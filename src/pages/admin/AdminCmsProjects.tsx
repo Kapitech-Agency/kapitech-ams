@@ -304,10 +304,36 @@ export const AdminCmsProjects: React.FC = () => {
       </div>
 
       {/* Projects Grid with Drag-to-scroll support */}
-      <div 
-        ref={galleryScrollRef}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"
-      >
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4" role="status" aria-label="Loading case studies">
+          {[1, 2, 3, 4, 5, 6].map((item) => (
+            <div key={item} className="overflow-hidden rounded-card border border-line bg-panel">
+              <Skeleton className="h-48 rounded-none" />
+              <div className="space-y-3 p-4">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-2/3" />
+                <div className="flex gap-1.5"><Skeleton className="h-5 w-14" /><Skeleton className="h-5 w-16" /></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : loadError ? (
+        <div className="rounded-card border border-danger/30 bg-danger/10 p-6">
+          <p className="text-sm font-semibold text-fg">Unable to load case studies</p>
+          <p className="mt-1 text-xs leading-5 text-muted">{loadError}</p>
+          <button type="button" onClick={() => window.location.reload()} className="mt-4 min-h-10 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">Retry</button>
+        </div>
+      ) : filteredProjects.length === 0 ? (
+        <div className="rounded-card border border-line bg-panel p-10 text-center">
+          <p className="text-sm font-semibold text-fg">{projects.length === 0 ? 'No case studies yet' : 'No matching case studies'}</p>
+          <p className="mt-1 text-xs leading-5 text-muted">{projects.length === 0 ? 'Add a case study to publish it through the CMS.' : 'Adjust the search or pillar filter.'}</p>
+          {projects.length === 0 && (
+            <button type="button" onClick={handleOpenAdd} className="mt-4 min-h-10 rounded-control bg-accent px-3 text-xs font-medium text-white hover:bg-accent-hover">Add case study</button>
+          )}
+        </div>
+      ) : (
+        <div ref={galleryScrollRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {filteredProjects.map((project) => (
           <div
             key={project.id}
@@ -315,11 +341,17 @@ export const AdminCmsProjects: React.FC = () => {
           >
             {/* Image Thumbnail */}
             <div className="relative h-48 w-full bg-bg overflow-hidden">
-              <img
-                src={project.image}
-                alt={project.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
+              {project.image ? (
+                <img
+                  src={project.image}
+                  alt={project.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-panel text-muted">
+                  <ImageIcon size={28} aria-hidden="true" />
+                </div>
+              )}
               <div className="absolute inset-0 bg-bg/30" />
 
               {/* Badges on image */}
@@ -405,8 +437,9 @@ export const AdminCmsProjects: React.FC = () => {
             </div>
           </div>
         ))}
-      </div>
 
+        </div>
+      )
       {/* MODAL: ADD / EDIT PROJECT WITH LIVE PREVIEW & DRAG & DROP */}
       <Modal open={isModalOpen && !!editingProject} onClose={() => setIsModalOpen(false)} size="xl" title={editingProject?.title ? 'Edit: ' + editingProject.title : 'Add New Case Study'} description="Manage the case study content and live card preview.">
             <div className="flex items-center justify-end pb-3 border-b border-line mb-4">
