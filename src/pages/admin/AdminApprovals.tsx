@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
+import { Skeleton } from '../../components/ui/Skeleton';
   ShieldCheck,
   Shield, 
   CheckCircle2, 
@@ -299,9 +300,17 @@ export const AdminApprovals: React.FC = () => {
       {/* Approvals List */}
       <div className="space-y-3">
         {isLoading ? (
-          <div className="p-12 rounded-card bg-bg border border-line text-center text-xs font-sans text-muted flex flex-col items-center justify-center gap-2">
-            <Loader2 className="animate-spin text-accent" size={20} />
-            <span>Loading authorization items...</span>
+          <div className="space-y-2" role="status" aria-label="Loading authorization items">
+            {[1, 2, 3].map((item) => (
+              <div key={item} className="rounded-card border border-line bg-panel p-4">
+                <Skeleton className="h-4 w-48" />
+                <Skeleton className="mt-3 h-3 w-72 max-w-full" />
+                <div className="mt-4 flex gap-2">
+                  <Skeleton className="h-8 w-20" />
+                  <Skeleton className="h-8 w-24" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : filteredApprovals.length === 0 ? (
           <div className="p-12 rounded-card bg-bg border border-line text-center text-xs font-sans text-muted">
