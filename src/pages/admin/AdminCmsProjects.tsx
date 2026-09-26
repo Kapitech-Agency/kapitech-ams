@@ -439,7 +439,7 @@ export const AdminCmsProjects: React.FC = () => {
         ))}
 
         </div>
-      )
+      )}
       {/* MODAL: ADD / EDIT PROJECT WITH LIVE PREVIEW & DRAG & DROP */}
       <Modal open={isModalOpen && !!editingProject} onClose={() => setIsModalOpen(false)} size="xl" title={editingProject?.title ? 'Edit: ' + editingProject.title : 'Add New Case Study'} description="Manage the case study content and live card preview.">
             <div className="flex items-center justify-end pb-3 border-b border-line mb-4">
