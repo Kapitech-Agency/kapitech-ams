@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
+import { Skeleton } from '../../components/ui/Skeleton';
   FileText, 
   Plus, 
   Search, 
@@ -253,9 +254,20 @@ export const AdminDocuments: React.FC = () => {
       {/* Documents Grid / Table */}
       <div className="rounded-card bg-panel border border-line overflow-hidden">
         {isLoading ? (
-          <div className="min-h-[160px] px-4 py-8 text-center text-xs font-sans text-muted flex flex-col items-center justify-center gap-2">
-            <Loader2 className="animate-spin text-accent" size={20} />
-            <span>Loading document vault...</span>
+          <div className="space-y-0" role="status" aria-label="Loading document vault">
+            {[1, 2, 3, 4].map((item) => (
+              <div key={item} className="grid grid-cols-[minmax(180px,1fr)_120px_90px_120px_120px_72px] items-center gap-4 border-b border-line px-4 py-3 last:border-b-0">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-48 max-w-full" />
+                  <Skeleton className="h-3 w-28" />
+                </div>
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-3 w-14" />
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-8 w-8" />
+              </div>
+            ))}
           </div>
         ) : filteredDocs.length === 0 ? (
           <div className="min-h-[160px] px-4 py-8 text-center text-xs font-sans text-muted flex flex-col items-center justify-center">
