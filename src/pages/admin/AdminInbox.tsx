@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
+import { Skeleton } from '../../components/ui/Skeleton';
   Inbox, 
   Mail, 
   Phone, 
@@ -879,10 +880,19 @@ export const AdminInbox: React.FC = () => {
           </div>
         </div>
       ) : loading ? (
-        /* LOADING STATE */
-        <div className="flex flex-col items-center justify-center py-20 text-muted space-y-3 bg-panel border border-line rounded-card">
-          <RefreshCw className="animate-spin text-accent" size={24} />
-          <p className="text-xs font-sans">{language === 'id' ? 'Memuat pesan masuk...' : 'Syncing inbox records...'}</p>
+        <div className="rounded-card border border-line bg-panel p-4" role="status" aria-label="Loading inbox records">
+          <div className="space-y-2">
+            {[1, 2, 3, 4, 5].map((item) => (
+              <div key={item} className="flex items-center gap-3 border-b border-line py-3 last:border-b-0">
+                <Skeleton className="h-8 w-8 shrink-0 rounded-control" />
+                <div className="min-w-0 flex-1 space-y-2">
+                  <Skeleton className="h-3.5 w-56 max-w-full" />
+                  <Skeleton className="h-3 w-80 max-w-full" />
+                </div>
+                <Skeleton className="hidden h-3 w-20 sm:block" />
+              </div>
+            ))}
+          </div>
         </div>
       ) : filteredItems.length === 0 ? (
         /* SINGLE UNIFIED EMPTY STATE - PREVENTS DUPLICATE BOXES */
