@@ -21,7 +21,8 @@ import {
   Sun,
   Moon,
   UserCircle,
-  HelpCircle
+  HelpCircle,
+  Search
 } from 'lucide-react';
 import { getAdminSession, logoutAdmin } from '../../lib/adminAuth';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -290,6 +291,23 @@ export const AdminLayout: React.FC = () => {
               {sidebarCollapsed ? <ChevronRight size={13} strokeWidth={2} /> : <ChevronLeft size={13} strokeWidth={2} />}
             </button>
           </div>
+        </div>
+        <div className="shrink-0 px-2.5 py-2">
+          <button
+            type="button"
+            onClick={() => setCommandPaletteOpen(true)}
+            aria-label="Search AMS"
+            aria-keyshortcuts="Control+K Meta+K"
+            className={`group flex min-h-10 w-full items-center rounded-control border border-line bg-panel text-muted transition-colors duration-150 hover:border-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${sidebarCollapsed ? 'justify-center px-0' : 'gap-2.5 px-2.5'}`}
+          >
+            <Search size={16} className="shrink-0" />
+            {!sidebarCollapsed && (
+              <>
+                <span className="min-w-0 flex-1 truncate text-left text-xs">Search</span>
+                <kbd className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] text-muted">⌘K</kbd>
+              </>
+            )}
+          </button>
         </div>
         <div className={`flex-1 min-h-0 overflow-hidden ${sidebarCollapsed ? 'px-2 py-3' : 'px-2.5 py-3'}`}>
           <div className={sidebarCollapsed ? 'space-y-2' : 'space-y-4'}>
