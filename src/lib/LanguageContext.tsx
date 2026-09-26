@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { api } from './apiClient';
 
 export type Language = 'en' | 'id';
 
@@ -702,19 +701,6 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const saved = localStorage.getItem('kapitech_lang') as Language;
     return saved === 'id' || saved === 'en' ? saved : 'en';
   });
-
-  useEffect(() => {
-    if (localStorage.getItem('kapitech_lang')) return;
-    let mounted = true;
-    void api.cms.getPublicSettings().then((res) => {
-      if (!mounted || !res.success || !res.data?.settings) return;
-      const configuredLanguage = res.data.settings.defaultLanguage;
-      if (configuredLanguage === 'id' || configuredLanguage === 'en') {
-        setLanguageState(configuredLanguage);
-      }
-    }).catch(() => {});
-    return () => { mounted = false; };
-  }, []);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
