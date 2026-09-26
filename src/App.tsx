@@ -77,10 +77,16 @@ const AdminSettings = React.lazy(() =>
 );
 
 const LoadingScreen = () => (
-  <div className="min-h-screen bg-bg text-fg flex items-center justify-center font-sans">
-    <div className="text-center">
-      <div className="w-8 h-8 border-2 border-line border-t-accent rounded-full animate-spin mx-auto mb-3" />
-      <p className="text-xs text-muted">Loading AMS…</p>
+  <div className="min-h-screen bg-bg text-fg flex items-center justify-center p-6 font-sans">
+    <div className="w-full max-w-[720px] space-y-3" role="status" aria-label="Loading AMS">
+      <div className="h-7 w-48 rounded-control bg-line/70" />
+      <div className="h-4 w-72 rounded-control bg-line/50" />
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="h-20 rounded-card bg-line/50" />
+        <div className="h-20 rounded-card bg-line/50" />
+        <div className="h-20 rounded-card bg-line/50" />
+      </div>
+      <div className="h-56 rounded-card bg-line/40" />
     </div>
   </div>
 );
