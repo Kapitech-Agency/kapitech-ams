@@ -159,129 +159,45 @@ export const AdminLayout: React.FC = () => {
       id: 'core',
       titleKey: 'admin.nav.coreOperations',
       items: [
-        {
-          key: 'dashboard',
-          to: '/admin/dashboard',
-          label: t('admin.nav.dashboard'),
-          icon: Home,
-          badge: null
-        },
-        {
-          key: 'inbox',
-          to: '/admin/inbox',
-          label: t('admin.nav.inbox'),
-          icon: Inbox,
-          badge: null
-        },
-        {
-          key: 'crm',
-          to: '/admin/crm',
-          label: t('admin.nav.crm'),
-          icon: Users,
-          badge: null
-        },
-        {
-          key: 'proposals',
-          to: '/admin/proposals',
-          label: language === 'id' ? 'Proposal & Penawaran' : 'Proposals & Quotes',
-          icon: Receipt,
-          badge: null
-        },
-        {
-          key: 'projects',
-          to: '/admin/projects',
-          label: t('admin.nav.projects'),
-          icon: Briefcase,
-          badge: null
-        }
+        { key: 'dashboard', to: '/admin/dashboard', label: t('admin.nav.dashboard'), icon: Home, badge: null },
+        { key: 'inbox', to: '/admin/inbox', label: t('admin.nav.inbox'), icon: Inbox, badge: null },
+        { key: 'crm', to: '/admin/crm', label: t('admin.nav.crm'), icon: Users, badge: null },
+        { key: 'clients', to: '/admin/clients', label: t('admin.nav.clients'), icon: Users, badge: null },
+        { key: 'projects', to: '/admin/projects', label: t('admin.nav.projects'), icon: Briefcase, badge: null }
       ]
     },
     {
       id: 'finance',
       titleKey: 'admin.nav.financeRevenue',
       items: [
-        {
-          key: 'invoicing',
-          to: '/admin/invoicing',
-          label: t('admin.nav.invoicing'),
-          icon: Landmark,
-          badge: null
-        },
-        {
-          key: 'clients',
-          to: '/admin/clients',
-          label: t('admin.nav.clients'),
-          icon: Users,
-          badge: null
-        },
-        {
-          key: 'vendors',
-          to: '/admin/vendors',
-          label: t('admin.nav.vendors'),
-          icon: Briefcase,
-          badge: null
-        },
-        {
-          key: 'approvals',
-          to: '/admin/approvals',
-          label: language === 'id' ? 'Pusat Persetujuan' : 'Approval Center',
-          icon: Shield,
-          badge: null
-        }
+        { key: 'proposals', to: '/admin/proposals', label: language === 'id' ? 'Proposal & Penawaran' : 'Proposals & quotes', icon: Receipt, badge: null },
+        { key: 'invoicing', to: '/admin/invoicing', label: t('admin.nav.invoicing'), icon: Landmark, badge: null },
+        { key: 'approvals', to: '/admin/approvals', label: language === 'id' ? 'Pusat persetujuan' : 'Approval center', icon: Shield, badge: null }
+      ]
+    },
+    {
+      id: 'delivery',
+      titleKey: 'admin.nav.delivery',
+      items: [
+        { key: 'vendors', to: '/admin/vendors', label: t('admin.nav.vendors'), icon: Briefcase, badge: null },
+        { key: 'documents', to: '/admin/documents', label: language === 'id' ? 'Dokumen' : 'Documents', icon: FileText, badge: null },
+        { key: 'timelogs', to: '/admin/time-logs', label: language === 'id' ? 'Pelacakan waktu' : 'Time tracking', icon: Clock3, badge: null }
       ]
     },
     {
       id: 'content',
       titleKey: 'admin.nav.contentPortfolio',
       items: [
-        {
-          key: 'services',
-          to: '/admin/cms/services',
-          label: t('admin.nav.servicesCatalog'),
-          icon: Layers,
-          badge: null
-        },
-        {
-          key: 'cms_projects',
-          to: '/admin/cms/projects',
-          label: t('admin.nav.caseStudies'),
-          icon: Layers,
-          badge: null
-        },
-        {
-          key: 'testimonials',
-          to: '/admin/cms/testimonials',
-          label: t('admin.cms.testiTitle'),
-          icon: Users,
-          badge: null
-        },
-        {
-          key: 'documents',
-          to: '/admin/documents',
-          label: language === 'id' ? 'Dokumen' : 'Documents',
-          icon: FileText,
-          badge: null
-        },
-        {
-          key: 'timelogs',
-          to: '/admin/time-logs',
-          label: language === 'id' ? 'Pelacakan Waktu' : 'Time Tracking',
-          icon: Clock3,
-          badge: null
-        }
+        { key: 'services', to: '/admin/cms/services', label: t('admin.nav.servicesCatalog'), icon: Layers, badge: null },
+        { key: 'cms_projects', to: '/admin/cms/projects', label: t('admin.nav.caseStudies'), icon: Layers, badge: null },
+        { key: 'testimonials', to: '/admin/cms/testimonials', label: t('admin.cms.testiTitle'), icon: Users, badge: null }
       ]
     },
     {
       id: 'admin',
       titleKey: 'admin.nav.administration',
       items: [
-        {
-          key: 'settings',
-          to: '/admin/settings',
-          label: t('admin.nav.settings'),
-          icon: Settings,
-          badge: null
-        },
+        { key: 'settings', to: '/admin/settings', label: t('admin.nav.settings'), icon: Settings, badge: null }
       ]
     }
   ];
