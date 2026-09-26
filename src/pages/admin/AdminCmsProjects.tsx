@@ -26,6 +26,7 @@ import { ProjectItem } from '../../data/projectsData';
 import { useLanguage } from '../../lib/LanguageContext';
 import { useDragToScroll } from '../../lib/useDragToScroll';
 import { CustomSelect } from '../../components/ui/CustomSelect';
+import { Skeleton } from '../../components/ui/Skeleton';
 
 export const AdminCmsProjects: React.FC = () => {
   const { language, t } = useLanguage();
@@ -37,6 +38,8 @@ export const AdminCmsProjects: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTab, setModalTab] = useState<'details' | 'preview'>('details');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
   const [isDraggingFile, setIsDraggingFile] = useState(false);
 
@@ -47,11 +50,19 @@ export const AdminCmsProjects: React.FC = () => {
   const [metricValue, setMetricValue] = useState('');
 
   const loadProjects = async () => {
+    setIsLoading(true);
+    setLoadError(null);
     try {
       const res = await api.cms.getProjects();
-      if (res.success && Array.isArray(res.data?.projects)) setProjects(res.data.projects as ProjectItem[]);
+      if (res.success && Array.isArray(res.data?.projects)) {
+        setProjects(res.data.projects as ProjectItem[]);
+      } else {
+        setLoadError(res.error || (language === 'id' ? 'Daftar case study gagal dimuat.' : 'Case studies could not be loaded.'));
+      }
     } catch {
-      setStatusMessage(language === 'id' ? 'Gagal memuat case study.' : 'Failed to load case studies.');
+      setLoadError(language === 'id' ? 'Daftar case study gagal dimuat. Coba lagi.' : 'Case studies could not be loaded. Try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -68,19 +79,16 @@ export const AdminCmsProjects: React.FC = () => {
       pillar: 'Innovation Development',
       service: 'Web Application',
       featured: false,
-      image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=1200',
+      image: '',
       desc: '',
       descId: '',
       challenge: '',
       challengeId: '',
       solution: '',
       solutionId: '',
-      deliverables: ['Full-Stack Architecture', 'Responsive UI/UX', 'Cloud Deployment'],
-      technologies: ['React', 'TypeScript', 'Tailwind CSS', 'Node.js'],
-      impact: [
-        { label: 'Conversion Lift', value: '+40%' },
-        { label: 'Latency', value: '< 200ms' }
-      ],
+      deliverables: [],
+      technologies: [],
+      impact: [],
       year: new Date().getFullYear().toString()
     };
     setEditingProject(newTemplate);
