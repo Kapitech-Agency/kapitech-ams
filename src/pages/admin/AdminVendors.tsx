@@ -574,7 +574,7 @@ export const AdminVendors: React.FC = () => {
         <Modal
           open={isDrawerOpen}
           onClose={() => setIsDrawerOpen(false)}
-          size="lg"
+          size="xl"
           title={selectedVendor.name}
           description={selectedVendor.primaryCategory}
         >
