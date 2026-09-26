@@ -75,7 +75,7 @@ export const AdminCmsServices: React.FC = () => {
   const [newCategory, setNewCategory] = useState<'Solutions' | 'Branding' | 'Design' | 'Development'>('Development');
   const [newHeadline, setNewHeadline] = useState('');
   const [newSubtitle, setNewSubtitle] = useState('');
-  const [newBadge, setNewBadge] = useState('Enterprise Tier');
+  const [newBadge, setNewBadge] = useState('');
   const [newCapability, setNewCapability] = useState('');
   const [tempCapabilities, setTempCapabilities] = useState<string[]>([]);
 
@@ -228,47 +228,33 @@ export const AdminCmsServices: React.FC = () => {
         </div>
       )}
 
-      {/* Quick Metrics Bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-        <div className="w-full h-full bg-panel border border-line p-4 rounded-card flex items-center justify-between">
-          <div>
-            <div className="text-xs font-sans text-muted">SEO & Growth Services</div>
-            <div className="text-xl font-sans font-semibold text-fg mt-0.5">3 Modules</div>
-          </div>
-          <div className="w-8 h-8 rounded-control bg-info/10 border border-info/30 flex items-center justify-center text-info">
-            <SearchCode size={16} />
-          </div>
-        </div>
-
-        <div className="w-full h-full bg-panel border border-line p-4 rounded-card flex items-center justify-between">
-          <div>
-            <div className="text-xs font-sans text-muted">Development & Cloud</div>
-            <div className="text-xl font-sans font-semibold text-fg mt-0.5">5 Stacks</div>
-          </div>
-          <div className="w-8 h-8 rounded-control bg-accent/10 border border-accent/30 flex items-center justify-center text-accent">
-            <FileCode2 size={16} />
-          </div>
-        </div>
-
-        <div className="w-full h-full bg-panel border border-line p-4 rounded-card flex items-center justify-between">
-          <div>
-            <div className="text-xs font-sans text-muted">UI/UX Design Systems</div>
-            <div className="text-xl font-sans font-semibold text-fg mt-0.5">4 Systems</div>
-          </div>
-          <div className="w-8 h-8 rounded-control bg-series-3/10 border border-series-3/30 flex items-center justify-center text-series-3">
-            <PenTool size={16} />
-          </div>
-        </div>
-
-        <div className="w-full h-full bg-panel border border-line p-4 rounded-card flex items-center justify-between">
-          <div>
-            <div className="text-xs font-sans text-muted">Standard Delivery SLA</div>
-            <div className="text-xl font-sans font-semibold text-success mt-0.5">7 - 14 Days</div>
-          </div>
-          <div className="w-8 h-8 rounded-control bg-success/10 border border-success/30 flex items-center justify-center text-success">
-            <ShieldCheck size={16} />
-          </div>
-        </div>
+      {/* Catalog metrics */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 w-full">
+        {(() => {
+          const developmentCount = servicesList.filter((item) => item.category === 'Development').length;
+          const designCount = servicesList.filter((item) => item.category === 'Design').length;
+          const activeCategories = new Set(servicesList.map((item) => item.category)).size;
+          return [
+            { label: 'Total services', value: servicesList.length, icon: Layers, tone: 'accent' },
+            { label: 'Development', value: developmentCount, icon: Code, tone: 'accent' },
+            { label: 'Design', value: designCount, icon: PenTool, tone: 'info' },
+            { label: 'Categories used', value: activeCategories, icon: Sliders, tone: 'success' }
+          ].map((metric) => {
+            const Icon = metric.icon;
+            const toneClass = metric.tone === 'info' ? 'text-info bg-info/10 border-info/30' : metric.tone === 'success' ? 'text-success bg-success/10 border-success/30' : 'text-accent-text bg-accent/10 border-accent/30';
+            return (
+              <div key={metric.label} className="rounded-card border border-line bg-panel p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-xs text-muted">{metric.label}</div>
+                    <div className="mt-1 text-xl font-medium tabular-nums text-fg">{metric.value}</div>
+                  </div>
+                  <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-control border ${toneClass}`}><Icon size={15} /></div>
+                </div>
+              </div>
+            );
+          });
+        })()}
       </div>
 
       {/* Category Pills & Search */}
