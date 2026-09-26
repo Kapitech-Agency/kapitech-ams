@@ -3,7 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { api } from '../../lib/apiClient';
 import { cacheAdminSession } from '../../lib/adminAuth';
 
-import Skeleton from './Skeleton';
+import Skeleton from '../ui/Skeleton';
 interface RequireAdminAuthProps {
   children: React.ReactNode;
 }
