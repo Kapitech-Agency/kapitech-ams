@@ -975,7 +975,7 @@ export const AdminCrm: React.FC = () => {
         <Modal
           open={isDrawerOpen}
           onClose={() => setIsDrawerOpen(false)}
-          size="lg"
+          size="xl"
           title={selectedLead.clientName}
           description={selectedLead.company}
         >
