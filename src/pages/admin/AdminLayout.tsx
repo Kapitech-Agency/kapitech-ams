@@ -217,10 +217,6 @@ export const AdminLayout: React.FC = () => {
     ?.items.find((item) => item.key === 'settings');
   const contentNavSections = filteredNavSections.filter((section) => section.id !== 'admin');
 
-  const activeSectionId = contentNavSections.find((section) =>
-    section.items.some((item) => isItemActive(item.to))
-  )?.id ?? contentNavSections[0]?.id;
-
   // Helper to determine if link is active
   const isItemActive = (itemTo: string) => {
     if (itemTo.includes('tab=')) {
@@ -236,6 +232,10 @@ export const AdminLayout: React.FC = () => {
     }
     return false;
   };
+
+  const activeSectionId = contentNavSections.find((section) =>
+    section.items.some((item) => isItemActive(item.to))
+  )?.id ?? contentNavSections[0]?.id;
 
   // Find active item label for breadcrumb
   let activeItemLabel = 'Dashboard';
