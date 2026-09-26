@@ -9,7 +9,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 export const Button: React.FC<ButtonProps> = ({ variant='primary', loading=false, icon, className, children, disabled, ...props }) => (
   <button {...props} disabled={disabled || loading}
-    className={cn('inline-flex min-h-9 items-center justify-center gap-2 rounded-control px-3 text-xs font-medium transition-[background-color,border-color,color,transform] duration-150 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-50',
+    className={cn('inline-flex min-h-10 sm:min-h-9 items-center justify-center gap-2 rounded-control px-3 text-xs font-medium transition-[background-color,border-color,color,transform] duration-150 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-50',
       variant==='primary' && 'bg-accent text-white hover:bg-accent-hover active:bg-accent-pressed',
       variant==='secondary' && 'border border-line bg-panel text-fg hover:border-muted hover:bg-bg',
       variant==='ghost' && 'bg-transparent text-muted hover:bg-bg hover:text-fg',
