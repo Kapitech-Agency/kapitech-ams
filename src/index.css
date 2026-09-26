@@ -127,6 +127,7 @@
 .ams-shell table th:first-child,.ams-shell table td:first-child{padding-left:16px}.ams-shell table th:last-child,.ams-shell table td:last-child{padding-right:16px}
 .ams-shell .overflow-x-auto{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent;-webkit-overflow-scrolling:touch}
 .ams-shell .overflow-x-auto::-webkit-scrollbar{width:4px;height:6px}.ams-shell .overflow-x-auto::-webkit-scrollbar-track{background:transparent}.ams-shell .overflow-x-auto::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+.ams-shell input,.ams-shell select,.ams-shell textarea{min-height:36px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);font-size:13px;line-height:18px;outline:none;transition:border-color .15s ease,box-shadow .15s ease}.ams-shell input::placeholder,.ams-shell textarea::placeholder{color:var(--muted)}.ams-shell input:focus,.ams-shell select:focus,.ams-shell textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 22%,transparent)}
 .ams-shell input:disabled,.ams-shell select:disabled,.ams-shell textarea:disabled{opacity:.55;cursor:not-allowed}
 .ams-shell .ams-page-header,.ams-shell .ams-dashboard-header{min-width:0;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--line)}
 .ams-shell .ams-page-header>*,.ams-shell .ams-dashboard-header>*{min-width:0}
