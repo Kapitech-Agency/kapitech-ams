@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process';
 import { build as buildVite } from 'vite';
 import { build as buildEsbuild } from 'esbuild';
 
@@ -19,4 +20,7 @@ await buildEsbuild({
   outfile: 'dist/server.cjs',
 });
 
-await import('./copy-postgres-migrations.mjs');
+const migration = spawnSync(process.execPath, ['scripts/copy-postgres-migrations.mjs'], { stdio: 'inherit', env });
+
+if (migration.error) throw migration.error;
+if (migration.status !== 0) process.exit(migration.status ?? 1);
