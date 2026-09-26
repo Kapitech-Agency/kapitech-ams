@@ -103,7 +103,7 @@ export const AdminSettings: React.FC = () => {
   const [securityLoading, setSecurityLoading] = useState(false);
 
   // Security / MFA state
-  const [mfaActive, setMfaActive] = useState(storedCreds.mfaEnabled ?? true);
+  const mfaActive = storedCreds.mfaEnabled === true;
   const [sessionTimeoutMin, setSessionTimeoutMin] = useState(120);
 
   // Meta & Branding Settings state
@@ -1216,29 +1216,24 @@ export const AdminSettings: React.FC = () => {
           </div>
 
           <div className="space-y-4">
-            <div className="p-4 bg-panel border border-line rounded-card flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
-              <div className="space-y-1">
-                <div className="text-fg font-sans font-semibold flex items-center gap-2 text-xs">
-                  <Smartphone size={15} className="text-success shrink-0" />
-                  <span>{language === 'id' ? 'Wajibkan Multi-Factor Authentication (MFA)' : 'Enforce Multi-Factor Authentication (MFA)'}</span>
+            <div className="p-4 bg-panel border border-line rounded-card">
+              <div className="flex items-start gap-3">
+                <Smartphone size={15} className={mfaActive ? 'text-success shrink-0 mt-0.5' : 'text-warning shrink-0 mt-0.5'} />
+                <div className="min-w-0">
+                  <div className="text-fg font-sans font-semibold flex items-center gap-2 text-xs">
+                    <span>Multi-factor authentication (MFA)</span>
+                    <span className={`rounded-badge border px-1.5 py-0.5 text-[10px] font-semibold ${mfaActive ? 'border-success/30 bg-success/10 text-success' : 'border-warning/30 bg-warning/10 text-warning'}`}>
+                      {mfaActive ? (language === 'id' ? 'Aktif' : 'Enabled') : (language === 'id' ? 'Belum dikonfigurasi' : 'Not configured')}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[11px] leading-5 text-muted">
+                    {language === 'id'
+                      ? 'Status mengikuti sesi server. Enrollment MFA dilakukan melalui alur autentikasi dan bukan melalui toggle lokal.'
+                      : 'Status follows the server-backed session. MFA enrollment is an authentication flow, not a local policy toggle.'}
+                  </p>
                 </div>
-                <p className="text-muted text-[11px] font-sans">
-                  {language === 'id'
-                    ? 'Wajibkan verifikasi OTP untuk Tier 1 (Top Management) dan Tier 4 (System Admin).'
-                    : 'Mandate time-based OTP verification for Tier 1 Sponsors and Tier 4 IT Administrators.'}
-                </p>
               </div>
-              <button
-                type="button"
-                onClick={() => setMfaActive(!mfaActive)}
-                className={`px-3.5 py-1.5 rounded-control text-xs font-sans font-semibold transition-all self-start sm:self-auto min-h-10 ${
-                  mfaActive ? 'bg-success/10 text-success border border-success/30' : 'bg-panel text-muted'
-                }`}
-              >
-                {mfaActive ? (language === 'id' ? 'AKTIF' : 'ACTIVE') : (language === 'id' ? 'NONAKTIF' : 'DISABLED')}
-              </button>
             </div>
-
             <div className="p-4 bg-panel border border-line rounded-card space-y-2">
               <label className="block text-xs font-sans text-muted font-semibold">
                 {language === 'id' ? 'Batas Waktu Ketidakaktifan Sesi (Menit)' : 'Session Inactivity Timeout (Minutes)'}
