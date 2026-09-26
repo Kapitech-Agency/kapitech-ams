@@ -410,7 +410,7 @@ export const AdminCmsServices: React.FC = () => {
         ))}
 
         </div>
-      )
+      )}
       {/* Service Detail / Inspection Modal */}
       <Modal open={!!selectedServiceForDetail} onClose={() => setSelectedServiceForDetail(null)} size="lg" title={selectedServiceForDetail?.title || 'Service detail'} description={selectedServiceForDetail?.heroSubtitle || selectedServiceForDetail?.heroSubtitleId}>
             <div className="flex items-center gap-2 font-sans text-xs text-accent font-semibold mb-2">
