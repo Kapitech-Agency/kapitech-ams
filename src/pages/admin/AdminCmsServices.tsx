@@ -58,7 +58,7 @@ export const AdminCmsServices: React.FC = () => {
   const [newSubtitle, setNewSubtitle] = useState('');
   const [newBadge, setNewBadge] = useState('Enterprise Tier');
   const [newCapability, setNewCapability] = useState('');
-  const [tempCapabilities, setTempCapabilities] = useState<string[]>(['Technical Audit & Core Web Vitals', 'Modern Jamstack Architecture', 'High-speed Edge Delivery']);
+  const [tempCapabilities, setTempCapabilities] = useState<string[]>([]);
 
   const categories = ['All', 'Development', 'Design', 'Branding', 'Solutions'];
 
@@ -107,30 +107,19 @@ export const AdminCmsServices: React.FC = () => {
       type: 'service',
       category: newCategory,
       title: newTitle,
-      navSubtitle: newHeadline || 'High-performance digital craft and engineering.',
-      navSubtitleId: newHeadline || 'Layanan rekayasa digital berstandar global.',
-      heroHeadline: newHeadline || `${newTitle} for High-Growth Brands`,
-      heroHeadlineId: newHeadline || `${newTitle} untuk Brand Berskala Global`,
-      heroSubtitle: newSubtitle || 'Accelerate conversion, user engagement, and revenue through our bespoke engineering methodology.',
-      heroSubtitleId: newSubtitle || 'Akselerasikan konversi dan retensi pengguna melalui arsitektur software berstandar industri.',
+      navSubtitle: newHeadline,
+      navSubtitleId: newHeadline,
+      heroHeadline: newHeadline,
+      heroHeadlineId: newHeadline,
+      heroSubtitle: newSubtitle,
+      heroSubtitleId: newSubtitle,
       badge: newBadge,
       badgeId: newBadge,
-      metrics: [
-        { value: '99.9%', label: 'Uptime SLA', labelId: 'Jaminan Uptime' },
-        { value: '3.4x', label: 'Avg ROI', labelId: 'Rata-rata ROI' },
-        { value: '<50ms', label: 'Edge Latency', labelId: 'Latensi Edge' }
-      ],
+      metrics: [],
       testimonial: {
-        quote: 'Kapitech delivered exceptional results ahead of our quarterly launch schedule.',
-        quoteId: 'Kapitech memberikan hasil luar biasa lebih cepat dari jadwal peluncuran kami.',
-        highlight: 'Top 1% Engineering Execution',
-        highlightId: 'Eksekusi Rekayasa Kelas Dunia',
-        author: 'Arif Hidayat',
-        role: 'VP of Technology',
-        company: 'Nexus Supply Chain',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
+        quote: '', quoteId: '', highlight: '', highlightId: '', author: '', role: '', company: '', avatar: ''
       },
-      caseStudySlugs: ['lumina-staging-cloud', 'aurora-ecommerce'],
+      caseStudySlugs: [],
       problemsSolutions: [],
       capabilities: tempCapabilities.map(cap => ({
         title: cap,
@@ -138,33 +127,9 @@ export const AdminCmsServices: React.FC = () => {
         desc: 'Production-ready delivery adhering to modern web standards and security benchmarks.',
         descId: 'Eksekusi produksi sesuai standar arsitektur modern dan keamanan data.'
       })),
-      processStages: [
-        {
-          stageNumber: '01',
-          stageName: 'Discovery & Audit',
-          stageNameId: 'Audit & Analisis Mendalam',
-          stageDesc: 'Deep-dive technical assessment and strategic roadmap mapping.',
-          stageDescId: 'Pemeriksaan sistem menyeluruh dan penyusunan roadmap teknis.',
-          deliverables: ['Audit Report', 'Architecture Blueprint'],
-          deliverablesId: ['Laporan Audit', 'Cetak Biru Arsitektur']
-        },
-        {
-          stageNumber: '02',
-          stageName: 'Agile Implementation',
-          stageNameId: 'Implementasi & Development',
-          stageDesc: 'Rapid deployment with weekly continuous integration and QA.',
-          stageDescId: 'Pengembangan cepat dengan integrasi mingguan dan pengujian ketat.',
-          deliverables: ['Staging Environment', 'API Documentation'],
-          deliverablesId: ['Environment Staging', 'Dokumentasi API']
-        }
-      ],
-      businessOutcomes: {
-        heading: 'Measurable Impact for Your Digital Enterprise',
-        headingId: 'Dampak Terukur untuk Ekosistem Digital Anda',
-        benefits: ['Reduced infrastructure overhead', 'Sub-second page load benchmarks', 'Higher organic conversion rate'],
-        benefitsId: ['Efisiensi biaya server', 'Waktu muat di bawah 1 detik', 'Peningkatan konversi organik']
-      },
-      tools: ['Next.js 15', 'TypeScript', 'Tailwind CSS', 'Docker', 'PostgreSQL', 'Redis'],
+      processStages: [],
+      businessOutcomes: { heading: '', headingId: '', benefits: [], benefitsId: [] },
+      tools: [],
       faqs: []
     };
 
