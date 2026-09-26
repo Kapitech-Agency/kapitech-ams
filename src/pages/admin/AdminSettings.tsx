@@ -10,6 +10,7 @@ import {
   Trash2, 
   Download, 
   Lock, 
+  Clock3,
   RefreshCw,
   UserCheck,
   Palette,
