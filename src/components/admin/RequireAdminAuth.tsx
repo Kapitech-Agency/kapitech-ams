@@ -3,6 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { api } from '../../lib/apiClient';
 import { cacheAdminSession } from '../../lib/adminAuth';
 
+import Skeleton from './Skeleton';
 interface RequireAdminAuthProps {
   children: React.ReactNode;
 }
@@ -61,10 +62,15 @@ export const RequireAdminAuth: React.FC<RequireAdminAuthProps> = ({ children }) 
 
   if (status === 'checking') {
     return (
-      <div className="min-h-screen bg-bg text-fg flex items-center justify-center font-sans">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-line border-t-accent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-xs text-muted">Verifying server session…</p>
+      <div className="min-h-screen bg-bg text-fg flex items-center justify-center p-6 font-sans">
+        <div className="w-full max-w-[640px] space-y-3" role="status" aria-label="Verifying server session">
+          <Skeleton className="h-7 w-48" />
+          <Skeleton className="h-4 w-72 max-w-full" />
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Skeleton className="h-20" />
+            <Skeleton className="h-20" />
+            <Skeleton className="h-20" />
+          </div>
         </div>
       </div>
     );
