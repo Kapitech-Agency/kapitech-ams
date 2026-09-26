@@ -547,7 +547,6 @@ export const AdminSettings: React.FC = () => {
                 </div>
               </div>
             </div>
-
             <form onSubmit={handleUpdateSecurity} className="space-y-3 pt-3 border-t border-line">
               <h3 className="text-xs font-semibold text-fg font-sans">
                 {language === 'id' ? 'Ganti Password Master' : 'Change Master Password'}
@@ -614,8 +613,7 @@ export const AdminSettings: React.FC = () => {
       {activeTab === 'api' && canAccessServer && (
         <div className="w-full space-y-4">
           <ProductionReadinessCard language={language} />
-
-          <section className="rounded-card border border-line bg-panel p-5 sm:p-6">
+          <div className="w-full max-w-4xl rounded-card border border-line bg-panel p-5 sm:p-6">
             <div className="flex items-start gap-3 border-b border-line pb-4">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-card border border-info/30 bg-info/10 text-info">
                 <Database size={20} />
@@ -631,7 +629,6 @@ export const AdminSettings: React.FC = () => {
                 </p>
               </div>
             </div>
-
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <div className="rounded-card border border-line bg-bg p-4">
                 <div className="text-xs font-semibold text-fg">Database</div>
@@ -662,7 +659,6 @@ export const AdminSettings: React.FC = () => {
                 </div>
               </div>
             </div>
-
             <div className="mt-4 rounded-control border border-line bg-bg px-3.5 py-3">
               <p className="text-xs leading-5 text-muted">
                 {language === 'id'
@@ -670,7 +666,7 @@ export const AdminSettings: React.FC = () => {
                   : 'There are no editable credential fields here. Production changes are made through deployment environment configuration and remain subject to the readiness gate.'}
               </p>
             </div>
-          </section>
+          </div>
         </div>
       )}
 
