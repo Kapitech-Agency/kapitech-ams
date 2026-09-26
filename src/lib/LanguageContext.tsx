@@ -221,10 +221,10 @@ const translations: Record<Language, Record<string, string>> = {
     'admin.fin.colActions': 'Actions',
 
     // Nav Section Headers & Titles
-    'admin.nav.coreOperations': 'CORE OPERATIONS',
-    'admin.nav.financeRevenue': 'FINANCE',
-    'admin.nav.contentPortfolio': 'CONTENT',
-    'admin.nav.administration': 'SYSTEM',
+    'admin.nav.coreOperations': 'Core operations',
+    'admin.nav.financeRevenue': 'Finance',
+    'admin.nav.contentPortfolio': 'Content',
+    'admin.nav.administration': 'System',
     'admin.nav.servicesCatalog': 'Services & Pricing',
     'admin.nav.caseStudies': 'Portfolio & Case Studies',
     'admin.nav.auditTrail': 'Audit Trail & Security',
@@ -547,10 +547,10 @@ const translations: Record<Language, Record<string, string>> = {
     'admin.fin.colActions': 'Aksi',
 
     // Nav Section Headers & Titles (ID)
-    'admin.nav.coreOperations': 'OPERASIONAL UTAMA',
-    'admin.nav.financeRevenue': 'KEUANGAN & PENDAPATAN',
-    'admin.nav.contentPortfolio': 'KONTEN & PORTOFOLIO',
-    'admin.nav.administration': 'ADMINISTRASI & SISTEM',
+    'admin.nav.coreOperations': 'Operasional utama',
+    'admin.nav.financeRevenue': 'Keuangan & pendapatan',
+    'admin.nav.contentPortfolio': 'Konten & portofolio',
+    'admin.nav.administration': 'Administrasi & sistem',
     'admin.nav.servicesCatalog': 'Katalog Layanan & Harga',
     'admin.nav.caseStudies': 'Studi Kasus & Portofolio',
     'admin.nav.auditTrail': 'Audit Jejak & Keamanan',
