@@ -49,7 +49,7 @@ const statusConfigs: Record<InvoiceStatus, StatusConfig> = {
   }
 };
 
-const statuses: InvoiceStatus[] = ['paid', 'partially_paid', 'sent', 'overdue', 'draft'];
+const statuses: InvoiceStatus[] = ['paid', 'partially_paid', 'sent', 'overdue', 'draft', 'cancelled'];
 
 export const InvoiceStatusDropdown: React.FC<InvoiceStatusDropdownProps> = ({
   status,
