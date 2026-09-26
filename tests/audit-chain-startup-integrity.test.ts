@@ -1,0 +1,3 @@
+import assert from 'node:assert/strict'; import fs from 'node:fs'; import test from 'node:test';
+test('audit startup migration only runs for fully legacy records',()=>{const s=fs.readFileSync('server/db.ts','utf8');assert.match(s,/const isLegacy = db\.auditLogs\.every\(log => !log\.hash && !log\.prevHash\)/);assert.match(s,/if \(migrateLegacyAuditLogChain\(inMemoryDb!\)\)/);assert.doesNotMatch(s,/function ensureAuditLogChain/);});
+test('audit chain verification remains fail-closed',()=>{const s=fs.readFileSync('server/db.ts','utf8');const start=s.indexOf('export function verifyAuditLogChain');const end=s.indexOf('export function hashSessionToken',start);const block=s.slice(start,end);assert.match(block,/return \{ valid: false/);});
