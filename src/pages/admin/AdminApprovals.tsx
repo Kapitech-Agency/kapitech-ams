@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
 import { Skeleton } from '../../components/ui/Skeleton';
+import { 
   ShieldCheck,
   Shield, 
   CheckCircle2, 
