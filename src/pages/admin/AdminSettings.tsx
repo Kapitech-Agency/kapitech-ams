@@ -1340,7 +1340,7 @@ export const AdminSettings: React.FC = () => {
                 </div>
               </div>
               <div className="rounded-card border border-line bg-bg p-4">
-                <div className="text-xs font-semibold text-fg">{language === 'id' ? 'Backup' : 'Backups'}</div>
+                <div className="text-xs font-semibold text-fg">{language === 'id' ? 'Backup terkelola provider' : 'Provider-managed backup'}</div>
                 <div className="mt-1 text-sm font-medium text-fg">Provider-managed</div>
                 <div className="mt-1 text-xs leading-5 text-muted">
                   {backupRetentionDays} {language === 'id' ? 'hari retensi' : 'days retention'}
