@@ -231,7 +231,7 @@ https://kapitech.id`
             return (
               <div 
                 key={tpl.key}
-                className="p-4 rounded-control bg-panel border border-line hover:border-[var(--line)] transition-all space-y-3"
+                className="p-4 rounded-control bg-panel border border-line hover:border-line transition-all space-y-3"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
@@ -263,7 +263,7 @@ https://kapitech.id`
                     <a
                       href={`mailto:${submission.email}?subject=${encodeURIComponent(tpl.subject)}&body=${encodeURIComponent(tpl.body)}`}
                       onClick={onClose}
-                      className="min-h-10 px-2.5 rounded-control bg-accent hover:brightness-110 text-white text-xs font-semibold transition-colors flex items-center gap-1.5"
+                      className="min-h-10 px-2.5 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-medium transition-colors flex items-center gap-1.5"
                       title="Send via default Email Client"
                     >
                       <Send size={12} />
@@ -277,7 +277,7 @@ https://kapitech.id`
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={onClose}
-                        className="min-h-10 px-2.5 rounded-control bg-[var(--success)] hover:brightness-110 text-white text-xs font-sans font-semibold transition-colors flex items-center gap-1.5"
+                        className="min-h-10 px-2.5 rounded-control bg-panel text-muted border border-line hover:bg-panel-hover hover:text-fg text-xs font-sans font-semibold transition-colors flex items-center gap-1.5"
                         title="Send via WhatsApp"
                       >
                         <span>WA</span>
