@@ -121,7 +121,7 @@
 .ams-shell .text-blue-400,.ams-shell .text-cyan-400{color:var(--info)}
 .ams-shell [data-status=success]{color:var(--success)}.ams-shell [data-status=warning]{color:var(--warning)}.ams-shell [data-status=danger]{color:var(--danger)}.ams-shell [data-status=info]{color:var(--info)}
 .ams-shell table{width:100%;border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums}
-.ams-shell thead th{height:40px;padding:0 12px;color:var(--muted);background:var(--panel);border-bottom:1px solid var(--line);font-size:12px;line-height:16px;font-weight:500;text-align:left;vertical-align:middle}
+.ams-shell thead th{position:sticky;top:0;z-index:1;height:40px;padding:0 12px;color:var(--muted);background:var(--panel);border-bottom:1px solid var(--line);font-size:12px;line-height:16px;font-weight:500;text-align:left;vertical-align:middle}
 .ams-shell tbody td{height:40px;padding:0 12px;color:var(--text);border-bottom:1px solid var(--line);font-size:13px;line-height:18px;vertical-align:middle}
 .ams-shell tbody tr:hover td{background:color-mix(in srgb,var(--text) 4%,transparent)}
 .ams-shell table th:first-child,.ams-shell table td:first-child{padding-left:16px}.ams-shell table th:last-child,.ams-shell table td:last-child{padding-right:16px}
