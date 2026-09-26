@@ -112,13 +112,6 @@ export const AdminSettings: React.FC = () => {
   });
   const [metaStatus, setMetaStatus] = useState<string | null>(null);
 
-  // API Connections state
-  const [smtpHost, setSmtpHost] = useState('smtp.gmail.com');
-  const [smtpPort, setSmtpPort] = useState('587');
-  const [webhookUrl, setWebhookUrl] = useState('https://discord.com/api/webhooks/kapitech-agency-leads');
-  const [cloudRunRegion, setCloudRunRegion] = useState('asia-southeast2 (Jakarta)');
-  const [apiSaveStatus, setApiSaveStatus] = useState<string | null>(null);
-
   // Audit Logs state
   const [logs, setLogs] = useState<SecurityAuditLog[]>([]);
   const [backupRetentionDays, setBackupRetentionDays] = useState(14);
@@ -1328,97 +1321,64 @@ export const AdminSettings: React.FC = () => {
       {/* TAB 5: API & CLOUD CONNECTIONS */}
       {activeTab === 'api' && canAccessServer && (
         <div className="w-full space-y-4">
-          {canAccessServer && <ProductionReadinessCard language={language} />}
-          {canAccessServer && (
-            <div className="p-4 rounded-card bg-panel border border-line">
-              <div className="text-[10px] font-sans normal-case tracking-normal text-muted">Backup Retention</div>
-              <div className="text-sm font-semibold text-fg mt-1">{backupRetentionDays} days</div>
-              <p className="text-[11px] text-muted font-sans mt-1">Provider-managed backup retention reported by the server.</p>
-            </div>
-          )}
-          <div className="w-full max-w-4xl bg-panel border border-line rounded-card p-5 sm:p-6 space-y-6">
-          <div className="flex items-center gap-3 pb-4 border-b border-line">
-            <div className="w-10 h-10 rounded-card bg-success/10 border border-success/30 flex items-center justify-center text-success shrink-0">
-              <Database size={20} />
-            </div>
-            <div>
-              <h2 className="text-base font-semibold font-sans text-fg">
-                {language === 'id' ? 'Integrasi API & Cloud' : 'API & Cloud Integrations'}
-              </h2>
-              <p className="text-xs text-muted font-sans">
-                {language === 'id'
-                  ? 'Webhook notifikasi masuk, server SMTP, dan konfigurasi region Cloud Run.'
-                  : 'Inbound notification webhooks, transactional SMTP credentials, and Cloud Run container regions.'}
-              </p>
-            </div>
-          </div>
+          <ProductionReadinessCard language={language} />
 
-          {apiSaveStatus && (
-            <div className="p-4 rounded-card text-xs font-sans flex items-start gap-2.5 bg-success/10 border border-success/30 text-success">
-              <Check size={16} className="shrink-0 mt-0.5" />
-              <span>{apiSaveStatus}</span>
-            </div>
-          )}
-
-          <div className="space-y-4 text-xs font-sans">
-            <div>
-              <label className="block text-muted mb-1 font-semibold">
-                {language === 'id' ? 'Webhook Notifikasi Prospek (Discord / Slack)' : 'Inbound Lead Webhook (Discord / Slack)'}
-              </label>
-              <input
-                type="text"
-                value={webhookUrl}
-                onChange={(e) => setWebhookUrl(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-panel border border-line rounded-control text-fg focus:outline-none focus:border-accent font-sans min-h-10"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-muted mb-1 font-semibold">
-                  {language === 'id' ? 'Host Server SMTP' : 'SMTP Server Host'}
-                </label>
-                <input
-                  type="text"
-                  value={smtpHost}
-                  onChange={(e) => setSmtpHost(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-panel border border-line rounded-control text-fg focus:outline-none focus:border-accent font-sans min-h-10"
-                />
+          <section className="rounded-card border border-line bg-panel p-5 sm:p-6">
+            <div className="flex items-start gap-3 border-b border-line pb-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-card border border-info/30 bg-info/10 text-info">
+                <Database size={20} />
               </div>
-
-              <div>
-                <label className="block text-muted mb-1 font-semibold">
-                  {language === 'id' ? 'Port SMTP' : 'SMTP Port'}
-                </label>
-                <input
-                  type="text"
-                  value={smtpPort}
-                  onChange={(e) => setSmtpPort(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-panel border border-line rounded-control text-fg focus:outline-none focus:border-accent font-sans min-h-10"
-                />
+              <div className="min-w-0">
+                <h2 className="text-base font-semibold text-fg">
+                  {language === 'id' ? 'Koneksi yang dikelola server' : 'Server-managed connections'}
+                </h2>
+                <p className="mt-1 text-xs leading-5 text-muted">
+                  {language === 'id'
+                    ? 'Credential, endpoint, dan koneksi produksi dikelola melalui environment server, bukan dari browser.'
+                    : 'Production credentials, endpoints, and connection settings are managed by the server environment, not the browser.'}
+                </p>
               </div>
             </div>
 
-            <div>
-              <label className="block text-muted mb-1 font-semibold">
-                {language === 'id' ? 'Region Deployment Cloud Run' : 'Cloud Run Deployment Region'}
-              </label>
-              <input
-                type="text"
-                value={cloudRunRegion}
-                onChange={(e) => setCloudRunRegion(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-panel border border-line rounded-control text-fg focus:outline-none focus:border-accent font-sans min-h-10"
-              />
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-card border border-line bg-bg p-4">
+                <div className="text-xs font-semibold text-fg">Database</div>
+                <div className="mt-1 text-sm font-medium text-fg">PostgreSQL</div>
+                <div className="mt-1 text-xs leading-5 text-muted">
+                  {language === 'id' ? 'Sumber data production' : 'Production data source'}
+                </div>
+              </div>
+              <div className="rounded-card border border-line bg-bg p-4">
+                <div className="text-xs font-semibold text-fg">{language === 'id' ? 'Backup' : 'Backups'}</div>
+                <div className="mt-1 text-sm font-medium text-fg">Provider-managed</div>
+                <div className="mt-1 text-xs leading-5 text-muted">
+                  {backupRetentionDays} {language === 'id' ? 'hari retensi' : 'days retention'}
+                </div>
+              </div>
+              <div className="rounded-card border border-line bg-bg p-4">
+                <div className="text-xs font-semibold text-fg">Document vault</div>
+                <div className="mt-1 text-sm font-medium text-fg">Server-managed</div>
+                <div className="mt-1 text-xs leading-5 text-muted">
+                  {language === 'id' ? 'Storage durable dikelola infrastructure' : 'Durable storage is managed by infrastructure'}
+                </div>
+              </div>
+              <div className="rounded-card border border-line bg-bg p-4">
+                <div className="text-xs font-semibold text-fg">{language === 'id' ? 'Notifikasi' : 'Notifications'}</div>
+                <div className="mt-1 text-sm font-medium text-fg">Server-managed</div>
+                <div className="mt-1 text-xs leading-5 text-muted">
+                  {language === 'id' ? 'Credential tidak ditampilkan di client' : 'Credentials are never exposed in the client'}
+                </div>
+              </div>
             </div>
-            <div className="pt-3 border-t border-line">
-              <p className="text-[11px] text-muted font-sans">
+
+            <div className="mt-4 rounded-control border border-line bg-bg px-3.5 py-3">
+              <p className="text-xs leading-5 text-muted">
                 {language === 'id'
-                  ? 'Konfigurasi koneksi ini dikelola oleh environment dan server. Panel ini tidak menyimpan perubahan koneksi.'
-                  : 'These connection values are managed by the environment and server. This panel does not persist connection changes.'}
+                  ? 'Tidak ada field credential editable di sini. Perubahan production dilakukan melalui environment/deployment configuration dan mengikuti readiness gate.'
+                  : 'There are no editable credential fields here. Production changes are made through deployment environment configuration and remain subject to the readiness gate.'}
               </p>
             </div>
-          </div>
-        </div>
+          </section>
         </div>
       )}
 
