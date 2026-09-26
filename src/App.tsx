@@ -1,5 +1,5 @@
 import React, { Suspense, useEffect } from 'react';
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { MotionConfig } from 'motion/react';
 import { LanguageProvider } from './lib/LanguageContext';
 import { RequireAdminAuth } from './components/admin/RequireAdminAuth';
@@ -103,7 +103,8 @@ const ProtectedAdminRoutes = () => (
 
 const App = () => {
   return (
-    <MotionConfig reducedMotion="user">
+    <BrowserRouter>
+      <MotionConfig reducedMotion="user">
       <LanguageProvider>
         <ScrollToTop />
 
@@ -136,8 +137,9 @@ const App = () => {
             <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
           </Routes>
         </Suspense>
-      </LanguageProvider>
-    </MotionConfig>
+        </LanguageProvider>
+      </MotionConfig>
+    </BrowserRouter>
   );
 };
 
