@@ -217,6 +217,10 @@ export const AdminLayout: React.FC = () => {
     ?.items.find((item) => item.key === 'settings');
   const contentNavSections = filteredNavSections.filter((section) => section.id !== 'admin');
 
+  const activeSectionId = contentNavSections.find((section) =>
+    section.items.some((item) => isItemActive(item.to))
+  )?.id ?? contentNavSections[0]?.id;
+
   // Helper to determine if link is active
   const isItemActive = (itemTo: string) => {
     if (itemTo.includes('tab=')) {
@@ -535,9 +539,27 @@ export const AdminLayout: React.FC = () => {
         {/* Sticky desktop top bar */}
         <header className="hidden min-[900px]:flex h-[52px] border-b border-line bg-panel sticky top-0 z-30 items-center shrink-0" aria-label="AMS top bar">
           <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-5 lg:px-6 flex items-center justify-between gap-4">
-            <div className="min-w-0 flex items-center gap-2 text-xs text-muted">
-              <span className="truncate">{activeItemLabel}</span>
-            </div>
+            <nav className="min-w-0 flex items-center gap-1 overflow-x-auto scrollbar-none" aria-label="AMS module sections">
+              {contentNavSections.map((section) => {
+                const firstItem = section.items[0];
+                if (!firstItem) return null;
+                const active = section.id === activeSectionId;
+                return (
+                  <Link
+                    key={section.id}
+                    to={firstItem.to}
+                    aria-current={active ? 'page' : undefined}
+                    className={
+                      'relative flex h-[52px] shrink-0 items-center px-3 text-[12px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset ' +
+                      (active ? 'text-fg' : 'text-muted hover:text-fg')
+                    }
+                  >
+                    <span>{t(section.titleKey)}</span>
+                    {active && <span className="absolute inset-x-3 bottom-0 h-0.5 bg-accent" />}
+                  </Link>
+                );
+              })}
+            </nav>
             <div className="flex items-center gap-1.5 shrink-0">
               <Link
                 to="/admin/settings?tab=audit"
