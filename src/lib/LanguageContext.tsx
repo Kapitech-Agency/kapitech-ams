@@ -223,6 +223,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Nav Section Headers & Titles
     'admin.nav.coreOperations': 'Core operations',
     'admin.nav.financeRevenue': 'Finance',
+    'admin.nav.delivery': 'Delivery',
     'admin.nav.contentPortfolio': 'Content',
     'admin.nav.administration': 'System',
     'admin.nav.servicesCatalog': 'Services & Pricing',
@@ -549,6 +550,7 @@ const translations: Record<Language, Record<string, string>> = {
     // Nav Section Headers & Titles (ID)
     'admin.nav.coreOperations': 'Operasional utama',
     'admin.nav.financeRevenue': 'Keuangan & pendapatan',
+    'admin.nav.delivery': 'Pengantaran',
     'admin.nav.contentPortfolio': 'Konten & portofolio',
     'admin.nav.administration': 'Administrasi & sistem',
     'admin.nav.servicesCatalog': 'Katalog Layanan & Harga',
