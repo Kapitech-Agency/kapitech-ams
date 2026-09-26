@@ -29,6 +29,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { api } from '../../lib/apiClient';
 import { Modal } from '../../components/ui/Modal';
+import { Skeleton } from '../../components/ui/Skeleton';
 
 export const AdminCmsServices: React.FC = () => {
   const { language } = useLanguage();
@@ -36,13 +37,31 @@ export const AdminCmsServices: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Backend is the only CMS source of truth.
   React.useEffect(() => {
-    void api.cms.getServices().then((res) => {
-      if (res.success && Array.isArray(res.data?.services)) setServicesList(res.data.services as ServiceItemData[]);
-    });
-  }, []);
+    let mounted = true;
+    setIsLoading(true);
+    setLoadError(null);
+    void api.cms.getServices()
+      .then((res) => {
+        if (!mounted) return;
+        if (res.success && Array.isArray(res.data?.services)) {
+          setServicesList(res.data.services as ServiceItemData[]);
+        } else {
+          setLoadError(res.error || (language === 'id' ? 'Daftar layanan gagal dimuat.' : 'Services could not be loaded.'));
+        }
+      })
+      .catch(() => {
+        if (mounted) setLoadError(language === 'id' ? 'Daftar layanan gagal dimuat. Coba lagi.' : 'Services could not be loaded. Try again.');
+      })
+      .finally(() => {
+        if (mounted) setIsLoading(false);
+      });
+    return () => { mounted = false; };
+  }, [language]);
 
   // Modals & Editing State
   const [editingService, setEditingService] = useState<ServiceItemData | null>(null);
@@ -283,7 +302,34 @@ export const AdminCmsServices: React.FC = () => {
       </div>
 
       {/* Services List Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full">
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full" role="status" aria-label="Loading services">
+          {[1, 2, 3, 4, 5, 6].map((item) => (
+            <div key={item} className="rounded-card border border-line bg-panel p-4">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="mt-4 h-5 w-40" />
+              <Skeleton className="mt-2 h-3 w-full" />
+              <Skeleton className="mt-1 h-3 w-4/5" />
+              <div className="mt-4 flex gap-1.5"><Skeleton className="h-5 w-16" /><Skeleton className="h-5 w-20" /></div>
+            </div>
+          ))}
+        </div>
+      ) : loadError ? (
+        <div className="rounded-card border border-danger/30 bg-danger/10 p-6">
+          <p className="text-sm font-semibold text-fg">Unable to load services</p>
+          <p className="mt-1 text-xs leading-5 text-muted">{loadError}</p>
+          <button type="button" onClick={() => void api.cms.getServices()} className="mt-4 min-h-10 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">Retry</button>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-card border border-line bg-panel p-10 text-center">
+          <p className="text-sm font-semibold text-fg">{servicesList.length === 0 ? 'No services yet' : 'No matching services'}</p>
+          <p className="mt-1 text-xs leading-5 text-muted">{servicesList.length === 0 ? 'Add a service before publishing it to the public site.' : 'Adjust the search or category filter.'}</p>
+          {servicesList.length === 0 && (
+            <button type="button" onClick={() => setIsAddModalOpen(true)} className="mt-4 min-h-10 rounded-control bg-accent px-3 text-xs font-medium text-white hover:bg-accent-hover">Add service</button>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full">
         {filtered.map((item) => (
           <div
             key={item.slug}
@@ -362,8 +408,9 @@ export const AdminCmsServices: React.FC = () => {
 
           </div>
         ))}
-      </div>
 
+        </div>
+      )
       {/* Service Detail / Inspection Modal */}
       <Modal open={!!selectedServiceForDetail} onClose={() => setSelectedServiceForDetail(null)} size="lg" title={selectedServiceForDetail?.title || 'Service detail'} description={selectedServiceForDetail?.heroSubtitle || selectedServiceForDetail?.heroSubtitleId}>
             <div className="flex items-center gap-2 font-sans text-xs text-accent font-semibold mb-2">
