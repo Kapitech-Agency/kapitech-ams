@@ -318,7 +318,7 @@ export const AdminCmsServices: React.FC = () => {
         <div className="rounded-card border border-danger/30 bg-danger/10 p-6">
           <p className="text-sm font-semibold text-fg">Unable to load services</p>
           <p className="mt-1 text-xs leading-5 text-muted">{loadError}</p>
-          <button type="button" onClick={() => void api.cms.getServices()} className="mt-4 min-h-10 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">Retry</button>
+          <button type="button" onClick={() => window.location.reload()} className="mt-4 min-h-10 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">Retry</button>
         </div>
       ) : filtered.length === 0 ? (
         <div className="rounded-card border border-line bg-panel p-10 text-center">
