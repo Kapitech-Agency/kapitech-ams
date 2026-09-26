@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { 
 import { Skeleton } from '../../components/ui/Skeleton';
+import { 
   Inbox, 
   Mail, 
   Phone, 
