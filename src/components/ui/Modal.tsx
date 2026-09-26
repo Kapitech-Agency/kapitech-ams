@@ -65,11 +65,11 @@ export const Modal: React.FC<ModalProps> = ({
             {description && <p id={descriptionId} className="mt-1.5 max-w-2xl text-xs leading-5 text-muted">{description}</p>}
           </div>
           <button type="button" onClick={onClose} aria-label="Close dialog"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-panel p-0 text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+            className="flex h-10 w-10 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-control border border-line bg-panel p-0 text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
             <X size={16} />
           </button>
         </header>
-        <div className={`min-h-0 flex-1 px-5 py-4 ${fitContent ? 'overflow-hidden' : 'overflow-y-auto'}`}>{children}</div>
+        <div className={`min-h-0 flex-1 px-4 py-4 ${fitContent ? 'overflow-hidden' : 'overflow-y-auto'}`}>{children}</div>
         {footer && <footer className="flex flex-col-reverse sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-end gap-2 border-t border-line bg-panel px-4 py-3.5">{footer}</footer>}
       </div>
     </div>
