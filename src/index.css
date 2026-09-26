@@ -1,5 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /* ==========================================================================
    KAPITECH AMS - DESIGN TOKENS
@@ -13,6 +13,7 @@
   --text: #16161c;
   --muted: #6c6c7a;
   --accent: #dc143c;
+  --series-1: var(--accent);
   --accent-text: #c40f34;
   --series-2: #12a672;
   --series-3: #3b6fe0;
@@ -32,6 +33,7 @@
   --text: #f3f3f6;
   --muted: #8b8b99;
   --accent: #dc143c;
+  --series-1: var(--accent);
   --accent-text: #ff4d6d;
   --series-2: #34d399;
   --series-3: #5b8cff;
@@ -52,6 +54,7 @@
   --color-fg: var(--text);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
+  --color-series-1: var(--series-1);
   --color-accent-text: var(--accent-text);
   --color-accent-hover: var(--accent-hover);
   --color-accent-pressed: var(--accent-pressed);
@@ -96,18 +99,9 @@
    Source of truth: AMS-DESIGN-SYSTEM.md
    ========================================================================== */
 .ams-shell{
-  --bg:#09090c;--panel:#0f0f14;--panel-hover:color-mix(in srgb,var(--text) 4%,var(--panel));
-  --line:#20202a;--text:#f3f3f6;--muted:#8b8b99;--accent:#dc143c;--accent-text:#ff4d6d;
-  --series-2:#34d399;--series-3:#5b8cff;--series-4:#b9b9c6;
-  --success:#34d399;--warning:#f5a524;--danger:#f97066;--info:#5b8cff;
+  --panel-hover:color-mix(in srgb,var(--text) 4%,var(--panel));
   min-width:0;min-height:100dvh;background:var(--bg);color:var(--text);
-  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden;
-}
-:root[data-theme="light"] .ams-shell{
-  --bg:#f4f4f7;--panel:#fff;--panel-hover:color-mix(in srgb,var(--text) 4%,var(--panel));
-  --line:#e3e3ea;--text:#16161c;--muted:#6c6c7a;--accent:#dc143c;--accent-text:#c40f34;
-  --series-2:#12a672;--series-3:#3b6fe0;--series-4:#8a8a98;
-  --success:#12a672;--warning:#b7791f;--danger:#d92d20;--info:#3b6fe0;
+  font-family:var(--font-sans);overflow:hidden;
 }
 .ams-shell *,.ams-shell *::before,.ams-shell *::after{box-sizing:border-box}
 .ams-shell>aside{min-width:0;background:var(--panel);border-right:1px solid var(--line)}
@@ -163,7 +157,7 @@
 .ams-shell .ams-leads-page .ams-kanban-scroll> *{flex:0 0 300px;min-width:280px;max-width:340px}
 .ams-shell .ams-inbox-list-pane,.ams-shell .ams-inbox-reader-pane{min-width:0;min-height:0}.ams-shell .ams-inbox-reader-pane{overflow:hidden}
 .ams-shell .custom-scrollbar::-webkit-scrollbar{width:4px;height:4px}.ams-shell .custom-scrollbar::-webkit-scrollbar-track{background:transparent}.ams-shell .custom-scrollbar::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}.ams-shell .custom-scrollbar::-webkit-scrollbar-thumb:hover{background:var(--muted)}
-.ams-portal-root{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--text)}
+.ams-portal-root{font-family:var(--font-sans);color:var(--text)}
 .ams-portal-root .ams-popover-surface,.ams-portal-root .ams-notification-surface{box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
 @media(max-width:1099px) and (min-width:900px){.ams-shell>main>div.flex-1{padding:20px}}
 @media(max-width:899px){
