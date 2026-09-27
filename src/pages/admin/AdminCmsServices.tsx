@@ -32,6 +32,7 @@ import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 
 export const AdminCmsServices: React.FC = () => {
   const { language } = useLanguage();
@@ -192,36 +193,32 @@ export const AdminCmsServices: React.FC = () => {
           onConfirm={() => void confirmDeleteService()}
         />
       
-      {/* Top Header */}
-      <div className="ams-page-header flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-accent font-sans text-xs font-semibold normal-case tracking-normal mb-1">
-            <Cpu size={14} />
+      <AdminModuleHeader
+        icon={<Layers size={20} />}
+        eyebrow={
+          <>
+            <Cpu size={14} className="text-accent" />
             <span>Service Catalog & Execution Engine</span>
-          </div>
-          <h1 className="ams-page-title">
-            <Layers className="text-accent-text shrink-0" size={22} />
-            <span>Agency Services (SEO & Dev)</span>
-          </h1>
-          <p className="text-xs sm:text-sm text-muted mt-1">
-            Manage live service offerings, SLA benchmarks, deliverables, and technical capabilities published on <code className="text-fg bg-panel px-1.5 py-0.5 rounded-badge border border-line">/services</code>.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="text-xs font-sans text-muted bg-panel px-3.5 py-2 rounded-card border border-line">
-            Active Catalog: <strong className="text-fg">{servicesList.length} Offerings</strong>
-          </div>
-
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="px-4 py-2 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-sans font-semibold transition-all flex items-center gap-1.5 min-h-10"
-          >
-            <Plus size={14} />
-            <span>Add Service</span>
-          </button>
-        </div>
-      </div>
+          </>
+        }
+        title="Agency Services (SEO & Dev)"
+        description={
+          <>Manage live service offerings, SLA benchmarks, deliverables, and technical capabilities published on <code className="rounded-badge border border-line bg-panel px-1.5 py-0.5 text-fg">/services</code>.</>
+        }
+        actions={
+          <>
+            <span className="text-xs tabular-nums text-muted">{servicesList.length} offerings</span>
+            <Button
+              type="button"
+              variant="primary"
+              icon={<Plus size={14} />}
+              onClick={() => setIsAddModalOpen(true)}
+            >
+              Add service
+            </Button>
+          </>
+        }
+      />
 
       {statusMessage && (
         <div className="p-3.5 rounded-card bg-success/10 border border-success/30 text-success text-xs font-sans flex items-center justify-between animate-in fade-in duration-200">
