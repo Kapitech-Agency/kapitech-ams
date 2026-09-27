@@ -968,7 +968,7 @@ export const AdminInvoicing: React.FC = () => {
       {loading ? (
         <div className="space-y-6" aria-label="Loading finance">
           <div className="grid grid-cols-2 gap-3 min-[900px]:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, index) => <div key={index} className="h-28 animate-pulse rounded-card border border-line bg-panel" />)}
+            {Array.from({ length: 6 }).map((_, index) => <div key={index} className="h-28 animate-pulse rounded-card border border-line bg-panel" />)}
           </div>
           <div className="h-56 animate-pulse rounded-card border border-line bg-panel" />
           <div className="h-72 animate-pulse rounded-card border border-line bg-panel" />
@@ -1462,7 +1462,7 @@ export const AdminInvoicing: React.FC = () => {
           <div><label className="mb-1.5 block text-xs font-medium text-muted">Description *</label><input required maxLength={500} value={expenseDescription} onChange={(event) => setExpenseDescription(event.target.value)} className={fieldClass} /></div>
           <div className="grid grid-cols-2 gap-3">
             <div><label className="mb-1.5 block text-xs font-medium text-muted">Amount *</label><input required type="number" min="0.01" max="100000000000" step="0.01" value={expenseAmount} onChange={(event) => setExpenseAmount(Number(event.target.value))} className={fieldClass} /></div>
-            <div><label className="mb-1.5 block text-xs font-medium text-muted">Date *</label><input required type="date" value={expenseDate} onChange={(event) => setExpenseDate(event.target.value)} className={fieldClass} /></div>
+            <div><label className="mb-1.5 block text-xs font-medium text-muted">Date *</label><input required type="date" max={getDateInputValue()} value={expenseDate} onChange={(event) => setExpenseDate(event.target.value)} className={fieldClass} /></div>
           </div>
         </form>
       </Modal>
@@ -1500,7 +1500,7 @@ export const AdminInvoicing: React.FC = () => {
               <input required min="0.01" type="number" step="0.01" max={Number(paymentInvoice.balanceDue ?? (paymentInvoice.total - (paymentInvoice.amountPaid || 0)))} value={paymentAmount} onChange={(event) => setPaymentAmount(Number(event.target.value))} className={fieldClass} /></div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div><label className="mb-1.5 block text-xs font-medium text-muted">Payment method</label><CustomSelect value={paymentMethod} onChange={(value) => { setPaymentDirty(true); setPaymentMethod(value as typeof paymentMethod); }} options={[{ value: 'bank_transfer', label: 'Bank transfer' }, { value: 'credit_card', label: 'Credit card' }, { value: 'cash', label: 'Cash' }, { value: 'other', label: 'Other' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" /></div>
-              <div><label className="mb-1.5 block text-xs font-medium text-muted">Payment date</label><input required type="date" value={paymentDate} onChange={(event) => setPaymentDate(event.target.value)} className={fieldClass} /></div>
+              <div><label className="mb-1.5 block text-xs font-medium text-muted">Payment date</label><input required type="date" max={getDateInputValue()} value={paymentDate} onChange={(event) => setPaymentDate(event.target.value)} className={fieldClass} /></div>
             </div>
             <div><label className="mb-1.5 block text-xs font-medium text-muted">Reference</label><input maxLength={160} value={paymentReference} onChange={(event) => setPaymentReference(event.target.value)} className={fieldClass} placeholder="Transaction reference" /></div>
             <div><label className="mb-1.5 block text-xs font-medium text-muted">Notes</label><textarea maxLength={1000} value={paymentNotes} onChange={(event) => setPaymentNotes(event.target.value)} rows={3} className={fieldClass + ' py-2.5'} /></div>
