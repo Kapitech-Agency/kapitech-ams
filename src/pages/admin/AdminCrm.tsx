@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-// Shared module chrome renders the canonical ams-dashboard-header primitive.
+// Shared module chrome renders the canonical ams-dashboard-header primitive; permission guard shape is kept regression-test compatible.
 import { 
   Briefcase, 
   Plus, 
