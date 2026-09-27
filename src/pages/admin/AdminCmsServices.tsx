@@ -30,6 +30,7 @@ import { CustomSelect } from '../../components/ui/CustomSelect';
 import { api } from '../../lib/apiClient';
 import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
 
 export const AdminCmsServices: React.FC = () => {
@@ -476,21 +477,17 @@ export const AdminCmsServices: React.FC = () => {
             )}
 
             <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2.5 pt-4 border-t border-line">
-              <button
+              <Button
+                type="button"
+                variant="destructive"
                 onClick={() => handleDeleteService(selectedServiceForDetail.slug)}
-                className="min-h-10 px-3 py-2 rounded-control bg-danger/10 border border-danger/30 text-danger hover:bg-danger/15 text-xs font-sans flex items-center gap-1.5 transition-colors"
+                icon={<Trash2 size={13} />}
               >
-                <Trash2 size={13} />
-                <span>Delete Offering</span>
-              </button>
+                Delete Offering
+              </Button>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                <button
-                  onClick={() => setSelectedServiceForDetail(null)}
-                  className="min-h-10 px-4 py-2 rounded-control bg-panel hover:bg-panel-hover border border-line text-fg text-xs font-sans transition-colors"
-                >
-                  Close
-                </button>
+                <Button type="button" variant="secondary" onClick={() => setSelectedServiceForDetail(null)}>Close</Button>
                 <a
                   href={`https://kapitech.id/services/${selectedServiceForDetail.slug}`}
                   target="_blank"
@@ -598,19 +595,8 @@ export const AdminCmsServices: React.FC = () => {
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-3">
-                <button
-                  type="button"
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="min-h-10 px-4 py-2 rounded-control bg-panel hover:bg-panel-hover border border-line text-fg text-xs transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="min-h-10 px-5 py-2 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-semibold transition-all"
-                >
-                  Publish Service
-                </button>
+                <Button type="button" variant="secondary" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
+                <Button type="submit">Publish Service</Button>
               </div>
             </form>
       </Modal>
