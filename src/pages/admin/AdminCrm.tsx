@@ -376,12 +376,7 @@ export const AdminCrm: React.FC = () => {
       
       <header className="ams-dashboard-header mb-6 flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 text-xs text-muted">
-            <span>Kapitech AMS</span>
-            <span aria-hidden="true">/</span>
-            <span className="text-fg">CRM</span>
-          </div>
-          <h1 className="mt-2 text-xl font-semibold leading-7 tracking-[-0.01em] text-fg">{t('admin.crm.title')}</h1>
+          <h1 className="text-2xl font-semibold leading-8 tracking-[-0.02em] text-fg">{t('admin.crm.title')}</h1>
           <p className="mt-1 max-w-2xl text-xs leading-5 text-muted">
             {language === 'id'
               ? 'Kelola pipeline prospek, tahapan deal, nilai peluang, dan follow-up tim dalam satu workspace.'
@@ -389,17 +384,17 @@ export const AdminCrm: React.FC = () => {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-          <div className="flex h-10 items-center rounded-control border border-line bg-transparent p-0.5" aria-label="Currency">
-            <button type="button" onClick={() => handleCurrencyToggle('IDR')} aria-pressed={currency === 'IDR'} className={"min-h-9 rounded-control px-3 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent " + (currency === 'IDR' ? 'bg-accent text-white' : 'text-muted hover:bg-bg hover:text-fg')}>IDR</button>
-            <button type="button" onClick={() => handleCurrencyToggle('USD')} aria-pressed={currency === 'USD'} className={"min-h-9 rounded-control px-3 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent " + (currency === 'USD' ? 'bg-accent text-white' : 'text-muted hover:bg-bg hover:text-fg')}>USD</button>
+          <div className="flex h-9 items-center rounded-control border border-line bg-panel p-0.5" aria-label="Currency">
+            <button type="button" onClick={() => handleCurrencyToggle('IDR')} aria-pressed={currency === 'IDR'} className={"h-8 rounded-chip px-3 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent " + (currency === 'IDR' ? 'bg-line text-fg' : 'text-muted hover:text-fg')}>IDR</button>
+            <button type="button" onClick={() => handleCurrencyToggle('USD')} aria-pressed={currency === 'USD'} className={"h-8 rounded-chip px-3 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent " + (currency === 'USD' ? 'bg-line text-fg' : 'text-muted hover:text-fg')}>USD</button>
           </div>
-          <button type="button" onClick={() => exportCrmLeadsToCsv(filteredLeads)} className="ams-action inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control border border-line bg-transparent px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" title={t('admin.action.exportCsv')}>
+          <button type="button" onClick={() => exportCrmLeadsToCsv(filteredLeads)} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" title={t('admin.action.exportCsv')}>
             <Download size={14} />
             <span>{t('admin.action.exportCsv')}</span>
           </button>
           {canManageCrm && (
             <>
-              <button type="button" onClick={() => handleOpenAddModal('new')} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control bg-accent px-3 text-xs font-semibold text-white transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+              <button type="button" onClick={() => handleOpenAddModal('new')} className="inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control bg-accent px-3.5 text-xs font-semibold text-white transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
               <Plus size={14} />
               <span>{t('admin.crm.addDeal')}</span>
               </button>
@@ -417,9 +412,9 @@ export const AdminCrm: React.FC = () => {
       )}
 
       {/* 2. Enterprise CRM KPI Funnel & Metrics Bar */}
-      <div className="ams-crm-kpi grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-12">
         {/* Active Pipeline Card */}
-        <div className="lg:col-span-4 bg-panel border border-line p-4 rounded-card flex flex-col justify-between group hover:border-line transition-all">
+        <div className="lg:col-span-4 rounded-card border border-line bg-panel p-4 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between text-muted mb-3">
               <span className="text-xs font-sans normal-case tracking-normal font-semibold">
@@ -445,7 +440,7 @@ export const AdminCrm: React.FC = () => {
         </div>
 
         {/* Closed Won Card */}
-        <div className="lg:col-span-3 bg-panel border border-line p-5 sm:p-6 rounded-card flex flex-col justify-between group hover:border-line transition-all">
+        <div className="lg:col-span-3 rounded-card border border-line bg-panel p-4 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between text-muted mb-3">
               <span className="text-xs font-sans normal-case tracking-normal font-semibold">
@@ -470,7 +465,7 @@ export const AdminCrm: React.FC = () => {
         </div>
 
         {/* Stage Conversion Funnel */}
-        <div className="md:col-span-2 lg:col-span-5 bg-panel border border-line p-5 sm:p-6 rounded-card flex flex-col justify-between group hover:border-line transition-all">
+        <div className="md:col-span-2 lg:col-span-5 rounded-card border border-line bg-panel p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between text-muted mb-2">
             <span className="text-xs font-sans normal-case tracking-normal font-semibold flex items-center gap-2 text-fg">
               <Activity size={14} className="text-danger" />
@@ -512,7 +507,7 @@ export const AdminCrm: React.FC = () => {
       </div>
 
       {/* 3. Filter Bar & View Mode Switcher */}
-      <div className="ams-crm-toolbar flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-panel border border-line p-3 sm:p-4 rounded-card">
+      <div className="ams-crm-toolbar flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 rounded-card border border-line bg-panel p-4 sm:p-5">
         <div className="flex flex-row items-center gap-2.5 flex-1 min-w-0 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
           <div className="relative shrink-0 w-[240px] sm:flex-1 sm:min-w-0 sm:w-auto sm:max-w-none lg:max-w-md">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" size={14} />
@@ -521,7 +516,7 @@ export const AdminCrm: React.FC = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={language === 'id' ? 'Cari prospek, perusahaan, atau kata kunci...' : 'Search leads, companies, or keywords...'}
-              className="w-full pl-9 pr-3.5 py-2 rounded-control bg-panel border border-line text-xs text-fg placeholder-muted focus:outline-none focus:border-accent font-sans min-h-10"
+              className="w-full h-9 min-h-9 pl-9 pr-3 rounded-control bg-bg border border-line text-xs text-fg placeholder-muted focus:outline-none focus:border-accent font-sans"
             />
           </div>
 
@@ -553,7 +548,7 @@ export const AdminCrm: React.FC = () => {
           />
         </div>
 
-        <div className="flex items-center gap-1 bg-bg p-1 rounded-card border border-line self-stretch lg:self-auto shrink-0">
+        <div className="flex items-center gap-1 bg-bg p-1 rounded-control border border-line self-stretch lg:self-auto shrink-0">
           <button
             onClick={() => setViewMode('kanban')}
             className={`flex items-center justify-center gap-2 px-3 py-1.5 rounded-control text-xs font-sans font-semibold transition-all min-h-10 ${
@@ -581,7 +576,7 @@ export const AdminCrm: React.FC = () => {
 
       {/* 4. MAIN VIEW: KANBAN BOARD OR LIST TABLE */}
       {viewMode === 'kanban' ? (
-        <div className="ams-kanban-scroll overflow-x-auto pb-4 overscroll-x-contain scrollbar-thin">
+        <div className="ams-kanban-scroll custom-scrollbar overflow-x-auto pb-4 overscroll-x-contain">
           <div className="flex gap-3 min-w-[1400px] min-[1280px]:min-w-full items-start">
             
             {CRM_STAGE_DEFINITIONS.map((stageDef) => {
@@ -637,7 +632,7 @@ export const AdminCrm: React.FC = () => {
                   </div>
 
                   {/* Column Cards Stream */}
-                  <div className="p-3 space-y-3 overflow-y-auto flex-1 max-h-[calc(100dvh-320px)] min-h-[180px] scrollbar-thin">
+                  <div className="p-3 space-y-3 overflow-y-auto flex-1 max-h-[calc(100dvh-320px)] min-h-[180px] custom-scrollbar">
                     {stageLeads.length === 0 ? (
                       <div className="py-8 text-center text-muted text-[11px] font-sans border border-dashed border-line rounded-card">
                         {language === 'id' ? 'Tarik deal ke sini' : 'Drop deals here'}
@@ -856,7 +851,7 @@ export const AdminCrm: React.FC = () => {
 
           {/* Desktop Table View */}
           <div className="hidden md:block bg-panel border border-line rounded-card overflow-hidden">
-            <div className="ams-table-scroll overflow-x-auto">
+            <div className="ams-table-scroll custom-scrollbar overflow-x-auto">
               <table className="ams-table w-full text-left text-xs font-sans">
                 <thead className="bg-panel text-muted border-b border-line normal-case text-[10px] tracking-normal">
                   <tr>
@@ -1076,7 +1071,7 @@ export const AdminCrm: React.FC = () => {
                   </button>
                 </form>
 
-                <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
+                <div className="space-y-2 max-h-44 overflow-y-auto pr-1 custom-scrollbar">
                   {selectedLead.notes && selectedLead.notes.length > 0 ? (
                     selectedLead.notes.slice().reverse().map((note) => (
                       <div key={note.id} className="p-3 rounded-card bg-panel border border-line text-xs">
