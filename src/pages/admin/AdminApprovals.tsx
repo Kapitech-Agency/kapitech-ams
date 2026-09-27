@@ -166,12 +166,12 @@ export const AdminApprovals: React.FC = () => {
   const getRiskBadge = (level: string) => {
     const l = level?.toLowerCase();
     if (l === 'high') {
-      return <span className="px-2 py-0.5 rounded text-xs font-sans bg-danger/10 text-danger border border-danger/30 normal-case font-semibold">High Risk</span>;
+      return <span className="px-2 py-0.5 rounded-badge text-xs font-sans bg-danger/10 text-danger border border-danger/30 normal-case font-semibold">High Risk</span>;
     }
     if (l === 'medium') {
-      return <span className="px-2 py-0.5 rounded text-xs font-sans bg-warning/10 text-warning border border-warning/30 normal-case font-semibold">Medium Risk</span>;
+      return <span className="px-2 py-0.5 rounded-badge text-xs font-sans bg-warning/10 text-warning border border-warning/30 normal-case font-semibold">Medium Risk</span>;
     }
-    return <span className="px-2 py-0.5 rounded text-xs font-sans bg-panel-hover text-muted border border-line normal-case font-semibold">Low Risk</span>;
+    return <span className="px-2 py-0.5 rounded-badge text-xs font-sans bg-panel-hover text-muted border border-line normal-case font-semibold">Low Risk</span>;
   };
 
   return (
@@ -331,7 +331,7 @@ export const AdminApprovals: React.FC = () => {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-semibold text-sm text-fg">{item.title}</span>
-                      <span className="px-2 py-0.5 rounded text-xs font-sans normal-case bg-panel text-muted border border-line">
+                      <span className="px-2 py-0.5 rounded-badge text-xs font-sans normal-case bg-panel text-muted border border-line">
                         {item.type}
                       </span>
                       {getRiskBadge(item.riskLevel)}

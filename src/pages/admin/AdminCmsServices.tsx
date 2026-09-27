@@ -204,7 +204,7 @@ export const AdminCmsServices: React.FC = () => {
             <span>Agency Services (SEO & Dev)</span>
           </h1>
           <p className="text-xs sm:text-sm text-muted mt-1">
-            Manage live service offerings, SLA benchmarks, deliverables, and technical capabilities published on <code className="text-fg bg-panel px-1.5 py-0.5 rounded border border-line">/services</code>.
+            Manage live service offerings, SLA benchmarks, deliverables, and technical capabilities published on <code className="text-fg bg-panel px-1.5 py-0.5 rounded-badge border border-line">/services</code>.
           </p>
         </div>
 
@@ -368,7 +368,7 @@ export const AdminCmsServices: React.FC = () => {
                 <div className="pt-2 border-t border-line mb-3 flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1">
                   <span className="text-[10px] font-sans text-muted shrink-0">Tech:</span>
                   {item.tools.slice(0, 4).map((tool, tIdx) => (
-                    <span key={tIdx} className="text-[9px] font-sans text-muted bg-panel px-1.5 py-0.5 rounded border border-line shrink-0">
+                    <span key={tIdx} className="text-[9px] font-sans text-muted bg-panel px-1.5 py-0.5 rounded-badge border border-line shrink-0">
                       {tool}
                     </span>
                   ))}
@@ -465,7 +465,7 @@ export const AdminCmsServices: React.FC = () => {
                       <p className="text-[11px] text-muted mb-2">{stage.stageDesc}</p>
                       <div className="flex flex-wrap gap-1">
                         {stage.deliverables?.map((d, dIdx) => (
-                          <span key={dIdx} className="text-[9px] font-sans bg-panel text-success px-1.5 py-0.5 rounded border border-line">
+                          <span key={dIdx} className="text-[9px] font-sans bg-panel text-success px-1.5 py-0.5 rounded-badge border border-line">
                             ✓ {d}
                           </span>
                         ))}

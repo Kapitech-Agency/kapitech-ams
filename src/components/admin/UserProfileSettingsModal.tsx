@@ -166,17 +166,27 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
     }
   };
 
+  const requestClose = () => {
+    if (saving || isDirty) return;
+    onClose();
+  };
+
+  const cancelChanges = () => {
+    if (saving) return;
+    onClose();
+  };
+
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={requestClose}
       closeOnOutsideClick={!isDirty && !saving}
       size="xl"
       title="Profile settings"
-      description={isDirty ? 'You have unsaved profile changes. Save them before leaving this state.' : 'Manage your visible identity and personal contact details.'}
+      description={isDirty ? 'You have unsaved changes. Save them or choose Cancel to discard them.' : 'Manage your visible identity and personal contact details.'}
       footer={(
         <>
-          <Button type="button" variant="secondary" onClick={onClose}>
+          <Button type="button" variant="secondary" onClick={cancelChanges} disabled={saving}>
             Cancel
           </Button>
           <Button

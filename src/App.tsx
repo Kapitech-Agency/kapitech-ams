@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-route
 import { MotionConfig } from 'motion/react';
 import { LanguageProvider } from './lib/LanguageContext';
 import { RequireAdminAuth } from './components/admin/RequireAdminAuth';
+import { RequireModuleAccess } from './components/admin/RequireModuleAccess';
 
 const AdminLogin = React.lazy(() =>
   import('./pages/admin/AdminLogin').then((m) => ({ default: m.AdminLogin }))
@@ -107,6 +108,16 @@ const ProtectedAdminRoutes = () => (
   </RequireAdminAuth>
 );
 
+const ModuleRoute: React.FC<{
+  moduleKey: string;
+  moduleLabel: string;
+  children: React.ReactNode;
+}> = ({ moduleKey, moduleLabel, children }) => (
+  <RequireModuleAccess moduleKey={moduleKey} moduleLabel={moduleLabel}>
+    {children}
+  </RequireModuleAccess>
+);
+
 const App = () => {
   return (
     <BrowserRouter>
@@ -122,22 +133,22 @@ const App = () => {
 
             <Route path="/admin" element={<ProtectedAdminRoutes />}>
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
-              <Route path="dashboard" element={<GlobalExecutiveDashboard />} />
+              <Route path="dashboard" element={<ModuleRoute moduleKey="dashboard" moduleLabel="the dashboard"><GlobalExecutiveDashboard /></ModuleRoute>} />
               <Route path="executive" element={<Navigate to="/admin/dashboard" replace />} />
-              <Route path="inbox" element={<AdminInbox />} />
-              <Route path="crm" element={<AdminCrm />} />
-              <Route path="proposals" element={<AdminProposals />} />
-              <Route path="invoicing" element={<AdminInvoicing />} />
-              <Route path="projects" element={<AdminProjects />} />
-              <Route path="approvals" element={<AdminApprovals />} />
-              <Route path="documents" element={<AdminDocuments />} />
-              <Route path="time-logs" element={<AdminTimeLogs />} />
-              <Route path="vendors" element={<AdminVendors />} />
-              <Route path="clients" element={<AdminClients />} />
-              <Route path="cms/projects" element={<AdminCmsProjects />} />
-              <Route path="cms/services" element={<AdminCmsServices />} />
-              <Route path="cms/testimonials" element={<AdminCmsTestimonials />} />
-              <Route path="settings" element={<AdminSettings />} />
+              <Route path="inbox" element={<ModuleRoute moduleKey="inbox" moduleLabel="the inbox"><AdminInbox /></ModuleRoute>} />
+              <Route path="crm" element={<ModuleRoute moduleKey="crm" moduleLabel="CRM"><AdminCrm /></ModuleRoute>} />
+              <Route path="proposals" element={<ModuleRoute moduleKey="proposals" moduleLabel="proposals"><AdminProposals /></ModuleRoute>} />
+              <Route path="invoicing" element={<ModuleRoute moduleKey="invoicing" moduleLabel="invoicing"><AdminInvoicing /></ModuleRoute>} />
+              <Route path="projects" element={<ModuleRoute moduleKey="projects" moduleLabel="projects"><AdminProjects /></ModuleRoute>} />
+              <Route path="approvals" element={<ModuleRoute moduleKey="approvals" moduleLabel="approvals"><AdminApprovals /></ModuleRoute>} />
+              <Route path="documents" element={<ModuleRoute moduleKey="documents" moduleLabel="documents"><AdminDocuments /></ModuleRoute>} />
+              <Route path="time-logs" element={<ModuleRoute moduleKey="timelogs" moduleLabel="time logs"><AdminTimeLogs /></ModuleRoute>} />
+              <Route path="vendors" element={<ModuleRoute moduleKey="vendors" moduleLabel="vendors"><AdminVendors /></ModuleRoute>} />
+              <Route path="clients" element={<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClients /></ModuleRoute>} />
+              <Route path="cms/projects" element={<ModuleRoute moduleKey="cms_projects" moduleLabel="case studies"><AdminCmsProjects /></ModuleRoute>} />
+              <Route path="cms/services" element={<ModuleRoute moduleKey="services" moduleLabel="the services catalog"><AdminCmsServices /></ModuleRoute>} />
+              <Route path="cms/testimonials" element={<ModuleRoute moduleKey="testimonials" moduleLabel="testimonials"><AdminCmsTestimonials /></ModuleRoute>} />
+              <Route path="settings" element={<ModuleRoute moduleKey="settings" moduleLabel="settings"><AdminSettings /></ModuleRoute>} />
             </Route>
 
             <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />

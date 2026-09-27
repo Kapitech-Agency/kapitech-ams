@@ -54,7 +54,10 @@ export const DropdownPortal: React.FC<DropdownPortalProps> = ({
   open, anchorRef, onClose, children, className = '', align = 'left', offset = 6
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
   const [style, setStyle] = useState<React.CSSProperties>({ visibility: 'hidden' });
+
+  onCloseRef.current = onClose;
 
   useLayoutEffect(() => {
     if (!open) return;
@@ -106,14 +109,15 @@ export const DropdownPortal: React.FC<DropdownPortalProps> = ({
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target as Node;
       if (!anchorRef.current?.contains(target) && !menuRef.current?.contains(target)) {
-        onClose();
+        onCloseRef.current();
       }
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
-        onClose();
+        event.stopImmediatePropagation();
+        onCloseRef.current();
       }
     };
 
@@ -136,7 +140,7 @@ export const DropdownPortal: React.FC<DropdownPortalProps> = ({
     viewport?.addEventListener('resize', updatePosition);
     viewport?.addEventListener('scroll', updatePosition);
     document.addEventListener('pointerdown', handlePointerDown, true);
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown, true);
 
     return () => {
       cancelAnimationFrame(frame);
@@ -146,9 +150,9 @@ export const DropdownPortal: React.FC<DropdownPortalProps> = ({
       viewport?.removeEventListener('resize', updatePosition);
       viewport?.removeEventListener('scroll', updatePosition);
       document.removeEventListener('pointerdown', handlePointerDown, true);
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keydown', handleKeyDown, true);
     };
-  }, [open, anchorRef, onClose, align, offset]);
+  }, [open, anchorRef, align, offset]);
 
   if (!open) return null;
 

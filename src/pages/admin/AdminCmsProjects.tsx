@@ -405,13 +405,13 @@ export const AdminCmsProjects: React.FC = () => {
                 {project.technologies.slice(0, 4).map((tech, idx) => (
                   <span
                     key={idx}
-                    className="text-[10px] font-sans px-2 py-0.5 rounded bg-panel border border-line text-muted"
+                    className="text-[10px] font-sans px-2 py-0.5 rounded-badge bg-panel border border-line text-muted"
                   >
                     {tech}
                   </span>
                 ))}
                 {project.technologies.length > 4 && (
-                  <span className="text-[10px] font-sans px-1.5 py-0.5 rounded bg-panel border border-line text-muted">
+                  <span className="text-[10px] font-sans px-1.5 py-0.5 rounded-badge bg-panel border border-line text-muted">
                     +{project.technologies.length - 4}
                   </span>
                 )}
@@ -509,7 +509,7 @@ export const AdminCmsProjects: React.FC = () => {
                     </p>
                     <div className="flex flex-wrap gap-1">
                       {editingProject.technologies.map((t, idx) => (
-                        <span key={idx} className="text-[10px] px-2 py-0.5 rounded bg-panel border border-line text-muted">
+                        <span key={idx} className="text-[10px] px-2 py-0.5 rounded-badge bg-panel border border-line text-muted">
                           {t}
                         </span>
                       ))}
@@ -741,7 +741,7 @@ export const AdminCmsProjects: React.FC = () => {
                       type="checkbox"
                       checked={editingProject.featured}
                       onChange={(e) => setEditingProject({ ...editingProject, featured: e.target.checked })}
-                      className="w-4 h-4 rounded bg-panel border-line text-danger accent-accent"
+                      className="w-4 h-4 rounded-badge bg-panel border-line text-danger accent-accent"
                     />
                     <span className="text-fg">Feature in Homepage Highlights</span>
                   </label>

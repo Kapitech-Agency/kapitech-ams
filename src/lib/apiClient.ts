@@ -31,7 +31,7 @@ const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 export async function apiRequest<T = any>(
   endpoint: string,
   options: RequestInit = {}
-): Promise<{ success: boolean; data?: T; error?: string }> {
+): Promise<{ success: boolean; data?: T; error?: string; status?: number }> {
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 15000);
   try {
@@ -66,10 +66,21 @@ export async function apiRequest<T = any>(
         localStorage.removeItem('kapitech_admin_profile_v2');
         window.dispatchEvent(new Event('kapitech_auth_state_changed'));
       }
+
+      const safeError =
+        res.status === 401
+          ? 'Your session expired. Refresh and try again.'
+          : res.status === 403
+            ? "You don't have access to this action."
+            : res.status >= 500
+              ? 'The request could not be completed right now. Try again.'
+              : json.error || 'The request could not be completed. Check your input and try again.';
+
       return {
         success: false,
         data: json as T,
-        error: json.error || `HTTP ${res.status}: ${res.statusText}`
+        error: safeError,
+        status: res.status
       };
     }
 
@@ -91,7 +102,7 @@ async function apiBinaryRequest<T = any>(
   endpoint: string,
   body: Blob,
   contentType: string = 'application/octet-stream'
-): Promise<{ success: boolean; data?: T; error?: string }> {
+): Promise<{ success: boolean; data?: T; error?: string; status?: number }> {
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 60000);
   try {
@@ -113,7 +124,15 @@ async function apiBinaryRequest<T = any>(
     const json = await res.json().catch(() => ({}));
     if (!res.ok) {
       if (res.status === 401 && typeof window !== 'undefined') clearSessionToken();
-      return { success: false, error: json.error || `HTTP ${res.status}: ${res.statusText}` };
+      const safeError =
+        res.status === 401
+          ? 'Your session expired. Refresh and try again.'
+          : res.status === 403
+            ? "You don't have access to this action."
+            : res.status >= 500
+              ? 'The upload could not be completed right now. Try again.'
+              : json.error || 'The upload could not be completed. Check the file and try again.';
+      return { success: false, error: safeError, status: res.status };
     }
     return { success: true, data: json };
   } catch (err: any) {
@@ -278,7 +297,11 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(exp)
       }),
-    deleteExpense: (id: string) => apiRequest(`/api/finance/expenses/${id}`, { method: 'DELETE' }),
+    deleteExpense: (id: string, version?: number) =>
+      apiRequest(`/api/finance/expenses/${id}`, {
+        method: 'DELETE',
+        body: version == null ? undefined : JSON.stringify({ version })
+      }),
     getMetrics: (currency?: string) => apiRequest<{ success: boolean; metrics: any }>('/api/finance/metrics' + (currency ? `?currency=${encodeURIComponent(currency)}` : ''))
   },
 

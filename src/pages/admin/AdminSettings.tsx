@@ -21,7 +21,6 @@ import {
   X,
   Key,
   Edit3,
-  Sliders,
   Shield,
   Briefcase,
   Terminal,
@@ -31,16 +30,13 @@ import {
   getAdminSession, 
   updateAdminCredentials, 
   fetchServerAuditLogs,
-  clearAuditLogs, 
   SecurityAuditLog,
   getStoredAdminCredentials,
   AdminAccount,
   AdminTier,
-  StakeholderPermissions,
   fetchAdminAccounts,
   createAdminAccount,
   deleteAdminAccount,
-    getDefaultPermissionsForRole
 } from '../../lib/adminAuth';
 import { SiteMetaSettings } from '../../lib/cmsStore';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -75,6 +71,7 @@ export const AdminSettings: React.FC = () => {
   ) as 'profile' | 'branding' | 'rbac' | 'security' | 'api' | 'audit';
 
   const [activeTab, setActiveTab] = useState<'profile' | 'branding' | 'rbac' | 'security' | 'api' | 'audit'>(initialTab);
+  const isCurrentMaster = session?.user?.stakeholderType === 'Master' || session?.user?.username === 'admin';
 
   const handleTabChange = (tab: 'profile' | 'branding' | 'rbac' | 'security' | 'api' | 'audit') => {
     if (tab === 'rbac' && !canManageAdminAccounts) return;
@@ -85,15 +82,26 @@ export const AdminSettings: React.FC = () => {
   };
 
   useEffect(() => {
-    if (paramTab) {
-      if (paramTab === 'team' || paramTab === 'rbac') setActiveTab('rbac');
-      else if (paramTab === 'audit') setActiveTab('audit');
-      else if (paramTab === 'system' || paramTab === 'branding') setActiveTab('branding');
-      else if (paramTab === 'security') setActiveTab('security');
-      else if (paramTab === 'api') setActiveTab('api');
-      else if (paramTab === 'profile') setActiveTab('profile');
-    }
-  }, [paramTab]);
+    const requestedTab =
+      paramTab === 'team' || paramTab === 'rbac' ? 'rbac' :
+      paramTab === 'audit' ? 'audit' :
+      paramTab === 'system' || paramTab === 'branding' ? 'branding' :
+      paramTab === 'security' ? 'security' :
+      paramTab === 'api' ? 'api' :
+      'profile';
+
+    const allowed =
+      requestedTab !== 'rbac' || canManageAdminAccounts
+        ? requestedTab === 'api'
+          ? canAccessServer ? requestedTab : 'profile'
+          : requestedTab === 'audit'
+            ? canViewAuditLogs ? requestedTab : 'profile'
+            : requestedTab
+        : 'profile';
+
+    if (activeTab !== allowed) setActiveTab(allowed);
+    if (paramTab && allowed !== requestedTab) setSearchParams({ tab: allowed }, { replace: true });
+  }, [paramTab, canManageAdminAccounts, canAccessServer, canViewAuditLogs, activeTab, setSearchParams]);
 
   // Security Credentials state
   const [username, setUsername] = useState(storedCreds.username);
@@ -120,9 +128,7 @@ export const AdminSettings: React.FC = () => {
   // Accounts Management state (Stakeholder Executive & Teknisi IT)
   const [accounts, setAccounts] = useState<AdminAccount[]>([]);
   const [isAddAccountModalOpen, setIsAddAccountModalOpen] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<{ type: 'account' | 'logs'; id?: string; name?: string } | null>(null);
-  const [isEditPermsModalOpen, setIsEditPermsModalOpen] = useState(false);
-  const [editingAccount, setEditingAccount] = useState<AdminAccount | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ type: 'account'; id?: string; name?: string } | null>(null);
   const [accountActionMessage, setAccountActionMessage] = useState<{ success: boolean; message: string } | null>(null);
 
   // New Account Form State
@@ -132,10 +138,6 @@ export const AdminSettings: React.FC = () => {
   const [newAccPassword, setNewAccPassword] = useState('');
   const [newAccRole, setNewAccRole] = useState<AdminTier>('Stakeholder Executive');
   const [newAccDivision, setNewAccDivision] = useState<'Management' | 'Engineering' | 'Design' | 'Finance' | 'Operations'>('Management');
-  const [newAccPermissions, setNewAccPermissions] = useState<StakeholderPermissions>(getDefaultPermissionsForRole('Stakeholder Executive'));
-
-  // Editable permissions state
-  const [tempPermissions, setTempPermissions] = useState<StakeholderPermissions>(getDefaultPermissionsForRole('Stakeholder Executive'));
 
   useEffect(() => {
     let mounted = true;
@@ -175,18 +177,15 @@ export const AdminSettings: React.FC = () => {
     setNewAccName('');
     setNewAccUsername('');
     setNewAccEmail('');
-    setNewAccPassword('kapi_' + Math.random().toString(36).substring(2, 7) + '25');
+    setNewAccPassword('Kapi_' + crypto.randomUUID().replace(/-/g, ''));
     setNewAccRole('Stakeholder Executive');
     setNewAccDivision('Management');
-    setNewAccPermissions(getDefaultPermissionsForRole('Stakeholder Executive'));
     setAccountActionMessage(null);
     setIsAddAccountModalOpen(true);
   };
 
   const handleRoleChangeForNewAccount = (role: AdminTier) => {
     setNewAccRole(role);
-    const perms = getDefaultPermissionsForRole(role);
-    setNewAccPermissions(perms);
     if (role === 'Teknisi IT / Systems Engineer' || role.includes('Internal IT')) {
       setNewAccDivision('Engineering');
     } else if (role === 'Stakeholder Executive' || role.includes('Top Management')) {
@@ -197,6 +196,14 @@ export const AdminSettings: React.FC = () => {
   const handleCreateAccountSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAccountActionMessage(null);
+
+    if (newAccPassword.length < 12) {
+      setAccountActionMessage({
+        success: false,
+        message: language === 'id' ? 'Password sementara harus 12 sampai 128 karakter.' : 'Temporary password must be 12 to 128 characters.'
+      });
+      return;
+    }
 
     const res = await createAdminAccount({
       name: newAccName,
@@ -242,30 +249,6 @@ export const AdminSettings: React.FC = () => {
   };
 
 
-  const handleOpenEditPermissions = (acc: AdminAccount) => {
-    setEditingAccount(acc);
-    setTempPermissions({ ...acc.permissions });
-    setIsEditPermsModalOpen(true);
-  };
-
-  const handleSavePermissions = async () => {
-    if (!editingAccount) return;
-    const res = await api.auth.updateUser(editingAccount.id, { permissions: tempPermissions });
-    if (res.success) {
-      refreshAccounts();
-      setIsEditPermsModalOpen(false);
-      setAccountActionMessage({
-        success: true,
-        message: language === 'id' 
-          ? `Hak akses untuk "${editingAccount.name}" berhasil diperbarui!` 
-          : `Permissions for "${editingAccount.name}" updated successfully!`
-      });
-      setTimeout(() => setAccountActionMessage(null), 4000);
-    } else {
-      setAccountActionMessage({ success: false, message: res.error || (language === 'id' ? 'Gagal memperbarui hak akses.' : 'Failed to update permissions.') });
-    }
-  };
-
   // Handle credentials update
   const handleUpdateSecurity = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -305,17 +288,15 @@ export const AdminSettings: React.FC = () => {
 
     try {
       const res = await updateAdminCredentials(currentPassword, {
-        username,
-        email,
         newPassword: newPassword || undefined
       });
 
       if (res.success) {
         setSecurityStatus({ 
           success: true, 
-          message: language === 'id' 
-            ? 'Kredensial dan password admin berhasil diperbarui dengan enkripsi aman!' 
-            : 'Admin credentials and password updated successfully with secure encryption!' 
+          message: language === 'id'
+            ? (newPassword ? 'Password admin berhasil diperbarui.' : 'Tidak ada perubahan password yang disimpan.')
+            : (newPassword ? 'Admin password updated successfully.' : 'No password change was saved.') 
         });
         setCurrentPassword('');
         setNewPassword('');
@@ -350,21 +331,6 @@ export const AdminSettings: React.FC = () => {
         : 'System settings and site metadata successfully saved!'
     );
     setTimeout(() => setMetaStatus(null), 3000);
-  };
-
-  const handleClearLogs = () => {
-    if (logs.length === 0) {
-      setAccountActionMessage({ success: false, message: language === 'id' ? 'Tidak ada audit log untuk dihapus.' : 'There are no audit logs to clear.' });
-      return;
-    }
-    setConfirmAction({ type: 'logs' });
-  };
-
-  const confirmClearLogs = () => {
-    clearAuditLogs();
-    setLogs([]);
-    setConfirmAction(null);
-    setAccountActionMessage({ success: true, message: language === 'id' ? 'Audit log berhasil dihapus.' : 'Audit logs cleared.' });
   };
 
   const handleExportLogs = () => {
@@ -505,7 +471,7 @@ export const AdminSettings: React.FC = () => {
             </div>
           )}
 
-          <form onSubmit={handleUpdateSecurity} className="space-y-4">
+          <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-sans text-muted mb-1 font-semibold">
@@ -513,10 +479,10 @@ export const AdminSettings: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  required
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-panel border border-line rounded-control text-xs text-fg focus:outline-none focus:border-accent font-sans min-h-10"
+                  readOnly
+                  aria-readonly="true"
+                  className="w-full min-h-10 rounded-control border border-line bg-bg px-3 text-xs text-muted cursor-default font-sans"
                 />
               </div>
 
@@ -526,10 +492,10 @@ export const AdminSettings: React.FC = () => {
                 </label>
                 <input
                   type="email"
-                  required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-panel border border-line rounded-control text-xs text-fg focus:outline-none focus:border-accent font-sans min-h-10"
+                  readOnly
+                  aria-readonly="true"
+                  className="w-full min-h-10 rounded-control border border-line bg-bg px-3 text-xs text-muted cursor-default font-sans"
                 />
               </div>
             </div>
@@ -549,31 +515,20 @@ export const AdminSettings: React.FC = () => {
               </div>
             </div>
 
-            <div className="pt-2 border-t border-line">
-              <label className="block text-xs font-sans text-muted mb-1 font-semibold">
-                {language === 'id' ? 'Password Saat Ini (Wajib Konfirmasi Perubahan) *' : 'Current Password (Required for confirmation) *'}
-              </label>
-              <input
-                type="password"
-                required
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder={language === 'id' ? 'Masukkan password admin saat ini...' : 'Enter your current password...'}
-                className="w-full px-3.5 py-2.5 bg-panel border border-line rounded-control text-xs text-fg focus:outline-none focus:border-accent font-sans min-h-10"
-              />
+            <div className="rounded-card border border-line bg-bg p-4">
+              <div className="flex items-start gap-3">
+                <ShieldCheck size={16} className="mt-0.5 shrink-0 text-accent-text" />
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-fg">Server-managed credentials</p>
+                  <p className="mt-1 text-[11px] leading-5 text-muted">
+                    {language === 'id'
+                      ? 'Username dan email akun Master dikelola oleh server. Perubahan password dilakukan melalui tab Security & MFA.'
+                      : 'Master username and email are server-managed. Change the password from the Security & MFA tab.'}
+                  </p>
+                </div>
+              </div>
             </div>
-
-            <div className="pt-4 flex items-center justify-end">
-              <button
-                type="submit"
-                disabled={securityLoading}
-                className="px-5 py-2.5 rounded-control bg-accent text-white text-xs font-sans font-semibold hover:bg-accent-hover transition-all flex items-center gap-2 disabled:opacity-50 min-h-10"
-              >
-                {securityLoading ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
-                <span>{language === 'id' ? 'Perbarui Akun Master' : 'Update Master Account'}</span>
-              </button>
-            </div>
-          </form>
+          </div>
         </div>
       )}
 
@@ -660,7 +615,7 @@ export const AdminSettings: React.FC = () => {
                   type="checkbox"
                   checked={metaSettings.soundEffectsEnabled}
                   onChange={(e) => setMetaSettings({ ...metaSettings, soundEffectsEnabled: e.target.checked })}
-                  className="w-4 h-4 rounded bg-panel border-line text-accent accent-accent"
+                  className="w-4 h-4 rounded-badge bg-panel border-line text-accent accent-accent"
                 />
                 <span className="text-xs text-fg font-sans">
                   {language === 'id' 
@@ -674,7 +629,7 @@ export const AdminSettings: React.FC = () => {
                   type="checkbox"
                   checked={metaSettings.enableLiveChat}
                   onChange={(e) => setMetaSettings({ ...metaSettings, enableLiveChat: e.target.checked })}
-                  className="w-4 h-4 rounded bg-panel border-line text-accent accent-accent"
+                  className="w-4 h-4 rounded-badge bg-panel border-line text-accent accent-accent"
                 />
                 <span className="text-xs text-fg font-sans">
                   {language === 'id' 
@@ -746,7 +701,7 @@ export const AdminSettings: React.FC = () => {
               {accounts.map((acc) => {
                 const isExecutive = acc.role === 'Stakeholder Executive' || acc.stakeholderType === 'Executive';
                 const isIT = acc.role === 'Teknisi IT / Systems Engineer' || acc.stakeholderType === 'IT_Technical';
-                const isMaster = acc.username === 'admin' || acc.stakeholderType === 'Master';
+                const isMasterAccount = acc.username === 'admin' || acc.stakeholderType === 'Master';
 
                 return (
                   <div 
@@ -757,7 +712,7 @@ export const AdminSettings: React.FC = () => {
                       <div className="flex items-start justify-between gap-2 mb-2.5">
                         <div className="flex items-center gap-2.5">
                           <div className={`w-9 h-9 rounded-card flex items-center justify-center font-semibold text-xs font-sans ${
-                            isMaster ? 'bg-danger/20 text-danger border border-danger/30' :
+                            isMasterAccount ? 'bg-danger/20 text-danger border border-danger/30' :
                             isExecutive ? 'bg-warning/20 text-warning border border-warning/30' :
                             isIT ? 'bg-success/20 text-success border border-success/30' :
                             'bg-series-3/20 text-series-3 border border-series-3/30'
@@ -771,7 +726,7 @@ export const AdminSettings: React.FC = () => {
                         </div>
 
                         <span className={`text-[10px] font-sans px-2 py-0.5 rounded-badge border shrink-0 ${
-                          isMaster ? 'bg-danger/10 text-danger border-danger/30' :
+                          isMasterAccount ? 'bg-danger/10 text-danger border-danger/30' :
                           isExecutive ? 'bg-warning/10 text-warning border-warning/30' :
                           isIT ? 'bg-success/10 text-success border-success/30' :
                           'bg-series-3/10 text-series-3 border-series-3/30'
@@ -800,8 +755,8 @@ export const AdminSettings: React.FC = () => {
 
                       {/* Permissions Summary Badges */}
                       <div className="mt-3 pt-3 border-t border-line flex flex-wrap gap-1">
-                        {acc.permissions?.canManageInvoicing && (
-                          <span className="text-[9px] font-sans px-1.5 py-0.5 bg-success/10 text-success border border-success/30 rounded">
+                        {acc.permissions?.canManageInvoices && (
+                          <span className="text-[9px] font-sans px-1.5 py-0.5 bg-success/10 text-success border border-success/30 rounded-badge">
                             Invoice
                           </span>
                         )}
@@ -810,13 +765,13 @@ export const AdminSettings: React.FC = () => {
                             Budget Approval
                           </span>
                         )}
-                        {acc.permissions?.canManageInfrastructure && (
+                        {acc.permissions?.canAccessServerAndApi && (
                           <span className="text-[9px] font-sans px-1.5 py-0.5 bg-info/10 text-info border border-info/30 rounded-badge">
                             DevOps / Cloud
                           </span>
                         )}
-                        {acc.permissions?.canViewAuditLogs && (
-                          <span className="text-[9px] font-sans px-1.5 py-0.5 bg-panel text-muted border border-line rounded">
+                        {acc.permissions?.canViewSecurityAuditLogs && (
+                          <span className="text-[9px] font-sans px-1.5 py-0.5 bg-panel text-muted border border-line rounded-badge">
                             Audit Logs
                           </span>
                         )}
@@ -829,27 +784,24 @@ export const AdminSettings: React.FC = () => {
                     </div>
 
                     <div className="pt-3 border-t border-line flex items-center justify-between gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleOpenEditPermissions(acc)}
-                        className="min-h-10 px-2.5 rounded-control bg-panel hover:bg-panel text-fg text-[11px] font-sans font-medium flex items-center gap-1.5 transition-colors"
-                      >
-                        <Sliders size={13} className="text-danger" />
-                        <span>{language === 'id' ? 'Atur Izin' : 'Permissions'}</span>
-                      </button>
+                      <span className="text-[10px] leading-4 text-muted">
+                        {language === 'id' ? 'Hak akses mengikuti policy role dari server.' : 'Access follows the server-managed role policy.'}
+                      </span>
 
-                      {!isMaster ? (
+                      {isCurrentMaster && !isMasterAccount ? (
                         <button
                           type="button"
                           onClick={() => handleDeleteAccountClick(acc.id, acc.name)}
-                          className="min-h-10 sm:min-h-9 px-2 rounded-control hover:bg-danger/10 text-muted hover:text-danger text-[11px] font-sans transition-colors flex items-center gap-1"
-                          title="Hapus Akun"
+                          className="min-h-10 sm:min-h-9 px-2 rounded-control border border-line bg-panel text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger text-[11px] font-medium transition-colors flex items-center gap-1"
+                          title="Delete account"
                         >
                           <Trash2 size={13} />
                           <span className="hidden sm:inline">{language === 'id' ? 'Hapus' : 'Delete'}</span>
                         </button>
                       ) : (
-                        <span className="text-[10px] font-sans text-muted italic">Root Master</span>
+                        <span className="text-[10px] font-sans text-muted italic">
+                          {isMasterAccount ? 'Root Master' : 'Master access required'}
+                        </span>
                       )}
                     </div>
                   </div>
@@ -1070,108 +1022,30 @@ export const AdminSettings: React.FC = () => {
                     required
                     value={newAccPassword}
                     onChange={(e) => setNewAccPassword(e.target.value)}
-                    placeholder="Minimal 6 karakter"
+                    minLength={12}
+                    maxLength={128}
+                    placeholder="12–128 characters"
                     className="w-full min-h-10 px-3.5 py-2.5 bg-panel border border-line rounded-control text-sm text-fg font-sans focus:outline-none focus:border-accent transition-all"
                   />
                 </div>
               </div>
 
-              {/* Granular Hak Akses Checkboxes */}
-              <div>
-                <label className="block text-xs font-sans text-muted normal-case tracking-normal mb-2 font-semibold flex items-center justify-between">
-                  <span>{language === 'id' ? 'Hak Akses Granular (RBAC Matrix)' : 'Granular Permissions Matrix'}</span>
-                  <span className="text-[10px] text-success lowercase">otomatis tersinkron dengan peran</span>
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3 bg-bg border border-line rounded-card max-h-48 overflow-y-auto custom-scrollbar">
-                  {[
-                    { key: 'canManageInvoicing', label: 'Finansial & Invoice (Buat / Hapus)' },
-                    { key: 'canViewInvoicing', label: 'Lihat Data & Laporan Keuangan' },
-                    { key: 'canApproveBudgets', label: 'Approval Anggaran & Kontrak' },
-                    { key: 'canManageCrm', label: 'CRM & Kelola Pipeline Prospek' },
-                    { key: 'canViewCrm', label: 'Lihat Data Prospek & Klien' },
-                    { key: 'canManageProjects', label: 'Manajemen Proyek & Delivery' },
-                    { key: 'canManageTasks', label: 'Sprint Kanban & Eksekusi Task' },
-                    { key: 'canManageClients', label: 'Kelola Master Data Klien' },
-                    { key: 'canManageVendors', label: 'Kelola Vendor & Mitra Pihak Ke-3' },
-                    { key: 'canAccessSystemSettings', label: 'Akses Konfigurasi Sistem AMS' },
-                    { key: 'canViewAuditLogs', label: 'Audit Trail & Log Keamanan' },
-                    { key: 'canManageInfrastructure', label: 'Server, Cloud Run, API & Diagnostik' },
-                    { key: 'canManageAdminAccounts', label: 'Manajemen Akun Internal AMS' }
-                  ].map((item) => (
-                    <label 
-                      key={item.key}
-                      className="flex items-center gap-2 p-2 rounded-control bg-panel/50 hover:bg-panel cursor-pointer text-xs font-sans transition-colors"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={!!newAccPermissions[item.key as keyof StakeholderPermissions]}
-                        onChange={(e) => setNewAccPermissions({
-                          ...newAccPermissions,
-                          [item.key]: e.target.checked
-                        })}
-                        className="w-4 h-4 rounded bg-bg border-line text-accent accent-accent"
-                      />
-                      <span className="text-fg text-[11px] truncate">{item.label}</span>
-                    </label>
-                  ))}
+              <section className="rounded-card border border-line bg-bg p-4" aria-labelledby="account-policy-note">
+                <h3 id="account-policy-note" className="text-xs font-semibold text-fg">Access policy</h3>
+                <p className="mt-1 text-[11px] leading-5 text-muted">
+                  {language === 'id'
+                    ? 'Hak akses tidak diubah satu per satu di browser. Server menerapkan permission berdasarkan role yang dipilih.'
+                    : 'Permissions are not overridden in the browser. The server applies the access policy associated with the selected role.'}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  <span className="rounded-badge border border-line bg-panel px-2 py-1 text-[10px] font-medium text-muted">{newAccRole}</span>
+                  <span className="rounded-badge border border-info/20 bg-info/10 px-2 py-1 text-[10px] font-medium text-info">
+                    {language === 'id' ? 'Server policy' : 'Server policy'}
+                  </span>
                 </div>
-              </div>
+              </section>
 
             </form>
-      </Modal>
-
-      {/* MODAL: EDIT PERMISSIONS (MOBILE FULLSCREEN + STICKY HEADER & FOOTER) */}
-      <Modal
-        open={isEditPermsModalOpen && !!editingAccount}
-        onClose={() => setIsEditPermsModalOpen(false)}
-        size="lg"
-        title={language === 'id' ? 'Atur Hak Akses Granular' : 'Manage Granular Permissions'}
-        description={editingAccount ? editingAccount.name + ' (' + editingAccount.role + ')' : undefined}
-        footer={(
-          <>
-            <Button type="button" variant="secondary" onClick={() => setIsEditPermsModalOpen(false)}>
-              {language === 'id' ? 'Batal' : 'Cancel'}
-            </Button>
-            <Button type="button" icon={<Save size={14} />} onClick={() => void handleSavePermissions()}>
-              {language === 'id' ? 'Simpan Perubahan Hak Akses' : 'Save Permissions'}
-            </Button>
-          </>
-        )}
-      >
-            <div className="space-y-2.5 custom-scrollbar">
-              {[
-                { key: 'canManageInvoicing', label: 'Finansial & Invoicing (Buat & Hapus Invoice)' },
-                { key: 'canViewInvoicing', label: 'Lihat Data & Laporan Keuangan' },
-                { key: 'canApproveBudgets', label: 'Approval Anggaran & Kontrak Eksekutif' },
-                { key: 'canManageCrm', label: 'CRM & Kelola Pipeline Leads' },
-                { key: 'canViewCrm', label: 'Lihat Data Prospek & Klien' },
-                { key: 'canManageProjects', label: 'Manajemen Proyek & Delivery' },
-                { key: 'canManageTasks', label: 'Sprint Planning & Eksekusi Tasks' },
-                { key: 'canManageClients', label: 'Kelola Master Data Klien' },
-                { key: 'canManageVendors', label: 'Kelola Vendor & Mitra Eksternal' },
-                { key: 'canAccessSystemSettings', label: 'Akses Konfigurasi Sistem AMS' },
-                { key: 'canViewAuditLogs', label: 'Audit Trail & Log Keamanan' },
-                { key: 'canManageInfrastructure', label: 'Server, Cloud Run, API & Diagnostik Sistem' },
-                { key: 'canManageAdminAccounts', label: 'Manajemen Akun Internal AMS' }
-              ].map((item) => (
-                <label 
-                  key={item.key}
-                  className="flex items-center justify-between p-3 rounded-card bg-panel border border-line hover:border-line cursor-pointer text-xs font-sans transition-colors"
-                >
-                  <span className="text-fg font-medium">{item.label}</span>
-                  <input
-                    type="checkbox"
-                    checked={!!tempPermissions[item.key as keyof StakeholderPermissions]}
-                    onChange={(e) => setTempPermissions({
-                      ...tempPermissions,
-                      [item.key]: e.target.checked
-                    })}
-                    className="w-4 h-4 rounded bg-bg border-line text-accent accent-accent"
-                  />
-                </label>
-              ))}
-            </div>
-
       </Modal>
         </div>
       )}
@@ -1241,6 +1115,7 @@ export const AdminSettings: React.FC = () => {
                   </label>
                   <input
                     type="password"
+                    required
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="••••••••"
@@ -1254,6 +1129,7 @@ export const AdminSettings: React.FC = () => {
                   </label>
                   <input
                     type="password"
+                    required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
@@ -1379,14 +1255,6 @@ export const AdminSettings: React.FC = () => {
                 <span>Export JSON</span>
               </button>
 
-              <button
-                onClick={handleClearLogs}
-                disabled={logs.length === 0}
-                className="px-3.5 py-2 rounded-control bg-panel hover:bg-danger/10 text-muted hover:text-danger border border-line hover:border-danger/30 text-xs font-sans transition-colors flex items-center gap-1.5 disabled:opacity-50 min-h-10"
-              >
-                <Trash2 size={13} />
-                <span>{language === 'id' ? 'Hapus Log' : 'Clear Logs'}</span>
-              </button>
             </div>
           </div>
 
@@ -1433,8 +1301,8 @@ export const AdminSettings: React.FC = () => {
         open={!!confirmAction}
         onClose={() => setConfirmAction(null)}
         size="sm"
-        title={confirmAction?.type === 'account' ? (language === 'id' ? 'Hapus akun stakeholder?' : 'Delete stakeholder account?') : (language === 'id' ? 'Hapus audit log?' : 'Clear audit logs?')}
-        description={confirmAction?.type === 'account' ? (language === 'id' ? `Akun ${confirmAction.name || ''} akan dihapus secara permanen.` : `Account ${confirmAction.name || ''} will be permanently deleted.`) : (language === 'id' ? 'Seluruh riwayat audit log keamanan akan dihapus.' : 'All security audit log history will be cleared.')}
+        title={language === 'id' ? 'Hapus akun stakeholder?' : 'Delete stakeholder account?'}
+        description={language === 'id' ? `Akun ${confirmAction?.name || ''} akan dihapus secara permanen.` : `Account ${confirmAction?.name || ''} will be permanently deleted.`}
         footer={(
           <>
             <Button type="button" variant="secondary" onClick={() => setConfirmAction(null)}>
@@ -1443,11 +1311,9 @@ export const AdminSettings: React.FC = () => {
             <Button
               type="button"
               variant="destructive"
-              onClick={() => confirmAction?.type === 'account' && confirmAction.id
+              onClick={() => confirmAction?.id
                 ? void confirmDeleteAccount(confirmAction.id, confirmAction.name || '')
-                : confirmAction?.type === 'logs'
-                  ? void confirmClearLogs()
-                  : undefined}
+                : undefined}
             >
               {language === 'id' ? 'Hapus' : 'Delete'}
             </Button>
@@ -1455,9 +1321,7 @@ export const AdminSettings: React.FC = () => {
         )}
       >
         <div className="rounded-card border border-danger/20 bg-danger/5 p-3.5 text-xs text-muted">
-          {confirmAction?.type === 'account'
-            ? (language === 'id' ? 'Tindakan ini tidak dapat dibatalkan.' : 'This action cannot be undone.')
-            : (language === 'id' ? 'Pastikan audit trail tidak lagi dibutuhkan sebelum melanjutkan.' : 'Make sure the audit trail is no longer needed before continuing.')}
+          {language === 'id' ? 'Tindakan ini tidak dapat dibatalkan.' : 'This action cannot be undone.'}
         </div>
       </Modal>
 

@@ -332,14 +332,14 @@ export const AdminCrm: React.FC = () => {
   const getPriorityBadge = (priority: CrmPriority) => {
     switch (priority) {
       case 'urgent':
-        return <span className="px-2 py-0.5 rounded bg-danger/10 text-danger border border-danger/30 text-[9px] font-sans font-semibold normal-case">Urgent</span>;
+        return <span className="px-2 py-0.5 rounded-badge bg-danger/10 text-danger border border-danger/30 text-[9px] font-sans font-semibold normal-case">Urgent</span>;
       case 'high':
-        return <span className="px-2 py-0.5 rounded bg-warning/10 text-warning border border-warning/30 text-[9px] font-sans font-semibold normal-case">High</span>;
+        return <span className="px-2 py-0.5 rounded-badge bg-warning/10 text-warning border border-warning/30 text-[9px] font-sans font-semibold normal-case">High</span>;
       case 'medium':
         return <span className="px-2 py-0.5 rounded-badge bg-info/10 text-info border border-info/30 text-[9px] font-sans font-semibold normal-case">Medium</span>;
       case 'low':
       default:
-        return <span className="px-2 py-0.5 rounded bg-panel-hover text-muted border border-line text-[9px] font-sans font-semibold normal-case">Low</span>;
+        return <span className="px-2 py-0.5 rounded-badge bg-panel-hover text-muted border border-line text-[9px] font-sans font-semibold normal-case">Low</span>;
     }
   };
 
@@ -617,7 +617,7 @@ export const AdminCrm: React.FC = () => {
                         <h3 className="text-xs font-semibold font-sans text-fg truncate">
                           {language === 'id' ? stageDef.labelId : stageDef.label}
                         </h3>
-                        <span className="text-[10px] font-sans px-1.5 py-0.2 rounded bg-panel text-muted border border-line shrink-0">
+                        <span className="text-[10px] font-sans px-1.5 py-0.2 rounded-badge bg-panel text-muted border border-line shrink-0">
                           {stageLeads.length}
                         </span>
                       </div>
@@ -658,7 +658,7 @@ export const AdminCrm: React.FC = () => {
                           >
                             {/* Top Card Info */}
                             <div className="flex items-start justify-between gap-2 mb-2">
-                              <span className={`text-[9px] font-sans px-2 py-0.5 rounded border font-semibold truncate max-w-[130px] ${getPillarColor(lead.servicePillar)}`}>
+                              <span className={`text-[9px] font-sans px-2 py-0.5 rounded-badge border font-semibold truncate max-w-[130px] ${getPillarColor(lead.servicePillar)}`}>
                                 {lead.servicePillar}
                               </span>
                               <div className="flex items-center gap-1">
@@ -714,7 +714,7 @@ export const AdminCrm: React.FC = () => {
                                   </button>
                                 )}
                                 {lead.stage === 'lost' && (
-                                  <span className="text-[10px] font-sans text-muted px-2 py-1 rounded bg-panel border border-line whitespace-nowrap">
+                                  <span className="text-[10px] font-sans text-muted px-2 py-1 rounded-badge bg-panel border border-line whitespace-nowrap">
                                     Closed Lost
                                   </span>
                                 )}
@@ -789,7 +789,7 @@ export const AdminCrm: React.FC = () => {
                     </span>
                     {getPriorityBadge(lead.priority)}
                     {lead.source && (
-                      <span className="text-[10px] font-sans text-muted bg-panel px-2 py-0.5 rounded border border-line">
+                      <span className="text-[10px] font-sans text-muted bg-panel px-2 py-0.5 rounded-badge border border-line">
                         {lead.source}
                       </span>
                     )}
@@ -894,7 +894,7 @@ export const AdminCrm: React.FC = () => {
                         </td>
 
                         <td className="py-3 px-4">
-                          <span className={`text-[10px] font-sans px-2 py-0.5 rounded border font-semibold ${getPillarColor(lead.servicePillar)}`}>
+                          <span className={`text-[10px] font-sans px-2 py-0.5 rounded-badge border font-semibold ${getPillarColor(lead.servicePillar)}`}>
                             {lead.servicePillar}
                           </span>
                         </td>
@@ -904,7 +904,7 @@ export const AdminCrm: React.FC = () => {
                         </td>
 
                         <td className="py-3 px-4">
-                          <span className="px-2 py-0.5 rounded bg-panel border border-line text-[11px] text-fg">
+                          <span className="px-2 py-0.5 rounded-badge bg-panel border border-line text-[11px] text-fg">
                             {language === 'id'
                               ? (CRM_STAGE_DEFINITIONS.find(s => s.key === lead.stage)?.labelId || lead.stage)
                               : (CRM_STAGE_DEFINITIONS.find(s => s.key === lead.stage)?.label || lead.stage)}
@@ -1069,8 +1069,7 @@ export const AdminCrm: React.FC = () => {
                   />
                   <button
                     type="submit"
-                    disabled={!canManageCrm}
-                    className="min-h-10 px-3.5 py-2 rounded-control bg-accent hover:bg-accent text-fg text-xs font-sans font-semibold transition-colors flex items-center gap-1 shrink-0 min-h-10"
+                    disabled={!canManageCrm} className="px-3.5 py-2 min-h-10 rounded-control bg-accent hover:bg-accent text-fg text-xs font-sans font-semibold transition-colors flex items-center gap-1 shrink-0"
                   >
                     <Plus size={13} />
                     <span>{language === 'id' ? 'Catat' : 'Log'}</span>

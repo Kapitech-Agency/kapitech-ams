@@ -19,6 +19,8 @@ import {
   Loader2
 } from 'lucide-react';
 import { useLanguage } from '../../lib/LanguageContext';
+import { getAdminSession } from '../../lib/adminAuth';
+import { useRbacRole } from '../../lib/rbacEngine';
 import { api } from '../../lib/apiClient';
 import { Modal } from '../ui/Modal';
 import Button from '../ui/Button';
@@ -44,11 +46,20 @@ interface QuickAction {
   icon: React.ComponentType<{ size?: number; className?: string }>;
   shortcut: string;
   action: () => void;
+  moduleKey?: string;
 }
 
 export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose }) => {
   const { language } = useLanguage();
   const navigate = useNavigate();
+  const session = getAdminSession();
+  const { isAllowed } = useRbacRole(
+    session?.user?.stakeholderType,
+    session?.user?.division,
+    session?.user?.role,
+    session?.user?.permissions
+  );
+  const searchRequestId = useRef(0);
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -68,24 +79,27 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
 
   useEffect(() => {
     if (!query.trim()) {
+      searchRequestId.current += 1;
       setSearchResults([]);
       setIsSearching(false);
       return;
     }
 
+    const requestId = ++searchRequestId.current;
     const timer = window.setTimeout(async () => {
       setIsSearching(true);
       try {
         const res = await api.search.query(query);
+        if (requestId !== searchRequestId.current) return;
         if (res.success && res.data?.results) {
           setSearchResults(res.data.results as SearchResult[]);
         } else {
           setSearchResults([]);
         }
       } catch {
-        setSearchResults([]);
+        if (requestId === searchRequestId.current) setSearchResults([]);
       } finally {
-        setIsSearching(false);
+        if (requestId === searchRequestId.current) setIsSearching(false);
       }
     }, 200);
 
@@ -103,6 +117,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       category: language === 'id' ? 'Navigasi' : 'Navigation',
       icon: LayoutDashboard,
       shortcut: 'G D',
+      moduleKey: 'dashboard',
       action: () => { navigate('/admin/dashboard'); onClose(); }
     },
     {
@@ -111,6 +126,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       category: language === 'id' ? 'Navigasi' : 'Navigation',
       icon: FileText,
       shortcut: 'G Q',
+      moduleKey: 'proposals',
       action: () => { navigate('/admin/proposals'); onClose(); }
     },
     {
@@ -119,6 +135,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       category: language === 'id' ? 'Navigasi' : 'Navigation',
       icon: Layers,
       shortcut: 'G P',
+      moduleKey: 'projects',
       action: () => { navigate('/admin/projects'); onClose(); }
     },
     {
@@ -127,6 +144,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       category: language === 'id' ? 'Navigasi' : 'Navigation',
       icon: Briefcase,
       shortcut: 'G C',
+      moduleKey: 'crm',
       action: () => { navigate('/admin/crm'); onClose(); }
     },
     {
@@ -135,6 +153,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       category: language === 'id' ? 'Navigasi' : 'Navigation',
       icon: Receipt,
       shortcut: 'G I',
+      moduleKey: 'invoicing',
       action: () => { navigate('/admin/invoicing'); onClose(); }
     },
     {
@@ -143,6 +162,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       category: language === 'id' ? 'Navigasi' : 'Navigation',
       icon: Users,
       shortcut: 'G U',
+      moduleKey: 'clients',
       action: () => { navigate('/admin/clients'); onClose(); }
     },
     {
@@ -151,6 +171,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       category: language === 'id' ? 'Navigasi' : 'Navigation',
       icon: ShieldCheck,
       shortcut: 'G A',
+      moduleKey: 'approvals',
       action: () => { navigate('/admin/approvals'); onClose(); }
     },
     {
@@ -159,6 +180,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       category: language === 'id' ? 'Navigasi' : 'System',
       icon: FolderOpen,
       shortcut: 'G V',
+      moduleKey: 'documents',
       action: () => { navigate('/admin/documents'); onClose(); }
     },
     {
@@ -167,6 +189,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       category: language === 'id' ? 'Navigasi' : 'Navigation',
       icon: Inbox,
       shortcut: 'G M',
+      moduleKey: 'inbox',
       action: () => { navigate('/admin/inbox'); onClose(); }
     },
     {
@@ -175,14 +198,18 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       category: language === 'id' ? 'Sistem' : 'System',
       icon: Settings,
       shortcut: 'G S',
+      moduleKey: 'settings',
       action: () => { navigate('/admin/settings'); onClose(); }
     }
   ];
 
-  const filteredActions = quickActions.filter((item) =>
-    item.title.toLowerCase().includes(query.toLowerCase()) ||
-    item.category.toLowerCase().includes(query.toLowerCase())
-  );
+  const filteredActions = quickActions.filter((item) => {
+    if (item.moduleKey && !isAllowed(item.moduleKey)) return false;
+    return (
+      item.title.toLowerCase().includes(query.toLowerCase()) ||
+      item.category.toLowerCase().includes(query.toLowerCase())
+    );
+  });
 
   const selectableItems = [
     ...searchResults.map((result) => ({ kind: 'result' as const, result })),
@@ -367,7 +394,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
 
           <div>
             <div className="mb-2 mt-5 flex items-center justify-between px-1">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">
+              <span className="text-[11px] font-medium text-muted">
                 {language === 'id' ? 'Navigasi & perintah' : 'Navigation & commands'}
               </span>
             </div>

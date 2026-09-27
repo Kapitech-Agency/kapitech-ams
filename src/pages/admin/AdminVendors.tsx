@@ -791,7 +791,7 @@ export const AdminVendors: React.FC = () => {
                   type="checkbox"
                   checked={formIsVetted}
                   onChange={e => setFormIsVetted(e.target.checked)}
-                  className="w-4 h-4 rounded bg-panel border-line text-accent focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                  className="w-4 h-4 rounded-badge bg-panel border-line text-accent focus:ring-0 focus:ring-offset-0 cursor-pointer"
                 />
               </div>
 

@@ -653,11 +653,11 @@ export const AdminProposals: React.FC = () => {
           <div className="space-y-3 p-4 sm:p-5">
             {[0, 1, 2, 3, 4].map((row) => (
               <div key={row} className="grid animate-pulse grid-cols-1 gap-3 border-b border-line py-3 last:border-b-0 sm:grid-cols-[minmax(0,2fr)_minmax(130px,1fr)_140px_120px_110px_80px]">
-                <div className="space-y-2"><div className="h-3 w-2/3 rounded bg-line" /><div className="h-3 w-1/3 rounded bg-line" /></div>
-                <div className="h-3 w-2/3 rounded bg-line" />
-                <div className="h-3 w-2/3 rounded bg-line" />
+                <div className="space-y-2"><div className="h-3 w-2/3 rounded-badge bg-line" /><div className="h-3 w-1/3 rounded-badge bg-line" /></div>
+                <div className="h-3 w-2/3 rounded-badge bg-line" />
+                <div className="h-3 w-2/3 rounded-badge bg-line" />
                 <div className="h-6 w-20 rounded-badge bg-line" />
-                <div className="h-3 w-20 rounded bg-line" />
+                <div className="h-3 w-20 rounded-badge bg-line" />
                 <div className="h-8 w-16 rounded-control bg-line" />
               </div>
             ))}

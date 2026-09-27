@@ -8,6 +8,7 @@ interface InvoiceStatusDropdownProps {
   onChange: (status: InvoiceStatus) => void;
   disabled?: boolean;
   size?: 'sm' | 'md';
+  allowedStatuses?: InvoiceStatus[];
 }
 
 interface StatusConfig {
@@ -49,19 +50,24 @@ const statusConfigs: Record<InvoiceStatus, StatusConfig> = {
   }
 };
 
-const statuses: InvoiceStatus[] = ['paid', 'partially_paid', 'sent', 'overdue', 'draft', 'cancelled'];
+const statuses: InvoiceStatus[] = ['draft', 'sent', 'overdue', 'partially_paid', 'paid', 'cancelled'];
 
 export const InvoiceStatusDropdown: React.FC<InvoiceStatusDropdownProps> = ({
   status,
   onChange,
   disabled = false,
-  size = 'sm'
+  size = 'sm',
+  allowedStatuses
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listboxId = useId();
 
+  const selectableStatuses = allowedStatuses?.length
+    ? statuses.filter((item) => allowedStatuses.includes(item))
+    : statuses;
+  const interactionDisabled = disabled || selectableStatuses.length === 0 || (selectableStatuses.length === 1 && selectableStatuses[0] === status);
   const current = statusConfigs[status] || statusConfigs.draft;
   const CurrentIcon = current.icon;
 
@@ -74,19 +80,19 @@ export const InvoiceStatusDropdown: React.FC<InvoiceStatusDropdownProps> = ({
     <div className="relative inline-block text-left">
       <button
         type="button"
-        disabled={disabled}
+        disabled={interactionDisabled}
         onClick={() => {
-          if (disabled) return;
-          setActiveIndex(Math.max(0, statuses.indexOf(status)));
+          if (disabled || selectableStatuses.length === 0) return;
+          setActiveIndex(Math.max(0, selectableStatuses.indexOf(status)));
           setIsOpen((open) => !open);
         }}
         onKeyDown={(e) => {
-          if (disabled) return;
+          if (interactionDisabled) return;
 
           if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
             e.preventDefault();
             const delta = e.key === 'ArrowDown' ? 1 : -1;
-            const nextIndex = (activeIndex + delta + statuses.length) % statuses.length;
+            const nextIndex = (activeIndex + delta + selectableStatuses.length) % selectableStatuses.length;
             setActiveIndex(nextIndex);
             setIsOpen(true);
             return;
@@ -94,7 +100,7 @@ export const InvoiceStatusDropdown: React.FC<InvoiceStatusDropdownProps> = ({
 
           if (e.key === 'Home' || e.key === 'End') {
             e.preventDefault();
-            setActiveIndex(e.key === 'Home' ? 0 : statuses.length - 1);
+            setActiveIndex(e.key === 'Home' ? 0 : selectableStatuses.length - 1);
             setIsOpen(true);
             return;
           }
@@ -102,13 +108,13 @@ export const InvoiceStatusDropdown: React.FC<InvoiceStatusDropdownProps> = ({
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             if (isOpen) {
-              const nextStatus = statuses[activeIndex];
+              const nextStatus = selectableStatuses[activeIndex];
               if (nextStatus) {
                 onChange(nextStatus);
                 setIsOpen(false);
               }
             } else {
-              setActiveIndex(Math.max(0, statuses.indexOf(status)));
+              setActiveIndex(Math.max(0, selectableStatuses.indexOf(status)));
               setIsOpen(true);
             }
             return;
@@ -116,6 +122,7 @@ export const InvoiceStatusDropdown: React.FC<InvoiceStatusDropdownProps> = ({
 
           if (e.key === 'Escape') {
             e.preventDefault();
+            e.stopPropagation();
             setIsOpen(false);
             return;
           }
@@ -128,11 +135,12 @@ export const InvoiceStatusDropdown: React.FC<InvoiceStatusDropdownProps> = ({
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-controls={isOpen ? listboxId : undefined}
+        aria-activedescendant={isOpen && selectableStatuses[activeIndex] ? listboxId + '-option-' + activeIndex : undefined}
         className={`flex items-center justify-between gap-2 rounded-badge font-sans text-xs font-semibold border transition-colors duration-150 select-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 ${
           size === 'sm' ? 'min-h-10 sm:min-h-7 px-2.5 py-1 text-[11px]' : 'min-h-10 sm:min-h-8 px-3 py-1.5 text-xs'
         } ${current.badgeClass} ${
           isOpen ? 'outline outline-2 outline-accent outline-offset-2' : ''
-        } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+        } ${interactionDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
       >
         <span className="flex items-center gap-1.5 min-w-0">
           <CurrentIcon size={12} className="shrink-0" />
@@ -154,7 +162,7 @@ export const InvoiceStatusDropdown: React.FC<InvoiceStatusDropdownProps> = ({
         className="ams-popover-surface min-w-[150px] max-w-[calc(100vw-16px)] max-h-[min(320px,calc(100dvh-16px))] overflow-y-auto overscroll-contain p-1 font-sans text-xs"
       >
         <div id={listboxId} role="listbox" aria-label="Invoice status" className="space-y-0.5">
-          {statuses.map((item) => {
+          {selectableStatuses.map((item) => {
             const isSelected = item === status;
             const config = statusConfigs[item];
             const Icon = config.icon;
@@ -162,6 +170,7 @@ export const InvoiceStatusDropdown: React.FC<InvoiceStatusDropdownProps> = ({
             return (
               <button
                 key={item}
+                id={listboxId + '-option-' + selectableStatuses.indexOf(item)}
                 type="button"
                 role="option"
                 aria-selected={isSelected}
@@ -171,8 +180,8 @@ export const InvoiceStatusDropdown: React.FC<InvoiceStatusDropdownProps> = ({
                   triggerRef.current?.focus();
                 }}
                 data-selected={isSelected}
-                data-active={statuses.indexOf(item) === activeIndex}
-                onMouseEnter={() => setActiveIndex(statuses.indexOf(item))}
+                data-active={selectableStatuses.indexOf(item) === activeIndex}
+                onMouseEnter={() => setActiveIndex(selectableStatuses.indexOf(item))}
                 className={`ams-dropdown-item w-full flex items-center justify-between min-h-10 sm:min-h-9 px-2.5 py-2 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[-2px] ${
                   isSelected
                     ? 'bg-accent/10 text-fg font-semibold'

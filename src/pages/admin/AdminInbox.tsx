@@ -795,7 +795,7 @@ export const AdminInbox: React.FC = () => {
                           <div className="font-semibold text-fg font-sans text-sm flex items-center gap-1.5">
                             <span>{item.fullName}</span>
                             {isConverted && (
-                              <span className="text-[9px] font-sans px-1.5 py-0.2 rounded bg-success/10 text-success border border-success/30">
+                              <span className="text-[9px] font-sans px-1.5 py-0.2 rounded-badge bg-success/10 text-success border border-success/30">
                                 CRM ✓
                               </span>
                             )}
@@ -815,7 +815,7 @@ export const AdminInbox: React.FC = () => {
                           <div className="flex flex-wrap gap-1">
                             {item.services && item.services.length > 0 ? (
                               item.services.slice(0, 2).map((svc, i) => (
-                                <span key={i} className="px-1.5 py-0.5 rounded bg-panel border border-line text-[10px] text-fg">
+                                <span key={i} className="px-1.5 py-0.5 rounded-badge bg-panel border border-line text-[10px] text-fg">
                                   {svc}
                                 </span>
                               ))
@@ -1011,7 +1011,7 @@ export const AdminInbox: React.FC = () => {
                     {item.services && item.services.length > 0 && (
                       <div className="flex flex-wrap gap-1 mb-2.5">
                         {item.services.slice(0, 3).map((svc, i) => (
-                          <span key={i} className="text-[9px] font-sans px-1.5 py-0.5 rounded bg-panel border border-line text-muted">
+                          <span key={i} className="text-[9px] font-sans px-1.5 py-0.5 rounded-badge bg-panel border border-line text-muted">
                             {svc}
                           </span>
                         ))}
@@ -1257,7 +1257,7 @@ export const AdminInbox: React.FC = () => {
                         <div className="flex flex-wrap gap-1.5">
                           {selectedSubmission.services && selectedSubmission.services.length > 0 ? (
                             selectedSubmission.services.map((svc, i) => (
-                              <span key={i} className="text-[10px] font-sans px-2 py-0.5 rounded bg-panel border border-line text-fg">
+                              <span key={i} className="text-[10px] font-sans px-2 py-0.5 rounded-badge bg-panel border border-line text-fg">
                                 {svc}
                               </span>
                             ))
