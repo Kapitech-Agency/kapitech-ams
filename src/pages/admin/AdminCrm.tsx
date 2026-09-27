@@ -41,6 +41,7 @@ import { api } from '../../lib/apiClient';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import Button from '../../components/ui/Button';
 
 export const AdminCrm: React.FC = () => {
   const { language, t } = useLanguage();
@@ -1100,33 +1101,36 @@ export const AdminCrm: React.FC = () => {
             {/* Drawer Bottom Action Buttons */}
             <div className="pt-5 border-t border-line flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <button
+                <Button
+                  type="button"
+                  variant="secondary"
                   onClick={() => handleOpenEditModal(selectedLead)}
                   disabled={!canManageCrm}
-                  className="px-3.5 py-2 rounded-control bg-panel hover:bg-panel text-fg border border-line text-xs transition-colors flex items-center gap-1.5 min-h-10"
+                  icon={<Edit3 size={13} />}
                 >
-                  <Edit3 size={13} />
-                  <span>{t('admin.action.edit')}</span>
-                </button>
-                <button
+                  {t('admin.action.edit')}
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
                   onClick={() => handleDeleteLead(selectedLead.id, selectedLead.clientName)}
                   disabled={!canManageCrm}
-                  className="p-2 rounded-card bg-panel hover:bg-danger/15 text-muted hover:text-danger border border-line hover:border-danger/30 transition-colors min-h-10 min-w-[40px] flex items-center justify-center"
+                  aria-label="Delete deal"
                   title="Delete deal"
-                >
-                  <Trash2 size={15} />
-                </button>
+                  icon={<Trash2 size={15} />}
+                  className="h-10 w-10 p-0"
+                />
               </div>
 
               {selectedLead.stage === 'won' && (
-                <button
+                <Button
+                  type="button"
                   onClick={() => handleConvertToProject(selectedLead)}
                   disabled={!canManageCrm}
-                  className="px-4 py-2 rounded-control bg-accent hover:bg-accent-hover text-white font-semibold text-xs flex items-center gap-1.5 min-h-10"
+                  icon={<Layers size={13} />}
                 >
-                  <Layers size={13} />
-                  <span>{t('admin.crm.convertToProject')}</span>
-                </button>
+                  {t('admin.crm.convertToProject')}
+                </Button>
               )}
             </div>
 
@@ -1236,20 +1240,12 @@ export const AdminCrm: React.FC = () => {
               </div>
 
               <div className="pt-4 border-t border-line flex items-center justify-end gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="min-h-10 px-4 rounded-control bg-panel text-muted hover:text-fg border border-line text-xs font-sans font-medium transition-colors"
-                >
+                <Button type="button" variant="secondary" onClick={() => setIsAddModalOpen(false)}>
                   {t('admin.action.cancel')}
-                </button>
-                <button
-                  type="submit"
-                  disabled={!canManageCrm}
-                  className="min-h-10 px-5 rounded-control bg-accent text-white font-sans font-semibold text-xs hover:bg-accent transition-colors"
-                >
+                </Button>
+                <Button type="submit" disabled={!canManageCrm}>
                   {editingLead ? (language === 'id' ? 'Simpan Perubahan' : 'Update Deal') : (language === 'id' ? 'Buat Deal' : 'Save Deal')}
-                </button>
+                </Button>
               </div>
             </form>
       </Modal>
