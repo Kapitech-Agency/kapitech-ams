@@ -1069,8 +1069,7 @@ export const AdminCrm: React.FC = () => {
                   />
                   <button
                     type="submit"
-                    disabled={!canManageCrm}
-                    className="min-h-10 px-3.5 py-2 rounded-control bg-accent hover:bg-accent text-fg text-xs font-sans font-semibold transition-colors flex items-center gap-1 shrink-0 min-h-10"
+                    disabled={!canManageCrm} className="px-3.5 py-2 min-h-10 rounded-control bg-accent hover:bg-accent text-fg text-xs font-sans font-semibold transition-colors flex items-center gap-1 shrink-0"
                   >
                     <Plus size={13} />
                     <span>{language === 'id' ? 'Catat' : 'Log'}</span>
