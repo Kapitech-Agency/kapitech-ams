@@ -184,20 +184,26 @@ export const AdminLayout: React.FC = () => {
   const settingsAllowed = isAllowed('settings');
   const profileTitle = session?.user?.role || DEFAULT_PROFILE_TITLE;
 
-  // Helper to determine if link is active
+  // Helper to determine if a navigation item is active, including Stitch dashboard view query tabs.
   const isItemActive = (itemTo: string) => {
-    if (itemTo.includes('tab=')) {
-      const [path, query] = itemTo.split('?');
-      return location.pathname === path && location.search.includes(query);
+    const [path, queryString] = itemTo.split('?');
+    if (location.pathname !== path) return false;
+
+    if (queryString) {
+      const expected = new URLSearchParams(queryString);
+      const actual = new URLSearchParams(location.search);
+      return Array.from(expected.entries()).every(([key, value]) => actual.get(key) === value);
     }
-    if (itemTo === '/admin/settings') {
-      return location.pathname === '/admin/settings' && !location.search.includes('tab=rbac');
+
+    if (path === '/admin/dashboard') {
+      return !location.search;
     }
-    if (location.pathname === itemTo) return true;
-    if (itemTo !== '/admin/dashboard' && itemTo !== '/admin/settings' && location.pathname.startsWith(itemTo)) {
-      return true;
+
+    if (path === '/admin/settings') {
+      return !location.search.includes('tab=rbac');
     }
-    return false;
+
+    return true;
   };
 
   const activeNavItem = filteredNavItems.find((item) => isItemActive(item.to));
@@ -423,12 +429,7 @@ export const AdminLayout: React.FC = () => {
 
             {/* Scrollable Navigation List Filtered by Dynamic RBAC */}
             <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 space-y-4 custom-scrollbar">
-              {contentNavSections.map((section) => (
-                <div key={section.id} className="space-y-1">
-                  <div className="text-[11px] font-sans text-muted font-medium px-3 pt-1">
-                    {t(section.titleKey)}
-                  </div>
-                  {section.items.map((item) => {
+              {filteredNavItems.length ? filteredNavItems.map((item) => {
                     const Icon = item.icon;
                     const active = isItemActive(item.to);
 
@@ -455,12 +456,9 @@ export const AdminLayout: React.FC = () => {
                         )}
                       </Link>
                     );
-                  })}
-                </div>
-              ))}
-
-
-            </div>
+                ) : null}
+            </nav>
+          </div>
 
             {/* Bottom session details */}
             <div className="shrink-0 border-t border-line bg-bg px-2.5 pb-[max(10px,env(safe-area-inset-bottom))] pt-2.5">
