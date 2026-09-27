@@ -675,7 +675,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const revenueData = sampleRevenueByRange[range];
 
   return (
-    <div className="min-h-full pb-10">
+    <div className="ams-dashboard min-h-full pb-10">
       <AdminModuleHeader
         title="Agency overview"
         description="Real-time metrics, project pacing, and financial health for the agency."
