@@ -772,7 +772,6 @@ export const AdminClients: React.FC = () => {
         open={isClientModalOpen}
         onClose={() => !isSaving && setIsClientModalOpen(false)}
         size="xl"
-        fitContent
         title={editingClient ? 'Edit client' : 'Add client'}
         description={editingClient
           ? 'Update the client record and operational settings.'
