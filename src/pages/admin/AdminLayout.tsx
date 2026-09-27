@@ -331,33 +331,33 @@ export const AdminLayout: React.FC = () => {
             ))}
           </div>
         </div>
-        <div className="shrink-0 border-t border-line bg-panel p-2.5">
-          <div className="rounded-card border border-line bg-bg p-2">
+        <div className="shrink-0 border-t border-line bg-panel px-2 pb-2">
+          <div className={`flex min-h-10 items-center rounded-control border border-line bg-bg px-1.5 ${sidebarCollapsed ? 'justify-center' : 'gap-1.5'}`}>
             <button
               type="button"
               onClick={() => setProfileSettingsOpen(true)}
               aria-label="Open profile settings"
-              className="group flex min-h-11 w-full items-center gap-2.5 rounded-control px-2 py-1.5 text-left transition-[background-color,border-color] duration-150 hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              title="Profile settings"
+              className={`group flex min-h-9 min-w-0 items-center rounded-control px-1.5 py-1 text-left transition-colors duration-150 hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${sidebarCollapsed ? 'justify-center' : 'flex-1 gap-2'}`}
             >
-              <UserAvatar name={profileName} imageUrl={profileAvatarUrl} size="md" online />
+              <UserAvatar name={profileName} imageUrl={profileAvatarUrl} size="sm" online />
               {!sidebarCollapsed && (
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0">
                   <div className="truncate text-xs font-semibold text-fg">{profileName}</div>
                   <div className="mt-0.5 truncate text-[10px] text-muted">{DEFAULT_PROFILE_TITLE}</div>
                 </div>
               )}
             </button>
-            <div className={sidebarCollapsed ? 'mt-2' : 'mt-2 flex justify-end'}>
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={handleLogout}
-                aria-label="Sign out"
-                title="Sign out"
-                icon={<LogOut size={15} strokeWidth={1.9} />}
-                className="h-9 w-9 p-0"
-              />
-            </div>
+
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleLogout}
+              aria-label="Sign out"
+              title="Sign out"
+              icon={<LogOut size={14} strokeWidth={1.9} />}
+              className="h-9 w-9 shrink-0 p-0"
+            />
           </div>
         </div>
         <button
@@ -365,9 +365,9 @@ export const AdminLayout: React.FC = () => {
           onClick={() => setSidebarCollapsed(v => !v)}
           aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className="ams-sidebar-toggle group absolute right-0 top-1/2 z-50 flex h-7 w-7 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-panel text-muted transition-[background-color,border-color,color,transform] duration-150 hover:border-accent/40 hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg active:scale-95"
+          className="ams-sidebar-toggle group absolute right-0 top-1/2 z-50 flex h-8 w-8 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-control border border-line bg-panel text-muted transition-[background-color,border-color,color,transform] duration-150 hover:border-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg active:scale-[0.96]"
         >
-          {sidebarCollapsed ? <ChevronRight size={13} strokeWidth={2} /> : <ChevronLeft size={13} strokeWidth={2} />}
+          {sidebarCollapsed ? <ChevronRight size={14} strokeWidth={2} /> : <ChevronLeft size={14} strokeWidth={2} />}
         </button>
       </motion.aside>
 
@@ -549,8 +549,8 @@ export const AdminLayout: React.FC = () => {
             </div>
 
             {/* Bottom session details */}
-            <div className="shrink-0 border-t border-line bg-bg p-3.5">
-              <div className="rounded-card border border-line bg-panel p-2.5">
+            <div className="shrink-0 border-t border-line bg-bg px-2.5 pb-2.5 pt-2">
+              <div className="flex items-center gap-1.5 rounded-card border border-line bg-panel p-1.5">
                 <button
                   type="button"
                   onClick={() => {
@@ -558,7 +558,7 @@ export const AdminLayout: React.FC = () => {
                     setProfileSettingsOpen(true);
                   }}
                   aria-label="Open profile settings"
-                  className="flex min-h-11 w-full items-center gap-2.5 rounded-control px-2 py-1.5 text-left transition-colors hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  className="group flex min-h-10 min-w-0 flex-1 items-center gap-2 rounded-control px-1.5 py-1 text-left transition-colors hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 >
                   <UserAvatar name={profileName} imageUrl={profileAvatarUrl} size="sm" online />
                   <div className="min-w-0 flex-1">
@@ -566,17 +566,15 @@ export const AdminLayout: React.FC = () => {
                     <div className="mt-0.5 truncate text-[10px] text-muted">{DEFAULT_PROFILE_TITLE}</div>
                   </div>
                 </button>
-                <div className="mt-2 flex justify-end">
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    onClick={handleLogout}
-                    aria-label="Sign out"
-                    title="Sign out"
-                    icon={<LogOut size={15} />}
-                    className="h-9 w-9 p-0"
-                  />
-                </div>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleLogout}
+                  aria-label="Sign out"
+                  title="Sign out"
+                  icon={<LogOut size={14} />}
+                  className="h-9 w-9 shrink-0 p-0"
+                />
               </div>
             </div>
           </motion.div>
