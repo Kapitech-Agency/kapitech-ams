@@ -618,6 +618,7 @@ export const AdminLayout: React.FC = () => {
                   className={`flex h-10 w-10 items-center justify-center rounded-control border border-line transition-colors hover:border-accent/40 hover:bg-accent/8 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${location.pathname.startsWith('/admin/settings') ? 'bg-accent/10 text-accent-text' : 'bg-panel text-muted'}`}
                 >
                   <Settings size={16} />
+                  <span className="hidden xl:inline text-xs font-medium">Settings</span>
                 </Link>
               )}
             </div>
