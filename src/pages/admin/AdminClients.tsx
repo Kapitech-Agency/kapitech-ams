@@ -472,7 +472,60 @@ export const AdminClients: React.FC = () => {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto custom-scrollbar">
+            <div className="min-[900px]:hidden divide-y divide-line">
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, index) => (
+                  <div key={index} className="p-4">
+                    <div className="h-4 w-2/3 animate-pulse rounded-badge bg-line" />
+                    <div className="mt-2 h-3 w-1/2 animate-pulse rounded-badge bg-line" />
+                    <div className="mt-4 h-10 w-full animate-pulse rounded-control bg-line" />
+                  </div>
+                ))
+              ) : paginatedClients.length === 0 ? (
+                <div className="px-4 py-12 text-center">
+                  <Users size={20} className="mx-auto text-muted" aria-hidden="true" />
+                  <p className="mt-3 text-sm font-medium text-fg">No matching clients</p>
+                  <p className="mt-1 text-xs text-muted">Try another search or clear the active filters.</p>
+                </div>
+              ) : (
+                paginatedClients.map((client) => {
+                  const meta = statusMeta[client.status];
+                  return (
+                    <article key={client.id} className="p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <button type="button" onClick={() => setSelectedClient(client)} className="min-w-0 text-left">
+                          <h3 className="truncate text-xs font-semibold text-fg">{client.company}</h3>
+                          <p className="mt-1 truncate text-[11px] text-muted">{client.name} · {client.id}</p>
+                        </button>
+                        <span className={`shrink-0 inline-flex items-center gap-1 rounded-badge px-2 py-1 text-[10px] font-semibold ${statusClasses[meta.tone]}`}>
+                          {meta.label}
+                        </span>
+                      </div>
+                      <div className="mt-4 grid grid-cols-2 gap-2">
+                        <div className="rounded-control border border-line bg-bg p-2.5">
+                          <div className="text-[10px] text-muted">Projects</div>
+                          <div className="mt-1 text-xs font-semibold tabular-nums text-fg">{client.projectsCount}</div>
+                        </div>
+                        <div className="rounded-control border border-line bg-bg p-2.5">
+                          <div className="text-[10px] text-muted">Updated</div>
+                          <div className="mt-1 truncate text-[11px] font-medium text-fg">{formatDate(client.updatedAt, language)}</div>
+                        </div>
+                      </div>
+                      {client.email && (
+                        <a href={`mailto:${client.email}`} className="mt-3 block truncate text-[11px] text-muted hover:text-accent-text">{client.email}</a>
+                      )}
+                      <div className="mt-3 grid grid-cols-3 gap-2">
+                        <button type="button" onClick={() => setSelectedClient(client)} className="min-h-9 rounded-control border border-line bg-bg text-xs font-medium text-fg">View</button>
+                        {canManageClients && <button type="button" onClick={() => openEdit(client)} className="min-h-9 rounded-control border border-line bg-bg text-xs font-medium text-fg">Edit</button>}
+                        {canManageClients && <button type="button" onClick={() => setDeleteTarget(client)} className="min-h-9 rounded-control border border-line bg-bg text-xs font-medium text-danger">Delete</button>}
+                      </div>
+                    </article>
+                  );
+                })
+              )}
+            </div>
+
+            <div className="hidden min-[900px]:block overflow-x-auto custom-scrollbar">
               <table className="w-full min-w-[940px] text-left">
                 <thead>
                   <tr>
