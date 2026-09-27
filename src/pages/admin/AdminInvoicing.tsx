@@ -1468,6 +1468,32 @@ export const AdminInvoicing: React.FC = () => {
       </Modal>
 
       <Modal
+        open={!!discardPrompt}
+        onClose={cancelDiscardPrompt}
+        size="sm"
+        title="Discard unsaved changes?"
+        description={
+          discardPrompt === 'invoice'
+            ? 'Your invoice draft has changes that are not saved.'
+            : discardPrompt === 'expense'
+              ? 'Your expense draft has changes that are not saved.'
+              : 'Your payment draft has changes that are not saved.'
+        }
+        footer={
+          <>
+            <button type="button" onClick={cancelDiscardPrompt} className={actionClass}>Keep editing</button>
+            <button type="button" onClick={confirmDiscardPrompt} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control bg-danger px-3.5 text-xs font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+              <Trash2 size={14} />Discard changes
+            </button>
+          </>
+        }
+      >
+        <p className="text-xs leading-5 text-muted">
+          The form will close without saving. You can keep editing and return to the current draft.
+        </p>
+      </Modal>
+
+      <Modal
         open={!!confirmAction}
         onClose={() => { if (!confirmingAction) setConfirmAction(null); }}
         size="sm"
