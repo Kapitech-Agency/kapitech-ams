@@ -668,7 +668,12 @@ export const AdminInvoicing: React.FC = () => {
           (expenses.find((expense) => expense.id === confirmAction.id) as FinanceExpense | undefined)?.version
         );
     if (!result.success) {
-      showNotice('danger', result.error || 'Action could not be completed.');
+      showNotice(
+        'danger',
+        result.status === 409
+          ? (language === 'id' ? 'Data finansial berubah di server. Muat ulang sebelum mencoba lagi.' : 'This financial record changed on the server. Refresh before trying again.')
+          : (result.error || 'Action could not be completed.')
+      );
     } else {
       showNotice('success', confirmAction.type === 'invoice'
         ? (language === 'id' ? 'Invoice dibatalkan.' : 'Invoice cancelled.')
@@ -1312,12 +1317,13 @@ export const AdminInvoicing: React.FC = () => {
         size="xl"
         title={detailInvoice ? detailInvoice.invoiceNumber : 'Invoice'}
         description={detailInvoice ? detailInvoice.clientCompany : undefined}
+        dialogClassName="ams-invoice-preview-modal"
         footer={
           <button type="button" onClick={() => window.print()} className={actionClass}><Download size={14} />Print / Save PDF</button>
         }
       >
         {detailInvoice && (
-          <div className="space-y-5">
+          <div className="ams-invoice-document space-y-5">
             <div className="flex flex-col gap-4 border-b border-line pb-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <p className="text-sm font-semibold text-fg">PT Kapitech Digital Indonesia</p>
