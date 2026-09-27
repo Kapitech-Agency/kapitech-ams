@@ -23,6 +23,7 @@ import {
 import { api } from '../../lib/apiClient';
 import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import Button from '../../components/ui/Button';
 import { ProjectItem } from '../../data/projectsData';
 import { useLanguage } from '../../lib/LanguageContext';
 import { useDragToScroll } from '../../lib/useDragToScroll';
@@ -746,19 +747,8 @@ export const AdminCmsProjects: React.FC = () => {
                   </label>
 
                   <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsModalOpen(false)}
-                      className="px-4 py-2 rounded-control bg-panel text-muted hover:text-fg border border-line"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="min-h-10 px-5 py-2 rounded-control bg-accent text-white font-semibold hover:bg-accent-hover transition-all"
-                    >
-                      Save Case Study
-                    </button>
+                    <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+                    <Button type="submit">Save Case Study</Button>
                   </div>
                 </div>
 
