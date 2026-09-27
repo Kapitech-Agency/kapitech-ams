@@ -615,7 +615,7 @@ export const AdminSettings: React.FC = () => {
                   type="checkbox"
                   checked={metaSettings.soundEffectsEnabled}
                   onChange={(e) => setMetaSettings({ ...metaSettings, soundEffectsEnabled: e.target.checked })}
-                  className="w-4 h-4 rounded bg-panel border-line text-accent accent-accent"
+                  className="w-4 h-4 rounded-badge bg-panel border-line text-accent accent-accent"
                 />
                 <span className="text-xs text-fg font-sans">
                   {language === 'id' 
@@ -629,7 +629,7 @@ export const AdminSettings: React.FC = () => {
                   type="checkbox"
                   checked={metaSettings.enableLiveChat}
                   onChange={(e) => setMetaSettings({ ...metaSettings, enableLiveChat: e.target.checked })}
-                  className="w-4 h-4 rounded bg-panel border-line text-accent accent-accent"
+                  className="w-4 h-4 rounded-badge bg-panel border-line text-accent accent-accent"
                 />
                 <span className="text-xs text-fg font-sans">
                   {language === 'id' 
@@ -756,7 +756,7 @@ export const AdminSettings: React.FC = () => {
                       {/* Permissions Summary Badges */}
                       <div className="mt-3 pt-3 border-t border-line flex flex-wrap gap-1">
                         {acc.permissions?.canManageInvoices && (
-                          <span className="text-[9px] font-sans px-1.5 py-0.5 bg-success/10 text-success border border-success/30 rounded">
+                          <span className="text-[9px] font-sans px-1.5 py-0.5 bg-success/10 text-success border border-success/30 rounded-badge">
                             Invoice
                           </span>
                         )}
@@ -771,7 +771,7 @@ export const AdminSettings: React.FC = () => {
                           </span>
                         )}
                         {acc.permissions?.canViewSecurityAuditLogs && (
-                          <span className="text-[9px] font-sans px-1.5 py-0.5 bg-panel text-muted border border-line rounded">
+                          <span className="text-[9px] font-sans px-1.5 py-0.5 bg-panel text-muted border border-line rounded-badge">
                             Audit Logs
                           </span>
                         )}
