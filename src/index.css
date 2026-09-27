@@ -95,6 +95,37 @@
     overflow-x: hidden;
   }
 
+  /* AMS-native scrollbars: replace platform defaults without hiding scroll affordance. */
+  *, *::before, *::after {
+    scrollbar-width: thin;
+    scrollbar-color: var(--line) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: var(--line);
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: var(--muted);
+    background-clip: padding-box;
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
   ::selection {
     background: var(--accent);
     color: #ffffff;
