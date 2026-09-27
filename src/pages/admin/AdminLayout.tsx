@@ -642,7 +642,7 @@ export const AdminLayout: React.FC = () => {
                   <Link to="/admin/settings?tab=security" onClick={() => setProfileMenuOpen(false)} className="ams-dropdown-item flex min-h-10 items-center rounded-chip px-2.5 text-xs">
                     Security
                   </Link>
-                  <button type="button" onClick={() => { setProfileMenuOpen(false); handleLogout(); }} className="ams-dropdown-item flex min-h-10 w-full items-center rounded-chip px-2.5 text-left text-xs text-danger">
+                  <button type="button" data-danger="true" onClick={() => { setProfileMenuOpen(false); handleLogout(); }} className="ams-dropdown-item flex min-h-10 w-full items-center rounded-chip px-2.5 text-left text-xs">
                     Sign out
                   </button>
                 </DropdownPortal>
