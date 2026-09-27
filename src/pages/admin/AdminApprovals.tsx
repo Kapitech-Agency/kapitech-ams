@@ -301,7 +301,7 @@ export const AdminApprovals: React.FC = () => {
             ]}
           />
         </div>
-      </div>
+      </section>
 
       {/* Approvals List */}
       <div className="space-y-3">
