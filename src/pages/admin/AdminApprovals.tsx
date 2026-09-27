@@ -185,21 +185,25 @@ export const AdminApprovals: React.FC = () => {
       )}
 
       {/* Header */}
-      <div className="ams-page-header">
-        <h1 className="ams-page-title">
-          <Shield size={22} className="text-accent-text shrink-0" />
-          <span>{language === 'id' ? 'Pusat Persetujuan Eksekutif' : 'Executive Approvals Center'}</span>
+      <header className="ams-dashboard-header mb-6 flex flex-col gap-4 border-b border-line pb-5">
+        <h1 className="text-2xl font-semibold leading-8 tracking-[-0.02em] text-fg">
+          <span className="flex items-center gap-2"><Shield size={20} className="text-accent-text shrink-0" />{language === 'id' ? 'Pusat Persetujuan Eksekutif' : 'Executive Approvals Center'}</span>
         </h1>
-        <p className="text-xs font-sans text-muted mt-1">
+        <p className="mt-1 max-w-2xl text-xs leading-5 text-muted">
           {language === 'id' 
             ? 'Otorisasi anggaran klien, invoice berisiko tinggi, proposal komersial, dan pengeluaran operasional.' 
             : 'Multi-level executive authorization for budgets, high-value invoices, and operational expenses.'}
         </p>
-      </div>
+      </header>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className="p-4 rounded-card bg-panel border border-line space-y-1">
+      <section aria-label="Approval snapshot" className="rounded-card border border-line bg-panel p-4 sm:p-5">
+        <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
+          <div><h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan persetujuan' : 'Approval snapshot'}</h2><p className="mt-1 text-xs text-muted">{language === 'id' ? 'Permintaan dan exposure finansial yang menunggu keputusan.' : 'Decision queue and financial exposure across the approval workspace.'}</p></div>
+          <span className="text-[11px] font-medium tabular-nums text-muted">{metrics.pendingCount} pending</span>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-0">
+        <div className="min-w-0 px-4 py-3 border-r border-line">
           <div className="text-xs font-sans text-muted flex items-center justify-between">
             <span>{language === 'id' ? 'Menunggu Otorisasi' : 'Pending Authorization'}</span>
             <Clock size={13} className="text-warning" />
@@ -212,7 +216,7 @@ export const AdminApprovals: React.FC = () => {
           </div>
         </div>
 
-        <div className="p-4 rounded-card bg-panel border border-line space-y-1">
+        <div className="min-w-0 px-4 py-3 border-r border-line">
           <div className="text-xs font-sans text-muted flex items-center justify-between">
             <span>{language === 'id' ? 'Nilai Tertunda' : 'Pending Value'}</span>
             <DollarSign size={13} className="text-accent" />
@@ -225,7 +229,7 @@ export const AdminApprovals: React.FC = () => {
           </div>
         </div>
 
-        <div className="p-4 rounded-card bg-panel border border-line space-y-1">
+        <div className="min-w-0 px-4 py-3 border-r border-line">
           <div className="text-xs font-sans text-muted flex items-center justify-between">
             <span>{language === 'id' ? 'Tinggi Risiko' : 'High Risk Items'}</span>
             <AlertTriangle size={13} className="text-danger" />
@@ -238,7 +242,7 @@ export const AdminApprovals: React.FC = () => {
           </div>
         </div>
 
-        <div className="p-4 rounded-card bg-panel border border-line space-y-1">
+        <div className="min-w-0 px-4 py-3">
           <div className="text-xs font-sans text-muted flex items-center justify-between">
             <span>{language === 'id' ? 'Telah Disetujui' : 'Total Approved'}</span>
             <CheckCircle2 size={13} className="text-success" />
@@ -250,10 +254,11 @@ export const AdminApprovals: React.FC = () => {
             {language === 'id' ? 'Tercatat dalam audit trail' : 'Logged in audit trail'}
           </div>
         </div>
-      </div>
+        </div>
+      </section>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-card bg-panel border border-line">
+      <section className="rounded-card border border-line bg-panel p-4 sm:p-5">
         <div className="relative flex-1">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
           <input
@@ -261,7 +266,7 @@ export const AdminApprovals: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={language === 'id' ? 'Cari judul, pemohon, atau catatan...' : 'Search title, requester, or notes...'}
-            className="w-full h-9 pl-8 pr-3 text-xs bg-panel text-fg placeholder-muted rounded-control border border-line focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus:border-accent font-sans"
+            className="w-full h-9 min-h-9 pl-8 pr-3 text-xs bg-bg text-fg placeholder-muted rounded-control border border-line focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus:border-accent font-sans"
           />
         </div>
 
@@ -273,9 +278,9 @@ export const AdminApprovals: React.FC = () => {
                 type="button"
                 aria-pressed={statusFilter === st}
                 onClick={() => setStatusFilter(st)}
-                className={`min-h-10 sm:min-h-9 px-2.5 rounded-chip text-xs font-sans capitalize transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-[.98] ${
+                className={`h-9 min-h-9 px-2.5 rounded-chip text-xs font-sans capitalize transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
                   statusFilter === st
-                    ? 'bg-accent text-white border border-accent font-semibold'
+                    ? 'bg-line text-fg font-semibold'
                     : 'text-muted hover:bg-bg hover:text-fg'
                 }`}
               >
@@ -296,7 +301,7 @@ export const AdminApprovals: React.FC = () => {
             ]}
           />
         </div>
-      </div>
+      </section>
 
       {/* Approvals List */}
       <div className="space-y-3">
