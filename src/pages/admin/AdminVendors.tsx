@@ -427,6 +427,7 @@ export const AdminVendors: React.FC = () => {
               ]}
             />
           </div>
+        </div>
       </section>
 
       {/* Vendors Grid */}
