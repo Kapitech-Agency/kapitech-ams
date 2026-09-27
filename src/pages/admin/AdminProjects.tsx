@@ -627,7 +627,7 @@ export const AdminProjects: React.FC = () => {
         <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3"><div><h2 className="text-sm font-semibold text-fg">Delivery snapshot</h2><p className="mt-1 text-xs text-muted">Project health and delivery workload across the workspace.</p></div><span className="text-[11px] font-medium tabular-nums text-muted">{projectMetrics.total} projects</span></div>
         <div className="grid grid-cols-2 sm:grid-cols-4">
         {[
-          { label: 'Projects', value: projectMetrics.total, icon: Briefcase, tone: 'text-fg' }
+          { label: 'Projects', value: projectMetrics.total, icon: Briefcase, tone: 'text-fg' },
           { label: 'Active', value: projectMetrics.active, icon: Clock, tone: 'text-success' },
           { label: 'At risk', value: projectMetrics.atRisk, icon: ShieldAlert, tone: 'text-warning' },
           { label: 'Overdue tasks', value: projectMetrics.overdueTasks, icon: AlertCircle, tone: 'text-danger' },
