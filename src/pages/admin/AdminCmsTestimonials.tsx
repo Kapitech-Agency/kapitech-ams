@@ -189,17 +189,23 @@ export const AdminCmsTestimonials: React.FC = () => {
       )}
 
       {deleteTarget && (
-        <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} size="sm"
+        <Modal
+          open={!!deleteTarget}
+          onClose={() => !isDeleting && setDeleteTarget(null)}
+          size="sm"
           title="Delete testimonial"
-          description={`This will permanently remove the testimonial from the CMS. Review the author before confirming.`}>
+          description={`This will permanently remove the testimonial from the CMS. Review the author before confirming.`}
+          footer={(
+            <>
+              <Button type="button" variant="secondary" onClick={() => setDeleteTarget(null)} disabled={isDeleting}>Cancel</Button>
+              <Button type="button" variant="destructive" onClick={() => void handleDelete()} loading={isDeleting}>Delete</Button>
+            </>
+          )}
+        >
           <div className="space-y-4">
             <div className="rounded-control border border-danger/30 bg-danger/5 p-3">
               <p className="text-sm font-semibold text-fg">{deleteTarget.author}</p>
               <p className="mt-1 text-xs text-muted">The testimonial will no longer appear on the public site.</p>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="secondary" onClick={() => setDeleteTarget(null)} disabled={isDeleting}>Cancel</Button>
-              <Button type="button" variant="destructive" onClick={() => void handleDelete()} loading={isDeleting}>Delete</Button>
             </div>
           </div>
         </Modal>
@@ -207,9 +213,24 @@ export const AdminCmsTestimonials: React.FC = () => {
 
       {/* Modal: Add / Edit Testimonial */}
       {isModalOpen && editingItem && (
-        <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)} size="lg" title={editingItem.author ? `Edit: ${editingItem.author}` : (language === 'id' ? 'Tambah Testimoni Klien' : 'Add Client Testimonial')}>
+        <Modal
+          open={isModalOpen}
+          onClose={() => !isSaving && setIsModalOpen(false)}
+          size="lg"
+          title={editingItem.author ? `Edit: ${editingItem.author}` : (language === 'id' ? 'Tambah Testimoni Klien' : 'Add Client Testimonial')}
+          footer={(
+            <>
+              <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)} disabled={isSaving}>
+                {language === 'id' ? 'Batal' : 'Cancel'}
+              </Button>
+              <Button type="submit" form="testimonial-form" loading={isSaving}>
+                {language === 'id' ? 'Simpan Testimoni' : 'Save Testimonial'}
+              </Button>
+            </>
+          )}
+        >
           <div className="space-y-4">
-            <form onSubmit={handleSaveModal} className="space-y-4">
+            <form id="testimonial-form" onSubmit={handleSaveModal} className="space-y-4">
               <div>
                 <label className="block text-xs font-sans text-muted mb-1 font-semibold">
                   {language === 'id' ? 'Nama Klien / Eksekutif *' : 'Client / Executive Name *'}
@@ -278,10 +299,6 @@ export const AdminCmsTestimonials: React.FC = () => {
                 />
               </div>
 
-              <div className="pt-2 flex items-center justify-end gap-2">
-                <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)} disabled={isSaving}>{language === 'id' ? 'Batal' : 'Cancel'}</Button>
-                <Button type="submit" loading={isSaving}>{language === 'id' ? 'Simpan Testimoni' : 'Save Testimonial'}</Button>
-              </div>
             </form>
           </div>
         </Modal>
