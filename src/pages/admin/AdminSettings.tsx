@@ -841,7 +841,7 @@ export const AdminSettings: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleDeleteAccountClick(acc.id, acc.name)}
-                          className="h-8 px-2 rounded-control hover:bg-danger/10 text-muted hover:text-danger text-[11px] font-sans transition-colors flex items-center gap-1"
+                          className="min-h-10 sm:min-h-9 px-2 rounded-control hover:bg-danger/10 text-muted hover:text-danger text-[11px] font-sans transition-colors flex items-center gap-1"
                           title="Hapus Akun"
                         >
                           <Trash2 size={13} />
