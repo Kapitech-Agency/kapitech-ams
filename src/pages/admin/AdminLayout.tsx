@@ -506,13 +506,15 @@ export const AdminLayout: React.FC = () => {
                         key={item.to}
                         to={item.to}
                         onClick={() => setMobileMenuOpen(false)}
-                        className={`relative flex items-center justify-between px-3 py-2.5 rounded-control text-xs font-sans transition-[background-color,color,transform] duration-150 min-h-10 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-panel ${
-                          active 
-                            ? 'bg-accent/15 text-fg font-semibold ' 
-                            : 'text-muted hover:text-fg hover:bg-panel-hover'
+                        aria-current={active ? 'page' : undefined}
+                        className={`relative flex min-h-10 items-center justify-between rounded-control px-3 py-2.5 text-xs font-sans transition-[background-color,color,transform] duration-150 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-panel ${
+                          active
+                            ? 'bg-accent/15 font-semibold text-fg'
+                            : 'text-muted hover:bg-panel-hover hover:text-fg'
                         }`}
                       >
-                        <div className="flex items-center gap-3 min-w-0">
+                        {active && <span aria-hidden="true" className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-accent" />}
+                        <div className="flex min-w-0 items-center gap-3">
                           <Icon size={17} className={active ? 'text-accent-text shrink-0' : 'text-muted shrink-0'} />
                           <span className="truncate">{item.label}</span>
                         </div>
