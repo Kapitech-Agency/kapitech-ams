@@ -3,6 +3,7 @@ import { Plus, Trash2, RefreshCw, CalendarDays, Timer, ReceiptText } from 'lucid
 import { api } from '../../lib/apiClient';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Modal } from '../../components/ui/Modal';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
 
 
@@ -245,18 +246,14 @@ export const AdminTimeLogs: React.FC = () => {
           )}
         </section>
       </div>
-      <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} size="sm" title="Delete time entry" description="This removes the selected time entry from the time log.">
-        <div className="space-y-4">
-          <div className="rounded-control border border-line bg-bg p-3 text-xs text-muted">
-            <div className="font-semibold text-fg">{deleteTarget?.projectName || 'General'}</div>
-            <div className="mt-1">{deleteTarget?.taskTitle || 'General activity'} · {deleteTarget ? formatMinutes(Number(deleteTarget.durationMinutes || 0)) : ''}</div>
-          </div>
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
-            <button type="button" onClick={() => setDeleteTarget(null)} className="min-h-10 px-4 rounded-control border border-line bg-panel text-xs text-muted">Cancel</button>
-            <button type="button" onClick={() => deleteTarget && void confirmRemove(deleteTarget)} className="min-h-10 px-4 rounded-control bg-danger text-white text-xs font-semibold">Delete</button>
-          </div>
-        </div>
-      </Modal>
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title="Delete time entry"
+        description={deleteTarget ? `${deleteTarget.projectName || 'General'} · ${deleteTarget.taskTitle || 'General activity'} · ${formatMinutes(Number(deleteTarget.durationMinutes || 0))}. This entry will be removed from the time log.` : 'This entry will be removed from the time log.'}
+        confirmLabel="Delete"
+        onConfirm={() => { if (deleteTarget) void confirmRemove(deleteTarget); }}
+      />
     </div>
   );
 };
