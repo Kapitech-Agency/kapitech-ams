@@ -29,6 +29,7 @@ import { InvoiceStatusDropdown } from '../../components/ui/InvoiceStatusDropdown
 import { TrendChart } from '../../components/charts/DashboardCharts';
 import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
 import { api } from '../../lib/apiClient';
+import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 
 type SortKey = 'updated' | 'due' | 'oldest' | 'amount_high' | 'amount_low' | 'invoice';
 type Tab = 'invoices' | 'expenses';
@@ -97,6 +98,9 @@ const cardClass = 'ams-dashboard-card rounded-card border border-line bg-panel p
 const actionClass = 'inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50';
 const primaryClass = 'inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control bg-accent px-3.5 text-xs font-semibold text-white transition-colors hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50';
 const fieldClass = 'h-9 min-h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none transition-colors placeholder:text-muted focus:border-accent';
+const financeHeaderClass = 'ams-dashboard-header mb-6 flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between';
+const financeMetricGridClass = 'grid grid-cols-2 sm:grid-cols-3 min-[1100px]:grid-cols-6';
+const financeMetricItemClass = 'min-w-0 border-l border-line px-4 py-5 first:border-l-0 min-[1100px]:py-5';
 
 const statusLabel: Record<InvoiceStatus, string> = {
   draft: 'Draft',
@@ -913,45 +917,46 @@ export const AdminInvoicing: React.FC = () => {
 
   return (
     <div className="min-h-full pb-8">
-      <header className="ams-dashboard-header mb-6 flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold leading-8 tracking-[-0.02em] text-fg">{language === 'id' ? 'Keuangan &amp; Invoicing' : 'Finance &amp; Invoicing'}</h1>
-          <p className="mt-1 max-w-2xl text-xs leading-5 text-muted">
-            {language === 'id' ? 'Pantau kas masuk, piutang, pengeluaran, dan invoice dari data keuangan aktual.' : 'Monitor collected revenue, receivables, expenses, and invoices from current financial data.'}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-          <div className="inline-flex min-h-10 items-center rounded-control border border-line bg-panel p-1" aria-label="Finance currency">
-            {(['IDR', 'USD'] as CurrencyCode[]).map((item) => (
-              <button
-                key={item}
-                type="button"
-                onClick={() => setActiveCurrency(item)}
-                aria-pressed={currency === item}
-                className={'min-h-8 rounded-chip px-3 text-xs font-semibold transition-colors ' + (currency === item ? 'bg-panel text-fg' : 'text-muted hover:text-fg')}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-          <button type="button" onClick={() => void loadData(true)} disabled={refreshing} className={actionClass}>
-            <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
-            {refreshing ? (language === 'id' ? 'Memuat' : 'Refreshing') : (language === 'id' ? 'Segarkan' : 'Refresh')}
-          </button>
-          {canManageInvoices && (
-            <>
-              <button type="button" onClick={openExpenseModal} disabled={!canManageInvoices} className={actionClass}>
-                <Plus size={14} />
-                {language === 'id' ? 'Catat pengeluaran' : 'Record expense'}
-              </button>
-              <button type="button" onClick={openCreateInvoice} disabled={!canManageInvoices} className={primaryClass}>
-                <Plus size={14} />
-                {language === 'id' ? 'Buat invoice' : 'Create invoice'}
-              </button>
-            </>
-          )}
-        </div>
-      </header>
+      <AdminModuleHeader
+        className={financeHeaderClass}
+        title={language === 'id' ? 'Keuangan &amp; Invoicing' : 'Finance &amp; Invoicing'}
+        description={language === 'id'
+          ? 'Pantau kas masuk, piutang, pengeluaran, dan invoice dari data keuangan aktual.'
+          : 'Monitor collected revenue, receivables, expenses, and invoices from current financial data.'}
+        actions={(
+          <>
+            <div className="inline-flex min-h-10 items-center rounded-control border border-line bg-panel p-1" aria-label="Finance currency">
+              {(['IDR', 'USD'] as CurrencyCode[]).map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => setActiveCurrency(item)}
+                  aria-pressed={currency === item}
+                  className={'min-h-8 rounded-chip px-3 text-xs font-semibold transition-colors ' + (currency === item ? 'bg-panel text-fg' : 'text-muted hover:text-fg')}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+            <button type="button" onClick={() => void loadData(true)} disabled={refreshing} className={actionClass}>
+              <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
+              {refreshing ? (language === 'id' ? 'Memuat' : 'Refreshing') : (language === 'id' ? 'Segarkan' : 'Refresh')}
+            </button>
+            {canManageInvoices && (
+              <>
+                <button type="button" onClick={openExpenseModal} disabled={!canManageInvoices} className={actionClass}>
+                  <Plus size={14} />
+                  {language === 'id' ? 'Catat pengeluaran' : 'Record expense'}
+                </button>
+                <button type="button" onClick={openCreateInvoice} disabled={!canManageInvoices} className={primaryClass}>
+                  <Plus size={14} />
+                  {language === 'id' ? 'Buat invoice' : 'Create invoice'}
+                </button>
+              </>
+            )}
+          </>
+        )}
+      />
 
       {notice && (
         <div className="fixed right-4 top-[68px] z-[60] w-[min(420px,calc(100vw-32px))]" aria-live="polite" aria-atomic="true">
@@ -996,27 +1001,18 @@ export const AdminInvoicing: React.FC = () => {
               )}
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 min-[1100px]:grid-cols-6">
-              {[
-                { label: language === 'id' ? 'Pendapatan diterima' : 'Revenue collected', value: serverMetrics ? formatNativeAmount(serverMetrics.totalRevenueCollected, currency) : '—', context: serverMetrics ? serverMetrics.paidCount + ' paid invoices' : '—', icon: DollarSign, tone: 'text-accent-text' },
-                { label: language === 'id' ? 'Piutang' : 'Outstanding', value: serverMetrics ? formatNativeAmount(serverMetrics.totalOutstanding, currency) : '—', context: serverMetrics ? serverMetrics.overdueCount + ' overdue' : '—', icon: WalletCards, tone: 'text-warning' },
-                { label: language === 'id' ? 'Pengeluaran' : 'Expenses', value: serverMetrics ? formatNativeAmount(serverMetrics.totalExpense, currency) : '—', context: currencyExpenses.length + ' records', icon: TrendingDown, tone: 'text-series-3' },
-                { label: language === 'id' ? 'Laba operasi' : 'Operating profit', value: serverMetrics ? formatNativeAmount(serverMetrics.netProfit, currency) : '—', context: serverMetrics ? serverMetrics.profitMargin + '% margin' : '—', icon: TrendingUp, tone: serverMetrics && serverMetrics.netProfit < 0 ? 'text-danger' : 'text-success' },
-                { label: 'OpEx', value: formatNativeAmount(derivedMetrics.opExExpenses, currency), context: 'Operating expense', icon: CreditCard, tone: 'text-info' },
-                { label: 'CapEx', value: formatNativeAmount(derivedMetrics.capExExpenses, currency), context: 'Capital expense', icon: ArrowUpRight, tone: 'text-muted' }
-              ].map((metric) => {
-                const Icon = metric.icon;
-                return (
-                <div key={metric.label} className="min-w-0 border-l border-line px-4 py-5 first:border-l-0 min-[1100px]:py-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <span className="text-xs leading-4 text-muted">{metric.label}</span>
-                    <Icon size={16} className={'shrink-0 ' + metric.tone} strokeWidth={1.8} />
-                  </div>
-                  <div className="mt-3 truncate text-lg font-medium leading-7 tracking-[-0.01em] tabular-nums text-fg sm:text-xl">{metric.value}</div>
-                  <div className="mt-1 min-h-4 text-[11px] leading-4 text-muted">{metric.context}</div>
-                </div>
-                );
-              })}
+            <AdminMetricStrip
+              className={financeMetricGridClass}
+              itemClassName={financeMetricItemClass}
+              metrics={[
+                { label: language === 'id' ? 'Pendapatan diterima' : 'Revenue collected', value: serverMetrics ? formatNativeAmount(serverMetrics.totalRevenueCollected, currency) : '—', context: serverMetrics ? serverMetrics.paidCount + ' paid invoices' : '—', icon: <DollarSign size={16} strokeWidth={1.8} />, toneClassName: 'text-accent-text' },
+                { label: language === 'id' ? 'Piutang' : 'Outstanding', value: serverMetrics ? formatNativeAmount(serverMetrics.totalOutstanding, currency) : '—', context: serverMetrics ? serverMetrics.overdueCount + ' overdue' : '—', icon: <WalletCards size={16} strokeWidth={1.8} />, toneClassName: 'text-warning' },
+                { label: language === 'id' ? 'Pengeluaran' : 'Expenses', value: serverMetrics ? formatNativeAmount(serverMetrics.totalExpense, currency) : '—', context: currencyExpenses.length + ' records', icon: <TrendingDown size={16} strokeWidth={1.8} />, toneClassName: 'text-series-3' },
+                { label: language === 'id' ? 'Laba operasi' : 'Operating profit', value: serverMetrics ? formatNativeAmount(serverMetrics.netProfit, currency) : '—', context: serverMetrics ? serverMetrics.profitMargin + '% margin' : '—', icon: <TrendingUp size={16} strokeWidth={1.8} />, toneClassName: serverMetrics && serverMetrics.netProfit < 0 ? 'text-danger' : 'text-success' },
+                { label: 'OpEx', value: formatNativeAmount(derivedMetrics.opExExpenses, currency), context: 'Operating expense', icon: <CreditCard size={16} strokeWidth={1.8} />, toneClassName: 'text-info' },
+                { label: 'CapEx', value: formatNativeAmount(derivedMetrics.capExExpenses, currency), context: 'Capital expense', icon: <ArrowUpRight size={16} strokeWidth={1.8} />, toneClassName: 'text-muted' }
+              ]}
+            />
             </div>
           </section>
 
