@@ -1330,7 +1330,7 @@ export const AdminInvoicing: React.FC = () => {
               />
             </div>
             <div>
-              <label htmlFor="finance-invoice-currency" className="mb-1.5 block text-xs font-medium text-muted">Currency</label>
+              <label className="mb-1.5 block text-xs font-medium text-muted">Currency</label>
               <CustomSelect aria-label="Invoice currency" disabled={invoiceBillingLocked} value={invoiceCurrency} onChange={(value) => { setInvoiceDirty(true); setInvoiceCurrency(value as CurrencyCode); }} options={[{ value: 'IDR', label: 'IDR' }, { value: 'USD', label: 'USD' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" />
             </div>
           </div>
