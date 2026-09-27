@@ -570,7 +570,7 @@ export const AdminCmsServices: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleAddTempCapability}
-                    className="px-3 py-1.5 rounded-card bg-panel hover:bg-panel-hover border border-line text-fg text-xs font-semibold transition-colors"
+                    className="min-h-10 px-3 py-1.5 rounded-control bg-panel hover:bg-panel-hover border border-line text-fg text-xs font-semibold transition-colors"
                   >
                     Add
                   </button>
