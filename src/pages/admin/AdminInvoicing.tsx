@@ -769,7 +769,7 @@ export const AdminInvoicing: React.FC = () => {
                 type="button"
                 onClick={() => setActiveCurrency(item)}
                 aria-pressed={currency === item}
-                className={'min-h-8 rounded-chip px-3 text-xs font-semibold transition-colors ' + (currency === item ? 'bg-accent text-white' : 'text-muted hover:text-fg')}
+                className={'min-h-8 rounded-chip px-3 text-xs font-semibold transition-colors ' + (currency === item ? 'bg-panel text-fg' : 'text-muted hover:text-fg')}
               >
                 {item}
               </button>
@@ -795,9 +795,14 @@ export const AdminInvoicing: React.FC = () => {
       </header>
 
       {notice && (
-        <div className={'mb-6 flex items-start gap-2 rounded-card border px-4 py-3 text-xs ' + (notice.tone === 'success' ? 'border-success/30 bg-success/10 text-success' : 'border-danger/30 bg-danger/10 text-danger')} role="status">
-          {notice.tone === 'success' ? <Check size={15} /> : <AlertCircle size={15} />}
-          <span>{notice.message}</span>
+        <div className="fixed right-4 top-[68px] z-[60] w-[min(420px,calc(100vw-32px))]" aria-live="polite" aria-atomic="true">
+          <div className={'flex items-start gap-3 rounded-card border px-4 py-3 text-xs ' + (notice.tone === 'success' ? 'border-success/30 bg-panel text-success' : 'border-danger/30 bg-panel text-danger')} role="status">
+            <span className="mt-0.5 shrink-0">{notice.tone === 'success' ? <Check size={15} /> : <AlertCircle size={15} />}</span>
+            <span className="min-w-0 flex-1 leading-5 text-fg">{notice.message}</span>
+            <button type="button" onClick={() => setNotice(null)} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" aria-label="Dismiss notification" title="Dismiss notification">
+              <X size={14} />
+            </button>
+          </div>
         </div>
       )}
 
@@ -940,11 +945,11 @@ export const AdminInvoicing: React.FC = () => {
             <div className="rounded-card border border-line bg-panel p-4 sm:p-5">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div className="inline-flex w-fit items-center rounded-control border border-line bg-bg p-1">
-                  <button type="button" onClick={() => setTab('invoices')} className={'inline-flex min-h-10 sm:min-h-9 items-center gap-1.5 rounded-chip px-3 text-xs font-medium ' + (tab === 'invoices' ? 'bg-accent text-white' : 'text-muted hover:text-fg')}>
+                  <button type="button" onClick={() => setTab('invoices')} className={'inline-flex min-h-10 sm:min-h-9 items-center gap-1.5 rounded-chip px-3 text-xs font-medium ' + (tab === 'invoices' ? 'bg-line text-fg' : 'text-muted hover:text-fg')}>
                     <Receipt size={14} />
                     {language === 'id' ? 'Invoice' : 'Invoices'} <span className="tabular-nums opacity-80">({currencyInvoices.length})</span>
                   </button>
-                  <button type="button" onClick={() => setTab('expenses')} className={'inline-flex min-h-9 items-center gap-1.5 rounded-chip px-3 text-xs font-medium ' + (tab === 'expenses' ? 'bg-accent text-white' : 'text-muted hover:text-fg')}>
+                  <button type="button" onClick={() => setTab('expenses')} className={'inline-flex min-h-9 items-center gap-1.5 rounded-chip px-3 text-xs font-medium ' + (tab === 'expenses' ? 'bg-line text-fg' : 'text-muted hover:text-fg')}>
                     <CreditCard size={14} />
                     {language === 'id' ? 'Pengeluaran' : 'Expenses'} <span className="tabular-nums opacity-80">({currencyExpenses.length})</span>
                   </button>
@@ -1049,9 +1054,9 @@ export const AdminInvoicing: React.FC = () => {
                                   {canManageInvoices && invoice.status !== 'paid' && invoice.status !== 'cancelled' && balance > 0 && (
                                     <button type="button" onClick={() => openPayment(invoice)} className="inline-flex min-h-9 items-center gap-1 rounded-control border border-success/30 bg-success/10 px-2.5 text-[11px] font-semibold text-success hover:bg-success/15" title="Record payment"><CreditCard size={13} />Pay</button>
                                   )}
-                                  <button type="button" onClick={() => openPrintPreview(invoice)} className="inline-flex min-h-10 min-w-10 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-control border border-line bg-transparent text-muted hover:bg-bg hover:text-fg" aria-label="View invoice"><FileText size={14} /></button>
-                                  {canManageInvoices && invoice.status !== 'cancelled' && <button type="button" onClick={() => openEditInvoice(invoice)} className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-control border border-line bg-transparent text-muted hover:bg-bg hover:text-fg" aria-label="Edit invoice"><Edit3 size={14} /></button>}
-                                  {canManageInvoices && canDeleteInvoice && invoice.status !== 'cancelled' && <button type="button" onClick={() => setConfirmAction({ type: 'invoice', id: invoice.id, label: invoice.invoiceNumber })} className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-control border border-line bg-transparent text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger" aria-label="Cancel invoice"><Trash2 size={14} /></button>}
+                                  <button type="button" onClick={() => openPrintPreview(invoice)} className="inline-flex min-h-10 min-w-10 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-control border border-line bg-transparent text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" aria-label="View invoice" title="View invoice"><FileText size={14} /></button>
+                                  {canManageInvoices && invoice.status !== 'cancelled' && <button type="button" onClick={() => openEditInvoice(invoice)} className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-control border border-line bg-transparent text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" aria-label="Edit invoice" title="Edit invoice"><Edit3 size={14} /></button>}
+                                  {canManageInvoices && canDeleteInvoice && invoice.status !== 'cancelled' && <button type="button" onClick={() => setConfirmAction({ type: 'invoice', id: invoice.id, label: invoice.invoiceNumber })} className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-control border border-line bg-transparent text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" aria-label="Cancel invoice" title="Cancel invoice"><Trash2 size={14} /></button>}
                                 </div>
                               </td>
                             </tr>
@@ -1106,7 +1111,7 @@ export const AdminInvoicing: React.FC = () => {
                             <td className="px-4 py-3 text-right font-medium tabular-nums text-fg">{formatNativeAmount(expense.amount, expense.currency || currency)}</td>
                             <td className="px-4 py-3 text-muted">{expense.recordedBy}</td>
                             <td className="px-4 py-3 text-right">
-                              {canManageInvoices && <button type="button" onClick={() => setConfirmAction({ type: 'expense', id: expense.id, label: expense.description })} className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-control border border-line text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger" aria-label="Void expense"><Trash2 size={14} /></button>}
+                              {canManageInvoices && <button type="button" onClick={() => setConfirmAction({ type: 'expense', id: expense.id, label: expense.description })} className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-control border border-line text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" aria-label="Void expense" title="Void expense"><Trash2 size={14} /></button>}
                             </td>
                           </tr>
                         ))}
@@ -1142,7 +1147,7 @@ export const AdminInvoicing: React.FC = () => {
         }}
         size="xl"
         title={editingInvoice ? 'Edit invoice' : 'Create invoice'}
-        description="Save only billing information that belongs to a real client/project record."
+        description="Review billing, client, project, and payment terms before saving the invoice."
         closeOnOutsideClick={!savingInvoice && !invoiceDirty}
         footer={
           <>
@@ -1198,19 +1203,19 @@ export const AdminInvoicing: React.FC = () => {
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium text-muted">Client name *</label>
-              <input required value={clientName} onChange={(event) => setClientName(event.target.value)} className={fieldClass} />
+              <input required maxLength={160} value={clientName} onChange={(event) => setClientName(event.target.value)} className={fieldClass} />
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium text-muted">Company *</label>
-              <input required value={clientCompany} onChange={(event) => setClientCompany(event.target.value)} className={fieldClass} />
+              <input required maxLength={200} value={clientCompany} onChange={(event) => setClientCompany(event.target.value)} className={fieldClass} />
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium text-muted">Email</label>
-              <input type="email" value={clientEmail} onChange={(event) => setClientEmail(event.target.value)} className={fieldClass} />
+              <input type="email" maxLength={254} value={clientEmail} onChange={(event) => setClientEmail(event.target.value)} className={fieldClass} />
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium text-muted">Phone</label>
-              <input value={clientPhone} onChange={(event) => setClientPhone(event.target.value)} className={fieldClass} />
+              <input maxLength={40} value={clientPhone} onChange={(event) => setClientPhone(event.target.value)} className={fieldClass} />
             </div>
           </div>
 
@@ -1244,7 +1249,7 @@ export const AdminInvoicing: React.FC = () => {
               <div><label className="mb-1.5 block text-xs font-medium text-muted">Payment terms</label><input maxLength={500} value={paymentTerms} onChange={(event) => setPaymentTerms(event.target.value)} className={fieldClass} placeholder="e.g. Net 14" /></div>
               <div><label className="mb-1.5 block text-xs font-medium text-muted">Notes</label><textarea maxLength={5000} value={invoiceNotes} onChange={(event) => setInvoiceNotes(event.target.value)} rows={4} className={fieldClass + ' py-2.5'} /></div>
             </div>
-            <div className="rounded-card border border-line bg-bg p-4">
+            <div className="self-start rounded-card border border-line bg-bg p-4 lg:sticky lg:top-3">
               <div className="flex items-center justify-between"><span className="text-xs text-muted">Subtotal</span><span className="tabular-nums text-sm text-fg">{formatNativeAmount(invoiceTotals.subtotal, invoiceCurrency)}</span></div>
               <div className="mt-2 flex items-center justify-between"><span className="text-xs text-muted">Discount</span><span className="tabular-nums text-sm text-fg">- {formatNativeAmount(invoiceTotals.discountAmount, invoiceCurrency)}</span></div>
               <div className="mt-2 flex items-center justify-between"><span className="text-xs text-muted">Tax</span><span className="tabular-nums text-sm text-fg">{formatNativeAmount(invoiceTotals.taxAmount, invoiceCurrency)}</span></div>
@@ -1296,12 +1301,17 @@ export const AdminInvoicing: React.FC = () => {
         }
       >
         <form id="finance-expense-form" onSubmit={handleSaveExpense} onChange={() => setExpenseDirty(true)} className="space-y-4">
-          <div><label className="mb-1.5 block text-xs font-medium text-muted">Type</label><CustomSelect value={expenseType} onChange={(value) => { setExpenseDirty(true); setExpenseType(value as 'OpEx' | 'CapEx' | 'Rentals'); }} options={[{ value: 'OpEx', label: 'OpEx' }, { value: 'CapEx', label: 'CapEx' }, { value: 'Rentals', label: 'Rentals' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" /></div>
+          <div>
+            <div className="flex items-center justify-between gap-3">
+              <label className="mb-1.5 block text-xs font-medium text-muted">Type</label>
+              <span className="mb-1.5 rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] font-semibold text-muted">{currency}</span>
+            </div>
+            <CustomSelect value={expenseType} onChange={(value) => { setExpenseDirty(true); setExpenseType(value as 'OpEx' | 'CapEx' | 'Rentals'); }} options={[{ value: 'OpEx', label: 'OpEx' }, { value: 'CapEx', label: 'CapEx' }, { value: 'Rentals', label: 'Rentals' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" /></div>
           <div><label className="mb-1.5 block text-xs font-medium text-muted">Category</label><CustomSelect value={expenseCategory} onChange={(value) => { setExpenseDirty(true); setExpenseCategory(value as AgencyExpense['category']); }} options={['Software & Cloud','Salaries & Contractors','Office & Hardware','Office & Rentals','Marketing & Ads','Legal & Admin','CapEx Equipment'].map((value) => ({ value, label: value }))} className="w-full" triggerClassName="h-10 min-h-10 w-full" /></div>
           <div><label className="mb-1.5 block text-xs font-medium text-muted">Description *</label><input required maxLength={500} value={expenseDescription} onChange={(event) => setExpenseDescription(event.target.value)} className={fieldClass} /></div>
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="mb-1.5 block text-xs font-medium text-muted">Amount</label><input required type="number" min="0.01" max="100000000000" step="0.01" value={expenseAmount} onChange={(event) => setExpenseAmount(Number(event.target.value))} className={fieldClass} /></div>
-            <div><label className="mb-1.5 block text-xs font-medium text-muted">Date</label><input required type="date" value={expenseDate} onChange={(event) => setExpenseDate(event.target.value)} className={fieldClass} /></div>
+            <div><label className="mb-1.5 block text-xs font-medium text-muted">Amount *</label><input required type="number" min="0.01" max="100000000000" step="0.01" value={expenseAmount} onChange={(event) => setExpenseAmount(Number(event.target.value))} className={fieldClass} /></div>
+            <div><label className="mb-1.5 block text-xs font-medium text-muted">Date *</label><input required type="date" value={expenseDate} onChange={(event) => setExpenseDate(event.target.value)} className={fieldClass} /></div>
           </div>
         </form>
       </Modal>
@@ -1337,7 +1347,12 @@ export const AdminInvoicing: React.FC = () => {
               <div className="mt-2 flex justify-between gap-3 text-xs"><span className="text-muted">Already paid</span><span className="tabular-nums text-success">{formatNativeAmount(paymentInvoice.amountPaid || 0, paymentInvoice.currency)}</span></div>
               <div className="mt-3 flex justify-between gap-3 border-t border-line pt-3 text-xs font-semibold"><span className="text-fg">Remaining balance</span><span className="tabular-nums text-warning">{formatNativeAmount(paymentInvoice.balanceDue ?? (paymentInvoice.total - (paymentInvoice.amountPaid || 0)), paymentInvoice.currency)}</span></div>
             </div>
-            <div><label className="mb-1.5 block text-xs font-medium text-muted">Amount received</label><input required min="0.01" type="number" step="0.01" max={Number(paymentInvoice.balanceDue ?? (paymentInvoice.total - (paymentInvoice.amountPaid || 0)))} value={paymentAmount} onChange={(event) => setPaymentAmount(Number(event.target.value))} className={fieldClass} /></div>
+            <div>
+              <div className="flex items-center justify-between gap-3">
+                <label className="mb-1.5 block text-xs font-medium text-muted">Amount received</label>
+                <span className="mb-1.5 text-[11px] tabular-nums text-muted">Up to {formatNativeAmount(Number(paymentInvoice.balanceDue ?? (paymentInvoice.total - (paymentInvoice.amountPaid || 0))), paymentInvoice.currency)}</span>
+              </div>
+              <input required min="0.01" type="number" step="0.01" max={Number(paymentInvoice.balanceDue ?? (paymentInvoice.total - (paymentInvoice.amountPaid || 0)))} value={paymentAmount} onChange={(event) => setPaymentAmount(Number(event.target.value))} className={fieldClass} /></div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div><label className="mb-1.5 block text-xs font-medium text-muted">Payment method</label><CustomSelect value={paymentMethod} onChange={(value) => { setPaymentDirty(true); setPaymentMethod(value as typeof paymentMethod); }} options={[{ value: 'bank_transfer', label: 'Bank transfer' }, { value: 'credit_card', label: 'Credit card' }, { value: 'cash', label: 'Cash' }, { value: 'other', label: 'Other' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" /></div>
               <div><label className="mb-1.5 block text-xs font-medium text-muted">Payment date</label><input required type="date" value={paymentDate} onChange={(event) => setPaymentDate(event.target.value)} className={fieldClass} /></div>
