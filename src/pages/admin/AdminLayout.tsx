@@ -432,7 +432,7 @@ export const AdminLayout: React.FC = () => {
             onClick={() => setMobileMenuOpen(false)}
           />
 
-          <motion.div initial={{ x: -16, opacity: 0.98 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.18, ease: "easeOut" }} className="relative w-[300px] max-w-[88vw] bg-panel border-r border-line h-[100dvh] flex flex-col justify-between z-50 overflow-hidden">
+          <motion.div initial={{ x: -16, opacity: 0.98 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.18, ease: "easeOut" }} className="relative w-[300px] max-w-[86vw] bg-panel border-r border-line h-[100dvh] flex flex-col justify-between z-50 overflow-hidden">
             
             {/* Drawer Header */}
             <div className="p-3.5 border-b border-line flex items-center justify-between gap-2 bg-panel shrink-0">
@@ -464,6 +464,20 @@ export const AdminLayout: React.FC = () => {
               </button>
             </div>
 
+            <div className="shrink-0 border-b border-line bg-panel px-3 py-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setCommandPaletteOpen(true);
+                }}
+                aria-label="Search AMS"
+                className="flex min-h-10 w-full items-center gap-2.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted transition-[background-color,border-color,color] duration-150 hover:border-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              >
+                <Search size={15} className="shrink-0" />
+                <span className="min-w-0 flex-1 truncate text-left">Search</span>
+              </button>
+            </div>
 
             {/* Scrollable Navigation List Filtered by Dynamic RBAC */}
             <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 space-y-4 custom-scrollbar">
