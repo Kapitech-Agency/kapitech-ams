@@ -195,3 +195,65 @@
 }
 @media(prefers-reduced-motion:reduce){.ams-shell *,.ams-shell *::before,.ams-shell *::after{animation-duration:.01ms;animation-iteration-count:1;transition-duration:.01ms}}
 
+
+@media print {
+  html, body {
+    background: #ffffff !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .ams-invoice-preview-modal,
+  .ams-invoice-preview-modal * {
+    visibility: visible !important;
+  }
+
+  .ams-invoice-preview-modal {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #ffffff !important;
+    color: #111111 !important;
+    box-shadow: none !important;
+  }
+
+  .ams-invoice-preview-modal > header,
+  .ams-invoice-preview-modal > header button,
+  .ams-invoice-preview-modal > footer {
+    border: 0 !important;
+  }
+
+  .ams-invoice-preview-modal > header button,
+  .ams-invoice-preview-modal > footer {
+    display: none !important;
+  }
+
+  .ams-invoice-preview-modal > header {
+    padding: 0 0 16px !important;
+  }
+
+  .ams-invoice-preview-modal > div {
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  .ams-invoice-document,
+  .ams-invoice-document * {
+    color: #111111 !important;
+    background: transparent !important;
+    border-color: #cccccc !important;
+  }
+
+  .ams-invoice-document {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 24px !important;
+  }
+}
