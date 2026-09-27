@@ -98,9 +98,7 @@ const cardClass = 'ams-dashboard-card rounded-card border border-line bg-panel p
 const actionClass = 'inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50';
 const primaryClass = 'inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control bg-accent px-3.5 text-xs font-semibold text-white transition-colors hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50';
 const fieldClass = 'h-9 min-h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none transition-colors placeholder:text-muted focus:border-accent';
-const financeHeaderClass = 'ams-dashboard-header mb-6 flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between';
 const financeMetricGridClass = 'grid grid-cols-2 sm:grid-cols-3 min-[1100px]:grid-cols-6';
-const financeMetricItemClass = 'min-w-0 border-l border-line px-4 py-5 first:border-l-0 min-[1100px]:py-5';
 
 const statusLabel: Record<InvoiceStatus, string> = {
   draft: 'Draft',
@@ -918,7 +916,6 @@ export const AdminInvoicing: React.FC = () => {
   return (
     <div className="min-h-full pb-8">
       <AdminModuleHeader
-        className={financeHeaderClass}
         title={language === 'id' ? 'Keuangan & Invoicing' : 'Finance & Invoicing'}
         description={language === 'id'
           ? 'Pantau kas masuk, piutang, pengeluaran, dan invoice dari data keuangan aktual.'
@@ -1003,7 +1000,6 @@ export const AdminInvoicing: React.FC = () => {
 
             <AdminMetricStrip
               className={financeMetricGridClass}
-              itemClassName={financeMetricItemClass}
               metrics={[
                 { label: language === 'id' ? 'Pendapatan diterima' : 'Revenue collected', value: serverMetrics ? formatNativeAmount(serverMetrics.totalRevenueCollected, currency) : '—', context: serverMetrics ? serverMetrics.paidCount + ' paid invoices' : '—', icon: <DollarSign size={16} strokeWidth={1.8} />, toneClassName: 'text-accent-text' },
                 { label: language === 'id' ? 'Piutang' : 'Outstanding', value: serverMetrics ? formatNativeAmount(serverMetrics.totalOutstanding, currency) : '—', context: serverMetrics ? serverMetrics.overdueCount + ' overdue' : '—', icon: <WalletCards size={16} strokeWidth={1.8} />, toneClassName: 'text-warning' },
