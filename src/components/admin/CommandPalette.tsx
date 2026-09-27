@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search,
+  SearchX,
+  X,
   LayoutDashboard,
   Layers,
   Briefcase,
@@ -262,51 +264,68 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
     <Modal
       open={isOpen}
       onClose={onClose}
-      size="xl"
+      size="2xl"
       title={language === 'id' ? 'Pencarian AMS' : 'Search AMS'}
+      description={language === 'id' ? 'Cari data AMS atau lompat langsung ke modul kerja.' : 'Search AMS records or jump directly to a work module.'}
       initialFocusRef={inputRef}
       footer={(
-        <div className="flex w-full items-center justify-between gap-3 text-[10px] text-muted">
-          <div className="flex items-center gap-3">
-            <span>↑↓ Navigate</span>
-            <span>↵ Select</span>
-            <span>ESC Close</span>
+        <div className="flex w-full flex-wrap items-center justify-between gap-2 text-[10px] text-muted">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {['↑↓ Navigate', '↵ Select', 'ESC Close'].map((hint) => (
+              <span key={hint} className="rounded-badge border border-line bg-bg px-2 py-1">{hint}</span>
+            ))}
           </div>
-          <div className="hidden items-center gap-1 font-semibold text-accent-text sm:flex">
+          <div className="hidden items-center gap-1 rounded-badge border border-accent/20 bg-accent/6 px-2 py-1 font-semibold text-accent-text sm:flex">
             <Command size={11} />
             <span>KAPITECH AMS</span>
           </div>
         </div>
       )}
     >
-      <div className="space-y-3">
-        <div className="flex min-h-12 items-center gap-3 rounded-control border border-line bg-bg px-3">
-          {isSearching ? (
-            <Loader2 size={17} className="shrink-0 animate-spin text-accent-text" />
-          ) : (
-            <Search size={17} className="shrink-0 text-muted" />
-          )}
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={
-              language === 'id'
-                ? 'Cari deal, invoice, proyek, proposal, atau modul...'
-                : 'Search deals, invoices, projects, proposals, or modules...'
-            }
-            className="min-h-10 flex-1 border-0 bg-transparent p-0 text-sm text-fg outline-none shadow-none focus:border-0 focus:shadow-none"
-            aria-label={language === 'id' ? 'Pencarian AMS' : 'AMS search'}
-            autoComplete="off"
-          />
+      <div className="space-y-4">
+        <div className="rounded-card border border-line bg-bg p-2">
+          <div className="flex min-h-12 items-center gap-3 rounded-control border border-line bg-panel px-3">
+            {isSearching ? (
+              <Loader2 size={17} className="shrink-0 animate-spin text-accent-text" />
+            ) : (
+              <Search size={17} className="shrink-0 text-muted" />
+            )}
+            <input
+              ref={inputRef}
+              type="text"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={
+                language === 'id'
+                  ? 'Cari deal, invoice, proyek, proposal, atau modul...'
+                  : 'Search deals, invoices, projects, proposals, or modules...'
+              }
+              className="min-h-10 min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-fg outline-none shadow-none focus:border-0 focus:shadow-none"
+              aria-label={language === 'id' ? 'Pencarian AMS' : 'AMS search'}
+              autoComplete="off"
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery('')}
+                aria-label="Clear search"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control text-muted transition-colors hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              >
+                <X size={14} />
+              </button>
+            )}
+            <kbd className="hidden shrink-0 rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-semibold text-muted sm:inline-flex">⌘ K</kbd>
+          </div>
         </div>
 
-        <div className="max-h-[min(52vh,440px)] space-y-2 overflow-y-auto rounded-card border border-line bg-bg/40 p-2 custom-scrollbar" role="listbox" aria-label="Command results">
+        <div className="max-h-[min(54vh,480px)] overflow-y-auto custom-scrollbar" role="listbox" aria-label="Command results">
           {searchResults.length > 0 && (
             <div>
-              <div className="px-3 py-1.5 text-[10px] font-medium text-muted">
-                {language === 'id' ? 'Hasil pencarian database' : 'Database records'} ({searchResults.length})
+              <div className="mb-2 flex items-center justify-between px-1">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">
+                  {language === 'id' ? 'Data AMS' : 'AMS records'}
+                </span>
+                <span className="text-[10px] text-muted">{searchResults.length}</span>
               </div>
               <div className="space-y-1">
                 {searchResults.map((result, index) => {
@@ -319,9 +338,12 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
                       aria-selected={isActive}
                       onMouseEnter={() => setActiveIndex(index)}
                       onClick={() => runSelected(index)}
-                      className={`group flex w-full items-center justify-between rounded-control p-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${isActive ? 'bg-panel-hover' : 'hover:bg-panel-hover'}`}
+                      className={`group flex w-full items-center justify-between rounded-control border p-3 text-left transition-[background-color,border-color] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${isActive ? 'border-accent/20 bg-accent/6' : 'border-transparent bg-panel hover:border-line hover:bg-panel-hover'}`}
                     >
                       <div className="flex min-w-0 items-center gap-2.5">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted">
+                          <FileText size={14} />
+                        </div>
                         <span className={`shrink-0 rounded-badge border px-2 py-0.5 text-[9px] font-medium normal-case ${getBadgeColor(result.type)}`}>
                           {result.type}
                         </span>
@@ -342,15 +364,21 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
           )}
 
           <div>
-            {searchResults.length > 0 && (
-              <div className="mt-2 border-t border-line px-3 py-1.5 text-[10px] font-medium text-muted">
-                {language === 'id' ? 'Perintah & modul' : 'Commands & navigation'}
-              </div>
-            )}
+            <div className="mb-2 mt-5 flex items-center justify-between px-1">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">
+                {language === 'id' ? 'Navigasi & perintah' : 'Navigation & commands'}
+              </span>
+            </div>
 
             {filteredActions.length === 0 && searchResults.length === 0 ? (
-              <div className="p-8 text-center text-xs text-muted">
-                {language === 'id' ? 'Tidak ada hasil untuk pencarian tersebut.' : 'No commands or records match your search.'}
+              <div className="flex min-h-40 flex-col items-center justify-center rounded-card border border-dashed border-line bg-bg/40 px-6 text-center">
+                <SearchX size={20} className="text-muted" />
+                <p className="mt-3 text-xs font-medium text-fg">
+                  {language === 'id' ? 'Tidak ada hasil' : 'No results'}
+                </p>
+                <p className="mt-1 max-w-sm text-[11px] leading-5 text-muted">
+                  {language === 'id' ? 'Coba kata kunci lain atau gunakan menu navigasi.' : 'Try a different keyword or use the navigation commands.'}
+                </p>
               </div>
             ) : (
               filteredActions.map((item, index) => {
