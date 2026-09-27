@@ -751,7 +751,7 @@ export const AdminProjects: React.FC = () => {
                           <div className="flex items-center gap-2 text-xs tabular-nums"><span className="text-fg">{project.tasks.filter(task => task.status === 'done').length}/{project.tasks.length}</span>{overdue > 0 && <span className="text-danger">{overdue} overdue</span>}</div>
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <button aria-label={'Open ' + project.name} onClick={() => setSelectedProjectId(project.id)} className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg"><ChevronRight size={15} /></button>
+                          <button aria-label={'Open ' + project.name} onClick={() => setSelectedProjectId(project.id)} className="inline-flex min-h-10 min-w-10 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg"><ChevronRight size={15} /></button>
                         </td>
                       </tr>
                     );
