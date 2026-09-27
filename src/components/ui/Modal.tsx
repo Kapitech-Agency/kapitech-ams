@@ -9,7 +9,7 @@ export interface ModalProps {
   description?: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   closeOnOutsideClick?: boolean;
   labelledBy?: string;
   initialFocusRef?: React.RefObject<HTMLElement | null>;
@@ -17,7 +17,7 @@ export interface ModalProps {
   fitContent?: boolean;
 }
 
-const sizes = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg', xl: 'max-w-3xl' };
+const sizes = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg', xl: 'max-w-3xl', '2xl': 'max-w-5xl' };
 
 export const Modal: React.FC<ModalProps> = ({
   open, onClose, title, description, children, footer, size = 'md',
