@@ -1138,7 +1138,23 @@ export const AdminCrm: React.FC = () => {
       )}
 
       {/* 6. CREATE / EDIT DEAL MODAL */}
-      <Modal open={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} size="lg" title={editingLead ? (language === 'id' ? 'Edit Data Prospek' : 'Edit CRM Deal') : t('admin.crm.addDeal')} description={language === 'id' ? 'Kelola detail deal dan scope kebutuhan klien.' : 'Manage deal details and client scope.'}>
+      <Modal
+        open={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        size="lg"
+        title={editingLead ? (language === 'id' ? 'Edit Data Prospek' : 'Edit CRM Deal') : t('admin.crm.addDeal')}
+        description={language === 'id' ? 'Kelola detail deal dan scope kebutuhan klien.' : 'Manage deal details and client scope.'}
+        footer={(
+          <>
+            <Button type="button" variant="secondary" onClick={() => setIsAddModalOpen(false)}>
+              {t('admin.action.cancel')}
+            </Button>
+            <Button type="submit" form="crm-deal-form" disabled={!canManageCrm}>
+              {editingLead ? (language === 'id' ? 'Simpan Perubahan' : 'Update Deal') : (language === 'id' ? 'Buat Deal' : 'Save Deal')}
+            </Button>
+          </>
+        )}
+      >
             <form onSubmit={handleSaveLead} className="space-y-4 text-xs font-sans">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -1238,14 +1254,6 @@ export const AdminCrm: React.FC = () => {
                 />
               </div>
 
-              <div className="pt-4 border-t border-line flex items-center justify-end gap-2.5">
-                <Button type="button" variant="secondary" onClick={() => setIsAddModalOpen(false)}>
-                  {t('admin.action.cancel')}
-                </Button>
-                <Button type="submit" disabled={!canManageCrm}>
-                  {editingLead ? (language === 'id' ? 'Simpan Perubahan' : 'Update Deal') : (language === 'id' ? 'Buat Deal' : 'Save Deal')}
-                </Button>
-              </div>
             </form>
       </Modal>
 
