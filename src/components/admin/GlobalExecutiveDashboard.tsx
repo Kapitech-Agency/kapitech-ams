@@ -218,7 +218,7 @@ const TasksView: React.FC = () => {
           </div>
         </div>
 
-        <div className="md:hidden divide-y divide-line">
+        <div className="min-[900px]:hidden divide-y divide-line">
           {filteredTasks.map((item) => (
             <article key={item.id} className="p-4">
               <div className="flex items-start justify-between gap-3">
@@ -262,7 +262,7 @@ const TasksView: React.FC = () => {
           )}
         </div>
 
-        <div className="hidden md:block overflow-x-auto custom-scrollbar">
+        <div className="hidden min-[900px]:block overflow-x-auto custom-scrollbar">
           <table className="w-full min-w-[840px] border-collapse text-left">
             <thead>
               <tr>
@@ -706,7 +706,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         )}
       />
 
-      <div className="md:hidden mb-4 -mt-2">
+      <div className="min-[900px]:hidden mb-4 -mt-2">
         <nav aria-label="Dashboard view" className="flex w-full items-center gap-1 overflow-x-auto rounded-control bg-panel border border-line p-1 custom-scrollbar">
           {[
             { key: 'overview', label: 'Overview', search: '' },
@@ -808,7 +808,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               ))}
             </div>
           </div>
-          <div className="md:hidden divide-y divide-line">
+          <div className="min-[900px]:hidden divide-y divide-line">
             {filteredProjects.map((project) => (
               <article key={project.id} className="p-4">
                 <div className="flex items-start justify-between gap-3">
@@ -853,7 +853,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             ))}
           </div>
 
-          <div className="hidden md:block overflow-x-auto custom-scrollbar">
+          <div className="hidden min-[900px]:block overflow-x-auto custom-scrollbar">
             <table className="w-full min-w-[760px] border-collapse text-left">
               <thead><tr>
                 <th className="px-4 py-3 text-xs font-medium text-muted sm:px-5">Project / client</th>
