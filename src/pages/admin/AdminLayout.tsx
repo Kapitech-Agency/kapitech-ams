@@ -332,7 +332,6 @@ export const AdminLayout: React.FC = () => {
                         aria-current={active ? 'page' : undefined}
                         className={`group relative flex min-h-10 items-center rounded-control text-[13px] font-medium transition-[background-color,color,transform] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-panel ${sidebarCollapsed ? 'mx-auto h-10 w-10 justify-center px-0' : 'gap-2.5 px-2.5'} ${active ? 'bg-accent/14 text-fg' : 'text-muted hover:bg-panel-hover hover:text-fg'}`}
                       >
-                        {active && <span aria-hidden="true" className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-accent" />}
                         <Icon size={16} strokeWidth={active ? 2.1 : 1.8} className={`shrink-0 transition-colors duration-150 ${active ? 'text-accent-text' : 'text-muted group-hover:text-fg'}`} />
                         {!sidebarCollapsed && <span className="min-w-0 truncate">{item.label}</span>}
                         {!sidebarCollapsed && item.badge !== null && item.badge !== undefined && <span className="ml-auto shrink-0 rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] font-semibold text-muted">{item.badge}</span>}
@@ -353,7 +352,6 @@ export const AdminLayout: React.FC = () => {
               aria-current={location.pathname.startsWith('/admin/settings') ? 'page' : undefined}
               className={`group relative mb-1 flex min-h-10 items-center rounded-control text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${sidebarCollapsed ? 'mx-auto h-10 w-10 justify-center px-0' : 'gap-2.5 px-2.5'} ${location.pathname.startsWith('/admin/settings') ? 'bg-accent/14 text-fg' : 'text-muted hover:bg-panel-hover hover:text-fg'}`}
             >
-              {location.pathname.startsWith('/admin/settings') && <span aria-hidden="true" className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-accent" />}
               <Settings size={16} strokeWidth={location.pathname.startsWith('/admin/settings') ? 2.1 : 1.8} className={`shrink-0 ${location.pathname.startsWith('/admin/settings') ? 'text-accent-text' : 'text-muted group-hover:text-fg'}`} />
               {!sidebarCollapsed && <span>Settings</span>}
             </Link>
