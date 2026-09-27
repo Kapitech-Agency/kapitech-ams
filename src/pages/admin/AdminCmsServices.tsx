@@ -601,7 +601,7 @@ export const AdminCmsServices: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-semibold transition-all"
+                  className="min-h-10 px-5 py-2 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-semibold transition-all"
                 >
                   Publish Service
                 </button>
