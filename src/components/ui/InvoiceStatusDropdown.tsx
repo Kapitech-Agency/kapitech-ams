@@ -122,6 +122,7 @@ export const InvoiceStatusDropdown: React.FC<InvoiceStatusDropdownProps> = ({
 
           if (e.key === 'Escape') {
             e.preventDefault();
+            e.stopPropagation();
             setIsOpen(false);
             return;
           }
