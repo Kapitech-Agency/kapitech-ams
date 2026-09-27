@@ -297,8 +297,9 @@ export const AdminLayout: React.FC = () => {
             type="button"
             onClick={() => setCommandPaletteOpen(true)}
             aria-label="Search AMS"
+            title="Search AMS"
             aria-keyshortcuts="Control+K Meta+K"
-            className={`group flex min-h-10 w-full items-center rounded-control border border-line bg-panel text-muted transition-colors duration-150 hover:border-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${sidebarCollapsed ? 'justify-center px-0' : 'gap-2.5 px-2.5'}`}
+            className={`group flex min-h-10 w-full items-center rounded-control border border-line bg-bg text-muted transition-colors duration-150 hover:border-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${sidebarCollapsed ? 'justify-center px-0' : 'gap-2.5 px-2.5'}`}
           >
             <Search size={16} className="shrink-0" />
             {!sidebarCollapsed && (
