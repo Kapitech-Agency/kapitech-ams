@@ -320,7 +320,7 @@ export const AdminClients: React.FC = () => {
       <button
         type="button"
         onClick={() => toggleSort(sort)}
-        className="inline-flex min-h-8 items-center gap-1.5 rounded-control text-left text-xs font-medium text-muted hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        className="inline-flex min-h-10 sm:min-h-9 items-center gap-1.5 rounded-control text-left text-xs font-medium text-muted hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         aria-label={active ? `Sort by ${label}, ${sortDirection === 'asc' ? 'ascending' : 'descending'}` : `Sort by ${label}`}
       >
         <span>{label}</span>
@@ -436,7 +436,7 @@ export const AdminClients: React.FC = () => {
                   type="button"
                   onClick={() => setSearchQuery('')}
                   aria-label="Clear search"
-                  className="absolute right-1.5 top-1/2 flex min-h-8 min-w-8 -translate-y-1/2 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg"
+                  className="absolute right-1.5 top-1/2 flex min-h-10 min-w-10 -translate-y-1/2 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg"
                 >
                   <X size={14} aria-hidden="true" />
                 </button>
