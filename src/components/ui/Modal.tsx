@@ -26,7 +26,12 @@ export const Modal: React.FC<ModalProps> = ({
 }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
+  const initialFocusRefRef = useRef(initialFocusRef);
   const instanceId = useId();
+
+  onCloseRef.current = onClose;
+  initialFocusRefRef.current = initialFocusRef;
   const titleId = labelledBy ?? `ams-modal-title-${instanceId}`;
   const descriptionId = `${titleId}-description`;
 
@@ -35,12 +40,28 @@ export const Modal: React.FC<ModalProps> = ({
     triggerRef.current = document.activeElement as HTMLElement | null;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+
     const focusables = (): HTMLElement[] => dialogRef.current
       ? (Array.from(dialogRef.current.querySelectorAll('button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[href],[tabindex="0"]')) as HTMLElement[]).filter(el => el.getClientRects().length > 0)
       : [];
-    requestAnimationFrame(() => (initialFocusRef?.current ?? focusables()[0] ?? dialogRef.current)?.focus());
+
+    const getInitialFocus = () => {
+      const dialog = dialogRef.current;
+      if (!dialog) return null;
+      return initialFocusRefRef.current?.current
+        ?? dialog.querySelector<HTMLElement>('input:not([disabled]),textarea:not([disabled]),select:not([disabled])')
+        ?? focusables()[0]
+        ?? dialog;
+    };
+
+    requestAnimationFrame(() => getInitialFocus()?.focus());
+
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { e.preventDefault(); onClose(); return; }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onCloseRef.current();
+        return;
+      }
       if (e.key !== 'Tab') return;
       const items = focusables();
       if (!items.length) return;
@@ -48,13 +69,14 @@ export const Modal: React.FC<ModalProps> = ({
       if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     };
+
     document.addEventListener('keydown', onKey);
     return () => {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener('keydown', onKey);
       triggerRef.current?.focus?.();
     };
-  }, [open, onClose, initialFocusRef]);
+  }, [open]);
 
   if (!open) return null;
   return (
