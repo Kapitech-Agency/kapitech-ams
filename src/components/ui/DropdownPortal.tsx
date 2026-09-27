@@ -140,7 +140,7 @@ export const DropdownPortal: React.FC<DropdownPortalProps> = ({
     viewport?.addEventListener('resize', updatePosition);
     viewport?.addEventListener('scroll', updatePosition);
     document.addEventListener('pointerdown', handlePointerDown, true);
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown, true);
 
     return () => {
       cancelAnimationFrame(frame);
@@ -150,7 +150,7 @@ export const DropdownPortal: React.FC<DropdownPortalProps> = ({
       viewport?.removeEventListener('resize', updatePosition);
       viewport?.removeEventListener('scroll', updatePosition);
       document.removeEventListener('pointerdown', handlePointerDown, true);
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keydown', handleKeyDown, true);
     };
   }, [open, anchorRef, align, offset]);
 
