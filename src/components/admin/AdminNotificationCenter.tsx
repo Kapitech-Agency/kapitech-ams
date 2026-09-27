@@ -49,6 +49,7 @@ export const AdminNotificationCenter: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [usingSampleData, setUsingSampleData] = useState(false);
   const [markingAllRead, setMarkingAllRead] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -94,15 +95,20 @@ export const AdminNotificationCenter: React.FC = () => {
   const markRead = async (id: string) => {
     const now = new Date().toISOString();
     setItems(prev => prev.map(item => item.id === id ? { ...item, isRead: true, readAt: now } : item));
-    if (usingSampleData) return;
+    if (usingSampleData) {
+      setActionMessage(null);
+      return;
+    }
 
     try {
       const res = await api.notifications.markRead(id);
       if (!res.success) {
-        setError(language === 'id' ? 'Status dibaca disimpan sementara di sesi ini.' : 'Read state is being kept locally for this session.');
+        setActionMessage(language === 'id' ? 'Status dibaca disimpan sementara di sesi ini.' : 'Read state is being kept locally for this session.');
+      } else {
+        setActionMessage(null);
       }
     } catch {
-      setError(language === 'id' ? 'Status dibaca disimpan sementara di sesi ini.' : 'Read state is being kept locally for this session.');
+      setActionMessage(language === 'id' ? 'Status dibaca disimpan sementara di sesi ini.' : 'Read state is being kept locally for this session.');
     }
   };
 
@@ -120,12 +126,12 @@ export const AdminNotificationCenter: React.FC = () => {
     try {
       const res = await api.notifications.markAllRead();
       if (!res.success) {
-        setError(language === 'id' ? 'Status baca disimpan sementara di sesi ini.' : 'Read state is being kept locally for this session.');
+        setActionMessage(language === 'id' ? 'Status baca disimpan sementara di sesi ini.' : 'Read state is being kept locally for this session.');
       } else {
-        setError(null);
+        setActionMessage(null);
       }
     } catch {
-      setError(language === 'id' ? 'Status baca disimpan sementara di sesi ini.' : 'Read state is being kept locally for this session.');
+      setActionMessage(language === 'id' ? 'Status baca disimpan sementara di sesi ini.' : 'Read state is being kept locally for this session.');
     } finally {
       setMarkingAllRead(false);
     }
@@ -187,6 +193,11 @@ export const AdminNotificationCenter: React.FC = () => {
               </Button>
             )}
           </div>
+          {actionMessage && (
+            <div role="status" className="border-b border-line bg-warning/5 px-4 py-2.5 text-[11px] leading-5 text-warning">
+              {actionMessage}
+            </div>
+          )}
           <div className="ams-notification-list max-h-[min(60vh,460px)] overflow-y-auto overscroll-contain custom-scrollbar">
             {error ? (
               <div className="px-4 py-10 text-center" role="status">
