@@ -1130,7 +1130,14 @@ export const AdminInvoicing: React.FC = () => {
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="sm:col-span-2">
               <label className="mb-1.5 block text-xs font-medium text-muted">Invoice number</label>
-              <input value={invoiceNumber} onChange={(event) => setInvoiceNumber(event.target.value)} className={fieldClass} placeholder="Leave blank to generate automatically" />
+              <input
+                value={invoiceNumber}
+                onChange={(event) => setInvoiceNumber(event.target.value)}
+                readOnly={Boolean(editingInvoice)}
+                maxLength={80}
+                className={fieldClass + (editingInvoice ? ' cursor-default text-muted' : '')}
+                placeholder="Generated automatically"
+              />
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium text-muted">Currency</label>
@@ -1180,14 +1187,14 @@ export const AdminInvoicing: React.FC = () => {
           <section className="rounded-card border border-line bg-panel">
             <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
               <div><h3 className="text-sm font-semibold text-fg">Line items</h3><p className="mt-1 text-[11px] text-muted">Totals are calculated from the existing finance utility.</p></div>
-              <button type="button" onClick={() => setInvoiceItems((items) => [...items, emptyLineItem()])} className={actionClass}><Plus size={13} />Add item</button>
+              <button type="button" onClick={() => setInvoiceItems((items) => items.length >= 100 ? items : [...items, emptyLineItem()])} disabled={invoiceItems.length >= 100} className={actionClass}><Plus size={13} />Add item</button>
             </div>
             <div className="space-y-3 p-4">
               {invoiceItems.map((item, index) => (
                 <div key={item.id} className="grid gap-3 rounded-control border border-line bg-bg p-3 sm:grid-cols-[minmax(0,1fr)_90px_150px_40px]">
-                  <div><label className="mb-1.5 block text-[11px] text-muted">Description *</label><input required value={item.description} onChange={(event) => updateLineItem(index, { description: event.target.value })} className={fieldClass} /></div>
-                  <div><label className="mb-1.5 block text-[11px] text-muted">Qty</label><input type="number" min="0" step="1" value={item.quantity} onChange={(event) => updateLineItem(index, { quantity: Number(event.target.value) })} className={fieldClass} /></div>
-                  <div><label className="mb-1.5 block text-[11px] text-muted">Unit price</label><input type="number" min="0" step="1" value={item.unitPrice} onChange={(event) => updateLineItem(index, { unitPrice: Number(event.target.value) })} className={fieldClass} /></div>
+                  <div><label className="mb-1.5 block text-[11px] text-muted">Description *</label><input required maxLength={500} value={item.description} onChange={(event) => updateLineItem(index, { description: event.target.value })} className={fieldClass} /></div>
+                  <div><label className="mb-1.5 block text-[11px] text-muted">Qty</label><input type="number" min="0.01" max="100000" step="0.01" value={item.quantity} onChange={(event) => updateLineItem(index, { quantity: Number(event.target.value) })} className={fieldClass} /></div>
+                  <div><label className="mb-1.5 block text-[11px] text-muted">Unit price</label><input type="number" min="0" max="10000000000" step="0.01" value={item.unitPrice} onChange={(event) => updateLineItem(index, { unitPrice: Number(event.target.value) })} className={fieldClass} /></div>
                   <div className="flex items-end"><button type="button" disabled={invoiceItems.length === 1} onClick={() => setInvoiceItems((items) => items.filter((_, itemIndex) => itemIndex !== index))} className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-control border border-line text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger disabled:opacity-40" aria-label="Remove line item"><Trash2 size={14} /></button></div>
                 </div>
               ))}
@@ -1204,8 +1211,8 @@ export const AdminInvoicing: React.FC = () => {
                 <div><label className="mb-1.5 block text-xs font-medium text-muted">Issue date</label><input type="date" value={issueDate} onChange={(event) => setIssueDate(event.target.value)} className={fieldClass} /></div>
                 <div><label className="mb-1.5 block text-xs font-medium text-muted">Due date</label><input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} className={fieldClass} /></div>
               </div>
-              <div><label className="mb-1.5 block text-xs font-medium text-muted">Payment terms</label><input value={paymentTerms} onChange={(event) => setPaymentTerms(event.target.value)} className={fieldClass} placeholder="e.g. Net 14" /></div>
-              <div><label className="mb-1.5 block text-xs font-medium text-muted">Notes</label><textarea value={invoiceNotes} onChange={(event) => setInvoiceNotes(event.target.value)} rows={4} className={fieldClass + ' py-2.5'} /></div>
+              <div><label className="mb-1.5 block text-xs font-medium text-muted">Payment terms</label><input maxLength={500} value={paymentTerms} onChange={(event) => setPaymentTerms(event.target.value)} className={fieldClass} placeholder="e.g. Net 14" /></div>
+              <div><label className="mb-1.5 block text-xs font-medium text-muted">Notes</label><textarea maxLength={5000} value={invoiceNotes} onChange={(event) => setInvoiceNotes(event.target.value)} rows={4} className={fieldClass + ' py-2.5'} /></div>
             </div>
             <div className="rounded-card border border-line bg-bg p-4">
               <div className="flex items-center justify-between"><span className="text-xs text-muted">Subtotal</span><span className="tabular-nums text-sm text-fg">{formatNativeAmount(invoiceTotals.subtotal, invoiceCurrency)}</span></div>
@@ -1251,9 +1258,9 @@ export const AdminInvoicing: React.FC = () => {
         <form id="finance-expense-form" onSubmit={handleSaveExpense} className="space-y-4">
           <div><label className="mb-1.5 block text-xs font-medium text-muted">Type</label><CustomSelect value={expenseType} onChange={(value) => setExpenseType(value as 'OpEx' | 'CapEx' | 'Rentals')} options={[{ value: 'OpEx', label: 'OpEx' }, { value: 'CapEx', label: 'CapEx' }, { value: 'Rentals', label: 'Rentals' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" /></div>
           <div><label className="mb-1.5 block text-xs font-medium text-muted">Category</label><CustomSelect value={expenseCategory} onChange={(value) => setExpenseCategory(value as AgencyExpense['category'])} options={['Software & Cloud','Salaries & Contractors','Office & Hardware','Office & Rentals','Marketing & Ads','Legal & Admin','CapEx Equipment'].map((value) => ({ value, label: value }))} className="w-full" triggerClassName="h-10 min-h-10 w-full" /></div>
-          <div><label className="mb-1.5 block text-xs font-medium text-muted">Description *</label><input required value={expenseDescription} onChange={(event) => setExpenseDescription(event.target.value)} className={fieldClass} /></div>
+          <div><label className="mb-1.5 block text-xs font-medium text-muted">Description *</label><input required maxLength={500} value={expenseDescription} onChange={(event) => setExpenseDescription(event.target.value)} className={fieldClass} /></div>
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="mb-1.5 block text-xs font-medium text-muted">Amount</label><input required type="number" min="0.01" step="0.01" value={expenseAmount} onChange={(event) => setExpenseAmount(Number(event.target.value))} className={fieldClass} /></div>
+            <div><label className="mb-1.5 block text-xs font-medium text-muted">Amount</label><input required type="number" min="0.01" max="100000000000" step="0.01" value={expenseAmount} onChange={(event) => setExpenseAmount(Number(event.target.value))} className={fieldClass} /></div>
             <div><label className="mb-1.5 block text-xs font-medium text-muted">Date</label><input required type="date" value={expenseDate} onChange={(event) => setExpenseDate(event.target.value)} className={fieldClass} /></div>
           </div>
         </form>
@@ -1285,8 +1292,8 @@ export const AdminInvoicing: React.FC = () => {
               <div><label className="mb-1.5 block text-xs font-medium text-muted">Payment method</label><CustomSelect value={paymentMethod} onChange={(value) => setPaymentMethod(value as typeof paymentMethod)} options={[{ value: 'bank_transfer', label: 'Bank transfer' }, { value: 'credit_card', label: 'Credit card' }, { value: 'cash', label: 'Cash' }, { value: 'other', label: 'Other' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" /></div>
               <div><label className="mb-1.5 block text-xs font-medium text-muted">Payment date</label><input required type="date" value={paymentDate} onChange={(event) => setPaymentDate(event.target.value)} className={fieldClass} /></div>
             </div>
-            <div><label className="mb-1.5 block text-xs font-medium text-muted">Reference</label><input value={paymentReference} onChange={(event) => setPaymentReference(event.target.value)} className={fieldClass} placeholder="Transaction reference" /></div>
-            <div><label className="mb-1.5 block text-xs font-medium text-muted">Notes</label><textarea value={paymentNotes} onChange={(event) => setPaymentNotes(event.target.value)} rows={3} className={fieldClass + ' py-2.5'} /></div>
+            <div><label className="mb-1.5 block text-xs font-medium text-muted">Reference</label><input maxLength={160} value={paymentReference} onChange={(event) => setPaymentReference(event.target.value)} className={fieldClass} placeholder="Transaction reference" /></div>
+            <div><label className="mb-1.5 block text-xs font-medium text-muted">Notes</label><textarea maxLength={1000} value={paymentNotes} onChange={(event) => setPaymentNotes(event.target.value)} rows={3} className={fieldClass + ' py-2.5'} /></div>
           </form>
         )}
       </Modal>
