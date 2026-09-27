@@ -43,9 +43,10 @@ export const TrendChart: React.FC<{
   data: TrendPoint[];
   primaryLabel: string;
   secondaryLabel?: string;
+  tertiaryLabel?: string;
   primaryFormat?: (value: number) => string;
   ariaLabel: string;
-}> = ({ data, primaryLabel, secondaryLabel, primaryFormat = formatCompact, ariaLabel }) => {
+}> = ({ data, primaryLabel, secondaryLabel, tertiaryLabel = 'Net', primaryFormat = formatCompact, ariaLabel }) => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const width = 720;
   const height = 260;
@@ -82,7 +83,7 @@ export const TrendChart: React.FC<{
       <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted">
         <span className="inline-flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-accent" />{primaryLabel}</span>
         {secondaryLabel && <span className="inline-flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-series-3" />{secondaryLabel}</span>}
-        {data.some((point) => point.tertiary !== undefined) && <span className="inline-flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-success" />Net</span>}
+        {data.some((point) => point.tertiary !== undefined) && <span className="inline-flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-success" />{tertiaryLabel}</span>}
       </div>
       <div className="relative overflow-hidden rounded-control border border-line bg-bg/40">
         <svg viewBox={`0 0 ${width} ${height}`} className="block h-[220px] w-full touch-none" preserveAspectRatio="none"
@@ -132,7 +133,7 @@ export const TrendChart: React.FC<{
             <div className="mt-2 space-y-1 text-muted">
               <div className="flex justify-between gap-3"><span>{primaryLabel}</span><span className="tabular-nums text-fg">{primaryFormat(active.primary)}</span></div>
               {secondaryLabel && active.secondary !== undefined && <div className="flex justify-between gap-3"><span>{secondaryLabel}</span><span className="tabular-nums text-fg">{primaryFormat(active.secondary)}</span></div>}
-              {active.tertiary !== undefined && <div className="flex justify-between gap-3"><span>Net</span><span className="tabular-nums text-fg">{primaryFormat(active.tertiary)}</span></div>}
+              {active.tertiary !== undefined && <div className="flex justify-between gap-3"><span>{tertiaryLabel}</span><span className="tabular-nums text-fg">{primaryFormat(active.tertiary)}</span></div>}
             </div>
           </div>
         )}
