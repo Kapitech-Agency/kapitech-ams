@@ -15,7 +15,6 @@ const AMS_PORTAL_TOKENS = [
   '--bg',
   '--panel',
   '--panel-hover',
-  '--panel-hover',
   '--line',
   '--text',
   '--muted',
