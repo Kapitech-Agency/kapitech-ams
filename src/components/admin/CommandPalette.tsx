@@ -51,11 +51,49 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
   const [isSearching, setIsSearching] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const restoreFocusRef = useRef<HTMLElement | null>(null);
+  const selectableItemsRef = useRef<Array<
+    { kind: 'result'; result: SearchResult } | { kind: 'action'; action: QuickAction }
+  >>([]);
 
   useEffect(() => {
     if (isOpen) {
+      restoreFocusRef.current = document.activeElement as HTMLElement | null;
+
       const timer = window.setTimeout(() => inputRef.current?.focus(), 50);
-      return () => window.clearTimeout(timer);
+      const handleTab = (event: KeyboardEvent) => {
+        if (event.key !== 'Tab') return;
+
+        const dialog = inputRef.current?.closest<HTMLElement>('[role="dialog"]');
+        if (!dialog) return;
+
+        const focusables = Array.from(
+          dialog.querySelectorAll<HTMLElement>(
+            'button:not([disabled]), input:not([disabled]), [href], [tabindex="0"]'
+          )
+        ).filter((element) => element.getClientRects().length > 0);
+
+        if (!focusables.length) return;
+
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      };
+
+      document.addEventListener('keydown', handleTab, true);
+
+      return () => {
+        window.clearTimeout(timer);
+        document.removeEventListener('keydown', handleTab, true);
+        if (restoreFocusRef.current?.isConnected) restoreFocusRef.current.focus();
+      };
     }
 
     setQuery('');
@@ -185,6 +223,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
     ...searchResults.map((result) => ({ kind: 'result' as const, result })),
     ...filteredActions.map((action) => ({ kind: 'action' as const, action }))
   ];
+  selectableItemsRef.current = selectableItems;
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -208,25 +247,29 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
 
       if (event.key === 'ArrowDown') {
         event.preventDefault();
+        const items = selectableItemsRef.current;
         setActiveIndex((index) =>
-          selectableItems.length ? (index + 1) % selectableItems.length : 0
+          items.length ? (index + 1) % items.length : 0
         );
         return;
       }
 
       if (event.key === 'ArrowUp') {
         event.preventDefault();
+        const items = selectableItemsRef.current;
         setActiveIndex((index) =>
-          selectableItems.length
-            ? (index - 1 + selectableItems.length) % selectableItems.length
+          items.length
+            ? (index - 1 + items.length) % items.length
             : 0
         );
         return;
       }
 
-      if (event.key === 'Enter' && selectableItems.length > 0) {
+      const items = selectableItemsRef.current;
+
+      if (event.key === 'Enter' && items.length > 0) {
         event.preventDefault();
-        const selected = selectableItems[activeIndex];
+        const selected = items[activeIndex];
         if (selected?.kind === 'result') {
           navigate(selected.result.url);
           onClose();
@@ -238,7 +281,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeIndex, isOpen, navigate, onClose, selectableItems.length]);
+  }, [activeIndex, isOpen, navigate, onClose]);
 
   if (!isOpen) return null;
 
