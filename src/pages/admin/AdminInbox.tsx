@@ -524,12 +524,7 @@ export const AdminInbox: React.FC = () => {
 
       <header className="ams-dashboard-header mb-6 flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 text-xs text-muted">
-            <span>Kapitech AMS</span>
-            <span aria-hidden="true">/</span>
-            <span className="text-fg">Leads & Inbox</span>
-          </div>
-          <h1 className="mt-2 text-xl font-semibold leading-7 tracking-[-0.01em] text-fg">Leads & Inbox</h1>
+          <h1 className="text-2xl font-semibold leading-8 tracking-[-0.02em] text-fg">Leads & Inbox</h1>
           <p className="mt-1 max-w-2xl text-xs leading-5 text-muted">
             {language === 'id'
               ? 'Kelola inquiry masuk, lakukan triage, balas dengan cepat, dan teruskan peluang yang siap ke CRM.'
@@ -538,7 +533,7 @@ export const AdminInbox: React.FC = () => {
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
           <span className="text-[11px] tabular-nums text-muted">{submissions.length} inbound</span>
-          <button type="button" onClick={() => setIsEmailModalOpen(true)} className="ams-action inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control border border-line bg-transparent px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" title={language === 'id' ? 'Buka pengaturan notifikasi email' : 'Open email alert settings'}>
+          <button type="button" onClick={() => setIsEmailModalOpen(true)} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" title={language === 'id' ? 'Buka pengaturan notifikasi email' : 'Open email alert settings'}>
             <Mail size={14} />
             <span>{language === 'id' ? 'Notifikasi Email' : 'Email Alerts'}</span>
           </button>
@@ -560,9 +555,11 @@ export const AdminInbox: React.FC = () => {
       {/* ------------------------------------------------------------- */}
       {/* 2. EXECUTIVE KPI SUMMARY RIBBON */}
       {/* ------------------------------------------------------------- */}
-      <div className="ams-inbox-kpi grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <section aria-label="Leads and inbox snapshot" className="rounded-card border border-line bg-panel p-4 sm:p-5">
+        <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3"><div><h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan leads & inbox' : 'Leads & inbox snapshot'}</h2><p className="mt-1 text-xs text-muted">{language === 'id' ? 'Sinyal intake, triage, konversi, dan estimasi pipeline.' : 'Intake, triage, conversion, and estimated pipeline signals.'}</p></div><span className="text-[11px] font-medium tabular-nums text-muted">{metrics.total} inbound</span></div>
+        <div className="ams-inbox-kpi grid grid-cols-2 lg:grid-cols-4">
         {/* Metric 1: Total Inbound */}
-        <div className="p-4 rounded-card bg-panel border border-line space-y-1">
+        <div className="min-w-0 px-4 py-3 lg:border-r lg:border-line">
           <div className="flex items-center justify-between text-xs font-sans text-muted">
             <span>{language === 'id' ? 'Total Masuk' : 'Total Inbound'}</span>
             <Inbox size={14} className="text-muted" />
@@ -576,7 +573,7 @@ export const AdminInbox: React.FC = () => {
         </div>
 
         {/* Metric 2: Action Needed / New */}
-        <div className="p-4 rounded-card bg-panel border border-line space-y-1">
+        <div className="min-w-0 px-4 py-3 lg:border-r lg:border-line">
           <div className="flex items-center justify-between text-xs font-sans text-muted">
             <span>{language === 'id' ? 'Perlu Ditinjau' : 'Action Needed'}</span>
             <AlertCircle size={14} className="text-danger" />
@@ -593,7 +590,7 @@ export const AdminInbox: React.FC = () => {
         </div>
 
         {/* Metric 3: Converted to CRM */}
-        <div className="p-4 rounded-card bg-panel border border-line space-y-1">
+        <div className="min-w-0 px-4 py-3 lg:border-r lg:border-line">
           <div className="flex items-center justify-between text-xs font-sans text-muted">
             <span>{language === 'id' ? 'Dikonversi ke CRM' : 'Converted to CRM'}</span>
             <Briefcase size={14} className="text-success" />
@@ -607,7 +604,7 @@ export const AdminInbox: React.FC = () => {
         </div>
 
         {/* Metric 4: Estimated Pipeline Volume */}
-        <div className="p-4 rounded-card bg-panel border border-line space-y-1">
+        <div className="min-w-0 px-4 py-3">
           <div className="flex items-center justify-between text-xs font-sans text-muted">
             <span>{language === 'id' ? 'Volume Peluang' : 'Intake Valuation'}</span>
             <TrendingUp size={14} className="text-success" />
@@ -619,16 +616,17 @@ export const AdminInbox: React.FC = () => {
             {language === 'id' ? 'Estimasi nilai brief masuk' : 'Cumulative brief budget estimate'}
           </p>
         </div>
-      </div>
+        </div>
+      </section>
 
       {/* ------------------------------------------------------------- */}
-      {/* 3. UNIFIED FILTER TABS & TOOLBAR */}
+      {/* 3. UNIFIED FILTER TABS & TOOLBAR */
       {/* ------------------------------------------------------------- */}
       <div className="ams-inbox-toolbar bg-panel border border-line p-4 sm:p-5 rounded-card space-y-3">
         
         {/* Top Channel Category Tabs */}
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
+          <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0 custom-scrollbar">
             {[
               { key: 'all', label: language === 'id' ? 'Semua Form' : 'All Briefs' },
               { key: 'inquiry', label: language === 'id' ? 'Konsultasi Klien' : 'Client Briefs' },
@@ -644,9 +642,9 @@ export const AdminInbox: React.FC = () => {
                 <button
                   key={tab.key}
                   onClick={() => setFilterType(tab.key)}
-                  className={`min-h-10 px-3 rounded-control text-xs font-sans transition-all flex items-center gap-2 border ${
+                  className={`h-9 min-h-9 px-3 rounded-control text-xs font-sans transition-all flex items-center gap-2 border ${
                     filterType === tab.key
-                      ? 'bg-accent text-white border-accent font-semibold'
+                      ? 'bg-line text-fg font-semibold'
                       : 'bg-panel text-muted border-line hover:text-fg'
                   }`}
                 >
@@ -662,12 +660,12 @@ export const AdminInbox: React.FC = () => {
           </div>
 
           {/* View Switcher: Split View vs Data Table View */}
-          <div className="flex items-center bg-panel border border-line rounded-card p-0.5">
+          <div className="flex items-center bg-panel border border-line rounded-control p-0.5">
             <button
               onClick={() => setViewMode('split')}
               className={`px-2.5 py-1.5 rounded-control text-xs font-sans transition-all flex items-center gap-1.5 ${
                 viewMode === 'split'
-                  ? 'bg-panel text-fg font-semibold border border-line'
+                  ? 'bg-line text-fg font-semibold border border-line'
                   : 'text-muted hover:text-fg'
               }`}
               title="Split Master-Detail View"
@@ -700,7 +698,7 @@ export const AdminInbox: React.FC = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={language === 'id' ? 'Cari nama, email, perusahaan, jasa, atau isi brief...' : 'Search name, email, company, requested stack, or message...'}
-              className="w-full pl-10 pr-8 py-2 rounded-control bg-panel border border-line text-xs text-fg focus:outline-none focus:border-accent placeholder:text-muted font-sans min-h-10"
+              className="w-full h-9 min-h-9 pl-9 pr-8 rounded-control bg-bg border border-line text-xs text-fg focus:outline-none focus:border-accent placeholder:text-muted font-sans"
             />
             {searchQuery && (
               <button
@@ -955,17 +953,12 @@ export const AdminInbox: React.FC = () => {
                   onClick={() => handleSelectSubmission(item)}
                   className={`relative p-4 rounded-card border transition-all cursor-pointer font-sans group ${
                     isSelected
-                      ? 'bg-panel border-accent'
+                      ? 'bg-accent/8 border-accent/30'
                       : item.status === 'new'
                       ? 'bg-panel border-danger/30 hover:border-danger/50'
                       : 'bg-panel border-line hover:border-line hover:bg-panel-hover'
                   }`}
                 >
-                    {/* Linear-style Left Accent Strip */}
-                    {isSelected && (
-                      <span className="absolute left-0 top-3 bottom-3 w-1 bg-accent rounded-r-full" />
-                    )}
-
                     {/* Top Row: Channel, Status, Star, Timestamp */}
                     <div className="flex items-center justify-between gap-2 mb-2">
                       <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
