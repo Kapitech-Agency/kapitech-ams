@@ -570,23 +570,23 @@ export const AdminProposals: React.FC = () => {
           <span className="text-[11px] font-medium tabular-nums text-muted">{metrics.total} {language === 'id' ? 'total' : 'total'}</span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4">
-        {[
-          { label: language === 'id' ? 'Total proposal' : 'Total proposals', value: metrics.total, icon: FileText },
-          { label: language === 'id' ? 'Aktif' : 'Active', value: metrics.active, icon: Clock3 },
-          { label: language === 'id' ? 'Diterima' : 'Accepted', value: metrics.accepted, icon: CheckCircle2 },
-          { label: language === 'id' ? 'Segera berakhir' : 'Expiring soon', value: metrics.expiring, icon: AlertCircle }
-        ].map((metric, index) => {
-          const Icon = metric.icon;
-          return (
-            <div key={metric.label} className={'flex min-w-0 items-start justify-between gap-3 px-4 py-3 ' + (index > 0 ? 'border-l border-line' : '')}>
-              <div>
-                <Icon size={14} aria-hidden="true" />
+          {[
+            { label: language === 'id' ? 'Total proposal' : 'Total proposals', value: metrics.total, icon: FileText },
+            { label: language === 'id' ? 'Aktif' : 'Active', value: metrics.active, icon: Clock3 },
+            { label: language === 'id' ? 'Diterima' : 'Accepted', value: metrics.accepted, icon: CheckCircle2 },
+            { label: language === 'id' ? 'Segera berakhir' : 'Expiring soon', value: metrics.expiring, icon: AlertCircle }
+          ].map((metric, index) => {
+            const Icon = metric.icon;
+            return (
+              <div key={metric.label} className={'flex min-w-0 items-start justify-between gap-3 px-4 py-3 ' + (index > 0 ? 'border-l border-line' : '')}>
+                <div className="min-w-0">
+                  <div className="text-xs text-muted">{metric.label}</div>
+                  <div className="mt-1 text-xl font-medium tabular-nums text-fg">{metric.value}</div>
+                </div>
+                <Icon size={16} className="mt-0.5 shrink-0 text-muted" aria-hidden="true" />
               </div>
-              <Icon size={16} className="mt-0.5 shrink-0 text-muted" aria-hidden="true" />
-              <div className="sr-only">{metric.label}</div>
-            </div>
-          );
-        })}
+            );
+          })}
         </div>
       </section>
 
