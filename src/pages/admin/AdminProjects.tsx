@@ -959,7 +959,7 @@ export const AdminProjects: React.FC = () => {
                 <div className="mt-2 space-y-2">
                   {(taskDrawer.subtasks || []).length === 0 ? <div className="rounded-control border border-dashed border-line p-3 text-xs text-muted">No checklist items.</div> : (taskDrawer.subtasks || []).map(item => (
                     <button key={item.id} disabled={!canManageKanbanTasks} onClick={() => void toggleSubtask(taskDrawer, item)} className="flex w-full items-center gap-2.5 rounded-control border border-line bg-bg p-3 text-left">
-                      {item.completed ? <CheckCircle2 size={16} className="shrink-0 text-success" /> : <span className="h-4 w-4 shrink-0 rounded border border-muted" />}
+                      {item.completed ? <CheckCircle2 size={16} className="shrink-0 text-success" /> : <span className="h-4 w-4 shrink-0 rounded-badge border border-muted" />}
                       <span className={'text-xs ' + (item.completed ? 'text-muted line-through' : 'text-fg')}>{item.title}</span>
                     </button>
                   ))}
