@@ -15,6 +15,7 @@ import {
   Users,
 } from 'lucide-react';
 import { AdminModuleHeader, AdminPanel } from './AdminModulePrimitives';
+import { CustomSelect } from '../ui/CustomSelect';
 import { Modal } from '../ui/Modal';
 import { DonutChart, TrendChart } from '../charts/DashboardCharts';
 
@@ -185,16 +186,17 @@ const TasksView: React.FC = () => {
                 className="h-9 min-h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
               />
             </label>
-            <select
-              aria-label="Filter tasks by priority"
+            <CustomSelect
               value={priority}
-              onChange={(event) => setPriority(event.target.value as 'All' | DashboardTask['priority'])}
-              className="h-9 min-h-9 rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
-            >
-              {['All', 'Urgent', 'High', 'Medium', 'Low'].map((value) => (
-                <option key={value} value={value}>{value === 'All' ? 'All priorities' : value}</option>
-              ))}
-            </select>
+              onChange={(value) => setPriority(value as 'All' | DashboardTask['priority'])}
+              options={['All', 'Urgent', 'High', 'Medium', 'Low'].map((value) => ({
+                value,
+                label: value === 'All' ? 'All priorities' : value,
+              }))}
+              aria-label="Filter tasks by priority"
+              className="w-full sm:w-40"
+              triggerClassName="w-full"
+            />
           </div>
         )}
       >
