@@ -134,6 +134,7 @@ export const InvoiceStatusDropdown: React.FC<InvoiceStatusDropdownProps> = ({
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-controls={isOpen ? listboxId : undefined}
+        aria-activedescendant={isOpen && selectableStatuses[activeIndex] ? listboxId + '-option-' + activeIndex : undefined}
         className={`flex items-center justify-between gap-2 rounded-badge font-sans text-xs font-semibold border transition-colors duration-150 select-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 ${
           size === 'sm' ? 'min-h-10 sm:min-h-7 px-2.5 py-1 text-[11px]' : 'min-h-10 sm:min-h-8 px-3 py-1.5 text-xs'
         } ${current.badgeClass} ${
@@ -168,6 +169,7 @@ export const InvoiceStatusDropdown: React.FC<InvoiceStatusDropdownProps> = ({
             return (
               <button
                 key={item}
+                id={listboxId + '-option-' + selectableStatuses.indexOf(item)}
                 type="button"
                 role="option"
                 aria-selected={isSelected}
