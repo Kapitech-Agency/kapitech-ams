@@ -103,7 +103,7 @@ export function formatNativeAmount(
   }
 
   return currency === 'USD'
-    ? `${Math.round(value).toLocaleString('en-US')}`
+    ? value.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 })
     : `Rp ${Math.round(value).toLocaleString('id-ID')}`;
 }
 
