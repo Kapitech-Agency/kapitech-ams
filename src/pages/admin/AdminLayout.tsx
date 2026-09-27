@@ -379,20 +379,12 @@ export const AdminLayout: React.FC = () => {
         description={language === 'id' ? 'Sesi Anda akan diakhiri pada perangkat ini.' : 'Your current AMS session will be ended on this device.'}
         footer={(
           <>
-            <button
-              type="button"
-              onClick={() => setLogoutConfirmOpen(false)}
-              className="min-h-10 w-full sm:w-auto rounded-control border border-line bg-panel px-3.5 text-xs font-medium text-muted transition-colors hover:border-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-            >
+            <Button type="button" variant="secondary" onClick={() => setLogoutConfirmOpen(false)}>
               {language === 'id' ? 'Tetap masuk' : 'Stay signed in'}
-            </button>
-            <button
-              type="button"
-              onClick={confirmLogout}
-              className="min-h-10 w-full sm:w-auto rounded-control border border-danger/30 bg-danger/10 px-3.5 text-xs font-semibold text-danger transition-colors hover:border-danger/50 hover:bg-danger/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger"
-            >
-              <span className="inline-flex items-center gap-2"><LogOut size={14} />{language === 'id' ? 'Keluar' : 'Sign out'}</span>
-            </button>
+            </Button>
+            <Button type="button" variant="destructive" onClick={confirmLogout} icon={<LogOut size={14} />}>
+              {language === 'id' ? 'Keluar' : 'Sign out'}
+            </Button>
           </>
         )}
       >
