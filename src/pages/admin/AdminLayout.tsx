@@ -270,9 +270,9 @@ export const AdminLayout: React.FC = () => {
         transition={{ duration: 0.18, ease: 'easeOut' }}
         className={`hidden min-[900px]:flex flex-col bg-panel border-r border-line shrink-0 h-full z-30 overflow-hidden ${sidebarCollapsed ? 'ams-sidebar-collapsed' : 'ams-sidebar-expanded'}`}
       >
-        <div className="shrink-0 px-2.5 py-2 border-b border-line">
-          <div className={`flex items-center min-w-0 ${sidebarCollapsed ? 'justify-center' : 'gap-2'}`}>
-            <Link to="/admin/dashboard" aria-label="Kapitech AMS dashboard" className={`group flex min-w-0 flex-1 items-center rounded-control min-h-10 transition-colors duration-150 hover:bg-panel-hover focus-visible:outline-none ${sidebarCollapsed ? 'justify-center px-1' : 'gap-3 px-2'}`}>
+        <div className={`relative shrink-0 px-2.5 py-2 border-b border-line ${sidebarCollapsed ? 'h-12' : ''}`}>
+          <div className={`flex h-10 items-center min-w-0 ${sidebarCollapsed ? 'justify-center' : 'gap-2'}`}>
+            <Link to="/admin/dashboard" aria-label="Kapitech AMS dashboard" className={`group flex min-w-0 items-center rounded-control min-h-10 transition-colors duration-150 hover:bg-panel-hover focus-visible:outline-none ${sidebarCollapsed ? 'w-full justify-center px-1' : 'flex-1 gap-3 px-2'}`}>
               <div className="h-9 w-9 rounded-control bg-bg border border-line p-1.5 flex items-center justify-center shrink-0 transition-colors duration-150 group-hover:border-accent/40">
                 <AmsBrandLogo className="h-5 w-5" />
               </div>
@@ -287,7 +287,7 @@ export const AdminLayout: React.FC = () => {
               )}
             </Link>
             <button type="button" onClick={() => setSidebarCollapsed(v => !v)} aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              className={`ams-sidebar-toggle group shrink-0 flex h-7 w-7 items-center justify-center rounded-control border border-line bg-panel text-muted transition-[background-color,border-color,color,transform] duration-150 ease-out hover:border-accent/30 hover:bg-panel-hover hover:text-fg active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-panel ${sidebarCollapsed ? 'absolute right-2 top-2' : ''}`}>
+              className={`ams-sidebar-toggle group flex h-7 w-7 !min-h-7 !min-w-7 items-center justify-center rounded-control border border-line bg-panel text-muted transition-[background-color,border-color,color,transform] duration-150 ease-out hover:border-accent/30 hover:bg-panel-hover hover:text-fg active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-panel ${sidebarCollapsed ? 'absolute right-1 top-2' : 'shrink-0'}`}>
               {sidebarCollapsed ? <ChevronRight size={13} strokeWidth={2} /> : <ChevronLeft size={13} strokeWidth={2} />}
             </button>
           </div>
@@ -309,7 +309,7 @@ export const AdminLayout: React.FC = () => {
             )}
           </button>
         </div>
-        <div className={`flex-1 min-h-0 overflow-hidden ${sidebarCollapsed ? 'px-2 py-3' : 'px-2.5 py-3'}`}>
+        <div className={`flex-1 min-h-0 overflow-y-auto overscroll-contain custom-scrollbar ${sidebarCollapsed ? 'px-2 py-3' : 'px-2.5 py-3'}`}>
           <div className={sidebarCollapsed ? 'space-y-2' : 'space-y-4'}>
             {contentNavSections.map((section) => (
               <div key={section.id} className="space-y-1">
