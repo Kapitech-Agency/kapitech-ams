@@ -144,6 +144,8 @@
 .ams-shell .ams-sidebar-toggle{position:relative;z-index:2;min-width:40px;min-height:40px}
 .ams-shell .ams-sidebar-expanded a[aria-current=page],.ams-shell .ams-sidebar-collapsed a[aria-current=page]{box-shadow:inset 2px 0 0 var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--text)}
 .ams-shell .ams-sidebar-expanded,.ams-shell .ams-sidebar-collapsed{min-width:0}
+.ams-shell .ams-topnav-scroll{scrollbar-width:none;-ms-overflow-style:none}
+.ams-shell .ams-topnav-scroll::-webkit-scrollbar{display:none}
 .ams-shell .ams-kanban-scroll{min-height:0;width:max-content;overscroll-behavior-x:contain}.ams-shell .kanban-card{min-height:126px}
 .ams-shell [role=dialog]{overscroll-behavior:contain}
 .ams-shell .ams-popover-surface{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;box-shadow:none}.ams-shell .ams-notification-surface{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:12px;box-shadow:none}
