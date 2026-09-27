@@ -44,7 +44,7 @@ import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 
-import { AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 export const AdminCrm: React.FC = () => {
   const { language, t } = useLanguage();
   const canManageCrm = hasAdminPermission('canManageCrm');
@@ -407,100 +407,86 @@ export const AdminCrm: React.FC = () => {
         </div>
       )}
 
-      {/* 2. Enterprise CRM KPI Funnel & Metrics Bar */}
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-12">
-        {/* Active Pipeline Card */}
-        <div className="lg:col-span-4 rounded-card border border-line bg-panel p-4 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between text-muted mb-3">
-              <span className="text-xs font-sans normal-case tracking-normal font-semibold">
-                {language === 'id' ? 'Pipeline Aktif' : 'Active Pipeline'}
-              </span>
-              <div className="w-8 h-8 rounded-control bg-success/10 border border-success/30 flex items-center justify-center text-success">
-                <Layers size={16} />
-              </div>
-            </div>
-            <div className="text-2xl sm:text-3xl font-sans font-semibold text-fg tracking-[-0.01em] break-words font-sans">
-              {formatAmount(metrics.totalPipelineValue, currency)}
-            </div>
+      {/* 2. CRM performance snapshot */}
+      <section aria-label="CRM performance snapshot" className="rounded-card border border-line bg-panel p-4 sm:p-5">
+        <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan pipeline' : 'Pipeline snapshot'}</h2>
+            <p className="mt-1 text-xs text-muted">{language === 'id' ? 'Nilai peluang, hasil closed-won, dan efisiensi konversi.' : 'Opportunity value, closed-won performance, and conversion efficiency.'}</p>
           </div>
-          <div className="flex items-center justify-between mt-4 pt-3 border-t border-line text-[11px] font-sans">
-            <span className="text-muted">
-              {metrics.activeDealsCount} {language === 'id' ? 'Prospek Aktif' : 'Active Deals'}
-            </span>
-            <span className="text-success font-semibold flex items-center gap-1">
-              <TrendingUp size={12} />
-              <span>{language === 'id' ? 'Tertimbang:' : 'Weighted:'} {formatAmount(metrics.weightedPipelineValue, currency, true)}</span>
-            </span>
+          <span className="shrink-0 text-[11px] font-medium tabular-nums text-muted">{metrics.totalDeals} {language === 'id' ? 'deal' : 'deals'}</span>
+        </div>
+        <AdminMetricStrip
+          metrics={[
+            {
+              id: 'active-pipeline',
+              label: language === 'id' ? 'Pipeline aktif' : 'Active pipeline',
+              value: formatAmount(metrics.totalPipelineValue, currency),
+              context: `${metrics.activeDealsCount} ${language === 'id' ? 'prospek aktif' : 'active deals'}`,
+              icon: <Layers size={16} strokeWidth={1.8} />,
+              toneClassName: 'text-success'
+            },
+            {
+              id: 'weighted-pipeline',
+              label: language === 'id' ? 'Pipeline tertimbang' : 'Weighted pipeline',
+              value: formatAmount(metrics.weightedPipelineValue, currency, true),
+              context: language === 'id' ? 'Berdasarkan probabilitas tahap' : 'Weighted by stage probability',
+              icon: <TrendingUp size={16} strokeWidth={1.8} />,
+              toneClassName: 'text-info'
+            },
+            {
+              id: 'closed-won',
+              label: language === 'id' ? 'Closed won' : 'Closed won',
+              value: formatAmount(metrics.totalWonValue, currency),
+              context: `${metrics.wonDealsCount} ${language === 'id' ? 'deal menang' : 'won deals'}`,
+              icon: <CheckCircle2 size={16} strokeWidth={1.8} />,
+              toneClassName: 'text-success'
+            },
+            {
+              id: 'win-rate',
+              label: language === 'id' ? 'Win rate' : 'Win rate',
+              value: `${metrics.winRate}%`,
+              context: `${language === 'id' ? 'Rata-rata deal' : 'Avg deal'}: ${formatAmount(metrics.avgDealSize, currency, true)}`,
+              icon: <Activity size={16} strokeWidth={1.8} />,
+              toneClassName: 'text-accent-text'
+            }
+          ]}
+        />
+      </section>
+
+      <section aria-label="Stage conversion funnel" className="rounded-card border border-line bg-panel p-4 sm:p-5">
+        <div className="flex items-center justify-between gap-3 border-b border-line pb-3">
+          <div className="flex min-w-0 items-center gap-2 text-xs font-semibold text-fg">
+            <Activity size={14} className="text-accent-text" />
+            <span>{language === 'id' ? 'Corong konversi tahapan' : 'Stage conversion funnel'}</span>
+          </div>
+          <span className="shrink-0 rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-muted">
+            Lead → Won
+          </span>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="rounded-control border border-line bg-bg p-2.5 text-center">
+            <div className="text-[10px] text-muted">Lead→Scope</div>
+            <div className="mt-0.5 text-sm font-semibold tabular-nums text-fg">{funnelStats.leadToScope}%</div>
+          </div>
+          <div className="rounded-control border border-line bg-bg p-2.5 text-center">
+            <div className="text-[10px] text-muted">Scope→Pitch</div>
+            <div className="mt-0.5 text-sm font-semibold tabular-nums text-fg">{funnelStats.scopeToPitch}%</div>
+          </div>
+          <div className="rounded-control border border-line bg-bg p-2.5 text-center">
+            <div className="text-[10px] text-muted">Pitch→SOW</div>
+            <div className="mt-0.5 text-sm font-semibold tabular-nums text-fg">{funnelStats.pitchToSow}%</div>
+          </div>
+          <div className="rounded-control border border-success/20 bg-success/10 p-2.5 text-center">
+            <div className="text-[10px] text-success">SOW→Won</div>
+            <div className="mt-0.5 text-sm font-semibold tabular-nums text-success">{funnelStats.sowToWon}%</div>
           </div>
         </div>
-
-        {/* Closed Won Card */}
-        <div className="lg:col-span-3 rounded-card border border-line bg-panel p-4 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between text-muted mb-3">
-              <span className="text-xs font-sans normal-case tracking-normal font-semibold">
-                {language === 'id' ? 'Closed Won (Q3)' : 'Closed Won (Q3)'}
-              </span>
-              <div className="w-8 h-8 rounded-control bg-success/10 border border-success/30 flex items-center justify-center text-success">
-                <CheckCircle2 size={16} />
-              </div>
-            </div>
-            <div className="text-2xl sm:text-3xl font-sans font-semibold text-success tracking-[-0.01em] break-words font-sans">
-              {formatAmount(metrics.totalWonValue, currency)}
-            </div>
-          </div>
-          <div className="flex items-center justify-between mt-4 pt-3 border-t border-line text-[11px] font-sans">
-            <span className="text-muted">
-              {language === 'id' ? 'Win Rate:' : 'Win Rate:'}
-            </span>
-            <span className="text-fg font-semibold font-sans">
-              {metrics.winRate}% ({metrics.wonDealsCount} of {metrics.totalDeals} closed)
-            </span>
-          </div>
+        <div className="mt-3 flex flex-col gap-2 border-t border-line pt-3 text-[11px] sm:flex-row sm:items-center sm:justify-between">
+          <span className="text-muted">{language === 'id' ? 'Rata-rata deal' : 'Avg deal'}: <span className="font-semibold text-fg">{formatAmount(metrics.avgDealSize, currency, true)}</span></span>
+          <span className="text-muted">{language === 'id' ? 'Proposal & negosiasi' : 'Proposal & SOW'}: <span className="font-semibold text-info">{formatAmount(metrics.negotiationValue, currency, true)}</span></span>
         </div>
-
-        {/* Stage Conversion Funnel */}
-        <div className="md:col-span-2 lg:col-span-5 rounded-card border border-line bg-panel p-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-muted mb-2">
-            <span className="text-xs font-sans normal-case tracking-normal font-semibold flex items-center gap-2 text-fg">
-              <Activity size={14} className="text-danger" />
-              <span>{language === 'id' ? 'Corong Konversi Tahapan' : 'Stage Conversion Funnel'}</span>
-            </span>
-            <span className="text-[10px] font-sans px-2 py-0.5 rounded-badge bg-panel text-muted border border-line">
-              Lead → Won Conversion
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 my-auto py-2">
-            <div className="bg-bg border border-line rounded-control p-2.5 text-center">
-              <div className="text-[10px] font-sans text-muted truncate">Lead→Scope</div>
-              <div className="text-sm font-semibold font-sans text-fg mt-0.5">{funnelStats.leadToScope}%</div>
-            </div>
-            <div className="bg-panel border border-line rounded-card p-2 text-center">
-              <div className="text-[10px] font-sans text-muted truncate">Scope→Pitch</div>
-              <div className="text-sm font-semibold font-sans text-fg mt-0.5">{funnelStats.scopeToPitch}%</div>
-            </div>
-            <div className="bg-panel border border-line rounded-card p-2 text-center">
-              <div className="text-[10px] font-sans text-muted truncate">Pitch→SOW</div>
-              <div className="text-sm font-semibold font-sans text-fg mt-0.5">{funnelStats.pitchToSow}%</div>
-            </div>
-            <div className="bg-success/10 border border-success/20 rounded-control p-2.5 text-center">
-              <div className="text-[10px] font-sans text-success truncate">SOW→Won</div>
-              <div className="text-sm font-semibold font-sans text-success mt-0.5">{funnelStats.sowToWon}%</div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between mt-3 pt-3 border-t border-line text-[11px] font-sans">
-            <span className="text-muted">
-              {language === 'id' ? 'Rata-rata Deal:' : 'Avg Deal:'} {formatAmount(metrics.avgDealSize, currency, true)}
-            </span>
-            <span className="text-muted">
-              {language === 'id' ? 'Proposal & Negosiasi:' : 'Proposal & SOW:'} <span className="text-info font-semibold">{formatAmount(metrics.negotiationValue, currency, true)}</span>
-            </span>
-          </div>
-        </div>
-      </div>
+      </section>
 
       {/* 3. Filter Bar & View Mode Switcher */}
       <div className="ams-crm-toolbar flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 rounded-card border border-line bg-panel p-4 sm:p-5">
