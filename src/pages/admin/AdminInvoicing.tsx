@@ -995,7 +995,7 @@ export const AdminInvoicing: React.FC = () => {
                     <EmptyState
                       title={language === 'id' ? 'Belum ada invoice' : 'No invoices found'}
                       description={search || statusFilter !== 'all' ? 'No invoices match the current search or filter.' : 'No invoice records are available yet.'}
-                      action={canManageInvoices ? <button type="button" onClick={() => setInvoiceModalOpen(true)} className={primaryClass}><Plus size={14} />Create invoice</button> : undefined}
+                      action={canManageInvoices ? <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14} />Create invoice</button> : undefined}
                     />
                   ) : (
                     <>
