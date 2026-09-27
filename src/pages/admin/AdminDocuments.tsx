@@ -14,6 +14,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Modal } from '../../components/ui/Modal';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
 interface DocumentItem {
   id: string;
@@ -366,12 +367,14 @@ export const AdminDocuments: React.FC = () => {
         )}
       </div>
 
-      <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} size="sm" title={language === 'id' ? 'Hapus dokumen?' : 'Delete document?'} description={language === 'id' ? 'Dokumen akan dihapus dari private vault dan tindakan ini tidak dapat dibatalkan.' : 'The document will be removed from the private vault and this action cannot be undone.'}>
-        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
-          <button type="button" onClick={() => setDeleteTarget(null)} className="min-h-10 px-4 rounded-control border border-line bg-panel text-xs text-muted">Cancel</button>
-          <button type="button" onClick={() => deleteTarget && void confirmDelete(deleteTarget)} className="min-h-10 px-4 rounded-control bg-danger text-white text-xs font-semibold">Delete permanently</button>
-        </div>
-      </Modal>
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title={language === 'id' ? 'Hapus dokumen?' : 'Delete document?'}
+        description={language === 'id' ? 'Dokumen akan dihapus dari private vault dan tindakan ini tidak dapat dibatalkan.' : 'The document will be removed from the private vault and this action cannot be undone.'}
+        confirmLabel={language === 'id' ? 'Hapus permanen' : 'Delete permanently'}
+        onConfirm={() => { if (deleteTarget) void confirmDelete(deleteTarget); }}
+      />
 
       {/* UPLOAD MODAL */}
       <Modal open={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} size="md" title={language === 'id' ? 'Unggah dokumen' : 'Upload document'} description={language === 'id' ? 'Tambahkan dokumen ke private vault AMS.' : 'Add a document to the AMS private vault.'}>
