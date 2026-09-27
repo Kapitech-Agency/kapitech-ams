@@ -205,6 +205,7 @@ export const AdminInvoicing: React.FC = () => {
 
   const [detailInvoice, setDetailInvoice] = useState<AgencyInvoice | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ type: 'invoice' | 'expense'; id: string; label: string } | null>(null);
+  const [confirmingAction, setConfirmingAction] = useState(false);
   const [invoiceDirty, setInvoiceDirty] = useState(false);
   const [expenseDirty, setExpenseDirty] = useState(false);
   const [paymentDirty, setPaymentDirty] = useState(false);
@@ -340,6 +341,10 @@ export const AdminInvoicing: React.FC = () => {
 
   const invoicePageCount = Math.max(1, Math.ceil(filteredInvoices.length / invoicePageSize));
 
+  useEffect(() => {
+    setInvoicePage((page) => Math.min(page, invoicePageCount));
+  }, [invoicePageCount]);
+
   const actionRequiredInvoices = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -382,9 +387,18 @@ export const AdminInvoicing: React.FC = () => {
   }, [filteredExpenses, expensePage]);
   const expensePageCount = Math.max(1, Math.ceil(filteredExpenses.length / expensePageSize));
 
+  useEffect(() => {
+    setExpensePage((page) => Math.min(page, expensePageCount));
+  }, [expensePageCount]);
+
   const invoiceTotals = useMemo(
     () => computeInvoiceTotals(invoiceItems, taxPercent, discountPercent),
     [invoiceItems, taxPercent, discountPercent]
+  );
+
+  const invoiceBillingLocked = Boolean(
+    editingInvoice
+    && ((editingInvoice.payments?.length ?? 0) > 0 || Number(editingInvoice.amountPaid || 0) > 0)
   );
 
   const resetInvoiceForm = () => {
@@ -466,9 +480,21 @@ export const AdminInvoicing: React.FC = () => {
     setProjectId(id);
     const project = projects.find((item) => item.id === id);
     if (!project) return;
-    if (project.clientId) selectClient(project.clientId);
+
+    if (project.clientId) {
+      const client = clients.find((item) => item.id === project.clientId);
+      setClientId(project.clientId);
+      setClientName(client?.name || project.clientName || '');
+      setClientCompany(client?.company || project.clientCompany || '');
+      setClientEmail(client?.email || project.clientEmail || '');
+      setClientPhone(client?.phone || '');
+      return;
+    }
+
+    setClientId('');
     if (!clientName) setClientName(project.clientName || '');
     if (!clientCompany) setClientCompany(project.clientCompany || '');
+    if (!clientEmail) setClientEmail(project.clientEmail || '');
   };
 
   const updateLineItem = (index: number, patch: Partial<InvoiceLineItem>) => {
@@ -486,15 +512,28 @@ export const AdminInvoicing: React.FC = () => {
     event.preventDefault();
     if (!canManageInvoices || savingInvoice) return;
 
-    const validItems = invoiceItems
-      .filter((item) => item.description.trim() && Number(item.quantity) > 0 && Number(item.unitPrice) >= 0)
-      .map((item) => ({
-        ...item,
-        description: item.description.trim(),
-        quantity: Number(item.quantity),
-        unitPrice: Number(item.unitPrice),
-        amount: Math.round(Number(item.quantity) * Number(item.unitPrice))
-      }));
+    const invalidLineItem = invoiceItems.some((item) => (
+      !item.description.trim()
+      || !Number.isFinite(Number(item.quantity))
+      || Number(item.quantity) <= 0
+      || !Number.isFinite(Number(item.unitPrice))
+      || Number(item.unitPrice) < 0
+    ));
+
+    if (invalidLineItem) {
+      showNotice('danger', language === 'id'
+        ? 'Setiap line item harus memiliki deskripsi, jumlah valid, dan harga satuan yang valid.'
+        : 'Every line item must have a description, a valid quantity, and a valid unit price.');
+      return;
+    }
+
+    const validItems = invoiceItems.map((item) => ({
+      ...item,
+      description: item.description.trim(),
+      quantity: Number(item.quantity),
+      unitPrice: Number(item.unitPrice),
+      amount: Math.round(Number(item.quantity) * Number(item.unitPrice))
+    }));
 
     const numericTax = Number(taxPercent);
     const numericDiscount = Number(discountPercent);
@@ -688,7 +727,8 @@ export const AdminInvoicing: React.FC = () => {
   };
 
   const confirmDelete = async () => {
-    if (!confirmAction) return;
+    if (!confirmAction || confirmingAction) return;
+    setConfirmingAction(true);
     const result = confirmAction.type === 'invoice'
       ? await api.finance.deleteInvoice(confirmAction.id)
       : await api.finance.deleteExpense(
@@ -709,6 +749,7 @@ export const AdminInvoicing: React.FC = () => {
       await loadData(true);
     }
     setConfirmAction(null);
+    setConfirmingAction(false);
   };
 
   const openPrintPreview = (invoice: AgencyInvoice) => setDetailInvoice(invoice);
@@ -1064,7 +1105,7 @@ export const AdminInvoicing: React.FC = () => {
                                   )}
                                   <button type="button" onClick={() => openPrintPreview(invoice)} className="inline-flex min-h-10 min-w-10 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-control border border-line bg-transparent text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" aria-label="View invoice" title="View invoice"><FileText size={14} /></button>
                                   {canManageInvoices && invoice.status !== 'cancelled' && <button type="button" onClick={() => openEditInvoice(invoice)} className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-control border border-line bg-transparent text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" aria-label="Edit invoice" title="Edit invoice"><Edit3 size={14} /></button>}
-                                  {canManageInvoices && canDeleteInvoice && invoice.status !== 'cancelled' && <button type="button" onClick={() => setConfirmAction({ type: 'invoice', id: invoice.id, label: invoice.invoiceNumber })} className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-control border border-line bg-transparent text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" aria-label="Cancel invoice" title="Cancel invoice"><Trash2 size={14} /></button>}
+                                  {canManageInvoices && canDeleteInvoice && !['cancelled', 'paid', 'partially_paid'].includes(invoice.status) && <button type="button" onClick={() => setConfirmAction({ type: 'invoice', id: invoice.id, label: invoice.invoiceNumber })} className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-control border border-line bg-transparent text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" aria-label="Cancel invoice" title="Cancel invoice"><Trash2 size={14} /></button>}
                                 </div>
                               </td>
                             </tr>
@@ -1373,14 +1414,14 @@ export const AdminInvoicing: React.FC = () => {
 
       <Modal
         open={!!confirmAction}
-        onClose={() => setConfirmAction(null)}
+        onClose={() => { if (!confirmingAction) setConfirmAction(null); }}
         size="sm"
         title={confirmAction?.type === 'invoice' ? 'Cancel invoice?' : 'Void expense?'}
         description={confirmAction ? confirmAction.label : undefined}
         footer={
           <>
             <button type="button" onClick={() => setConfirmAction(null)} className={actionClass}>Keep record</button>
-            <button type="button" onClick={() => void confirmDelete()} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control bg-danger px-3.5 text-xs font-semibold text-white"><Trash2 size={14} />Confirm</button>
+            <button type="button" onClick={() => void confirmDelete()} disabled={confirmingAction} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control bg-danger px-3.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"><Trash2 size={14} />{confirmingAction ? 'Processing...' : 'Confirm'}</button>
           </>
         }
       >
