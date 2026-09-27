@@ -16,32 +16,71 @@ type ServerNotification = {
   readAt?: string | null;
 };
 
+const sampleNotifications: ServerNotification[] = [
+  {
+    id: 'sample-1',
+    title: 'Project milestone due',
+    message: 'Meridian Commerce checkout UI review is due tomorrow.',
+    type: 'Project',
+    createdAt: new Date().toISOString(),
+    isRead: false,
+  },
+  {
+    id: 'sample-2',
+    title: 'Invoice follow-up',
+    message: 'An outstanding invoice is ready for follow-up.',
+    type: 'Finance',
+    createdAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+    isRead: false,
+  },
+  {
+    id: 'sample-3',
+    title: 'Team capacity alert',
+    message: 'Raka is approaching maximum planned utilization.',
+    type: 'Capacity',
+    createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+    isRead: true,
+  },
+];
+
 export const AdminNotificationCenter: React.FC = () => {
   const { language } = useLanguage();
   const [items, setItems] = useState<ServerNotification[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [usingSampleData, setUsingSampleData] = useState(false);
   const [markingAllRead, setMarkingAllRead] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
   const refresh = async () => {
     setLoading(true);
-    const res = await api.notifications.getAll();
-    if (res.success && Array.isArray(res.data?.notifications)) {
-      setItems((res.data.notifications as Array<ServerNotification & { read?: boolean; timestamp?: string }>)
-        .map((notification) => ({
-          ...notification,
-          isRead: typeof notification.isRead === 'boolean'
-            ? notification.isRead
-            : Boolean(notification.read),
-          createdAt: notification.createdAt || notification.timestamp
-        })));
+    try {
+      const res = await api.notifications.getAll();
+      if (res.success && Array.isArray(res.data?.notifications)) {
+        setItems((res.data.notifications as Array<ServerNotification & { read?: boolean; timestamp?: string }>)
+          .map((notification) => ({
+            ...notification,
+            isRead: typeof notification.isRead === 'boolean'
+              ? notification.isRead
+              : Boolean(notification.read),
+            createdAt: notification.createdAt || notification.timestamp
+          })));
+        setUsingSampleData(false);
+        setError(null);
+        return;
+      }
+
+      setItems((current) => current.length > 0 ? current : sampleNotifications);
+      setUsingSampleData(true);
       setError(null);
-    } else {
-      setError(language === 'id' ? 'Notifikasi tidak dapat dimuat.' : 'Notifications could not be loaded.');
+    } catch {
+      setItems((current) => current.length > 0 ? current : sampleNotifications);
+      setUsingSampleData(true);
+      setError(null);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -53,21 +92,40 @@ export const AdminNotificationCenter: React.FC = () => {
   const unread = useMemo(() => items.filter(item => !item.isRead && !item.readAt).length, [items]);
 
   const markRead = async (id: string) => {
-    const res = await api.notifications.markRead(id);
-    if (res.success) setItems(prev => prev.map(item => item.id === id ? { ...item, isRead: true, readAt: new Date().toISOString() } : item));
+    const now = new Date().toISOString();
+    setItems(prev => prev.map(item => item.id === id ? { ...item, isRead: true, readAt: now } : item));
+    if (usingSampleData) return;
+
+    try {
+      const res = await api.notifications.markRead(id);
+      if (!res.success) {
+        setError(language === 'id' ? 'Status dibaca disimpan sementara di sesi ini.' : 'Read state is being kept locally for this session.');
+      }
+    } catch {
+      setError(language === 'id' ? 'Status dibaca disimpan sementara di sesi ini.' : 'Read state is being kept locally for this session.');
+    }
   };
 
   const markAllRead = async () => {
     if (markingAllRead || unread === 0) return;
     setMarkingAllRead(true);
+    const now = new Date().toISOString();
+    setItems(prev => prev.map(item => ({ ...item, isRead: true, readAt: now })));
+
+    if (usingSampleData) {
+      setMarkingAllRead(false);
+      return;
+    }
+
     try {
       const res = await api.notifications.markAllRead();
-      if (res.success) {
-        setItems(prev => prev.map(item => ({ ...item, isRead: true, readAt: new Date().toISOString() })));
-        setError(null);
+      if (!res.success) {
+        setError(language === 'id' ? 'Status baca disimpan sementara di sesi ini.' : 'Read state is being kept locally for this session.');
       } else {
-        setError(language === 'id' ? 'Notifikasi belum dapat ditandai dibaca.' : 'Notifications could not be marked as read.');
+        setError(null);
       }
+    } catch {
+      setError(language === 'id' ? 'Status baca disimpan sementara di sesi ini.' : 'Read state is being kept locally for this session.');
     } finally {
       setMarkingAllRead(false);
     }
@@ -105,8 +163,15 @@ export const AdminNotificationCenter: React.FC = () => {
       >
         <section id="ams-notification-menu" role="dialog" aria-label={language === 'id' ? 'Notifikasi' : 'Notifications'}>
           <div className="ams-notification-header flex min-h-14 items-center justify-between gap-3 border-b border-line px-4">
-            <div>
-              <p className="text-[13px] font-semibold text-fg">{language === 'id' ? 'Notifikasi' : 'Notifications'}</p>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="text-[13px] font-semibold text-fg">{language === 'id' ? 'Notifikasi' : 'Notifications'}</p>
+                {usingSampleData && (
+                  <span className="rounded-badge border border-warning/20 bg-warning/10 px-1.5 py-0.5 text-[9px] font-semibold text-warning">
+                    Sample
+                  </span>
+                )}
+              </div>
               <p className="mt-0.5 text-[11px] text-muted">{unread} {language === 'id' ? 'belum dibaca' : 'unread'}</p>
             </div>
             {unread > 0 && (
