@@ -282,7 +282,6 @@ export const AdminTimeLogs: React.FC = () => {
             </div>
           )}
         </section>
-      </div>
       <ConfirmDialog
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
