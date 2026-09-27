@@ -206,6 +206,7 @@ export const AdminInvoicing: React.FC = () => {
   const [detailInvoice, setDetailInvoice] = useState<AgencyInvoice | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ type: 'invoice' | 'expense'; id: string; label: string } | null>(null);
   const [confirmingAction, setConfirmingAction] = useState(false);
+  const [discardPrompt, setDiscardPrompt] = useState<'invoice' | 'expense' | 'payment' | null>(null);
   const [invoiceDirty, setInvoiceDirty] = useState(false);
   const [expenseDirty, setExpenseDirty] = useState(false);
   const [paymentDirty, setPaymentDirty] = useState(false);
@@ -425,6 +426,64 @@ export const AdminInvoicing: React.FC = () => {
   const openCreateInvoice = () => {
     resetInvoiceForm();
     setInvoiceModalOpen(true);
+  };
+
+  const requestCloseInvoice = () => {
+    if (savingInvoice) return;
+    if (invoiceDirty) {
+      setInvoiceModalOpen(false);
+      setDiscardPrompt('invoice');
+      return;
+    }
+    setInvoiceModalOpen(false);
+    setInvoiceDirty(false);
+  };
+
+  const requestCloseExpense = () => {
+    if (savingExpense) return;
+    if (expenseDirty) {
+      setExpenseModalOpen(false);
+      setDiscardPrompt('expense');
+      return;
+    }
+    setExpenseModalOpen(false);
+    setExpenseDirty(false);
+  };
+
+  const requestClosePayment = () => {
+    if (savingPayment) return;
+    if (paymentDirty) {
+      setPaymentInvoice(null);
+      setDiscardPrompt('payment');
+      return;
+    }
+    setPaymentInvoice(null);
+    setPaymentDirty(false);
+  };
+
+  const cancelDiscardPrompt = () => {
+    const target = discardPrompt;
+    setDiscardPrompt(null);
+    if (target === 'invoice') setInvoiceModalOpen(true);
+    if (target === 'expense') setExpenseModalOpen(true);
+    if (target === 'payment') {
+      // Keep the current payment draft in memory so the user can continue editing.
+      setPaymentInvoice((current) => current);
+    }
+  };
+
+  const confirmDiscardPrompt = () => {
+    const target = discardPrompt;
+    setDiscardPrompt(null);
+    if (target === 'invoice') setInvoiceDirty(false);
+    if (target === 'expense') {
+      setExpenseDirty(false);
+      setExpenseIdempotencyKey('');
+    }
+    if (target === 'payment') {
+      setPaymentDirty(false);
+      setPaymentIdempotencyKey('');
+    }
   };
 
   const openExpenseModal = () => {
@@ -1189,10 +1248,7 @@ export const AdminInvoicing: React.FC = () => {
       <Modal
         open={invoiceModalOpen}
         onClose={() => {
-          if (savingInvoice) return;
-          if (invoiceDirty && !window.confirm(language === 'id' ? 'Ada perubahan invoice yang belum disimpan. Buang perubahan?' : 'This invoice has unsaved changes. Discard them?')) return;
-          setInvoiceModalOpen(false);
-          setInvoiceDirty(false);
+          requestCloseInvoice();
         }}
         size="xl"
         title={editingInvoice ? 'Edit invoice' : 'Create invoice'}
@@ -1201,10 +1257,7 @@ export const AdminInvoicing: React.FC = () => {
         footer={
           <>
             <button type="button" onClick={() => {
-              if (savingInvoice) return;
-              if (invoiceDirty && !window.confirm(language === 'id' ? 'Ada perubahan invoice yang belum disimpan. Buang perubahan?' : 'This invoice has unsaved changes. Discard them?')) return;
-              setInvoiceModalOpen(false);
-              setInvoiceDirty(false);
+              requestCloseInvoice();
             }} className={actionClass} disabled={savingInvoice}>Cancel</button>
             <button type="submit" form="finance-invoice-form" className={primaryClass} disabled={savingInvoice}>{savingInvoice ? 'Saving...' : 'Save invoice'}</button>
           </>
@@ -1339,10 +1392,7 @@ export const AdminInvoicing: React.FC = () => {
       <Modal
         open={expenseModalOpen}
         onClose={() => {
-          if (savingExpense) return;
-          if (expenseDirty && !window.confirm(language === 'id' ? 'Ada perubahan pengeluaran yang belum disimpan. Buang perubahan?' : 'This expense has unsaved changes. Discard them?')) return;
-          setExpenseModalOpen(false);
-          setExpenseDirty(false);
+          requestCloseExpense();
         }}
         size="md"
         title="Record expense"
@@ -1351,10 +1401,7 @@ export const AdminInvoicing: React.FC = () => {
         footer={
           <>
             <button type="button" onClick={() => {
-              if (savingExpense) return;
-              if (expenseDirty && !window.confirm(language === 'id' ? 'Ada perubahan pengeluaran yang belum disimpan. Buang perubahan?' : 'This expense has unsaved changes. Discard them?')) return;
-              setExpenseModalOpen(false);
-              setExpenseDirty(false);
+              requestCloseExpense();
             }} className={actionClass} disabled={savingExpense}>Cancel</button>
             <button type="submit" form="finance-expense-form" className={primaryClass} disabled={savingExpense}>{savingExpense ? 'Saving...' : 'Save expense'}</button>
           </>
@@ -1379,10 +1426,7 @@ export const AdminInvoicing: React.FC = () => {
       <Modal
         open={!!paymentInvoice}
         onClose={() => {
-          if (savingPayment) return;
-          if (paymentDirty && !window.confirm(language === 'id' ? 'Ada data pembayaran yang belum disimpan. Buang perubahan?' : 'This payment has unsaved changes. Discard them?')) return;
-          setPaymentInvoice(null);
-          setPaymentDirty(false);
+          requestClosePayment();
         }}
         size="md"
         title="Record payment"
@@ -1391,10 +1435,7 @@ export const AdminInvoicing: React.FC = () => {
         footer={
           <>
             <button type="button" onClick={() => {
-              if (savingPayment) return;
-              if (paymentDirty && !window.confirm(language === 'id' ? 'Ada data pembayaran yang belum disimpan. Buang perubahan?' : 'This payment has unsaved changes. Discard them?')) return;
-              setPaymentInvoice(null);
-              setPaymentDirty(false);
+              requestClosePayment();
             }} className={actionClass} disabled={savingPayment}>Cancel</button>
             <button type="submit" form="finance-payment-form" className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control bg-success px-3.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50" disabled={savingPayment}><Check size={14} />{savingPayment ? 'Saving...' : 'Record payment'}</button>
           </>
