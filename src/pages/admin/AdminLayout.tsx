@@ -3,12 +3,9 @@ import { motion } from 'motion/react';
 import { Link, NavLink, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import {
   Home,
-  Inbox,
   Users,
-  Receipt,
   Briefcase,
   Landmark,
-  FileText,
   Settings,
   Menu,
   X,
@@ -48,11 +45,24 @@ interface NavSection {
   items: NavItem[];
 }
 
+type AdminNavItem = NavItem & { accessKey?: string };
+
+const STITCH_NAV_ITEMS: AdminNavItem[] = [
+  { key: 'dashboard', to: '/admin/dashboard', label: 'Dashboard', icon: Home },
+  { key: 'clients', to: '/admin/clients', label: 'Clients', icon: UsersRound },
+  { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, badge: 14 },
+  { key: 'tasks', to: '/admin/dashboard?view=tasks', label: 'Tasks', icon: ClipboardCheck, badge: 3, accessKey: 'projects' },
+  { key: 'team', to: '/admin/time-logs', label: 'Team', icon: UsersRound, accessKey: 'timelogs' },
+  { key: 'finance', to: '/admin/invoicing', label: 'Finance', icon: Landmark, accessKey: 'invoicing' },
+  { key: 'documents', to: '/admin/documents', label: 'Documents Vault', icon: LockKeyhole, badge: 'Encrypted' },
+  { key: 'system', to: '/admin/settings', label: 'System', icon: ServerCog, accessKey: 'settings' },
+];
+
 const DEFAULT_PROFILE_NAME = 'Fikri Nurlete';
 const DEFAULT_PROFILE_TITLE = 'Stakeholder account';
 
 export const AdminLayout: React.FC = () => {
-  const { language, t } = useLanguage();
+  const { language } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
   const session = getAdminSession();
@@ -165,20 +175,9 @@ export const AdminLayout: React.FC = () => {
     navigate('/admin/login', { replace: true });
   };
 
-  const navItems: Array<NavItem & { accessKey?: string }> = [
-    { key: 'dashboard', to: '/admin/dashboard', label: 'Dashboard', icon: Home },
-    { key: 'clients', to: '/admin/clients', label: 'Clients', icon: UsersRound },
-    { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, badge: 14 },
-    { key: 'tasks', to: '/admin/dashboard?view=tasks', label: 'Tasks', icon: ClipboardCheck, badge: 3, accessKey: 'projects' },
-    { key: 'team', to: '/admin/time-logs', label: 'Team', icon: UsersRound, accessKey: 'timelogs' },
-    { key: 'finance', to: '/admin/invoicing', label: 'Finance', icon: Landmark, accessKey: 'invoicing' },
-    { key: 'documents', to: '/admin/documents', label: 'Documents Vault', icon: LockKeyhole, badge: 'Encrypted' },
-    { key: 'system', to: '/admin/settings', label: 'System', icon: ServerCog, accessKey: 'settings' },
-  ];
-
   const filteredNavItems = useMemo(
-    () => navItems.filter((item) => isAllowed(item.accessKey || item.key)),
-    [navItems, isAllowed]
+    () => STITCH_NAV_ITEMS.filter((item) => isAllowed(item.accessKey || item.key)),
+    [isAllowed]
   );
 
   const settingsAllowed = isAllowed('settings');
