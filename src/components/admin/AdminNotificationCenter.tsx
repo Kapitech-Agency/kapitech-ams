@@ -88,7 +88,7 @@ export const AdminNotificationCenter: React.FC = () => {
     void refresh();
     const timer = window.setInterval(() => void refresh(), 30000);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [language]);
 
   const unread = useMemo(() => items.filter(item => !item.isRead && !item.readAt).length, [items]);
 
