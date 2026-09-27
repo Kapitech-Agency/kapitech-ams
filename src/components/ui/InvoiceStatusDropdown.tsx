@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useId } from 'react';
 import { ChevronDown, Check, CircleCheck, Clock3, Send, CircleAlert, FileText } from 'lucide-react';
 import { DropdownPortal } from './DropdownPortal';
 import { InvoiceStatus } from '../../lib/financeStore';
@@ -60,6 +60,7 @@ export const InvoiceStatusDropdown: React.FC<InvoiceStatusDropdownProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const listboxId = useId();
 
   const current = statusConfigs[status] || statusConfigs.draft;
   const CurrentIcon = current.icon;
@@ -80,11 +81,53 @@ export const InvoiceStatusDropdown: React.FC<InvoiceStatusDropdownProps> = ({
           setIsOpen((open) => !open);
         }}
         onKeyDown={(e) => {
-          if (e.key === 'Escape' || e.key === 'Tab') setIsOpen(false);
+          if (disabled) return;
+
+          if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            const delta = e.key === 'ArrowDown' ? 1 : -1;
+            const nextIndex = (activeIndex + delta + statuses.length) % statuses.length;
+            setActiveIndex(nextIndex);
+            setIsOpen(true);
+            return;
+          }
+
+          if (e.key === 'Home' || e.key === 'End') {
+            e.preventDefault();
+            setActiveIndex(e.key === 'Home' ? 0 : statuses.length - 1);
+            setIsOpen(true);
+            return;
+          }
+
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            if (isOpen) {
+              const nextStatus = statuses[activeIndex];
+              if (nextStatus) {
+                onChange(nextStatus);
+                setIsOpen(false);
+              }
+            } else {
+              setActiveIndex(Math.max(0, statuses.indexOf(status)));
+              setIsOpen(true);
+            }
+            return;
+          }
+
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            setIsOpen(false);
+            return;
+          }
+
+          if (e.key === 'Tab') {
+            setIsOpen(false);
+          }
         }}
         ref={triggerRef}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
+        aria-controls={isOpen ? listboxId : undefined}
         className={`flex items-center justify-between gap-2 rounded-badge font-sans text-xs font-semibold border transition-colors duration-150 select-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 ${
           size === 'sm' ? 'min-h-10 sm:min-h-7 px-2.5 py-1 text-[11px]' : 'min-h-10 sm:min-h-8 px-3 py-1.5 text-xs'
         } ${current.badgeClass} ${
@@ -110,7 +153,7 @@ export const InvoiceStatusDropdown: React.FC<InvoiceStatusDropdownProps> = ({
         align="left"
         className="ams-popover-surface min-w-[150px] max-w-[calc(100vw-16px)] max-h-[min(320px,calc(100dvh-16px))] overflow-y-auto overscroll-contain p-1 font-sans text-xs"
       >
-        <div role="listbox" className="space-y-0.5">
+        <div id={listboxId} role="listbox" aria-label="Invoice status" className="space-y-0.5">
           {statuses.map((item) => {
             const isSelected = item === status;
             const config = statusConfigs[item];
@@ -129,6 +172,7 @@ export const InvoiceStatusDropdown: React.FC<InvoiceStatusDropdownProps> = ({
                 }}
                 data-selected={isSelected}
                 data-active={statuses.indexOf(item) === activeIndex}
+                onMouseEnter={() => setActiveIndex(statuses.indexOf(item))}
                 className={`ams-dropdown-item w-full flex items-center justify-between min-h-10 sm:min-h-9 px-2.5 py-2 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[-2px] ${
                   isSelected
                     ? 'bg-accent/10 text-fg font-semibold'
