@@ -3,6 +3,7 @@ import { Bell, CheckCheck } from 'lucide-react';
 import { api } from '../../lib/apiClient';
 import { useLanguage } from '../../lib/LanguageContext';
 import { DropdownPortal } from '../ui/DropdownPortal';
+import { Skeleton } from '../ui/Skeleton';
 
 type ServerNotification = {
   id: string;
@@ -50,11 +51,6 @@ export const AdminNotificationCenter: React.FC = () => {
 
   const unread = useMemo(() => items.filter(item => !item.isRead && !item.readAt).length, [items]);
 
-  const closeMenu = () => {
-    setOpen(false);
-    requestAnimationFrame(() => triggerRef.current?.focus());
-  };
-
   const markRead = async (id: string) => {
     const res = await api.notifications.markRead(id);
     if (res.success) setItems(prev => prev.map(item => item.id === id ? { ...item, isRead: true, readAt: new Date().toISOString() } : item));
@@ -82,7 +78,7 @@ export const AdminNotificationCenter: React.FC = () => {
         ref={triggerRef}
         type="button"
         onClick={() => setOpen(v => !v)}
-        className="relative flex h-11 w-11 items-center justify-center rounded-control border border-line bg-panel text-muted transition-colors hover:bg-panel-hover hover:border-muted hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+        className="relative flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted transition-colors hover:bg-panel-hover hover:border-muted hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
         aria-label={language === 'id' ? 'Notifikasi' : 'Notifications'}
         aria-haspopup="dialog"
         aria-expanded={open}
@@ -95,7 +91,7 @@ export const AdminNotificationCenter: React.FC = () => {
       <DropdownPortal
         open={open}
         anchorRef={triggerRef}
-        onClose={closeMenu}
+        onClose={() => setOpen(false)}
         align="right"
         offset={8}
         className="ams-notification-surface w-[min(380px,calc(100vw-24px))] overflow-hidden"
@@ -117,7 +113,18 @@ export const AdminNotificationCenter: React.FC = () => {
                 </button>
               </div>
             ) : loading && items.length === 0 ? (
-              <div className="px-4 py-10 text-center text-[12px] text-muted">{language === 'id' ? 'Memuat notifikasi...' : 'Loading notifications...'}</div>
+              <div className="space-y-1 p-2" aria-label={language === 'id' ? 'Memuat notifikasi' : 'Loading notifications'} role="status">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <div key={index} className="flex gap-3 border-b border-line px-2 py-3.5 last:border-b-0">
+                    <Skeleton className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" />
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <Skeleton className="h-3 w-2/5" />
+                      <Skeleton className="h-3 w-full" />
+                      <Skeleton className="h-2.5 w-1/3" />
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : items.length === 0 ? (
               <div className="px-4 py-10 text-center text-[12px] text-muted">{language === 'id' ? 'Tidak ada notifikasi.' : 'No notifications.'}</div>
             ) : items.slice(0, 30).map(item => (
