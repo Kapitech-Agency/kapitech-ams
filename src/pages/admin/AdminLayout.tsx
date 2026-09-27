@@ -20,7 +20,6 @@ import {
   LogOut,
   Sun,
   Moon,
-  UserCircle,
   HelpCircle,
   Search
 } from 'lucide-react';
@@ -31,7 +30,6 @@ import { AdminNotificationCenter } from '../../components/admin/AdminNotificatio
 import { Modal } from '../../components/ui/Modal';
 import { useRbacRole } from '../../lib/rbacEngine';
 import { AmsBrandLogo } from '../../components/admin/AmsBrandLogo';
-import { DropdownPortal } from '../../components/ui/DropdownPortal';
 
 interface NavItem {
   key: string;
@@ -80,8 +78,6 @@ export const AdminLayout: React.FC = () => {
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     try { return window.localStorage.getItem('kapitech_ams_theme') === 'light' ? 'light' : 'dark'; } catch { return 'dark'; }
   });
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const profileTriggerRef = React.useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -213,9 +209,7 @@ export const AdminLayout: React.FC = () => {
       .filter(section => section.items.length > 0);
   }, [navSections, isAllowed]);
 
-  const settingsItem = filteredNavSections
-    .find((section) => section.id === 'admin')
-    ?.items.find((item) => item.key === 'settings');
+  const settingsAllowed = isAllowed('settings');
   const contentNavSections = filteredNavSections.filter((section) => section.id !== 'admin');
 
   // Helper to determine if link is active
@@ -234,12 +228,9 @@ export const AdminLayout: React.FC = () => {
     return false;
   };
 
-  const activeSectionId = filteredNavSections.find((section) =>
-    section.items.some((item) => isItemActive(item.to))
-  )?.id ?? filteredNavSections[0]?.id;
-
-  // Find active item label for breadcrumb
+  // Current location labels used by the utility bar.
   let activeItemLabel = 'Dashboard';
+  let activeSectionLabel = '';
   if (location.pathname === '/admin/settings') {
     activeItemLabel = t('admin.nav.settings');
   } else {
@@ -247,10 +238,16 @@ export const AdminLayout: React.FC = () => {
       for (const item of section.items) {
         if (isItemActive(item.to)) {
           activeItemLabel = item.label;
+          activeSectionLabel = t(section.titleKey);
           break;
         }
       }
+      if (activeSectionLabel) break;
     }
+  }
+
+  if (!activeSectionLabel) {
+    activeSectionLabel = t('admin.nav.coreOperations');
   }
 
   return (
@@ -268,29 +265,23 @@ export const AdminLayout: React.FC = () => {
         initial={false}
         animate={{ width: sidebarCollapsed ? 64 : 220 }}
         transition={{ duration: 0.18, ease: 'easeOut' }}
-        className={`hidden min-[900px]:flex flex-col bg-panel border-r border-line shrink-0 h-full z-30 overflow-hidden ${sidebarCollapsed ? 'ams-sidebar-collapsed' : 'ams-sidebar-expanded'}`}
+        className={`hidden min-[900px]:flex flex-col bg-panel border-r border-line shrink-0 h-full z-30 overflow-visible ${sidebarCollapsed ? 'ams-sidebar-collapsed' : 'ams-sidebar-expanded'}`}
       >
-        <div className={`relative shrink-0 px-2.5 py-2 border-b border-line ${sidebarCollapsed ? 'h-12' : ''}`}>
-          <div className={`flex h-10 items-center min-w-0 ${sidebarCollapsed ? 'justify-center' : 'gap-2'}`}>
-            <Link to="/admin/dashboard" aria-label="Kapitech AMS dashboard" className={`group flex min-w-0 items-center rounded-control min-h-10 transition-colors duration-150 hover:bg-panel-hover focus-visible:outline-none ${sidebarCollapsed ? 'w-full justify-center px-1' : 'flex-1 gap-3 px-2'}`}>
-              <div className="h-9 w-9 rounded-control bg-bg border border-line p-1.5 flex items-center justify-center shrink-0 transition-colors duration-150 group-hover:border-accent/40">
-                <AmsBrandLogo className="h-5 w-5" />
-              </div>
-              {!sidebarCollapsed && (
-                <div className="min-w-0 py-0.5">
-                  <div className="flex items-center gap-2 leading-none">
-                    <span className="text-[13px] font-semibold tracking-[0.01em] text-fg whitespace-nowrap">KAPITECH</span>
-                    <span className="shrink-0 rounded-badge border border-accent/25 bg-accent/8 px-1.5 py-0.5 text-[9px] font-semibold tracking-[0.04em] text-accent-text">AMS</span>
-                  </div>
-                  <p className="mt-1 text-[10px] leading-4 text-muted whitespace-nowrap">Agency Management System</p>
+        <div className="relative shrink-0 border-b border-line px-2.5 py-3">
+          <Link to="/admin/dashboard" aria-label="Kapitech AMS dashboard" className={`group flex min-h-10 items-center rounded-control px-2 transition-colors duration-150 hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
+            <div className="h-9 w-9 rounded-control bg-bg border border-line p-1.5 flex items-center justify-center shrink-0 transition-colors duration-150 group-hover:border-accent/40">
+              <AmsBrandLogo className="h-5 w-5" />
+            </div>
+            {!sidebarCollapsed && (
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 leading-none">
+                  <span className="text-[13px] font-semibold text-fg whitespace-nowrap">KAPITECH</span>
+                  <span className="shrink-0 rounded-badge border border-accent/25 bg-accent/8 px-1.5 py-0.5 text-[9px] font-semibold text-accent-text">AMS</span>
                 </div>
-              )}
-            </Link>
-            <button type="button" onClick={() => setSidebarCollapsed(v => !v)} aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'} title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              className={`ams-sidebar-toggle group flex h-7 w-7 !min-h-7 !min-w-7 items-center justify-center rounded-control border border-line bg-panel text-muted transition-[background-color,border-color,color,transform] duration-150 ease-out hover:border-accent/30 hover:bg-panel-hover hover:text-fg active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-panel ${sidebarCollapsed ? 'absolute right-1 top-2' : 'shrink-0'}`}>
-              {sidebarCollapsed ? <ChevronRight size={13} strokeWidth={2} /> : <ChevronLeft size={13} strokeWidth={2} />}
-            </button>
-          </div>
+                <p className="mt-1 text-[10px] leading-4 text-muted whitespace-nowrap">Agency Management System</p>
+              </div>
+            )}
+          </Link>
         </div>
         <div className="shrink-0 px-2.5 py-2">
           <button
@@ -334,30 +325,44 @@ export const AdminLayout: React.FC = () => {
             ))}
           </div>
         </div>
-        {settingsItem && (
-          <div className="shrink-0 px-2.5 pb-1">
-            <Link to={settingsItem.to} title={sidebarCollapsed ? settingsItem.label : undefined} aria-current={isItemActive(settingsItem.to) ? 'page' : undefined}
-              className={`group flex min-h-10 items-center rounded-control text-[13px] font-medium transition-[background-color,color,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-panel active:scale-[0.985] ${sidebarCollapsed ? 'mx-auto h-10 w-10 justify-center px-0' : 'gap-2.5 px-2.5'} ${isItemActive(settingsItem.to) ? 'bg-accent/12 text-fg' : 'text-muted hover:bg-panel-hover hover:text-fg'}`}>
-              <Settings size={16} strokeWidth={isItemActive(settingsItem.to) ? 2.1 : 1.8} className={`shrink-0 transition-colors duration-150 ${isItemActive(settingsItem.to) ? 'text-accent-text' : 'text-muted group-hover:text-fg'}`} />
-              {!sidebarCollapsed && <span className="truncate">{settingsItem.label}</span>}
-            </Link>
-          </div>
-        )}
-        <div className={`shrink-0 border-t border-line bg-panel px-2.5 py-2 ${sidebarCollapsed ? 'space-y-2' : ''}`}>
-          <div className={`group flex min-h-10 items-center rounded-control transition-colors duration-150 hover:bg-panel-hover ${sidebarCollapsed ? 'justify-center' : 'gap-2.5 px-1.5'}`}>
-            <div className="h-8 w-8 rounded-control bg-accent/90 border border-accent/30 flex items-center justify-center text-xs font-semibold text-fg shrink-0">{roleMeta.accountProfile.avatarLabel}</div>
-            {!sidebarCollapsed && (
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-xs font-semibold text-fg">{roleMeta.accountProfile.displayName}</div>
-                <div className="mt-0.5 flex min-w-0 items-center gap-1 text-[11px] text-muted"><span className="h-1.5 w-1.5 shrink-0 rounded-full bg-success" /><span className="truncate">{roleMeta.accountProfile.accountId}</span></div>
+        <div className="shrink-0 border-t border-line bg-panel p-2.5">
+          <div className={`flex min-h-10 items-center rounded-control border border-line bg-bg ${sidebarCollapsed ? 'justify-center px-1.5' : 'gap-2.5 px-2'}`}>
+            <Link
+              to="/admin/settings"
+              aria-label="Open settings"
+              title={sidebarCollapsed ? 'Settings' : undefined}
+              className={`group flex min-w-0 items-center rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${sidebarCollapsed ? 'justify-center' : 'flex-1 gap-2.5'}`}
+            >
+              <div className="h-8 w-8 rounded-control border border-accent/30 bg-accent/15 flex items-center justify-center text-xs font-semibold text-accent-text shrink-0">
+                {roleMeta.accountProfile.avatarLabel}
               </div>
-            )}
-            <button type="button" onClick={handleLogout} aria-label={t('admin.nav.logout')} title={t('admin.nav.logout')}
-              className={`group/logout flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted transition-[background-color,border-color,color,transform] duration-150 hover:border-danger/30 hover:bg-danger/10 hover:text-danger active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger focus-visible:ring-offset-2 focus-visible:ring-offset-panel ${sidebarCollapsed ? '' : 'ml-auto'}`}>
+              {!sidebarCollapsed && (
+                <div className="min-w-0">
+                  <div className="truncate text-xs font-semibold text-fg">{roleMeta.accountProfile.displayName}</div>
+                  <div className="mt-0.5 truncate text-[10px] text-muted">{roleMeta.accountProfile.accountId}</div>
+                </div>
+              )}
+            </Link>
+            <button
+              type="button"
+              onClick={handleLogout}
+              aria-label={t('admin.nav.logout')}
+              title={t('admin.nav.logout')}
+              className={`group flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-panel text-muted transition-[background-color,border-color,color,transform] duration-150 hover:border-danger/40 hover:bg-danger/10 hover:text-danger active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger ${sidebarCollapsed ? '' : 'ml-auto'}`}
+            >
               <LogOut size={15} strokeWidth={1.9} />
             </button>
           </div>
         </div>
+        <button
+          type="button"
+          onClick={() => setSidebarCollapsed(v => !v)}
+          aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          className="ams-sidebar-toggle group absolute right-0 top-1/2 z-50 flex h-7 w-7 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-panel text-muted transition-[background-color,border-color,color,transform] duration-150 hover:border-accent/40 hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg active:scale-95"
+        >
+          {sidebarCollapsed ? <ChevronRight size={13} strokeWidth={2} /> : <ChevronLeft size={13} strokeWidth={2} />}
+        </button>
       </motion.aside>
 
       <Modal
