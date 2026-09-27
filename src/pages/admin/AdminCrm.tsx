@@ -678,7 +678,7 @@ export const AdminCrm: React.FC = () => {
                               <span className="text-success font-semibold font-sans text-sm tracking-[-0.01em]">
                                 {formatAmount(lead.dealValue, currency)}
                               </span>
-                              <span className="text-[10px] text-muted font-sans px-1.5 py-0.5 rounded bg-panel border border-line shrink-0">
+                              <span className="text-[10px] text-muted font-sans px-1.5 py-0.5 rounded-badge bg-panel border border-line shrink-0">
                                 {lead.source}
                               </span>
                             </div>
@@ -703,7 +703,7 @@ export const AdminCrm: React.FC = () => {
                                     onClick={() => handleConvertToProject(lead)}
                                     disabled={!canManageCrm}
                                     title={language === 'id' ? 'Konversi ke Proyek Aktif' : 'Convert deal to Agency Project'}
-                                    className="h-10 sm:h-7 min-h-10 sm:min-h-0 px-2.5 rounded-control bg-accent/20 hover:bg-accent/40 text-danger border border-accent/30 text-[10px] font-semibold font-sans transition-colors flex items-center gap-1 whitespace-nowrap"
+                                    className="h-10 sm:h-7 min-h-10 sm:min-h-0 px-2.5 rounded-control bg-info/10 hover:bg-info/15 text-info border border-info/30 text-[10px] font-semibold font-sans transition-colors flex items-center gap-1 whitespace-nowrap"
                                   >
                                     <Layers size={11} />
                                     <span>Project</span>
