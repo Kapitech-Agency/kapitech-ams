@@ -347,7 +347,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
           {searchResults.length > 0 && (
             <div>
               <div className="px-3 py-1.5 text-[10px] font-sans tracking-normal text-muted">
-                {language === 'id' ? 'Hasil Pencarian Database' : 'Database Records'} ({searchResults.length})
+                {language === 'id' ? 'Hasil pencarian database' : 'Database records'} ({searchResults.length})
               </div>
               <div className="space-y-1">
                 {searchResults.map((result, index) => {
@@ -360,7 +360,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
                       aria-selected={isActive}
                       onMouseEnter={() => setActiveIndex(index)}
                       onClick={() => runSelected(index)}
-                      className={`group flex w-full items-center justify-between rounded-control p-2.5 text-left transition-colors ${isActive ? 'bg-panel' : 'hover:bg-panel-hover'}`}
+                      className={`group flex w-full items-center justify-between rounded-control p-2.5 text-left transition-colors ${isActive ? 'bg-panel-hover' : 'hover:bg-panel-hover'}`}
                     >
                       <div className="flex min-w-0 items-center gap-2.5">
                         <span className={`shrink-0 rounded-badge border px-2 py-0.5 text-[9px] font-sans font-medium normal-case ${getBadgeColor(result.type)}`}>
@@ -387,7 +387,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
           <div>
             {searchResults.length > 0 && (
               <div className="mt-2 border-t border-line px-3 py-1.5 text-[10px] font-sans tracking-normal text-muted">
-                {language === 'id' ? 'Perintah & Modul' : 'Commands & Navigation'}
+                {language === 'id' ? 'Perintah & modul' : 'Commands & navigation'}
               </div>
             )}
 
