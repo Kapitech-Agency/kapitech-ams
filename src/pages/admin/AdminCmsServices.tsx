@@ -32,7 +32,7 @@ import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 
 export const AdminCmsServices: React.FC = () => {
   const { language } = useLanguage();
@@ -233,29 +233,39 @@ export const AdminCmsServices: React.FC = () => {
       )}
 
       {/* Catalog metrics */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 w-full">
-        {(() => {
-          const developmentCount = servicesList.filter((item) => item.category === 'Development').length;
-          const designCount = servicesList.filter((item) => item.category === 'Design').length;
-          const activeCategories = new Set(servicesList.map((item) => item.category)).size;
-          return [
-            { label: 'Total services', value: servicesList.length, icon: Layers, tone: 'accent' },
-            { label: 'Development', value: developmentCount, icon: Code, tone: 'accent' },
-            { label: 'Design', value: designCount, icon: PenTool, tone: 'info' },
-            { label: 'Categories used', value: activeCategories, icon: Sliders, tone: 'success' }
-          ].map((metric) => {
-            const Icon = metric.icon;
-            const toneClass = metric.tone === 'info' ? 'text-info bg-info/10 border-info/30' : metric.tone === 'success' ? 'text-success bg-success/10 border-success/30' : 'text-accent-text bg-accent/10 border-accent/30';
-            return (
-              <div key={metric.label} className="rounded-card border border-line bg-panel p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <div className="text-xs text-muted">{metric.label}</div>
-                    <div className="mt-1 text-xl font-medium tabular-nums text-fg">{metric.value}</div>
-                  </div>
-                  <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-control border ${toneClass}`}><Icon size={15} /></div>
-                </div>
-              </div>
+      <AdminMetricStrip
+        className="grid-cols-2 sm:grid-cols-4"
+        metrics={[
+          {
+            id: 'total-services',
+            label: 'Total services',
+            value: servicesList.length,
+            icon: <Layers size={15} />,
+            toneClassName: 'text-accent-text'
+          },
+          {
+            id: 'development-services',
+            label: 'Development',
+            value: servicesList.filter((item) => item.category === 'Development').length,
+            icon: <Code size={15} />,
+            toneClassName: 'text-accent-text'
+          },
+          {
+            id: 'design-services',
+            label: 'Design',
+            value: servicesList.filter((item) => item.category === 'Design').length,
+            icon: <PenTool size={15} />,
+            toneClassName: 'text-info'
+          },
+          {
+            id: 'active-categories',
+            label: 'Categories used',
+            value: new Set(servicesList.map((item) => item.category)).size,
+            icon: <Sliders size={15} />,
+            toneClassName: 'text-success'
+          }
+        ]}
+      />
             );
           });
         })()}
@@ -270,8 +280,8 @@ export const AdminCmsServices: React.FC = () => {
               onClick={() => setSelectedCategory(cat)}
               className={`shrink-0 px-3 py-1.5 rounded-control text-xs font-sans transition-all ${
                 selectedCategory === cat
-                  ? 'bg-accent text-white font-semibold'
-                  : 'text-muted hover:text-fg hover:bg-panel'
+                  ? 'bg-panel-hover text-fg font-semibold border border-line'
+                  : 'text-muted border border-transparent hover:text-fg hover:bg-panel'
               }`}
             >
               {cat}
