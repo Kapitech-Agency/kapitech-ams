@@ -30,6 +30,9 @@ import { AdminNotificationCenter } from '../../components/admin/AdminNotificatio
 import { Modal } from '../../components/ui/Modal';
 import { useRbacRole } from '../../lib/rbacEngine';
 import { AmsBrandLogo } from '../../components/admin/AmsBrandLogo';
+import UserAvatar from '../../components/admin/UserAvatar';
+import UserProfileSettingsModal from '../../components/admin/UserProfileSettingsModal';
+import Button from '../../components/ui/Button';
 
 interface NavItem {
   key: string;
@@ -46,6 +49,9 @@ interface NavSection {
   titleKey: string;
   items: NavItem[];
 }
+
+const DEFAULT_PROFILE_NAME = 'Fikri Nurlete';
+const DEFAULT_PROFILE_TITLE = 'Chief Executive Officer';
 
 export const AdminLayout: React.FC = () => {
   const { language, t } = useLanguage();
@@ -75,6 +81,11 @@ export const AdminLayout: React.FC = () => {
   }, [sidebarCollapsed]);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
+  const [profileSettingsOpen, setProfileSettingsOpen] = useState(false);
+  const [profileName, setProfileName] = useState(DEFAULT_PROFILE_NAME);
+  const [profileAvatarUrl, setProfileAvatarUrl] = useState<string | null>(
+    () => (session?.user as any)?.avatarUrl || null
+  );
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     try { return window.localStorage.getItem('kapitech_ams_theme') === 'light' ? 'light' : 'dark'; } catch { return 'dark'; }
   });
@@ -87,6 +98,17 @@ export const AdminLayout: React.FC = () => {
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    const handleProfileUpdated = (event: Event) => {
+      const detail = (event as CustomEvent<{ name?: string; avatarUrl?: string | null }>).detail;
+      if (detail?.name) setProfileName(detail.name);
+      setProfileAvatarUrl(detail?.avatarUrl || null);
+    };
+
+    window.addEventListener('kapitech_profile_updated', handleProfileUpdated);
+    return () => window.removeEventListener('kapitech_profile_updated', handleProfileUpdated);
+  }, []);
 
   // Mobile navigation is a true drawer: lock the page, trap keyboard focus, and restore focus on close.
   useEffect(() => {
@@ -208,7 +230,6 @@ export const AdminLayout: React.FC = () => {
       }))
       .filter(section => section.items.length > 0);
   }, [navSections, isAllowed]);
-
   const settingsAllowed = isAllowed('settings');
   const contentNavSections = filteredNavSections.filter((section) => section.id !== 'admin');
 
@@ -266,7 +287,7 @@ export const AdminLayout: React.FC = () => {
         initial={false}
         animate={{ width: sidebarCollapsed ? 64 : 220 }}
         transition={{ duration: 0.18, ease: 'easeOut' }}
-        className={`hidden min-[900px]:flex flex-col bg-panel border-r border-line shrink-0 h-full z-30 overflow-visible ${sidebarCollapsed ? 'ams-sidebar-collapsed' : 'ams-sidebar-expanded'}`}
+        className={`hidden min-[900px]:flex flex-col relative bg-panel border-r border-line shrink-0 h-full z-30 overflow-visible ${sidebarCollapsed ? 'ams-sidebar-collapsed' : 'ams-sidebar-expanded'}`}
       >
         <div className="relative shrink-0 border-b border-line px-2.5 py-3">
           <Link to="/admin/dashboard" aria-label="Kapitech AMS dashboard" className={`group flex min-h-10 items-center rounded-control px-2 transition-colors duration-150 hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
@@ -309,33 +330,32 @@ export const AdminLayout: React.FC = () => {
           </div>
         </div>
         <div className="shrink-0 border-t border-line bg-panel p-2.5">
-          <div className={`flex min-h-10 items-center rounded-control border border-line bg-bg ${sidebarCollapsed ? 'justify-center px-1.5' : 'gap-2.5 px-2'}`}>
-            <Link
-              to="/admin/settings"
-              aria-label="Open settings"
-              title={sidebarCollapsed ? 'Settings' : undefined}
-              className={`group flex min-w-0 items-center rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${sidebarCollapsed ? 'justify-center' : 'flex-1 gap-2.5'}`}
-            >
-              <div className="h-8 w-8 rounded-control border border-accent/30 bg-accent/15 flex items-center justify-center text-xs font-semibold text-accent-text shrink-0">
-                {roleMeta.accountProfile.avatarLabel}
-              </div>
-              {!sidebarCollapsed && (
-                <div className="min-w-0">
-                  <div className="truncate text-xs font-semibold text-fg">{roleMeta.accountProfile.displayName}</div>
-                  <div className="mt-0.5 truncate text-[10px] text-muted">{roleMeta.accountProfile.accountId}</div>
-                </div>
-              )}
-            </Link>
+          <div className="rounded-card border border-line bg-bg p-2">
             <button
               type="button"
-              onClick={handleLogout}
-              aria-label={t('admin.nav.logout')}
-              title={t('admin.nav.logout')}
-              className={`group flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-panel text-muted transition-[background-color,border-color,color,transform] duration-150 hover:border-danger/40 hover:bg-danger/10 hover:text-danger active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger ${sidebarCollapsed ? '' : 'ml-auto'}`}
+              onClick={() => setProfileSettingsOpen(true)}
+              aria-label="Open profile settings"
+              className="group flex min-h-11 w-full items-center gap-2.5 rounded-control px-2 py-1.5 text-left transition-[background-color,border-color] duration-150 hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
-              <LogOut size={15} strokeWidth={1.9} />
-              {!sidebarCollapsed && <span className="ml-1 hidden min-[1100px]:inline text-[11px] font-medium">Sign out</span>}
+              <UserAvatar name={profileName} imageUrl={profileAvatarUrl} size="md" online />
+              {!sidebarCollapsed && (
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-xs font-semibold text-fg">{profileName}</div>
+                  <div className="mt-0.5 truncate text-[10px] text-muted">{DEFAULT_PROFILE_TITLE}</div>
+                </div>
+              )}
             </button>
+            <div className={sidebarCollapsed ? 'mt-2' : 'mt-2 flex justify-end'}>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleLogout}
+                aria-label="Sign out"
+                title="Sign out"
+                icon={<LogOut size={15} strokeWidth={1.9} />}
+                className="h-9 w-9 p-0"
+              />
+            </div>
           </div>
         </div>
         <button
@@ -385,6 +405,13 @@ export const AdminLayout: React.FC = () => {
         </div>
       </Modal>
 
+      <UserProfileSettingsModal
+        open={profileSettingsOpen}
+        onClose={() => setProfileSettingsOpen(false)}
+        displayName={profileName}
+        title={DEFAULT_PROFILE_TITLE}
+      />
+
       {/* ------------------------------------------------------------- */}
       {/* MOBILE TOPBAR - Single, sleek, non-cluttered header */}
       {/* ------------------------------------------------------------- */}
@@ -410,15 +437,15 @@ export const AdminLayout: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-1.5">
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={() => setCommandPaletteOpen(true)}
             aria-label="Search AMS"
             aria-keyshortcuts="Control+K Meta+K"
-            className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted transition-colors hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-          >
-            <Search size={15} />
-          </button>
+            icon={<Search size={15} />}
+            className="h-10 w-10 p-0"
+          />
           {settingsAllowed && (
             <Link
               to="/admin/settings"
@@ -428,9 +455,15 @@ export const AdminLayout: React.FC = () => {
               <Settings size={16} />
             </Link>
           )}
-          <button type="button" aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'} onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted transition-colors hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
-            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
+          <Button
+            type="button"
+            variant="secondary"
+            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+            title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            icon={theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            className="h-10 w-10 p-0"
+          />
           <AdminNotificationCenter />
         </div>
       </div>
@@ -482,21 +515,6 @@ export const AdminLayout: React.FC = () => {
               </button>
             </div>
 
-            <div className="shrink-0 border-b border-line bg-panel px-3 py-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  setCommandPaletteOpen(true);
-                }}
-                aria-label="Search AMS"
-                className="flex min-h-10 w-full items-center gap-2.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted transition-[background-color,border-color,color] duration-150 hover:border-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              >
-                <Search size={15} className="shrink-0" />
-                <span className="min-w-0 flex-1 truncate text-left">Search</span>
-              </button>
-            </div>
-
             {/* Scrollable Navigation List Filtered by Dynamic RBAC */}
             <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 space-y-4 custom-scrollbar">
               {contentNavSections.map((section) => (
@@ -537,27 +555,35 @@ export const AdminLayout: React.FC = () => {
             </div>
 
             {/* Bottom session details */}
-            <div className="p-3.5 border-t border-line bg-bg flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-6 h-6 rounded-control bg-accent border border-line flex items-center justify-center text-xs font-sans text-fg font-semibold shrink-0 ">
-                  {roleMeta.accountProfile.avatarLabel}
-                </div>
-                <div className="min-w-0">
-                  <div className="text-xs font-semibold text-fg truncate">{roleMeta.accountProfile.displayName}</div>
-                  <div className="text-xs font-sans text-muted truncate flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-success shrink-0" />
-                    <span className="truncate">{roleMeta.accountProfile.accountId}</span>
+            <div className="shrink-0 border-t border-line bg-bg p-3.5">
+              <div className="rounded-card border border-line bg-panel p-2.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setProfileSettingsOpen(true);
+                  }}
+                  aria-label="Open profile settings"
+                  className="flex min-h-11 w-full items-center gap-2.5 rounded-control px-2 py-1.5 text-left transition-colors hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                >
+                  <UserAvatar name={profileName} imageUrl={profileAvatarUrl} size="sm" online />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-xs font-semibold text-fg">{profileName}</div>
+                    <div className="mt-0.5 truncate text-[10px] text-muted">{DEFAULT_PROFILE_TITLE}</div>
                   </div>
+                </button>
+                <div className="mt-2 flex justify-end">
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={handleLogout}
+                    aria-label="Sign out"
+                    title="Sign out"
+                    icon={<LogOut size={15} />}
+                    className="h-9 w-9 p-0"
+                  />
                 </div>
               </div>
-              <button
-                onClick={handleLogout}
-                aria-label="Logout"
-                className="px-3 py-2 min-h-[40px] rounded-control bg-panel border border-line text-muted text-xs font-sans flex items-center gap-1.5 shrink-0 transition-[background-color,border-color,color,transform] duration-150 hover:bg-panel-hover hover:border-danger/30 hover:text-danger active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger"
-              >
-                <LogOut size={14} />
-                <span>{t('admin.nav.logout')}</span>
-              </button>
             </div>
           </motion.div>
         </div>
@@ -581,17 +607,18 @@ export const AdminLayout: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={() => setCommandPaletteOpen(true)}
                 aria-label="Search AMS"
                 aria-keyshortcuts="Control+K Meta+K"
-                className="hidden lg:flex h-10 w-44 items-center gap-2 rounded-control border border-line bg-bg px-3 text-muted transition-colors hover:border-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                icon={<Search size={15} />}
+                className="hidden lg:flex h-10 w-44 justify-start border-line bg-bg px-3"
               >
-                <Search size={15} className="shrink-0" />
-                <span className="flex-1 truncate text-left text-xs">Search AMS</span>
-                <kbd className="rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] text-muted">⌘K</kbd>
-              </button>
+                <span className="min-w-0 flex-1 truncate text-left text-xs">Search AMS</span>
+                <kbd className="ml-auto rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] text-muted">⌘K</kbd>
+              </Button>
               <Link
                 to="/admin/settings?tab=audit"
                 aria-label="Open help and audit"
@@ -600,15 +627,15 @@ export const AdminLayout: React.FC = () => {
               >
                 <HelpCircle size={16} />
               </Link>
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
                 title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted transition-colors hover:border-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              >
-                {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-              </button>
+                icon={theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+                className="h-10 w-10 p-0"
+              />
               <AdminNotificationCenter />
               {settingsAllowed && (
                 <Link
@@ -618,7 +645,6 @@ export const AdminLayout: React.FC = () => {
                   className={`flex h-10 w-10 items-center justify-center rounded-control border border-line transition-colors hover:border-accent/40 hover:bg-accent/8 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${location.pathname.startsWith('/admin/settings') ? 'bg-accent/10 text-accent-text' : 'bg-panel text-muted'}`}
                 >
                   <Settings size={16} />
-                  <span className="hidden xl:inline text-xs font-medium">Settings</span>
                 </Link>
               )}
             </div>
