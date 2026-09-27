@@ -389,10 +389,12 @@ export const AdminCrm: React.FC = () => {
               <Download size={14} /><span>{t('admin.action.exportCsv')}</span>
             </button>
             {canManageCrm && (
-              <button type="button" onClick={() => handleOpenAddModal('new')} className="inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control bg-accent px-3.5 text-xs font-semibold text-white transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent">
-                <Plus size={14} /><span>{t('admin.crm.addDeal')}</span>
-              </button>
-            )}
+              <>
+                <button type="button" onClick={() => handleOpenAddModal('new')} className="inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control bg-accent px-3.5 text-xs font-semibold text-white transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent">
+                  <Plus size={14} /><span>{t('admin.crm.addDeal')}</span>
+                </button>
+            </>
+          )}
           </>
         )}
       />
