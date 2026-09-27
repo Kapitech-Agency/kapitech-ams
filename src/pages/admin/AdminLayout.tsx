@@ -233,6 +233,7 @@ export const AdminLayout: React.FC = () => {
   let activeSectionLabel = '';
   if (location.pathname === '/admin/settings') {
     activeItemLabel = t('admin.nav.settings');
+    activeSectionLabel = t('admin.nav.administration');
   } else {
     for (const section of navSections) {
       for (const item of section.items) {
@@ -282,24 +283,6 @@ export const AdminLayout: React.FC = () => {
               </div>
             )}
           </Link>
-        </div>
-        <div className="shrink-0 px-2.5 py-2">
-          <button
-            type="button"
-            onClick={() => setCommandPaletteOpen(true)}
-            aria-label="Search AMS"
-            title="Search AMS"
-            aria-keyshortcuts="Control+K Meta+K"
-            className={`group flex min-h-10 w-full items-center rounded-control border border-line bg-bg text-muted transition-colors duration-150 hover:border-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${sidebarCollapsed ? 'justify-center px-0' : 'gap-2.5 px-2.5'}`}
-          >
-            <Search size={16} className="shrink-0" />
-            {!sidebarCollapsed && (
-              <>
-                <span className="min-w-0 flex-1 truncate text-left text-xs">Search</span>
-                <kbd className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] text-muted">⌘K</kbd>
-              </>
-            )}
-          </button>
         </div>
         <div className={`flex-1 min-h-0 overflow-y-auto overscroll-contain custom-scrollbar ${sidebarCollapsed ? 'px-2 py-3' : 'px-2.5 py-3'}`}>
           <div className={sidebarCollapsed ? 'space-y-2' : 'space-y-4'}>
@@ -365,31 +348,41 @@ export const AdminLayout: React.FC = () => {
         </button>
       </motion.aside>
 
-      <Modal
+            <Modal
         open={logoutConfirmOpen}
         onClose={() => setLogoutConfirmOpen(false)}
         size="sm"
         title={language === 'id' ? 'Keluar dari AMS?' : 'Sign out of AMS?'}
-        description={t('admin.nav.logoutConfirm')}
+        description={language === 'id' ? 'Sesi Anda akan diakhiri pada perangkat ini.' : 'Your current AMS session will be ended on this device.'}
         footer={(
           <>
             <button
               type="button"
               onClick={() => setLogoutConfirmOpen(false)}
-              className="min-h-10 w-full sm:w-auto px-3 rounded-control border border-line bg-panel text-xs font-medium text-muted hover:text-fg hover:bg-panel-hover"
+              className="min-h-10 w-full sm:w-auto rounded-control border border-line bg-panel px-3.5 text-xs font-medium text-muted transition-colors hover:border-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
-              {language === 'id' ? 'Batal' : 'Cancel'}
+              {language === 'id' ? 'Tetap masuk' : 'Stay signed in'}
             </button>
             <button
               type="button"
               onClick={confirmLogout}
-              className="min-h-10 w-full sm:w-auto px-3 rounded-control bg-danger/10 border border-danger/30 text-danger hover:bg-danger/15 text-xs font-semibold"
+              className="min-h-10 w-full sm:w-auto rounded-control border border-danger/30 bg-danger/10 px-3.5 text-xs font-semibold text-danger transition-colors hover:border-danger/50 hover:bg-danger/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger"
             >
-              {language === 'id' ? 'Keluar' : 'Sign out'}
+              <span className="inline-flex items-center gap-2"><LogOut size={14} />{language === 'id' ? 'Keluar' : 'Sign out'}</span>
             </button>
           </>
         )}
-      />
+      >
+        <div className="flex items-start gap-3 rounded-card border border-danger/20 bg-danger/5 p-3.5">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-danger/20 bg-danger/10 text-danger">
+            <LogOut size={16} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-fg">{language === 'id' ? 'Konfirmasi keluar' : 'Confirm sign out'}</p>
+            <p className="mt-1 text-[11px] leading-5 text-muted">{language === 'id' ? 'Anda dapat masuk kembali kapan saja dengan akun AMS yang sama.' : 'You can sign in again at any time with the same AMS account.'}</p>
+          </div>
+        </div>
+      </Modal>
 
       {/* ------------------------------------------------------------- */}
       {/* MOBILE TOPBAR - Single, sleek, non-cluttered header */}
@@ -416,7 +409,16 @@ export const AdminLayout: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-1.5">
-          <button type="button" aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'} onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+          {settingsAllowed && (
+            <Link
+              to="/admin/settings"
+              aria-label="Open settings"
+              className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted transition-colors hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            >
+              <Settings size={16} />
+            </Link>
+          )}
+          <button type="button" aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'} onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted transition-colors hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
             {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
           </button>
           <AdminNotificationCenter />
@@ -524,24 +526,6 @@ export const AdminLayout: React.FC = () => {
 
             </div>
 
-            {/* Settings remains pinned above the session controls */}
-            {settingsItem && (
-              <div className="px-3 pb-2 pt-1 border-t border-line bg-panel shrink-0">
-                <Link
-                  to={settingsItem.to}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`relative flex items-center gap-3 px-3 py-2.5 rounded-control text-xs font-sans min-h-10 transition-[background-color,color,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-panel active:scale-[0.985] ${
-                    isItemActive(settingsItem.to)
-                      ? 'bg-accent/15 text-fg font-medium'
-                      : 'text-muted hover:text-fg hover:bg-bg'
-                  }`}
-                >
-                  <Settings size={16} className={isItemActive(settingsItem.to) ? 'text-accent-text' : 'text-muted'} />
-                  <span>{settingsItem.label}</span>
-                </Link>
-              </div>
-            )}
-
             {/* Bottom session details */}
             <div className="p-3.5 border-t border-line bg-bg flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2.5 min-w-0">
@@ -577,33 +561,32 @@ export const AdminLayout: React.FC = () => {
         {/* Sticky desktop top bar */}
         <header className="hidden min-[900px]:flex h-[52px] border-b border-line bg-panel sticky top-0 z-30 items-center shrink-0" aria-label="AMS top bar">
           <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-5 lg:px-6 flex items-center justify-between gap-4">
-            <nav className="ams-topnav-scroll min-w-0 flex items-center gap-0 overflow-x-auto" aria-label="AMS module sections">
-              {filteredNavSections.map((section) => {
-                const firstItem = section.items[0];
-                if (!firstItem) return null;
-                const active = section.id === activeSectionId;
-                return (
-                  <Link
-                    key={section.id}
-                    to={firstItem.to}
-                    aria-current={active ? 'page' : undefined}
-                    className={
-                      'relative flex h-[52px] shrink-0 items-center px-3 text-[12px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset ' +
-                      (active ? 'text-fg' : 'text-muted hover:text-fg')
-                    }
-                  >
-                    <span>{t(section.titleKey)}</span>
-                    {active && <span className="absolute inset-x-3 bottom-0 h-0.5 bg-accent" />}
-                  </Link>
-                );
-              })}
-            </nav>
+            <div className="min-w-0 flex items-center gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-[12px] font-medium text-muted">{activeSectionLabel}</span>
+                  <span className="text-[11px] text-muted">/</span>
+                  <span className="truncate text-[13px] font-semibold text-fg">{activeItemLabel}</span>
+                </div>
+              </div>
+            </div>
             <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setCommandPaletteOpen(true)}
+                aria-label="Search AMS"
+                aria-keyshortcuts="Control+K Meta+K"
+                className="hidden lg:flex h-10 w-44 items-center gap-2 rounded-control border border-line bg-bg px-3 text-muted transition-colors hover:border-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              >
+                <Search size={15} className="shrink-0" />
+                <span className="flex-1 truncate text-left text-xs">Search AMS</span>
+                <kbd className="rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] text-muted">⌘K</kbd>
+              </button>
               <Link
                 to="/admin/settings?tab=audit"
                 aria-label="Open help and audit"
                 title="Help and audit"
-                className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted transition-colors hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted transition-colors hover:border-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 <HelpCircle size={16} />
               </Link>
@@ -612,46 +595,21 @@ export const AdminLayout: React.FC = () => {
                 aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
                 title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted transition-colors hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted transition-colors hover:border-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
               </button>
               <AdminNotificationCenter />
-              <div className="relative">
-                <button
-                  ref={profileTriggerRef}
-                  type="button"
-                  onClick={() => setProfileMenuOpen(v => !v)}
-                  aria-label="Open account menu"
-                  aria-haspopup="menu"
-                  aria-expanded={profileMenuOpen}
-                  className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted transition-colors hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              {settingsAllowed && (
+                <Link
+                  to="/admin/settings"
+                  aria-label="Open settings"
+                  title="Settings"
+                  className={`flex h-10 w-10 items-center justify-center rounded-control border border-line transition-colors hover:border-accent/40 hover:bg-accent/8 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${location.pathname.startsWith('/admin/settings') ? 'bg-accent/10 text-accent-text' : 'bg-panel text-muted'}`}
                 >
-                  <UserCircle size={17} />
-                </button>
-                <DropdownPortal
-                  open={profileMenuOpen}
-                  anchorRef={profileTriggerRef}
-                  onClose={() => setProfileMenuOpen(false)}
-                  align="right"
-                  offset={8}
-                  className="ams-popover-surface w-56 p-1"
-                >
-                  <div className="border-b border-line px-3 py-2.5">
-                    <p className="truncate text-xs font-semibold text-fg">{roleMeta.accountProfile.displayName}</p>
-                    <p className="mt-0.5 truncate text-[11px] text-muted">{roleMeta.accountProfile.accountId}</p>
-                  </div>
-                  <Link to="/admin/settings?tab=profile" onClick={() => setProfileMenuOpen(false)} className="ams-dropdown-item flex min-h-10 items-center rounded-chip px-2.5 text-xs">
-                    Profile
-                  </Link>
-                  <Link to="/admin/settings?tab=security" onClick={() => setProfileMenuOpen(false)} className="ams-dropdown-item flex min-h-10 items-center rounded-chip px-2.5 text-xs">
-                    Security
-                  </Link>
-                  <button type="button" data-danger="true" onClick={() => { setProfileMenuOpen(false); handleLogout(); }} className="ams-dropdown-item flex min-h-10 w-full items-center rounded-chip px-2.5 text-left text-xs">
-                    Sign out
-                  </button>
-                </DropdownPortal>
-              </div>
+                  <Settings size={16} />
+                </Link>
+              )}
             </div>
           </div>
         </header>
