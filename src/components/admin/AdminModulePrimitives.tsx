@@ -36,7 +36,7 @@ export const AdminModuleHeader: React.FC<AdminModuleHeaderProps> = ({
       )}
     </div>
     {actions && (
-      <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+      <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:justify-end">
         {actions}
       </div>
     )}
@@ -138,7 +138,7 @@ export const AdminFilterBar: React.FC<AdminFilterBarProps> = ({
         {children}
       </div>
       {actions && (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
           {actions}
         </div>
       )}
@@ -170,7 +170,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           {title && <h2 className="text-sm font-semibold text-fg">{title}</h2>}
           {description && <p className="mt-1 text-xs leading-5 text-muted">{description}</p>}
         </div>
-        {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
+        {actions && <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:shrink-0 sm:flex-wrap sm:items-center">{actions}</div>}
       </div>
     )}
     <div className={cn('min-w-0', bodyClassName)}>{children}</div>
