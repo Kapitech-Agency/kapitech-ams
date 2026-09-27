@@ -1139,7 +1139,7 @@ export const AdminInvoicing: React.FC = () => {
               {tab === 'invoices' && currencyInvoices.length > 0 && (
                 <div className="mt-3 flex gap-1 overflow-x-auto border-t border-line pt-3 custom-scrollbar">
                   {invoiceStatusCounts.filter((item) => item.count > 0).map(({ status, count }) => (
-                    <button key={status} type="button" onClick={() => setStatusFilter(status)} className={'shrink-0 rounded-chip border px-2.5 py-1 text-[11px] font-semibold transition-colors ' + (statusFilter === status ? 'border-accent/30 bg-accent/10 text-accent-text' : 'border-line text-muted hover:text-fg')}>
+                    <button key={status} type="button" onClick={() => setStatusFilter(status)} className={'shrink-0 rounded-chip border px-2.5 py-1 text-[11px] font-semibold transition-colors ' + (statusFilter === status ? 'border-line bg-panel-hover text-fg' : 'border-line text-muted hover:text-fg')}>
                       {statusLabel[status]} <span className="tabular-nums">{count}</span>
                     </button>
                   ))}
