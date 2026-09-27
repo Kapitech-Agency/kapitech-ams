@@ -1047,6 +1047,8 @@ export const AdminSettings: React.FC = () => {
 
             </form>
       </Modal>
+        </div>
+      )}
 
       {/* TAB 4: SECURITY & MFA POLICY */}
       {activeTab === 'security' && (
