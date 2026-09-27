@@ -96,6 +96,12 @@ export const AdminLayout: React.FC = () => {
   }, [location.pathname]);
 
   useEffect(() => {
+    const handleOpenCommandPalette = () => setCommandPaletteOpen(true);
+    window.addEventListener('open_command_palette', handleOpenCommandPalette);
+    return () => window.removeEventListener('open_command_palette', handleOpenCommandPalette);
+  }, []);
+
+  useEffect(() => {
     const handleProfileUpdated = (event: Event) => {
       const detail = (event as CustomEvent<{ name?: string; avatarUrl?: string | null }>).detail;
       if (detail?.name) setProfileName(detail.name);
