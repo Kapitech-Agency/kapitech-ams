@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+// Shared module chrome renders the canonical ams-dashboard-header primitive.
 import { Link, useNavigate } from 'react-router-dom';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { 
