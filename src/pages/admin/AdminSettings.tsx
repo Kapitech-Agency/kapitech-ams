@@ -1295,7 +1295,7 @@ export const AdminSettings: React.FC = () => {
       {activeTab === 'api' && canAccessServer && (
         <div className="w-full space-y-4">
           <ProductionReadinessCard language={language} />
-          <div className="w-full max-w-4xl rounded-card border border-line bg-panel p-5 sm:p-6">
+          <div className="w-full rounded-card border border-line bg-panel p-5 sm:p-6">
             <div className="flex items-start gap-3 border-b border-line pb-4">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-card border border-info/30 bg-info/10 text-info">
                 <Database size={20} />
