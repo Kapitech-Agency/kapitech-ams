@@ -8,20 +8,18 @@ import {
   Receipt,
   Briefcase,
   Landmark,
-  Shield,
-  Layers,
   FileText,
-  Clock3,
   Settings,
-  ChevronLeft,
-  ChevronRight,
   Menu,
   X,
   LogOut,
   Sun,
   Moon,
-  HelpCircle,
-  Search
+  Search,
+  ClipboardCheck,
+  UsersRound,
+  LockKeyhole,
+  ServerCog
 } from 'lucide-react';
 import { getAdminSession, logoutAdmin } from '../../lib/adminAuth';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -66,19 +64,6 @@ export const AdminLayout: React.FC = () => {
   );
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    try {
-      return window.localStorage.getItem('kapitech_ams_sidebar_collapsed') === '1';
-    } catch {
-      return false;
-    }
-  });
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem('kapitech_ams_sidebar_collapsed', sidebarCollapsed ? '1' : '0');
-    } catch {}
-  }, [sidebarCollapsed]);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [profileSettingsOpen, setProfileSettingsOpen] = useState(false);
@@ -180,67 +165,24 @@ export const AdminLayout: React.FC = () => {
     navigate('/admin/login', { replace: true });
   };
 
-  // 4 Logical Sections (with Consolidated Single Settings U('menu'))
-  const navSections: NavSection[] = [
-    {
-      id: 'core',
-      titleKey: 'admin.nav.coreOperations',
-      items: [
-        { key: 'dashboard', to: '/admin/dashboard', label: t('admin.nav.dashboard'), icon: Home, badge: null },
-        { key: 'inbox', to: '/admin/inbox', label: t('admin.nav.inbox'), icon: Inbox, badge: null },
-        { key: 'crm', to: '/admin/crm', label: t('admin.nav.crm'), icon: Users, badge: null },
-        { key: 'clients', to: '/admin/clients', label: t('admin.nav.clients'), icon: Users, badge: null },
-        { key: 'projects', to: '/admin/projects', label: t('admin.nav.projects'), icon: Briefcase, badge: null }
-      ]
-    },
-    {
-      id: 'finance',
-      titleKey: 'admin.nav.financeRevenue',
-      items: [
-        { key: 'proposals', to: '/admin/proposals', label: language === 'id' ? 'Proposal & Penawaran' : 'Proposals & quotes', icon: Receipt, badge: null },
-        { key: 'invoicing', to: '/admin/invoicing', label: t('admin.nav.invoicing'), icon: Landmark, badge: null },
-        { key: 'approvals', to: '/admin/approvals', label: language === 'id' ? 'Pusat persetujuan' : 'Approval center', icon: Shield, badge: null }
-      ]
-    },
-    {
-      id: 'delivery',
-      titleKey: 'admin.nav.delivery',
-      items: [
-        { key: 'vendors', to: '/admin/vendors', label: t('admin.nav.vendors'), icon: Briefcase, badge: null },
-        { key: 'documents', to: '/admin/documents', label: language === 'id' ? 'Dokumen' : 'Documents', icon: FileText, badge: null },
-        { key: 'timelogs', to: '/admin/time-logs', label: language === 'id' ? 'Pelacakan waktu' : 'Time tracking', icon: Clock3, badge: null }
-      ]
-    },
-    {
-      id: 'content',
-      titleKey: 'admin.nav.contentPortfolio',
-      items: [
-        { key: 'services', to: '/admin/cms/services', label: t('admin.nav.servicesCatalog'), icon: Layers, badge: null },
-        { key: 'cms_projects', to: '/admin/cms/projects', label: t('admin.nav.caseStudies'), icon: Layers, badge: null },
-        { key: 'testimonials', to: '/admin/cms/testimonials', label: t('admin.cms.testiTitle'), icon: Users, badge: null }
-      ]
-    },
-    {
-      id: 'admin',
-      titleKey: 'admin.nav.administration',
-      items: [
-        { key: 'settings', to: '/admin/settings', label: t('admin.nav.settings'), icon: Settings, badge: null }
-      ]
-    }
+  const navItems: Array<NavItem & { accessKey?: string }> = [
+    { key: 'dashboard', to: '/admin/dashboard', label: 'Dashboard', icon: Home },
+    { key: 'clients', to: '/admin/clients', label: 'Clients', icon: UsersRound },
+    { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, badge: 14 },
+    { key: 'tasks', to: '/admin/dashboard?view=performance', label: 'Tasks', icon: ClipboardCheck, badge: 3, accessKey: 'projects' },
+    { key: 'team', to: '/admin/time-logs', label: 'Team', icon: UsersRound, accessKey: 'timelogs' },
+    { key: 'finance', to: '/admin/invoicing', label: 'Finance', icon: Landmark, accessKey: 'invoicing' },
+    { key: 'documents', to: '/admin/documents', label: 'Documents Vault', icon: LockKeyhole, badge: 'Encrypted' },
+    { key: 'system', to: '/admin/settings', label: 'System', icon: ServerCog, accessKey: 'settings' },
   ];
 
-  // RBAC Filtered Sections: dynamically show only modules permitted for the current stakeholder role
-  const filteredNavSections = useMemo(() => {
-    return navSections
-      .map(section => ({
-        ...section,
-        items: section.items.filter(item => isAllowed(item.key))
-      }))
-      .filter(section => section.items.length > 0);
-  }, [navSections, isAllowed]);
+  const filteredNavItems = useMemo(
+    () => navItems.filter((item) => isAllowed(item.accessKey || item.key)),
+    [navItems, isAllowed]
+  );
+
   const settingsAllowed = isAllowed('settings');
   const profileTitle = session?.user?.role || DEFAULT_PROFILE_TITLE;
-  const contentNavSections = filteredNavSections.filter((section) => section.id !== 'admin');
 
   // Helper to determine if link is active
   const isItemActive = (itemTo: string) => {
@@ -258,28 +200,9 @@ export const AdminLayout: React.FC = () => {
     return false;
   };
 
-  // Current location labels used by the utility bar.
-  let activeItemLabel = 'Dashboard';
-  let activeSectionLabel = '';
-  if (location.pathname === '/admin/settings') {
-    activeItemLabel = t('admin.nav.settings');
-    activeSectionLabel = t('admin.nav.administration');
-  } else {
-    for (const section of navSections) {
-      for (const item of section.items) {
-        if (isItemActive(item.to)) {
-          activeItemLabel = item.label;
-          activeSectionLabel = t(section.titleKey);
-          break;
-        }
-      }
-      if (activeSectionLabel) break;
-    }
-  }
-
-  if (!activeSectionLabel) {
-    activeSectionLabel = t('admin.nav.coreOperations');
-  }
+  const activeNavItem = filteredNavItems.find((item) => isItemActive(item.to));
+  const activeItemLabel = activeNavItem?.label || 'Dashboard';
+  const activeSectionLabel = 'Workspace';
 
   return (
     <div className="h-screen w-full bg-bg text-fg flex flex-col min-[900px]:flex-row selection:bg-accent selection:text-fg font-sans antialiased overflow-hidden ams-shell">
@@ -294,110 +217,77 @@ export const AdminLayout: React.FC = () => {
       {/* DESKTOP SIDEBAR */}
       <motion.aside
         initial={false}
-        animate={{ width: sidebarCollapsed ? 64 : 220 }}
+        animate={{ width: 220 }}
         transition={{ duration: 0.18, ease: 'easeOut' }}
-        className={`hidden min-[900px]:flex flex-col relative bg-panel border-r border-line shrink-0 h-full z-30 overflow-visible ${sidebarCollapsed ? 'ams-sidebar-collapsed' : 'ams-sidebar-expanded'}`}
+        className="hidden min-[900px]:flex w-[220px] shrink-0 flex-col relative bg-panel border-r border-line h-full z-30 overflow-hidden"
       >
-        <div className="relative flex h-[52px] shrink-0 items-center border-b border-line px-1">
-          <div className="flex min-w-0 flex-1 items-center gap-1">
-            <Link to="/admin/dashboard" aria-label="Kapitech AMS dashboard" className={`group flex min-h-10 min-w-0 items-center rounded-control px-1.5 transition-colors duration-150 hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${sidebarCollapsed ? 'h-8 w-7 justify-center px-0' : 'flex-1 gap-3'}`}>
-              <div className={`rounded-control bg-bg border border-line flex items-center justify-center shrink-0 transition-colors duration-150 group-hover:border-accent/40 ${sidebarCollapsed ? 'h-7 w-7 p-1' : 'h-9 w-9 p-1.5'}`}>
-                <AmsBrandLogo className={sidebarCollapsed ? 'h-4 w-4' : 'h-5 w-5'} />
+        <div className="relative flex h-[52px] shrink-0 items-center border-b border-line px-3">
+          <Link to="/admin/dashboard" aria-label="Kapitech AMS dashboard" className="flex min-w-0 flex-1 items-center gap-2.5 rounded-control px-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg">
+              <AmsBrandLogo className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 leading-none">
+                <span className="truncate text-[13px] font-semibold text-fg">KAPITECH</span>
+                <span className="rounded-badge border border-accent/25 bg-accent/8 px-1.5 py-0.5 text-[9px] font-semibold text-accent-text">AMS</span>
               </div>
-              {!sidebarCollapsed && (
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 leading-none">
-                    <span className="text-[13px] font-semibold text-fg whitespace-nowrap">KAPITECH</span>
-                    <span className="shrink-0 rounded-badge border border-accent/25 bg-accent/8 px-1.5 py-0.5 text-[9px] font-semibold text-accent-text">AMS</span>
-                  </div>
-                  <p className="mt-1 text-[10px] leading-4 text-muted whitespace-nowrap">Agency Management System</p>
-                </div>
-              )}
-            </Link>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setSidebarCollapsed((value) => !value)}
-              aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              icon={sidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-              className={`shrink-0 p-0 ${sidebarCollapsed ? 'h-8 w-7' : 'h-8 w-8'}`}
-            />
-          </div>
+              <p className="mt-1 truncate text-[10px] text-muted">Agency Management System</p>
+            </div>
+          </Link>
         </div>
-        <div className={`flex-1 min-h-0 overflow-y-auto overscroll-contain custom-scrollbar ${sidebarCollapsed ? 'px-2 py-3' : 'px-2.5 py-3'}`}>
-          <div className={sidebarCollapsed ? 'space-y-2' : 'space-y-4'}>
-            {contentNavSections.map((section) => (
-              <div key={section.id} className="space-y-1">
-                {!sidebarCollapsed && <div className="px-2.5 pb-1 text-[10px] font-semibold text-muted">{t(section.titleKey)}</div>}
-                {sidebarCollapsed && <div className="mx-auto mb-1.5 h-px w-4 bg-line" />}
-                <div className="space-y-0.5">
-                  {section.items.map((item) => {
-                    const Icon = item.icon;
-                    const active = isItemActive(item.to);
-                    return (
-                      <Link
-                        key={item.to}
-                        to={item.to}
-                        title={sidebarCollapsed ? item.label : undefined}
-                        aria-current={active ? 'page' : undefined}
-                        className={`group relative flex min-h-10 items-center rounded-control text-[13px] font-medium transition-[background-color,color,transform] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-panel ${sidebarCollapsed ? 'mx-auto h-10 w-10 justify-center px-0' : 'gap-2.5 px-2.5'} ${active ? 'bg-accent/10 text-accent-text' : 'text-muted hover:bg-panel-hover hover:text-fg'}`}
-                      >
-                        <Icon size={16} strokeWidth={active ? 2.1 : 1.8} className={`shrink-0 transition-colors duration-150 ${active ? 'text-accent-text' : 'text-muted group-hover:text-fg'}`} />
-                        {!sidebarCollapsed && <span className="min-w-0 truncate">{item.label}</span>}
-                        {!sidebarCollapsed && item.badge !== null && item.badge !== undefined && <span className="ml-auto shrink-0 rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] font-semibold text-muted">{item.badge}</span>}
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="shrink-0 border-t border-line bg-panel px-2 pb-2 pt-2">
-          <button
-            type="button"
-            onClick={() => setProfileSettingsOpen(true)}
-            title={sidebarCollapsed ? profileName : undefined}
-            aria-label="Open profile settings"
-            className={`group mb-1.5 flex min-h-10 items-center rounded-control text-left transition-colors hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${sidebarCollapsed ? 'mx-auto h-10 w-10 justify-center px-0' : 'w-full gap-2.5 px-2'}`}
-          >
-            <UserAvatar name={profileName} imageUrl={profileAvatarUrl} size="sm" online />
-            {!sidebarCollapsed && (
-              <>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-xs font-semibold text-fg">{profileName}</div>
-                  <div className="mt-0.5 truncate text-[10px] text-muted">{profileTitle}</div>
-                </div>
-                <ChevronRight size={14} className="shrink-0 text-muted group-hover:text-fg" aria-hidden="true" />
-              </>
-            )}
-          </button>
 
-          <div className={`flex gap-1.5 ${sidebarCollapsed ? 'flex-col items-center' : 'items-center'}`}>
-            {settingsAllowed && (
-              <Link
-                to="/admin/settings"
-                title="Settings"
-                aria-label="Open settings"
-                aria-current={location.pathname.startsWith('/admin/settings') ? 'page' : undefined}
-                className={`group flex min-h-10 items-center justify-center rounded-control text-[12px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${sidebarCollapsed ? 'h-10 w-10 px-0' : 'flex-1 gap-2 px-2.5'} ${location.pathname.startsWith('/admin/settings') ? 'bg-accent/10 text-accent-text' : 'border border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg'}`}
-              >
-                <Settings size={16} strokeWidth={location.pathname.startsWith('/admin/settings') ? 2.1 : 1.8} />
-                {!sidebarCollapsed && <span>Settings</span>}
-              </Link>
-            )}
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={handleLogout}
-              aria-label="Sign out"
-              title="Sign out"
-              icon={<LogOut size={14} strokeWidth={1.9} />}
-              className={`${sidebarCollapsed ? 'h-10 w-10 p-0' : 'min-h-10 flex-1 px-2.5'}`}
+        <div className="px-3 pt-3">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setCommandPaletteOpen(true)}
+            aria-label="Search AMS"
+            aria-keyshortcuts="Control+K Meta+K"
+            icon={<Search size={15} />}
+            className="flex h-9 w-full justify-start border-line bg-bg px-3"
+          >
+            <span className="min-w-0 flex-1 truncate text-left text-xs">Search</span>
+            <kbd className="ml-auto rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] text-muted">⌘K</kbd>
+          </Button>
+        </div>
+
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-3 custom-scrollbar">
+          <nav aria-label="Primary navigation" className="space-y-0.5">
+            {filteredNavItems.map((item) => {
+              const Icon = item.icon;
+              const active = isItemActive(item.to);
+              return (
+                <Link
+                  key={item.key}
+                  to={item.to}
+                  aria-current={active ? 'page' : undefined}
+                  className={`group relative flex min-h-10 items-center gap-2.5 rounded-control px-2.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${active ? 'bg-accent/10 text-accent-text' : 'text-muted hover:bg-panel-hover hover:text-fg'}`}
+                >
+                  <Icon size={16} strokeWidth={active ? 2.1 : 1.8} className="shrink-0" />
+                  <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                  {item.badge !== null && item.badge !== undefined && (
+                    <span className="shrink-0 rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] font-semibold text-muted">{item.badge}</span>
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        <div className="shrink-0 border-t border-line bg-panel px-3 pb-3 pt-3">
+          {settingsAllowed && (
+            <Link
+              to="/admin/settings"
+              aria-current={location.pathname.startsWith('/admin/settings') ? 'page' : undefined}
+              className={`flex min-h-10 items-center gap-2.5 rounded-control px-2.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${location.pathname.startsWith('/admin/settings') ? 'bg-accent/10 text-accent-text' : 'text-muted hover:bg-panel-hover hover:text-fg'}`}
             >
-              {!sidebarCollapsed && 'Sign out'}
-            </Button>
+              <Settings size={16} />
+              <span className="flex-1">Settings</span>
+            </Link>
+          )}
+          <div className="mt-2 flex items-center justify-between px-2.5 text-[10px] text-muted">
+            <span>Kapitech AMS</span>
+            <span>v2.4.0</span>
           </div>
         </div>
       </motion.aside>
@@ -653,12 +543,7 @@ export const AdminLayout: React.FC = () => {
                       end
                       className={() => {
                         const activeView = new URLSearchParams(location.search).get('view') || 'overview';
-                        return [
-                          'inline-flex h-9 items-center rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
-                          activeView === tab.key
-                            ? 'bg-line text-fg'
-                            : 'text-muted hover:bg-bg hover:text-fg',
-                        ].join(' ');
+                        return `inline-flex h-9 items-center rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${activeView === tab.key ? 'bg-line text-fg' : 'text-muted hover:bg-bg hover:text-fg'}`;
                       }}
                     >
                       {tab.label}
@@ -679,26 +564,6 @@ export const AdminLayout: React.FC = () => {
               <Button
                 type="button"
                 variant="secondary"
-                onClick={() => setCommandPaletteOpen(true)}
-                aria-label="Search AMS"
-                aria-keyshortcuts="Control+K Meta+K"
-                icon={<Search size={15} />}
-                className="flex h-10 w-[260px] xl:w-[420px] 2xl:w-[520px] justify-start border-line bg-bg px-3"
-              >
-                <span className="min-w-0 flex-1 truncate text-left text-xs">Search AMS</span>
-                <kbd className="ml-auto rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] text-muted">⌘K</kbd>
-              </Button>
-              <Link
-                to="/admin/settings?tab=audit"
-                aria-label="Open help and audit"
-                title="Help and audit"
-                className="hidden xl:flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted transition-colors hover:border-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              >
-                <HelpCircle size={16} />
-              </Link>
-              <Button
-                type="button"
-                variant="secondary"
                 aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
                 title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -706,6 +571,15 @@ export const AdminLayout: React.FC = () => {
                 className="h-10 w-10 p-0"
               />
               <AdminNotificationCenter />
+              <button
+                type="button"
+                onClick={() => setProfileSettingsOpen(true)}
+                aria-label="Open profile settings"
+                title="Profile settings"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-bg text-muted transition-colors hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              >
+                <UserAvatar name={profileName} imageUrl={profileAvatarUrl} size="sm" />
+              </button>
             </div>
           </div>
         </header>
