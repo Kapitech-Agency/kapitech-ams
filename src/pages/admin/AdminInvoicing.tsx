@@ -1248,7 +1248,6 @@ export const AdminInvoicing: React.FC = () => {
                 options={[{ value: '', label: 'Manual client details' }, ...clients.map((client) => ({ value: client.id, label: client.company + ' · ' + client.name }))]}
                 className="w-full"
                 triggerClassName="h-10 min-h-10 w-full"
-                disabled={invoiceBillingLocked}
               />
             </div>
             <div>
