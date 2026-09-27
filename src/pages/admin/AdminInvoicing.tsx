@@ -207,6 +207,7 @@ export const AdminInvoicing: React.FC = () => {
   const [confirmAction, setConfirmAction] = useState<{ type: 'invoice' | 'expense'; id: string; label: string } | null>(null);
   const [confirmingAction, setConfirmingAction] = useState(false);
   const [discardPrompt, setDiscardPrompt] = useState<'invoice' | 'expense' | 'payment' | null>(null);
+  const [pendingPaymentInvoice, setPendingPaymentInvoice] = useState<AgencyInvoice | null>(null);
   const [invoiceDirty, setInvoiceDirty] = useState(false);
   const [expenseDirty, setExpenseDirty] = useState(false);
   const [paymentDirty, setPaymentDirty] = useState(false);
@@ -453,6 +454,7 @@ export const AdminInvoicing: React.FC = () => {
   const requestClosePayment = () => {
     if (savingPayment) return;
     if (paymentDirty) {
+      setPendingPaymentInvoice(paymentInvoice);
       setPaymentInvoice(null);
       setDiscardPrompt('payment');
       return;
@@ -467,8 +469,8 @@ export const AdminInvoicing: React.FC = () => {
     if (target === 'invoice') setInvoiceModalOpen(true);
     if (target === 'expense') setExpenseModalOpen(true);
     if (target === 'payment') {
-      // Keep the current payment draft in memory so the user can continue editing.
-      setPaymentInvoice((current) => current);
+      setPaymentInvoice(pendingPaymentInvoice);
+      setPendingPaymentInvoice(null);
     }
   };
 
@@ -483,6 +485,7 @@ export const AdminInvoicing: React.FC = () => {
     if (target === 'payment') {
       setPaymentDirty(false);
       setPaymentIdempotencyKey('');
+      setPendingPaymentInvoice(null);
     }
   };
 
