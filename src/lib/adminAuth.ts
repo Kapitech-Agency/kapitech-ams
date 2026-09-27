@@ -35,6 +35,7 @@ export interface StakeholderPermissions {
 export interface AdminUser {
   id: string;
   name?: string;
+  profileDisplayName?: string;
   username: string;
   email: string;
   bio?: string;
