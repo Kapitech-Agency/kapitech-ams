@@ -829,7 +829,7 @@ export const AdminVendors: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-semibold"
+                  className="min-h-10 px-5 py-2 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-semibold"
                 >
                   {language === 'id' ? 'Simpan Vendor' : 'Save Vendor'}
                 </button>
