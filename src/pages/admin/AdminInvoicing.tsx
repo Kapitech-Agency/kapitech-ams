@@ -196,6 +196,7 @@ export const AdminInvoicing: React.FC = () => {
 
   const [detailInvoice, setDetailInvoice] = useState<AgencyInvoice | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ type: 'invoice' | 'expense'; id: string; label: string } | null>(null);
+  const loadRequestId = React.useRef(0);
 
   const showNotice = (tone: 'success' | 'danger', message: string) => {
     setNotice({ tone, message });
@@ -203,6 +204,7 @@ export const AdminInvoicing: React.FC = () => {
   };
 
   const loadData = async (silent = false) => {
+    const requestId = ++loadRequestId.current;
     if (silent) setRefreshing(true);
     else setLoading(true);
     setError(null);
@@ -225,6 +227,7 @@ export const AdminInvoicing: React.FC = () => {
         throw new Error(metricsRes.error || 'Unable to load financial metrics.');
       }
 
+      if (requestId !== loadRequestId.current) return;
       setInvoices(invoiceRes.data.invoices as AgencyInvoice[]);
       setExpenses(expenseRes.data.expenses as FinanceExpense[]);
       setServerMetrics(metricsRes.data.metrics as ServerMetrics);
@@ -235,10 +238,14 @@ export const AdminInvoicing: React.FC = () => {
         setProjects(projectRes.data.projects as FinanceProject[]);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Financial data is temporarily unavailable.');
+      if (requestId === loadRequestId.current) {
+        setError(err instanceof Error ? err.message : 'Financial data is temporarily unavailable.');
+      }
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (requestId === loadRequestId.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   };
 
@@ -571,8 +578,17 @@ export const AdminInvoicing: React.FC = () => {
     if (!paymentInvoice || !canManageInvoices || savingPayment) return;
     const balance = Number(paymentInvoice.balanceDue ?? (paymentInvoice.total - (paymentInvoice.amountPaid || 0)));
     const amount = Number(paymentAmount);
+    const normalizedPaymentDate = new Date(`${paymentDate}T00:00:00`);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
     if (!Number.isFinite(amount) || amount <= 0 || amount > balance) {
       showNotice('danger', language === 'id' ? 'Nominal pembayaran harus lebih dari 0 dan tidak boleh melebihi sisa tagihan.' : 'Payment must be greater than 0 and cannot exceed the remaining balance.');
+      return;
+    }
+
+    if (Number.isNaN(normalizedPaymentDate.getTime()) || normalizedPaymentDate > today) {
+      showNotice('danger', language === 'id' ? 'Tanggal pembayaran tidak boleh kosong atau berada di masa depan.' : 'Payment date must be valid and cannot be in the future.');
       return;
     }
 
@@ -604,8 +620,17 @@ export const AdminInvoicing: React.FC = () => {
     event.preventDefault();
     if (!canManageInvoices || savingExpense) return;
     const amount = Number(expenseAmount);
+    const normalizedExpenseDate = new Date(`${expenseDate}T00:00:00`);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
     if (!expenseDescription.trim() || !Number.isFinite(amount) || amount <= 0) {
       showNotice('danger', language === 'id' ? 'Deskripsi dan nominal pengeluaran wajib diisi.' : 'Description and a valid expense amount are required.');
+      return;
+    }
+
+    if (Number.isNaN(normalizedExpenseDate.getTime()) || normalizedExpenseDate > today) {
+      showNotice('danger', language === 'id' ? 'Tanggal pengeluaran harus valid dan tidak boleh berada di masa depan.' : 'Expense date must be valid and cannot be in the future.');
       return;
     }
 
