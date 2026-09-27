@@ -266,10 +266,6 @@ export const AdminCmsServices: React.FC = () => {
           }
         ]}
       />
-            );
-          });
-        })()}
-      </div>
 
       {/* Category Pills & Search */}
       <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3 bg-panel p-3 rounded-card border border-line">
