@@ -516,7 +516,7 @@ export const AdminProposals: React.FC = () => {
     return date ? new Intl.DateTimeFormat(language === 'id' ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' }).format(date) : '—';
   };
 
-  const fieldClass = 'min-h-10 w-full rounded-control border border-line bg-panel px-3 text-xs text-fg placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg';
+  const fieldClass = 'h-9 min-h-9 w-full rounded-control border border-line bg-panel px-3 text-xs text-fg placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg';
   const sectionClass = 'rounded-card border border-line bg-panel p-4 sm:p-5';
 
   return (
@@ -532,12 +532,7 @@ export const AdminProposals: React.FC = () => {
 
       <header className="ams-dashboard-header mb-6 flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 text-xs text-muted">
-            <span>Kapitech AMS</span>
-            <span aria-hidden="true">/</span>
-            <span className="text-fg">{language === 'id' ? 'Proposal & Penawaran' : 'Proposal & Quotes'}</span>
-          </div>
-          <h1 className="mt-2 text-xl font-semibold leading-7 tracking-[-0.01em] text-fg">
+          <h1 className="text-2xl font-semibold leading-8 tracking-[-0.02em] text-fg">
             {language === 'id' ? 'Proposal & Penawaran' : 'Proposal & Quotes'}
           </h1>
           <p className="mt-1 max-w-2xl text-xs leading-5 text-muted">
@@ -549,7 +544,7 @@ export const AdminProposals: React.FC = () => {
             type="button"
             onClick={() => void loadProposals()}
             disabled={isLoading}
-            className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control border border-line bg-transparent px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} aria-hidden="true" />
             <span>{language === 'id' ? 'Refresh' : 'Refresh'}</span>
@@ -558,7 +553,7 @@ export const AdminProposals: React.FC = () => {
             type="button"
             onClick={openCreate}
             disabled={!canManageCrm}
-            className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control bg-accent px-3 text-xs font-semibold text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control bg-accent px-3.5 text-xs font-semibold text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             <Plus size={14} aria-hidden="true" />
             <span>{language === 'id' ? 'Buat Proposal' : 'Create Proposal'}</span>
@@ -566,29 +561,36 @@ export const AdminProposals: React.FC = () => {
         </div>
       </header>
 
-      <section aria-label="Proposal summary" className="grid grid-cols-2 gap-x-4 border-y border-line py-4 sm:grid-cols-4 sm:gap-0">
-        {[
-          { label: language === 'id' ? 'Total proposal' : 'Total proposals', value: metrics.total, icon: FileText },
-          { label: language === 'id' ? 'Aktif' : 'Active', value: metrics.active, icon: Clock3 },
-          { label: language === 'id' ? 'Diterima' : 'Accepted', value: metrics.accepted, icon: CheckCircle2 },
-          { label: language === 'id' ? 'Segera berakhir' : 'Expiring soon', value: metrics.expiring, icon: AlertCircle }
-        ].map((metric, index) => {
-          const Icon = metric.icon;
-          return (
-            <div key={metric.label} className={'flex min-w-0 items-center gap-3 py-2 ' + (index > 0 ? 'sm:border-l sm:border-line sm:pl-4' : '')}>
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-panel text-muted">
-                <Icon size={14} aria-hidden="true" />
+      <section aria-label="Proposal summary" className="rounded-card border border-line bg-panel p-4 sm:p-5">
+        <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
+          <div>
+            <h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan proposal' : 'Proposal snapshot'}</h2>
+            <p className="mt-1 text-xs text-muted">{language === 'id' ? 'Status komersial berdasarkan proposal yang tersedia.' : 'Commercial status across the available proposals.'}</p>
+          </div>
+          <span className="text-[11px] font-medium tabular-nums text-muted">{metrics.total} {language === 'id' ? 'total' : 'total'}</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4">
+          {[
+            { label: language === 'id' ? 'Total proposal' : 'Total proposals', value: metrics.total, icon: FileText },
+            { label: language === 'id' ? 'Aktif' : 'Active', value: metrics.active, icon: Clock3 },
+            { label: language === 'id' ? 'Diterima' : 'Accepted', value: metrics.accepted, icon: CheckCircle2 },
+            { label: language === 'id' ? 'Segera berakhir' : 'Expiring soon', value: metrics.expiring, icon: AlertCircle }
+          ].map((metric, index) => {
+            const Icon = metric.icon;
+            return (
+              <div key={metric.label} className={'flex min-w-0 items-start justify-between gap-3 px-4 py-3 ' + (index > 0 ? 'border-l border-line' : '')}>
+                <div className="min-w-0">
+                  <div className="text-xs text-muted">{metric.label}</div>
+                  <div className="mt-1 text-xl font-medium tabular-nums text-fg">{metric.value}</div>
+                </div>
+                <Icon size={16} className="mt-0.5 shrink-0 text-muted" aria-hidden="true" />
               </div>
-              <div className="min-w-0">
-                <div className="text-xs text-muted">{metric.label}</div>
-                <div className="mt-0.5 text-xl font-medium tabular-nums text-fg">{metric.value}</div>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </section>
 
-      <section className="space-y-3" aria-label="Proposal filters">
+      <section className="rounded-card border border-line bg-panel p-4 sm:p-5" aria-label="Proposal filters">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
           <label className="relative min-w-0 flex-1">
             <span className="sr-only">{language === 'id' ? 'Cari proposal' : 'Search proposals'}</span>
@@ -641,7 +643,7 @@ export const AdminProposals: React.FC = () => {
         {(searchQuery || statusFilter !== 'all' || expiryFilter !== 'all' || sortBy !== 'newest') && (
           <div className="flex items-center justify-between gap-3 text-xs text-muted">
             <span>{filteredProposals.length} {language === 'id' ? 'hasil ditampilkan' : 'results shown'}</span>
-            <button type="button" onClick={clearFilters} className="min-h-10 rounded-control px-2.5 text-xs font-medium text-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+            <button type="button" onClick={clearFilters} className="h-9 min-h-9 rounded-control px-2.5 text-xs font-medium text-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
               {language === 'id' ? 'Reset filter' : 'Reset filters'}
             </button>
           </div>
@@ -702,7 +704,7 @@ export const AdminProposals: React.FC = () => {
                 <p className="mt-0.5 text-xs text-muted">{filteredProposals.length} {language === 'id' ? 'dokumen' : 'documents'}</p>
               </div>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto custom-scrollbar">
               <table className="ams-table w-full min-w-[900px] border-collapse text-left">
                 <thead>
                   <tr className="border-b border-line text-xs text-muted">
