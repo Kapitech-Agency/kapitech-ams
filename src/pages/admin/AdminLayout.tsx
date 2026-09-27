@@ -572,7 +572,7 @@ export const AdminLayout: React.FC = () => {
         {/* Sticky desktop top bar */}
         <header className="hidden min-[900px]:flex h-[52px] border-b border-line bg-panel sticky top-0 z-30 items-center shrink-0" aria-label="AMS top bar">
           <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-5 lg:px-6 flex items-center justify-between gap-4">
-            <nav className="min-w-0 flex items-center gap-1 overflow-x-auto scrollbar-none" aria-label="AMS module sections">
+            <nav className="ams-topnav-scroll min-w-0 flex items-center gap-0 overflow-x-auto" aria-label="AMS module sections">
               {filteredNavSections.map((section) => {
                 const firstItem = section.items[0];
                 if (!firstItem) return null;
