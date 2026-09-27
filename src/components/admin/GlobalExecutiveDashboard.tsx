@@ -1,441 +1,126 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AlertTriangle,
   ArrowUpRight,
-  CalendarClock,
+  CalendarDays,
   CheckCircle2,
   CircleDollarSign,
   Clock3,
   FolderKanban,
-  Layers3,
-  MoreVertical,
+  MoreHorizontal,
   Plus,
   ReceiptText,
-  RefreshCw,
-  ShieldAlert,
+  Sparkles,
   Users,
-  WalletCards,
 } from 'lucide-react';
-import { api } from '../../lib/apiClient';
-import { useLanguage } from '../../lib/LanguageContext';
-import { CURRENCY_EVENT, CurrencyCode, formatAmount, getActiveCurrency } from '../../lib/currency';
-import { getAdminSession } from '../../lib/adminAuth';
-import { FINANCE_EVENT_NAME, getAgencyExpenses, getAgencyInvoices, getMonthlyCashFlowSeries } from '../../lib/financeStore';
-import { AdminMetricStrip, AdminModuleHeader, AdminPanel } from './AdminModulePrimitives';
-import Button from '../ui/Button';
+import { AdminModuleHeader, AdminPanel } from './AdminModulePrimitives';
 import { DonutChart, TrendChart } from '../charts/DashboardCharts';
 
 type RangeKey = '30D' | 'Q2' | 'YTD' | '12M';
-type Tone = 'success' | 'warning' | 'danger' | 'info' | 'muted';
+type ProjectFilter = 'All' | 'Enterprise' | 'Retainer' | 'Fixed-fee';
 
 interface DashboardProject {
   id: string;
   name: string;
-  clientName: string;
-  clientCompany: string;
+  client: string;
+  type: Exclude<ProjectFilter, 'All'>;
   status: string;
-  health?: string;
-  progressPercent: number;
-  budget: number;
-  serviceCategory: string;
-  teamLead: string;
-  tasks: Array<{
-    id?: string;
-    title?: string;
-    status?: string;
-    assignedTo?: string;
-    assignee?: string;
-    dueDate?: string;
-  }>;
+  statusTone: 'success' | 'warning' | 'danger' | 'info';
+  progress: number;
+  lead: string;
+  budget: string;
 }
 
-interface DashboardTask {
-  id?: string;
-  status?: string;
-  assignedTo?: string;
-  assignee?: string;
-  dueDate?: string;
-  projectName?: string;
+interface TeamMember {
+  name: string;
+  role: string;
+  workload: number;
+  tasks: number;
+  state: string;
+  tone: 'success' | 'warning' | 'info';
 }
 
-interface ExecutiveOverviewData {
-  metrics: {
-    activeProjects: number;
-    projectsAtRisk: number;
-    overdueTasks: number;
-    outstandingReceivables: number | null;
-    overdueReceivables: number | null;
-    openLeads: number;
-  };
-  financials: {
-    revenueThisMonth: number | null;
-    outstandingReceivables: number | null;
-  };
-  projects?: unknown[];
-}
+const sampleProjects: DashboardProject[] = [
+  { id: 'proj-001', name: 'Atlas Brand System', client: 'Atlas Group', type: 'Enterprise', status: 'On track', statusTone: 'success', progress: 78, lead: 'Fikri', budget: '$42,000' },
+  { id: 'proj-002', name: 'Meridian Commerce', client: 'Meridian Labs', type: 'Fixed-fee', status: 'At risk', statusTone: 'warning', progress: 61, lead: 'Sarah', budget: '$28,500' },
+  { id: 'proj-003', name: 'Nova Growth Retainer', client: 'Nova Ventures', type: 'Retainer', status: 'On track', statusTone: 'success', progress: 72, lead: 'Dimas', budget: '$18,000' },
+  { id: 'proj-004', name: 'Orbit Product Launch', client: 'Orbit Health', type: 'Enterprise', status: 'Delayed', statusTone: 'danger', progress: 44, lead: 'Raka', budget: '$36,800' },
+  { id: 'proj-005', name: 'Northstar Campaign', client: 'Northstar Capital', type: 'Retainer', status: 'In review', statusTone: 'info', progress: 86, lead: 'Nadia', budget: '$24,000' },
+];
 
-const subtleActionClass =
-  'inline-flex min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:border-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent';
+const sampleTeam: TeamMember[] = [
+  { name: 'Fikri Nurlete', role: 'Creative director', workload: 82, tasks: 11, state: 'High load', tone: 'warning' },
+  { name: 'Sarah Pratama', role: 'Account lead', workload: 74, tasks: 9, state: 'Balanced', tone: 'success' },
+  { name: 'Dimas Ardi', role: 'Product designer', workload: 68, tasks: 8, state: 'Balanced', tone: 'success' },
+  { name: 'Raka Mahendra', role: 'Developer', workload: 91, tasks: 13, state: 'Near max', tone: 'warning' },
+  { name: 'Nadia Putri', role: 'Strategist', workload: 55, tasks: 6, state: 'Available', tone: 'info' },
+];
 
-const toneClass: Record<Tone, string> = {
-  success: 'border-success/30 bg-success/10 text-success',
-  warning: 'border-warning/30 bg-warning/10 text-warning',
-  danger: 'border-danger/30 bg-danger/10 text-danger',
-  info: 'border-info/30 bg-info/10 text-info',
-  muted: 'border-line bg-bg text-muted',
-};
+const sampleRevenue = [
+  { label: 'Jan', primary: 61000, secondary: 42000, tertiary: 19000 },
+  { label: 'Feb', primary: 68500, secondary: 44700, tertiary: 23800 },
+  { label: 'Mar', primary: 74200, secondary: 46300, tertiary: 27900 },
+  { label: 'Apr', primary: 71800, secondary: 49200, tertiary: 22600 },
+  { label: 'May', primary: 80200, secondary: 51400, tertiary: 28800 },
+  { label: 'Jun', primary: 84500, secondary: 52200, tertiary: 32300 },
+];
 
-const normalizeProject = (value: any): DashboardProject => ({
-  id: String(value?.id || ''),
-  name: String(value?.name || value?.title || 'Untitled project'),
-  clientName: String(value?.clientName || ''),
-  clientCompany: String(value?.clientCompany || value?.client || ''),
-  status: String(value?.status || 'planning'),
-  health: value?.health ? String(value.health) : undefined,
-  progressPercent: Math.min(100, Math.max(0, Number(value?.progressPercent || 0))),
-  budget: Number(value?.budget || 0),
-  serviceCategory: String(value?.serviceCategory || ''),
-  teamLead: String(value?.teamLead || ''),
-  tasks: Array.isArray(value?.tasks) ? value.tasks : [],
-});
+const deliveryBreakdown = [
+  { label: 'On schedule', value: 8, tone: 'success' as const },
+  { label: 'At risk', value: 3, tone: 'warning' as const },
+  { label: 'Overdue', value: 1, tone: 'danger' as const },
+];
 
-const statusTone = (status: string, health?: string): Tone => {
-  const value = `${status} ${health || ''}`.toLowerCase();
-  if (value.includes('block') || value.includes('delay')) return 'danger';
-  if (value.includes('risk') || value.includes('hold') || value.includes('review')) return 'warning';
-  if (value.includes('complete') || value.includes('done') || value.includes('good')) return 'success';
-  if (value.includes('progress') || value.includes('active')) return 'info';
-  return 'muted';
-};
+const toneClasses = {
+  success: 'border-success/25 bg-success/10 text-success',
+  warning: 'border-warning/25 bg-warning/10 text-warning',
+  danger: 'border-danger/25 bg-danger/10 text-danger',
+  info: 'border-info/25 bg-info/10 text-info',
+} as const;
 
-const startOfDay = (date = new Date()) => {
-  const copy = new Date(date);
-  copy.setHours(0, 0, 0, 0);
-  return copy;
-};
+const progressClasses = {
+  success: 'bg-success',
+  warning: 'bg-warning',
+  danger: 'bg-danger',
+  info: 'bg-info',
+} as const;
 
-const isPastDue = (value?: string) => {
-  if (!value) return false;
-  const parsed = new Date(value);
-  return !Number.isNaN(parsed.getTime()) && startOfDay(parsed) < startOfDay();
-};
-
-const isDueWithinWeek = (value?: string) => {
-  if (!value) return false;
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return false;
-  const today = startOfDay();
-  const end = new Date(today);
-  end.setDate(end.getDate() + 7);
-  const due = startOfDay(parsed);
-  return due >= today && due <= end;
-};
-
-const EmptyState = ({
-  message,
-  description,
-  action,
-}: {
-  message: string;
-  description?: string;
-  action?: React.ReactNode;
-}) => (
-  <div className="flex min-h-[176px] flex-col items-center justify-center rounded-control border border-line bg-bg px-4 py-8 text-center">
-    <div className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted">
-      <Layers3 size={18} />
-    </div>
-    <p className="mt-3 text-sm font-medium text-fg">{message}</p>
-    {description && <p className="mt-1 max-w-[48ch] text-xs leading-5 text-muted">{description}</p>}
-    {action && <div className="mt-3">{action}</div>}
-  </div>
-);
-
-const initials = (value: string) =>
-  value
-    .split(/\s+/)
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase() || 'NA';
+const formatMoney = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
 
 export const GlobalExecutiveDashboard: React.FC = () => {
-  const { language } = useLanguage();
-  const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
   const [range, setRange] = useState<RangeKey>('Q2');
-  const [projectFilter, setProjectFilter] = useState('All');
-  const [isLoading, setIsLoading] = useState(true);
-  const [data, setData] = useState<ExecutiveOverviewData | null>(null);
-  const [projects, setProjects] = useState<DashboardProject[]>([]);
-  const [tasks, setTasks] = useState<DashboardTask[]>([]);
-  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [mfaRequired, setMfaRequired] = useState(() => getAdminSession()?.user.mfaEnabled !== true);
-  const [mfaRetrying, setMfaRetrying] = useState(false);
+  const [projectFilter, setProjectFilter] = useState<ProjectFilter>('All');
 
-  const fetchOverview = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    const [overviewResult, projectsResult, tasksResult] = await Promise.allSettled([
-      api.executive.getOverview(),
-      api.projects.getAll(),
-      api.tasks.getAll(),
-    ]);
-
-    const overview = overviewResult.status === 'fulfilled' ? overviewResult.value : null;
-    const projectResponse = projectsResult.status === 'fulfilled' ? projectsResult.value : null;
-    const taskResponse = tasksResult.status === 'fulfilled' ? tasksResult.value : null;
-
-    if (overview?.success) {
-      setData((overview.data || overview) as ExecutiveOverviewData);
-      setLastRefreshed(new Date());
-    } else {
-      const code = (overview?.data as { code?: string } | undefined)?.code;
-      const mfaBlocked = code === 'MFA_REQUIRED' || /MFA is required/i.test(overview?.error || '');
-      if (mfaBlocked) {
-        setMfaRequired(true);
-        setData(null);
-      } else {
-        setError(overview?.error || 'Dashboard data is temporarily unavailable.');
-      }
-    }
-
-    if (projectResponse?.success && Array.isArray(projectResponse.data?.projects)) {
-      setProjects(projectResponse.data.projects.map(normalizeProject));
-    } else if (overview?.success && Array.isArray((overview.data as any)?.projects)) {
-      setProjects((overview.data as any).projects.map(normalizeProject));
-    }
-
-    if (taskResponse?.success && Array.isArray(taskResponse.data?.tasks)) {
-      setTasks(taskResponse.data.tasks);
-    }
-
-    setIsLoading(false);
-  };
-
-  useEffect(() => {
-    const onCurrency = (event: Event) => {
-      const detail = (event as CustomEvent<{ currency?: CurrencyCode }>).detail;
-      setCurrency(detail?.currency || getActiveCurrency());
-    };
-    const onAuthChange = () => setMfaRequired(getAdminSession()?.user.mfaEnabled !== true);
-    const onFinanceChange = () => void fetchOverview();
-
-    void fetchOverview();
-    window.addEventListener(CURRENCY_EVENT, onCurrency);
-    window.addEventListener('kapitech_auth_state_changed', onAuthChange);
-    window.addEventListener(FINANCE_EVENT_NAME, onFinanceChange);
-
-    return () => {
-      window.removeEventListener(CURRENCY_EVENT, onCurrency);
-      window.removeEventListener('kapitech_auth_state_changed', onAuthChange);
-      window.removeEventListener(FINANCE_EVENT_NAME, onFinanceChange);
-    };
-  }, []);
-
-  const retryMfaStatus = async () => {
-    setMfaRetrying(true);
-    try {
-      const response = await api.auth.me();
-      if (response.success && response.data?.success && response.data.user) {
-        setMfaRequired(response.data.user.mfaEnabled !== true);
-        if (response.data.user.mfaEnabled === true) {
-          window.dispatchEvent(new CustomEvent('kapitech_auth_state_changed'));
-        }
-      }
-    } finally {
-      setMfaRetrying(false);
-    }
-  };
-
-  const effectiveProjects = projects.length
-    ? projects
-    : (data?.projects || []).map(normalizeProject);
-
-  const allTasks = useMemo(
-    () => tasks.length
-      ? tasks
-      : effectiveProjects.flatMap((project) => project.tasks.map((task) => ({ ...task, projectName: project.name }))),
-    [effectiveProjects, tasks]
+  const filteredProjects = useMemo(
+    () => projectFilter === 'All' ? sampleProjects : sampleProjects.filter((project) => project.type === projectFilter),
+    [projectFilter],
   );
 
-  const activeProjects = effectiveProjects.filter(
-    (project) => project.status === 'in_progress' || project.status === 'review'
-  ).length || data?.metrics.activeProjects || 0;
-
-  const tasksDueThisWeek = allTasks.filter(
-    (task) => task.status !== 'done' && isDueWithinWeek(task.dueDate)
-  ).length;
-
-  const overdueTasks =
-    allTasks.filter((task) => task.status !== 'done' && isPastDue(task.dueDate)).length ||
-    data?.metrics.overdueTasks ||
-    0;
-
-  const teamLoad = useMemo(() => {
-    const counts = new Map<string, number>();
-    allTasks.forEach((task) => {
-      if (task.status === 'done') return;
-      const owner = String(task.assignedTo || task.assignee || 'Unassigned');
-      counts.set(owner, (counts.get(owner) || 0) + 1);
-    });
-    effectiveProjects.forEach((project) => {
-      if (project.teamLead && !counts.has(project.teamLead)) counts.set(project.teamLead, 0);
-    });
-
-    const entries = Array.from(counts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 6);
-
-    const max = Math.max(1, ...entries.map(([, count]) => count));
-
-    return entries.map(([name, count]) => ({
-      name,
-      tasks: count,
-      percent: count ? Math.max(8, Math.round((count / max) * 100)) : 0,
-      state: count >= max * 0.9 ? 'Near max' : count >= max * 0.7 ? 'High load' : count >= max * 0.45 ? 'Balanced' : 'Available',
-    }));
-  }, [allTasks, effectiveProjects]);
-
-  const deliveryData = useMemo(() => {
-    const items = [
-      {
-        label: 'On schedule',
-        value: effectiveProjects.filter((project) => {
-          const health = (project.health || '').toLowerCase();
-          return health === 'good' || (!health && !['on_hold', 'review'].includes(project.status));
-        }).length,
-        tone: 'success' as const,
-      },
-      {
-        label: 'At risk',
-        value: effectiveProjects.filter((project) => {
-          const health = (project.health || '').toLowerCase();
-          return health.includes('risk') || project.status === 'review' || project.status === 'on_hold';
-        }).length,
-        tone: 'warning' as const,
-      },
-      {
-        label: 'Overdue',
-        value: effectiveProjects.filter((project) => {
-          const health = (project.health || '').toLowerCase();
-          return health.includes('delay') || health.includes('block');
-        }).length,
-        tone: 'danger' as const,
-      },
-    ];
-    return items.filter((item) => item.value > 0);
-  }, [effectiveProjects]);
-
-  const onSchedulePercent = useMemo(() => {
-    const total = deliveryData.reduce((sum, item) => sum + item.value, 0);
-    const current = deliveryData.find((item) => item.label === 'On schedule')?.value || 0;
-    return total ? Math.round((current / total) * 100) : 0;
-  }, [deliveryData]);
-
-  const financeSeries = useMemo(() => {
-    if (!data?.financials || data.financials.revenueThisMonth === null) return [];
-    try {
-      return getMonthlyCashFlowSeries(getAgencyInvoices(), getAgencyExpenses());
-    } catch {
-      return [];
-    }
-  }, [data, currency]);
-
-  const visibleFinanceSeries = useMemo(() => {
-    if (range === '30D') return financeSeries.slice(-1);
-    if (range === 'Q2') return financeSeries.slice(-3);
-    if (range === 'YTD') return financeSeries.slice(0, new Date().getMonth() + 1);
-    return financeSeries.slice(-12);
-  }, [financeSeries, range]);
-
-  const formatCurrency = (value: number | null | undefined) =>
-    value == null ? 'Restricted' : formatAmount(value, currency, false);
-
-  const filteredProjects = useMemo(() => {
-    if (projectFilter === 'All') return effectiveProjects.slice(0, 6);
-    return effectiveProjects
-      .filter((project) => project.serviceCategory.toLowerCase() === projectFilter.toLowerCase())
-      .slice(0, 6);
-  }, [effectiveProjects, projectFilter]);
-
-  const metrics = data?.metrics;
-  const financials = data?.financials;
-
-  const kpis = [
-    {
-      id: 'active-projects',
-      label: 'Active projects',
-      value: activeProjects,
-      context: effectiveProjects.length ? `${effectiveProjects.length} total projects` : 'Project access required',
-      icon: <FolderKanban size={16} />,
-      toneClassName: 'text-success',
-    },
-    {
-      id: 'due-week',
-      label: 'Tasks due this week',
-      value: tasks.length || effectiveProjects.some((project) => project.tasks.length) ? tasksDueThisWeek : '—',
-      context: allTasks.length ? 'Open tasks in the next 7 days' : 'Task data unavailable',
-      icon: <CalendarClock size={16} />,
-      toneClassName: 'text-muted',
-    },
-    {
-      id: 'overdue',
-      label: 'Overdue tasks',
-      value: overdueTasks,
-      context: overdueTasks ? 'Requires attention' : 'No overdue tasks reported',
-      icon: <AlertTriangle size={16} />,
-      toneClassName: overdueTasks ? 'text-danger' : 'text-success',
-    },
-    {
-      id: 'team-workload',
-      label: 'Team workload',
-      value: allTasks.filter((task) => task.status !== 'done').length,
-      context: teamLoad.length ? `Open tasks across ${teamLoad.length} people` : 'Team task data unavailable',
-      icon: <Users size={16} />,
-      toneClassName: 'text-info',
-    },
-    {
-      id: 'monthly-revenue',
-      label: 'Monthly revenue',
-      value: formatCurrency(financials?.revenueThisMonth),
-      context: 'Current month',
-      icon: <CircleDollarSign size={16} />,
-      toneClassName: 'text-accent-text',
-    },
-    {
-      id: 'outstanding',
-      label: 'Outstanding invoices',
-      value: formatCurrency(financials?.outstandingReceivables ?? metrics?.outstandingReceivables),
-      context: metrics?.overdueReceivables ? `${formatCurrency(metrics.overdueReceivables)} overdue` : 'No overdue balance reported',
-      icon: <ReceiptText size={16} />,
-      toneClassName: 'text-warning',
-    },
-  ];
+  const totalDelivery = deliveryBreakdown.reduce((total, item) => total + item.value, 0);
+  const onSchedulePercent = Math.round((deliveryBreakdown[0].value / totalDelivery) * 100);
 
   return (
-    <div className="min-h-full pb-8">
+    <div className="min-h-full pb-10">
       <AdminModuleHeader
         title="Agency overview"
         description="Real-time metrics, project pacing, and financial health for the agency."
-        icon={<Layers3 size={18} />}
-        actions={
+        icon={<Sparkles size={18} />}
+        actions={(
           <>
-            {lastRefreshed && (
-              <span className="hidden text-[11px] tabular-nums text-muted sm:inline">
-                Synced {lastRefreshed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </span>
-            )}
-            <Button
-              type="button"
-              variant="secondary"
-              loading={isLoading}
-              onClick={() => void fetchOverview()}
-              icon={<RefreshCw size={14} />}
-            >
-              {isLoading ? 'Syncing' : 'Refresh'}
-            </Button>
+            <div className="flex items-center gap-0.5 rounded-control bg-bg p-0.5">
+              {(['30D', 'Q2', 'YTD', '12M'] as RangeKey[]).map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  aria-pressed={range === item}
+                  onClick={() => setRange(item)}
+                  className={['rounded-chip px-2.5 py-1.5 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent', range === item ? 'bg-line font-medium text-fg' : 'text-muted hover:text-fg'].join(' ')}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
             <Link
               to="/admin/projects"
               className="inline-flex min-h-9 items-center justify-center gap-2 rounded-control bg-accent px-3 text-xs font-medium text-white transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
@@ -444,301 +129,133 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               New project
             </Link>
           </>
-        }
+        )}
       />
 
-      {mfaRequired && (
-        <section className="mb-6 flex flex-col gap-4 rounded-card border border-danger/40 bg-danger/10 p-4 sm:flex-row sm:items-center sm:justify-between" role="alert">
-          <div className="flex items-start gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-danger/30 bg-danger/10 text-danger">
-              <ShieldAlert size={17} />
-            </span>
-            <div>
-              <h2 className="text-sm font-semibold text-fg">MFA setup required</h2>
-              <p className="mt-1 text-xs leading-5 text-muted">Enable MFA before using protected AMS functions.</p>
-            </div>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-2">
-            <Button
-              type="button"
-              variant="destructive"
-              loading={mfaRetrying}
-              onClick={() => void retryMfaStatus()}
-              icon={<RefreshCw size={14} />}
-            >
-              {language === 'id' ? 'Coba lagi' : 'Retry'}
-            </Button>
-            <Link to="/admin/settings?tab=security&mfaRequired=1" className={subtleActionClass}>
-              MFA settings <ArrowUpRight size={13} />
-            </Link>
-          </div>
-        </section>
-      )}
-
-      {error && (
-        <section className="mb-6 flex items-center justify-between gap-3 rounded-card border border-danger/40 bg-danger/10 px-4 py-3" role="alert">
-          <p className="text-xs leading-5 text-fg">{error}</p>
-          <button type="button" onClick={() => void fetchOverview()} className={subtleActionClass}>Retry</button>
-        </section>
-      )}
-
-      {isLoading && !data ? (
-        <div className="space-y-6" aria-label="Loading dashboard">
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 min-[1100px]:grid-cols-6">
-            {Array.from({ length: 6 }).map((_, index) => <div key={index} className="h-20 animate-pulse rounded-control bg-line/70" />)}
-          </div>
-          <div className="grid gap-3 min-[1100px]:grid-cols-12">
-            <div className="h-[340px] animate-pulse rounded-card bg-line/70 min-[1100px]:col-span-8" />
-            <div className="h-[340px] animate-pulse rounded-card bg-line/70 min-[1100px]:col-span-4" />
-          </div>
-          <div className="grid gap-3 min-[1100px]:grid-cols-12">
-            <div className="h-[320px] animate-pulse rounded-card bg-line/70 min-[1100px]:col-span-8" />
-            <div className="h-[320px] animate-pulse rounded-card bg-line/70 min-[1100px]:col-span-4" />
-          </div>
+      <section className="mb-6" aria-label="Executive key performance indicators">
+        <div className="grid gap-3 sm:grid-cols-2 min-[760px]:grid-cols-3 min-[1180px]:grid-cols-6">
+          {[
+            { label: 'Active projects', value: '12', change: '+2 this month', icon: <FolderKanban size={16} />, tone: 'success' },
+            { label: 'Tasks due this week', value: '18', change: '6 high priority', icon: <CalendarDays size={16} />, tone: 'info' },
+            { label: 'Overdue tasks', value: '3', change: 'Requires attention', icon: <AlertTriangle size={16} />, tone: 'danger' },
+            { label: 'Team utilization', value: '78%', change: '+6% vs last month', icon: <Users size={16} />, tone: 'warning' },
+            { label: 'Monthly revenue', value: '$84.5k', change: '+12.4% vs May', icon: <CircleDollarSign size={16} />, tone: 'success' },
+            { label: 'Outstanding invoices', value: '$32.4k', change: '$8.7k overdue', icon: <ReceiptText size={16} />, tone: 'warning' },
+          ].map((metric) => (
+            <article key={metric.label} className="rounded-card border border-line bg-panel p-4">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs text-muted">{metric.label}</span>
+                <span className={['flex h-7 w-7 items-center justify-center rounded-control border', toneClasses[metric.tone as keyof typeof toneClasses]].join(' ')}>
+                  {metric.icon}
+                </span>
+              </div>
+              <div className="mt-4">
+                <div className="text-2xl font-medium tracking-[-0.02em] tabular-nums text-fg">{metric.value}</div>
+                <div className="mt-1 text-[11px] text-muted">{metric.change}</div>
+              </div>
+            </article>
+          ))}
         </div>
-      ) : (
-        <>
-          <section aria-labelledby="dashboard-kpis">
-            <div className="mb-3">
-              <h2 id="dashboard-kpis" className="text-sm font-semibold text-fg">Operational snapshot</h2>
-              <p className="mt-1 text-xs text-muted">The signals worth checking first.</p>
+      </section>
+
+      <div className="grid gap-3 min-[1100px]:grid-cols-12">
+        <AdminPanel className="min-[1100px]:col-span-8" bodyClassName="p-4 sm:p-5" title="Revenue vs expenses" description="Monthly cash flow performance for the selected period." actions={(
+          <div className="hidden items-center gap-3 text-[11px] text-muted sm:flex">
+            <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-accent" /> Revenue</span>
+            <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-info" /> Expenses</span>
+            <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-success" /> Net</span>
+          </div>
+        )}>
+          <TrendChart data={sampleRevenue} primaryLabel="Revenue" secondaryLabel="Expenses" tertiaryLabel="Net" primaryFormat={formatMoney} ariaLabel={'Revenue, expenses, and net trend for ' + range + '.'} />
+        </AdminPanel>
+
+        <AdminPanel className="min-[1100px]:col-span-4" bodyClassName="p-4 sm:p-5" title="Delivery & pacing" description="Project delivery distribution across the current portfolio.">
+          <div className="grid items-center gap-4 sm:grid-cols-[150px_1fr] min-[1100px]:grid-cols-1">
+            <div className="mx-auto w-full max-w-[160px]">
+              <DonutChart data={deliveryBreakdown} ariaLabel="Project delivery distribution: 8 on schedule, 3 at risk, 1 overdue." />
             </div>
-            <AdminMetricStrip metrics={kpis} className="grid-cols-2 gap-y-6 sm:grid-cols-3 min-[1100px]:grid-cols-6" />
-          </section>
-
-          <div className="mt-6 grid gap-3 min-[1100px]:grid-cols-12">
-            <AdminPanel
-              className="min-[1100px]:col-span-8"
-              bodyClassName="p-4 sm:p-5"
-              title="Revenue vs expenses"
-              description="Comparative financial performance over the selected range."
-              actions={
-                <div className="flex items-center gap-0.5 rounded-control bg-bg p-0.5">
-                  {(['30D', 'Q2', 'YTD', '12M'] as RangeKey[]).map((item) => (
-                    <button
-                      key={item}
-                      type="button"
-                      aria-pressed={range === item}
-                      onClick={() => setRange(item)}
-                      className={`rounded-chip px-2.5 py-1.5 text-xs transition-colors ${range === item ? 'bg-line font-medium text-fg' : 'text-muted hover:text-fg'} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent`}
-                    >
-                      {item}
-                    </button>
-                  ))}
-                </div>
-              }
-            >
-              {visibleFinanceSeries.length ? (
-                <TrendChart
-                  data={visibleFinanceSeries.map((point) => ({
-                    label: point.month,
-                    primary: point.inflow,
-                    secondary: point.outflow,
-                    tertiary: point.net,
-                  }))}
-                  primaryLabel="Revenue"
-                  secondaryLabel="Operating expenses"
-                  primaryFormat={(value) => formatAmount(value, currency, true)}
-                  ariaLabel="Revenue and operating expenses trend."
-                />
-              ) : (
-                <EmptyState
-                  message="Financial trend unavailable."
-                  description="Recorded invoices and expenses will appear here when financial data is accessible."
-                  action={<Link to="/admin/invoicing" className={subtleActionClass}>Open invoicing</Link>}
-                />
-              )}
-            </AdminPanel>
-
-            <AdminPanel
-              className="min-[1100px]:col-span-4"
-              bodyClassName="p-4 sm:p-5"
-              title="Delivery & pacing"
-              description={`Milestone delivery distribution across ${effectiveProjects.length} projects.`}
-            >
-              {deliveryData.length ? (
-                <>
-                  <div className="mb-3 flex items-center justify-between">
-                    <span className="text-xs text-muted">On schedule</span>
-                    <span className="text-sm font-semibold tabular-nums text-fg">{onSchedulePercent}%</span>
-                  </div>
-                  <DonutChart data={deliveryData} ariaLabel="Project delivery status distribution." />
-                  <div className="mt-4 space-y-3 border-t border-line pt-4">
-                    {deliveryData.map((item) => {
-                      const total = deliveryData.reduce((sum, entry) => sum + entry.value, 0);
-                      const percent = total ? Math.round((item.value / total) * 100) : 0;
-                      const fill = item.tone === 'success' ? 'bg-success' : item.tone === 'warning' ? 'bg-warning' : 'bg-danger';
-                      return (
-                        <div key={item.label}>
-                          <div className="flex items-center justify-between pb-1">
-                            <span className="flex items-center gap-2 text-xs text-fg">
-                              <i className={`h-2 w-2 rounded-full ${fill}`} />{item.label}
-                            </span>
-                            <span className="text-xs tabular-nums text-muted">{item.value} ({percent}%)</span>
-                          </div>
-                          <div className="h-1.5 overflow-hidden rounded-sm bg-line">
-                            <div className={`h-full rounded-sm ${fill}`} style={{ width: `${percent}%` }} />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
-              ) : (
-                <EmptyState message="No project delivery data." description="Project health and pacing will appear here when project data is available." action={<Link to="/admin/projects" className={subtleActionClass}>Open projects</Link>} />
-              )}
-            </AdminPanel>
-          </div>
-
-          <div className="mt-6 grid gap-3 min-[1100px]:grid-cols-12">
-            <AdminPanel
-              className="min-[1100px]:col-span-8"
-              bodyClassName="p-0"
-              title="Active projects"
-              description="Status, delivery pacing, and project budget."
-              actions={
-                <div className="flex max-w-full gap-1.5 overflow-x-auto custom-scrollbar">
-                  {['All', 'Enterprise', 'Retainer', 'Fixed-fee'].map((filter) => (
-                    <button
-                      key={filter}
-                      type="button"
-                      aria-pressed={projectFilter === filter}
-                      onClick={() => setProjectFilter(filter)}
-                      className={`h-7 shrink-0 rounded-chip border px-2.5 text-xs transition-colors ${projectFilter === filter ? 'border-line bg-panel-hover font-medium text-fg' : 'border-line bg-bg text-muted hover:text-fg'} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent`}
-                    >
-                      {filter}
-                    </button>
-                  ))}
-                </div>
-              }
-            >
-              {filteredProjects.length ? (
-                <div className="overflow-x-auto custom-scrollbar">
-                  <table className="w-full min-w-[760px] border-collapse text-left">
-                    <thead>
-                      <tr className="border-b border-line bg-bg/50">
-                        <th className="px-4 py-2.5 text-xs font-medium text-muted sm:px-5">Project & client</th>
-                        <th className="px-3 py-2.5 text-xs font-medium text-muted">Status</th>
-                        <th className="px-3 py-2.5 text-xs font-medium text-muted">Pacing</th>
-                        <th className="px-3 py-2.5 text-xs font-medium text-muted">Lead</th>
-                        <th className="px-4 py-2.5 text-right text-xs font-medium text-muted">Budget</th>
-                        <th className="w-10 px-3 py-2.5" />
-                      </tr>
-                    </thead>
-                    <tbody className="text-xs">
-                      {filteredProjects.map((project) => {
-                        const tone = statusTone(project.status, project.health);
-                        return (
-                          <tr key={project.id || project.name} className="border-b border-line last:border-0 hover:bg-panel-hover">
-                            <td className="px-4 py-3 sm:px-5">
-                              <div className="font-medium text-fg">{project.name}</div>
-                              <div className="mt-0.5 text-[11px] text-muted">{project.clientName || project.clientCompany || 'No client assigned'}</div>
-                            </td>
-                            <td className="px-3 py-3">
-                              <span className={`inline-flex items-center gap-1.5 rounded-badge border px-2 py-0.5 text-[11px] font-medium ${toneClass[tone]}`}>
-                                <i className={`h-1.5 w-1.5 rounded-full ${tone === 'danger' ? 'bg-danger' : tone === 'warning' ? 'bg-warning' : tone === 'success' ? 'bg-success' : tone === 'info' ? 'bg-info' : 'bg-series-4'}`} />
-                                {project.health || project.status.replace(/_/g, ' ')}
-                              </span>
-                            </td>
-                            <td className="w-36 px-3 py-3">
-                              <div className="flex items-center gap-2">
-                                <div className="h-1.5 min-w-[78px] flex-1 overflow-hidden rounded-sm bg-line">
-                                  <div
-                                    className={`h-full rounded-sm ${tone === 'danger' ? 'bg-danger' : tone === 'warning' ? 'bg-warning' : 'bg-success'}`}
-                                    style={{ width: `${project.progressPercent}%` }}
-                                  />
-                                </div>
-                                <span className="text-[11px] tabular-nums text-muted">{project.progressPercent}%</span>
-                              </div>
-                            </td>
-                            <td className="px-3 py-3">
-                              <div className="flex items-center gap-1.5">
-                                <span className="flex h-5 w-5 items-center justify-center rounded-full border border-line bg-bg text-[10px] font-medium text-fg">
-                                  {initials(project.teamLead)}
-                                </span>
-                                <span className="max-w-[120px] truncate text-xs text-muted">{project.teamLead || 'Unassigned'}</span>
-                              </div>
-                            </td>
-                            <td className="px-4 py-3 text-right">
-                              {project.budget > 0 ? <span className="text-xs font-medium tabular-nums text-fg">{formatCurrency(project.budget)}</span> : <span className="text-xs text-muted">Not set</span>}
-                            </td>
-                            <td className="px-3 py-3 text-right">
-                              <Link to="/admin/projects" aria-label={`Open projects for ${project.name}`} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                                <MoreVertical size={15} />
-                              </Link>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="p-5">
-                  <EmptyState
-                    message={projectFilter === 'All' ? 'No active projects.' : `No projects match ${projectFilter.toLowerCase()}.`}
-                    description="Project records will appear here when the current account can access them."
-                    action={<Link to="/admin/projects" className={subtleActionClass}>Open projects</Link>}
-                  />
-                </div>
-              )}
-            </AdminPanel>
-
-            <AdminPanel
-              className="min-[1100px]:col-span-4"
-              bodyClassName="p-4 sm:p-5"
-              title="Team capacity"
-              description="Current task load based on open assignments."
-              actions={<span className="rounded-badge border border-line bg-bg px-2 py-1 text-[11px] text-muted tabular-nums">{teamLoad.length} leads</span>}
-            >
-              {teamLoad.length ? (
-                <div className="space-y-4">
-                  {teamLoad.map((member) => {
-                    const max = Math.max(1, ...teamLoad.map((item) => item.tasks));
-                    const bar = member.tasks >= max * 0.9 ? 'bg-warning' : member.tasks < max * 0.5 ? 'bg-series-3' : 'bg-success';
-                    return (
-                      <div key={member.name}>
-                        <div className="mb-1.5 flex items-center justify-between gap-3">
-                          <div className="flex min-w-0 items-center gap-2">
-                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-line bg-bg text-xs font-semibold text-fg">{initials(member.name)}</div>
-                            <div className="min-w-0">
-                              <div className="truncate text-xs font-medium text-fg">{member.name}</div>
-                              <div className="mt-0.5 text-[11px] text-muted">{member.tasks} tasks</div>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-xs font-medium tabular-nums text-fg">{member.percent}%</span>
-                            <span className="block text-[10px] text-muted">{member.state}</span>
-                          </div>
-                        </div>
-                        <div className="h-1.5 overflow-hidden rounded-sm bg-line">
-                          <div className={`h-full rounded-sm ${bar}`} style={{ width: `${member.percent}%` }} />
-                        </div>
+            <div>
+              <div className="flex items-end justify-between gap-3">
+                <div><div className="text-xs text-muted">On schedule</div><div className="mt-1 text-2xl font-medium tabular-nums text-fg">{onSchedulePercent}%</div></div>
+                <span className="text-[11px] text-muted">12 active projects</span>
+              </div>
+              <div className="mt-4 space-y-3 border-t border-line pt-4">
+                {deliveryBreakdown.map((item) => {
+                  const percent = Math.round((item.value / totalDelivery) * 100);
+                  return (
+                    <div key={item.label}>
+                      <div className="flex items-center justify-between gap-3 text-xs">
+                        <span className="flex min-w-0 items-center gap-2 text-fg"><i className={['h-2 w-2 rounded-full', progressClasses[item.tone]].join(' ')} />{item.label}</span>
+                        <span className="tabular-nums text-muted">{item.value} ({percent}%)</span>
                       </div>
-                    );
-                  })}
-                  <div className="border-t border-line pt-4">
-                    <Link to="/admin/time-logs" className="inline-flex items-center gap-1 text-xs font-medium text-muted hover:text-accent-text">
-                      View full team schedule <ArrowUpRight size={13} />
-                    </Link>
-                  </div>
-                </div>
-              ) : (
-                <EmptyState message="No team workload data." description="Open tasks with an assignee will appear here when available." action={<Link to="/admin/projects" className={subtleActionClass}>Open projects</Link>} />
-              )}
-            </AdminPanel>
+                      <div className="mt-1.5 h-1.5 overflow-hidden rounded-sm bg-line"><div className={['h-full rounded-sm', progressClasses[item.tone]].join(' ')} style={{ width: percent + '%' }} /></div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
+        </AdminPanel>
+      </div>
 
-          <section className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="flex items-center gap-2 rounded-control border border-line bg-panel px-3 py-3"><CheckCircle2 size={15} className="text-success" /><div><p className="text-[11px] text-muted">On schedule</p><p className="text-xs font-medium tabular-nums text-fg">{onSchedulePercent}%</p></div></div>
-            <div className="flex items-center gap-2 rounded-control border border-line bg-panel px-3 py-3"><Clock3 size={15} className="text-warning" /><div><p className="text-[11px] text-muted">Tasks due this week</p><p className="text-xs font-medium tabular-nums text-fg">{tasks.length ? tasksDueThisWeek : '—'}</p></div></div>
-            <div className="flex items-center gap-2 rounded-control border border-line bg-panel px-3 py-3"><WalletCards size={15} className="text-warning" /><div><p className="text-[11px] text-muted">Outstanding</p><p className="text-xs font-medium tabular-nums text-fg">{formatCurrency(financials?.outstandingReceivables ?? metrics?.outstandingReceivables)}</p></div></div>
-            <div className="flex items-center gap-2 rounded-control border border-line bg-panel px-3 py-3"><Users size={15} className="text-info" /><div><p className="text-[11px] text-muted">Open leads</p><p className="text-xs font-medium tabular-nums text-fg">{metrics?.openLeads ?? 0}</p></div></div>
-          </section>
-        </>
-      )}
+      <div className="mt-3 grid gap-3 min-[1100px]:grid-cols-12">
+        <AdminPanel className="min-[1100px]:col-span-8" bodyClassName="p-0" title="Active projects" description="Current delivery status across the agency portfolio." actions={(
+          <Link to="/admin/projects" className="inline-flex items-center gap-1 text-xs font-medium text-muted transition-colors hover:text-accent-text">View all <ArrowUpRight size={13} /></Link>
+        )}>
+          <div className="border-b border-line px-4 pt-3 sm:px-5">
+            <div className="flex gap-1.5 overflow-x-auto pb-3 custom-scrollbar">
+              {(['All', 'Enterprise', 'Retainer', 'Fixed-fee'] as ProjectFilter[]).map((filter) => (
+                <button key={filter} type="button" aria-pressed={projectFilter === filter} onClick={() => setProjectFilter(filter)} className={['shrink-0 rounded-chip border px-2.5 py-1.5 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent', projectFilter === filter ? 'border-line bg-panel-hover font-medium text-fg' : 'border-transparent bg-transparent text-muted hover:border-line hover:bg-bg hover:text-fg'].join(' ')}>{filter}</button>
+              ))}
+            </div>
+          </div>
+          <div className="overflow-x-auto custom-scrollbar">
+            <table className="w-full min-w-[760px] border-collapse text-left">
+              <thead><tr>
+                <th className="px-4 py-3 text-xs font-medium text-muted sm:px-5">Project / client</th>
+                <th className="px-3 py-3 text-xs font-medium text-muted">Status</th>
+                <th className="px-3 py-3 text-xs font-medium text-muted">Pacing</th>
+                <th className="px-3 py-3 text-xs font-medium text-muted">Lead</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-muted">Budget</th>
+                <th className="w-10 px-2 py-3" />
+              </tr></thead>
+              <tbody>
+                {filteredProjects.map((project) => (
+                  <tr key={project.id} className="border-t border-line transition-colors hover:bg-panel-hover">
+                    <td className="px-4 py-3 sm:px-5"><div className="font-medium text-xs text-fg">{project.name}</div><div className="mt-0.5 text-[11px] text-muted">{project.client}</div></td>
+                    <td className="px-3 py-3"><span className={['inline-flex items-center rounded-badge border px-2 py-1 text-[11px] font-medium', toneClasses[project.statusTone]].join(' ')}>{project.status}</span></td>
+                    <td className="px-3 py-3"><div className="flex min-w-[150px] items-center gap-2"><div className="h-1.5 min-w-20 flex-1 overflow-hidden rounded-sm bg-line"><div className={['h-full rounded-sm', progressClasses[project.statusTone === 'danger' ? 'danger' : project.statusTone === 'warning' ? 'warning' : 'success']].join(' ')} style={{ width: project.progress + '%' }} /></div><span className="w-8 text-right text-[11px] tabular-nums text-muted">{project.progress}%</span></div></td>
+                    <td className="px-3 py-3"><div className="flex items-center gap-2"><span className="flex h-6 w-6 items-center justify-center rounded-full border border-line bg-bg text-[10px] font-semibold text-fg">{project.lead.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()}</span><span className="text-xs text-muted">{project.lead}</span></div></td>
+                    <td className="px-4 py-3 text-right text-xs font-medium tabular-nums text-fg">{project.budget}</td>
+                    <td className="px-2 py-3 text-right"><button type="button" aria-label={'More actions for ' + project.name} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><MoreHorizontal size={15} /></button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </AdminPanel>
 
-      <div className="sr-only" aria-live="polite">{isLoading ? 'Refreshing dashboard' : 'Dashboard ready'}</div>
+        <AdminPanel className="min-[1100px]:col-span-4" bodyClassName="p-4 sm:p-5" title="Team capacity" description="Current task load based on the sample agency plan." actions={<span className="rounded-badge border border-line bg-bg px-2 py-1 text-[11px] text-muted">5 members</span>}>
+          <div className="space-y-4">
+            {sampleTeam.map((member) => (
+              <div key={member.name}>
+                <div className="mb-1.5 flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-2"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-line bg-bg text-xs font-semibold text-fg">{member.name.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()}</span><div className="min-w-0"><div className="truncate text-xs font-medium text-fg">{member.name}</div><div className="mt-0.5 truncate text-[10px] text-muted">{member.role}</div></div></div>
+                  <div className="shrink-0 text-right"><span className="text-xs font-medium tabular-nums text-fg">{member.workload}%</span><span className="mt-0.5 block text-[10px] text-muted">{member.tasks} tasks · {member.state}</span></div>
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-sm bg-line"><div className={['h-full rounded-sm', progressClasses[member.tone]].join(' ')} style={{ width: member.workload + '%' }} /></div>
+              </div>
+            ))}
+            <div className="border-t border-line pt-4"><Link to="/admin/time-logs" className="inline-flex items-center gap-1 text-xs font-medium text-muted hover:text-accent-text">View team schedule <ArrowUpRight size={13} /></Link></div>
+          </div>
+        </AdminPanel>
+      </div>
+
+      <section className="mt-3 grid gap-3 sm:grid-cols-3" aria-label="Dashboard supporting signals">
+        <article className="rounded-card border border-line bg-panel p-4"><div className="flex items-center gap-2 text-xs text-muted"><CheckCircle2 size={15} className="text-success" /> Delivery health</div><div className="mt-2 text-lg font-medium tabular-nums text-fg">8 / 12</div><div className="mt-1 text-[11px] text-muted">Projects currently on schedule.</div></article>
+        <article className="rounded-card border border-line bg-panel p-4"><div className="flex items-center gap-2 text-xs text-muted"><Clock3 size={15} className="text-warning" /> Priority work</div><div className="mt-2 text-lg font-medium tabular-nums text-fg">6</div><div className="mt-1 text-[11px] text-muted">High-priority tasks due this week.</div></article>
+        <article className="rounded-card border border-line bg-panel p-4"><div className="flex items-center gap-2 text-xs text-muted"><ReceiptText size={15} className="text-warning" /> Invoice follow-up</div><div className="mt-2 text-lg font-medium tabular-nums text-fg">$8.7k</div><div className="mt-1 text-[11px] text-muted">Outstanding amount past due.</div></article>
+      </section>
     </div>
   );
 };
