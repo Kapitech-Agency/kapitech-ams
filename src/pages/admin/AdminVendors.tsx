@@ -297,7 +297,7 @@ export const AdminVendors: React.FC = () => {
             <span>{language === 'id' ? 'Tambah Vendor' : 'Add Vendor'}</span>
           </button>
         </div>
-      </div>
+      </header>
 
       {/* Success Notification */}
       {statusMessage && (
@@ -428,7 +428,6 @@ export const AdminVendors: React.FC = () => {
               ]}
             />
           </div>
-        </div>
         </div>
       </section>
 
