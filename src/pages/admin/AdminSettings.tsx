@@ -361,7 +361,6 @@ export const AdminSettings: React.FC = () => {
           ? 'Konfigurasi akun master admin, hak akses RBAC, integrasi API, dan log audit keamanan terenkripsi.'
           : 'Configure master admin identity, 4-tier RBAC access matrix, API cloud integrations, and encrypted audit trail.'}
       />
-      </div>
 
       {/* Tabs */}
       <div className="flex items-center gap-2 border-b border-line pb-2 overflow-x-auto custom-scrollbar">
