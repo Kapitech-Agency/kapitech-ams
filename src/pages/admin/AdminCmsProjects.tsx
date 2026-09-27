@@ -659,7 +659,7 @@ export const AdminCmsProjects: React.FC = () => {
                     <button
                       type="button"
                       onClick={handleAddTech}
-                      className="px-3.5 py-2 rounded-control bg-panel hover:bg-panel text-fg border border-line"
+                      className="min-h-10 px-3.5 py-2 rounded-control bg-panel hover:bg-panel text-fg border border-line"
                     >
                       Add Tag
                     </button>
