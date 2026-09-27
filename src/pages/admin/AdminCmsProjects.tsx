@@ -749,7 +749,7 @@ export const AdminCmsProjects: React.FC = () => {
                     </button>
                     <button
                       type="submit"
-                      className="px-5 py-2 rounded-control bg-accent text-white font-semibold hover:bg-accent-hover transition-all"
+                      className="min-h-10 px-5 py-2 rounded-control bg-accent text-white font-semibold hover:bg-accent-hover transition-all"
                     >
                       Save Case Study
                     </button>
