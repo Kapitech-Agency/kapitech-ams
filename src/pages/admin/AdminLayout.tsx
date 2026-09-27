@@ -58,7 +58,7 @@ export const AdminLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const session = getAdminSession();
-  const { roleMeta, isAllowed } = useRbacRole(
+  const { isAllowed } = useRbacRole(
     session?.user?.stakeholderType,
     session?.user?.division,
     session?.user?.role,
@@ -82,9 +82,11 @@ export const AdminLayout: React.FC = () => {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [profileSettingsOpen, setProfileSettingsOpen] = useState(false);
-  const [profileName, setProfileName] = useState(DEFAULT_PROFILE_NAME);
+  const [profileName, setProfileName] = useState(
+    session?.user.profileDisplayName || DEFAULT_PROFILE_NAME
+  );
   const [profileAvatarUrl, setProfileAvatarUrl] = useState<string | null>(
-    () => (session?.user as any)?.avatarUrl || null
+    () => session?.user.avatarUrl || null
   );
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     try { return window.localStorage.getItem('kapitech_ams_theme') === 'light' ? 'light' : 'dark'; } catch { return 'dark'; }
