@@ -37,6 +37,11 @@ export interface AdminUser {
   name?: string;
   username: string;
   email: string;
+  bio?: string;
+  personalEmail?: string;
+  additionalPhone?: string;
+  phone?: string;
+  avatarUrl?: string;
   role: AdminTier;
   permissions?: StakeholderPermissions;
   stakeholderType?: 'Executive' | 'IT_Technical' | 'Project_Manager' | 'Operations' | 'Master';
