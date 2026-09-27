@@ -380,7 +380,7 @@ export const AdminLayout: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Drawer Overlay & U('menu') (Global standard sliding drawer from left) */}
+      {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div
           className="min-[900px]:hidden ams-mobile-drawer fixed inset-0 z-50 flex"
@@ -391,76 +391,81 @@ export const AdminLayout: React.FC = () => {
           <button
             type="button"
             aria-label="Close navigation menu"
-            className="fixed inset-0 bg-bg/80 transition-opacity cursor-default"
+            className="fixed inset-0 bg-bg/80 cursor-default"
             onClick={() => setMobileMenuOpen(false)}
           />
 
-          <motion.div initial={{ x: -16, opacity: 0.98 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.18, ease: "easeOut" }} className="relative w-[300px] max-w-[86vw] bg-panel border-r border-line h-[100dvh] flex flex-col justify-between z-50 overflow-hidden">
-            
-            {/* Drawer Header */}
-            <div className="p-3.5 border-b border-line flex items-center justify-between gap-2 bg-panel shrink-0">
-              <Link 
-                to="/admin/dashboard" 
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2.5"
-              >
-                <div className="h-8 px-2.5 rounded-control bg-bg border border-line flex items-center justify-center shrink-0">
+          <motion.div
+            initial={{ x: -16, opacity: 0.98 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+            className="relative z-50 flex h-[100dvh] w-[300px] max-w-[86vw] flex-col overflow-hidden border-r border-line bg-panel"
+          >
+            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-line bg-panel p-3.5">
+              <Link to="/admin/dashboard" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-control border border-line bg-bg">
                   <AmsBrandLogo className="h-4 w-4" />
                 </div>
-                <div>
-                  <div className="font-sans font-semibold text-fg text-sm flex items-center gap-1.5">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 text-sm font-semibold text-fg">
                     <span>KAPITECH</span>
-                    <span className="text-xs font-sans px-1.5 py-0.5 rounded-badge text-accent-text border border-accent/30 font-semibold">
-                      AMS
-                    </span>
+                    <span className="rounded-badge border border-accent/30 px-1.5 py-0.5 text-xs text-accent-text">AMS</span>
                   </div>
-                  <p className="text-[10px] font-sans text-muted -mt-0.5">Agency Management System</p>
+                  <p className="mt-[-2px] text-[10px] text-muted">Agency Management System</p>
                 </div>
               </Link>
-
               <button
+                type="button"
                 onClick={() => setMobileMenuOpen(false)}
                 aria-label="Close navigation menu"
-                className="min-h-10 min-w-10 flex items-center justify-center rounded-control bg-bg text-muted border border-line transition-[background-color,border-color,color,transform] duration-150 hover:bg-panel-hover hover:border-accent/30 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 <X size={18} />
               </button>
             </div>
 
-            {/* Scrollable Navigation List Filtered by Dynamic RBAC */}
-            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 space-y-4 custom-scrollbar">
-              {filteredNavItems.length ? filteredNavItems.map((item) => {
-                    const Icon = item.icon;
-                    const active = isItemActive(item.to);
+            <div className="px-3 pt-3">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setCommandPaletteOpen(true);
+                }}
+                aria-label="Search AMS"
+                aria-keyshortcuts="Control+K Meta+K"
+                icon={<Search size={15} />}
+                className="flex h-9 w-full justify-start border-line bg-bg px-3"
+              >
+                <span className="min-w-0 flex-1 truncate text-left text-xs">Search</span>
+                <kbd className="ml-auto rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] text-muted">⌘K</kbd>
+              </Button>
+            </div>
 
-                    return (
-                      <Link
-                        key={item.to}
-                        to={item.to}
-                        onClick={() => setMobileMenuOpen(false)}
-                        aria-current={active ? 'page' : undefined}
-                        className={`relative flex min-h-10 items-center justify-between rounded-control px-3 py-2.5 text-xs font-sans transition-[background-color,color,transform] duration-150 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-panel ${
-                          active
-                            ? 'bg-accent/10 font-semibold text-accent-text'
-                            : 'text-muted hover:bg-panel-hover hover:text-fg'
-                        }`}
-                      >
-                        <div className="flex min-w-0 items-center gap-3">
-                          <Icon size={17} className={active ? 'text-accent-text shrink-0' : 'text-muted shrink-0'} />
-                          <span className="truncate">{item.label}</span>
-                        </div>
-                        {item.badge !== null && item.badge !== undefined && (
-                          <span className={`px-2 py-0.5 rounded-badge text-[10px] font-semibold shrink-0 ${item.badgeColor || 'bg-bg text-muted border border-line'}`}>
-                            {item.badge}
-                          </span>
-                        )}
-                      </Link>
-                    );
-                ) : null}
+            <nav aria-label="Primary navigation" className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-3 custom-scrollbar">
+              <div className="space-y-0.5">
+                {filteredNavItems.map((item) => {
+                  const Icon = item.icon;
+                  const active = isItemActive(item.to);
+                  return (
+                    <Link
+                      key={item.key}
+                      to={item.to}
+                      onClick={() => setMobileMenuOpen(false)}
+                      aria-current={active ? 'page' : undefined}
+                      className={`relative flex min-h-10 items-center gap-3 rounded-control px-3 py-2.5 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${active ? 'bg-accent/10 font-semibold text-accent-text' : 'text-muted hover:bg-panel-hover hover:text-fg'}`}
+                    >
+                      <Icon size={17} className="shrink-0" />
+                      <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                      {item.badge !== null && item.badge !== undefined && (
+                        <span className="shrink-0 rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] font-semibold text-muted">{item.badge}</span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
             </nav>
-          </div>
 
-            {/* Bottom session details */}
             <div className="shrink-0 border-t border-line bg-bg px-2.5 pb-[max(10px,env(safe-area-inset-bottom))] pt-2.5">
               <div className="rounded-card border border-line bg-panel p-1.5">
                 <button
@@ -470,7 +475,7 @@ export const AdminLayout: React.FC = () => {
                     setProfileSettingsOpen(true);
                   }}
                   aria-label="Open profile settings"
-                  className="group flex min-h-10 w-full items-center gap-2 rounded-control px-1.5 py-1 text-left transition-colors hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  className="flex min-h-10 w-full items-center gap-2 rounded-control px-1.5 py-1 text-left hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 >
                   <UserAvatar name={profileName} imageUrl={profileAvatarUrl} size="sm" online />
                   <div className="min-w-0 flex-1">
@@ -483,9 +488,7 @@ export const AdminLayout: React.FC = () => {
                     <Link
                       to="/admin/settings"
                       onClick={() => setMobileMenuOpen(false)}
-                      aria-label="Open settings"
-                      title="Settings"
-                      className={`flex h-10 min-w-0 flex-1 items-center justify-center gap-2 rounded-control border border-line bg-bg text-muted transition-colors hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${location.pathname.startsWith('/admin/settings') ? 'text-accent-text' : ''}`}
+                      className="flex h-10 min-w-0 flex-1 items-center justify-center gap-2 rounded-control border border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                     >
                       <Settings size={16} />
                       <span className="text-xs font-medium">Settings</span>
@@ -495,8 +498,7 @@ export const AdminLayout: React.FC = () => {
                     type="button"
                     onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                     aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-                    title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted transition-colors hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                    className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   >
                     {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
                   </button>
@@ -508,11 +510,13 @@ export const AdminLayout: React.FC = () => {
                       handleLogout();
                     }}
                     aria-label="Sign out"
-                    title="Sign out"
                     icon={<LogOut size={14} />}
                     className="h-10 w-10 shrink-0 p-0"
                   />
                 </div>
+              </div>
+              <div className="mt-2 flex items-center justify-between px-2.5 pb-1 text-[10px] text-muted">
+                <span>Kapitech AMS</span><span>v2.4.0</span>
               </div>
             </div>
           </motion.div>
