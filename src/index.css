@@ -152,6 +152,8 @@
 .ams-shell .ams-popover-surface .ams-dropdown-item{min-height:36px;padding:8px 10px;background:transparent;color:var(--muted);border-radius:6px}
 .ams-shell .ams-popover-surface .ams-dropdown-item:hover,.ams-shell .ams-popover-surface .ams-dropdown-item[data-active=true]{background:var(--panel-hover);color:var(--text)}
 .ams-shell .ams-popover-surface .ams-dropdown-item[data-selected=true]{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--text);font-weight:600}
+.ams-shell .ams-popover-surface .ams-dropdown-item[data-danger=true]{color:var(--danger)}
+.ams-shell .ams-popover-surface .ams-dropdown-item[data-danger=true]:hover,.ams-shell .ams-popover-surface .ams-dropdown-item[data-danger=true][data-active=true]{background:color-mix(in srgb,var(--danger) 10%,transparent);color:var(--danger)}
 .ams-shell .ams-crm-kpi,.ams-shell .ams-inbox-kpi{gap:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .ams-shell .ams-crm-kpi>div,.ams-shell .ams-inbox-kpi>div{border:0;border-radius:0;background:transparent;box-shadow:none}.ams-shell .ams-crm-kpi>div+div,.ams-shell .ams-inbox-kpi>div+div{border-left:1px solid var(--line)}
 .ams-shell .ams-crm-kpi>.ams-crm-funnel-card{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:16px}
