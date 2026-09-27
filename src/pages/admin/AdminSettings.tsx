@@ -406,7 +406,7 @@ export const AdminSettings: React.FC = () => {
           onClick={() => handleTabChange('security')}
           className={`px-4 py-2.5 rounded-control text-xs font-sans transition-all flex items-center gap-2 shrink-0 min-h-10 ${
             activeTab === 'security'
-              ? 'bg-accent text-white font-semibold '
+              ? 'bg-panel-hover text-fg font-semibold border-line '
               : 'text-muted hover:text-fg hover:bg-panel'
           }`}
         >
@@ -419,7 +419,7 @@ export const AdminSettings: React.FC = () => {
            disabled={!canAccessServer}
           className={`px-4 py-2.5 rounded-control text-xs font-sans transition-all flex items-center gap-2 shrink-0 min-h-10 ${
             activeTab === 'api'
-              ? 'bg-accent text-white font-semibold '
+              ? 'bg-panel-hover text-fg font-semibold border-line '
               : 'text-muted hover:text-fg hover:bg-panel'
           }`}
         >
@@ -432,7 +432,7 @@ export const AdminSettings: React.FC = () => {
            disabled={!canViewAuditLogs}
           className={`px-4 py-2.5 rounded-control text-xs font-sans transition-all flex items-center gap-2 shrink-0 min-h-10 ${
             activeTab === 'audit'
-              ? 'bg-accent text-white font-semibold '
+              ? 'bg-panel-hover text-fg font-semibold border-line '
               : 'text-muted hover:text-fg hover:bg-panel'
           }`}
         >
