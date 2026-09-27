@@ -202,6 +202,7 @@ export const AdminInvoicing: React.FC = () => {
   const [paymentNotes, setPaymentNotes] = useState('');
   const [paymentIdempotencyKey, setPaymentIdempotencyKey] = useState('');
   const [savingPayment, setSavingPayment] = useState(false);
+  const [updatingInvoiceId, setUpdatingInvoiceId] = useState<string | null>(null);
 
   const [detailInvoice, setDetailInvoice] = useState<AgencyInvoice | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ type: 'invoice' | 'expense'; id: string; label: string } | null>(null);
@@ -668,20 +669,27 @@ export const AdminInvoicing: React.FC = () => {
   };
 
   const updateInvoiceStatus = async (invoice: AgencyInvoice, nextStatus: InvoiceStatus) => {
-    if (!canManageInvoices || invoice.status === nextStatus || nextStatus === 'cancelled') return;
-    const result = await api.finance.updateInvoice(invoice.id, { status: nextStatus, updatedAt: invoice.updatedAt });
-    if (!result.success) {
-      showNotice(
-        'danger',
-        result.status === 409
-          ? (language === 'id' ? 'Status invoice berubah di server. Data terbaru dimuat ulang; coba lagi dari state terbaru.' : 'This invoice changed on the server. The latest data was reloaded; retry from the current state.')
-          : (result.error || 'Invoice status could not be updated.')
-      );
-      if (result.status === 409) await loadData(true);
-      return;
+    if (!canManageInvoices || updatingInvoiceId || invoice.status === nextStatus || nextStatus === 'cancelled') return;
+    setUpdatingInvoiceId(invoice.id);
+    try {
+      const result = await api.finance.updateInvoice(invoice.id, { status: nextStatus, updatedAt: invoice.updatedAt });
+      if (!result.success) {
+        showNotice(
+          'danger',
+          result.status === 409
+            ? (language === 'id' ? 'Status invoice berubah di server. Data terbaru dimuat ulang; coba lagi dari state terbaru.' : 'This invoice changed on the server. The latest data was reloaded; retry from the current state.')
+            : (result.error || 'Invoice status could not be updated.')
+        );
+        if (result.status === 409) await loadData(true);
+        return;
+      }
+      showNotice('success', language === 'id' ? 'Status invoice diperbarui.' : 'Invoice status updated.');
+      await loadData(true);
+    } catch (err) {
+      showNotice('danger', err instanceof Error ? err.message : 'Invoice status could not be updated.');
+    } finally {
+      setUpdatingInvoiceId(null);
     }
-    showNotice('success', language === 'id' ? 'Status invoice diperbarui.' : 'Invoice status updated.');
-    await loadData(true);
   };
 
   const openPayment = (invoice: AgencyInvoice) => {
@@ -791,27 +799,34 @@ export const AdminInvoicing: React.FC = () => {
   const confirmDelete = async () => {
     if (!confirmAction || confirmingAction) return;
     setConfirmingAction(true);
-    const result = confirmAction.type === 'invoice'
-      ? await api.finance.deleteInvoice(confirmAction.id)
-      : await api.finance.deleteExpense(
-          confirmAction.id,
-          (expenses.find((expense) => expense.id === confirmAction.id) as FinanceExpense | undefined)?.version
+    try {
+      const result = confirmAction.type === 'invoice'
+        ? await api.finance.deleteInvoice(confirmAction.id)
+        : await api.finance.deleteExpense(
+            confirmAction.id,
+            (expenses.find((expense) => expense.id === confirmAction.id) as FinanceExpense | undefined)?.version
+          );
+
+      if (!result.success) {
+        showNotice(
+          'danger',
+          result.status === 409
+            ? (language === 'id' ? 'Data finansial berubah di server. Muat ulang sebelum mencoba lagi.' : 'This financial record changed on the server. Refresh before trying again.')
+            : (result.error || 'Action could not be completed.')
         );
-    if (!result.success) {
-      showNotice(
-        'danger',
-        result.status === 409
-          ? (language === 'id' ? 'Data finansial berubah di server. Muat ulang sebelum mencoba lagi.' : 'This financial record changed on the server. Refresh before trying again.')
-          : (result.error || 'Action could not be completed.')
-      );
-    } else {
-      showNotice('success', confirmAction.type === 'invoice'
-        ? (language === 'id' ? 'Invoice dibatalkan.' : 'Invoice cancelled.')
-        : (language === 'id' ? 'Pengeluaran dibatalkan.' : 'Expense voided.'));
-      await loadData(true);
+      } else {
+        showNotice('success', confirmAction.type === 'invoice'
+          ? (language === 'id' ? 'Invoice dibatalkan.' : 'Invoice cancelled.')
+          : (language === 'id' ? 'Pengeluaran dibatalkan.' : 'Expense voided.'));
+        await loadData(true);
+      }
+      setConfirmAction(null);
+    } catch (err) {
+      showNotice('danger', err instanceof Error ? err.message : 'Action could not be completed.');
+      setConfirmAction(null);
+    } finally {
+      setConfirmingAction(false);
     }
-    setConfirmAction(null);
-    setConfirmingAction(false);
   };
 
   const openPrintPreview = (invoice: AgencyInvoice) => setDetailInvoice(invoice);
@@ -1155,7 +1170,7 @@ export const AdminInvoicing: React.FC = () => {
                                   <InvoiceStatusDropdown
                                     status={invoice.status}
                                     allowedStatuses={['draft', 'sent', 'overdue']}
-                                    disabled={!['draft', 'sent', 'overdue'].includes(invoice.status)}
+                                    disabled={updatingInvoiceId === invoice.id || !['draft', 'sent', 'overdue'].includes(invoice.status)}
                                     onChange={(next) => void updateInvoiceStatus(invoice, next)}
                                   />
                                 ) : <StatusBadge status={invoice.status} />}
