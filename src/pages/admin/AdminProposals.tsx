@@ -808,8 +808,22 @@ export const AdminProposals: React.FC = () => {
         title={editingProposal ? (language === 'id' ? 'Edit proposal' : 'Edit proposal') : (language === 'id' ? 'Buat proposal' : 'Create proposal')}
         description={language === 'id' ? 'Lengkapi informasi komersial dan line item sebelum menyimpan.' : 'Complete the commercial information and line items before saving.'}
         closeOnOutsideClick={!isSubmitting}
+        footer={(
+          <>
+            <Button type="button" variant="secondary" onClick={() => setFormOpen(false)} disabled={isSubmitting}>Cancel</Button>
+            <Button
+              type="submit"
+              form="proposal-form"
+              disabled={isSubmitting || !canManageCrm}
+              loading={isSubmitting}
+              icon={<CheckCircle2 size={14} />}
+            >
+              {editingProposal ? 'Save changes' : 'Create proposal'}
+            </Button>
+          </>
+        )}
       >
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form id="proposal-form" onSubmit={handleSubmit} className="space-y-5">
           <section className="space-y-3">
             <div className="text-sm font-semibold text-fg">{language === 'id' ? 'Informasi dasar' : 'Basic information'}</div>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -849,17 +863,6 @@ export const AdminProposals: React.FC = () => {
             </div>
           </section>
 
-          <div className="flex flex-col-reverse gap-2 border-t border-line pt-4 sm:flex-row sm:justify-end">
-            <Button type="button" variant="secondary" onClick={() => setFormOpen(false)} disabled={isSubmitting}>Cancel</Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting || !canManageCrm}
-              loading={isSubmitting}
-              icon={<CheckCircle2 size={14} />}
-            >
-              {editingProposal ? 'Save changes' : 'Create proposal'}
-            </Button>
-          </div>
         </form>
       </Modal>
 
