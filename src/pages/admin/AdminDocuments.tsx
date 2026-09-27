@@ -273,7 +273,57 @@ export const AdminDocuments: React.FC = () => {
             {language === 'id' ? 'Belum ada dokumen di registri.' : 'No documents found in the registry.'}
           </div>
         ) : (
-          <div className="ams-table-scroll overflow-x-auto">
+          <div className="min-[900px]:hidden divide-y divide-line">
+            {filteredDocs.map((doc) => {
+              const docTitle = doc.name || doc.title || 'Untitled Document';
+              const docDate = doc.uploadedDate || (doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString() : 'Recent');
+              const docOwner = doc.owner || doc.uploadedBy || 'Kapitech System';
+              const docType = doc.type || doc.fileType || 'PDF';
+              const docSize = doc.size ? String(doc.size) : '1.5 MB';
+              const ready = doc.status === 'ready' || doc.sourceType === 'external_link';
+              return (
+                <article key={doc.id} className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-accent">
+                      <FileText size={15} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate text-xs font-semibold text-fg">{docTitle}</h3>
+                      <p className="mt-1 truncate text-[10px] text-muted">{docType} · {doc.category || 'General'}</p>
+                    </div>
+                    <span className={`shrink-0 rounded-badge border px-2 py-1 text-[10px] font-semibold ${ready ? 'border-success/20 bg-success/10 text-success' : 'border-warning/20 bg-warning/10 text-warning'}`}>
+                      {ready ? 'Ready' : 'Pending'}
+                    </span>
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <div className="rounded-control border border-line bg-bg p-2.5">
+                      <div className="text-[10px] text-muted">Size</div>
+                      <div className="mt-1 text-[11px] font-medium text-fg">{docSize}</div>
+                    </div>
+                    <div className="rounded-control border border-line bg-bg p-2.5">
+                      <div className="text-[10px] text-muted">Uploaded</div>
+                      <div className="mt-1 truncate text-[11px] font-medium text-fg">{docDate}</div>
+                    </div>
+                  </div>
+                  <p className="mt-3 truncate text-[10px] text-muted">By {docOwner} · {doc.relatedEntity || 'General'}</p>
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    {(doc.downloadUrl || doc.url) ? (
+                      <a href={doc.downloadUrl || doc.url} target="_blank" rel="noopener noreferrer" className="flex min-h-9 items-center justify-center rounded-control border border-line bg-bg text-xs font-medium text-fg">
+                        Open
+                      </a>
+                    ) : (
+                      <span className="flex min-h-9 items-center justify-center rounded-control border border-line bg-bg text-xs text-muted">Unavailable</span>
+                    )}
+                    <button type="button" onClick={() => handleDelete(doc.id)} className="min-h-9 rounded-control border border-line bg-bg text-xs font-medium text-danger">
+                      Delete
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          <div className="hidden min-[900px]:block ams-table-scroll overflow-x-auto">
             <table className="ams-table w-full text-left border-collapse min-w-[700px]">
               <thead>
                 <tr className="border-b border-line bg-panel/50 text-xs font-sans text-muted normal-case">
