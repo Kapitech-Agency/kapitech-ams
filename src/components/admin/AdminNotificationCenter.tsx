@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Bell, CheckCheck } from 'lucide-react';
+import { Bell, CheckCheck, AlertCircle, BellOff } from 'lucide-react';
+import Button from '../ui/Button';
 import { api } from '../../lib/apiClient';
 import { useLanguage } from '../../lib/LanguageContext';
 import { DropdownPortal } from '../ui/DropdownPortal';
@@ -74,19 +75,25 @@ export const AdminNotificationCenter: React.FC = () => {
 
   return (
     <div className="relative">
-      <button
-        ref={triggerRef}
-        type="button"
-        onClick={() => setOpen(v => !v)}
-        className="relative flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted transition-colors hover:bg-panel-hover hover:border-muted hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
-        aria-label={language === 'id' ? 'Notifikasi' : 'Notifications'}
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        aria-controls="ams-notification-menu"
-      >
-        <Bell size={16} />
-        {unread > 0 && <span className="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-badge border border-panel bg-accent px-1 text-[9px] font-semibold text-white">{unread > 99 ? '99+' : unread}</span>}
-      </button>
+      <div className="relative">
+        <Button
+          ref={triggerRef}
+          type="button"
+          variant="secondary"
+          onClick={() => setOpen(v => !v)}
+          aria-label={language === 'id' ? 'Notifikasi' : 'Notifications'}
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          aria-controls="ams-notification-menu"
+          icon={<Bell size={16} />}
+          className={`h-10 w-10 p-0 ${open ? 'border-accent/40 bg-accent/8 text-accent-text' : ''}`}
+        />
+        {unread > 0 && (
+          <span className="pointer-events-none absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-badge border-2 border-panel bg-accent px-1 text-[9px] font-semibold text-white">
+            {unread > 99 ? '99+' : unread}
+          </span>
+        )}
+      </div>
 
       <DropdownPortal
         open={open}
@@ -102,15 +109,29 @@ export const AdminNotificationCenter: React.FC = () => {
               <p className="text-[13px] font-semibold text-fg">{language === 'id' ? 'Notifikasi' : 'Notifications'}</p>
               <p className="mt-0.5 text-[11px] text-muted">{unread} {language === 'id' ? 'belum dibaca' : 'unread'}</p>
             </div>
-            {unread > 0 && <button type="button" onClick={() => void markAllRead()} disabled={markingAllRead} className="inline-flex min-h-10 items-center gap-1.5 rounded-control px-2 text-[11px] font-medium text-accent-text hover:bg-panel-hover hover:text-fg disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"><CheckCheck size={14}/>{language === 'id' ? 'Tandai semua' : 'Mark all read'}</button>}
+            {unread > 0 && (
+              <Button
+                type="button"
+                variant="ghost"
+                loading={markingAllRead}
+                onClick={() => void markAllRead()}
+                icon={<CheckCheck size={14} />}
+                className="min-h-9 px-2 text-[11px] text-accent-text"
+              >
+                {language === 'id' ? 'Tandai semua' : 'Mark all read'}
+              </Button>
+            )}
           </div>
           <div className="ams-notification-list max-h-[min(60vh,460px)] overflow-y-auto overscroll-contain custom-scrollbar">
             {error ? (
               <div className="px-4 py-10 text-center" role="status">
-                <p className="text-[12px] font-medium text-fg">{error}</p>
-                <button type="button" onClick={() => void refresh()} className="mt-3 min-h-10 rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-control border border-danger/20 bg-danger/10 text-danger">
+                  <AlertCircle size={16} />
+                </div>
+                <p className="mt-3 text-[12px] font-medium text-fg">{error}</p>
+                <Button type="button" variant="secondary" onClick={() => void refresh()} className="mt-3 min-h-9 px-3">
                   {language === 'id' ? 'Coba lagi' : 'Retry'}
-                </button>
+                </Button>
               </div>
             ) : loading && items.length === 0 ? (
               <div className="space-y-1 p-2" aria-label={language === 'id' ? 'Memuat notifikasi' : 'Loading notifications'} role="status">
@@ -126,9 +147,15 @@ export const AdminNotificationCenter: React.FC = () => {
                 ))}
               </div>
             ) : items.length === 0 ? (
-              <div className="px-4 py-10 text-center text-[12px] text-muted">{language === 'id' ? 'Tidak ada notifikasi.' : 'No notifications.'}</div>
+              <div className="px-4 py-10 text-center" role="status">
+                <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-control border border-line bg-bg text-muted">
+                  <BellOff size={16} />
+                </div>
+                <p className="mt-3 text-[12px] font-medium text-fg">{language === 'id' ? 'Tidak ada notifikasi.' : 'No notifications.'}</p>
+                <p className="mt-1 text-[11px] text-muted">{language === 'id' ? 'Notifikasi baru akan muncul di sini.' : 'New notifications will appear here.'}</p>
+              </div>
             ) : items.slice(0, 30).map(item => (
-              <button key={item.id} type="button" onClick={() => void markRead(item.id)} className={`ams-notification-item w-full border-b border-line px-4 py-3.5 text-left transition-colors hover:bg-panel-hover focus-visible:outline-none focus-visible:bg-panel-hover ${(!item.isRead && !item.readAt) ? 'is-unread' : ''}`}>
+              <button key={item.id} type="button" onClick={() => void markRead(item.id)} className={`ams-notification-item w-full border-b border-line px-4 py-3.5 text-left transition-colors hover:bg-panel-hover focus-visible:outline-none focus-visible:bg-panel-hover ${(!item.isRead && !item.readAt) ? 'is-unread border-l-2 border-l-accent pl-[14px]' : ''}`}>
                 <div className="flex gap-3">
                   <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${(!item.isRead && !item.readAt) ? 'bg-accent' : 'bg-line'}`} />
                   <div className="min-w-0 flex-1">
