@@ -3,7 +3,6 @@ import { motion } from 'motion/react';
 import { Link, NavLink, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import {
   Home,
-  Users,
   Briefcase,
   Landmark,
   Settings,
@@ -37,12 +36,6 @@ interface NavItem {
   badge?: string | number | null;
   badgeColor?: string;
   exact?: boolean;
-}
-
-interface NavSection {
-  id: string;
-  titleKey: string;
-  items: NavItem[];
 }
 
 type AdminNavItem = NavItem & { accessKey?: string };
