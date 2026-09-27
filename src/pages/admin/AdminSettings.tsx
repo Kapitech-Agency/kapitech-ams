@@ -177,10 +177,9 @@ export const AdminSettings: React.FC = () => {
     setNewAccName('');
     setNewAccUsername('');
     setNewAccEmail('');
-    setNewAccPassword('kapi_' + Math.random().toString(36).substring(2, 7) + '25');
+    setNewAccPassword('Kapi_' + crypto.randomUUID().replace(/-/g, ''));
     setNewAccRole('Stakeholder Executive');
     setNewAccDivision('Management');
-    setNewAccPermissions(getDefaultPermissionsForRole('Stakeholder Executive'));
     setAccountActionMessage(null);
     setIsAddAccountModalOpen(true);
   };
@@ -197,6 +196,14 @@ export const AdminSettings: React.FC = () => {
   const handleCreateAccountSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAccountActionMessage(null);
+
+    if (newAccPassword.length < 12) {
+      setAccountActionMessage({
+        success: false,
+        message: language === 'id' ? 'Password sementara harus 12 sampai 128 karakter.' : 'Temporary password must be 12 to 128 characters.'
+      });
+      return;
+    }
 
     const res = await createAdminAccount({
       name: newAccName,
@@ -1015,7 +1022,9 @@ export const AdminSettings: React.FC = () => {
                     required
                     value={newAccPassword}
                     onChange={(e) => setNewAccPassword(e.target.value)}
-                    placeholder="Minimal 6 karakter"
+                    minLength={12}
+                    maxLength={128}
+                    placeholder="12–128 characters"
                     className="w-full min-h-10 px-3.5 py-2.5 bg-panel border border-line rounded-control text-sm text-fg font-sans focus:outline-none focus:border-accent transition-all"
                   />
                 </div>
