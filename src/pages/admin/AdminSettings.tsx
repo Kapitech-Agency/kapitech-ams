@@ -281,8 +281,6 @@ export const AdminSettings: React.FC = () => {
 
     try {
       const res = await updateAdminCredentials(currentPassword, {
-        username,
-        email,
         newPassword: newPassword || undefined
       });
 
