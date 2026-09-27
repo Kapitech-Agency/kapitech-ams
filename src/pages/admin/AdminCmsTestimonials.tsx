@@ -15,6 +15,8 @@ export const AdminCmsTestimonials: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; author: string } | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadData = async () => {
     setIsLoading(true); setLoadError(null);
@@ -36,9 +38,9 @@ export const AdminCmsTestimonials: React.FC = () => {
       quote: '',
       quoteId: '',
       author: '',
-      role: 'Head of Product / CEO',
+      role: '',
       company: '',
-      location: 'Jakarta, Indonesia',
+      location: '',
       rating: 5
     };
     setEditingItem(template);
@@ -51,30 +53,35 @@ export const AdminCmsTestimonials: React.FC = () => {
   };
 
   const handleDelete = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget || isDeleting) return;
+    setIsDeleting(true);
     const res = await api.cms.deleteTestimonial(deleteTarget.id);
     setDeleteTarget(null);
-    if (!res.success) { setStatusMessage(res.error || 'Delete failed.'); return; }
+    if (!res.success) { setStatusMessage(res.error || 'Delete failed.'); setIsDeleting(false); return; }
     await loadData();
     setStatusMessage('Testimoni berhasil dihapus.');
     setTimeout(() => setStatusMessage(null), 3000);
+    setIsDeleting(false);
   };
 
   const handleSaveModal = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSaving) return;
     if (!editingItem || !editingItem.author.trim() || (!editingItem.quoteId && !editingItem.quote)) {
       setStatusMessage('Nama author dan isi kutipan testimoni wajib diisi.');
       return;
     }
 
+    setIsSaving(true);
     const exists = testimonials.some(item => item.id === editingItem.id);
     const res = exists ? await api.cms.updateTestimonial(editingItem.id, editingItem) : await api.cms.createTestimonial(editingItem);
-    if (!res.success) { setStatusMessage(res.error || 'Failed to save testimonial.'); return; }
+    if (!res.success) { setStatusMessage(res.error || 'Failed to save testimonial.'); setIsSaving(false); return; }
     setIsModalOpen(false);
     setEditingItem(null);
     await loadData();
     setStatusMessage('Testimoni berhasil disimpan ke database CMS!');
     setTimeout(() => setStatusMessage(null), 3000);
+    setIsSaving(false);
   };
 
   return (
@@ -163,13 +170,13 @@ export const AdminCmsTestimonials: React.FC = () => {
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => handleOpenEdit(item)}
-                  className="min-h-9 min-w-9 rounded-control bg-panel hover:bg-panel-hover text-muted hover:text-fg border border-line transition-colors flex items-center justify-center"
+                  className="min-h-10 min-w-10 sm:min-h-9 sm:min-w-9 rounded-control bg-panel hover:bg-panel-hover text-muted hover:text-fg border border-line transition-colors flex items-center justify-center"
                 >
                   <Edit3 size={14} />
                 </button>
                 <button
                   onClick={() => setDeleteTarget({ id: item.id, author: item.author })}
-                  className="min-h-9 min-w-9 rounded-control bg-panel hover:bg-danger/10 text-muted hover:text-danger border border-line hover:border-danger/30 transition-colors flex items-center justify-center"
+                  className="min-h-10 min-w-10 sm:min-h-9 sm:min-w-9 rounded-control bg-panel hover:bg-danger/10 text-muted hover:text-danger border border-line hover:border-danger/30 transition-colors flex items-center justify-center"
                 >
                   <Trash2 size={14} />
                 </button>
@@ -191,8 +198,8 @@ export const AdminCmsTestimonials: React.FC = () => {
               <p className="mt-1 text-xs text-muted">The testimonial will no longer appear on the public site.</p>
             </div>
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="secondary" onClick={() => setDeleteTarget(null)}>Cancel</Button>
-              <Button type="button" variant="destructive" onClick={() => void handleDelete()}>Delete</Button>
+              <Button type="button" variant="secondary" onClick={() => setDeleteTarget(null)} disabled={isDeleting}>Cancel</Button>
+              <Button type="button" variant="destructive" onClick={() => void handleDelete()} loading={isDeleting}>Delete</Button>
             </div>
           </div>
         </Modal>
@@ -272,8 +279,8 @@ export const AdminCmsTestimonials: React.FC = () => {
               </div>
 
               <div className="pt-2 flex items-center justify-end gap-2">
-                <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)}>{language === 'id' ? 'Batal' : 'Cancel'}</Button>
-                <Button type="submit">{language === 'id' ? 'Simpan Testimoni' : 'Save Testimonial'}</Button>
+                <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)} disabled={isSaving}>{language === 'id' ? 'Batal' : 'Cancel'}</Button>
+                <Button type="submit" loading={isSaving}>{language === 'id' ? 'Simpan Testimoni' : 'Save Testimonial'}</Button>
               </div>
             </form>
           </div>
