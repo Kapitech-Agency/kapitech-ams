@@ -638,7 +638,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         icon={<Sparkles size={18} />}
         actions={(
           <>
-            <div className="flex items-center gap-0.5 rounded-control bg-bg p-0.5">
+            <div className="flex w-full items-center gap-0.5 rounded-control bg-bg p-0.5 sm:w-auto">
               {(['30D', 'Q2', 'YTD', '12M'] as RangeKey[]).map((item) => (
                 <button
                   key={item}
@@ -653,7 +653,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             </div>
             <Link
               to="/admin/projects"
-              className="inline-flex min-h-9 items-center justify-center gap-2 rounded-control bg-accent px-3 text-xs font-medium text-white transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-control bg-accent px-3 text-xs font-medium sm:min-h-9 sm:w-auto text-white transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
               <Plus size={14} />
               New project
@@ -668,6 +668,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             { key: 'overview', label: 'Overview', search: '' },
             { key: 'performance', label: 'Performance', search: '?view=performance' },
             { key: 'analytics', label: 'Analytics', search: '?view=analytics' },
+            { key: 'tasks', label: 'Tasks', search: '?view=tasks' },
           ].map((tab) => (
             <Link
               key={tab.key}
@@ -687,7 +688,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       {view === 'overview' ? (
         <>
       <section className="mb-6" aria-label="Executive key performance indicators">
-        <div className="grid gap-3 sm:grid-cols-2 min-[760px]:grid-cols-3 min-[1180px]:grid-cols-6">
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-3 min-[760px]:grid-cols-3 min-[1180px]:grid-cols-6">
           {[
             { label: 'Active projects', value: '12', change: '+2 this month', icon: <FolderKanban size={16} />, tone: 'success' },
             { label: 'Tasks due this week', value: '18', change: '6 high priority', icon: <CalendarDays size={16} />, tone: 'info' },
@@ -763,7 +764,52 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               ))}
             </div>
           </div>
-          <div className="overflow-x-auto custom-scrollbar">
+          <div className="md:hidden divide-y divide-line">
+            {filteredProjects.map((project) => (
+              <article key={project.id} className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="truncate text-xs font-semibold text-fg">{project.name}</h3>
+                    <p className="mt-1 truncate text-[11px] text-muted">{project.client}</p>
+                  </div>
+                  <span className={['shrink-0 rounded-badge border px-2 py-1 text-[10px] font-medium', toneClasses[project.statusTone]].join(' ')}>
+                    {project.status}
+                  </span>
+                </div>
+                <div className="mt-4">
+                  <div className="flex items-center justify-between gap-3 text-[10px] text-muted">
+                    <span>{project.type}</span>
+                    <span className="tabular-nums">{project.progress}%</span>
+                  </div>
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-line">
+                    <div
+                      className={['h-full rounded-full', progressClasses[project.statusTone === 'danger' ? 'danger' : project.statusTone === 'warning' ? 'warning' : 'success']].join(' ')}
+                      style={{ width: project.progress + '%' }}
+                    />
+                  </div>
+                </div>
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <div className="rounded-control border border-line bg-bg p-2.5">
+                    <div className="text-[10px] text-muted">Lead</div>
+                    <div className="mt-1 truncate text-[11px] font-medium text-fg">{project.lead}</div>
+                  </div>
+                  <div className="rounded-control border border-line bg-bg p-2.5">
+                    <div className="text-[10px] text-muted">Budget</div>
+                    <div className="mt-1 truncate text-[11px] font-medium text-fg">{project.budget}</div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setProjectDetails(project)}
+                  className="mt-3 flex min-h-9 w-full items-center justify-center rounded-control border border-line bg-bg px-3 text-xs font-medium text-fg transition-colors hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                >
+                  View project
+                </button>
+              </article>
+            ))}
+          </div>
+
+          <div className="hidden md:block overflow-x-auto custom-scrollbar">
             <table className="w-full min-w-[760px] border-collapse text-left">
               <thead><tr>
                 <th className="px-4 py-3 text-xs font-medium text-muted sm:px-5">Project / client</th>
