@@ -24,6 +24,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { getActiveCurrency, formatAmount, CurrencyCode, CURRENCY_EVENT } from '../../lib/currency';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { CustomSelect } from '../../components/ui/CustomSelect';
+import Button from '../../components/ui/Button';
 
 interface ApprovalItem {
   id: string;
@@ -484,21 +485,8 @@ export const AdminApprovals: React.FC = () => {
               </div>
 
               <div className="pt-3 border-t border-line flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setActiveItem(null)}
-                  className="min-h-10 px-4 py-2 rounded-control bg-panel hover:bg-panel-hover border border-line text-muted text-xs font-sans"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-5 py-2 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-sans font-semibold disabled:opacity-50 flex items-center gap-1.5 min-h-10"
-                >
-                  {isSubmitting ? <Loader2 size={13} className="animate-spin" /> : <ShieldCheck size={14} />}
-                  <span>Confirm Decision</span>
-                </button>
+                <Button type="button" variant="secondary" onClick={() => setActiveItem(null)}>Cancel</Button>
+                <Button type="submit" loading={isSubmitting} disabled={isSubmitting} icon={<ShieldCheck size={14} />}>Confirm Decision</Button>
               </div>
             </form>
       </Modal>
