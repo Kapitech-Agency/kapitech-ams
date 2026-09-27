@@ -361,8 +361,7 @@ export const AdminVendors: React.FC = () => {
       </section>
 
       {/* Filter & Search Bar */}
-      <section className="w-full rounded-card bg-panel border border-line p-4 sm:p-5" aria-label="Vendor directory controls">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+      <section className="w-full rounded-card bg-panel border border-line p-4 sm:p-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between" aria-label="Vendor directory controls">
         <div className="relative w-full lg:w-96">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
           <input
@@ -428,7 +427,6 @@ export const AdminVendors: React.FC = () => {
               ]}
             />
           </div>
-        </div>
       </section>
 
       {/* Vendors Grid */}
