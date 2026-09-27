@@ -51,7 +51,7 @@ interface NavSection {
 }
 
 const DEFAULT_PROFILE_NAME = 'Fikri Nurlete';
-const DEFAULT_PROFILE_TITLE = 'Chief Executive Officer';
+const DEFAULT_PROFILE_TITLE = 'Stakeholder account';
 
 export const AdminLayout: React.FC = () => {
   const { language, t } = useLanguage();
@@ -89,7 +89,13 @@ export const AdminLayout: React.FC = () => {
     () => session?.user.avatarUrl || null
   );
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
-    try { return window.localStorage.getItem('kapitech_ams_theme') === 'light' ? 'light' : 'dark'; } catch { return 'dark'; }
+    try {
+      const saved = window.localStorage.getItem('kapitech_ams_theme');
+      if (saved === 'light' || saved === 'dark') return saved;
+      return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    } catch {
+      return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
+    }
   });
 
   useEffect(() => {
@@ -233,6 +239,7 @@ export const AdminLayout: React.FC = () => {
       .filter(section => section.items.length > 0);
   }, [navSections, isAllowed]);
   const settingsAllowed = isAllowed('settings');
+  const profileTitle = session?.user?.role || DEFAULT_PROFILE_TITLE;
   const contentNavSections = filteredNavSections.filter((section) => section.id !== 'admin');
 
   // Helper to determine if link is active
@@ -331,7 +338,19 @@ export const AdminLayout: React.FC = () => {
             ))}
           </div>
         </div>
-        <div className="shrink-0 border-t border-line bg-panel px-2 pb-2">
+        <div className="shrink-0 border-t border-line bg-panel px-2 pb-2 pt-2">
+          {settingsAllowed && (
+            <Link
+              to="/admin/settings"
+              title="Settings"
+              aria-label="Open settings"
+              aria-current={location.pathname.startsWith('/admin/settings') ? 'page' : undefined}
+              className={`group mb-1 flex min-h-10 items-center rounded-control text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${sidebarCollapsed ? 'mx-auto h-10 w-10 justify-center px-0' : 'gap-2.5 px-2.5'} ${location.pathname.startsWith('/admin/settings') ? 'bg-accent/14 text-fg' : 'text-muted hover:bg-panel-hover hover:text-fg'}`}
+            >
+              <Settings size={16} strokeWidth={location.pathname.startsWith('/admin/settings') ? 2.1 : 1.8} className={`shrink-0 ${location.pathname.startsWith('/admin/settings') ? 'text-accent-text' : 'text-muted group-hover:text-fg'}`} />
+              {!sidebarCollapsed && <span>Settings</span>}
+            </Link>
+          )}
           <div className={`flex min-h-10 items-center rounded-control border border-line bg-bg px-1.5 ${sidebarCollapsed ? 'justify-center' : 'gap-1.5'}`}>
             <button
               type="button"
@@ -344,7 +363,7 @@ export const AdminLayout: React.FC = () => {
               {!sidebarCollapsed && (
                 <div className="min-w-0">
                   <div className="truncate text-xs font-semibold text-fg">{profileName}</div>
-                  <div className="mt-0.5 truncate text-[10px] text-muted">{DEFAULT_PROFILE_TITLE}</div>
+                  <div className="mt-0.5 truncate text-[10px] text-muted">{profileTitle}</div>
                 </div>
               )}
             </button>
@@ -537,6 +556,19 @@ export const AdminLayout: React.FC = () => {
                 </div>
               ))}
 
+              {settingsAllowed && (
+                <div className="border-t border-line pt-3">
+                  <Link
+                    to="/admin/settings"
+                    onClick={() => setMobileMenuOpen(false)}
+                    aria-current={location.pathname.startsWith('/admin/settings') ? 'page' : undefined}
+                    className={`flex min-h-10 items-center gap-3 rounded-control px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${location.pathname.startsWith('/admin/settings') ? 'bg-accent/14 text-fg' : 'text-muted hover:bg-panel-hover hover:text-fg'}`}
+                  >
+                    <Settings size={17} className={location.pathname.startsWith('/admin/settings') ? 'text-accent-text' : 'text-muted'} />
+                    <span>Settings</span>
+                  </Link>
+                </div>
+              )}
             </div>
 
             {/* Bottom session details */}
@@ -569,7 +601,7 @@ export const AdminLayout: React.FC = () => {
       <main className="flex-1 flex flex-col min-w-0 min-h-0 h-full overflow-y-auto overscroll-none bg-bg custom-scrollbar">
         
         {/* Sticky desktop top bar */}
-        <header className="hidden min-[900px]:flex h-14 border-b border-line bg-panel sticky top-0 z-30 items-center shrink-0" aria-label="AMS top bar">
+        <header className="hidden min-[900px]:flex h-[52px] min-h-[52px] border-b border-line bg-panel sticky top-0 z-30 items-center shrink-0" aria-label="AMS top bar">
           <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-5 lg:px-6 flex items-center justify-between gap-4">
             <div className="min-w-0 flex items-center gap-2.5">
               <Button
@@ -597,7 +629,7 @@ export const AdminLayout: React.FC = () => {
                 aria-label="Search AMS"
                 aria-keyshortcuts="Control+K Meta+K"
                 icon={<Search size={15} />}
-                className="hidden lg:flex h-10 w-[260px] xl:w-[320px] justify-start border-line bg-bg px-3"
+                className="hidden lg:flex h-10 w-[320px] xl:w-[420px] 2xl:w-[520px] justify-start border-line bg-bg px-3"
               >
                 <span className="min-w-0 flex-1 truncate text-left text-xs">Search AMS</span>
                 <kbd className="ml-auto rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] text-muted">⌘K</kbd>
