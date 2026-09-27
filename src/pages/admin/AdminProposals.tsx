@@ -582,7 +582,6 @@ export const AdminProposals: React.FC = () => {
             { label: language === 'id' ? 'Segera berakhir' : 'Expiring soon', value: metrics.expiring, icon: <AlertCircle size={16} aria-hidden="true" />, toneClassName: 'text-warning' }
           ]}
         />
-        </div>
       </section>
 
       <AdminFilterBar
