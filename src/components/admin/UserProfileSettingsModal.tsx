@@ -42,7 +42,7 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
 
   useEffect(() => {
     if (!open) return;
-    setName(displayName);
+    setName(String((user as any)?.profileDisplayName || displayName));
     setBio(String((user as any)?.bio || ''));
     setPersonalEmail(String((user as any)?.personalEmail || ''));
     setAdditionalPhone(String((user as any)?.additionalPhone || ''));
@@ -109,6 +109,7 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
           {
             ...current.user,
             name: payload.name,
+            profileDisplayName: payload.name,
             bio: payload.bio,
             personalEmail: payload.personalEmail,
             additionalPhone: payload.additionalPhone,
