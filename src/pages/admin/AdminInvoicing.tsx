@@ -677,9 +677,10 @@ export const AdminInvoicing: React.FC = () => {
 
       if (!result.success) {
         if (result.status === 409) {
+          await loadData(true);
           throw new Error(language === 'id'
-            ? 'Invoice berubah di server. Data terbaru dimuat ulang; periksa kembali sebelum menyimpan.'
-            : 'This invoice changed on the server. The latest data was reloaded; review it before saving again.');
+            ? 'Invoice tidak tersimpan karena state finansial berubah. Daftar terbaru sudah dimuat; periksa kembali draft ini sebelum mencoba lagi.'
+            : 'The invoice was not saved because its financial state changed. The latest list is refreshed; review this draft before trying again.');
         }
         throw new Error(result.error || 'Invoice could not be saved.');
       }
@@ -763,7 +764,15 @@ export const AdminInvoicing: React.FC = () => {
         notes: paymentNotes.trim(),
         idempotencyKey: paymentIdempotencyKey
       });
-      if (!result.success) throw new Error(result.error || 'Payment could not be recorded.');
+      if (!result.success) {
+        if (result.status === 409) {
+          await loadData(true);
+          throw new Error(language === 'id'
+            ? 'Pembayaran tidak dicatat karena saldo atau state invoice berubah. Data terbaru sudah dimuat; buka kembali pembayaran dari invoice terbaru.'
+            : 'The payment was not recorded because the invoice balance or state changed. The latest data is refreshed; reopen payment from the current invoice.');
+        }
+        throw new Error(result.error || 'Payment could not be recorded.');
+      }
       setPaymentInvoice(null);
       setPaymentIdempotencyKey('');
       setPaymentDirty(false);
@@ -834,10 +843,13 @@ export const AdminInvoicing: React.FC = () => {
           );
 
       if (!result.success) {
+        if (result.status === 409) {
+          await loadData(true);
+        }
         showNotice(
           'danger',
           result.status === 409
-            ? (language === 'id' ? 'Data finansial berubah di server. Muat ulang sebelum mencoba lagi.' : 'This financial record changed on the server. Refresh before trying again.')
+            ? (language === 'id' ? 'Data finansial berubah di server. Data terbaru sudah dimuat; periksa kembali sebelum mencoba lagi.' : 'This financial record changed on the server. The latest data is refreshed; review it before trying again.')
             : (result.error || 'Action could not be completed.')
         );
       } else {
