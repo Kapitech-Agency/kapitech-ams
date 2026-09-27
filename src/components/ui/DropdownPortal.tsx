@@ -59,6 +59,8 @@ export const DropdownPortal: React.FC<DropdownPortalProps> = ({
   useLayoutEffect(() => {
     if (!open) return;
 
+    setStyle({ visibility: 'hidden' });
+
     let frame = 0;
     const updatePosition = () => {
       cancelAnimationFrame(frame);
@@ -70,19 +72,17 @@ export const DropdownPortal: React.FC<DropdownPortalProps> = ({
         const rect = anchor.getBoundingClientRect();
         const menuRect = menu.getBoundingClientRect();
         const viewportPadding = 8;
-        const viewportHeight = window.innerHeight;
-        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+        const viewportWidth = window.visualViewport?.width ?? window.innerWidth;
         const availableBelow = Math.max(0, viewportHeight - rect.bottom - viewportPadding - offset);
         const availableAbove = Math.max(0, rect.top - viewportPadding - offset);
         const canOpenUp = availableBelow < menuRect.height && availableAbove > availableBelow;
-        const maxHeight = Math.max(
-          120,
-          canOpenUp ? availableAbove : availableBelow
-        );
+        const maxHeight = Math.max(120, canOpenUp ? availableAbove : availableBelow);
+        const constrainedHeight = Math.min(menuRect.height, maxHeight);
         const top = canOpenUp
-          ? Math.max(viewportPadding, rect.top - Math.min(menuRect.height, maxHeight) - offset)
+          ? Math.max(viewportPadding, rect.top - constrainedHeight - offset)
           : Math.min(
-              viewportHeight - Math.min(menuRect.height, maxHeight) - viewportPadding,
+              Math.max(viewportPadding, viewportHeight - constrainedHeight - viewportPadding),
               rect.bottom + offset
             );
         const rawLeft = align === 'right' ? rect.right - menuRect.width : rect.left;
@@ -95,7 +95,7 @@ export const DropdownPortal: React.FC<DropdownPortalProps> = ({
           position: 'fixed',
           top,
           left,
-          maxWidth: viewportWidth - viewportPadding * 2,
+          maxWidth: Math.max(0, viewportWidth - viewportPadding * 2),
           maxHeight,
           zIndex: 1000,
           visibility: 'visible'
@@ -117,16 +117,34 @@ export const DropdownPortal: React.FC<DropdownPortalProps> = ({
       }
     };
 
-    updatePosition();
+    const resizeObserver = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(updatePosition)
+      : null;
+
+    const observeLayout = () => {
+      updatePosition();
+      if (resizeObserver) {
+        if (anchorRef.current) resizeObserver.observe(anchorRef.current);
+        if (menuRef.current) resizeObserver.observe(menuRef.current);
+      }
+    };
+
+    const viewport = window.visualViewport;
+    observeLayout();
     window.addEventListener('resize', updatePosition);
     window.addEventListener('scroll', updatePosition, true);
+    viewport?.addEventListener('resize', updatePosition);
+    viewport?.addEventListener('scroll', updatePosition);
     document.addEventListener('pointerdown', handlePointerDown, true);
     document.addEventListener('keydown', handleKeyDown);
 
     return () => {
       cancelAnimationFrame(frame);
+      resizeObserver?.disconnect();
       window.removeEventListener('resize', updatePosition);
       window.removeEventListener('scroll', updatePosition, true);
+      viewport?.removeEventListener('resize', updatePosition);
+      viewport?.removeEventListener('scroll', updatePosition);
       document.removeEventListener('pointerdown', handlePointerDown, true);
       document.removeEventListener('keydown', handleKeyDown);
     };
