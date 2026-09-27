@@ -807,7 +807,6 @@ export const AdminProposals: React.FC = () => {
         size="xl"
         title={editingProposal ? (language === 'id' ? 'Edit proposal' : 'Edit proposal') : (language === 'id' ? 'Buat proposal' : 'Create proposal')}
         description={language === 'id' ? 'Lengkapi informasi komersial dan line item sebelum menyimpan.' : 'Complete the commercial information and line items before saving.'}
-        closeOnOutsideClick={!isSubmitting}
         footer={(
           <>
             <Button type="button" variant="secondary" onClick={() => setFormOpen(false)} disabled={isSubmitting}>Cancel</Button>
