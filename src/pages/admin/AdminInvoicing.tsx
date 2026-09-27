@@ -313,6 +313,11 @@ export const AdminInvoicing: React.FC = () => {
     [expenses, currency]
   );
 
+  const projectsById = useMemo(
+    () => new Map(projects.map((project) => [project.id, project])),
+    [projects]
+  );
+
   const derivedMetrics = useMemo(
     () => computeFinancialMetrics(currencyInvoices, currencyExpenses),
     [currencyInvoices, currencyExpenses]
@@ -333,7 +338,7 @@ export const AdminInvoicing: React.FC = () => {
         invoice.clientName,
         invoice.clientCompany,
         invoice.clientEmail,
-        projects.find((project) => project.id === invoice.projectId)?.name || ''
+        projectsById.get(invoice.projectId)?.name || ''
       ].join(' ').toLowerCase();
       const matchesSearch = !query || searchable.includes(query);
       const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter;
@@ -348,7 +353,7 @@ export const AdminInvoicing: React.FC = () => {
       if (sort === 'invoice') return a.invoiceNumber.localeCompare(b.invoiceNumber);
       return String(b.updatedAt || '').localeCompare(String(a.updatedAt || ''));
     });
-  }, [currencyInvoices, search, statusFilter, sort, projects]);
+  }, [currencyInvoices, search, statusFilter, sort, projectsById]);
 
   useEffect(() => {
     setInvoicePage(1);
@@ -1167,7 +1172,7 @@ export const AdminInvoicing: React.FC = () => {
                       <tbody>
                         {paginatedInvoices.map((invoice) => {
                           const balance = Number(invoice.balanceDue ?? (invoice.total - (invoice.amountPaid || 0)));
-                          const project = projects.find((item) => item.id === invoice.projectId);
+                          const project = projectsById.get(invoice.projectId);
                           return (
                             <tr key={invoice.id} className="border-t border-line transition-colors hover:bg-bg">
                               <td className="px-4 py-3 align-top">
