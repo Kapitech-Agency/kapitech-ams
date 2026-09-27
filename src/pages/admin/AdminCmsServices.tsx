@@ -29,6 +29,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { api } from '../../lib/apiClient';
 import { Modal } from '../../components/ui/Modal';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { Skeleton } from '../../components/ui/Skeleton';
 
 export const AdminCmsServices: React.FC = () => {
@@ -181,9 +182,14 @@ export const AdminCmsServices: React.FC = () => {
 
   return (
     <div className="space-y-6">
-        <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} size="sm" title={language === 'id' ? 'Hapus layanan?' : 'Delete service?'} description={language === 'id' ? 'Layanan ini akan dihapus dari CMS.' : 'This service will be removed from the CMS.'}>
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2"><button type="button" onClick={() => setDeleteTarget(null)} className="min-h-10 px-4 rounded-control border border-line bg-panel text-xs text-muted">Cancel</button><button type="button" onClick={() => void confirmDeleteService()} className="min-h-10 px-4 rounded-control bg-danger text-white text-xs font-semibold">Delete</button></div>
-        </Modal>
+        <ConfirmDialog
+          open={!!deleteTarget}
+          onClose={() => setDeleteTarget(null)}
+          title={language === 'id' ? 'Hapus layanan?' : 'Delete service?'}
+          description={language === 'id' ? 'Layanan ini akan dihapus dari CMS.' : 'This service will be removed from the CMS.'}
+          confirmLabel={language === 'id' ? 'Hapus' : 'Delete'}
+          onConfirm={() => void confirmDeleteService()}
+        />
       
       {/* Top Header */}
       <div className="ams-page-header flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
