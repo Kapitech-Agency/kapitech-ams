@@ -69,6 +69,13 @@ type ServerMetrics = {
   draftCount: number;
 };
 
+const createInvoiceNumber = (): string => {
+  const bytes = typeof crypto !== 'undefined' && crypto.getRandomValues
+    ? crypto.getRandomValues(new Uint32Array(1))[0]
+    : Math.floor(Math.random() * 0xffffffff);
+  return `INV-KAPI-${new Date().getFullYear()}-${1000 + (bytes % 9000)}`;
+};
+
 const emptyLineItem = (): InvoiceLineItem => ({
   id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'line-' + Date.now(),
   description: '',
@@ -363,7 +370,7 @@ export const AdminInvoicing: React.FC = () => {
 
   const resetInvoiceForm = () => {
     setEditingInvoice(null);
-    setInvoiceNumber(`INV-KAPI-${new Date().getFullYear()}-${crypto.randomInt ? crypto.randomInt(1000, 10000) : Math.floor(1000 + Math.random() * 9000)}`);
+    setInvoiceNumber(createInvoiceNumber());
     setClientId('');
     setProjectId('');
     setClientName('');
@@ -1175,8 +1182,23 @@ export const AdminInvoicing: React.FC = () => {
               <div className="mt-2 flex items-center justify-between"><span className="text-xs text-muted">Discount</span><span className="tabular-nums text-sm text-fg">- {formatNativeAmount(invoiceTotals.discountAmount, invoiceCurrency)}</span></div>
               <div className="mt-2 flex items-center justify-between"><span className="text-xs text-muted">Tax</span><span className="tabular-nums text-sm text-fg">{formatNativeAmount(invoiceTotals.taxAmount, invoiceCurrency)}</span></div>
               <div className="mt-4 flex items-end justify-between gap-4 border-t border-line pt-4"><span className="text-sm font-semibold text-fg">Total</span><span className="text-lg font-medium tabular-nums text-fg">{formatNativeAmount(invoiceTotals.total, invoiceCurrency)}</span></div>
-              <div className="mt-4"><label className="mb-1.5 block text-xs font-medium text-muted">Status</label><CustomSelect value={invoiceStatus} onChange={(value) => setInvoiceStatus(value as InvoiceStatus)} options={[{ value: 'draft', label: 'Draft' }, { value: 'sent', label: 'Sent' }, { value: 'overdue', label: 'Overdue' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" /></div>
-              {editingInvoice && <p className="mt-3 text-[11px] leading-4 text-muted">Paid and partially paid status is controlled by recorded payments. Cancelled invoices cannot be edited.</p>}
+              <div className="mt-4">
+              <label className="mb-1.5 block text-xs font-medium text-muted">Status</label>
+              {editingInvoice && !['draft', 'sent', 'overdue'].includes(editingInvoice.status) ? (
+                <div className="flex min-h-10 items-center rounded-control border border-line bg-bg px-3">
+                  <StatusBadge status={editingInvoice.status} />
+                  <span className="ml-2 text-[11px] text-muted">Controlled by the payment/cancellation workflow.</span>
+                </div>
+              ) : (
+                <CustomSelect
+                  value={invoiceStatus}
+                  onChange={(value) => setInvoiceStatus(value as InvoiceStatus)}
+                  options={[{ value: 'draft', label: 'Draft' }, { value: 'sent', label: 'Sent' }, { value: 'overdue', label: 'Overdue' }]}
+                  className="w-full"
+                  triggerClassName="h-10 min-h-10 w-full"
+                />
+              )}
+            </div>
             </div>
           </div>
         </form>
