@@ -40,6 +40,7 @@ import Button from '../../components/ui/Button';
 import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
 
+import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 export const AdminVendors: React.FC = () => {
   const { t, language } = useLanguage();
   const canManageVendors = hasAdminPermission('canManageVendors');
@@ -277,27 +278,18 @@ export const AdminVendors: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <header className="ams-dashboard-header mb-6 flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="flex items-center gap-2.5 text-2xl font-semibold leading-8 tracking-[-0.02em] text-fg"><Users className="text-accent-text shrink-0" size={22} /><span>{language === 'id' ? 'Direktori Vendor & Kontraktor' : 'Vendor & Talent Directory'}</span></h1>
-          <p className="mt-1 max-w-3xl text-xs leading-5 text-muted">
-            {language === 'id'
-              ? 'Database mitra agensi, freelance spesialis terverifikasi, tarif per jam, dan evaluasi performa SLA.'
-              : 'Database of vetted agency partners, specialized freelance contractors, hourly rates, and SLA contract ratings.'}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3 shrink-0">
-          <button
-            onClick={handleOpenAdd}
-                            disabled={!canManageVendors}
-            className="h-9 min-h-9 px-3.5 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-semibold flex items-center gap-2 transition-all"
-          >
+      <AdminModuleHeader
+        title={(
+          <span className="flex items-center gap-2.5"><Users className="shrink-0 text-accent-text" size={22} />{language === 'id' ? 'Direktori Vendor & Kontraktor' : 'Vendor & Talent Directory'}</span>
+        )}
+        description={language === 'id' ? 'Database mitra agensi, freelance spesialis terverifikasi, tarif per jam, dan evaluasi performa SLA.' : 'Database of vetted agency partners, specialized freelance contractors, hourly rates, and SLA contract ratings.'}
+        actions={(
+          <button type="button" onClick={handleOpenAdd} disabled={!canManageVendors} className="h-9 min-h-9 px-3.5 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-semibold flex items-center gap-2 transition-all disabled:cursor-not-allowed disabled:opacity-50">
             <Plus size={15} />
             <span>{language === 'id' ? 'Tambah Vendor' : 'Add Vendor'}</span>
           </button>
-        </div>
-      </header>
+        )}
+      />
 
       {/* Success Notification */}
       {statusMessage && (
@@ -315,49 +307,15 @@ export const AdminVendors: React.FC = () => {
       {/* Top Summary Metrics */}
       <section aria-label="Vendor snapshot" className="rounded-card border border-line bg-panel p-4 sm:p-5">
         <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3"><div><h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan vendor' : 'Vendor snapshot'}</h2><p className="mt-1 text-xs text-muted">{language === 'id' ? 'Komposisi talent, partner, dan kualitas operasional.' : 'Talent mix, agency partners, and operational quality signals.'}</p></div><span className="text-[11px] font-medium tabular-nums text-muted">{vendors.length} total</span></div>
-        <div className="grid grid-cols-2 lg:grid-cols-4">
-        <div className="min-w-0 px-4 py-3 lg:border-r lg:border-line">
-          <div className="text-[11px] font-sans text-muted normal-case tracking-normal">
-            {language === 'id' ? 'Total Mitra Terdaftar' : 'Total Vetted Vendors'}
-          </div>
-          <div className="mt-2 text-2xl font-semibold font-sans text-fg">{vendors.length}</div>
-          <div className="text-[10px] font-sans text-success mt-1 flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-success" />
-            <span>{vendors.filter(v => v.status === 'active').length} Active</span>
-          </div>
-        </div>
-
-        <div className="min-w-0 px-4 py-3 lg:border-r lg:border-line">
-          <div className="text-[11px] font-sans text-muted normal-case tracking-normal">
-            {language === 'id' ? 'Spesialis Freelance' : 'Freelance Talent'}
-          </div>
-          <div className="mt-2 text-2xl font-semibold font-sans text-fg">
-            {vendors.filter(v => v.type === 'freelancer' || v.type === 'contractor').length}
-          </div>
-          <div className="text-[10px] font-sans text-muted mt-1">Design, Dev & 3D</div>
-        </div>
-
-        <div className="min-w-0 px-4 py-3 lg:border-r lg:border-line">
-          <div className="text-[11px] font-sans text-muted normal-case tracking-normal">
-            {language === 'id' ? 'Partner Agensi' : 'Agency Partners'}
-          </div>
-          <div className="mt-2 text-2xl font-semibold font-sans text-fg">
-            {vendors.filter(v => v.type === 'agency_partner').length}
-          </div>
-          <div className="text-[10px] font-sans text-info mt-1">DevOps, Cloud & Legal</div>
-        </div>
-
-        <div className="min-w-0 px-4 py-3">
-          <div className="text-[11px] font-sans text-muted normal-case tracking-normal">
-            {language === 'id' ? 'Rata-rata Rating SLA' : 'Avg Performance SLA'}
-          </div>
-          <div className="mt-2 text-2xl font-semibold font-sans text-fg flex items-center gap-1.5">
-            <span>4.9</span>
-            <Star size={16} className="text-warning fill-warning" />
-          </div>
-          <div className="text-[10px] font-sans text-muted mt-1">From 42 verified deliverables</div>
-        </div>
-        </div>
+        <AdminMetricStrip
+          className="lg:grid-cols-4"
+          metrics={[
+            { id: 'total', label: language === 'id' ? 'Total Mitra Terdaftar' : 'Total Vetted Vendors', value: vendors.length, context: vendors.filter(v => v.status === 'active').length + ' Active', icon: <Users size={16} strokeWidth={1.8} /> },
+            { id: 'freelance', label: language === 'id' ? 'Spesialis Freelance' : 'Freelance Talent', value: vendors.filter(v => v.type === 'freelancer' || v.type === 'contractor').length, context: 'Design, Dev & 3D', icon: <Briefcase size={16} strokeWidth={1.8} /> },
+            { id: 'agency', label: language === 'id' ? 'Partner Agensi' : 'Agency Partners', value: vendors.filter(v => v.type === 'agency_partner').length, context: 'DevOps, Cloud & Legal', icon: <Building2 size={16} strokeWidth={1.8} />, toneClassName: 'text-info' },
+            { id: 'sla', label: language === 'id' ? 'Rata-rata Rating SLA' : 'Avg Performance SLA', value: <span className="inline-flex items-center gap-1.5">4.9 <Star size={16} className="text-warning fill-warning" /></span>, context: 'From 42 verified deliverables', icon: <CheckCircle2 size={16} strokeWidth={1.8} />, toneClassName: 'text-success' }
+          ]}
+        />
       </section>
 
       {/* Filter & Search Bar */}
