@@ -36,6 +36,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import Button from '../../components/ui/Button';
 import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
 
@@ -636,15 +637,15 @@ export const AdminVendors: React.FC = () => {
             </div>
 
             <div className="pt-4 border-t border-line flex items-center justify-end gap-2">
-              <button
+              <Button
+                type="button"
                 onClick={() => {
                   setIsDrawerOpen(false);
                   handleOpenEdit(selectedVendor);
                 }}
-                className="px-4 py-2 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-semibold"
               >
                 {language === 'id' ? 'Edit Profil' : 'Edit Profile'}
-              </button>
+              </Button>
             </div>
           </div>
         </Modal>
@@ -821,19 +822,12 @@ export const AdminVendors: React.FC = () => {
               </div>
 
               <div className="pt-4 border-t border-line flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="min-h-10 px-4 py-2 rounded-control bg-panel hover:bg-panel-hover text-fg text-xs font-semibold border border-line"
-                >
+                <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)}>
                   {language === 'id' ? 'Batal' : 'Cancel'}
-                </button>
-                <button
-                  type="submit"
-                  className="min-h-10 px-5 py-2 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-semibold"
-                >
+                </Button>
+                <Button type="submit">
                   {language === 'id' ? 'Simpan Vendor' : 'Save Vendor'}
-                </button>
+                </Button>
               </div>
             </form>
       </Modal>
