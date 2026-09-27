@@ -143,7 +143,7 @@ export const AdminInbox: React.FC = () => {
   // Status update
   const handleStatusChange = async (id: string, newStatus: ContactSubmission['status']) => {
     if (!canManageCrm) {
-      setToastMessage({ text: language === 'id' ? 'Anda tidak memiliki izin mengelola Leads & Inbox.' : 'You do not have CRM permission.' });
+      setToastMessage({ text: language === 'id' ? 'Anda tidak memiliki izin mengelola Leads & Inbox.' : 'You do not have CRM permission.', tone: 'danger' });
       window.setTimeout(() => setToastMessage(null), 3000);
       return;
     }
@@ -168,7 +168,7 @@ export const AdminInbox: React.FC = () => {
   // Priority update
   const handlePriorityChange = async (id: string, newPriority: ContactSubmission['priority']) => {
     if (!canManageCrm) {
-      setToastMessage({ text: language === 'id' ? 'Anda tidak memiliki izin mengelola Leads & Inbox.' : 'You do not have CRM permission.' });
+      setToastMessage({ text: language === 'id' ? 'Anda tidak memiliki izin mengelola Leads & Inbox.' : 'You do not have CRM permission.', tone: 'danger' });
       window.setTimeout(() => setToastMessage(null), 3000);
       return;
     }
@@ -190,7 +190,7 @@ export const AdminInbox: React.FC = () => {
   // Assignee update
   const handleAssigneeChange = async (id: string, assignee: string) => {
     if (!canManageCrm) {
-      setToastMessage({ text: language === 'id' ? 'Anda tidak memiliki izin mengelola Leads & Inbox.' : 'You do not have CRM permission.' });
+      setToastMessage({ text: language === 'id' ? 'Anda tidak memiliki izin mengelola Leads & Inbox.' : 'You do not have CRM permission.', tone: 'danger' });
       window.setTimeout(() => setToastMessage(null), 3000);
       return;
     }
@@ -212,7 +212,7 @@ export const AdminInbox: React.FC = () => {
   // Star toggle
   const handleToggleStar = async (e: React.MouseEvent, id: string, currentStarred?: boolean) => {
     if (!canManageCrm) {
-      setToastMessage({ text: language === 'id' ? 'Anda tidak memiliki izin mengelola Leads & Inbox.' : 'You do not have CRM permission.' });
+      setToastMessage({ text: language === 'id' ? 'Anda tidak memiliki izin mengelola Leads & Inbox.' : 'You do not have CRM permission.', tone: 'danger' });
       window.setTimeout(() => setToastMessage(null), 3000);
       return;
     }
