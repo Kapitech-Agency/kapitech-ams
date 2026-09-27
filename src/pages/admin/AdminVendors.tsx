@@ -277,10 +277,10 @@ export const AdminVendors: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="ams-page-header flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+      <header className="ams-dashboard-header mb-6 flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="ams-page-title flex items-center gap-2.5"><Users className="text-accent-text shrink-0" size={22} /><span>{language === 'id' ? 'Direktori Vendor & Kontraktor' : 'Vendor & Talent Directory'}</span></h1>
-          <p className="text-[13px] leading-[18px] font-sans text-muted mt-1 max-w-3xl">
+          <h1 className="flex items-center gap-2.5 text-2xl font-semibold leading-8 tracking-[-0.02em] text-fg"><Users className="text-accent-text shrink-0" size={22} /><span>{language === 'id' ? 'Direktori Vendor & Kontraktor' : 'Vendor & Talent Directory'}</span></h1>
+          <p className="mt-1 max-w-3xl text-xs leading-5 text-muted">
             {language === 'id'
               ? 'Database mitra agensi, freelance spesialis terverifikasi, tarif per jam, dan evaluasi performa SLA.'
               : 'Database of vetted agency partners, specialized freelance contractors, hourly rates, and SLA contract ratings.'}
@@ -291,13 +291,13 @@ export const AdminVendors: React.FC = () => {
           <button
             onClick={handleOpenAdd}
                             disabled={!canManageVendors}
-            className="min-h-10 px-4 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-semibold flex items-center gap-2 transition-all"
+            className="h-9 min-h-9 px-3.5 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-semibold flex items-center gap-2 transition-all"
           >
             <Plus size={15} />
             <span>{language === 'id' ? 'Tambah Vendor' : 'Add Vendor'}</span>
           </button>
         </div>
-      </div>
+      </header>
 
       {/* Success Notification */}
       {statusMessage && (
@@ -313,8 +313,10 @@ export const AdminVendors: React.FC = () => {
       )}
 
       {/* Top Summary Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 w-full">
-        <div className="w-full h-full p-4 rounded-card bg-panel border border-line flex flex-col justify-between">
+      <section aria-label="Vendor snapshot" className="rounded-card border border-line bg-panel p-4 sm:p-5">
+        <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3"><div><h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan vendor' : 'Vendor snapshot'}</h2><p className="mt-1 text-xs text-muted">{language === 'id' ? 'Komposisi talent, partner, dan kualitas operasional.' : 'Talent mix, agency partners, and operational quality signals.'}</p></div><span className="text-[11px] font-medium tabular-nums text-muted">{vendors.length} total</span></div>
+        <div className="grid grid-cols-2 lg:grid-cols-4">
+        <div className="min-w-0 px-4 py-3 lg:border-r lg:border-line">
           <div className="text-[11px] font-sans text-muted normal-case tracking-normal">
             {language === 'id' ? 'Total Mitra Terdaftar' : 'Total Vetted Vendors'}
           </div>
@@ -325,7 +327,7 @@ export const AdminVendors: React.FC = () => {
           </div>
         </div>
 
-        <div className="w-full h-full p-4 rounded-card bg-panel border border-line flex flex-col justify-between">
+        <div className="min-w-0 px-4 py-3 lg:border-r lg:border-line">
           <div className="text-[11px] font-sans text-muted normal-case tracking-normal">
             {language === 'id' ? 'Spesialis Freelance' : 'Freelance Talent'}
           </div>
@@ -335,7 +337,7 @@ export const AdminVendors: React.FC = () => {
           <div className="text-[10px] font-sans text-muted mt-1">Design, Dev & 3D</div>
         </div>
 
-        <div className="w-full h-full p-4 rounded-card bg-panel border border-line flex flex-col justify-between">
+        <div className="min-w-0 px-4 py-3 lg:border-r lg:border-line">
           <div className="text-[11px] font-sans text-muted normal-case tracking-normal">
             {language === 'id' ? 'Partner Agensi' : 'Agency Partners'}
           </div>
@@ -345,7 +347,7 @@ export const AdminVendors: React.FC = () => {
           <div className="text-[10px] font-sans text-info mt-1">DevOps, Cloud & Legal</div>
         </div>
 
-        <div className="w-full h-full p-4 rounded-card bg-panel border border-line flex flex-col justify-between">
+        <div className="min-w-0 px-4 py-3">
           <div className="text-[11px] font-sans text-muted normal-case tracking-normal">
             {language === 'id' ? 'Rata-rata Rating SLA' : 'Avg Performance SLA'}
           </div>
@@ -355,10 +357,11 @@ export const AdminVendors: React.FC = () => {
           </div>
           <div className="text-[10px] font-sans text-muted mt-1">From 42 verified deliverables</div>
         </div>
-      </div>
+        </div>
+      </section>
 
       {/* Filter & Search Bar */}
-      <div className="w-full p-4 rounded-card bg-panel border border-line flex flex-col lg:flex-row items-center justify-between gap-3">
+      <section className="w-full rounded-card bg-panel border border-line p-4 sm:p-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between" aria-label="Vendor directory controls">
         <div className="relative w-full lg:w-96">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
           <input
@@ -366,11 +369,11 @@ export const AdminVendors: React.FC = () => {
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder={language === 'id' ? 'Cari nama, keahlian, atau email...' : 'Search name, skills, or email...'}
-            className="w-full pl-9 pr-3 py-2 rounded-control bg-panel border border-line text-xs font-sans text-fg placeholder:text-muted focus:outline-none focus:border-accent min-h-10"
+            className="w-full h-9 min-h-9 pl-9 pr-3 rounded-control bg-bg border border-line text-xs font-sans text-fg placeholder:text-muted focus:outline-none focus:border-accent"
           />
         </div>
 
-        <div className="flex flex-nowrap items-center gap-2 w-full lg:w-auto overflow-x-auto pb-1 lg:flex-wrap lg:overflow-visible lg:pb-0">
+        <div className="flex flex-nowrap items-center gap-2 w-full lg:w-auto overflow-x-auto pb-1 lg:flex-wrap lg:overflow-visible lg:pb-0 custom-scrollbar">
           <div className="w-[160px] shrink-0 lg:w-40">
             <CustomSelect
               value={selectedCategory}
@@ -425,14 +428,14 @@ export const AdminVendors: React.FC = () => {
             />
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Vendors Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 w-full">
+      <section aria-label="Vendor directory list"><div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {filteredVendors.map(vendor => (
           <div
             key={vendor.id}
-            className="w-full h-full p-4 rounded-card bg-panel border border-line hover:border-muted transition-all flex flex-col justify-between group"
+            className="w-full h-full rounded-card border border-line bg-panel p-4 transition-[border-color,background-color] hover:border-accent/30 flex flex-col justify-between group"
           >
             <div>
               {/* Header Card */}
@@ -555,7 +558,7 @@ export const AdminVendors: React.FC = () => {
             </div>
           </div>
         ))}
-      </div>
+      </div></section>
 
       {filteredVendors.length === 0 && (
         <div className="w-full p-12 rounded-card bg-panel border border-line text-center">
