@@ -116,6 +116,7 @@ export const DropdownPortal: React.FC<DropdownPortalProps> = ({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
+        event.stopImmediatePropagation();
         onCloseRef.current();
       }
     };
