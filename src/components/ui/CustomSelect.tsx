@@ -87,6 +87,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
             setIsOpen(true);
           } else if (e.key === 'Escape') {
             e.preventDefault();
+            e.stopPropagation();
             setIsOpen(false);
           } else if (e.key === 'Tab') {
             setIsOpen(false);
