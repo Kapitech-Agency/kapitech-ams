@@ -333,12 +333,7 @@ export const AdminClients: React.FC = () => {
     <div className="min-h-full pb-8">
       <header className="ams-dashboard-header mb-6 flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 text-xs text-muted">
-            <span>Kapitech AMS</span>
-            <span aria-hidden="true">/</span>
-            <span className="text-fg">{t('admin.client.title')}</span>
-          </div>
-          <h1 className="mt-2 text-xl font-semibold leading-7 tracking-[-0.01em] text-fg">
+          <h1 className="text-2xl font-semibold leading-8 tracking-[-0.02em] text-fg">
             {t('admin.client.title')}
           </h1>
           <p className="mt-1 max-w-2xl text-xs leading-5 text-muted">
@@ -387,23 +382,19 @@ export const AdminClients: React.FC = () => {
         </div>
       )}
 
-      <section aria-labelledby="client-snapshot-title" className="mb-6">
-        <div className="mb-3">
-          <h2 id="client-snapshot-title" className="text-sm font-semibold text-fg">
-            {language === 'id' ? 'Ringkasan klien' : 'Client snapshot'}
-          </h2>
-          <p className="mt-1 text-xs leading-5 text-muted">
-            {language === 'id' ? 'Sinyal utama dari direktori klien saat ini.' : 'Key signals from the current client directory.'}
-          </p>
+      <section aria-labelledby="client-snapshot-title" className="mb-6 rounded-card border border-line bg-panel p-4 sm:p-5">
+        <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
+          <div><h2 id="client-snapshot-title" className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan klien' : 'Client snapshot'}</h2><p className="mt-1 text-xs leading-5 text-muted">{language === 'id' ? 'Sinyal utama dari direktori klien saat ini.' : 'Key signals from the current client directory.'}</p></div>
+          <span className="text-[11px] font-medium tabular-nums text-muted">{clientMetrics.total} {language === 'id' ? 'total' : 'total'}</span>
         </div>
-        <div className="grid grid-cols-2 border-y border-line sm:grid-cols-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4">
           {[
             { label: language === 'id' ? 'Total klien' : 'Total clients', value: clientMetrics.total, helper: language === 'id' ? 'Semua status' : 'All statuses', valueClass: 'text-fg' },
             { label: language === 'id' ? 'Klien aktif' : 'Active clients', value: clientMetrics.active, helper: language === 'id' ? 'Sedang berjalan' : 'Currently active', valueClass: 'text-success' },
             { label: language === 'id' ? 'Prospek' : 'Leads', value: clientMetrics.leads, helper: language === 'id' ? 'Status lead' : 'Lead status', valueClass: 'text-info' },
             { label: language === 'id' ? 'Melewati SLA' : 'Over budget', value: clientMetrics.overBudget, helper: language === 'id' ? 'Daily ad-spend' : 'Daily ad-spend SLA', valueClass: 'text-warning' }
           ].map((metric, index) => (
-            <div key={metric.label} className={`ams-kpi min-w-0 px-4 py-4 ${index % 2 === 1 ? 'border-l border-line' : ''} ${index >= 2 ? 'border-t border-line' : ''} ${index > 0 ? 'sm:border-l sm:border-t-0' : ''}`}>
+            <div key={metric.label} className={`min-w-0 px-4 py-3 ${index > 0 ? 'border-l border-line' : ''}`}>
               <p className="ams-meta">{metric.label}</p>
               <p className={`ams-kpi-value mt-2 ${metric.valueClass}`}>{isLoading ? '—' : metric.value}</p>
               <p className="ams-meta mt-1">{metric.helper}</p>
@@ -428,7 +419,7 @@ export const AdminClients: React.FC = () => {
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder={t('admin.client.searchPlaceholder')}
-                className="h-10 w-full pl-9 pr-9 text-[13px]"
+                className="h-9 min-h-9 w-full pl-9 pr-9 text-[13px]"
                 autoComplete="off"
               />
               {searchQuery && (
@@ -436,7 +427,7 @@ export const AdminClients: React.FC = () => {
                   type="button"
                   onClick={() => setSearchQuery('')}
                   aria-label="Clear search"
-                  className="absolute right-1.5 top-1/2 flex min-h-10 min-w-10 -translate-y-1/2 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg"
+                  className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg"
                 >
                   <X size={14} aria-hidden="true" />
                 </button>
@@ -498,7 +489,7 @@ export const AdminClients: React.FC = () => {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto custom-scrollbar">
               <table className="w-full min-w-[940px] text-left">
                 <thead>
                   <tr>
@@ -651,7 +642,7 @@ export const AdminClients: React.FC = () => {
                     onClick={() => setPage((current) => Math.max(1, current - 1))}
                     disabled={page === 1}
                     aria-label="Previous page"
-                    className="flex min-h-10 min-w-10 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg disabled:cursor-not-allowed disabled:opacity-40"
+                    className="flex h-9 w-9 min-h-9 min-w-9 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <ChevronLeft size={16} aria-hidden="true" />
                   </button>
@@ -661,7 +652,7 @@ export const AdminClients: React.FC = () => {
                     onClick={() => setPage((current) => Math.min(pageCount, current + 1))}
                     disabled={page === pageCount}
                     aria-label="Next page"
-                    className="flex min-h-10 min-w-10 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg disabled:cursor-not-allowed disabled:opacity-40"
+                    className="flex h-9 w-9 min-h-9 min-w-9 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <ChevronRight size={16} aria-hidden="true" />
                   </button>
