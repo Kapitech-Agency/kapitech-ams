@@ -52,6 +52,7 @@ type FinanceExpense = AgencyExpense & {
   currency?: CurrencyCode;
   projectId?: string;
   status?: string;
+  version?: number;
 };
 
 type ServerMetrics = {
