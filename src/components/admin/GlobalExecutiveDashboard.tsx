@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   AlertTriangle,
@@ -117,65 +117,198 @@ const progressClasses = {
 const formatMoney = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
 
 
-const TasksView: React.FC = () => (
-  <div className="space-y-3">
-    <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      {[
-        ['Open tasks', '31', '18 due this week'],
-        ['High priority', '6', '3 overdue'],
-        ['Completed this week', '24', '+8 vs previous week'],
-        ['Blocked', '3', 'Across 2 projects'],
-      ].map(([label, value, context]) => (
-        <article key={label} className="rounded-card border border-line bg-panel p-4">
-          <div className="text-xs text-muted">{label}</div>
-          <div className="mt-3 text-2xl font-medium tabular-nums text-fg">{value}</div>
-          <div className="mt-1 text-[11px] text-muted">{context}</div>
-        </article>
-      ))}
-    </section>
+type DashboardTask = {
+  id: string;
+  task: string;
+  project: string;
+  assignee: string;
+  due: string;
+  priority: 'Low' | 'Medium' | 'High' | 'Urgent';
+  status: 'Open' | 'Blocked' | 'Completed';
+};
 
-    <AdminPanel title="Tasks this week" description="Sample task queue prepared from the Stitch dashboard workload model." bodyClassName="p-0">
-      <div className="overflow-x-auto custom-scrollbar">
-        <table className="w-full min-w-[760px] border-collapse text-left">
-          <thead>
-            <tr>
-              <th className="px-4 py-3 text-xs font-medium text-muted">Task</th>
-              <th className="px-3 py-3 text-xs font-medium text-muted">Project</th>
-              <th className="px-3 py-3 text-xs font-medium text-muted">Assignee</th>
-              <th className="px-3 py-3 text-xs font-medium text-muted">Due</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-muted">Priority</th>
-            </tr>
-          </thead>
-          <tbody>
-            {[
-              ['Approve homepage copy', 'Atlas Brand System', 'Fikri', 'Today', 'High'],
-              ['Finalize checkout UI', 'Meridian Commerce', 'Sarah', 'Tomorrow', 'High'],
-              ['QA campaign landing page', 'Nova Growth Retainer', 'Dimas', 'Wed', 'Medium'],
-              ['Resolve API handoff', 'Orbit Product Launch', 'Raka', 'Overdue', 'Urgent'],
-              ['Prepare client presentation', 'Northstar Campaign', 'Nadia', 'Thu', 'Medium'],
-              ['Review analytics dashboard', 'Atlas Brand System', 'Fikri', 'Fri', 'Low'],
-            ].map(([task, project, assignee, due, priority]) => (
-              <tr key={task} className="border-t border-line hover:bg-panel-hover">
-                <td className="px-4 py-3 text-xs font-medium text-fg">{task}</td>
-                <td className="px-3 py-3 text-xs text-muted">{project}</td>
-                <td className="px-3 py-3 text-xs text-muted">{assignee}</td>
-                <td className="px-3 py-3 text-xs text-muted">{due}</td>
-                <td className="px-4 py-3 text-right">
-                  <span className={`inline-flex rounded-badge border px-2 py-1 text-[11px] font-medium ${
-                    priority === 'Urgent' ? toneClasses.danger : priority === 'High' ? toneClasses.warning : priority === 'Medium' ? toneClasses.info : toneClasses.success
-                  }`}>
-                    {priority}
-                  </span>
-                </td>
+const sampleTasks: DashboardTask[] = [
+  { id: 'task-001', task: 'Approve homepage copy', project: 'Atlas Brand System', assignee: 'Fikri', due: 'Today', priority: 'High', status: 'Open' },
+  { id: 'task-002', task: 'Finalize checkout UI', project: 'Meridian Commerce', assignee: 'Sarah', due: 'Tomorrow', priority: 'High', status: 'Open' },
+  { id: 'task-003', task: 'QA campaign landing page', project: 'Nova Growth Retainer', assignee: 'Dimas', due: 'Wed', priority: 'Medium', status: 'Open' },
+  { id: 'task-004', task: 'Resolve API handoff', project: 'Orbit Product Launch', assignee: 'Raka', due: 'Overdue', priority: 'Urgent', status: 'Blocked' },
+  { id: 'task-005', task: 'Prepare client presentation', project: 'Northstar Campaign', assignee: 'Nadia', due: 'Thu', priority: 'Medium', status: 'Open' },
+  { id: 'task-006', task: 'Review analytics dashboard', project: 'Atlas Brand System', assignee: 'Fikri', due: 'Fri', priority: 'Low', status: 'Open' },
+];
+
+const TasksView: React.FC = () => {
+  const [query, setQuery] = useState('');
+  const [priority, setPriority] = useState<'All' | DashboardTask['priority']>('All');
+  const [selectedTask, setSelectedTask] = useState<DashboardTask | null>(null);
+
+  const filteredTasks = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    return sampleTasks.filter((item) => {
+      const matchesQuery = !normalized || [item.task, item.project, item.assignee, item.due]
+        .join(' ')
+        .toLowerCase()
+        .includes(normalized);
+      const matchesPriority = priority === 'All' || item.priority === priority;
+      return matchesQuery && matchesPriority;
+    });
+  }, [priority, query]);
+
+  return (
+    <div className="space-y-3">
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          ['Open tasks', '31', '18 due this week'],
+          ['High priority', '6', '3 overdue'],
+          ['Completed this week', '24', '+8 vs previous week'],
+          ['Blocked', '3', 'Across 2 projects'],
+        ].map(([label, value, context]) => (
+          <article key={label} className="rounded-card border border-line bg-panel p-4">
+            <div className="text-xs text-muted">{label}</div>
+            <div className="mt-3 text-2xl font-medium tabular-nums text-fg">{value}</div>
+            <div className="mt-1 text-[11px] text-muted">{context}</div>
+          </article>
+        ))}
+      </section>
+
+      <AdminPanel
+        title="Tasks this week"
+        description="Sample task queue prepared from the Stitch dashboard workload model."
+        bodyClassName="p-0"
+        actions={(
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+            <label className="relative block min-w-0 sm:w-52">
+              <span className="sr-only">Search tasks</span>
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Search tasks…"
+                className="h-9 min-h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
+              />
+            </label>
+            <select
+              aria-label="Filter tasks by priority"
+              value={priority}
+              onChange={(event) => setPriority(event.target.value as 'All' | DashboardTask['priority'])}
+              className="h-9 min-h-9 rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
+            >
+              {['All', 'Urgent', 'High', 'Medium', 'Low'].map((value) => (
+                <option key={value} value={value}>{value === 'All' ? 'All priorities' : value}</option>
+              ))}
+            </select>
+          </div>
+        )}
+      >
+        <div className="border-b border-line px-4 py-3 sm:px-5">
+          <div className="flex items-center justify-between gap-3 text-[11px] text-muted">
+            <span>{filteredTasks.length} of {sampleTasks.length} tasks shown</span>
+            {(query || priority !== 'All') && (
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery('');
+                  setPriority('All');
+                }}
+                className="rounded-control px-2 py-1 text-accent-text hover:bg-bg"
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="overflow-x-auto custom-scrollbar">
+          <table className="w-full min-w-[840px] border-collapse text-left">
+            <thead>
+              <tr>
+                <th className="px-4 py-3 text-xs font-medium text-muted">Task</th>
+                <th className="px-3 py-3 text-xs font-medium text-muted">Project</th>
+                <th className="px-3 py-3 text-xs font-medium text-muted">Assignee</th>
+                <th className="px-3 py-3 text-xs font-medium text-muted">Due</th>
+                <th className="px-3 py-3 text-right text-xs font-medium text-muted">Priority</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-muted">Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </AdminPanel>
-  </div>
-);
+            </thead>
+            <tbody>
+              {filteredTasks.map((item) => (
+                <tr key={item.id} className="border-t border-line hover:bg-panel-hover">
+                  <td className="px-4 py-3 text-xs font-medium text-fg">
+                    <div>{item.task}</div>
+                    {item.status === 'Blocked' && <span className="mt-1 inline-flex rounded-badge border border-danger/25 bg-danger/10 px-1.5 py-0.5 text-[10px] font-medium text-danger">Blocked</span>}
+                  </td>
+                  <td className="px-3 py-3 text-xs text-muted">{item.project}</td>
+                  <td className="px-3 py-3 text-xs text-muted">{item.assignee}</td>
+                  <td className="px-3 py-3 text-xs text-muted">{item.due}</td>
+                  <td className="px-3 py-3 text-right">
+                    <span className={`inline-flex rounded-badge border px-2 py-1 text-[11px] font-medium ${
+                      item.priority === 'Urgent' ? toneClasses.danger : item.priority === 'High' ? toneClasses.warning : item.priority === 'Medium' ? toneClasses.info : toneClasses.success
+                    }`}>
+                      {item.priority}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTask(item)}
+                      className="inline-flex min-h-8 items-center justify-center rounded-control border border-line bg-panel px-2.5 text-[11px] font-medium text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"
+                    >
+                      View
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {filteredTasks.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-4 py-12 text-center">
+                    <p className="text-xs font-medium text-fg">No matching tasks</p>
+                    <p className="mt-1 text-[11px] text-muted">Adjust the search or priority filter.</p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </AdminPanel>
 
+      <Modal
+        open={Boolean(selectedTask)}
+        onClose={() => setSelectedTask(null)}
+        size="md"
+        title={selectedTask?.task || 'Task details'}
+        description={selectedTask ? selectedTask.project : undefined}
+        footer={(
+          <button
+            type="button"
+            onClick={() => setSelectedTask(null)}
+            className="inline-flex min-h-9 items-center justify-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            Close
+          </button>
+        )}
+      >
+        {selectedTask && (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-control border border-line bg-bg p-3">
+              <div className="text-[10px] uppercase tracking-[0.08em] text-muted">Assignee</div>
+              <div className="mt-1 text-sm font-semibold text-fg">{selectedTask.assignee}</div>
+            </div>
+            <div className="rounded-control border border-line bg-bg p-3">
+              <div className="text-[10px] uppercase tracking-[0.08em] text-muted">Due</div>
+              <div className="mt-1 text-sm font-semibold text-fg">{selectedTask.due}</div>
+            </div>
+            <div className="rounded-control border border-line bg-bg p-3">
+              <div className="text-[10px] uppercase tracking-[0.08em] text-muted">Priority</div>
+              <div className="mt-1 text-sm font-semibold text-fg">{selectedTask.priority}</div>
+            </div>
+            <div className="rounded-control border border-line bg-bg p-3">
+              <div className="text-[10px] uppercase tracking-[0.08em] text-muted">Status</div>
+              <div className="mt-1 text-sm font-semibold text-fg">{selectedTask.status}</div>
+            </div>
+          </div>
+        )}
+      </Modal>
+    </div>
+  );
+};
 const PerformanceView: React.FC = () => {
   const completion = 76;
   const totalTasks = 84;
@@ -465,6 +598,27 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const [projectActionId, setProjectActionId] = useState<string | null>(null);
   const [projectDetails, setProjectDetails] = useState<DashboardProject | null>(null);
 
+  useEffect(() => {
+    if (!projectActionId) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest('[data-dashboard-project-actions]')) return;
+      setProjectActionId(null);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setProjectActionId(null);
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown, true);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown, true);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [projectActionId]);
+
   const filteredProjects = useMemo(
     () => projectFilter === 'All' ? sampleProjects : sampleProjects.filter((project) => project.type === projectFilter),
     [projectFilter],
@@ -625,7 +779,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     <td className="px-3 py-3"><div className="flex min-w-[150px] items-center gap-2"><div className="h-1.5 min-w-20 flex-1 overflow-hidden rounded-sm bg-line"><div className={['h-full rounded-sm', progressClasses[project.statusTone === 'danger' ? 'danger' : project.statusTone === 'warning' ? 'warning' : 'success']].join(' ')} style={{ width: project.progress + '%' }} /></div><span className="w-8 text-right text-[11px] tabular-nums text-muted">{project.progress}%</span></div></td>
                     <td className="px-3 py-3"><div className="flex items-center gap-2"><span className="flex h-6 w-6 items-center justify-center rounded-full border border-line bg-bg text-[10px] font-semibold text-fg">{project.lead.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()}</span><span className="text-xs text-muted">{project.lead}</span></div></td>
                     <td className="px-4 py-3 text-right text-xs font-medium tabular-nums text-fg">{project.budget}</td>
-                    <td className="relative px-2 py-3 text-right">
+                    <td className="relative px-2 py-3 text-right" data-dashboard-project-actions>
                       <button
                         type="button"
                         aria-label={'More actions for ' + project.name}
