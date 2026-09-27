@@ -624,19 +624,19 @@ export const AdminProjects: React.FC = () => {
         </div>
       )}
 
-      <section aria-label="Project operations summary" className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+      <section aria-label="Project operations summary" className="grid grid-cols-2 border-y border-line sm:grid-cols-4">
         {[
-          { label: 'Projects', value: projectMetrics.total, icon: Briefcase },
-          { label: 'Active', value: projectMetrics.active, icon: Clock },
-          { label: 'At Risk', value: projectMetrics.atRisk, icon: ShieldAlert },
-          { label: 'Overdue Tasks', value: projectMetrics.overdueTasks, icon: AlertCircle },
-        ].map(item => (
-          <div key={item.label} className="rounded-card border border-line bg-panel p-4">
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-xs text-muted">{item.label}</span>
-              <item.icon size={15} className="text-muted" />
+          { label: 'Projects', value: projectMetrics.total, icon: Briefcase, tone: 'text-fg' },
+          { label: 'Active', value: projectMetrics.active, icon: Clock, tone: 'text-success' },
+          { label: 'At risk', value: projectMetrics.atRisk, icon: ShieldAlert, tone: 'text-warning' },
+          { label: 'Overdue tasks', value: projectMetrics.overdueTasks, icon: AlertCircle, tone: 'text-danger' },
+        ].map((item, index) => (
+          <div key={item.label} className={'ams-kpi min-w-0 px-4 py-4 ' + (index > 0 ? 'border-l border-line' : '')}>
+            <div className="flex items-center gap-2">
+              <item.icon size={14} className="shrink-0 text-muted" />
+              <span className="ams-meta">{item.label}</span>
             </div>
-            <div className="mt-2 text-[24px] leading-8 font-medium tabular-nums text-fg">{item.value}</div>
+            <div className={'ams-kpi-value mt-2 ' + item.tone}>{item.value}</div>
           </div>
         ))}
       </section>
@@ -735,7 +735,7 @@ export const AdminProjects: React.FC = () => {
                           </button>
                         </td>
                         <td className="px-4 py-3">
-                          <span className={'inline-flex rounded-control border px-2 py-1 text-[11px] font-semibold ' + projectStatusClass(project.status)}>{statusLabel(project.status)}</span>
+                          <span className={'inline-flex rounded-badge border px-2 py-1 text-[11px] font-semibold ' + projectStatusClass(project.status)}>{statusLabel(project.status)}</span>
                         </td>
                         <td className="px-4 py-3">
                           <div className="w-36">
