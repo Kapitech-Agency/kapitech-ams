@@ -420,8 +420,22 @@ export const AdminApprovals: React.FC = () => {
       </div>
 
       {/* DECISION MODAL */}
-      <Modal open={!!activeItem && canApproveBudgets} onClose={() => setActiveItem(null)} size="md" title="Executive Decision Confirmation" description="Record the decision and rationale in the security audit log.">
-            <form onSubmit={handleDecisionSubmit} className="p-5 space-y-4 text-xs font-sans">
+      <Modal
+        open={!!activeItem && canApproveBudgets}
+        onClose={() => setActiveItem(null)}
+        size="md"
+        title="Executive Decision Confirmation"
+        description="Record the decision and rationale in the security audit log."
+        footer={(
+          <>
+            <Button type="button" variant="secondary" onClick={() => setActiveItem(null)}>Cancel</Button>
+            <Button type="submit" form="approval-decision-form" loading={isSubmitting} disabled={isSubmitting} icon={<ShieldCheck size={14} />}>
+              Confirm Decision
+            </Button>
+          </>
+        )}
+      >
+            <form id="approval-decision-form" onSubmit={handleDecisionSubmit} className="space-y-4 text-xs font-sans">
               <div>
                 <div className="font-semibold text-fg text-sm">{activeItem.title}</div>
                 <div className="text-xs font-sans text-muted mt-0.5">
@@ -484,10 +498,6 @@ export const AdminApprovals: React.FC = () => {
                 />
               </div>
 
-              <div className="pt-3 border-t border-line flex items-center justify-end gap-2">
-                <Button type="button" variant="secondary" onClick={() => setActiveItem(null)}>Cancel</Button>
-                <Button type="submit" loading={isSubmitting} disabled={isSubmitting} icon={<ShieldCheck size={14} />}>Confirm Decision</Button>
-              </div>
             </form>
       </Modal>
     </div>

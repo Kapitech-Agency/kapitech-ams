@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  FolderKanban, 
   Plus, 
   Search, 
   Edit3, 
@@ -448,39 +447,44 @@ export const AdminCmsProjects: React.FC = () => {
         </div>
       )}
       {/* MODAL: ADD / EDIT PROJECT WITH LIVE PREVIEW & DRAG & DROP */}
-      <Modal open={isModalOpen && !!editingProject} onClose={() => setIsModalOpen(false)} size="xl" title={editingProject?.title ? 'Edit: ' + editingProject.title : 'Add New Case Study'} description="Manage the case study content and live card preview.">
-            <div className="flex items-center justify-end pb-3 border-b border-line mb-4">
-              <div className="flex items-center gap-3">
-                <FolderKanban className="text-accent-text" size={20} />
-                <h2 className="text-lg font-semibold font-sans text-fg">
-                  {editingProject.title ? `Edit: ${editingProject.title}` : 'Add New Case Study'}
-                </h2>
-              </div>
-
-              <div className="flex items-center gap-3">
-                {/* Modal Tab Switcher */}
-                <div className="flex items-center rounded-control bg-panel border border-line p-0.5">
-                  <button
-                    type="button"
-                    onClick={() => setModalTab('details')}
-                    className={`px-3 py-1 rounded-chip text-[11px] font-semibold transition-all ${
-                      modalTab === 'details' ? 'bg-panel text-fg' : 'text-muted hover:text-fg'
-                    }`}
-                  >
-                    Details
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setModalTab('preview')}
-                    className={`flex items-center gap-1.5 px-3 py-1 rounded-chip text-[11px] font-semibold transition-all ${
-                      modalTab === 'preview' ? 'bg-panel text-fg' : 'text-muted hover:text-fg'
-                    }`}
-                  >
-                    <Eye size={12} />
-                    <span>Card Preview</span>
-                  </button>
-                </div>
-
+      <Modal
+        open={isModalOpen && !!editingProject}
+        onClose={() => setIsModalOpen(false)}
+        size="xl"
+        title={editingProject?.title ? 'Edit: ' + editingProject.title : 'Add New Case Study'}
+        description="Manage the case study content and live card preview."
+        footer={modalTab === 'details'
+          ? (
+            <>
+              <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+              <Button type="submit" form="case-study-form">Save Case Study</Button>
+            </>
+          )
+          : (
+            <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)}>Close preview</Button>
+          )}
+      >
+            <div className="flex items-center justify-end border-b border-line pb-3 mb-4">
+              <div className="flex items-center rounded-control bg-panel border border-line p-0.5" role="tablist" aria-label="Case study editor">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={modalTab === 'details'}
+                  onClick={() => setModalTab('details')}
+                  className={`px-3 py-1 rounded-chip text-[11px] font-semibold transition-all ${modalTab === 'details' ? 'bg-panel text-fg' : 'text-muted hover:text-fg'}`}
+                >
+                  Details
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={modalTab === 'preview'}
+                  onClick={() => setModalTab('preview')}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-chip text-[11px] font-semibold transition-all ${modalTab === 'preview' ? 'bg-panel text-fg' : 'text-muted hover:text-fg'}`}
+                >
+                  <Eye size={12} />
+                  <span>Card Preview</span>
+                </button>
               </div>
             </div>
 
@@ -528,7 +532,7 @@ export const AdminCmsProjects: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <form onSubmit={handleSaveModal} className="space-y-4">
+              <form id="case-study-form" onSubmit={handleSaveModal} className="space-y-4">
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
@@ -746,10 +750,6 @@ export const AdminCmsProjects: React.FC = () => {
                     <span className="text-fg">Feature in Homepage Highlights</span>
                   </label>
 
-                  <div className="flex items-center gap-2">
-                    <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-                    <Button type="submit">Save Case Study</Button>
-                  </div>
                 </div>
 
               </form>

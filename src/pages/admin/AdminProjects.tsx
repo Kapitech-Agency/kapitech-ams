@@ -567,11 +567,13 @@ export const AdminProjects: React.FC = () => {
         size="sm"
         title={language === 'id' ? 'Hapus proyek?' : 'Delete project?'}
         description={deleteProject ? (language === 'id' ? 'Proyek ' + deleteProject.name + ' akan dihapus.' : 'Project ' + deleteProject.name + ' will be removed.') : undefined}
+        footer={(
+          <>
+            <Button type="button" variant="secondary" onClick={() => setDeleteProject(null)}>Cancel</Button>
+            <Button type="button" variant="destructive" onClick={() => void deleteProjectConfirmed()} disabled={!canDeleteProjects}>Delete</Button>
+          </>
+        )}
       >
-        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
-          <Button variant="secondary" onClick={() => setDeleteProject(null)}>Cancel</Button>
-          <Button variant="destructive" onClick={() => void deleteProjectConfirmed()} disabled={!canDeleteProjects}>Delete</Button>
-        </div>
       </Modal>
 
       <Modal
@@ -580,11 +582,13 @@ export const AdminProjects: React.FC = () => {
         size="sm"
         title="Delete task?"
         description={deleteTaskTarget ? 'Task "' + deleteTaskTarget.title + '" will be permanently removed.' : undefined}
+        footer={(
+          <>
+            <Button type="button" variant="secondary" onClick={() => setDeleteTaskTarget(null)}>Cancel</Button>
+            <Button type="button" variant="destructive" onClick={() => void confirmDeleteTask()} disabled={!canManageKanbanTasks}>Delete</Button>
+          </>
+        )}
       >
-        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
-          <Button variant="secondary" onClick={() => setDeleteTaskTarget(null)}>Cancel</Button>
-          <Button variant="destructive" onClick={() => void confirmDeleteTask()} disabled={!canManageKanbanTasks}>Delete</Button>
-        </div>
       </Modal>
 
       <header className="ams-dashboard-header mb-6 flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
@@ -975,8 +979,20 @@ export const AdminProjects: React.FC = () => {
         </Modal>
       )}
 
-      <Modal open={projectModalOpen} onClose={() => !saving && setProjectModalOpen(false)} size="xl" title={editingProject ? 'Edit project' : 'New project'} description="Keep project information aligned with the delivery record.">
-        <form onSubmit={saveProject} className="space-y-5">
+      <Modal
+        open={projectModalOpen}
+        onClose={() => !saving && setProjectModalOpen(false)}
+        size="xl"
+        title={editingProject ? 'Edit project' : 'New project'}
+        description="Keep project information aligned with the delivery record."
+        footer={(
+          <>
+            <Button type="button" variant="secondary" onClick={() => setProjectModalOpen(false)} disabled={saving}>Cancel</Button>
+            <Button type="submit" form="project-form" loading={saving}>{editingProject ? 'Save changes' : 'Create project'}</Button>
+          </>
+        )}
+      >
+        <form id="project-form" onSubmit={saveProject} className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="text-xs text-muted">Project name<input value={projectForm.name} onChange={event => setProjectForm({ ...projectForm, name: event.target.value })} className={fieldClass} required /></label>
             <label className="text-xs text-muted">Client company<input value={projectForm.clientCompany} onChange={event => setProjectForm({ ...projectForm, clientCompany: event.target.value })} className={fieldClass} required /></label>
@@ -997,15 +1013,23 @@ export const AdminProjects: React.FC = () => {
             <label className="text-xs text-muted sm:col-span-2">Staging URL<input type="url" value={projectForm.liveStagingUrl} onChange={event => setProjectForm({ ...projectForm, liveStagingUrl: event.target.value })} className={fieldClass} /></label>
             <label className="text-xs text-muted sm:col-span-2">Notes<textarea value={projectForm.notes} onChange={event => setProjectForm({ ...projectForm, notes: event.target.value })} className={fieldClass + ' min-h-24 py-2'} /></label>
           </div>
-          <div className="flex flex-col-reverse gap-2 border-t border-line pt-4 sm:flex-row sm:justify-end">
-            <Button type="button" variant="secondary" onClick={() => setProjectModalOpen(false)} disabled={saving}>Cancel</Button>
-            <Button type="submit" loading={saving}>{editingProject ? 'Save changes' : 'Create project'}</Button>
-          </div>
         </form>
       </Modal>
 
-      <Modal open={taskModalOpen} onClose={() => !saving && setTaskModalOpen(false)} size="xl" title={editingTask ? 'Edit task' : 'New task'} description="Update the task record used by the project execution board.">
-        <form onSubmit={handleAddTask} className="space-y-5">
+      <Modal
+        open={taskModalOpen}
+        onClose={() => !saving && setTaskModalOpen(false)}
+        size="xl"
+        title={editingTask ? 'Edit task' : 'New task'}
+        description="Update the task record used by the project execution board."
+        footer={(
+          <>
+            <Button type="button" variant="secondary" onClick={() => setTaskModalOpen(false)} disabled={saving}>Cancel</Button>
+            <Button type="submit" form="task-form" loading={saving}>{editingTask ? 'Save changes' : 'Create task'}</Button>
+          </>
+        )}
+      >
+        <form id="task-form" onSubmit={handleAddTask} className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="text-xs text-muted sm:col-span-2">Task title<input value={taskForm.title} onChange={event => setTaskForm({ ...taskForm, title: event.target.value })} className={fieldClass} required /></label>
             <div><label className="text-xs text-muted">Project</label><CustomSelect value={taskForm.projectId} onChange={value => setTaskForm({ ...taskForm, projectId: value })} options={projects.map(project => ({ value: project.id, label: project.name }))} className="mt-1 w-full" /></div>
@@ -1024,10 +1048,6 @@ export const AdminProjects: React.FC = () => {
             <label className="text-xs text-muted">Tags, comma separated<input value={taskForm.tags} onChange={event => setTaskForm({ ...taskForm, tags: event.target.value })} className={fieldClass} /></label>
             <label className="text-xs text-muted sm:col-span-2">Description<textarea value={taskForm.description} onChange={event => setTaskForm({ ...taskForm, description: event.target.value })} className={fieldClass + ' min-h-24 py-2'} /></label>
             <label className="text-xs text-muted sm:col-span-2">Checklist, one item per line<textarea value={taskForm.subtasks} onChange={event => setTaskForm({ ...taskForm, subtasks: event.target.value })} className={fieldClass + ' min-h-24 py-2'} /></label>
-          </div>
-          <div className="flex flex-col-reverse gap-2 border-t border-line pt-4 sm:flex-row sm:justify-end">
-            <Button type="button" variant="secondary" onClick={() => setTaskModalOpen(false)} disabled={saving}>Cancel</Button>
-            <Button type="submit" loading={saving}>{editingTask ? 'Save changes' : 'Create task'}</Button>
           </div>
         </form>
       </Modal>

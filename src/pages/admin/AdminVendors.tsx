@@ -652,8 +652,24 @@ export const AdminVendors: React.FC = () => {
       )}
 
       {/* Add / Edit Modal */}
-      <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)} size="lg" title={editingVendor ? (language === 'id' ? 'Edit Profil Vendor' : 'Edit Vendor Profile') : (language === 'id' ? 'Tambah Vendor Baru' : 'Add New Talent Vendor')} description={language === 'id' ? 'Kelola profil, keahlian, dan evaluasi SLA vendor.' : 'Manage vendor profile, skills, and SLA review.'}>
-            <form onSubmit={handleSaveVendor} className="py-4 space-y-3.5 max-h-[calc(100dvh-24px)] overflow-y-auto pr-1 custom-scrollbar">
+      <Modal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        size="lg"
+        title={editingVendor ? (language === 'id' ? 'Edit Profil Vendor' : 'Edit Vendor Profile') : (language === 'id' ? 'Tambah Vendor Baru' : 'Add New Talent Vendor')}
+        description={language === 'id' ? 'Kelola profil, keahlian, dan evaluasi SLA vendor.' : 'Manage vendor profile, skills, and SLA review.'}
+        footer={(
+          <>
+            <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)}>
+              {language === 'id' ? 'Batal' : 'Cancel'}
+            </Button>
+            <Button type="submit" form="vendor-form">
+              {language === 'id' ? 'Simpan Vendor' : 'Save Vendor'}
+            </Button>
+          </>
+        )}
+      >
+            <form id="vendor-form" onSubmit={handleSaveVendor} className="space-y-3.5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[11px] font-sans text-muted normal-case block mb-1">
@@ -821,14 +837,6 @@ export const AdminVendors: React.FC = () => {
                 />
               </div>
 
-              <div className="pt-4 border-t border-line flex items-center justify-end gap-2">
-                <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)}>
-                  {language === 'id' ? 'Batal' : 'Cancel'}
-                </Button>
-                <Button type="submit">
-                  {language === 'id' ? 'Simpan Vendor' : 'Save Vendor'}
-                </Button>
-              </div>
             </form>
       </Modal>
       <ConfirmDialog

@@ -378,8 +378,22 @@ export const AdminDocuments: React.FC = () => {
       />
 
       {/* UPLOAD MODAL */}
-      <Modal open={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} size="md" title={language === 'id' ? 'Unggah dokumen' : 'Upload document'} description={language === 'id' ? 'Tambahkan dokumen ke private vault AMS.' : 'Add a document to the AMS private vault.'}>
-            <form onSubmit={handleUploadSubmit} className="p-4 space-y-4 text-xs font-sans">
+      <Modal
+        open={isUploadModalOpen}
+        onClose={() => !isSubmitting && setIsUploadModalOpen(false)}
+        size="md"
+        title={language === 'id' ? 'Unggah dokumen' : 'Upload document'}
+        description={language === 'id' ? 'Tambahkan dokumen ke private vault AMS.' : 'Add a document to the AMS private vault.'}
+        footer={(
+          <>
+            <Button type="button" variant="secondary" onClick={() => setIsUploadModalOpen(false)} disabled={isSubmitting}>Cancel</Button>
+            <Button type="submit" form="document-upload-form" disabled={isSubmitting} loading={isSubmitting} icon={<Plus size={14} />}>
+              {language === 'id' ? 'Simpan ke Private Vault' : 'Store in Private Vault'}
+            </Button>
+          </>
+        )}
+      >
+            <form id="document-upload-form" onSubmit={handleUploadSubmit} className="space-y-4 text-xs font-sans">
               <div className="space-y-1">
                 <label className="text-xs font-sans text-muted">Document Title *</label>
                 <input
@@ -420,12 +434,6 @@ export const AdminDocuments: React.FC = () => {
                 </p>
               </div>
 
-              <div className="pt-3 border-t border-line flex items-center justify-end gap-2">
-                <Button type="button" variant="secondary" onClick={() => setIsUploadModalOpen(false)}>Cancel</Button>
-                <Button type="submit" disabled={isSubmitting} loading={isSubmitting} icon={<Plus size={14} />}>
-                  {language === 'id' ? 'Simpan ke Private Vault' : 'Store in Private Vault'}
-                </Button>
-              </div>
             </form>
       </Modal>
     </div>

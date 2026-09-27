@@ -128,6 +128,7 @@ export const AdminSettings: React.FC = () => {
   // Accounts Management state (Stakeholder Executive & Teknisi IT)
   const [accounts, setAccounts] = useState<AdminAccount[]>([]);
   const [isAddAccountModalOpen, setIsAddAccountModalOpen] = useState(false);
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{ type: 'account'; id?: string; name?: string } | null>(null);
   const [accountActionMessage, setAccountActionMessage] = useState<{ success: boolean; message: string } | null>(null);
 
@@ -205,6 +206,7 @@ export const AdminSettings: React.FC = () => {
       return;
     }
 
+    setIsCreatingAccount(true);
     const res = await createAdminAccount({
       name: newAccName,
       username: newAccUsername,
@@ -213,6 +215,8 @@ export const AdminSettings: React.FC = () => {
       role: newAccRole,
       division: newAccDivision
     });
+
+    setIsCreatingAccount(false);
 
     if (res.success) {
       await refreshAccounts();
@@ -886,8 +890,24 @@ export const AdminSettings: React.FC = () => {
           </div>
 
       {/* MODAL: TAMBAH AKUN BARU (MOBILE FULLSCREEN + STICKY HEADER & FOOTER) */}
-      <Modal open={isAddAccountModalOpen} onClose={() => setIsAddAccountModalOpen(false)} size="lg" title={language === 'id' ? 'Tambah Akun Stakeholder / Teknisi' : 'Add Stakeholder / Technical Account'} description={language === 'id' ? 'Pilih peran dan sesuaikan hak akses sistem.' : 'Select role and configure granular permissions.'}>
-            <form onSubmit={handleCreateAccountSubmit} className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5 custom-scrollbar">
+      <Modal
+        open={isAddAccountModalOpen}
+        onClose={() => !isCreatingAccount && setIsAddAccountModalOpen(false)}
+        size="lg"
+        title={language === 'id' ? 'Tambah Akun Stakeholder / Teknisi' : 'Add Stakeholder / Technical Account'}
+        description={language === 'id' ? 'Pilih peran dan sesuaikan hak akses sistem.' : 'Select role and configure the server-managed account policy.'}
+        footer={(
+          <>
+            <Button type="button" variant="secondary" onClick={() => setIsAddAccountModalOpen(false)} disabled={isCreatingAccount}>
+              {language === 'id' ? 'Batal' : 'Cancel'}
+            </Button>
+            <Button type="submit" form="add-stakeholder-account-form" loading={isCreatingAccount}>
+              {language === 'id' ? 'Buat akun' : 'Create account'}
+            </Button>
+          </>
+        )}
+      >
+            <form id="add-stakeholder-account-form" onSubmit={handleCreateAccountSubmit} className="space-y-5">
               
               {/* Role Selection Cards */}
               <div>
