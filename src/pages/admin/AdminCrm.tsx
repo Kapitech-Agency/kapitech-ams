@@ -40,6 +40,7 @@ import { hasAdminPermission } from '../../lib/adminAuth';
 import { api } from '../../lib/apiClient';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Modal } from '../../components/ui/Modal';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
 export const AdminCrm: React.FC = () => {
   const { language, t } = useLanguage();
@@ -362,12 +363,14 @@ export const AdminCrm: React.FC = () => {
 
   return (
     <>
-      <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} size="sm" title={language === 'id' ? 'Hapus prospek?' : 'Delete lead?'} description={language === 'id' ? `Prospek ${deleteTarget?.name || ''} akan dihapus dari CRM.` : `Lead ${deleteTarget?.name || ''} will be removed from CRM.`}>
-        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
-          <button type="button" onClick={() => setDeleteTarget(null)} className="min-h-10 px-4 rounded-control border border-line bg-panel text-xs text-muted">Cancel</button>
-          <button type="button" onClick={() => deleteTarget && void confirmDeleteLead(deleteTarget.id)} disabled={!canManageCrm} className="px-3.5 py-2 rounded-control bg-danger text-white text-xs font-semibold">Delete</button>
-        </div>
-      </Modal>
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title={language === 'id' ? 'Hapus prospek?' : 'Delete lead?'}
+        description={language === 'id' ? `Prospek ${deleteTarget?.name || ''} akan dihapus dari CRM.` : `Lead ${deleteTarget?.name || ''} will be removed from CRM.`}
+        confirmLabel={language === 'id' ? 'Hapus' : 'Delete'}
+        onConfirm={() => { if (deleteTarget && canManageCrm) void confirmDeleteLead(deleteTarget.id); }}
+      />
       <div className="ams-leads-page space-y-6 pb-8">
       
       <header className="ams-dashboard-header mb-6 flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
