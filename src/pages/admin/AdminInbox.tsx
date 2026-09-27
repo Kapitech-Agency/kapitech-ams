@@ -620,7 +620,7 @@ export const AdminInbox: React.FC = () => {
       </section>
 
       {/* ------------------------------------------------------------- */}
-      {/* 3. UNIFIED FILTER TABS & TOOLBAR */
+      {/* 3. UNIFIED FILTER TABS & TOOLBAR */}
       {/* ------------------------------------------------------------- */}
       <div className="ams-inbox-toolbar bg-panel border border-line p-4 sm:p-5 rounded-card space-y-3">
         
