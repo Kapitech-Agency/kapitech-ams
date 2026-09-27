@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   AlertTriangle,
   ArrowUpRight,
@@ -15,6 +15,7 @@ import {
   Users,
 } from 'lucide-react';
 import { AdminModuleHeader, AdminPanel } from './AdminModulePrimitives';
+import { Modal } from '../ui/Modal';
 import { DonutChart, TrendChart } from '../charts/DashboardCharts';
 
 type RangeKey = '30D' | 'Q2' | 'YTD' | '12M';
@@ -57,14 +58,41 @@ const sampleTeam: TeamMember[] = [
   { name: 'Nadia Putri', role: 'Strategist', workload: 55, tasks: 6, state: 'Available', tone: 'info' },
 ];
 
-const sampleRevenue = [
-  { label: 'Jan', primary: 61000, secondary: 42000, tertiary: 19000 },
-  { label: 'Feb', primary: 68500, secondary: 44700, tertiary: 23800 },
-  { label: 'Mar', primary: 74200, secondary: 46300, tertiary: 27900 },
-  { label: 'Apr', primary: 71800, secondary: 49200, tertiary: 22600 },
-  { label: 'May', primary: 80200, secondary: 51400, tertiary: 28800 },
-  { label: 'Jun', primary: 84500, secondary: 52200, tertiary: 32300 },
-];
+const sampleRevenueByRange: Record<RangeKey, Array<{ label: string; primary: number; secondary: number; tertiary: number }>> = {
+  '30D': [
+    { label: 'W1', primary: 18800, secondary: 12400, tertiary: 6400 },
+    { label: 'W2', primary: 20100, secondary: 12900, tertiary: 7200 },
+    { label: 'W3', primary: 21400, secondary: 13200, tertiary: 8200 },
+    { label: 'W4', primary: 22600, secondary: 13800, tertiary: 8800 },
+  ],
+  Q2: [
+    { label: 'Apr', primary: 71800, secondary: 49200, tertiary: 22600 },
+    { label: 'May', primary: 80200, secondary: 51400, tertiary: 28800 },
+    { label: 'Jun', primary: 84500, secondary: 52200, tertiary: 32300 },
+  ],
+  YTD: [
+    { label: 'Jan', primary: 61000, secondary: 42000, tertiary: 19000 },
+    { label: 'Feb', primary: 68500, secondary: 44700, tertiary: 23800 },
+    { label: 'Mar', primary: 74200, secondary: 46300, tertiary: 27900 },
+    { label: 'Apr', primary: 71800, secondary: 49200, tertiary: 22600 },
+    { label: 'May', primary: 80200, secondary: 51400, tertiary: 28800 },
+    { label: 'Jun', primary: 84500, secondary: 52200, tertiary: 32300 },
+  ],
+  '12M': [
+    { label: 'Jul', primary: 57400, secondary: 40100, tertiary: 17300 },
+    { label: 'Aug', primary: 59200, secondary: 41100, tertiary: 18100 },
+    { label: 'Sep', primary: 63800, secondary: 42600, tertiary: 21200 },
+    { label: 'Oct', primary: 67100, secondary: 43500, tertiary: 23600 },
+    { label: 'Nov', primary: 69600, secondary: 44100, tertiary: 25500 },
+    { label: 'Dec', primary: 73200, secondary: 45200, tertiary: 28000 },
+    { label: 'Jan', primary: 61000, secondary: 42000, tertiary: 19000 },
+    { label: 'Feb', primary: 68500, secondary: 44700, tertiary: 23800 },
+    { label: 'Mar', primary: 74200, secondary: 46300, tertiary: 27900 },
+    { label: 'Apr', primary: 71800, secondary: 49200, tertiary: 22600 },
+    { label: 'May', primary: 80200, secondary: 51400, tertiary: 28800 },
+    { label: 'Jun', primary: 84500, secondary: 52200, tertiary: 32300 },
+  ],
+};
 
 const deliveryBreakdown = [
   { label: 'On schedule', value: 8, tone: 'success' as const },
@@ -430,9 +458,12 @@ const AnalyticsView: React.FC = () => {
 
 export const GlobalExecutiveDashboard: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const view = (searchParams.get('view') || 'overview') as 'overview' | 'performance' | 'analytics';
+  const navigate = useNavigate();
+  const view = (searchParams.get('view') || 'overview') as 'overview' | 'performance' | 'analytics' | 'tasks';
   const [range, setRange] = useState<RangeKey>('Q2');
   const [projectFilter, setProjectFilter] = useState<ProjectFilter>('All');
+  const [projectActionId, setProjectActionId] = useState<string | null>(null);
+  const [projectDetails, setProjectDetails] = useState<DashboardProject | null>(null);
 
   const filteredProjects = useMemo(
     () => projectFilter === 'All' ? sampleProjects : sampleProjects.filter((project) => project.type === projectFilter),
@@ -441,6 +472,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
   const totalDelivery = deliveryBreakdown.reduce((total, item) => total + item.value, 0);
   const onSchedulePercent = Math.round((deliveryBreakdown[0].value / totalDelivery) * 100);
+  const revenueData = sampleRevenueByRange[range];
 
   return (
     <div className="min-h-full pb-10">
@@ -532,7 +564,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-success" /> Net</span>
           </div>
         )}>
-          <TrendChart data={sampleRevenue} primaryLabel="Revenue" secondaryLabel="Expenses" tertiaryLabel="Net" primaryFormat={formatMoney} ariaLabel={'Revenue, expenses, and net trend for ' + range + '.'} />
+          <TrendChart data={revenueData} primaryLabel="Revenue" secondaryLabel="Expenses" tertiaryLabel="Net" primaryFormat={formatMoney} ariaLabel={'Revenue, expenses, and net trend for ' + range + '.'} />
         </AdminPanel>
 
         <AdminPanel className="min-[1100px]:col-span-4" bodyClassName="p-4 sm:p-5" title="Delivery & pacing" description="Project delivery distribution across the current portfolio.">
@@ -593,7 +625,48 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     <td className="px-3 py-3"><div className="flex min-w-[150px] items-center gap-2"><div className="h-1.5 min-w-20 flex-1 overflow-hidden rounded-sm bg-line"><div className={['h-full rounded-sm', progressClasses[project.statusTone === 'danger' ? 'danger' : project.statusTone === 'warning' ? 'warning' : 'success']].join(' ')} style={{ width: project.progress + '%' }} /></div><span className="w-8 text-right text-[11px] tabular-nums text-muted">{project.progress}%</span></div></td>
                     <td className="px-3 py-3"><div className="flex items-center gap-2"><span className="flex h-6 w-6 items-center justify-center rounded-full border border-line bg-bg text-[10px] font-semibold text-fg">{project.lead.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()}</span><span className="text-xs text-muted">{project.lead}</span></div></td>
                     <td className="px-4 py-3 text-right text-xs font-medium tabular-nums text-fg">{project.budget}</td>
-                    <td className="px-2 py-3 text-right"><button type="button" aria-label={'More actions for ' + project.name} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><MoreHorizontal size={15} /></button></td>
+                    <td className="relative px-2 py-3 text-right">
+                      <button
+                        type="button"
+                        aria-label={'More actions for ' + project.name}
+                        aria-haspopup="menu"
+                        aria-expanded={projectActionId === project.id}
+                        onClick={() => setProjectActionId(current => current === project.id ? null : project.id)}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"
+                      >
+                        <MoreHorizontal size={15} />
+                      </button>
+                      {projectActionId === project.id && (
+                        <div
+                          role="menu"
+                          aria-label={'Actions for ' + project.name}
+                          className="absolute right-2 top-[calc(100%-2px)] z-20 w-48 overflow-hidden rounded-card border border-line bg-panel p-1 text-left shadow-none"
+                        >
+                          <button
+                            type="button"
+                            role="menuitem"
+                            className="flex min-h-9 w-full items-center rounded-control px-3 text-xs text-muted hover:bg-bg hover:text-fg"
+                            onClick={() => {
+                              setProjectDetails(project);
+                              setProjectActionId(null);
+                            }}
+                          >
+                            View project details
+                          </button>
+                          <button
+                            type="button"
+                            role="menuitem"
+                            className="flex min-h-9 w-full items-center rounded-control px-3 text-xs text-muted hover:bg-bg hover:text-fg"
+                            onClick={() => {
+                              navigate('/admin/projects');
+                              setProjectActionId(null);
+                            }}
+                          >
+                            Open project workspace
+                          </button>
+                        </div>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -631,6 +704,69 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       ) : (
         <AnalyticsView />
       )}
+      <Modal
+        open={Boolean(projectDetails)}
+        onClose={() => setProjectDetails(null)}
+        size="md"
+        title={projectDetails?.name || 'Project details'}
+        description={projectDetails ? projectDetails.client : undefined}
+        footer={(
+          <>
+            <button
+              type="button"
+              className="inline-flex min-h-9 items-center justify-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"
+              onClick={() => setProjectDetails(null)}
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              className="inline-flex min-h-9 items-center justify-center gap-2 rounded-control bg-accent px-3 text-xs font-medium text-white hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"
+              onClick={() => {
+                setProjectDetails(null);
+                navigate('/admin/projects');
+              }}
+            >
+              Open workspace
+            </button>
+          </>
+        )}
+      >
+        {projectDetails && (
+          <div className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-control border border-line bg-bg p-3">
+                <div className="text-[10px] uppercase tracking-[0.08em] text-muted">Status</div>
+                <div className="mt-1 text-sm font-semibold text-fg">{projectDetails.status}</div>
+              </div>
+              <div className="rounded-control border border-line bg-bg p-3">
+                <div className="text-[10px] uppercase tracking-[0.08em] text-muted">Progress</div>
+                <div className="mt-1 text-sm font-semibold text-fg">{projectDetails.progress}%</div>
+              </div>
+              <div className="rounded-control border border-line bg-bg p-3">
+                <div className="text-[10px] uppercase tracking-[0.08em] text-muted">Project lead</div>
+                <div className="mt-1 text-sm font-semibold text-fg">{projectDetails.lead}</div>
+              </div>
+              <div className="rounded-control border border-line bg-bg p-3">
+                <div className="text-[10px] uppercase tracking-[0.08em] text-muted">Budget</div>
+                <div className="mt-1 text-sm font-semibold text-fg">{projectDetails.budget}</div>
+              </div>
+            </div>
+            <div className="rounded-control border border-line bg-bg p-3">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs text-muted">Delivery pacing</span>
+                <span className="text-xs font-semibold text-fg">{projectDetails.progress}% complete</span>
+              </div>
+              <div className="mt-2 h-2 overflow-hidden rounded-sm bg-line">
+                <div
+                  className={['h-full rounded-sm', progressClasses[projectDetails.statusTone === 'danger' ? 'danger' : projectDetails.statusTone === 'warning' ? 'warning' : 'success']].join(' ')}
+                  style={{ width: projectDetails.progress + '%' }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };
