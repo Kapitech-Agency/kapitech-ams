@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+// Shared module chrome renders the canonical ams-dashboard-header primitive.
 import { Skeleton } from '../../components/ui/Skeleton';
 import { 
   ShieldCheck,
@@ -26,6 +27,7 @@ import { hasAdminPermission } from '../../lib/adminAuth';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import Button from '../../components/ui/Button';
 
+import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 interface ApprovalItem {
   id: string;
   type: string;
@@ -185,16 +187,12 @@ export const AdminApprovals: React.FC = () => {
       )}
 
       {/* Header */}
-      <header className="ams-dashboard-header mb-6 flex flex-col gap-4 border-b border-line pb-5">
-        <h1 className="text-2xl font-semibold leading-8 tracking-[-0.02em] text-fg">
+      <AdminModuleHeader
+        title={(
           <span className="flex items-center gap-2"><Shield size={20} className="text-accent-text shrink-0" />{language === 'id' ? 'Pusat Persetujuan Eksekutif' : 'Executive Approvals Center'}</span>
-        </h1>
-        <p className="mt-1 max-w-2xl text-xs leading-5 text-muted">
-          {language === 'id' 
-            ? 'Otorisasi anggaran klien, invoice berisiko tinggi, proposal komersial, dan pengeluaran operasional.' 
-            : 'Multi-level executive authorization for budgets, high-value invoices, and operational expenses.'}
-        </p>
-      </header>
+        )}
+        description={language === 'id' ? 'Otorisasi anggaran klien, invoice berisiko tinggi, proposal komersial, dan pengeluaran operasional.' : 'Multi-level executive authorization for budgets, high-value invoices, and operational expenses.'}
+      />
 
       {/* KPI Cards */}
       <section aria-label="Approval snapshot" className="rounded-card border border-line bg-panel p-4 sm:p-5">
@@ -202,59 +200,14 @@ export const AdminApprovals: React.FC = () => {
           <div><h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan persetujuan' : 'Approval snapshot'}</h2><p className="mt-1 text-xs text-muted">{language === 'id' ? 'Permintaan dan exposure finansial yang menunggu keputusan.' : 'Decision queue and financial exposure across the approval workspace.'}</p></div>
           <span className="text-[11px] font-medium tabular-nums text-muted">{metrics.pendingCount} pending</span>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-0">
-        <div className="min-w-0 px-4 py-3 border-r border-line">
-          <div className="text-xs font-sans text-muted flex items-center justify-between">
-            <span>{language === 'id' ? 'Menunggu Otorisasi' : 'Pending Authorization'}</span>
-            <Clock size={13} className="text-warning" />
-          </div>
-          <div className="text-lg sm:text-xl font-semibold font-sans text-warning">
-            {metrics.pendingCount}
-          </div>
-          <div className="text-xs font-sans text-muted">
-            {language === 'id' ? 'Perlu tindakan eksekutif' : 'Action required'}
-          </div>
-        </div>
-
-        <div className="min-w-0 px-4 py-3 border-r border-line">
-          <div className="text-xs font-sans text-muted flex items-center justify-between">
-            <span>{language === 'id' ? 'Nilai Tertunda' : 'Pending Value'}</span>
-            <DollarSign size={13} className="text-accent" />
-          </div>
-          <div className="text-lg sm:text-xl font-semibold font-sans text-fg">
-            {formatAmount(metrics.totalPendingValue, currency)}
-          </div>
-          <div className="text-xs font-sans text-muted">
-            {language === 'id' ? 'Total nilai menunggu review' : 'Total financial exposure'}
-          </div>
-        </div>
-
-        <div className="min-w-0 px-4 py-3 border-r border-line">
-          <div className="text-xs font-sans text-muted flex items-center justify-between">
-            <span>{language === 'id' ? 'Tinggi Risiko' : 'High Risk Items'}</span>
-            <AlertTriangle size={13} className="text-danger" />
-          </div>
-          <div className="text-lg sm:text-xl font-semibold font-sans text-danger">
-            {metrics.highRiskPending}
-          </div>
-          <div className="text-xs font-sans text-danger/80">
-            {language === 'id' ? 'Perlu hak persetujuan' : 'Requires approval permission'}
-          </div>
-        </div>
-
-        <div className="min-w-0 px-4 py-3">
-          <div className="text-xs font-sans text-muted flex items-center justify-between">
-            <span>{language === 'id' ? 'Telah Disetujui' : 'Total Approved'}</span>
-            <CheckCircle2 size={13} className="text-success" />
-          </div>
-          <div className="text-lg sm:text-xl font-semibold font-sans text-success">
-            {metrics.approvedCount}
-          </div>
-          <div className="text-xs font-sans text-muted">
-            {language === 'id' ? 'Tercatat dalam audit trail' : 'Logged in audit trail'}
-          </div>
-        </div>
-        </div>
+        <AdminMetricStrip
+          metrics={[
+            { id: 'pending', label: language === 'id' ? 'Menunggu Otorisasi' : 'Pending Authorization', value: metrics.pendingCount, context: language === 'id' ? 'Perlu tindakan eksekutif' : 'Action required', icon: <Clock size={16} strokeWidth={1.8} />, toneClassName: 'text-warning' },
+            { id: 'pending-value', label: language === 'id' ? 'Nilai Tertunda' : 'Pending Value', value: formatAmount(metrics.totalPendingValue, currency), context: language === 'id' ? 'Total nilai menunggu review' : 'Total financial exposure', icon: <DollarSign size={16} strokeWidth={1.8} />, toneClassName: 'text-accent-text' },
+            { id: 'risk', label: language === 'id' ? 'Tinggi Risiko' : 'High Risk Items', value: metrics.highRiskPending, context: language === 'id' ? 'Perlu hak persetujuan' : 'Requires approval permission', icon: <AlertTriangle size={16} strokeWidth={1.8} />, toneClassName: 'text-danger' },
+            { id: 'approved', label: language === 'id' ? 'Telah Disetujui' : 'Total Approved', value: metrics.approvedCount, context: language === 'id' ? 'Tercatat dalam audit trail' : 'Logged in audit trail', icon: <CheckCircle2 size={16} strokeWidth={1.8} />, toneClassName: 'text-success' }
+          ]}
+        />
       </section>
 
       {/* Filter and Search Bar */}

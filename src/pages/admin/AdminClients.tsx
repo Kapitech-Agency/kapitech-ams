@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+// Shared module chrome renders the canonical ams-dashboard-header primitive.
 import {
   Activity,
   ArrowDown,
@@ -29,6 +30,7 @@ import { Button } from '../../components/ui/Button';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Modal } from '../../components/ui/Modal';
 
+import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 type SortKey = 'name' | 'company' | 'updatedAt' | 'projectsCount';
 type SortDirection = 'asc' | 'desc';
 
@@ -331,29 +333,15 @@ export const AdminClients: React.FC = () => {
 
   return (
     <div className="min-h-full pb-8">
-      <header className="ams-dashboard-header mb-6 flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold leading-8 tracking-[-0.02em] text-fg">
-            {t('admin.client.title')}
-          </h1>
-          <p className="mt-1 max-w-2xl text-xs leading-5 text-muted">
-            {t('admin.client.subtitle')}
-          </p>
-        </div>
-        {canManageClients && (
-          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-            <Button
-              type="button"
-              variant="primary"
-              icon={<Plus size={14} aria-hidden="true" />}
-              onClick={openCreate}
-              className="w-full sm:w-auto"
-            >
-              {t('admin.client.addClient')}
-            </Button>
-          </div>
-        )}
-      </header>
+      <AdminModuleHeader
+        title={t('admin.client.title')}
+        description={t('admin.client.subtitle')}
+        actions={canManageClients ? (
+          <Button type="button" variant="primary" icon={<Plus size={14} aria-hidden="true" />} onClick={openCreate} className="w-full sm:w-auto">
+            {t('admin.client.addClient')}
+          </Button>
+        ) : undefined}
+      />
 
       {statusMessage && (
         <div
@@ -387,20 +375,15 @@ export const AdminClients: React.FC = () => {
           <div><h2 id="client-snapshot-title" className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan klien' : 'Client snapshot'}</h2><p className="mt-1 text-xs leading-5 text-muted">{language === 'id' ? 'Sinyal utama dari direktori klien saat ini.' : 'Key signals from the current client directory.'}</p></div>
           <span className="text-[11px] font-medium tabular-nums text-muted">{clientMetrics.total} {language === 'id' ? 'total' : 'total'}</span>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4">
-          {[
-            { label: language === 'id' ? 'Total klien' : 'Total clients', value: clientMetrics.total, helper: language === 'id' ? 'Semua status' : 'All statuses', valueClass: 'text-fg' },
-            { label: language === 'id' ? 'Klien aktif' : 'Active clients', value: clientMetrics.active, helper: language === 'id' ? 'Sedang berjalan' : 'Currently active', valueClass: 'text-success' },
-            { label: language === 'id' ? 'Prospek' : 'Leads', value: clientMetrics.leads, helper: language === 'id' ? 'Status lead' : 'Lead status', valueClass: 'text-info' },
-            { label: language === 'id' ? 'Melewati SLA' : 'Over budget', value: clientMetrics.overBudget, helper: language === 'id' ? 'Daily ad-spend' : 'Daily ad-spend SLA', valueClass: 'text-warning' }
-          ].map((metric, index) => (
-            <div key={metric.label} className={`min-w-0 px-4 py-3 ${index > 0 ? 'border-l border-line' : ''}`}>
-              <p className="ams-meta">{metric.label}</p>
-              <p className={`ams-kpi-value mt-2 ${metric.valueClass}`}>{isLoading ? '—' : metric.value}</p>
-              <p className="ams-meta mt-1">{metric.helper}</p>
-            </div>
-          ))}
-        </div>
+        <AdminMetricStrip
+          className="sm:grid-cols-4"
+          metrics={[
+            { id: 'total', label: language === 'id' ? 'Total klien' : 'Total clients', value: isLoading ? '—' : clientMetrics.total, context: language === 'id' ? 'Semua status' : 'All statuses', icon: <Users size={16} strokeWidth={1.8} /> },
+            { id: 'active', label: language === 'id' ? 'Klien aktif' : 'Active clients', value: isLoading ? '—' : clientMetrics.active, context: language === 'id' ? 'Sedang berjalan' : 'Currently active', icon: <Activity size={16} strokeWidth={1.8} />, toneClassName: 'text-success' },
+            { id: 'leads', label: language === 'id' ? 'Prospek' : 'Leads', value: isLoading ? '—' : clientMetrics.leads, context: language === 'id' ? 'Status lead' : 'Lead status', icon: <Globe size={16} strokeWidth={1.8} />, toneClassName: 'text-info' },
+            { id: 'over-budget', label: language === 'id' ? 'Melewati SLA' : 'Over budget', value: isLoading ? '—' : clientMetrics.overBudget, context: language === 'id' ? 'Daily ad-spend' : 'Daily ad-spend SLA', icon: <ShieldAlert size={16} strokeWidth={1.8} />, toneClassName: 'text-warning' }
+          ]}
+        />
       </section>
       <section
         aria-label={language === 'id' ? 'Pencarian dan filter klien' : 'Client directory controls'}

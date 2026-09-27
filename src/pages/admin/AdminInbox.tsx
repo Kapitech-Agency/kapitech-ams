@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+// Shared module chrome renders the canonical ams-dashboard-header primitive.
 import { Link, useNavigate } from 'react-router-dom';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { 
@@ -56,6 +57,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
 
+import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 export const AdminInbox: React.FC = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
@@ -522,101 +524,33 @@ export const AdminInbox: React.FC = () => {
         </div>
       )}
 
-      <header className="ams-dashboard-header mb-6 flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold leading-8 tracking-[-0.02em] text-fg">Leads & Inbox</h1>
-          <p className="mt-1 max-w-2xl text-xs leading-5 text-muted">
-            {language === 'id'
-              ? 'Kelola inquiry masuk, lakukan triage, balas dengan cepat, dan teruskan peluang yang siap ke CRM.'
-              : 'Triage inbound inquiries, respond quickly, and move qualified opportunities into CRM.'}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-          <span className="text-[11px] tabular-nums text-muted">{submissions.length} inbound</span>
-          <button type="button" onClick={() => setIsEmailModalOpen(true)} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" title={language === 'id' ? 'Buka pengaturan notifikasi email' : 'Open email alert settings'}>
-            <Mail size={14} />
-            <span>{language === 'id' ? 'Notifikasi Email' : 'Email Alerts'}</span>
-          </button>
-          {metrics.newCount > 0 && (
-            <button type="button" onClick={handleMarkAllRead} disabled={!canManageCrm} className="ams-action inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control border border-line bg-transparent px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-              <Check size={14} />
-              <span>{language === 'id' ? 'Tandai Dibaca' : 'Mark Read'}</span>
-            </button>
-          )}
-          {submissions.length > 0 && (
-            <button type="button" onClick={handleExportCSV} className="ams-action inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control border border-line bg-transparent px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-              <Download size={14} />
-              <span>Export CSV</span>
-            </button>
-          )}
-        </div>
-      </header>
+      <AdminModuleHeader
+        title="Leads & Inbox"
+        description={language === 'id' ? 'Kelola inquiry masuk, lakukan triage, balas dengan cepat, dan teruskan peluang yang siap ke CRM.' : 'Triage inbound inquiries, respond quickly, and move qualified opportunities into CRM.'}
+        actions={(
+          <>
+            <span className="text-[11px] tabular-nums text-muted">{submissions.length} inbound</span>
+            <button type="button" onClick={() => setIsEmailModalOpen(true)} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent" title={language === 'id' ? 'Buka pengaturan notifikasi email' : 'Open email alert settings'}><Mail size={14} /><span>{language === 'id' ? 'Notifikasi Email' : 'Email Alerts'}</span></button>
+            {metrics.newCount > 0 && <button type="button" onClick={handleMarkAllRead} disabled={!canManageCrm} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"><Check size={14} /><span>{language === 'id' ? 'Tandai Dibaca' : 'Mark Read'}</span></button>}
+            {submissions.length > 0 && <button type="button" onClick={handleExportCSV} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"><Download size={14} /><span>Export CSV</span></button>}
+          </>
+        )}
+      />
 
       {/* ------------------------------------------------------------- */}
       {/* 2. EXECUTIVE KPI SUMMARY RIBBON */}
       {/* ------------------------------------------------------------- */}
       <section aria-label="Leads and inbox snapshot" className="rounded-card border border-line bg-panel p-4 sm:p-5">
         <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3"><div><h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan leads & inbox' : 'Leads & inbox snapshot'}</h2><p className="mt-1 text-xs text-muted">{language === 'id' ? 'Sinyal intake, triage, konversi, dan estimasi pipeline.' : 'Intake, triage, conversion, and estimated pipeline signals.'}</p></div><span className="text-[11px] font-medium tabular-nums text-muted">{metrics.total} inbound</span></div>
-        <div className="ams-inbox-kpi grid grid-cols-2 lg:grid-cols-4">
-        {/* Metric 1: Total Inbound */}
-        <div className="min-w-0 px-4 py-3 lg:border-r lg:border-line">
-          <div className="flex items-center justify-between text-xs font-sans text-muted">
-            <span>{language === 'id' ? 'Total Masuk' : 'Total Inbound'}</span>
-            <Inbox size={14} className="text-muted" />
-          </div>
-          <div className="text-2xl font-semibold font-sans text-fg">
-            {metrics.total}
-          </div>
-          <p className="text-[11px] font-sans text-muted">
-            {language === 'id' ? 'Seluruh kanal formulir' : 'All intake touchpoints'}
-          </p>
-        </div>
-
-        {/* Metric 2: Action Needed / New */}
-        <div className="min-w-0 px-4 py-3 lg:border-r lg:border-line">
-          <div className="flex items-center justify-between text-xs font-sans text-muted">
-            <span>{language === 'id' ? 'Perlu Ditinjau' : 'Action Needed'}</span>
-            <AlertCircle size={14} className="text-danger" />
-          </div>
-          <div className="text-2xl font-semibold font-sans text-danger flex items-center gap-2">
-            <span>{metrics.newCount}</span>
-            {metrics.newCount > 0 && (
-              <span className="w-2 h-2 rounded-full bg-danger animate-ping" />
-            )}
-          </div>
-          <p className="text-[11px] font-sans text-muted">
-            {language === 'id' ? 'Belum dikualifikasi' : 'Pending initial triage'}
-          </p>
-        </div>
-
-        {/* Metric 3: Converted to CRM */}
-        <div className="min-w-0 px-4 py-3 lg:border-r lg:border-line">
-          <div className="flex items-center justify-between text-xs font-sans text-muted">
-            <span>{language === 'id' ? 'Dikonversi ke CRM' : 'Converted to CRM'}</span>
-            <Briefcase size={14} className="text-success" />
-          </div>
-          <div className="text-2xl font-semibold font-sans text-success">
-            {metrics.convertedCount} <span className="text-xs text-muted">({metrics.conversionRate}%)</span>
-          </div>
-          <p className="text-[11px] font-sans text-muted">
-            {language === 'id' ? 'Aktif dalam pipeline agensi' : 'Active deal opportunities'}
-          </p>
-        </div>
-
-        {/* Metric 4: Estimated Pipeline Volume */}
-        <div className="min-w-0 px-4 py-3">
-          <div className="flex items-center justify-between text-xs font-sans text-muted">
-            <span>{language === 'id' ? 'Volume Peluang' : 'Intake Valuation'}</span>
-            <TrendingUp size={14} className="text-success" />
-          </div>
-          <div className="text-xl sm:text-2xl font-semibold font-sans text-fg truncate">
-            {formatAmount(metrics.totalPipelineValue, currency)}
-          </div>
-          <p className="text-[11px] font-sans text-muted">
-            {language === 'id' ? 'Estimasi nilai brief masuk' : 'Cumulative brief budget estimate'}
-          </p>
-        </div>
-        </div>
+        <AdminMetricStrip
+          className="lg:grid-cols-4"
+          metrics={[
+            { id: 'total', label: language === 'id' ? 'Total Masuk' : 'Total Inbound', value: metrics.total, context: language === 'id' ? 'Seluruh kanal formulir' : 'All intake touchpoints', icon: <Inbox size={16} strokeWidth={1.8} /> },
+            { id: 'action', label: language === 'id' ? 'Perlu Ditinjau' : 'Action Needed', value: <span className="inline-flex items-center gap-2 text-danger">{metrics.newCount}{metrics.newCount > 0 && <span className="h-2 w-2 rounded-full bg-danger" />}</span>, context: language === 'id' ? 'Belum dikualifikasi' : 'Pending initial triage', icon: <AlertCircle size={16} strokeWidth={1.8} />, toneClassName: 'text-danger' },
+            { id: 'converted', label: language === 'id' ? 'Dikonversi ke CRM' : 'Converted to CRM', value: metrics.convertedCount, context: String(metrics.conversionRate) + '% conversion', icon: <Briefcase size={16} strokeWidth={1.8} />, toneClassName: 'text-success' },
+            { id: 'pipeline', label: language === 'id' ? 'Volume Peluang' : 'Intake Valuation', value: formatAmount(metrics.totalPipelineValue, currency), context: language === 'id' ? 'Estimasi nilai brief masuk' : 'Cumulative brief budget estimate', icon: <TrendingUp size={16} strokeWidth={1.8} />, toneClassName: 'text-success' }
+          ]}
+        />
       </section>
 
       {/* ------------------------------------------------------------- */}
