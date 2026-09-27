@@ -298,21 +298,32 @@ export const AdminLayout: React.FC = () => {
         transition={{ duration: 0.18, ease: 'easeOut' }}
         className={`hidden min-[900px]:flex flex-col relative bg-panel border-r border-line shrink-0 h-full z-30 overflow-visible ${sidebarCollapsed ? 'ams-sidebar-collapsed' : 'ams-sidebar-expanded'}`}
       >
-        <div className="relative flex h-[52px] shrink-0 items-center border-b border-line px-2.5">
-          <Link to="/admin/dashboard" aria-label="Kapitech AMS dashboard" className={`group flex min-h-10 items-center rounded-control px-2 transition-colors duration-150 hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
-            <div className="h-9 w-9 rounded-control bg-bg border border-line p-1.5 flex items-center justify-center shrink-0 transition-colors duration-150 group-hover:border-accent/40">
-              <AmsBrandLogo className="h-5 w-5" />
-            </div>
-            {!sidebarCollapsed && (
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 leading-none">
-                  <span className="text-[13px] font-semibold text-fg whitespace-nowrap">KAPITECH</span>
-                  <span className="shrink-0 rounded-badge border border-accent/25 bg-accent/8 px-1.5 py-0.5 text-[9px] font-semibold text-accent-text">AMS</span>
-                </div>
-                <p className="mt-1 text-[10px] leading-4 text-muted whitespace-nowrap">Agency Management System</p>
+        <div className="relative flex h-[52px] shrink-0 items-center border-b border-line px-1">
+          <div className="flex min-w-0 flex-1 items-center gap-1">
+            <Link to="/admin/dashboard" aria-label="Kapitech AMS dashboard" className={`group flex min-h-10 min-w-0 items-center rounded-control px-1.5 transition-colors duration-150 hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${sidebarCollapsed ? 'h-8 w-7 justify-center px-0' : 'flex-1 gap-3'}`}>
+              <div className={`rounded-control bg-bg border border-line flex items-center justify-center shrink-0 transition-colors duration-150 group-hover:border-accent/40 ${sidebarCollapsed ? 'h-7 w-7 p-1' : 'h-9 w-9 p-1.5'}`}>
+                <AmsBrandLogo className={sidebarCollapsed ? 'h-4 w-4' : 'h-5 w-5'} />
               </div>
-            )}
-          </Link>
+              {!sidebarCollapsed && (
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 leading-none">
+                    <span className="text-[13px] font-semibold text-fg whitespace-nowrap">KAPITECH</span>
+                    <span className="shrink-0 rounded-badge border border-accent/25 bg-accent/8 px-1.5 py-0.5 text-[9px] font-semibold text-accent-text">AMS</span>
+                  </div>
+                  <p className="mt-1 text-[10px] leading-4 text-muted whitespace-nowrap">Agency Management System</p>
+                </div>
+              )}
+            </Link>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setSidebarCollapsed((value) => !value)}
+              aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              icon={sidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+              className={`shrink-0 p-0 ${sidebarCollapsed ? 'h-8 w-7' : 'h-8 w-8'}`}
+            />
+          </div>
         </div>
         <div className={`flex-1 min-h-0 overflow-y-auto overscroll-contain custom-scrollbar ${sidebarCollapsed ? 'px-2 py-3' : 'px-2.5 py-3'}`}>
           <div className={sidebarCollapsed ? 'space-y-2' : 'space-y-4'}>
@@ -330,7 +341,7 @@ export const AdminLayout: React.FC = () => {
                         to={item.to}
                         title={sidebarCollapsed ? item.label : undefined}
                         aria-current={active ? 'page' : undefined}
-                        className={`group relative flex min-h-10 items-center rounded-control text-[13px] font-medium transition-[background-color,color,transform] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-panel ${sidebarCollapsed ? 'mx-auto h-10 w-10 justify-center px-0' : 'gap-2.5 px-2.5'} ${active ? 'bg-accent/14 text-fg' : 'text-muted hover:bg-panel-hover hover:text-fg'}`}
+                        className={`group relative flex min-h-10 items-center rounded-control text-[13px] font-medium transition-[background-color,color,transform] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-panel ${sidebarCollapsed ? 'mx-auto h-10 w-10 justify-center px-0' : 'gap-2.5 px-2.5'} ${active ? 'bg-accent/10 text-accent-text' : 'text-muted hover:bg-panel-hover hover:text-fg'}`}
                       >
                         <Icon size={16} strokeWidth={active ? 2.1 : 1.8} className={`shrink-0 transition-colors duration-150 ${active ? 'text-accent-text' : 'text-muted group-hover:text-fg'}`} />
                         {!sidebarCollapsed && <span className="min-w-0 truncate">{item.label}</span>}
@@ -344,18 +355,50 @@ export const AdminLayout: React.FC = () => {
           </div>
         </div>
         <div className="shrink-0 border-t border-line bg-panel px-2 pb-2 pt-2">
-          {settingsAllowed && (
-            <Link
-              to="/admin/settings"
-              title="Settings"
-              aria-label="Open settings"
-              aria-current={location.pathname.startsWith('/admin/settings') ? 'page' : undefined}
-              className={`group relative mb-1 flex min-h-10 items-center rounded-control text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${sidebarCollapsed ? 'mx-auto h-10 w-10 justify-center px-0' : 'gap-2.5 px-2.5'} ${location.pathname.startsWith('/admin/settings') ? 'bg-accent/14 text-fg' : 'text-muted hover:bg-panel-hover hover:text-fg'}`}
+          <button
+            type="button"
+            onClick={() => setProfileSettingsOpen(true)}
+            title={sidebarCollapsed ? profileName : undefined}
+            aria-label="Open profile settings"
+            className={`group mb-1.5 flex min-h-10 items-center rounded-control text-left transition-colors hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${sidebarCollapsed ? 'mx-auto h-10 w-10 justify-center px-0' : 'w-full gap-2.5 px-2'}`}
+          >
+            <UserAvatar name={profileName} imageUrl={profileAvatarUrl} size="sm" online />
+            {!sidebarCollapsed && (
+              <>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-xs font-semibold text-fg">{profileName}</div>
+                  <div className="mt-0.5 truncate text-[10px] text-muted">{profileTitle}</div>
+                </div>
+                <ChevronRight size={14} className="shrink-0 text-muted group-hover:text-fg" aria-hidden="true" />
+              </>
+            )}
+          </button>
+
+          <div className={`flex gap-1.5 ${sidebarCollapsed ? 'flex-col items-center' : 'items-center'}`}>
+            {settingsAllowed && (
+              <Link
+                to="/admin/settings"
+                title="Settings"
+                aria-label="Open settings"
+                aria-current={location.pathname.startsWith('/admin/settings') ? 'page' : undefined}
+                className={`group flex min-h-10 items-center justify-center rounded-control text-[12px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${sidebarCollapsed ? 'h-10 w-10 px-0' : 'flex-1 gap-2 px-2.5'} ${location.pathname.startsWith('/admin/settings') ? 'bg-accent/10 text-accent-text' : 'border border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg'}`}
+              >
+                <Settings size={16} strokeWidth={location.pathname.startsWith('/admin/settings') ? 2.1 : 1.8} />
+                {!sidebarCollapsed && <span>Settings</span>}
+              </Link>
+            )}
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleLogout}
+              aria-label="Sign out"
+              title="Sign out"
+              icon={<LogOut size={14} strokeWidth={1.9} />}
+              className={`${sidebarCollapsed ? 'h-10 w-10 p-0' : 'min-h-10 flex-1 px-2.5'}`}
             >
-              <Settings size={16} strokeWidth={location.pathname.startsWith('/admin/settings') ? 2.1 : 1.8} className={`shrink-0 ${location.pathname.startsWith('/admin/settings') ? 'text-accent-text' : 'text-muted group-hover:text-fg'}`} />
-              {!sidebarCollapsed && <span>Settings</span>}
-            </Link>
-          )}
+              {!sidebarCollapsed && 'Sign out'}
+            </Button>
+          </div>
         </div>
       </motion.aside>
 
@@ -391,7 +434,7 @@ export const AdminLayout: React.FC = () => {
         open={profileSettingsOpen}
         onClose={() => setProfileSettingsOpen(false)}
         displayName={profileName}
-        title={DEFAULT_PROFILE_TITLE}
+        title={profileTitle}
       />
 
       {/* ------------------------------------------------------------- */}
@@ -507,11 +550,10 @@ export const AdminLayout: React.FC = () => {
                         aria-current={active ? 'page' : undefined}
                         className={`relative flex min-h-10 items-center justify-between rounded-control px-3 py-2.5 text-xs font-sans transition-[background-color,color,transform] duration-150 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-panel ${
                           active
-                            ? 'bg-accent/15 font-semibold text-fg'
+                            ? 'bg-accent/10 font-semibold text-accent-text'
                             : 'text-muted hover:bg-panel-hover hover:text-fg'
                         }`}
                       >
-                        {active && <span aria-hidden="true" className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-accent" />}
                         <div className="flex min-w-0 items-center gap-3">
                           <Icon size={17} className={active ? 'text-accent-text shrink-0' : 'text-muted shrink-0'} />
                           <span className="truncate">{item.label}</span>
@@ -597,23 +639,14 @@ export const AdminLayout: React.FC = () => {
         {/* Sticky desktop top bar */}
         <header className="hidden min-[900px]:flex h-[52px] min-h-[52px] border-b border-line bg-panel sticky top-0 z-30 items-center shrink-0" aria-label="AMS top bar">
           <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-5 lg:px-6 flex items-center justify-between gap-4">
-            <div className="min-w-0 flex items-center gap-2.5">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => setSidebarCollapsed(v => !v)}
-                aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                icon={sidebarCollapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
-                className="h-9 w-9 shrink-0 p-0"
-              />
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-[12px] font-medium text-muted">{activeSectionLabel}</span>
-                  <span className="text-[11px] text-muted">/</span>
-                  <span className="truncate text-[13px] font-semibold text-fg">{activeItemLabel}</span>
-                </div>
-              </div>
+            <div className="min-w-0 flex-1">
+              <nav aria-label="Breadcrumb">
+                <ol className="flex min-w-0 items-center gap-2 text-xs">
+                  <li className="shrink-0 font-medium text-muted">{activeSectionLabel}</li>
+                  <li aria-hidden="true" className="shrink-0 text-muted/60">/</li>
+                  <li aria-current="page" className="min-w-0 truncate font-semibold text-fg">{activeItemLabel}</li>
+                </ol>
+              </nav>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
               <Button
@@ -646,34 +679,6 @@ export const AdminLayout: React.FC = () => {
                 className="h-10 w-10 p-0"
               />
               <AdminNotificationCenter />
-              <button
-                type="button"
-                onClick={() => setProfileSettingsOpen(true)}
-                aria-label="Open profile settings"
-                title="Profile settings"
-                className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted transition-colors hover:border-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              >
-                <UserAvatar name={profileName} imageUrl={profileAvatarUrl} size="sm" />
-              </button>
-              {settingsAllowed && (
-                <Link
-                  to="/admin/settings"
-                  aria-label="Open settings"
-                  title="Settings"
-                  className={`flex h-10 w-10 items-center justify-center rounded-control border border-line transition-colors hover:border-accent/40 hover:bg-accent/8 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${location.pathname.startsWith('/admin/settings') ? 'bg-accent/10 text-accent-text' : 'bg-panel text-muted'}`}
-                >
-                  <Settings size={16} />
-                </Link>
-              )}
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={handleLogout}
-                aria-label="Sign out"
-                title="Sign out"
-                icon={<LogOut size={14} strokeWidth={1.9} />}
-                className="h-10 w-10 shrink-0 p-0"
-              />
             </div>
           </div>
         </header>
