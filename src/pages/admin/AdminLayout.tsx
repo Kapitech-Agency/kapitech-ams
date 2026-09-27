@@ -169,7 +169,7 @@ export const AdminLayout: React.FC = () => {
     { key: 'dashboard', to: '/admin/dashboard', label: 'Dashboard', icon: Home },
     { key: 'clients', to: '/admin/clients', label: 'Clients', icon: UsersRound },
     { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, badge: 14 },
-    { key: 'tasks', to: '/admin/dashboard?view=performance', label: 'Tasks', icon: ClipboardCheck, badge: 3, accessKey: 'projects' },
+    { key: 'tasks', to: '/admin/dashboard?view=tasks', label: 'Tasks', icon: ClipboardCheck, badge: 3, accessKey: 'projects' },
     { key: 'team', to: '/admin/time-logs', label: 'Team', icon: UsersRound, accessKey: 'timelogs' },
     { key: 'finance', to: '/admin/invoicing', label: 'Finance', icon: Landmark, accessKey: 'invoicing' },
     { key: 'documents', to: '/admin/documents', label: 'Documents Vault', icon: LockKeyhole, badge: 'Encrypted' },
