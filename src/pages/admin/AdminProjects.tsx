@@ -31,6 +31,7 @@ import { api } from '../../lib/apiClient';
 import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
 import { formatAmount, getActiveCurrency, CURRENCY_EVENT, CurrencyCode } from '../../lib/currency';
 
+import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 type ProjectHealth = 'Good' | 'At Risk' | 'Delayed' | 'Blocked';
 type ProjectRecord = AgencyProject & { health?: ProjectHealth; title?: string; client?: string };
 type SortKey = 'name' | 'deadline' | 'progress' | 'updated';
@@ -591,18 +592,16 @@ export const AdminProjects: React.FC = () => {
       >
       </Modal>
 
-      <header className="ams-dashboard-header mb-6 flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold leading-8 tracking-[-0.02em] text-fg">Projects &amp; Tasks</h1>
-          <p className="mt-1 max-w-2xl text-xs leading-5 text-muted">
-            {language === 'id' ? 'Pantau delivery proyek, pekerjaan terbuka, deadline, dan tanggung jawab tim.' : 'Track delivery, outstanding work, deadlines, and team ownership from one workspace.'}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-          {canManageKanbanTasks && <Button variant="secondary" icon={<ListTodo size={14} />} onClick={openNewTask}>New Task</Button>}
-          {canManageProjects && <Button icon={<Plus size={14} />} onClick={() => resetProjectForm()}>New Project</Button>}
-        </div>
-      </header>
+      <AdminModuleHeader
+        title="Projects & Tasks"
+        description={language === 'id' ? 'Pantau delivery proyek, pekerjaan terbuka, deadline, dan tanggung jawab tim.' : 'Track delivery, outstanding work, deadlines, and team ownership from one workspace.'}
+        actions={(
+          <>
+            {canManageKanbanTasks && <Button variant="secondary" icon={<ListTodo size={14} />} onClick={openNewTask}>New Task</Button>}
+            {canManageProjects && <Button icon={<Plus size={14} />} onClick={() => resetProjectForm()}>New Project</Button>}
+          </>
+        )}
+      />
 
       {toast && (
         <div role="status" className="fixed bottom-4 left-1/2 z-[70] -translate-x-1/2 rounded-control border border-line bg-panel px-4 py-3 text-xs text-fg">
@@ -625,22 +624,14 @@ export const AdminProjects: React.FC = () => {
 
       <section aria-label="Project operations summary" className="rounded-card border border-line bg-panel p-4 sm:p-5">
         <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3"><div><h2 className="text-sm font-semibold text-fg">Delivery snapshot</h2><p className="mt-1 text-xs text-muted">Project health and delivery workload across the workspace.</p></div><span className="text-[11px] font-medium tabular-nums text-muted">{projectMetrics.total} projects</span></div>
-        <div className="grid grid-cols-2 sm:grid-cols-4">
-        {[
-          { label: 'Projects', value: projectMetrics.total, icon: Briefcase, tone: 'text-fg' },
-          { label: 'Active', value: projectMetrics.active, icon: Clock, tone: 'text-success' },
-          { label: 'At risk', value: projectMetrics.atRisk, icon: ShieldAlert, tone: 'text-warning' },
-          { label: 'Overdue tasks', value: projectMetrics.overdueTasks, icon: AlertCircle, tone: 'text-danger' },
-        ].map((item, index) => (
-          <div key={item.label} className={'min-w-0 px-4 py-3 ' + (index > 0 ? 'border-l border-line' : '')}>
-            <div className="flex items-center gap-2">
-              <item.icon size={14} className="shrink-0 text-muted" />
-              <span className="ams-meta">{item.label}</span>
-            </div>
-            <div className={'ams-kpi-value mt-2 ' + item.tone}>{item.value}</div>
-          </div>
-        ))}
-        </div>
+        <AdminMetricStrip
+          metrics={[
+            { id: 'projects', label: 'Projects', value: projectMetrics.total, context: 'All projects', icon: <Briefcase size={16} strokeWidth={1.8} /> },
+            { id: 'active', label: 'Active', value: projectMetrics.active, context: 'In delivery', icon: <Clock size={16} strokeWidth={1.8} />, toneClassName: 'text-success' },
+            { id: 'risk', label: 'At risk', value: projectMetrics.atRisk, context: 'Needs attention', icon: <ShieldAlert size={16} strokeWidth={1.8} />, toneClassName: 'text-warning' },
+            { id: 'overdue', label: 'Overdue tasks', value: projectMetrics.overdueTasks, context: 'Past due', icon: <AlertCircle size={16} strokeWidth={1.8} />, toneClassName: 'text-danger' }
+          ]}
+        />
       </section>
 
       {(projectMetrics.overdueTasks > 0 || projectMetrics.dueToday > 0) && (
