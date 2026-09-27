@@ -153,6 +153,7 @@ export const AdminInvoicing: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<{ tone: 'success' | 'danger'; message: string } | null>(null);
+  const noticeTimerRef = React.useRef<number | null>(null);
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -214,10 +215,30 @@ export const AdminInvoicing: React.FC = () => {
   const [paymentDirty, setPaymentDirty] = useState(false);
   const loadRequestId = React.useRef(0);
 
-  const showNotice = (tone: 'success' | 'danger', message: string) => {
-    setNotice({ tone, message });
-    window.setTimeout(() => setNotice((current) => current?.message === message ? null : current), 3500);
+  const dismissNotice = () => {
+    if (noticeTimerRef.current !== null) {
+      window.clearTimeout(noticeTimerRef.current);
+      noticeTimerRef.current = null;
+    }
+    setNotice(null);
   };
+
+  const showNotice = (tone: 'success' | 'danger', message: string) => {
+    if (noticeTimerRef.current !== null) {
+      window.clearTimeout(noticeTimerRef.current);
+    }
+    setNotice({ tone, message });
+    noticeTimerRef.current = window.setTimeout(() => {
+      setNotice(null);
+      noticeTimerRef.current = null;
+    }, 3500);
+  };
+
+  useEffect(() => () => {
+    if (noticeTimerRef.current !== null) {
+      window.clearTimeout(noticeTimerRef.current);
+    }
+  }, []);
 
   const loadData = async (silent = false) => {
     const requestId = ++loadRequestId.current;
@@ -925,7 +946,7 @@ export const AdminInvoicing: React.FC = () => {
           <div className={'flex items-start gap-3 rounded-card border px-4 py-3 text-xs ' + (notice.tone === 'success' ? 'border-success/30 bg-panel text-success' : 'border-danger/30 bg-panel text-danger')} role="status">
             <span className="mt-0.5 shrink-0">{notice.tone === 'success' ? <Check size={15} /> : <AlertCircle size={15} />}</span>
             <span className="min-w-0 flex-1 leading-5 text-fg">{notice.message}</span>
-            <button type="button" onClick={() => setNotice(null)} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" aria-label="Dismiss notification" title="Dismiss notification">
+            <button type="button" onClick={dismissNotice} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" aria-label="Dismiss notification" title="Dismiss notification">
               <X size={14} />
             </button>
           </div>
@@ -968,7 +989,7 @@ export const AdminInvoicing: React.FC = () => {
                 { label: language === 'id' ? 'Pendapatan diterima' : 'Revenue collected', value: serverMetrics ? formatNativeAmount(serverMetrics.totalRevenueCollected, currency) : '—', context: serverMetrics ? serverMetrics.paidCount + ' paid invoices' : '—', icon: DollarSign, tone: 'text-accent-text' },
                 { label: language === 'id' ? 'Piutang' : 'Outstanding', value: serverMetrics ? formatNativeAmount(serverMetrics.totalOutstanding, currency) : '—', context: serverMetrics ? serverMetrics.overdueCount + ' overdue' : '—', icon: WalletCards, tone: 'text-warning' },
                 { label: language === 'id' ? 'Pengeluaran' : 'Expenses', value: serverMetrics ? formatNativeAmount(serverMetrics.totalExpense, currency) : '—', context: currencyExpenses.length + ' records', icon: TrendingDown, tone: 'text-series-3' },
-                { label: language === 'id' ? 'Laba operasi' : 'Operating profit', value: serverMetrics ? formatNativeAmount(serverMetrics.netProfit, currency) : '—', context: serverMetrics ? serverMetrics.profitMargin + '% margin' : '—', icon: TrendingUp, tone: 'text-success' },
+                { label: language === 'id' ? 'Laba operasi' : 'Operating profit', value: serverMetrics ? formatNativeAmount(serverMetrics.netProfit, currency) : '—', context: serverMetrics ? serverMetrics.profitMargin + '% margin' : '—', icon: TrendingUp, tone: serverMetrics && serverMetrics.netProfit < 0 ? 'text-danger' : 'text-success' },
                 { label: 'OpEx', value: formatNativeAmount(derivedMetrics.opExExpenses, currency), context: 'Operating expense', icon: CreditCard, tone: 'text-info' },
                 { label: 'CapEx', value: formatNativeAmount(derivedMetrics.capExExpenses, currency), context: 'Capital expense', icon: ArrowUpRight, tone: 'text-muted' }
               ].map((metric) => {
@@ -1000,7 +1021,7 @@ export const AdminInvoicing: React.FC = () => {
                 {[
                   { label: 'Revenue', value: serverMetrics ? formatNativeAmount(serverMetrics.totalRevenueCollected, currency) : '—', tone: 'text-accent-text' },
                   { label: 'Expenses', value: serverMetrics ? formatNativeAmount(serverMetrics.totalExpense, currency) : '—', tone: 'text-series-3' },
-                  { label: 'Operating profit', value: serverMetrics ? formatNativeAmount(serverMetrics.netProfit, currency) : '—', tone: 'text-success' },
+                  { label: 'Operating profit', value: serverMetrics ? formatNativeAmount(serverMetrics.netProfit, currency) : '—', tone: serverMetrics && serverMetrics.netProfit < 0 ? 'text-danger' : 'text-success' },
                   { label: 'Outstanding', value: serverMetrics ? formatNativeAmount(serverMetrics.totalOutstanding, currency) : '—', tone: 'text-warning' }
                 ].map((metric) => (
                   <div key={metric.label} className={'min-w-0 px-4 py-4 sm:px-5 ' + (metric.label === 'Operating profit' ? '' : 'border-l border-line')}>
