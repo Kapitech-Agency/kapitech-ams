@@ -69,17 +69,20 @@ export const TrendChart: React.FC<{
   const primaryPath = points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ');
   const secondaryPath = points.filter((point) => point.secondaryY !== undefined)
     .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.secondaryY}`).join(' ');
+  const tertiaryPath = points.filter((point) => point.tertiaryY !== undefined)
+    .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.tertiaryY}`).join(' ');
 
   if (!data.length) return null;
 
   const active = activeIndex === null ? null : points[activeIndex];
-  const tooltipLeft = active ? (active.x < width / 2 ? 64 : 36) : 50;
+  const tooltipLeft = active ? Math.max(18, Math.min(82, (active.x / width) * 100)) : 50;
 
   return (
     <div className="relative min-w-0" role="img" aria-label={ariaLabel}>
       <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted">
         <span className="inline-flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-accent" />{primaryLabel}</span>
         {secondaryLabel && <span className="inline-flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-series-3" />{secondaryLabel}</span>}
+        {data.some((point) => point.tertiary !== undefined) && <span className="inline-flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-success" />Net</span>}
       </div>
       <div className="relative overflow-hidden rounded-control border border-line bg-bg/40">
         <svg viewBox={`0 0 ${width} ${height}`} className="block h-[220px] w-full touch-none" preserveAspectRatio="none"
@@ -98,6 +101,9 @@ export const TrendChart: React.FC<{
           {secondaryLabel && secondaryPath && (
             <path d={secondaryPath} fill="none" stroke="var(--series-3)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           )}
+          {tertiaryPath && (
+            <path d={tertiaryPath} fill="none" stroke="var(--success)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="5 4" />
+          )}
           {points.map((point, index) => (
             <g key={point.label}>
               <rect
@@ -108,11 +114,13 @@ export const TrendChart: React.FC<{
                 fill="transparent"
                 onMouseEnter={() => setActiveIndex(index)}
                 onFocus={() => setActiveIndex(index)}
+                onPointerDown={() => setActiveIndex(index)}
                 tabIndex={0}
                 aria-label={`${point.label}: ${primaryLabel} ${primaryFormat(point.primary)}${point.secondary !== undefined ? `, ${secondaryLabel} ${primaryFormat(point.secondary)}` : ''}`}
               />
               <circle cx={point.x} cy={point.y} r={activeIndex === index ? 4.5 : 2.5} fill="var(--series-1)" />
               {point.secondaryY !== undefined && <circle cx={point.x} cy={point.secondaryY} r={activeIndex === index ? 4 : 2} fill="var(--series-3)" />}
+              {point.tertiaryY !== undefined && <circle cx={point.x} cy={point.tertiaryY} r={activeIndex === index ? 4 : 2} fill="var(--success)" />}
               <text x={point.x} y={height - 15} textAnchor="middle" fontSize="10" fill="var(--muted)">{point.label}</text>
             </g>
           ))}
