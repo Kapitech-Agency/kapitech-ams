@@ -89,6 +89,65 @@ const progressClasses = {
 const formatMoney = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
 
 
+const TasksView: React.FC = () => (
+  <div className="space-y-3">
+    <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {[
+        ['Open tasks', '31', '18 due this week'],
+        ['High priority', '6', '3 overdue'],
+        ['Completed this week', '24', '+8 vs previous week'],
+        ['Blocked', '3', 'Across 2 projects'],
+      ].map(([label, value, context]) => (
+        <article key={label} className="rounded-card border border-line bg-panel p-4">
+          <div className="text-xs text-muted">{label}</div>
+          <div className="mt-3 text-2xl font-medium tabular-nums text-fg">{value}</div>
+          <div className="mt-1 text-[11px] text-muted">{context}</div>
+        </article>
+      ))}
+    </section>
+
+    <AdminPanel title="Tasks this week" description="Sample task queue prepared from the Stitch dashboard workload model." bodyClassName="p-0">
+      <div className="overflow-x-auto custom-scrollbar">
+        <table className="w-full min-w-[760px] border-collapse text-left">
+          <thead>
+            <tr>
+              <th className="px-4 py-3 text-xs font-medium text-muted">Task</th>
+              <th className="px-3 py-3 text-xs font-medium text-muted">Project</th>
+              <th className="px-3 py-3 text-xs font-medium text-muted">Assignee</th>
+              <th className="px-3 py-3 text-xs font-medium text-muted">Due</th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-muted">Priority</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              ['Approve homepage copy', 'Atlas Brand System', 'Fikri', 'Today', 'High'],
+              ['Finalize checkout UI', 'Meridian Commerce', 'Sarah', 'Tomorrow', 'High'],
+              ['QA campaign landing page', 'Nova Growth Retainer', 'Dimas', 'Wed', 'Medium'],
+              ['Resolve API handoff', 'Orbit Product Launch', 'Raka', 'Overdue', 'Urgent'],
+              ['Prepare client presentation', 'Northstar Campaign', 'Nadia', 'Thu', 'Medium'],
+              ['Review analytics dashboard', 'Atlas Brand System', 'Fikri', 'Fri', 'Low'],
+            ].map(([task, project, assignee, due, priority]) => (
+              <tr key={task} className="border-t border-line hover:bg-panel-hover">
+                <td className="px-4 py-3 text-xs font-medium text-fg">{task}</td>
+                <td className="px-3 py-3 text-xs text-muted">{project}</td>
+                <td className="px-3 py-3 text-xs text-muted">{assignee}</td>
+                <td className="px-3 py-3 text-xs text-muted">{due}</td>
+                <td className="px-4 py-3 text-right">
+                  <span className={`inline-flex rounded-badge border px-2 py-1 text-[11px] font-medium ${
+                    priority === 'Urgent' ? toneClasses.danger : priority === 'High' ? toneClasses.warning : priority === 'Medium' ? toneClasses.info : toneClasses.success
+                  }`}>
+                    {priority}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </AdminPanel>
+  </div>
+);
+
 const PerformanceView: React.FC = () => {
   const completion = 76;
   const totalTasks = 84;
@@ -567,6 +626,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         </>
       ) : view === 'performance' ? (
         <PerformanceView />
+      ) : view === 'tasks' ? (
+        <TasksView />
       ) : (
         <AnalyticsView />
       )}
