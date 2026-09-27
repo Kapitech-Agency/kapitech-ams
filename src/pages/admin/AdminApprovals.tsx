@@ -375,7 +375,7 @@ export const AdminApprovals: React.FC = () => {
                           setActiveItem(item);
                           setDecisionAction('Approve');
                         }}
-                        className="px-3 py-1 rounded-control bg-success/10 hover:bg-success/20 text-success border border-success/30 text-xs font-sans font-semibold flex items-center gap-1 transition-colors"
+                        className="min-h-10 sm:min-h-9 px-3 py-1 rounded-control bg-success/10 hover:bg-success/20 text-success border border-success/30 text-xs font-sans font-semibold flex items-center gap-1 transition-colors"
                       >
                         <Check size={12} />
                         <span>Approve</span>
@@ -385,7 +385,7 @@ export const AdminApprovals: React.FC = () => {
                           setActiveItem(item);
                           setDecisionAction('Reject');
                         }}
-                        className="px-3 py-1 rounded-control bg-danger/10 hover:bg-danger/15 text-danger border border-danger/30 text-xs font-sans font-semibold flex items-center gap-1 transition-colors"
+                        className="min-h-10 sm:min-h-9 px-3 py-1 rounded-control bg-danger/10 hover:bg-danger/15 text-danger border border-danger/30 text-xs font-sans font-semibold flex items-center gap-1 transition-colors"
                       >
                         <X size={12} />
                         <span>Reject</span>
