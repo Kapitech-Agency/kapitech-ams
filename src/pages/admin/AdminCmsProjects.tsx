@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { api } from '../../lib/apiClient';
 import { Modal } from '../../components/ui/Modal';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { ProjectItem } from '../../data/projectsData';
 import { useLanguage } from '../../lib/LanguageContext';
 import { useDragToScroll } from '../../lib/useDragToScroll';
@@ -238,9 +239,14 @@ export const AdminCmsProjects: React.FC = () => {
 
   return (
     <div className="space-y-6">
-        <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} size="sm" title="Delete case study?" description={deleteTarget ? `Case study "${deleteTarget.title}" will be permanently removed.` : undefined}>
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2"><button type="button" onClick={() => setDeleteTarget(null)} className="min-h-10 px-4 rounded-control border border-line bg-panel text-xs text-muted">Cancel</button><button type="button" onClick={() => void confirmDeleteProject()} className="min-h-10 px-4 rounded-control bg-danger text-white text-xs font-semibold">Delete</button></div>
-        </Modal>
+        <ConfirmDialog
+          open={!!deleteTarget}
+          onClose={() => setDeleteTarget(null)}
+          title="Delete case study?"
+          description={deleteTarget ? `Case study "${deleteTarget.title}" will be permanently removed.` : 'This case study will be permanently removed.'}
+          confirmLabel="Delete"
+          onConfirm={() => void confirmDeleteProject()}
+        />
       
       {/* Top Title & Actions */}
       <div className="ams-page-header flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
