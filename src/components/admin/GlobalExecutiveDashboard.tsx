@@ -311,7 +311,7 @@ const PerformanceView: React.FC = () => {
   );
 };
 
-const AnalyticsView: React.FC = () => {
+const AnalyticsView: React.FC<{ range: RangeKey }> = ({ range }) => {
   const revenue = [61000, 68500, 74200, 71800, 80200, 84500];
   const expenses = [42000, 44700, 46300, 49200, 51400, 52200];
   const revenueTotal = revenue.reduce((sum, value) => sum + value, 0);
@@ -337,7 +337,7 @@ const AnalyticsView: React.FC = () => {
       <div className="grid gap-3 min-[1100px]:grid-cols-12">
         <AdminPanel className="min-[1100px]:col-span-8" title="Financial analytics" description="Revenue, expense, and net contribution trend based on Stitch sample inputs." bodyClassName="p-4 sm:p-5">
           <TrendChart
-            data={sampleRevenue}
+            data={sampleRevenueByRange[range]}
             primaryLabel="Revenue"
             secondaryLabel="Expenses"
             tertiaryLabel="Net"
@@ -702,7 +702,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       ) : view === 'tasks' ? (
         <TasksView />
       ) : (
-        <AnalyticsView />
+        <AnalyticsView range={range} />
       )}
       <Modal
         open={Boolean(projectDetails)}
