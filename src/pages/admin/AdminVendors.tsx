@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+// Shared module chrome renders the canonical ams-dashboard-header primitive.
 import {
   Users,
   Plus,
