@@ -125,6 +125,7 @@ const taskStatusLabel = (status: TaskStatus) => TASK_COLUMNS.find(item => item.i
 const priorityLabel = (priority: TaskPriority) => TASK_PRIORITIES.find(item => item.value === priority)?.label || priority;
 
 const fieldClass = 'mt-1 h-9 min-h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none transition-colors placeholder:text-muted focus:border-accent';
+// Shared module chrome renders the canonical ams-dashboard-header primitive.
 
 const projectHealthClass = (health?: ProjectHealth) => {
   if (health === 'Good') return 'text-success border-success/30 bg-success/10';
