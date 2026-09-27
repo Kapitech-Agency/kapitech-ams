@@ -297,7 +297,11 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(exp)
       }),
-    deleteExpense: (id: string) => apiRequest(`/api/finance/expenses/${id}`, { method: 'DELETE' }),
+    deleteExpense: (id: string, version?: number) =>
+      apiRequest(`/api/finance/expenses/${id}`, {
+        method: 'DELETE',
+        body: version == null ? undefined : JSON.stringify({ version })
+      }),
     getMetrics: (currency?: string) => apiRequest<{ success: boolean; metrics: any }>('/api/finance/metrics' + (currency ? `?currency=${encodeURIComponent(currency)}` : ''))
   },
 
