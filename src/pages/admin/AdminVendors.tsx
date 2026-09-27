@@ -35,6 +35,7 @@ import { formatAmount, getActiveCurrency, CurrencyCode, CURRENCY_EVENT } from '.
 import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Modal } from '../../components/ui/Modal';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
 
@@ -836,18 +837,14 @@ export const AdminVendors: React.FC = () => {
               </div>
             </form>
       </Modal>
-      <Modal
+      <ConfirmDialog
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
-        size="sm"
         title={language === 'id' ? 'Hapus vendor?' : 'Delete vendor?'}
         description={language === 'id' ? `Vendor ${deleteTarget?.name || ''} akan dihapus dari direktori.` : `Vendor ${deleteTarget?.name || ''} will be removed from the directory.`}
-      >
-        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
-          <button type="button" onClick={() => setDeleteTarget(null)} className="min-h-10 px-4 rounded-control border border-line bg-panel text-xs text-muted">Cancel</button>
-          <button type="button" onClick={() => deleteTarget && void confirmDeleteVendor(deleteTarget.id)} className="min-h-10 px-4 rounded-control bg-danger text-white text-xs font-semibold">Delete</button>
-        </div>
-      </Modal>
+        confirmLabel={language === 'id' ? 'Hapus' : 'Delete'}
+        onConfirm={() => { if (deleteTarget) void confirmDeleteVendor(deleteTarget.id); }}
+      />
     </div>
   );
 };
