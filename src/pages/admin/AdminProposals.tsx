@@ -22,6 +22,8 @@ import { CurrencyCode, CURRENCY_EVENT, formatAmount, getActiveCurrency } from '.
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Modal } from '../../components/ui/Modal';
+import Button from '../../components/ui/Button';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
 type ProposalStatus = 'draft' | 'review' | 'approved' | 'sent' | 'accepted' | 'rejected';
 type SortOption = 'newest' | 'oldest' | 'amount-high' | 'amount-low' | 'expiry';
@@ -849,11 +851,15 @@ export const AdminProposals: React.FC = () => {
           </section>
 
           <div className="flex flex-col-reverse gap-2 border-t border-line pt-4 sm:flex-row sm:justify-end">
-            <button type="button" onClick={() => setFormOpen(false)} disabled={isSubmitting} className="inline-flex min-h-10 items-center justify-center rounded-control border border-line bg-panel px-4 text-xs font-medium text-muted hover:bg-panel-hover hover:text-fg disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Cancel</button>
-            <button type="submit" disabled={isSubmitting || !canManageCrm} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control bg-accent px-4 text-xs font-semibold text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-              {isSubmitting ? <Loader2 size={14} className="animate-spin" aria-hidden="true" /> : <CheckCircle2 size={14} aria-hidden="true" />}
+            <Button type="button" variant="secondary" onClick={() => setFormOpen(false)} disabled={isSubmitting}>Cancel</Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting || !canManageCrm}
+              loading={isSubmitting}
+              icon={<CheckCircle2 size={14} />}
+            >
               {editingProposal ? 'Save changes' : 'Create proposal'}
-            </button>
+            </Button>
           </div>
         </form>
       </Modal>
@@ -917,8 +923,12 @@ export const AdminProposals: React.FC = () => {
             <div className="flex flex-col gap-2 border-t border-line pt-4 sm:flex-row sm:items-center sm:justify-between">
               <button type="button" onClick={() => window.print()} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><Download size={14} aria-hidden="true" />Print / Export</button>
               <div className="flex flex-wrap justify-end gap-2">
-                {detailProposal.status !== 'accepted' && canManageCrm && <button type="button" onClick={() => { setDetailProposal(null); openEdit(detailProposal); }} className="inline-flex min-h-10 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><FileText size={14} aria-hidden="true" />Edit</button>}
-                {detailProposal.status === 'approved' && canManageInvoices && <button type="button" onClick={() => openConvert(detailProposal)} className="inline-flex min-h-10 items-center gap-1.5 rounded-control bg-accent px-3 text-xs font-semibold text-white hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><CheckCircle2 size={14} aria-hidden="true" />Convert to invoice</button>}
+                {detailProposal.status !== 'accepted' && canManageCrm && (
+                  <Button type="button" variant="secondary" onClick={() => { setDetailProposal(null); openEdit(detailProposal); }} icon={<FileText size={14} />}>Edit</Button>
+                )}
+                {detailProposal.status === 'approved' && canManageInvoices && (
+                  <Button type="button" onClick={() => openConvert(detailProposal)} icon={<CheckCircle2 size={14} />}>Convert to invoice</Button>
+                )}
               </div>
             </div>
 
@@ -945,10 +955,14 @@ export const AdminProposals: React.FC = () => {
           : (language === 'id' ? 'Tindakan ini menjalankan workflow invoice untuk proposal yang diterima.' : 'This runs the invoice workflow for the accepted proposal.')}
       >
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <button type="button" onClick={() => setConfirmAction(null)} className="min-h-10 rounded-control border border-line bg-panel px-4 text-xs font-medium text-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Cancel</button>
-          <button type="button" onClick={() => confirmAction?.type === 'delete' ? void confirmDelete() : void confirmConvert()} className={'min-h-10 rounded-control px-4 text-xs font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ' + (confirmAction?.type === 'delete' ? 'bg-danger' : 'bg-accent')}>
+          <Button type="button" variant="secondary" onClick={() => setConfirmAction(null)}>Cancel</Button>
+          <Button
+            type="button"
+            variant={confirmAction?.type === 'delete' ? 'destructive' : 'primary'}
+            onClick={() => confirmAction?.type === 'delete' ? void confirmDelete() : void confirmConvert()}
+          >
             {confirmAction?.type === 'delete' ? 'Delete' : 'Convert to invoice'}
-          </button>
+          </Button>
         </div>
       </Modal>
     </div>
