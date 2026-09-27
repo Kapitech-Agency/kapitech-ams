@@ -39,14 +39,29 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [status, setStatus] = useState<{ success: boolean; message: string } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [initialDraft, setInitialDraft] = useState({
+    name: displayName,
+    bio: '',
+    personalEmail: '',
+    additionalPhone: '',
+    avatarUrl: null as string | null
+  });
 
   useEffect(() => {
     if (!open) return;
-    setName(String((user as any)?.profileDisplayName || displayName));
-    setBio(String((user as any)?.bio || ''));
-    setPersonalEmail(String((user as any)?.personalEmail || ''));
-    setAdditionalPhone(String((user as any)?.additionalPhone || ''));
-    setAvatarUrl((user as any)?.avatarUrl || null);
+    const nextDraft = {
+      name: String((user as any)?.profileDisplayName || displayName),
+      bio: String((user as any)?.bio || ''),
+      personalEmail: String((user as any)?.personalEmail || ''),
+      additionalPhone: String((user as any)?.additionalPhone || ''),
+      avatarUrl: (user as any)?.avatarUrl || null
+    };
+    setName(nextDraft.name);
+    setBio(nextDraft.bio);
+    setPersonalEmail(nextDraft.personalEmail);
+    setAdditionalPhone(nextDraft.additionalPhone);
+    setAvatarUrl(nextDraft.avatarUrl);
+    setInitialDraft(nextDraft);
     setPhotoError(null);
     setStatus(null);
   }, [open, displayName, user?.id]);
@@ -55,6 +70,14 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
   const primaryPhone = String((user as any)?.phone || '');
 
   const initialsPreview = useMemo(() => avatarUrl || undefined, [avatarUrl]);
+  const currentDraft = useMemo(() => ({
+    name,
+    bio,
+    personalEmail,
+    additionalPhone,
+    avatarUrl
+  }), [name, bio, personalEmail, additionalPhone, avatarUrl]);
+  const isDirty = JSON.stringify(currentDraft) !== JSON.stringify(initialDraft);
 
   const handlePhotoChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -80,7 +103,7 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
   };
 
   const handleSave = async () => {
-    if (!user?.id) return;
+    if (!user?.id || !isDirty || saving) return;
 
     setSaving(true);
     setStatus(null);
@@ -122,6 +145,13 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
         }));
       }
 
+      setInitialDraft({
+        name: payload.name,
+        bio: payload.bio,
+        personalEmail: payload.personalEmail,
+        additionalPhone: payload.additionalPhone,
+        avatarUrl: payload.avatarUrl
+      });
       setStatus({
         success: true,
         message: 'Profile settings saved.'
@@ -140,9 +170,10 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
     <Modal
       open={open}
       onClose={onClose}
-      size="lg"
+      closeOnOutsideClick={!isDirty && !saving}
+      size="xl"
       title="Profile settings"
-      description="Manage your visible identity and personal contact details."
+      description={isDirty ? 'You have unsaved profile changes. Save them before leaving this state.' : 'Manage your visible identity and personal contact details.'}
       footer={(
         <>
           <Button type="button" variant="secondary" onClick={onClose}>
@@ -152,6 +183,7 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
             type="button"
             variant="primary"
             loading={saving}
+            disabled={!isDirty}
             icon={<Save size={14} />}
             onClick={() => void handleSave()}
           >
@@ -160,20 +192,25 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
         </>
       )}
     >
-      <div className="space-y-5">
-        <div className="flex flex-col gap-4 rounded-card border border-line bg-bg p-4 sm:flex-row sm:items-center">
-          <UserAvatar name={name} imageUrl={initialsPreview} size="lg" online />
-          <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold text-fg">{name}</div>
-            <div className="mt-0.5 text-xs text-muted">{title}</div>
-            <label className="mt-3 inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:border-muted hover:bg-panel-hover hover:text-fg">
-              <Camera size={14} />
-              Change photo
-              <input type="file" accept="image/*" className="sr-only" onChange={handlePhotoChange} />
-            </label>
-            {photoError && <p className="mt-2 text-[11px] text-danger">{photoError}</p>}
+      <div className="space-y-4">
+        <section className="rounded-card border border-line bg-bg p-4 sm:p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <UserAvatar name={name} imageUrl={initialsPreview} size="lg" online />
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <div className="text-sm font-semibold text-fg">{name || 'Your name'}</div>
+                <span className="rounded-badge border border-accent/20 bg-accent/8 px-1.5 py-0.5 text-[10px] font-semibold text-accent-text">AMS profile</span>
+              </div>
+              <div className="mt-1 text-xs text-muted">{title}</div>
+              <label className="mt-3 inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:border-muted hover:bg-panel-hover hover:text-fg">
+                <Camera size={14} />
+                Change photo
+                <input type="file" accept="image/*" className="sr-only" onChange={handlePhotoChange} />
+              </label>
+              {photoError && <p className="mt-2 text-[11px] text-danger">{photoError}</p>}
+            </div>
           </div>
-        </div>
+        </section>
 
         {status && (
           <div className={status.success
@@ -183,22 +220,84 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
           </div>
         )}
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="space-y-1.5">
-            <span className="text-xs font-medium text-muted">Full name</span>
-            <input value={name} onChange={(event) => setName(event.target.value)} />
-          </label>
-
-          <div className="space-y-1.5">
-            <span className="text-xs font-medium text-muted">Role</span>
-            <div className="flex min-h-9 items-center rounded-control border border-line bg-bg px-3 text-[13px] text-fg">
-              {title}
-            </div>
+        {isDirty && (
+          <div className="rounded-control border border-accent/20 bg-accent/6 px-3.5 py-2.5 text-xs text-muted">
+            Unsaved changes are protected from accidental backdrop clicks. Use Save changes or Cancel to leave the dialog.
           </div>
+        )}
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <section className="rounded-card border border-line bg-panel p-4">
+            <div className="mb-4 border-b border-line pb-3">
+              <h3 className="text-xs font-semibold text-fg">Identity</h3>
+              <p className="mt-1 text-[10px] leading-4 text-muted">Visible profile information used across the AMS shell.</p>
+            </div>
+
+            <div className="space-y-4">
+              <label className="block space-y-1.5">
+                <span className="text-xs font-medium text-muted">Full name</span>
+                <input value={name} onChange={(event) => setName(event.target.value)} />
+              </label>
+
+              <div className="space-y-1.5">
+                <span className="text-xs font-medium text-muted">Role</span>
+                <div className="flex min-h-9 items-center rounded-control border border-line bg-bg px-3 text-[13px] text-fg">
+                  {title}
+                </div>
+                <p className="text-[10px] text-muted">Assigned by AMS access policy.</p>
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-card border border-line bg-panel p-4">
+            <div className="mb-4 border-b border-line pb-3">
+              <h3 className="text-xs font-semibold text-fg">Contact details</h3>
+              <p className="mt-1 text-[10px] leading-4 text-muted">Separate company-managed and personal contact information.</p>
+            </div>
+
+            <div className="space-y-4">
+              <label className="block space-y-1.5">
+                <span className="flex items-center gap-1.5 text-xs font-medium text-muted"><Mail size={13} />Company email</span>
+                <input value={companyEmail} readOnly aria-readonly="true" />
+                <span className="text-[10px] leading-4 text-muted">Managed by Kapitech and cannot be changed here.</span>
+              </label>
+
+              <label className="block space-y-1.5">
+                <span className="flex items-center gap-1.5 text-xs font-medium text-muted"><Mail size={13} />Personal email</span>
+                <input
+                  value={personalEmail}
+                  onChange={(event) => setPersonalEmail(event.target.value)}
+                  type="email"
+                  placeholder="name@example.com"
+                />
+                <span className="text-[10px] leading-4 text-muted">Optional personal contact address.</span>
+              </label>
+
+              <label className="block space-y-1.5">
+                <span className="flex items-center gap-1.5 text-xs font-medium text-muted"><Phone size={13} />Primary phone</span>
+                <input value={primaryPhone} readOnly aria-readonly="true" placeholder="Managed by company" />
+                <span className="text-[10px] leading-4 text-muted">Company-managed number cannot be changed here.</span>
+              </label>
+
+              <label className="block space-y-1.5">
+                <span className="flex items-center gap-1.5 text-xs font-medium text-muted"><Phone size={13} />Additional phone</span>
+                <input
+                  value={additionalPhone}
+                  onChange={(event) => setAdditionalPhone(event.target.value)}
+                  inputMode="tel"
+                  placeholder="+62 ..."
+                />
+                <span className="text-[10px] leading-4 text-muted">Optional additional contact number.</span>
+              </label>
+            </div>
+          </section>
         </div>
 
-        <label className="block space-y-1.5">
-          <span className="text-xs font-medium text-muted">Bio</span>
+        <section className="rounded-card border border-line bg-panel p-4">
+          <div className="mb-4 border-b border-line pb-3">
+            <h3 className="text-xs font-semibold text-fg">Professional bio</h3>
+            <p className="mt-1 text-[10px] leading-4 text-muted">A short description shown wherever your AMS profile is presented.</p>
+          </div>
           <textarea
             rows={4}
             value={bio}
@@ -206,43 +305,7 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
             placeholder="Add a short professional bio."
             className="w-full resize-y"
           />
-        </label>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="space-y-1.5">
-            <span className="flex items-center gap-1.5 text-xs font-medium text-muted"><Mail size={13} />Company email</span>
-            <input value={companyEmail} readOnly aria-readonly="true" />
-            <span className="text-[10px] text-muted">Managed by Kapitech and cannot be changed here.</span>
-          </label>
-
-          <label className="space-y-1.5">
-            <span className="flex items-center gap-1.5 text-xs font-medium text-muted"><Mail size={13} />Personal email</span>
-            <input
-              value={personalEmail}
-              onChange={(event) => setPersonalEmail(event.target.value)}
-              type="email"
-              placeholder="name@example.com"
-            />
-            <span className="text-[10px] text-muted">Optional personal contact address.</span>
-          </label>
-
-          <label className="space-y-1.5">
-            <span className="flex items-center gap-1.5 text-xs font-medium text-muted"><Phone size={13} />Primary phone</span>
-            <input value={primaryPhone} readOnly aria-readonly="true" placeholder="Managed by company" />
-            <span className="text-[10px] text-muted">Company-managed number cannot be changed here.</span>
-          </label>
-
-          <label className="space-y-1.5">
-            <span className="flex items-center gap-1.5 text-xs font-medium text-muted"><Phone size={13} />Additional phone</span>
-            <input
-              value={additionalPhone}
-              onChange={(event) => setAdditionalPhone(event.target.value)}
-              inputMode="tel"
-              placeholder="+62 ..."
-            />
-            <span className="text-[10px] text-muted">Optional additional contact number.</span>
-          </label>
-        </div>
+        </section>
 
         <div className="flex items-start gap-2.5 rounded-control border border-line bg-bg p-3 text-[11px] text-muted">
           <UserRound size={14} className="mt-0.5 shrink-0 text-accent-text" />
