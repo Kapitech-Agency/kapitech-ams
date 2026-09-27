@@ -67,6 +67,7 @@ export const InvoiceStatusDropdown: React.FC<InvoiceStatusDropdownProps> = ({
   const selectableStatuses = allowedStatuses?.length
     ? statuses.filter((item) => allowedStatuses.includes(item))
     : statuses;
+  const interactionDisabled = disabled || selectableStatuses.length === 0 || (selectableStatuses.length === 1 && selectableStatuses[0] === status);
   const current = statusConfigs[status] || statusConfigs.draft;
   const CurrentIcon = current.icon;
 
@@ -79,14 +80,14 @@ export const InvoiceStatusDropdown: React.FC<InvoiceStatusDropdownProps> = ({
     <div className="relative inline-block text-left">
       <button
         type="button"
-        disabled={disabled || selectableStatuses.length === 0 || (selectableStatuses.length === 1 && selectableStatuses[0] === status)}
+        disabled={interactionDisabled}
         onClick={() => {
           if (disabled || selectableStatuses.length === 0) return;
           setActiveIndex(Math.max(0, selectableStatuses.indexOf(status)));
           setIsOpen((open) => !open);
         }}
         onKeyDown={(e) => {
-          if (disabled) return;
+          if (interactionDisabled) return;
 
           if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
             e.preventDefault();
@@ -137,7 +138,7 @@ export const InvoiceStatusDropdown: React.FC<InvoiceStatusDropdownProps> = ({
           size === 'sm' ? 'min-h-10 sm:min-h-7 px-2.5 py-1 text-[11px]' : 'min-h-10 sm:min-h-8 px-3 py-1.5 text-xs'
         } ${current.badgeClass} ${
           isOpen ? 'outline outline-2 outline-accent outline-offset-2' : ''
-        } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+        } ${interactionDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
       >
         <span className="flex items-center gap-1.5 min-w-0">
           <CurrentIcon size={12} className="shrink-0" />
