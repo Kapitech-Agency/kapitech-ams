@@ -1104,6 +1104,7 @@ export const AdminSettings: React.FC = () => {
                   </label>
                   <input
                     type="password"
+                    required
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="••••••••"
@@ -1117,6 +1118,7 @@ export const AdminSettings: React.FC = () => {
                   </label>
                   <input
                     type="password"
+                    required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
