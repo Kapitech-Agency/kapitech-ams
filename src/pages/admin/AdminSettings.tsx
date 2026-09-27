@@ -46,6 +46,7 @@ import { SiteMetaSettings } from '../../lib/cmsStore';
 import { useLanguage } from '../../lib/LanguageContext';
 import { api } from '../../lib/apiClient';
 import { ProductionReadinessCard } from '../../components/admin/ProductionReadinessCard';
+import Button from '../../components/ui/Button';
 
 export const AdminSettings: React.FC = () => {
   const { language, t } = useLanguage();
@@ -1116,30 +1117,28 @@ export const AdminSettings: React.FC = () => {
                 </div>
               </div>
 
-              {/* Sticky Footer */}
-              <div className="sticky bottom-0 -mx-5 sm:-mx-6 -mb-5 sm:-mb-6 mt-4 bg-panel  px-5 sm:px-6 py-3.5 border-t border-line flex items-center justify-end gap-3 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setIsAddAccountModalOpen(false)}
-                  className="h-10 px-4 rounded-control bg-panel text-muted hover:text-fg text-xs font-sans font-semibold transition-colors"
-                >
-                  {language === 'id' ? 'Batal' : 'Cancel'}
-                </button>
-                <button
-                  type="submit"
-                  className="h-10 px-5 rounded-control bg-accent text-white text-xs font-sans font-semibold hover:bg-accent transition-all flex items-center gap-2"
-                >
-                  <Save size={14} />
-                  <span>{language === 'id' ? 'Simpan Akun Baru' : 'Save Account'}</span>
-                </button>
-              </div>
-
             </form>
       </Modal>
 
       {/* MODAL: EDIT PERMISSIONS (MOBILE FULLSCREEN + STICKY HEADER & FOOTER) */}
-      <Modal open={isEditPermsModalOpen && !!editingAccount} onClose={() => setIsEditPermsModalOpen(false)} size="lg" title={language === 'id' ? 'Atur Hak Akses Granular' : 'Manage Granular Permissions'} description={editingAccount ? editingAccount.name + ' (' + editingAccount.role + ')' : undefined}>
-            <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-2.5 custom-scrollbar">
+      <Modal
+        open={isEditPermsModalOpen && !!editingAccount}
+        onClose={() => setIsEditPermsModalOpen(false)}
+        size="lg"
+        title={language === 'id' ? 'Atur Hak Akses Granular' : 'Manage Granular Permissions'}
+        description={editingAccount ? editingAccount.name + ' (' + editingAccount.role + ')' : undefined}
+        footer={(
+          <>
+            <Button type="button" variant="secondary" onClick={() => setIsEditPermsModalOpen(false)}>
+              {language === 'id' ? 'Batal' : 'Cancel'}
+            </Button>
+            <Button type="button" icon={<Save size={14} />} onClick={() => void handleSavePermissions()}>
+              {language === 'id' ? 'Simpan Perubahan Hak Akses' : 'Save Permissions'}
+            </Button>
+          </>
+        )}
+      >
+            <div className="space-y-2.5 custom-scrollbar">
               {[
                 { key: 'canManageInvoicing', label: 'Finansial & Invoicing (Buat & Hapus Invoice)' },
                 { key: 'canViewInvoicing', label: 'Lihat Data & Laporan Keuangan' },
@@ -1171,25 +1170,6 @@ export const AdminSettings: React.FC = () => {
                   />
                 </label>
               ))}
-            </div>
-
-            {/* Sticky Footer */}
-            <div className="sticky bottom-0 bg-panel  px-5 sm:px-6 py-3.5 border-t border-line flex items-center justify-end gap-3 shrink-0">
-              <button
-                type="button"
-                onClick={() => setIsEditPermsModalOpen(false)}
-                className="h-10 px-4 rounded-control bg-panel text-muted hover:text-fg text-xs font-sans font-semibold transition-colors"
-              >
-                {language === 'id' ? 'Batal' : 'Cancel'}
-              </button>
-              <button
-                type="button"
-                onClick={handleSavePermissions}
-                className="h-10 px-5 rounded-control bg-accent text-white text-xs font-sans font-semibold hover:bg-accent transition-all flex items-center gap-2"
-              >
-                <Save size={14} />
-                <span>{language === 'id' ? 'Simpan Perubahan Hak Akses' : 'Save Permissions'}</span>
-              </button>
             </div>
 
       </Modal>
@@ -1455,10 +1435,29 @@ export const AdminSettings: React.FC = () => {
         size="sm"
         title={confirmAction?.type === 'account' ? (language === 'id' ? 'Hapus akun stakeholder?' : 'Delete stakeholder account?') : (language === 'id' ? 'Hapus audit log?' : 'Clear audit logs?')}
         description={confirmAction?.type === 'account' ? (language === 'id' ? `Akun ${confirmAction.name || ''} akan dihapus secara permanen.` : `Account ${confirmAction.name || ''} will be permanently deleted.`) : (language === 'id' ? 'Seluruh riwayat audit log keamanan akan dihapus.' : 'All security audit log history will be cleared.')}
+        footer={(
+          <>
+            <Button type="button" variant="secondary" onClick={() => setConfirmAction(null)}>
+              {language === 'id' ? 'Batal' : 'Cancel'}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => confirmAction?.type === 'account' && confirmAction.id
+                ? void confirmDeleteAccount(confirmAction.id, confirmAction.name || '')
+                : confirmAction?.type === 'logs'
+                  ? void confirmClearLogs()
+                  : undefined}
+            >
+              {language === 'id' ? 'Hapus' : 'Delete'}
+            </Button>
+          </>
+        )}
       >
-        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
-          <button type="button" onClick={() => setConfirmAction(null)} className="min-h-10 px-4 rounded-control border border-line bg-panel text-xs text-muted">Cancel</button>
-          <button type="button" onClick={() => confirmAction?.type === 'account' && confirmAction.id ? void confirmDeleteAccount(confirmAction.id, confirmAction.name || '') : confirmAction?.type === 'logs' ? void confirmClearLogs() : undefined} className="min-h-10 px-4 rounded-control bg-danger text-white text-xs font-semibold">Delete</button>
+        <div className="rounded-card border border-danger/20 bg-danger/5 p-3.5 text-xs text-muted">
+          {confirmAction?.type === 'account'
+            ? (language === 'id' ? 'Tindakan ini tidak dapat dibatalkan.' : 'This action cannot be undone.')
+            : (language === 'id' ? 'Pastikan audit trail tidak lagi dibutuhkan sebelum melanjutkan.' : 'Make sure the audit trail is no longer needed before continuing.')}
         </div>
       </Modal>
 
