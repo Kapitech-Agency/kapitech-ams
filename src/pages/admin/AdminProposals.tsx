@@ -23,6 +23,7 @@ import { hasAdminPermission } from '../../lib/adminAuth';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Modal } from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
+import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 
 type ProposalStatus = 'draft' | 'review' | 'approved' | 'sent' | 'accepted' | 'rejected';
 type SortOption = 'newest' | 'oldest' | 'amount-high' | 'amount-low' | 'expiry';
@@ -518,6 +519,9 @@ export const AdminProposals: React.FC = () => {
 
   const fieldClass = 'h-9 min-h-9 w-full rounded-control border border-line bg-panel px-3 text-xs text-fg placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg';
   const sectionClass = 'rounded-card border border-line bg-panel p-4 sm:p-5';
+  const proposalHeaderClass = 'ams-dashboard-header mb-6 flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between';
+  const proposalMetricGridClass = 'grid grid-cols-2 sm:grid-cols-4';
+  const proposalMetricItemClass = 'flex min-w-0 items-start justify-between gap-3 px-4 py-3';
 
   return (
     <div className="space-y-6">
@@ -530,36 +534,35 @@ export const AdminProposals: React.FC = () => {
         </div>
       )}
 
-      <header className="ams-dashboard-header mb-6 flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold leading-8 tracking-[-0.02em] text-fg">
-            {language === 'id' ? 'Proposal & Penawaran' : 'Proposal & Quotes'}
-          </h1>
-          <p className="mt-1 max-w-2xl text-xs leading-5 text-muted">
-            {language === 'id' ? 'Kelola proposal komersial, nilai penawaran, status, dan tindak lanjut dari satu tempat.' : 'Manage commercial proposals, values, status, and follow-up from one place.'}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-          <button
-            type="button"
-            onClick={() => void loadProposals()}
-            disabled={isLoading}
-            className="inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-          >
-            <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} aria-hidden="true" />
-            <span>{language === 'id' ? 'Refresh' : 'Refresh'}</span>
-          </button>
-          <button
-            type="button"
-            onClick={openCreate}
-            disabled={!canManageCrm}
-            className="inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control bg-accent px-3.5 text-xs font-semibold text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-          >
-            <Plus size={14} aria-hidden="true" />
-            <span>{language === 'id' ? 'Buat Proposal' : 'Create Proposal'}</span>
-          </button>
-        </div>
-      </header>
+      <AdminModuleHeader
+        className={proposalHeaderClass}
+        title={language === 'id' ? 'Proposal & Penawaran' : 'Proposal & Quotes'}
+        description={language === 'id'
+          ? 'Kelola proposal komersial, nilai penawaran, status, dan tindak lanjut dari satu tempat.'
+          : 'Manage commercial proposals, values, status, and follow-up from one place.'}
+        actions={(
+          <>
+            <button
+              type="button"
+              onClick={() => void loadProposals()}
+              disabled={isLoading}
+              className="inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} aria-hidden="true" />
+              <span>Refresh</span>
+            </button>
+            <button
+              type="button"
+              onClick={openCreate}
+              disabled={!canManageCrm}
+              className="inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control bg-accent px-3.5 text-xs font-semibold text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              <Plus size={14} aria-hidden="true" />
+              <span>{language === 'id' ? 'Buat Proposal' : 'Create Proposal'}</span>
+            </button>
+          </>
+        )}
+      />
 
       <section aria-label="Proposal summary" className="rounded-card border border-line bg-panel p-4 sm:p-5">
         <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
@@ -569,86 +572,69 @@ export const AdminProposals: React.FC = () => {
           </div>
           <span className="text-[11px] font-medium tabular-nums text-muted">{metrics.total} {language === 'id' ? 'total' : 'total'}</span>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4">
-          {[
-            { label: language === 'id' ? 'Total proposal' : 'Total proposals', value: metrics.total, icon: FileText },
-            { label: language === 'id' ? 'Aktif' : 'Active', value: metrics.active, icon: Clock3 },
-            { label: language === 'id' ? 'Diterima' : 'Accepted', value: metrics.accepted, icon: CheckCircle2 },
-            { label: language === 'id' ? 'Segera berakhir' : 'Expiring soon', value: metrics.expiring, icon: AlertCircle }
-          ].map((metric, index) => {
-            const Icon = metric.icon;
-            return (
-              <div key={metric.label} className={'flex min-w-0 items-start justify-between gap-3 px-4 py-3 ' + (index > 0 ? 'border-l border-line' : '')}>
-                <div className="min-w-0">
-                  <div className="text-xs text-muted">{metric.label}</div>
-                  <div className="mt-1 text-xl font-medium tabular-nums text-fg">{metric.value}</div>
-                </div>
-                <Icon size={16} className="mt-0.5 shrink-0 text-muted" aria-hidden="true" />
-              </div>
-            );
-          })}
-        </div>
+        <AdminMetricStrip
+          className={proposalMetricGridClass}
+          itemClassName={proposalMetricItemClass}
+          metrics={[
+            { label: language === 'id' ? 'Total proposal' : 'Total proposals', value: metrics.total, icon: <FileText size={16} aria-hidden="true" /> },
+            { label: language === 'id' ? 'Aktif' : 'Active', value: metrics.active, icon: <Clock3 size={16} aria-hidden="true" /> },
+            { label: language === 'id' ? 'Diterima' : 'Accepted', value: metrics.accepted, icon: <CheckCircle2 size={16} aria-hidden="true" /> },
+            { label: language === 'id' ? 'Segera berakhir' : 'Expiring soon', value: metrics.expiring, icon: <AlertCircle size={16} aria-hidden="true" />, toneClassName: 'text-warning' }
+          ]}
+        />
       </section>
 
-      <section className="rounded-card border border-line bg-panel p-4 sm:p-5" aria-label="Proposal filters">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-          <label className="relative min-w-0 flex-1">
-            <span className="sr-only">{language === 'id' ? 'Cari proposal' : 'Search proposals'}</span>
-            <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" aria-hidden="true" />
-            <input
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder={language === 'id' ? 'Cari nomor, judul, klien, perusahaan, atau owner…' : 'Search number, title, client, company, or owner…'}
-              className={fieldClass + ' pl-9'}
-            />
-          </label>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:w-[520px]">
-            <CustomSelect
-              value={statusFilter}
-              onChange={(value) => setStatusFilter(value as ProposalStatus | 'all')}
-              size="sm"
-              aria-label={language === 'id' ? 'Filter status' : 'Status filter'}
-              options={[{ value: 'all', label: language === 'id' ? 'Semua status' : 'All statuses' }, ...STATUS_OPTIONS.map((item) => ({ ...item, label: language === 'id' && item.value === 'review' ? 'Review internal' : item.label }))]}
-              
-            />
-            <CustomSelect
-              value={expiryFilter}
-              onChange={(value) => setExpiryFilter(value as typeof expiryFilter)}
-              size="sm"
-              aria-label={language === 'id' ? 'Filter masa berlaku' : 'Expiry filter'}
-              options={[
-                { value: 'all', label: language === 'id' ? 'Semua masa berlaku' : 'All expiry' },
-                { value: 'active', label: language === 'id' ? 'Masih aktif' : 'Active' },
-                { value: 'expiring', label: language === 'id' ? '≤ 7 hari' : '≤ 7 days' },
-                { value: 'expired', label: language === 'id' ? 'Kedaluwarsa' : 'Expired' }
-              ]}
-              
-            />
-            <CustomSelect
-              value={sortBy}
-              onChange={(value) => setSortBy(value as SortOption)}
-              size="sm"
-              aria-label={language === 'id' ? 'Urutkan proposal' : 'Sort proposals'}
-              options={[
-                { value: 'newest', label: language === 'id' ? 'Terbaru' : 'Newest' },
-                { value: 'oldest', label: language === 'id' ? 'Terlama' : 'Oldest' },
-                { value: 'amount-high', label: language === 'id' ? 'Nilai tertinggi' : 'Highest value' },
-                { value: 'amount-low', label: language === 'id' ? 'Nilai terendah' : 'Lowest value' },
-                { value: 'expiry', label: language === 'id' ? 'Masa berlaku terdekat' : 'Nearest expiry' }
-              ]}
-              
-            />
-          </div>
-        </div>
-        {(searchQuery || statusFilter !== 'all' || expiryFilter !== 'all' || sortBy !== 'newest') && (
-          <div className="flex items-center justify-between gap-3 text-xs text-muted">
-            <span>{filteredProposals.length} {language === 'id' ? 'hasil ditampilkan' : 'results shown'}</span>
-            <button type="button" onClick={clearFilters} className="h-9 min-h-9 rounded-control px-2.5 text-xs font-medium text-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-              {language === 'id' ? 'Reset filter' : 'Reset filters'}
-            </button>
-          </div>
+      <AdminFilterBar
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder={language === 'id' ? 'Cari nomor, judul, klien, perusahaan, atau owner…' : 'Search number, title, client, company, or owner…'}
+        searchLabel={language === 'id' ? 'Cari proposal' : 'Search proposals'}
+        actions={(
+          <>
+            <span className="text-xs tabular-nums text-muted">{filteredProposals.length} {language === 'id' ? 'hasil' : 'results'}</span>
+            {(searchQuery || statusFilter !== 'all' || expiryFilter !== 'all' || sortBy !== 'newest') && (
+              <button type="button" onClick={clearFilters} className="h-9 min-h-9 rounded-control px-2.5 text-xs font-medium text-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                {language === 'id' ? 'Reset filter' : 'Reset filters'}
+              </button>
+            )}
+          </>
         )}
-      </section>
+      >
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:w-[520px]">
+          <CustomSelect
+            value={statusFilter}
+            onChange={(value) => setStatusFilter(value as ProposalStatus | 'all')}
+            size="sm"
+            aria-label={language === 'id' ? 'Filter status' : 'Status filter'}
+            options={[{ value: 'all', label: language === 'id' ? 'Semua status' : 'All statuses' }, ...STATUS_OPTIONS.map((item) => ({ ...item, label: language === 'id' && item.value === 'review' ? 'Review internal' : item.label }))]}
+          />
+          <CustomSelect
+            value={expiryFilter}
+            onChange={(value) => setExpiryFilter(value as typeof expiryFilter)}
+            size="sm"
+            aria-label={language === 'id' ? 'Filter masa berlaku' : 'Expiry filter'}
+            options={[
+              { value: 'all', label: language === 'id' ? 'Semua masa berlaku' : 'All expiry' },
+              { value: 'active', label: language === 'id' ? 'Masih aktif' : 'Active' },
+              { value: 'expiring', label: language === 'id' ? '≤ 7 hari' : '≤ 7 days' },
+              { value: 'expired', label: language === 'id' ? 'Kedaluwarsa' : 'Expired' }
+            ]}
+          />
+          <CustomSelect
+            value={sortBy}
+            onChange={(value) => setSortBy(value as SortOption)}
+            size="sm"
+            aria-label={language === 'id' ? 'Urutkan proposal' : 'Sort proposals'}
+            options={[
+              { value: 'newest', label: language === 'id' ? 'Terbaru' : 'Newest' },
+              { value: 'oldest', label: language === 'id' ? 'Terlama' : 'Oldest' },
+              { value: 'amount-high', label: language === 'id' ? 'Nilai tertinggi' : 'Highest value' },
+              { value: 'amount-low', label: language === 'id' ? 'Nilai terendah' : 'Lowest value' },
+              { value: 'expiry', label: language === 'id' ? 'Masa berlaku terdekat' : 'Nearest expiry' }
+            ]}
+          />
+        </div>
+      </AdminFilterBar>
 
       {isLoading ? (
         <section className="overflow-hidden rounded-card border border-line bg-panel" aria-label={language === 'id' ? 'Memuat proposal' : 'Loading proposals'}>
