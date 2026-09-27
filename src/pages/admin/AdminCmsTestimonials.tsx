@@ -5,6 +5,7 @@ import { api } from '../../lib/apiClient';
 import { useLanguage } from '../../lib/LanguageContext';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
+import { AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 
 export const AdminCmsTestimonials: React.FC = () => {
   const { language } = useLanguage();
@@ -87,28 +88,23 @@ export const AdminCmsTestimonials: React.FC = () => {
   return (
     <div className="space-y-6">
       
-      {/* Top Header */}
-      <div className="ams-page-header flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="ams-page-title">
-            <Users className="text-accent-text shrink-0" size={22} />
-            <span>Testimonials</span>
-          </h1>
-          <p className="text-xs text-muted mt-1 font-sans">
-            {language === 'id' 
-              ? 'Kelola ulasan klien, feedback kepuasan, dan rekomendasi eksekutif yang tampil di homepage.'
-              : 'Manage client reviews, enterprise feedback, and executive recommendations on the homepage.'}
-          </p>
-        </div>
-
-        <button
-          onClick={handleOpenAdd}
-          className="min-h-10 px-3 rounded-control bg-accent hover:bg-accent-hover active:bg-accent-pressed text-white text-xs font-sans font-medium transition-colors flex items-center gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-        >
-          <Plus size={14} />
-          <span>{language === 'id' ? 'Tambah Testimoni' : 'Add Testimonial'}</span>
-        </button>
-      </div>
+      <AdminModuleHeader
+        icon={<Users size={20} />}
+        title="Testimonials"
+        description={language === 'id'
+          ? 'Kelola ulasan klien, feedback kepuasan, dan rekomendasi eksekutif yang tampil di homepage.'
+          : 'Manage client reviews, enterprise feedback, and executive recommendations on the homepage.'}
+        actions={
+          <Button
+            type="button"
+            variant="primary"
+            icon={<Plus size={14} />}
+            onClick={handleOpenAdd}
+          >
+            {language === 'id' ? 'Tambah testimoni' : 'Add testimonial'}
+          </Button>
+        }
+      />
 
       {statusMessage && (
         <div className="p-3 rounded-control bg-success/10 border border-success/25 text-success text-xs font-sans flex items-center gap-2">

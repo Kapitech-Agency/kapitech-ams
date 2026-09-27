@@ -1,15 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Activity,
   AlertTriangle,
   ArrowUpRight,
-  BriefcaseBusiness,
+  CalendarClock,
+  CheckCircle2,
   CircleDollarSign,
-  ClipboardCheck,
+  Clock3,
   FolderKanban,
-  Inbox,
-  Landmark,
+  Layers3,
+  MoreVertical,
+  Plus,
+  ReceiptText,
   RefreshCw,
   ShieldAlert,
   Users,
@@ -17,76 +19,131 @@ import {
 } from 'lucide-react';
 import { api } from '../../lib/apiClient';
 import { useLanguage } from '../../lib/LanguageContext';
-import { getActiveCurrency, CURRENCY_EVENT, CurrencyCode, formatAmount } from '../../lib/currency';
+import { CURRENCY_EVENT, CurrencyCode, formatAmount, getActiveCurrency } from '../../lib/currency';
 import { getAdminSession } from '../../lib/adminAuth';
-import {
-  FINANCE_EVENT_NAME,
-  getAgencyExpenses,
-  getAgencyInvoices,
-  getMonthlyCashFlowSeries,
-  computeFinancialMetrics,
-} from '../../lib/financeStore';
-import { TrendChart, BarChart, DonutChart } from '../charts/DashboardCharts';
+import { FINANCE_EVENT_NAME, getAgencyExpenses, getAgencyInvoices, getMonthlyCashFlowSeries } from '../../lib/financeStore';
+import { AdminMetricStrip, AdminModuleHeader, AdminPanel } from './AdminModulePrimitives';
+import Button from '../ui/Button';
+import { DonutChart, TrendChart } from '../charts/DashboardCharts';
+
+type RangeKey = '30D' | 'Q2' | 'YTD' | '12M';
+type Tone = 'success' | 'warning' | 'danger' | 'info' | 'muted';
+
+interface DashboardProject {
+  id: string;
+  name: string;
+  clientName: string;
+  clientCompany: string;
+  status: string;
+  health?: string;
+  progressPercent: number;
+  budget: number;
+  serviceCategory: string;
+  teamLead: string;
+  tasks: Array<{
+    id?: string;
+    title?: string;
+    status?: string;
+    assignedTo?: string;
+    assignee?: string;
+    dueDate?: string;
+  }>;
+}
+
+interface DashboardTask {
+  id?: string;
+  status?: string;
+  assignedTo?: string;
+  assignee?: string;
+  dueDate?: string;
+  projectName?: string;
+}
 
 interface ExecutiveOverviewData {
   metrics: {
-    revenueCollected: number | null;
-    totalBilled: number | null;
-    outstandingReceivables: number | null;
-    overdueReceivables: number | null;
-    activePipeline: number | null;
     activeProjects: number;
     projectsAtRisk: number;
-    pendingApprovals: number;
     overdueTasks: number;
+    outstandingReceivables: number | null;
+    overdueReceivables: number | null;
     openLeads: number;
   };
   financials: {
     revenueThisMonth: number | null;
-    cashCollected: number | null;
     outstandingReceivables: number | null;
-    operatingExpenses: number | null;
-    netOperatingProfit: number | null;
-    margin: string | null;
   };
-  pipelineByStage: Array<{ stage: string; count: number; value: number }>;
-  attentionItems: Array<{
-    id: string;
-    title: string;
-    description: string;
-    severity: 'danger' | 'warning' | 'info';
-    category: string;
-    linkUrl: string;
-  }>;
-  projects: Array<{
-    id?: string;
-    name?: string;
-    clientName?: string;
-    status?: string;
-    health?: string;
-    progressPercent?: number;
-    targetEndDate?: string;
-  }>;
-  recentActivity: Array<{
-    id?: string;
-    action?: string;
-    title?: string;
-    description?: string;
-    actor?: string;
-    createdAt?: string;
-    timestamp?: string;
-  }>;
+  projects?: unknown[];
 }
 
-type ProjectTone = 'accent' | 'success' | 'info' | 'warning' | 'danger' | 'muted';
+const subtleActionClass =
+  'inline-flex min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:border-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent';
 
-const cardClass = 'ams-dashboard-card rounded-card border border-line bg-panel p-4 sm:p-5';
-const actionClass = 'inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control border border-line bg-transparent px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent';
+const toneClass: Record<Tone, string> = {
+  success: 'border-success/30 bg-success/10 text-success',
+  warning: 'border-warning/30 bg-warning/10 text-warning',
+  danger: 'border-danger/30 bg-danger/10 text-danger',
+  info: 'border-info/30 bg-info/10 text-info',
+  muted: 'border-line bg-bg text-muted',
+};
 
-const EmptyState = ({ message, description, action }: { message: string; description?: string; action?: React.ReactNode }) => (
-  <div className="flex min-h-[176px] flex-col items-center justify-center rounded-card border border-line bg-bg px-4 py-8 text-center">
+const normalizeProject = (value: any): DashboardProject => ({
+  id: String(value?.id || ''),
+  name: String(value?.name || value?.title || 'Untitled project'),
+  clientName: String(value?.clientName || ''),
+  clientCompany: String(value?.clientCompany || value?.client || ''),
+  status: String(value?.status || 'planning'),
+  health: value?.health ? String(value.health) : undefined,
+  progressPercent: Math.min(100, Math.max(0, Number(value?.progressPercent || 0))),
+  budget: Number(value?.budget || 0),
+  serviceCategory: String(value?.serviceCategory || ''),
+  teamLead: String(value?.teamLead || ''),
+  tasks: Array.isArray(value?.tasks) ? value.tasks : [],
+});
+
+const statusTone = (status: string, health?: string): Tone => {
+  const value = `${status} ${health || ''}`.toLowerCase();
+  if (value.includes('block') || value.includes('delay')) return 'danger';
+  if (value.includes('risk') || value.includes('hold') || value.includes('review')) return 'warning';
+  if (value.includes('complete') || value.includes('done') || value.includes('good')) return 'success';
+  if (value.includes('progress') || value.includes('active')) return 'info';
+  return 'muted';
+};
+
+const startOfDay = (date = new Date()) => {
+  const copy = new Date(date);
+  copy.setHours(0, 0, 0, 0);
+  return copy;
+};
+
+const isPastDue = (value?: string) => {
+  if (!value) return false;
+  const parsed = new Date(value);
+  return !Number.isNaN(parsed.getTime()) && startOfDay(parsed) < startOfDay();
+};
+
+const isDueWithinWeek = (value?: string) => {
+  if (!value) return false;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return false;
+  const today = startOfDay();
+  const end = new Date(today);
+  end.setDate(end.getDate() + 7);
+  const due = startOfDay(parsed);
+  return due >= today && due <= end;
+};
+
+const EmptyState = ({
+  message,
+  description,
+  action,
+}: {
+  message: string;
+  description?: string;
+  action?: React.ReactNode;
+}) => (
+  <div className="flex min-h-[176px] flex-col items-center justify-center rounded-control border border-line bg-bg px-4 py-8 text-center">
     <div className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted">
-      <ClipboardCheck size={18} strokeWidth={1.8} />
+      <Layers3 size={18} />
     </div>
     <p className="mt-3 text-sm font-medium text-fg">{message}</p>
     {description && <p className="mt-1 max-w-[48ch] text-xs leading-5 text-muted">{description}</p>}
@@ -94,130 +151,87 @@ const EmptyState = ({ message, description, action }: { message: string; descrip
   </div>
 );
 
-const SkeletonBlock = ({ className = '' }: { className?: string }) => (
-  <div className={`animate-pulse rounded-control bg-line/70 ${className}`} aria-hidden="true" />
-);
-
-const statusTone = (status: string): ProjectTone => {
-  const value = status.toLowerCase();
-  if (value.includes('complete') || value === 'done') return 'success';
-  if (value.includes('review')) return 'warning';
-  if (value.includes('hold') || value.includes('risk') || value.includes('delay')) return 'danger';
-  if (value.includes('progress') || value.includes('active')) return 'info';
-  if (value.includes('planning')) return 'muted';
-  return 'accent';
-};
-
-const toneClass: Record<ProjectTone, string> = {
-  accent: 'bg-accent/10 text-accent-text',
-  success: 'bg-success/10 text-success',
-  info: 'bg-info/10 text-info',
-  warning: 'bg-warning/10 text-warning',
-  danger: 'bg-danger/10 text-danger',
-  muted: 'bg-bg text-muted',
-};
-
-const iconToneClass: Record<ProjectTone, string> = {
-  accent: 'text-accent-text',
-  success: 'text-success',
-  info: 'text-info',
-  warning: 'text-warning',
-  danger: 'text-danger',
-  muted: 'text-muted',
-};
-
-const Metric = ({
-  label,
-  value,
-  context,
-  icon: Icon,
-  tone = 'accent',
-  href,
-}: {
-  label: string;
-  value: string | number;
-  context: React.ReactNode;
-  icon: React.ElementType;
-  tone?: ProjectTone;
-  href?: string;
-}) => {
-  const content = (
-    <div className="min-w-0 px-1">
-      <div className="flex items-start justify-between gap-3">
-        <span className="text-xs leading-4 text-muted">{label}</span>
-        <span className={`flex h-7 w-7 shrink-0 items-center justify-center ${iconToneClass[tone]}`} aria-hidden="true">
-          <Icon size={16} strokeWidth={1.8} />
-        </span>
-      </div>
-      <div className="mt-3 text-2xl font-medium leading-8 tracking-[-0.02em] tabular-nums text-fg">{value}</div>
-      <div className="mt-1 min-h-4 text-xs leading-4 text-muted">{context}</div>
-    </div>
-  );
-  return href ? (
-    <Link to={href} className="group rounded-control focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent">
-      <div className="transition-transform duration-150 group-hover:-translate-y-0.5">{content}</div>
-    </Link>
-  ) : content;
-};
+const initials = (value: string) =>
+  value
+    .split(/\s+/)
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase() || 'NA';
 
 export const GlobalExecutiveDashboard: React.FC = () => {
   const { language } = useLanguage();
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
+  const [range, setRange] = useState<RangeKey>('Q2');
+  const [projectFilter, setProjectFilter] = useState('All');
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState<ExecutiveOverviewData | null>(null);
+  const [projects, setProjects] = useState<DashboardProject[]>([]);
+  const [tasks, setTasks] = useState<DashboardTask[]>([]);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [financeVersion, setFinanceVersion] = useState(0);
   const [mfaRequired, setMfaRequired] = useState(() => getAdminSession()?.user.mfaEnabled !== true);
   const [mfaRetrying, setMfaRetrying] = useState(false);
-
-  useEffect(() => {
-    const handleCurrencyChange = (event: Event) => {
-      const custom = event as CustomEvent<{ currency: CurrencyCode }>;
-      if (custom.detail?.currency) setCurrency(custom.detail.currency);
-    };
-    const handleAuthChange = () => setMfaRequired(getAdminSession()?.user.mfaEnabled !== true);
-    const handleFinanceChange = () => setFinanceVersion((value) => value + 1);
-    window.addEventListener(CURRENCY_EVENT, handleCurrencyChange);
-    window.addEventListener('kapitech_auth_state_changed', handleAuthChange);
-    window.addEventListener(FINANCE_EVENT_NAME, handleFinanceChange);
-    return () => {
-      window.removeEventListener(CURRENCY_EVENT, handleCurrencyChange);
-      window.removeEventListener('kapitech_auth_state_changed', handleAuthChange);
-      window.removeEventListener(FINANCE_EVENT_NAME, handleFinanceChange);
-    };
-  }, []);
 
   const fetchOverview = async () => {
     setIsLoading(true);
     setError(null);
-    try {
-      const response = await api.executive.getOverview();
-      if (response.success) {
-        const payload = (response.data || response) as ExecutiveOverviewData;
-        setData(payload);
-        setLastRefreshed(new Date());
+
+    const [overviewResult, projectsResult, tasksResult] = await Promise.allSettled([
+      api.executive.getOverview(),
+      api.projects.getAll(),
+      api.tasks.getAll(),
+    ]);
+
+    const overview = overviewResult.status === 'fulfilled' ? overviewResult.value : null;
+    const projectResponse = projectsResult.status === 'fulfilled' ? projectsResult.value : null;
+    const taskResponse = tasksResult.status === 'fulfilled' ? tasksResult.value : null;
+
+    if (overview?.success) {
+      setData((overview.data || overview) as ExecutiveOverviewData);
+      setLastRefreshed(new Date());
+    } else {
+      const code = (overview?.data as { code?: string } | undefined)?.code;
+      const mfaBlocked = code === 'MFA_REQUIRED' || /MFA is required/i.test(overview?.error || '');
+      if (mfaBlocked) {
+        setMfaRequired(true);
+        setData(null);
       } else {
-        const responseCode = (response.data as { code?: string } | undefined)?.code;
-        const mfaBlocked = responseCode === 'MFA_REQUIRED' || /MFA is required/i.test(response.error || '');
-        if (mfaBlocked) {
-          setMfaRequired(true);
-          setData(null);
-          setLastRefreshed(null);
-          setError(null);
-        } else {
-          setError(response.error || 'Dashboard data is temporarily unavailable.');
-        }
+        setError(overview?.error || 'Dashboard data is temporarily unavailable.');
       }
-    } catch {
-      setError('Dashboard data is temporarily unavailable. Retry to reconnect.');
-    } finally {
-      setIsLoading(false);
     }
+
+    if (projectResponse?.success && Array.isArray(projectResponse.data?.projects)) {
+      setProjects(projectResponse.data.projects.map(normalizeProject));
+    } else if (overview?.success && Array.isArray((overview.data as any)?.projects)) {
+      setProjects((overview.data as any).projects.map(normalizeProject));
+    }
+
+    if (taskResponse?.success && Array.isArray(taskResponse.data?.tasks)) {
+      setTasks(taskResponse.data.tasks);
+    }
+
+    setIsLoading(false);
   };
 
   useEffect(() => {
+    const onCurrency = (event: Event) => {
+      const detail = (event as CustomEvent<{ currency?: CurrencyCode }>).detail;
+      setCurrency(detail?.currency || getActiveCurrency());
+    };
+    const onAuthChange = () => setMfaRequired(getAdminSession()?.user.mfaEnabled !== true);
+    const onFinanceChange = () => void fetchOverview();
+
     void fetchOverview();
+    window.addEventListener(CURRENCY_EVENT, onCurrency);
+    window.addEventListener('kapitech_auth_state_changed', onAuthChange);
+    window.addEventListener(FINANCE_EVENT_NAME, onFinanceChange);
+
+    return () => {
+      window.removeEventListener(CURRENCY_EVENT, onCurrency);
+      window.removeEventListener('kapitech_auth_state_changed', onAuthChange);
+      window.removeEventListener(FINANCE_EVENT_NAME, onFinanceChange);
+    };
   }, []);
 
   const retryMfaStatus = async () => {
@@ -225,9 +239,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     try {
       const response = await api.auth.me();
       if (response.success && response.data?.success && response.data.user) {
-        const user = response.data.user;
-        setMfaRequired(user.mfaEnabled !== true);
-        if (user.mfaEnabled === true) {
+        setMfaRequired(response.data.user.mfaEnabled !== true);
+        if (response.data.user.mfaEnabled === true) {
           window.dispatchEvent(new CustomEvent('kapitech_auth_state_changed'));
         }
       }
@@ -236,293 +249,492 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     }
   };
 
-  const canViewFinancials = data !== null && data.financials.revenueThisMonth !== null;
+  const effectiveProjects = projects.length
+    ? projects
+    : (data?.projects || []).map(normalizeProject);
+
+  const allTasks = useMemo(
+    () => tasks.length
+      ? tasks
+      : effectiveProjects.flatMap((project) => project.tasks.map((task) => ({ ...task, projectName: project.name }))),
+    [effectiveProjects, tasks]
+  );
+
+  const activeProjects = effectiveProjects.filter(
+    (project) => project.status === 'in_progress' || project.status === 'review'
+  ).length || data?.metrics.activeProjects || 0;
+
+  const tasksDueThisWeek = allTasks.filter(
+    (task) => task.status !== 'done' && isDueWithinWeek(task.dueDate)
+  ).length;
+
+  const overdueTasks =
+    allTasks.filter((task) => task.status !== 'done' && isPastDue(task.dueDate)).length ||
+    data?.metrics.overdueTasks ||
+    0;
+
+  const teamLoad = useMemo(() => {
+    const counts = new Map<string, number>();
+    allTasks.forEach((task) => {
+      if (task.status === 'done') return;
+      const owner = String(task.assignedTo || task.assignee || 'Unassigned');
+      counts.set(owner, (counts.get(owner) || 0) + 1);
+    });
+    effectiveProjects.forEach((project) => {
+      if (project.teamLead && !counts.has(project.teamLead)) counts.set(project.teamLead, 0);
+    });
+
+    const entries = Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6);
+
+    const max = Math.max(1, ...entries.map(([, count]) => count));
+
+    return entries.map(([name, count]) => ({
+      name,
+      tasks: count,
+      percent: count ? Math.max(8, Math.round((count / max) * 100)) : 0,
+      state: count >= max * 0.9 ? 'Near max' : count >= max * 0.7 ? 'High load' : count >= max * 0.45 ? 'Balanced' : 'Available',
+    }));
+  }, [allTasks, effectiveProjects]);
+
+  const deliveryData = useMemo(() => {
+    const items = [
+      {
+        label: 'On schedule',
+        value: effectiveProjects.filter((project) => {
+          const health = (project.health || '').toLowerCase();
+          return health === 'good' || (!health && !['on_hold', 'review'].includes(project.status));
+        }).length,
+        tone: 'success' as const,
+      },
+      {
+        label: 'At risk',
+        value: effectiveProjects.filter((project) => {
+          const health = (project.health || '').toLowerCase();
+          return health.includes('risk') || project.status === 'review' || project.status === 'on_hold';
+        }).length,
+        tone: 'warning' as const,
+      },
+      {
+        label: 'Overdue',
+        value: effectiveProjects.filter((project) => {
+          const health = (project.health || '').toLowerCase();
+          return health.includes('delay') || health.includes('block');
+        }).length,
+        tone: 'danger' as const,
+      },
+    ];
+    return items.filter((item) => item.value > 0);
+  }, [effectiveProjects]);
+
+  const onSchedulePercent = useMemo(() => {
+    const total = deliveryData.reduce((sum, item) => sum + item.value, 0);
+    const current = deliveryData.find((item) => item.label === 'On schedule')?.value || 0;
+    return total ? Math.round((current / total) * 100) : 0;
+  }, [deliveryData]);
+
   const financeSeries = useMemo(() => {
-    if (!canViewFinancials) return [];
+    if (!data?.financials || data.financials.revenueThisMonth === null) return [];
     try {
       return getMonthlyCashFlowSeries(getAgencyInvoices(), getAgencyExpenses());
     } catch {
       return [];
     }
-  }, [canViewFinancials, financeVersion]);
+  }, [data, currency]);
 
-  const financialMetrics = useMemo(() => {
-    if (!canViewFinancials) return null;
-    const invoices = getAgencyInvoices();
-    const expenses = getAgencyExpenses();
-    const metrics = computeFinancialMetrics(invoices, expenses);
-    return {
-      collectionRate: invoices.length ? metrics.collectionRate : null,
-      totalOutstanding: metrics.totalOutstanding,
-      totalOverdue: metrics.totalOverdue,
-      totalExpenses: metrics.totalExpenses,
-    };
-  }, [canViewFinancials, financeVersion]);
+  const visibleFinanceSeries = useMemo(() => {
+    if (range === '30D') return financeSeries.slice(-1);
+    if (range === 'Q2') return financeSeries.slice(-3);
+    if (range === 'YTD') return financeSeries.slice(0, new Date().getMonth() + 1);
+    return financeSeries.slice(-12);
+  }, [financeSeries, range]);
+
+  const formatCurrency = (value: number | null | undefined) =>
+    value == null ? 'Restricted' : formatAmount(value, currency, false);
+
+  const filteredProjects = useMemo(() => {
+    if (projectFilter === 'All') return effectiveProjects.slice(0, 6);
+    return effectiveProjects
+      .filter((project) => project.serviceCategory.toLowerCase() === projectFilter.toLowerCase())
+      .slice(0, 6);
+  }, [effectiveProjects, projectFilter]);
 
   const metrics = data?.metrics;
   const financials = data?.financials;
-  const attentionItems = data?.attentionItems ?? [];
-  const pipelineStages = data?.pipelineByStage ?? [];
-  const projects = data?.projects ?? [];
-  const recentActivity = data?.recentActivity ?? [];
 
-  const formatCurrency = (value: number | null | undefined) => {
-    if (value === null || value === undefined) return language === 'id' ? 'Restricted' : 'Restricted';
-    return formatAmount(value, currency, false);
-  };
-
-  const projectStatusData = useMemo(() => {
-    const grouped = new Map<string, number>();
-    projects.forEach((project) => {
-      const key = String(project.status || 'unknown').replace(/_/g, ' ');
-      grouped.set(key, (grouped.get(key) || 0) + 1);
-    });
-    return Array.from(grouped.entries()).map(([label, value]) => ({
-      label: label.replace(/\b\w/g, (char) => char.toUpperCase()),
-      value,
-      tone: statusTone(label),
-    }));
-  }, [projects]);
-
-  const pipelineData = useMemo(() => pipelineStages.map((stage) => ({
-    label: stage.stage.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase()),
-    value: stage.count,
-    detail: formatCurrency(stage.value),
-  })), [pipelineStages, currency]);
-
-  const latestFinancial = financeSeries.at(-1);
-  const previousFinancial = financeSeries.at(-2);
-  const financialInsight = latestFinancial && previousFinancial
-    ? latestFinancial.inflow > previousFinancial.inflow
-      ? 'Collected revenue is above the previous month.'
-      : latestFinancial.inflow < previousFinancial.inflow
-        ? 'Collected revenue is below the previous month.'
-        : 'Collected revenue is flat versus the previous month.'
-    : null;
-
-  const attentionCount = attentionItems.length;
-  const operationalActions = [
-    { label: 'Open inbox', href: '/admin/inbox', icon: Inbox },
-    { label: 'Open CRM', href: '/admin/crm', icon: Users },
-    { label: 'Open projects', href: '/admin/projects', icon: BriefcaseBusiness },
-    { label: 'Open invoicing', href: '/admin/invoicing', icon: Landmark },
+  const kpis = [
+    {
+      id: 'active-projects',
+      label: 'Active projects',
+      value: activeProjects,
+      context: effectiveProjects.length ? `${effectiveProjects.length} total projects` : 'Project access required',
+      icon: <FolderKanban size={16} />,
+      toneClassName: 'text-success',
+    },
+    {
+      id: 'due-week',
+      label: 'Tasks due this week',
+      value: tasks.length || effectiveProjects.some((project) => project.tasks.length) ? tasksDueThisWeek : '—',
+      context: allTasks.length ? 'Open tasks in the next 7 days' : 'Task data unavailable',
+      icon: <CalendarClock size={16} />,
+      toneClassName: 'text-muted',
+    },
+    {
+      id: 'overdue',
+      label: 'Overdue tasks',
+      value: overdueTasks,
+      context: overdueTasks ? 'Requires attention' : 'No overdue tasks reported',
+      icon: <AlertTriangle size={16} />,
+      toneClassName: overdueTasks ? 'text-danger' : 'text-success',
+    },
+    {
+      id: 'team-workload',
+      label: 'Team workload',
+      value: allTasks.filter((task) => task.status !== 'done').length,
+      context: teamLoad.length ? `Open tasks across ${teamLoad.length} people` : 'Team task data unavailable',
+      icon: <Users size={16} />,
+      toneClassName: 'text-info',
+    },
+    {
+      id: 'monthly-revenue',
+      label: 'Monthly revenue',
+      value: formatCurrency(financials?.revenueThisMonth),
+      context: 'Current month',
+      icon: <CircleDollarSign size={16} />,
+      toneClassName: 'text-accent-text',
+    },
+    {
+      id: 'outstanding',
+      label: 'Outstanding invoices',
+      value: formatCurrency(financials?.outstandingReceivables ?? metrics?.outstandingReceivables),
+      context: metrics?.overdueReceivables ? `${formatCurrency(metrics.overdueReceivables)} overdue` : 'No overdue balance reported',
+      icon: <ReceiptText size={16} />,
+      toneClassName: 'text-warning',
+    },
   ];
 
   return (
     <div className="min-h-full pb-8">
-      <header className="ams-dashboard-header mb-6 flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 text-xs text-muted">
-            <span>Kapitech AMS</span>
-            <span aria-hidden="true">/</span>
-            <span className="text-fg">Dashboard</span>
-          </div>
-          <h1 className="mt-2 text-xl font-semibold leading-7 tracking-[-0.01em] text-fg">Executive overview</h1>
-          <p className="mt-1 max-w-2xl text-xs leading-5 text-muted">
-            A live operational view of revenue, pipeline, delivery, and items that need attention.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-          {lastRefreshed && <span className="text-[11px] tabular-nums text-muted">Synced {lastRefreshed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
-          <button type="button" onClick={() => void fetchOverview()} disabled={isLoading} className={`${actionClass} disabled:cursor-not-allowed disabled:opacity-50`} aria-label="Refresh dashboard">
-            <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
-            {isLoading ? 'Syncing' : 'Refresh'}
-          </button>
-        </div>
-      </header>
+      <AdminModuleHeader
+        title="Agency overview"
+        description="Real-time metrics, project pacing, and financial health for the agency."
+        icon={<Layers3 size={18} />}
+        actions={
+          <>
+            {lastRefreshed && (
+              <span className="hidden text-[11px] tabular-nums text-muted sm:inline">
+                Synced {lastRefreshed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            )}
+            <Button
+              type="button"
+              variant="secondary"
+              loading={isLoading}
+              onClick={() => void fetchOverview()}
+              icon={<RefreshCw size={14} />}
+            >
+              {isLoading ? 'Syncing' : 'Refresh'}
+            </Button>
+            <Link
+              to="/admin/projects"
+              className="inline-flex min-h-9 items-center justify-center gap-2 rounded-control bg-accent px-3 text-xs font-medium text-white transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              <Plus size={14} />
+              New project
+            </Link>
+          </>
+        }
+      />
 
       {mfaRequired && (
-        <section className="mb-6 flex flex-col gap-4 rounded-card border border-danger/40 bg-danger/10 p-4 sm:flex-row sm:items-center sm:justify-between" role="alert" aria-label="MFA setup required">
-          <div className="flex min-w-0 items-start gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-danger/30 bg-danger/10 text-danger" aria-hidden="true">
+        <section className="mb-6 flex flex-col gap-4 rounded-card border border-danger/40 bg-danger/10 p-4 sm:flex-row sm:items-center sm:justify-between" role="alert">
+          <div className="flex items-start gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-danger/30 bg-danger/10 text-danger">
               <ShieldAlert size={17} />
             </span>
-            <div className="min-w-0">
+            <div>
               <h2 className="text-sm font-semibold text-fg">MFA setup required</h2>
               <p className="mt-1 text-xs leading-5 text-muted">Enable MFA before using protected AMS functions.</p>
             </div>
           </div>
-          <div className="grid w-full grid-cols-1 gap-2 sm:w-auto sm:grid-cols-2">
-            <button type="button" onClick={() => void retryMfaStatus()} disabled={mfaRetrying} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control border border-danger/40 bg-danger/10 px-3 text-xs font-semibold text-danger hover:bg-danger/15 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger">
-              <RefreshCw size={14} className={mfaRetrying ? 'animate-spin' : ''} />
-              {mfaRetrying ? 'Retrying' : (language === 'id' ? 'Coba lagi' : 'Retry')}
-            </button>
-            <Link to="/admin/settings?tab=security&mfaRequired=1" className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-              MFA Settings <ArrowUpRight size={13} />
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Button
+              type="button"
+              variant="destructive"
+              loading={mfaRetrying}
+              onClick={() => void retryMfaStatus()}
+              icon={<RefreshCw size={14} />}
+            >
+              {language === 'id' ? 'Coba lagi' : 'Retry'}
+            </Button>
+            <Link to="/admin/settings?tab=security&mfaRequired=1" className={subtleActionClass}>
+              MFA settings <ArrowUpRight size={13} />
             </Link>
           </div>
         </section>
       )}
 
       {error && (
-        <section className="mb-6 flex flex-col gap-3 rounded-card border border-danger/40 bg-danger/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between" role="alert">
+        <section className="mb-6 flex items-center justify-between gap-3 rounded-card border border-danger/40 bg-danger/10 px-4 py-3" role="alert">
           <p className="text-xs leading-5 text-fg">{error}</p>
-          <button type="button" onClick={() => void fetchOverview()} className={actionClass}>Retry</button>
+          <button type="button" onClick={() => void fetchOverview()} className={subtleActionClass}>Retry</button>
         </section>
       )}
 
       {isLoading && !data ? (
         <div className="space-y-6" aria-label="Loading dashboard">
-          <div className="grid grid-cols-2 gap-3 min-[900px]:grid-cols-3 min-[1100px]:grid-cols-6">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <React.Fragment key={`dashboard-skeleton-${index}`}>
-                <SkeletonBlock className="h-24" />
-              </React.Fragment>
-            ))}
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 min-[1100px]:grid-cols-6">
+            {Array.from({ length: 6 }).map((_, index) => <div key={index} className="h-20 animate-pulse rounded-control bg-line/70" />)}
           </div>
-          <SkeletonBlock className="h-[310px]" />
-          <div className="grid gap-3 lg:grid-cols-2"><SkeletonBlock className="h-[300px]" /><SkeletonBlock className="h-[300px]" /></div>
+          <div className="grid gap-3 min-[1100px]:grid-cols-12">
+            <div className="h-[340px] animate-pulse rounded-card bg-line/70 min-[1100px]:col-span-8" />
+            <div className="h-[340px] animate-pulse rounded-card bg-line/70 min-[1100px]:col-span-4" />
+          </div>
+          <div className="grid gap-3 min-[1100px]:grid-cols-12">
+            <div className="h-[320px] animate-pulse rounded-card bg-line/70 min-[1100px]:col-span-8" />
+            <div className="h-[320px] animate-pulse rounded-card bg-line/70 min-[1100px]:col-span-4" />
+          </div>
         </div>
       ) : (
         <>
-          <section aria-labelledby="snapshot-title">
-            <div className="mb-3 flex items-end justify-between gap-3">
-              <div>
-                <h2 id="snapshot-title" className="text-sm font-semibold text-fg">Operational snapshot</h2>
-                <p className="mt-1 text-xs text-muted">The few signals worth checking first.</p>
-              </div>
+          <section aria-labelledby="dashboard-kpis">
+            <div className="mb-3">
+              <h2 id="dashboard-kpis" className="text-sm font-semibold text-fg">Operational snapshot</h2>
+              <p className="mt-1 text-xs text-muted">The signals worth checking first.</p>
             </div>
-            <div className="grid grid-cols-2 gap-y-6 border-y border-line py-5 sm:grid-cols-3 min-[1100px]:grid-cols-6">
-              <Metric label="Revenue collected" value={formatCurrency(metrics?.revenueCollected)} icon={CircleDollarSign} href="/admin/invoicing" context={financials?.revenueThisMonth != null ? `${formatCurrency(financials.revenueThisMonth)} this month` : 'Financial access required'} />
-              <Metric label="Outstanding" value={formatCurrency(metrics?.outstandingReceivables)} icon={WalletCards} tone="warning" href="/admin/invoicing" context={metrics?.overdueReceivables ? `${formatCurrency(metrics.overdueReceivables)} overdue` : 'No overdue balance reported'} />
-              <Metric label="Open leads" value={metrics?.openLeads ?? 0} icon={Users} tone="info" href="/admin/crm" context={metrics?.activePipeline != null ? `${formatCurrency(metrics.activePipeline)} active pipeline` : 'CRM access required'} />
-              <Metric label="Active projects" value={metrics?.activeProjects ?? 0} icon={FolderKanban} tone="success" href="/admin/projects" context={metrics?.projectsAtRisk ? `${metrics.projectsAtRisk} at risk` : 'No active risk flags'} />
-              <Metric label="Pending approvals" value={metrics?.pendingApprovals ?? 0} icon={ClipboardCheck} tone="warning" href="/admin/approvals" context="Awaiting review" />
-              <Metric label="Overdue tasks" value={metrics?.overdueTasks ?? 0} icon={AlertTriangle} tone="danger" href="/admin/projects" context="Needs attention" />
-            </div>
+            <AdminMetricStrip metrics={kpis} className="grid-cols-2 gap-y-6 sm:grid-cols-3 min-[1100px]:grid-cols-6" />
           </section>
 
-          <section className="mt-6" aria-labelledby="financial-trend-title">
-            <div className={cardClass}>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <h2 id="financial-trend-title" className="text-sm font-semibold text-fg">Financial operating trend</h2>
-                  <p className="mt-1 text-xs leading-5 text-muted">Collected revenue versus recorded expenses over the last six available months.</p>
+          <div className="mt-6 grid gap-3 min-[1100px]:grid-cols-12">
+            <AdminPanel
+              className="min-[1100px]:col-span-8"
+              bodyClassName="p-4 sm:p-5"
+              title="Revenue vs expenses"
+              description="Comparative financial performance over the selected range."
+              actions={
+                <div className="flex items-center gap-0.5 rounded-control bg-bg p-0.5">
+                  {(['30D', 'Q2', 'YTD', '12M'] as RangeKey[]).map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      aria-pressed={range === item}
+                      onClick={() => setRange(item)}
+                      className={`rounded-chip px-2.5 py-1.5 text-xs transition-colors ${range === item ? 'bg-line font-medium text-fg' : 'text-muted hover:text-fg'} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent`}
+                    >
+                      {item}
+                    </button>
+                  ))}
                 </div>
-                <Link to="/admin/invoicing" className={actionClass}>View invoicing <ArrowUpRight size={13} /></Link>
-              </div>
-              {canViewFinancials && financeSeries.length > 0 ? (
-                <div className="mt-5">
-                  <TrendChart
-                    data={financeSeries.map((point) => ({ label: point.month, primary: point.inflow, secondary: point.outflow, tertiary: point.net }))}
-                    primaryLabel="Revenue"
-                    secondaryLabel="Expenses"
-                    primaryFormat={(value) => formatAmount(value, currency, true)}
-                    ariaLabel="Six month financial trend showing collected revenue and expenses."
-                  />
-                  <div className="mt-4 grid grid-cols-2 gap-3 border-t border-line pt-4 sm:grid-cols-4">
-                    <div><p className="text-xs text-muted">This month</p><p className="mt-1 text-sm font-medium tabular-nums text-fg">{formatCurrency(financials?.revenueThisMonth)}</p></div>
-                    <div><p className="text-xs text-muted">Expenses</p><p className="mt-1 text-sm font-medium tabular-nums text-fg">{formatCurrency(financials?.operatingExpenses)}</p></div>
-                    <div><p className="text-xs text-muted">Net operating profit</p><p className="mt-1 text-sm font-medium tabular-nums text-fg">{formatCurrency(financials?.netOperatingProfit)}</p></div>
-                    <div><p className="text-xs text-muted">Net margin</p><p className="mt-1 text-sm font-medium tabular-nums text-fg">{financials?.margin ?? 'Restricted'}</p></div>
+              }
+            >
+              {visibleFinanceSeries.length ? (
+                <TrendChart
+                  data={visibleFinanceSeries.map((point) => ({
+                    label: point.month,
+                    primary: point.inflow,
+                    secondary: point.outflow,
+                    tertiary: point.net,
+                  }))}
+                  primaryLabel="Revenue"
+                  secondaryLabel="Operating expenses"
+                  primaryFormat={(value) => formatAmount(value, currency, true)}
+                  ariaLabel="Revenue and operating expenses trend."
+                />
+              ) : (
+                <EmptyState
+                  message="Financial trend unavailable."
+                  description="Recorded invoices and expenses will appear here when financial data is accessible."
+                  action={<Link to="/admin/invoicing" className={subtleActionClass}>Open invoicing</Link>}
+                />
+              )}
+            </AdminPanel>
+
+            <AdminPanel
+              className="min-[1100px]:col-span-4"
+              bodyClassName="p-4 sm:p-5"
+              title="Delivery & pacing"
+              description={`Milestone delivery distribution across ${effectiveProjects.length} projects.`}
+            >
+              {deliveryData.length ? (
+                <>
+                  <div className="mb-3 flex items-center justify-between">
+                    <span className="text-xs text-muted">On schedule</span>
+                    <span className="text-sm font-semibold tabular-nums text-fg">{onSchedulePercent}%</span>
                   </div>
-                  {financialInsight && <p className="mt-3 text-xs leading-5 text-muted"><span className="font-medium text-fg">Insight:</span> {financialInsight}</p>}
+                  <DonutChart data={deliveryData} ariaLabel="Project delivery status distribution." />
+                  <div className="mt-4 space-y-3 border-t border-line pt-4">
+                    {deliveryData.map((item) => {
+                      const total = deliveryData.reduce((sum, entry) => sum + entry.value, 0);
+                      const percent = total ? Math.round((item.value / total) * 100) : 0;
+                      const fill = item.tone === 'success' ? 'bg-success' : item.tone === 'warning' ? 'bg-warning' : 'bg-danger';
+                      return (
+                        <div key={item.label}>
+                          <div className="flex items-center justify-between pb-1">
+                            <span className="flex items-center gap-2 text-xs text-fg">
+                              <i className={`h-2 w-2 rounded-full ${fill}`} />{item.label}
+                            </span>
+                            <span className="text-xs tabular-nums text-muted">{item.value} ({percent}%)</span>
+                          </div>
+                          <div className="h-1.5 overflow-hidden rounded-sm bg-line">
+                            <div className={`h-full rounded-sm ${fill}`} style={{ width: `${percent}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : (
+                <EmptyState message="No project delivery data." description="Project health and pacing will appear here when project data is available." action={<Link to="/admin/projects" className={subtleActionClass}>Open projects</Link>} />
+              )}
+            </AdminPanel>
+          </div>
+
+          <div className="mt-6 grid gap-3 min-[1100px]:grid-cols-12">
+            <AdminPanel
+              className="min-[1100px]:col-span-8"
+              bodyClassName="p-0"
+              title="Active projects"
+              description="Status, delivery pacing, and project budget."
+              actions={
+                <div className="flex max-w-full gap-1.5 overflow-x-auto custom-scrollbar">
+                  {['All', 'Enterprise', 'Retainer', 'Fixed-fee'].map((filter) => (
+                    <button
+                      key={filter}
+                      type="button"
+                      aria-pressed={projectFilter === filter}
+                      onClick={() => setProjectFilter(filter)}
+                      className={`h-7 shrink-0 rounded-chip border px-2.5 text-xs transition-colors ${projectFilter === filter ? 'border-line bg-panel-hover font-medium text-fg' : 'border-line bg-bg text-muted hover:text-fg'} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent`}
+                    >
+                      {filter}
+                    </button>
+                  ))}
+                </div>
+              }
+            >
+              {filteredProjects.length ? (
+                <div className="overflow-x-auto custom-scrollbar">
+                  <table className="w-full min-w-[760px] border-collapse text-left">
+                    <thead>
+                      <tr className="border-b border-line bg-bg/50">
+                        <th className="px-4 py-2.5 text-xs font-medium text-muted sm:px-5">Project & client</th>
+                        <th className="px-3 py-2.5 text-xs font-medium text-muted">Status</th>
+                        <th className="px-3 py-2.5 text-xs font-medium text-muted">Pacing</th>
+                        <th className="px-3 py-2.5 text-xs font-medium text-muted">Lead</th>
+                        <th className="px-4 py-2.5 text-right text-xs font-medium text-muted">Budget</th>
+                        <th className="w-10 px-3 py-2.5" />
+                      </tr>
+                    </thead>
+                    <tbody className="text-xs">
+                      {filteredProjects.map((project) => {
+                        const tone = statusTone(project.status, project.health);
+                        return (
+                          <tr key={project.id || project.name} className="border-b border-line last:border-0 hover:bg-panel-hover">
+                            <td className="px-4 py-3 sm:px-5">
+                              <div className="font-medium text-fg">{project.name}</div>
+                              <div className="mt-0.5 text-[11px] text-muted">{project.clientName || project.clientCompany || 'No client assigned'}</div>
+                            </td>
+                            <td className="px-3 py-3">
+                              <span className={`inline-flex items-center gap-1.5 rounded-badge border px-2 py-0.5 text-[11px] font-medium ${toneClass[tone]}`}>
+                                <i className={`h-1.5 w-1.5 rounded-full ${tone === 'danger' ? 'bg-danger' : tone === 'warning' ? 'bg-warning' : tone === 'success' ? 'bg-success' : tone === 'info' ? 'bg-info' : 'bg-series-4'}`} />
+                                {project.health || project.status.replace(/_/g, ' ')}
+                              </span>
+                            </td>
+                            <td className="w-36 px-3 py-3">
+                              <div className="flex items-center gap-2">
+                                <div className="h-1.5 min-w-[78px] flex-1 overflow-hidden rounded-sm bg-line">
+                                  <div
+                                    className={`h-full rounded-sm ${tone === 'danger' ? 'bg-danger' : tone === 'warning' ? 'bg-warning' : 'bg-success'}`}
+                                    style={{ width: `${project.progressPercent}%` }}
+                                  />
+                                </div>
+                                <span className="text-[11px] tabular-nums text-muted">{project.progressPercent}%</span>
+                              </div>
+                            </td>
+                            <td className="px-3 py-3">
+                              <div className="flex items-center gap-1.5">
+                                <span className="flex h-5 w-5 items-center justify-center rounded-full border border-line bg-bg text-[10px] font-medium text-fg">
+                                  {initials(project.teamLead)}
+                                </span>
+                                <span className="max-w-[120px] truncate text-xs text-muted">{project.teamLead || 'Unassigned'}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              {project.budget > 0 ? <span className="text-xs font-medium tabular-nums text-fg">{formatCurrency(project.budget)}</span> : <span className="text-xs text-muted">Not set</span>}
+                            </td>
+                            <td className="px-3 py-3 text-right">
+                              <Link to="/admin/projects" aria-label={`Open projects for ${project.name}`} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                                <MoreVertical size={15} />
+                              </Link>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               ) : (
-                <div className="mt-4"><EmptyState message={canViewFinancials ? 'No financial trend data available.' : 'Financial trend is restricted.'} description={canViewFinancials ? 'Recorded payments and expenses will appear here once data is available.' : 'Your current role does not expose financial data.'} /></div>
+                <div className="p-5">
+                  <EmptyState
+                    message={projectFilter === 'All' ? 'No active projects.' : `No projects match ${projectFilter.toLowerCase()}.`}
+                    description="Project records will appear here when the current account can access them."
+                    action={<Link to="/admin/projects" className={subtleActionClass}>Open projects</Link>}
+                  />
+                </div>
               )}
-            </div>
+            </AdminPanel>
+
+            <AdminPanel
+              className="min-[1100px]:col-span-4"
+              bodyClassName="p-4 sm:p-5"
+              title="Team capacity"
+              description="Current task load based on open assignments."
+              actions={<span className="rounded-badge border border-line bg-bg px-2 py-1 text-[11px] text-muted tabular-nums">{teamLoad.length} leads</span>}
+            >
+              {teamLoad.length ? (
+                <div className="space-y-4">
+                  {teamLoad.map((member) => {
+                    const max = Math.max(1, ...teamLoad.map((item) => item.tasks));
+                    const bar = member.tasks >= max * 0.9 ? 'bg-warning' : member.tasks < max * 0.5 ? 'bg-series-3' : 'bg-success';
+                    return (
+                      <div key={member.name}>
+                        <div className="mb-1.5 flex items-center justify-between gap-3">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-line bg-bg text-xs font-semibold text-fg">{initials(member.name)}</div>
+                            <div className="min-w-0">
+                              <div className="truncate text-xs font-medium text-fg">{member.name}</div>
+                              <div className="mt-0.5 text-[11px] text-muted">{member.tasks} tasks</div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-xs font-medium tabular-nums text-fg">{member.percent}%</span>
+                            <span className="block text-[10px] text-muted">{member.state}</span>
+                          </div>
+                        </div>
+                        <div className="h-1.5 overflow-hidden rounded-sm bg-line">
+                          <div className={`h-full rounded-sm ${bar}`} style={{ width: `${member.percent}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div className="border-t border-line pt-4">
+                    <Link to="/admin/time-logs" className="inline-flex items-center gap-1 text-xs font-medium text-muted hover:text-accent-text">
+                      View full team schedule <ArrowUpRight size={13} />
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <EmptyState message="No team workload data." description="Open tasks with an assignee will appear here when available." action={<Link to="/admin/projects" className={subtleActionClass}>Open projects</Link>} />
+              )}
+            </AdminPanel>
+          </div>
+
+          <section className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="flex items-center gap-2 rounded-control border border-line bg-panel px-3 py-3"><CheckCircle2 size={15} className="text-success" /><div><p className="text-[11px] text-muted">On schedule</p><p className="text-xs font-medium tabular-nums text-fg">{onSchedulePercent}%</p></div></div>
+            <div className="flex items-center gap-2 rounded-control border border-line bg-panel px-3 py-3"><Clock3 size={15} className="text-warning" /><div><p className="text-[11px] text-muted">Tasks due this week</p><p className="text-xs font-medium tabular-nums text-fg">{tasks.length ? tasksDueThisWeek : '—'}</p></div></div>
+            <div className="flex items-center gap-2 rounded-control border border-line bg-panel px-3 py-3"><WalletCards size={15} className="text-warning" /><div><p className="text-[11px] text-muted">Outstanding</p><p className="text-xs font-medium tabular-nums text-fg">{formatCurrency(financials?.outstandingReceivables ?? metrics?.outstandingReceivables)}</p></div></div>
+            <div className="flex items-center gap-2 rounded-control border border-line bg-panel px-3 py-3"><Users size={15} className="text-info" /><div><p className="text-[11px] text-muted">Open leads</p><p className="text-xs font-medium tabular-nums text-fg">{metrics?.openLeads ?? 0}</p></div></div>
           </section>
-
-          <div className="mt-6 grid gap-3 min-[1100px]:grid-cols-12">
-            <section className={`${cardClass} min-[1100px]:col-span-7`} aria-labelledby="pipeline-title">
-              <div className="flex items-start justify-between gap-3">
-                <div><h2 id="pipeline-title" className="text-sm font-semibold text-fg">Lead pipeline</h2><p className="mt-1 text-xs text-muted">Lead count by current CRM stage.</p></div>
-                <Link to="/admin/crm" className={actionClass}>Open CRM <ArrowUpRight size={13} /></Link>
-              </div>
-              <div className="mt-5">
-                {pipelineData.length ? <BarChart data={pipelineData} valueLabel="Leads" ariaLabel="Lead pipeline counts by CRM stage." /> : <EmptyState message="No pipeline data available." description="CRM stage data will appear here when accessible." action={<Link to="/admin/crm" className={actionClass}>Open CRM</Link>} />}
-              </div>
-            </section>
-
-            <section className={`${cardClass} min-[1100px]:col-span-5`} aria-labelledby="project-status-title">
-              <div className="flex items-start justify-between gap-3">
-                <div><h2 id="project-status-title" className="text-sm font-semibold text-fg">Project delivery</h2><p className="mt-1 text-xs text-muted">Current project status mix returned by the operational data.</p></div>
-                <Link to="/admin/projects" className={actionClass}>Projects <ArrowUpRight size={13} /></Link>
-              </div>
-              <div className="mt-5">
-                {projectStatusData.length ? <DonutChart data={projectStatusData} ariaLabel="Project status distribution." /> : <EmptyState message="No active project data." description="Project status will appear here when projects are available." />}
-              </div>
-            </section>
-          </div>
-
-          <div className="mt-6 grid gap-3 min-[1100px]:grid-cols-12">
-            <section className={`${cardClass} min-[1100px]:col-span-7`} aria-labelledby="financial-summary-title">
-              <div className="flex items-start justify-between gap-3">
-                <div><h2 id="financial-summary-title" className="text-sm font-semibold text-fg">Financial operating summary</h2><p className="mt-1 text-xs text-muted">Receivables and operating performance from current financial data.</p></div>
-                {financialMetrics?.collectionRate !== null && financialMetrics?.collectionRate !== undefined && <span className="rounded-badge bg-success/10 px-2 py-1 text-[11px] font-semibold text-success">{financialMetrics.collectionRate}% collection rate</span>}
-              </div>
-              <div className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-control border border-line bg-line sm:grid-cols-4">
-                <div className="bg-panel p-3.5"><p className="text-xs text-muted">Revenue</p><p className="mt-1 text-sm font-medium tabular-nums text-fg">{formatCurrency(financials?.revenueThisMonth)}</p></div>
-                <div className="bg-panel p-3.5"><p className="text-xs text-muted">Expenses</p><p className="mt-1 text-sm font-medium tabular-nums text-fg">{formatCurrency(financials?.operatingExpenses)}</p></div>
-                <div className="bg-panel p-3.5"><p className="text-xs text-muted">Outstanding</p><p className="mt-1 text-sm font-medium tabular-nums text-fg">{formatCurrency(financials?.outstandingReceivables)}</p></div>
-                <div className="bg-panel p-3.5"><p className="text-xs text-muted">Overdue</p><p className="mt-1 text-sm font-medium tabular-nums text-danger">{formatCurrency(metrics?.overdueReceivables)}</p></div>
-              </div>
-              <div className="mt-4 grid gap-4 rounded-control border border-line bg-bg p-4 sm:grid-cols-[1fr_auto] sm:items-center">
-                <div className="min-w-0">
-                  <div className="flex items-end justify-between gap-3">
-                    <div>
-                      <p className="text-xs text-muted">Collection rate</p>
-                      <p className="mt-1 text-xl font-medium tabular-nums text-fg">
-                        {financialMetrics?.collectionRate != null ? `${financialMetrics.collectionRate}%` : 'Restricted'}
-                      </p>
-                    </div>
-                    <span className="text-xs text-muted">Receivables collected</span>
-                  </div>
-                  {financialMetrics?.collectionRate != null && (
-                    <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-line">
-                      <div className="h-full rounded-full bg-success" style={{ width: `${Math.min(100, Math.max(0, financialMetrics.collectionRate))}%` }} />
-                    </div>
-                  )}
-                </div>
-                <div className="border-t border-line pt-3 sm:border-l sm:border-t-0 sm:pl-5 sm:pt-0">
-                  <p className="text-xs text-muted">Net operating profit</p>
-                  <p className="mt-1 text-xl font-medium tabular-nums text-fg">{formatCurrency(financials?.netOperatingProfit)}</p>
-                  <p className="mt-1 text-xs text-muted">Net margin {financials?.margin ?? 'Restricted'}</p>
-                </div>
-              </div>
-            </section>
-
-            <section className={`${cardClass} min-[1100px]:col-span-5`} aria-labelledby="attention-title">
-              <div className="flex items-start justify-between gap-3">
-                <div><h2 id="attention-title" className="text-sm font-semibold text-fg">Action required</h2><p className="mt-1 text-xs text-muted">Only current items generated by the operational data.</p></div>
-                <span className={`rounded-badge px-2 py-1 text-[11px] font-semibold ${attentionCount ? 'bg-warning/10 text-warning' : 'bg-success/10 text-success'}`}>{attentionCount}</span>
-              </div>
-              <div className="mt-4 space-y-2">
-                {attentionItems.length ? attentionItems.slice(0, 5).map((item) => (
-                  <Link key={item.id} to={item.linkUrl} className="group flex min-h-14 items-start gap-3 rounded-control border border-line bg-bg p-3 hover:border-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                    <span className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-control ${toneClass[item.severity === 'danger' ? 'danger' : item.severity === 'warning' ? 'warning' : 'info']}`}><AlertTriangle size={14} /></span>
-                    <span className="min-w-0 flex-1"><span className="block truncate text-xs font-semibold text-fg">{item.title}</span><span className="mt-0.5 block text-[11px] leading-4 text-muted">{item.description}</span></span>
-                    <ArrowUpRight size={14} className="mt-1 shrink-0 text-muted transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-                  </Link>
-                )) : <EmptyState message="No action required." description="No current overdue, approval, delivery, or unassigned-lead alerts were returned." />}
-              </div>
-            </section>
-          </div>
-
-          <div className="mt-6 grid gap-3 min-[1100px]:grid-cols-12">
-            <section className={`${cardClass} min-[1100px]:col-span-4`} aria-labelledby="quick-actions-title">
-              <div><h2 id="quick-actions-title" className="text-sm font-semibold text-fg">Quick actions</h2><p className="mt-1 text-xs text-muted">Jump directly to the modules used most often.</p></div>
-              <div className="mt-4 grid grid-cols-2 gap-2">
-                {operationalActions.map((item) => {
-                  const Icon = item.icon;
-                  return <Link key={item.href} to={item.href} className="group flex min-h-20 flex-col justify-between rounded-control border border-line bg-bg p-3 text-xs font-medium text-fg transition-colors hover:border-muted hover:bg-panel focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><Icon size={17} className="text-muted transition-colors group-hover:text-accent-text" /><span className="flex items-center justify-between gap-2">{item.label}<ArrowUpRight size={13} className="text-muted" /></span></Link>;
-                })}
-              </div>
-            </section>
-
-            <section className={`${cardClass} min-[1100px]:col-span-8`} aria-labelledby="activity-title">
-              <div className="flex items-start justify-between gap-3"><div><h2 id="activity-title" className="text-sm font-semibold text-fg">Recent activity</h2><p className="mt-1 text-xs text-muted">Latest audit events returned for this account.</p></div><Link to="/admin/settings" className={actionClass}>View audit log <ArrowUpRight size={13} /></Link></div>
-              <div className="mt-4 overflow-hidden rounded-control border border-line">
-                {recentActivity.length ? recentActivity.slice(0, 6).map((event, index) => (
-                  <div key={event.id ?? index} className="flex items-start gap-3 border-b border-line px-3 py-3 last:border-0">
-                    <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-control bg-bg text-muted"><Activity size={14} /></span>
-                    <div className="min-w-0 flex-1"><p className="text-xs leading-5 text-fg">{event.action ?? event.title ?? 'System activity'}</p><p className="mt-0.5 text-[11px] leading-4 text-muted">{event.description ?? event.actor ?? 'AMS operation'}</p></div>
-                  </div>
-                )) : <EmptyState message="No recent activity." description="New audit events will appear here after operational actions are recorded." />}
-              </div>
-            </section>
-          </div>
         </>
       )}
 

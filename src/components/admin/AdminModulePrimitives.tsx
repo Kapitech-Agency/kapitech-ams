@@ -5,6 +5,8 @@ import { cn } from '../../lib/cn';
 export interface AdminModuleHeaderProps {
   title: React.ReactNode;
   description?: React.ReactNode;
+  eyebrow?: React.ReactNode;
+  icon?: React.ReactNode;
   actions?: React.ReactNode;
   className?: string;
 }
@@ -12,16 +14,20 @@ export interface AdminModuleHeaderProps {
 export const AdminModuleHeader: React.FC<AdminModuleHeaderProps> = ({
   title,
   description,
+  eyebrow,
+  icon,
   actions,
   className
 }) => (
   <header className={cn(
-    'ams-dashboard-header mb-6 flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between',
+    'ams-dashboard-header mb-6 flex flex-col gap-3 border-b border-line pb-4 sm:flex-row sm:items-center sm:justify-between',
     className
   )}>
     <div className="min-w-0">
-      <h1 className="text-2xl font-semibold leading-8 tracking-[-0.02em] text-fg">
-        {title}
+      {eyebrow && <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted">{eyebrow}</div>}
+      <h1 className="flex min-w-0 items-center gap-2.5 text-xl font-semibold leading-7 tracking-[-0.01em] text-fg">
+        {icon && <span className="shrink-0 text-accent-text">{icon}</span>}
+        <span className="min-w-0 truncate">{title}</span>
       </h1>
       {description && (
         <p className="mt-1 max-w-2xl text-xs leading-5 text-muted">
@@ -62,7 +68,7 @@ export const AdminMetricStrip: React.FC<AdminMetricStripProps> = ({
       <div
         key={metric.id || String(metric.label)}
         className={cn(
-          'min-w-0 border-l border-line px-4 py-4 first:border-l-0',
+          'min-w-0 px-2 py-1 first:pl-0 sm:px-3 sm:first:pl-0',
           index === 0 && 'first:border-l-0',
           itemClassName
         )}
@@ -75,11 +81,11 @@ export const AdminMetricStrip: React.FC<AdminMetricStripProps> = ({
             </span>
           )}
         </div>
-        <div className="mt-2 truncate text-xl font-medium leading-7 tracking-[-0.01em] tabular-nums text-fg">
+        <div className="mt-1 truncate text-2xl font-medium leading-8 tracking-[-0.02em] tabular-nums text-fg">
           {metric.value}
         </div>
         {metric.context !== undefined && (
-          <div className="mt-1 min-h-4 text-[11px] leading-4 text-muted">
+          <div className="mt-1 min-h-4 text-xs leading-4 text-muted">
             {metric.context}
           </div>
         )}

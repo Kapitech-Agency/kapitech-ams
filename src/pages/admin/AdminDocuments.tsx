@@ -16,6 +16,7 @@ import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
+import { AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 
 interface DocumentItem {
   id: string;
@@ -184,27 +185,23 @@ export const AdminDocuments: React.FC = () => {
       )}
 
       {/* Header */}
-      <div className="ams-page-header flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-        <div>
-          <h1 className="ams-page-title flex items-center gap-2.5">
-            <FileText className="text-accent-text shrink-0" size={22} />
-            <span>{language === 'id' ? 'Brankas Dokumen & Aset Agency' : 'Documents & Asset Vault'}</span>
-          </h1>
-          <p className="text-xs font-sans text-muted mt-1">
-            {language === 'id' 
-              ? 'Arsip kontrak digital, NDA, proposal komersial, berkas kepatuhan pajak, dan deliverable proyek.' 
-              : 'Digital contract repository, NDAs, commercial proposals, tax compliance, and project assets.'}
-          </p>
-        </div>
-
-        <button
-          onClick={() => setIsUploadModalOpen(true)}
-          className="min-h-10 px-3 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-sans font-medium flex items-center justify-center gap-2 transition-colors shrink-0"
-        >
-          <Plus size={15} />
-          <span>{language === 'id' ? 'Unggah Dokumen' : 'Upload Document'}</span>
-        </button>
-      </div>
+      <AdminModuleHeader
+        icon={<FileText size={20} />}
+        title={language === 'id' ? 'Brankas Dokumen & Aset Agency' : 'Documents & Asset Vault'}
+        description={language === 'id'
+          ? 'Arsip kontrak digital, NDA, proposal komersial, berkas kepatuhan pajak, dan deliverable proyek.'
+          : 'Digital contract repository, NDAs, commercial proposals, tax compliance, and project assets.'}
+        actions={
+          <Button
+            type="button"
+            variant="primary"
+            icon={<Plus size={15} />}
+            onClick={() => setIsUploadModalOpen(true)}
+          >
+            {language === 'id' ? 'Unggah dokumen' : 'Upload document'}
+          </Button>
+        }
+      />
 
       {/* Document filters */}
       <div className="rounded-card border border-line bg-panel p-2"><div className="mb-2 px-2 text-xs font-medium text-muted">Filter documents</div><div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
@@ -216,7 +213,7 @@ export const AdminDocuments: React.FC = () => {
               onClick={() => setCategoryFilter(categoryFilter === cat ? 'all' : cat)}
               className={`min-h-10 px-3 py-2 rounded-chip border text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-[.98] ${
                 categoryFilter === cat
-                  ? 'bg-accent/10 border-accent/30 text-fg'
+                  ? 'bg-panel-hover border-line text-fg'
                   : 'bg-panel border-line text-muted hover:text-fg hover:border-line'
               }`}
             >

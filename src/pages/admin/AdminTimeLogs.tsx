@@ -5,6 +5,9 @@ import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
+import Button from '../../components/ui/Button';
+import { Skeleton } from '../../components/ui/Skeleton';
+import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 
 
 type TimeLog = {
@@ -106,40 +109,60 @@ export const AdminTimeLogs: React.FC = () => {
   };
 
   return (
-    <div className="min-h-full bg-bg text-fg">
-      <div className="max-w-[1500px] mx-auto p-4 sm:p-5 lg:p-6 space-y-6">
-        <header className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 pb-5 border-b border-line">
-          <div className="flex items-center gap-2 self-stretch sm:self-auto">
+    <div className="space-y-6">
+      <AdminModuleHeader
+        title="Time tracking"
+        description="Record project time, billable hours, and activity notes in one consistent delivery workspace."
+        actions={
+          <>
             {canManage && (
-              <button
+              <Button
                 type="button"
+                variant="primary"
+                icon={<Plus size={15} />}
                 onClick={() => document.getElementById('time-entry-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
-                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control bg-accent px-3 text-xs font-medium text-white transition-colors hover:bg-accent-hover active:bg-accent-pressed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               >
-                <Plus size={15} /> Add Time Entry
-              </button>
+                Add time entry
+              </Button>
             )}
-            <button onClick={() => void load()} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control border border-line bg-panel px-3 text-xs text-fg transition-colors hover:bg-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent self-stretch sm:self-auto">
-              <RefreshCw size={14} /> Refresh
-            </button>
-          </div>
-        </header>
+            <Button
+              type="button"
+              variant="secondary"
+              icon={<RefreshCw size={14} />}
+              loading={loading}
+              onClick={() => void load()}
+            >
+              Refresh
+            </Button>
+          </>
+        }
+      />
 
-        <section className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {[
-            ['Tracked time', formatMinutes(totalMinutes), Timer],
-            ['Billable time', formatMinutes(billableMinutes), ReceiptText],
-            ['Entries', String(logs.length), CalendarDays]
-          ].map(([label, value, Icon]: any) => (
-            <div key={label} className="rounded-card border border-line bg-panel p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted">{label}</span>
-                <Icon size={15} className="text-accent" />
-              </div>
-              <div className="mt-2 text-xl font-semibold tracking-[-0.01em]">{value}</div>
-            </div>
-          ))}
-        </section>
+      <AdminMetricStrip
+        metrics={[
+          {
+            id: 'tracked-time',
+            label: 'Tracked time',
+            value: formatMinutes(totalMinutes),
+            icon: <Timer size={15} />,
+            toneClassName: 'text-accent-text'
+          },
+          {
+            id: 'billable-time',
+            label: 'Billable time',
+            value: formatMinutes(billableMinutes),
+            icon: <ReceiptText size={15} />,
+            toneClassName: 'text-accent-text'
+          },
+          {
+            id: 'entries',
+            label: 'Entries',
+            value: String(logs.length),
+            icon: <CalendarDays size={15} />,
+            toneClassName: 'text-muted'
+          }
+        ]}
+      />
 
         {canManage && (
           <form id="time-entry-form" onSubmit={submit} className="rounded-card border border-line bg-panel p-4 space-y-4">
@@ -200,7 +223,21 @@ export const AdminTimeLogs: React.FC = () => {
             </div>
           </div>
           {loading ? (
-            <div className="p-8 text-sm text-muted">Loading time entries…</div>
+            <div className="space-y-0" role="status" aria-label="Loading time entries">
+              {[1, 2, 3, 4].map((row) => (
+                <div key={row} className="grid grid-cols-[110px_minmax(220px,1fr)_120px_100px_110px_72px] items-center gap-4 border-b border-line px-4 py-3 last:border-b-0">
+                  <Skeleton className="h-3 w-20" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-32 max-w-full" />
+                    <Skeleton className="h-3 w-24 max-w-full" />
+                  </div>
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-5 w-20 rounded-badge" />
+                  <Skeleton className="h-8 w-8 rounded-control" />
+                </div>
+              ))}
+            </div>
           ) : logs.length === 0 ? (
             <div className="min-h-[160px] px-4 py-8 text-center">
               <Timer size={22} className="mx-auto text-muted" />
@@ -245,7 +282,6 @@ export const AdminTimeLogs: React.FC = () => {
             </div>
           )}
         </section>
-      </div>
       <ConfirmDialog
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}

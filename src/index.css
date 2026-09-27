@@ -178,7 +178,8 @@
 .ams-shell .ams-action:hover{color:var(--text);background:var(--panel-hover)}
 .ams-shell .ams-dashboard-card,.ams-shell .ams-panel{min-width:0;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
 .ams-shell .ams-dashboard-card:hover{box-shadow:none}.ams-shell .ams-dashboard-card .text-2xl{font-size:24px;line-height:32px;font-weight:500;font-variant-numeric:tabular-nums}.ams-shell .ams-dashboard-card .text-base{font-size:14px;line-height:20px;font-weight:600}
-.ams-shell .ams-sidebar-expanded a[aria-current=page],.ams-shell .ams-sidebar-collapsed a[aria-current=page]{box-shadow:none;background:color-mix(in srgb,var(--accent) 10%,transparent);color:var(--accent-text)}
+.ams-shell .ams-sidebar-expanded a[aria-current=page],.ams-shell .ams-sidebar-collapsed a[aria-current=page]{position:relative;box-shadow:none;background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--text)}
+.ams-shell .ams-sidebar-expanded a[aria-current=page]::before,.ams-shell .ams-sidebar-collapsed a[aria-current=page]::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:2px;border-radius:1px;background:var(--accent)}
 .ams-shell .ams-sidebar-expanded,.ams-shell .ams-sidebar-collapsed{min-width:0}
 .ams-shell .ams-topnav-scroll{scrollbar-width:none;-ms-overflow-style:none}
 .ams-shell .ams-topnav-scroll::-webkit-scrollbar{display:none}
@@ -190,8 +191,8 @@
 .ams-shell .ams-popover-surface .ams-dropdown-item[data-selected=true]{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--text);font-weight:600}
 .ams-shell .ams-popover-surface .ams-dropdown-item[data-danger=true]{color:var(--danger)}
 .ams-shell .ams-popover-surface .ams-dropdown-item[data-danger=true]:hover,.ams-shell .ams-popover-surface .ams-dropdown-item[data-danger=true][data-active=true]{background:color-mix(in srgb,var(--danger) 10%,transparent);color:var(--danger)}
-.ams-shell .ams-crm-kpi,.ams-shell .ams-inbox-kpi{gap:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.ams-shell .ams-crm-kpi>div,.ams-shell .ams-inbox-kpi>div{border:0;border-radius:0;background:transparent;box-shadow:none}.ams-shell .ams-crm-kpi>div+div,.ams-shell .ams-inbox-kpi>div+div{border-left:1px solid var(--line)}
+.ams-shell .ams-crm-kpi,.ams-shell .ams-inbox-kpi{gap:0;border:0}
+.ams-shell .ams-crm-kpi>div,.ams-shell .ams-inbox-kpi>div{border:0;border-radius:0;background:transparent;box-shadow:none}.ams-shell .ams-crm-kpi>div+div,.ams-shell .ams-inbox-kpi>div+div{border-left:0}
 .ams-shell .ams-crm-kpi>.ams-crm-funnel-card{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:16px}
 .ams-shell .ams-leads-page,.ams-shell .ams-inbox-page{min-width:0;width:100%;color:var(--text)}.ams-shell .ams-leads-page>*,.ams-shell .ams-inbox-page>*{min-width:0}
 .ams-shell .ams-leads-page .ams-table-scroll,.ams-shell .ams-inbox-page .ams-table-scroll{max-width:100%;overflow-x:auto}.ams-shell .ams-table-scroll table{min-width:max-content}

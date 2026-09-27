@@ -934,7 +934,7 @@ export const AdminProjects: React.FC = () => {
               <div className="mt-5">
                 <div className="text-[11px] font-semibold text-muted">Status</div>
                 <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  {TASK_COLUMNS.map(column => <button key={column.id} disabled={!canManageKanbanTasks} onClick={() => void changeTaskStatus(taskDrawer, column.id)} className={'min-h-10 rounded-control border px-2 text-[11px] font-semibold transition-colors ' + (taskDrawer.status === column.id ? 'border-accent bg-accent text-white' : 'border-line bg-bg text-muted hover:text-fg')}>{column.label}</button>)}
+                  {TASK_COLUMNS.map(column => <button key={column.id} disabled={!canManageKanbanTasks} onClick={() => void changeTaskStatus(taskDrawer, column.id)} className={'min-h-10 rounded-control border px-2 text-[11px] font-semibold transition-colors ' + (taskDrawer.status === column.id ? 'border-line bg-panel-hover text-fg' : 'border-line bg-bg text-muted hover:text-fg')}>{column.label}</button>)}
                 </div>
               </div>
 
