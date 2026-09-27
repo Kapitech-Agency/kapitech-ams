@@ -43,6 +43,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { api } from '../../lib/apiClient';
 import { ProductionReadinessCard } from '../../components/admin/ProductionReadinessCard';
 import Button from '../../components/ui/Button';
+import { AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 
 export const AdminSettings: React.FC = () => {
   const { language, t } = useLanguage();
@@ -353,27 +354,22 @@ export const AdminSettings: React.FC = () => {
     <div className="space-y-6">
       
       {/* Top Header */}
-      <div className="ams-page-header flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
-        <div>
-          <h1 className="ams-page-title">
-            <Settings className="text-accent-text shrink-0" size={22} />
-            <span>{language === 'id' ? 'Pengaturan Sistem & Keamanan' : 'Settings'}</span>
-          </h1>
-          <p className="text-xs text-muted mt-1 font-sans">
-            {language === 'id'
-              ? 'Konfigurasi akun master admin, hak akses RBAC, integrasi API, dan log audit keamanan terenkripsi.'
-              : 'Configure master admin identity, 4-tier RBAC access matrix, API cloud integrations, and encrypted audit trail.'}
-          </p>
-        </div>
+      <AdminModuleHeader
+        icon={<Settings size={20} />}
+        title={language === 'id' ? 'Pengaturan Sistem & Keamanan' : 'Settings'}
+        description={language === 'id'
+          ? 'Konfigurasi akun master admin, hak akses RBAC, integrasi API, dan log audit keamanan terenkripsi.'
+          : 'Configure master admin identity, 4-tier RBAC access matrix, API cloud integrations, and encrypted audit trail.'}
+      />
       </div>
 
       {/* Tabs */}
       <div className="flex items-center gap-2 border-b border-line pb-2 overflow-x-auto custom-scrollbar">
         <button
           onClick={() => handleTabChange('profile')}
-          className={`px-4 py-2.5 rounded-control text-xs font-sans transition-all flex items-center gap-2 shrink-0 min-h-10 ${
+          className={`px-4 py-2.5 rounded-control border border-transparent text-xs font-sans transition-all flex items-center gap-2 shrink-0 min-h-10 ${
             activeTab === 'profile'
-              ? 'bg-accent text-white font-semibold '
+              ? 'bg-panel-hover text-fg font-semibold border-line '
               : 'text-muted hover:text-fg hover:bg-panel'
           }`}
         >
@@ -385,7 +381,7 @@ export const AdminSettings: React.FC = () => {
           onClick={() => handleTabChange('branding')}
           className={`px-4 py-2.5 rounded-control text-xs font-sans transition-all flex items-center gap-2 shrink-0 min-h-10 ${
             activeTab === 'branding'
-              ? 'bg-accent text-white font-semibold '
+              ? 'bg-panel-hover text-fg font-semibold border-line '
               : 'text-muted hover:text-fg hover:bg-panel'
           }`}
         >
@@ -398,7 +394,7 @@ export const AdminSettings: React.FC = () => {
            disabled={!canManageAdminAccounts}
           className={`px-4 py-2.5 rounded-control text-xs font-sans transition-all flex items-center gap-2 shrink-0 min-h-10 ${
             activeTab === 'rbac'
-              ? 'bg-accent text-white font-semibold '
+              ? 'bg-panel-hover text-fg font-semibold border-line '
               : 'text-muted hover:text-fg hover:bg-panel'
           }`}
         >
