@@ -825,7 +825,7 @@ export const AdminInvoicing: React.FC = () => {
             <div className="rounded-card border border-line bg-panel p-4 sm:p-5">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div className="inline-flex w-fit items-center rounded-control border border-line bg-bg p-1">
-                  <button type="button" onClick={() => setTab('invoices')} className={'inline-flex min-h-9 items-center gap-1.5 rounded-chip px-3 text-xs font-medium ' + (tab === 'invoices' ? 'bg-accent text-white' : 'text-muted hover:text-fg')}>
+                  <button type="button" onClick={() => setTab('invoices')} className={'inline-flex min-h-10 sm:min-h-9 items-center gap-1.5 rounded-chip px-3 text-xs font-medium ' + (tab === 'invoices' ? 'bg-accent text-white' : 'text-muted hover:text-fg')}>
                     <Receipt size={14} />
                     {language === 'id' ? 'Invoice' : 'Invoices'} <span className="tabular-nums opacity-80">({currencyInvoices.length})</span>
                   </button>
