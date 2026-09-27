@@ -11,7 +11,6 @@ import {
   Settings,
   Command,
   ArrowRight,
-  X,
   FileText,
   ShieldCheck,
   FolderOpen,
@@ -19,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../../lib/LanguageContext';
 import { api } from '../../lib/apiClient';
+import { Modal } from '../ui/Modal';
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -51,54 +51,16 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
   const [isSearching, setIsSearching] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
-  const restoreFocusRef = useRef<HTMLElement | null>(null);
   const selectableItemsRef = useRef<Array<
     { kind: 'result'; result: SearchResult } | { kind: 'action'; action: QuickAction }
   >>([]);
 
   useEffect(() => {
-    if (isOpen) {
-      restoreFocusRef.current = document.activeElement as HTMLElement | null;
-
-      const timer = window.setTimeout(() => inputRef.current?.focus(), 50);
-      const handleTab = (event: KeyboardEvent) => {
-        if (event.key !== 'Tab') return;
-
-        const dialog = inputRef.current?.closest<HTMLElement>('[role="dialog"]');
-        if (!dialog) return;
-
-        const focusables = Array.from(
-          dialog.querySelectorAll<HTMLElement>(
-            'button:not([disabled]), input:not([disabled]), [href], [tabindex="0"]'
-          )
-        ).filter((element) => element.getClientRects().length > 0);
-
-        if (!focusables.length) return;
-
-        const first = focusables[0];
-        const last = focusables[focusables.length - 1];
-
-        if (event.shiftKey && document.activeElement === first) {
-          event.preventDefault();
-          last.focus();
-        } else if (!event.shiftKey && document.activeElement === last) {
-          event.preventDefault();
-          first.focus();
-        }
-      };
-
-      document.addEventListener('keydown', handleTab, true);
-
-      return () => {
-        window.clearTimeout(timer);
-        document.removeEventListener('keydown', handleTab, true);
-        if (restoreFocusRef.current?.isConnected) restoreFocusRef.current.focus();
-      };
+    if (!isOpen) {
+      setQuery('');
+      setSearchResults([]);
+      setActiveIndex(0);
     }
-
-    setQuery('');
-    setSearchResults([]);
-    setActiveIndex(0);
   }, [isOpen]);
 
   useEffect(() => {
@@ -283,8 +245,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeIndex, isOpen, navigate, onClose]);
 
-  if (!isOpen) return null;
-
   const getBadgeColor = (_type: string) => 'bg-panel text-muted border-line';
 
   const runSelected = (index: number) => {
@@ -299,25 +259,32 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-bg/80 px-3 pt-16 pb-3 sm:px-4 sm:pt-24 sm:pb-4 overflow-y-auto overscroll-contain"
-      role="presentation"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
+    <Modal
+      open={isOpen}
+      onClose={onClose}
+      size="xl"
+      title={language === 'id' ? 'Pencarian AMS' : 'Search AMS'}
+      initialFocusRef={inputRef}
+      footer={(
+        <div className="flex w-full items-center justify-between gap-3 text-[10px] text-muted">
+          <div className="flex items-center gap-3">
+            <span>↑↓ Navigate</span>
+            <span>↵ Select</span>
+            <span>ESC Close</span>
+          </div>
+          <div className="hidden items-center gap-1 font-semibold text-accent-text sm:flex">
+            <Command size={11} />
+            <span>KAPITECH AMS</span>
+          </div>
+        </div>
+      )}
     >
-      <div
-        className="flex max-h-[calc(100dvh-24px)] w-full max-w-xl flex-col overflow-hidden rounded-card border border-line bg-panel"
-        role="dialog"
-        aria-modal="true"
-        aria-label={language === 'id' ? 'Command Palette' : 'Command Palette'}
-        onMouseDown={(event) => event.stopPropagation()}
-      >
-        <div className="flex min-h-14 items-center gap-3 border-b border-line bg-bg px-4">
+      <div className="space-y-3">
+        <div className="flex min-h-12 items-center gap-3 rounded-control border border-line bg-bg px-3">
           {isSearching ? (
-            <Loader2 size={18} className="shrink-0  text-accent-text" />
+            <Loader2 size={17} className="shrink-0 animate-spin text-accent-text" />
           ) : (
-            <Search size={18} className="shrink-0 text-muted" />
+            <Search size={17} className="shrink-0 text-muted" />
           )}
           <input
             ref={inputRef}
@@ -326,27 +293,19 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
             onChange={(event) => setQuery(event.target.value)}
             placeholder={
               language === 'id'
-                ? 'Cari deal, invoice, proyek, proposal, atau modul (⌘K)...'
-                : 'Search deals, invoices, projects, proposals, or modules (⌘K)...'
+                ? 'Cari deal, invoice, proyek, proposal, atau modul...'
+                : 'Search deals, invoices, projects, proposals, or modules...'
             }
-            className="flex-1 bg-transparent text-sm text-fg placeholder-muted font-sans outline-none"
+            className="min-h-10 flex-1 border-0 bg-transparent p-0 text-sm text-fg outline-none shadow-none focus:border-0 focus:shadow-none"
             aria-label={language === 'id' ? 'Pencarian AMS' : 'AMS search'}
             autoComplete="off"
           />
-          <button
-            type="button"
-            onClick={onClose}
-            className="min-h-10 min-w-10 shrink-0 rounded-control p-2 text-muted transition-colors hover:bg-panel-hover hover:text-fg"
-            aria-label={language === 'id' ? 'Tutup pencarian' : 'Close search'}
-          >
-            <X size={16} />
-          </button>
         </div>
 
-        <div className="max-h-[440px] space-y-2 overflow-y-auto p-2 custom-scrollbar" role="listbox" aria-label="Command results">
+        <div className="max-h-[min(52vh,440px)] space-y-2 overflow-y-auto rounded-card border border-line bg-bg/40 p-2 custom-scrollbar" role="listbox" aria-label="Command results">
           {searchResults.length > 0 && (
             <div>
-              <div className="px-3 py-1.5 text-[10px] font-sans tracking-normal text-muted">
+              <div className="px-3 py-1.5 text-[10px] font-medium text-muted">
                 {language === 'id' ? 'Hasil pencarian database' : 'Database records'} ({searchResults.length})
               </div>
               <div className="space-y-1">
@@ -360,23 +319,21 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
                       aria-selected={isActive}
                       onMouseEnter={() => setActiveIndex(index)}
                       onClick={() => runSelected(index)}
-                      className={`group flex w-full items-center justify-between rounded-control p-2.5 text-left transition-colors ${isActive ? 'bg-panel-hover' : 'hover:bg-panel-hover'}`}
+                      className={`group flex w-full items-center justify-between rounded-control p-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${isActive ? 'bg-panel-hover' : 'hover:bg-panel-hover'}`}
                     >
                       <div className="flex min-w-0 items-center gap-2.5">
-                        <span className={`shrink-0 rounded-badge border px-2 py-0.5 text-[9px] font-sans font-medium normal-case ${getBadgeColor(result.type)}`}>
+                        <span className={`shrink-0 rounded-badge border px-2 py-0.5 text-[9px] font-medium normal-case ${getBadgeColor(result.type)}`}>
                           {result.type}
                         </span>
                         <div className="min-w-0">
-                          <div className={`truncate text-xs font-semibold transition-colors ${isActive ? 'text-fg' : 'text-fg'}`}>
-                            {result.name}
-                          </div>
-                          <div className="flex items-center gap-2 text-[10px] font-sans text-muted">
+                          <div className="truncate text-xs font-semibold text-fg">{result.name}</div>
+                          <div className="flex items-center gap-2 text-[10px] text-muted">
                             {result.status && <span>Status: {result.status}</span>}
                             {result.owner && <span>• {result.owner}</span>}
                           </div>
                         </div>
                       </div>
-                      <ArrowRight size={12} className={`shrink-0 transition-colors ${isActive ? ' text-accent-text' : 'text-muted'}`} />
+                      <ArrowRight size={12} className={`shrink-0 transition-colors ${isActive ? 'text-accent-text' : 'text-muted'}`} />
                     </button>
                   );
                 })}
@@ -386,13 +343,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
 
           <div>
             {searchResults.length > 0 && (
-              <div className="mt-2 border-t border-line px-3 py-1.5 text-[10px] font-sans tracking-normal text-muted">
+              <div className="mt-2 border-t border-line px-3 py-1.5 text-[10px] font-medium text-muted">
                 {language === 'id' ? 'Perintah & modul' : 'Commands & navigation'}
               </div>
             )}
 
             {filteredActions.length === 0 && searchResults.length === 0 ? (
-              <div className="p-8 text-center text-xs font-sans text-muted">
+              <div className="p-8 text-center text-xs text-muted">
                 {language === 'id' ? 'Tidak ada hasil untuk pencarian tersebut.' : 'No commands or records match your search.'}
               </div>
             ) : (
@@ -409,23 +366,19 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
                     aria-selected={isActive}
                     onMouseEnter={() => setActiveIndex(selectableIndex)}
                     onClick={() => runSelected(selectableIndex)}
-                    className={`group flex w-full items-center justify-between rounded-control p-2.5 text-left transition-colors ${isActive ? 'bg-panel' : 'hover:bg-panel-hover'}`}
+                    className={`group flex w-full items-center justify-between rounded-control p-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${isActive ? 'bg-panel-hover' : 'hover:bg-panel-hover'}`}
                   >
                     <div className="flex min-w-0 items-center gap-3">
                       <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-control border transition-colors ${isActive ? 'border-line bg-panel text-fg' : 'border-line bg-bg text-muted'}`}>
                         <Icon size={15} />
                       </div>
                       <div className="min-w-0">
-                        <div className="truncate text-xs font-semibold text-fg">
-                          {item.title}
-                        </div>
-                        <div className="text-[10px] font-sans text-muted">
-                          {item.category}
-                        </div>
+                        <div className="truncate text-xs font-semibold text-fg">{item.title}</div>
+                        <div className="text-[10px] text-muted">{item.category}</div>
                       </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
-                      <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] font-sans text-muted">
+                      <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-muted">
                         {item.shortcut}
                       </span>
                       <ArrowRight size={12} className={`transition-all ${isActive ? 'text-accent-text' : 'text-muted'}`} />
@@ -436,20 +389,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
             )}
           </div>
         </div>
-
-        <div className="flex min-h-12 items-center justify-between border-t border-line bg-bg px-3 text-[11px] font-sans text-muted">
-          <div className="flex items-center gap-3">
-            <span>↑↓ Navigate</span>
-            <span>↵ Select</span>
-            <span>ESC Close</span>
-          </div>
-          <div className="flex items-center gap-1 font-semibold text-accent-text">
-            <Command size={11} />
-            <span>KAPITECH AMS</span>
-          </div>
-        </div>
       </div>
-    </div>
+    </Modal>
   );
 };
 
