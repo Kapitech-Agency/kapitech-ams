@@ -21,7 +21,7 @@ import {
   X
 } from 'lucide-react';
 import { AgencyExpense, AgencyInvoice, InvoiceLineItem, InvoiceStatus, computeInvoiceTotals, computeFinancialMetrics, getMonthlyCashFlowSeries } from '../../lib/financeStore';
-import { CurrencyCode, CURRENCY_EVENT, getActiveCurrency, setActiveCurrency, formatAmount } from '../../lib/currency';
+import { CurrencyCode, CURRENCY_EVENT, getActiveCurrency, setActiveCurrency, formatNativeAmount } from '../../lib/currency';
 import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Modal } from '../../components/ui/Modal';
@@ -124,7 +124,7 @@ export const AdminInvoicing: React.FC = () => {
   const canViewFinancials = hasAdminPermission('canViewFinancials');
   const canManageInvoices = hasAdminPermission('canManageInvoices');
   const canCreateInvoice = canManageInvoices;
-  const canDeleteInvoice = session?.user?.role?.startsWith('Tier 1') || session?.user?.stakeholderType === 'Master';
+  const canDeleteInvoice = canManageInvoices;
 
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
   const [tab, setTab] = useState<Tab>('invoices');
@@ -176,6 +176,7 @@ export const AdminInvoicing: React.FC = () => {
   const [expenseDescription, setExpenseDescription] = useState('');
   const [expenseAmount, setExpenseAmount] = useState(0);
   const [expenseDate, setExpenseDate] = useState(new Date().toISOString().slice(0, 10));
+  const [expenseIdempotencyKey, setExpenseIdempotencyKey] = useState('');
 
   const [paymentInvoice, setPaymentInvoice] = useState<AgencyInvoice | null>(null);
   const [paymentAmount, setPaymentAmount] = useState(0);
@@ -183,6 +184,7 @@ export const AdminInvoicing: React.FC = () => {
   const [paymentReference, setPaymentReference] = useState('');
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().slice(0, 10));
   const [paymentNotes, setPaymentNotes] = useState('');
+  const [paymentIdempotencyKey, setPaymentIdempotencyKey] = useState('');
   const [savingPayment, setSavingPayment] = useState(false);
 
   const [detailInvoice, setDetailInvoice] = useState<AgencyInvoice | null>(null);
@@ -361,7 +363,7 @@ export const AdminInvoicing: React.FC = () => {
 
   const resetInvoiceForm = () => {
     setEditingInvoice(null);
-    setInvoiceNumber('');
+    setInvoiceNumber(`INV-KAPI-${new Date().getFullYear()}-${crypto.randomInt ? crypto.randomInt(1000, 10000) : Math.floor(1000 + Math.random() * 9000)}`);
     setClientId('');
     setProjectId('');
     setClientName('');
@@ -382,6 +384,20 @@ export const AdminInvoicing: React.FC = () => {
   const openCreateInvoice = () => {
     resetInvoiceForm();
     setInvoiceModalOpen(true);
+  };
+
+  const openExpenseModal = () => {
+    setExpenseType('OpEx');
+    setExpenseCategory('Software & Cloud');
+    setExpenseDescription('');
+    setExpenseAmount(0);
+    setExpenseDate(new Date().toISOString().slice(0, 10));
+    setExpenseIdempotencyKey(
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `expense-${Date.now()}-${Math.random().toString(16).slice(2)}`
+    );
+    setExpenseModalOpen(true);
   };
 
   const openEditInvoice = (invoice: AgencyInvoice) => {
@@ -448,8 +464,28 @@ export const AdminInvoicing: React.FC = () => {
         amount: Math.round(Number(item.quantity) * Number(item.unitPrice))
       }));
 
+    const numericTax = Number(taxPercent);
+    const numericDiscount = Number(discountPercent);
+    const parsedIssueDate = issueDate ? new Date(`${issueDate}T00:00:00`) : null;
+    const parsedDueDate = dueDate ? new Date(`${dueDate}T00:00:00`) : null;
+
     if (!clientName.trim() || !clientCompany.trim() || validItems.length === 0) {
       showNotice('danger', language === 'id' ? 'Klien, perusahaan, dan minimal satu line item wajib diisi.' : 'Client, company, and at least one line item are required.');
+      return;
+    }
+
+    if (!Number.isFinite(numericTax) || numericTax < 0 || numericTax > 100 || !Number.isFinite(numericDiscount) || numericDiscount < 0 || numericDiscount > 100) {
+      showNotice('danger', language === 'id' ? 'Pajak dan diskon harus berada di antara 0% dan 100%.' : 'Tax and discount must be between 0% and 100%.');
+      return;
+    }
+
+    if ((parsedIssueDate && Number.isNaN(parsedIssueDate.getTime())) || (parsedDueDate && Number.isNaN(parsedDueDate.getTime()))) {
+      showNotice('danger', language === 'id' ? 'Tanggal invoice tidak valid.' : 'Invoice dates are invalid.');
+      return;
+    }
+
+    if (parsedIssueDate && parsedDueDate && parsedDueDate < parsedIssueDate) {
+      showNotice('danger', language === 'id' ? 'Tanggal jatuh tempo tidak boleh sebelum tanggal invoice.' : 'Due date cannot be earlier than the invoice date.');
       return;
     }
 
@@ -471,14 +507,22 @@ export const AdminInvoicing: React.FC = () => {
         issueDate: issueDate || undefined,
         dueDate: dueDate || undefined,
         paymentTerms: paymentTerms.trim(),
-        notes: invoiceNotes.trim()
+        notes: invoiceNotes.trim(),
+        updatedAt: editingInvoice?.updatedAt
       };
 
       const result = editingInvoice
         ? await api.finance.updateInvoice(editingInvoice.id, payload)
         : await api.finance.createInvoice(payload);
 
-      if (!result.success) throw new Error(result.error || 'Invoice could not be saved.');
+      if (!result.success) {
+        if (result.status === 409) {
+          throw new Error(language === 'id'
+            ? 'Invoice berubah di server. Data terbaru dimuat ulang; periksa kembali sebelum menyimpan.'
+            : 'This invoice changed on the server. The latest data was reloaded; review it before saving again.');
+        }
+        throw new Error(result.error || 'Invoice could not be saved.');
+      }
       setInvoiceModalOpen(false);
       showNotice('success', language === 'id' ? 'Invoice berhasil disimpan.' : 'Invoice saved successfully.');
       await loadData(true);
@@ -508,6 +552,11 @@ export const AdminInvoicing: React.FC = () => {
     setPaymentReference('');
     setPaymentDate(new Date().toISOString().slice(0, 10));
     setPaymentNotes('');
+    setPaymentIdempotencyKey(
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `payment-${invoice.id}-${Date.now()}-${Math.random().toString(16).slice(2)}`
+    );
   };
 
   const handlePayment = async (event: React.FormEvent) => {
@@ -527,11 +576,15 @@ export const AdminInvoicing: React.FC = () => {
         date: paymentDate,
         method: paymentMethod,
         reference: paymentReference.trim(),
-        notes: paymentNotes.trim()
+        notes: paymentNotes.trim(),
+        idempotencyKey: paymentIdempotencyKey
       });
       if (!result.success) throw new Error(result.error || 'Payment could not be recorded.');
       setPaymentInvoice(null);
-      showNotice('success', language === 'id' ? 'Pembayaran berhasil dicatat.' : 'Payment recorded successfully.');
+      setPaymentIdempotencyKey('');
+      showNotice('success', result.data?.replayed
+        ? (language === 'id' ? 'Pembayaran sebelumnya sudah tercatat; data disinkronkan.' : 'That payment was already recorded; the finance data has been synchronized.')
+        : (language === 'id' ? 'Pembayaran berhasil dicatat.' : 'Payment recorded successfully.'));
       await loadData(true);
     } catch (err) {
       showNotice('danger', err instanceof Error ? err.message : 'Payment could not be recorded.');
@@ -557,10 +610,12 @@ export const AdminInvoicing: React.FC = () => {
         description: expenseDescription.trim(),
         amount,
         date: expenseDate,
-        currency
+        currency,
+        idempotencyKey: expenseIdempotencyKey
       });
       if (!result.success) throw new Error(result.error || 'Expense could not be saved.');
       setExpenseModalOpen(false);
+      setExpenseIdempotencyKey('');
       setExpenseDescription('');
       setExpenseAmount(0);
       showNotice('success', language === 'id' ? 'Pengeluaran berhasil dicatat.' : 'Expense recorded successfully.');
@@ -576,7 +631,10 @@ export const AdminInvoicing: React.FC = () => {
     if (!confirmAction) return;
     const result = confirmAction.type === 'invoice'
       ? await api.finance.deleteInvoice(confirmAction.id)
-      : await api.finance.deleteExpense(confirmAction.id);
+      : await api.finance.deleteExpense(
+          confirmAction.id,
+          (expenses.find((expense) => expense.id === confirmAction.id) as FinanceExpense | undefined)?.version
+        );
     if (!result.success) {
       showNotice('danger', result.error || 'Action could not be completed.');
     } else {
@@ -666,7 +724,7 @@ export const AdminInvoicing: React.FC = () => {
           </button>
           {canManageInvoices && (
             <>
-              <button type="button" onClick={() => setExpenseModalOpen(true)} disabled={!canManageInvoices} className={actionClass}>
+              <button type="button" onClick={openExpenseModal} disabled={!canManageInvoices} className={actionClass}>
                 <Plus size={14} />
                 {language === 'id' ? 'Catat pengeluaran' : 'Record expense'}
               </button>
@@ -719,12 +777,12 @@ export const AdminInvoicing: React.FC = () => {
 
             <div className="grid grid-cols-2 sm:grid-cols-3 min-[1100px]:grid-cols-6">
               {[
-                { label: language === 'id' ? 'Pendapatan diterima' : 'Revenue collected', value: serverMetrics ? formatAmount(serverMetrics.totalRevenueCollected, currency) : '—', context: serverMetrics ? serverMetrics.paidCount + ' paid invoices' : '—', icon: DollarSign, tone: 'text-accent-text' },
-                { label: language === 'id' ? 'Piutang' : 'Outstanding', value: serverMetrics ? formatAmount(serverMetrics.totalOutstanding, currency) : '—', context: serverMetrics ? serverMetrics.overdueCount + ' overdue' : '—', icon: WalletCards, tone: 'text-warning' },
-                { label: language === 'id' ? 'Pengeluaran' : 'Expenses', value: serverMetrics ? formatAmount(serverMetrics.totalExpense, currency) : '—', context: currencyExpenses.length + ' records', icon: TrendingDown, tone: 'text-series-3' },
-                { label: language === 'id' ? 'Laba operasi' : 'Operating profit', value: serverMetrics ? formatAmount(serverMetrics.netProfit, currency) : '—', context: serverMetrics ? serverMetrics.profitMargin + '% margin' : '—', icon: TrendingUp, tone: 'text-success' },
-                { label: 'OpEx', value: formatAmount(derivedMetrics.opExExpenses, currency), context: 'Operating expense', icon: CreditCard, tone: 'text-info' },
-                { label: 'CapEx', value: formatAmount(derivedMetrics.capExExpenses, currency), context: 'Capital expense', icon: ArrowUpRight, tone: 'text-muted' }
+                { label: language === 'id' ? 'Pendapatan diterima' : 'Revenue collected', value: serverMetrics ? formatNativeAmount(serverMetrics.totalRevenueCollected, currency) : '—', context: serverMetrics ? serverMetrics.paidCount + ' paid invoices' : '—', icon: DollarSign, tone: 'text-accent-text' },
+                { label: language === 'id' ? 'Piutang' : 'Outstanding', value: serverMetrics ? formatNativeAmount(serverMetrics.totalOutstanding, currency) : '—', context: serverMetrics ? serverMetrics.overdueCount + ' overdue' : '—', icon: WalletCards, tone: 'text-warning' },
+                { label: language === 'id' ? 'Pengeluaran' : 'Expenses', value: serverMetrics ? formatNativeAmount(serverMetrics.totalExpense, currency) : '—', context: currencyExpenses.length + ' records', icon: TrendingDown, tone: 'text-series-3' },
+                { label: language === 'id' ? 'Laba operasi' : 'Operating profit', value: serverMetrics ? formatNativeAmount(serverMetrics.netProfit, currency) : '—', context: serverMetrics ? serverMetrics.profitMargin + '% margin' : '—', icon: TrendingUp, tone: 'text-success' },
+                { label: 'OpEx', value: formatNativeAmount(derivedMetrics.opExExpenses, currency), context: 'Operating expense', icon: CreditCard, tone: 'text-info' },
+                { label: 'CapEx', value: formatNativeAmount(derivedMetrics.capExExpenses, currency), context: 'Capital expense', icon: ArrowUpRight, tone: 'text-muted' }
               ].map((metric) => {
                 const Icon = metric.icon;
                 return (
@@ -752,10 +810,10 @@ export const AdminInvoicing: React.FC = () => {
               </div>
               <div className="mt-5 grid grid-cols-2 border-y border-line sm:grid-cols-4">
                 {[
-                  { label: 'Revenue', value: serverMetrics ? formatAmount(serverMetrics.totalRevenueCollected, currency) : '—', tone: 'text-accent-text' },
-                  { label: 'Expenses', value: serverMetrics ? formatAmount(serverMetrics.totalExpense, currency) : '—', tone: 'text-series-3' },
-                  { label: 'Operating profit', value: serverMetrics ? formatAmount(serverMetrics.netProfit, currency) : '—', tone: 'text-success' },
-                  { label: 'Outstanding', value: serverMetrics ? formatAmount(serverMetrics.totalOutstanding, currency) : '—', tone: 'text-warning' }
+                  { label: 'Revenue', value: serverMetrics ? formatNativeAmount(serverMetrics.totalRevenueCollected, currency) : '—', tone: 'text-accent-text' },
+                  { label: 'Expenses', value: serverMetrics ? formatNativeAmount(serverMetrics.totalExpense, currency) : '—', tone: 'text-series-3' },
+                  { label: 'Operating profit', value: serverMetrics ? formatNativeAmount(serverMetrics.netProfit, currency) : '—', tone: 'text-success' },
+                  { label: 'Outstanding', value: serverMetrics ? formatNativeAmount(serverMetrics.totalOutstanding, currency) : '—', tone: 'text-warning' }
                 ].map((metric) => (
                   <div key={metric.label} className={'min-w-0 px-4 py-4 sm:px-5 ' + (metric.label === 'Operating profit' ? '' : 'border-l border-line')}>
                     <p className="text-xs text-muted">{metric.label}</p>
@@ -765,7 +823,7 @@ export const AdminInvoicing: React.FC = () => {
               </div>
               <div className="mt-4 grid grid-cols-2 divide-x divide-y divide-line border-t border-line pt-0 sm:grid-cols-3 sm:divide-y-0">
                 <div className="min-w-0 px-3 py-4 sm:pl-4"><p className="text-xs text-muted">Collection rate</p><p className="mt-1 text-sm font-medium tabular-nums text-fg">{currencyInvoices.length ? derivedMetrics.collectionRate + '%' : '—'}</p></div>
-                <div className="min-w-0 px-3 py-4 sm:pl-4"><p className="text-xs text-muted">Monthly burn rate</p><p className="mt-1 text-sm font-medium tabular-nums text-fg">{derivedMetrics.monthlyBurnRate ? formatAmount(derivedMetrics.monthlyBurnRate, currency) : '—'}</p></div>
+                <div className="min-w-0 px-3 py-4 sm:pl-4"><p className="text-xs text-muted">Monthly burn rate</p><p className="mt-1 text-sm font-medium tabular-nums text-fg">{derivedMetrics.monthlyBurnRate ? formatNativeAmount(derivedMetrics.monthlyBurnRate, currency) : '—'}</p></div>
                 <div className="min-w-0 px-3 py-4 sm:pl-4"><p className="text-xs text-muted">Cash runway</p><p className="mt-1 text-sm font-medium tabular-nums text-fg">{derivedMetrics.cashRunwayMonths == null ? 'Not available' : derivedMetrics.cashRunwayMonths + ' mo'}</p></div>
               </div>
             </div>
@@ -784,7 +842,7 @@ export const AdminInvoicing: React.FC = () => {
                     data={cashFlow.filter((point) => point.inflow !== 0 || point.outflow !== 0).map((point) => ({ label: point.month, primary: point.inflow, secondary: point.outflow, tertiary: point.net }))}
                     primaryLabel="Revenue"
                     secondaryLabel="Expenses"
-                    primaryFormat={(value) => formatAmount(value, currency, true)}
+                    primaryFormat={(value) => formatNativeAmount(value, currency, true)}
                     ariaLabel="Recorded revenue and expenses over available periods."
                   />
                 ) : (
@@ -812,7 +870,7 @@ export const AdminInvoicing: React.FC = () => {
                       <button key={invoice.id} type="button" onClick={() => openPrintPreview(invoice)} className="flex w-full items-center gap-3 py-3 text-left hover:bg-bg focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent">
                         <span className={'flex h-8 w-8 shrink-0 items-center justify-center rounded-control ' + (overdue ? 'bg-danger/10 text-danger' : 'bg-warning/10 text-warning')}><AlertCircle size={15} /></span>
                         <span className="min-w-0 flex-1"><span className="block truncate text-xs font-medium text-fg">{invoice.invoiceNumber}</span><span className="mt-0.5 block truncate text-[11px] text-muted">{invoice.clientCompany || invoice.clientName}</span></span>
-                        <span className="shrink-0 text-right"><span className="block text-xs font-medium tabular-nums text-fg">{formatAmount(balance, invoice.currency)}</span><span className={'mt-0.5 block text-[11px] ' + (overdue ? 'text-danger' : 'text-warning')}>{overdue ? 'Overdue' : (daysUntilDue + 'd left')}</span></span>
+                        <span className="shrink-0 text-right"><span className="block text-xs font-medium tabular-nums text-fg">{formatNativeAmount(balance, invoice.currency)}</span><span className={'mt-0.5 block text-[11px] ' + (overdue ? 'text-danger' : 'text-warning')}>{overdue ? 'Overdue' : (daysUntilDue + 'd left')}</span></span>
                       </button>
                     );
                   })}
@@ -916,12 +974,17 @@ export const AdminInvoicing: React.FC = () => {
                                 <p className={'mt-1 text-[11px] ' + (invoice.status === 'overdue' ? 'text-danger' : 'text-muted')}>Due {invoice.dueDate}</p>
                               </td>
                               <td className="px-4 py-3 text-right align-top">
-                                <p className="font-medium tabular-nums text-fg">{formatAmount(invoice.total, invoice.currency)}</p>
-                                <p className="mt-1 text-[11px] tabular-nums text-muted">{balance > 0 ? 'Due ' + formatAmount(balance, invoice.currency) : 'Settled'}</p>
+                                <p className="font-medium tabular-nums text-fg">{formatNativeAmount(invoice.total, invoice.currency)}</p>
+                                <p className="mt-1 text-[11px] tabular-nums text-muted">{balance > 0 ? 'Due ' + formatNativeAmount(balance, invoice.currency) : 'Settled'}</p>
                               </td>
                               <td className="px-4 py-3 align-top">
                                 {canManageInvoices && invoice.status !== 'cancelled' ? (
-                                  <InvoiceStatusDropdown status={invoice.status} onChange={(next) => void updateInvoiceStatus(invoice, next)} />
+                                  <InvoiceStatusDropdown
+                                    status={invoice.status}
+                                    allowedStatuses={['draft', 'sent', 'overdue']}
+                                    disabled={!['draft', 'sent', 'overdue'].includes(invoice.status)}
+                                    onChange={(next) => void updateInvoiceStatus(invoice, next)}
+                                  />
                                 ) : <StatusBadge status={invoice.status} />}
                               </td>
                               <td className="px-4 py-3 text-right align-top">
@@ -983,7 +1046,7 @@ export const AdminInvoicing: React.FC = () => {
                             <td className="px-4 py-3 tabular-nums text-muted">{expense.date}</td>
                             <td className="px-4 py-3"><div className="font-medium text-fg">{expense.type || 'OpEx'}</div><div className="mt-1 text-[11px] text-muted">{expense.category}</div></td>
                             <td className="px-4 py-3 text-fg">{expense.description}</td>
-                            <td className="px-4 py-3 text-right font-medium tabular-nums text-fg">{formatAmount(expense.amount, expense.currency || currency)}</td>
+                            <td className="px-4 py-3 text-right font-medium tabular-nums text-fg">{formatNativeAmount(expense.amount, expense.currency || currency)}</td>
                             <td className="px-4 py-3 text-muted">{expense.recordedBy}</td>
                             <td className="px-4 py-3 text-right">
                               {canManageInvoices && <button type="button" onClick={() => setConfirmAction({ type: 'expense', id: expense.id, label: expense.description })} className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-control border border-line text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger" aria-label="Void expense"><Trash2 size={14} /></button>}
@@ -1108,10 +1171,10 @@ export const AdminInvoicing: React.FC = () => {
               <div><label className="mb-1.5 block text-xs font-medium text-muted">Notes</label><textarea value={invoiceNotes} onChange={(event) => setInvoiceNotes(event.target.value)} rows={4} className={fieldClass + ' py-2.5'} /></div>
             </div>
             <div className="rounded-card border border-line bg-bg p-4">
-              <div className="flex items-center justify-between"><span className="text-xs text-muted">Subtotal</span><span className="tabular-nums text-sm text-fg">{formatAmount(invoiceTotals.subtotal, invoiceCurrency)}</span></div>
-              <div className="mt-2 flex items-center justify-between"><span className="text-xs text-muted">Discount</span><span className="tabular-nums text-sm text-fg">- {formatAmount(invoiceTotals.discountAmount, invoiceCurrency)}</span></div>
-              <div className="mt-2 flex items-center justify-between"><span className="text-xs text-muted">Tax</span><span className="tabular-nums text-sm text-fg">{formatAmount(invoiceTotals.taxAmount, invoiceCurrency)}</span></div>
-              <div className="mt-4 flex items-end justify-between gap-4 border-t border-line pt-4"><span className="text-sm font-semibold text-fg">Total</span><span className="text-lg font-medium tabular-nums text-fg">{formatAmount(invoiceTotals.total, invoiceCurrency)}</span></div>
+              <div className="flex items-center justify-between"><span className="text-xs text-muted">Subtotal</span><span className="tabular-nums text-sm text-fg">{formatNativeAmount(invoiceTotals.subtotal, invoiceCurrency)}</span></div>
+              <div className="mt-2 flex items-center justify-between"><span className="text-xs text-muted">Discount</span><span className="tabular-nums text-sm text-fg">- {formatNativeAmount(invoiceTotals.discountAmount, invoiceCurrency)}</span></div>
+              <div className="mt-2 flex items-center justify-between"><span className="text-xs text-muted">Tax</span><span className="tabular-nums text-sm text-fg">{formatNativeAmount(invoiceTotals.taxAmount, invoiceCurrency)}</span></div>
+              <div className="mt-4 flex items-end justify-between gap-4 border-t border-line pt-4"><span className="text-sm font-semibold text-fg">Total</span><span className="text-lg font-medium tabular-nums text-fg">{formatNativeAmount(invoiceTotals.total, invoiceCurrency)}</span></div>
               <div className="mt-4"><label className="mb-1.5 block text-xs font-medium text-muted">Status</label><CustomSelect value={invoiceStatus} onChange={(value) => setInvoiceStatus(value as InvoiceStatus)} options={[{ value: 'draft', label: 'Draft' }, { value: 'sent', label: 'Sent' }, { value: 'overdue', label: 'Overdue' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" /></div>
               {editingInvoice && <p className="mt-3 text-[11px] leading-4 text-muted">Paid and partially paid status is controlled by recorded payments. Cancelled invoices cannot be edited.</p>}
             </div>
@@ -1161,9 +1224,9 @@ export const AdminInvoicing: React.FC = () => {
         {paymentInvoice && (
           <form id="finance-payment-form" onSubmit={handlePayment} className="space-y-4">
             <div className="rounded-card border border-line bg-bg p-4">
-              <div className="flex justify-between gap-3 text-xs"><span className="text-muted">Invoice total</span><span className="tabular-nums text-fg">{formatAmount(paymentInvoice.total, paymentInvoice.currency)}</span></div>
-              <div className="mt-2 flex justify-between gap-3 text-xs"><span className="text-muted">Already paid</span><span className="tabular-nums text-success">{formatAmount(paymentInvoice.amountPaid || 0, paymentInvoice.currency)}</span></div>
-              <div className="mt-3 flex justify-between gap-3 border-t border-line pt-3 text-xs font-semibold"><span className="text-fg">Remaining balance</span><span className="tabular-nums text-warning">{formatAmount(paymentInvoice.balanceDue ?? (paymentInvoice.total - (paymentInvoice.amountPaid || 0)), paymentInvoice.currency)}</span></div>
+              <div className="flex justify-between gap-3 text-xs"><span className="text-muted">Invoice total</span><span className="tabular-nums text-fg">{formatNativeAmount(paymentInvoice.total, paymentInvoice.currency)}</span></div>
+              <div className="mt-2 flex justify-between gap-3 text-xs"><span className="text-muted">Already paid</span><span className="tabular-nums text-success">{formatNativeAmount(paymentInvoice.amountPaid || 0, paymentInvoice.currency)}</span></div>
+              <div className="mt-3 flex justify-between gap-3 border-t border-line pt-3 text-xs font-semibold"><span className="text-fg">Remaining balance</span><span className="tabular-nums text-warning">{formatNativeAmount(paymentInvoice.balanceDue ?? (paymentInvoice.total - (paymentInvoice.amountPaid || 0)), paymentInvoice.currency)}</span></div>
             </div>
             <div><label className="mb-1.5 block text-xs font-medium text-muted">Amount received</label><input required min="0.01" type="number" step="0.01" max={Number(paymentInvoice.balanceDue ?? paymentInvoice.total)} value={paymentAmount} onChange={(event) => setPaymentAmount(Number(event.target.value))} className={fieldClass} /></div>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -1222,25 +1285,25 @@ export const AdminInvoicing: React.FC = () => {
             <div className="overflow-x-auto rounded-control border border-line">
               <table className="ams-table w-full min-w-[520px] text-xs">
                 <thead><tr className="border-b border-line text-muted"><th className="px-3 py-2 text-left font-medium">Description</th><th className="px-3 py-2 text-right font-medium">Qty</th><th className="px-3 py-2 text-right font-medium">Unit price</th><th className="px-3 py-2 text-right font-medium">Amount</th></tr></thead>
-                <tbody>{detailInvoice.items.map((item) => <tr key={item.id} className="border-b border-line last:border-0"><td className="px-3 py-2.5 text-fg">{item.description}</td><td className="px-3 py-2.5 text-right tabular-nums text-fg">{item.quantity}</td><td className="px-3 py-2.5 text-right tabular-nums text-fg">{formatAmount(item.unitPrice, detailInvoice.currency)}</td><td className="px-3 py-2.5 text-right tabular-nums text-fg">{formatAmount(item.amount, detailInvoice.currency)}</td></tr>)}</tbody>
+                <tbody>{detailInvoice.items.map((item) => <tr key={item.id} className="border-b border-line last:border-0"><td className="px-3 py-2.5 text-fg">{item.description}</td><td className="px-3 py-2.5 text-right tabular-nums text-fg">{item.quantity}</td><td className="px-3 py-2.5 text-right tabular-nums text-fg">{formatNativeAmount(item.unitPrice, detailInvoice.currency)}</td><td className="px-3 py-2.5 text-right tabular-nums text-fg">{formatNativeAmount(item.amount, detailInvoice.currency)}</td></tr>)}</tbody>
               </table>
             </div>
             <div className="grid gap-5 sm:grid-cols-[1fr_260px]">
               <div>
                 <p className="text-xs font-medium text-muted">Payment activity</p>
                 {detailInvoice.payments?.length ? (
-                  <div className="mt-2 space-y-2">{detailInvoice.payments.map((payment) => <div key={payment.id} className="flex flex-col gap-1 rounded-control border border-line bg-bg p-3 text-xs sm:flex-row sm:items-center sm:justify-between"><span className="text-muted">{payment.date} · {payment.method.replace('_', ' ')}{payment.reference ? ' · ' + payment.reference : ''}</span><span className="font-medium tabular-nums text-success">{formatAmount(payment.amount, detailInvoice.currency)}</span></div>)}</div>
+                  <div className="mt-2 space-y-2">{detailInvoice.payments.map((payment) => <div key={payment.id} className="flex flex-col gap-1 rounded-control border border-line bg-bg p-3 text-xs sm:flex-row sm:items-center sm:justify-between"><span className="text-muted">{payment.date} · {payment.method.replace('_', ' ')}{payment.reference ? ' · ' + payment.reference : ''}</span><span className="font-medium tabular-nums text-success">{formatNativeAmount(payment.amount, detailInvoice.currency)}</span></div>)}</div>
                 ) : <p className="mt-2 rounded-control border border-line bg-bg p-3 text-xs text-muted">No recorded payments.</p>}
                 {detailInvoice.notes && <p className="mt-3 text-xs leading-5 text-muted">{detailInvoice.notes}</p>}
                 {detailInvoice.paymentTerms && <p className="mt-2 text-xs text-muted">Terms: {detailInvoice.paymentTerms}</p>}
               </div>
               <div className="rounded-card border border-line bg-bg p-4 text-xs">
-                <div className="flex justify-between gap-3"><span className="text-muted">Subtotal</span><span className="tabular-nums text-fg">{formatAmount(detailInvoice.subtotal, detailInvoice.currency)}</span></div>
-                <div className="mt-2 flex justify-between gap-3"><span className="text-muted">Discount</span><span className="tabular-nums text-fg">- {formatAmount(detailInvoice.discountAmount || 0, detailInvoice.currency)}</span></div>
-                <div className="mt-2 flex justify-between gap-3"><span className="text-muted">Tax ({detailInvoice.taxPercent}%)</span><span className="tabular-nums text-fg">{formatAmount(detailInvoice.taxAmount, detailInvoice.currency)}</span></div>
-                <div className="mt-3 flex justify-between gap-3 border-t border-line pt-3 font-semibold"><span className="text-fg">Total</span><span className="tabular-nums text-fg">{formatAmount(detailInvoice.total, detailInvoice.currency)}</span></div>
-                <div className="mt-2 flex justify-between gap-3"><span className="text-muted">Paid</span><span className="tabular-nums text-success">{formatAmount(detailInvoice.amountPaid || 0, detailInvoice.currency)}</span></div>
-                <div className="mt-2 flex justify-between gap-3 font-semibold"><span className="text-fg">Balance due</span><span className="tabular-nums text-warning">{formatAmount(detailInvoice.balanceDue ?? (detailInvoice.total - (detailInvoice.amountPaid || 0)), detailInvoice.currency)}</span></div>
+                <div className="flex justify-between gap-3"><span className="text-muted">Subtotal</span><span className="tabular-nums text-fg">{formatNativeAmount(detailInvoice.subtotal, detailInvoice.currency)}</span></div>
+                <div className="mt-2 flex justify-between gap-3"><span className="text-muted">Discount</span><span className="tabular-nums text-fg">- {formatNativeAmount(detailInvoice.discountAmount || 0, detailInvoice.currency)}</span></div>
+                <div className="mt-2 flex justify-between gap-3"><span className="text-muted">Tax ({detailInvoice.taxPercent}%)</span><span className="tabular-nums text-fg">{formatNativeAmount(detailInvoice.taxAmount, detailInvoice.currency)}</span></div>
+                <div className="mt-3 flex justify-between gap-3 border-t border-line pt-3 font-semibold"><span className="text-fg">Total</span><span className="tabular-nums text-fg">{formatNativeAmount(detailInvoice.total, detailInvoice.currency)}</span></div>
+                <div className="mt-2 flex justify-between gap-3"><span className="text-muted">Paid</span><span className="tabular-nums text-success">{formatNativeAmount(detailInvoice.amountPaid || 0, detailInvoice.currency)}</span></div>
+                <div className="mt-2 flex justify-between gap-3 font-semibold"><span className="text-fg">Balance due</span><span className="tabular-nums text-warning">{formatNativeAmount(detailInvoice.balanceDue ?? (detailInvoice.total - (detailInvoice.amountPaid || 0)), detailInvoice.currency)}</span></div>
               </div>
             </div>
           </div>
