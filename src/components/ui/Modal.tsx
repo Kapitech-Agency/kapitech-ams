@@ -79,13 +79,12 @@ export const Modal: React.FC<ModalProps> = ({
       const dialog = dialogRef.current;
       if (!dialog) return [];
 
-      return (
-        Array.from(
-          dialog.querySelectorAll<HTMLElement>(
-            'button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),a[href],[tabindex="0"]'
-          )
+      const elements = Array.from(
+        dialog.querySelectorAll(
+          'button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),a[href],[tabindex="0"]'
         )
-      ).filter((element) => element.getClientRects().length > 0);
+      ) as HTMLElement[];
+      return elements.filter((element) => element.getClientRects().length > 0);
     };
 
     const getInitialFocus = () => {
