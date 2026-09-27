@@ -306,14 +306,15 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
               autoComplete="off"
             />
             {query && (
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={() => setQuery('')}
                 aria-label="Clear search"
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control text-muted transition-colors hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              >
-                <X size={14} />
-              </button>
+                title="Clear search"
+                icon={<X size={14} />}
+                className="h-8 w-8 shrink-0 p-0"
+              />
             )}
             <kbd className="hidden shrink-0 rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-semibold text-muted sm:inline-flex">⌘ K</kbd>
           </div>
@@ -323,7 +324,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
           {searchResults.length > 0 && (
             <div>
               <div className="mb-2 flex items-center justify-between px-1">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">
+                <span className="text-[10px] font-semibold text-muted">
                   {language === 'id' ? 'Data AMS' : 'AMS records'}
                 </span>
                 <span className="text-[10px] text-muted">{searchResults.length}</span>
