@@ -218,7 +218,51 @@ const TasksView: React.FC = () => {
           </div>
         </div>
 
-        <div className="overflow-x-auto custom-scrollbar">
+        <div className="md:hidden divide-y divide-line">
+          {filteredTasks.map((item) => (
+            <article key={item.id} className="p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 className="text-xs font-semibold leading-5 text-fg">{item.task}</h3>
+                  <p className="mt-1 truncate text-[11px] text-muted">{item.project}</p>
+                </div>
+                <span className={['shrink-0 rounded-badge border px-2 py-1 text-[10px] font-medium', item.priority === 'Urgent' ? toneClasses.danger : item.priority === 'High' ? toneClasses.warning : item.priority === 'Medium' ? toneClasses.info : toneClasses.success].join(' ')}>
+                  {item.priority}
+                </span>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <div className="rounded-control border border-line bg-bg p-2.5">
+                  <div className="text-[10px] text-muted">Assignee</div>
+                  <div className="mt-1 truncate text-[11px] font-medium text-fg">{item.assignee}</div>
+                </div>
+                <div className="rounded-control border border-line bg-bg p-2.5">
+                  <div className="text-[10px] text-muted">Due</div>
+                  <div className={['mt-1 truncate text-[11px] font-medium', item.due === 'Overdue' ? 'text-danger' : 'text-fg'].join(' ')}>{item.due}</div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedTask(item)}
+                className="mt-3 flex min-h-9 w-full items-center justify-center rounded-control border border-line bg-bg px-3 text-xs font-medium text-fg hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              >
+                View task
+              </button>
+              {item.status === 'Blocked' && (
+                <div className="mt-3 rounded-control border border-danger/20 bg-danger/5 px-3 py-2 text-[10px] font-medium text-danger">
+                  Blocked — requires attention
+                </div>
+              )}
+            </article>
+          ))}
+          {filteredTasks.length === 0 && (
+            <div className="px-4 py-12 text-center">
+              <p className="text-xs font-medium text-fg">No matching tasks</p>
+              <p className="mt-1 text-[11px] text-muted">Adjust the search or priority filter.</p>
+            </div>
+          )}
+        </div>
+
+        <div className="hidden md:block overflow-x-auto custom-scrollbar">
           <table className="w-full min-w-[840px] border-collapse text-left">
             <thead>
               <tr>
