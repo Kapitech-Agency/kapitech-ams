@@ -43,6 +43,7 @@ import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 
+import { AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 export const AdminCrm: React.FC = () => {
   const { language, t } = useLanguage();
   const canManageCrm = hasAdminPermission('canManageCrm');
@@ -374,34 +375,24 @@ export const AdminCrm: React.FC = () => {
       />
       <div className="ams-leads-page space-y-6 pb-8">
       
-      <header className="ams-dashboard-header mb-6 flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold leading-8 tracking-[-0.02em] text-fg">{t('admin.crm.title')}</h1>
-          <p className="mt-1 max-w-2xl text-xs leading-5 text-muted">
-            {language === 'id'
-              ? 'Kelola pipeline prospek, tahapan deal, nilai peluang, dan follow-up tim dalam satu workspace.'
-              : 'Manage lead pipeline, deal stages, opportunity value, and team follow-up from one workspace.'}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-          <div className="flex h-9 items-center rounded-control border border-line bg-panel p-0.5" aria-label="Currency">
-            <button type="button" onClick={() => handleCurrencyToggle('IDR')} aria-pressed={currency === 'IDR'} className={"h-8 rounded-chip px-3 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent " + (currency === 'IDR' ? 'bg-line text-fg' : 'text-muted hover:text-fg')}>IDR</button>
-            <button type="button" onClick={() => handleCurrencyToggle('USD')} aria-pressed={currency === 'USD'} className={"h-8 rounded-chip px-3 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent " + (currency === 'USD' ? 'bg-line text-fg' : 'text-muted hover:text-fg')}>USD</button>
-          </div>
-          <button type="button" onClick={() => exportCrmLeadsToCsv(filteredLeads)} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" title={t('admin.action.exportCsv')}>
-            <Download size={14} />
-            <span>{t('admin.action.exportCsv')}</span>
-          </button>
-          {canManageCrm && (
-            <>
-              <button type="button" onClick={() => handleOpenAddModal('new')} className="inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control bg-accent px-3.5 text-xs font-semibold text-white transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-              <Plus size={14} />
-              <span>{t('admin.crm.addDeal')}</span>
-              </button>
-            </>
-          )}
-        </div>
-      </header>
+      <AdminModuleHeader
+        title={t('admin.crm.title')}
+        description={language === 'id' ? 'Kelola pipeline prospek, tahapan deal, nilai peluang, dan follow-up tim dalam satu workspace.' : 'Manage lead pipeline, deal stages, opportunity value, and team follow-up from one workspace.'}
+        actions={(
+          <>
+            <div className="flex h-9 items-center rounded-control border border-line bg-panel p-0.5" aria-label="Currency">
+              <button type="button" onClick={() => handleCurrencyToggle('IDR')} aria-pressed={currency === 'IDR'} className={"h-8 rounded-chip px-3 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent " + (currency === 'IDR' ? 'bg-line text-fg' : 'text-muted hover:text-fg')}>IDR</button>
+              <button type="button" onClick={() => handleCurrencyToggle('USD')} aria-pressed={currency === 'USD'} className={"h-8 rounded-chip px-3 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent " + (currency === 'USD' ? 'bg-line text-fg' : 'text-muted hover:text-fg')}>USD</button>
+            </div>
+            <button type="button" onClick={() => exportCrmLeadsToCsv(filteredLeads)} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent" title={t('admin.action.exportCsv')}>
+              <Download size={14} /><span>{t('admin.action.exportCsv')}</span>
+            </button>
+            {canManageCrm && <button type="button" onClick={() => handleOpenAddModal('new')} className="inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control bg-accent px-3.5 text-xs font-semibold text-white transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent">
+              <Plus size={14} /><span>{t('admin.crm.addDeal')}</span>
+            </button>}
+          </>
+        )}
+      />
 
       {/* Toast Alert */}
       {statusMessage && (
