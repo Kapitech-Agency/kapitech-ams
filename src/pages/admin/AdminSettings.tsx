@@ -289,9 +289,9 @@ export const AdminSettings: React.FC = () => {
       if (res.success) {
         setSecurityStatus({ 
           success: true, 
-          message: language === 'id' 
-            ? 'Kredensial dan password admin berhasil diperbarui dengan enkripsi aman!' 
-            : 'Admin credentials and password updated successfully with secure encryption!' 
+          message: language === 'id'
+            ? (newPassword ? 'Password admin berhasil diperbarui.' : 'Tidak ada perubahan password yang disimpan.')
+            : (newPassword ? 'Admin password updated successfully.' : 'No password change was saved.') 
         });
         setCurrentPassword('');
         setNewPassword('');
@@ -466,7 +466,7 @@ export const AdminSettings: React.FC = () => {
             </div>
           )}
 
-          <form onSubmit={handleUpdateSecurity} className="space-y-4">
+          <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-sans text-muted mb-1 font-semibold">
@@ -474,10 +474,10 @@ export const AdminSettings: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  required
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-panel border border-line rounded-control text-xs text-fg focus:outline-none focus:border-accent font-sans min-h-10"
+                  readOnly
+                  aria-readonly="true"
+                  className="w-full min-h-10 rounded-control border border-line bg-bg px-3 text-xs text-muted cursor-default font-sans"
                 />
               </div>
 
@@ -487,10 +487,10 @@ export const AdminSettings: React.FC = () => {
                 </label>
                 <input
                   type="email"
-                  required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-panel border border-line rounded-control text-xs text-fg focus:outline-none focus:border-accent font-sans min-h-10"
+                  readOnly
+                  aria-readonly="true"
+                  className="w-full min-h-10 rounded-control border border-line bg-bg px-3 text-xs text-muted cursor-default font-sans"
                 />
               </div>
             </div>
@@ -510,31 +510,20 @@ export const AdminSettings: React.FC = () => {
               </div>
             </div>
 
-            <div className="pt-2 border-t border-line">
-              <label className="block text-xs font-sans text-muted mb-1 font-semibold">
-                {language === 'id' ? 'Password Saat Ini (Wajib Konfirmasi Perubahan) *' : 'Current Password (Required for confirmation) *'}
-              </label>
-              <input
-                type="password"
-                required
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder={language === 'id' ? 'Masukkan password admin saat ini...' : 'Enter your current password...'}
-                className="w-full px-3.5 py-2.5 bg-panel border border-line rounded-control text-xs text-fg focus:outline-none focus:border-accent font-sans min-h-10"
-              />
+            <div className="rounded-card border border-line bg-bg p-4">
+              <div className="flex items-start gap-3">
+                <ShieldCheck size={16} className="mt-0.5 shrink-0 text-accent-text" />
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-fg">Server-managed credentials</p>
+                  <p className="mt-1 text-[11px] leading-5 text-muted">
+                    {language === 'id'
+                      ? 'Username dan email akun Master dikelola oleh server. Perubahan password dilakukan melalui tab Security & MFA.'
+                      : 'Master username and email are server-managed. Change the password from the Security & MFA tab.'}
+                  </p>
+                </div>
+              </div>
             </div>
-
-            <div className="pt-4 flex items-center justify-end">
-              <button
-                type="submit"
-                disabled={securityLoading}
-                className="px-5 py-2.5 rounded-control bg-accent text-white text-xs font-sans font-semibold hover:bg-accent-hover transition-all flex items-center gap-2 disabled:opacity-50 min-h-10"
-              >
-                {securityLoading ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
-                <span>{language === 'id' ? 'Perbarui Akun Master' : 'Update Master Account'}</span>
-              </button>
-            </div>
-          </form>
+          </div>
         </div>
       )}
 
