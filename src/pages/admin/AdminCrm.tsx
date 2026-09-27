@@ -1155,7 +1155,7 @@ export const AdminCrm: React.FC = () => {
           </>
         )}
       >
-            <form onSubmit={handleSaveLead} className="space-y-4 text-xs font-sans">
+            <form id="crm-deal-form" onSubmit={handleSaveLead} className="space-y-4 text-xs font-sans">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-muted mb-1 font-semibold">{language === 'id' ? 'Nama PIC Klien *' : 'Client PIC Name *'}</label>
