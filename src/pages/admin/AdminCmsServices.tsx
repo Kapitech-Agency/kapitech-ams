@@ -502,8 +502,20 @@ export const AdminCmsServices: React.FC = () => {
       </Modal>
 
       {/* Add New Service Modal */}
-      <Modal open={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} size="lg" title="Add New Agency Service Offering" description="Publish a new technical capability or SEO service package into the agency catalog.">
-            <form onSubmit={handleCreateService} className="space-y-4 text-xs font-sans">
+      <Modal
+        open={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        size="lg"
+        title="Add New Agency Service Offering"
+        description="Publish a new technical capability or SEO service package into the agency catalog."
+        footer={(
+          <>
+            <Button type="button" variant="secondary" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
+            <Button type="submit" form="service-form">Publish Service</Button>
+          </>
+        )}
+      >
+            <form id="service-form" onSubmit={handleCreateService} className="space-y-4 text-xs font-sans">
               <div>
                 <label className="block text-muted mb-1 font-medium">Service Title *</label>
                 <input
@@ -594,10 +606,6 @@ export const AdminCmsServices: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3">
-                <Button type="button" variant="secondary" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
-                <Button type="submit">Publish Service</Button>
-              </div>
             </form>
       </Modal>
 
