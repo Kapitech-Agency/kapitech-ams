@@ -196,6 +196,9 @@ export const AdminInvoicing: React.FC = () => {
 
   const [detailInvoice, setDetailInvoice] = useState<AgencyInvoice | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ type: 'invoice' | 'expense'; id: string; label: string } | null>(null);
+  const [invoiceDirty, setInvoiceDirty] = useState(false);
+  const [expenseDirty, setExpenseDirty] = useState(false);
+  const [paymentDirty, setPaymentDirty] = useState(false);
   const loadRequestId = React.useRef(0);
 
   const showNotice = (tone: 'success' | 'danger', message: string) => {
@@ -376,6 +379,7 @@ export const AdminInvoicing: React.FC = () => {
   );
 
   const resetInvoiceForm = () => {
+    setInvoiceDirty(false);
     setEditingInvoice(null);
     setInvoiceNumber(createInvoiceNumber());
     setClientId('');
@@ -401,6 +405,7 @@ export const AdminInvoicing: React.FC = () => {
   };
 
   const openExpenseModal = () => {
+    setExpenseDirty(false);
     setExpenseType('OpEx');
     setExpenseCategory('Software & Cloud');
     setExpenseDescription('');
@@ -415,6 +420,7 @@ export const AdminInvoicing: React.FC = () => {
   };
 
   const openEditInvoice = (invoice: AgencyInvoice) => {
+    setInvoiceDirty(false);
     setEditingInvoice(invoice);
     setInvoiceNumber(invoice.invoiceNumber);
     setClientId(String((invoice as AgencyInvoice & { clientId?: string }).clientId || ''));
@@ -436,6 +442,7 @@ export const AdminInvoicing: React.FC = () => {
   };
 
   const selectClient = (id: string) => {
+    setInvoiceDirty(true);
     setClientId(id);
     const client = clients.find((item) => item.id === id);
     if (!client) return;
@@ -446,6 +453,7 @@ export const AdminInvoicing: React.FC = () => {
   };
 
   const selectProject = (id: string) => {
+    setInvoiceDirty(true);
     setProjectId(id);
     const project = projects.find((item) => item.id === id);
     if (!project) return;
@@ -455,6 +463,7 @@ export const AdminInvoicing: React.FC = () => {
   };
 
   const updateLineItem = (index: number, patch: Partial<InvoiceLineItem>) => {
+    setInvoiceDirty(true);
     setInvoiceItems((current) => current.map((item, itemIndex) => {
       if (itemIndex !== index) return item;
       const next = { ...item, ...patch };
@@ -538,6 +547,7 @@ export const AdminInvoicing: React.FC = () => {
         throw new Error(result.error || 'Invoice could not be saved.');
       }
       setInvoiceModalOpen(false);
+      setInvoiceDirty(false);
       showNotice('success', language === 'id' ? 'Invoice berhasil disimpan.' : 'Invoice saved successfully.');
       await loadData(true);
     } catch (err) {
@@ -549,9 +559,15 @@ export const AdminInvoicing: React.FC = () => {
 
   const updateInvoiceStatus = async (invoice: AgencyInvoice, nextStatus: InvoiceStatus) => {
     if (!canManageInvoices || invoice.status === nextStatus || nextStatus === 'cancelled') return;
-    const result = await api.finance.updateInvoice(invoice.id, { status: nextStatus });
+    const result = await api.finance.updateInvoice(invoice.id, { status: nextStatus, updatedAt: invoice.updatedAt });
     if (!result.success) {
-      showNotice('danger', result.error || 'Invoice status could not be updated.');
+      showNotice(
+        'danger',
+        result.status === 409
+          ? (language === 'id' ? 'Status invoice berubah di server. Data terbaru dimuat ulang; coba lagi dari state terbaru.' : 'This invoice changed on the server. The latest data was reloaded; retry from the current state.')
+          : (result.error || 'Invoice status could not be updated.')
+      );
+      if (result.status === 409) await loadData(true);
       return;
     }
     showNotice('success', language === 'id' ? 'Status invoice diperbarui.' : 'Invoice status updated.');
@@ -559,6 +575,7 @@ export const AdminInvoicing: React.FC = () => {
   };
 
   const openPayment = (invoice: AgencyInvoice) => {
+    setPaymentDirty(false);
     const balance = Number(invoice.balanceDue ?? (invoice.total - (invoice.amountPaid || 0)));
     setPaymentInvoice(invoice);
     setPaymentAmount(Math.max(0, balance));
@@ -605,6 +622,7 @@ export const AdminInvoicing: React.FC = () => {
       if (!result.success) throw new Error(result.error || 'Payment could not be recorded.');
       setPaymentInvoice(null);
       setPaymentIdempotencyKey('');
+      setPaymentDirty(false);
       showNotice('success', result.data?.replayed
         ? (language === 'id' ? 'Pembayaran sebelumnya sudah tercatat; data disinkronkan.' : 'That payment was already recorded; the finance data has been synchronized.')
         : (language === 'id' ? 'Pembayaran berhasil dicatat.' : 'Payment recorded successfully.'));
@@ -648,6 +666,7 @@ export const AdminInvoicing: React.FC = () => {
       if (!result.success) throw new Error(result.error || 'Expense could not be saved.');
       setExpenseModalOpen(false);
       setExpenseIdempotencyKey('');
+      setExpenseDirty(false);
       setExpenseDescription('');
       setExpenseAmount(0);
       showNotice('success', language === 'id' ? 'Pengeluaran berhasil dicatat.' : 'Expense recorded successfully.');
@@ -1061,7 +1080,7 @@ export const AdminInvoicing: React.FC = () => {
                     <EmptyState
                       title={language === 'id' ? 'Belum ada pengeluaran' : 'No expenses found'}
                       description={expenseSearch || expenseTypeFilter !== 'all' ? 'No actual expense records match the current search or filter.' : 'Only actual expense records are shown. No placeholder rows are used.'}
-                      action={canManageInvoices ? <button type="button" onClick={() => setExpenseModalOpen(true)} className={primaryClass}><Plus size={14} />Record expense</button> : undefined}
+                      action={canManageInvoices ? <button type="button" onClick={openExpenseModal} className={primaryClass}><Plus size={14} />Record expense</button> : undefined}
                     />
                   ) : (
                     <>
@@ -1114,19 +1133,29 @@ export const AdminInvoicing: React.FC = () => {
 
       <Modal
         open={invoiceModalOpen}
-        onClose={() => !savingInvoice && setInvoiceModalOpen(false)}
+        onClose={() => {
+          if (savingInvoice) return;
+          if (invoiceDirty && !window.confirm(language === 'id' ? 'Ada perubahan invoice yang belum disimpan. Buang perubahan?' : 'This invoice has unsaved changes. Discard them?')) return;
+          setInvoiceModalOpen(false);
+          setInvoiceDirty(false);
+        }}
         size="xl"
         title={editingInvoice ? 'Edit invoice' : 'Create invoice'}
         description="Save only billing information that belongs to a real client/project record."
-        closeOnOutsideClick={!savingInvoice}
+        closeOnOutsideClick={!savingInvoice && !invoiceDirty}
         footer={
           <>
-            <button type="button" onClick={() => setInvoiceModalOpen(false)} className={actionClass} disabled={savingInvoice}>Cancel</button>
+            <button type="button" onClick={() => {
+              if (savingInvoice) return;
+              if (invoiceDirty && !window.confirm(language === 'id' ? 'Ada perubahan invoice yang belum disimpan. Buang perubahan?' : 'This invoice has unsaved changes. Discard them?')) return;
+              setInvoiceModalOpen(false);
+              setInvoiceDirty(false);
+            }} className={actionClass} disabled={savingInvoice}>Cancel</button>
             <button type="submit" form="finance-invoice-form" className={primaryClass} disabled={savingInvoice}>{savingInvoice ? 'Saving...' : 'Save invoice'}</button>
           </>
         }
       >
-        <form id="finance-invoice-form" onSubmit={handleSaveInvoice} className="space-y-5">
+        <form id="finance-invoice-form" onSubmit={handleSaveInvoice} onChange={() => setInvoiceDirty(true)} className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="sm:col-span-2">
               <label className="mb-1.5 block text-xs font-medium text-muted">Invoice number</label>
@@ -1141,7 +1170,7 @@ export const AdminInvoicing: React.FC = () => {
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium text-muted">Currency</label>
-              <CustomSelect value={invoiceCurrency} onChange={(value) => setInvoiceCurrency(value as CurrencyCode)} options={[{ value: 'IDR', label: 'IDR' }, { value: 'USD', label: 'USD' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" />
+              <CustomSelect value={invoiceCurrency} onChange={(value) => { setInvoiceDirty(true); setInvoiceCurrency(value as CurrencyCode); }} options={[{ value: 'IDR', label: 'IDR' }, { value: 'USD', label: 'USD' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" />
             </div>
           </div>
 
@@ -1187,7 +1216,7 @@ export const AdminInvoicing: React.FC = () => {
           <section className="rounded-card border border-line bg-panel">
             <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
               <div><h3 className="text-sm font-semibold text-fg">Line items</h3><p className="mt-1 text-[11px] text-muted">Totals are calculated from the existing finance utility.</p></div>
-              <button type="button" onClick={() => setInvoiceItems((items) => items.length >= 100 ? items : [...items, emptyLineItem()])} disabled={invoiceItems.length >= 100} className={actionClass}><Plus size={13} />Add item</button>
+              <button type="button" onClick={() => { setInvoiceDirty(true); setInvoiceItems((items) => items.length >= 100 ? items : [...items, emptyLineItem()]); }} disabled={invoiceItems.length >= 100} className={actionClass}><Plus size={13} />Add item</button>
             </div>
             <div className="space-y-3 p-4">
               {invoiceItems.map((item, index) => (
@@ -1195,7 +1224,7 @@ export const AdminInvoicing: React.FC = () => {
                   <div><label className="mb-1.5 block text-[11px] text-muted">Description *</label><input required maxLength={500} value={item.description} onChange={(event) => updateLineItem(index, { description: event.target.value })} className={fieldClass} /></div>
                   <div><label className="mb-1.5 block text-[11px] text-muted">Qty</label><input type="number" min="0.01" max="100000" step="0.01" value={item.quantity} onChange={(event) => updateLineItem(index, { quantity: Number(event.target.value) })} className={fieldClass} /></div>
                   <div><label className="mb-1.5 block text-[11px] text-muted">Unit price</label><input type="number" min="0" max="10000000000" step="0.01" value={item.unitPrice} onChange={(event) => updateLineItem(index, { unitPrice: Number(event.target.value) })} className={fieldClass} /></div>
-                  <div className="flex items-end"><button type="button" disabled={invoiceItems.length === 1} onClick={() => setInvoiceItems((items) => items.filter((_, itemIndex) => itemIndex !== index))} className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-control border border-line text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger disabled:opacity-40" aria-label="Remove line item"><Trash2 size={14} /></button></div>
+                  <div className="flex items-end"><button type="button" disabled={invoiceItems.length === 1} onClick={() => { setInvoiceDirty(true); setInvoiceItems((items) => items.filter((_, itemIndex) => itemIndex !== index)); }} className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-control border border-line text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger disabled:opacity-40" aria-label="Remove line item"><Trash2 size={14} /></button></div>
                 </div>
               ))}
             </div>
@@ -1229,7 +1258,7 @@ export const AdminInvoicing: React.FC = () => {
               ) : (
                 <CustomSelect
                   value={invoiceStatus}
-                  onChange={(value) => setInvoiceStatus(value as InvoiceStatus)}
+                  onChange={(value) => { setInvoiceDirty(true); setInvoiceStatus(value as InvoiceStatus); }}
                   options={[{ value: 'draft', label: 'Draft' }, { value: 'sent', label: 'Sent' }, { value: 'overdue', label: 'Overdue' }]}
                   className="w-full"
                   triggerClassName="h-10 min-h-10 w-full"
@@ -1243,21 +1272,31 @@ export const AdminInvoicing: React.FC = () => {
 
       <Modal
         open={expenseModalOpen}
-        onClose={() => !savingExpense && setExpenseModalOpen(false)}
+        onClose={() => {
+          if (savingExpense) return;
+          if (expenseDirty && !window.confirm(language === 'id' ? 'Ada perubahan pengeluaran yang belum disimpan. Buang perubahan?' : 'This expense has unsaved changes. Discard them?')) return;
+          setExpenseModalOpen(false);
+          setExpenseDirty(false);
+        }}
         size="md"
         title="Record expense"
         description="Record an actual expense against the selected currency ledger."
-        closeOnOutsideClick={!savingExpense}
+        closeOnOutsideClick={!savingExpense && !expenseDirty}
         footer={
           <>
-            <button type="button" onClick={() => setExpenseModalOpen(false)} className={actionClass} disabled={savingExpense}>Cancel</button>
+            <button type="button" onClick={() => {
+              if (savingExpense) return;
+              if (expenseDirty && !window.confirm(language === 'id' ? 'Ada perubahan pengeluaran yang belum disimpan. Buang perubahan?' : 'This expense has unsaved changes. Discard them?')) return;
+              setExpenseModalOpen(false);
+              setExpenseDirty(false);
+            }} className={actionClass} disabled={savingExpense}>Cancel</button>
             <button type="submit" form="finance-expense-form" className={primaryClass} disabled={savingExpense}>{savingExpense ? 'Saving...' : 'Save expense'}</button>
           </>
         }
       >
-        <form id="finance-expense-form" onSubmit={handleSaveExpense} className="space-y-4">
-          <div><label className="mb-1.5 block text-xs font-medium text-muted">Type</label><CustomSelect value={expenseType} onChange={(value) => setExpenseType(value as 'OpEx' | 'CapEx' | 'Rentals')} options={[{ value: 'OpEx', label: 'OpEx' }, { value: 'CapEx', label: 'CapEx' }, { value: 'Rentals', label: 'Rentals' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" /></div>
-          <div><label className="mb-1.5 block text-xs font-medium text-muted">Category</label><CustomSelect value={expenseCategory} onChange={(value) => setExpenseCategory(value as AgencyExpense['category'])} options={['Software & Cloud','Salaries & Contractors','Office & Hardware','Office & Rentals','Marketing & Ads','Legal & Admin','CapEx Equipment'].map((value) => ({ value, label: value }))} className="w-full" triggerClassName="h-10 min-h-10 w-full" /></div>
+        <form id="finance-expense-form" onSubmit={handleSaveExpense} onChange={() => setExpenseDirty(true)} className="space-y-4">
+          <div><label className="mb-1.5 block text-xs font-medium text-muted">Type</label><CustomSelect value={expenseType} onChange={(value) => { setExpenseDirty(true); setExpenseType(value as 'OpEx' | 'CapEx' | 'Rentals'); }} options={[{ value: 'OpEx', label: 'OpEx' }, { value: 'CapEx', label: 'CapEx' }, { value: 'Rentals', label: 'Rentals' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" /></div>
+          <div><label className="mb-1.5 block text-xs font-medium text-muted">Category</label><CustomSelect value={expenseCategory} onChange={(value) => { setExpenseDirty(true); setExpenseCategory(value as AgencyExpense['category']); }}} options={['Software & Cloud','Salaries & Contractors','Office & Hardware','Office & Rentals','Marketing & Ads','Legal & Admin','CapEx Equipment'].map((value) => ({ value, label: value }))} className="w-full" triggerClassName="h-10 min-h-10 w-full" /></div>
           <div><label className="mb-1.5 block text-xs font-medium text-muted">Description *</label><input required maxLength={500} value={expenseDescription} onChange={(event) => setExpenseDescription(event.target.value)} className={fieldClass} /></div>
           <div className="grid grid-cols-2 gap-3">
             <div><label className="mb-1.5 block text-xs font-medium text-muted">Amount</label><input required type="number" min="0.01" max="100000000000" step="0.01" value={expenseAmount} onChange={(event) => setExpenseAmount(Number(event.target.value))} className={fieldClass} /></div>
@@ -1268,20 +1307,30 @@ export const AdminInvoicing: React.FC = () => {
 
       <Modal
         open={!!paymentInvoice}
-        onClose={() => !savingPayment && setPaymentInvoice(null)}
+        onClose={() => {
+          if (savingPayment) return;
+          if (paymentDirty && !window.confirm(language === 'id' ? 'Ada data pembayaran yang belum disimpan. Buang perubahan?' : 'This payment has unsaved changes. Discard them?')) return;
+          setPaymentInvoice(null);
+          setPaymentDirty(false);
+        }}
         size="md"
         title="Record payment"
         description={paymentInvoice ? paymentInvoice.invoiceNumber + ' · ' + paymentInvoice.clientCompany : undefined}
-        closeOnOutsideClick={!savingPayment}
+        closeOnOutsideClick={!savingPayment && !paymentDirty}
         footer={
           <>
-            <button type="button" onClick={() => setPaymentInvoice(null)} className={actionClass} disabled={savingPayment}>Cancel</button>
+            <button type="button" onClick={() => {
+              if (savingPayment) return;
+              if (paymentDirty && !window.confirm(language === 'id' ? 'Ada data pembayaran yang belum disimpan. Buang perubahan?' : 'This payment has unsaved changes. Discard them?')) return;
+              setPaymentInvoice(null);
+              setPaymentDirty(false);
+            }} className={actionClass} disabled={savingPayment}>Cancel</button>
             <button type="submit" form="finance-payment-form" className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control bg-success px-3.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50" disabled={savingPayment}><Check size={14} />{savingPayment ? 'Saving...' : 'Record payment'}</button>
           </>
         }
       >
         {paymentInvoice && (
-          <form id="finance-payment-form" onSubmit={handlePayment} className="space-y-4">
+          <form id="finance-payment-form" onSubmit={handlePayment} onChange={() => setPaymentDirty(true)} className="space-y-4">
             <div className="rounded-card border border-line bg-bg p-4">
               <div className="flex justify-between gap-3 text-xs"><span className="text-muted">Invoice total</span><span className="tabular-nums text-fg">{formatNativeAmount(paymentInvoice.total, paymentInvoice.currency)}</span></div>
               <div className="mt-2 flex justify-between gap-3 text-xs"><span className="text-muted">Already paid</span><span className="tabular-nums text-success">{formatNativeAmount(paymentInvoice.amountPaid || 0, paymentInvoice.currency)}</span></div>
@@ -1289,7 +1338,7 @@ export const AdminInvoicing: React.FC = () => {
             </div>
             <div><label className="mb-1.5 block text-xs font-medium text-muted">Amount received</label><input required min="0.01" type="number" step="0.01" max={Number(paymentInvoice.balanceDue ?? paymentInvoice.total)} value={paymentAmount} onChange={(event) => setPaymentAmount(Number(event.target.value))} className={fieldClass} /></div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <div><label className="mb-1.5 block text-xs font-medium text-muted">Payment method</label><CustomSelect value={paymentMethod} onChange={(value) => setPaymentMethod(value as typeof paymentMethod)} options={[{ value: 'bank_transfer', label: 'Bank transfer' }, { value: 'credit_card', label: 'Credit card' }, { value: 'cash', label: 'Cash' }, { value: 'other', label: 'Other' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" /></div>
+              <div><label className="mb-1.5 block text-xs font-medium text-muted">Payment method</label><CustomSelect value={paymentMethod} onChange={(value) => { setPaymentDirty(true); setPaymentMethod(value as typeof paymentMethod); }} options={[{ value: 'bank_transfer', label: 'Bank transfer' }, { value: 'credit_card', label: 'Credit card' }, { value: 'cash', label: 'Cash' }, { value: 'other', label: 'Other' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" /></div>
               <div><label className="mb-1.5 block text-xs font-medium text-muted">Payment date</label><input required type="date" value={paymentDate} onChange={(event) => setPaymentDate(event.target.value)} className={fieldClass} /></div>
             </div>
             <div><label className="mb-1.5 block text-xs font-medium text-muted">Reference</label><input maxLength={160} value={paymentReference} onChange={(event) => setPaymentReference(event.target.value)} className={fieldClass} placeholder="Transaction reference" /></div>
