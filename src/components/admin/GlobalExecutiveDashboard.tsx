@@ -371,7 +371,7 @@ const PerformanceView: React.FC = () => {
           { label: 'Avg. cycle time', value: avgCycleTime, context: '-0.6 days vs previous period', tone: 'success' as const },
           { label: 'Blocked work', value: String(blockedTasks), context: '3 projects affected', tone: 'warning' as const },
         ].map((metric) => (
-          <article key={metric.label} className="rounded-card border border-line bg-panel p-4">
+          <article key={metric.label} className="min-w-0 rounded-card border border-line bg-panel p-3.5 sm:p-4">
             <div className="text-xs text-muted">{metric.label}</div>
             <div className="mt-3 text-2xl font-medium tabular-nums text-fg">{metric.value}</div>
             <div className="mt-1 text-[11px] text-muted">{metric.context}</div>
@@ -707,7 +707,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       />
 
       <div className="min-[900px]:hidden mb-4 -mt-2">
-        <nav aria-label="Dashboard view" className="flex w-full items-center gap-1 overflow-x-auto rounded-control bg-panel border border-line p-1 custom-scrollbar">
+        <nav aria-label="Dashboard view" className="grid w-full grid-cols-4 gap-1 rounded-control bg-panel border border-line p-1">
           {[
             { key: 'overview', label: 'Overview', search: '' },
             { key: 'performance', label: 'Performance', search: '?view=performance' },
@@ -718,7 +718,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               key={tab.key}
               to={`/admin/dashboard${tab.search}`}
               className={[
-                'shrink-0 rounded-chip px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                'min-w-0 rounded-chip px-2 py-2 text-center text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
                 view === tab.key ? 'bg-line text-fg' : 'text-muted hover:bg-bg hover:text-fg',
               ].join(' ')}
               aria-current={view === tab.key ? 'page' : undefined}
@@ -731,7 +731,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
       {view === 'overview' ? (
         <>
-      <section className="mb-6" aria-label="Executive key performance indicators">
+      <section className="mb-5" aria-label="Executive key performance indicators">
         <div className="grid grid-cols-2 gap-2.5 sm:gap-3 min-[760px]:grid-cols-3 min-[1180px]:grid-cols-6">
           {[
             { label: 'Active projects', value: '12', change: '+2 this month', icon: <FolderKanban size={16} />, tone: 'success' },
@@ -749,7 +749,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 </span>
               </div>
               <div className="mt-4">
-                <div className="text-2xl font-medium tracking-[-0.02em] tabular-nums text-fg">{metric.value}</div>
+                <div className="truncate text-2xl font-medium tracking-[-0.02em] tabular-nums text-fg">{metric.value}</div>
                 <div className="mt-1 text-[11px] text-muted">{metric.change}</div>
               </div>
             </article>
