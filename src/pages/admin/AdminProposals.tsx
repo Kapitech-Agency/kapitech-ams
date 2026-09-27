@@ -955,17 +955,19 @@ export const AdminProposals: React.FC = () => {
         description={confirmAction?.type === 'delete'
           ? (language === 'id' ? 'Proposal Draft akan dihapus dari daftar.' : 'This Draft proposal will be removed from the list.')
           : (language === 'id' ? 'Tindakan ini menjalankan workflow invoice untuk proposal yang diterima.' : 'This runs the invoice workflow for the accepted proposal.')}
+        footer={(
+          <>
+            <Button type="button" variant="secondary" onClick={() => setConfirmAction(null)}>Cancel</Button>
+            <Button
+              type="button"
+              variant={confirmAction?.type === 'delete' ? 'destructive' : 'primary'}
+              onClick={() => confirmAction?.type === 'delete' ? void confirmDelete() : void confirmConvert()}
+            >
+              {confirmAction?.type === 'delete' ? 'Delete' : 'Convert to invoice'}
+            </Button>
+          </>
+        )}
       >
-        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button type="button" variant="secondary" onClick={() => setConfirmAction(null)}>Cancel</Button>
-          <Button
-            type="button"
-            variant={confirmAction?.type === 'delete' ? 'destructive' : 'primary'}
-            onClick={() => confirmAction?.type === 'delete' ? void confirmDelete() : void confirmConvert()}
-          >
-            {confirmAction?.type === 'delete' ? 'Delete' : 'Convert to invoice'}
-          </Button>
-        </div>
       </Modal>
     </div>
   );
