@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   AlertTriangle,
   ArrowUpRight,
@@ -88,7 +88,290 @@ const progressClasses = {
 
 const formatMoney = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
 
+
+const PerformanceView: React.FC = () => {
+  const completion = 76;
+  const totalTasks = 84;
+  const completedTasks = 64;
+  const avgCycleTime = '3.8 days';
+  const blockedTasks = 7;
+
+  return (
+    <div className="space-y-3">
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          { label: 'Delivery score', value: '92%', context: '+4.8% vs previous period', tone: 'success' as const },
+          { label: 'Task completion', value: '76%', context: '64 of 84 tracked tasks', tone: 'info' as const },
+          { label: 'Avg. cycle time', value: avgCycleTime, context: '-0.6 days vs previous period', tone: 'success' as const },
+          { label: 'Blocked work', value: String(blockedTasks), context: '3 projects affected', tone: 'warning' as const },
+        ].map((metric) => (
+          <article key={metric.label} className="rounded-card border border-line bg-panel p-4">
+            <div className="text-xs text-muted">{metric.label}</div>
+            <div className="mt-3 text-2xl font-medium tabular-nums text-fg">{metric.value}</div>
+            <div className="mt-1 text-[11px] text-muted">{metric.context}</div>
+          </article>
+        ))}
+      </section>
+
+      <div className="grid gap-3 min-[1100px]:grid-cols-12">
+        <AdminPanel
+          className="min-[1100px]:col-span-8"
+          title="Delivery performance"
+          description="How projects are progressing against planned delivery windows."
+          bodyClassName="p-4 sm:p-5"
+        >
+          <div className="grid gap-4 sm:grid-cols-3">
+            {[
+              { label: 'On schedule', value: 67, tone: 'success' as const },
+              { label: 'At risk', value: 25, tone: 'warning' as const },
+              { label: 'Delayed', value: 8, tone: 'danger' as const },
+            ].map((item) => (
+              <div key={item.label} className="rounded-control border border-line bg-bg p-3">
+                <div className="flex items-center justify-between gap-2 text-xs">
+                  <span className="text-muted">{item.label}</span>
+                  <span className="font-semibold tabular-nums text-fg">{item.value}%</span>
+                </div>
+                <div className="mt-2 h-2 overflow-hidden rounded-sm bg-line">
+                  <div
+                    className={item.tone === 'success' ? 'h-full rounded-sm bg-success' : item.tone === 'warning' ? 'h-full rounded-sm bg-warning' : 'h-full rounded-sm bg-danger'}
+                    style={{ width: item.value + '%' }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-5 border-t border-line pt-4">
+            <TrendChart
+              data={[
+                { label: 'W1', primary: 58, secondary: 18, tertiary: 12 },
+                { label: 'W2', primary: 63, secondary: 16, tertiary: 11 },
+                { label: 'W3', primary: 69, secondary: 14, tertiary: 9 },
+                { label: 'W4', primary: 76, secondary: 12, tertiary: 7 },
+                { label: 'W5', primary: 81, secondary: 10, tertiary: 5 },
+                { label: 'W6', primary: 84, secondary: 9, tertiary: 4 },
+              ]}
+              primaryLabel="Completed"
+              secondaryLabel="In progress"
+              tertiaryLabel="Blocked"
+              ariaLabel="Task completion performance over the last six weeks."
+            />
+          </div>
+        </AdminPanel>
+
+        <AdminPanel
+          className="min-[1100px]:col-span-4"
+          title="Capacity pressure"
+          description="Current workload distribution across the team."
+          bodyClassName="p-4 sm:p-5"
+        >
+          <div className="space-y-4">
+            {sampleTeam.map((member) => (
+              <div key={member.name}>
+                <div className="mb-1.5 flex items-center justify-between gap-3">
+                  <span className="truncate text-xs font-medium text-fg">{member.name}</span>
+                  <span className="text-xs font-medium tabular-nums text-fg">{member.workload}%</span>
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-sm bg-line">
+                  <div className={['h-full rounded-sm', progressClasses[member.tone]].join(' ')} style={{ width: member.workload + '%' }} />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-5 rounded-control border border-warning/20 bg-warning/5 p-3 text-xs">
+            <div className="font-medium text-fg">2 members near maximum load</div>
+            <div className="mt-1 leading-5 text-muted">Rebalance work before adding new high-priority assignments.</div>
+          </div>
+        </AdminPanel>
+      </div>
+
+      <div className="grid gap-3 min-[1100px]:grid-cols-12">
+        <AdminPanel className="min-[1100px]:col-span-7" title="Workstream health" description="Sample operational indicators for the current delivery cycle." bodyClassName="p-4 sm:p-5">
+          {[
+            ['Creative production', 88, 'Ahead of plan'],
+            ['Development', 71, 'On plan'],
+            ['Client approvals', 63, 'Needs follow-up'],
+            ['QA & launch', 79, 'On plan'],
+          ].map(([label, value, state]) => (
+            <div key={String(label)} className="mb-4 last:mb-0">
+              <div className="mb-1.5 flex items-center justify-between gap-3">
+                <span className="text-xs text-fg">{label}</span>
+                <span className="text-[11px] text-muted">{state} · {value}%</span>
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-sm bg-line">
+                <div className="h-full rounded-sm bg-success" style={{ width: String(value) + '%' }} />
+              </div>
+            </div>
+          ))}
+        </AdminPanel>
+
+        <AdminPanel className="min-[1100px]:col-span-5" title="Execution summary" description="Core performance counters from the current sample period." bodyClassName="p-4 sm:p-5">
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              ['Tasks tracked', String(totalTasks)],
+              ['Completed', String(completedTasks)],
+              ['Overdue', '3'],
+              ['Client approvals pending', '5'],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-control border border-line bg-bg p-3">
+                <div className="text-lg font-medium tabular-nums text-fg">{value}</div>
+                <div className="mt-1 text-[11px] text-muted">{label}</div>
+              </div>
+            ))}
+          </div>
+        </AdminPanel>
+      </div>
+    </div>
+  );
+};
+
+const AnalyticsView: React.FC = () => {
+  const revenue = [61000, 68500, 74200, 71800, 80200, 84500];
+  const expenses = [42000, 44700, 46300, 49200, 51400, 52200];
+  const revenueTotal = revenue.reduce((sum, value) => sum + value, 0);
+  const expenseTotal = expenses.reduce((sum, value) => sum + value, 0);
+
+  return (
+    <div className="space-y-3">
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          ['Revenue growth', '+12.4%', 'Month over month'],
+          ['Gross margin', '61.9%', 'Sample agency blended margin'],
+          ['Portfolio value', '$149.3k', 'Active project budgets'],
+          ['Invoice aging', '$8.7k', 'Past due balance'],
+        ].map(([label, value, context]) => (
+          <article key={label} className="rounded-card border border-line bg-panel p-4">
+            <div className="text-xs text-muted">{label}</div>
+            <div className="mt-3 text-2xl font-medium tabular-nums text-fg">{value}</div>
+            <div className="mt-1 text-[11px] text-muted">{context}</div>
+          </article>
+        ))}
+      </section>
+
+      <div className="grid gap-3 min-[1100px]:grid-cols-12">
+        <AdminPanel className="min-[1100px]:col-span-8" title="Financial analytics" description="Revenue, expense, and net contribution trend based on Stitch sample inputs." bodyClassName="p-4 sm:p-5">
+          <TrendChart
+            data={sampleRevenue}
+            primaryLabel="Revenue"
+            secondaryLabel="Expenses"
+            tertiaryLabel="Net"
+            primaryFormat={formatMoney}
+            ariaLabel="Financial analytics trend."
+          />
+          <div className="mt-4 grid grid-cols-3 gap-2 border-t border-line pt-4">
+            {[
+              ['Revenue', formatMoney(revenueTotal)],
+              ['Expenses', formatMoney(expenseTotal)],
+              ['Net', formatMoney(revenueTotal - expenseTotal)],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-control bg-bg p-3">
+                <div className="text-[11px] text-muted">{label}</div>
+                <div className="mt-1 text-sm font-medium tabular-nums text-fg">{value}</div>
+              </div>
+            ))}
+          </div>
+        </AdminPanel>
+
+        <AdminPanel className="min-[1100px]:col-span-4" title="Portfolio mix" description="Sample distribution of active work by commercial model." bodyClassName="p-4 sm:p-5">
+          <DonutChart
+            data={[
+              { label: 'Enterprise', value: 5, tone: 'info' as const },
+              { label: 'Retainer', value: 4, tone: 'success' as const },
+              { label: 'Fixed-fee', value: 3, tone: 'warning' as const },
+            ]}
+            ariaLabel="Portfolio mix by commercial model."
+          />
+          <div className="mt-4 space-y-3 border-t border-line pt-4">
+            {[
+              ['Enterprise', '42%', '5 projects'],
+              ['Retainer', '33%', '4 projects'],
+              ['Fixed-fee', '25%', '3 projects'],
+            ].map(([label, percent, context]) => (
+              <div key={label} className="flex items-center justify-between gap-3 text-xs">
+                <span className="text-fg">{label}</span>
+                <span className="text-muted">{percent} · {context}</span>
+              </div>
+            ))}
+          </div>
+        </AdminPanel>
+      </div>
+
+      <div className="grid gap-3 min-[1100px]:grid-cols-12">
+        <AdminPanel className="min-[1100px]:col-span-7" title="Team workload analytics" description="Task allocation and utilization by team member." bodyClassName="p-0">
+          <div className="overflow-x-auto custom-scrollbar">
+            <table className="w-full min-w-[620px] border-collapse text-left">
+              <thead>
+                <tr>
+                  <th className="px-4 py-3 text-xs font-medium text-muted">Team member</th>
+                  <th className="px-3 py-3 text-xs font-medium text-muted">Tasks</th>
+                  <th className="px-3 py-3 text-xs font-medium text-muted">Utilization</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-muted">State</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sampleTeam.map((member) => (
+                  <tr key={member.name} className="border-t border-line">
+                    <td className="px-4 py-3 text-xs font-medium text-fg">{member.name}</td>
+                    <td className="px-3 py-3 text-xs tabular-nums text-muted">{member.tasks}</td>
+                    <td className="px-3 py-3">
+                      <div className="flex min-w-[150px] items-center gap-2">
+                        <div className="h-1.5 flex-1 overflow-hidden rounded-sm bg-line">
+                          <div className={['h-full rounded-sm', progressClasses[member.tone]].join(' ')} style={{ width: member.workload + '%' }} />
+                        </div>
+                        <span className="w-9 text-right text-[11px] tabular-nums text-muted">{member.workload}%</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-right text-xs text-muted">{member.state}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </AdminPanel>
+
+        <AdminPanel className="min-[1100px]:col-span-5" title="Client & project analytics" description="Sample health signals for decision support." bodyClassName="p-4 sm:p-5">
+          <div className="space-y-3">
+            {[
+              ['Atlas Group', '78%', 'Brand system · enterprise', 'success'],
+              ['Meridian Labs', '61%', 'Commerce · fixed-fee', 'warning'],
+              ['Nova Ventures', '72%', 'Growth · retainer', 'success'],
+              ['Orbit Health', '44%', 'Launch · enterprise', 'danger'],
+            ].map(([client, progress, context, tone]) => (
+              <div key={client} className="rounded-control border border-line bg-bg p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="truncate text-xs font-medium text-fg">{client}</div>
+                    <div className="mt-0.5 truncate text-[10px] text-muted">{context}</div>
+                  </div>
+                  <span className="text-xs font-medium tabular-nums text-fg">{progress}</span>
+                </div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-sm bg-line">
+                  <div className={['h-full rounded-sm', progressClasses[tone as keyof typeof progressClasses]].join(' ')} style={{ width: progress }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </AdminPanel>
+      </div>
+
+      <section className="grid gap-3 sm:grid-cols-3">
+        {[
+          { icon: <CircleDollarSign size={15} />, label: 'Highest revenue month', value: 'June · $84.5k' },
+          { icon: <Users size={15} />, label: 'Peak team load', value: 'Raka · 91%' },
+          { icon: <AlertTriangle size={15} />, label: 'Risk concentration', value: '3 projects at risk' },
+        ].map((item) => (
+          <article key={item.label} className="rounded-card border border-line bg-panel p-4">
+            <div className="flex items-center gap-2 text-xs text-muted">{item.icon}{item.label}</div>
+            <div className="mt-2 text-sm font-medium text-fg">{item.value}</div>
+          </article>
+        ))}
+      </section>
+    </div>
+  );
+};
+
 export const GlobalExecutiveDashboard: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const view = (searchParams.get('view') || 'overview') as 'overview' | 'performance' | 'analytics';
   const [range, setRange] = useState<RangeKey>('Q2');
   const [projectFilter, setProjectFilter] = useState<ProjectFilter>('All');
 
@@ -132,6 +415,30 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         )}
       />
 
+      <div className="md:hidden mb-4 -mt-2">
+        <nav aria-label="Dashboard view" className="flex w-full items-center gap-1 overflow-x-auto rounded-control bg-panel border border-line p-1 custom-scrollbar">
+          {[
+            { key: 'overview', label: 'Overview', search: '' },
+            { key: 'performance', label: 'Performance', search: '?view=performance' },
+            { key: 'analytics', label: 'Analytics', search: '?view=analytics' },
+          ].map((tab) => (
+            <Link
+              key={tab.key}
+              to={`/admin/dashboard${tab.search}`}
+              className={[
+                'shrink-0 rounded-chip px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                view === tab.key ? 'bg-line text-fg' : 'text-muted hover:bg-bg hover:text-fg',
+              ].join(' ')}
+              aria-current={view === tab.key ? 'page' : undefined}
+            >
+              {tab.label}
+            </Link>
+          ))}
+        </nav>
+      </div>
+
+      {view === 'overview' ? (
+        <>
       <section className="mb-6" aria-label="Executive key performance indicators">
         <div className="grid gap-3 sm:grid-cols-2 min-[760px]:grid-cols-3 min-[1180px]:grid-cols-6">
           {[
@@ -256,6 +563,13 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         <article className="rounded-card border border-line bg-panel p-4"><div className="flex items-center gap-2 text-xs text-muted"><Clock3 size={15} className="text-warning" /> Priority work</div><div className="mt-2 text-lg font-medium tabular-nums text-fg">6</div><div className="mt-1 text-[11px] text-muted">High-priority tasks due this week.</div></article>
         <article className="rounded-card border border-line bg-panel p-4"><div className="flex items-center gap-2 text-xs text-muted"><ReceiptText size={15} className="text-warning" /> Invoice follow-up</div><div className="mt-2 text-lg font-medium tabular-nums text-fg">$8.7k</div><div className="mt-1 text-[11px] text-muted">Outstanding amount past due.</div></article>
       </section>
+
+        </>
+      ) : view === 'performance' ? (
+        <PerformanceView />
+      ) : (
+        <AnalyticsView />
+      )}
     </div>
   );
 };
