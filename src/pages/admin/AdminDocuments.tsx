@@ -321,7 +321,7 @@ export const AdminDocuments: React.FC = () => {
                         {doc.relatedEntity || 'General'}
                       </td>
                       <td className="py-3 px-4">
-                        <span className={'px-2 py-0.5 rounded text-xs font-sans normal-case border ' + (
+                        <span className={'px-2 py-0.5 rounded-badge text-xs font-sans normal-case border ' + (
                           doc.status === 'ready' || doc.sourceType === 'external_link'
                             ? 'bg-success/10 text-success border-success/20'
                             : 'bg-warning/10 text-warning border-warning/20'
