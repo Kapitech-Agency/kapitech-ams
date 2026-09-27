@@ -28,6 +28,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { useDragToScroll } from '../../lib/useDragToScroll';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Skeleton } from '../../components/ui/Skeleton';
+import { AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 
 export const AdminCmsProjects: React.FC = () => {
   const { language, t } = useLanguage();
@@ -248,30 +249,23 @@ export const AdminCmsProjects: React.FC = () => {
           onConfirm={() => void confirmDeleteProject()}
         />
       
-      {/* Top Title & Actions */}
-      <div className="ams-page-header flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-        <div>
-          <h1 className="ams-page-title">
-            <Layers className="text-accent-text shrink-0" size={22} />
-            <span>{t('admin.nav.cmsProjects')}</span>
-          </h1>
-          <p className="text-xs text-muted mt-1 font-sans">
-            {language === 'id'
-              ? 'Kelola showcase studi kasus dan portofolio agency untuk kapitech.id/work.'
-              : 'Manage case studies, portfolio showcases, and technical deliverables at kapitech.id/work.'}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button
+      <AdminModuleHeader
+        icon={<Layers size={20} />}
+        title={t('admin.nav.cmsProjects')}
+        description={language === 'id'
+          ? 'Kelola showcase studi kasus dan portofolio agency untuk kapitech.id/work.'
+          : 'Manage case studies, portfolio showcases, and technical deliverables at kapitech.id/work.'}
+        actions={
+          <Button
+            type="button"
+            variant="primary"
+            icon={<Plus size={15} />}
             onClick={handleOpenAdd}
-            className="min-h-10 px-4 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-sans font-medium transition-colors flex items-center gap-2"
           >
-            <Plus size={15} />
-            <span>{language === 'id' ? 'Tambah Case Study' : 'Add Case Study'}</span>
-          </button>
-        </div>
-      </div>
+            {language === 'id' ? 'Tambah case study' : 'Add case study'}
+          </Button>
+        }
+      />
 
       {/* Success alert */}
       {statusMessage && (
