@@ -279,7 +279,7 @@ export const AdminVendors: React.FC = () => {
       {/* Top Header */}
       <header className="ams-dashboard-header mb-6 flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold leading-8 tracking-[-0.02em] text-fg"><Users className="text-accent-text shrink-0" size={22} /><span>{language === 'id' ? 'Direktori Vendor & Kontraktor' : 'Vendor & Talent Directory'}</span></h1>
+          <h1 className="flex items-center gap-2.5 text-2xl font-semibold leading-8 tracking-[-0.02em] text-fg"><Users className="text-accent-text shrink-0" size={22} /><span>{language === 'id' ? 'Direktori Vendor & Kontraktor' : 'Vendor & Talent Directory'}</span></h1>
           <p className="mt-1 max-w-3xl text-xs leading-5 text-muted">
             {language === 'id'
               ? 'Database mitra agensi, freelance spesialis terverifikasi, tarif per jam, dan evaluasi performa SLA.'
@@ -429,7 +429,6 @@ export const AdminVendors: React.FC = () => {
             />
           </div>
         </div>
-          </div>
         </div>
       </section>
 
