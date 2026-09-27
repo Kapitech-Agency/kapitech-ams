@@ -21,6 +21,7 @@ import {
 import { useLanguage } from '../../lib/LanguageContext';
 import { api } from '../../lib/apiClient';
 import { Modal } from '../ui/Modal';
+import Button from '../ui/Button';
 
 interface CommandPaletteProps {
   isOpen: boolean;
