@@ -567,11 +567,13 @@ export const AdminProjects: React.FC = () => {
         size="sm"
         title={language === 'id' ? 'Hapus proyek?' : 'Delete project?'}
         description={deleteProject ? (language === 'id' ? 'Proyek ' + deleteProject.name + ' akan dihapus.' : 'Project ' + deleteProject.name + ' will be removed.') : undefined}
+        footer={(
+          <>
+            <Button type="button" variant="secondary" onClick={() => setDeleteProject(null)}>Cancel</Button>
+            <Button type="button" variant="destructive" onClick={() => void deleteProjectConfirmed()} disabled={!canDeleteProjects}>Delete</Button>
+          </>
+        )}
       >
-        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
-          <Button variant="secondary" onClick={() => setDeleteProject(null)}>Cancel</Button>
-          <Button variant="destructive" onClick={() => void deleteProjectConfirmed()} disabled={!canDeleteProjects}>Delete</Button>
-        </div>
       </Modal>
 
       <Modal
@@ -580,11 +582,13 @@ export const AdminProjects: React.FC = () => {
         size="sm"
         title="Delete task?"
         description={deleteTaskTarget ? 'Task "' + deleteTaskTarget.title + '" will be permanently removed.' : undefined}
+        footer={(
+          <>
+            <Button type="button" variant="secondary" onClick={() => setDeleteTaskTarget(null)}>Cancel</Button>
+            <Button type="button" variant="destructive" onClick={() => void confirmDeleteTask()} disabled={!canManageKanbanTasks}>Delete</Button>
+          </>
+        )}
       >
-        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
-          <Button variant="secondary" onClick={() => setDeleteTaskTarget(null)}>Cancel</Button>
-          <Button variant="destructive" onClick={() => void confirmDeleteTask()} disabled={!canManageKanbanTasks}>Delete</Button>
-        </div>
       </Modal>
 
       <header className="ams-dashboard-header mb-6 flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
