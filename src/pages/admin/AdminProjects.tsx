@@ -797,8 +797,8 @@ export const AdminProjects: React.FC = () => {
               <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className={'rounded-control border px-2 py-1 text-[11px] font-semibold ' + projectStatusClass(selectedProject.status)}>{statusLabel(selectedProject.status)}</span>
-                    {selectedProject.health && <span className={'rounded-control border px-2 py-1 text-[11px] font-semibold ' + projectHealthClass(selectedProject.health)}>{selectedProject.health}</span>}
+                    <span className={'rounded-badge border px-2 py-1 text-[11px] font-semibold ' + projectStatusClass(selectedProject.status)}>{statusLabel(selectedProject.status)}</span>
+                    {selectedProject.health && <span className={'rounded-badge border px-2 py-1 text-[11px] font-semibold ' + projectHealthClass(selectedProject.health)}>{selectedProject.health}</span>}
                     <span className="text-[11px] text-muted">{selectedProject.serviceCategory || 'Delivery project'}</span>
                   </div>
                   <h2 className="mt-3 text-xl font-semibold tracking-[-0.01em] text-fg">{selectedProject.name}</h2>
