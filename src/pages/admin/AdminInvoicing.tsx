@@ -913,7 +913,7 @@ export const AdminInvoicing: React.FC = () => {
 
   return (
     <div className="min-h-full pb-8">
-      <header className="mb-6 flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
+      <header className="ams-dashboard-header mb-6 flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold leading-8 tracking-[-0.02em] text-fg">{language === 'id' ? 'Keuangan &amp; Invoicing' : 'Finance &amp; Invoicing'}</h1>
           <p className="mt-1 max-w-2xl text-xs leading-5 text-muted">
