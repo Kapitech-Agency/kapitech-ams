@@ -1211,6 +1211,15 @@ export const AdminInvoicing: React.FC = () => {
         }
       >
         <form id="finance-invoice-form" onSubmit={handleSaveInvoice} onChange={() => setInvoiceDirty(true)} className="space-y-5">
+          {invoiceBillingLocked && (
+            <div className="flex items-start gap-3 rounded-card border border-warning/30 bg-warning/10 px-4 py-3 text-xs text-fg" role="note">
+              <ShieldCheck size={15} className="mt-0.5 shrink-0 text-warning" />
+              <div>
+                <p className="font-medium">Billing fields are locked</p>
+                <p className="mt-1 leading-5 text-muted">This invoice has recorded payment activity. Client linkage, currency, amounts, tax, discount, and invoice dates cannot be changed.</p>
+              </div>
+            </div>
+          )}
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="sm:col-span-2">
               <label className="mb-1.5 block text-xs font-medium text-muted">Invoice number</label>
@@ -1225,7 +1234,7 @@ export const AdminInvoicing: React.FC = () => {
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium text-muted">Currency</label>
-              <CustomSelect value={invoiceCurrency} onChange={(value) => { setInvoiceDirty(true); setInvoiceCurrency(value as CurrencyCode); }} options={[{ value: 'IDR', label: 'IDR' }, { value: 'USD', label: 'USD' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" />
+              <CustomSelect disabled={invoiceBillingLocked} value={invoiceCurrency} onChange={(value) => { setInvoiceDirty(true); setInvoiceCurrency(value as CurrencyCode); }} options={[{ value: 'IDR', label: 'IDR' }, { value: 'USD', label: 'USD' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" />
             </div>
           </div>
 
@@ -1233,16 +1242,19 @@ export const AdminInvoicing: React.FC = () => {
             <div>
               <label className="mb-1.5 block text-xs font-medium text-muted">Client record</label>
               <CustomSelect
+                disabled={invoiceBillingLocked}
                 value={clientId}
                 onChange={selectClient}
                 options={[{ value: '', label: 'Manual client details' }, ...clients.map((client) => ({ value: client.id, label: client.company + ' · ' + client.name }))]}
                 className="w-full"
                 triggerClassName="h-10 min-h-10 w-full"
+                disabled={invoiceBillingLocked}
               />
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium text-muted">Project</label>
               <CustomSelect
+                disabled={invoiceBillingLocked}
                 value={projectId}
                 onChange={selectProject}
                 options={[{ value: '', label: 'No project linked' }, ...projects.map((project) => ({ value: project.id, label: project.name }))]}
@@ -1252,34 +1264,34 @@ export const AdminInvoicing: React.FC = () => {
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium text-muted">Client name *</label>
-              <input required maxLength={160} value={clientName} onChange={(event) => setClientName(event.target.value)} className={fieldClass} />
+              <input required disabled={invoiceBillingLocked} maxLength={160} value={clientName} onChange={(event) => setClientName(event.target.value)} className={fieldClass} />
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium text-muted">Company *</label>
-              <input required maxLength={200} value={clientCompany} onChange={(event) => setClientCompany(event.target.value)} className={fieldClass} />
+              <input required disabled={invoiceBillingLocked} maxLength={200} value={clientCompany} onChange={(event) => setClientCompany(event.target.value)} className={fieldClass} />
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium text-muted">Email</label>
-              <input type="email" maxLength={254} value={clientEmail} onChange={(event) => setClientEmail(event.target.value)} className={fieldClass} />
+              <input type="email" disabled={invoiceBillingLocked} maxLength={254} value={clientEmail} onChange={(event) => setClientEmail(event.target.value)} className={fieldClass} />
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium text-muted">Phone</label>
-              <input maxLength={40} value={clientPhone} onChange={(event) => setClientPhone(event.target.value)} className={fieldClass} />
+              <input disabled={invoiceBillingLocked} maxLength={40} value={clientPhone} onChange={(event) => setClientPhone(event.target.value)} className={fieldClass} />
             </div>
           </div>
 
           <section className="rounded-card border border-line bg-panel">
             <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
               <div><h3 className="text-sm font-semibold text-fg">Line items</h3><p className="mt-1 text-[11px] text-muted">Totals are calculated from the existing finance utility.</p></div>
-              <button type="button" onClick={() => { setInvoiceDirty(true); setInvoiceItems((items) => items.length >= 100 ? items : [...items, emptyLineItem()]); }} disabled={invoiceItems.length >= 100} className={actionClass}><Plus size={13} />Add item</button>
+              <button type="button" onClick={() => { setInvoiceDirty(true); setInvoiceItems((items) => items.length >= 100 ? items : [...items, emptyLineItem()]); }} disabled={invoiceBillingLocked || invoiceItems.length >= 100} className={actionClass}><Plus size={13} />Add item</button>
             </div>
             <div className="space-y-3 p-4">
               {invoiceItems.map((item, index) => (
                 <div key={item.id} className="grid gap-3 rounded-control border border-line bg-bg p-3 sm:grid-cols-[minmax(0,1fr)_90px_150px_40px]">
-                  <div><label className="mb-1.5 block text-[11px] text-muted">Description *</label><input required maxLength={500} value={item.description} onChange={(event) => updateLineItem(index, { description: event.target.value })} className={fieldClass} /></div>
-                  <div><label className="mb-1.5 block text-[11px] text-muted">Qty</label><input type="number" min="0.01" max="100000" step="0.01" value={item.quantity} onChange={(event) => updateLineItem(index, { quantity: Number(event.target.value) })} className={fieldClass} /></div>
-                  <div><label className="mb-1.5 block text-[11px] text-muted">Unit price</label><input type="number" min="0" max="10000000000" step="0.01" value={item.unitPrice} onChange={(event) => updateLineItem(index, { unitPrice: Number(event.target.value) })} className={fieldClass} /></div>
-                  <div className="flex items-end"><button type="button" disabled={invoiceItems.length === 1} onClick={() => { setInvoiceDirty(true); setInvoiceItems((items) => items.filter((_, itemIndex) => itemIndex !== index)); }} className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-control border border-line text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger disabled:opacity-40" aria-label="Remove line item"><Trash2 size={14} /></button></div>
+                  <div><label className="mb-1.5 block text-[11px] text-muted">Description *</label><input required disabled={invoiceBillingLocked} maxLength={500} value={item.description} onChange={(event) => updateLineItem(index, { description: event.target.value })} className={fieldClass} /></div>
+                  <div><label className="mb-1.5 block text-[11px] text-muted">Qty</label><input disabled={invoiceBillingLocked} type="number" min="0.01" max="100000" step="0.01" value={item.quantity} onChange={(event) => updateLineItem(index, { quantity: Number(event.target.value) })} className={fieldClass} /></div>
+                  <div><label className="mb-1.5 block text-[11px] text-muted">Unit price</label><input disabled={invoiceBillingLocked} type="number" min="0" max="10000000000" step="0.01" value={item.unitPrice} onChange={(event) => updateLineItem(index, { unitPrice: Number(event.target.value) })} className={fieldClass} /></div>
+                  <div className="flex items-end"><button type="button" disabled={invoiceBillingLocked || invoiceItems.length === 1} onClick={() => { setInvoiceDirty(true); setInvoiceItems((items) => items.filter((_, itemIndex) => itemIndex !== index)); }} className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-control border border-line text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger disabled:opacity-40" aria-label="Remove line item"><Trash2 size={14} /></button></div>
                 </div>
               ))}
             </div>
@@ -1288,12 +1300,12 @@ export const AdminInvoicing: React.FC = () => {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
-                <div><label className="mb-1.5 block text-xs font-medium text-muted">Discount %</label><input type="number" min="0" max="100" step="0.01" value={discountPercent} onChange={(event) => setDiscountPercent(Number(event.target.value))} className={fieldClass} /></div>
-                <div><label className="mb-1.5 block text-xs font-medium text-muted">Tax %</label><input type="number" min="0" max="100" step="0.01" value={taxPercent} onChange={(event) => setTaxPercent(Number(event.target.value))} className={fieldClass} /></div>
+                <div><label className="mb-1.5 block text-xs font-medium text-muted">Discount %</label><input disabled={invoiceBillingLocked} type="number" min="0" max="100" step="0.01" value={discountPercent} onChange={(event) => setDiscountPercent(Number(event.target.value))} className={fieldClass} /></div>
+                <div><label className="mb-1.5 block text-xs font-medium text-muted">Tax %</label><input disabled={invoiceBillingLocked} type="number" min="0" max="100" step="0.01" value={taxPercent} onChange={(event) => setTaxPercent(Number(event.target.value))} className={fieldClass} /></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div><label className="mb-1.5 block text-xs font-medium text-muted">Issue date</label><input type="date" value={issueDate} onChange={(event) => setIssueDate(event.target.value)} className={fieldClass} /></div>
-                <div><label className="mb-1.5 block text-xs font-medium text-muted">Due date</label><input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} className={fieldClass} /></div>
+                <div><label className="mb-1.5 block text-xs font-medium text-muted">Issue date</label><input disabled={invoiceBillingLocked} type="date" value={issueDate} onChange={(event) => setIssueDate(event.target.value)} className={fieldClass} /></div>
+                <div><label className="mb-1.5 block text-xs font-medium text-muted">Due date</label><input disabled={invoiceBillingLocked} type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} className={fieldClass} /></div>
               </div>
               <div><label className="mb-1.5 block text-xs font-medium text-muted">Payment terms</label><input maxLength={500} value={paymentTerms} onChange={(event) => setPaymentTerms(event.target.value)} className={fieldClass} placeholder="e.g. Net 14" /></div>
               <div><label className="mb-1.5 block text-xs font-medium text-muted">Notes</label><textarea maxLength={5000} value={invoiceNotes} onChange={(event) => setInvoiceNotes(event.target.value)} rows={4} className={fieldClass + ' py-2.5'} /></div>
