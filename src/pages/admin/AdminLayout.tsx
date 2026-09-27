@@ -80,7 +80,7 @@ export const AdminLayout: React.FC = () => {
     try {
       const saved = window.localStorage.getItem('kapitech_ams_theme');
       if (saved === 'light' || saved === 'dark') return saved;
-      return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      return 'dark';
     } catch {
       return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
     }
