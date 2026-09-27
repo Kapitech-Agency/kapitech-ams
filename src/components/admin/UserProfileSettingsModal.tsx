@@ -116,7 +116,9 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
           } as typeof current.user,
           current.rememberMe
         );
-        window.dispatchEvent(new Event('kapitech_profile_updated'));
+        window.dispatchEvent(new CustomEvent('kapitech_profile_updated', {
+          detail: { name: payload.name, avatarUrl: payload.avatarUrl || null }
+        }));
       }
 
       setStatus({
