@@ -123,7 +123,7 @@ const taskStatusLabel = (status: TaskStatus) => TASK_COLUMNS.find(item => item.i
 
 const priorityLabel = (priority: TaskPriority) => TASK_PRIORITIES.find(item => item.value === priority)?.label || priority;
 
-const fieldClass = 'mt-1 w-full min-h-10 rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none transition-colors placeholder:text-muted focus:border-accent';
+const fieldClass = 'mt-1 h-9 min-h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none transition-colors placeholder:text-muted focus:border-accent';
 
 const projectHealthClass = (health?: ProjectHealth) => {
   if (health === 'Good') return 'text-success border-success/30 bg-success/10';
@@ -593,12 +593,7 @@ export const AdminProjects: React.FC = () => {
 
       <header className="ams-dashboard-header mb-6 flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 text-xs text-muted">
-            <span>Kapitech AMS</span>
-            <span aria-hidden="true">/</span>
-            <span className="text-fg">Projects &amp; Tasks</span>
-          </div>
-          <h1 className="mt-2 text-xl font-semibold leading-7 tracking-[-0.01em] text-fg">Projects &amp; Tasks</h1>
+          <h1 className="text-2xl font-semibold leading-8 tracking-[-0.02em] text-fg">Projects &amp; Tasks</h1>
           <p className="mt-1 max-w-2xl text-xs leading-5 text-muted">
             {language === 'id' ? 'Pantau delivery proyek, pekerjaan terbuka, deadline, dan tanggung jawab tim.' : 'Track delivery, outstanding work, deadlines, and team ownership from one workspace.'}
           </p>
@@ -628,14 +623,16 @@ export const AdminProjects: React.FC = () => {
         </div>
       )}
 
-      <section aria-label="Project operations summary" className="grid grid-cols-2 border-y border-line sm:grid-cols-4">
+      <section aria-label="Project operations summary" className="rounded-card border border-line bg-panel p-4 sm:p-5">
+        <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3"><div><h2 className="text-sm font-semibold text-fg">Delivery snapshot</h2><p className="mt-1 text-xs text-muted">Project health and delivery workload across the workspace.</p></div><span className="text-[11px] font-medium tabular-nums text-muted">{projectMetrics.total} projects</span></div>
+        <div className="grid grid-cols-2 sm:grid-cols-4">
         {[
           { label: 'Projects', value: projectMetrics.total, icon: Briefcase, tone: 'text-fg' },
           { label: 'Active', value: projectMetrics.active, icon: Clock, tone: 'text-success' },
           { label: 'At risk', value: projectMetrics.atRisk, icon: ShieldAlert, tone: 'text-warning' },
           { label: 'Overdue tasks', value: projectMetrics.overdueTasks, icon: AlertCircle, tone: 'text-danger' },
         ].map((item, index) => (
-          <div key={item.label} className={'ams-kpi min-w-0 px-4 py-4 ' + (index > 0 ? 'border-l border-line' : '')}>
+          <div key={item.label} className={'min-w-0 px-4 py-3 ' + (index > 0 ? 'border-l border-line' : '')}>
             <div className="flex items-center gap-2">
               <item.icon size={14} className="shrink-0 text-muted" />
               <span className="ams-meta">{item.label}</span>
@@ -643,6 +640,7 @@ export const AdminProjects: React.FC = () => {
             <div className={'ams-kpi-value mt-2 ' + item.tone}>{item.value}</div>
           </div>
         ))}
+        </div>
       </section>
 
       {(projectMetrics.overdueTasks > 0 || projectMetrics.dueToday > 0) && (
@@ -678,7 +676,7 @@ export const AdminProjects: React.FC = () => {
                   onChange={event => setProjectSearch(event.target.value)}
                   placeholder="Search projects..."
                   aria-label="Search projects"
-                  className={fieldClass + ' mt-0 h-10 min-h-10 min-w-0 pl-9 pr-3 leading-5 sm:h-9 sm:min-h-9'}
+                  className={fieldClass + ' mt-0 min-w-0 pl-9 pr-3 leading-5'}
                 />
               </label>
               <CustomSelect
@@ -719,7 +717,7 @@ export const AdminProjects: React.FC = () => {
           </div>
         ) : (
           <>
-            <div className="hidden overflow-x-auto md:block">
+            <div className="hidden overflow-x-auto custom-scrollbar md:block">
               <table className="ams-table w-full min-w-[920px] border-collapse text-left">
                 <thead className="border-b border-line bg-bg">
                   <tr>
@@ -871,7 +869,7 @@ export const AdminProjects: React.FC = () => {
               </div>
             </div>
 
-            <div className="overflow-x-auto p-4 sm:p-5">
+            <div className="overflow-x-auto custom-scrollbar p-4 sm:p-5">
               <div className="flex min-w-max gap-3 pb-1">
                 {TASK_COLUMNS.map(column => {
                   const tasks = visibleTasks.filter(task => task.status === column.id);
