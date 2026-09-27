@@ -15,12 +15,15 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
   className,
   children,
   disabled,
+  type = 'button',
   ...props
 }, ref) => (
   <button
     {...props}
     ref={ref}
+    type={type}
     disabled={disabled || loading}
+    aria-busy={loading || undefined}
     className={cn(
       'inline-flex min-h-10 sm:min-h-9 items-center justify-center gap-2 rounded-control px-3 text-xs font-medium transition-[background-color,border-color,color,transform] duration-150 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-50',
       variant === 'primary' && 'bg-accent text-white hover:bg-accent-hover active:bg-accent-pressed',
