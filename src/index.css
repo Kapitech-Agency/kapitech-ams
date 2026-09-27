@@ -141,7 +141,7 @@
 .ams-shell .ams-action:hover{color:var(--text);background:var(--panel-hover)}
 .ams-shell .ams-dashboard-card,.ams-shell .ams-panel{min-width:0;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
 .ams-shell .ams-dashboard-card:hover{box-shadow:none}.ams-shell .ams-dashboard-card .text-2xl{font-size:24px;line-height:32px;font-weight:500;font-variant-numeric:tabular-nums}.ams-shell .ams-dashboard-card .text-base{font-size:14px;line-height:20px;font-weight:600}
-.ams-shell .ams-sidebar-toggle{position:relative;z-index:2;min-width:40px;min-height:40px}
+.ams-shell .ams-sidebar-toggle{position:absolute;right:0;top:50%;z-index:50;width:28px;min-width:28px;height:28px;min-height:28px;transform:translate(50%,-50%)}
 .ams-shell .ams-sidebar-expanded a[aria-current=page],.ams-shell .ams-sidebar-collapsed a[aria-current=page]{box-shadow:inset 2px 0 0 var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--text)}
 .ams-shell .ams-sidebar-expanded,.ams-shell .ams-sidebar-collapsed{min-width:0}
 .ams-shell .ams-topnav-scroll{scrollbar-width:none;-ms-overflow-style:none}
