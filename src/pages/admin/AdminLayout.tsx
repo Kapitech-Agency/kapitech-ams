@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import {
   Home,
   Inbox,
@@ -640,13 +640,40 @@ export const AdminLayout: React.FC = () => {
         <header className="hidden min-[900px]:flex h-[52px] min-h-[52px] border-b border-line bg-panel sticky top-0 z-30 items-center shrink-0" aria-label="AMS top bar">
           <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-5 lg:px-6 flex items-center justify-between gap-4">
             <div className="min-w-0 flex-1">
-              <nav aria-label="Breadcrumb">
-                <ol className="flex min-w-0 items-center gap-2 text-xs">
-                  <li className="shrink-0 font-medium text-muted">{activeSectionLabel}</li>
-                  <li aria-hidden="true" className="shrink-0 text-muted/60">/</li>
-                  <li aria-current="page" className="min-w-0 truncate font-semibold text-fg">{activeItemLabel}</li>
-                </ol>
-              </nav>
+              {location.pathname === '/admin/dashboard' ? (
+                <nav aria-label="Dashboard view" className="flex items-center gap-1">
+                  {[
+                    { key: 'overview', label: 'Overview', search: '' },
+                    { key: 'performance', label: 'Performance', search: '?view=performance' },
+                    { key: 'analytics', label: 'Analytics', search: '?view=analytics' },
+                  ].map((tab) => (
+                    <NavLink
+                      key={tab.key}
+                      to={`/admin/dashboard${tab.search}`}
+                      end
+                      className={() => {
+                        const activeView = new URLSearchParams(location.search).get('view') || 'overview';
+                        return [
+                          'inline-flex h-9 items-center rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+                          activeView === tab.key
+                            ? 'bg-line text-fg'
+                            : 'text-muted hover:bg-bg hover:text-fg',
+                        ].join(' ');
+                      }}
+                    >
+                      {tab.label}
+                    </NavLink>
+                  ))}
+                </nav>
+              ) : (
+                <nav aria-label="Breadcrumb">
+                  <ol className="flex min-w-0 items-center gap-2 text-xs">
+                    <li className="shrink-0 font-medium text-muted">{activeSectionLabel}</li>
+                    <li aria-hidden="true" className="shrink-0 text-muted/60">/</li>
+                    <li aria-current="page" className="min-w-0 truncate font-semibold text-fg">{activeItemLabel}</li>
+                  </ol>
+                </nav>
+              )}
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
               <Button
