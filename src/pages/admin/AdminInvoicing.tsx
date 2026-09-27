@@ -919,7 +919,7 @@ export const AdminInvoicing: React.FC = () => {
     <div className="min-h-full pb-8">
       <AdminModuleHeader
         className={financeHeaderClass}
-        title={language === 'id' ? 'Keuangan &amp; Invoicing' : 'Finance &amp; Invoicing'}
+        title={language === 'id' ? 'Keuangan & Invoicing' : 'Finance & Invoicing'}
         description={language === 'id'
           ? 'Pantau kas masuk, piutang, pengeluaran, dan invoice dari data keuangan aktual.'
           : 'Monitor collected revenue, receivables, expenses, and invoices from current financial data.'}
@@ -1013,7 +1013,6 @@ export const AdminInvoicing: React.FC = () => {
                 { label: 'CapEx', value: formatNativeAmount(derivedMetrics.capExExpenses, currency), context: 'Capital expense', icon: <ArrowUpRight size={16} strokeWidth={1.8} />, toneClassName: 'text-muted' }
               ]}
             />
-            </div>
           </section>
 
           <section className="mt-6 grid gap-3 min-[1100px]:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]" aria-labelledby="financial-flow-title">
