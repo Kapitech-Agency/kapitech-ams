@@ -203,15 +203,6 @@ export const AdminDocuments: React.FC = () => {
         }
       />
 
-        <button
-          onClick={() => setIsUploadModalOpen(true)}
-          className="min-h-10 px-3 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-sans font-medium flex items-center justify-center gap-2 transition-colors shrink-0"
-        >
-          <Plus size={15} />
-          <span>{language === 'id' ? 'Unggah Dokumen' : 'Upload Document'}</span>
-        </button>
-      </div>
-
       {/* Document filters */}
       <div className="rounded-card border border-line bg-panel p-2"><div className="mb-2 px-2 text-xs font-medium text-muted">Filter documents</div><div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
         {(['all', 'contract', 'proposal', 'invoice', 'deliverable', 'compliance'] as const).map((cat) => {
