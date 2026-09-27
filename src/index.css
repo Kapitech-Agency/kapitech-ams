@@ -306,3 +306,157 @@
     padding: 24px !important;
   }
 }
+
+
+/* Temporary mobile dashboard shell — intentionally independent from desktop composition. */
+@media (max-width: 899px) {
+  .ams-shell .ams-dashboard {
+    width: 100%;
+    max-width: 720px;
+    margin-inline: auto;
+    padding-bottom: max(32px, env(safe-area-inset-bottom));
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-header {
+    display: block;
+    margin-bottom: 10px;
+    border-bottom: 0;
+    padding-bottom: 10px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-header > div:last-child {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-header > div:last-child > div:first-child {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    width: 100%;
+    min-height: 40px;
+    padding: 3px;
+    gap: 2px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--panel);
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-header > div:last-child > div:first-child button {
+    min-height: 32px;
+    padding: 4px 2px;
+    border-radius: 7px;
+    font-size: 10px;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-header > div:last-child > a {
+    width: auto;
+    min-width: 42px;
+    min-height: 40px;
+    padding-inline: 11px;
+    white-space: nowrap;
+  }
+
+  .ams-shell .ams-dashboard > .min-\[900px\]\:hidden {
+    position: sticky;
+    top: calc(52px + env(safe-area-inset-top));
+    z-index: 20;
+    margin: 0 -14px 14px;
+    padding: 7px 14px;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    background: color-mix(in srgb, var(--bg) 94%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .ams-shell .ams-dashboard > .min-\[900px\]\:hidden nav {
+    border: 0;
+    background: var(--panel);
+    border-radius: 9px;
+    padding: 3px;
+    gap: 2px;
+  }
+
+  .ams-shell .ams-dashboard > .min-\[900px\]\:hidden nav a {
+    min-height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 4px;
+    font-size: 10px;
+  }
+
+  .ams-shell .ams-dashboard section[aria-label="Executive key performance indicators"] {
+    margin-bottom: 14px;
+  }
+
+  .ams-shell .ams-dashboard section[aria-label="Executive key performance indicators"] > div {
+    gap: 7px;
+  }
+
+  .ams-shell .ams-dashboard section[aria-label="Executive key performance indicators"] article {
+    min-height: 112px;
+    padding: 12px;
+    border-radius: 10px;
+  }
+
+  .ams-shell .ams-dashboard section[aria-label="Executive key performance indicators"] article > div:first-child > span:first-child {
+    max-width: calc(100% - 34px);
+    font-size: 10px;
+    line-height: 14px;
+  }
+
+  .ams-shell .ams-dashboard section[aria-label="Executive key performance indicators"] article > div:first-child > span:last-child {
+    width: 26px;
+    height: 26px;
+  }
+
+  .ams-shell .ams-dashboard section[aria-label="Executive key performance indicators"] article > div:last-child {
+    margin-top: 13px;
+  }
+
+  .ams-shell .ams-dashboard section[aria-label="Executive key performance indicators"] article .text-2xl {
+    font-size: 20px;
+    line-height: 25px;
+  }
+
+  .ams-shell .ams-dashboard .ams-panel {
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .ams-shell .ams-dashboard .ams-panel > div:first-child {
+    padding: 13px 14px;
+  }
+
+  .ams-shell .ams-dashboard .ams-panel h2 {
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  .ams-shell .ams-dashboard .ams-panel p {
+    font-size: 10px;
+    line-height: 16px;
+  }
+
+  .ams-shell .ams-dashboard .ams-panel .divide-y > article {
+    padding: 13px 14px;
+  }
+}
+
+@media (max-width: 599px) {
+  .ams-shell .ams-dashboard .ams-dashboard-header > div:last-child {
+    grid-template-columns: 1fr;
+  }
+
+  .ams-shell .ams-dashboard .ams-dashboard-header > div:last-child > a {
+    width: 100%;
+  }
+
+  .ams-shell .ams-dashboard section[aria-label="Executive key performance indicators"] > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
