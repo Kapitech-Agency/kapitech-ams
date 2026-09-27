@@ -183,7 +183,7 @@ export const AdminLogin: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 min-h-9 min-w-9 flex items-center justify-center rounded-control text-muted hover:text-fg"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 min-h-10 min-w-10 sm:min-h-9 sm:min-w-9 flex items-center justify-center rounded-control text-muted hover:text-fg"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
