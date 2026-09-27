@@ -89,7 +89,7 @@ export const AdminInbox: React.FC = () => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [testSending, setTestSending] = useState(false);
   const [prevCount, setPrevCount] = useState<number | null>(null);
-  const [toastMessage, setToastMessage] = useState<{ text: string; link?: string; linkText?: string } | null>(null);
+  const [toastMessage, setToastMessage] = useState<{ text: string; link?: string; linkText?: string; tone?: 'success' | 'danger' } | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ type: 'delete' | 'mark-read'; id?: string; count?: number } | null>(null);
 
   // Sync Currency
@@ -153,7 +153,13 @@ export const AdminInbox: React.FC = () => {
       if (!res.success) throw new Error(res.error || 'Status update failed');
       await refreshInbox();
     } catch (err) {
-      console.error('Failed to update status:', err);
+      setToastMessage({
+        text: language === 'id'
+          ? 'Status lead gagal diperbarui. Periksa koneksi lalu coba lagi.'
+          : 'Lead status could not be updated. Check your connection and try again.',
+        tone: 'danger'
+      });
+      window.setTimeout(() => setToastMessage(null), 3000);
     } finally {
       setIsUpdating(false);
     }
@@ -171,7 +177,13 @@ export const AdminInbox: React.FC = () => {
       if (!res.success) throw new Error(res.error || 'Priority update failed');
       await refreshInbox();
     } catch (err) {
-      console.error('Failed to update priority:', err);
+      setToastMessage({
+        text: language === 'id'
+          ? 'Prioritas lead gagal diperbarui. Coba lagi.'
+          : 'Lead priority could not be updated. Please try again.',
+        tone: 'danger'
+      });
+      window.setTimeout(() => setToastMessage(null), 3000);
     }
   };
 
@@ -187,7 +199,13 @@ export const AdminInbox: React.FC = () => {
       if (!res.success) throw new Error(res.error || 'Assignee update failed');
       await refreshInbox();
     } catch (err) {
-      console.error('Failed to update assignee:', err);
+      setToastMessage({
+        text: language === 'id'
+          ? 'Assignee lead gagal diperbarui. Coba lagi.'
+          : 'Lead assignee could not be updated. Please try again.',
+        tone: 'danger'
+      });
+      window.setTimeout(() => setToastMessage(null), 3000);
     }
   };
 
@@ -204,7 +222,13 @@ export const AdminInbox: React.FC = () => {
       if (!res.success) throw new Error(res.error || 'Star update failed');
       await refreshInbox();
     } catch (err) {
-      console.error('Failed to toggle star:', err);
+      setToastMessage({
+        text: language === 'id'
+          ? 'Status bintang gagal diperbarui. Coba lagi.'
+          : 'Starred state could not be updated. Please try again.',
+        tone: 'danger'
+      });
+      window.setTimeout(() => setToastMessage(null), 3000);
     }
   };
 
@@ -221,7 +245,13 @@ export const AdminInbox: React.FC = () => {
       });
       setTimeout(() => setToastMessage(null), 3000);
     } catch (err) {
-      console.error('Failed to save notes:', err);
+      setToastMessage({
+        text: language === 'id'
+          ? 'Catatan internal gagal disimpan. Periksa koneksi lalu coba lagi.'
+          : 'Internal notes could not be saved. Check your connection and try again.',
+        tone: 'danger'
+      });
+      window.setTimeout(() => setToastMessage(null), 3000);
     } finally {
       setIsSavingNote(false);
     }
@@ -244,7 +274,13 @@ export const AdminInbox: React.FC = () => {
       });
       setTimeout(() => setToastMessage(null), 3000);
     } catch (err) {
-      console.error('Failed to delete submission:', err);
+      setToastMessage({
+        text: language === 'id'
+          ? 'Lead gagal dihapus. Coba lagi.'
+          : 'The lead could not be deleted. Please try again.',
+        tone: 'danger'
+      });
+      window.setTimeout(() => setToastMessage(null), 3000);
     } finally {
       setConfirmAction(null);
     }
@@ -270,7 +306,13 @@ export const AdminInbox: React.FC = () => {
       });
       setTimeout(() => setToastMessage(null), 3000);
     } catch (err) {
-      console.error('Failed to mark messages as read:', err);
+      setToastMessage({
+        text: language === 'id'
+          ? 'Pesan gagal ditandai sebagai ditinjau. Coba lagi.'
+          : 'Messages could not be marked as reviewed. Please try again.',
+        tone: 'danger'
+      });
+      window.setTimeout(() => setToastMessage(null), 3000);
     } finally {
       setConfirmAction(null);
     }
@@ -505,9 +547,9 @@ export const AdminInbox: React.FC = () => {
       
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="p-3 sm:p-4 rounded-card bg-success/10 border border-success/30 text-success text-xs font-sans flex items-start sm:items-center justify-between gap-2 animate-in fade-in duration-300">
+        <div className={`p-3 sm:p-4 rounded-card text-xs font-sans flex items-start sm:items-center justify-between gap-2 animate-in fade-in duration-300 ${toastMessage.tone === 'danger' ? 'bg-danger/10 border border-danger/30 text-danger' : 'bg-success/10 border border-success/30 text-success'}`}>
           <div className="flex items-center gap-2.5">
-            <Check size={16} className="text-success shrink-0" />
+            {toastMessage.tone === 'danger' ? <AlertCircle size={16} className="text-danger shrink-0" aria-hidden="true" /> : <Check size={16} className="text-success shrink-0" aria-hidden="true" />}
             <span>{toastMessage.text}</span>
           </div>
           {toastMessage.link && (
