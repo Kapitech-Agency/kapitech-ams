@@ -129,7 +129,7 @@ export const AdminCmsProjects: React.FC = () => {
 
   const handleFileUpload = (file: File) => {
     if (!file.type.startsWith('image/')) {
-      alert('Only image files are supported (PNG, JPG, WebP, SVG).');
+      setStatusMessage(language === 'id' ? 'Hanya file gambar yang didukung (PNG, JPG, WebP, SVG).' : 'Only image files are supported (PNG, JPG, WebP, SVG).');
       return;
     }
     const reader = new FileReader();
@@ -212,7 +212,7 @@ export const AdminCmsProjects: React.FC = () => {
   const handleSaveModal = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProject || !editingProject.title.trim()) {
-      alert('Project title is required.');
+      setStatusMessage(language === 'id' ? 'Judul case study wajib diisi.' : 'Project title is required.');
       return;
     }
 
