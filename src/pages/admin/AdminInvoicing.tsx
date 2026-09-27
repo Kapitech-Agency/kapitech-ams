@@ -77,6 +77,14 @@ const createInvoiceNumber = (): string => {
   return `INV-KAPI-${new Date().getFullYear()}-${1000 + (bytes % 9000)}`;
 };
 
+const getDateInputValue = (offsetDays = 0): string => {
+  const date = new Date();
+  date.setDate(date.getDate() + offsetDays);
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
+};
+
 const emptyLineItem = (): InvoiceLineItem => ({
   id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'line-' + Date.now(),
   description: '',
@@ -183,14 +191,14 @@ export const AdminInvoicing: React.FC = () => {
   const [expenseCategory, setExpenseCategory] = useState<AgencyExpense['category']>('Software & Cloud');
   const [expenseDescription, setExpenseDescription] = useState('');
   const [expenseAmount, setExpenseAmount] = useState(0);
-  const [expenseDate, setExpenseDate] = useState(new Date().toISOString().slice(0, 10));
+  const [expenseDate, setExpenseDate] = useState(getDateInputValue());
   const [expenseIdempotencyKey, setExpenseIdempotencyKey] = useState('');
 
   const [paymentInvoice, setPaymentInvoice] = useState<AgencyInvoice | null>(null);
   const [paymentAmount, setPaymentAmount] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'credit_card' | 'cash' | 'other'>('bank_transfer');
   const [paymentReference, setPaymentReference] = useState('');
-  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().slice(0, 10));
+  const [paymentDate, setPaymentDate] = useState(getDateInputValue());
   const [paymentNotes, setPaymentNotes] = useState('');
   const [paymentIdempotencyKey, setPaymentIdempotencyKey] = useState('');
   const [savingPayment, setSavingPayment] = useState(false);
@@ -394,8 +402,8 @@ export const AdminInvoicing: React.FC = () => {
     setDiscountPercent(0);
     setTaxPercent(11);
     setInvoiceStatus('draft');
-    setIssueDate(new Date().toISOString().slice(0, 10));
-    setDueDate(new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10));
+    setIssueDate(getDateInputValue());
+    setDueDate(getDateInputValue(14));
     setPaymentTerms('');
     setInvoiceNotes('');
   };
@@ -411,7 +419,7 @@ export const AdminInvoicing: React.FC = () => {
     setExpenseCategory('Software & Cloud');
     setExpenseDescription('');
     setExpenseAmount(0);
-    setExpenseDate(new Date().toISOString().slice(0, 10));
+    setExpenseDate(getDateInputValue());
     setExpenseIdempotencyKey(
       typeof crypto !== 'undefined' && crypto.randomUUID
         ? crypto.randomUUID()
@@ -582,7 +590,7 @@ export const AdminInvoicing: React.FC = () => {
     setPaymentAmount(Math.max(0, balance));
     setPaymentMethod('bank_transfer');
     setPaymentReference('');
-    setPaymentDate(new Date().toISOString().slice(0, 10));
+    setPaymentDate(getDateInputValue());
     setPaymentNotes('');
     setPaymentIdempotencyKey(
       typeof crypto !== 'undefined' && crypto.randomUUID
