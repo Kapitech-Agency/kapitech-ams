@@ -334,6 +334,7 @@ export const AdminLayout: React.FC = () => {
               className={`group flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-panel text-muted transition-[background-color,border-color,color,transform] duration-150 hover:border-danger/40 hover:bg-danger/10 hover:text-danger active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger ${sidebarCollapsed ? '' : 'ml-auto'}`}
             >
               <LogOut size={15} strokeWidth={1.9} />
+              {!sidebarCollapsed && <span className="ml-1 hidden min-[1100px]:inline text-[11px] font-medium">Sign out</span>}
             </button>
           </div>
         </div>
@@ -409,6 +410,15 @@ export const AdminLayout: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setCommandPaletteOpen(true)}
+            aria-label="Search AMS"
+            aria-keyshortcuts="Control+K Meta+K"
+            className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted transition-colors hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            <Search size={15} />
+          </button>
           {settingsAllowed && (
             <Link
               to="/admin/settings"
