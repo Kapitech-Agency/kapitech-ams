@@ -12,6 +12,7 @@ export interface ModalProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
   closeOnOutsideClick?: boolean;
   labelledBy?: string;
+  initialFocusRef?: React.RefObject<HTMLElement | null>;
   /** Keep the dialog body fully visible without an internal scroll region. */
   fitContent?: boolean;
 }
@@ -20,7 +21,7 @@ const sizes = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg', xl: 'max-w-3xl' 
 
 export const Modal: React.FC<ModalProps> = ({
   open, onClose, title, description, children, footer, size = 'md',
-  closeOnOutsideClick = true, labelledBy, fitContent = false
+  closeOnOutsideClick = true, labelledBy, initialFocusRef, fitContent = false
 }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
@@ -36,7 +37,7 @@ export const Modal: React.FC<ModalProps> = ({
     const focusables = (): HTMLElement[] => dialogRef.current
       ? (Array.from(dialogRef.current.querySelectorAll('button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),[href],[tabindex="0"]')) as HTMLElement[]).filter(el => el.getClientRects().length > 0)
       : [];
-    requestAnimationFrame(() => (focusables()[0] ?? dialogRef.current)?.focus());
+    requestAnimationFrame(() => (initialFocusRef?.current ?? focusables()[0] ?? dialogRef.current)?.focus());
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { e.preventDefault(); onClose(); return; }
       if (e.key !== 'Tab') return;
@@ -52,7 +53,7 @@ export const Modal: React.FC<ModalProps> = ({
       document.removeEventListener('keydown', onKey);
       triggerRef.current?.focus?.();
     };
-  }, [open, onClose]);
+  }, [open, onClose, initialFocusRef]);
 
   if (!open) return null;
   return (
