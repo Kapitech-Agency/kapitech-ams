@@ -167,6 +167,11 @@
 .ams-portal-root .ams-dropdown-item{min-height:36px;padding:8px 10px;border-radius:6px}
 .ams-portal-root .ams-notification-surface{background:var(--panel);border:1px solid var(--line);border-radius:12px;color:var(--text);box-shadow:0 12px 32px color-mix(in srgb,var(--bg) 45%,transparent);overflow:hidden}
 .ams-portal-root .ams-popover-surface:focus-visible,.ams-portal-root .ams-notification-surface:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ams-portal-root .ams-notification-header{background:var(--panel)}
+.ams-portal-root .ams-notification-item{border-left:2px solid transparent}
+.ams-portal-root .ams-notification-item.is-unread{background:color-mix(in srgb,var(--accent) 5%,var(--panel));border-left-color:var(--accent)}
+.ams-portal-root .ams-notification-item:hover{background:var(--panel-hover)}
+.ams-portal-root .ams-notification-item:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .ams-portal-root .ams-popover-surface,.ams-portal-root .ams-notification-surface{box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
 @media(max-width:1099px) and (min-width:900px){.ams-shell>main>div.flex-1{padding:20px}}
 @media(max-width:899px){
