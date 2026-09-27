@@ -83,6 +83,30 @@ export function convertIdrToUsd(amountInIdr: number): number {
   return Math.round((Number(amountInIdr) || 0) / USD_EXCHANGE_RATE);
 }
 
+export function formatNativeAmount(
+  amount: number,
+  currency: CurrencyCode = 'IDR',
+  compact: boolean = false
+): string {
+  const value = Number(amount) || 0;
+  if (compact) {
+    if (currency === 'USD') {
+      const abs = Math.abs(value);
+      const sign = value < 0 ? '-' : '';
+      if (abs >= 1_000_000) return `${sign}${(abs / 1_000_000).toFixed(1)}M`;
+      if (abs >= 1_000) return `${sign}${(abs / 1_000).toFixed(1)}k`;
+      return `${sign}${Math.round(abs).toLocaleString('en-US')}`;
+    }
+    if (value >= 1_000_000_000) return `Rp ${(value / 1_000_000_000).toFixed(1)} M`;
+    if (value >= 1_000_000) return `Rp ${(value / 1_000_000).toFixed(0)} Jt`;
+    if (value >= 1_000) return `Rp ${(value / 1_000).toFixed(0)} Rb`;
+  }
+
+  return currency === 'USD'
+    ? `${Math.round(value).toLocaleString('en-US')}`
+    : `Rp ${Math.round(value).toLocaleString('id-ID')}`;
+}
+
 export function formatIDR(amount: number): string {
   return formatAmount(amount, 'IDR');
 }
