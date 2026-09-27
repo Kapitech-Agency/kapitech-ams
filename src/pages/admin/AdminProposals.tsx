@@ -561,7 +561,15 @@ export const AdminProposals: React.FC = () => {
         </div>
       </header>
 
-      <section aria-label="Proposal summary" className="grid grid-cols-2 gap-x-4 border-y border-line py-4 sm:grid-cols-4 sm:gap-0">
+      <section aria-label="Proposal summary" className="rounded-card border border-line bg-panel p-4 sm:p-5">
+        <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
+          <div>
+            <h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan proposal' : 'Proposal snapshot'}</h2>
+            <p className="mt-1 text-xs text-muted">{language === 'id' ? 'Status komersial berdasarkan proposal yang tersedia.' : 'Commercial status across the available proposals.'}</p>
+          </div>
+          <span className="text-[11px] font-medium tabular-nums text-muted">{metrics.total} {language === 'id' ? 'total' : 'total'}</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4">
         {[
           { label: language === 'id' ? 'Total proposal' : 'Total proposals', value: metrics.total, icon: FileText },
           { label: language === 'id' ? 'Aktif' : 'Active', value: metrics.active, icon: Clock3 },
@@ -570,17 +578,16 @@ export const AdminProposals: React.FC = () => {
         ].map((metric, index) => {
           const Icon = metric.icon;
           return (
-            <div key={metric.label} className={'flex min-w-0 items-center gap-3 py-2 ' + (index > 0 ? 'sm:border-l sm:border-line sm:pl-4' : '')}>
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-panel text-muted">
+            <div key={metric.label} className={'flex min-w-0 items-start justify-between gap-3 px-4 py-3 ' + (index > 0 ? 'border-l border-line' : '')}>
+              <div>
                 <Icon size={14} aria-hidden="true" />
               </div>
-              <div className="min-w-0">
-                <div className="text-xs text-muted">{metric.label}</div>
-                <div className="mt-0.5 text-xl font-medium tabular-nums text-fg">{metric.value}</div>
-              </div>
+              <Icon size={16} className="mt-0.5 shrink-0 text-muted" aria-hidden="true" />
+              <div className="sr-only">{metric.label}</div>
             </div>
           );
         })}
+        </div>
       </section>
 
       <section className="rounded-card border border-line bg-panel p-4 sm:p-5" aria-label="Proposal filters">
