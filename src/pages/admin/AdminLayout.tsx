@@ -291,7 +291,7 @@ export const AdminLayout: React.FC = () => {
         transition={{ duration: 0.18, ease: 'easeOut' }}
         className={`hidden min-[900px]:flex flex-col relative bg-panel border-r border-line shrink-0 h-full z-30 overflow-visible ${sidebarCollapsed ? 'ams-sidebar-collapsed' : 'ams-sidebar-expanded'}`}
       >
-        <div className="relative shrink-0 border-b border-line px-2.5 py-3">
+        <div className="relative flex h-14 shrink-0 items-center border-b border-line px-2.5">
           <Link to="/admin/dashboard" aria-label="Kapitech AMS dashboard" className={`group flex min-h-10 items-center rounded-control px-2 transition-colors duration-150 hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
             <div className="h-9 w-9 rounded-control bg-bg border border-line p-1.5 flex items-center justify-center shrink-0 transition-colors duration-150 group-hover:border-accent/40">
               <AmsBrandLogo className="h-5 w-5" />
@@ -349,29 +349,11 @@ export const AdminLayout: React.FC = () => {
               )}
             </button>
 
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={handleLogout}
-              aria-label="Sign out"
-              title="Sign out"
-              icon={<LogOut size={14} strokeWidth={1.9} />}
-              className="h-9 w-9 shrink-0 p-0"
-            />
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => setSidebarCollapsed(v => !v)}
-          aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className="ams-sidebar-toggle group absolute right-0 top-1/2 z-50 flex h-8 w-8 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-control border border-line bg-panel text-muted transition-[background-color,border-color,color,transform] duration-150 hover:border-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg active:scale-[0.96]"
-        >
-          {sidebarCollapsed ? <ChevronRight size={14} strokeWidth={2} /> : <ChevronLeft size={14} strokeWidth={2} />}
-        </button>
       </motion.aside>
 
-            <Modal
+      <Modal
         open={logoutConfirmOpen}
         onClose={() => setLogoutConfirmOpen(false)}
         size="sm"
@@ -449,6 +431,15 @@ export const AdminLayout: React.FC = () => {
               <Settings size={16} />
             </Link>
           )}
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={handleLogout}
+            aria-label="Sign out"
+            title="Sign out"
+            icon={<LogOut size={14} strokeWidth={1.9} />}
+            className="h-10 w-10 shrink-0 p-0"
+          />
           <Button
             type="button"
             variant="secondary"
@@ -566,15 +557,6 @@ export const AdminLayout: React.FC = () => {
                     <div className="mt-0.5 truncate text-[10px] text-muted">{DEFAULT_PROFILE_TITLE}</div>
                   </div>
                 </button>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={handleLogout}
-                  aria-label="Sign out"
-                  title="Sign out"
-                  icon={<LogOut size={14} />}
-                  className="h-9 w-9 shrink-0 p-0"
-                />
               </div>
             </div>
           </motion.div>
@@ -587,9 +569,18 @@ export const AdminLayout: React.FC = () => {
       <main className="flex-1 flex flex-col min-w-0 min-h-0 h-full overflow-y-auto overscroll-none bg-bg custom-scrollbar">
         
         {/* Sticky desktop top bar */}
-        <header className="hidden min-[900px]:flex h-[52px] border-b border-line bg-panel sticky top-0 z-30 items-center shrink-0" aria-label="AMS top bar">
+        <header className="hidden min-[900px]:flex h-14 border-b border-line bg-panel sticky top-0 z-30 items-center shrink-0" aria-label="AMS top bar">
           <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-5 lg:px-6 flex items-center justify-between gap-4">
-            <div className="min-w-0 flex items-center gap-3">
+            <div className="min-w-0 flex items-center gap-2.5">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setSidebarCollapsed(v => !v)}
+                aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                icon={sidebarCollapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
+                className="h-9 w-9 shrink-0 p-0"
+              />
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-[12px] font-medium text-muted">{activeSectionLabel}</span>
@@ -606,7 +597,7 @@ export const AdminLayout: React.FC = () => {
                 aria-label="Search AMS"
                 aria-keyshortcuts="Control+K Meta+K"
                 icon={<Search size={15} />}
-                className="hidden lg:flex h-10 w-44 justify-start border-line bg-bg px-3"
+                className="hidden lg:flex h-10 w-[260px] xl:w-[320px] justify-start border-line bg-bg px-3"
               >
                 <span className="min-w-0 flex-1 truncate text-left text-xs">Search AMS</span>
                 <kbd className="ml-auto rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] text-muted">⌘K</kbd>
@@ -639,6 +630,15 @@ export const AdminLayout: React.FC = () => {
                   <Settings size={16} />
                 </Link>
               )}
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleLogout}
+                aria-label="Sign out"
+                title="Sign out"
+                icon={<LogOut size={14} strokeWidth={1.9} />}
+                className="h-10 w-10 shrink-0 p-0"
+              />
             </div>
           </div>
         </header>
