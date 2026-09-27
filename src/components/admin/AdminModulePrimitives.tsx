@@ -5,6 +5,8 @@ import { cn } from '../../lib/cn';
 export interface AdminModuleHeaderProps {
   title: React.ReactNode;
   description?: React.ReactNode;
+  eyebrow?: React.ReactNode;
+  icon?: React.ReactNode;
   actions?: React.ReactNode;
   className?: string;
 }
@@ -12,6 +14,8 @@ export interface AdminModuleHeaderProps {
 export const AdminModuleHeader: React.FC<AdminModuleHeaderProps> = ({
   title,
   description,
+  eyebrow,
+  icon,
   actions,
   className
 }) => (
@@ -20,8 +24,10 @@ export const AdminModuleHeader: React.FC<AdminModuleHeaderProps> = ({
     className
   )}>
     <div className="min-w-0">
-      <h1 className="text-xl font-semibold leading-7 tracking-[-0.01em] text-fg">
-        {title}
+      {eyebrow && <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted">{eyebrow}</div>}
+      <h1 className="flex min-w-0 items-center gap-2.5 text-xl font-semibold leading-7 tracking-[-0.01em] text-fg">
+        {icon && <span className="shrink-0 text-accent-text">{icon}</span>}
+        <span className="min-w-0 truncate">{title}</span>
       </h1>
       {description && (
         <p className="mt-1 max-w-2xl text-xs leading-5 text-muted">
