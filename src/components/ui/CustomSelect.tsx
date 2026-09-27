@@ -97,8 +97,9 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-controls={isOpen ? listboxId : undefined}
+        aria-activedescendant={isOpen && options[activeIndex] ? `${listboxId}-option-${activeIndex}` : undefined}
         aria-disabled={disabled || undefined}
-        className={`flex w-full items-center justify-between font-sans transition-colors duration-150 border select-none focus-visible:outline-none ${
+        className={`flex w-full items-center justify-between font-sans transition-colors duration-150 border select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
           sizeClasses[size]
         } ${
           isOpen
