@@ -93,10 +93,10 @@ const emptyLineItem = (): InvoiceLineItem => ({
   amount: 0
 });
 
-const cardClass = 'ams-dashboard-card rounded-card border border-line bg-panel p-4';
-const actionClass = 'inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control border border-line bg-transparent px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50';
-const primaryClass = 'inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control bg-accent px-3.5 text-xs font-semibold text-white transition-colors hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50';
-const fieldClass = 'min-h-10 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none transition-colors placeholder:text-muted focus:border-accent';
+const cardClass = 'rounded-card border border-line bg-panel p-4 sm:p-5';
+const actionClass = 'inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50';
+const primaryClass = 'inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control bg-accent px-3.5 text-xs font-semibold text-white transition-colors hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50';
+const fieldClass = 'h-9 min-h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none transition-colors placeholder:text-muted focus:border-accent';
 
 const statusLabel: Record<InvoiceStatus, string> = {
   draft: 'Draft',
@@ -913,14 +913,9 @@ export const AdminInvoicing: React.FC = () => {
 
   return (
     <div className="min-h-full pb-8">
-      <header className="ams-dashboard-header mb-6 flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
+      <header className="mb-6 flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <div className="flex items-center gap-2 text-xs text-muted">
-            <span>Kapitech AMS</span>
-            <span aria-hidden="true">/</span>
-            <span className="text-fg">Finance &amp; Invoicing</span>
-          </div>
-          <h1 className="mt-2 text-xl font-semibold leading-7 tracking-[-0.01em] text-fg">{language === 'id' ? 'Keuangan &amp; Invoicing' : 'Finance &amp; Invoicing'}</h1>
+          <h1 className="text-2xl font-semibold leading-8 tracking-[-0.02em] text-fg">{language === 'id' ? 'Keuangan &amp; Invoicing' : 'Finance &amp; Invoicing'}</h1>
           <p className="mt-1 max-w-2xl text-xs leading-5 text-muted">
             {language === 'id' ? 'Pantau kas masuk, piutang, pengeluaran, dan invoice dari data keuangan aktual.' : 'Monitor collected revenue, receivables, expenses, and invoices from current financial data.'}
           </p>
@@ -987,7 +982,7 @@ export const AdminInvoicing: React.FC = () => {
         </div>
       ) : (
         <>
-          <section aria-labelledby="finance-snapshot-title">
+          <section className="rounded-card border border-line bg-panel p-4 sm:p-5" aria-labelledby="finance-snapshot-title">
             <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
               <div className="min-w-0">
                 <h2 id="finance-snapshot-title" className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan finansial' : 'Financial snapshot'}</h2>
@@ -1025,7 +1020,7 @@ export const AdminInvoicing: React.FC = () => {
             </div>
           </section>
 
-          <section className="mt-6" aria-labelledby="financial-flow-title">
+          <section className="mt-6 grid gap-3 min-[1100px]:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]" aria-labelledby="financial-flow-title">
             <div className={cardClass}>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
@@ -1054,7 +1049,7 @@ export const AdminInvoicing: React.FC = () => {
               </div>
             </div>
 
-            <div className={`${cardClass} mt-3`}>
+            <div className={cardClass}>
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h2 id="financial-trend-title" className="text-sm font-semibold text-fg">{language === 'id' ? 'Arus kas tercatat' : 'Recorded cash flow'}</h2>
@@ -1108,12 +1103,12 @@ export const AdminInvoicing: React.FC = () => {
           <section className="mt-6" aria-labelledby="finance-workspace-title">
             <div className="rounded-card border border-line bg-panel p-4 sm:p-5">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div className="inline-flex w-fit items-center rounded-control border border-line bg-bg p-1">
-                  <button type="button" onClick={() => setTab('invoices')} className={'inline-flex min-h-10 sm:min-h-9 items-center gap-1.5 rounded-chip px-3 text-xs font-medium ' + (tab === 'invoices' ? 'bg-line text-fg' : 'text-muted hover:text-fg')}>
+                <div className="flex w-fit items-center border-b border-line">
+                  <button type="button" onClick={() => setTab('invoices')} className={'inline-flex min-h-9 items-center gap-1.5 border-b-2 px-3 text-xs font-medium transition-colors ' + (tab === 'invoices' ? 'border-accent text-fg' : 'border-transparent text-muted hover:border-line hover:text-fg')}>
                     <Receipt size={14} />
                     {language === 'id' ? 'Invoice' : 'Invoices'} <span className="tabular-nums opacity-80">({currencyInvoices.length})</span>
                   </button>
-                  <button type="button" onClick={() => setTab('expenses')} className={'inline-flex min-h-9 items-center gap-1.5 rounded-chip px-3 text-xs font-medium ' + (tab === 'expenses' ? 'bg-line text-fg' : 'text-muted hover:text-fg')}>
+                  <button type="button" onClick={() => setTab('expenses')} className={'inline-flex min-h-9 items-center gap-1.5 border-b-2 px-3 text-xs font-medium transition-colors ' + (tab === 'expenses' ? 'border-accent text-fg' : 'border-transparent text-muted hover:border-line hover:text-fg')}>
                     <CreditCard size={14} />
                     {language === 'id' ? 'Pengeluaran' : 'Expenses'} <span className="tabular-nums opacity-80">({currencyExpenses.length})</span>
                   </button>
@@ -1147,7 +1142,7 @@ export const AdminInvoicing: React.FC = () => {
                 )}
               </div>
               {tab === 'invoices' && currencyInvoices.length > 0 && (
-                <div className="mt-3 flex gap-1 overflow-x-auto border-t border-line pt-3">
+                <div className="mt-3 flex gap-1 overflow-x-auto border-t border-line pt-3 custom-scrollbar">
                   {invoiceStatusCounts.filter((item) => item.count > 0).map(({ status, count }) => (
                     <button key={status} type="button" onClick={() => setStatusFilter(status)} className={'shrink-0 rounded-chip border px-2.5 py-1 text-[11px] font-semibold transition-colors ' + (statusFilter === status ? 'border-accent/30 bg-accent/10 text-accent-text' : 'border-line text-muted hover:text-fg')}>
                       {statusLabel[status]} <span className="tabular-nums">{count}</span>
@@ -1169,7 +1164,7 @@ export const AdminInvoicing: React.FC = () => {
                     />
                   ) : (
                     <>
-                  <div className="overflow-x-auto rounded-card border border-line bg-panel">
+                  <div className="overflow-x-auto rounded-card border border-line bg-panel custom-scrollbar">
                     <table className="ams-table w-full min-w-[1040px] border-collapse text-left text-xs">
                       <thead className="sticky top-0 z-10 bg-panel">
                         <tr>
