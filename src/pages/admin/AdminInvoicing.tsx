@@ -484,6 +484,7 @@ export const AdminInvoicing: React.FC = () => {
 
   const ytdInvoiced = useMemo(
     () => currencyInvoices
+      .filter((invoice) => invoice.status !== 'cancelled')
       .filter((invoice) => {
         const date = new Date(invoice.issueDate + 'T00:00:00');
         return !Number.isNaN(date.getTime()) && date >= yearStart && date <= yearEnd;
@@ -493,7 +494,9 @@ export const AdminInvoicing: React.FC = () => {
   );
 
   const ytdCollected = useMemo(
-    () => currencyInvoices.reduce((sum, invoice) => sum + getInvoiceCollectedInRange(invoice, yearStart, yearEnd), 0),
+    () => currencyInvoices
+      .filter((invoice) => invoice.status !== 'cancelled')
+      .reduce((sum, invoice) => sum + getInvoiceCollectedInRange(invoice, yearStart, yearEnd), 0),
     [currencyInvoices, currentYear]
   );
 
@@ -511,7 +514,7 @@ export const AdminInvoicing: React.FC = () => {
   const ytdCollectionRate = ytdInvoiced > 0 ? (ytdCollected / ytdInvoiced) * 100 : 0;
 
   const retainerInvoices = useMemo(
-    () => currencyInvoices.filter(isRetainerInvoice),
+    () => currencyInvoices.filter((invoice) => invoice.status !== 'cancelled' && isRetainerInvoice(invoice)),
     [currencyInvoices]
   );
 
@@ -1233,7 +1236,9 @@ export const AdminInvoicing: React.FC = () => {
   );
 
   const currentQuarterTotal = useMemo(
-    () => ledgerInvoices.reduce((sum, invoice) => sum + Number(invoice.total || 0), 0),
+    () => ledgerInvoices
+      .filter((invoice) => invoice.status !== 'cancelled')
+      .reduce((sum, invoice) => sum + Number(invoice.total || 0), 0),
     [ledgerInvoices]
   );
 
@@ -1256,6 +1261,53 @@ export const AdminInvoicing: React.FC = () => {
 
   const operatingMarginValue = serverMetrics ? Number.parseFloat(serverMetrics.profitMargin) : NaN;
   const operatingMarginHealthy = Number.isFinite(operatingMarginValue) && operatingMarginValue >= 35;
+
+  const exportTaxCsv = () => {
+    const headers = ['Invoice #', 'Client', 'Issue Date', 'Currency', 'Taxable Base', 'Tax Rate', 'Tax Provision', 'Tax Collected'];
+    const rows = currencyInvoices
+      .filter((invoice) => invoice.status !== 'cancelled')
+      .map((invoice) => {
+        const paidRatio = invoice.total > 0 ? Math.min(1, Number(invoice.amountPaid || 0) / Number(invoice.total)) : 0;
+        return [
+          invoice.invoiceNumber,
+          invoice.clientCompany || invoice.clientName,
+          invoice.issueDate,
+          invoice.currency,
+          invoice.subtotal,
+          invoice.taxPercent,
+          invoice.taxAmount,
+          Number(invoice.taxAmount || 0) * paidRatio
+        ];
+      });
+    const csv = [headers, ...rows]
+      .map((row) => row.map((value) => '"' + String(value ?? '').replace(/"/g, '""') + '"').join(','))
+      .join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'kapitech-finance-tax.csv';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    showNotice('success', language === 'id' ? 'CSV pajak berhasil diekspor.' : 'Tax CSV exported successfully.');
+  };
+
+  const exportReportCsv = () => {
+    const rows = financeChartData.map((point) => [point.label, point.inflow, point.outflow, point.net, point.retainerTarget]);
+    const csv = [['Period', 'Billing Inflow', 'Operational Burn', 'Net Inflow', 'Retainer Target'], ...rows]
+      .map((row) => row.map((value) => '"' + String(value ?? '').replace(/"/g, '""') + '"').join(','))
+      .join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'kapitech-finance-report.csv';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    showNotice('success', language === 'id' ? 'Laporan finansial berhasil diekspor.' : 'Financial report CSV exported successfully.');
+  };
 
   const exportInvoicesCsv = () => {
     const headers = ['Invoice #', 'Client', 'Project', 'Issue Date', 'Due Date', 'Currency', 'Total', 'Balance Due', 'Status'];
@@ -1416,7 +1468,7 @@ export const AdminInvoicing: React.FC = () => {
           <section aria-labelledby="tax-retainers-title">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div><h2 id="tax-retainers-title" className="text-base font-semibold text-fg">Tax &amp; Retainers</h2><p className="mt-1 max-w-2xl text-xs leading-5 text-muted">Tax provisions and retainer activity derived from the Finance ledger.</p></div>
-              <button type="button" onClick={exportInvoicesCsv} disabled={!currencyInvoices.length} className={actionClass}><Download size={14} />Export CSV</button>
+              <button type="button" onClick={exportTaxCsv} disabled={!currencyInvoices.length} className={actionClass}><Download size={14} />Export CSV</button>
             </div>
           </section>
 
@@ -1452,7 +1504,7 @@ export const AdminInvoicing: React.FC = () => {
           <section aria-labelledby="financial-reports-title">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div><h2 id="financial-reports-title" className="text-base font-semibold text-fg">Financial Reports</h2><p className="mt-1 max-w-2xl text-xs leading-5 text-muted">Billing, collections, operating spend, cash movement, and invoice status for the reporting period.</p></div>
-              <button type="button" onClick={exportInvoicesCsv} disabled={!filteredInvoices.length} className={actionClass}><Download size={14} />Export current ledger CSV</button>
+              <button type="button" onClick={exportReportCsv} disabled={!financeChartData.length} className={actionClass}><Download size={14} />Export report CSV</button>
             </div>
           </section>
 
