@@ -35,12 +35,18 @@ test('Admin invoicing keeps financial mutations permission-gated and uses the sh
   assert.ok(source.includes('retainerLedgerInvoices'));
   assert.ok(source.includes('usingDemoRetainerLedger'));
   assert.ok(source.includes('border-separate border-spacing-0 text-xs'));
-  assert.ok(!source.includes('overflow-x-auto'));
+  assert.ok(source.includes('overflow-x-auto px-1 custom-scrollbar'));
   assert.ok(!source.includes('xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]'));
   assert.ok(source.includes('sticky top-0 z-10'));
   assert.ok(source.includes('Tax & Retainers'));
   assert.ok(source.includes('Financial Reports'));
   assert.ok(source.includes('Quotations'));
+  assert.ok(source.includes('space-y-5"><section className="rounded-card border border-line bg-panel overflow-hidden">'));
+  assert.ok(source.includes('grid gap-5 lg:grid-cols-2'));
+  assert.ok(source.includes('const getInvoiceCollectedTotal'));
+  assert.ok(source.includes('quarterInvoices'));
+  assert.ok(source.includes("expense.type !== 'CapEx'"));
+  assert.ok(source.includes('min-[900px]:hidden -mx-1 mb-4 overflow-x-auto'));
 });
 
 test('Admin projects mutation actions stay behind their permissions', () => {

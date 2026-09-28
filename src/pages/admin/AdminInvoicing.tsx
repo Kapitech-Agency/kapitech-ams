@@ -1,11 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
   AlertCircle,
   ArrowDown,
-  ArrowUp,
-  ArrowUpRight,
-  CalendarDays,
   Check,
   CheckCircle2,
   Copy,
@@ -168,6 +165,14 @@ const getInvoiceCollectedInRange = (invoice: AgencyInvoice, start: Date, end: Da
   }
 
   return 0;
+};
+
+const getInvoiceCollectedTotal = (invoice: AgencyInvoice) => {
+  const payments = Array.isArray(invoice.payments) ? invoice.payments : [];
+  if (payments.length) {
+    return payments.reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0);
+  }
+  return Number(invoice.amountPaid || 0);
 };
 
 const getPreviousQuarter = (range: ReturnType<typeof getQuarterRange>) => {
@@ -840,7 +845,7 @@ export const AdminInvoicing: React.FC = () => {
 
   const financeChartData = useMemo(
     () => cashFlow.map((point) => {
-      const target = retainerLedgerInvoices
+      const target = retainerInvoices
         .filter((invoice) => {
           const date = new Date(invoice.issueDate + 'T00:00:00');
           return !Number.isNaN(date.getTime()) && date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }) === point.month;
@@ -849,7 +854,7 @@ export const AdminInvoicing: React.FC = () => {
 
       return { ...point, label: point.month, retainerTarget: target };
     }),
-    [cashFlow, retainerLedgerInvoices]
+    [cashFlow, retainerInvoices]
   );
 
   const hasTrendData = financeChartData.some(
@@ -877,7 +882,9 @@ export const AdminInvoicing: React.FC = () => {
 
   const quarterExpenses = useMemo(
     () => reportingQuarter
-      ? currencyExpenses.filter((expense) => isInQuarter(expense.date, reportingQuarter)).reduce((sum, expense) => sum + Number(expense.amount || 0), 0)
+      ? currencyExpenses
+        .filter((expense) => isInQuarter(expense.date, reportingQuarter) && expense.type !== 'CapEx')
+        .reduce((sum, expense) => sum + Number(expense.amount || 0), 0)
       : 0,
     [currencyExpenses, reportingQuarter]
   );
@@ -896,9 +903,7 @@ export const AdminInvoicing: React.FC = () => {
     () => currencyInvoices
       .filter((invoice) => invoice.status !== 'cancelled')
       .reduce((sum, invoice) => {
-        const collected = Array.isArray(invoice.payments) && invoice.payments.length
-          ? invoice.payments.reduce((paymentSum, payment) => paymentSum + (Number(payment.amount) || 0), 0)
-          : Number(invoice.amountPaid || 0);
+        const collected = getInvoiceCollectedTotal(invoice);
         const paidRatio = invoice.total > 0 ? Math.min(1, collected / Number(invoice.total)) : 0;
         return sum + Number(invoice.taxAmount || 0) * paidRatio;
       }, 0),
@@ -908,18 +913,13 @@ export const AdminInvoicing: React.FC = () => {
   const taxOutstanding = Math.max(0, taxProvision - taxCollected);
 
   const retainerBilled = useMemo(
-    () => retainerLedgerInvoices.reduce((sum, invoice) => sum + Number(invoice.total || 0), 0),
-    [retainerLedgerInvoices]
+    () => retainerInvoices.reduce((sum, invoice) => sum + Number(invoice.total || 0), 0),
+    [retainerInvoices]
   );
 
   const retainerCollected = useMemo(
-    () => retainerLedgerInvoices.reduce((sum, invoice) => {
-      const collected = Array.isArray(invoice.payments) && invoice.payments.length
-        ? invoice.payments.reduce((paymentSum, payment) => paymentSum + (Number(payment.amount) || 0), 0)
-        : Number(invoice.amountPaid || 0);
-      return sum + collected;
-    }, 0),
-    [retainerLedgerInvoices]
+    () => retainerInvoices.reduce((sum, invoice) => sum + getInvoiceCollectedTotal(invoice), 0),
+    [retainerInvoices]
   );
 
   const quarterExpenseCategories = useMemo(() => {
@@ -1761,10 +1761,10 @@ export const AdminInvoicing: React.FC = () => {
   );
 
   const currentQuarterTotal = useMemo(
-    () => ledgerInvoices
+    () => quarterInvoices
       .filter((invoice) => invoice.status !== 'cancelled')
       .reduce((sum, invoice) => sum + Number(invoice.total || 0), 0),
-    [ledgerInvoices]
+    [quarterInvoices]
   );
 
   const quarterChangePercent = previousQuarterTotal > 0
@@ -2066,7 +2066,7 @@ export const AdminInvoicing: React.FC = () => {
     const rows = currencyInvoices
       .filter((invoice) => invoice.status !== 'cancelled')
       .map((invoice) => {
-        const paidRatio = invoice.total > 0 ? Math.min(1, Number(invoice.amountPaid || 0) / Number(invoice.total)) : 0;
+        const paidRatio = invoice.total > 0 ? Math.min(1, getInvoiceCollectedTotal(invoice) / Number(invoice.total)) : 0;
         return [
           invoice.invoiceNumber,
           invoice.clientCompany || invoice.clientName,
@@ -2156,6 +2156,29 @@ export const AdminInvoicing: React.FC = () => {
 
   return (
     <div className="min-h-full pb-10">
+      <div className="min-[900px]:hidden -mx-1 mb-4 overflow-x-auto px-1 custom-scrollbar">
+        <nav aria-label="Finance sections" className="inline-flex min-w-max items-center gap-1 rounded-control border border-line bg-panel p-1">
+          {[
+            { key: 'invoices', label: 'Invoices', search: '' },
+            { key: 'income-expenses', label: 'Income & Expenses', search: '?finance=income-expenses' },
+            { key: 'tax-retainers', label: 'Tax & Retainers', search: '?finance=tax-retainers' },
+            { key: 'financial-reports', label: 'Financial Reports', search: '?finance=financial-reports' },
+            { key: 'quotations', label: 'Quotations', search: '?finance=quotations' },
+          ].map((tab) => {
+            const activeView = new URLSearchParams(location.search).get('finance') || 'invoices';
+            return (
+              <Link
+                key={tab.key}
+                to={`/admin/invoicing${tab.search}`}
+                aria-current={activeView === tab.key ? 'page' : undefined}
+                className={`inline-flex min-h-8 shrink-0 items-center rounded-chip px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${activeView === tab.key ? 'bg-line text-fg' : 'text-muted hover:bg-bg hover:text-fg'}`}
+              >
+                {tab.label}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
       <AdminModuleHeader
         title={financeView === 'quotations' ? 'Quotations' : financeView === 'income-expenses' ? 'Income & Expenses' : financeView === 'tax-retainers' ? 'Tax & Retainers' : financeView === 'financial-reports' ? 'Financial Reports' : 'Invoices'}
         description={financeView === 'quotations'
@@ -2268,7 +2291,7 @@ export const AdminInvoicing: React.FC = () => {
       ) : financeView === 'income-expenses' ? (
         <div className="space-y-5">
           <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Income YTD" value={formatFinanceCardAmount(ytdCollected,currency)} context={ytdCollectionRate.toFixed(1)+'% collected vs issued'} icon={<WalletCards size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Invoiced YTD" value={formatFinanceCardAmount(ytdInvoiced,currency)} context="Issued billings" icon={<Receipt size={15}/>}/><FinanceMetricCard label="Expenses YTD" value={formatFinanceCardAmount(ytdExpenses,currency)} context={currencyExpenses.length+' expense records'} icon={<ArrowDown size={15}/>}/><FinanceMetricCard label="Net cash YTD" value={formatFinanceCardAmount(ytdNetCash,currency)} context="Collected less expenses" icon={<TrendingUp size={15}/>} toneClassName={ytdNetCash>=0?'text-success':'text-danger'}/></section>
-          <section className="grid gap-5 xl:grid-cols-2"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><div className="flex items-end justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Income ledger</h2><p className="mt-1 text-xs text-muted">Actual payment activity.</p></div><label className="relative w-full max-w-xs"><Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/><span className="sr-only">Search income</span><input value={incomeSearch} onChange={(event)=>setIncomeSearch(event.target.value)} placeholder="Search invoice or client..." className={fieldClass+' pl-8'}/></label></div></div><div className="overflow-hidden">{incomeRows.length===0?<div className="p-5"><EmptyState title="No income recorded" description="Recorded payments will appear here."/></div>:<table className="w-full table-fixed border-separate border-spacing-0 text-xs">
+          <section className="space-y-5"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><div className="flex items-end justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Income ledger</h2><p className="mt-1 text-xs text-muted">Actual payment activity.</p></div><label className="relative w-full max-w-xs"><Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/><span className="sr-only">Search income</span><input value={incomeSearch} onChange={(event)=>setIncomeSearch(event.target.value)} placeholder="Search invoice or client..." className={fieldClass+' pl-8'}/></label></div></div><div className="overflow-hidden">{incomeRows.length===0?<div className="p-5"><EmptyState title="No income recorded" description="Recorded payments will appear here."/></div>:<table className="w-full table-fixed border-separate border-spacing-0 text-xs">
 <thead className="sticky top-0 z-10 border-b border-line bg-panel/95 backdrop-blur-sm"><tr>
   <th className="w-[28%] px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Payment</th>
   <th className="w-[34%] px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client</th>
@@ -2321,7 +2344,7 @@ export const AdminInvoicing: React.FC = () => {
   <td className="px-4 py-5 text-right font-semibold tabular-nums text-success">{formatNativeAmount(getInvoiceCollectedInRange(invoice,yearStart,yearEnd),invoice.currency,true)}</td>
 </tr>)}
 </tbody></table></div></section>
-            <div className="grid gap-5"><section className="rounded-card border border-line bg-panel p-4 sm:p-5"><div className="border-b border-line pb-3"><h2 className="text-sm font-semibold text-fg">Tax provision</h2><p className="mt-1 text-xs text-muted">Provision versus collected and outstanding tax.</p></div><div className="mt-4 space-y-3">{[{label:'Provision',value:taxProvision,tone:'bg-series-1'},{label:'Collected',value:taxCollected,tone:'bg-success'},{label:'Outstanding',value:taxOutstanding,tone:'bg-warning'}].map((item)=>{const percent=taxProvision>0?Math.min(100,item.value/taxProvision*100):0;return <div key={item.label}><div className="flex justify-between text-xs"><span className="text-muted">{item.label}</span><span className="font-medium tabular-nums">{formatNativeAmount(item.value,currency,true)}</span></div><div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg"><div className={'h-full rounded-full '+item.tone} style={{width:percent+'%'}}/></div></div>})}</div><button type="button" onClick={exportTaxCsv} disabled={!currencyInvoices.length} className={actionClass+' mt-5 w-full'}><Download size={14}/>Export tax detail</button></section><section className="rounded-card border border-line bg-panel p-4 sm:p-5"><div className="flex justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Retainer collection</h2><p className="mt-1 text-xs text-muted">Collection against billed retainers.</p></div><span className="text-sm font-semibold tabular-nums">{retainerBilled>0?((retainerCollected/retainerBilled)*100).toFixed(1):'0.0'}%</span></div><div className="mt-4 h-2 rounded-full bg-bg overflow-hidden"><div className="h-full rounded-full bg-success" style={{width:(retainerBilled>0?Math.min(100,retainerCollected/retainerBilled*100):0)+'%'}}/></div><div className="mt-2 flex justify-between text-[10px] tabular-nums text-muted"><span>{formatFinanceCardAmount(retainerCollected,currency)}</span><span>{formatFinanceCardAmount(retainerBilled,currency)}</span></div></section></div>
+            <div className="grid gap-5 lg:grid-cols-2"><section className="rounded-card border border-line bg-panel p-4 sm:p-5"><div className="border-b border-line pb-3"><h2 className="text-sm font-semibold text-fg">Tax provision</h2><p className="mt-1 text-xs text-muted">Provision versus collected and outstanding tax.</p></div><div className="mt-4 space-y-3">{[{label:'Provision',value:taxProvision,tone:'bg-series-1'},{label:'Collected',value:taxCollected,tone:'bg-success'},{label:'Outstanding',value:taxOutstanding,tone:'bg-warning'}].map((item)=>{const percent=taxProvision>0?Math.min(100,item.value/taxProvision*100):0;return <div key={item.label}><div className="flex justify-between text-xs"><span className="text-muted">{item.label}</span><span className="font-medium tabular-nums">{formatNativeAmount(item.value,currency,true)}</span></div><div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg"><div className={'h-full rounded-full '+item.tone} style={{width:percent+'%'}}/></div></div>})}</div><button type="button" onClick={exportTaxCsv} disabled={!currencyInvoices.length} className={actionClass+' mt-5 w-full'}><Download size={14}/>Export tax detail</button></section><section className="rounded-card border border-line bg-panel p-4 sm:p-5"><div className="flex justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Retainer collection</h2><p className="mt-1 text-xs text-muted">Collection against billed retainers.</p></div><span className="text-sm font-semibold tabular-nums">{retainerBilled>0?((retainerCollected/retainerBilled)*100).toFixed(1):'0.0'}%</span></div><div className="mt-4 h-2 rounded-full bg-bg overflow-hidden"><div className="h-full rounded-full bg-success" style={{width:(retainerBilled>0?Math.min(100,retainerCollected/retainerBilled*100):0)+'%'}}/></div><div className="mt-2 flex justify-between text-[10px] tabular-nums text-muted"><span>{formatFinanceCardAmount(retainerCollected,currency)}</span><span>{formatFinanceCardAmount(retainerBilled,currency)}</span></div></section></div>
           </section>
         </div>
       ) : financeView === 'financial-reports' ? (
