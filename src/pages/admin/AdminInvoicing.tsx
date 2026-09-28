@@ -1237,7 +1237,7 @@ export const AdminInvoicing: React.FC = () => {
             <article className="flex min-w-0 flex-col justify-between rounded-card border border-line bg-panel p-5">
               <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted">
                 <span>Total Invoiced Q2</span>
-                <Receipt size={12} aria-hidden="true" className="text-muted" />
+                <Receipt size={12} aria-hidden="true" />
               </div>
               <div className="mt-3">
                 <div className="truncate font-mono text-2xl font-bold tabular-nums tracking-tight text-fg">{formatFinanceCardAmount(currentQuarterTotal, currency)}</div>
