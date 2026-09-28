@@ -59,6 +59,10 @@ const AdminClients = React.lazy(() =>
   import('./pages/admin/AdminClients').then((m) => ({ default: m.AdminClients }))
 );
 
+const AdminClientRetainers = React.lazy(() =>
+  import('./pages/admin/AdminClientRetainers').then((m) => ({ default: m.AdminClientRetainers }))
+);
+
 const AdminCmsProjects = React.lazy(() =>
   import('./pages/admin/AdminCmsProjects').then((m) => ({ default: m.AdminCmsProjects }))
 );
@@ -144,9 +148,9 @@ const App = () => {
               <Route path="documents" element={<ModuleRoute moduleKey="documents" moduleLabel="documents"><AdminDocuments /></ModuleRoute>} />
               <Route path="time-logs" element={<ModuleRoute moduleKey="timelogs" moduleLabel="time logs"><AdminTimeLogs /></ModuleRoute>} />
               <Route path="vendors" element={<ModuleRoute moduleKey="vendors" moduleLabel="vendors"><AdminVendors /></ModuleRoute>} />
-              <Route path="clients" element={<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClients /></ModuleRoute>} />
+              <Route path="clients" element={<Navigate to="/admin/clients/all-clients" replace />} />
               <Route path="clients/all-clients" element={<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClients /></ModuleRoute>} />
-              <Route path="clients/retainers" element={<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClients /></ModuleRoute>} />
+              <Route path="clients/retainers" element={<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClientRetainers /></ModuleRoute>} />
               <Route path="clients/sla-monitoring" element={<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClients /></ModuleRoute>} />
               <Route path="clients/lead-accounts" element={<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClients /></ModuleRoute>} />
               <Route path="cms/projects" element={<ModuleRoute moduleKey="cms_projects" moduleLabel="case studies"><AdminCmsProjects /></ModuleRoute>} />
