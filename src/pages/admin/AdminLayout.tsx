@@ -551,7 +551,7 @@ export const AdminLayout: React.FC = () => {
                   ))}
                 </nav>
               ) : location.pathname === '/admin/invoicing' ? (
-                <nav aria-label="Finance sections" className="flex h-[52px] min-w-0 items-stretch gap-1 overflow-x-auto custom-scrollbar">
+                <nav aria-label="Finance sections" className="flex h-9 min-w-0 items-center gap-1 overflow-x-auto custom-scrollbar">
                   {[
                     { key: 'invoices', label: 'Invoices', search: '' },
                     { key: 'income-expenses', label: 'Income & Expenses', search: '?finance=income-expenses' },
