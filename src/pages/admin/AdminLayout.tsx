@@ -563,7 +563,7 @@ export const AdminLayout: React.FC = () => {
                   <span className="min-w-0 flex-1 truncate text-left text-xs">Search client or project...</span>
                   <kbd className="ml-auto rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] text-muted">⌘K</kbd>
                 </Button>
-                <Button type="button" variant="secondary" aria-label="Notifications" icon={<AdminNotificationCenter />} className="h-10 w-10 p-0" />
+                <AdminNotificationCenter />
                 <Button type="button" variant="secondary" aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'} onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} icon={theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />} className="h-10 w-10 p-0" />
                 <div className="mx-1 h-4 w-px bg-line" aria-hidden="true" />
                 <button type="button" onClick={() => setProfileSettingsOpen(true)} aria-label="Open profile settings" title="Profile settings" className="flex h-10 items-center gap-2 rounded-control px-1.5 text-left hover:bg-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
