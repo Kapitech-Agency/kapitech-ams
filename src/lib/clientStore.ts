@@ -6,6 +6,7 @@
 
 export interface AgencyClient {
   id: string;
+  slug: string;
   name: string;
   company: string;
   email: string;
@@ -27,6 +28,23 @@ export interface AgencyClient {
 
 let clientsCache: AgencyClient[] | null = null;
 export const CLIENT_EVENT_NAME = 'kapitech_clients_updated';
+
+export const createClientSlug = (company: string, id = ''): string => {
+  const base = company
+    .normalize('NFKD')
+    .replace(/[\\u0300-\\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return base || `client-${id.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+};
+
+export const normalizeAgencyClient = (client: AgencyClient): AgencyClient => ({
+  ...client,
+  slug: client.slug?.trim() || createClientSlug(client.company, client.id)
+});
 
 import { api } from './apiClient';
 
@@ -55,7 +73,7 @@ function hydrateClientsFromServer(): void {
       return;
     }
     clientServerHydrationRetryCount = 0;
-    clientsCache = res.data.clients;
+    clientsCache = res.data.clients.map(normalizeAgencyClient);
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(CLIENT_EVENT_NAME, { detail: res.data.clients }));
     }
@@ -68,6 +86,7 @@ function hydrateClientsFromServer(): void {
 export const INITIAL_DEFAULT_CLIENTS: AgencyClient[] = [
   {
     id: 'cli_101',
+    slug: 'pt-astra-digital-ventura',
     name: 'Budi Santoso',
     company: 'PT Astra Digital Ventura',
     email: 'budi.santoso@astradigital.id',
@@ -87,6 +106,7 @@ export const INITIAL_DEFAULT_CLIENTS: AgencyClient[] = [
   },
   {
     id: 'cli_102',
+    slug: 'telkomsel-innovation-labs',
     name: 'Sarah Jenkins',
     company: 'Telkomsel Innovation Labs',
     email: 's.jenkins@telkomsel.co.id',
@@ -106,6 +126,7 @@ export const INITIAL_DEFAULT_CLIENTS: AgencyClient[] = [
   },
   {
     id: 'cli_103',
+    slug: 'goto-financial-technology',
     name: 'Hendra Gunawan',
     company: 'GoTo Financial Technology',
     email: 'hendra.gunawan@gotofinancial.com',
@@ -125,6 +146,7 @@ export const INITIAL_DEFAULT_CLIENTS: AgencyClient[] = [
   },
   {
     id: 'cli_104',
+    slug: 'shopeepay-international',
     name: 'Jessica Halim',
     company: 'ShopeePay International',
     email: 'jessica.h@shopeepay.com',
@@ -144,6 +166,7 @@ export const INITIAL_DEFAULT_CLIENTS: AgencyClient[] = [
   },
   {
     id: 'cli_105',
+    slug: 'nusa-cloud-systems',
     name: 'Kevin Wijaya',
     company: 'Nusa Cloud Systems',
     email: 'kevin@nusacloud.id',
@@ -165,7 +188,7 @@ export const INITIAL_DEFAULT_CLIENTS: AgencyClient[] = [
 
 export const getAgencyClients = (): AgencyClient[] => {
   hydrateClientsFromServer();
-  if (clientsCache) return clientsCache;
+  if (clientsCache) return clientsCache.map(normalizeAgencyClient);
   clientsCache = import.meta.env.PROD ? [] : INITIAL_DEFAULT_CLIENTS;
   return clientsCache;
 };
