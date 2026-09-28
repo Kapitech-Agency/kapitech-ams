@@ -2141,7 +2141,9 @@ export const AdminInvoicing: React.FC = () => {
           </div>
           <div className="h-80 animate-pulse rounded-card border border-line bg-panel" />
         </div>
-      ) : financeView === 'quotations' ? (
+      ) : (
+        <>
+          {financeView === 'quotations' && (
         <div className="space-y-5">
           <section className="grid grid-cols-2 gap-3 xl:grid-cols-4" aria-label="Quotation overview">
             <FinanceMetricCard label="Total quotations" value={quotationMetrics.total} context="All records" icon={<FileText size={15} />} />
@@ -2226,7 +2228,9 @@ export const AdminInvoicing: React.FC = () => {
               </div>
             </section>
           </section>
-        </div>      ) : financeView === 'income-expenses' ? (
+        </div>
+          )}
+          {financeView === 'income-expenses' && (
         <div className="space-y-5">
           <section className="grid grid-cols-2 gap-3 xl:grid-cols-4" aria-label="Income and expenses summary">
             <FinanceMetricCard label="Income YTD" value={formatFinanceCardAmount(ytdCollected, currency)} context={ytdCollectionRate.toFixed(1) + '% collected of issued billings'} icon={<WalletCards size={15} className="text-success" />} toneClassName="text-success" />
@@ -2275,7 +2279,9 @@ export const AdminInvoicing: React.FC = () => {
               {expensePageCount > 1 && <div className="border-t border-line px-5 py-3"><div className="flex items-center justify-between text-[11px] text-muted"><span className="tabular-nums">Showing {((expensePage - 1) * expensePageSize) + 1}–{Math.min(expensePage * expensePageSize, filteredExpenses.length)} of {filteredExpenses.length}</span><div className="flex items-center gap-1"><button type="button" onClick={() => setExpensePage((page) => Math.max(1, page - 1))} disabled={expensePage === 1} className={actionClass}>Previous</button><span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control border border-line bg-line px-2 text-[10px] font-semibold text-fg">{expensePage}</span><button type="button" onClick={() => setExpensePage((page) => Math.min(expensePageCount, page + 1))} disabled={expensePage === expensePageCount} className={actionClass}>Next</button></div></div></div>}
             </section>
           </section>
-        </div>      ) : financeView === 'tax-retainers' ? (
+        </div>
+          )}
+          {financeView === 'tax-retainers' && (
         <div className="space-y-5">
           <section className="grid grid-cols-2 gap-3 xl:grid-cols-4" aria-label="Tax and retainers summary">
             <FinanceMetricCard label="Tax provision" value={formatFinanceCardAmount(taxProvision, currency)} context="Tax across issued invoices" icon={<Receipt size={15} />} />
@@ -2305,7 +2311,9 @@ export const AdminInvoicing: React.FC = () => {
               </section>
             </section>
           </section>
-        </div>      ) : financeView === 'financial-reports' ? (
+        </div>
+          )}
+          {financeView === 'financial-reports' && (
         <div className="space-y-5">
           <section className="grid grid-cols-2 gap-3 xl:grid-cols-4" aria-label="Financial reporting summary">
             <FinanceMetricCard label="Net cash YTD" value={formatFinanceCardAmount(ytdNetCash, currency)} context="Collected less expenses" icon={<TrendingUp size={15} />} toneClassName={ytdNetCash >= 0 ? 'text-success' : 'text-danger'} />
@@ -2442,13 +2450,10 @@ export const AdminInvoicing: React.FC = () => {
             <div className="border-b border-line p-4 sm:p-5">
               <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between"><div><h2 id="finance-snapshot-title" className="text-sm font-semibold text-fg">Finance snapshot</h2><p className="mt-1 text-xs leading-5 text-muted">A compact view of billings, collections, receivables, burn, margin, tax, and retainer health for {reportingQuarter?.label||'the active period'}.</p></div><div className="flex flex-wrap gap-2 text-[10px] text-muted"><span className="rounded-badge border border-line bg-bg px-2 py-1 tabular-nums">{ledgerInvoices.length} invoices</span><span className="rounded-badge border border-line bg-bg px-2 py-1 tabular-nums">{currencyExpenses.length} expenses</span><span className="rounded-badge border border-line bg-bg px-2 py-1 tabular-nums">{retainerInvoices.length} retainers</span></div></div>
             </div>
-            <div className="p-4 sm:p-5">
-              <div className="grid grid-cols-2 gap-2 md:grid-cols-4">{[['Quarter billed',formatFinanceCardAmount(currentQuarterTotal,currency)],['Quarter collected',formatFinanceCardAmount(quarterCollected,currency)],['Quarter expenses',formatFinanceCardAmount(quarterExpenses,currency)],['Quarter net cash',formatFinanceCardAmount(quarterNetCash,currency)],['Outstanding',formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)],['Overdue',formatFinanceCardAmount(overdueBalance,currency)],['Collection rate',ytdCollectionRate.toFixed(1)+'%'],['Operating margin',(Number.isFinite(operatingMarginValue)?operatingMarginValue:quarterMargin).toFixed(1)+'%']].map(([label,value])=><div key={label} className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">{label}</p><p className="mt-1.5 text-sm font-semibold tabular-nums text-fg">{value}</p></div>)}</div>
-              <div className="mt-5 grid gap-5 lg:grid-cols-3">
-                <section className="rounded-control border border-line bg-bg p-4"><div className="flex items-center justify-between gap-3"><div><p className="text-xs font-semibold text-fg">Collection health</p><p className="mt-1 text-[10px] text-muted">Cash collected vs issued billings.</p></div><span className="text-sm font-semibold tabular-nums text-success">{ytdCollectionRate.toFixed(1)}%</span></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-panel"><div className="h-full rounded-full bg-success" style={{width:Math.min(100,Math.max(0,ytdCollectionRate))+'%'}}/></div><div className="mt-2 flex justify-between gap-3 text-[10px] text-muted"><span>Collected {formatFinanceCardAmount(ytdCollected,currency)}</span><span>Issued {formatFinanceCardAmount(ytdInvoiced,currency)}</span></div></section>
-                <section className="rounded-control border border-line bg-bg p-4"><div className="flex items-center justify-between gap-3"><div><p className="text-xs font-semibold text-fg">Retainer health</p><p className="mt-1 text-[10px] text-muted">Billed against collected retainer value.</p></div><span className="text-sm font-semibold tabular-nums text-fg">{retainerBilled>0?((retainerCollected/retainerBilled)*100).toFixed(1):'0.0'}%</span></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-panel"><div className="h-full rounded-full bg-series-3" style={{width:(retainerBilled>0?Math.min(100,(retainerCollected/retainerBilled)*100):0)+'%'}}/></div><div className="mt-2 flex justify-between gap-3 text-[10px] text-muted"><span>Collected {formatFinanceCardAmount(retainerCollected,currency)}</span><span>Billed {formatFinanceCardAmount(retainerBilled,currency)}</span></div></section>
-                <section className="rounded-control border border-line bg-bg p-4"><div className="flex items-center justify-between gap-3"><div><p className="text-xs font-semibold text-fg">Attention queue</p><p className="mt-1 text-[10px] text-muted">Items requiring finance follow-up.</p></div><Send size={15} className="text-warning"/></div><div className="mt-3 grid grid-cols-3 gap-2"><div><p className="text-[10px] text-muted">Overdue</p><p className="mt-1 text-sm font-semibold tabular-nums text-danger">{criticalOverdueCount}</p></div><div><p className="text-[10px] text-muted">Due soon</p><p className="mt-1 text-sm font-semibold tabular-nums text-warning">{dueSoonCount}</p></div><div><p className="text-[10px] text-muted">Tax due</p><p className="mt-1 text-sm font-semibold tabular-nums text-warning">{formatFinanceCardAmount(taxOutstanding,currency)}</p></div></div></section>
-              </div>
+          )}
+        </>
+      )}
+            </div>
             </div>
           </section>
         </div>      <Modal
