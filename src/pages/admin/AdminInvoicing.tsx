@@ -304,6 +304,15 @@ export const AdminInvoicing: React.FC = () => {
   const [sort, setSort] = useState<SortKey>('updated');
   const [ledgerPeriod, setLedgerPeriod] = useState<LedgerPeriod>('reporting-quarter');
   const [periodMenuOpen, setPeriodMenuOpen] = useState(false);
+  const [columnMenuOpen, setColumnMenuOpen] = useState(false);
+  const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({
+    client: true,
+    issue: true,
+    due: true,
+    amount: true,
+    status: true,
+    actions: true
+  });
   const [expenseSearch, setExpenseSearch] = useState('');
   const [expenseTypeFilter, setExpenseTypeFilter] = useState('all');
   const [expenseSort, setExpenseSort] = useState<'date_desc' | 'date_asc' | 'amount_high' | 'amount_low'>('date_desc');
@@ -1701,9 +1710,35 @@ export const AdminInvoicing: React.FC = () => {
                         </div>
                       )}
                     </div>
-                    <button type="button" onClick={() => setPeriodMenuOpen(false)} className={actionClass + ' w-9 px-0'} aria-label="Filter columns" title="Filter columns">
-                      <SlidersHorizontal size={14} />
-                    </button>
+                    <div className="relative">
+                      <button type="button" onClick={() => setColumnMenuOpen((open) => !open)} className={actionClass + ' w-9 px-0'} aria-label="Filter columns" title="Filter columns" aria-expanded={columnMenuOpen}>
+                        <SlidersHorizontal size={14} />
+                      </button>
+                      {columnMenuOpen && (
+                        <div className="absolute right-0 top-[calc(100%+6px)] z-30 w-56 rounded-card border border-line bg-panel p-1.5">
+                          {[
+                            ['client', 'Client & Project'],
+                            ['issue', 'Issue Date'],
+                            ['due', 'Due Date'],
+                            ['amount', 'Amount'],
+                            ['status', 'Status'],
+                            ['actions', 'Actions']
+                          ].map(([key, label]) => (
+                            <button
+                              key={key}
+                              type="button"
+                              role="menuitemcheckbox"
+                              aria-checked={columnVisibility[key]}
+                              onClick={() => setColumnVisibility((current) => ({ ...current, [key]: !current[key] }))}
+                              className="flex w-full items-center justify-between rounded-control px-3 py-2 text-left text-xs text-muted hover:bg-bg hover:text-fg"
+                            >
+                              <span>{label}</span>
+                              <span className={columnVisibility[key] ? 'text-accent-text' : 'text-muted'}>{columnVisibility[key] ? 'Visible' : 'Hidden'}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     <CustomSelect value={sort} onChange={(value) => setSort(value as SortKey)} options={sortOptions} className="w-full xl:w-44" triggerClassName="h-9 min-h-9 w-full" aria-label="Invoice sort" />
                   </div>
                 ) : (
@@ -1725,12 +1760,12 @@ export const AdminInvoicing: React.FC = () => {
                         <table className="ams-table w-full min-w-[1040px] border-collapse text-left text-xs">
                           <thead className="bg-bg"><tr>
                             <th className="px-4 py-3 sm:px-5 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice #</th>
-                            <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client &amp; Project</th>
-                            <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Issue Date</th>
-                            <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Due Date</th>
-                            <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount (IDR)</th>
-                            <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Status</th>
-                            <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Actions</th>
+                            {columnVisibility.client && <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client &amp; Project</th>}
+                            {columnVisibility.issue && <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Issue Date</th>}
+                            {columnVisibility.due && <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Due Date</th>}
+                            {columnVisibility.amount && <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount (IDR)</th>}
+                            {columnVisibility.status && <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Status</th>}
+                            {columnVisibility.actions && <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Actions</th>
                           </tr></thead>
                           <tbody>
                             {paginatedInvoices.map((invoice) => {
@@ -1740,12 +1775,12 @@ export const AdminInvoicing: React.FC = () => {
                               return (
                                 <tr key={invoice.id} className="group border-t border-line transition-colors hover:bg-bg">
                                   <td className="px-4 py-3 sm:px-5"><div className="flex items-center gap-2"><span className={'h-1.5 w-1.5 rounded-full ' + (isOverdue ? 'bg-danger' : invoice.status === 'paid' ? 'bg-success' : invoice.status === 'sent' ? 'bg-info' : 'bg-warning')} /><button type="button" onClick={() => openPrintPreview(invoice)} className="font-medium tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button></div><p className="mt-1 text-[11px] text-muted">{invoice.currency}</p></td>
-                                  <td className="px-4 py-3"><div className="font-medium text-fg">{invoice.clientCompany || invoice.clientName}</div><div className="mt-0.5 text-[11px] text-muted">{project?.name || invoice.clientName}</div></td>
-                                  <td className="px-4 py-3 tabular-nums text-muted">{invoice.issueDate}</td>
-                                  <td className={'px-4 py-3 tabular-nums font-medium ' + (isOverdue ? 'text-danger' : 'text-muted')}>{invoice.dueDate}{isOverdue && <div className="mt-0.5 text-[10px] text-danger">Overdue</div>}</td>
-                                  <td className="px-4 py-3 text-right"><div className="font-semibold tabular-nums text-fg">{formatNativeAmount(invoice.total, invoice.currency)}</div><div className="mt-0.5 text-[10px] tabular-nums text-muted">{balance > 0 ? 'Due ' + formatNativeAmount(balance, invoice.currency, true) : 'Settled'}</div></td>
-                                  <td className="px-4 py-3">{canManageInvoices && invoice.status !== 'cancelled' ? <InvoiceStatusDropdown status={invoice.status} allowedStatuses={['draft', 'sent', 'overdue']} disabled={updatingInvoiceId === invoice.id || !['draft', 'sent', 'overdue'].includes(invoice.status)} onChange={(next) => void updateInvoiceStatus(invoice, next)} /> : <StatusBadge status={invoice.status} />}</td>
-                                  <td className="px-4 py-3 text-right"><div className="flex items-center justify-end gap-1">
+                                  {columnVisibility.client && <td className="px-4 py-3"><div className="font-medium text-fg">{invoice.clientCompany || invoice.clientName}</div><div className="mt-0.5 text-[11px] text-muted">{project?.name || invoice.clientName}</div></td>}
+                                  {columnVisibility.issue && <td className="px-4 py-3 tabular-nums text-muted">{invoice.issueDate}</td>}
+                                  {columnVisibility.due && <td className={'px-4 py-3 tabular-nums font-medium ' + (isOverdue ? 'text-danger' : 'text-muted')}>{invoice.dueDate}{isOverdue && <div className="mt-0.5 text-[10px] text-danger">Overdue</div>}</td>}
+                                  {columnVisibility.amount && <td className="px-4 py-3 text-right"><div className="font-semibold tabular-nums text-fg">{formatNativeAmount(invoice.total, invoice.currency)}</div><div className="mt-0.5 text-[10px] tabular-nums text-muted">{balance > 0 ? 'Due ' + formatNativeAmount(balance, invoice.currency, true) : 'Settled'}</div></td>}
+                                  {columnVisibility.status && <td className="px-4 py-3">{canManageInvoices && invoice.status !== 'cancelled' ? <InvoiceStatusDropdown status={invoice.status} allowedStatuses={['draft', 'sent', 'overdue']} disabled={updatingInvoiceId === invoice.id || !['draft', 'sent', 'overdue'].includes(invoice.status)} onChange={(next) => void updateInvoiceStatus(invoice, next)} /> : <StatusBadge status={invoice.status} />}</td>}
+                                  {columnVisibility.actions && <td className="px-4 py-3 text-right"><div className="flex items-center justify-end gap-1">
                                     {canManageInvoices && invoice.status !== 'paid' && invoice.status !== 'cancelled' && balance > 0 && <button type="button" onClick={() => openPayment(invoice)} className="inline-flex h-7 min-h-7 items-center rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted hover:bg-panel-hover hover:text-fg">Pay</button>}
                                     <button type="button" onClick={() => openPrintPreview(invoice)} className="inline-flex h-7 w-7 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="View invoice" title="View invoice"><FileText size={15} /></button>
                                     {canManageInvoices && invoice.status !== 'cancelled' && <button type="button" onClick={() => openEditInvoice(invoice)} className="inline-flex h-7 w-7 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Edit invoice" title="Edit invoice"><Edit3 size={14} /></button>}
