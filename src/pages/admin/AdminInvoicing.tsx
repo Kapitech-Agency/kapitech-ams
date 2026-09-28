@@ -37,7 +37,7 @@ import { Modal } from '../../components/ui/Modal';
 import { InvoiceStatusDropdown } from '../../components/ui/InvoiceStatusDropdown';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { api } from '../../lib/apiClient';
-import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 
 
 type SortKey = 'updated' | 'due' | 'oldest' | 'amount_high' | 'amount_low' | 'invoice';
