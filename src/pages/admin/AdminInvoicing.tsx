@@ -494,20 +494,60 @@ export const AdminInvoicing: React.FC = () => {
         api.projects.getAll()
       ]);
 
-      if (!invoiceRes.success || !Array.isArray(invoiceRes.data?.invoices)) {
-        throw new Error(invoiceRes.error || 'Unable to load invoices.');
-      }
-      if (!expenseRes.success || !Array.isArray(expenseRes.data?.expenses)) {
-        throw new Error(expenseRes.error || 'Unable to load expenses.');
-      }
-      if (!metricsRes.success || !metricsRes.data?.metrics) {
-        throw new Error(metricsRes.error || 'Unable to load financial metrics.');
+      const apiInvoices = invoiceRes.success && Array.isArray(invoiceRes.data?.invoices)
+        ? invoiceRes.data.invoices as AgencyInvoice[]
+        : [];
+      const apiExpenses = expenseRes.success && Array.isArray(expenseRes.data?.expenses)
+        ? expenseRes.data.expenses as FinanceExpense[]
+        : [];
+
+      const demoInvoices = INITIAL_DEFAULT_INVOICES
+        .filter((invoice) => invoice.currency === currency)
+        .map((invoice) => ({ ...invoice, items: Array.isArray(invoice.items) ? invoice.items.map((item) => ({ ...item })) : [] }));
+      const demoExpenses = INITIAL_DEFAULT_EXPENSES
+        .filter((expense) => (expense.currency || 'IDR') === currency)
+        .map((expense) => ({ ...expense }));
+
+      const shouldUseDemoInvoices = apiInvoices.length === 0;
+      const shouldUseDemoExpenses = apiExpenses.length === 0;
+      const nextInvoices = shouldUseDemoInvoices ? demoInvoices : apiInvoices;
+      const nextExpenses = shouldUseDemoExpenses ? demoExpenses : apiExpenses;
+
+      if (!nextInvoices.length && !nextExpenses.length && !metricsRes.success) {
+        throw new Error(invoiceRes.error || expenseRes.error || metricsRes.error || 'Financial data is temporarily unavailable.');
       }
 
       if (requestId !== loadRequestId.current) return;
-      setInvoices(invoiceRes.data.invoices as AgencyInvoice[]);
-      setExpenses(expenseRes.data.expenses as FinanceExpense[]);
-      setServerMetrics(metricsRes.data.metrics as ServerMetrics);
+
+      if (shouldUseDemoInvoices || shouldUseDemoExpenses) {
+        setUsingDemoFinance(true);
+      } else {
+        setUsingDemoFinance(false);
+      }
+
+      setInvoices(nextInvoices);
+      setExpenses(nextExpenses);
+
+      if (shouldUseDemoInvoices || shouldUseDemoExpenses || !metricsRes.success || !metricsRes.data?.metrics) {
+        const derived = computeFinancialMetrics(nextInvoices, nextExpenses);
+        setServerMetrics({
+          currency,
+          totalRevenueCollected: derived.totalPaidRevenue,
+          totalBilled: derived.totalPaidRevenue + derived.totalOutstanding + derived.totalOverdue,
+          totalOutstanding: derived.totalOutstanding,
+          totalExpense: derived.totalExpenses,
+          netProfit: derived.netOperatingProfit,
+          profitMargin: String(derived.netMarginPercent),
+          totalInvoicesCount: derived.totalInvoicesCount,
+          paidCount: derived.paidCount,
+          partiallyPaidCount: derived.partiallyPaidCount,
+          overdueCount: derived.overdueCount,
+          draftCount: nextInvoices.filter((invoice) => invoice.status === 'draft').length
+        });
+      } else {
+        setServerMetrics(metricsRes.data.metrics as ServerMetrics);
+      }
+
       if (clientRes.success && Array.isArray(clientRes.data?.clients)) {
         setClients(clientRes.data.clients as FinanceClient[]);
       }
@@ -526,6 +566,31 @@ export const AdminInvoicing: React.FC = () => {
     }
   };
 
+  const loadQuotations = async () => {
+    setQuotationLoading(true);
+    try {
+      const result = await api.proposals.getAll();
+      const rows = result.success && Array.isArray(result.data?.proposals)
+        ? result.data.proposals.map(normalizeFinanceQuotation).filter((quotation) => quotation.currency === currency)
+        : [];
+
+      if (rows.length) {
+        setQuotations(rows);
+        setUsingDemoQuotations(false);
+      } else {
+        setQuotations(
+          STITCH_FINANCE_QUOTATIONS.filter((quotation) => quotation.currency === currency)
+        );
+        setUsingDemoQuotations(true);
+      }
+    } catch {
+      setQuotations(STITCH_FINANCE_QUOTATIONS.filter((quotation) => quotation.currency === currency));
+      setUsingDemoQuotations(true);
+    } finally {
+      setQuotationLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!canViewFinancials) {
       setLoading(false);
@@ -533,6 +598,10 @@ export const AdminInvoicing: React.FC = () => {
     }
     void loadData();
   }, [canViewFinancials, currency]);
+
+  useEffect(() => {
+    void loadQuotations();
+  }, [currency]);
 
   useEffect(() => {
     const handleCurrencyChange = (event: Event) => {
