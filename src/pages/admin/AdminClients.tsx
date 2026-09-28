@@ -24,7 +24,7 @@ import {
   Users,
   X
 } from 'lucide-react';
-import { AgencyClient } from '../../lib/clientStore';
+import { AgencyClient, createClientSlug, normalizeAgencyClient } from '../../lib/clientStore';
 import { formatAmount, getActiveCurrency, CURRENCY_EVENT, CurrencyCode } from '../../lib/currency';
 import { useLanguage } from '../../lib/LanguageContext';
 import { hasAdminPermission } from '../../lib/adminAuth';
@@ -133,7 +133,7 @@ export const AdminClients: React.FC = () => {
     try {
       const res = await api.clients.getAll();
       if (res.success && Array.isArray(res.data?.clients)) {
-        setClients(res.data.clients as AgencyClient[]);
+        setClients((res.data.clients as AgencyClient[]).map(normalizeAgencyClient));
       } else {
         setErrorMessage(language === 'id' ? 'Daftar klien gagal dimuat.' : 'Client directory could not be loaded.');
       }
@@ -326,6 +326,7 @@ export const AdminClients: React.FC = () => {
 
     const clientData: AgencyClient = {
       id: editingClient?.id || 'client_' + Date.now().toString(36),
+      slug: editingClient?.slug || createClientSlug(company.trim(), editingClient?.id || 'client_' + Date.now().toString(36)),
       name: name.trim(),
       company: company.trim(),
       email: email.trim(),
@@ -354,7 +355,7 @@ export const AdminClients: React.FC = () => {
         return;
       }
 
-      const savedClient = res.data.client as AgencyClient;
+      const savedClient = normalizeAgencyClient(res.data.client as AgencyClient);
       setClients((current) => editingClient
         ? current.map((item) => item.id === savedClient.id ? savedClient : item)
         : [savedClient, ...current]);
