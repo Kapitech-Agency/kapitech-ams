@@ -1450,7 +1450,7 @@ export const AdminInvoicing: React.FC = () => {
                 <div className="overflow-x-auto custom-scrollbar">
                   <table className="ams-table w-full min-w-[680px] border-collapse text-left text-xs">
                     <thead className="bg-bg"><tr><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Date</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice</th><th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount</th></tr></thead>
-                    <tbody>{currencyInvoices.filter((invoice) => invoice.status !== 'cancelled' && getInvoiceCollectedInRange(invoice, yearStart, yearEnd) > 0).slice(0, 10).map((invoice) => <tr key={invoice.id} className="border-t border-line hover:bg-bg"><td className="px-4 py-3 tabular-nums text-muted">{invoice.paidDate || invoice.issueDate}</td><td className="px-4 py-3"><div className="font-medium text-fg">{invoice.clientCompany || invoice.clientName}</div><div className="mt-0.5 text-[10px] text-muted">{invoice.status}</div></td><td className="px-4 py-3"><button type="button" onClick={() => openPrintPreview(invoice)} className="font-medium tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button></td><td className="px-4 py-3 text-right font-medium tabular-nums text-success">{formatNativeAmount(invoice.amountPaid || 0, invoice.currency, true)}</td></tr>)}</tbody>
+                    <tbody>{currencyInvoices.filter((invoice) => invoice.status !== 'cancelled' && getInvoiceCollectedInRange(invoice, yearStart, yearEnd) > 0).slice(0, 10).map((invoice) => <tr key={invoice.id} className="border-t border-line hover:bg-bg"><td className="px-4 py-3 tabular-nums text-muted">{invoice.paidDate || invoice.issueDate}</td><td className="px-4 py-3"><div className="font-medium text-fg">{invoice.clientCompany || invoice.clientName}</div><div className="mt-0.5 text-[10px] text-muted">{invoice.status}</div></td><td className="px-4 py-3"><button type="button" onClick={() => openPrintPreview(invoice)} className="font-medium tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button></td><td className="px-4 py-3 text-right font-medium tabular-nums text-success">{formatNativeAmount(getInvoiceCollectedInRange(invoice, yearStart, yearEnd), invoice.currency, true)}</td></tr>)}</tbody>
                   </table>
                 </div>
               )}
@@ -1551,7 +1551,7 @@ export const AdminInvoicing: React.FC = () => {
             <article className="flex min-w-0 flex-col justify-between rounded-card border border-line bg-panel p-5">
               <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted">
                 <span>Total Invoiced Q2</span>
-                <Receipt size={18} aria-hidden="true" />
+                <Receipt size={12} aria-hidden="true" />
               </div>
               <div className="mt-3">
                 <div className="truncate font-mono text-2xl font-bold tabular-nums tracking-tight text-fg">{formatFinanceCardAmount(currentQuarterTotal, currency)}</div>
@@ -1577,9 +1577,9 @@ export const AdminInvoicing: React.FC = () => {
                 <WalletCards size={18} className="text-success" aria-hidden="true" />
               </div>
               <div className="mt-3">
-                <div className="truncate font-mono text-2xl font-bold tabular-nums tracking-tight text-fg">{formatFinanceCardAmount(serverMetrics?.totalRevenueCollected || 0, currency)}</div>
+                <div className="truncate font-mono text-2xl font-bold tabular-nums tracking-tight text-fg">{formatFinanceCardAmount(ytdCollected, currency)}</div>
                 <div className="mt-2 flex items-center gap-1.5 text-xs">
-                  <span className="font-medium tabular-nums text-fg">{derivedMetrics.collectionRate}%</span>
+                  <span className="font-medium tabular-nums text-fg">{ytdCollectionRate.toFixed(1)}%</span>
                   <span className="text-muted">collection rate</span>
                 </div>
               </div>
