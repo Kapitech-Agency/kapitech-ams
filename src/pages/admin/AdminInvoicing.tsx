@@ -8,14 +8,21 @@ import {
   CalendarDays,
   Check,
   CheckCircle2,
+  BadgeCheck,
+  BarChart3,
+  Clock3,
+  Copy,
   Download,
   Edit3,
+  Eye,
   FileText,
   Hourglass,
+  MoreHorizontal,
   Plus,
   Receipt,
   RefreshCw,
   Search,
+  Send,
   ShieldCheck,
   SlidersHorizontal,
   Trash2,
@@ -23,7 +30,7 @@ import {
   WalletCards,
   X
 } from 'lucide-react';
-import { AgencyExpense, AgencyInvoice, InvoiceLineItem, InvoiceStatus, computeInvoiceTotals, computeFinancialMetrics, getMonthlyCashFlowSeries } from '../../lib/financeStore';
+import { AgencyExpense, AgencyInvoice, InvoiceLineItem, InvoiceStatus, INITIAL_DEFAULT_EXPENSES, INITIAL_DEFAULT_INVOICES, computeInvoiceTotals, computeFinancialMetrics, getMonthlyCashFlowSeries } from '../../lib/financeStore';
 import { CurrencyCode, CURRENCY_EVENT, getActiveCurrency, setActiveCurrency, formatNativeAmount } from '../../lib/currency';
 import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
@@ -196,6 +203,66 @@ const statusTone: Record<InvoiceStatus, string> = {
   overdue: 'bg-danger/10 text-danger border-danger/20',
   cancelled: 'bg-danger/10 text-danger border-danger/20'
 };
+
+type FinanceQuotationStatus = 'draft' | 'review' | 'approved' | 'sent' | 'accepted' | 'rejected';
+
+type FinanceQuotation = {
+  id: string;
+  quotationNumber: string;
+  title: string;
+  clientName: string;
+  clientCompany: string;
+  total: number;
+  currency: CurrencyCode;
+  status: FinanceQuotationStatus;
+  validUntil: string;
+  createdAt: string;
+  owner: string;
+  invoiceId?: string;
+};
+
+const STITCH_FINANCE_QUOTATIONS: FinanceQuotation[] = [
+  { id: 'quote_slug_001', quotationNumber: 'QTN-2026-018', title: 'Enterprise Website Redesign & Design System', clientName: 'Nadia Wijaya', clientCompany: 'Astra Digital Ventures', total: 285000000, currency: 'IDR', status: 'sent', validUntil: '2026-10-10', createdAt: '2026-09-23', owner: 'Fikri Nurlete' },
+  { id: 'quote_slug_002', quotationNumber: 'QTN-2026-017', title: 'Fintech Product UX Audit & Prototype', clientName: 'Raka Prasetyo', clientCompany: 'Finova Labs', total: 92000000, currency: 'IDR', status: 'review', validUntil: '2026-10-04', createdAt: '2026-09-21', owner: 'Strategy Team' },
+  { id: 'quote_slug_003', quotationNumber: 'QTN-2026-016', title: 'Cloud Migration & Platform Hardening', clientName: 'Sarah Jenkins', clientCompany: 'Telkomsel Innovation Labs', total: 175000000, currency: 'IDR', status: 'approved', validUntil: '2026-10-16', createdAt: '2026-09-18', owner: 'Technology Team' },
+  { id: 'quote_slug_004', quotationNumber: 'QTN-2026-015', title: '3D Brand Experience Sprint', clientName: 'Jessica Halim', clientCompany: 'ShopeePay Regional Tech', total: 640000000, currency: 'IDR', status: 'accepted', validUntil: '2026-09-29', createdAt: '2026-09-12', owner: 'Creative Team', invoiceId: 'slug-inv-qtn-015' },
+  { id: 'quote_slug_005', quotationNumber: 'QTN-2026-014', title: 'Security Portal Discovery', clientName: 'Reza Pratama', clientCompany: 'Mandiri FinTech Division', total: 145000000, currency: 'IDR', status: 'draft', validUntil: '2026-10-22', createdAt: '2026-09-08', owner: 'Fikri Nurlete' },
+  { id: 'quote_slug_006', quotationNumber: 'QTN-2026-013', title: 'React Native Commerce App', clientName: 'Kevin Wijaya', clientCompany: 'Nusa Cloud Systems', total: 128000000, currency: 'IDR', status: 'rejected', validUntil: '2026-09-26', createdAt: '2026-09-03', owner: 'Product Team' }
+];
+
+const normalizeFinanceQuotationStatus = (value: unknown): FinanceQuotationStatus => {
+  switch (String(value || '').trim().toLowerCase()) {
+    case 'review':
+    case 'internal review':
+    case 'internal_review':
+      return 'review';
+    case 'approved':
+      return 'approved';
+    case 'sent':
+      return 'sent';
+    case 'accepted':
+      return 'accepted';
+    case 'rejected':
+      return 'rejected';
+    default:
+      return 'draft';
+  }
+};
+
+const normalizeFinanceQuotation = (raw: any): FinanceQuotation => ({
+  id: String(raw?.id || ''),
+  quotationNumber: String(raw?.proposalNumber || raw?.quotationNumber || ''),
+  title: String(raw?.title || 'Untitled quotation'),
+  clientName: String(raw?.clientName || raw?.name || ''),
+  clientCompany: String(raw?.clientCompany || raw?.company || ''),
+  total: Number(raw?.total) || Number(raw?.subtotal) || 0,
+  currency: raw?.currency === 'USD' ? 'USD' : 'IDR',
+  status: normalizeFinanceQuotationStatus(raw?.status),
+  validUntil: String(raw?.validUntil || raw?.validityPeriod || ''),
+  createdAt: String(raw?.createdAt || raw?.createdDate || ''),
+  owner: String(raw?.owner || 'Finance'),
+  invoiceId: raw?.invoiceId || raw?.invoice?.id || undefined
+});
 
 const StatusBadge = ({ status }: { status: InvoiceStatus }) => (
   <span className={'inline-flex items-center gap-1.5 rounded-badge border px-2 py-1 text-[11px] font-semibold ' + statusTone[status]}>
@@ -370,6 +437,23 @@ export const AdminInvoicing: React.FC = () => {
   const [expenseDirty, setExpenseDirty] = useState(false);
   const [paymentDirty, setPaymentDirty] = useState(false);
   const loadRequestId = React.useRef(0);
+
+  const [usingDemoFinance, setUsingDemoFinance] = useState(false);
+  const [quotations, setQuotations] = useState<FinanceQuotation[]>(STITCH_FINANCE_QUOTATIONS);
+  const [usingDemoQuotations, setUsingDemoQuotations] = useState(true);
+  const [quotationLoading, setQuotationLoading] = useState(true);
+  const [quotationSearch, setQuotationSearch] = useState('');
+  const [quotationStatusFilter, setQuotationStatusFilter] = useState<'all' | FinanceQuotationStatus>('all');
+  const [quotationModalOpen, setQuotationModalOpen] = useState(false);
+  const [quotationDetail, setQuotationDetail] = useState<FinanceQuotation | null>(null);
+  const [editingQuotation, setEditingQuotation] = useState<FinanceQuotation | null>(null);
+  const [quotationSaving, setQuotationSaving] = useState(false);
+  const [quotationTitle, setQuotationTitle] = useState('');
+  const [quotationClientName, setQuotationClientName] = useState('');
+  const [quotationClientCompany, setQuotationClientCompany] = useState('');
+  const [quotationAmount, setQuotationAmount] = useState(0);
+  const [quotationValidUntil, setQuotationValidUntil] = useState(getDateInputValue(30));
+  const [quotationStatus, setQuotationStatus] = useState<FinanceQuotationStatus>('draft');
 
   const dismissNotice = () => {
     if (noticeTimerRef.current !== null) {
