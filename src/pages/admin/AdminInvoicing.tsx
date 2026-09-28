@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   AlertCircle,
   ArrowUpRight,
@@ -232,6 +232,7 @@ const FinanceCashFlowChart: React.FC<{
 export const AdminInvoicing: React.FC = () => {
   const { language } = useLanguage();
   const location = useLocation();
+  const navigate = useNavigate();
   const session = getAdminSession();
   const canViewFinancials = hasAdminPermission('canViewFinancials');
   const canManageInvoices = hasAdminPermission('canManageInvoices');
@@ -1174,10 +1175,10 @@ export const AdminInvoicing: React.FC = () => {
               : 'This Finance surface is reserved for reporting packs and period summaries. The current AMS finance API does not expose a dedicated reporting dataset for this section yet.'}
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
-            <button type="button" onClick={() => window.history.pushState({}, '', '/admin/invoicing'); window.dispatchEvent(new PopStateEvent('popstate'));} className={primaryClass}>
+            <button type="button" onClick={() => navigate('/admin/invoicing')} className={primaryClass}>
               Open Invoices
             </button>
-            <button type="button" onClick={() => window.history.pushState({}, '', '/admin/invoicing?finance=income-expenses'); window.dispatchEvent(new PopStateEvent('popstate'));} className={actionClass}>
+            <button type="button" onClick={() => navigate('/admin/invoicing?finance=income-expenses')} className={actionClass}>
               Open Income &amp; Expenses
             </button>
           </div>
