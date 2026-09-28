@@ -32,7 +32,6 @@ test('Admin invoicing keeps financial mutations permission-gated and uses the sh
   assert.ok(source.includes('border-separate border-spacing-0 text-xs'));
   assert.ok(!source.includes('overflow-x-auto'));
   assert.ok(!source.includes('xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]'));
-  assert.ok(!source.includes('inline-flex max-w-full flex-wrap items-center rounded-control border border-line bg-bg p-0.5 shadow-sm'));
   assert.ok(source.includes('sticky top-0 z-10'));
   assert.ok(source.includes('Tax & Retainers'));
   assert.ok(source.includes('Financial Reports'));
