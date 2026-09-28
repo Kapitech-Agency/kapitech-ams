@@ -2178,11 +2178,11 @@ export const AdminInvoicing: React.FC = () => {
       <div className="min-[900px]:hidden -mx-1 mb-4 overflow-x-auto px-1 custom-scrollbar">
         <nav aria-label="Finance sections" className="inline-flex min-w-max items-center gap-1 rounded-control border border-line bg-panel p-1">
           {[
-            { key: 'invoices', label: 'Invoices', search: '' },
+            { key: 'invoices', label: 'Invoice', search: '' },
+            { key: 'quotations', label: 'Quotation', search: '?finance=quotations' },
             { key: 'income-expenses', label: 'Income & Expenses', search: '?finance=income-expenses' },
             { key: 'tax-retainers', label: 'Tax & Retainers', search: '?finance=tax-retainers' },
             { key: 'financial-reports', label: 'Financial Reports', search: '?finance=financial-reports' },
-            { key: 'quotations', label: 'Quotations', search: '?finance=quotations' },
           ].map((tab) => {
             const activeView = new URLSearchParams(location.search).get('finance') || 'invoices';
             return (
