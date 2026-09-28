@@ -477,12 +477,111 @@ export const AdminInvoicing: React.FC = () => {
     [currencyInvoices, currencyExpenses]
   );
 
-  const hasTrendData = cashFlow.some((point) => point.inflow !== 0 || point.outflow !== 0);
-
   const reportingQuarter = useMemo(() => {
     const dates = currencyInvoices.map((invoice) => invoice.issueDate).filter(Boolean).sort();
     return getQuarterRange(dates[dates.length - 1] || new Date());
   }, [currencyInvoices]);
+
+  const currentYear = new Date().getFullYear();
+  const yearStart = new Date(currentYear, 0, 1);
+  const yearEnd = new Date(currentYear, 11, 31, 23, 59, 59, 999);
+
+  const ytdInvoiced = useMemo(
+    () => currencyInvoices
+      .filter((invoice) => {
+        const date = new Date(invoice.issueDate + 'T00:00:00');
+        return !Number.isNaN(date.getTime()) && date >= yearStart && date <= yearEnd;
+      })
+      .reduce((sum, invoice) => sum + Number(invoice.total || 0), 0),
+    [currencyInvoices, currentYear]
+  );
+
+  const ytdCollected = useMemo(
+    () => currencyInvoices.reduce((sum, invoice) => sum + getInvoiceCollectedInRange(invoice, yearStart, yearEnd), 0),
+    [currencyInvoices, currentYear]
+  );
+
+  const ytdExpenses = useMemo(
+    () => currencyExpenses.reduce((sum, expense) => {
+      const date = new Date(String(expense.date || '') + 'T00:00:00');
+      return !Number.isNaN(date.getTime()) && date >= yearStart && date <= yearEnd
+        ? sum + Number(expense.amount || 0)
+        : sum;
+    }, 0),
+    [currencyExpenses, currentYear]
+  );
+
+  const ytdNetCash = ytdCollected - ytdExpenses;
+  const ytdCollectionRate = ytdInvoiced > 0 ? (ytdCollected / ytdInvoiced) * 100 : 0;
+
+  const retainerInvoices = useMemo(
+    () => currencyInvoices.filter(isRetainerInvoice),
+    [currencyInvoices]
+  );
+
+  const financeChartData = useMemo(
+    () => cashFlow.map((point) => {
+      const target = retainerInvoices
+        .filter((invoice) => {
+          const date = new Date(invoice.issueDate + 'T00:00:00');
+          return !Number.isNaN(date.getTime()) && date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }) === point.month;
+        })
+        .reduce((sum, invoice) => sum + Number(invoice.total || 0), 0);
+
+      return { ...point, label: point.month, retainerTarget: target };
+    }),
+    [cashFlow, retainerInvoices]
+  );
+
+  const hasTrendData = financeChartData.some(
+    (point) => point.net !== 0 || point.outflow !== 0 || point.retainerTarget !== 0
+  );
+
+  const quarterInvoices = useMemo(
+    () => reportingQuarter
+      ? currencyInvoices.filter((invoice) => isInQuarter(invoice.issueDate, reportingQuarter))
+      : [],
+    [currencyInvoices, reportingQuarter]
+  );
+
+  const quarterCollected = useMemo(
+    () => quarterInvoices.reduce((sum, invoice) => {
+      const paid = Number(invoice.amountPaid || 0);
+      return sum + paid;
+    }, 0),
+    [quarterInvoices]
+  );
+
+  const quarterExpenses = useMemo(
+    () => reportingQuarter
+      ? currencyExpenses.filter((expense) => isInQuarter(expense.date, reportingQuarter)).reduce((sum, expense) => sum + Number(expense.amount || 0), 0)
+      : 0,
+    [currencyExpenses, reportingQuarter]
+  );
+
+  const quarterNetCash = quarterCollected - quarterExpenses;
+  const quarterMargin = quarterCollected > 0 ? (quarterNetCash / quarterCollected) * 100 : 0;
+
+  const taxProvision = useMemo(
+    () => currencyInvoices
+      .filter((invoice) => invoice.status !== 'cancelled')
+      .reduce((sum, invoice) => sum + Number(invoice.taxAmount || 0), 0),
+    [currencyInvoices]
+  );
+
+  const taxCollected = useMemo(
+    () => currencyInvoices
+      .filter((invoice) => invoice.status !== 'cancelled')
+      .reduce((sum, invoice) => {
+        const paidRatio = invoice.total > 0
+          ? Math.min(1, Number(invoice.amountPaid || 0) / Number(invoice.total))
+          : 0;
+        return sum + Number(invoice.taxAmount || 0) * paidRatio;
+      }, 0),
+    [currencyInvoices]
+  );
+
+  const taxOutstanding = Math.max(0, taxProvision - taxCollected);
 
   const ledgerInvoices = useMemo(
     () => ledgerPeriod === 'all'
