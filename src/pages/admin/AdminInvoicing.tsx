@@ -1427,7 +1427,7 @@ export const AdminInvoicing: React.FC = () => {
               <div className="divide-y divide-line">
                 {reportExpenseCategories.map((item) => {
                   const percent = reportExpenses > 0 ? (item.amount / reportExpenses) * 100 : 0;
-                  return <div key={item.label} className="p-4"><div className="flex items-center justify-between gap-3 text-xs"><span className="font-medium text-fg">{item.label}</span><span className="tabular-nums text-fg">{formatNativeAmount(item.amount, currency, true)}</span></div><div className="mt-2 h-1.5 overflow-hidden rounded-full border border-line bg-bg"><div className="h-full rounded-full bg-accent" style={{{ width: Math.min(100, percent) + '%' }}} /></div><div className="mt-1 text-[10px] tabular-nums text-muted">{percent.toFixed(1)}% of recorded operating spend</div></div>;
+                  return <div key={item.label} className="p-4"><div className="flex items-center justify-between gap-3 text-xs"><span className="font-medium text-fg">{item.label}</span><span className="tabular-nums text-fg">{formatNativeAmount(item.amount, currency, true)}</span></div><div className="mt-2 h-1.5 overflow-hidden rounded-full border border-line bg-bg"><div className="h-full rounded-full bg-accent" style={{ width: Math.min(100, percent) + '%' }} /></div><div className="mt-1 text-[10px] tabular-nums text-muted">{percent.toFixed(1)}% of recorded operating spend</div></div>;
                 })}
               </div>
             )}
