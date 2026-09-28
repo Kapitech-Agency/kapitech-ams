@@ -2374,8 +2374,7 @@ export const AdminInvoicing: React.FC = () => {
           </section>
         </div>
       )}
-    </div>
-  );      <Modal
+      <Modal
         open={invoiceModalOpen}
         onClose={() => {
           requestCloseInvoice();
