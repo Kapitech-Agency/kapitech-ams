@@ -11,6 +11,7 @@ import {
   Download,
   Edit3,
   FileText,
+  Hourglass,
   Plus,
   Receipt,
   RefreshCw,
@@ -1432,11 +1433,11 @@ export const AdminInvoicing: React.FC = () => {
           <section className="grid grid-cols-1 gap-6 min-[1100px]:grid-cols-2">
             <section className="rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="finance-income-title">
               <div className="border-b border-line p-5"><h3 id="finance-income-title" className="text-sm font-semibold text-fg">Income</h3><p className="mt-1 text-xs text-muted">Invoice collections recorded in the current year.</p></div>
-              {currencyInvoices.filter((invoice) => Number(invoice.amountPaid || 0) > 0).length === 0 ? <div className="p-5"><EmptyState title="No income records yet" description="Recorded invoice collections will appear here." /></div> : (
+              {currencyInvoices.filter((invoice) => invoice.status !== 'cancelled' && getInvoiceCollectedInRange(invoice, yearStart, yearEnd) > 0).length === 0 ? <div className="p-5"><EmptyState title="No income records yet" description="Recorded invoice collections will appear here." /></div> : (
                 <div className="overflow-x-auto custom-scrollbar">
                   <table className="ams-table w-full min-w-[680px] border-collapse text-left text-xs">
                     <thead className="bg-bg"><tr><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Date</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice</th><th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount</th></tr></thead>
-                    <tbody>{currencyInvoices.filter((invoice) => Number(invoice.amountPaid || 0) > 0).slice(0, 10).map((invoice) => <tr key={invoice.id} className="border-t border-line hover:bg-bg"><td className="px-4 py-3 tabular-nums text-muted">{invoice.paidDate || invoice.issueDate}</td><td className="px-4 py-3"><div className="font-medium text-fg">{invoice.clientCompany || invoice.clientName}</div><div className="mt-0.5 text-[10px] text-muted">{invoice.status}</div></td><td className="px-4 py-3"><button type="button" onClick={() => openPrintPreview(invoice)} className="font-medium tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button></td><td className="px-4 py-3 text-right font-medium tabular-nums text-success">{formatNativeAmount(invoice.amountPaid || 0, invoice.currency, true)}</td></tr>)}</tbody>
+                    <tbody>{currencyInvoices.filter((invoice) => invoice.status !== 'cancelled' && getInvoiceCollectedInRange(invoice, yearStart, yearEnd) > 0).slice(0, 10).map((invoice) => <tr key={invoice.id} className="border-t border-line hover:bg-bg"><td className="px-4 py-3 tabular-nums text-muted">{invoice.paidDate || invoice.issueDate}</td><td className="px-4 py-3"><div className="font-medium text-fg">{invoice.clientCompany || invoice.clientName}</div><div className="mt-0.5 text-[10px] text-muted">{invoice.status}</div></td><td className="px-4 py-3"><button type="button" onClick={() => openPrintPreview(invoice)} className="font-medium tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button></td><td className="px-4 py-3 text-right font-medium tabular-nums text-success">{formatNativeAmount(invoice.amountPaid || 0, invoice.currency, true)}</td></tr>)}</tbody>
                   </table>
                 </div>
               )}
@@ -1449,6 +1450,7 @@ export const AdminInvoicing: React.FC = () => {
                   <div className="flex flex-wrap gap-2">
                     <label className="relative"><span className="sr-only">Search expenses</span><Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" /><input value={expenseSearch} onChange={(event) => setExpenseSearch(event.target.value)} placeholder="Search expense or category..." className={fieldClass + ' pl-8 sm:w-56'} /></label>
                     <CustomSelect value={expenseTypeFilter} onChange={setExpenseTypeFilter} options={expenseTypeOptions} className="w-32" triggerClassName="h-9 min-h-9 w-full" aria-label="Expense type" />
+                    <CustomSelect value={expenseSort} onChange={(value) => setExpenseSort(value as typeof expenseSort)} options={[{ value: 'date_desc', label: 'Newest' }, { value: 'date_asc', label: 'Oldest' }, { value: 'amount_high', label: 'Highest' }, { value: 'amount_low', label: 'Lowest' }]} className="w-28" triggerClassName="h-9 min-h-9 w-full" aria-label="Expense sort" />
                   </div>
                 </div>
               </div>
@@ -1536,7 +1538,7 @@ export const AdminInvoicing: React.FC = () => {
             <article className="flex min-w-0 flex-col justify-between rounded-card border border-line bg-panel p-5">
               <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted">
                 <span>Total Invoiced Q2</span>
-                <Receipt size={12} aria-hidden="true" />
+                <Receipt size={18} aria-hidden="true" />
               </div>
               <div className="mt-3">
                 <div className="truncate font-mono text-2xl font-bold tabular-nums tracking-tight text-fg">{formatFinanceCardAmount(currentQuarterTotal, currency)}</div>
@@ -1573,7 +1575,7 @@ export const AdminInvoicing: React.FC = () => {
             <article className="flex min-w-0 flex-col justify-between rounded-card border border-line bg-panel p-5">
               <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted">
                 <span>Outstanding</span>
-                <span className="text-warning" aria-hidden="true"><span className="inline-block text-[18px] leading-none">⌛</span></span>
+                <Hourglass size={18} className="text-warning" aria-hidden="true" />
               </div>
               <div className="mt-3">
                 <div className="truncate font-mono text-2xl font-bold tabular-nums tracking-tight text-fg">{formatFinanceCardAmount(serverMetrics?.totalOutstanding || 0, currency)}</div>
