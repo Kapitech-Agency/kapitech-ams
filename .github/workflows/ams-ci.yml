@@ -99,7 +99,7 @@ jobs:
             echo "===== AMS smoke socket diagnostic ====="
             ss -ltnp | grep ':4173' || true
             echo "===== AMS smoke curl diagnostic ====="
-            curl -sS --max-time 5 -o /tmp/health-debug.json -w 'HTTP %{http_code}\\n' http://127.0.0.1:4173/api/health || true
+            curl -sS --max-time 5 -o /tmp/health-debug.json -w 'HTTP %{http_code}\\n' http://127.0.0.1:4173/api/health/ready || true
             cat /tmp/health-debug.json 2>/dev/null || true
             echo "===== AMS smoke curl stderr ====="
             cat /tmp/health.err 2>/dev/null || true
