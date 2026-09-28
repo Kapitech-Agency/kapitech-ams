@@ -621,14 +621,6 @@ export const AdminInvoicing: React.FC = () => {
   }, [currency]);
 
   useEffect(() => {
-    const openQuotation = () => {
-      if (canManageInvoices) openCreateQuotation();
-    };
-    window.addEventListener('finance_open_quotation', openQuotation);
-    return () => window.removeEventListener('finance_open_quotation', openQuotation);
-  }, [canManageInvoices]);
-
-  useEffect(() => {
     const handleCurrencyChange = (event: Event) => {
       const detail = (event as CustomEvent<{ currency?: CurrencyCode }>).detail;
       if (detail?.currency) setCurrency(detail.currency);
@@ -2049,10 +2041,7 @@ export const AdminInvoicing: React.FC = () => {
                   Export CSV
                 </button>
                 {financeView === 'invoices' && canManageInvoices && (
-                  <button type="button" onClick={() => {
-                    const event = new CustomEvent('finance_open_quotation');
-                    window.dispatchEvent(event);
-                  }} className={actionClass}>
+                  <button type="button" onClick={openCreateQuotation} className={actionClass}>
                     <FileText size={14} />
                     New Quotation
                   </button>
@@ -2225,26 +2214,72 @@ export const AdminInvoicing: React.FC = () => {
 
           <section className="grid grid-cols-1 gap-6 min-[1100px]:grid-cols-2">
             <section className="rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="finance-income-title">
-              <div className="border-b border-line p-5"><h2 id="finance-income-title" className="text-sm font-semibold text-fg">Income</h2><p className="mt-1 text-xs text-muted">Collected invoice activity for the current year.</p></div>
-              <div className="overflow-x-auto custom-scrollbar">
-                <table className="w-full min-w-[820px] border-collapse text-left text-xs">
-                  <thead className="bg-bg"><tr><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Date</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice</th><th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount</th></tr></thead>
-                  <tbody>{currencyInvoices.filter((invoice) => invoice.status !== 'cancelled' && getInvoiceCollectedInRange(invoice, yearStart, yearEnd) > 0).slice(0, 10).map((invoice) => <tr key={invoice.id} className="border-t border-line hover:bg-bg"><td className="px-4 py-3 tabular-nums text-muted">{invoice.paidDate || invoice.issueDate}</td><td className="px-4 py-3 text-fg">{invoice.clientCompany}</td><td className="px-4 py-3"><button type="button" onClick={() => openPrintPreview(invoice)} className="font-medium tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button></td><td className="px-4 py-3 text-right font-medium tabular-nums text-success">{formatNativeAmount(getInvoiceCollectedInRange(invoice, yearStart, yearEnd), invoice.currency, true)}</td></tr>)}</tbody>
-                </table>
+              <div className="border-b border-line p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div><h2 id="finance-income-title" className="text-sm font-semibold text-fg">Income</h2><p className="mt-1 text-xs text-muted">Actual payment activity for the current year.</p></div>
+                  <label className="relative w-full sm:w-56"><span className="sr-only">Search income</span><Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" /><input value={incomeSearch} onChange={(event) => setIncomeSearch(event.target.value)} placeholder="Search payment or client..." className={fieldClass + ' pl-8'} /></label>
+                </div>
+                <div className="mt-3 flex items-center gap-2 border-t border-line pt-3 text-[10px] text-muted"><span>{incomeRows.length} payment records</span><span className="h-1 w-1 rounded-full bg-line" /><span>YTD collection</span>{incomeSearch && <button type="button" onClick={() => setIncomeSearch('')} className="ml-auto text-accent-text hover:text-fg">Clear</button>}</div>
               </div>
+              <div className="overflow-x-auto custom-scrollbar">
+                {incomeRows.length === 0 ? (
+                  <div className="p-5"><EmptyState title="No income recorded" description="Recorded payments will appear here once invoices start collecting cash." /></div>
+                ) : (
+                  <table className="w-full min-w-[820px] border-collapse text-left text-xs">
+                    <thead className="bg-bg"><tr><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Payment date</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice</th><th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount</th></tr></thead>
+                    <tbody>{paginatedIncomeRows.map((row) => <tr key={row.id} className="border-t border-line hover:bg-bg"><td className="px-4 py-3 tabular-nums text-muted">{row.date}</td><td className="px-4 py-3 text-fg">{row.clientCompany}</td><td className="px-4 py-3"><button type="button" onClick={() => {
+                      const invoice = currencyInvoices.find((item) => item.id === row.invoiceId);
+                      if (invoice) openPrintPreview(invoice);
+                    }} className="font-medium tabular-nums text-fg hover:text-accent-text">{row.invoiceNumber}</button></td><td className="px-4 py-3 text-right font-medium tabular-nums text-success">{formatNativeAmount(row.amount, row.currency, true)}</td></tr>)}</tbody>
+                  </table>
+                )}
+              </div>
+              {incomePageCount > 1 && (
+                <div className="border-t border-line px-4 py-3">
+                  <div className="flex items-center justify-between text-[11px] text-muted">
+                    <span className="tabular-nums">Showing {((incomePage - 1) * incomePageSize) + 1}–{Math.min(incomePage * incomePageSize, incomeRows.length)} of {incomeRows.length}</span>
+                    <div className="flex items-center gap-1">
+                      <button type="button" onClick={() => setIncomePage((page) => Math.max(1, page - 1))} disabled={incomePage === 1} className={actionClass}>Previous</button>
+                      <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control border border-line bg-line px-2 text-[10px] font-semibold text-fg">{incomePage}</span>
+                      <button type="button" onClick={() => setIncomePage((page) => Math.min(incomePageCount, page + 1))} disabled={incomePage === incomePageCount} className={actionClass}>Next</button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </section>
 
             <section className="rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="finance-expense-title">
-              <div className="border-b border-line p-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div><h2 id="finance-expense-title" className="text-sm font-semibold text-fg">Expenses</h2><p className="mt-1 text-xs text-muted">Operating and capital expense records.</p></div>
-                {canManageInvoices && <button type="button" onClick={openExpenseModal} className={primaryClass}><Plus size={14} />Record expense</button>}
+              <div className="border-b border-line p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div><div className="flex items-center gap-2"><h2 id="finance-expense-title" className="text-sm font-semibold text-fg">Expenses</h2>{usingDemoExpenses && <span className="rounded-badge border border-warning/20 bg-warning/10 px-1.5 py-0.5 text-[10px] font-medium text-warning">Demo data</span>}</div><p className="mt-1 text-xs text-muted">Operating, rental, and capital expense records.</p></div>
+                  <div className="flex items-center gap-2">
+                    {canManageInvoices && <button type="button" onClick={openExpenseModal} className={primaryClass}><Plus size={14} />Record expense</button>}
+                  </div>
+                </div>
+                <div className="mt-3 grid gap-2 border-t border-line pt-3 sm:grid-cols-[1fr_150px_180px]">
+                  <label className="relative"><span className="sr-only">Search expenses</span><Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" /><input value={expenseSearch} onChange={(event) => setExpenseSearch(event.target.value)} placeholder="Search expense..." className={fieldClass + ' pl-8'} /></label>
+                  <CustomSelect value={expenseTypeFilter} onChange={setExpenseTypeFilter} options={expenseTypeOptions} className="w-full" triggerClassName="h-9 min-h-9 w-full" aria-label="Expense type filter" />
+                  <CustomSelect value={expenseSort} onChange={(value) => setExpenseSort(value as typeof expenseSort)} options={[{ value: 'date_desc', label: 'Newest first' }, { value: 'date_asc', label: 'Oldest first' }, { value: 'amount_high', label: 'Highest amount' }, { value: 'amount_low', label: 'Lowest amount' }]} className="w-full" triggerClassName="h-9 min-h-9 w-full" aria-label="Expense sort" />
+                </div>
               </div>
               <div className="overflow-x-auto custom-scrollbar">
                 <table className="w-full min-w-[820px] border-collapse text-left text-xs">
                   <thead className="bg-bg"><tr><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Date</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Type / category</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Description</th><th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount</th><th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Action</th></tr></thead>
-                  <tbody>{paginatedExpenses.slice(0, 10).map((expense) => <tr key={expense.id} className="border-t border-line hover:bg-bg"><td className="px-4 py-3 tabular-nums text-muted">{expense.date}</td><td className="px-4 py-3"><div className="font-medium text-fg">{expense.type || 'OpEx'}</div><div className="mt-0.5 text-[10px] text-muted">{expense.category}</div></td><td className="px-4 py-3 text-fg">{expense.description}</td><td className="px-4 py-3 text-right font-medium tabular-nums text-fg">{formatNativeAmount(expense.amount, expense.currency || currency, true)}</td><td className="px-4 py-3 text-right">{canManageInvoices && <button type="button" onClick={() => setConfirmAction({ type: 'expense', id: expense.id, label: expense.description })} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Void expense" title="Void expense"><Trash2 size={14} /></button>}</td></tr>)}</tbody>
+                  <tbody>{paginatedExpenses.map((expense) => <tr key={expense.id} className="border-t border-line hover:bg-bg"><td className="px-4 py-3 tabular-nums text-muted">{expense.date}</td><td className="px-4 py-3"><div className="font-medium text-fg">{expense.type || 'OpEx'}</div><div className="mt-0.5 text-[10px] text-muted">{expense.category}</div></td><td className="px-4 py-3 text-fg">{expense.description}</td><td className="px-4 py-3 text-right font-medium tabular-nums text-fg">{formatNativeAmount(expense.amount, expense.currency || currency, true)}</td><td className="px-4 py-3 text-right">{canManageInvoices && <button type="button" onClick={() => setConfirmAction({ type: 'expense', id: expense.id, label: expense.description })} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Void expense" title="Void expense"><Trash2 size={14} /></button>}</td></tr>)}</tbody>
                 </table>
               </div>
+              {expensePageCount > 1 && (
+                <div className="border-t border-line px-4 py-3">
+                  <div className="flex items-center justify-between text-[11px] text-muted">
+                    <span className="tabular-nums">Showing {((expensePage - 1) * expensePageSize) + 1}–{Math.min(expensePage * expensePageSize, filteredExpenses.length)} of {filteredExpenses.length}</span>
+                    <div className="flex items-center gap-1">
+                      <button type="button" onClick={() => setExpensePage((page) => Math.max(1, page - 1))} disabled={expensePage === 1} className={actionClass}>Previous</button>
+                      <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control border border-line bg-line px-2 text-[10px] font-semibold text-fg">{expensePage}</span>
+                      <button type="button" onClick={() => setExpensePage((page) => Math.min(expensePageCount, page + 1))} disabled={expensePage === expensePageCount} className={actionClass}>Next</button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </section>
           </section>
         </div>
@@ -2347,7 +2382,7 @@ export const AdminInvoicing: React.FC = () => {
             itemClassName="rounded-card border border-line bg-panel p-4 sm:p-5"
             metrics={[
               { id: 'billed', label: 'Total invoiced', value: formatFinanceCardAmount(currentQuarterTotal, currency), context: quarterChangePercent === null ? 'No prior quarter comparison' : (quarterChangePercent >= 0 ? '+' : '') + quarterChangePercent.toFixed(1) + '% vs previous quarter', icon: <Receipt size={18} aria-hidden="true" /> },
-              { id: 'collected', label: 'Collected YTD', value: formatFinanceCardAmount(ytdCollected, currency), context: ytdCollectionRate.toFixed(1) + '% collection rate', icon: <WalletCards size={18} className="text-success" aria-hidden="true" /> },
+              { id: 'collected', label: 'Collected YTD', value: formatFinanceCardAmount(ytdCollected, currency), context: ytdCollectionRate.toFixed(1) + '% collection rate' + (usingDemoInvoices ? ' · Demo' : ''), icon: <WalletCards size={18} className="text-success" aria-hidden="true" /> },
               { id: 'outstanding', label: 'Outstanding', value: formatFinanceCardAmount(derivedMetrics.totalOutstanding, currency), context: pendingInvoiceCount + ' invoices pending', icon: <Hourglass size={18} className="text-warning" aria-hidden="true" /> },
               { id: 'overdue', label: 'Overdue balance', value: formatFinanceCardAmount(overdueBalance, currency), context: criticalOverdueCount + ' critical invoices', icon: <AlertCircle size={18} className="text-danger" aria-hidden="true" />, toneClassName: 'text-danger' },
               { id: 'margin', label: 'Operating margin', value: Number.isFinite(operatingMarginValue) ? operatingMarginValue.toFixed(1) + '%' : quarterMargin.toFixed(1) + '%', context: operatingMarginHealthy ? 'Healthy · target ≥ 35%' : 'Below target · monitor burn', icon: <TrendingUp size={18} className={operatingMarginHealthy ? 'text-success' : 'text-warning'} aria-hidden="true" /> },
@@ -2406,7 +2441,13 @@ export const AdminInvoicing: React.FC = () => {
                   <div className="flex items-center gap-1 overflow-x-auto rounded-control border border-line bg-bg p-0.5 custom-scrollbar">
                     {['All', 'Paid', 'Due Soon', 'Overdue', 'Draft'].map((label) => {
                       const key = label === 'All' ? 'all' : label === 'Paid' ? 'paid' : label === 'Due Soon' ? 'due_soon' : label === 'Overdue' ? 'overdue' : 'draft';
-                      const count = key === 'all' ? ledgerInvoices.length : key === 'due_soon' ? dueSoonCount : invoiceStatusCounts.find((item) => item.status === key)?.count || 0;
+                      const count = key === 'all'
+                        ? ledgerInvoices.length
+                        : key === 'due_soon'
+                          ? dueSoonCount
+                          : key === 'overdue'
+                            ? ledgerInvoices.filter((invoice) => isPastDueInvoice(invoice)).length
+                            : invoiceStatusCounts.find((item) => item.status === key)?.count || 0;
                       return <button key={label} type="button" onClick={() => setStatusFilter(key)} className={'min-h-8 shrink-0 rounded-chip px-2.5 text-[11px] font-medium transition-colors ' + (statusFilter === key ? 'bg-line text-fg' : 'text-muted hover:text-fg')}>{label}<span className="ml-1 tabular-nums opacity-70">{count}</span></button>;
                     })}
                   </div>
@@ -2446,7 +2487,7 @@ export const AdminInvoicing: React.FC = () => {
                     {paginatedInvoices.map((invoice) => {
                       const balance = Number(invoice.balanceDue ?? (invoice.total - (invoice.amountPaid || 0)));
                       const project = projectsById.get(invoice.projectId);
-                      const isOverdue = invoice.status === 'overdue';
+                      const isOverdue = isPastDueInvoice(invoice) || invoice.status === 'overdue';
                       return (
                         <tr key={invoice.id} className="group border-t border-line transition-colors hover:bg-bg">
                           <td className="px-4 py-3 sm:px-5"><div className="flex items-center gap-2"><span className={'h-1.5 w-1.5 rounded-full ' + (isOverdue ? 'bg-danger' : invoice.status === 'paid' ? 'bg-success' : invoice.status === 'sent' ? 'bg-info' : 'bg-warning')} /><button type="button" onClick={() => openPrintPreview(invoice)} className="font-medium tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button></div><p className="mt-1 text-[11px] text-muted">{invoice.currency}</p></td>
