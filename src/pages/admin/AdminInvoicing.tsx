@@ -2340,165 +2340,87 @@ export const AdminInvoicing: React.FC = () => {
             </section>
           </section>
         </div>      ) : (
-        <div className="space-y-6">
-          <AdminMetricStrip
-            className="grid-cols-2 sm:grid-cols-3 min-[1100px]:grid-cols-6"
-            itemClassName="rounded-card border border-line bg-panel p-4 sm:p-5"
-            metrics={[
-              { id: 'billed', label: 'Total invoiced', value: formatFinanceCardAmount(currentQuarterTotal, currency), context: quarterChangePercent === null ? 'Current quarter' : (quarterChangePercent >= 0 ? '+' : '') + quarterChangePercent.toFixed(1) + '% vs previous quarter', icon: <Receipt size={18} aria-hidden="true" /> },
-              { id: 'collected', label: 'Collected YTD', value: formatFinanceCardAmount(ytdCollected, currency), context: ytdCollectionRate.toFixed(1) + '% collection rate' + (usingDemoInvoices ? ' · Demo' : ''), icon: <WalletCards size={18} className="text-success" aria-hidden="true" /> },
-              { id: 'outstanding', label: 'Outstanding', value: formatFinanceCardAmount(derivedMetrics.totalOutstanding, currency), context: pendingInvoiceCount + ' invoices pending', icon: <Hourglass size={18} className="text-warning" aria-hidden="true" /> },
-              { id: 'overdue', label: 'Overdue balance', value: formatFinanceCardAmount(overdueBalance, currency), context: criticalOverdueCount + ' critical invoices', icon: <AlertCircle size={18} className="text-danger" aria-hidden="true" />, toneClassName: 'text-danger' },
-              { id: 'margin', label: 'Operating margin', value: Number.isFinite(operatingMarginValue) ? operatingMarginValue.toFixed(1) + '%' : quarterMargin.toFixed(1) + '%', context: operatingMarginHealthy ? 'Healthy · target ≥ 35%' : 'Below target · monitor burn', icon: <TrendingUp size={18} className={operatingMarginHealthy ? 'text-success' : 'text-warning'} aria-hidden="true" /> },
-              { id: 'count', label: 'Total invoices', value: serverMetrics ? serverMetrics.totalInvoicesCount : 0, context: currency + ' finance ledger', icon: <FileText size={18} aria-hidden="true" /> }
-            ]}
-          />
+        <div className="space-y-5">
+          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4" aria-label="Invoice finance summary">
+            <FinanceMetricCard label="Quarter billed" value={formatFinanceCardAmount(currentQuarterTotal, currency)} context={quarterChangePercent === null ? 'Current quarter' : (quarterChangePercent >= 0 ? '+' : '') + quarterChangePercent.toFixed(1) + '% vs previous quarter'} icon={<Receipt size={15} />} />
+            <FinanceMetricCard label="Collected YTD" value={formatFinanceCardAmount(ytdCollected, currency)} context={ytdCollectionRate.toFixed(1) + '% collection rate'} icon={<WalletCards size={15} className="text-success" />} toneClassName="text-success" />
+            <FinanceMetricCard label="Outstanding" value={formatFinanceCardAmount(derivedMetrics.totalOutstanding, currency)} context={pendingInvoiceCount + ' open invoices'} icon={<Hourglass size={15} className="text-warning" />} toneClassName="text-warning" />
+            <FinanceMetricCard label="Overdue" value={formatFinanceCardAmount(overdueBalance, currency)} context={criticalOverdueCount + ' invoices need attention'} icon={<AlertCircle size={15} className="text-danger" />} toneClassName="text-danger" />
+          </section>
 
-          <section className="grid grid-cols-1 gap-6 min-[1100px]:grid-cols-3">
-            <section className="min-[1100px]:col-span-2 rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="dashboard-finance-trend-title">
-              <div className="border-b border-line p-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div><h2 id="dashboard-finance-trend-title" className="text-sm font-semibold text-fg">Cash Flow vs Operating Burn</h2><p className="mt-1 text-xs text-muted">Monthly billing inflow, operating burn rate, and net retention.</p></div>
-                <div className="flex items-center gap-3 text-[10px] text-muted"><span>Net inflow</span><span>Retainer target</span><span>Operational burn</span></div>
+          <section className="grid gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
+            <section className="rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="dashboard-finance-trend-title">
+              <div className="border-b border-line p-4 sm:p-5">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                  <div><h2 id="dashboard-finance-trend-title" className="text-sm font-semibold text-fg">Cash Flow vs Operating Burn</h2><p className="mt-1 text-xs leading-5 text-muted">Six-month view of cash actually collected versus recorded operating spend.</p></div>
+                  <div className="flex flex-wrap gap-2"><span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] tabular-nums text-muted">Retainer {formatFinanceCardAmount(retainerBilled,currency)}</span><span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] tabular-nums text-muted">Margin {(Number.isFinite(operatingMarginValue)?operatingMarginValue:quarterMargin).toFixed(1)}%</span></div>
+                </div>
               </div>
-              <div className="p-5">
-                {hasTrendData ? <FinanceCashFlowChart data={financeChartData} currency={currency} ariaLabel="Finance cash flow trend." /> : <EmptyState title="No trend data" description="Billing and expense records will populate the financial trend." />}
-              </div>
+              <div className="p-4 sm:p-5">{hasTrendData ? <FinanceCashFlowChart data={financeChartData} currency={currency} ariaLabel="Finance cash flow trend comparing cash collected, operating burn, and net cash." /> : <EmptyState title="No trend data" description="Billing payments and expense records will populate the financial trend." />}</div>
             </section>
 
             <section className="rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="aging-receivables-title">
-              <div className="border-b border-line p-5"><h2 id="aging-receivables-title" className="text-sm font-semibold text-fg">Aging Receivables</h2><p className="mt-1 text-xs text-muted">Total outstanding {formatFinanceCardAmount(derivedMetrics.totalOutstanding, currency)} across 3 buckets.</p></div>
-              <div className="p-5">
-                <div className="h-2.5 overflow-hidden rounded-full border border-line bg-bg flex">
-                  {agingBuckets.map((bucket) => <div key={bucket.label} className={'h-full ' + (bucket.tone === 'success' ? 'bg-success' : bucket.tone === 'warning' ? 'bg-warning' : 'bg-danger')} style={{ width: bucket.percent + '%' }} title={bucket.label + ': ' + bucket.percent + '%'} />)}
-                </div>
-                <div className="mt-4 space-y-3">
-                  {agingBuckets.map((bucket) => (
-                    <div key={bucket.label} className="rounded-control border border-line bg-bg px-3 py-2.5 flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2 min-w-0"><span className={'h-2 w-2 shrink-0 rounded-full ' + (bucket.tone === 'success' ? 'bg-success' : bucket.tone === 'warning' ? 'bg-warning' : 'bg-danger')} /><div className="min-w-0"><p className="truncate text-sm font-medium text-fg">{bucket.label}</p><p className="mt-0.5 text-[10px] text-muted">{bucket.count} active account{bucket.count === 1 ? '' : 's'}</p></div></div>
-                      <div className="text-right shrink-0"><p className="text-xs font-semibold tabular-nums text-fg">{formatNativeAmount(bucket.amount, currency, true)}</p><p className="mt-0.5 text-[10px] tabular-nums text-muted">{bucket.percent}%</p></div>
-                    </div>
-                  ))}
-                </div>
-                <button type="button" onClick={() => setDunningOpen(true)} disabled={!actionRequiredInvoices.length} className={actionClass + ' mt-4 w-full'}><Send size={14} />Prepare bulk dunning notices</button>
+              <div className="border-b border-line p-4 sm:p-5"><h2 id="aging-receivables-title" className="text-sm font-semibold text-fg">Aging receivables</h2><p className="mt-1 text-xs leading-5 text-muted">Outstanding balances grouped by time since due date.</p></div>
+              <div className="p-4 sm:p-5">
+                <div className="flex h-2.5 overflow-hidden rounded-full border border-line bg-bg">{agingBuckets.map((bucket)=><div key={bucket.label} className={'h-full '+(bucket.tone==='success'?'bg-success':bucket.tone==='warning'?'bg-warning':'bg-danger')} style={{width:bucket.percent+'%'}} />)}</div>
+                <div className="mt-4 space-y-2.5">{agingBuckets.map((bucket)=><div key={bucket.label} className="flex items-center justify-between gap-3 rounded-control border border-line bg-bg px-3 py-3"><div className="min-w-0"><p className="truncate text-xs font-medium text-fg">{bucket.label}</p><p className="mt-1 text-[10px] text-muted">{bucket.count} account{bucket.count===1?'':'s'}</p></div><div className="text-right"><p className="text-xs font-semibold tabular-nums text-fg">{formatNativeAmount(bucket.amount,currency,true)}</p><p className="mt-1 text-[10px] tabular-nums text-muted">{bucket.percent}%</p></div></div>)}</div>
+                <button type="button" onClick={() => setDunningOpen(true)} disabled={!actionRequiredInvoices.length} className={actionClass + ' mt-4 w-full'}><Send size={14} />Prepare collection notices</button>
               </div>
             </section>
           </section>
 
           <section className="rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="finance-workspace-title">
             <div className="border-b border-line p-4 sm:p-5">
-              <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h2 id="finance-workspace-title" className="text-sm font-semibold text-fg">Invoice Ledger</h2>
-                    {usingDemoInvoices && <span className="rounded-badge border border-warning/20 bg-warning/10 px-1.5 py-0.5 text-[10px] font-medium text-warning">Demo data</span>}
-                  </div>
-                  <p className="mt-1 text-[11px] text-muted">{serverMetrics ? serverMetrics.totalInvoicesCount : ledgerInvoices.length} invoices in the active ledger period</p>
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2 xl:flex-row xl:items-end xl:justify-between">
+                  <div><div className="flex items-center gap-2"><h2 id="finance-workspace-title" className="text-sm font-semibold text-fg">Invoice ledger</h2>{usingDemoInvoices && <span className="rounded-badge border border-warning/20 bg-warning/10 px-1.5 py-0.5 text-[10px] font-medium text-warning">Demo data</span>}</div><p className="mt-1 text-xs leading-5 text-muted">{filteredInvoices.length} visible of {ledgerInvoices.length} invoices · {ledgerPeriod==='all'?'all periods':reportingQuarter?.label||'current quarter'}</p></div>
+                  <label className="relative w-full xl:w-80"><span className="sr-only">Search invoices</span><Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" /><input value={search} onChange={(event)=>setSearch(event.target.value)} placeholder="Search invoice, client, project..." className={fieldClass+' pl-9'} /></label>
                 </div>
-                <div className="flex w-full flex-col gap-2 xl:w-auto xl:flex-row xl:items-center">
-                  <label className="relative min-w-[220px] xl:w-64"><span className="sr-only">Search invoices</span><Search size={14} className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-muted" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search invoice # or client..." className={fieldClass + ' pl-9 pr-3'} /></label>
-                  <div className="flex items-center gap-1 overflow-x-auto rounded-control border border-line bg-bg p-0.5 custom-scrollbar">
-                    {['All', 'Paid', 'Due Soon', 'Overdue', 'Draft'].map((label) => {
-                      const key = label === 'All' ? 'all' : label === 'Paid' ? 'paid' : label === 'Due Soon' ? 'due_soon' : label === 'Overdue' ? 'overdue' : 'draft';
-                      const count = key === 'all'
-                        ? ledgerInvoices.length
-                        : key === 'due_soon'
-                          ? dueSoonCount
-                          : key === 'overdue'
-                            ? ledgerInvoices.filter((invoice) => isPastDueInvoice(invoice)).length
-                            : invoiceStatusCounts.find((item) => item.status === key)?.count || 0;
-                      return <button key={label} type="button" onClick={() => setStatusFilter(key)} className={'min-h-8 shrink-0 rounded-chip px-2.5 text-[11px] font-medium transition-colors ' + (statusFilter === key ? 'bg-line text-fg' : 'text-muted hover:text-fg')}>{label}<span className="ml-1 tabular-nums opacity-70">{count}</span></button>;
-                    })}
-                  </div>
-                  <div className="relative">
-                    <button type="button" onClick={() => setPeriodMenuOpen((open) => !open)} className={actionClass + ' justify-between'} aria-expanded={periodMenuOpen}><CalendarDays size={13} />{ledgerPeriod === 'reporting-quarter' ? (reportingQuarter?.label || 'Reporting period') : 'All periods'}</button>
-                    {periodMenuOpen && <div className="absolute right-0 top-[calc(100%+6px)] z-30 w-56 rounded-card border border-line bg-panel p-1.5"><button type="button" onClick={() => { setLedgerPeriod('reporting-quarter'); setPeriodMenuOpen(false); setStatusFilter('all'); }} className="w-full rounded-control px-3 py-2 text-left text-xs text-fg hover:bg-bg"><span className="block font-medium">{reportingQuarter?.label || 'Reporting period'}</span><span className="mt-0.5 block text-[10px] text-muted">Match the latest invoice quarter</span></button><button type="button" onClick={() => { setLedgerPeriod('all'); setPeriodMenuOpen(false); setStatusFilter('all'); }} className="mt-1 w-full rounded-control px-3 py-2 text-left text-xs text-muted hover:bg-bg hover:text-fg"><span className="block font-medium">All periods</span><span className="mt-0.5 block text-[10px]">Show the full invoice ledger</span></button></div>}
-                  </div>
-                  <div className="relative">
-                    <button type="button" onClick={() => setColumnMenuOpen((open) => !open)} className={actionClass + ' w-9 px-0'} aria-label="Filter columns" title="Filter columns" aria-expanded={columnMenuOpen}><SlidersHorizontal size={14} /></button>
-                    {columnMenuOpen && <div className="absolute right-0 top-[calc(100%+6px)] z-30 w-56 rounded-card border border-line bg-panel p-1.5">{[['client','Client & Project'],['issue','Issue Date'],['due','Due Date'],['amount','Amount'],['status','Status'],['actions','Actions']].map(([key,label]) => <button key={key} type="button" role="menuitemcheckbox" aria-checked={columnVisibility[key]} onClick={() => setColumnVisibility((current) => ({ ...current, [key]: !current[key] }))} className="flex w-full items-center justify-between rounded-control px-3 py-2 text-left text-xs text-muted hover:bg-bg hover:text-fg"><span>{label}</span><span className={columnVisibility[key] ? 'text-accent-text' : 'text-muted'}>{columnVisibility[key] ? 'Visible' : 'Hidden'}</span></button>)}</div>}
-                  </div>
-                  <CustomSelect value={sort} onChange={(value) => setSort(value as SortKey)} options={sortOptions} className="w-full xl:w-44" triggerClassName="h-9 min-h-9 w-full" aria-label="Invoice sort" />
+                <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                  <CustomSelect value={statusFilter} onChange={setStatusFilter} options={statusOptions} className="w-full" triggerClassName="h-9 min-h-9 w-full" aria-label="Invoice status filter" />
+                  <CustomSelect value={paymentFilter} onChange={(value)=>setPaymentFilter(value as PaymentFilter)} options={[{value:'all',label:'All payment states'},{value:'unpaid',label:'Unpaid'},{value:'partial',label:'Partially paid'},{value:'paid',label:'Paid'}]} className="w-full" triggerClassName="h-9 min-h-9 w-full" aria-label="Payment state filter" />
+                  <CustomSelect value={dueFilter} onChange={(value)=>setDueFilter(value as DueFilter)} options={[{value:'all',label:'All due states'},{value:'due_soon',label:'Due within 7 days'},{value:'overdue',label:'Overdue'},{value:'later',label:'Due later'}]} className="w-full" triggerClassName="h-9 min-h-9 w-full" aria-label="Due state filter" />
+                  <CustomSelect value={sort} onChange={(value)=>setSort(value as SortKey)} options={sortOptions} className="w-full" triggerClassName="h-9 min-h-9 w-full" aria-label="Invoice sort" />
                 </div>
-              </div>
-              <div className="mt-3 flex items-center gap-2 border-t border-line pt-3">
-                <span className="text-[10px] uppercase tracking-[0.08em] text-muted">Ledger</span><span className="h-1 w-1 rounded-full bg-line" /><span className="text-[10px] text-muted">Current financial period</span>
-                {(search || statusFilter !== 'all') && <button type="button" onClick={() => { setSearch(''); setStatusFilter('all'); }} className="ml-auto rounded-chip px-2 py-1 text-[11px] text-muted hover:text-fg">Clear filters</button>}
+                <div className="flex flex-wrap items-center gap-2 border-t border-line pt-3">
+                  <div className="inline-flex items-center rounded-control border border-line bg-bg p-0.5"><button type="button" onClick={()=>{setLedgerPeriod('reporting-quarter');setStatusFilter('all')}} className={'min-h-8 rounded-chip px-2.5 text-[11px] font-medium '+(ledgerPeriod==='reporting-quarter'?'bg-line text-fg':'text-muted hover:text-fg')}>Current quarter</button><button type="button" onClick={()=>{setLedgerPeriod('all');setStatusFilter('all')}} className={'min-h-8 rounded-chip px-2.5 text-[11px] font-medium '+(ledgerPeriod==='all'?'bg-line text-fg':'text-muted hover:text-fg')}>All periods</button></div>
+                  <div className="relative"><button type="button" onClick={()=>setColumnMenuOpen((open)=>!open)} className={actionClass+' h-9 min-h-9'} aria-expanded={columnMenuOpen}><SlidersHorizontal size={14}/>Columns</button>{columnMenuOpen && <div className="absolute left-0 top-[calc(100%+6px)] z-30 w-52 rounded-card border border-line bg-panel p-1.5">{[['client','Client'],['timeline','Timeline'],['billing','Billing'],['status','Status'],['actions','Actions']].map(([key,label])=><button key={key} type="button" role="menuitemcheckbox" aria-checked={columnVisibility[key]} onClick={()=>setColumnVisibility((current)=>({...current,[key]:!current[key]}))} className="flex w-full items-center justify-between rounded-control px-3 py-2 text-left text-xs text-muted hover:bg-bg hover:text-fg"><span>{label}</span><span className={columnVisibility[key]?'text-accent-text':'text-muted'}>{columnVisibility[key]?'Visible':'Hidden'}</span></button>)}</div>}</div>}
+                  {(search||statusFilter!=='all'||paymentFilter!=='all'||dueFilter!=='all') && <button type="button" onClick={()=>{setSearch('');setStatusFilter('all');setPaymentFilter('all');setDueFilter('all')}} className="rounded-chip px-2.5 py-1.5 text-[11px] text-muted hover:bg-bg hover:text-fg">Clear filters</button>}
+                  <span className="ml-auto text-[10px] tabular-nums text-muted">{pendingInvoiceCount} open · {criticalOverdueCount} overdue · {dueSoonCount} due soon</span>
+                </div>
               </div>
             </div>
             <div className="overflow-x-auto custom-scrollbar">
-              {filteredInvoices.length === 0 ? (
-                <div className="p-5"><EmptyState title="No invoices found" description={search || statusFilter !== 'all' ? 'No invoices match the current search or filter.' : 'No invoice records are available yet.'} action={canManageInvoices ? <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14} />Create invoice</button> : undefined} /></div>
-              ) : (
-                <table className="w-full min-w-[1040px] border-collapse text-left text-xs">
-                  <thead className="bg-bg">
-                    <tr>
-                      <th className="px-4 py-3 sm:px-5 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice #</th>
-                      {columnVisibility.client && <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client & Project</th>}
-                      {columnVisibility.issue && <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Issue Date</th>}
-                      {columnVisibility.due && <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Due Date</th>}
-                      {columnVisibility.amount && <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount (IDR)</th>}
-                      {columnVisibility.status && <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Status</th>}
-                      {columnVisibility.actions && <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Actions</th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedInvoices.map((invoice) => {
-                      const balance = Number(invoice.balanceDue ?? (invoice.total - (invoice.amountPaid || 0)));
-                      const project = projectsById.get(invoice.projectId);
-                      const isOverdue = isPastDueInvoice(invoice) || invoice.status === 'overdue';
-                      return (
-                        <tr key={invoice.id} className="group border-t border-line transition-colors hover:bg-bg">
-                          <td className="px-4 py-3 sm:px-5"><div className="flex items-center gap-2"><span className={'h-1.5 w-1.5 rounded-full ' + (isOverdue ? 'bg-danger' : invoice.status === 'paid' ? 'bg-success' : invoice.status === 'sent' ? 'bg-info' : 'bg-warning')} /><button type="button" onClick={() => openPrintPreview(invoice)} className="font-medium tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button></div><p className="mt-1 text-[11px] text-muted">{invoice.currency}</p></td>
-                          {columnVisibility.client && <td className="px-4 py-3"><div className="font-medium text-fg">{invoice.clientCompany || invoice.clientName}</div><div className="mt-0.5 text-[11px] text-muted">{project?.name || invoice.clientName}</div></td>}
-                          {columnVisibility.issue && <td className="px-4 py-3 tabular-nums text-muted">{invoice.issueDate}</td>}
-                          {columnVisibility.due && <td className={'px-4 py-3 tabular-nums font-medium ' + (isOverdue ? 'text-danger' : 'text-muted')}>{invoice.dueDate}{isOverdue && <div className="mt-0.5 text-[10px] text-danger">Overdue</div>}</td>}
-                          {columnVisibility.amount && <td className="px-4 py-3 text-right"><div className="font-semibold tabular-nums text-fg">{formatNativeAmount(invoice.total, invoice.currency)}</div><div className="mt-0.5 text-[10px] tabular-nums text-muted">{balance > 0 ? 'Due ' + formatNativeAmount(balance, invoice.currency, true) : 'Settled'}</div></td>}
-                          {columnVisibility.status && <td className="px-4 py-3">{canManageInvoices ? <InvoiceStatusDropdown status={invoice.status} allowedStatuses={['draft', 'sent', 'overdue']} disabled={updatingInvoiceId === invoice.id || !['draft', 'sent', 'overdue'].includes(invoice.status)} onChange={(next) => void updateInvoiceStatus(invoice, next)} /> : <StatusBadge status={invoice.status} />}</td>}
-                          {columnVisibility.actions && <td className="px-4 py-3 text-right"><div className="flex items-center justify-end gap-1 opacity-85 group-hover:opacity-100">
-                            {isPastDueInvoice(invoice) && <button type="button" onClick={() => setReminderInvoice(invoice)} className="inline-flex h-7 items-center rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-danger hover:bg-panel-hover">Reminder</button>}
-                            {canManageInvoices && invoice.status !== 'paid' && invoice.status !== 'cancelled' && balance > 0 && <button type="button" onClick={() => openPayment(invoice)} className="inline-flex h-7 min-h-7 items-center rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted hover:bg-panel-hover hover:text-fg">Pay</button>}
-                            <button type="button" onClick={() => openPrintPreview(invoice)} className="inline-flex h-7 w-7 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="View invoice" title="View invoice"><Eye size={15} /></button>
-                            {canManageInvoices && invoice.status !== 'cancelled' && <button type="button" onClick={() => openEditInvoice(invoice)} className="inline-flex h-7 w-7 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Edit invoice" title="Edit invoice"><Edit3 size={14} /></button>}
-                            {canManageInvoices && canDeleteInvoice && !['cancelled', 'paid', 'partially_paid'].includes(invoice.status) && <button type="button" onClick={() => setConfirmAction({ type: 'invoice', id: invoice.id, label: invoice.invoiceNumber })} className="inline-flex h-7 w-7 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Cancel invoice" title="Cancel invoice"><Trash2 size={14} /></button>}
-
-                          </div></td>}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
+              {filteredInvoices.length===0 ? <div className="p-5"><EmptyState title="No invoices found" description="No invoices match the current search and filter set." action={canManageInvoices?<button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>Create invoice</button>:undefined}/></div> : (
+                <table className="w-full min-w-[980px] border-collapse text-xs">
+                  <thead className="bg-bg"><tr><th className="px-5 py-3 text-left text-[10px] font-semibold text-muted">Invoice / client</th>{columnVisibility.timeline&&<th className="px-4 py-3 text-left text-[10px] font-semibold text-muted">Timeline</th>}{columnVisibility.billing&&<th className="px-4 py-3 text-right text-[10px] font-semibold text-muted">Billing</th>}{columnVisibility.status&&<th className="px-4 py-3 text-left text-[10px] font-semibold text-muted">Status</th>}{columnVisibility.actions&&<th className="px-5 py-3 text-right text-[10px] font-semibold text-muted">Actions</th>}</tr></thead>
+                  <tbody>{paginatedInvoices.map((invoice)=>{const balance=Number(invoice.balanceDue??(invoice.total-(invoice.amountPaid||0)));const project=projectsById.get(invoice.projectId);const isOverdue=isPastDueInvoice(invoice)||invoice.status==='overdue';return <tr key={invoice.id} className="group border-t border-line hover:bg-bg">
+                    <td className="px-5 py-4"><div className="flex items-start gap-2.5"><span className={'mt-1 h-1.5 w-1.5 shrink-0 rounded-full '+(isOverdue?'bg-danger':invoice.status==='paid'?'bg-success':invoice.status==='sent'?'bg-info':'bg-warning')}/><div className="min-w-0"><button type="button" onClick={()=>openPrintPreview(invoice)} className="font-semibold tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button><p className="mt-1 max-w-[30ch] truncate text-xs text-fg">{invoice.clientCompany||invoice.clientName}</p><p className="mt-0.5 max-w-[34ch] truncate text-[10px] text-muted">{project?.name||invoice.clientEmail||invoice.clientName}</p></div></div></td>
+                    {columnVisibility.timeline&&<td className="px-4 py-4"><p className="tabular-nums text-fg">Issued {invoice.issueDate}</p><p className={'mt-1 tabular-nums text-[10px] '+(isOverdue?'text-danger':'text-muted')}>Due {invoice.dueDate}{isOverdue?' · overdue':isDueSoonInvoice(invoice)?' · due soon':''}</p></td>}
+                    {columnVisibility.billing&&<td className="px-4 py-4 text-right"><p className="font-semibold tabular-nums text-fg">{formatNativeAmount(invoice.total,invoice.currency)}</p><p className={'mt-1 text-[10px] tabular-nums '+(balance>0?'text-warning':'text-success')}>{balance>0?'Balance '+formatNativeAmount(balance,invoice.currency,true):'Settled'}</p></td>}
+                    {columnVisibility.status&&<td className="px-4 py-4">{canManageInvoices&&['draft','sent','overdue'].includes(invoice.status)?<InvoiceStatusDropdown status={invoice.status} allowedStatuses={['draft','sent','overdue']} disabled={updatingInvoiceId===invoice.id} onChange={(next)=>void updateInvoiceStatus(invoice,next)}/>:<StatusBadge status={invoice.status}/>}</td>}
+                    {columnVisibility.actions&&<td className="px-5 py-4 text-right"><div className="flex items-center justify-end gap-1">{isPastDueInvoice(invoice)&&<button type="button" onClick={()=>setReminderInvoice(invoice)} className="inline-flex h-8 items-center rounded-control border border-danger/20 bg-danger/10 px-2.5 text-[10px] font-medium text-danger hover:bg-danger/15">Reminder</button>}{canManageInvoices&&invoice.status!=='paid'&&invoice.status!=='cancelled'&&balance>0&&<button type="button" onClick={()=>openPayment(invoice)} className="inline-flex h-8 items-center rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted hover:bg-panel-hover hover:text-fg">Pay</button>}<button type="button" onClick={()=>openPrintPreview(invoice)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="View invoice" title="View invoice"><Eye size={15}/></button>{canManageInvoices&&invoice.status!=='cancelled'&&<button type="button" onClick={()=>openEditInvoice(invoice)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Edit invoice" title="Edit invoice"><Edit3 size={14}/></button>}{canManageInvoices&&canDeleteInvoice&&!['cancelled','paid','partially_paid'].includes(invoice.status)&&<button type="button" onClick={()=>setConfirmAction({type:'invoice',id:invoice.id,label:invoice.invoiceNumber})} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Cancel invoice" title="Cancel invoice"><Trash2 size={14}/></button>}</div></td>}
+                  </tr>})}</tbody>
                 </table>
               )}
             </div>
-            {invoicePageCount > 1 && (
-              <div className="border-t border-line px-4 py-3 sm:px-5">
-                <div className="flex flex-col gap-2 text-[11px] text-muted sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-1 tabular-nums"><span>Showing</span><span className="font-medium text-fg">{((invoicePage - 1) * invoicePageSize) + 1}–{Math.min(invoicePage * invoicePageSize, filteredInvoices.length)}</span><span>of</span><span className="font-medium text-fg">{filteredInvoices.length}</span><span>invoices</span></div>
-                  <div className="flex items-center gap-1">
-                    <button type="button" onClick={() => setInvoicePage((page) => Math.max(1, page - 1))} disabled={invoicePage === 1} className={actionClass}>Previous</button>
-                    <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control border border-line bg-line px-2 text-[10px] font-semibold text-fg">{invoicePage}</span>
-                    <button type="button" onClick={() => setInvoicePage((page) => Math.min(invoicePageCount, page + 1))} disabled={invoicePage === invoicePageCount} className={actionClass}>Next</button>
-                  </div>
-                </div>
-              </div>
-            )}
+            {invoicePageCount>1&&<div className="border-t border-line px-5 py-3"><div className="flex flex-col gap-2 text-[11px] text-muted sm:flex-row sm:items-center sm:justify-between"><span className="tabular-nums">Showing {((invoicePage-1)*invoicePageSize)+1}–{Math.min(invoicePage*invoicePageSize,filteredInvoices.length)} of {filteredInvoices.length} invoices</span><div className="flex items-center gap-1"><button type="button" onClick={()=>setInvoicePage((page)=>Math.max(1,page-1))} disabled={invoicePage===1} className={actionClass}>Previous</button><span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control border border-line bg-line px-2 text-[10px] font-semibold text-fg">{invoicePage}</span><button type="button" onClick={()=>setInvoicePage((page)=>Math.min(invoicePageCount,page+1))} disabled={invoicePage===invoicePageCount} className={actionClass}>Next</button></div></div></div>}
           </section>
 
-          <section className="rounded-card border border-line bg-panel overflow-hidden">
-            <div className="flex flex-col gap-3 border-b border-line p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-              <div><h2 className="text-sm font-semibold text-fg">Finance snapshot</h2><p className="mt-1 text-xs text-muted">Period: {reportingQuarter?.label || 'Active period'} · {pendingInvoiceCount} open invoices · {currencyExpenses.length} expense records.</p></div>
-              <div className="flex items-center gap-2"><span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">Invoices {ledgerInvoices.length}</span><span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">Retainers {retainerInvoices.length}</span><span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">Expenses {currencyExpenses.length}</span></div>
+          <section className="rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="finance-snapshot-title">
+            <div className="border-b border-line p-4 sm:p-5">
+              <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between"><div><h2 id="finance-snapshot-title" className="text-sm font-semibold text-fg">Finance snapshot</h2><p className="mt-1 text-xs leading-5 text-muted">A compact view of billings, collections, receivables, burn, margin, tax, and retainer health for {reportingQuarter?.label||'the active period'}.</p></div><div className="flex flex-wrap gap-2 text-[10px] text-muted"><span className="rounded-badge border border-line bg-bg px-2 py-1 tabular-nums">{ledgerInvoices.length} invoices</span><span className="rounded-badge border border-line bg-bg px-2 py-1 tabular-nums">{currencyExpenses.length} expenses</span><span className="rounded-badge border border-line bg-bg px-2 py-1 tabular-nums">{retainerInvoices.length} retainers</span></div></div>
             </div>
-            <div className="grid gap-4 p-4 sm:grid-cols-3 sm:p-5">
-              {[
-                { label: 'Quarter billed', value: formatFinanceCardAmount(currentQuarterTotal, currency), icon: <Receipt size={16} /> },
-                { label: 'Quarter collected', value: formatFinanceCardAmount(quarterCollected, currency), icon: <WalletCards size={16} /> },
-                { label: 'Quarter expenses', value: formatFinanceCardAmount(quarterExpenses, currency), icon: <ArrowDown size={16} /> }
-              ].map((item) => <div key={item.label} className="rounded-control border border-line bg-bg p-3"><div className="flex items-center gap-2 text-xs text-muted">{item.icon}{item.label}</div><p className="mt-2 text-lg font-medium tabular-nums text-fg">{item.value}</p></div>)}
+            <div className="p-4 sm:p-5">
+              <div className="grid grid-cols-2 gap-2 md:grid-cols-4">{[['Quarter billed',formatFinanceCardAmount(currentQuarterTotal,currency)],['Quarter collected',formatFinanceCardAmount(quarterCollected,currency)],['Quarter expenses',formatFinanceCardAmount(quarterExpenses,currency)],['Quarter net cash',formatFinanceCardAmount(quarterNetCash,currency)],['Outstanding',formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)],['Overdue',formatFinanceCardAmount(overdueBalance,currency)],['Collection rate',ytdCollectionRate.toFixed(1)+'%'],['Operating margin',(Number.isFinite(operatingMarginValue)?operatingMarginValue:quarterMargin).toFixed(1)+'%']].map(([label,value])=><div key={label} className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">{label}</p><p className="mt-1.5 text-sm font-semibold tabular-nums text-fg">{value}</p></div>)}</div>
+              <div className="mt-5 grid gap-5 lg:grid-cols-3">
+                <section className="rounded-control border border-line bg-bg p-4"><div className="flex items-center justify-between gap-3"><div><p className="text-xs font-semibold text-fg">Collection health</p><p className="mt-1 text-[10px] text-muted">Cash collected vs issued billings.</p></div><span className="text-sm font-semibold tabular-nums text-success">{ytdCollectionRate.toFixed(1)}%</span></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-panel"><div className="h-full rounded-full bg-success" style={{width:Math.min(100,Math.max(0,ytdCollectionRate))+'%'}}/></div><div className="mt-2 flex justify-between gap-3 text-[10px] text-muted"><span>Collected {formatFinanceCardAmount(ytdCollected,currency)}</span><span>Issued {formatFinanceCardAmount(ytdInvoiced,currency)}</span></div></section>
+                <section className="rounded-control border border-line bg-bg p-4"><div className="flex items-center justify-between gap-3"><div><p className="text-xs font-semibold text-fg">Retainer health</p><p className="mt-1 text-[10px] text-muted">Billed against collected retainer value.</p></div><span className="text-sm font-semibold tabular-nums text-fg">{retainerBilled>0?((retainerCollected/retainerBilled)*100).toFixed(1):'0.0'}%</span></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-panel"><div className="h-full rounded-full bg-series-3" style={{width:(retainerBilled>0?Math.min(100,(retainerCollected/retainerBilled)*100):0)+'%'}}/></div><div className="mt-2 flex justify-between gap-3 text-[10px] text-muted"><span>Collected {formatFinanceCardAmount(retainerCollected,currency)}</span><span>Billed {formatFinanceCardAmount(retainerBilled,currency)}</span></div></section>
+                <section className="rounded-control border border-line bg-bg p-4"><div className="flex items-center justify-between gap-3"><div><p className="text-xs font-semibold text-fg">Attention queue</p><p className="mt-1 text-[10px] text-muted">Items requiring finance follow-up.</p></div><Send size={15} className="text-warning"/></div><div className="mt-3 grid grid-cols-3 gap-2"><div><p className="text-[10px] text-muted">Overdue</p><p className="mt-1 text-sm font-semibold tabular-nums text-danger">{criticalOverdueCount}</p></div><div><p className="text-[10px] text-muted">Due soon</p><p className="mt-1 text-sm font-semibold tabular-nums text-warning">{dueSoonCount}</p></div><div><p className="text-[10px] text-muted">Tax due</p><p className="mt-1 text-sm font-semibold tabular-nums text-warning">{formatFinanceCardAmount(taxOutstanding,currency)}</p></div></div></section>
+              </div>
             </div>
           </section>
-        </div>
-      )}
-      <Modal
+        </div>      <Modal
         open={!!reminderInvoice}
         onClose={() => setReminderInvoice(null)}
         size="md"
