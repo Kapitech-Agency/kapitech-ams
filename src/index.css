@@ -462,18 +462,28 @@
 }
 
 /* --------------------------------------------------------------------------
-   AMS CLIENT TABLE PRIMITIVES
+   AMS CANONICAL DATA TABLE
+   One geometry for data tables across every module.
    -------------------------------------------------------------------------- */
-.ams-shell .ams-client-table-shell{min-width:0;overflow:hidden;background:var(--panel);border:1px solid var(--line);border-radius:12px}
-.ams-shell .ams-client-table{width:100%;border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums}
-.ams-shell .ams-client-table thead th{height:40px!important;padding:0 12px!important;background:var(--panel)!important;border-bottom:1px solid var(--line)!important;color:var(--muted)!important;font-size:11px!important;line-height:16px!important;font-weight:600!important;letter-spacing:.04em;text-transform:uppercase;vertical-align:middle}
-.ams-shell .ams-client-table tbody td{height:52px;min-height:52px;padding:0 12px!important;background:var(--panel);border-bottom:1px solid var(--line);color:var(--text);font-size:13px;line-height:18px;vertical-align:middle}
-.ams-shell .ams-client-table tbody tr:last-child td{border-bottom:0}
-.ams-shell .ams-client-table tbody tr:hover td{background:color-mix(in srgb,var(--text) 4%,transparent)}
-.ams-shell .ams-client-table .ams-table-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:6px}
-.ams-shell .ams-client-table .ams-table-action{min-height:34px!important;padding:7px 10px!important;border:1px solid var(--line)!important;border-radius:8px!important;background:var(--bg)!important;color:var(--muted);font-size:11px;font-weight:500;white-space:nowrap;transition:background-color .15s ease,border-color .15s ease,color .15s ease}
-.ams-shell .ams-client-table .ams-table-action:hover{background:var(--panel)!important;color:var(--text)}
-.ams-shell .ams-client-table .ams-table-action[data-primary=true]{border-color:color-mix(in srgb,var(--accent) 35%,var(--line))!important;background:color-mix(in srgb,var(--accent) 10%,var(--bg))!important;color:var(--accent-text)}
-.ams-shell .ams-client-table .ams-table-action[data-primary=true]:hover{background:var(--accent)!important;color:#fff!important}
-.ams-shell .ams-client-table .ams-table-action:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.ams-shell .ams-client-table .font-mono{font-family:var(--font-mono)}
+.ams-shell table{width:100%;border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums}
+.ams-shell table thead th{height:40px!important;padding:0 12px!important;background:var(--panel)!important;border-bottom:1px solid var(--line)!important;color:var(--muted)!important;font-size:11px!important;line-height:16px!important;font-weight:600!important;letter-spacing:.035em;text-transform:uppercase;vertical-align:middle}
+.ams-shell table tbody td{height:40px;min-height:40px;padding:0 12px!important;background:var(--panel);border-bottom:1px solid var(--line);color:var(--text);font-size:13px;line-height:18px;vertical-align:middle}
+.ams-shell table tbody tr:last-child td{border-bottom:0}
+.ams-shell table tbody tr:hover td{background:color-mix(in srgb,var(--text) 4%,transparent)}
+.ams-shell table th:first-child,.ams-shell table td:first-child{padding-left:16px!important}
+.ams-shell table th:last-child,.ams-shell table td:last-child{padding-right:16px!important}
+.ams-shell .ams-table-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:6px}
+.ams-shell .ams-table-action{min-height:34px!important;padding:7px 10px!important;border:1px solid var(--line)!important;border-radius:8px!important;background:var(--bg)!important;color:var(--muted);font-size:11px;font-weight:500;white-space:nowrap;transition:background-color .15s ease,border-color .15s ease,color .15s ease}
+.ams-shell .ams-table-action:hover{background:var(--panel)!important;color:var(--text)}
+.ams-shell .ams-table-action[data-primary=true]{border-color:color-mix(in srgb,var(--accent) 35%,var(--line))!important;background:color-mix(in srgb,var(--accent) 10%,var(--bg))!important;color:var(--accent-text)}
+.ams-shell .ams-table-action[data-primary=true]:hover{background:var(--accent)!important;color:#fff!important}
+.ams-shell .ams-table-action:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ams-shell .ams-data-table-shell,.ams-shell .ams-client-table-shell{min-width:0;overflow:hidden;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.ams-shell .ams-data-table,.ams-shell .ams-client-table{width:100%;border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums}
+.ams-shell .ams-topbar-utilities,.ams-shell .ams-topbar-mobile-utilities{display:flex;align-items:center;gap:6px;padding:3px;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.ams-shell .ams-topbar-icon{min-width:36px;min-height:36px;border-radius:8px}
+.ams-shell .ams-topbar-profile{min-height:36px;border-radius:8px}
+@media(max-width:899px){
+  .ams-shell .ams-topbar-mobile-utilities{padding:2px;border-radius:9px}
+  .ams-shell .ams-topbar-mobile-utilities .ams-topbar-profile{display:none}
+}
