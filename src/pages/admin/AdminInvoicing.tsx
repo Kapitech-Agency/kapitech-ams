@@ -248,6 +248,118 @@ const STITCH_FINANCE_QUOTATIONS: FinanceQuotation[] = [
   { id: 'quote_slug_006', quotationNumber: 'QTN-2026-013', title: 'React Native Commerce App', clientName: 'Kevin Wijaya', clientCompany: 'Nusa Cloud Systems', total: 128000000, currency: 'IDR', status: 'rejected', validUntil: '2026-09-26', createdAt: '2026-09-03', owner: 'Product Team' }
 ];
 
+const STITCH_FINANCE_RETAINER_INVOICES: AgencyInvoice[] = [
+  {
+    id: 'retainer_demo_001',
+    invoiceNumber: 'KAPI-RET-2026-001',
+    type: 'invoice',
+    clientName: 'Nadia Wijaya',
+    clientCompany: 'Astra Digital Ventures',
+    clientEmail: 'finance@astradigital.id',
+    clientPhone: '+62 811-2000-1100',
+    items: [{ id: 'retainer_item_001', description: 'Monthly Product Design & Frontend Retainer', quantity: 1, unitPrice: 68000000, amount: 68000000 }],
+    subtotal: 68000000,
+    discountPercent: 0,
+    discountAmount: 0,
+    taxPercent: 11,
+    taxAmount: 7480000,
+    total: 75480000,
+    amountPaid: 75480000,
+    balanceDue: 0,
+    payments: [{ id: 'retainer_payment_001', amount: 75480000, date: '2026-09-06', method: 'bank_transfer', reference: 'ADV-RET-SEP', recordedBy: 'Finance Lead' }],
+    currency: 'IDR',
+    status: 'paid',
+    issueDate: '2026-09-01',
+    dueDate: '2026-09-10',
+    paidDate: '2026-09-06',
+    notes: 'Monthly retainer — product design and frontend support.',
+    paymentTerms: 'Monthly Retainer Net 10',
+    createdAt: '2026-09-01T09:00:00Z',
+    updatedAt: '2026-09-06T14:00:00Z'
+  },
+  {
+    id: 'retainer_demo_002',
+    invoiceNumber: 'KAPI-RET-2026-002',
+    type: 'invoice',
+    clientName: 'Sarah Jenkins',
+    clientCompany: 'Telkomsel Innovation Labs',
+    clientEmail: 'finance@telkomsel.co.id',
+    clientPhone: '+62 811-2000-2200',
+    items: [{ id: 'retainer_item_002', description: 'Cloud Platform Maintenance Retainer', quantity: 1, unitPrice: 92000000, amount: 92000000 }],
+    subtotal: 92000000,
+    discountPercent: 0,
+    discountAmount: 0,
+    taxPercent: 11,
+    taxAmount: 10120000,
+    total: 102120000,
+    amountPaid: 51060000,
+    balanceDue: 51060000,
+    payments: [{ id: 'retainer_payment_002', amount: 51060000, date: '2026-09-12', method: 'bank_transfer', reference: 'TIL-RET-SEP', recordedBy: 'Finance Lead' }],
+    currency: 'IDR',
+    status: 'partially_paid',
+    issueDate: '2026-09-03',
+    dueDate: '2026-09-18',
+    notes: 'Monthly cloud platform maintenance retainer.',
+    paymentTerms: 'Monthly Retainer Net 15',
+    createdAt: '2026-09-03T10:00:00Z',
+    updatedAt: '2026-09-12T15:00:00Z'
+  },
+  {
+    id: 'retainer_demo_003',
+    invoiceNumber: 'KAPI-RET-2026-003',
+    type: 'invoice',
+    clientName: 'Jessica Halim',
+    clientCompany: 'ShopeePay Regional Tech',
+    clientEmail: 'finance@shopeepay.com',
+    clientPhone: '+62 811-2000-3300',
+    items: [{ id: 'retainer_item_003', description: 'Interactive Product Support Retainer', quantity: 1, unitPrice: 125000000, amount: 125000000 }],
+    subtotal: 125000000,
+    discountPercent: 0,
+    discountAmount: 0,
+    taxPercent: 11,
+    taxAmount: 13750000,
+    total: 138750000,
+    amountPaid: 0,
+    balanceDue: 138750000,
+    payments: [],
+    currency: 'IDR',
+    status: 'sent',
+    issueDate: '2026-09-05',
+    dueDate: '2026-09-20',
+    notes: 'Monthly product support and optimization retainer.',
+    paymentTerms: 'Monthly Retainer Net 15',
+    createdAt: '2026-09-05T09:00:00Z',
+    updatedAt: '2026-09-05T09:00:00Z'
+  },
+  {
+    id: 'retainer_demo_004',
+    invoiceNumber: 'KAPI-RET-2026-004',
+    type: 'invoice',
+    clientName: 'Marcus Lee',
+    clientCompany: 'Northstar Labs',
+    clientEmail: 'finance@northstarlabs.com',
+    clientPhone: '+1 415-200-4400',
+    items: [{ id: 'retainer_item_004', description: 'US Market Growth Retainer', quantity: 1, unitPrice: 14500, amount: 14500 }],
+    subtotal: 14500,
+    discountPercent: 0,
+    discountAmount: 0,
+    taxPercent: 0,
+    taxAmount: 0,
+    total: 14500,
+    amountPaid: 7250,
+    balanceDue: 7250,
+    payments: [{ id: 'retainer_payment_004', amount: 7250, date: '2026-09-08', method: 'bank_transfer', reference: 'NSL-SEP-RET', recordedBy: 'Finance Lead' }],
+    currency: 'USD',
+    status: 'partially_paid',
+    issueDate: '2026-09-02',
+    dueDate: '2026-09-16',
+    notes: 'Monthly growth retainer for US market support.',
+    paymentTerms: 'Monthly Retainer Net 14',
+    createdAt: '2026-09-02T09:00:00Z',
+    updatedAt: '2026-09-08T14:00:00Z'
+  }
+];
+
 const normalizeFinanceQuotationStatus = (value: unknown): FinanceQuotationStatus => {
   switch (String(value || '').trim().toLowerCase()) {
     case 'review':
@@ -719,9 +831,16 @@ export const AdminInvoicing: React.FC = () => {
     [currencyInvoices]
   );
 
+  const retainerLedgerInvoices = useMemo(() => {
+    if (retainerInvoices.length) return retainerInvoices;
+    return STITCH_FINANCE_RETAINER_INVOICES.filter((invoice) => invoice.currency === currency);
+  }, [currency, retainerInvoices]);
+
+  const usingDemoRetainerLedger = retainerInvoices.length === 0 && retainerLedgerInvoices.length > 0;
+
   const financeChartData = useMemo(
     () => cashFlow.map((point) => {
-      const target = retainerInvoices
+      const target = retainerLedgerInvoices
         .filter((invoice) => {
           const date = new Date(invoice.issueDate + 'T00:00:00');
           return !Number.isNaN(date.getTime()) && date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }) === point.month;
@@ -730,7 +849,7 @@ export const AdminInvoicing: React.FC = () => {
 
       return { ...point, label: point.month, retainerTarget: target };
     }),
-    [cashFlow, retainerInvoices]
+    [cashFlow, retainerLedgerInvoices]
   );
 
   const hasTrendData = financeChartData.some(
@@ -789,18 +908,18 @@ export const AdminInvoicing: React.FC = () => {
   const taxOutstanding = Math.max(0, taxProvision - taxCollected);
 
   const retainerBilled = useMemo(
-    () => retainerInvoices.reduce((sum, invoice) => sum + Number(invoice.total || 0), 0),
-    [retainerInvoices]
+    () => retainerLedgerInvoices.reduce((sum, invoice) => sum + Number(invoice.total || 0), 0),
+    [retainerLedgerInvoices]
   );
 
   const retainerCollected = useMemo(
-    () => retainerInvoices.reduce((sum, invoice) => {
+    () => retainerLedgerInvoices.reduce((sum, invoice) => {
       const collected = Array.isArray(invoice.payments) && invoice.payments.length
         ? invoice.payments.reduce((paymentSum, payment) => paymentSum + (Number(payment.amount) || 0), 0)
         : Number(invoice.amountPaid || 0);
       return sum + collected;
     }, 0),
-    [retainerInvoices]
+    [retainerLedgerInvoices]
   );
 
   const quarterExpenseCategories = useMemo(() => {
@@ -2116,7 +2235,7 @@ export const AdminInvoicing: React.FC = () => {
       ) : financeView === 'quotations' ? (
         <div className="space-y-5">
           <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Total quotations" value={quotationMetrics.total} context="All records" icon={<FileText size={15}/>}/><FinanceMetricCard label="Active pipeline" value={quotationMetrics.active} context="Draft through sent" icon={<Clock3 size={15}/>}/><FinanceMetricCard label="Pipeline value" value={formatFinanceCardAmount(quotationMetrics.value,currency)} context={usingDemoQuotations?'Demo workspace data':'Server-backed records'} icon={<WalletCards size={15} />}/><FinanceMetricCard label="Accepted" value={quotationMetrics.accepted} context={quotationMetrics.approved+' approved ready to convert'} icon={<CheckCircle2 size={15} className="text-success"/>} toneClassName="text-success"/></section>
-          <section className="grid gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+          <section className="space-y-5">
             <section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between"><div><h2 className="text-sm font-semibold text-fg">Quotation ledger</h2><p className="mt-1 text-xs text-muted">Search, filter, and sort the commercial pipeline.</p></div><div className="grid gap-2 sm:grid-cols-2 xl:flex"><label className="relative xl:w-64"><Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/><span className="sr-only">Search quotations</span><input value={quotationSearch} onChange={(event)=>setQuotationSearch(event.target.value)} placeholder="Search quotation, client..." className={fieldClass+' pl-9'}/></label><CustomSelect value={quotationStatusFilter} onChange={(value)=>setQuotationStatusFilter(value as typeof quotationStatusFilter)} options={[{value:'all',label:'All statuses'},{value:'draft',label:'Draft'},{value:'review',label:'Internal review'},{value:'approved',label:'Approved'},{value:'sent',label:'Sent'},{value:'accepted',label:'Accepted'},{value:'rejected',label:'Rejected'}]} triggerClassName="h-9 min-h-9" aria-label="Quotation status filter"/><CustomSelect value={quotationSort} onChange={(value)=>setQuotationSort(value as QuotationSort)} options={[{value:'newest',label:'Newest'},{value:'oldest',label:'Oldest'},{value:'value_high',label:'Highest value'},{value:'value_low',label:'Lowest value'},{value:'valid_until',label:'Valid until'}]} triggerClassName="h-9 min-h-9" aria-label="Quotation sort"/></div></div></div><div className="overflow-hidden">{filteredQuotations.length===0?<div className="p-5"><EmptyState title="No quotations found" description="Adjust the search or filters."/></div>:<table className="w-full table-fixed border-separate border-spacing-0 text-xs">
 <thead className="sticky top-0 z-10 border-b border-line bg-panel/95 backdrop-blur-sm"><tr>
   <th className="w-[30%] px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Quotation</th>
@@ -2127,15 +2246,15 @@ export const AdminInvoicing: React.FC = () => {
 </tr></thead>
 <tbody className="divide-y divide-line">
 {filteredQuotations.map((quotation)=><tr key={quotation.id} className="group align-top transition-colors hover:bg-bg">
-  <td className="px-4 py-4">
+  <td className="px-4 py-5">
     <button type="button" onClick={()=>setQuotationDetail(quotation)} className="font-semibold tabular-nums text-fg hover:text-accent-text">{quotation.quotationNumber}</button>
     <p className="mt-1 truncate font-medium text-fg">{quotation.title}</p>
     <p className="mt-1 truncate text-[11px] text-muted">{quotation.clientCompany} · {quotation.clientName}</p>
   </td>
-  <td className="px-4 py-4 text-right"><p className="font-semibold tabular-nums text-fg">{formatNativeAmount(quotation.total,quotation.currency,true)}</p><p className="mt-1 text-[11px] text-muted">{quotation.owner}</p></td>
-  <td className="px-4 py-4"><div className="grid gap-1.5 text-[11px]"><div className="flex items-center justify-between gap-3"><span className="text-muted">Created</span><span className="tabular-nums text-fg">{quotation.createdAt}</span></div><div className="flex items-center justify-between gap-3"><span className="text-muted">Valid</span><span className="tabular-nums text-fg">{quotation.validUntil}</span></div></div></td>
-  <td className="px-4 py-4"><StatusBadge status={quotation.status as never}/></td>
-  <td className="px-4 py-4"><div className="flex max-w-full flex-wrap justify-end"><div className="inline-flex max-w-full flex-wrap items-center rounded-control border border-line bg-bg p-0.5 shadow-sm"><button type="button" onClick={()=>setQuotationDetail(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-panel-hover hover:text-fg" aria-label="View quotation" title="View quotation"><Eye size={14}/></button>{canManageInvoices&&<button type="button" onClick={()=>openEditQuotation(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-panel-hover hover:text-fg" aria-label="Edit quotation" title="Edit quotation"><Edit3 size={14}/></button>}{canManageInvoices&&<button type="button" onClick={()=>void convertQuotationToInvoice(quotation)} disabled={Boolean(quotation.invoiceId)||quotation.status!=='approved'} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-panel-hover hover:text-fg disabled:cursor-not-allowed disabled:opacity-40" aria-label="Convert quotation to invoice" title={quotation.invoiceId?'Invoice already created':quotation.status==='approved'?'Convert approved quotation to invoice':'Only approved quotations can be converted'}><Receipt size={14}/></button>}{canManageInvoices&&<button type="button" onClick={()=>void deleteQuotation(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Delete quotation" title="Delete quotation"><Trash2 size={14}/></button>}</div></div></td>
+  <td className="px-4 py-5 text-right"><p className="font-semibold tabular-nums text-fg">{formatNativeAmount(quotation.total,quotation.currency,true)}</p><p className="mt-1 text-[11px] text-muted">{quotation.owner}</p></td>
+  <td className="px-4 py-5"><div className="grid gap-1.5 text-[11px]"><div className="flex items-center justify-between gap-3"><span className="text-muted">Created</span><span className="tabular-nums text-fg">{quotation.createdAt}</span></div><div className="flex items-center justify-between gap-3"><span className="text-muted">Valid</span><span className="tabular-nums text-fg">{quotation.validUntil}</span></div></div></td>
+  <td className="px-4 py-5"><StatusBadge status={quotation.status as never}/></td>
+  <td className="px-4 py-5"><div className="flex items-center justify-end gap-1.5"><button type="button" onClick={()=>setQuotationDetail(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="View quotation" title="View quotation"><Eye size={14}/></button>{canManageInvoices&&<button type="button" onClick={()=>openEditQuotation(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Edit quotation" title="Edit quotation"><Edit3 size={14}/></button>}{canManageInvoices&&<button type="button" onClick={()=>void convertQuotationToInvoice(quotation)} disabled={Boolean(quotation.invoiceId)||quotation.status!=='approved'} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg disabled:cursor-not-allowed disabled:opacity-40" aria-label="Convert quotation to invoice" title={quotation.invoiceId?'Invoice already created':quotation.status==='approved'?'Convert approved quotation to invoice':'Only approved quotations can be converted'}><Receipt size={14}/></button>}{canManageInvoices&&<button type="button" onClick={()=>void deleteQuotation(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Delete quotation" title="Delete quotation"><Trash2 size={14}/></button>}</div></td>
 </tr>)}
 </tbody></table>}</div></section>
             <section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><h2 className="text-sm font-semibold text-fg">Pipeline stages</h2><p className="mt-1 text-xs text-muted">Count and value by stage.</p></div><div className="space-y-3 p-4 sm:p-5">{(['draft','review','approved','sent','accepted','rejected'] as FinanceQuotationStatus[]).map((status)=>{const count=quotations.filter((q)=>q.status===status).length;const value=quotations.filter((q)=>q.status===status).reduce((sum,q)=>sum+q.total,0);return <div key={status} className="rounded-control border border-line bg-bg px-3 py-3"><div className="flex justify-between text-xs"><span className="font-medium text-fg">{quotationStatusLabel(status)}</span><span className="tabular-nums font-semibold">{count}</span></div><p className="mt-1 text-[10px] tabular-nums text-muted">{formatNativeAmount(value,currency,true)}</p><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel"><div className="h-full rounded-full bg-series-3" style={{width:(quotationMetrics.value>0?Math.min(100,value/quotationMetrics.value*100):0)+'%'}}/></div></div>})}</div></section>
@@ -2153,10 +2272,10 @@ export const AdminInvoicing: React.FC = () => {
 </tr></thead>
 <tbody className="divide-y divide-line">
 {paginatedIncomeRows.map((row)=><tr key={row.id} className="group transition-colors hover:bg-bg">
-  <td className="px-4 py-4"><button type="button" onClick={()=>{const invoice=currencyInvoices.find((item)=>item.id===row.invoiceId);if(invoice)openPrintPreview(invoice)}} className="font-semibold tabular-nums text-fg hover:text-accent-text">{row.invoiceNumber}</button><p className="mt-1 text-[11px] text-muted">Payment received</p></td>
-  <td className="px-4 py-4"><p className="font-medium text-fg">{row.clientCompany}</p><p className="mt-1 text-[11px] text-muted">Invoice payment</p></td>
-  <td className="px-4 py-4 tabular-nums text-muted">{row.date}</td>
-  <td className="px-4 py-4 text-right"><p className="font-semibold tabular-nums text-success">{formatNativeAmount(row.amount,row.currency,true)}</p><span className="mt-1 inline-flex rounded-badge border border-success/20 bg-success/10 px-1.5 py-0.5 text-[10px] font-medium text-success">Collected</span></td>
+  <td className="px-4 py-5"><button type="button" onClick={()=>{const invoice=currencyInvoices.find((item)=>item.id===row.invoiceId);if(invoice)openPrintPreview(invoice)}} className="font-semibold tabular-nums text-fg hover:text-accent-text">{row.invoiceNumber}</button><p className="mt-1 text-[11px] text-muted">Payment received</p></td>
+  <td className="px-4 py-5"><p className="font-medium text-fg">{row.clientCompany}</p><p className="mt-1 text-[11px] text-muted">Invoice payment</p></td>
+  <td className="px-4 py-5 tabular-nums text-muted">{row.date}</td>
+  <td className="px-4 py-5 text-right"><p className="font-semibold tabular-nums text-success">{formatNativeAmount(row.amount,row.currency,true)}</p><span className="mt-1 inline-flex rounded-badge border border-success/20 bg-success/10 px-1.5 py-0.5 text-[10px] font-medium text-success">Collected</span></td>
 </tr>)}
 </tbody></table>}</div>{incomePageCount>1&&<div className="border-t border-line p-4"><div className="flex justify-between text-[11px] text-muted"><span>{incomeRows.length} payments</span><div className="flex gap-1"><button type="button" onClick={()=>setIncomePage((p)=>Math.max(1,p-1))} disabled={incomePage===1} className={actionClass}>Prev</button><span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control bg-line px-2 text-[10px] font-semibold text-fg">{incomePage}</span><button type="button" onClick={()=>setIncomePage((p)=>Math.min(incomePageCount,p+1))} disabled={incomePage===incomePageCount} className={actionClass}>Next</button></div></div></div>}</section>
           <section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><div className="flex items-end justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Expense ledger</h2><p className="mt-1 text-xs text-muted">Operating spend by type, category, and date.</p></div>{canManageInvoices&&<button type="button" onClick={openExpenseModal} className={actionClass}><Plus size={14}/>Add expense</button>}</div><div className="mt-3 grid gap-2 sm:grid-cols-3"><label className="relative"><Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/><span className="sr-only">Search expense</span><input value={expenseSearch} onChange={(event)=>setExpenseSearch(event.target.value)} placeholder="Search expense..." className={fieldClass+' pl-8'}/></label><CustomSelect value={expenseTypeFilter} onChange={setExpenseTypeFilter} options={expenseTypeOptions} triggerClassName="h-9 min-h-9 w-full"/><CustomSelect value={expenseSort} onChange={(value)=>setExpenseSort(value as typeof expenseSort)} options={[{value:'date_desc',label:'Newest'},{value:'date_asc',label:'Oldest'},{value:'amount_high',label:'Highest amount'},{value:'amount_low',label:'Lowest amount'}]} triggerClassName="h-9 min-h-9 w-full"/></div></div><div className="overflow-hidden"><table className="w-full table-fixed border-separate border-spacing-0 text-xs">
@@ -2169,18 +2288,18 @@ export const AdminInvoicing: React.FC = () => {
 </tr></thead>
 <tbody className="divide-y divide-line">
 {paginatedExpenses.map((expense)=><tr key={expense.id} className="group transition-colors hover:bg-bg">
-  <td className="px-4 py-4"><p className="font-medium text-fg">{expense.description}</p><p className="mt-1 truncate text-[11px] text-muted">{expense.category}</p></td>
-  <td className="px-4 py-4"><span className="inline-flex rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">{expense.type||'OpEx'}</span></td>
-  <td className="px-4 py-4 tabular-nums text-muted">{expense.date}</td>
-  <td className="px-4 py-4 text-right"><p className="font-semibold tabular-nums text-fg">{formatNativeAmount(expense.amount,expense.currency||currency,true)}</p></td>
-  <td className="px-4 py-4 text-right">{canManageInvoices&&<button type="button" onClick={()=>setConfirmAction({type:'expense',id:expense.id,label:expense.description})} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Void expense" title="Void expense"><Trash2 size={14}/></button>}</td>
+  <td className="px-4 py-5"><p className="font-medium text-fg">{expense.description}</p><p className="mt-1 truncate text-[11px] text-muted">{expense.category}</p></td>
+  <td className="px-4 py-5"><span className="inline-flex rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">{expense.type||'OpEx'}</span></td>
+  <td className="px-4 py-5 tabular-nums text-muted">{expense.date}</td>
+  <td className="px-4 py-5 text-right"><p className="font-semibold tabular-nums text-fg">{formatNativeAmount(expense.amount,expense.currency||currency,true)}</p></td>
+  <td className="px-4 py-5 text-right">{canManageInvoices&&<button type="button" onClick={()=>setConfirmAction({type:'expense',id:expense.id,label:expense.description})} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Void expense" title="Void expense"><Trash2 size={14}/></button>}</td>
 </tr>)}
 </tbody></table></div>{expensePageCount>1&&<div className="border-t border-line p-4"><div className="flex justify-between text-[11px] text-muted"><span>{filteredExpenses.length} expenses</span><div className="flex gap-1"><button type="button" onClick={()=>setExpensePage((p)=>Math.max(1,p-1))} disabled={expensePage===1} className={actionClass}>Prev</button><span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control bg-line px-2 text-[10px] font-semibold text-fg">{expensePage}</span><button type="button" onClick={()=>setExpensePage((p)=>Math.min(expensePageCount,p+1))} disabled={expensePage===expensePageCount} className={actionClass}>Next</button></div></div></div>}</section></section>
         </div>
       ) : financeView === 'tax-retainers' ? (
         <div className="space-y-5">
           <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Tax provision" value={formatFinanceCardAmount(taxProvision,currency)} context="Tax across issued invoices" icon={<Receipt size={15}/>}/><FinanceMetricCard label="Tax collected" value={formatFinanceCardAmount(taxCollected,currency)} context={(taxProvision>0?((taxCollected/taxProvision)*100).toFixed(1):'0.0')+'% of provision'} icon={<BadgeCheck size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Tax outstanding" value={formatFinanceCardAmount(taxOutstanding,currency)} context="Provision not collected" icon={<Hourglass size={15} className="text-warning"/>} toneClassName="text-warning"/><FinanceMetricCard label="Retainer billed" value={formatFinanceCardAmount(retainerBilled,currency)} context={(retainerBilled>0?((retainerCollected/retainerBilled)*100).toFixed(1):'0.0')+'% collected'} icon={<TrendingUp size={15}/>}/></section>
-          <section className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.65fr)]"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><h2 className="text-sm font-semibold text-fg">Retainer ledger</h2><p className="mt-1 text-xs text-muted">Billing and collected value for retainer invoices.</p></div><div className="overflow-hidden"><table className="w-full table-fixed border-separate border-spacing-0 text-xs">
+          <section className="space-y-5"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><div className="flex items-start justify-between gap-4"><div><h2 className="text-sm font-semibold text-fg">Retainer ledger</h2><p className="mt-1 text-xs text-muted">Billing and collected value for retainer invoices.</p></div>{usingDemoRetainerLedger&&<span className="shrink-0 rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">Sample data</span>}</div></div><div className="overflow-hidden"><table className="w-full table-fixed border-separate border-spacing-0 text-xs">
 <thead className="sticky top-0 z-10 border-b border-line bg-panel/95 backdrop-blur-sm"><tr>
   <th className="w-[26%] px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice</th>
   <th className="w-[28%] px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client</th>
@@ -2189,12 +2308,12 @@ export const AdminInvoicing: React.FC = () => {
   <th className="w-[15%] px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Collected</th>
 </tr></thead>
 <tbody className="divide-y divide-line">
-{retainerInvoices.slice(0,12).map((invoice)=><tr key={invoice.id} className="group align-top transition-colors hover:bg-bg">
-  <td className="px-4 py-4"><button type="button" onClick={()=>openPrintPreview(invoice)} className="font-semibold tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button><p className="mt-1 text-[11px] text-muted">Due {invoice.dueDate}</p></td>
-  <td className="px-4 py-4"><p className="font-medium text-fg">{invoice.clientCompany||invoice.clientName}</p><p className="mt-1 text-[11px] text-muted">Retainer invoice</p></td>
-  <td className="px-4 py-4"><StatusBadge status={invoice.status}/></td>
-  <td className="px-4 py-4 text-right font-semibold tabular-nums text-fg">{formatNativeAmount(invoice.total,invoice.currency,true)}</td>
-  <td className="px-4 py-4 text-right font-semibold tabular-nums text-success">{formatNativeAmount(getInvoiceCollectedInRange(invoice,yearStart,yearEnd),invoice.currency,true)}</td>
+{retainerLedgerInvoices.slice(0,12).map((invoice)=><tr key={invoice.id} className="group align-top transition-colors hover:bg-bg">
+  <td className="px-4 py-5"><button type="button" onClick={()=>openPrintPreview(invoice)} className="font-semibold tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button><p className="mt-1 text-[11px] text-muted">Due {invoice.dueDate}</p></td>
+  <td className="px-4 py-5"><p className="font-medium text-fg">{invoice.clientCompany||invoice.clientName}</p><p className="mt-1 text-[11px] text-muted">Retainer invoice</p></td>
+  <td className="px-4 py-5"><StatusBadge status={invoice.status}/></td>
+  <td className="px-4 py-5 text-right font-semibold tabular-nums text-fg">{formatNativeAmount(invoice.total,invoice.currency,true)}</td>
+  <td className="px-4 py-5 text-right font-semibold tabular-nums text-success">{formatNativeAmount(getInvoiceCollectedInRange(invoice,yearStart,yearEnd),invoice.currency,true)}</td>
 </tr>)}
 </tbody></table></div></section>
             <div className="grid gap-5"><section className="rounded-card border border-line bg-panel p-4 sm:p-5"><div className="border-b border-line pb-3"><h2 className="text-sm font-semibold text-fg">Tax provision</h2><p className="mt-1 text-xs text-muted">Provision versus collected and outstanding tax.</p></div><div className="mt-4 space-y-3">{[{label:'Provision',value:taxProvision,tone:'bg-series-1'},{label:'Collected',value:taxCollected,tone:'bg-success'},{label:'Outstanding',value:taxOutstanding,tone:'bg-warning'}].map((item)=>{const percent=taxProvision>0?Math.min(100,item.value/taxProvision*100):0;return <div key={item.label}><div className="flex justify-between text-xs"><span className="text-muted">{item.label}</span><span className="font-medium tabular-nums">{formatNativeAmount(item.value,currency,true)}</span></div><div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg"><div className={'h-full rounded-full '+item.tone} style={{width:percent+'%'}}/></div></div>})}</div><button type="button" onClick={exportTaxCsv} disabled={!currencyInvoices.length} className={actionClass+' mt-5 w-full'}><Download size={14}/>Export tax detail</button></section><section className="rounded-card border border-line bg-panel p-4 sm:p-5"><div className="flex justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Retainer collection</h2><p className="mt-1 text-xs text-muted">Collection against billed retainers.</p></div><span className="text-sm font-semibold tabular-nums">{retainerBilled>0?((retainerCollected/retainerBilled)*100).toFixed(1):'0.0'}%</span></div><div className="mt-4 h-2 rounded-full bg-bg overflow-hidden"><div className="h-full rounded-full bg-success" style={{width:(retainerBilled>0?Math.min(100,retainerCollected/retainerBilled*100):0)+'%'}}/></div><div className="mt-2 flex justify-between text-[10px] tabular-nums text-muted"><span>{formatFinanceCardAmount(retainerCollected,currency)}</span><span>{formatFinanceCardAmount(retainerBilled,currency)}</span></div></section></div>
@@ -2225,7 +2344,7 @@ export const AdminInvoicing: React.FC = () => {
   const project=projectsById.get(invoice.projectId);
   const overdue=isPastDueInvoice(invoice);
   return <tr key={invoice.id} className="group align-top transition-colors hover:bg-bg">
-    <td className="px-4 py-4">
+    <td className="px-4 py-5">
       <div className="flex items-start gap-2.5">
         <span className={'mt-1.5 h-2 w-2 shrink-0 rounded-full '+(overdue?'bg-danger':invoice.status==='paid'?'bg-success':'bg-warning')} aria-hidden="true" />
         <div className="min-w-0">
@@ -2234,26 +2353,26 @@ export const AdminInvoicing: React.FC = () => {
         </div>
       </div>
     </td>
-    {columnVisibility.client&&<td className="px-4 py-4">
+    {columnVisibility.client&&<td className="px-4 py-5">
       <p className="truncate font-medium text-fg">{invoice.clientCompany||invoice.clientName}</p>
       <p className="mt-1 truncate text-[11px] text-muted">{project?.name||invoice.clientEmail||invoice.clientName}</p>
     </td>}
-    {columnVisibility.timeline&&<td className="px-4 py-4">
+    {columnVisibility.timeline&&<td className="px-4 py-5">
       <div className="grid gap-1.5 text-[11px]">
         <div className="flex items-center justify-between gap-3"><span className="text-muted">Issued</span><span className="tabular-nums text-fg">{invoice.issueDate}</span></div>
         <div className={'flex items-center justify-between gap-3 '+(overdue?'text-danger':'')}><span className={overdue?'text-danger':'text-muted'}>Due</span><span className="tabular-nums">{invoice.dueDate}</span></div>
       </div>
     </td>}
-    {columnVisibility.billing&&<td className="px-4 py-4 text-right">
+    {columnVisibility.billing&&<td className="px-4 py-5 text-right">
       <p className="font-semibold tabular-nums text-fg">{formatNativeAmount(invoice.total,invoice.currency)}</p>
       <p className={'mt-1 text-[11px] tabular-nums '+(balance>0?'text-warning':'text-success')}>{balance>0?'Balance '+formatNativeAmount(balance,invoice.currency,true):'Settled'}</p>
     </td>}
-    {columnVisibility.status&&<td className="px-4 py-4">
+    {columnVisibility.status&&<td className="px-4 py-5">
       {canManageInvoices&&['draft','sent','overdue'].includes(invoice.status)
         ? <InvoiceStatusDropdown status={invoice.status} allowedStatuses={['draft','sent','overdue']} disabled={updatingInvoiceId===invoice.id} onChange={(next)=>void updateInvoiceStatus(invoice,next)} />
         : <StatusBadge status={invoice.status} />}
     </td>}
-    {columnVisibility.actions&&<td className="px-4 py-4">
+    {columnVisibility.actions&&<td className="px-4 py-5">
       <div className="flex max-w-full flex-wrap justify-end">
         <div className="inline-flex max-w-full flex-wrap items-center rounded-control border border-line bg-bg p-0.5 shadow-sm">
           {overdue&&<button type="button" onClick={()=>setReminderInvoice(invoice)} className="inline-flex h-8 items-center rounded-control px-2 text-[10px] font-medium text-danger hover:bg-danger/10" aria-label={'Send reminder for '+invoice.invoiceNumber} title="Reminder">Reminder</button>}
