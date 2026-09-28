@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import {
   AlertCircle,
   ArrowDown,
@@ -8,8 +8,6 @@ import {
   CalendarDays,
   Check,
   CheckCircle2,
-  CreditCard,
-  DollarSign,
   Download,
   Edit3,
   FileText,
@@ -20,7 +18,6 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Trash2,
-  TrendingDown,
   TrendingUp,
   WalletCards,
   X
@@ -122,6 +119,34 @@ const isDueSoonInvoice = (invoice: AgencyInvoice) => {
   return invoice.status !== 'paid' && invoice.status !== 'cancelled' && days >= 0 && days <= 7;
 };
 
+const isRetainerInvoice = (invoice: AgencyInvoice) =>
+  /retainer/i.test(
+    [invoice.paymentTerms, invoice.notes, ...invoice.items.map((item) => item.description)]
+      .filter(Boolean)
+      .join(' ')
+  );
+
+const getInvoiceCollectedInRange = (invoice: AgencyInvoice, start: Date, end: Date) => {
+  const payments = Array.isArray(invoice.payments) ? invoice.payments : [];
+  if (payments.length) {
+    return payments.reduce((sum, payment) => {
+      const date = new Date(String(payment.date || '') + 'T00:00:00');
+      return !Number.isNaN(date.getTime()) && date >= start && date <= end
+        ? sum + (Number(payment.amount) || 0)
+        : sum;
+    }, 0);
+  }
+
+  if (invoice.paidDate) {
+    const paidDate = new Date(invoice.paidDate + 'T00:00:00');
+    return !Number.isNaN(paidDate.getTime()) && paidDate >= start && paidDate <= end
+      ? Number(invoice.amountPaid || invoice.total || 0)
+      : 0;
+  }
+
+  return 0;
+};
+
 const getPreviousQuarter = (range: ReturnType<typeof getQuarterRange>) => {
   if (!range) return null;
   return getQuarterRange(new Date(range.start.getFullYear(), range.start.getMonth() - 1, 15));
@@ -195,6 +220,7 @@ type FinanceChartPoint = {
   inflow: number;
   outflow: number;
   net: number;
+  retainerTarget: number;
 };
 
 const FinanceCashFlowChart: React.FC<{
@@ -211,13 +237,13 @@ const FinanceCashFlowChart: React.FC<{
   const bottom = 18;
   const innerWidth = width - left - right;
   const innerHeight = height - top - bottom;
-  const values = data.flatMap((point) => [point.inflow, point.outflow, point.net, 0]);
+  const values = data.flatMap((point) => [point.net, point.outflow, point.retainerTarget, 0]);
   const minValue = Math.min(...values);
   const maxValue = Math.max(...values);
   const range = Math.max(1, maxValue - minValue);
   const x = (index: number) => left + (data.length === 1 ? innerWidth / 2 : (index / (data.length - 1)) * innerWidth);
   const y = (value: number) => top + ((maxValue - value) / range) * innerHeight;
-  const polyline = (key: 'inflow' | 'outflow' | 'net') => data.map((point, index) => x(index) + ',' + y(point[key])).join(' ');
+  const polyline = (key: 'outflow' | 'net' | 'retainerTarget') => data.map((point, index) => x(index) + ',' + y(point[key])).join(' ');
   const current = data[data.length - 1];
   return (
     <div className="min-w-0" role="img" aria-label={ariaLabel}>
@@ -228,13 +254,13 @@ const FinanceCashFlowChart: React.FC<{
             return <line key={ratio} x1={left} x2={width - right} y1={yy} y2={yy} stroke="var(--line)" strokeWidth="1" />;
           })}
           <polyline points={polyline('outflow')} fill="none" stroke="var(--series-3)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-          <polyline points={polyline('net')} fill="none" stroke="var(--success)" strokeWidth="1.8" strokeDasharray="5 4" strokeLinecap="round" strokeLinejoin="round" />
-          <polyline points={polyline('inflow')} fill="none" stroke="var(--series-1)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+          <polyline points={polyline('retainerTarget')} fill="none" stroke="var(--success)" strokeWidth="1.8" strokeDasharray="5 4" strokeLinecap="round" strokeLinejoin="round" />
+          <polyline points={polyline('net')} fill="none" stroke="var(--series-1)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
           {data.map((point, index) => (
             <g key={point.label}>
-              <circle cx={x(index)} cy={y(point.inflow)} r="2.8" fill="var(--series-1)" />
+              <circle cx={x(index)} cy={y(point.net)} r="2.8" fill="var(--series-1)" />
+              <circle cx={x(index)} cy={y(point.retainerTarget)} r="2.4" fill="var(--success)" />
               <circle cx={x(index)} cy={y(point.outflow)} r="2.4" fill="var(--series-3)" />
-              <circle cx={x(index)} cy={y(point.net)} r="2.4" fill="var(--success)" />
             </g>
           ))}
         </svg>
