@@ -24,7 +24,7 @@ import {
   Users,
   X
 } from 'lucide-react';
-import { AgencyClient } from '../../lib/clientStore';
+import { AgencyClient, createClientSlug, normalizeAgencyClient } from '../../lib/clientStore';
 import { formatAmount, getActiveCurrency, CURRENCY_EVENT, CurrencyCode } from '../../lib/currency';
 import { useLanguage } from '../../lib/LanguageContext';
 import { hasAdminPermission } from '../../lib/adminAuth';
