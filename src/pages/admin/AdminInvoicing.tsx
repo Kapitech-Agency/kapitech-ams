@@ -2227,86 +2227,55 @@ export const AdminInvoicing: React.FC = () => {
             </section>
           </section>
         </div>      ) : financeView === 'income-expenses' ? (
-        <div className="space-y-6">
-          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Income and expenses summary">
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Income YTD</span><WalletCards size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(ytdCollected, currency)}</p><p className="mt-2 text-xs text-muted">Collection rate {ytdCollectionRate.toFixed(1)}%</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Invoiced YTD</span><Receipt size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(ytdInvoiced, currency)}</p><p className="mt-2 text-xs text-muted">Billings issued</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Expenses YTD</span><ArrowDown size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(ytdExpenses, currency)}</p><p className="mt-2 text-xs text-muted">Actual records</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Net Cash YTD</span><TrendingUp size={15} className={ytdNetCash >= 0 ? 'text-success' : 'text-danger'} /></div><p className={'mt-3 text-2xl font-medium tabular-nums ' + (ytdNetCash >= 0 ? 'text-success' : 'text-danger')}>{formatFinanceCardAmount(ytdNetCash, currency)}</p><p className="mt-2 text-xs text-muted">Collected less expenses</p></article>
+        <div className="space-y-5">
+          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4" aria-label="Income and expenses summary">
+            <FinanceMetricCard label="Income YTD" value={formatFinanceCardAmount(ytdCollected, currency)} context={ytdCollectionRate.toFixed(1) + '% collected of issued billings'} icon={<WalletCards size={15} className="text-success" />} toneClassName="text-success" />
+            <FinanceMetricCard label="Invoiced YTD" value={formatFinanceCardAmount(ytdInvoiced, currency)} context="Issued billings" icon={<Receipt size={15} />} />
+            <FinanceMetricCard label="Expenses YTD" value={formatFinanceCardAmount(ytdExpenses, currency)} context={currencyExpenses.length + ' recorded entries'} icon={<ArrowDown size={15} className="text-series-3" />} />
+            <FinanceMetricCard label="Net cash YTD" value={formatFinanceCardAmount(ytdNetCash, currency)} context="Collections less expenses" icon={<TrendingUp size={15} />} toneClassName={ytdNetCash >= 0 ? 'text-success' : 'text-danger'} />
           </section>
 
-          <section className="grid grid-cols-1 gap-6 min-[1100px]:grid-cols-2">
+          <section className="grid gap-5 xl:grid-cols-2">
             <section className="rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="finance-income-title">
-              <div className="border-b border-line p-5">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div><h2 id="finance-income-title" className="text-sm font-semibold text-fg">Income</h2><p className="mt-1 text-xs text-muted">Actual payment activity for the current year.</p></div>
-                  <label className="relative w-full sm:w-56"><span className="sr-only">Search income</span><Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" /><input value={incomeSearch} onChange={(event) => setIncomeSearch(event.target.value)} placeholder="Search payment or client..." className={fieldClass + ' pl-8'} /></label>
+              <div className="border-b border-line p-4 sm:p-5">
+                <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                  <div><h2 id="finance-income-title" className="text-sm font-semibold text-fg">Income ledger</h2><p className="mt-1 text-xs leading-5 text-muted">Actual payment activity, separated from invoice value.</p></div>
+                  <label className="relative w-full md:w-60"><span className="sr-only">Search income</span><Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" /><input value={incomeSearch} onChange={(event) => setIncomeSearch(event.target.value)} placeholder="Search payment, invoice, client..." className={fieldClass + ' pl-8'} /></label>
                 </div>
-                <div className="mt-3 flex items-center gap-2 border-t border-line pt-3 text-[10px] text-muted"><span>{incomeRows.length} payment records</span><span className="h-1 w-1 rounded-full bg-line" /><span>YTD collection</span>{incomeSearch && <button type="button" onClick={() => setIncomeSearch('')} className="ml-auto text-accent-text hover:text-fg">Clear</button>}</div>
+                <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-line pt-3 text-[10px] text-muted"><span>{incomeRows.length} payment records</span><span className="h-1 w-1 rounded-full bg-line" /><span>YTD collected {formatFinanceCardAmount(ytdCollected, currency)}</span>{incomeSearch && <button type="button" onClick={() => setIncomeSearch('')} className="ml-auto rounded-chip px-2 py-1 text-[11px] text-muted hover:bg-bg hover:text-fg">Clear</button>}</div>
               </div>
               <div className="overflow-x-auto custom-scrollbar">
-                {incomeRows.length === 0 ? (
-                  <div className="p-5"><EmptyState title="No income recorded" description="Recorded payments will appear here once invoices start collecting cash." /></div>
-                ) : (
-                  <table className="w-full min-w-[820px] border-collapse text-left text-xs">
-                    <thead className="bg-bg"><tr><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Payment date</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice</th><th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount</th></tr></thead>
-                    <tbody>{paginatedIncomeRows.map((row) => <tr key={row.id} className="border-t border-line hover:bg-bg"><td className="px-4 py-3 tabular-nums text-muted">{row.date}</td><td className="px-4 py-3 text-fg">{row.clientCompany}</td><td className="px-4 py-3"><button type="button" onClick={() => {
-                      const invoice = currencyInvoices.find((item) => item.id === row.invoiceId);
-                      if (invoice) openPrintPreview(invoice);
-                    }} className="font-medium tabular-nums text-fg hover:text-accent-text">{row.invoiceNumber}</button></td><td className="px-4 py-3 text-right font-medium tabular-nums text-success">{formatNativeAmount(row.amount, row.currency, true)}</td></tr>)}</tbody>
+                {incomeRows.length === 0 ? <div className="p-5"><EmptyState title="No income recorded" description="Recorded payments will appear here once invoices start collecting cash." /></div> : (
+                  <table className="w-full min-w-[760px] border-collapse text-xs">
+                    <thead className="bg-bg"><tr><th className="px-5 py-3 text-left text-[10px] font-semibold text-muted">Payment</th><th className="px-4 py-3 text-left text-[10px] font-semibold text-muted">Client</th><th className="px-4 py-3 text-left text-[10px] font-semibold text-muted">Date</th><th className="px-5 py-3 text-right text-[10px] font-semibold text-muted">Amount</th></tr></thead>
+                    <tbody>{paginatedIncome.map((row) => <tr key={row.id} className="border-t border-line hover:bg-bg"><td className="px-5 py-4"><button type="button" onClick={() => { const invoice = currencyInvoices.find((item) => item.id === row.invoiceId); if (invoice) openPrintPreview(invoice); }} className="font-semibold tabular-nums text-fg hover:text-accent-text">{row.invoiceNumber}</button><p className="mt-1 text-[10px] text-muted">Payment record</p></td><td className="px-4 py-4 text-fg">{row.clientCompany}</td><td className="px-4 py-4 tabular-nums text-muted">{row.date}</td><td className="px-5 py-4 text-right font-semibold tabular-nums text-success">{formatNativeAmount(row.amount, row.currency, true)}</td></tr>)}</tbody>
                   </table>
                 )}
               </div>
-              {incomePageCount > 1 && (
-                <div className="border-t border-line px-4 py-3">
-                  <div className="flex items-center justify-between text-[11px] text-muted">
-                    <span className="tabular-nums">Showing {((incomePage - 1) * incomePageSize) + 1}–{Math.min(incomePage * incomePageSize, incomeRows.length)} of {incomeRows.length}</span>
-                    <div className="flex items-center gap-1">
-                      <button type="button" onClick={() => setIncomePage((page) => Math.max(1, page - 1))} disabled={incomePage === 1} className={actionClass}>Previous</button>
-                      <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control border border-line bg-line px-2 text-[10px] font-semibold text-fg">{incomePage}</span>
-                      <button type="button" onClick={() => setIncomePage((page) => Math.min(incomePageCount, page + 1))} disabled={incomePage === incomePageCount} className={actionClass}>Next</button>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {incomePageCount > 1 && <div className="border-t border-line px-5 py-3"><div className="flex items-center justify-between text-[11px] text-muted"><span className="tabular-nums">Showing {((incomePage - 1) * incomePageSize) + 1}–{Math.min(incomePage * incomePageSize, incomeRows.length)} of {incomeRows.length}</span><div className="flex items-center gap-1"><button type="button" onClick={() => setIncomePage((page) => Math.max(1, page - 1))} disabled={incomePage === 1} className={actionClass}>Previous</button><span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control border border-line bg-line px-2 text-[10px] font-semibold text-fg">{incomePage}</span><button type="button" onClick={() => setIncomePage((page) => Math.min(incomePageCount, page + 1))} disabled={incomePage === incomePageCount} className={actionClass}>Next</button></div></div></div>}
             </section>
 
             <section className="rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="finance-expense-title">
-              <div className="border-b border-line p-5">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div><div className="flex items-center gap-2"><h2 id="finance-expense-title" className="text-sm font-semibold text-fg">Expenses</h2>{usingDemoExpenses && <span className="rounded-badge border border-warning/20 bg-warning/10 px-1.5 py-0.5 text-[10px] font-medium text-warning">Demo data</span>}</div><p className="mt-1 text-xs text-muted">Operating, rental, and capital expense records.</p></div>
-                  <div className="flex items-center gap-2">
-                    {canManageInvoices && <button type="button" onClick={openExpenseModal} className={primaryClass}><Plus size={14} />Record expense</button>}
+              <div className="border-b border-line p-4 sm:p-5">
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-end justify-between gap-3"><div><h2 id="finance-expense-title" className="text-sm font-semibold text-fg">Expense ledger</h2><p className="mt-1 text-xs leading-5 text-muted">Operating spend with type, category, and date controls.</p></div><button type="button" onClick={openExpenseModal} className={actionClass}><Plus size={14} />Add expense</button></div>
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    <label className="relative"><span className="sr-only">Search expense</span><Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" /><input value={expenseSearch} onChange={(event) => setExpenseSearch(event.target.value)} placeholder="Search expense..." className={fieldClass + ' pl-8'} /></label>
+                    <CustomSelect value={expenseTypeFilter} onChange={setExpenseTypeFilter} options={expenseTypeOptions} className="w-full" triggerClassName="h-9 min-h-9 w-full" aria-label="Expense type filter" />
+                    <CustomSelect value={expenseSort} onChange={(value) => setExpenseSort(value as typeof expenseSort)} options={[{ value: 'date_desc', label: 'Newest first' }, { value: 'date_asc', label: 'Oldest first' }, { value: 'amount_high', label: 'Highest amount' }, { value: 'amount_low', label: 'Lowest amount' }]} className="w-full" triggerClassName="h-9 min-h-9 w-full" aria-label="Expense sort" />
                   </div>
-                </div>
-                <div className="mt-3 grid gap-2 border-t border-line pt-3 sm:grid-cols-[1fr_150px_180px]">
-                  <label className="relative"><span className="sr-only">Search expenses</span><Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" /><input value={expenseSearch} onChange={(event) => setExpenseSearch(event.target.value)} placeholder="Search expense..." className={fieldClass + ' pl-8'} /></label>
-                  <CustomSelect value={expenseTypeFilter} onChange={setExpenseTypeFilter} options={expenseTypeOptions} className="w-full" triggerClassName="h-9 min-h-9 w-full" aria-label="Expense type filter" />
-                  <CustomSelect value={expenseSort} onChange={(value) => setExpenseSort(value as typeof expenseSort)} options={[{ value: 'date_desc', label: 'Newest first' }, { value: 'date_asc', label: 'Oldest first' }, { value: 'amount_high', label: 'Highest amount' }, { value: 'amount_low', label: 'Lowest amount' }]} className="w-full" triggerClassName="h-9 min-h-9 w-full" aria-label="Expense sort" />
                 </div>
               </div>
               <div className="overflow-x-auto custom-scrollbar">
-                <table className="w-full min-w-[820px] border-collapse text-left text-xs">
-                  <thead className="bg-bg"><tr><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Date</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Type / category</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Description</th><th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount</th><th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Action</th></tr></thead>
-                  <tbody>{paginatedExpenses.map((expense) => <tr key={expense.id} className="border-t border-line hover:bg-bg"><td className="px-4 py-3 tabular-nums text-muted">{expense.date}</td><td className="px-4 py-3"><div className="font-medium text-fg">{expense.type || 'OpEx'}</div><div className="mt-0.5 text-[10px] text-muted">{expense.category}</div></td><td className="px-4 py-3 text-fg">{expense.description}</td><td className="px-4 py-3 text-right font-medium tabular-nums text-fg">{formatNativeAmount(expense.amount, expense.currency || currency, true)}</td><td className="px-4 py-3 text-right">{canManageInvoices && <button type="button" onClick={() => setConfirmAction({ type: 'expense', id: expense.id, label: expense.description })} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Void expense" title="Void expense"><Trash2 size={14} /></button>}</td></tr>)}</tbody>
+                <table className="w-full min-w-[780px] border-collapse text-xs">
+                  <thead className="bg-bg"><tr><th className="px-5 py-3 text-left text-[10px] font-semibold text-muted">Expense</th><th className="px-4 py-3 text-left text-[10px] font-semibold text-muted">Type</th><th className="px-4 py-3 text-left text-[10px] font-semibold text-muted">Date</th><th className="px-5 py-3 text-right text-[10px] font-semibold text-muted">Amount</th><th className="px-4 py-3 text-right text-[10px] font-semibold text-muted">Action</th></tr></thead>
+                  <tbody>{paginatedExpenses.map((expense) => <tr key={expense.id} className="border-t border-line hover:bg-bg"><td className="px-5 py-4"><p className="font-medium text-fg">{expense.description}</p><p className="mt-1 text-[10px] text-muted">{expense.category}</p></td><td className="px-4 py-4 text-muted">{expense.type || 'OpEx'}</td><td className="px-4 py-4 tabular-nums text-muted">{expense.date}</td><td className="px-5 py-4 text-right font-medium tabular-nums text-fg">{formatNativeAmount(expense.amount, expense.currency || currency, true)}</td><td className="px-4 py-4 text-right">{canManageInvoices && <button type="button" onClick={() => setConfirmAction({ type: 'expense', id: expense.id, label: expense.description })} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Void expense" title="Void expense"><Trash2 size={14} /></button>}</td></tr>)}</tbody>
                 </table>
               </div>
-              {expensePageCount > 1 && (
-                <div className="border-t border-line px-4 py-3">
-                  <div className="flex items-center justify-between text-[11px] text-muted">
-                    <span className="tabular-nums">Showing {((expensePage - 1) * expensePageSize) + 1}–{Math.min(expensePage * expensePageSize, filteredExpenses.length)} of {filteredExpenses.length}</span>
-                    <div className="flex items-center gap-1">
-                      <button type="button" onClick={() => setExpensePage((page) => Math.max(1, page - 1))} disabled={expensePage === 1} className={actionClass}>Previous</button>
-                      <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control border border-line bg-line px-2 text-[10px] font-semibold text-fg">{expensePage}</span>
-                      <button type="button" onClick={() => setExpensePage((page) => Math.min(expensePageCount, page + 1))} disabled={expensePage === expensePageCount} className={actionClass}>Next</button>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {expensePageCount > 1 && <div className="border-t border-line px-5 py-3"><div className="flex items-center justify-between text-[11px] text-muted"><span className="tabular-nums">Showing {((expensePage - 1) * expensePageSize) + 1}–{Math.min(expensePage * expensePageSize, filteredExpenses.length)} of {filteredExpenses.length}</span><div className="flex items-center gap-1"><button type="button" onClick={() => setExpensePage((page) => Math.max(1, page - 1))} disabled={expensePage === 1} className={actionClass}>Previous</button><span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control border border-line bg-line px-2 text-[10px] font-semibold text-fg">{expensePage}</span><button type="button" onClick={() => setExpensePage((page) => Math.min(expensePageCount, page + 1))} disabled={expensePage === expensePageCount} className={actionClass}>Next</button></div></div></div>}
             </section>
           </section>
-        </div>
-      ) : financeView === 'tax-retainers' ? (
+        </div>      ) : financeView === 'tax-retainers' ? (
         <div className="space-y-6">
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Tax and retainers summary">
             <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Tax provision</span><Receipt size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(taxProvision, currency)}</p><p className="mt-2 text-xs text-muted">Tax across issued invoices</p></article>
