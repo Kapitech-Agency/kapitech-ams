@@ -6,7 +6,7 @@
 
 export interface AgencyClient {
   id: string;
-  slug: string;
+  slug?: string;
   name: string;
   company: string;
   email: string;
