@@ -1302,21 +1302,7 @@ export const AdminInvoicing: React.FC = () => {
           ? { ...item, status: nextStatus, updatedAt: new Date().toISOString(), paidDate: nextStatus === 'paid' ? getDateInputValue() : item.paidDate }
           : item);
         setInvoices(nextInvoices);
-        const derived = computeFinancialMetrics(nextInvoices, expenses);
-        setServerMetrics({
-          currency,
-          totalRevenueCollected: derived.totalPaidRevenue,
-          totalBilled: derived.totalPaidRevenue + derived.totalOutstanding + derived.totalOverdue,
-          totalOutstanding: derived.totalOutstanding,
-          totalExpense: derived.totalExpenses,
-          netProfit: derived.netOperatingProfit,
-          profitMargin: String(derived.netMarginPercent),
-          totalInvoicesCount: derived.totalInvoicesCount,
-          paidCount: derived.paidCount,
-          partiallyPaidCount: derived.partiallyPaidCount,
-          overdueCount: derived.overdueCount,
-          draftCount: nextInvoices.filter((item) => item.status === 'draft').length
-        });
+        syncDemoFinanceMetrics(nextInvoices, expenses);
         showNotice('success', 'Demo invoice status updated.');
         return;
       }
@@ -1401,7 +1387,6 @@ export const AdminInvoicing: React.FC = () => {
               updatedAt: new Date().toISOString()
             }
           : item);
-        setInvoices(nextInvoices);
         setInvoices(nextInvoices);
         syncDemoFinanceMetrics(nextInvoices, expenses);
         setPaymentInvoice(null);
@@ -1859,7 +1844,7 @@ export const AdminInvoicing: React.FC = () => {
       const updatedQuotation = { ...quotation, status: 'accepted' as FinanceQuotationStatus, invoiceId: 'slug-inv-' + Date.now() };
       setQuotations((current) => current.map((item) => item.id === quotation.id ? updatedQuotation : item));
       setQuotationDetail((current) => current?.id === quotation.id ? updatedQuotation : current);
-      showNotice('success', 'Quotation converted to a demo invoice reference.');
+      showNotice('success', 'Approved quotation converted to a demo invoice reference.');
       return;
     }
 
@@ -2090,27 +2075,27 @@ export const AdminInvoicing: React.FC = () => {
         <div className="space-y-6">
           <section className="grid grid-cols-2 gap-3 min-[1100px]:grid-cols-4" aria-label="Quotation overview">
             <article className="rounded-card border border-line bg-panel px-4 py-4">
-              <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Total quotations</span><FileText size={15} /></div>
+              <div className="flex items-center justify-between text-xs font-medium text-muted"><span>Total quotations</span><FileText size={15} /></div>
               <div className="mt-2 text-2xl font-medium tabular-nums text-fg">{quotationMetrics.total}</div>
               <p className="mt-1 text-[11px] text-muted">Active sales workspace</p>
             </article>
             <article className="rounded-card border border-line bg-panel px-4 py-4">
-              <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Active</span><Clock3 size={15} /></div>
+              <div className="flex items-center justify-between text-xs font-medium text-muted"><span>Active</span><Clock3 size={15} /></div>
               <div className="mt-2 text-2xl font-medium tabular-nums text-fg">{quotationMetrics.active}</div>
               <p className="mt-1 text-[11px] text-muted">Draft → sent pipeline</p>
             </article>
             <article className="rounded-card border border-line bg-panel px-4 py-4">
-              <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Approved</span><BadgeCheck size={15} className="text-success" /></div>
+              <div className="flex items-center justify-between text-xs font-medium text-muted"><span>Approved</span><BadgeCheck size={15} className="text-success" /></div>
               <div className="mt-2 text-2xl font-medium tabular-nums text-success">{quotationMetrics.approved}</div>
-              <p className="mt-1 text-[11px] text-muted">Ready to convert to invoice</p>
+              <p className="mt-1 text-[11px] text-muted">Ready for invoice conversion</p>
             </article>
             <article className="rounded-card border border-line bg-panel px-4 py-4">
-              <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Accepted</span><CheckCircle2 size={15} className="text-info" /></div>
+              <div className="flex items-center justify-between text-xs font-medium text-muted"><span>Accepted</span><CheckCircle2 size={15} className="text-info" /></div>
               <div className="mt-2 text-2xl font-medium tabular-nums text-info">{quotationMetrics.accepted}</div>
               <p className="mt-1 text-[11px] text-muted">Client acceptance</p>
             </article>
             <article className="rounded-card border border-line bg-panel px-4 py-4">
-              <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Pipeline value</span><WalletCards size={15} /></div>
+              <div className="flex items-center justify-between text-xs font-medium text-muted"><span>Pipeline value</span><WalletCards size={15} /></div>
               <div className="mt-2 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(quotationMetrics.value, currency)}</div>
               <p className="mt-1 text-[11px] text-muted">{usingDemoQuotations ? 'Sample workspace data' : 'Server-backed quotations'}</p>
             </article>
@@ -2206,10 +2191,10 @@ export const AdminInvoicing: React.FC = () => {
       ) : financeView === 'income-expenses' ? (
         <div className="space-y-6">
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Income and expenses summary">
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Income YTD</span><WalletCards size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(ytdCollected, currency)}</p><p className="mt-2 text-xs text-muted">Collection rate {ytdCollectionRate.toFixed(1)}%</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Invoiced YTD</span><Receipt size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(ytdInvoiced, currency)}</p><p className="mt-2 text-xs text-muted">Billings issued</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Expenses YTD</span><ArrowDown size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(ytdExpenses, currency)}</p><p className="mt-2 text-xs text-muted">Actual records</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Net Cash YTD</span><TrendingUp size={15} className={ytdNetCash >= 0 ? 'text-success' : 'text-danger'} /></div><p className={'mt-3 text-2xl font-medium tabular-nums ' + (ytdNetCash >= 0 ? 'text-success' : 'text-danger')}>{formatFinanceCardAmount(ytdNetCash, currency)}</p><p className="mt-2 text-xs text-muted">Collected less expenses</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Income YTD</span><WalletCards size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(ytdCollected, currency)}</p><p className="mt-2 text-xs text-muted">Collection rate {ytdCollectionRate.toFixed(1)}%</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Invoiced YTD</span><Receipt size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(ytdInvoiced, currency)}</p><p className="mt-2 text-xs text-muted">Billings issued</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Expenses YTD</span><ArrowDown size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(ytdExpenses, currency)}</p><p className="mt-2 text-xs text-muted">Actual records</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Net Cash YTD</span><TrendingUp size={15} className={ytdNetCash >= 0 ? 'text-success' : 'text-danger'} /></div><p className={'mt-3 text-2xl font-medium tabular-nums ' + (ytdNetCash >= 0 ? 'text-success' : 'text-danger')}>{formatFinanceCardAmount(ytdNetCash, currency)}</p><p className="mt-2 text-xs text-muted">Collected less expenses</p></article>
           </section>
 
           <section className="grid grid-cols-1 gap-6 min-[1100px]:grid-cols-2">
@@ -2286,10 +2271,10 @@ export const AdminInvoicing: React.FC = () => {
       ) : financeView === 'tax-retainers' ? (
         <div className="space-y-6">
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Tax and retainers summary">
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Tax provision</span><Receipt size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(taxProvision, currency)}</p><p className="mt-2 text-xs text-muted">Tax across issued invoices</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Tax collected</span><BadgeCheck size={15} className="text-success" /></div><p className="mt-3 text-2xl font-medium tabular-nums text-success">{formatFinanceCardAmount(taxCollected, currency)}</p><p className="mt-2 text-xs text-muted">Recovered through payments</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Tax outstanding</span><Hourglass size={15} className="text-warning" /></div><p className="mt-3 text-2xl font-medium tabular-nums text-warning">{formatFinanceCardAmount(taxOutstanding, currency)}</p><p className="mt-2 text-xs text-muted">Waiting on collections</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Retainer billed</span><TrendingUp size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(retainerBilled, currency)}</p><p className="mt-2 text-xs text-muted">{retainerInvoices.length} retainer invoices</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Tax provision</span><Receipt size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(taxProvision, currency)}</p><p className="mt-2 text-xs text-muted">Tax across issued invoices</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Tax collected</span><BadgeCheck size={15} className="text-success" /></div><p className="mt-3 text-2xl font-medium tabular-nums text-success">{formatFinanceCardAmount(taxCollected, currency)}</p><p className="mt-2 text-xs text-muted">Recovered through payments</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Tax outstanding</span><Hourglass size={15} className="text-warning" /></div><p className="mt-3 text-2xl font-medium tabular-nums text-warning">{formatFinanceCardAmount(taxOutstanding, currency)}</p><p className="mt-2 text-xs text-muted">Waiting on collections</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Retainer billed</span><TrendingUp size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(retainerBilled, currency)}</p><p className="mt-2 text-xs text-muted">{retainerInvoices.length} retainer invoices</p></article>
           </section>
 
           <section className="grid grid-cols-1 gap-6 min-[1100px]:grid-cols-2">
@@ -2320,10 +2305,10 @@ export const AdminInvoicing: React.FC = () => {
       ) : financeView === 'financial-reports' ? (
         <div className="space-y-6">
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Financial reporting summary">
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Net cash YTD</span><TrendingUp size={15} /></div><p className={'mt-3 text-2xl font-medium tabular-nums ' + (ytdNetCash >= 0 ? 'text-success' : 'text-danger')}>{formatFinanceCardAmount(ytdNetCash, currency)}</p><p className="mt-2 text-xs text-muted">Collected less expenses</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Collection rate</span><BarChart3 size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{ytdCollectionRate.toFixed(1)}%</p><p className="mt-2 text-xs text-muted">Collected against issued billings</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Operating margin</span><TrendingUp size={15} className="text-success" /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{Number.isFinite(operatingMarginValue) ? operatingMarginValue.toFixed(1) : quarterMargin.toFixed(1)}%</p><p className="mt-2 text-xs text-muted">Target ≥ 35%</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Outstanding</span><Hourglass size={15} className="text-warning" /></div><p className="mt-3 text-2xl font-medium tabular-nums text-warning">{formatFinanceCardAmount(derivedMetrics.totalOutstanding, currency)}</p><p className="mt-2 text-xs text-muted">{pendingInvoiceCount} invoices still open</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Net cash YTD</span><TrendingUp size={15} /></div><p className={'mt-3 text-2xl font-medium tabular-nums ' + (ytdNetCash >= 0 ? 'text-success' : 'text-danger')}>{formatFinanceCardAmount(ytdNetCash, currency)}</p><p className="mt-2 text-xs text-muted">Collected less expenses</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Collection rate</span><BarChart3 size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{ytdCollectionRate.toFixed(1)}%</p><p className="mt-2 text-xs text-muted">Collected against issued billings</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Operating margin</span><TrendingUp size={15} className="text-success" /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{Number.isFinite(operatingMarginValue) ? operatingMarginValue.toFixed(1) : quarterMargin.toFixed(1)}%</p><p className="mt-2 text-xs text-muted">Target ≥ 35%</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Outstanding</span><Hourglass size={15} className="text-warning" /></div><p className="mt-3 text-2xl font-medium tabular-nums text-warning">{formatFinanceCardAmount(derivedMetrics.totalOutstanding, currency)}</p><p className="mt-2 text-xs text-muted">{pendingInvoiceCount} invoices still open</p></article>
           </section>
 
           <section className="grid grid-cols-1 gap-6 min-[1100px]:grid-cols-3">
@@ -2381,7 +2366,7 @@ export const AdminInvoicing: React.FC = () => {
             className="grid-cols-2 sm:grid-cols-3 min-[1100px]:grid-cols-6"
             itemClassName="rounded-card border border-line bg-panel p-4 sm:p-5"
             metrics={[
-              { id: 'billed', label: 'Total invoiced', value: formatFinanceCardAmount(currentQuarterTotal, currency), context: quarterChangePercent === null ? 'No prior quarter comparison' : (quarterChangePercent >= 0 ? '+' : '') + quarterChangePercent.toFixed(1) + '% vs previous quarter', icon: <Receipt size={18} aria-hidden="true" /> },
+              { id: 'billed', label: 'Total invoiced', value: formatFinanceCardAmount(currentQuarterTotal, currency), context: quarterChangePercent === null ? 'Current quarter' : (quarterChangePercent >= 0 ? '+' : '') + quarterChangePercent.toFixed(1) + '% vs previous quarter', icon: <Receipt size={18} aria-hidden="true" /> },
               { id: 'collected', label: 'Collected YTD', value: formatFinanceCardAmount(ytdCollected, currency), context: ytdCollectionRate.toFixed(1) + '% collection rate' + (usingDemoInvoices ? ' · Demo' : ''), icon: <WalletCards size={18} className="text-success" aria-hidden="true" /> },
               { id: 'outstanding', label: 'Outstanding', value: formatFinanceCardAmount(derivedMetrics.totalOutstanding, currency), context: pendingInvoiceCount + ' invoices pending', icon: <Hourglass size={18} className="text-warning" aria-hidden="true" /> },
               { id: 'overdue', label: 'Overdue balance', value: formatFinanceCardAmount(overdueBalance, currency), context: criticalOverdueCount + ' critical invoices', icon: <AlertCircle size={18} className="text-danger" aria-hidden="true" />, toneClassName: 'text-danger' },
