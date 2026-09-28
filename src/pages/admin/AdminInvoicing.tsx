@@ -2306,64 +2306,40 @@ export const AdminInvoicing: React.FC = () => {
             </section>
           </section>
         </div>      ) : financeView === 'financial-reports' ? (
-        <div className="space-y-6">
-          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Financial reporting summary">
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Net cash YTD</span><TrendingUp size={15} /></div><p className={'mt-3 text-2xl font-medium tabular-nums ' + (ytdNetCash >= 0 ? 'text-success' : 'text-danger')}>{formatFinanceCardAmount(ytdNetCash, currency)}</p><p className="mt-2 text-xs text-muted">Collected less expenses</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Collection rate</span><BarChart3 size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{ytdCollectionRate.toFixed(1)}%</p><p className="mt-2 text-xs text-muted">Collected against issued billings</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Operating margin</span><TrendingUp size={15} className="text-success" /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{Number.isFinite(operatingMarginValue) ? operatingMarginValue.toFixed(1) : quarterMargin.toFixed(1)}%</p><p className="mt-2 text-xs text-muted">Target ≥ 35%</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Outstanding</span><Hourglass size={15} className="text-warning" /></div><p className="mt-3 text-2xl font-medium tabular-nums text-warning">{formatFinanceCardAmount(derivedMetrics.totalOutstanding, currency)}</p><p className="mt-2 text-xs text-muted">{pendingInvoiceCount} invoices still open</p></article>
+        <div className="space-y-5">
+          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4" aria-label="Financial reporting summary">
+            <FinanceMetricCard label="Net cash YTD" value={formatFinanceCardAmount(ytdNetCash, currency)} context="Collected less expenses" icon={<TrendingUp size={15} />} toneClassName={ytdNetCash >= 0 ? 'text-success' : 'text-danger'} />
+            <FinanceMetricCard label="Collection rate" value={ytdCollectionRate.toFixed(1) + '%'} context="Collected against issued billings" icon={<BarChart3 size={15} />} />
+            <FinanceMetricCard label="Operating margin" value={(Number.isFinite(operatingMarginValue) ? operatingMarginValue : quarterMargin).toFixed(1) + '%'} context="Target ≥ 35%" icon={<TrendingUp size={15} />} />
+            <FinanceMetricCard label="Outstanding" value={formatFinanceCardAmount(derivedMetrics.totalOutstanding, currency)} context={pendingInvoiceCount + ' invoices still open'} icon={<Hourglass size={15} className="text-warning" />} toneClassName="text-warning" />
           </section>
 
-          <section className="grid grid-cols-1 gap-6 min-[1100px]:grid-cols-3">
-            <section className="min-[1100px]:col-span-2 rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="financial-trend-title">
-              <div className="border-b border-line p-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div><h2 id="financial-trend-title" className="text-sm font-semibold text-fg">Cash Flow vs Operating Burn</h2><p className="mt-1 text-xs text-muted">Monthly billing inflow, operational burn, and retainer target.</p></div>
-                <div className="flex flex-wrap items-center gap-3 text-[10px] text-muted"><span className="flex items-center gap-1.5"><span className="h-1.5 w-4 rounded-full bg-accent"></span>Net inflow</span><span className="flex items-center gap-1.5"><span className="h-1.5 w-4 rounded-full bg-success"></span>Retainer target</span><span className="flex items-center gap-1.5"><span className="h-1.5 w-4 rounded-full bg-series-3"></span>Operating burn</span></div>
+          <section className="rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="financial-trend-title">
+            <div className="border-b border-line p-4 sm:p-5">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div><h2 id="financial-trend-title" className="text-sm font-semibold text-fg">Cash Flow vs Operating Burn</h2><p className="mt-1 text-xs leading-5 text-muted">Compare actual cash collected with recorded operating spend. The dotted line shows net cash.</p></div>
+                <div className="flex flex-wrap gap-2 text-[10px] text-muted"><span className="rounded-badge border border-line bg-bg px-2 py-1">{reportingQuarter?.label || 'Current quarter'}</span><span className="rounded-badge border border-line bg-bg px-2 py-1 tabular-nums">{formatFinanceCardAmount(ytdExpenses, currency)} YTD burn</span></div>
               </div>
-              <div className="p-5">
-                {hasTrendData ? <FinanceCashFlowChart data={financeChartData} currency={currency} ariaLabel="Finance cash flow trend showing net inflow, retainer target and operating burn." /> : <EmptyState title="No trend data" description="Monthly billing and expense records will populate this chart." />}
-              </div>
-            </section>
+            </div>
+            <div className="p-4 sm:p-5">{hasTrendData ? <FinanceCashFlowChart data={financeChartData} currency={currency} ariaLabel="Finance cash flow trend comparing cash collected, operating burn, and net cash." /> : <EmptyState title="No trend data" description="Monthly payment and expense records will populate this report." />}</div>
+          </section>
 
+          <section className="grid gap-5 xl:grid-cols-3">
             <section className="rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="report-status-title">
-              <div className="border-b border-line p-5"><h2 id="report-status-title" className="text-sm font-semibold text-fg">Invoice status mix</h2><p className="mt-1 text-xs text-muted">{ledgerInvoices.length} invoices in the active period.</p></div>
-              <div className="space-y-3 p-5">
-                {quarterStatusRows.map((row) => (
-                  <div key={row.status} className="flex items-center justify-between rounded-control border border-line bg-bg px-3 py-2.5">
-                    <div className="flex items-center gap-2"><Receipt size={12} aria-hidden="true" /><span className="text-xs text-muted">{statusLabel[row.status]}</span></div>
-                    <span className="text-xs font-semibold tabular-nums text-fg">{row.count}</span>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </section>
-
-          <section className="grid grid-cols-1 gap-6 min-[1100px]:grid-cols-2">
-            <section className="rounded-card border border-line bg-panel overflow-hidden">
-              <div className="border-b border-line p-5"><h2 className="text-sm font-semibold text-fg">Expense categories</h2><p className="mt-1 text-xs text-muted">Top recorded expenses in the current quarter.</p></div>
-              <div className="p-5 space-y-3">
-                {quarterExpenseCategories.length === 0 ? <EmptyState title="No expense categories" description="Actual expense records will appear here." /> : quarterExpenseCategories.slice(0, 6).map(([category, amount]) => {
-                  const max = quarterExpenseCategories[0]?.[1] || 1;
-                  const percent = Math.round((amount / max) * 100);
-                  return <div key={category}><div className="flex items-center justify-between gap-3 text-xs"><span className="truncate text-muted">{category}</span><span className="tabular-nums font-medium text-fg">{formatNativeAmount(amount, currency, true)}</span></div><div className="mt-1.5 h-1.5 rounded-full bg-bg overflow-hidden"><div className="h-full rounded-full bg-series-3" style={{ width: percent + '%' }} /></div></div>;
-                })}
-              </div>
+              <div className="border-b border-line p-4"><h2 id="report-status-title" className="text-sm font-semibold text-fg">Invoice status mix</h2><p className="mt-1 text-xs text-muted">Counts across the current reporting quarter.</p></div>
+              <div className="space-y-2 p-4">{quarterStatusRows.map((row) => <div key={row.status} className="flex items-center justify-between gap-3 rounded-control border border-line bg-bg px-3 py-2.5"><StatusBadge status={row.status} /><span className="text-xs font-semibold tabular-nums text-fg">{row.count}</span></div>)}</div>
             </section>
             <section className="rounded-card border border-line bg-panel overflow-hidden">
-              <div className="border-b border-line p-5"><h2 className="text-sm font-semibold text-fg">Reporting controls</h2><p className="mt-1 text-xs text-muted">The report surface stays exportable and drillable without changing the underlying finance ledger.</p></div>
-              <div className="grid grid-cols-2 gap-3 p-5 sm:grid-cols-4">
-                {[
-                  ['Current quarter', reportingQuarter?.label || '—'],
-                  ['Current invoices', String(serverMetrics ? serverMetrics.totalInvoicesCount : ledgerInvoices.length)],
-                  ['Open balances', String(pendingInvoiceCount)],
-                  ['Overdue', String(criticalOverdueCount)]
-                ].map(([label, value]) => <div key={label} className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] uppercase tracking-[0.08em] text-muted">{label}</p><p className="mt-1 text-sm font-semibold tabular-nums text-fg">{value}</p></div>)}
-              </div>
-              <div className="border-t border-line p-5"><button type="button" onClick={exportReportCsv} disabled={!financeChartData.length} className={actionClass + ' w-full'}><Download size={14} />Export financial report</button></div>
+              <div className="border-b border-line p-4"><h2 className="text-sm font-semibold text-fg">Expense mix</h2><p className="mt-1 text-xs text-muted">Top categories in the current quarter.</p></div>
+              <div className="space-y-3 p-4">{quarterExpenseCategories.length === 0 ? <EmptyState title="No expense categories" description="Actual expense records will appear here." /> : quarterExpenseCategories.slice(0,5).map(([category,amount]) => { const percent=quarterExpenses>0?Math.min(100,(amount/quarterExpenses)*100):0; return <div key={category}><div className="flex items-center justify-between gap-3 text-xs"><span className="truncate text-muted">{category}</span><span className="tabular-nums font-medium text-fg">{formatNativeAmount(amount,currency,true)}</span></div><div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg"><div className="h-full rounded-full bg-series-3" style={{width:percent+'%'}} /></div></div>; })}</div>
+            </section>
+            <section className="rounded-card border border-line bg-panel overflow-hidden">
+              <div className="border-b border-line p-4"><h2 className="text-sm font-semibold text-fg">Report controls</h2><p className="mt-1 text-xs text-muted">Compact reporting context for audit and export.</p></div>
+              <div className="grid grid-cols-2 gap-2 p-4">{[['Reporting period',reportingQuarter?.label||'—'],['Invoice count',String(serverMetrics?serverMetrics.totalInvoicesCount:ledgerInvoices.length)],['Open balances',String(pendingInvoiceCount)],['Critical overdue',String(criticalOverdueCount)],['Retainer billed',formatFinanceCardAmount(retainerBilled,currency)],['Tax outstanding',formatFinanceCardAmount(taxOutstanding,currency)]].map(([label,value]) => <div key={label} className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">{label}</p><p className="mt-1 text-sm font-semibold tabular-nums text-fg">{value}</p></div>)}</div>
+              <div className="border-t border-line p-4"><button type="button" onClick={exportReportCsv} disabled={!financeChartData.length} className={actionClass + ' w-full'}><Download size={14} />Export financial report</button></div>
             </section>
           </section>
-        </div>
-      ) : (
+        </div>      ) : (
         <div className="space-y-6">
           <AdminMetricStrip
             className="grid-cols-2 sm:grid-cols-3 min-[1100px]:grid-cols-6"
