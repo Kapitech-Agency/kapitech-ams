@@ -48,6 +48,7 @@ import {
   clearMfaChallengeCookie
 } from './auth';
 import { getDataSourceMode } from './data-source.ts';
+import { createClientSlug } from '../src/lib/clientStore.ts';
 import { loadApplicationDatabase } from './application-data-repository.ts';
 import { postgresAuthRepository } from './postgres-repository.ts';
 import { postgresClientRepository } from './postgres-client-repository.ts';
@@ -1765,7 +1766,14 @@ apiRouter.delete('/crm/deals/:id', requireAuth, requirePermission('canManageCrm'
 // ----------------------------------------------------
 
 apiRouter.get('/clients', requireAuth, requireAnyPermission('canManageClients', 'canManageCrm'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  const clients = getDataSourceMode() === 'postgres' ? await postgresClientRepository.list() : getDatabase().clients;
+  const clients = getDataSourceMode() === 'postgres'
+    ? await postgresClientRepository.list()
+    : getDatabase().clients.map((client: any) => ({
+        ...client,
+        slug: typeof client.slug === 'string' && client.slug.trim()
+          ? client.slug.trim()
+          : createClientSlug(String(client.company || client.clientName || ''), String(client.id || ''))
+      }));
   res.json({ success: true, clients });
 });
 
@@ -1791,6 +1799,9 @@ apiRouter.post('/clients', requireAuth, requirePermission('canManageClients'), a
 
   const newClient = {
     id: `cli_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
+    slug: typeof clientData.slug === 'string' && clientData.slug.trim()
+      ? clientData.slug.trim()
+      : createClientSlug(String(clientData.company || clientData.companyName || clientData.clientName || clientData.name || ''), 'new'),
     ...pickFields(clientData, ['name','company','companyName','clientName','email','phone','website','location','industry','status','contactPersonRole','notes']),
     name: cleanText(clientData.name || clientData.clientName, 160),
     company: cleanText(clientData.company || clientData.companyName, 200),
