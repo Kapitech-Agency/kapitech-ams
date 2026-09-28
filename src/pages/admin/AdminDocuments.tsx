@@ -322,6 +322,7 @@ export const AdminDocuments: React.FC = () => {
               );
             })}
           </div>
+        )}
 
           <div className="hidden min-[900px]:block ams-table-scroll overflow-x-auto">
             <table className="ams-table w-full text-left border-collapse min-w-[700px]">
