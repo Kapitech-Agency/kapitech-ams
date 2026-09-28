@@ -29,7 +29,7 @@ import { InvoiceStatusDropdown } from '../../components/ui/InvoiceStatusDropdown
 import { TrendChart } from '../../components/charts/DashboardCharts';
 import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
 import { api } from '../../lib/apiClient';
-import { AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 
 
 type SortKey = 'updated' | 'due' | 'oldest' | 'amount_high' | 'amount_low' | 'invoice';
@@ -1007,12 +1007,12 @@ export const AdminInvoicing: React.FC = () => {
               <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
               {refreshing ? (language === 'id' ? 'Memuat' : 'Refreshing') : (language === 'id' ? 'Segarkan' : 'Refresh')}
             </button>
-            <button type="button" onClick={exportInvoicesCsv} className={actionClass} disabled={!filteredInvoices.length}>
+            <button type="button" onClick={exportInvoicesCsv} className={actionClass} disabled={!filteredInvoices.length || refreshing}>
               <Download size={14} />
               Export CSV
             </button>
             {canManageInvoices && (
-              <button type="button" onClick={openCreateInvoice} className={primaryClass}>
+              <button type="button" onClick={openCreateInvoice} className={primaryClass} disabled={!canManageInvoices || refreshing}>
                 <Plus size={14} />
                 {language === 'id' ? 'Buat invoice' : 'New invoice'}
               </button>
@@ -1100,6 +1100,17 @@ export const AdminInvoicing: React.FC = () => {
                 <div className="mt-1.5 truncate text-[11px] text-muted">{metric.context}</div>
               </article>
             ))}
+          </section>
+
+          <section className="mt-3 rounded-card border border-line bg-panel px-4 py-3 sm:px-5" aria-label="Finance operating signals">
+            <AdminMetricStrip
+              className="grid-cols-2 sm:grid-cols-3"
+              metrics={[
+                { label: 'Collection rate', value: currencyInvoices.length ? derivedMetrics.collectionRate + '%' : '—', context: 'Current ledger' },
+                { label: 'Monthly burn', value: derivedMetrics.monthlyBurnRate ? formatNativeAmount(derivedMetrics.monthlyBurnRate, currency, true) : '—', context: 'Expense run-rate' },
+                { label: 'Cash runway', value: derivedMetrics.cashRunwayMonths == null ? '—' : derivedMetrics.cashRunwayMonths + ' mo', context: 'Based on current burn' }
+              ]}
+            />
           </section>
 
           <section className="mt-6 grid gap-3 min-[1100px]:grid-cols-3" aria-label="Finance analytics">
