@@ -355,7 +355,7 @@ export const AdminLayout: React.FC = () => {
           </Link>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="ams-topbar-mobile-utilities flex items-center gap-1.5">
           <Button
             type="button"
             variant="secondary"
@@ -363,7 +363,7 @@ export const AdminLayout: React.FC = () => {
             aria-label="Search AMS"
             aria-keyshortcuts="Control+K Meta+K"
             icon={<Search size={15} />}
-            className="h-10 w-10 p-0"
+            className="ams-topbar-icon h-9 w-9 p-0"
           />
           <AdminNotificationCenter />
           <Button
@@ -373,7 +373,7 @@ export const AdminLayout: React.FC = () => {
             title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             icon={theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
-            className="h-10 w-10 p-0"
+            className="ams-topbar-icon h-9 w-9 p-0"
           />
           <button
             type="button"
@@ -626,7 +626,7 @@ export const AdminLayout: React.FC = () => {
                 <kbd className="ml-auto rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] text-muted">⌘K</kbd>
               </Button>
             </div>
-            <div className="flex items-center gap-1.5 shrink-0">
+            <div className="ams-topbar-utilities flex items-center gap-1.5 shrink-0">
               <AdminNotificationCenter />
               <Button
                 type="button"
@@ -643,7 +643,7 @@ export const AdminLayout: React.FC = () => {
                 onClick={() => setProfileSettingsOpen(true)}
                 aria-label="Open profile settings"
                 title="Profile settings"
-                className="flex h-10 items-center gap-2 rounded-control px-1.5 text-left transition-colors hover:bg-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="ams-topbar-profile flex h-9 items-center gap-2 rounded-control border border-line bg-bg px-1.5 text-left transition-colors hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 <UserAvatar name={profileName} imageUrl={profileAvatarUrl} size="sm" />
                 <span className="hidden max-w-[150px] truncate text-xs font-medium text-fg 2xl:block">{profileName}</span>
