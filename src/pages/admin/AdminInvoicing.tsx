@@ -1059,7 +1059,7 @@ export const AdminInvoicing: React.FC = () => {
                 label: language === 'id' ? 'Total ditagihkan' : 'Total invoiced',
                 value: serverMetrics ? formatNativeAmount(serverMetrics.totalBilled, currency) : '—',
                 context: serverMetrics ? serverMetrics.totalInvoicesCount + ' invoices' : '—',
-                icon: <Receipt size={16} />,
+                icon: <Receipt size={12} aria-hidden="true" />,
                 tone: 'text-accent-text'
               },
               {
@@ -1104,7 +1104,7 @@ export const AdminInvoicing: React.FC = () => {
 
           <section className="mt-3 rounded-card border border-line bg-panel px-4 py-3 sm:px-5" aria-label="Finance operating signals">
             <AdminMetricStrip
-              className="grid-cols-2 sm:grid-cols-3"
+              className="grid-cols-2 sm:grid-cols-3 min-[1100px]:grid-cols-6"
               metrics={[
                 { label: 'Collection rate', value: currencyInvoices.length ? derivedMetrics.collectionRate + '%' : '—', context: 'Current ledger' },
                 { label: 'Monthly burn', value: derivedMetrics.monthlyBurnRate ? formatNativeAmount(derivedMetrics.monthlyBurnRate, currency, true) : '—', context: 'Expense run-rate' },
@@ -1117,7 +1117,7 @@ export const AdminInvoicing: React.FC = () => {
             <div className="min-[1100px]:col-span-2 rounded-card border border-line bg-panel p-4 sm:p-5">
               <div className="flex flex-col gap-3 border-b border-line pb-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="border-b border-line pb-3">
-                  <h2 className="text-sm font-semibold text-fg">Cash Flow vs Operating Burn</h2>
+                  <h2 id="financial-trend-title" className="text-sm font-semibold text-fg">Cash Flow vs Operating Burn</h2>
                   <p className="mt-1 text-xs leading-5 text-muted">Recorded revenue inflow, operating expenses, and net result for available periods.</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3 text-[11px] text-muted">
