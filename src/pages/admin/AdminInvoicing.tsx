@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   AlertCircle,
   ArrowUpRight,
@@ -230,6 +231,7 @@ const FinanceCashFlowChart: React.FC<{
 };
 export const AdminInvoicing: React.FC = () => {
   const { language } = useLanguage();
+  const location = useLocation();
   const session = getAdminSession();
   const canViewFinancials = hasAdminPermission('canViewFinancials');
   const canManageInvoices = hasAdminPermission('canManageInvoices');
@@ -238,6 +240,16 @@ export const AdminInvoicing: React.FC = () => {
 
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
   const [tab, setTab] = useState<Tab>('invoices');
+
+  const financeView = useMemo(
+    () => new URLSearchParams(location.search).get('finance') || 'invoices',
+    [location.search]
+  );
+
+  useEffect(() => {
+    if (financeView === 'income-expenses') setTab('expenses');
+    if (financeView === 'invoices') setTab('invoices');
+  }, [financeView]);
   const [invoices, setInvoices] = useState<AgencyInvoice[]>([]);
   const [expenses, setExpenses] = useState<FinanceExpense[]>([]);
   const [clients, setClients] = useState<FinanceClient[]>([]);
@@ -1125,15 +1137,6 @@ export const AdminInvoicing: React.FC = () => {
         )}
       />
 
-      <div className="mb-6 overflow-x-auto border-b border-line">
-        <nav className="flex min-w-max items-center gap-6" aria-label="Finance sections">
-          <button type="button" onClick={() => setTab('invoices')} className={'border-b-2 px-1 pb-2 pt-1 text-xs font-semibold transition-colors ' + (tab === 'invoices' ? 'border-accent text-fg' : 'border-transparent text-muted hover:text-fg')}>Invoices</button>
-          <button type="button" onClick={() => setTab('expenses')} className={'border-b-2 px-1 pb-2 pt-1 text-xs font-semibold transition-colors ' + (tab === 'expenses' ? 'border-accent text-fg' : 'border-transparent text-muted hover:text-fg')}>Income &amp; Expenses</button>
-          <button type="button" onClick={() => showNotice('danger', 'Tax & Retainers is not connected to a dedicated finance ledger yet.')} className="border-b-2 border-transparent px-1 pb-2 pt-1 text-xs font-semibold text-muted transition-colors hover:text-fg">Tax &amp; Retainers</button>
-          <button type="button" onClick={() => showNotice('danger', 'Financial Reports is not connected to a dedicated reporting workspace yet.')} className="border-b-2 border-transparent px-1 pb-2 pt-1 text-xs font-semibold text-muted transition-colors hover:text-fg">Financial Reports</button>
-        </nav>
-      </div>
-
       {notice && (
         <div className="fixed right-4 top-[68px] z-[60] w-[min(420px,calc(100vw-32px))]" aria-live="polite" aria-atomic="true">
           <div className={'flex items-start gap-3 rounded-card border px-4 py-3 text-xs ' + (notice.tone === 'success' ? 'border-success/30 bg-panel text-success' : 'border-danger/30 bg-panel text-danger')} role="status">
@@ -1157,6 +1160,28 @@ export const AdminInvoicing: React.FC = () => {
           <div className="grid gap-3 min-[1100px]:grid-cols-3"><div className="h-72 animate-pulse rounded-card border border-line bg-panel min-[1100px]:col-span-2" /><div className="h-72 animate-pulse rounded-card border border-line bg-panel" /></div>
           <div className="h-80 animate-pulse rounded-card border border-line bg-panel" />
         </div>
+      ) : financeView === 'tax-retainers' || financeView === 'financial-reports' ? (
+        <section className="rounded-card border border-line bg-panel p-6 sm:p-8" aria-labelledby="finance-section-title">
+          <div className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-bg text-muted">
+            {financeView === 'tax-retainers' ? <DollarSign size={18} /> : <TrendingUp size={18} />}
+          </div>
+          <h2 id="finance-section-title" className="mt-4 text-base font-semibold text-fg">
+            {financeView === 'tax-retainers' ? 'Tax & Retainers' : 'Financial Reports'}
+          </h2>
+          <p className="mt-2 max-w-[62ch] text-xs leading-5 text-muted">
+            {financeView === 'tax-retainers'
+              ? 'This Finance surface is reserved for tax provisions and retainer controls. The current AMS finance API does not expose a dedicated dataset for this section yet.'
+              : 'This Finance surface is reserved for reporting packs and period summaries. The current AMS finance API does not expose a dedicated reporting dataset for this section yet.'}
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <button type="button" onClick={() => window.history.pushState({}, '', '/admin/invoicing'); window.dispatchEvent(new PopStateEvent('popstate'));} className={primaryClass}>
+              Open Invoices
+            </button>
+            <button type="button" onClick={() => window.history.pushState({}, '', '/admin/invoicing?finance=income-expenses'); window.dispatchEvent(new PopStateEvent('popstate'));} className={actionClass}>
+              Open Income &amp; Expenses
+            </button>
+          </div>
+        </section>
       ) : (
         <>
           <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 min-[1100px]:grid-cols-5" aria-label="Finance KPI snapshot">
