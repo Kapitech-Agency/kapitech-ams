@@ -2415,7 +2415,7 @@ export const AdminInvoicing: React.FC = () => {
       })}
     </div>
   )}
-</div>}
+</div>
                   {(search||statusFilter!=='all'||paymentFilter!=='all'||dueFilter!=='all') && <button type="button" onClick={()=>{setSearch('');setStatusFilter('all');setPaymentFilter('all');setDueFilter('all')}} className="rounded-chip px-2.5 py-1.5 text-[11px] text-muted hover:bg-bg hover:text-fg">Clear filters</button>}
                   <span className="ml-auto text-[10px] tabular-nums text-muted">{pendingInvoiceCount} open · {criticalOverdueCount} overdue · {dueSoonCount} due soon</span>
                 </div>
