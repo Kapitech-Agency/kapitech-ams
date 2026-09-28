@@ -2050,11 +2050,43 @@ export const AdminInvoicing: React.FC = () => {
               {(['IDR', 'USD'] as CurrencyCode[]).map((item) => <button key={item} type="button" onClick={() => setActiveCurrency(item)} aria-pressed={currency === item} className={'min-h-7 rounded-chip px-2.5 text-[11px] font-semibold ' + (currency === item ? 'bg-line text-fg' : 'text-muted hover:text-fg')}>{item}</button>)}
             </div>
             <button type="button" onClick={() => void loadData(true)} disabled={refreshing} className={actionClass} title="Refresh finance data"><RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />{refreshing ? 'Refreshing' : 'Refresh'}</button>
-            {financeView === 'quotations' ? <><button type="button" onClick={exportQuotationsCsv} disabled={!filteredQuotations.length} className={actionClass}><Download size={14}/>Export CSV</button>{canManageInvoices&&<button type="button" onClick={openCreateQuotation} className={primaryClass}><Plus size={14}/>New quotation</button>}</> :
-             financeView === 'income-expenses' ? <><button type="button" onClick={exportReportCsv} className={actionClass}><Download size={14}/>Export report</button>{canManageInvoices&&<button type="button" onClick={openExpenseModal} className={actionClass}><Plus size={14}/>New expense</button>}{canCreateInvoice&&<button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>New invoice</button>}</> :
-             financeView === 'tax-retainers' ? <><button type="button" onClick={exportTaxCsv} disabled={!currencyInvoices.length} className={actionClass}><Download size={14}/>Export tax detail</button>{canCreateInvoice&&<button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>New invoice</button>}</> :
-             financeView === 'financial-reports' ? <button type="button" onClick={exportReportCsv} disabled={!financeChartData.length} className={actionClass}><Download size={14}/>Export report</button> :
-             <><button type="button" onClick={exportInvoicesCsv} disabled={!currencyInvoices.length} className={actionClass}><Download size={14}/>Export CSV</button>{canManageInvoices&&<button type="button" onClick={openCreateQuotation} className={actionClass}><FileText size={14}/>New quotation</button>}{canCreateInvoice&&<button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>New invoice</button>}</>}
+            {financeView === 'quotations' ? (
+              <>
+                <button type="button" onClick={exportQuotationsCsv} disabled={!filteredQuotations.length} className={actionClass}><Download size={14}/>Export CSV</button>
+                {canManageInvoices && (
+                  <button type="button" onClick={openCreateQuotation} className={primaryClass}><Plus size={14}/>New quotation</button>
+                )}
+              </>
+            ) : financeView === 'income-expenses' ? (
+              <>
+                <button type="button" onClick={exportReportCsv} className={actionClass}><Download size={14}/>Export report</button>
+                {canManageInvoices && (
+                  <>
+                    <button type="button" onClick={openExpenseModal} className={actionClass}><Plus size={14}/>New expense</button>
+                    <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>New invoice</button>
+                  </>
+                )}
+              </>
+            ) : financeView === 'tax-retainers' ? (
+              <>
+                <button type="button" onClick={exportTaxCsv} disabled={!currencyInvoices.length} className={actionClass}><Download size={14}/>Export tax detail</button>
+                {canManageInvoices && (
+                  <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>New invoice</button>
+                )}
+              </>
+            ) : financeView === 'financial-reports' ? (
+              <button type="button" onClick={exportReportCsv} disabled={!financeChartData.length} className={actionClass}><Download size={14}/>Export report</button>
+            ) : (
+              <>
+                <button type="button" onClick={exportInvoicesCsv} disabled={!currencyInvoices.length} className={actionClass}><Download size={14}/>Export CSV</button>
+                {canManageInvoices && (
+                  <>
+                    <button type="button" onClick={openCreateQuotation} className={actionClass}><FileText size={14}/>New quotation</button>
+                    <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>New invoice</button>
+                  </>
+                )}
+              </>
+            )}
           </>
         )}
       />
