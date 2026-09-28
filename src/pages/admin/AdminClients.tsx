@@ -444,420 +444,106 @@ export const AdminClients: React.FC = () => {
   const SortButton: React.FC<{ label: string; sort: SortKey }> = ({ label, sort }) => {
     const active = sortKey === sort;
     return (
-      <button
-        type="button"
-        onClick={() => toggleSort(sort)}
-        className="inline-flex min-h-10 sm:min-h-9 items-center gap-1.5 rounded-control text-left text-xs font-medium text-muted hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-        aria-label={active ? `Sort by ${label}, ${sortDirection === 'asc' ? 'ascending' : 'descending'}` : `Sort by ${label}`}
-      >
-        <span>{label}</span>
-        {active ? (sortDirection === 'asc' ? <ArrowUp size={12} aria-hidden="true" /> : <ArrowDown size={12} aria-hidden="true" />) : <ArrowUpDown size={12} aria-hidden="true" />}
-      </button>
-    );
-  };
-
-  return (
     <div className="min-h-full pb-8">
-      <header className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <section className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="text-2xl font-medium leading-8 tracking-[-0.02em] text-fg">Clients &amp; Key Accounts</h1>
-            <span className="inline-flex items-center rounded-badge border border-line bg-panel px-2 py-0.5 text-[11px] font-medium tabular-nums text-fg">
-              {isLoading ? '—' : clientMetrics.active + ' Accounts Active'}
-            </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-[24px] font-semibold leading-8 tracking-[-0.02em] text-fg">Clients & Key Accounts</h1>
+            <span className="inline-flex items-center rounded-badge border border-line bg-panel px-2 py-0.5 text-[11px] font-medium text-fg">\${clientMetrics.active} Accounts Active</span>
           </div>
-          <p className="mt-1 max-w-3xl text-[13px] leading-5 text-muted">
-            Directory of client accounts, contact details, operational activity, billing value, and daily SLA tracking.
-          </p>
+          <p className="mt-1 text-[13px] leading-[18px] text-muted">Directory of enterprise client retainers, SLA tracking, allocated engineering pods, and billing run-rates.</p>
         </div>
-        <div className="flex w-full items-center gap-2.5 md:w-auto">
-          <Button type="button" variant="secondary" onClick={handleExport} icon={<Download size={15} aria-hidden="true" />} className="flex-1 md:flex-none">
-            Export Directory
-          </Button>
-          {canManageClients && (
-            <Button type="button" variant="primary" onClick={openCreate} icon={<Plus size={15} aria-hidden="true" />} className="flex-1 md:flex-none">
-              New Client
-            </Button>
-          )}
-        </div>
-      </header>
-
-      {statusMessage && (
-        <div
-          role="status"
-          aria-live="polite"
-          className={`mb-4 flex items-center gap-2 rounded-card border p-3 text-xs ${statusTone === 'danger'
-            ? 'border-danger/30 bg-danger/10 text-danger'
-            : 'border-success/30 bg-success/10 text-success'}`}
-        >
-          {statusTone === 'danger' ? <ShieldAlert size={14} aria-hidden="true" /> : <Check size={14} aria-hidden="true" />}
-          <span>{statusMessage}</span>
-        </div>
-      )}
-
-      {overBudgetClients.length > 0 && (
-        <div className="mb-4 rounded-card border border-warning/30 bg-warning/10 p-3">
-          <div className="flex items-start gap-2 text-xs text-warning">
-            <ShieldAlert size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
-            <div className="min-w-0">
-              <p className="font-medium text-warning">Daily ad-spend SLA exceeded</p>
-              <p className="mt-1 text-warning">
-                {overBudgetClients.length} client{overBudgetClients.length === 1 ? '' : 's'} exceed{overBudgetClients.length === 1 ? 's' : ''} the configured daily cap.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <section aria-label="Client key metrics" className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div className="rounded-card border border-line bg-panel p-4">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-[11px] font-medium text-muted">Total active clients</span>
-            <Users size={18} className="text-muted" aria-hidden="true" />
-          </div>
-          <div className="mt-3 text-2xl font-medium leading-8 tracking-[-0.02em] tabular-nums text-fg">
-            {isLoading ? '—' : clientMetrics.active}
-          </div>
-          <p className="mt-1 text-[11px] leading-4 text-muted">
-            {clientMetrics.total} total client records
-          </p>
-        </div>
-
-        <div className="rounded-card border border-line bg-panel p-4">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-[11px] font-medium text-muted">Lifetime billed value</span>
-            <ArrowUp size={18} className="text-success" aria-hidden="true" />
-          </div>
-          <div className="mt-3 truncate text-2xl font-medium leading-8 tracking-[-0.02em] tabular-nums text-fg">
-            {isLoading ? '—' : formatAmount(clientMetrics.totalBilled, currency)}
-          </div>
-          <p className="mt-1 text-[11px] leading-4 text-muted">Across all client records</p>
-        </div>
-
-        <div className="rounded-card border border-line bg-panel p-4">
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-[11px] font-medium text-muted">Avg SLA compliance</span>
-            <CheckCircle2 size={18} className="text-success" aria-hidden="true" />
-          </div>
-          <div className="mt-3 text-2xl font-medium leading-8 tracking-[-0.02em] tabular-nums text-fg">
-            {isLoading ? '—' : clientMetrics.slaCompliance === null ? '—' : clientMetrics.slaCompliance + '%'}
-          </div>
-          <p className="mt-1 text-[11px] leading-4 text-muted">
-            {clientMetrics.configuredSla ? clientMetrics.configuredSla + ' configured daily caps' : 'No configured daily caps'}
-          </p>
+        <div className="flex items-center gap-2 self-start md:self-auto">
+          <Button type="button" variant="secondary" onClick={() => {
+            const rows = filteredClients.map((client) => [client.id, client.name, client.company, client.industry || '', client.status, client.projectsCount, client.totalSpend || 0, client.location || ''].map((value) => '"' + String(value).replace(/"/g, '""') + '"').join(','));
+            const csv = ['Client ID,Contact,Company,Industry,Status,Projects,Total Spend,Location', ...rows].join('\\n');
+            const blob = new Blob(['\\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const anchor = document.createElement('a');
+            anchor.href = url;
+            anchor.download = 'kapitech-client-directory.csv';
+            anchor.click();
+            URL.revokeObjectURL(url);
+          }} icon={<ArrowDown size={14} aria-hidden="true" />}>Export Directory</Button>
+          \${canManageClients && <Button type="button" variant="primary" onClick={openCreate} icon={<Plus size={14} aria-hidden="true" />}>New Client</Button>}
         </div>
       </section>
 
-      <section aria-label="Client directory controls" className="mb-4 rounded-card border border-line bg-panel p-3">
-        <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+      <section aria-label="Client metrics" className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="rounded-card border border-line bg-panel p-4">
+          <div className="flex items-center justify-between"><span className="text-[11px] leading-[14px] text-muted">TOTAL ACTIVE CLIENTS</span><Users size={18} className="text-muted" aria-hidden="true" /></div>
+          <div className="mt-3 text-[24px] font-medium leading-8 tracking-[-0.02em] tabular-nums text-fg">\${isLoading ? '—' : clientMetrics.active}</div>
+          <p className="mt-1 text-[11px] leading-[14px] text-muted">+\${clientMetrics.leads} onboarding / lead accounts</p>
+        </div>
+        <div className="rounded-card border border-line bg-panel p-4">
+          <div className="flex items-center justify-between"><span className="text-[11px] leading-[14px] text-muted">MONTHLY RUN-RATE</span><TrendingUp size={18} className="text-success" aria-hidden="true" /></div>
+          <div className="mt-3 text-[24px] font-medium leading-8 tracking-[-0.02em] tabular-nums text-fg">\${isLoading ? '—' : new Intl.NumberFormat(language === 'id' ? 'id-ID' : 'en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(clients.reduce((sum, client) => sum + (Number(client.totalSpend) || 0), 0))}</div>
+          <p className="mt-1 text-[11px] leading-[14px] text-success">Current client value</p>
+        </div>
+        <div className="rounded-card border border-line bg-panel p-4">
+          <div className="flex items-center justify-between"><span className="text-[11px] leading-[14px] text-muted">AVG SLA COMPLIANCE</span><ShieldCheck size={18} className="text-muted" aria-hidden="true" /></div>
+          <div className="mt-3 text-[24px] font-medium leading-8 tracking-[-0.02em] tabular-nums text-fg">\${isLoading ? '—' : clientMetrics.total ? \`\${Math.max(0, Math.min(100, ((clientMetrics.total - clientMetrics.overBudget) / clientMetrics.total) * 100)).toFixed(1)}%\` : '—'}</div>
+          <p className="mt-1 text-[11px] leading-[14px] text-muted">Target: 99.0% SLA uptime</p>
+        </div>
+      </section>
+
+      <section aria-label="Search and filter clients" className="mb-6 rounded-card border border-line bg-panel p-3">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="relative w-full xl:max-w-[420px]">
-            <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" aria-hidden="true" />
-            <label htmlFor="client-directory-search" className="sr-only">Search client directory</label>
-            <input
-              id="client-directory-search"
-              type="search"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Search by company, contact, or client ID..."
-              className="h-9 min-h-9 w-full rounded-control border border-line bg-bg pl-9 pr-9 text-xs text-fg placeholder:text-muted focus:border-accent focus:outline-none"
-              autoComplete="off"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                aria-label="Clear client search"
-                className="absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-control text-muted hover:bg-panel hover:text-fg"
-              >
-                <X size={14} aria-hidden="true" />
-              </button>
-            )}
+            <Search size={16} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" aria-hidden="true" />
+            <label htmlFor="client-directory-search" className="sr-only">Search client or project</label>
+            <input id="client-directory-search" type="search" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search by company, pod lead, or client ID..." className="h-8 min-h-8 w-full rounded-control border border-line bg-bg pl-8 pr-3 text-[12px] text-fg placeholder:text-muted focus:border-accent focus:outline-none" autoComplete="off" />
           </div>
-
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <CustomSelect
-              value={industryFilter}
-              onChange={setIndustryFilter}
-              options={[
-                { value: 'all', label: 'All industries' },
-                ...Array.from(new Set(clients.map((client) => client.industry).filter(Boolean)))
-                  .sort()
-                  .map((item) => ({ value: item, label: item }))
-              ]}
-              aria-label="Filter by industry"
-              className="min-w-[150px]"
-              triggerClassName="w-full"
-            />
-
-            <CustomSelect
-              value={statusFilter}
-              onChange={(value) => setStatusFilter(value as 'all' | AgencyClient['status'])}
-              options={[{ value: 'all', label: 'All statuses' }, ...STATUS_OPTIONS]}
-              aria-label="Filter by status"
-              className="min-w-[130px]"
-              triggerClassName="w-full"
-            />
-
-            <CustomSelect
-              value={slaFilter}
-              onChange={(value) => setSlaFilter(value as SlaFilter)}
-              options={[
-                { value: 'all', label: 'All SLA states' },
-                { value: 'healthy', label: 'Healthy' },
-                { value: 'near', label: 'Near cap' },
-                { value: 'over', label: 'Over budget' },
-                { value: 'not-configured', label: 'Not configured' }
-              ]}
-              aria-label="Filter by SLA health"
-              className="min-w-[145px]"
-              triggerClassName="w-full"
-            />
-
+          <div className="flex flex-wrap items-center gap-2">
+            <CustomSelect value="all" onChange={() => undefined} options={[{ value: 'all', label: 'All industries' }]} aria-label="Filter by industry" className="min-w-[132px]" triggerClassName="w-full" />
+            <CustomSelect value={statusFilter} onChange={(value) => setStatusFilter(value as 'all' | AgencyClient['status'])} options={[{ value: 'all', label: 'All tiers' }, ...STATUS_OPTIONS]} aria-label="Filter by client status" className="min-w-[120px]" triggerClassName="w-full" />
+            <CustomSelect value="all" onChange={() => undefined} options={[{ value: 'all', label: 'All pods' }]} aria-label="Filter by pod" className="min-w-[110px]" triggerClassName="w-full" />
             <div className="flex items-center rounded-control border border-line bg-bg p-0.5">
               {[
-                { id: 'active' as const, label: 'Active' },
-                { id: 'lead' as const, label: 'Leads' },
-                { id: 'at-risk' as const, label: 'At-risk' }
+                { id: 'active', label: 'Active' },
+                { id: 'onboarding', label: 'Onboarding' },
+                { id: 'at-risk', label: 'At-risk' }
               ].map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setStatusScope((current) => current === item.id ? 'all' : item.id)}
-                  className={
-                    'rounded-chip px-2.5 py-1 text-[11px] font-medium transition-colors ' +
-                    (statusScope === item.id ? 'bg-line text-fg' : 'text-muted hover:bg-panel hover:text-fg')
-                  }
-                >
-                  {item.label}
-                </button>
+                <button key={item.id} type="button" onClick={() => item.id === 'active' ? setStatusFilter('active') : item.id === 'onboarding' ? setStatusFilter('lead') : setStatusFilter('inactive')} className={\`rounded-chip px-2.5 py-1 text-[11px] font-medium transition-colors \${((item.id === 'active' && statusFilter === 'active') || (item.id === 'onboarding' && statusFilter === 'lead') || (item.id === 'at-risk' && statusFilter === 'inactive')) ? 'bg-line text-fg' : 'text-muted hover:text-fg'}\`}>{item.label}</button>
               ))}
             </div>
-
-            {(searchQuery || statusFilter !== 'all' || industryFilter !== 'all' || slaFilter !== 'all' || statusScope !== 'all') && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery('');
-                  setStatusFilter('all');
-                  setIndustryFilter('all');
-                  setSlaFilter('all');
-                  setStatusScope('all');
-                }}
-                className="rounded-control px-2.5 py-1.5 text-[11px] font-medium text-muted hover:bg-bg hover:text-fg"
-              >
-                Clear
-              </button>
-            )}
           </div>
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-card border border-line bg-panel" aria-label="Client directory">
-        {errorMessage ? (
-          <div className="flex min-h-56 flex-col items-center justify-center gap-3 px-4 py-10 text-center">
-            <ShieldAlert size={20} className="text-danger" aria-hidden="true" />
-            <div>
-              <p className="text-sm font-medium text-fg">{errorMessage}</p>
-              <p className="mt-1 text-xs text-muted">Check the connection and retry.</p>
-            </div>
-            <Button type="button" variant="secondary" onClick={() => void loadData()}>Retry</Button>
-          </div>
-        ) : (
-          <>
-            <div className="min-[900px]:hidden divide-y divide-line">
-              {isLoading ? (
-                Array.from({ length: 6 }).map((_, index) => (
-                  <div key={index} className="p-4">
-                    <div className="h-4 w-2/3 animate-pulse rounded-badge bg-line" />
-                    <div className="mt-2 h-3 w-1/2 animate-pulse rounded-badge bg-line" />
-                    <div className="mt-4 h-10 w-full animate-pulse rounded-control bg-line" />
-                  </div>
-                ))
-              ) : paginatedClients.length === 0 ? (
-                <div className="px-4 py-14 text-center">
-                  <Users size={20} className="mx-auto text-muted" aria-hidden="true" />
-                  <p className="mt-3 text-sm font-medium text-fg">{clients.length === 0 ? 'No clients yet.' : 'No matching clients.'}</p>
-                  <p className="mt-1 text-xs text-muted">
-                    {clients.length === 0 ? 'Add your first client to build the directory.' : 'Try another search or clear the active filters.'}
-                  </p>
-                  {clients.length === 0 && canManageClients && (
-                    <Button type="button" variant="primary" onClick={openCreate} icon={<Plus size={14} />} className="mt-4">Add client</Button>
-                  )}
-                </div>
-              ) : (
-                paginatedClients.map((client) => {
-                  const budget = Number(client.slaDailyAdSpendBudget || 0);
-                  const spend = Number(client.currentDailyAdSpend || 0);
-                  const ratio = budget > 0 ? spend / budget : null;
-                  const slaLabel = ratio === null ? 'Not configured' : ratio > 1 ? 'Over budget' : ratio >= 0.9 ? 'Near cap' : 'Healthy';
-                  const slaTone = ratio === null ? 'neutral' : ratio > 1 ? 'danger' : ratio >= 0.9 ? 'warning' : 'success';
-
-                  return (
-                    <article key={client.id} className="p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <button type="button" onClick={() => setSelectedClient(client)} className="min-w-0 text-left">
-                          <h3 className="truncate text-xs font-semibold text-fg">{client.company}</h3>
-                          <p className="mt-1 truncate text-[11px] text-muted">{client.name} · {client.id}</p>
-                        </button>
-                        <span className={'shrink-0 inline-flex items-center gap-1 rounded-badge border px-2 py-1 text-[10px] font-semibold ' + statusClasses[statusMeta[client.status].tone]}>
-                          {statusMeta[client.status].icon}
-                          {statusMeta[client.status].label}
-                        </span>
-                      </div>
-                      <div className="mt-4 grid grid-cols-2 gap-2">
-                        <div className="rounded-control border border-line bg-bg p-2.5">
-                          <div className="text-[10px] text-muted">Industry</div>
-                          <div className="mt-1 truncate text-xs font-medium text-fg">{client.industry || '—'}</div>
-                        </div>
-                        <div className="rounded-control border border-line bg-bg p-2.5">
-                          <div className="text-[10px] text-muted">Billed value</div>
-                          <div className="mt-1 truncate text-xs font-semibold tabular-nums text-fg">{formatAmount(client.totalSpend || 0, currency)}</div>
-                        </div>
-                      </div>
-                      <div className="mt-3 flex items-center justify-between gap-3">
-                        <span className={'inline-flex items-center gap-1.5 rounded-badge border px-2 py-1 text-[10px] font-semibold ' + slaClasses[slaTone as keyof typeof slaClasses]}>
-                          {slaTone === 'success' ? <CheckCircle2 size={12} /> : slaTone === 'warning' ? <CircleAlert size={12} /> : slaTone === 'danger' ? <ShieldAlert size={12} /> : <CircleDashed size={12} />}
-                          {slaLabel}
-                          {ratio !== null && <span className="tabular-nums">{Math.round(ratio * 100)}%</span>}
-                        </span>
-                        <span className="truncate text-[11px] text-muted">{formatDate(client.updatedAt, language)}</span>
-                      </div>
-                      <div className="mt-3 grid grid-cols-3 gap-2">
-                        <button type="button" onClick={() => setSelectedClient(client)} className="min-h-9 rounded-control border border-line bg-bg text-xs font-medium text-fg hover:bg-panel">View</button>
-                        {canManageClients && <button type="button" onClick={() => openEdit(client)} className="min-h-9 rounded-control border border-line bg-bg text-xs font-medium text-fg hover:bg-panel">Manage</button>}
-                        <button type="button" onClick={handleExport} className="min-h-9 rounded-control border border-line bg-bg text-xs font-medium text-muted hover:bg-panel hover:text-fg">Export</button>
-                      </div>
-                    </article>
-                  );
-                })
-              )}
-            </div>
-
-            <div className="hidden min-[900px]:block overflow-x-auto custom-scrollbar">
-              <table className="w-full min-w-[1080px] text-left">
-                <thead>
-                  <tr>
-                    <th scope="col"><SortButton label="Client account" sort="company" /></th>
-                    <th scope="col"><SortButton label="Industry" sort="industry" /></th>
-                    <th scope="col"><SortButton label="Status" sort="status" /></th>
-                    <th scope="col">Assigned contact</th>
-                    <th scope="col" className="text-right"><SortButton label="Lifetime billed" sort="totalSpend" /></th>
-                    <th scope="col">SLA health</th>
-                    <th scope="col" className="text-right">Actions</th>
+      <section aria-label="Clients directory" className="overflow-hidden rounded-card border border-line bg-panel">
+        <div className="overflow-x-auto custom-scrollbar">
+          <table className="w-full min-w-[1120px] border-collapse text-left">
+            <thead className="bg-bg"><tr className="border-b border-line text-[11px] leading-[14px] text-muted">
+              <th className="px-4 py-2.5 font-medium">CLIENT ACCOUNT</th><th className="px-4 py-2.5 font-medium">INDUSTRY</th><th className="px-4 py-2.5 font-medium">CONTRACT TIER</th><th className="px-4 py-2.5 font-medium">ASSIGNED POD & LEAD</th><th className="px-4 py-2.5 text-right font-medium">MONTHLY RUN-RATE</th><th className="px-4 py-2.5 font-medium">SLA HEALTH</th><th className="px-4 py-2.5 text-right font-medium">ACTIONS</th>
+            </tr></thead>
+            <tbody className="divide-y divide-line text-[13px] leading-[18px]">
+              {isLoading ? Array.from({ length: 6 }).map((_, index) => <tr key={index}>{Array.from({ length: 7 }).map((__, cell) => <td key={cell} className="px-4 py-3"><div className="h-3 w-24 animate-pulse rounded-badge bg-line" /></td>)}</tr>) : paginatedClients.length === 0 ? (
+                <tr><td colSpan={7} className="px-4 py-12 text-center"><Users size={20} className="mx-auto text-muted" aria-hidden="true" /><p className="mt-3 text-sm font-medium text-fg">{clients.length ? 'No matching clients.' : 'No clients yet.'}</p><p className="mt-1 text-xs text-muted">Try another search or add your first client.</p></td></tr>
+              ) : paginatedClients.map((client) => {
+                const budget = Number(client.slaDailyAdSpendBudget) || 0;
+                const spend = Number(client.currentDailyAdSpend) || 0;
+                const slaState = budget <= 0 ? 'neutral' : spend > budget ? 'danger' : spend >= budget * 0.9 ? 'warning' : 'success';
+                const slaValue = budget > 0 ? Math.max(0, Math.min(100, (1 - spend / budget) * 100)) : null;
+                return (
+                  <tr key={client.id} className="transition-colors hover:bg-bg">
+                    <td className="px-4 py-3"><button type="button" onClick={() => setSelectedClient(client)} className="block max-w-[250px] text-left"><span className="block truncate font-medium text-fg">{client.company}</span><span className="mt-0.5 block truncate text-[11px] text-muted tabular-nums">ID: {client.id} • {client.location || '—'}</span></button></td>
+                    <td className="px-4 py-3 text-muted">{client.industry || '—'}</td>
+                    <td className="px-4 py-3"><span className={\`inline-flex items-center rounded-badge border px-2 py-0.5 text-[11px] font-medium \${client.projectsCount >= 5 ? 'border-accent/30 bg-accent/10 text-accent-text' : client.status === 'lead' ? 'border-info/20 bg-info/10 text-info' : 'border-line bg-bg text-fg'}\`}>{client.projectsCount >= 5 ? 'Tier 1 Strategic' : client.status === 'lead' ? 'Project-based' : 'Retainer Core'}</span></td>
+                    <td className="px-4 py-3"><div className="font-medium text-fg">{client.contactPersonRole || 'Pod Alpha'}</div><div className="text-[11px] text-muted">{client.name || 'Unassigned lead'}</div></td>
+                    <td className="px-4 py-3 text-right font-medium tabular-nums text-fg">{new Intl.NumberFormat(language === 'id' ? 'id-ID' : 'en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(Number(client.totalSpend) || 0)}<span className="ml-1 text-[11px] font-normal text-muted">/mo</span></td>
+                    <td className="px-4 py-3"><div className="flex items-center gap-2"><span className={\`h-2 w-2 rounded-full \${slaState === 'success' ? 'bg-success' : slaState === 'warning' ? 'bg-warning' : slaState === 'danger' ? 'bg-danger' : 'bg-line'}\`} aria-hidden="true" /><span className={slaState === 'danger' ? 'font-medium text-danger tabular-nums' : 'text-fg tabular-nums'}>{slaValue === null ? 'Not configured' : \`\${slaValue.toFixed(1)}%\`}</span></div></td>
+                    <td className="px-4 py-3 text-right"><div className="inline-flex items-center gap-1.5"><button type="button" onClick={() => setSelectedClient(client)} className="rounded-control border border-line bg-panel px-2 py-1 text-[11px] font-medium text-fg transition-colors hover:bg-bg">View Profile</button>{canManageClients && <button type="button" onClick={() => openEdit(client)} className="rounded-control border border-line bg-panel px-2 py-1 text-[11px] font-medium text-muted transition-colors hover:bg-bg hover:text-fg">Manage</button>}</div></td>
                   </tr>
-                </thead>
-                <tbody>
-                  {isLoading ? (
-                    Array.from({ length: 6 }).map((_, index) => (
-                      <tr key={index} aria-hidden="true">
-                        {Array.from({ length: 7 }).map((__, cell) => (
-                          <td key={cell}><div className="h-3 w-24 animate-pulse rounded-badge bg-line" /></td>
-                        ))}
-                      </tr>
-                    ))
-                  ) : paginatedClients.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="px-4 py-14 text-center">
-                        <div className="mx-auto max-w-sm">
-                          <Users size={20} className="mx-auto text-muted" aria-hidden="true" />
-                          <p className="mt-3 text-sm font-medium text-fg">{clients.length === 0 ? 'No clients yet.' : 'No matching clients.'}</p>
-                          <p className="mt-1 text-xs text-muted">
-                            {clients.length === 0 ? 'Add your first client to build the directory.' : 'Try another search or clear the active filters.'}
-                          </p>
-                          {clients.length === 0 && canManageClients && (
-                            <Button type="button" variant="primary" onClick={openCreate} icon={<Plus size={14} />} className="mt-4">Add client</Button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ) : (
-                    paginatedClients.map((client) => {
-                      const budget = Number(client.slaDailyAdSpendBudget || 0);
-                      const spend = Number(client.currentDailyAdSpend || 0);
-                      const ratio = budget > 0 ? spend / budget : null;
-                      const slaLabel = ratio === null ? 'Not configured' : ratio > 1 ? 'Over budget' : ratio >= 0.9 ? 'Near cap' : 'Healthy';
-                      const slaTone = ratio === null ? 'neutral' : ratio > 1 ? 'danger' : ratio >= 0.9 ? 'warning' : 'success';
-
-                      return (
-                        <tr key={client.id}>
-                          <td>
-                            <button type="button" onClick={() => setSelectedClient(client)} className="group block max-w-[280px] text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" aria-label={'View ' + client.company}>
-                              <span className="block truncate text-[13px] font-medium text-fg group-hover:text-accent-text">{client.company}</span>
-                              <span className="mt-0.5 block truncate text-[11px] text-muted tabular-nums">
-                                ID: {client.id}{client.location ? ' • ' + client.location : ''}
-                              </span>
-                            </button>
-                          </td>
-                          <td><span className="block max-w-[200px] truncate text-[13px] text-muted">{client.industry || '—'}</span></td>
-                          <td>
-                            <span className={'inline-flex items-center gap-1.5 rounded-badge border px-2 py-1 text-[11px] font-semibold ' + statusClasses[statusMeta[client.status].tone]}>
-                              {statusMeta[client.status].icon}
-                              {statusMeta[client.status].label}
-                            </span>
-                          </td>
-                          <td>
-                            <div className="max-w-[240px] min-w-0">
-                              <p className="truncate text-[13px] font-medium text-fg">{client.name || '—'}</p>
-                              {client.email ? (
-                                <a href={'mailto:' + client.email} className="mt-0.5 block truncate text-[11px] text-muted hover:text-accent-text">{client.email}</a>
-                              ) : (
-                                <p className="mt-0.5 truncate text-[11px] text-muted">No email</p>
-                              )}
-                            </div>
-                          </td>
-                          <td className="text-right">
-                            <div className="tabular-nums text-[13px] font-medium text-fg">{formatAmount(client.totalSpend || 0, currency)}</div>
-                            <div className="mt-0.5 text-[11px] text-muted">{client.projectsCount || 0} {client.projectsCount === 1 ? 'project' : 'projects'}</div>
-                          </td>
-                          <td>
-                            <span className={'inline-flex items-center gap-1.5 rounded-badge border px-2 py-1 text-[11px] font-semibold ' + slaClasses[slaTone as keyof typeof slaClasses]}>
-                              {slaTone === 'success' ? <CheckCircle2 size={12} /> : slaTone === 'warning' ? <CircleAlert size={12} /> : slaTone === 'danger' ? <ShieldAlert size={12} /> : <CircleDashed size={12} />}
-                              {slaLabel}
-                              {ratio !== null && <span className="tabular-nums">{Math.round(ratio * 100)}%</span>}
-                            </span>
-                          </td>
-                          <td>
-                            <div className="flex items-center justify-end gap-1.5">
-                              <button type="button" onClick={() => setSelectedClient(client)} className="rounded-control border border-line bg-bg px-2.5 py-1.5 text-[11px] font-medium text-fg transition-colors hover:bg-panel">View Profile</button>
-                              {canManageClients && <button type="button" onClick={() => openEdit(client)} className="rounded-control border border-line bg-bg px-2.5 py-1.5 text-[11px] font-medium text-muted transition-colors hover:bg-panel hover:text-fg">Manage</button>}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {!isLoading && filteredClients.length > 0 && (
-              <div className="flex flex-col gap-3 border-t border-line bg-bg px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-xs text-muted">
-                  Showing <span className="tabular-nums font-medium text-fg">{(page - 1) * pageSize + 1}</span> to <span className="tabular-nums font-medium text-fg">{Math.min(page * pageSize, filteredClients.length)}</span> of <span className="tabular-nums font-medium text-fg">{filteredClients.length}</span> records
-                </p>
-                <div className="flex items-center gap-1.5">
-                  <button type="button" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page === 1} className="rounded-control border border-line bg-panel px-2.5 py-1.5 text-[11px] font-medium text-muted hover:bg-bg hover:text-fg disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: Math.min(pageCount, 4) }, (_, index) => index + 1).map((pageNumber) => (
-                      <button key={pageNumber} type="button" onClick={() => setPage(pageNumber)} className={'h-7 min-w-7 rounded-badge px-1.5 text-[11px] font-medium tabular-nums ' + (page === pageNumber ? 'bg-line text-fg' : 'text-muted hover:bg-panel hover:text-fg')}>
-                        {pageNumber}
-                      </button>
-                    ))}
-                    {pageCount > 4 && <span className="px-0.5 text-muted">…</span>}
-                    {pageCount > 4 && (
-                      <button type="button" onClick={() => setPage(pageCount)} className={'h-7 min-w-7 rounded-badge px-1.5 text-[11px] font-medium tabular-nums ' + (page === pageCount ? 'bg-line text-fg' : 'text-muted hover:bg-panel hover:text-fg')}>
-                        {pageCount}
-                      </button>
-                    )}
-                  </div>
-                  <button type="button" onClick={() => setPage((current) => Math.min(pageCount, current + 1))} disabled={page === pageCount} className="rounded-control border border-line bg-panel px-2.5 py-1.5 text-[11px] font-medium text-fg hover:bg-bg hover:text-fg disabled:cursor-not-allowed disabled:opacity-40">Next</button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        {!isLoading && filteredClients.length > 0 && <div className="flex flex-col gap-3 border-t border-line bg-bg px-4 py-3 sm:flex-row sm:items-center sm:justify-between"><p className="text-[11px] text-muted">Showing <span className="font-medium tabular-nums text-fg">\${(page - 1) * pageSize + 1}</span> to <span className="font-medium tabular-nums text-fg">\${Math.min(page * pageSize, filteredClients.length)}</span> of <span className="font-medium tabular-nums text-fg">\${filteredClients.length}</span> records</p><div className="flex items-center gap-1.5"><button type="button" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page === 1} className="rounded-control border border-line bg-panel px-2.5 py-1 text-[11px] text-muted disabled:cursor-not-allowed disabled:opacity-40">Previous</button><div className="flex items-center gap-1 px-1">{Array.from({ length: Math.min(3, pageCount) }, (_, index) => index + 1).map((value) => <button key={value} type="button" onClick={() => setPage(value)} className={\`h-6 w-6 rounded-chip text-[11px] tabular-nums \${page === value ? 'bg-line text-fg' : 'text-muted hover:bg-panel'}\`}>{value}</button>)}{pageCount > 4 && <span className="px-0.5 text-muted">…</span>}{pageCount > 3 && <button type="button" onClick={() => setPage(pageCount)} className={\`h-6 w-6 rounded-chip text-[11px] tabular-nums \${page === pageCount ? 'bg-line text-fg' : 'text-muted hover:bg-panel'}\`}>{pageCount}</button>}</div><button type="button" onClick={() => setPage((current) => Math.min(pageCount, current + 1))} disabled={page === pageCount} className="rounded-control border border-line bg-panel px-2.5 py-1 text-[11px] text-fg disabled:cursor-not-allowed disabled:opacity-40">Next</button></div></div>}
       </section>
-
+    </div>
+  );
       <Modal
         open={!!selectedClient}
         onClose={() => setSelectedClient(null)}
