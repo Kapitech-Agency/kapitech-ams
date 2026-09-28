@@ -554,11 +554,15 @@ export const AdminInvoicing: React.FC = () => {
   );
 
   const quarterCollected = useMemo(
-    () => quarterInvoices.reduce((sum, invoice) => {
-      const paid = Number(invoice.amountPaid || 0);
-      return sum + paid;
-    }, 0),
-    [quarterInvoices]
+    () => {
+      if (!reportingQuarter) return 0;
+      const end = new Date(reportingQuarter.end);
+      end.setHours(23, 59, 59, 999);
+      return quarterInvoices
+        .filter((invoice) => invoice.status !== 'cancelled')
+        .reduce((sum, invoice) => sum + getInvoiceCollectedInRange(invoice, reportingQuarter.start, end), 0);
+    },
+    [quarterInvoices, reportingQuarter]
   );
 
   const quarterExpenses = useMemo(
