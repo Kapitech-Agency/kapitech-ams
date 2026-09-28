@@ -1730,7 +1730,7 @@ export const AdminInvoicing: React.FC = () => {
                             {columnVisibility.due && <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Due Date</th>}
                             {columnVisibility.amount && <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount (IDR)</th>}
                             {columnVisibility.status && <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Status</th>}
-                            {columnVisibility.actions && <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Actions</th>
+                            {columnVisibility.actions && <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Actions</th>}
                           </tr></thead>
                           <tbody>
                             {paginatedInvoices.map((invoice) => {
