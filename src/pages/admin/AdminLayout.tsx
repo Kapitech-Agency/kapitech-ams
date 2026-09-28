@@ -550,6 +550,27 @@ export const AdminLayout: React.FC = () => {
                     </NavLink>
                   ))}
                 </nav>
+              ) : location.pathname === '/admin/invoicing' ? (
+                <nav aria-label="Finance sections" className="flex h-full min-w-0 items-center gap-1 overflow-x-auto custom-scrollbar">
+                  {[
+                    { key: 'invoices', label: 'Invoices', search: '' },
+                    { key: 'income-expenses', label: 'Income & Expenses', search: '?finance=income-expenses' },
+                    { key: 'tax-retainers', label: 'Tax & Retainers', search: '?finance=tax-retainers' },
+                    { key: 'financial-reports', label: 'Financial Reports', search: '?finance=financial-reports' },
+                  ].map((tab) => {
+                    const activeView = new URLSearchParams(location.search).get('finance') || 'invoices';
+                    return (
+                      <NavLink
+                        key={tab.key}
+                        to={`/admin/invoicing${tab.search}`}
+                        end
+                        className={() => `inline-flex h-9 shrink-0 items-center rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${activeView === tab.key ? 'bg-line text-fg' : 'text-muted hover:bg-bg hover:text-fg'}`}
+                      >
+                        {tab.label}
+                      </NavLink>
+                    );
+                  })}
+                </nav>
               ) : (
                 <nav aria-label="Breadcrumb">
                   <ol className="flex min-w-0 items-center gap-2 text-xs">
