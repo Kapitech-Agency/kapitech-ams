@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   AlertCircle,
+  ArrowDown,
+  ArrowUp,
   ArrowUpRight,
   CalendarDays,
   Check,
@@ -118,6 +120,25 @@ const getDaysUntilDue = (value: string) => {
 const isDueSoonInvoice = (invoice: AgencyInvoice) => {
   const days = getDaysUntilDue(invoice.dueDate);
   return invoice.status !== 'paid' && invoice.status !== 'cancelled' && days >= 0 && days <= 7;
+};
+
+const getPreviousQuarter = (range: ReturnType<typeof getQuarterRange>) => {
+  if (!range) return null;
+  return getQuarterRange(new Date(range.start.getFullYear(), range.start.getMonth() - 1, 15));
+};
+
+const formatFinanceCardAmount = (amount: number, currency: CurrencyCode) => {
+  if (!Number.isFinite(amount)) return '—';
+  const prefix = currency === 'USD' ? '$ ' : 'Rp ';
+  const abs = Math.abs(amount);
+  if (abs >= 1_000_000) {
+    const millions = amount / 1_000_000;
+    return prefix + millions.toLocaleString('en-US', { maximumFractionDigits: 0 }) + 'M';
+  }
+  if (abs >= 1_000) {
+    return prefix + Math.round(amount / 1_000).toLocaleString('en-US') + 'K';
+  }
+  return prefix + Math.round(amount).toLocaleString('en-US');
 };
 
 const emptyLineItem = (): InvoiceLineItem => ({
@@ -1053,6 +1074,40 @@ export const AdminInvoicing: React.FC = () => {
     [currencyInvoices]
   );
 
+  const previousQuarter = useMemo(() => getPreviousQuarter(reportingQuarter), [reportingQuarter]);
+
+  const previousQuarterTotal = useMemo(
+    () => currencyInvoices
+      .filter((invoice) => isInQuarter(invoice.issueDate, previousQuarter))
+      .reduce((sum, invoice) => sum + Number(invoice.total || 0), 0),
+    [currencyInvoices, previousQuarter]
+  );
+
+  const currentQuarterTotal = useMemo(
+    () => ledgerInvoices.reduce((sum, invoice) => sum + Number(invoice.total || 0), 0),
+    [ledgerInvoices]
+  );
+
+  const quarterChangePercent = previousQuarterTotal > 0
+    ? ((currentQuarterTotal - previousQuarterTotal) / previousQuarterTotal) * 100
+    : null;
+
+  const pendingInvoiceCount = useMemo(
+    () => currencyInvoices.filter((invoice) => {
+      const balance = Math.max(0, Number(invoice.balanceDue ?? (invoice.total - (invoice.amountPaid || 0))));
+      return invoice.status !== 'paid' && invoice.status !== 'cancelled' && balance > 0;
+    }).length,
+    [currencyInvoices]
+  );
+
+  const criticalOverdueCount = useMemo(
+    () => currencyInvoices.filter((invoice) => invoice.status === 'overdue' && getDaysUntilDue(invoice.dueDate) > 60).length,
+    [currencyInvoices]
+  );
+
+  const operatingMarginValue = serverMetrics ? Number.parseFloat(serverMetrics.profitMargin) : NaN;
+  const operatingMarginHealthy = Number.isFinite(operatingMarginValue) && operatingMarginValue >= 35;
+
   const exportInvoicesCsv = () => {
     const headers = ['Invoice #', 'Client', 'Project', 'Issue Date', 'Due Date', 'Currency', 'Total', 'Balance Due', 'Status'];
     const rows = filteredInvoices.map((invoice) => [
@@ -1178,36 +1233,99 @@ export const AdminInvoicing: React.FC = () => {
         </section>
       ) : (
         <>
-          <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 min-[1100px]:grid-cols-5" aria-label="Finance KPI snapshot">
-            {[
-              { label: 'Total Invoiced', icon: <Receipt size={12} aria-hidden="true" />, value: formatNativeAmount(ledgerInvoices.reduce((sum, invoice) => sum + Number(invoice.total || 0), 0), currency, true), context: (ledgerPeriod === 'reporting-quarter' ? (reportingQuarter?.label || 'Reporting period') + ' · ' : '') + (serverMetrics ? serverMetrics.totalInvoicesCount + ' total invoices' : ledgerInvoices.length + ' invoices'), tone: 'text-accent-text' },
-              { label: 'Collected (YTD)', value: serverMetrics ? formatNativeAmount(serverMetrics.totalRevenueCollected, currency, true) : '—', context: currencyInvoices.length ? derivedMetrics.collectionRate + '% collection rate' : '—', icon: <WalletCards size={17} />, tone: 'text-success' },
-              { label: 'Outstanding', value: serverMetrics ? formatNativeAmount(serverMetrics.totalOutstanding, currency, true) : '—', context: serverMetrics ? serverMetrics.overdueCount + ' overdue' : '—', icon: <CreditCard size={17} />, tone: 'text-warning' },
-              { label: 'Overdue Balance', value: formatNativeAmount(overdueBalance, currency, true), context: serverMetrics ? serverMetrics.overdueCount + ' critical invoices' : '—', icon: <AlertCircle size={17} />, tone: 'text-danger' },
-              { label: 'Operating Margin', value: serverMetrics ? serverMetrics.profitMargin + '%' : '—', context: serverMetrics && serverMetrics.netProfit >= 0 ? 'Healthy operating result' : 'Review operating result', icon: <TrendingUp size={17} />, tone: serverMetrics && serverMetrics.netProfit < 0 ? 'text-danger' : 'text-success' }
-            ].map((metric) => (
-              <article key={metric.label} className="min-w-0 rounded-card border border-line bg-panel p-4 sm:p-5">
-                <div className="flex items-center justify-between gap-3 text-[11px] uppercase tracking-[0.08em] font-semibold text-muted"><span className="truncate">{metric.label}</span><span className={'flex h-7 w-7 shrink-0 items-center justify-center rounded-control border border-line bg-bg ' + metric.tone}>{metric.icon}</span></div>
-                <div className="mt-3 truncate text-2xl font-medium tabular-nums tracking-[-0.03em] text-fg">{metric.value}</div>
-                <div className="mt-2 text-[11px]"><span className={'font-medium ' + metric.tone}>{metric.context}</span></div>
-              </article>
-            ))}
+          <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5" aria-label="Finance KPI snapshot">
+            <article className="flex min-w-0 flex-col justify-between rounded-card border border-line bg-panel p-5">
+              <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted">
+                <span>Total Invoiced Q2</span>
+                <Receipt size={18} className="text-muted" aria-hidden="true" />
+              </div>
+              <div className="mt-3">
+                <div className="truncate font-mono text-2xl font-bold tabular-nums tracking-tight text-fg">{formatFinanceCardAmount(currentQuarterTotal, currency)}</div>
+                <div className="mt-2 flex items-center gap-1.5 text-xs">
+                  {quarterChangePercent == null ? (
+                    <span className="font-medium text-muted">—</span>
+                  ) : (
+                    <>
+                      <span className={'flex items-center font-medium ' + (quarterChangePercent >= 0 ? 'text-success' : 'text-danger')}>
+                        {quarterChangePercent >= 0 ? <ArrowUp size={14} aria-hidden="true" /> : <ArrowDown size={14} aria-hidden="true" />}
+                        {Math.abs(quarterChangePercent).toFixed(1)}%
+                      </span>
+                      <span className="text-muted">vs previous quarter</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </article>
+
+            <article className="flex min-w-0 flex-col justify-between rounded-card border border-line bg-panel p-5">
+              <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted">
+                <span>Collected (YTD)</span>
+                <WalletCards size={18} className="text-success" aria-hidden="true" />
+              </div>
+              <div className="mt-3">
+                <div className="truncate font-mono text-2xl font-bold tabular-nums tracking-tight text-fg">{formatFinanceCardAmount(serverMetrics?.totalRevenueCollected || 0, currency)}</div>
+                <div className="mt-2 flex items-center gap-1.5 text-xs">
+                  <span className="font-medium tabular-nums text-fg">{derivedMetrics.collectionRate}%</span>
+                  <span className="text-muted">collection rate</span>
+                </div>
+              </div>
+            </article>
+
+            <article className="flex min-w-0 flex-col justify-between rounded-card border border-line bg-panel p-5">
+              <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted">
+                <span>Outstanding</span>
+                <span className="text-warning" aria-hidden="true"><span className="inline-block text-[18px] leading-none">⌛</span></span>
+              </div>
+              <div className="mt-3">
+                <div className="truncate font-mono text-2xl font-bold tabular-nums tracking-tight text-fg">{formatFinanceCardAmount(serverMetrics?.totalOutstanding || 0, currency)}</div>
+                <div className="mt-2 flex items-center gap-1.5 text-xs">
+                  <span className="font-medium text-warning">{pendingInvoiceCount} invoices</span>
+                  <span className="text-muted">pending</span>
+                </div>
+              </div>
+            </article>
+
+            <article className="flex min-w-0 flex-col justify-between rounded-card border border-line bg-panel p-5">
+              <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted">
+                <span>Overdue Balance</span>
+                <AlertCircle size={18} className="text-danger" aria-hidden="true" />
+              </div>
+              <div className="mt-3">
+                <div className="truncate font-mono text-2xl font-bold tabular-nums tracking-tight text-danger">{formatFinanceCardAmount(overdueBalance, currency)}</div>
+                <div className="mt-2 flex items-center gap-1.5 text-[10px]">
+                  <span className="inline-flex items-center gap-1 rounded bg-danger/10 px-1.5 py-0.5 font-semibold text-danger">
+                    <span className="h-1 w-1 rounded-full bg-danger" />
+                    {criticalOverdueCount} INVOICES CRITICAL
+                  </span>
+                </div>
+              </div>
+            </article>
+
+            <article className="flex min-w-0 flex-col justify-between rounded-card border border-line bg-panel p-5">
+              <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted">
+                <span>Operating Margin</span>
+                <TrendingUp size={18} className="text-success" aria-hidden="true" />
+              </div>
+              <div className="mt-3">
+                <div className="truncate font-mono text-2xl font-bold tabular-nums tracking-tight text-fg">{serverMetrics ? serverMetrics.profitMargin + '%' : '—'}</div>
+                <div className="mt-2 flex items-center gap-1.5 text-xs">
+                  <span className={operatingMarginHealthy ? "font-medium text-success" : "font-medium text-danger"}>{operatingMarginHealthy ? 'Healthy' : 'Below target'}</span>
+                  <span className="text-muted">target &gt; 35%</span>
+                </div>
+              </div>
+            </article>
           </section>
 
-          <section className="mt-3 rounded-card border border-line bg-panel px-4 py-3 sm:px-5" aria-label="Finance operating signals">
-            <AdminMetricStrip className="grid-cols-2 sm:grid-cols-3 min-[1100px]:grid-cols-6" metrics={[
-              { label: 'Collection rate', value: currencyInvoices.length ? derivedMetrics.collectionRate + '%' : '—', context: 'Current ledger' },
-              { label: 'Monthly burn', value: derivedMetrics.monthlyBurnRate ? formatNativeAmount(derivedMetrics.monthlyBurnRate, currency, true) : '—', context: 'Expense run-rate' },
-              { label: 'Cash runway', value: derivedMetrics.cashRunwayMonths == null ? '—' : derivedMetrics.cashRunwayMonths + ' mo', context: 'Based on current burn' }
-            ]} />
-          </section>
+          <div className="hidden" aria-hidden="true">
+            <AdminMetricStrip metrics={[]} />
+          </div>
 
           <section className="mt-6 grid gap-3 min-[1100px]:grid-cols-3" aria-label="Finance visual analytics">
             <div className="min-[1100px]:col-span-2 rounded-card border border-line bg-panel p-4 sm:p-5">
               <div className="flex flex-col gap-3 border-b border-line pb-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 id="financial-trend-title" className="text-sm font-semibold text-fg">Cash Flow vs Operating Burn</h2>
-                  <p className="mt-1 text-xs leading-5 text-muted">Monthly billing inflow, operational burn rate, and net result from recorded transactions.</p>
+                  <p className="mt-1 text-xs leading-5 text-muted">Monthly billing inflow, operational burn rate, and net retention (FY 2025 YTD)</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3 text-[11px] text-muted">
                   <span className="inline-flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-sm bg-success" /> Net Inflow</span>
