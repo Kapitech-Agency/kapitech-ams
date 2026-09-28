@@ -37,11 +37,14 @@ import { Modal } from '../../components/ui/Modal';
 import { InvoiceStatusDropdown } from '../../components/ui/InvoiceStatusDropdown';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { api } from '../../lib/apiClient';
-import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 
 
 type SortKey = 'updated' | 'due' | 'oldest' | 'amount_high' | 'amount_low' | 'invoice';
 type LedgerPeriod = 'reporting-quarter' | 'all';
+type PaymentFilter = 'all' | 'unpaid' | 'partial' | 'paid';
+type DueFilter = 'all' | 'due_soon' | 'overdue' | 'later';
+type QuotationSort = 'newest' | 'oldest' | 'value_high' | 'value_low' | 'valid_until';
 type FinanceClient = {
   id: string;
   name: string;
@@ -286,6 +289,29 @@ const StatusBadge = ({ status }: { status: InvoiceStatus }) => (
   </span>
 );
 
+const FinanceMetricCard = ({
+  label,
+  value,
+  context,
+  icon,
+  toneClassName = 'text-fg'
+}: {
+  label: React.ReactNode;
+  value: React.ReactNode;
+  context?: React.ReactNode;
+  icon?: React.ReactNode;
+  toneClassName?: string;
+}) => (
+  <article className="min-w-0 rounded-card border border-line bg-panel px-4 py-3.5">
+    <div className="flex items-center justify-between gap-3">
+      <span className="truncate text-[11px] font-medium text-muted">{label}</span>
+      {icon && <span className={'shrink-0 ' + toneClassName}>{icon}</span>}
+    </div>
+    <p className={'mt-1.5 truncate text-xl font-medium leading-7 tracking-[-0.02em] tabular-nums ' + toneClassName}>{value}</p>
+    {context && <p className="mt-0.5 truncate text-[10px] leading-4 text-muted">{context}</p>}
+  </article>
+);
+
 const EmptyState = ({ title, description, action }: { title: string; description: string; action?: React.ReactNode }) => (
   <div className="flex min-h-[180px] flex-col items-center justify-center rounded-card border border-line bg-bg px-5 py-8 text-center">
     <div className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted">
@@ -305,6 +331,7 @@ type FinanceChartPoint = {
   retainerTarget: number;
 };
 
+
 const FinanceCashFlowChart: React.FC<{
   data: FinanceChartPoint[];
   currency: CurrencyCode;
@@ -312,48 +339,72 @@ const FinanceCashFlowChart: React.FC<{
 }> = ({ data, currency, ariaLabel }) => {
   if (!data.length) return null;
   const width = 760;
-  const height = 180;
+  const height = 190;
   const left = 8;
   const right = 12;
   const top = 12;
-  const bottom = 18;
+  const bottom = 20;
   const innerWidth = width - left - right;
   const innerHeight = height - top - bottom;
-  const values = data.flatMap((point) => [point.net, point.outflow, point.retainerTarget, 0]);
-  const minValue = Math.min(...values);
-  const maxValue = Math.max(...values);
+  const values = data.flatMap((point) => [point.inflow, point.outflow, point.net]);
+  const minValue = Math.min(0, ...values);
+  const maxValue = Math.max(1, ...values);
   const range = Math.max(1, maxValue - minValue);
   const x = (index: number) => left + (data.length === 1 ? innerWidth / 2 : (index / (data.length - 1)) * innerWidth);
   const y = (value: number) => top + ((maxValue - value) / range) * innerHeight;
-  const polyline = (key: 'outflow' | 'net' | 'retainerTarget') => data.map((point, index) => x(index) + ',' + y(point[key])).join(' ');
+  const polyline = (key: 'inflow' | 'outflow' | 'net') => data.map((point, index) => x(index) + ',' + y(point[key])).join(' ');
   const current = data[data.length - 1];
+  const collected = data.reduce((sum, point) => sum + point.inflow, 0);
+  const burn = data.reduce((sum, point) => sum + point.outflow, 0);
+  const net = collected - burn;
+  const latestCoverage = current.outflow > 0 ? (current.inflow / current.outflow) * 100 : null;
   return (
     <div className="min-w-0" role="img" aria-label={ariaLabel}>
-      <div className="relative h-48 w-full">
-        <svg viewBox={'0 0 ' + width + ' ' + height} className="h-full w-full" preserveAspectRatio="none">
-          {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
-            const yy = top + ratio * innerHeight;
-            return <line key={ratio} x1={left} x2={width - right} y1={yy} y2={yy} stroke="var(--line)" strokeWidth="1" />;
-          })}
-          <polyline points={polyline('outflow')} fill="none" stroke="var(--series-3)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-          <polyline points={polyline('retainerTarget')} fill="none" stroke="var(--success)" strokeWidth="1.8" strokeDasharray="5 4" strokeLinecap="round" strokeLinejoin="round" />
-          <polyline points={polyline('net')} fill="none" stroke="var(--series-1)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-          {data.map((point, index) => (
-            <g key={point.label}>
-              <circle cx={x(index)} cy={y(point.net)} r="2.8" fill="var(--series-1)" />
-              <circle cx={x(index)} cy={y(point.retainerTarget)} r="2.4" fill="var(--success)" />
-              <circle cx={x(index)} cy={y(point.outflow)} r="2.4" fill="var(--series-3)" />
-            </g>
-          ))}
-        </svg>
+      <div className="grid grid-cols-3 gap-2">
+        {[
+          { label: 'Latest collected', value: current.inflow, tone: 'text-accent-text' },
+          { label: 'Latest burn', value: current.outflow, tone: 'text-series-3' },
+          { label: 'Latest net cash', value: current.net, tone: current.net >= 0 ? 'text-success' : 'text-danger' }
+        ].map((item) => (
+          <div key={item.label} className="min-w-0 rounded-control border border-line bg-bg px-3 py-2.5">
+            <p className="truncate text-[10px] font-medium text-muted">{item.label}</p>
+            <p className={'mt-1 truncate text-sm font-semibold tabular-nums ' + item.tone}>{formatNativeAmount(item.value, currency, true)}</p>
+          </div>
+        ))}
       </div>
-      <div className="grid grid-cols-2 gap-x-3 border-t border-line px-1 pt-2 text-[10px] tabular-nums text-muted sm:grid-cols-6">
-        {data.map((point) => <span key={point.label} className="truncate text-center">{point.label}</span>)}
+      <div className="mt-4 rounded-control border border-line bg-bg p-3">
+        <div className="relative h-48 w-full">
+          <svg viewBox={'0 0 ' + width + ' ' + height} className="h-full w-full" preserveAspectRatio="none">
+            {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+              const yy = top + ratio * innerHeight;
+              return <line key={ratio} x1={left} x2={width - right} y1={yy} y2={yy} stroke="var(--line)" strokeWidth="1" />;
+            })}
+            <line x1={left} x2={width - right} y1={y(0)} y2={y(0)} stroke="var(--line)" strokeWidth="1.4" strokeDasharray="4 4" />
+            <polyline points={polyline('inflow')} fill="none" stroke="var(--series-1)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            <polyline points={polyline('outflow')} fill="none" stroke="var(--series-3)" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+            <polyline points={polyline('net')} fill="none" stroke="var(--success)" strokeWidth="1.9" strokeDasharray="5 4" strokeLinecap="round" strokeLinejoin="round" />
+            {data.map((point, index) => (
+              <g key={point.label}>
+                <circle cx={x(index)} cy={y(point.inflow)} r="3" fill="var(--series-1)" />
+                <circle cx={x(index)} cy={y(point.outflow)} r="2.5" fill="var(--series-3)" />
+                <circle cx={x(index)} cy={y(point.net)} r="2.5" fill="var(--success)" />
+              </g>
+            ))}
+          </svg>
+        </div>
+        <div className="grid grid-cols-3 gap-2 border-t border-line pt-2 text-[10px] tabular-nums text-muted sm:grid-cols-6">
+          {data.map((point) => <span key={point.label} className="truncate text-center">{point.label}</span>)}
+        </div>
       </div>
-      <div className="mt-2 flex items-center justify-between gap-3 text-[10px] text-muted">
-        <span>Latest period</span>
-        <span className="tabular-nums text-fg">{current ? formatNativeAmount(current.net, currency, true) : '—'} net</span>
+      <div className="mt-3 flex flex-col gap-2 text-[10px] text-muted sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+          <span className="flex items-center gap-1.5"><span className="h-1.5 w-4 rounded-full bg-accent"></span>Cash collected</span>
+          <span className="flex items-center gap-1.5"><span className="h-1.5 w-4 rounded-full bg-series-3"></span>Operating burn</span>
+          <span className="flex items-center gap-1.5"><span className="h-1.5 w-4 rounded-full border border-success bg-transparent"></span>Net cash</span>
+        </div>
+        <div className="tabular-nums text-fg">6-month net {formatNativeAmount(net, currency, true)} · {latestCoverage === null ? '—' : latestCoverage.toFixed(0) + '%'} cash coverage latest</div>
       </div>
+      <p className="mt-2 text-[10px] leading-4 text-muted">Cash collected is actual payments received. Operating burn is recorded expenses. Net cash is collected less burn for each month.</p>
     </div>
   );
 };
@@ -386,13 +437,14 @@ export const AdminInvoicing: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [sort, setSort] = useState<SortKey>('updated');
   const [ledgerPeriod, setLedgerPeriod] = useState<LedgerPeriod>('reporting-quarter');
+  const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>('all');
+  const [dueFilter, setDueFilter] = useState<DueFilter>('all');
   const [periodMenuOpen, setPeriodMenuOpen] = useState(false);
   const [columnMenuOpen, setColumnMenuOpen] = useState(false);
   const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({
     client: true,
-    issue: true,
-    due: true,
-    amount: true,
+    timeline: true,
+    billing: true,
     status: true,
     actions: true
   });
@@ -466,6 +518,7 @@ export const AdminInvoicing: React.FC = () => {
   const [quotationLoading, setQuotationLoading] = useState(true);
   const [quotationSearch, setQuotationSearch] = useState('');
   const [quotationStatusFilter, setQuotationStatusFilter] = useState<'all' | FinanceQuotationStatus>('all');
+  const [quotationSort, setQuotationSort] = useState<QuotationSort>('newest');
   const [quotationModalOpen, setQuotationModalOpen] = useState(false);
   const [quotationDetail, setQuotationDetail] = useState<FinanceQuotation | null>(null);
   const [editingQuotation, setEditingQuotation] = useState<FinanceQuotation | null>(null);
@@ -810,22 +863,17 @@ export const AdminInvoicing: React.FC = () => {
   const filteredInvoices = useMemo(() => {
     const query = search.trim().toLowerCase();
     const result = ledgerInvoices.filter((invoice) => {
-      const searchable = [
-        invoice.invoiceNumber,
-        invoice.clientName,
-        invoice.clientCompany,
-        invoice.clientEmail,
-        projectsById.get(invoice.projectId)?.name || ''
-      ].join(' ').toLowerCase();
+      const balance = Math.max(0, Number(invoice.balanceDue ?? (invoice.total - (invoice.amountPaid || 0))));
+      const collected = Math.max(0, Number(invoice.total || 0) - balance);
+      const paymentState: PaymentFilter = balance <= 0 || invoice.status === 'paid' ? 'paid' : collected > 0 ? 'partial' : 'unpaid';
+      const dueState: DueFilter = isPastDueInvoice(invoice) ? 'overdue' : isDueSoonInvoice(invoice) ? 'due_soon' : 'later';
+      const searchable = [invoice.invoiceNumber, invoice.clientName, invoice.clientCompany, invoice.clientEmail, projectsById.get(invoice.projectId)?.name || ''].join(' ').toLowerCase();
       const matchesSearch = !query || searchable.includes(query);
-      const matchesStatus = statusFilter === 'all'
-        ? true
-        : statusFilter === 'due_soon'
-          ? isDueSoonInvoice(invoice)
-          : invoice.status === statusFilter;
-      return matchesSearch && matchesStatus;
+      const matchesStatus = statusFilter === 'all' ? true : statusFilter === 'due_soon' ? isDueSoonInvoice(invoice) : invoice.status === statusFilter;
+      const matchesPayment = paymentFilter === 'all' || paymentState === paymentFilter;
+      const matchesDue = dueFilter === 'all' || dueState === dueFilter;
+      return matchesSearch && matchesStatus && matchesPayment && matchesDue;
     });
-
     return [...result].sort((a, b) => {
       if (sort === 'amount_high') return b.total - a.total;
       if (sort === 'amount_low') return a.total - b.total;
@@ -834,11 +882,10 @@ export const AdminInvoicing: React.FC = () => {
       if (sort === 'invoice') return a.invoiceNumber.localeCompare(b.invoiceNumber);
       return String(b.updatedAt || '').localeCompare(String(a.updatedAt || ''));
     });
-  }, [ledgerInvoices, search, statusFilter, sort, projectsById]);
-
+  }, [ledgerInvoices, search, statusFilter, paymentFilter, dueFilter, sort, projectsById]);
   useEffect(() => {
     setInvoicePage(1);
-  }, [search, statusFilter, sort, currency]);
+  }, [search, statusFilter, paymentFilter, dueFilter, sort, ledgerPeriod, currency]);
 
   useEffect(() => {
     setExpensePage(1);
@@ -1694,19 +1741,17 @@ export const AdminInvoicing: React.FC = () => {
     const query = quotationSearch.trim().toLowerCase();
     return quotations
       .filter((quotation) => {
-        const searchable = [
-          quotation.quotationNumber,
-          quotation.title,
-          quotation.clientName,
-          quotation.clientCompany,
-          quotation.owner
-        ].join(' ').toLowerCase();
-        return (!query || searchable.includes(query))
-          && (quotationStatusFilter === 'all' || quotation.status === quotationStatusFilter);
+        const searchable = [quotation.quotationNumber, quotation.title, quotation.clientName, quotation.clientCompany, quotation.owner].join(' ').toLowerCase();
+        return (!query || searchable.includes(query)) && (quotationStatusFilter === 'all' || quotation.status === quotationStatusFilter);
       })
-      .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
-  }, [quotations, quotationSearch, quotationStatusFilter]);
-
+      .sort((a, b) => {
+        if (quotationSort === 'oldest') return String(a.createdAt).localeCompare(String(b.createdAt));
+        if (quotationSort === 'value_high') return b.total - a.total;
+        if (quotationSort === 'value_low') return a.total - b.total;
+        if (quotationSort === 'valid_until') return String(a.validUntil).localeCompare(String(b.validUntil));
+        return String(b.createdAt).localeCompare(String(a.createdAt));
+      });
+  }, [quotations, quotationSearch, quotationStatusFilter, quotationSort]);
   const quotationMetrics = useMemo(() => ({
     total: quotations.length,
     active: quotations.filter((quotation) => ['draft', 'review', 'approved', 'sent'].includes(quotation.status)).length,
@@ -2016,59 +2061,52 @@ export const AdminInvoicing: React.FC = () => {
 
   return (
     <div className="min-h-full pb-10">
+
       <AdminModuleHeader
-        title="Finance & Invoices"
-        description="Cash flow pacing, accounts receivable, quotations, retainer burn, and tax provisions for the active financial period."
+        title={financeView === 'quotations' ? 'Quotations' : financeView === 'income-expenses' ? 'Income & Expenses' : financeView === 'tax-retainers' ? 'Tax & Retainers' : financeView === 'financial-reports' ? 'Financial Reports' : 'Invoices'}
+        description={financeView === 'quotations'
+          ? 'Manage the commercial pipeline from draft quotation through approval, acceptance, and invoice conversion.'
+          : financeView === 'income-expenses'
+            ? 'Track actual cash collections, operating expenses, and net cash movement for the current financial year.'
+            : financeView === 'tax-retainers'
+              ? 'Monitor tax provision, tax collection, and retainer billing and collection across the active currency ledger.'
+              : financeView === 'financial-reports'
+                ? 'Review collection performance, margin, expense mix, and reporting trends for the active financial period.'
+                : 'Manage invoices, accounts receivable, collection risk, and billing activity for the active financial period.'}
         actions={(
           <>
-            <div className="inline-flex min-h-10 items-center rounded-control border border-line bg-panel p-1" aria-label="Finance currency">
+            <div className="inline-flex min-h-9 items-center rounded-control border border-line bg-panel p-1" aria-label="Finance currency">
               {(['IDR', 'USD'] as CurrencyCode[]).map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => setActiveCurrency(item)}
-                  aria-pressed={currency === item}
-                  className={'min-h-8 rounded-chip px-3 text-xs font-semibold transition-colors ' + (currency === item ? 'bg-line text-fg' : 'text-muted hover:text-fg')}
-                >
-                  {item}
-                </button>
+                <button key={item} type="button" onClick={() => setActiveCurrency(item)} aria-pressed={currency === item} className={'min-h-7 rounded-chip px-2.5 text-[11px] font-semibold transition-colors ' + (currency === item ? 'bg-line text-fg' : 'text-muted hover:text-fg')}>{item}</button>
               ))}
             </div>
-            <button type="button" onClick={() => void loadData(true)} disabled={refreshing} className={actionClass}>
+            <button type="button" onClick={() => void loadData(true)} disabled={refreshing} className={actionClass} title="Refresh finance data">
               <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
               {refreshing ? 'Refreshing' : 'Refresh'}
             </button>
             {financeView === 'quotations' ? (
               <>
-                <button type="button" onClick={exportQuotationsCsv} disabled={!filteredQuotations.length} className={actionClass}>
-                  <Download size={14} />
-                  Export CSV
-                </button>
-                {canManageInvoices && (
-                  <button type="button" onClick={openCreateQuotation} className={primaryClass}>
-                    <Plus size={14} />
-                    + New Quotation
-                  </button>
-                )}
+                <button type="button" onClick={exportQuotationsCsv} disabled={!filteredQuotations.length} className={actionClass}><Download size={14} />Export CSV</button>
+                {canManageInvoices && <button type="button" onClick={openCreateQuotation} className={primaryClass}><Plus size={14} />New quotation</button>}
               </>
+            ) : financeView === 'income-expenses' ? (
+              <>
+                <button type="button" onClick={exportReportCsv} disabled={!financeChartData.length} className={actionClass}><Download size={14} />Export report</button>
+                {canManageInvoices && <button type="button" onClick={openExpenseModal} className={actionClass}><Plus size={14} />New expense</button>}
+                {canCreateInvoice && <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14} />New invoice</button>}
+              </>
+            ) : financeView === 'tax-retainers' ? (
+              <>
+                <button type="button" onClick={exportTaxCsv} disabled={!currencyInvoices.length} className={actionClass}><Download size={14} />Export tax detail</button>
+                {canCreateInvoice && <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14} />New invoice</button>}
+              </>
+            ) : financeView === 'financial-reports' ? (
+              <button type="button" onClick={exportReportCsv} disabled={!financeChartData.length} className={actionClass}><Download size={14} />Export report</button>
             ) : (
               <>
-                <button type="button" onClick={financeView === 'tax-retainers' ? exportTaxCsv : financeView === 'financial-reports' ? exportReportCsv : exportInvoicesCsv} className={actionClass}>
-                  <Download size={14} />
-                  Export CSV
-                </button>
-                {financeView === 'invoices' && canManageInvoices && (
-                  <button type="button" onClick={openCreateQuotation} className={actionClass}>
-                    <FileText size={14} />
-                    New Quotation
-                  </button>
-                )}
-                {canCreateInvoice && (
-                  <button type="button" onClick={openCreateInvoice} disabled={!canManageInvoices} className={primaryClass}>
-                    <Plus size={14} />
-                    + New Invoice
-                  </button>
-                )}
+                <button type="button" onClick={exportInvoicesCsv} disabled={!currencyInvoices.length} className={actionClass}><Download size={14} />Export CSV</button>
+                {canManageInvoices && <button type="button" onClick={openCreateQuotation} className={actionClass}><FileText size={14} />New quotation</button>}
+                {canCreateInvoice && <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14} />New invoice</button>}
               </>
             )}
           </>
