@@ -50,6 +50,9 @@ test('Admin invoicing keeps financial mutations permission-gated and uses the sh
   assert.ok(source.includes('const QuotationStatusBadge'));
   assert.ok(!source.includes('quotation.status as never'));
   assert.ok(source.includes('Quarter net cash'));
+  assert.ok(source.includes('xl:w-[150px]'));
+  assert.ok(source.includes('xl:w-[164px]'));
+  assert.ok(source.includes('whitespace-nowrap'));
   assert.ok(source.includes('px-5 py-4'));
   assert.ok(source.includes('border border-line bg-panel text-muted'));
   const financeNavOrder = ['label: ' + String.fromCharCode(39) + 'Invoice', 'label: ' + String.fromCharCode(39) + 'Quotation', 'label: ' + String.fromCharCode(39) + 'Income & Expenses', 'label: ' + String.fromCharCode(39) + 'Tax & Retainers', 'label: ' + String.fromCharCode(39) + 'Financial Reports'];
