@@ -1131,6 +1131,64 @@ export const AdminInvoicing: React.FC = () => {
         updatedAt: editingInvoice?.updatedAt
       };
 
+
+      if (usingDemoFinance) {
+        const now = new Date().toISOString();
+        const localTotals = computeInvoiceTotals(validItems, numericTax, numericDiscount);
+        const localInvoice: AgencyInvoice = {
+          id: editingInvoice?.id || 'inv_slug_' + Date.now(),
+          invoiceNumber: invoiceNumber.trim() || 'INV-SLUG-' + String(100 + invoices.length + 1),
+          type: 'invoice',
+          clientName: clientName.trim(),
+          clientCompany: clientCompany.trim(),
+          clientEmail: clientEmail.trim(),
+          clientPhone: clientPhone.trim(),
+          projectId: projectId || undefined,
+          items: validItems,
+          subtotal: localTotals.subtotal,
+          discountPercent: numericDiscount,
+          discountAmount: localTotals.discountAmount,
+          taxPercent: numericTax,
+          taxAmount: localTotals.taxAmount,
+          total: localTotals.total,
+          amountPaid: editingInvoice?.amountPaid || 0,
+          balanceDue: Math.max(0, localTotals.total - Number(editingInvoice?.amountPaid || 0)),
+          payments: editingInvoice?.payments || [],
+          currency: invoiceCurrency,
+          status: invoiceStatus,
+          issueDate: issueDate || new Date().toISOString().slice(0, 10),
+          dueDate: dueDate || getDateInputValue(14),
+          paidDate: editingInvoice?.paidDate,
+          notes: invoiceNotes.trim(),
+          paymentTerms: paymentTerms.trim(),
+          createdAt: editingInvoice?.createdAt || now,
+          updatedAt: now
+        };
+        const nextInvoices = editingInvoice
+          ? invoices.map((invoice) => invoice.id === editingInvoice.id ? localInvoice : invoice)
+          : [localInvoice, ...invoices];
+        setInvoices(nextInvoices);
+        const derived = computeFinancialMetrics(nextInvoices, expenses);
+        setServerMetrics({
+          currency,
+          totalRevenueCollected: derived.totalPaidRevenue,
+          totalBilled: derived.totalPaidRevenue + derived.totalOutstanding + derived.totalOverdue,
+          totalOutstanding: derived.totalOutstanding,
+          totalExpense: derived.totalExpenses,
+          netProfit: derived.netOperatingProfit,
+          profitMargin: String(derived.netMarginPercent),
+          totalInvoicesCount: derived.totalInvoicesCount,
+          paidCount: derived.paidCount,
+          partiallyPaidCount: derived.partiallyPaidCount,
+          overdueCount: derived.overdueCount,
+          draftCount: nextInvoices.filter((invoice) => invoice.status === 'draft').length
+        });
+        setInvoiceModalOpen(false);
+        setInvoiceDirty(false);
+        showNotice('success', editingInvoice ? 'Demo invoice updated.' : 'Demo invoice created.');
+        return;
+      }
+
       const result = editingInvoice
         ? await api.finance.updateInvoice(editingInvoice.id, payload)
         : await api.finance.createInvoice(payload);
@@ -1159,6 +1217,30 @@ export const AdminInvoicing: React.FC = () => {
     if (!canManageInvoices || updatingInvoiceId || invoice.status === nextStatus || nextStatus === 'cancelled') return;
     setUpdatingInvoiceId(invoice.id);
     try {
+      if (usingDemoFinance) {
+        const nextInvoices = invoices.map((item) => item.id === invoice.id
+          ? { ...item, status: nextStatus, updatedAt: new Date().toISOString(), paidDate: nextStatus === 'paid' ? getDateInputValue() : item.paidDate }
+          : item);
+        setInvoices(nextInvoices);
+        const derived = computeFinancialMetrics(nextInvoices, expenses);
+        setServerMetrics({
+          currency,
+          totalRevenueCollected: derived.totalPaidRevenue,
+          totalBilled: derived.totalPaidRevenue + derived.totalOutstanding + derived.totalOverdue,
+          totalOutstanding: derived.totalOutstanding,
+          totalExpense: derived.totalExpenses,
+          netProfit: derived.netOperatingProfit,
+          profitMargin: String(derived.netMarginPercent),
+          totalInvoicesCount: derived.totalInvoicesCount,
+          paidCount: derived.paidCount,
+          partiallyPaidCount: derived.partiallyPaidCount,
+          overdueCount: derived.overdueCount,
+          draftCount: nextInvoices.filter((item) => item.status === 'draft').length
+        });
+        showNotice('success', 'Demo invoice status updated.');
+        return;
+      }
+
       const result = await api.finance.updateInvoice(invoice.id, { status: nextStatus, updatedAt: invoice.updatedAt });
       if (!result.success) {
         showNotice(
@@ -1216,6 +1298,37 @@ export const AdminInvoicing: React.FC = () => {
 
     setSavingPayment(true);
     try {
+      if (usingDemoFinance) {
+        const nextAmountPaid = Math.min(Number(paymentInvoice.total), Number(paymentInvoice.amountPaid || 0) + amount);
+        const nextBalance = Math.max(0, Number(paymentInvoice.total) - nextAmountPaid);
+        const nextStatus: InvoiceStatus = nextBalance === 0 ? 'paid' : 'partially_paid';
+        const paymentRecord = {
+          id: 'payment_slug_' + Date.now(),
+          amount,
+          date: paymentDate,
+          method: paymentMethod,
+          reference: paymentReference.trim(),
+          notes: paymentNotes.trim()
+        };
+        const nextInvoices = invoices.map((item) => item.id === paymentInvoice.id
+          ? {
+              ...item,
+              amountPaid: nextAmountPaid,
+              balanceDue: nextBalance,
+              status: nextStatus,
+              paidDate: nextBalance === 0 ? paymentDate : item.paidDate,
+              payments: [...(item.payments || []), paymentRecord],
+              updatedAt: new Date().toISOString()
+            }
+          : item);
+        setInvoices(nextInvoices);
+        setPaymentInvoice(null);
+        setPaymentIdempotencyKey('');
+        setPaymentDirty(false);
+        showNotice('success', 'Demo payment recorded.');
+        return;
+      }
+
       const result = await api.finance.payInvoice(paymentInvoice.id, {
         amount,
         date: paymentDate,
@@ -1267,6 +1380,29 @@ export const AdminInvoicing: React.FC = () => {
 
     setSavingExpense(true);
     try {
+      if (usingDemoFinance) {
+        const localExpense: FinanceExpense = {
+          id: 'exp_slug_' + Date.now(),
+          type: expenseType,
+          category: expenseCategory,
+          description: expenseDescription.trim(),
+          amount,
+          date: expenseDate,
+          currency,
+          recordedBy: 'Fikri Nurlete',
+          createdAt: new Date().toISOString(),
+          version: 1
+        };
+        setExpenses((current) => [localExpense, ...current]);
+        setExpenseModalOpen(false);
+        setExpenseIdempotencyKey('');
+        setExpenseDirty(false);
+        setExpenseDescription('');
+        setExpenseAmount(0);
+        showNotice('success', 'Demo expense recorded.');
+        return;
+      }
+
       const result = await api.finance.createExpense({
         type: expenseType,
         category: expenseCategory,
@@ -1295,6 +1431,19 @@ export const AdminInvoicing: React.FC = () => {
     if (!confirmAction || confirmingAction) return;
     setConfirmingAction(true);
     try {
+      if (usingDemoFinance) {
+        if (confirmAction.type === 'invoice') {
+          setInvoices((current) => current.map((item) => item.id === confirmAction.id ? { ...item, status: 'cancelled', updatedAt: new Date().toISOString() } : item));
+          setDetailInvoice((current) => current?.id === confirmAction.id ? null : current);
+          showNotice('success', 'Demo invoice cancelled.');
+        } else {
+          setExpenses((current) => current.filter((item) => item.id !== confirmAction.id));
+          showNotice('success', 'Demo expense voided.');
+        }
+        setConfirmAction(null);
+        return;
+      }
+
       const result = confirmAction.type === 'invoice'
         ? await api.finance.deleteInvoice(confirmAction.id)
         : await api.finance.deleteExpense(
