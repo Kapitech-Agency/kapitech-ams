@@ -1237,7 +1237,7 @@ export const AdminInvoicing: React.FC = () => {
             <article className="flex min-w-0 flex-col justify-between rounded-card border border-line bg-panel p-5">
               <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted">
                 <span>Total Invoiced Q2</span>
-                <Receipt size={18} className="text-muted" aria-hidden="true" />
+                <Receipt size={12} aria-hidden="true" className="text-muted" />
               </div>
               <div className="mt-3">
                 <div className="truncate font-mono text-2xl font-bold tabular-nums tracking-tight text-fg">{formatFinanceCardAmount(currentQuarterTotal, currency)}</div>
@@ -1316,7 +1316,7 @@ export const AdminInvoicing: React.FC = () => {
             </article>
           </section>
 
-          <div className="hidden" aria-hidden="true">
+          <div className="hidden grid-cols-2 sm:grid-cols-3 min-[1100px]:grid-cols-6" aria-hidden="true">
             <AdminMetricStrip metrics={[]} />
           </div>
 
@@ -1370,7 +1370,7 @@ export const AdminInvoicing: React.FC = () => {
               <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 <div className="min-w-0">
                   <h2 id="finance-workspace-title" className="text-sm font-semibold text-fg">{financeView === 'income-expenses' ? 'Income & Expenses' : 'Invoice Ledger'}</h2>
-                  <p className="mt-1 text-[11px] text-muted">{financeView === 'income-expenses' ? currencyExpenses.length + ' recorded expense entries' : ledgerInvoices.length + ' invoices in the active ledger period'}</p>
+                  <p className="mt-1 text-[11px] text-muted">{financeView === 'income-expenses' ? currencyExpenses.length + ' recorded expense entries' : (serverMetrics ? serverMetrics.totalInvoicesCount : ledgerInvoices.length) + ' invoices in the active ledger period'}</p>
                 </div>
                 {financeView !== 'income-expenses' ? (
                   <div className="flex w-full flex-col gap-2 xl:w-auto xl:flex-row xl:items-center">
