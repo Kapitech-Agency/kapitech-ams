@@ -174,7 +174,6 @@ const emptyLineItem = (): InvoiceLineItem => ({
   amount: 0
 });
 
-const cardClass = 'ams-dashboard-card rounded-card border border-line bg-panel p-4';
 const actionClass = 'inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50';
 const primaryClass = 'inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control bg-accent px-3.5 text-xs font-semibold text-white transition-colors hover:bg-accent/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50';
 const fieldClass = 'h-9 min-h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none transition-colors placeholder:text-muted focus:border-accent';
@@ -278,10 +277,9 @@ const FinanceCashFlowChart: React.FC<{
 export const AdminInvoicing: React.FC = () => {
   const { language } = useLanguage();
   const location = useLocation();
-  const session = getAdminSession();
+  getAdminSession();
   const canViewFinancials = hasAdminPermission('canViewFinancials');
   const canManageInvoices = hasAdminPermission('canManageInvoices');
-  const canCreateInvoice = canManageInvoices;
   const canDeleteInvoice = canManageInvoices;
 
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
@@ -1584,7 +1582,7 @@ export const AdminInvoicing: React.FC = () => {
                 </div>
               </div>
               <div className="pt-3">
-                {hasTrendData ? <FinanceCashFlowChart data={cashFlow.filter((point) => point.inflow !== 0 || point.outflow !== 0)} currency={currency} ariaLabel="Cash flow versus operating burn by month." /> : <EmptyState title={language === 'id' ? 'Belum ada data arus kas' : 'No cash-flow data yet'} description={language === 'id' ? 'Chart akan muncul setelah ada pembayaran invoice atau expense aktual.' : 'The chart appears after actual invoice payments or expense records are available.'} />}
+                {hasTrendData ? <FinanceCashFlowChart data={financeChartData} currency={currency} ariaLabel="Cash flow versus operating burn by month." /> : <EmptyState title={language === 'id' ? 'Belum ada data arus kas' : 'No cash-flow data yet'} description={language === 'id' ? 'Chart akan muncul setelah ada pembayaran invoice atau expense aktual.' : 'The chart appears after actual invoice payments or expense records are available.'} />}
               </div>
             </div>
 
