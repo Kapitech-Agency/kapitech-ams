@@ -41,18 +41,27 @@ export const createClientSlug = (company: string, id = ''): string => {
   return base || `client-${id.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
 };
 
-export const normalizeAgencyClient = (client: AgencyClient): AgencyClient => {
-  const raw = client as AgencyClient & {
-    clientSlug?: string | null;
-    client_slug?: string | null;
-  };
-  const slug = String(raw.slug ?? raw.clientSlug ?? raw.client_slug ?? '').trim();
+export const getAgencyClientSlug = (client: Partial<AgencyClient> & Record<string, unknown>): string => {
+  const existing = String(client.slug ?? client.clientSlug ?? client.client_slug ?? '').trim();
+  if (existing) return existing;
 
-  return {
-    ...client,
-    slug: slug || createClientSlug(client.company, client.id)
-  };
+  const company = String(
+    client.company ??
+    client.companyName ??
+    client.clientCompany ??
+    client.clientName ??
+    client.name ??
+    ''
+  ).trim();
+
+  const id = String(client.id ?? '').trim();
+  return createClientSlug(company || 'client account', id);
 };
+
+export const normalizeAgencyClient = (client: AgencyClient): AgencyClient => ({
+  ...client,
+  slug: getAgencyClientSlug(client as AgencyClient & Record<string, unknown>)
+});
 
 import { api } from './apiClient';
 
