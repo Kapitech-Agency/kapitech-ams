@@ -528,20 +528,20 @@ export const AdminLayout: React.FC = () => {
         
         {/* Sticky desktop top bar */}
         <header className="hidden min-[900px]:flex h-[52px] min-h-[52px] border-b border-line bg-panel sticky top-0 z-30 items-center shrink-0" aria-label="AMS top bar">
-          {location.pathname === '/admin/clients' ? (
+          {location.pathname.startsWith('/admin/clients') ? (
             <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-5 lg:px-6 flex items-center justify-between gap-4">
               <nav aria-label="Clients sections" className="flex min-w-0 items-center gap-1 overflow-x-auto custom-scrollbar">
                 {[
-                  { key: 'all', label: 'All Clients', search: '' },
-                  { key: 'retainers', label: 'Retainers', search: '?clients=retainers' },
-                  { key: 'sla-monitoring', label: 'SLA Monitoring', search: '?clients=sla-monitoring' },
-                  { key: 'lead-accounts', label: 'Lead Accounts', search: '?clients=lead-accounts' }
+                  { key: 'all-clients', label: 'All Clients', slug: '/admin/clients/all-clients' },
+                  { key: 'retainers', label: 'Retainers', slug: '/admin/clients/retainers' },
+                  { key: 'sla-monitoring', label: 'SLA Monitoring', slug: '/admin/clients/sla-monitoring' },
+                  { key: 'lead-accounts', label: 'Lead Accounts', slug: '/admin/clients/lead-accounts' }
                 ].map((tab) => {
-                  const active = (new URLSearchParams(location.search).get('clients') || 'all') === tab.key;
+                  const active = location.pathname === tab.slug || (tab.key === 'all-clients' && location.pathname === '/admin/clients');
                   return (
                     <NavLink
                       key={tab.key}
-                      to={`/admin/clients${tab.search}`}
+                      to={tab.slug}
                       end
                       className={`inline-flex h-9 shrink-0 items-center rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${active ? 'bg-line text-fg' : 'text-muted hover:bg-bg hover:text-fg'}`}
                     >
