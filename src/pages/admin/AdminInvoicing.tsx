@@ -595,10 +595,6 @@ export const AdminInvoicing: React.FC = () => {
 
   const quarterExpenseCategories = useMemo(() => {
     const totals = new Map<string, number>();
-    quarterInvoices.forEach((expense) => {
-      const key = expense.type || 'Operating Expense';
-      totals.set(key, (totals.get(key) || 0) + Number(expense.amount || 0));
-    });
     currencyExpenses
       .filter((expense) => reportingQuarter && isInQuarter(expense.date, reportingQuarter))
       .forEach((expense) => {
@@ -606,7 +602,7 @@ export const AdminInvoicing: React.FC = () => {
         totals.set(key, (totals.get(key) || 0) + Number(expense.amount || 0));
       });
     return [...totals.entries()].sort((a, b) => b[1] - a[1]);
-  }, [quarterInvoices, currencyExpenses, reportingQuarter]);
+  }, [currencyExpenses, reportingQuarter]);
 
   const quarterStatusRows = useMemo(() => (
     ['paid', 'sent', 'partially_paid', 'overdue', 'draft'] as InvoiceStatus[]
