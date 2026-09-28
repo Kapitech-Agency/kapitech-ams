@@ -595,7 +595,7 @@ export const AdminLayout: React.FC = () => {
                         key={tab.key}
                         to={'/admin/invoicing' + tab.search}
                         end
-                        className={'inline-flex h-9 shrink-0 items-center rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (activeView === tab.key ? 'bg-line text-fg' : 'text-muted hover:bg-bg hover:text-fg')}
+                        className={'inline-flex h-9 shrink-0 items-center rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (activeView === tab.key ? 'font-semibold text-fg' : 'text-muted hover:bg-bg hover:text-fg')}
                       >
                         {tab.label}
                       </NavLink>
