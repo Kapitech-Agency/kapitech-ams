@@ -89,7 +89,7 @@ jobs:
           trap 'status=$?; if [ "$status" -ne 0 ]; then echo "===== AMS smoke server log ====="; cat /tmp/kapitech-ams-smoke.log || true; fi; kill $PID >/dev/null 2>&1 || true' EXIT
           ready=0
           for i in $(seq 1 30); do
-            if curl -fsS --retry 1 --retry-connrefused http://127.0.0.1:4173/api/health >/tmp/health.json 2>/tmp/health.err; then
+            if curl -fsS --retry 1 --retry-connrefused http://127.0.0.1:4173/api/health/ready >/tmp/health-ready.json 2>/tmp/health.err; then
               ready=1
               break
             fi
