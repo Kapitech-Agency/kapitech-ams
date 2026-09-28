@@ -8,6 +8,7 @@ import {
   ChevronRight,
   CircleDollarSign,
   Clock3,
+  Eye,
   FileText,
   MailCheck,
   Plus,
@@ -224,7 +225,7 @@ export const AdminClientLeadAccounts: React.FC = () => {
   };
 
   return (
-    <div className="min-h-full pb-8">
+    <div className="ams-clients-module min-h-full pb-8">
       <header className="mb-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2.5">
@@ -284,7 +285,7 @@ export const AdminClientLeadAccounts: React.FC = () => {
                 <th className="px-4 py-2.5"><SortButton label="Lead owner" sortKey="owner" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} /></th>
                 <th className="px-4 py-2.5"><SortButton label="Win probability" sortKey="probability" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} /></th>
                 <th className="px-4 py-2.5"><SortButton label="Next action" sortKey="dueAt" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} /></th>
-                <th className="px-5 py-2.5 text-right">ACTIONS</th>
+                <th className="px-5 py-2.5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -303,7 +304,10 @@ export const AdminClientLeadAccounts: React.FC = () => {
                         <td className="px-4 py-3"><div className="flex items-center gap-1.5 whitespace-nowrap"><div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-line bg-bg text-[9px] font-semibold text-fg">{item.ownerInitials}</div><span className="text-xs text-fg">{item.owner}</span></div><div className="mt-0.5 text-[10px] text-muted">{item.ownerRole}</div></td>
                         <td className="px-4 py-3 tabular-nums"><div className="flex items-center gap-2"><span className="h-1.5 w-16 overflow-hidden rounded-full bg-line/70"><span className="block h-1.5 rounded-full bg-accent" style={{ width: Math.min(100, item.probability) + '%' }} /></span><span className="text-xs font-medium text-fg">{item.probability}%</span></div></td>
                         <td className="px-4 py-3"><div className="text-xs font-medium text-fg">{item.nextAction}</div><div className={`mt-0.5 text-[10px] ${item.urgent ? 'font-medium text-accent-text' : new Date(item.dueAt).getTime() < Date.now() ? 'text-danger' : 'text-muted'}`}>{dueLabel(item.dueAt, item.urgent)}</div></td>
-                        <td className="px-5 py-3 text-right"><div className="ams-table-actions flex flex-wrap items-center justify-end gap-1.5"><button type="button" onClick={() => setSelectedLead(item)} className="ams-table-action inline-flex min-h-9 items-center rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-fg hover:bg-panel">View deal</button><button type="button" onClick={() => setMessage(`Proposal creation is not connected for ${item.company} yet.`)} className={`ams-table-action inline-flex min-h-9 items-center rounded-control border px-3 text-[11px] font-medium transition-colors ${item.stage === 'ready-to-sign' ? 'border-accent bg-accent/10 text-accent-text hover:bg-accent hover:text-white' : 'border-line bg-bg text-fg hover:bg-panel'}`} data-primary={item.stage === 'ready-to-sign' ? 'true' : undefined}>Create proposal</button></div></td>
+                        <td className="px-5 py-3 text-right"><div className="ams-table-actions flex items-center justify-end gap-1">
+                          <button type="button" onClick={() => setSelectedLead(item)} aria-label={`View deal for ${item.company}`} title="View deal" className="inline-flex h-10 w-10 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><Eye size={16} aria-hidden="true" /></button>
+                          <button type="button" onClick={() => setMessage(`Proposal creation is not connected for ${item.company} yet.`)} aria-label={`Create proposal for ${item.company}`} title="Create proposal" className={`inline-flex h-10 w-10 items-center justify-center rounded-control transition-colors ${item.stage === 'ready-to-sign' ? 'bg-accent/10 text-accent-text hover:bg-accent/20' : 'text-muted hover:bg-bg hover:text-fg'} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent`}><Plus size={16} aria-hidden="true" /></button>
+                        </div></td>
                       </tr>
                     ))
                   : (

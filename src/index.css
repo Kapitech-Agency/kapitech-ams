@@ -487,3 +487,11 @@
   .ams-shell .ams-topbar-mobile-utilities{padding:2px;border-radius:9px}
   .ams-shell .ams-topbar-mobile-utilities .ams-topbar-profile{display:none}
 }
+
+/* Clients module: keep the canonical table language, with more breathing room for account rows. */
+.ams-shell .ams-clients-module .ams-client-table-shell{overflow:hidden}
+.ams-shell .ams-clients-module table thead th{height:44px!important;padding:0 16px!important;font-size:11px!important;letter-spacing:0;text-transform:none}
+.ams-shell .ams-clients-module table tbody td{height:48px!important;min-height:48px;padding:8px 16px!important;font-size:13px;line-height:18px}
+.ams-shell .ams-clients-module table th:first-child,.ams-shell .ams-clients-module table td:first-child{padding-left:18px!important}
+.ams-shell .ams-clients-module table th:last-child,.ams-shell .ams-clients-module table td:last-child{padding-right:18px!important}
+.ams-shell .ams-clients-module .ams-table-actions{gap:2px}

@@ -9,6 +9,7 @@ import {
   Clock3,
   Download,
   Plus,
+  Pencil,
   ReceiptText,
   RotateCcw,
   Search,
@@ -154,7 +155,7 @@ export const AdminClientRetainers: React.FC = () => {
   };
 
   return (
-    <div className="min-h-full pb-8">
+    <div className="ams-clients-module min-h-full pb-8">
       <header className="mb-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2.5"><h1 className="text-2xl font-medium leading-8 tracking-[-0.02em] text-fg">Client Retainer Agreements</h1><span className="inline-flex items-center rounded-badge border border-success/20 bg-success/10 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-success">{records.length} Active Contracts</span></div>
@@ -189,8 +190,8 @@ export const AdminClientRetainers: React.FC = () => {
               <th className="px-4 py-2.5 text-right"><SortButton label="Monthly value" sortKey="monthlyValue" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} /></th>
               <th className="px-4 py-2.5 text-right"><SortButton label="Committed hours" sortKey="committedHours" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} /></th>
               <th className="px-4 py-2.5"><SortButton label="Hours used" sortKey="usedHours" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} /></th>
-              <th className="px-4 py-2.5 text-right">OVERAGE RATE</th><th className="px-4 py-2.5">CYCLE / RENEWAL</th>
-              <th className="px-4 py-2.5 text-center"><SortButton label="Status" sortKey="health" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} /></th><th className="px-4 py-2.5 text-right">ACTIONS</th>
+              <th className="px-4 py-2.5 text-right">Overage rate</th><th className="px-4 py-2.5">Cycle / renewal</th>
+              <th className="px-4 py-2.5 text-center"><SortButton label="Status" sortKey="health" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} /></th><th className="px-4 py-2.5 text-right">Actions</th>
             </tr></thead>
             <tbody>
               {isLoading ? Array.from({ length: pageSize }).map((_, index) => <tr key={index} className="border-b border-line last:border-0">{Array.from({ length: 8 }).map((__, cell) => <td key={cell} className="px-4 py-4"><div className="h-3 w-full max-w-28 animate-pulse rounded-badge bg-line" /></td>)}</tr>) :
@@ -204,7 +205,10 @@ export const AdminClientRetainers: React.FC = () => {
                    <td className="px-4 py-3 text-right text-xs font-medium tabular-nums text-fg">{money(item.overageRate)}<span className="ml-0.5 text-[10px] text-muted">/hr</span></td>
                    <td className="px-4 py-3 text-[11px] text-muted"><div>{cycleLabel[item.cycle]}</div><div className={(renewalDays(item.renewal) <= 30 ? 'text-warning ' : 'text-fg ') + 'mt-0.5 font-medium'}>Renews {formatDate(item.renewal)}</div></td>
                    <td className="px-4 py-3 text-center"><span className={`inline-flex min-h-6 items-center gap-1.5 rounded-badge border px-2 py-0.5 text-[10px] font-medium ${meta.className}`}><span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />{meta.label}{usage >= 80 ? ` · ${usage}%` : ''}</span></td>
-                   <td className="px-4 py-3 text-right"><div className="ams-table-actions flex flex-wrap items-center justify-end gap-1.5"><button type="button" onClick={() => setMessage(`Terms editing is not connected for ${item.client} yet.`)} className="ams-table-action inline-flex min-h-9 items-center rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-fg hover:bg-panel">Edit terms</button><button type="button" onClick={() => { setHoursTarget(item); setHours('8'); }} className="ams-table-action inline-flex min-h-9 items-center rounded-control border border-accent/30 bg-accent/10 px-3 text-[11px] font-medium text-accent-text hover:bg-accent hover:text-white" data-primary="true">Log hours</button></div></td>
+                   <td className="px-4 py-3 text-right"><div className="ams-table-actions flex items-center justify-end gap-1">
+                     <button type="button" onClick={() => setMessage(`Terms editing is not connected for ${item.client} yet.`)} aria-label={`Edit terms for ${item.client}`} title="Edit terms" className="inline-flex h-10 w-10 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><Pencil size={15} aria-hidden="true" /></button>
+                     <button type="button" onClick={() => { setHoursTarget(item); setHours('8'); }} aria-label={`Log hours for ${item.client}`} title="Log hours" className="inline-flex h-10 w-10 items-center justify-center rounded-control text-accent-text hover:bg-accent/10 hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><Clock3 size={16} aria-hidden="true" /></button>
+                   </div></td>
                  </tr>;
                }) : <tr><td colSpan={8} className="px-4 py-14 text-center"><Search size={18} className="mx-auto text-muted" /><p className="mt-3 text-sm font-medium text-fg">No matching retainers.</p><p className="mt-1 text-xs text-muted">Adjust the search or clear the active filters.</p><button type="button" onClick={reset} className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg">Reset filters</button></td></tr>}
             </tbody>

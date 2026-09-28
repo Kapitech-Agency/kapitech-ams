@@ -465,7 +465,7 @@ export const AdminClients: React.FC = () => {
   };
 
   return (
-    <div className="min-h-full pb-8">
+    <div className="ams-clients-module min-h-full pb-8">
       <section className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3">
@@ -545,13 +545,13 @@ export const AdminClients: React.FC = () => {
             <thead className="bg-bg">
               <tr className="border-b border-line text-[10px] uppercase tracking-wider text-muted">
                 <th className="px-4 py-2.5"><button type="button" onClick={() => toggleSort('company')} className="inline-flex min-h-9 items-center gap-1.5 font-medium hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">Client account {sortKey === 'company' ? (sortDirection === 'asc' ? <ArrowUp size={13} /> : <ArrowUp size={13} className="rotate-180" />) : <ArrowUpDown size={13} />}</button></th>
-                <th className="px-4 py-2.5">SLUG</th>
+                <th className="px-4 py-2.5">Slug</th>
                 <th className="px-4 py-2.5"><button type="button" onClick={() => toggleSort('industry')} className="inline-flex min-h-9 items-center gap-1.5 font-medium hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">Industry {sortKey === 'industry' ? (sortDirection === 'asc' ? <ArrowUp size={13} /> : <ArrowUp size={13} className="rotate-180" />) : <ArrowUpDown size={13} />}</button></th>
-                <th className="px-4 py-2.5">CONTRACT TIER</th>
-                <th className="px-4 py-2.5">CONTACT &amp; ROLE</th>
-                <th className="px-4 py-2.5 text-right"><button type="button" onClick={() => toggleSort('totalSpend')} className="ml-auto inline-flex min-h-9 items-center gap-1.5 font-medium hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">BILLED VALUE {sortKey === 'totalSpend' ? (sortDirection === 'asc' ? <ArrowUp size={13} /> : <ArrowUp size={13} className="rotate-180" />) : <ArrowUpDown size={13} />}</button></th>
-                <th className="px-4 py-2.5">SPEND CAP HEALTH</th>
-                <th className="px-4 py-2.5 text-right">ACTIONS</th>
+                <th className="px-4 py-2.5">Contract tier</th>
+                <th className="px-4 py-2.5">Contact &amp; role</th>
+                <th className="px-4 py-2.5 text-right"><button type="button" onClick={() => toggleSort('totalSpend')} className="ml-auto inline-flex min-h-9 items-center gap-1.5 font-medium hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">Billed value {sortKey === 'totalSpend' ? (sortDirection === 'asc' ? <ArrowUp size={13} /> : <ArrowUp size={13} className="rotate-180" />) : <ArrowUpDown size={13} />}</button></th>
+                <th className="px-4 py-2.5">Spend cap health</th>
+                <th className="px-4 py-2.5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line text-[13px] leading-[18px]">
@@ -571,7 +571,16 @@ export const AdminClients: React.FC = () => {
                     <td className="px-4 py-3"><div className="font-medium text-fg">{client.name || '—'}</div><div className="mt-0.5 text-[11px] text-muted">{client.contactPersonRole || 'Primary contact'}</div></td>
                     <td className="px-4 py-3 text-right font-medium tabular-nums text-fg">{new Intl.NumberFormat(language === 'id' ? 'id-ID' : 'en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(Number(client.totalSpend) || 0)}</td>
                     <td className="px-4 py-3"><div className="flex items-center gap-2"><span className={`h-2 w-2 rounded-full ${spendState === 'success' ? 'bg-success' : spendState === 'warning' ? 'bg-warning' : spendState === 'danger' ? 'bg-danger' : 'bg-line'}`} aria-hidden="true" /><span className={spendState === 'danger' ? 'font-medium text-danger tabular-nums' : 'text-fg tabular-nums'}>{headroom === null ? 'Not configured' : headroom.toFixed(1) + '% headroom'}</span></div></td>
-                    <td className="px-4 py-3 text-right"><div className="ams-table-actions flex flex-wrap items-center justify-end gap-1.5"><button type="button" onClick={() => setSelectedClient(client)} className="ams-table-action inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-fg transition-colors hover:bg-bg">View profile</button>{canManageClients && <button type="button" onClick={() => openEdit(client)} className="ams-table-action inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-muted transition-colors hover:bg-bg hover:text-fg">Manage</button>}</div></td>
+                    <td className="px-4 py-3 text-right"><div className="ams-table-actions flex items-center justify-end gap-1">
+                        <button type="button" onClick={() => setSelectedClient(client)} aria-label={`View profile for ${client.company}`} title="View profile" className="inline-flex h-10 w-10 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                          <Eye size={16} aria-hidden="true" />
+                        </button>
+                        {canManageClients && (
+                          <button type="button" onClick={() => openEdit(client)} aria-label={`Manage ${client.company}`} title="Manage client" className="inline-flex h-10 w-10 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                            <Pencil size={16} aria-hidden="true" />
+                          </button>
+                        )}
+                      </div></td>
                   </tr>
                 );
               })}

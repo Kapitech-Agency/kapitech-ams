@@ -137,7 +137,7 @@ export const AdminClientSlaMonitoring: React.FC = () => {
   };
 
   return (
-    <div className="min-h-full pb-8">
+    <div className="ams-clients-module min-h-full pb-8">
       <header className="mb-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2.5"><h1 className="text-2xl font-medium leading-8 tracking-[-0.02em] text-fg">SLA Monitoring</h1><span className="inline-flex items-center gap-1.5 rounded-badge border border-success/20 bg-success/10 px-2 py-0.5 text-[11px] font-semibold text-success"><CheckCircle2 size={12} /> {complianceCount}/{records.length} compliant</span></div>
@@ -171,7 +171,7 @@ export const AdminClientSlaMonitoring: React.FC = () => {
               <th className="px-4 py-2.5 text-right"><SortButton label="Current uptime" sortKey="currentUptime" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} /></th>
               <th className="px-4 py-2.5"><SortButton label="MTTR" sortKey="mttrMinutes" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} /></th>
               <th className="px-4 py-2.5"><SortButton label="Last incident" sortKey="lastIncidentAt" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} /></th>
-              <th className="px-4 py-2.5 text-center"><SortButton label="Status" sortKey="compliance" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} /></th><th className="px-4 py-2.5 text-right">ACTIONS</th>
+              <th className="px-4 py-2.5 text-center"><SortButton label="Status" sortKey="compliance" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} /></th><th className="px-4 py-2.5 text-right">Actions</th>
             </tr></thead>
             <tbody>
               {isLoading ? Array.from({ length: pageSize }).map((_, index) => <tr key={index} className="border-b border-line last:border-0">{Array.from({ length: 7 }).map((__, cell) => <td key={cell} className="px-4 py-4"><div className="h-3 w-full max-w-28 animate-pulse rounded-badge bg-line" /></td>)}</tr>) :
@@ -184,7 +184,10 @@ export const AdminClientSlaMonitoring: React.FC = () => {
                    <td className="px-4 py-3"><div className="text-xs font-medium tabular-nums text-fg">{item.mttrMinutes} min</div><div className={`mt-0.5 text-[10px] ${item.compliance === 'degraded' ? 'text-danger' : item.compliance === 'warning' ? 'text-warning' : 'text-success'}`}>{item.responseStatus}</div></td>
                    <td className="px-4 py-3"><div className="max-w-[300px] truncate text-xs text-fg" title={item.incidentTitle}>{formatDate(item.lastIncidentAt)}</div><div className="mt-0.5 max-w-[300px] truncate text-[10px] text-muted">{item.incidentTitle}</div></td>
                    <td className="px-4 py-3 text-center"><span className={`inline-flex min-h-6 items-center gap-1.5 rounded-badge border px-2 py-0.5 text-[10px] font-medium ${meta.className}`}><span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />{meta.label}</span></td>
-                   <td className="px-4 py-3 text-right"><div className="ams-table-actions flex flex-wrap items-center justify-end gap-1.5"><button type="button" onClick={() => setSelectedIncident(item)} className="ams-table-action inline-flex min-h-9 items-center rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-fg hover:bg-panel">Incident log</button><button type="button" onClick={() => setSelectedTelemetry(item)} className="ams-table-action inline-flex min-h-9 items-center rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-muted hover:bg-panel hover:text-fg">Telemetry</button></div></td>
+                   <td className="px-4 py-3 text-right"><div className="ams-table-actions flex items-center justify-end gap-1">
+                     <button type="button" onClick={() => setSelectedIncident(item)} aria-label={`View incident log for ${item.client}`} title="Incident log" className="inline-flex h-10 w-10 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><FileText size={15} aria-hidden="true" /></button>
+                     <button type="button" onClick={() => setSelectedTelemetry(item)} aria-label={`View telemetry for ${item.client}`} title="Telemetry" className="inline-flex h-10 w-10 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><Activity size={16} aria-hidden="true" /></button>
+                   </div></td>
                  </tr>;
                }) : <tr><td colSpan={7} className="px-4 py-14 text-center"><Search size={18} className="mx-auto text-muted" /><p className="mt-3 text-sm font-medium text-fg">No matching SLA accounts.</p><p className="mt-1 text-xs text-muted">Adjust the search or clear the active filters.</p><button type="button" onClick={reset} className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg">Reset filters</button></td></tr>}
             </tbody>
