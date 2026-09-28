@@ -2398,10 +2398,10 @@ export const AdminInvoicing: React.FC = () => {
     <input value={search} onChange={(event)=>setSearch(event.target.value)} placeholder="Search invoice, client, project..." className={fieldClass+' pl-9'}/>
   </label>
   <div className="grid gap-2 sm:grid-cols-2 xl:flex xl:min-w-0 xl:flex-1 xl:items-center xl:gap-2">
-    <CustomSelect value={statusFilter} onChange={setStatusFilter} options={statusOptions} triggerClassName="h-9 min-h-9 w-full whitespace-nowrap xl:w-[150px]"/>
-    <CustomSelect value={paymentFilter} onChange={(value)=>setPaymentFilter(value as PaymentFilter)} options={[{value:'all',label:'All payment states'},{value:'unpaid',label:'Unpaid'},{value:'partial',label:'Partially paid'},{value:'paid',label:'Paid'}]} triggerClassName="h-9 min-h-9 w-full whitespace-nowrap xl:w-[164px]"/>
-    <CustomSelect value={dueFilter} onChange={setDueFilter} options={[{value:'all',label:'All due states'},{value:'due_soon',label:'Due within 7 days'},{value:'overdue',label:'Overdue'},{value:'later',label:'Due later'}]} triggerClassName="h-9 min-h-9 w-full whitespace-nowrap xl:w-[150px]"/>
-    <CustomSelect value={sort} onChange={(value)=>setSort(value as SortKey)} options={sortOptions} triggerClassName="h-9 min-h-9 w-full whitespace-nowrap xl:w-[154px]"/>
+    <CustomSelect value={statusFilter} onChange={setStatusFilter} options={statusOptions} className="xl:shrink-0" triggerClassName="h-9 min-h-9 w-full whitespace-nowrap xl:w-[150px]"/>
+    <CustomSelect value={paymentFilter} onChange={(value)=>setPaymentFilter(value as PaymentFilter)} options={[{value:'all',label:'All payment states'},{value:'unpaid',label:'Unpaid'},{value:'partial',label:'Partially paid'},{value:'paid',label:'Paid'}]} className="xl:shrink-0" triggerClassName="h-9 min-h-9 w-full whitespace-nowrap xl:w-[176px]"/>
+    <CustomSelect value={dueFilter} onChange={setDueFilter} options={[{value:'all',label:'All due states'},{value:'due_soon',label:'Due within 7 days'},{value:'overdue',label:'Overdue'},{value:'later',label:'Due later'}]} className="xl:shrink-0" triggerClassName="h-9 min-h-9 w-full whitespace-nowrap xl:w-[150px]"/>
+    <CustomSelect value={sort} onChange={(value)=>setSort(value as SortKey)} options={sortOptions} className="xl:shrink-0" triggerClassName="h-9 min-h-9 w-full whitespace-nowrap xl:w-[176px]"/>
   </div>
   <div className="flex shrink-0 items-center gap-2">
     <div className="inline-flex items-center rounded-control border border-line bg-bg p-0.5">
