@@ -880,70 +880,75 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             ))}
           </div>
 
-          <div className="hidden min-[900px]:block overflow-x-auto custom-scrollbar">
-            <table className="w-full min-w-[760px] border-collapse text-left">
-              <thead><tr>
-                <th className="px-4 py-3 text-xs font-medium text-muted sm:px-5">Project / client</th>
-                <th className="px-3 py-3 text-xs font-medium text-muted">Status</th>
-                <th className="px-3 py-3 text-xs font-medium text-muted">Pacing</th>
-                <th className="px-3 py-3 text-xs font-medium text-muted">Lead</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-muted">Budget</th>
-                <th className="w-10 px-2 py-3" />
-              </tr></thead>
-              <tbody>
-                {filteredProjects.map((project) => (
-                  <tr key={project.id} className="border-t border-line transition-colors hover:bg-panel-hover">
-                    <td className="px-4 py-3 sm:px-5"><div className="font-medium text-xs text-fg">{project.name}</div><div className="mt-0.5 text-[11px] text-muted">{project.client}</div></td>
-                    <td className="px-3 py-3"><span className={['inline-flex items-center rounded-badge border px-2 py-1 text-[11px] font-medium', toneClasses[project.statusTone]].join(' ')}>{project.status}</span></td>
-                    <td className="px-3 py-3"><div className="flex min-w-[150px] items-center gap-2"><div className="h-1.5 min-w-20 flex-1 overflow-hidden rounded-sm bg-line"><div className={['h-full rounded-sm', progressClasses[project.statusTone === 'danger' ? 'danger' : project.statusTone === 'warning' ? 'warning' : 'success']].join(' ')} style={{ width: project.progress + '%' }} /></div><span className="w-8 text-right text-[11px] tabular-nums text-muted">{project.progress}%</span></div></td>
-                    <td className="px-3 py-3"><div className="flex items-center gap-2"><span className="flex h-6 w-6 items-center justify-center rounded-full border border-line bg-bg text-[10px] font-semibold text-fg">{project.lead.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()}</span><span className="text-xs text-muted">{project.lead}</span></div></td>
-                    <td className="px-4 py-3 text-right text-xs font-medium tabular-nums text-fg">{project.budget}</td>
-                    <td className="relative px-2 py-3 text-right" data-dashboard-project-actions>
-                      <button
-                        type="button"
-                        aria-label={'More actions for ' + project.name}
-                        aria-haspopup="menu"
-                        aria-expanded={projectActionId === project.id}
-                        onClick={() => setProjectActionId(current => current === project.id ? null : project.id)}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"
-                      >
-                        <MoreHorizontal size={15} />
-                      </button>
-                      {projectActionId === project.id && (
-                        <div
-                          role="menu"
-                          aria-label={'Actions for ' + project.name}
-                          className="absolute right-2 top-[calc(100%-2px)] z-20 w-48 overflow-hidden rounded-card border border-line bg-panel p-1 text-left shadow-none"
-                        >
-                          <button
-                            type="button"
-                            role="menuitem"
-                            className="flex min-h-9 w-full items-center rounded-control px-3 text-xs text-muted hover:bg-bg hover:text-fg"
-                            onClick={() => {
-                              setProjectDetails(project);
-                              setProjectActionId(null);
-                            }}
-                          >
-                            View project details
-                          </button>
-                          <button
-                            type="button"
-                            role="menuitem"
-                            className="flex min-h-9 w-full items-center rounded-control px-3 text-xs text-muted hover:bg-bg hover:text-fg"
-                            onClick={() => {
-                              navigate('/admin/projects');
-                              setProjectActionId(null);
-                            }}
-                          >
-                            Open project workspace
-                          </button>
-                        </div>
-                      )}
-                    </td>
+          <div className="hidden min-[900px]:block">
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="w-full min-w-[720px] border-collapse text-left">
+                <thead>
+                  <tr>
+                    <th className="px-4 py-3 text-[11px] font-medium uppercase tracking-[0.06em] text-muted sm:px-5">Project / client</th>
+                    <th className="px-3 py-3 text-[11px] font-medium uppercase tracking-[0.06em] text-muted">Status</th>
+                    <th className="px-3 py-3 text-[11px] font-medium uppercase tracking-[0.06em] text-muted">Pacing</th>
+                    <th className="px-3 py-3 text-[11px] font-medium uppercase tracking-[0.06em] text-muted">Lead</th>
+                    <th className="px-4 py-3 text-right text-[11px] font-medium uppercase tracking-[0.06em] text-muted">Budget</th>
+                    <th className="w-24 px-4 py-3 text-right text-[11px] font-medium uppercase tracking-[0.06em] text-muted">Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filteredProjects.map((project) => {
+                    const progressTone = project.statusTone === 'danger' ? 'danger' : project.statusTone === 'warning' ? 'warning' : 'success';
+                    const initials = project.lead.split(/\\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase();
+                    return (
+                      <tr key={project.id} className="group border-t border-line transition-colors hover:bg-panel-hover">
+                        <td className="px-4 py-3.5 sm:px-5">
+                          <div className="min-w-0">
+                            <div className="truncate text-xs font-medium text-fg">{project.name}</div>
+                            <div className="mt-0.5 truncate text-[11px] text-muted">{project.client} · {project.type}</div>
+                          </div>
+                        </td>
+                        <td className="px-3 py-3.5">
+                          <span className={['inline-flex items-center gap-1.5 rounded-badge border px-2 py-1 text-[10px] font-medium', toneClasses[project.statusTone]].join(' ')}>
+                            <i className="h-1.5 w-1.5 rounded-full bg-current" />
+                            {project.status}
+                          </span>
+                        </td>
+                        <td className="px-3 py-3.5">
+                          <div className="flex min-w-[150px] items-center gap-2.5">
+                            <div className="h-1.5 min-w-16 flex-1 overflow-hidden rounded-full bg-line">
+                              <div className={['h-full rounded-full transition-[width] duration-300', progressClasses[progressTone]].join(' ')} style={{ width: Math.min(100, Math.max(0, project.progress)) + '%' }} />
+                            </div>
+                            <span className="w-9 text-right text-[11px] font-medium tabular-nums text-fg">{project.progress}%</span>
+                          </div>
+                        </td>
+                        <td className="px-3 py-3.5">
+                          <div className="flex items-center gap-2">
+                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-line bg-bg text-[10px] font-semibold text-fg">{initials}</span>
+                            <span className="truncate text-xs text-muted">{project.lead}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3.5 text-right text-xs font-medium tabular-nums text-fg">{project.budget}</td>
+                        <td className="px-4 py-3.5 text-right">
+                          <button
+                            type="button"
+                            onClick={() => setProjectDetails(project)}
+                            className="inline-flex min-h-8 items-center justify-center rounded-control border border-line bg-bg px-2.5 text-[11px] font-medium text-muted transition-colors hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                          >
+                            View
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {filteredProjects.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="px-5 py-12 text-center">
+                        <p className="text-xs font-medium text-fg">No projects in this filter</p>
+                        <p className="mt-1 text-[11px] text-muted">Choose another portfolio segment to continue.</p>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </AdminPanel>
 
