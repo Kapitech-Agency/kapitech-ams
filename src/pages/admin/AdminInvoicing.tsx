@@ -840,7 +840,7 @@ export const AdminInvoicing: React.FC = () => {
 
   const financeChartData = useMemo(
     () => cashFlow.map((point) => {
-      const target = retainerInvoices
+      const target = retainerLedgerInvoices
         .filter((invoice) => {
           const date = new Date(invoice.issueDate + 'T00:00:00');
           return !Number.isNaN(date.getTime()) && date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }) === point.month;
@@ -849,7 +849,7 @@ export const AdminInvoicing: React.FC = () => {
 
       return { ...point, label: point.month, retainerTarget: target };
     }),
-    [cashFlow, retainerInvoices]
+    [cashFlow, retainerLedgerInvoices]
   );
 
   const hasTrendData = financeChartData.some(
@@ -2299,7 +2299,7 @@ export const AdminInvoicing: React.FC = () => {
       ) : financeView === 'tax-retainers' ? (
         <div className="space-y-5">
           <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Tax provision" value={formatFinanceCardAmount(taxProvision,currency)} context="Tax across issued invoices" icon={<Receipt size={15}/>}/><FinanceMetricCard label="Tax collected" value={formatFinanceCardAmount(taxCollected,currency)} context={(taxProvision>0?((taxCollected/taxProvision)*100).toFixed(1):'0.0')+'% of provision'} icon={<BadgeCheck size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Tax outstanding" value={formatFinanceCardAmount(taxOutstanding,currency)} context="Provision not collected" icon={<Hourglass size={15} className="text-warning"/>} toneClassName="text-warning"/><FinanceMetricCard label="Retainer billed" value={formatFinanceCardAmount(retainerBilled,currency)} context={(retainerBilled>0?((retainerCollected/retainerBilled)*100).toFixed(1):'0.0')+'% collected'} icon={<TrendingUp size={15}/>}/></section>
-          <section className="space-y-5"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><h2 className="text-sm font-semibold text-fg">Retainer ledger</h2><p className="mt-1 text-xs text-muted">Billing and collected value for retainer invoices.</p></div><div className="overflow-hidden"><table className="w-full table-fixed border-separate border-spacing-0 text-xs">
+          <section className="space-y-5"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><div className="flex items-start justify-between gap-4"><div><h2 className="text-sm font-semibold text-fg">Retainer ledger</h2><p className="mt-1 text-xs text-muted">Billing and collected value for retainer invoices.</p></div>{usingDemoRetainerLedger&&<span className="shrink-0 rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">Sample data</span>}</div></div><div className="overflow-hidden"><table className="w-full table-fixed border-separate border-spacing-0 text-xs">
 <thead className="sticky top-0 z-10 border-b border-line bg-panel/95 backdrop-blur-sm"><tr>
   <th className="w-[26%] px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice</th>
   <th className="w-[28%] px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client</th>
