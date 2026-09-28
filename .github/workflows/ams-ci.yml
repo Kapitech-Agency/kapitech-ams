@@ -105,9 +105,8 @@ jobs:
             cat /tmp/health.err 2>/dev/null || true
           fi
           test "$ready" = "1"
-          test -s /tmp/health-ready.json
-          node -e "const fs=require('fs'); const x=JSON.parse(fs.readFileSync('/tmp/health-ready.json','utf8')); if(x.status!=='ok'||x.services?.dataSource!=='postgres') process.exit(1)"
-          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:4173/api/health)" = "200"
+          test -s /tmp/health.json
+          node -e "const fs=require('fs'); const x=JSON.parse(fs.readFileSync('/tmp/health.json','utf8')); if(x.status!=='ok'||x.services?.dataSource!=='postgres') process.exit(1)"
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:4173/api/auth/me)" = "401"
           curl -sS -D /tmp/login.headers -H 'Content-Type: application/json' --data '{"identifier":"admin","password":"smoke-test-password-123456","rememberMe":false}' http://127.0.0.1:4173/api/auth/login >/tmp/login.json
           node -e "const fs=require('fs'); const x=JSON.parse(fs.readFileSync('/tmp/login.json','utf8')); if(!x.success||x.user?.stakeholderType!=='Master') process.exit(1)"

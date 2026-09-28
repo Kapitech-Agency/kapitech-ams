@@ -15,9 +15,9 @@ test('production health separates liveness from database readiness', () => {
   assert.ok(ready < apiRouter);
 
   const livenessSection = source.slice(live, ready);
-  assert.match(livenessSection, /res.json({/);
-  assert.doesNotMatch(livenessSection, /checkPostgresConnection/);
-  assert.doesNotMatch(livenessSection, /res.status(503)/);
+  assert.ok(livenessSection.includes('res.json({'));
+  assert.ok(!livenessSection.includes('checkPostgresConnection'));
+  assert.ok(!livenessSection.includes('res.status(503)'));
 });
 
 test('CI waits on readiness while keeping liveness available for platform health checks', () => {
