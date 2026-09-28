@@ -41,10 +41,18 @@ export const createClientSlug = (company: string, id = ''): string => {
   return base || `client-${id.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
 };
 
-export const normalizeAgencyClient = (client: AgencyClient): AgencyClient => ({
-  ...client,
-  slug: client.slug?.trim() || createClientSlug(client.company, client.id)
-});
+export const normalizeAgencyClient = (client: AgencyClient): AgencyClient => {
+  const raw = client as AgencyClient & {
+    clientSlug?: string | null;
+    client_slug?: string | null;
+  };
+  const slug = String(raw.slug ?? raw.clientSlug ?? raw.client_slug ?? '').trim();
+
+  return {
+    ...client,
+    slug: slug || createClientSlug(client.company, client.id)
+  };
+};
 
 import { api } from './apiClient';
 
