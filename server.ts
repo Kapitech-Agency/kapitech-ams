@@ -155,8 +155,23 @@ async function startServer() {
     next();
   });
 
-  // Health check
-  app.get('/api/health', async (_req, res) => {
+  // Liveness: this endpoint only proves the Node/Express process is alive.
+  // It must not depend on PostgreSQL so reverse proxies/load balancers do not
+  // mark a healthy process as unavailable while the database is recovering.
+  app.get('/api/health', (_req, res) => {
+    res.json({
+      status: 'ok',
+      version: process.env.APP_VERSION || '2.6.0-enterprise',
+      services: {
+        application: 'healthy'
+      },
+      time: new Date().toISOString()
+    });
+  });
+
+  // Readiness: this endpoint proves the application can serve authenticated API work.
+  // It intentionally returns 503 until production configuration and PostgreSQL are ready.
+  app.get('/api/health/ready', async (_req, res) => {
     if (productionConfigError) {
       res.status(503).json({
         status: 'error',
@@ -212,7 +227,7 @@ async function startServer() {
         time: new Date().toISOString()
       });
     } catch (error) {
-      console.error('Health check failed:', error);
+      console.error('Readiness check failed:', error);
       res.status(503).json({
         status: 'error',
         services: {
@@ -220,14 +235,14 @@ async function startServer() {
           database: 'unavailable',
           auth: 'unknown'
         },
-        message: 'Health check failed'
+        message: 'Readiness check failed'
       });
     }
   });
 
   // Keep the web shell online while PostgreSQL initializes or recovers.
   app.use('/api', (req, res, next) => {
-    if (req.path === '/health') {
+    if (req.path === '/health' || req.path === '/health/ready') {
       next();
       return;
     }
