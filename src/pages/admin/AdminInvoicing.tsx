@@ -2276,40 +2276,36 @@ export const AdminInvoicing: React.FC = () => {
             </section>
           </section>
         </div>      ) : financeView === 'tax-retainers' ? (
-        <div className="space-y-6">
-          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Tax and retainers summary">
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Tax provision</span><Receipt size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(taxProvision, currency)}</p><p className="mt-2 text-xs text-muted">Tax across issued invoices</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Tax collected</span><BadgeCheck size={15} className="text-success" /></div><p className="mt-3 text-2xl font-medium tabular-nums text-success">{formatFinanceCardAmount(taxCollected, currency)}</p><p className="mt-2 text-xs text-muted">Recovered through payments</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Tax outstanding</span><Hourglass size={15} className="text-warning" /></div><p className="mt-3 text-2xl font-medium tabular-nums text-warning">{formatFinanceCardAmount(taxOutstanding, currency)}</p><p className="mt-2 text-xs text-muted">Waiting on collections</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Retainer billed</span><TrendingUp size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(retainerBilled, currency)}</p><p className="mt-2 text-xs text-muted">{retainerInvoices.length} retainer invoices</p></article>
+        <div className="space-y-5">
+          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4" aria-label="Tax and retainers summary">
+            <FinanceMetricCard label="Tax provision" value={formatFinanceCardAmount(taxProvision, currency)} context="Tax across issued invoices" icon={<Receipt size={15} />} />
+            <FinanceMetricCard label="Tax collected" value={formatFinanceCardAmount(taxCollected, currency)} context={(taxProvision > 0 ? ((taxCollected / taxProvision) * 100).toFixed(1) : '0.0') + '% of provision'} icon={<BadgeCheck size={15} className="text-success" />} toneClassName="text-success" />
+            <FinanceMetricCard label="Tax outstanding" value={formatFinanceCardAmount(taxOutstanding, currency)} context="Provision not yet collected" icon={<Hourglass size={15} className="text-warning" />} toneClassName="text-warning" />
+            <FinanceMetricCard label="Retainer billed" value={formatFinanceCardAmount(retainerBilled, currency)} context={(retainerBilled > 0 ? ((retainerCollected / retainerBilled) * 100).toFixed(1) : '0.0') + '% collected'} icon={<TrendingUp size={15} />} />
           </section>
 
-          <section className="grid grid-cols-1 gap-6 min-[1100px]:grid-cols-2">
+          <section className="grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.7fr)]">
             <section className="rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="finance-retainer-title">
-              <div className="border-b border-line p-5"><h2 id="finance-retainer-title" className="text-sm font-semibold text-fg">Retainer activity</h2><p className="mt-1 text-xs text-muted">Invoices with retainer indicators across notes, terms, or line items.</p></div>
-              <div className="overflow-x-auto custom-scrollbar">
-                <table className="w-full min-w-[820px] border-collapse text-left text-xs">
-                  <thead className="bg-bg"><tr><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Status</th><th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Billed</th><th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Collected</th></tr></thead>
-                  <tbody>{retainerInvoices.slice(0, 10).map((invoice) => <tr key={invoice.id} className="border-t border-line hover:bg-bg"><td className="px-4 py-3"><button type="button" onClick={() => openPrintPreview(invoice)} className="font-medium tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button></td><td className="px-4 py-3 text-fg">{invoice.clientCompany}</td><td className="px-4 py-3 text-muted">{statusLabel[invoice.status]}</td><td className="px-4 py-3 text-right tabular-nums text-fg">{formatNativeAmount(invoice.total, invoice.currency, true)}</td><td className="px-4 py-3 text-right tabular-nums text-success">{formatNativeAmount(invoice.amountPaid || 0, invoice.currency, true)}</td></tr>)}</tbody>
-                </table>
-              </div>
+              <div className="border-b border-line p-4 sm:p-5"><div className="flex items-center justify-between gap-3"><div><h2 id="finance-retainer-title" className="text-sm font-semibold text-fg">Retainer ledger</h2><p className="mt-1 text-xs leading-5 text-muted">Billing and actual collections for invoices identified as retainers.</p></div><span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] tabular-nums text-muted">{retainerInvoices.length} invoices</span></div></div>
+              <div className="overflow-x-auto custom-scrollbar"><table className="w-full min-w-[720px] border-collapse text-xs"><thead className="bg-bg"><tr><th className="px-5 py-3 text-left text-[10px] font-semibold text-muted">Invoice</th><th className="px-4 py-3 text-left text-[10px] font-semibold text-muted">Client</th><th className="px-4 py-3 text-left text-[10px] font-semibold text-muted">Status</th><th className="px-4 py-3 text-right text-[10px] font-semibold text-muted">Billed</th><th className="px-5 py-3 text-right text-[10px] font-semibold text-muted">Collected</th></tr></thead><tbody>{retainerInvoices.slice(0,12).map((invoice) => <tr key={invoice.id} className="border-t border-line hover:bg-bg"><td className="px-5 py-4"><button type="button" onClick={() => openPrintPreview(invoice)} className="font-semibold tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button><p className="mt-1 text-[10px] text-muted">Due {invoice.dueDate}</p></td><td className="px-4 py-4 text-fg">{invoice.clientCompany || invoice.clientName}</td><td className="px-4 py-4"><StatusBadge status={invoice.status} /></td><td className="px-4 py-4 text-right tabular-nums text-fg">{formatNativeAmount(invoice.total, invoice.currency, true)}</td><td className="px-5 py-4 text-right tabular-nums text-success">{formatNativeAmount(getInvoiceCollectedInRange(invoice, yearStart, yearEnd), invoice.currency, true)}</td></tr>)}</tbody></table></div>
             </section>
 
-            <section className="rounded-card border border-line bg-panel p-5" aria-labelledby="finance-tax-breakdown-title">
-              <div className="border-b border-line pb-3"><h2 id="finance-tax-breakdown-title" className="text-sm font-semibold text-fg">Tax provision breakdown</h2><p className="mt-1 text-xs text-muted">Tax base and collected share across the current currency ledger.</p></div>
-              <div className="mt-5 space-y-3">
-                {[{ label: 'Provision', value: taxProvision, tone: 'text-fg' }, { label: 'Collected', value: taxCollected, tone: 'text-success' }, { label: 'Outstanding', value: taxOutstanding, tone: 'text-warning' }].map((item) => (
-                  <div key={item.label} className="flex items-center justify-between rounded-control border border-line bg-bg px-3 py-3">
-                    <span className="text-xs text-muted">{item.label}</span>
-                    <span className={'text-xs font-semibold tabular-nums ' + item.tone}>{formatNativeAmount(item.value, currency, true)}</span>
-                  </div>
-                ))}
-              </div>
-              <button type="button" onClick={exportTaxCsv} disabled={!currencyInvoices.length} className={actionClass + ' mt-5 w-full'}><Download size={14} />Export tax detail</button>
+            <section className="grid gap-5">
+              <section className="rounded-card border border-line bg-panel p-4 sm:p-5" aria-labelledby="finance-tax-breakdown-title">
+                <div className="border-b border-line pb-3"><h2 id="finance-tax-breakdown-title" className="text-sm font-semibold text-fg">Tax provision</h2><p className="mt-1 text-xs leading-5 text-muted">Movement from issued tax into collected and outstanding tax.</p></div>
+                <div className="mt-4 space-y-3">
+                  {[{ label: 'Provision', value: taxProvision, percent: 100, tone: 'bg-series-1' }, { label: 'Collected', value: taxCollected, percent: taxProvision > 0 ? Math.min(100,(taxCollected/taxProvision)*100) : 0, tone: 'bg-success' }, { label: 'Outstanding', value: taxOutstanding, percent: taxProvision > 0 ? Math.min(100,(taxOutstanding/taxProvision)*100) : 0, tone: 'bg-warning' }].map((item) => <div key={item.label}><div className="flex items-center justify-between text-xs"><span className="text-muted">{item.label}</span><span className="font-medium tabular-nums text-fg">{formatNativeAmount(item.value,currency,true)}</span></div><div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg"><div className={'h-full rounded-full '+item.tone} style={{width:item.percent+'%'}} /></div></div>)}
+                </div>
+                <button type="button" onClick={exportTaxCsv} disabled={!currencyInvoices.length} className={actionClass + ' mt-5 w-full'}><Download size={14} />Export tax detail</button>
+              </section>
+              <section className="rounded-card border border-line bg-panel p-4 sm:p-5">
+                <div className="flex items-center justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Retainer collection</h2><p className="mt-1 text-xs leading-5 text-muted">Collected against retainer billings in the active ledger.</p></div><span className="text-sm font-semibold tabular-nums text-fg">{retainerBilled > 0 ? ((retainerCollected/retainerBilled)*100).toFixed(1) : '0.0'}%</span></div>
+                <div className="mt-4 h-2 overflow-hidden rounded-full bg-bg"><div className="h-full rounded-full bg-success" style={{width:(retainerBilled>0?Math.min(100,(retainerCollected/retainerBilled)*100):0)+'%'}} /></div>
+                <div className="mt-2 flex justify-between gap-3 text-[10px] tabular-nums text-muted"><span>{formatFinanceCardAmount(retainerCollected,currency)} collected</span><span>{formatFinanceCardAmount(retainerBilled,currency)} billed</span></div>
+              </section>
             </section>
           </section>
-        </div>
-      ) : financeView === 'financial-reports' ? (
+        </div>      ) : financeView === 'financial-reports' ? (
         <div className="space-y-6">
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Financial reporting summary">
             <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Net cash YTD</span><TrendingUp size={15} /></div><p className={'mt-3 text-2xl font-medium tabular-nums ' + (ytdNetCash >= 0 ? 'text-success' : 'text-danger')}>{formatFinanceCardAmount(ytdNetCash, currency)}</p><p className="mt-2 text-xs text-muted">Collected less expenses</p></article>
