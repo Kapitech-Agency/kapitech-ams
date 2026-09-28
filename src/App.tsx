@@ -145,6 +145,10 @@ const App = () => {
               <Route path="time-logs" element={<ModuleRoute moduleKey="timelogs" moduleLabel="time logs"><AdminTimeLogs /></ModuleRoute>} />
               <Route path="vendors" element={<ModuleRoute moduleKey="vendors" moduleLabel="vendors"><AdminVendors /></ModuleRoute>} />
               <Route path="clients" element={<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClients /></ModuleRoute>} />
+              <Route path="clients/all-clients" element={<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClients /></ModuleRoute>} />
+              <Route path="clients/retainers" element={<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClients /></ModuleRoute>} />
+              <Route path="clients/sla-monitoring" element={<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClients /></ModuleRoute>} />
+              <Route path="clients/lead-accounts" element={<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClients /></ModuleRoute>} />
               <Route path="cms/projects" element={<ModuleRoute moduleKey="cms_projects" moduleLabel="case studies"><AdminCmsProjects /></ModuleRoute>} />
               <Route path="cms/services" element={<ModuleRoute moduleKey="services" moduleLabel="the services catalog"><AdminCmsServices /></ModuleRoute>} />
               <Route path="cms/testimonials" element={<ModuleRoute moduleKey="testimonials" moduleLabel="testimonials"><AdminCmsTestimonials /></ModuleRoute>} />
