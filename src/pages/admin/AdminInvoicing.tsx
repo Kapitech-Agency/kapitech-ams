@@ -11,7 +11,6 @@ import {
   BadgeCheck,
   BarChart3,
   Clock3,
-  Copy,
   Download,
   Edit3,
   Eye,
@@ -1581,7 +1580,7 @@ export const AdminInvoicing: React.FC = () => {
   const quotationStatusLabel = (status: FinanceQuotationStatus) => {
     const labels: Record<FinanceQuotationStatus, string> = {
       draft: 'Draft',
-      review: 'Internal review',
+      review: 'Internal Review',
       approved: 'Approved',
       sent: 'Sent',
       accepted: 'Accepted',
@@ -1723,7 +1722,9 @@ export const AdminInvoicing: React.FC = () => {
     if (!canManageInvoices || quotation.status === status) return;
 
     if (usingDemoQuotations) {
-      setQuotations((current) => current.map((item) => item.id === quotation.id ? { ...item, status } : item));
+      const updatedQuotation = { ...quotation, status };
+      setQuotations((current) => current.map((item) => item.id === quotation.id ? updatedQuotation : item));
+      setQuotationDetail((current) => current?.id === quotation.id ? updatedQuotation : current);
       showNotice('success', 'Quotation status updated.');
       return;
     }
@@ -1733,6 +1734,7 @@ export const AdminInvoicing: React.FC = () => {
       if (!response.success || !response.data?.proposal) throw new Error(response.error || 'Quotation status could not be updated.');
       const normalized = normalizeFinanceQuotation(response.data.proposal);
       setQuotations((current) => current.map((item) => item.id === normalized.id ? normalized : item));
+      setQuotationDetail((current) => current?.id === normalized.id ? normalized : current);
       showNotice('success', 'Quotation status updated.');
     } catch (err) {
       showNotice('danger', err instanceof Error ? err.message : 'Quotation status could not be updated.');
@@ -1764,9 +1766,9 @@ export const AdminInvoicing: React.FC = () => {
     if (!canManageInvoices || quotation.invoiceId) return;
 
     if (usingDemoQuotations) {
-      setQuotations((current) => current.map((item) => item.id === quotation.id
-        ? { ...item, status: 'accepted', invoiceId: 'slug-inv-' + Date.now() }
-        : item));
+      const updatedQuotation = { ...quotation, status: 'accepted' as FinanceQuotationStatus, invoiceId: 'slug-inv-' + Date.now() };
+      setQuotations((current) => current.map((item) => item.id === quotation.id ? updatedQuotation : item));
+      setQuotationDetail((current) => current?.id === quotation.id ? updatedQuotation : current);
       showNotice('success', 'Quotation converted to a demo invoice reference.');
       return;
     }
@@ -1776,9 +1778,9 @@ export const AdminInvoicing: React.FC = () => {
       if (!response.success || !response.data?.invoice) {
         throw new Error(response.error || 'Quotation could not be converted to an invoice.');
       }
-      setQuotations((current) => current.map((item) => item.id === quotation.id
-        ? { ...item, status: 'accepted', invoiceId: response.data?.invoice?.id || item.invoiceId }
-        : item));
+      const updatedQuotation = { ...quotation, status: 'accepted' as FinanceQuotationStatus, invoiceId: response.data?.invoice?.id || quotation.invoiceId };
+      setQuotations((current) => current.map((item) => item.id === quotation.id ? updatedQuotation : item));
+      setQuotationDetail((current) => current?.id === quotation.id ? updatedQuotation : current);
       await loadData(true);
       showNotice('success', 'Quotation converted to invoice ' + response.data.invoice.invoiceNumber + '.');
     } catch (err) {
