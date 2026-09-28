@@ -8,6 +8,9 @@ test('production build uses the constrained Hostinger-safe runner', () => {
   const pkg = JSON.parse(read('package.json'));
   assert.equal(pkg.scripts.build, 'node scripts/build-production.mjs');
   assert.equal(pkg.scripts.start, 'node dist/server.cjs');
+  const server = read('server.ts');
+  assert.match(server, /isProductionRuntime/);
+  assert.match(server, /server\.cjs/);
   const build = read('scripts/build-production.mjs');
   assert.match(build, /spawnSync/);
   assert.match(build, /RAYON_NUM_THREADS/);
