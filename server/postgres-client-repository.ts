@@ -1,4 +1,4 @@
-import type { AgencyClient } from '../src/lib/clientStore.ts';
+import { createClientSlug, type AgencyClient } from '../src/lib/clientStore.ts';
 import { getPostgresPool, withPostgresTransaction } from './postgres.ts';
 import { postgresAuditLogRepository, type AuditEntry } from './postgres-audit-log-repository.ts';
 
@@ -31,6 +31,9 @@ function mapClient(row: ClientRow): AgencyClient {
   return {
     ...(metadata as Partial<AgencyClient>),
     id: row.id,
+    slug: typeof metadata.slug === 'string' && metadata.slug.trim()
+      ? metadata.slug.trim()
+      : createClientSlug(row.company ?? '', row.id),
     name: row.name,
     company: row.company ?? '',
     email: row.email ?? '',
