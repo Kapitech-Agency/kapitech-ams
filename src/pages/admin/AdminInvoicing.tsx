@@ -1547,92 +1547,53 @@ export const AdminInvoicing: React.FC = () => {
           </section>
         </div>      ) : (
         <>
-          <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5" aria-label="Finance KPI snapshot">
-            <article className="flex min-w-0 flex-col justify-between rounded-card border border-line bg-panel p-5">
-              <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted">
-                <span>Total Invoiced Q2</span>
-                <Receipt size={12} aria-hidden="true" />
-              </div>
-              <div className="mt-3">
-                <div className="truncate font-mono text-2xl font-bold tabular-nums tracking-tight text-fg">{formatFinanceCardAmount(currentQuarterTotal, currency)}</div>
-                <div className="mt-2 flex items-center gap-1.5 text-xs">
-                  {quarterChangePercent == null ? (
-                    <span className="font-medium text-muted">—</span>
-                  ) : (
-                    <>
-                      <span className={'flex items-center font-medium ' + (quarterChangePercent >= 0 ? 'text-success' : 'text-danger')}>
-                        {quarterChangePercent >= 0 ? <ArrowUp size={14} aria-hidden="true" /> : <ArrowDown size={14} aria-hidden="true" />}
-                        {Math.abs(quarterChangePercent).toFixed(1)}%
-                      </span>
-                      <span className="text-muted">vs previous quarter</span>
-                    </>
-                  )}
-                </div>
-              </div>
-            </article>
-
-            <article className="flex min-w-0 flex-col justify-between rounded-card border border-line bg-panel p-5">
-              <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted">
-                <span>Collected (YTD)</span>
-                <WalletCards size={18} className="text-success" aria-hidden="true" />
-              </div>
-              <div className="mt-3">
-                <div className="truncate font-mono text-2xl font-bold tabular-nums tracking-tight text-fg">{formatFinanceCardAmount(ytdCollected, currency)}</div>
-                <div className="mt-2 flex items-center gap-1.5 text-xs">
-                  <span className="font-medium tabular-nums text-fg">{ytdCollectionRate.toFixed(1)}%</span>
-                  <span className="text-muted">collection rate</span>
-                </div>
-              </div>
-            </article>
-
-            <article className="flex min-w-0 flex-col justify-between rounded-card border border-line bg-panel p-5">
-              <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted">
-                <span>Outstanding</span>
-                <Hourglass size={18} className="text-warning" aria-hidden="true" />
-              </div>
-              <div className="mt-3">
-                <div className="truncate font-mono text-2xl font-bold tabular-nums tracking-tight text-fg">{formatFinanceCardAmount(serverMetrics?.totalOutstanding || 0, currency)}</div>
-                <div className="mt-2 flex items-center gap-1.5 text-xs">
-                  <span className="font-medium text-warning">{pendingInvoiceCount} invoices</span>
-                  <span className="text-muted">pending</span>
-                </div>
-              </div>
-            </article>
-
-            <article className="flex min-w-0 flex-col justify-between rounded-card border border-line bg-panel p-5">
-              <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted">
-                <span>Overdue Balance</span>
-                <AlertCircle size={18} className="text-danger" aria-hidden="true" />
-              </div>
-              <div className="mt-3">
-                <div className="truncate font-mono text-2xl font-bold tabular-nums tracking-tight text-danger">{formatFinanceCardAmount(overdueBalance, currency)}</div>
-                <div className="mt-2 flex items-center gap-1.5 text-[10px]">
-                  <span className="inline-flex items-center gap-1 rounded bg-danger/10 px-1.5 py-0.5 font-semibold text-danger">
-                    <span className="h-1 w-1 rounded-full bg-danger" />
-                    {criticalOverdueCount} INVOICES CRITICAL
-                  </span>
-                </div>
-              </div>
-            </article>
-
-            <article className="flex min-w-0 flex-col justify-between rounded-card border border-line bg-panel p-5">
-              <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted">
-                <span>Operating Margin</span>
-                <TrendingUp size={18} className="text-success" aria-hidden="true" />
-              </div>
-              <div className="mt-3">
-                <div className="truncate font-mono text-2xl font-bold tabular-nums tracking-tight text-fg">{serverMetrics ? serverMetrics.profitMargin + '%' : '—'}</div>
-                <div className="mt-2 flex items-center gap-1.5 text-xs">
-                  <span className={operatingMarginHealthy ? "font-medium text-success" : "font-medium text-danger"}>{operatingMarginHealthy ? 'Healthy' : 'Below target'}</span>
-                  <span className="text-muted">target &gt; 35%</span>
-                </div>
-              </div>
-            </article>
+          <section className="mb-8" aria-label="Finance KPI snapshot">
+            <AdminMetricStrip
+              className="grid-cols-2 sm:grid-cols-3 min-[1100px]:grid-cols-6"
+              metrics={[
+                {
+                  label: 'Total Invoiced Q2',
+                  value: formatFinanceCardAmount(currentQuarterTotal, currency),
+                  context: quarterChangePercent == null ? '— vs previous quarter' : (
+                    <span className={quarterChangePercent >= 0 ? 'text-success' : 'text-danger'}>
+                      {quarterChangePercent >= 0 ? '+' : ''}{quarterChangePercent.toFixed(1)}% vs previous quarter
+                    </span>
+                  ),
+                  icon: <Receipt size={12} aria-hidden="true" />
+                },
+                {
+                  label: 'Collected (YTD)',
+                  value: formatFinanceCardAmount(ytdCollected, currency),
+                  context: ytdCollectionRate.toFixed(1) + '% collection rate',
+                  icon: <WalletCards size={16} className="text-success" aria-hidden="true" />
+                },
+                {
+                  label: 'Outstanding',
+                  value: formatFinanceCardAmount(serverMetrics?.totalOutstanding || 0, currency),
+                  context: pendingInvoiceCount + ' invoices pending',
+                  icon: <Hourglass size={16} className="text-warning" aria-hidden="true" />
+                },
+                {
+                  label: 'Overdue Balance',
+                  value: formatFinanceCardAmount(overdueBalance, currency),
+                  context: criticalOverdueCount + ' critical overdue',
+                  icon: <AlertCircle size={16} className="text-danger" aria-hidden="true" />
+                },
+                {
+                  label: 'Total invoices',
+                  value: serverMetrics ? serverMetrics.totalInvoicesCount : 0,
+                  context: 'Active currency ledger',
+                  icon: <FileText size={16} aria-hidden="true" />
+                },
+                {
+                  label: 'Operating Margin',
+                  value: serverMetrics ? serverMetrics.profitMargin + '%' : '—',
+                  context: operatingMarginHealthy ? 'Healthy • target > 35%' : 'Below target • target > 35%',
+                  icon: <TrendingUp size={16} className={operatingMarginHealthy ? 'text-success' : 'text-danger'} aria-hidden="true" />
+                }
+              ]}
+            />
           </section>
-
-          <div className="hidden grid-cols-2 sm:grid-cols-3 min-[1100px]:grid-cols-6" aria-hidden="true">
-            <AdminMetricStrip metrics={[]} />
-          </div>
 
           <section className="mt-6 grid gap-3 min-[1100px]:grid-cols-3" aria-label="Finance visual analytics">
             <div className="min-[1100px]:col-span-2 rounded-card border border-line bg-panel p-4 sm:p-5">
@@ -1769,7 +1730,7 @@ export const AdminInvoicing: React.FC = () => {
                             {columnVisibility.due && <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Due Date</th>}
                             {columnVisibility.amount && <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount (IDR)</th>}
                             {columnVisibility.status && <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Status</th>}
-                            {columnVisibility.actions && <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Actions</th>
+                            {columnVisibility.actions && <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Actions</th>}
                           </tr></thead>
                           <tbody>
                             {paginatedInvoices.map((invoice) => {
@@ -1789,7 +1750,7 @@ export const AdminInvoicing: React.FC = () => {
                                     <button type="button" onClick={() => openPrintPreview(invoice)} className="inline-flex h-7 w-7 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="View invoice" title="View invoice"><FileText size={15} /></button>
                                     {canManageInvoices && invoice.status !== 'cancelled' && <button type="button" onClick={() => openEditInvoice(invoice)} className="inline-flex h-7 w-7 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Edit invoice" title="Edit invoice"><Edit3 size={14} /></button>}
                                     {canManageInvoices && canDeleteInvoice && !['cancelled', 'paid', 'partially_paid'].includes(invoice.status) && <button type="button" onClick={() => setConfirmAction({ type: 'invoice', id: invoice.id, label: invoice.invoiceNumber })} className="inline-flex h-7 w-7 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Cancel invoice" title="Cancel invoice"><Trash2 size={14} /></button>}
-                                  </div></td>
+                                  </div></td>}
                                 </tr>
                               );
                             })}
