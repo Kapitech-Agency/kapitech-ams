@@ -406,6 +406,25 @@ const StatusBadge = ({ status }: { status: InvoiceStatus }) => (
   </span>
 );
 
+const quotationStatusTone: Record<FinanceQuotationStatus, string> = {
+  draft: 'bg-bg text-muted border-line',
+  review: 'bg-warning/10 text-warning border-warning/20',
+  approved: 'bg-accent/10 text-accent-text border-accent/20',
+  sent: 'bg-info/10 text-info border-info/20',
+  accepted: 'bg-success/10 text-success border-success/20',
+  rejected: 'bg-danger/10 text-danger border-danger/20'
+};
+
+const QuotationStatusBadge = ({ status }: { status: FinanceQuotationStatus }) => {
+  const icon = status === 'approved' ? <BadgeCheck size={12} /> : status === 'accepted' ? <CheckCircle2 size={12} /> : status === 'sent' ? <Send size={12} /> : status === 'review' ? <Clock3 size={12} /> : status === 'rejected' ? <AlertCircle size={12} /> : <FileText size={12} />;
+  return (
+    <span className={'inline-flex items-center gap-1.5 rounded-badge border px-2 py-1 text-[11px] font-semibold ' + quotationStatusTone[status]}>
+      {icon}
+      {quotationStatusLabel(status)}
+    </span>
+  );
+};
+
 const EmptyState = ({ title, description, action }: { title: string; description: string; action?: React.ReactNode }) => (
   <div className="flex min-h-[180px] flex-col items-center justify-center rounded-card border border-line bg-bg px-5 py-8 text-center">
     <div className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted">
@@ -2239,7 +2258,7 @@ export const AdminInvoicing: React.FC = () => {
 
       {notice && (
         <div className="fixed right-4 top-[68px] z-[60] w-[min(420px,calc(100vw-32px))]" aria-live="polite" aria-atomic="true">
-          <div className={'flex items-start gap-3 rounded-card border px-4 py-3 text-xs ' + (notice.tone === 'success' ? 'border-success/30 bg-panel text-success' : 'border-danger/30 bg-panel text-danger')} role="status">
+          <div className={'flex items-start gap-3 rounded-card border px-5 py-3 text-xs ' + (notice.tone === 'success' ? 'border-success/30 bg-panel text-success' : 'border-danger/30 bg-panel text-danger')} role="status">
             <span className="mt-0.5 shrink-0">{notice.tone === 'success' ? <Check size={15} /> : <AlertCircle size={15} />}</span>
             <span className="min-w-0 flex-1 leading-5 text-fg">{notice.message}</span>
             <button type="button" onClick={dismissNotice} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Dismiss notification" title="Dismiss notification"><X size={14} /></button>
@@ -2266,23 +2285,23 @@ export const AdminInvoicing: React.FC = () => {
           <section className="space-y-5">
             <section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between"><div><h2 className="text-sm font-semibold text-fg">Quotation ledger</h2><p className="mt-1 text-xs text-muted">Search, filter, and sort the commercial pipeline.</p></div><div className="grid gap-2 sm:grid-cols-2 xl:flex"><label className="relative xl:w-64"><Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/><span className="sr-only">Search quotations</span><input value={quotationSearch} onChange={(event)=>setQuotationSearch(event.target.value)} placeholder="Search quotation, client..." className={fieldClass+' pl-9'}/></label><CustomSelect value={quotationStatusFilter} onChange={(value)=>setQuotationStatusFilter(value as typeof quotationStatusFilter)} options={[{value:'all',label:'All statuses'},{value:'draft',label:'Draft'},{value:'review',label:'Internal review'},{value:'approved',label:'Approved'},{value:'sent',label:'Sent'},{value:'accepted',label:'Accepted'},{value:'rejected',label:'Rejected'}]} triggerClassName="h-9 min-h-9" aria-label="Quotation status filter"/><CustomSelect value={quotationSort} onChange={(value)=>setQuotationSort(value as QuotationSort)} options={[{value:'newest',label:'Newest'},{value:'oldest',label:'Oldest'},{value:'value_high',label:'Highest value'},{value:'value_low',label:'Lowest value'},{value:'valid_until',label:'Valid until'}]} triggerClassName="h-9 min-h-9" aria-label="Quotation sort"/></div></div></div><div className="overflow-hidden">{filteredQuotations.length===0?<div className="p-5"><EmptyState title="No quotations found" description="Adjust the search or filters."/></div>:<table className="w-full table-fixed border-separate border-spacing-0 text-xs">
 <thead className="sticky top-0 z-10 border-b border-line bg-panel/95 backdrop-blur-sm"><tr>
-  <th className="w-[30%] px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Quotation</th>
-  <th className="w-[17%] px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Value</th>
-  <th className="w-[21%] px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Timeline</th>
-  <th className="w-[16%] px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Status</th>
-  <th className="w-[16%] px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Actions</th>
+  <th className="w-[30%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Quotation</th>
+  <th className="w-[17%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Value</th>
+  <th className="w-[21%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Timeline</th>
+  <th className="w-[16%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Status</th>
+  <th className="w-[16%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Actions</th>
 </tr></thead>
 <tbody className="divide-y divide-line">
 {filteredQuotations.map((quotation)=><tr key={quotation.id} className="group align-top transition-colors hover:bg-bg">
-  <td className="px-4 py-5">
+  <td className="px-5 py-4">
     <button type="button" onClick={()=>setQuotationDetail(quotation)} className="font-semibold tabular-nums text-fg hover:text-accent-text">{quotation.quotationNumber}</button>
     <p className="mt-1 truncate font-medium text-fg">{quotation.title}</p>
     <p className="mt-1 truncate text-[11px] text-muted">{quotation.clientCompany} · {quotation.clientName}</p>
   </td>
   <td className="px-4 py-5 text-right"><p className="font-semibold tabular-nums text-fg">{formatNativeAmount(quotation.total,quotation.currency,true)}</p><p className="mt-1 text-[11px] text-muted">{quotation.owner}</p></td>
-  <td className="px-4 py-5"><div className="grid gap-1.5 text-[11px]"><div className="flex items-center justify-between gap-3"><span className="text-muted">Created</span><span className="tabular-nums text-fg">{quotation.createdAt}</span></div><div className="flex items-center justify-between gap-3"><span className="text-muted">Valid</span><span className="tabular-nums text-fg">{quotation.validUntil}</span></div></div></td>
-  <td className="px-4 py-5"><StatusBadge status={quotation.status as never}/></td>
-  <td className="px-4 py-5"><div className="flex items-center justify-end gap-1.5"><button type="button" onClick={()=>setQuotationDetail(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="View quotation" title="View quotation"><Eye size={14}/></button>{canManageInvoices&&<button type="button" onClick={()=>openEditQuotation(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Edit quotation" title="Edit quotation"><Edit3 size={14}/></button>}{canManageInvoices&&<button type="button" onClick={()=>void convertQuotationToInvoice(quotation)} disabled={Boolean(quotation.invoiceId)||quotation.status!=='approved'} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg disabled:cursor-not-allowed disabled:opacity-40" aria-label="Convert quotation to invoice" title={quotation.invoiceId?'Invoice already created':quotation.status==='approved'?'Convert approved quotation to invoice':'Only approved quotations can be converted'}><Receipt size={14}/></button>}{canManageInvoices&&<button type="button" onClick={()=>void deleteQuotation(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Delete quotation" title="Delete quotation"><Trash2 size={14}/></button>}</div></td>
+  <td className="px-5 py-4"><div className="grid gap-1.5 text-[11px]"><div className="flex items-center justify-between gap-3"><span className="text-muted">Created</span><span className="tabular-nums text-fg">{quotation.createdAt}</span></div><div className="flex items-center justify-between gap-3"><span className="text-muted">Valid</span><span className="tabular-nums text-fg">{quotation.validUntil}</span></div></div></td>
+  <td className="px-5 py-4"><QuotationStatusBadge status={quotation.status}/></td>
+  <td className="px-5 py-4"><div className="flex items-center justify-end gap-1.5"><button type="button" onClick={()=>setQuotationDetail(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="View quotation" title="View quotation"><Eye size={14}/></button>{canManageInvoices&&<button type="button" onClick={()=>openEditQuotation(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Edit quotation" title="Edit quotation"><Edit3 size={14}/></button>}{canManageInvoices&&<button type="button" onClick={()=>void convertQuotationToInvoice(quotation)} disabled={Boolean(quotation.invoiceId)||quotation.status!=='approved'} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg disabled:cursor-not-allowed disabled:opacity-40" aria-label="Convert quotation to invoice" title={quotation.invoiceId?'Invoice already created':quotation.status==='approved'?'Convert approved quotation to invoice':'Only approved quotations can be converted'}><Receipt size={14}/></button>}{canManageInvoices&&<button type="button" onClick={()=>void deleteQuotation(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Delete quotation" title="Delete quotation"><Trash2 size={14}/></button>}</div></td>
 </tr>)}
 </tbody></table>}</div></section>
             <section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><h2 className="text-sm font-semibold text-fg">Pipeline stages</h2><p className="mt-1 text-xs text-muted">Count and value by stage.</p></div><div className="space-y-3 p-4 sm:p-5">{(['draft','review','approved','sent','accepted','rejected'] as FinanceQuotationStatus[]).map((status)=>{const count=quotations.filter((q)=>q.status===status).length;const value=quotations.filter((q)=>q.status===status).reduce((sum,q)=>sum+q.total,0);return <div key={status} className="rounded-control border border-line bg-bg px-3 py-3"><div className="flex justify-between text-xs"><span className="font-medium text-fg">{quotationStatusLabel(status)}</span><span className="tabular-nums font-semibold">{count}</span></div><p className="mt-1 text-[10px] tabular-nums text-muted">{formatNativeAmount(value,currency,true)}</p><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel"><div className="h-full rounded-full bg-series-3" style={{width:(quotationMetrics.value>0?Math.min(100,value/quotationMetrics.value*100):0)+'%'}}/></div></div>})}</div></section>
@@ -2293,31 +2312,31 @@ export const AdminInvoicing: React.FC = () => {
           <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Income YTD" value={formatFinanceCardAmount(ytdCollected,currency)} context={ytdCollectionRate.toFixed(1)+'% collected vs issued'} icon={<WalletCards size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Invoiced YTD" value={formatFinanceCardAmount(ytdInvoiced,currency)} context="Issued billings" icon={<Receipt size={15}/>}/><FinanceMetricCard label="Expenses YTD" value={formatFinanceCardAmount(ytdExpenses,currency)} context={currencyExpenses.length+' expense records'} icon={<ArrowDown size={15}/>}/><FinanceMetricCard label="Net cash YTD" value={formatFinanceCardAmount(ytdNetCash,currency)} context="Collected less expenses" icon={<TrendingUp size={15}/>} toneClassName={ytdNetCash>=0?'text-success':'text-danger'}/></section>
           <section className="space-y-5"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><div className="flex items-end justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Income ledger</h2><p className="mt-1 text-xs text-muted">Actual payment activity.</p></div><label className="relative w-full max-w-xs"><Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/><span className="sr-only">Search income</span><input value={incomeSearch} onChange={(event)=>setIncomeSearch(event.target.value)} placeholder="Search invoice or client..." className={fieldClass+' pl-8'}/></label></div></div><div className="overflow-hidden">{incomeRows.length===0?<div className="p-5"><EmptyState title="No income recorded" description="Recorded payments will appear here."/></div>:<table className="w-full table-fixed border-separate border-spacing-0 text-xs">
 <thead className="sticky top-0 z-10 border-b border-line bg-panel/95 backdrop-blur-sm"><tr>
-  <th className="w-[28%] px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Payment</th>
-  <th className="w-[34%] px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client</th>
-  <th className="w-[18%] px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Date</th>
-  <th className="w-[20%] px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount</th>
+  <th className="w-[28%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Payment</th>
+  <th className="w-[34%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client</th>
+  <th className="w-[18%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Date</th>
+  <th className="w-[20%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount</th>
 </tr></thead>
 <tbody className="divide-y divide-line">
 {paginatedIncomeRows.map((row)=><tr key={row.id} className="group transition-colors hover:bg-bg">
-  <td className="px-4 py-5"><button type="button" onClick={()=>{const invoice=currencyInvoices.find((item)=>item.id===row.invoiceId);if(invoice)openPrintPreview(invoice)}} className="font-semibold tabular-nums text-fg hover:text-accent-text">{row.invoiceNumber}</button><p className="mt-1 text-[11px] text-muted">Payment received</p></td>
-  <td className="px-4 py-5"><p className="font-medium text-fg">{row.clientCompany}</p><p className="mt-1 text-[11px] text-muted">Invoice payment</p></td>
+  <td className="px-5 py-4"><button type="button" onClick={()=>{const invoice=currencyInvoices.find((item)=>item.id===row.invoiceId);if(invoice)openPrintPreview(invoice)}} className="font-semibold tabular-nums text-fg hover:text-accent-text">{row.invoiceNumber}</button><p className="mt-1 text-[11px] text-muted">Payment received</p></td>
+  <td className="px-5 py-4"><p className="font-medium text-fg">{row.clientCompany}</p><p className="mt-1 text-[11px] text-muted">Invoice payment</p></td>
   <td className="px-4 py-5 tabular-nums text-muted">{row.date}</td>
   <td className="px-4 py-5 text-right"><p className="font-semibold tabular-nums text-success">{formatNativeAmount(row.amount,row.currency,true)}</p><span className="mt-1 inline-flex rounded-badge border border-success/20 bg-success/10 px-1.5 py-0.5 text-[10px] font-medium text-success">Collected</span></td>
 </tr>)}
 </tbody></table>}</div>{incomePageCount>1&&<div className="border-t border-line p-4"><div className="flex justify-between text-[11px] text-muted"><span>{incomeRows.length} payments</span><div className="flex gap-1"><button type="button" onClick={()=>setIncomePage((p)=>Math.max(1,p-1))} disabled={incomePage===1} className={actionClass}>Prev</button><span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control bg-line px-2 text-[10px] font-semibold text-fg">{incomePage}</span><button type="button" onClick={()=>setIncomePage((p)=>Math.min(incomePageCount,p+1))} disabled={incomePage===incomePageCount} className={actionClass}>Next</button></div></div></div>}</section>
           <section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><div className="flex items-end justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Expense ledger</h2><p className="mt-1 text-xs text-muted">Operating spend by type, category, and date.</p></div>{canManageInvoices&&<button type="button" onClick={openExpenseModal} className={actionClass}><Plus size={14}/>Add expense</button>}</div><div className="mt-3 grid gap-2 sm:grid-cols-3"><label className="relative"><Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/><span className="sr-only">Search expense</span><input value={expenseSearch} onChange={(event)=>setExpenseSearch(event.target.value)} placeholder="Search expense..." className={fieldClass+' pl-8'}/></label><CustomSelect value={expenseTypeFilter} onChange={setExpenseTypeFilter} options={expenseTypeOptions} triggerClassName="h-9 min-h-9 w-full"/><CustomSelect value={expenseSort} onChange={(value)=>setExpenseSort(value as typeof expenseSort)} options={[{value:'date_desc',label:'Newest'},{value:'date_asc',label:'Oldest'},{value:'amount_high',label:'Highest amount'},{value:'amount_low',label:'Lowest amount'}]} triggerClassName="h-9 min-h-9 w-full"/></div></div><div className="overflow-hidden"><table className="w-full table-fixed border-separate border-spacing-0 text-xs">
 <thead className="sticky top-0 z-10 border-b border-line bg-panel/95 backdrop-blur-sm"><tr>
-  <th className="w-[38%] px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Expense</th>
-  <th className="w-[16%] px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Type</th>
-  <th className="w-[18%] px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Date</th>
-  <th className="w-[18%] px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount</th>
-  <th className="w-[10%] px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted"> </th>
+  <th className="w-[38%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Expense</th>
+  <th className="w-[16%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Type</th>
+  <th className="w-[18%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Date</th>
+  <th className="w-[18%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount</th>
+  <th className="w-[10%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted"> </th>
 </tr></thead>
 <tbody className="divide-y divide-line">
 {paginatedExpenses.map((expense)=><tr key={expense.id} className="group transition-colors hover:bg-bg">
-  <td className="px-4 py-5"><p className="font-medium text-fg">{expense.description}</p><p className="mt-1 truncate text-[11px] text-muted">{expense.category}</p></td>
-  <td className="px-4 py-5"><span className="inline-flex rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">{expense.type||'OpEx'}</span></td>
+  <td className="px-5 py-4"><p className="font-medium text-fg">{expense.description}</p><p className="mt-1 truncate text-[11px] text-muted">{expense.category}</p></td>
+  <td className="px-5 py-4"><span className="inline-flex rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">{expense.type||'OpEx'}</span></td>
   <td className="px-4 py-5 tabular-nums text-muted">{expense.date}</td>
   <td className="px-4 py-5 text-right"><p className="font-semibold tabular-nums text-fg">{formatNativeAmount(expense.amount,expense.currency||currency,true)}</p></td>
   <td className="px-4 py-5 text-right">{canManageInvoices&&<button type="button" onClick={()=>setConfirmAction({type:'expense',id:expense.id,label:expense.description})} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Void expense" title="Void expense"><Trash2 size={14}/></button>}</td>
@@ -2329,17 +2348,17 @@ export const AdminInvoicing: React.FC = () => {
           <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Tax provision" value={formatFinanceCardAmount(taxProvision,currency)} context="Tax across issued invoices" icon={<Receipt size={15}/>}/><FinanceMetricCard label="Tax collected" value={formatFinanceCardAmount(taxCollected,currency)} context={(taxProvision>0?((taxCollected/taxProvision)*100).toFixed(1):'0.0')+'% of provision'} icon={<BadgeCheck size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Tax outstanding" value={formatFinanceCardAmount(taxOutstanding,currency)} context="Provision not collected" icon={<Hourglass size={15} className="text-warning"/>} toneClassName="text-warning"/><FinanceMetricCard label="Retainer billed" value={formatFinanceCardAmount(retainerBilled,currency)} context={(retainerBilled>0?((retainerCollected/retainerBilled)*100).toFixed(1):'0.0')+'% collected'} icon={<TrendingUp size={15}/>}/></section>
           <section className="space-y-5"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><div className="flex items-start justify-between gap-4"><div><h2 className="text-sm font-semibold text-fg">Retainer ledger</h2><p className="mt-1 text-xs text-muted">Billing and collected value for retainer invoices.</p></div>{usingDemoRetainerLedger&&<span className="shrink-0 rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">Sample data</span>}</div></div><div className="overflow-hidden"><table className="w-full table-fixed border-separate border-spacing-0 text-xs">
 <thead className="sticky top-0 z-10 border-b border-line bg-panel/95 backdrop-blur-sm"><tr>
-  <th className="w-[26%] px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice</th>
-  <th className="w-[28%] px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client</th>
-  <th className="w-[16%] px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Status</th>
-  <th className="w-[15%] px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Billed</th>
-  <th className="w-[15%] px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Collected</th>
+  <th className="w-[26%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice</th>
+  <th className="w-[28%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client</th>
+  <th className="w-[16%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Status</th>
+  <th className="w-[15%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Billed</th>
+  <th className="w-[15%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Collected</th>
 </tr></thead>
 <tbody className="divide-y divide-line">
 {retainerLedgerInvoices.slice(0,12).map((invoice)=><tr key={invoice.id} className="group align-top transition-colors hover:bg-bg">
-  <td className="px-4 py-5"><button type="button" onClick={()=>openPrintPreview(invoice)} className="font-semibold tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button><p className="mt-1 text-[11px] text-muted">Due {invoice.dueDate}</p></td>
-  <td className="px-4 py-5"><p className="font-medium text-fg">{invoice.clientCompany||invoice.clientName}</p><p className="mt-1 text-[11px] text-muted">Retainer invoice</p></td>
-  <td className="px-4 py-5"><StatusBadge status={invoice.status}/></td>
+  <td className="px-5 py-4"><button type="button" onClick={()=>openPrintPreview(invoice)} className="font-semibold tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button><p className="mt-1 text-[11px] text-muted">Due {invoice.dueDate}</p></td>
+  <td className="px-5 py-4"><p className="font-medium text-fg">{invoice.clientCompany||invoice.clientName}</p><p className="mt-1 text-[11px] text-muted">Retainer invoice</p></td>
+  <td className="px-5 py-4"><StatusBadge status={invoice.status}/></td>
   <td className="px-4 py-5 text-right font-semibold tabular-nums text-fg">{formatNativeAmount(invoice.total,invoice.currency,true)}</td>
   <td className="px-4 py-5 text-right font-semibold tabular-nums text-success">{formatNativeAmount(getInvoiceCollectedInRange(invoice,yearStart,yearEnd),invoice.currency,true)}</td>
 </tr>)}
@@ -2356,15 +2375,45 @@ export const AdminInvoicing: React.FC = () => {
       ) : (
         <div className="space-y-5">
           <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Quarter billed" value={formatFinanceCardAmount(currentQuarterTotal,currency)} context={quarterChangePercent===null?'Current quarter':(quarterChangePercent>=0?'+':'')+quarterChangePercent.toFixed(1)+'% vs previous quarter'} icon={<Receipt size={15}/>}/><FinanceMetricCard label="Collected YTD" value={formatFinanceCardAmount(ytdCollected,currency)} context={ytdCollectionRate.toFixed(1)+'% collection rate'} icon={<WalletCards size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Outstanding" value={formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} context={pendingInvoiceCount+' open invoices'} icon={<Hourglass size={15} className="text-warning"/>} toneClassName="text-warning"/><FinanceMetricCard label="Overdue" value={formatFinanceCardAmount(overdueBalance,currency)} context={criticalOverdueCount+' invoices need attention'} icon={<AlertCircle size={15} className="text-danger"/>} toneClassName="text-danger"/></section>
-          <section className="grid gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><div className="flex justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Cash Flow vs Operating Burn</h2><p className="mt-1 text-xs text-muted">Six-month view of actual cash collected versus recorded operating spend.</p></div><span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">Net {formatFinanceCardAmount(quarterNetCash,currency)}</span></div></div><div className="p-4 sm:p-5">{hasTrendData?<FinanceCashFlowChart data={financeChartData} currency={currency} ariaLabel="Finance cash flow trend comparing cash collected, operating burn, and net cash."/>:<EmptyState title="No trend data" description="Billing payments and expenses will populate this trend."/>}</div></section><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><h2 className="text-sm font-semibold text-fg">Aging receivables</h2><p className="mt-1 text-xs text-muted">{formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} outstanding across 3 aging buckets.</p></div><div className="p-4 sm:p-5"><div className="flex h-2.5 overflow-hidden rounded-full bg-bg border border-line">{agingBuckets.map((bucket)=><div key={bucket.label} className={'h-full '+(bucket.tone==='success'?'bg-success':bucket.tone==='warning'?'bg-warning':'bg-danger')} style={{width:bucket.percent+'%'}}/>)}</div><div className="mt-4 space-y-2.5">{agingBuckets.map((bucket)=><div key={bucket.label} className="flex items-center justify-between rounded-control border border-line bg-bg px-3 py-3"><div><p className="text-xs font-medium text-fg">{bucket.label}</p><p className="mt-1 text-[10px] text-muted">{bucket.count} account{bucket.count===1?'':'s'}</p></div><div className="text-right"><p className="text-xs font-semibold tabular-nums">{formatNativeAmount(bucket.amount,currency,true)}</p><p className="mt-1 text-[10px] text-muted">{bucket.percent}%</p></div></div>)}</div><button type="button" onClick={()=>setDunningOpen(true)} disabled={!actionRequiredInvoices.length} className={actionClass+' mt-4 w-full'}><Send size={14}/>Prepare collection notices</button></div></section></section>
-          <section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between"><div><h2 className="text-sm font-semibold text-fg">Invoice ledger</h2><p className="mt-1 text-xs text-muted">{filteredInvoices.length} visible of {ledgerInvoices.length} invoices · {ledgerPeriod==='all'?'all periods':reportingQuarter?.label||'current quarter'}</p></div><label className="relative w-full xl:w-80"><Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/><span className="sr-only">Search invoices</span><input value={search} onChange={(event)=>setSearch(event.target.value)} placeholder="Search invoice, client, project..." className={fieldClass+' pl-9'}/></label></div><div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4"><CustomSelect value={statusFilter} onChange={setStatusFilter} options={statusOptions} triggerClassName="h-9 min-h-9 w-full"/><CustomSelect value={paymentFilter} onChange={(value)=>setPaymentFilter(value as PaymentFilter)} options={[{value:'all',label:'All payment states'},{value:'unpaid',label:'Unpaid'},{value:'partial',label:'Partially paid'},{value:'paid',label:'Paid'}]} triggerClassName="h-9 min-h-9 w-full"/><CustomSelect value={dueFilter} onChange={(value)=>setDueFilter(value as DueFilter)} options={[{value:'all',label:'All due states'},{value:'due_soon',label:'Due within 7 days'},{value:'overdue',label:'Overdue'},{value:'later',label:'Due later'}]} triggerClassName="h-9 min-h-9 w-full"/><CustomSelect value={sort} onChange={(value)=>setSort(value as SortKey)} options={sortOptions} triggerClassName="h-9 min-h-9 w-full"/></div><div className="mt-3 flex flex-wrap items-center gap-2 border-t border-line pt-3"><div className="inline-flex items-center rounded-control border border-line bg-bg p-0.5"><button type="button" onClick={()=>{setLedgerPeriod('reporting-quarter');setStatusFilter('all')}} className={'min-h-8 rounded-chip px-2.5 text-[11px] '+(ledgerPeriod==='reporting-quarter'?'bg-line text-fg':'text-muted')}>Current quarter</button><button type="button" onClick={()=>{setLedgerPeriod('all');setStatusFilter('all')}} className={'min-h-8 rounded-chip px-2.5 text-[11px] '+(ledgerPeriod==='all'?'bg-line text-fg':'text-muted')}>All periods</button></div><div className="relative"><button type="button" onClick={()=>setColumnMenuOpen((open)=>!open)} className={actionClass+' h-9 min-h-9'}><SlidersHorizontal size={14}/>Columns</button>{columnMenuOpen&&<div className="absolute left-0 top-[calc(100%+6px)] z-30 w-56 rounded-card border border-line bg-panel p-1.5">{(['client','timeline','billing','status','actions'] as const).map((key)=>{const labels:Record<typeof key,string>={client:'Client & Project',timeline:'Timeline',billing:'Billing',status:'Status',actions:'Actions'};return <button key={key} type="button" role="menuitemcheckbox" aria-checked={columnVisibility[key]} onClick={()=>setColumnVisibility((current)=>({...current,[key]:!current[key]}))} className="flex w-full justify-between rounded-control px-3 py-2 text-left text-xs text-muted hover:bg-bg hover:text-fg"><span>{labels[key]}</span><span className={columnVisibility[key]?'text-accent-text':'text-muted'}>{columnVisibility[key]?'Visible':'Hidden'}</span></button>})}</div>}</div>{(search||statusFilter!=='all'||paymentFilter!=='all'||dueFilter!=='all')&&<button type="button" onClick={()=>{setSearch('');setStatusFilter('all');setPaymentFilter('all');setDueFilter('all')}} className="rounded-chip px-2 py-1 text-[11px] text-muted hover:bg-bg hover:text-fg">Clear filters</button>}<span className="ml-auto text-[10px] text-muted">{pendingInvoiceCount} open · {criticalOverdueCount} overdue · {dueSoonCount} due soon</span></div></div><div className="overflow-hidden">{filteredInvoices.length===0?<div className="p-5"><EmptyState title="No invoices found" description="No invoices match the current filters." action={canManageInvoices?<button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>Create invoice</button>:undefined}/></div>:<table className="w-full table-fixed border-separate border-spacing-0 text-xs">
+          <section className="grid gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><div className="flex justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Cash Flow vs Operating Burn</h2><p className="mt-1 text-xs text-muted">Six-month view of actual cash collected versus recorded operating spend.</p></div><div className="shrink-0 rounded-control border border-line bg-bg px-3 py-2 text-right">
+  <p className="text-[9px] font-semibold uppercase tracking-[0.08em] text-muted">Quarter net cash</p>
+  <p className={'mt-0.5 text-sm font-semibold tabular-nums '+(quarterNetCash>=0?'text-success':'text-danger')}>{formatFinanceCardAmount(quarterNetCash,currency)}</p>
+</div></div></div><div className="p-4 sm:p-5">{hasTrendData?<FinanceCashFlowChart data={financeChartData} currency={currency} ariaLabel="Finance cash flow trend comparing cash collected, operating burn, and net cash."/>:<EmptyState title="No trend data" description="Billing payments and expenses will populate this trend."/>}</div></section><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><h2 className="text-sm font-semibold text-fg">Aging receivables</h2><p className="mt-1 text-xs text-muted">{formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} outstanding across 3 aging buckets.</p></div><div className="p-4 sm:p-5"><div className="flex h-2.5 overflow-hidden rounded-full bg-bg border border-line">{agingBuckets.map((bucket)=><div key={bucket.label} className={'h-full '+(bucket.tone==='success'?'bg-success':bucket.tone==='warning'?'bg-warning':'bg-danger')} style={{width:bucket.percent+'%'}}/>)}</div><div className="mt-4 space-y-2.5">{agingBuckets.map((bucket)=><div key={bucket.label} className="flex items-center justify-between rounded-control border border-line bg-bg px-3 py-3"><div><p className="text-xs font-medium text-fg">{bucket.label}</p><p className="mt-1 text-[10px] text-muted">{bucket.count} account{bucket.count===1?'':'s'}</p></div><div className="text-right"><p className="text-xs font-semibold tabular-nums">{formatNativeAmount(bucket.amount,currency,true)}</p><p className="mt-1 text-[10px] text-muted">{bucket.percent}%</p></div></div>)}</div><button type="button" onClick={()=>setDunningOpen(true)} disabled={!actionRequiredInvoices.length} className={actionClass+' mt-4 w-full'}><Send size={14}/>Prepare collection notices</button></div></section></section>
+          <section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line px-4 py-3.5 sm:px-5 sm:py-4"><div className="flex flex-col gap-2.5 xl:flex-row xl:items-center xl:gap-2.5">
+  <div className="min-w-0 shrink-0 xl:w-[170px]">
+    <h2 className="text-sm font-semibold text-fg">Invoice ledger</h2>
+    <p className="mt-0.5 truncate text-[10px] text-muted">{filteredInvoices.length} visible · {ledgerPeriod==='all'?'All periods':reportingQuarter?.label||'Current quarter'}</p>
+  </div>
+  <label className="relative min-w-0 flex-1 xl:min-w-[210px] xl:max-w-[280px]">
+    <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/>
+    <span className="sr-only">Search invoices</span>
+    <input value={search} onChange={(event)=>setSearch(event.target.value)} placeholder="Search invoice, client, project..." className={fieldClass+' pl-9'}/>
+  </label>
+  <div className="grid gap-2 sm:grid-cols-2 xl:flex xl:min-w-0 xl:flex-1 xl:items-center xl:gap-2">
+    <CustomSelect value={statusFilter} onChange={setStatusFilter} options={statusOptions} triggerClassName="h-9 min-h-9 w-full xl:w-[126px]"/>
+    <CustomSelect value={paymentFilter} onChange={(value)=>setPaymentFilter(value as PaymentFilter)} options={[{value:'all',label:'All payment states'},{value:'unpaid',label:'Unpaid'},{value:'partial',label:'Partially paid'},{value:'paid',label:'Paid'}]} triggerClassName="h-9 min-h-9 w-full xl:w-[136px]"/>
+    <CustomSelect value={dueFilter} onChange={setDueFilter} options={[{value:'all',label:'All due states'},{value:'due_soon',label:'Due within 7 days'},{value:'overdue',label:'Overdue'},{value:'later',label:'Due later'}]} triggerClassName="h-9 min-h-9 w-full xl:w-[126px]"/>
+    <CustomSelect value={sort} onChange={(value)=>setSort(value as SortKey)} options={sortOptions} triggerClassName="h-9 min-h-9 w-full xl:w-[138px]"/>
+  </div>
+  <div className="flex shrink-0 items-center gap-2">
+    <div className="inline-flex items-center rounded-control border border-line bg-bg p-0.5">
+      <button type="button" onClick={()=>{setLedgerPeriod('reporting-quarter');setStatusFilter('all')}} className={'min-h-8 rounded-chip px-2.5 text-[11px] '+(ledgerPeriod==='reporting-quarter'?'bg-line text-fg':'text-muted')}>Current quarter</button>
+      <button type="button" onClick={()=>{setLedgerPeriod('all');setStatusFilter('all')}} className={'min-h-8 rounded-chip px-2.5 text-[11px] '+(ledgerPeriod==='all'?'bg-line text-fg':'text-muted')}>All periods</button>
+    </div>
+    <div className="relative">
+      <button type="button" onClick={()=>setColumnMenuOpen((open)=>!open)} className={actionClass+' h-9 min-h-9 px-2.5'}><SlidersHorizontal size={14}/>Columns</button>
+      {columnMenuOpen&&<div className="absolute right-0 top-[calc(100%+6px)] z-30 w-56 rounded-card border border-line bg-panel p-1.5">{(['client','timeline','billing','status','actions'] as const).map((key)=>{const labels:Record<typeof key,string>={client:'Client & Project',timeline:'Timeline',billing:'Billing',status:'Status',actions:'Actions'};return <button key={key} type="button" role="menuitemcheckbox" aria-checked={columnVisibility[key]} onClick={()=>setColumnVisibility((current)=>({...current,[key]:!current[key]}))} className="flex w-full justify-between rounded-control px-3 py-2 text-left text-xs text-muted hover:bg-bg hover:text-fg"><span>{labels[key]}</span><span className={columnVisibility[key]?'text-accent-text':'text-muted'}>{columnVisibility[key]?'Visible':'Hidden'}</span></button>})}</div>}
+    </div>
+    {(search||statusFilter!=='all'||paymentFilter!=='all'||dueFilter!=='all')&&<button type="button" onClick={()=>{setSearch('');setStatusFilter('all');setPaymentFilter('all');setDueFilter('all')}} className="rounded-chip px-2 py-2 text-[11px] font-medium text-muted hover:bg-bg hover:text-fg">Clear</button>}
+  </div>
+</div></div><div className="overflow-hidden">{filteredInvoices.length===0?<div className="p-5"><EmptyState title="No invoices found" description="No invoices match the current filters." action={canManageInvoices?<button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>Create invoice</button>:undefined}/></div>:<table className="w-full table-fixed border-separate border-spacing-0 text-xs">
 <thead className="sticky top-0 z-10 border-b border-line bg-panel/95 backdrop-blur-sm"><tr>
-  <th className="w-[22%] px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice</th>
-  {columnVisibility.client&&<th className="w-[18%] px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client & project</th>}
-  {columnVisibility.timeline&&<th className="w-[17%] px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Timeline</th>}
-  {columnVisibility.billing&&<th className="w-[16%] px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Billing</th>}
-  {columnVisibility.status&&<th className="w-[10%] px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Status</th>}
-  {columnVisibility.actions&&<th className="w-[17%] px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted"> </th>}
+  <th className="w-[22%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice</th>
+  {columnVisibility.client&&<th className="w-[18%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client & project</th>}
+  {columnVisibility.timeline&&<th className="w-[17%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Timeline</th>}
+  {columnVisibility.billing&&<th className="w-[16%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Billing</th>}
+  {columnVisibility.status&&<th className="w-[10%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Status</th>}
+  {columnVisibility.actions&&<th className="w-[17%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted"> </th>}
 </tr></thead>
 <tbody className="divide-y divide-line">
 {paginatedInvoices.map((invoice)=>{
@@ -2372,7 +2421,7 @@ export const AdminInvoicing: React.FC = () => {
   const project=projectsById.get(invoice.projectId);
   const overdue=isPastDueInvoice(invoice);
   return <tr key={invoice.id} className="group align-top transition-colors hover:bg-bg">
-    <td className="px-4 py-5">
+    <td className="px-5 py-4">
       <div className="flex items-start gap-2.5">
         <span className={'mt-1.5 h-2 w-2 shrink-0 rounded-full '+(overdue?'bg-danger':invoice.status==='paid'?'bg-success':'bg-warning')} aria-hidden="true" />
         <div className="min-w-0">
@@ -2381,11 +2430,11 @@ export const AdminInvoicing: React.FC = () => {
         </div>
       </div>
     </td>
-    {columnVisibility.client&&<td className="px-4 py-5">
+    {columnVisibility.client&&<td className="px-5 py-4">
       <p className="truncate font-medium text-fg">{invoice.clientCompany||invoice.clientName}</p>
       <p className="mt-1 truncate text-[11px] text-muted">{project?.name||invoice.clientEmail||invoice.clientName}</p>
     </td>}
-    {columnVisibility.timeline&&<td className="px-4 py-5">
+    {columnVisibility.timeline&&<td className="px-5 py-4">
       <div className="grid gap-1.5 text-[11px]">
         <div className="flex items-center justify-between gap-3"><span className="text-muted">Issued</span><span className="tabular-nums text-fg">{invoice.issueDate}</span></div>
         <div className={'flex items-center justify-between gap-3 '+(overdue?'text-danger':'')}><span className={overdue?'text-danger':'text-muted'}>Due</span><span className="tabular-nums">{invoice.dueDate}</span></div>
@@ -2395,20 +2444,18 @@ export const AdminInvoicing: React.FC = () => {
       <p className="font-semibold tabular-nums text-fg">{formatNativeAmount(invoice.total,invoice.currency)}</p>
       <p className={'mt-1 text-[11px] tabular-nums '+(balance>0?'text-warning':'text-success')}>{balance>0?'Balance '+formatNativeAmount(balance,invoice.currency,true):'Settled'}</p>
     </td>}
-    {columnVisibility.status&&<td className="px-4 py-5">
+    {columnVisibility.status&&<td className="px-5 py-4">
       {canManageInvoices&&['draft','sent','overdue'].includes(invoice.status)
         ? <InvoiceStatusDropdown status={invoice.status} allowedStatuses={['draft','sent','overdue']} disabled={updatingInvoiceId===invoice.id} onChange={(next)=>void updateInvoiceStatus(invoice,next)} />
         : <StatusBadge status={invoice.status} />}
     </td>}
-    {columnVisibility.actions&&<td className="px-4 py-5">
-      <div className="flex max-w-full flex-wrap justify-end">
-        <div className="inline-flex max-w-full flex-wrap items-center rounded-control border border-line bg-bg p-0.5 shadow-sm">
-          {overdue&&<button type="button" onClick={()=>setReminderInvoice(invoice)} className="inline-flex h-8 items-center rounded-control px-2 text-[10px] font-medium text-danger hover:bg-danger/10" aria-label={'Send reminder for '+invoice.invoiceNumber} title="Reminder">Reminder</button>}
-          {canManageInvoices&&invoice.status!=='paid'&&invoice.status!=='cancelled'&&balance>0&&<button type="button" onClick={()=>openPayment(invoice)} className="inline-flex h-8 items-center rounded-control px-2 text-[10px] font-medium text-muted hover:bg-panel-hover hover:text-fg" aria-label={'Record payment for '+invoice.invoiceNumber} title="Record payment">Pay</button>}
-          <button type="button" onClick={()=>openPrintPreview(invoice)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-panel-hover hover:text-fg" aria-label="View invoice" title="View invoice"><Eye size={14}/></button>
-          {canManageInvoices&&invoice.status!=='cancelled'&&<button type="button" onClick={()=>openEditInvoice(invoice)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-panel-hover hover:text-fg" aria-label="Edit invoice" title="Edit invoice"><Edit3 size={14}/></button>}
-          {canManageInvoices&&canDeleteInvoice&&!['cancelled','paid','partially_paid'].includes(invoice.status)&&<button type="button" onClick={()=>setConfirmAction({type:'invoice',id:invoice.id,label:invoice.invoiceNumber})} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Cancel invoice" title="Cancel invoice"><Trash2 size={14}/></button>}
-        </div>
+    {columnVisibility.actions&&<td className="px-5 py-4">
+      <div className="flex items-center justify-end gap-1.5">
+        {overdue&&<button type="button" onClick={()=>setReminderInvoice(invoice)} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger" aria-label={'Send reminder for '+invoice.invoiceNumber} title="Send reminder"><Send size={13}/></button>}
+        {canManageInvoices&&invoice.status!=='paid'&&invoice.status!=='cancelled'&&balance>0&&<button type="button" onClick={()=>openPayment(invoice)} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-bg hover:text-fg" aria-label={'Record payment for '+invoice.invoiceNumber} title="Record payment"><WalletCards size={13}/></button>}
+        <button type="button" onClick={()=>openPrintPreview(invoice)} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-bg hover:text-fg" aria-label="View invoice" title="View invoice"><Eye size={13}/></button>
+        {canManageInvoices&&invoice.status!=='cancelled'&&<button type="button" onClick={()=>openEditInvoice(invoice)} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-bg hover:text-fg" aria-label="Edit invoice" title="Edit invoice"><Edit3 size={13}/></button>}
+        {canManageInvoices&&canDeleteInvoice&&!['cancelled','paid','partially_paid'].includes(invoice.status)&&<button type="button" onClick={()=>setConfirmAction({type:'invoice',id:invoice.id,label:invoice.invoiceNumber})} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger" aria-label="Cancel invoice" title="Cancel invoice"><Trash2 size={13}/></button>}
       </div>
     </td>}
   </tr>;
@@ -2775,7 +2822,7 @@ export const AdminInvoicing: React.FC = () => {
       >
         <form id="finance-invoice-form" onSubmit={handleSaveInvoice} onChange={() => setInvoiceDirty(true)} className="space-y-5">
           {invoiceBillingLocked && (
-            <div className="flex items-start gap-3 rounded-card border border-warning/30 bg-warning/10 px-4 py-3 text-xs text-fg" role="note">
+            <div className="flex items-start gap-3 rounded-card border border-warning/30 bg-warning/10 px-5 py-3 text-xs text-fg" role="note">
               <ShieldCheck size={15} className="mt-0.5 shrink-0 text-warning" />
               <div>
                 <p className="font-medium">Billing fields are locked</p>
