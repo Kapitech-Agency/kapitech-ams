@@ -273,7 +273,7 @@ export const AdminClientLeadAccounts: React.FC = () => {
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-card border border-line bg-panel" aria-label="Lead pipeline table">
+      <section className="ams-client-table-shell overflow-hidden rounded-card border border-line bg-panel" aria-label="Lead pipeline table">
         <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full min-w-[1220px] border-collapse text-left">
             <thead className="bg-bg">
@@ -303,7 +303,7 @@ export const AdminClientLeadAccounts: React.FC = () => {
                         <td className="px-4 py-3"><div className="flex items-center gap-1.5 whitespace-nowrap"><div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-line bg-bg text-[9px] font-semibold text-fg">{item.ownerInitials}</div><span className="text-xs text-fg">{item.owner}</span></div><div className="mt-0.5 text-[10px] text-muted">{item.ownerRole}</div></td>
                         <td className="px-4 py-3 tabular-nums"><div className="flex items-center gap-2"><span className="h-1.5 w-16 overflow-hidden rounded-full bg-line/70"><span className="block h-1.5 rounded-full bg-accent" style={{ width: Math.min(100, item.probability) + '%' }} /></span><span className="text-xs font-medium text-fg">{item.probability}%</span></div></td>
                         <td className="px-4 py-3"><div className="text-xs font-medium text-fg">{item.nextAction}</div><div className={`mt-0.5 text-[10px] ${item.urgent ? 'font-medium text-accent-text' : new Date(item.dueAt).getTime() < Date.now() ? 'text-danger' : 'text-muted'}`}>{dueLabel(item.dueAt, item.urgent)}</div></td>
-                        <td className="px-5 py-3 text-right"><div className="flex flex-wrap items-center justify-end gap-1.5"><button type="button" onClick={() => setSelectedLead(item)} className="inline-flex min-h-9 items-center rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-fg hover:bg-panel">View deal</button><button type="button" onClick={() => setMessage(`Proposal creation is not connected for ${item.company} yet.`)} className={`inline-flex min-h-9 items-center rounded-control border px-3 text-[11px] font-medium transition-colors ${item.stage === 'ready-to-sign' ? 'border-accent bg-accent/10 text-accent-text hover:bg-accent hover:text-white' : 'border-line bg-bg text-fg hover:bg-panel'}`}>Create proposal</button></div></td>
+                        <td className="px-5 py-3 text-right"><div className="ams-table-actions flex flex-wrap items-center justify-end gap-1.5"><button type="button" onClick={() => setSelectedLead(item)} className="ams-table-action inline-flex min-h-9 items-center rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-fg hover:bg-panel">View deal</button><button type="button" onClick={() => setMessage(`Proposal creation is not connected for ${item.company} yet.`)} className={`ams-table-action inline-flex min-h-9 items-center rounded-control border px-3 text-[11px] font-medium transition-colors ${item.stage === 'ready-to-sign' ? 'border-accent bg-accent/10 text-accent-text hover:bg-accent hover:text-white' : 'border-line bg-bg text-fg hover:bg-panel'}`} data-primary={item.stage === 'ready-to-sign' ? 'true' : undefined}>Create proposal</button></div></td>
                       </tr>
                     ))
                   : (

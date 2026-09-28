@@ -162,7 +162,7 @@ export const AdminClientSlaMonitoring: React.FC = () => {
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-card border border-line bg-panel" aria-label="SLA monitoring table">
+      <section className="ams-client-table-shell overflow-hidden rounded-card border border-line bg-panel" aria-label="SLA monitoring table">
         <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full min-w-[1160px] border-collapse text-left">
             <thead className="bg-bg"><tr className="border-b border-line text-[10px] uppercase tracking-wider text-muted">
@@ -184,7 +184,7 @@ export const AdminClientSlaMonitoring: React.FC = () => {
                    <td className="px-4 py-3"><div className="text-xs font-medium tabular-nums text-fg">{item.mttrMinutes} min</div><div className={`mt-0.5 text-[10px] ${item.compliance === 'degraded' ? 'text-danger' : item.compliance === 'warning' ? 'text-warning' : 'text-success'}`}>{item.responseStatus}</div></td>
                    <td className="px-4 py-3"><div className="max-w-[300px] truncate text-xs text-fg" title={item.incidentTitle}>{formatDate(item.lastIncidentAt)}</div><div className="mt-0.5 max-w-[300px] truncate text-[10px] text-muted">{item.incidentTitle}</div></td>
                    <td className="px-4 py-3 text-center"><span className={`inline-flex min-h-6 items-center gap-1.5 rounded-badge border px-2 py-0.5 text-[10px] font-medium ${meta.className}`}><span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />{meta.label}</span></td>
-                   <td className="px-4 py-3 text-right"><div className="flex flex-wrap items-center justify-end gap-1.5"><button type="button" onClick={() => setSelectedIncident(item)} className="inline-flex min-h-9 items-center rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-fg hover:bg-panel">Incident log</button><button type="button" onClick={() => setSelectedTelemetry(item)} className="inline-flex min-h-9 items-center rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-muted hover:bg-panel hover:text-fg">Telemetry</button></div></td>
+                   <td className="px-4 py-3 text-right"><div className="ams-table-actions flex flex-wrap items-center justify-end gap-1.5"><button type="button" onClick={() => setSelectedIncident(item)} className="ams-table-action inline-flex min-h-9 items-center rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-fg hover:bg-panel">Incident log</button><button type="button" onClick={() => setSelectedTelemetry(item)} className="ams-table-action inline-flex min-h-9 items-center rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-muted hover:bg-panel hover:text-fg">Telemetry</button></div></td>
                  </tr>;
                }) : <tr><td colSpan={7} className="px-4 py-14 text-center"><Search size={18} className="mx-auto text-muted" /><p className="mt-3 text-sm font-medium text-fg">No matching SLA accounts.</p><p className="mt-1 text-xs text-muted">Adjust the search or clear the active filters.</p><button type="button" onClick={reset} className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg">Reset filters</button></td></tr>}
             </tbody>

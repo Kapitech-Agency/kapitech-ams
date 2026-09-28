@@ -166,7 +166,8 @@ export const AdminClients: React.FC = () => {
         client.phone,
         client.id,
         client.industry,
-        client.location
+        client.location,
+        client.slug
       ].filter(Boolean).join(' ').toLowerCase();
 
       if (query && !searchable.includes(query)) return false;
@@ -419,6 +420,7 @@ export const AdminClients: React.FC = () => {
       [
         'Client account',
         'Client ID',
+        'Slug',
         'Location',
         'Industry',
         'Status',
@@ -432,6 +434,7 @@ export const AdminClients: React.FC = () => {
       ...filteredClients.map((client) => [
         client.company,
         client.id,
+        client.slug,
         client.location,
         client.industry,
         client.status,
@@ -473,8 +476,8 @@ export const AdminClients: React.FC = () => {
         </div>
         <div className="flex items-center gap-2 self-start md:self-auto">
           <Button type="button" variant="secondary" onClick={() => {
-            const rows = filteredClients.map((client) => [client.id, client.name, client.company, client.industry || '', client.status, client.projectsCount, client.totalSpend || 0, client.location || ''].map((value) => '"' + String(value).replace(/"/g, '""') + '"').join(','));
-            const csv = ['Client ID,Contact,Company,Industry,Status,Projects,Total Spend,Location', ...rows].join('\\n');
+            const rows = filteredClients.map((client) => [client.id, client.slug, client.name, client.company, client.industry || '', client.status, client.projectsCount, client.totalSpend || 0, client.location || ''].map((value) => '"' + String(value).replace(/"/g, '""') + '"').join(','));
+            const csv = ['Client ID,Slug,Contact,Company,Industry,Status,Projects,Total Spend,Location', ...rows].join('\\n');
             const blob = new Blob(['\\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const anchor = document.createElement('a');
@@ -536,12 +539,13 @@ export const AdminClients: React.FC = () => {
         </div>
       </section>
 
-      <section aria-label="Clients directory" className="overflow-hidden rounded-card border border-line bg-panel">
+      <section aria-label="Clients directory" className="ams-client-table-shell overflow-hidden rounded-card border border-line bg-panel">
         <div className="overflow-x-auto custom-scrollbar">
-          <table className="w-full min-w-[1120px] border-collapse text-left">
+          <table className="ams-client-table w-full min-w-[1240px] border-collapse text-left">
             <thead className="bg-bg">
               <tr className="border-b border-line text-[10px] uppercase tracking-wider text-muted">
                 <th className="px-4 py-2.5"><button type="button" onClick={() => toggleSort('company')} className="inline-flex min-h-9 items-center gap-1.5 font-medium hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">Client account {sortKey === 'company' ? (sortDirection === 'asc' ? <ArrowUp size={13} /> : <ArrowUp size={13} className="rotate-180" />) : <ArrowUpDown size={13} />}</button></th>
+                <th className="px-4 py-2.5">SLUG</th>
                 <th className="px-4 py-2.5"><button type="button" onClick={() => toggleSort('industry')} className="inline-flex min-h-9 items-center gap-1.5 font-medium hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">Industry {sortKey === 'industry' ? (sortDirection === 'asc' ? <ArrowUp size={13} /> : <ArrowUp size={13} className="rotate-180" />) : <ArrowUpDown size={13} />}</button></th>
                 <th className="px-4 py-2.5">CONTRACT TIER</th>
                 <th className="px-4 py-2.5">CONTACT &amp; ROLE</th>
@@ -551,8 +555,8 @@ export const AdminClients: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-line text-[13px] leading-[18px]">
-              {isLoading ? Array.from({ length: 6 }).map((_, index) => <tr key={index}>{Array.from({ length: 7 }).map((__, cell) => <td key={cell} className="px-4 py-3"><div className="h-3 w-24 animate-pulse rounded-badge bg-line" /></td>)}</tr>) : paginatedClients.length === 0 ? (
-                <tr><td colSpan={7} className="px-4 py-14 text-center"><Users size={20} className="mx-auto text-muted" aria-hidden="true" /><p className="mt-3 text-sm font-medium text-fg">{clients.length ? 'No matching clients.' : 'No clients yet.'}</p><p className="mt-1 text-xs text-muted">Adjust the search or active filters.</p>{clients.length > 0 && <button type="button" onClick={resetFilters} className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg">Reset filters</button>}</td></tr>
+              {isLoading ? Array.from({ length: 6 }).map((_, index) => <tr key={index}>{Array.from({ length: 8 }).map((__, cell) => <td key={cell} className="px-4 py-3"><div className="h-3 w-24 animate-pulse rounded-badge bg-line" /></td>)}</tr>) : paginatedClients.length === 0 ? (
+                <tr><td colSpan={8} className="px-4 py-14 text-center"><Users size={20} className="mx-auto text-muted" aria-hidden="true" /><p className="mt-3 text-sm font-medium text-fg">{clients.length ? 'No matching clients.' : 'No clients yet.'}</p><p className="mt-1 text-xs text-muted">Adjust the search or active filters.</p>{clients.length > 0 && <button type="button" onClick={resetFilters} className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg">Reset filters</button>}</td></tr>
               ) : paginatedClients.map((client) => {
                 const budget = Number(client.slaDailyAdSpendBudget) || 0;
                 const spend = Number(client.currentDailyAdSpend) || 0;
@@ -561,12 +565,13 @@ export const AdminClients: React.FC = () => {
                 return (
                   <tr key={client.id} className="transition-colors hover:bg-bg/70">
                     <td className="px-4 py-3"><button type="button" onClick={() => setSelectedClient(client)} className="block max-w-[250px] text-left"><span className="block truncate font-medium text-fg">{client.company}</span><span className="mt-0.5 block truncate text-[11px] text-muted tabular-nums">ID: {client.id} • {client.location || '—'}</span></button></td>
+                    <td className="px-4 py-3"><span className="block max-w-[260px] truncate font-mono text-[11px] text-muted" title={client.slug}>{client.slug}</span></td>
                     <td className="px-4 py-3 text-muted">{client.industry || '—'}</td>
                     <td className="px-4 py-3"><span className={`inline-flex min-h-6 items-center rounded-badge border px-2 py-0.5 text-[11px] font-medium ${client.projectsCount >= 5 ? 'border-accent/30 bg-accent/10 text-accent-text' : client.status === 'lead' ? 'border-info/20 bg-info/10 text-info' : 'border-line bg-bg text-fg'}`}>{client.projectsCount >= 5 ? 'Tier 1 Strategic' : client.status === 'lead' ? 'Project-based' : 'Retainer Core'}</span></td>
                     <td className="px-4 py-3"><div className="font-medium text-fg">{client.name || '—'}</div><div className="mt-0.5 text-[11px] text-muted">{client.contactPersonRole || 'Primary contact'}</div></td>
                     <td className="px-4 py-3 text-right font-medium tabular-nums text-fg">{new Intl.NumberFormat(language === 'id' ? 'id-ID' : 'en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(Number(client.totalSpend) || 0)}</td>
                     <td className="px-4 py-3"><div className="flex items-center gap-2"><span className={`h-2 w-2 rounded-full ${spendState === 'success' ? 'bg-success' : spendState === 'warning' ? 'bg-warning' : spendState === 'danger' ? 'bg-danger' : 'bg-line'}`} aria-hidden="true" /><span className={spendState === 'danger' ? 'font-medium text-danger tabular-nums' : 'text-fg tabular-nums'}>{headroom === null ? 'Not configured' : headroom.toFixed(1) + '% headroom'}</span></div></td>
-                    <td className="px-4 py-3 text-right"><div className="flex flex-wrap items-center justify-end gap-1.5"><button type="button" onClick={() => setSelectedClient(client)} className="inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-fg transition-colors hover:bg-bg">View profile</button>{canManageClients && <button type="button" onClick={() => openEdit(client)} className="inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-muted transition-colors hover:bg-bg hover:text-fg">Manage</button>}</div></td>
+                    <td className="px-4 py-3 text-right"><div className="ams-table-actions flex flex-wrap items-center justify-end gap-1.5"><button type="button" onClick={() => setSelectedClient(client)} className="ams-table-action inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-fg transition-colors hover:bg-bg">View profile</button>{canManageClients && <button type="button" onClick={() => openEdit(client)} className="ams-table-action inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-muted transition-colors hover:bg-bg hover:text-fg">Manage</button>}</div></td>
                   </tr>
                 );
               })}
@@ -581,7 +586,7 @@ export const AdminClients: React.FC = () => {
         onClose={() => setSelectedClient(null)}
         size="lg"
         title={selectedClient?.company || 'Client details'}
-        description={selectedClient ? `${selectedClient.name} · ${selectedClient.id}` : undefined}
+        description={selectedClient ? `${selectedClient.name} · ${selectedClient.id} · ${selectedClient.slug}` : undefined}
         footer={<Button type="button" variant="secondary" onClick={() => setSelectedClient(null)}>Close</Button>}
       >
         {selectedClient && (
@@ -619,6 +624,10 @@ export const AdminClients: React.FC = () => {
                 <p className="mt-1 text-sm text-fg">{selectedClient.location || '—'}</p>
               </div>
               <div className="sm:col-span-2">
+                <p className="text-xs text-muted">Slug</p>
+                <p className="mt-1 truncate font-mono text-xs text-fg">{selectedClient.slug}</p>
+              </div>
+              <div>
                 <p className="text-xs text-muted">Website</p>
                 {selectedClient.website ? (
                   <a href={selectedClient.website} target="_blank" rel="noreferrer" className="mt-1 inline-flex max-w-full items-center gap-2 truncate text-sm text-accent-text hover:text-fg">

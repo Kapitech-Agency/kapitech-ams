@@ -181,7 +181,7 @@ export const AdminClientRetainers: React.FC = () => {
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-card border border-line bg-panel" aria-label="Retainer agreements table">
+      <section className="ams-client-table-shell overflow-hidden rounded-card border border-line bg-panel" aria-label="Retainer agreements table">
         <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full min-w-[1120px] border-collapse text-left">
             <thead className="bg-bg"><tr className="border-b border-line text-[10px] uppercase tracking-wider text-muted">
@@ -204,7 +204,7 @@ export const AdminClientRetainers: React.FC = () => {
                    <td className="px-4 py-3 text-right text-xs font-medium tabular-nums text-fg">{money(item.overageRate)}<span className="ml-0.5 text-[10px] text-muted">/hr</span></td>
                    <td className="px-4 py-3 text-[11px] text-muted"><div>{cycleLabel[item.cycle]}</div><div className={(renewalDays(item.renewal) <= 30 ? 'text-warning ' : 'text-fg ') + 'mt-0.5 font-medium'}>Renews {formatDate(item.renewal)}</div></td>
                    <td className="px-4 py-3 text-center"><span className={`inline-flex min-h-6 items-center gap-1.5 rounded-badge border px-2 py-0.5 text-[10px] font-medium ${meta.className}`}><span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />{meta.label}{usage >= 80 ? ` · ${usage}%` : ''}</span></td>
-                   <td className="px-4 py-3 text-right"><div className="flex flex-wrap items-center justify-end gap-1.5"><button type="button" onClick={() => setMessage(`Terms editing is not connected for ${item.client} yet.`)} className="inline-flex min-h-9 items-center rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-fg hover:bg-panel">Edit terms</button><button type="button" onClick={() => { setHoursTarget(item); setHours('8'); }} className="inline-flex min-h-9 items-center rounded-control border border-accent/30 bg-accent/10 px-3 text-[11px] font-medium text-accent-text hover:bg-accent hover:text-white">Log hours</button></div></td>
+                   <td className="px-4 py-3 text-right"><div className="ams-table-actions flex flex-wrap items-center justify-end gap-1.5"><button type="button" onClick={() => setMessage(`Terms editing is not connected for ${item.client} yet.`)} className="ams-table-action inline-flex min-h-9 items-center rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-fg hover:bg-panel">Edit terms</button><button type="button" onClick={() => { setHoursTarget(item); setHours('8'); }} className="ams-table-action inline-flex min-h-9 items-center rounded-control border border-accent/30 bg-accent/10 px-3 text-[11px] font-medium text-accent-text hover:bg-accent hover:text-white" data-primary="true">Log hours</button></div></td>
                  </tr>;
                }) : <tr><td colSpan={8} className="px-4 py-14 text-center"><Search size={18} className="mx-auto text-muted" /><p className="mt-3 text-sm font-medium text-fg">No matching retainers.</p><p className="mt-1 text-xs text-muted">Adjust the search or clear the active filters.</p><button type="button" onClick={reset} className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg">Reset filters</button></td></tr>}
             </tbody>
