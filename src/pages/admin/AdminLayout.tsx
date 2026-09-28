@@ -551,7 +551,7 @@ export const AdminLayout: React.FC = () => {
                   ))}
                 </nav>
               ) : location.pathname === '/admin/invoicing' ? (
-                <nav aria-label="Finance sections" className="flex h-full min-w-0 items-center gap-1 overflow-x-auto custom-scrollbar">
+                <nav aria-label="Finance sections" className="flex h-[52px] min-w-0 items-stretch gap-1 overflow-x-auto custom-scrollbar">
                   {[
                     { key: 'invoices', label: 'Invoices', search: '' },
                     { key: 'income-expenses', label: 'Income & Expenses', search: '?finance=income-expenses' },
@@ -564,7 +564,7 @@ export const AdminLayout: React.FC = () => {
                         key={tab.key}
                         to={`/admin/invoicing${tab.search}`}
                         end
-                        className={() => `inline-flex h-9 shrink-0 items-center rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${activeView === tab.key ? 'bg-line text-fg' : 'text-muted hover:bg-bg hover:text-fg'}`}
+                        className={() => `inline-flex h-full shrink-0 items-center border-b-2 px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${activeView === tab.key ? 'border-accent text-fg' : 'border-transparent text-muted hover:border-line hover:text-fg'}`}
                       >
                         {tab.label}
                       </NavLink>
