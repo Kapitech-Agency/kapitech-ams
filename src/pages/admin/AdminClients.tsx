@@ -451,7 +451,7 @@ export const AdminClients: React.FC = () => {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-[24px] font-semibold leading-8 tracking-[-0.02em] text-fg">Clients & Key Accounts</h1>
-            <span className="inline-flex items-center rounded-badge border border-line bg-panel px-2 py-0.5 text-[11px] font-medium text-fg">${clientMetrics.active} Accounts Active</span>
+            <span className="inline-flex items-center rounded-badge border border-line bg-panel px-2 py-0.5 text-[11px] font-medium text-fg">{clientMetrics.active} Accounts Active</span>
           </div>
           <p className="mt-1 text-[13px] leading-[18px] text-muted">Directory of enterprise client retainers, SLA tracking, allocated engineering pods, and billing run-rates.</p>
         </div>
