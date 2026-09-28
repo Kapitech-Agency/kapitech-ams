@@ -465,7 +465,9 @@ export const AdminClients: React.FC = () => {
             anchor.click();
             URL.revokeObjectURL(url);
           }} icon={<ArrowDown size={14} aria-hidden="true" />}>Export Directory</Button>
-          {canManageClients && <Button type="button" variant="primary" onClick={openCreate} icon={<Plus size={14} aria-hidden="true" />}>New Client</Button>}
+          {canManageClients && (
+            <Button type="button" variant="primary" onClick={openCreate} icon={<Plus size={14} aria-hidden="true" />}>New Client</Button>
+          )}
         </div>
       </section>
 
