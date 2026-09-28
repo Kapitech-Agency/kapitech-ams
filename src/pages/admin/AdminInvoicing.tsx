@@ -2142,115 +2142,91 @@ export const AdminInvoicing: React.FC = () => {
           <div className="h-80 animate-pulse rounded-card border border-line bg-panel" />
         </div>
       ) : financeView === 'quotations' ? (
-        <div className="space-y-6">
-          <section className="grid grid-cols-2 gap-3 min-[1100px]:grid-cols-4" aria-label="Quotation overview">
-            <article className="rounded-card border border-line bg-panel px-4 py-4">
-              <div className="flex items-center justify-between text-xs font-medium text-muted"><span>Total quotations</span><FileText size={15} /></div>
-              <div className="mt-2 text-2xl font-medium tabular-nums text-fg">{quotationMetrics.total}</div>
-              <p className="mt-1 text-[11px] text-muted">Active sales workspace</p>
-            </article>
-            <article className="rounded-card border border-line bg-panel px-4 py-4">
-              <div className="flex items-center justify-between text-xs font-medium text-muted"><span>Active</span><Clock3 size={15} /></div>
-              <div className="mt-2 text-2xl font-medium tabular-nums text-fg">{quotationMetrics.active}</div>
-              <p className="mt-1 text-[11px] text-muted">Draft → sent pipeline</p>
-            </article>
-            <article className="rounded-card border border-line bg-panel px-4 py-4">
-              <div className="flex items-center justify-between text-xs font-medium text-muted"><span>Approved</span><BadgeCheck size={15} className="text-success" /></div>
-              <div className="mt-2 text-2xl font-medium tabular-nums text-success">{quotationMetrics.approved}</div>
-              <p className="mt-1 text-[11px] text-muted">Ready for invoice conversion</p>
-            </article>
-            <article className="rounded-card border border-line bg-panel px-4 py-4">
-              <div className="flex items-center justify-between text-xs font-medium text-muted"><span>Accepted</span><CheckCircle2 size={15} className="text-info" /></div>
-              <div className="mt-2 text-2xl font-medium tabular-nums text-info">{quotationMetrics.accepted}</div>
-              <p className="mt-1 text-[11px] text-muted">Client acceptance</p>
-            </article>
-            <article className="rounded-card border border-line bg-panel px-4 py-4">
-              <div className="flex items-center justify-between text-xs font-medium text-muted"><span>Pipeline value</span><WalletCards size={15} /></div>
-              <div className="mt-2 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(quotationMetrics.value, currency)}</div>
-              <p className="mt-1 text-[11px] text-muted">{usingDemoQuotations ? 'Sample workspace data' : 'Server-backed quotations'}</p>
-            </article>
+        <div className="space-y-5">
+          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4" aria-label="Quotation overview">
+            <FinanceMetricCard label="Total quotations" value={quotationMetrics.total} context="All records" icon={<FileText size={15} />} />
+            <FinanceMetricCard label="Active pipeline" value={quotationMetrics.active} context="Draft, review, approved, sent" icon={<Clock3 size={15} />} />
+            <FinanceMetricCard label="Pipeline value" value={formatFinanceCardAmount(quotationMetrics.value, currency)} context={usingDemoQuotations ? 'Demo workspace data' : 'Server-backed records'} icon={<WalletCards size={15} />} />
+            <FinanceMetricCard label="Accepted" value={quotationMetrics.accepted} context={quotationMetrics.approved + ' approved and ready to convert'} icon={<CheckCircle2 size={15} className="text-success" />} toneClassName="text-success" />
           </section>
 
-          <section className="rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="finance-quotations-title">
-            <div className="border-b border-line p-4 sm:p-5">
-              <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h2 id="finance-quotations-title" className="text-sm font-semibold text-fg">Quotations</h2>
-                    <span className="rounded-badge border border-accent/20 bg-accent/8 px-1.5 py-0.5 text-[10px] font-semibold text-accent-text">Finance</span>
+          <section className="grid gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+            <section className="rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="finance-quotations-title">
+              <div className="border-b border-line p-4 sm:p-5">
+                <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
+                  <div className="min-w-0">
+                    <h2 id="finance-quotations-title" className="text-sm font-semibold text-fg">Quotation ledger</h2>
+                    <p className="mt-1 text-xs leading-5 text-muted">Search and filter commercial opportunities before they move into invoicing.</p>
                   </div>
-                  <p className="mt-1 text-[11px] text-muted">{usingDemoQuotations ? 'Demo quotation data is enabled so the workspace remains tangible before production data is connected.' : 'Commercial quotations from the shared proposal service.'}</p>
+                  <div className="grid gap-2 sm:grid-cols-2 xl:flex xl:items-center">
+                    <label className="relative min-w-0 sm:min-w-[240px] xl:w-64"><span className="sr-only">Search quotations</span><Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" /><input value={quotationSearch} onChange={(event) => setQuotationSearch(event.target.value)} placeholder="Search quotation, client, company..." className={fieldClass + ' pl-9'} /></label>
+                    <CustomSelect value={quotationStatusFilter} onChange={(value) => setQuotationStatusFilter(value as typeof quotationStatusFilter)} options={[{ value: 'all', label: 'All statuses' }, { value: 'draft', label: 'Draft' }, { value: 'review', label: 'Internal review' }, { value: 'approved', label: 'Approved' }, { value: 'sent', label: 'Sent' }, { value: 'accepted', label: 'Accepted' }, { value: 'rejected', label: 'Rejected' }]} className="w-full sm:w-44" triggerClassName="h-9 min-h-9 w-full" aria-label="Quotation status filter" />
+                    <CustomSelect value={quotationSort} onChange={(value) => setQuotationSort(value as QuotationSort)} options={[{ value: 'newest', label: 'Newest' }, { value: 'oldest', label: 'Oldest' }, { value: 'value_high', label: 'Highest value' }, { value: 'value_low', label: 'Lowest value' }, { value: 'valid_until', label: 'Valid until' }]} className="w-full sm:w-44" triggerClassName="h-9 min-h-9 w-full" aria-label="Quotation sort" />
+                  </div>
                 </div>
-                <div className="flex w-full flex-col gap-2 xl:w-auto xl:flex-row">
-                  <label className="relative min-w-[220px] xl:w-72"><span className="sr-only">Search quotations</span><Search size={14} className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-muted" /><input value={quotationSearch} onChange={(event) => setQuotationSearch(event.target.value)} placeholder="Search quotation, client, or company..." className={fieldClass + ' pl-9 pr-3'} /></label>
-                  <CustomSelect value={quotationStatusFilter} onChange={(value) => setQuotationStatusFilter(value as typeof quotationStatusFilter)} options={[{ value: 'all', label: 'All statuses' }, { value: 'draft', label: 'Draft' }, { value: 'review', label: 'Internal review' }, { value: 'approved', label: 'Approved' }, { value: 'sent', label: 'Sent' }, { value: 'accepted', label: 'Accepted' }, { value: 'rejected', label: 'Rejected' }]} className="w-full xl:w-44" triggerClassName="h-9 min-h-9 w-full" aria-label="Quotation status filter" />
+                <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-line pt-3 text-[10px] text-muted">
+                  <span>{filteredQuotations.length} visible records</span><span className="h-1 w-1 rounded-full bg-line" /><span>{quotationMetrics.value ? formatFinanceCardAmount(quotationMetrics.value, currency) : '—'} active pipeline value</span>
+                  {(quotationSearch || quotationStatusFilter !== 'all') && <button type="button" onClick={() => { setQuotationSearch(''); setQuotationStatusFilter('all'); }} className="ml-auto rounded-chip px-2 py-1 text-[11px] text-muted hover:bg-bg hover:text-fg">Clear filters</button>}
                 </div>
               </div>
-              <div className="mt-3 flex items-center gap-2 border-t border-line pt-3">
-                <span className="text-[10px] uppercase tracking-[0.08em] text-muted">Quotation ledger</span>
-                <span className="h-1 w-1 rounded-full bg-line" />
-                <span className="text-[10px] text-muted">{filteredQuotations.length} visible records</span>
-                {quotationStatusFilter !== 'all' && <button type="button" onClick={() => setQuotationStatusFilter('all')} className="ml-auto rounded-chip px-2 py-1 text-[11px] text-muted hover:text-fg">Clear filter</button>}
-              </div>
-            </div>
-            <div className="overflow-x-auto custom-scrollbar">
-              {quotationLoading ? (
-                <div className="grid gap-2 p-5">{Array.from({ length: 5 }).map((_, index) => <div key={index} className="h-12 animate-pulse rounded-control bg-bg" />)}</div>
-              ) : filteredQuotations.length === 0 ? (
-                <div className="p-5"><EmptyState title="No quotations found" description="Adjust the search or status filter, or create a new quotation." action={canManageInvoices ? <button type="button" onClick={openCreateQuotation} className={primaryClass}><Plus size={14} />Create quotation</button> : undefined} /></div>
-              ) : (
-                <table className="w-full min-w-[1040px] border-collapse text-left text-xs">
-                  <thead className="bg-bg">
-                    <tr>
-                      <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Quotation #</th>
-                      <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client & Project</th>
-                      <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Created</th>
-                      <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Valid Until</th>
-                      <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount</th>
-                      <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Status</th>
-                      <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredQuotations.map((quotation) => {
-                      const statusToneClass = quotation.status === 'accepted'
-                        ? 'border-success/20 bg-success/10 text-success'
-                        : quotation.status === 'rejected'
-                          ? 'border-danger/20 bg-danger/10 text-danger'
-                          : quotation.status === 'sent'
-                            ? 'border-info/20 bg-info/10 text-info'
-                            : quotation.status === 'review' || quotation.status === 'approved'
-                              ? 'border-warning/20 bg-warning/10 text-warning'
-                              : 'border-line bg-bg text-muted';
-                      return (
-                        <tr key={quotation.id} className="group border-t border-line transition-colors hover:bg-bg">
-                          <td className="px-4 py-3 sm:px-5">
-                            <button type="button" onClick={() => setQuotationDetail(quotation)} className="font-medium tabular-nums text-fg hover:text-accent-text">{quotation.quotationNumber}</button>
-                            <p className="mt-1 text-[11px] text-muted">{quotation.currency}</p>
-                          </td>
-                          <td className="px-4 py-3"><div className="font-medium text-fg">{quotation.clientCompany}</div><div className="mt-0.5 text-[11px] text-muted">{quotation.title} · {quotation.clientName}</div></td>
-                          <td className="px-4 py-3 tabular-nums text-muted">{quotation.createdAt}</td>
-                          <td className="px-4 py-3 tabular-nums text-muted">{quotation.validUntil}</td>
-                          <td className="px-4 py-3 text-right"><div className="font-semibold tabular-nums text-fg">{formatNativeAmount(quotation.total, quotation.currency, true)}</div><div className="mt-0.5 text-[10px] text-muted">{quotation.owner}</div></td>
-                          <td className="px-4 py-3"><CustomSelect value={quotation.status} onChange={(value) => void updateQuotationStatus(quotation, value as FinanceQuotationStatus)} options={getQuotationStatusOptions(quotation.status)} className="w-36" triggerClassName={'h-8 min-h-8 w-full border ' + statusToneClass} aria-label={'Status for ' + quotation.quotationNumber} /></td>
-                          <td className="px-4 py-3 text-right">
-                            <div className="flex items-center justify-end gap-1 opacity-85 group-hover:opacity-100">
-                              <button type="button" onClick={() => setQuotationDetail(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-panel-hover hover:text-fg" aria-label="View quotation" title="View quotation"><Eye size={15} /></button>
-                              {canManageInvoices && <button type="button" onClick={() => openEditQuotation(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-panel-hover hover:text-fg" aria-label="Edit quotation" title="Edit quotation"><Edit3 size={14} /></button>}
-                              {canManageInvoices && <button type="button" onClick={() => void convertQuotationToInvoice(quotation)} disabled={Boolean(quotation.invoiceId) || quotation.status !== 'approved'} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-panel-hover hover:text-fg disabled:cursor-not-allowed disabled:opacity-40" aria-label="Convert quotation to invoice" title={quotation.invoiceId ? 'Invoice already created' : quotation.status === 'approved' ? 'Convert approved quotation to invoice' : 'Only approved quotations can be converted'}><Receipt size={15} aria-hidden="true" /></button>}
+              <div className="overflow-x-auto custom-scrollbar">
+                {quotationLoading ? (
+                  <div className="grid gap-2 p-5">{Array.from({ length: 5 }).map((_, index) => <div key={index} className="h-14 animate-pulse rounded-control bg-bg" />)}</div>
+                ) : filteredQuotations.length === 0 ? (
+                  <div className="p-5"><EmptyState title="No quotations found" description="Adjust the search or status filter, or create a new quotation." action={canManageInvoices ? <button type="button" onClick={openCreateQuotation} className={primaryClass}><Plus size={14} />Create quotation</button> : undefined} /></div>
+                ) : (
+                  <table className="w-full min-w-[900px] border-collapse text-xs">
+                    <thead className="bg-bg"><tr>
+                      <th className="px-5 py-3 text-left text-[10px] font-semibold text-muted">Quotation</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-semibold text-muted">Value</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-semibold text-muted">Timeline</th>
+                      <th className="px-4 py-3 text-left text-[10px] font-semibold text-muted">Status</th>
+                      <th className="px-5 py-3 text-right text-[10px] font-semibold text-muted">Actions</th>
+                    </tr></thead>
+                    <tbody>
+                      {filteredQuotations.map((quotation) => {
+                        const statusToneClass = quotation.status === 'accepted'
+                          ? 'border-success/20 bg-success/10 text-success'
+                          : quotation.status === 'rejected'
+                            ? 'border-danger/20 bg-danger/10 text-danger'
+                            : quotation.status === 'sent'
+                              ? 'border-info/20 bg-info/10 text-info'
+                              : quotation.status === 'review' || quotation.status === 'approved'
+                                ? 'border-warning/20 bg-warning/10 text-warning'
+                                : 'border-line bg-bg text-muted';
+                        return (
+                          <tr key={quotation.id} className="group border-t border-line hover:bg-bg">
+                            <td className="px-5 py-4"><button type="button" onClick={() => setQuotationDetail(quotation)} className="font-semibold tabular-nums text-fg hover:text-accent-text">{quotation.quotationNumber}</button><p className="mt-1 max-w-[34ch] truncate text-xs text-fg">{quotation.title}</p><p className="mt-0.5 text-[10px] text-muted">{quotation.clientCompany} · {quotation.clientName}</p></td>
+                            <td className="px-4 py-4"><p className="font-semibold tabular-nums text-fg">{formatNativeAmount(quotation.total, quotation.currency, true)}</p><p className="mt-1 text-[10px] text-muted">Owner · {quotation.owner}</p></td>
+                            <td className="px-4 py-4"><p className="tabular-nums text-fg">Created {quotation.createdAt}</p><p className="mt-1 tabular-nums text-[10px] text-muted">Valid until {quotation.validUntil}</p></td>
+                            <td className="px-4 py-4"><CustomSelect value={quotation.status} onChange={(value) => void updateQuotationStatus(quotation, value as FinanceQuotationStatus)} options={getQuotationStatusOptions(quotation.status)} className="w-40" triggerClassName={'h-8 min-h-8 w-full border ' + statusToneClass} aria-label={'Status for ' + quotation.quotationNumber} /></td>
+                            <td className="px-5 py-4 text-right"><div className="flex items-center justify-end gap-1">
+                              <button type="button" onClick={() => setQuotationDetail(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="View quotation" title="View quotation"><Eye size={15} /></button>
+                              {canManageInvoices && <button type="button" onClick={() => openEditQuotation(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Edit quotation" title="Edit quotation"><Edit3 size={14} /></button>}
+                              {canManageInvoices && <button type="button" onClick={() => void convertQuotationToInvoice(quotation)} disabled={Boolean(quotation.invoiceId) || quotation.status !== 'approved'} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg disabled:cursor-not-allowed disabled:opacity-40" aria-label="Convert quotation to invoice" title={quotation.invoiceId ? 'Invoice already created' : quotation.status === 'approved' ? 'Convert approved quotation to invoice' : 'Only approved quotations can be converted'}><Receipt size={15} /></button>}
                               {canManageInvoices && <button type="button" onClick={() => void deleteQuotation(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Delete quotation" title="Delete quotation"><Trash2 size={14} /></button>}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              )}
-            </div>
+                            </div></td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </section>
+
+            <section className="rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="quotation-pipeline-title">
+              <div className="border-b border-line p-4 sm:p-5"><h2 id="quotation-pipeline-title" className="text-sm font-semibold text-fg">Pipeline stages</h2><p className="mt-1 text-xs leading-5 text-muted">Commercial movement before invoice conversion.</p></div>
+              <div className="p-4 sm:p-5 space-y-3">
+                {(['draft','review','approved','sent','accepted','rejected'] as FinanceQuotationStatus[]).map((status) => {
+                  const count = quotations.filter((quotation) => quotation.status === status).length;
+                  const value = quotations.filter((quotation) => quotation.status === status).reduce((sum, quotation) => sum + quotation.total, 0);
+                  return <div key={status} className="rounded-control border border-line bg-bg px-3 py-3"><div className="flex items-center justify-between gap-3"><span className="text-xs font-medium text-fg">{quotationStatusLabel(status)}</span><span className="text-xs font-semibold tabular-nums text-fg">{count}</span></div><p className="mt-1 text-[10px] tabular-nums text-muted">{formatNativeAmount(value, currency, true)}</p><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel"><div className="h-full rounded-full bg-series-3" style={{ width: (quotationMetrics.value > 0 ? Math.min(100, (value / quotationMetrics.value) * 100) : 0) + '%' }} /></div></div>;
+                })}
+              </div>
+            </section>
           </section>
-        </div>
-      ) : financeView === 'income-expenses' ? (
+        </div>      ) : financeView === 'income-expenses' ? (
         <div className="space-y-6">
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Income and expenses summary">
             <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Income YTD</span><WalletCards size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(ytdCollected, currency)}</p><p className="mt-2 text-xs text-muted">Collection rate {ytdCollectionRate.toFixed(1)}%</p></article>
