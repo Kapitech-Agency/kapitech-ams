@@ -2375,6 +2375,136 @@ export const AdminInvoicing: React.FC = () => {
         </div>
       )}
       <Modal
+        open={quotationModalOpen}
+        onClose={() => {
+          if (!quotationSaving) {
+            setQuotationModalOpen(false);
+            resetQuotationForm();
+          }
+        }}
+        size="lg"
+        title={editingQuotation ? 'Edit quotation' : 'Create quotation'}
+        description="Create a commercial quotation from the Finance workspace. Demo mode keeps the record local until server data is available."
+        closeOnOutsideClick={!quotationSaving}
+        footer={
+          <>
+            <button type="button" onClick={() => { setQuotationModalOpen(false); resetQuotationForm(); }} className={actionClass} disabled={quotationSaving}>Cancel</button>
+            <button type="submit" form="finance-quotation-form" className={primaryClass} disabled={quotationSaving}>
+              {quotationSaving ? 'Saving...' : editingQuotation ? 'Save quotation' : 'Create quotation'}
+            </button>
+          </>
+        }
+      >
+        <form id="finance-quotation-form" onSubmit={saveQuotation} className="space-y-5">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <label htmlFor="finance-quotation-title" className="mb-1.5 block text-xs font-medium text-muted">Quotation title *</label>
+              <input id="finance-quotation-title" required maxLength={180} value={quotationTitle} onChange={(event) => setQuotationTitle(event.target.value)} className={fieldClass} placeholder="e.g. Enterprise website redesign" />
+            </div>
+            <div>
+              <label htmlFor="finance-quotation-client" className="mb-1.5 block text-xs font-medium text-muted">Client name *</label>
+              <input id="finance-quotation-client" required maxLength={120} value={quotationClientName} onChange={(event) => setQuotationClientName(event.target.value)} className={fieldClass} placeholder="Contact name" />
+            </div>
+            <div>
+              <label htmlFor="finance-quotation-company" className="mb-1.5 block text-xs font-medium text-muted">Company *</label>
+              <input id="finance-quotation-company" required maxLength={160} value={quotationClientCompany} onChange={(event) => setQuotationClientCompany(event.target.value)} className={fieldClass} placeholder="Company / account" />
+            </div>
+            <div>
+              <label htmlFor="finance-quotation-amount" className="mb-1.5 block text-xs font-medium text-muted">Quoted amount *</label>
+              <input id="finance-quotation-amount" required min="0.01" max="1000000000000" step="0.01" type="number" value={quotationAmount || ''} onChange={(event) => setQuotationAmount(Number(event.target.value))} className={fieldClass} />
+            </div>
+            <div>
+              <label htmlFor="finance-quotation-valid-until" className="mb-1.5 block text-xs font-medium text-muted">Valid until *</label>
+              <input id="finance-quotation-valid-until" required type="date" value={quotationValidUntil} onChange={(event) => setQuotationValidUntil(event.target.value)} className={fieldClass} />
+            </div>
+            {editingQuotation && (
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-muted">Status</label>
+                <CustomSelect
+                  value={quotationStatus}
+                  onChange={(value) => setQuotationStatus(value as FinanceQuotationStatus)}
+                  options={[
+                    { value: 'draft', label: 'Draft' },
+                    { value: 'review', label: 'Internal review' },
+                    { value: 'approved', label: 'Approved' },
+                    { value: 'sent', label: 'Sent' },
+                    { value: 'accepted', label: 'Accepted' },
+                    { value: 'rejected', label: 'Rejected' }
+                  ]}
+                  className="w-full"
+                  triggerClassName="h-10 min-h-10 w-full"
+                />
+              </div>
+            )}
+          </div>
+          <div className="rounded-card border border-line bg-bg px-4 py-3">
+            <div className="flex items-center justify-between gap-3 text-xs">
+              <span className="text-muted">Preview total</span>
+              <span className="font-semibold tabular-nums text-fg">{formatNativeAmount(Number(quotationAmount) || 0, currency, true)}</span>
+            </div>
+            <p className="mt-1 text-[10px] text-muted">Currency follows the active Finance currency switch.</p>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal
+        open={!!quotationDetail}
+        onClose={() => setQuotationDetail(null)}
+        size="lg"
+        title={quotationDetail ? quotationDetail.quotationNumber : 'Quotation'}
+        description={quotationDetail ? quotationDetail.clientCompany : undefined}
+        footer={
+          quotationDetail ? (
+            <div className="flex w-full flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => openEditQuotation(quotationDetail)} className={actionClass}><Edit3 size={14} />Edit</button>
+                <button type="button" onClick={() => exportQuotationsCsv()} className={actionClass}><Download size={14} />Export list</button>
+              </div>
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => void convertQuotationToInvoice(quotationDetail)} disabled={Boolean(quotationDetail.invoiceId) || quotationDetail.status === 'rejected'} className={primaryClass}>
+                  <Receipt size={14} />
+                  {quotationDetail.invoiceId ? 'Invoice linked' : 'Convert to invoice'}
+                </button>
+              </div>
+            </div>
+          ) : undefined
+        }
+      >
+        {quotationDetail && (
+          <div className="space-y-5">
+            <div className="flex flex-col gap-4 rounded-card border border-line bg-bg p-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.08em] text-muted">Quotation</p>
+                <p className="mt-1 text-lg font-semibold text-fg">{quotationDetail.quotationNumber}</p>
+                <p className="mt-1 text-xs text-muted">{quotationDetail.title}</p>
+              </div>
+              <span className="inline-flex min-h-7 items-center rounded-badge border border-line bg-panel px-2 py-1 text-xs font-semibold text-fg">{quotationStatusLabel(quotationDetail.status)}</span>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] uppercase tracking-[0.08em] text-muted">Client</p><p className="mt-1 text-sm font-medium text-fg">{quotationDetail.clientCompany}</p><p className="mt-0.5 text-xs text-muted">{quotationDetail.clientName}</p></div>
+              <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] uppercase tracking-[0.08em] text-muted">Commercial value</p><p className="mt-1 text-sm font-semibold tabular-nums text-fg">{formatNativeAmount(quotationDetail.total, quotationDetail.currency, true)}</p><p className="mt-0.5 text-xs text-muted">Valid until {quotationDetail.validUntil}</p></div>
+              <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] uppercase tracking-[0.08em] text-muted">Owner</p><p className="mt-1 text-sm font-medium text-fg">{quotationDetail.owner}</p></div>
+              <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] uppercase tracking-[0.08em] text-muted">Created</p><p className="mt-1 text-sm font-medium text-fg">{quotationDetail.createdAt}</p></div>
+            </div>
+            <div className="rounded-card border border-line bg-panel p-4">
+              <p className="text-xs font-semibold text-fg">Next actions</p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                {([
+                  ['review', 'Internal review'],
+                  ['approved', 'Approve'],
+                  ['sent', 'Mark sent']
+                ] as Array<[FinanceQuotationStatus, string]>).map(([status, label]) => (
+                  <button key={status} type="button" onClick={() => void updateQuotationStatus(quotationDetail, status)} className={actionClass + ' w-full'} disabled={!canManageInvoices}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal
         open={invoiceModalOpen}
         onClose={() => {
           requestCloseInvoice();
