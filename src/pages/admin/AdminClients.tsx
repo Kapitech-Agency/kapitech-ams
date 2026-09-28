@@ -326,6 +326,7 @@ export const AdminClients: React.FC = () => {
 
     const clientData: AgencyClient = {
       id: editingClient?.id || 'client_' + Date.now().toString(36),
+      slug: editingClient?.slug || createClientSlug(company.trim(), editingClient?.id || 'client_' + Date.now().toString(36)),
       name: name.trim(),
       company: company.trim(),
       email: email.trim(),
