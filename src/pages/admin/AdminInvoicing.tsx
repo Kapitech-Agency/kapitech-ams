@@ -8,6 +8,7 @@ import {
   CalendarDays,
   Check,
   CheckCircle2,
+  Copy,
   BadgeCheck,
   BarChart3,
   Clock3,
@@ -16,7 +17,6 @@ import {
   Eye,
   FileText,
   Hourglass,
-  MoreHorizontal,
   Plus,
   Receipt,
   RefreshCw,
@@ -121,9 +121,25 @@ const getDaysUntilDue = (value: string) => {
   return Math.ceil((due.getTime() - today.getTime()) / 86400000);
 };
 
+const isPastDueInvoice = (invoice: AgencyInvoice) => {
+  if (invoice.status === 'paid' || invoice.status === 'cancelled') return false;
+  const days = getDaysUntilDue(invoice.dueDate);
+  return days < 0;
+};
+
 const isDueSoonInvoice = (invoice: AgencyInvoice) => {
   const days = getDaysUntilDue(invoice.dueDate);
-  return invoice.status !== 'paid' && invoice.status !== 'cancelled' && days >= 0 && days <= 7;
+  return !isPastDueInvoice(invoice) && invoice.status !== 'paid' && invoice.status !== 'cancelled' && days >= 0 && days <= 7;
+};
+
+type FinanceIncomeRow = {
+  id: string;
+  invoiceId: string;
+  invoiceNumber: string;
+  clientCompany: string;
+  date: string;
+  amount: number;
+  currency: CurrencyCode;
 };
 
 const isRetainerInvoice = (invoice: AgencyInvoice) =>
@@ -428,6 +444,8 @@ export const AdminInvoicing: React.FC = () => {
   const [updatingInvoiceId, setUpdatingInvoiceId] = useState<string | null>(null);
 
   const [detailInvoice, setDetailInvoice] = useState<AgencyInvoice | null>(null);
+  const [reminderInvoice, setReminderInvoice] = useState<AgencyInvoice | null>(null);
+  const [dunningOpen, setDunningOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{ type: 'invoice' | 'expense'; id: string; label: string } | null>(null);
   const [confirmingAction, setConfirmingAction] = useState(false);
   const [discardPrompt, setDiscardPrompt] = useState<'invoice' | 'expense' | 'payment' | null>(null);
@@ -438,6 +456,11 @@ export const AdminInvoicing: React.FC = () => {
   const loadRequestId = React.useRef(0);
 
   const [usingDemoFinance, setUsingDemoFinance] = useState(false);
+  const [usingDemoInvoices, setUsingDemoInvoices] = useState(false);
+  const [usingDemoExpenses, setUsingDemoExpenses] = useState(false);
+  const [incomeSearch, setIncomeSearch] = useState('');
+  const [incomePage, setIncomePage] = useState(1);
+  const incomePageSize = 10;
   const [quotations, setQuotations] = useState<FinanceQuotation[]>(STITCH_FINANCE_QUOTATIONS);
   const [usingDemoQuotations, setUsingDemoQuotations] = useState(true);
   const [quotationLoading, setQuotationLoading] = useState(true);
@@ -517,11 +540,9 @@ export const AdminInvoicing: React.FC = () => {
 
       if (requestId !== loadRequestId.current) return;
 
-      if (shouldUseDemoInvoices || shouldUseDemoExpenses) {
-        setUsingDemoFinance(true);
-      } else {
-        setUsingDemoFinance(false);
-      }
+      setUsingDemoInvoices(shouldUseDemoInvoices);
+      setUsingDemoExpenses(shouldUseDemoExpenses);
+      setUsingDemoFinance(shouldUseDemoInvoices || shouldUseDemoExpenses);
 
       setInvoices(nextInvoices);
       setExpenses(nextExpenses);
@@ -635,10 +656,7 @@ export const AdminInvoicing: React.FC = () => {
     [currencyInvoices, currencyExpenses]
   );
 
-  const reportingQuarter = useMemo(() => {
-    const dates = currencyInvoices.map((invoice) => invoice.issueDate).filter(Boolean).sort();
-    return getQuarterRange(dates[dates.length - 1] || new Date());
-  }, [currencyInvoices]);
+  const reportingQuarter = useMemo(() => getQuarterRange(new Date()), []);
 
   const currentYear = new Date().getFullYear();
   const yearStart = new Date(currentYear, 0, 1);
@@ -738,9 +756,10 @@ export const AdminInvoicing: React.FC = () => {
     () => currencyInvoices
       .filter((invoice) => invoice.status !== 'cancelled')
       .reduce((sum, invoice) => {
-        const paidRatio = invoice.total > 0
-          ? Math.min(1, Number(invoice.amountPaid || 0) / Number(invoice.total))
-          : 0;
+        const collected = Array.isArray(invoice.payments) && invoice.payments.length
+          ? invoice.payments.reduce((paymentSum, payment) => paymentSum + (Number(payment.amount) || 0), 0)
+          : Number(invoice.amountPaid || 0);
+        const paidRatio = invoice.total > 0 ? Math.min(1, collected / Number(invoice.total)) : 0;
         return sum + Number(invoice.taxAmount || 0) * paidRatio;
       }, 0),
     [currencyInvoices]
@@ -754,7 +773,12 @@ export const AdminInvoicing: React.FC = () => {
   );
 
   const retainerCollected = useMemo(
-    () => retainerInvoices.reduce((sum, invoice) => sum + Number(invoice.amountPaid || 0), 0),
+    () => retainerInvoices.reduce((sum, invoice) => {
+      const collected = Array.isArray(invoice.payments) && invoice.payments.length
+        ? invoice.payments.reduce((paymentSum, payment) => paymentSum + (Number(payment.amount) || 0), 0)
+        : Number(invoice.amountPaid || 0);
+      return sum + collected;
+    }, 0),
     [retainerInvoices]
   );
 
@@ -841,7 +865,7 @@ export const AdminInvoicing: React.FC = () => {
         const daysUntilDue = Math.ceil((due.getTime() - today.getTime()) / 86400000);
         return { invoice, daysUntilDue };
       })
-      .filter(({ daysUntilDue }) => daysUntilDue <= 7)
+      .filter(({ invoice, daysUntilDue }) => daysUntilDue <= 7 || isPastDueInvoice(invoice))
       .sort((a, b) => a.daysUntilDue - b.daysUntilDue);
   }, [currencyInvoices]);
 
@@ -851,6 +875,58 @@ export const AdminInvoicing: React.FC = () => {
   })), [ledgerInvoices]);
 
   const dueSoonCount = useMemo(() => ledgerInvoices.filter(isDueSoonInvoice).length, [ledgerInvoices]);
+
+  const incomeRows = useMemo<FinanceIncomeRow[]>(() => {
+    const rows: FinanceIncomeRow[] = [];
+    currencyInvoices
+      .filter((invoice) => invoice.status !== 'cancelled')
+      .forEach((invoice) => {
+        const payments = Array.isArray(invoice.payments) ? invoice.payments : [];
+        if (payments.length) {
+          payments.forEach((payment) => {
+            const date = String(payment.date || '');
+            if (!date) return;
+            rows.push({
+              id: String(payment.id || invoice.id + '-' + date),
+              invoiceId: invoice.id,
+              invoiceNumber: invoice.invoiceNumber,
+              clientCompany: invoice.clientCompany || invoice.clientName,
+              date,
+              amount: Number(payment.amount) || 0,
+              currency: invoice.currency
+            });
+          });
+        } else if (invoice.paidDate && Number(invoice.amountPaid || 0) > 0) {
+          rows.push({
+            id: invoice.id + '-paid',
+            invoiceId: invoice.id,
+            invoiceNumber: invoice.invoiceNumber,
+            clientCompany: invoice.clientCompany || invoice.clientName,
+            date: invoice.paidDate,
+            amount: Number(invoice.amountPaid || 0),
+            currency: invoice.currency
+          });
+        }
+      });
+    const query = incomeSearch.trim().toLowerCase();
+    return rows
+      .filter((row) => !query || [row.invoiceNumber, row.clientCompany, row.date].join(' ').toLowerCase().includes(query))
+      .sort((a, b) => b.date.localeCompare(a.date));
+  }, [currencyInvoices, incomeSearch]);
+
+  const paginatedIncomeRows = useMemo(() => {
+    const start = (incomePage - 1) * incomePageSize;
+    return incomeRows.slice(start, start + incomePageSize);
+  }, [incomeRows, incomePage]);
+  const incomePageCount = Math.max(1, Math.ceil(incomeRows.length / incomePageSize));
+
+  useEffect(() => {
+    setIncomePage(1);
+  }, [incomeSearch, currency]);
+
+  useEffect(() => {
+    setIncomePage((page) => Math.min(page, incomePageCount));
+  }, [incomePageCount]);
 
   const filteredExpenses = useMemo(() => {
     const query = expenseSearch.trim().toLowerCase();
@@ -908,6 +984,27 @@ export const AdminInvoicing: React.FC = () => {
     setDueDate(getDateInputValue(14));
     setPaymentTerms('');
     setInvoiceNotes('');
+  };
+
+  const syncDemoFinanceMetrics = (nextInvoices: AgencyInvoice[], nextExpenses: FinanceExpense[]) => {
+    const metrics = computeFinancialMetrics(
+      nextInvoices.filter((invoice) => invoice.currency === currency),
+      nextExpenses.filter((expense) => (expense.currency || 'IDR') === currency)
+    );
+    setServerMetrics({
+      currency,
+      totalRevenueCollected: metrics.totalPaidRevenue,
+      totalBilled: metrics.totalPaidRevenue + metrics.totalOutstanding + metrics.totalOverdue,
+      totalOutstanding: metrics.totalOutstanding,
+      totalExpense: metrics.totalExpenses,
+      netProfit: metrics.netOperatingProfit,
+      profitMargin: String(metrics.netMarginPercent),
+      totalInvoicesCount: metrics.totalInvoicesCount,
+      paidCount: metrics.paidCount,
+      partiallyPaidCount: metrics.partiallyPaidCount,
+      overdueCount: metrics.overdueCount,
+      draftCount: nextInvoices.filter((invoice) => invoice.status === 'draft' && invoice.currency === currency).length
+    });
   };
 
   const openCreateInvoice = () => {
@@ -1131,7 +1228,7 @@ export const AdminInvoicing: React.FC = () => {
       };
 
 
-      if (usingDemoFinance) {
+      if (usingDemoInvoices) {
         const now = new Date().toISOString();
         const localTotals = computeInvoiceTotals(validItems, numericTax, numericDiscount);
         const localInvoice: AgencyInvoice = {
@@ -1167,21 +1264,7 @@ export const AdminInvoicing: React.FC = () => {
           ? invoices.map((invoice) => invoice.id === editingInvoice.id ? localInvoice : invoice)
           : [localInvoice, ...invoices];
         setInvoices(nextInvoices);
-        const derived = computeFinancialMetrics(nextInvoices, expenses);
-        setServerMetrics({
-          currency,
-          totalRevenueCollected: derived.totalPaidRevenue,
-          totalBilled: derived.totalPaidRevenue + derived.totalOutstanding + derived.totalOverdue,
-          totalOutstanding: derived.totalOutstanding,
-          totalExpense: derived.totalExpenses,
-          netProfit: derived.netOperatingProfit,
-          profitMargin: String(derived.netMarginPercent),
-          totalInvoicesCount: derived.totalInvoicesCount,
-          paidCount: derived.paidCount,
-          partiallyPaidCount: derived.partiallyPaidCount,
-          overdueCount: derived.overdueCount,
-          draftCount: nextInvoices.filter((invoice) => invoice.status === 'draft').length
-        });
+        syncDemoFinanceMetrics(nextInvoices, expenses);
         setInvoiceModalOpen(false);
         setInvoiceDirty(false);
         showNotice('success', editingInvoice ? 'Demo invoice updated.' : 'Demo invoice created.');
@@ -1216,26 +1299,12 @@ export const AdminInvoicing: React.FC = () => {
     if (!canManageInvoices || updatingInvoiceId || invoice.status === nextStatus || nextStatus === 'cancelled') return;
     setUpdatingInvoiceId(invoice.id);
     try {
-      if (usingDemoFinance) {
+      if (usingDemoInvoices) {
         const nextInvoices = invoices.map((item) => item.id === invoice.id
           ? { ...item, status: nextStatus, updatedAt: new Date().toISOString(), paidDate: nextStatus === 'paid' ? getDateInputValue() : item.paidDate }
           : item);
         setInvoices(nextInvoices);
-        const derived = computeFinancialMetrics(nextInvoices, expenses);
-        setServerMetrics({
-          currency,
-          totalRevenueCollected: derived.totalPaidRevenue,
-          totalBilled: derived.totalPaidRevenue + derived.totalOutstanding + derived.totalOverdue,
-          totalOutstanding: derived.totalOutstanding,
-          totalExpense: derived.totalExpenses,
-          netProfit: derived.netOperatingProfit,
-          profitMargin: String(derived.netMarginPercent),
-          totalInvoicesCount: derived.totalInvoicesCount,
-          paidCount: derived.paidCount,
-          partiallyPaidCount: derived.partiallyPaidCount,
-          overdueCount: derived.overdueCount,
-          draftCount: nextInvoices.filter((item) => item.status === 'draft').length
-        });
+        syncDemoFinanceMetrics(nextInvoices, expenses);
         showNotice('success', 'Demo invoice status updated.');
         return;
       }
@@ -1297,7 +1366,7 @@ export const AdminInvoicing: React.FC = () => {
 
     setSavingPayment(true);
     try {
-      if (usingDemoFinance) {
+      if (usingDemoInvoices) {
         const nextAmountPaid = Math.min(Number(paymentInvoice.total), Number(paymentInvoice.amountPaid || 0) + amount);
         const nextBalance = Math.max(0, Number(paymentInvoice.total) - nextAmountPaid);
         const nextStatus: InvoiceStatus = nextBalance === 0 ? 'paid' : 'partially_paid';
@@ -1321,6 +1390,7 @@ export const AdminInvoicing: React.FC = () => {
             }
           : item);
         setInvoices(nextInvoices);
+        syncDemoFinanceMetrics(nextInvoices, expenses);
         setPaymentInvoice(null);
         setPaymentIdempotencyKey('');
         setPaymentDirty(false);
@@ -1379,7 +1449,7 @@ export const AdminInvoicing: React.FC = () => {
 
     setSavingExpense(true);
     try {
-      if (usingDemoFinance) {
+      if (usingDemoExpenses) {
         const localExpense: FinanceExpense = {
           id: 'exp_slug_' + Date.now(),
           type: expenseType,
@@ -1392,7 +1462,9 @@ export const AdminInvoicing: React.FC = () => {
           createdAt: new Date().toISOString(),
           version: 1
         };
-        setExpenses((current) => [localExpense, ...current]);
+        const nextExpenses = [localExpense, ...expenses];
+        setExpenses(nextExpenses);
+        syncDemoFinanceMetrics(invoices, nextExpenses);
         setExpenseModalOpen(false);
         setExpenseIdempotencyKey('');
         setExpenseDirty(false);
@@ -1430,13 +1502,17 @@ export const AdminInvoicing: React.FC = () => {
     if (!confirmAction || confirmingAction) return;
     setConfirmingAction(true);
     try {
-      if (usingDemoFinance) {
+      if ((confirmAction.type === 'invoice' && usingDemoInvoices) || (confirmAction.type === 'expense' && usingDemoExpenses)) {
         if (confirmAction.type === 'invoice') {
-          setInvoices((current) => current.map((item) => item.id === confirmAction.id ? { ...item, status: 'cancelled', updatedAt: new Date().toISOString() } : item));
+          const nextInvoices = invoices.map((item) => item.id === confirmAction.id ? { ...item, status: 'cancelled' as InvoiceStatus, updatedAt: new Date().toISOString() } : item);
+          setInvoices(nextInvoices);
+          syncDemoFinanceMetrics(nextInvoices, expenses);
           setDetailInvoice((current) => current?.id === confirmAction.id ? null : current);
           showNotice('success', 'Demo invoice cancelled.');
         } else {
-          setExpenses((current) => current.filter((item) => item.id !== confirmAction.id));
+          const nextExpenses = expenses.filter((item) => item.id !== confirmAction.id);
+          setExpenses(nextExpenses);
+          syncDemoFinanceMetrics(invoices, nextExpenses);
           showNotice('success', 'Demo expense voided.');
         }
         setConfirmAction(null);
@@ -1508,7 +1584,7 @@ export const AdminInvoicing: React.FC = () => {
     today.setHours(0, 0, 0, 0);
 
     const buckets = [
-      { label: '0–30 Days', tone: 'success' as const, amount: 0, count: 0 },
+      { label: 'Current / 0–30 Days', tone: 'success' as const, amount: 0, count: 0 },
       { label: '31–60 Days', tone: 'warning' as const, amount: 0, count: 0 },
       { label: '60+ Days', tone: 'danger' as const, amount: 0, count: 0 }
     ];
@@ -1536,7 +1612,7 @@ export const AdminInvoicing: React.FC = () => {
 
   const overdueBalance = useMemo(
     () => currencyInvoices
-      .filter((invoice) => invoice.status === 'overdue')
+      .filter(isPastDueInvoice)
       .reduce((sum, invoice) => sum + Math.max(0, Number(invoice.balanceDue ?? (invoice.total - (invoice.amountPaid || 0)))), 0),
     [currencyInvoices]
   );
@@ -1570,12 +1646,37 @@ export const AdminInvoicing: React.FC = () => {
   );
 
   const criticalOverdueCount = useMemo(
-    () => currencyInvoices.filter((invoice) => invoice.status === 'overdue' && getDaysUntilDue(invoice.dueDate) > 60).length,
+    () => currencyInvoices.filter((invoice) => isPastDueInvoice(invoice) && getDaysUntilDue(invoice.dueDate) < -60).length,
     [currencyInvoices]
   );
 
   const operatingMarginValue = serverMetrics ? Number.parseFloat(serverMetrics.profitMargin) : NaN;
   const operatingMarginHealthy = Number.isFinite(operatingMarginValue) && operatingMarginValue >= 35;
+
+  const getQuotationStatusOptions = (status: FinanceQuotationStatus) => {
+    const options: Array<{ value: FinanceQuotationStatus; label: string }> = [
+      { value: status, label: quotationStatusLabel(status) }
+    ];
+    if (status === 'draft') options.push({ value: 'review', label: 'Internal Review' });
+    if (status === 'review') options.push(
+      { value: 'draft', label: 'Draft' },
+      { value: 'approved', label: 'Approved' },
+      { value: 'rejected', label: 'Rejected' }
+    );
+    if (status === 'approved') options.push(
+      { value: 'review', label: 'Internal Review' },
+      { value: 'sent', label: 'Sent' },
+      { value: 'rejected', label: 'Rejected' }
+    );
+    if (status === 'sent') options.push(
+      { value: 'approved', label: 'Approved' },
+      { value: 'accepted', label: 'Accepted' },
+      { value: 'rejected', label: 'Rejected' }
+    );
+    if (status === 'accepted') options.push({ value: 'sent', label: 'Sent' });
+    if (status === 'rejected') options.push({ value: 'review', label: 'Internal Review' });
+    return options;
+  };
 
   const quotationStatusLabel = (status: FinanceQuotationStatus) => {
     const labels: Record<FinanceQuotationStatus, string> = {
@@ -1609,6 +1710,7 @@ export const AdminInvoicing: React.FC = () => {
   const quotationMetrics = useMemo(() => ({
     total: quotations.length,
     active: quotations.filter((quotation) => ['draft', 'review', 'approved', 'sent'].includes(quotation.status)).length,
+    approved: quotations.filter((quotation) => quotation.status === 'approved' && !quotation.invoiceId).length,
     accepted: quotations.filter((quotation) => quotation.status === 'accepted').length,
     value: quotations.filter((quotation) => quotation.status !== 'rejected').reduce((sum, quotation) => sum + quotation.total, 0)
   }), [quotations]);
@@ -1647,6 +1749,11 @@ export const AdminInvoicing: React.FC = () => {
       showNotice('danger', language === 'id'
         ? 'Judul, klien, perusahaan, dan nominal quotation wajib diisi.'
         : 'Quotation title, client, company, and a valid amount are required.');
+      return;
+    }
+
+    if (editingQuotation && quotationStatus !== editingQuotation.status && !getQuotationStatusOptions(editingQuotation.status).some((option) => option.value === quotationStatus)) {
+      showNotice('danger', language === 'id' ? 'Perubahan status quotation tidak mengikuti alur approval.' : 'That quotation status change is not allowed by the approval workflow.');
       return;
     }
 
@@ -1763,13 +1870,13 @@ export const AdminInvoicing: React.FC = () => {
   };
 
   const convertQuotationToInvoice = async (quotation: FinanceQuotation) => {
-    if (!canManageInvoices || quotation.invoiceId) return;
+    if (!canManageInvoices || quotation.invoiceId || quotation.status !== 'approved') return;
 
     if (usingDemoQuotations) {
       const updatedQuotation = { ...quotation, status: 'accepted' as FinanceQuotationStatus, invoiceId: 'slug-inv-' + Date.now() };
       setQuotations((current) => current.map((item) => item.id === quotation.id ? updatedQuotation : item));
       setQuotationDetail((current) => current?.id === quotation.id ? updatedQuotation : current);
-      showNotice('success', 'Quotation converted to a demo invoice reference.');
+      showNotice('success', 'Approved quotation converted to a demo invoice reference.');
       return;
     }
 
@@ -1950,6 +2057,12 @@ export const AdminInvoicing: React.FC = () => {
                   <Download size={14} />
                   Export CSV
                 </button>
+                {financeView === 'invoices' && canManageInvoices && (
+                  <button type="button" onClick={openCreateQuotation} className={actionClass}>
+                    <FileText size={14} />
+                    New Quotation
+                  </button>
+                )}
                 {canCreateInvoice && (
                   <button type="button" onClick={openCreateInvoice} disabled={!canManageInvoices} className={primaryClass}>
                     <Plus size={14} />
@@ -1994,22 +2107,27 @@ export const AdminInvoicing: React.FC = () => {
         <div className="space-y-6">
           <section className="grid grid-cols-2 gap-3 min-[1100px]:grid-cols-4" aria-label="Quotation overview">
             <article className="rounded-card border border-line bg-panel px-4 py-4">
-              <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Total quotations</span><FileText size={15} /></div>
+              <div className="flex items-center justify-between text-xs font-medium text-muted"><span>Total quotations</span><FileText size={15} /></div>
               <div className="mt-2 text-2xl font-medium tabular-nums text-fg">{quotationMetrics.total}</div>
               <p className="mt-1 text-[11px] text-muted">Active sales workspace</p>
             </article>
             <article className="rounded-card border border-line bg-panel px-4 py-4">
-              <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Active</span><Clock3 size={15} /></div>
+              <div className="flex items-center justify-between text-xs font-medium text-muted"><span>Active</span><Clock3 size={15} /></div>
               <div className="mt-2 text-2xl font-medium tabular-nums text-fg">{quotationMetrics.active}</div>
               <p className="mt-1 text-[11px] text-muted">Draft → sent pipeline</p>
             </article>
             <article className="rounded-card border border-line bg-panel px-4 py-4">
-              <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Accepted</span><BadgeCheck size={15} className="text-success" /></div>
-              <div className="mt-2 text-2xl font-medium tabular-nums text-success">{quotationMetrics.accepted}</div>
-              <p className="mt-1 text-[11px] text-muted">Ready to invoice</p>
+              <div className="flex items-center justify-between text-xs font-medium text-muted"><span>Approved</span><BadgeCheck size={15} className="text-success" /></div>
+              <div className="mt-2 text-2xl font-medium tabular-nums text-success">{quotationMetrics.approved}</div>
+              <p className="mt-1 text-[11px] text-muted">Ready for invoice conversion</p>
             </article>
             <article className="rounded-card border border-line bg-panel px-4 py-4">
-              <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Pipeline value</span><WalletCards size={15} /></div>
+              <div className="flex items-center justify-between text-xs font-medium text-muted"><span>Accepted</span><CheckCircle2 size={15} className="text-info" /></div>
+              <div className="mt-2 text-2xl font-medium tabular-nums text-info">{quotationMetrics.accepted}</div>
+              <p className="mt-1 text-[11px] text-muted">Client acceptance</p>
+            </article>
+            <article className="rounded-card border border-line bg-panel px-4 py-4">
+              <div className="flex items-center justify-between text-xs font-medium text-muted"><span>Pipeline value</span><WalletCards size={15} /></div>
               <div className="mt-2 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(quotationMetrics.value, currency)}</div>
               <p className="mt-1 text-[11px] text-muted">{usingDemoQuotations ? 'Sample workspace data' : 'Server-backed quotations'}</p>
             </article>
@@ -2076,12 +2194,12 @@ export const AdminInvoicing: React.FC = () => {
                           <td className="px-4 py-3 tabular-nums text-muted">{quotation.createdAt}</td>
                           <td className="px-4 py-3 tabular-nums text-muted">{quotation.validUntil}</td>
                           <td className="px-4 py-3 text-right"><div className="font-semibold tabular-nums text-fg">{formatNativeAmount(quotation.total, quotation.currency, true)}</div><div className="mt-0.5 text-[10px] text-muted">{quotation.owner}</div></td>
-                          <td className="px-4 py-3"><CustomSelect value={quotation.status} onChange={(value) => void updateQuotationStatus(quotation, value as FinanceQuotationStatus)} options={[{ value: 'draft', label: 'Draft' }, { value: 'review', label: 'Review' }, { value: 'approved', label: 'Approved' }, { value: 'sent', label: 'Sent' }, { value: 'accepted', label: 'Accepted' }, { value: 'rejected', label: 'Rejected' }]} className="w-32" triggerClassName={'h-8 min-h-8 w-full border ' + statusToneClass} aria-label={'Status for ' + quotation.quotationNumber} /></td>
+                          <td className="px-4 py-3"><CustomSelect value={quotation.status} onChange={(value) => void updateQuotationStatus(quotation, value as FinanceQuotationStatus)} options={getQuotationStatusOptions(quotation.status)} className="w-36" triggerClassName={'h-8 min-h-8 w-full border ' + statusToneClass} aria-label={'Status for ' + quotation.quotationNumber} /></td>
                           <td className="px-4 py-3 text-right">
                             <div className="flex items-center justify-end gap-1 opacity-85 group-hover:opacity-100">
                               <button type="button" onClick={() => setQuotationDetail(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-panel-hover hover:text-fg" aria-label="View quotation" title="View quotation"><Eye size={15} /></button>
                               {canManageInvoices && <button type="button" onClick={() => openEditQuotation(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-panel-hover hover:text-fg" aria-label="Edit quotation" title="Edit quotation"><Edit3 size={14} /></button>}
-                              {canManageInvoices && <button type="button" onClick={() => void convertQuotationToInvoice(quotation)} disabled={Boolean(quotation.invoiceId) || quotation.status === 'rejected'} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-panel-hover hover:text-fg disabled:cursor-not-allowed disabled:opacity-40" aria-label="Convert quotation to invoice" title={quotation.invoiceId ? 'Invoice already created' : 'Convert to invoice'}><Receipt size={15} aria-hidden="true" /></button>}
+                              {canManageInvoices && <button type="button" onClick={() => void convertQuotationToInvoice(quotation)} disabled={Boolean(quotation.invoiceId) || quotation.status !== 'approved'} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-panel-hover hover:text-fg disabled:cursor-not-allowed disabled:opacity-40" aria-label="Convert quotation to invoice" title={quotation.invoiceId ? 'Invoice already created' : quotation.status === 'approved' ? 'Convert approved quotation to invoice' : 'Only approved quotations can be converted'}><Receipt size={15} aria-hidden="true" /></button>}
                               {canManageInvoices && <button type="button" onClick={() => void deleteQuotation(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Delete quotation" title="Delete quotation"><Trash2 size={14} /></button>}
                             </div>
                           </td>
@@ -2097,44 +2215,90 @@ export const AdminInvoicing: React.FC = () => {
       ) : financeView === 'income-expenses' ? (
         <div className="space-y-6">
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Income and expenses summary">
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Income YTD</span><WalletCards size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(ytdCollected, currency)}</p><p className="mt-2 text-xs text-muted">Collection rate {ytdCollectionRate.toFixed(1)}%</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Invoiced YTD</span><Receipt size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(ytdInvoiced, currency)}</p><p className="mt-2 text-xs text-muted">Billings issued</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Expenses YTD</span><ArrowDown size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(ytdExpenses, currency)}</p><p className="mt-2 text-xs text-muted">Actual records</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Net Cash YTD</span><TrendingUp size={15} className={ytdNetCash >= 0 ? 'text-success' : 'text-danger'} /></div><p className={'mt-3 text-2xl font-medium tabular-nums ' + (ytdNetCash >= 0 ? 'text-success' : 'text-danger')}>{formatFinanceCardAmount(ytdNetCash, currency)}</p><p className="mt-2 text-xs text-muted">Collected less expenses</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Income YTD</span><WalletCards size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(ytdCollected, currency)}</p><p className="mt-2 text-xs text-muted">Collection rate {ytdCollectionRate.toFixed(1)}%</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Invoiced YTD</span><Receipt size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(ytdInvoiced, currency)}</p><p className="mt-2 text-xs text-muted">Billings issued</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Expenses YTD</span><ArrowDown size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(ytdExpenses, currency)}</p><p className="mt-2 text-xs text-muted">Actual records</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Net Cash YTD</span><TrendingUp size={15} className={ytdNetCash >= 0 ? 'text-success' : 'text-danger'} /></div><p className={'mt-3 text-2xl font-medium tabular-nums ' + (ytdNetCash >= 0 ? 'text-success' : 'text-danger')}>{formatFinanceCardAmount(ytdNetCash, currency)}</p><p className="mt-2 text-xs text-muted">Collected less expenses</p></article>
           </section>
 
           <section className="grid grid-cols-1 gap-6 min-[1100px]:grid-cols-2">
             <section className="rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="finance-income-title">
-              <div className="border-b border-line p-5"><h2 id="finance-income-title" className="text-sm font-semibold text-fg">Income</h2><p className="mt-1 text-xs text-muted">Collected invoice activity for the current year.</p></div>
-              <div className="overflow-x-auto custom-scrollbar">
-                <table className="w-full min-w-[820px] border-collapse text-left text-xs">
-                  <thead className="bg-bg"><tr><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Date</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice</th><th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount</th></tr></thead>
-                  <tbody>{currencyInvoices.filter((invoice) => invoice.status !== 'cancelled' && getInvoiceCollectedInRange(invoice, yearStart, yearEnd) > 0).slice(0, 10).map((invoice) => <tr key={invoice.id} className="border-t border-line hover:bg-bg"><td className="px-4 py-3 tabular-nums text-muted">{invoice.paidDate || invoice.issueDate}</td><td className="px-4 py-3 text-fg">{invoice.clientCompany}</td><td className="px-4 py-3"><button type="button" onClick={() => openPrintPreview(invoice)} className="font-medium tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button></td><td className="px-4 py-3 text-right font-medium tabular-nums text-success">{formatNativeAmount(getInvoiceCollectedInRange(invoice, yearStart, yearEnd), invoice.currency, true)}</td></tr>)}</tbody>
-                </table>
+              <div className="border-b border-line p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div><h2 id="finance-income-title" className="text-sm font-semibold text-fg">Income</h2><p className="mt-1 text-xs text-muted">Actual payment activity for the current year.</p></div>
+                  <label className="relative w-full sm:w-56"><span className="sr-only">Search income</span><Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" /><input value={incomeSearch} onChange={(event) => setIncomeSearch(event.target.value)} placeholder="Search payment or client..." className={fieldClass + ' pl-8'} /></label>
+                </div>
+                <div className="mt-3 flex items-center gap-2 border-t border-line pt-3 text-[10px] text-muted"><span>{incomeRows.length} payment records</span><span className="h-1 w-1 rounded-full bg-line" /><span>YTD collection</span>{incomeSearch && <button type="button" onClick={() => setIncomeSearch('')} className="ml-auto text-accent-text hover:text-fg">Clear</button>}</div>
               </div>
+              <div className="overflow-x-auto custom-scrollbar">
+                {incomeRows.length === 0 ? (
+                  <div className="p-5"><EmptyState title="No income recorded" description="Recorded payments will appear here once invoices start collecting cash." /></div>
+                ) : (
+                  <table className="w-full min-w-[820px] border-collapse text-left text-xs">
+                    <thead className="bg-bg"><tr><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Payment date</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice</th><th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount</th></tr></thead>
+                    <tbody>{paginatedIncomeRows.map((row) => <tr key={row.id} className="border-t border-line hover:bg-bg"><td className="px-4 py-3 tabular-nums text-muted">{row.date}</td><td className="px-4 py-3 text-fg">{row.clientCompany}</td><td className="px-4 py-3"><button type="button" onClick={() => {
+                      const invoice = currencyInvoices.find((item) => item.id === row.invoiceId);
+                      if (invoice) openPrintPreview(invoice);
+                    }} className="font-medium tabular-nums text-fg hover:text-accent-text">{row.invoiceNumber}</button></td><td className="px-4 py-3 text-right font-medium tabular-nums text-success">{formatNativeAmount(row.amount, row.currency, true)}</td></tr>)}</tbody>
+                  </table>
+                )}
+              </div>
+              {incomePageCount > 1 && (
+                <div className="border-t border-line px-4 py-3">
+                  <div className="flex items-center justify-between text-[11px] text-muted">
+                    <span className="tabular-nums">Showing {((incomePage - 1) * incomePageSize) + 1}–{Math.min(incomePage * incomePageSize, incomeRows.length)} of {incomeRows.length}</span>
+                    <div className="flex items-center gap-1">
+                      <button type="button" onClick={() => setIncomePage((page) => Math.max(1, page - 1))} disabled={incomePage === 1} className={actionClass}>Previous</button>
+                      <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control border border-line bg-line px-2 text-[10px] font-semibold text-fg">{incomePage}</span>
+                      <button type="button" onClick={() => setIncomePage((page) => Math.min(incomePageCount, page + 1))} disabled={incomePage === incomePageCount} className={actionClass}>Next</button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </section>
 
             <section className="rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="finance-expense-title">
-              <div className="border-b border-line p-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div><h2 id="finance-expense-title" className="text-sm font-semibold text-fg">Expenses</h2><p className="mt-1 text-xs text-muted">Operating and capital expense records.</p></div>
-                {canManageInvoices && <button type="button" onClick={openExpenseModal} className={primaryClass}><Plus size={14} />Record expense</button>}
+              <div className="border-b border-line p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div><div className="flex items-center gap-2"><h2 id="finance-expense-title" className="text-sm font-semibold text-fg">Expenses</h2>{usingDemoExpenses && <span className="rounded-badge border border-warning/20 bg-warning/10 px-1.5 py-0.5 text-[10px] font-medium text-warning">Demo data</span>}</div><p className="mt-1 text-xs text-muted">Operating, rental, and capital expense records.</p></div>
+                  <div className="flex items-center gap-2">
+                    {canManageInvoices && <button type="button" onClick={openExpenseModal} className={primaryClass}><Plus size={14} />Record expense</button>}
+                  </div>
+                </div>
+                <div className="mt-3 grid gap-2 border-t border-line pt-3 sm:grid-cols-[1fr_150px_180px]">
+                  <label className="relative"><span className="sr-only">Search expenses</span><Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" /><input value={expenseSearch} onChange={(event) => setExpenseSearch(event.target.value)} placeholder="Search expense..." className={fieldClass + ' pl-8'} /></label>
+                  <CustomSelect value={expenseTypeFilter} onChange={setExpenseTypeFilter} options={expenseTypeOptions} className="w-full" triggerClassName="h-9 min-h-9 w-full" aria-label="Expense type filter" />
+                  <CustomSelect value={expenseSort} onChange={(value) => setExpenseSort(value as typeof expenseSort)} options={[{ value: 'date_desc', label: 'Newest first' }, { value: 'date_asc', label: 'Oldest first' }, { value: 'amount_high', label: 'Highest amount' }, { value: 'amount_low', label: 'Lowest amount' }]} className="w-full" triggerClassName="h-9 min-h-9 w-full" aria-label="Expense sort" />
+                </div>
               </div>
               <div className="overflow-x-auto custom-scrollbar">
                 <table className="w-full min-w-[820px] border-collapse text-left text-xs">
                   <thead className="bg-bg"><tr><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Date</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Type / category</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Description</th><th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount</th><th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Action</th></tr></thead>
-                  <tbody>{paginatedExpenses.slice(0, 10).map((expense) => <tr key={expense.id} className="border-t border-line hover:bg-bg"><td className="px-4 py-3 tabular-nums text-muted">{expense.date}</td><td className="px-4 py-3"><div className="font-medium text-fg">{expense.type || 'OpEx'}</div><div className="mt-0.5 text-[10px] text-muted">{expense.category}</div></td><td className="px-4 py-3 text-fg">{expense.description}</td><td className="px-4 py-3 text-right font-medium tabular-nums text-fg">{formatNativeAmount(expense.amount, expense.currency || currency, true)}</td><td className="px-4 py-3 text-right">{canManageInvoices && <button type="button" onClick={() => setConfirmAction({ type: 'expense', id: expense.id, label: expense.description })} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Void expense" title="Void expense"><Trash2 size={14} /></button>}</td></tr>)}</tbody>
+                  <tbody>{paginatedExpenses.map((expense) => <tr key={expense.id} className="border-t border-line hover:bg-bg"><td className="px-4 py-3 tabular-nums text-muted">{expense.date}</td><td className="px-4 py-3"><div className="font-medium text-fg">{expense.type || 'OpEx'}</div><div className="mt-0.5 text-[10px] text-muted">{expense.category}</div></td><td className="px-4 py-3 text-fg">{expense.description}</td><td className="px-4 py-3 text-right font-medium tabular-nums text-fg">{formatNativeAmount(expense.amount, expense.currency || currency, true)}</td><td className="px-4 py-3 text-right">{canManageInvoices && <button type="button" onClick={() => setConfirmAction({ type: 'expense', id: expense.id, label: expense.description })} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Void expense" title="Void expense"><Trash2 size={14} /></button>}</td></tr>)}</tbody>
                 </table>
               </div>
+              {expensePageCount > 1 && (
+                <div className="border-t border-line px-4 py-3">
+                  <div className="flex items-center justify-between text-[11px] text-muted">
+                    <span className="tabular-nums">Showing {((expensePage - 1) * expensePageSize) + 1}–{Math.min(expensePage * expensePageSize, filteredExpenses.length)} of {filteredExpenses.length}</span>
+                    <div className="flex items-center gap-1">
+                      <button type="button" onClick={() => setExpensePage((page) => Math.max(1, page - 1))} disabled={expensePage === 1} className={actionClass}>Previous</button>
+                      <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control border border-line bg-line px-2 text-[10px] font-semibold text-fg">{expensePage}</span>
+                      <button type="button" onClick={() => setExpensePage((page) => Math.min(expensePageCount, page + 1))} disabled={expensePage === expensePageCount} className={actionClass}>Next</button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </section>
           </section>
         </div>
       ) : financeView === 'tax-retainers' ? (
         <div className="space-y-6">
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Tax and retainers summary">
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Tax provision</span><Receipt size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(taxProvision, currency)}</p><p className="mt-2 text-xs text-muted">Tax across issued invoices</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Tax collected</span><BadgeCheck size={15} className="text-success" /></div><p className="mt-3 text-2xl font-medium tabular-nums text-success">{formatFinanceCardAmount(taxCollected, currency)}</p><p className="mt-2 text-xs text-muted">Recovered through payments</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Tax outstanding</span><Hourglass size={15} className="text-warning" /></div><p className="mt-3 text-2xl font-medium tabular-nums text-warning">{formatFinanceCardAmount(taxOutstanding, currency)}</p><p className="mt-2 text-xs text-muted">Waiting on collections</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Retainer billed</span><TrendingUp size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(retainerBilled, currency)}</p><p className="mt-2 text-xs text-muted">{retainerInvoices.length} retainer invoices</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Tax provision</span><Receipt size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(taxProvision, currency)}</p><p className="mt-2 text-xs text-muted">Tax across issued invoices</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Tax collected</span><BadgeCheck size={15} className="text-success" /></div><p className="mt-3 text-2xl font-medium tabular-nums text-success">{formatFinanceCardAmount(taxCollected, currency)}</p><p className="mt-2 text-xs text-muted">Recovered through payments</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Tax outstanding</span><Hourglass size={15} className="text-warning" /></div><p className="mt-3 text-2xl font-medium tabular-nums text-warning">{formatFinanceCardAmount(taxOutstanding, currency)}</p><p className="mt-2 text-xs text-muted">Waiting on collections</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Retainer billed</span><TrendingUp size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(retainerBilled, currency)}</p><p className="mt-2 text-xs text-muted">{retainerInvoices.length} retainer invoices</p></article>
           </section>
 
           <section className="grid grid-cols-1 gap-6 min-[1100px]:grid-cols-2">
@@ -2165,10 +2329,10 @@ export const AdminInvoicing: React.FC = () => {
       ) : financeView === 'financial-reports' ? (
         <div className="space-y-6">
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Financial reporting summary">
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Net cash YTD</span><TrendingUp size={15} /></div><p className={'mt-3 text-2xl font-medium tabular-nums ' + (ytdNetCash >= 0 ? 'text-success' : 'text-danger')}>{formatFinanceCardAmount(ytdNetCash, currency)}</p><p className="mt-2 text-xs text-muted">Collected less expenses</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Collection rate</span><BarChart3 size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{ytdCollectionRate.toFixed(1)}%</p><p className="mt-2 text-xs text-muted">Collected against issued billings</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Operating margin</span><TrendingUp size={15} className="text-success" /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{Number.isFinite(operatingMarginValue) ? operatingMarginValue.toFixed(1) : quarterMargin.toFixed(1)}%</p><p className="mt-2 text-xs text-muted">Target ≥ 35%</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-muted"><span>Outstanding</span><Hourglass size={15} className="text-warning" /></div><p className="mt-3 text-2xl font-medium tabular-nums text-warning">{formatFinanceCardAmount(derivedMetrics.totalOutstanding, currency)}</p><p className="mt-2 text-xs text-muted">{pendingInvoiceCount} invoices still open</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Net cash YTD</span><TrendingUp size={15} /></div><p className={'mt-3 text-2xl font-medium tabular-nums ' + (ytdNetCash >= 0 ? 'text-success' : 'text-danger')}>{formatFinanceCardAmount(ytdNetCash, currency)}</p><p className="mt-2 text-xs text-muted">Collected less expenses</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Collection rate</span><BarChart3 size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{ytdCollectionRate.toFixed(1)}%</p><p className="mt-2 text-xs text-muted">Collected against issued billings</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Operating margin</span><TrendingUp size={15} className="text-success" /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{Number.isFinite(operatingMarginValue) ? operatingMarginValue.toFixed(1) : quarterMargin.toFixed(1)}%</p><p className="mt-2 text-xs text-muted">Target ≥ 35%</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Outstanding</span><Hourglass size={15} className="text-warning" /></div><p className="mt-3 text-2xl font-medium tabular-nums text-warning">{formatFinanceCardAmount(derivedMetrics.totalOutstanding, currency)}</p><p className="mt-2 text-xs text-muted">{pendingInvoiceCount} invoices still open</p></article>
           </section>
 
           <section className="grid grid-cols-1 gap-6 min-[1100px]:grid-cols-3">
@@ -2226,12 +2390,12 @@ export const AdminInvoicing: React.FC = () => {
             className="grid-cols-2 sm:grid-cols-3 min-[1100px]:grid-cols-6"
             itemClassName="rounded-card border border-line bg-panel p-4 sm:p-5"
             metrics={[
-              { id: 'billed', label: 'Total invoiced Q2', value: formatFinanceCardAmount(currentQuarterTotal, currency), context: quarterChangePercent === null ? 'No prior quarter comparison' : (quarterChangePercent >= 0 ? '+' : '') + quarterChangePercent.toFixed(1) + '% vs previous quarter', icon: <Receipt size={18} aria-hidden="true" /> },
-              { id: 'collected', label: 'Collected YTD', value: formatFinanceCardAmount(ytdCollected, currency), context: ytdCollectionRate.toFixed(1) + '% collection rate', icon: <WalletCards size={18} className="text-success" aria-hidden="true" /> },
+              { id: 'billed', label: 'Total invoiced', value: formatFinanceCardAmount(currentQuarterTotal, currency), context: quarterChangePercent === null ? 'Current quarter' : (quarterChangePercent >= 0 ? '+' : '') + quarterChangePercent.toFixed(1) + '% vs previous quarter', icon: <Receipt size={18} aria-hidden="true" /> },
+              { id: 'collected', label: 'Collected YTD', value: formatFinanceCardAmount(ytdCollected, currency), context: ytdCollectionRate.toFixed(1) + '% collection rate' + (usingDemoInvoices ? ' · Demo' : ''), icon: <WalletCards size={18} className="text-success" aria-hidden="true" /> },
               { id: 'outstanding', label: 'Outstanding', value: formatFinanceCardAmount(derivedMetrics.totalOutstanding, currency), context: pendingInvoiceCount + ' invoices pending', icon: <Hourglass size={18} className="text-warning" aria-hidden="true" /> },
               { id: 'overdue', label: 'Overdue balance', value: formatFinanceCardAmount(overdueBalance, currency), context: criticalOverdueCount + ' critical invoices', icon: <AlertCircle size={18} className="text-danger" aria-hidden="true" />, toneClassName: 'text-danger' },
               { id: 'margin', label: 'Operating margin', value: Number.isFinite(operatingMarginValue) ? operatingMarginValue.toFixed(1) + '%' : quarterMargin.toFixed(1) + '%', context: operatingMarginHealthy ? 'Healthy · target ≥ 35%' : 'Below target · monitor burn', icon: <TrendingUp size={18} className={operatingMarginHealthy ? 'text-success' : 'text-warning'} aria-hidden="true" /> },
-              { id: 'count', label: 'Total invoices', value: serverMetrics ? serverMetrics.totalInvoicesCount : 0, context: 'Active finance ledger', icon: <FileText size={18} aria-hidden="true" /> }
+              { id: 'count', label: 'Total invoices', value: serverMetrics ? serverMetrics.totalInvoicesCount : 0, context: currency + ' finance ledger', icon: <FileText size={18} aria-hidden="true" /> }
             ]}
           />
 
@@ -2260,13 +2424,7 @@ export const AdminInvoicing: React.FC = () => {
                     </div>
                   ))}
                 </div>
-                <button type="button" onClick={() => {
-                  if (!actionRequiredInvoices.length) {
-                    showNotice('success', 'No overdue or due-soon invoices require dunning.');
-                    return;
-                  }
-                  showNotice('success', usingDemoFinance ? 'Demo bulk dunning prepared for ' + actionRequiredInvoices.length + ' invoices.' : 'Bulk dunning notices queued for ' + actionRequiredInvoices.length + ' invoices.');
-                }} className={actionClass + ' mt-4 w-full'}><Send size={14} />Trigger Bulk Dunning Notices</button>
+                <button type="button" onClick={() => setDunningOpen(true)} disabled={!actionRequiredInvoices.length} className={actionClass + ' mt-4 w-full'}><Send size={14} />Prepare bulk dunning notices</button>
               </div>
             </section>
           </section>
@@ -2275,7 +2433,10 @@ export const AdminInvoicing: React.FC = () => {
             <div className="border-b border-line p-4 sm:p-5">
               <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 <div className="min-w-0">
-                  <h2 id="finance-workspace-title" className="text-sm font-semibold text-fg">Invoice Ledger</h2>
+                  <div className="flex items-center gap-2">
+                    <h2 id="finance-workspace-title" className="text-sm font-semibold text-fg">Invoice Ledger</h2>
+                    {usingDemoInvoices && <span className="rounded-badge border border-warning/20 bg-warning/10 px-1.5 py-0.5 text-[10px] font-medium text-warning">Demo data</span>}
+                  </div>
                   <p className="mt-1 text-[11px] text-muted">{serverMetrics ? serverMetrics.totalInvoicesCount : ledgerInvoices.length} invoices in the active ledger period</p>
                 </div>
                 <div className="flex w-full flex-col gap-2 xl:w-auto xl:flex-row xl:items-center">
@@ -2283,7 +2444,13 @@ export const AdminInvoicing: React.FC = () => {
                   <div className="flex items-center gap-1 overflow-x-auto rounded-control border border-line bg-bg p-0.5 custom-scrollbar">
                     {['All', 'Paid', 'Due Soon', 'Overdue', 'Draft'].map((label) => {
                       const key = label === 'All' ? 'all' : label === 'Paid' ? 'paid' : label === 'Due Soon' ? 'due_soon' : label === 'Overdue' ? 'overdue' : 'draft';
-                      const count = key === 'all' ? ledgerInvoices.length : key === 'due_soon' ? dueSoonCount : invoiceStatusCounts.find((item) => item.status === key)?.count || 0;
+                      const count = key === 'all'
+                        ? ledgerInvoices.length
+                        : key === 'due_soon'
+                          ? dueSoonCount
+                          : key === 'overdue'
+                            ? ledgerInvoices.filter((invoice) => isPastDueInvoice(invoice)).length
+                            : invoiceStatusCounts.find((item) => item.status === key)?.count || 0;
                       return <button key={label} type="button" onClick={() => setStatusFilter(key)} className={'min-h-8 shrink-0 rounded-chip px-2.5 text-[11px] font-medium transition-colors ' + (statusFilter === key ? 'bg-line text-fg' : 'text-muted hover:text-fg')}>{label}<span className="ml-1 tabular-nums opacity-70">{count}</span></button>;
                     })}
                   </div>
@@ -2323,7 +2490,7 @@ export const AdminInvoicing: React.FC = () => {
                     {paginatedInvoices.map((invoice) => {
                       const balance = Number(invoice.balanceDue ?? (invoice.total - (invoice.amountPaid || 0)));
                       const project = projectsById.get(invoice.projectId);
-                      const isOverdue = invoice.status === 'overdue';
+                      const isOverdue = isPastDueInvoice(invoice) || invoice.status === 'overdue';
                       return (
                         <tr key={invoice.id} className="group border-t border-line transition-colors hover:bg-bg">
                           <td className="px-4 py-3 sm:px-5"><div className="flex items-center gap-2"><span className={'h-1.5 w-1.5 rounded-full ' + (isOverdue ? 'bg-danger' : invoice.status === 'paid' ? 'bg-success' : invoice.status === 'sent' ? 'bg-info' : 'bg-warning')} /><button type="button" onClick={() => openPrintPreview(invoice)} className="font-medium tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button></div><p className="mt-1 text-[11px] text-muted">{invoice.currency}</p></td>
@@ -2333,12 +2500,12 @@ export const AdminInvoicing: React.FC = () => {
                           {columnVisibility.amount && <td className="px-4 py-3 text-right"><div className="font-semibold tabular-nums text-fg">{formatNativeAmount(invoice.total, invoice.currency)}</div><div className="mt-0.5 text-[10px] tabular-nums text-muted">{balance > 0 ? 'Due ' + formatNativeAmount(balance, invoice.currency, true) : 'Settled'}</div></td>}
                           {columnVisibility.status && <td className="px-4 py-3">{canManageInvoices ? <InvoiceStatusDropdown status={invoice.status} allowedStatuses={['draft', 'sent', 'overdue']} disabled={updatingInvoiceId === invoice.id || !['draft', 'sent', 'overdue'].includes(invoice.status)} onChange={(next) => void updateInvoiceStatus(invoice, next)} /> : <StatusBadge status={invoice.status} />}</td>}
                           {columnVisibility.actions && <td className="px-4 py-3 text-right"><div className="flex items-center justify-end gap-1 opacity-85 group-hover:opacity-100">
-                            {invoice.status === 'overdue' && <button type="button" onClick={() => showNotice('success', 'Reminder prepared for ' + invoice.invoiceNumber + '.')} className="inline-flex h-7 items-center rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-danger hover:bg-panel-hover">Reminder</button>}
+                            {isPastDueInvoice(invoice) && <button type="button" onClick={() => setReminderInvoice(invoice)} className="inline-flex h-7 items-center rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-danger hover:bg-panel-hover">Reminder</button>}
                             {canManageInvoices && invoice.status !== 'paid' && invoice.status !== 'cancelled' && balance > 0 && <button type="button" onClick={() => openPayment(invoice)} className="inline-flex h-7 min-h-7 items-center rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted hover:bg-panel-hover hover:text-fg">Pay</button>}
                             <button type="button" onClick={() => openPrintPreview(invoice)} className="inline-flex h-7 w-7 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="View invoice" title="View invoice"><Eye size={15} /></button>
                             {canManageInvoices && invoice.status !== 'cancelled' && <button type="button" onClick={() => openEditInvoice(invoice)} className="inline-flex h-7 w-7 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Edit invoice" title="Edit invoice"><Edit3 size={14} /></button>}
                             {canManageInvoices && canDeleteInvoice && !['cancelled', 'paid', 'partially_paid'].includes(invoice.status) && <button type="button" onClick={() => setConfirmAction({ type: 'invoice', id: invoice.id, label: invoice.invoiceNumber })} className="inline-flex h-7 w-7 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Cancel invoice" title="Cancel invoice"><Trash2 size={14} /></button>}
-                            <button type="button" onClick={() => showNotice('success', 'Quick action menu for ' + invoice.invoiceNumber + ' is ready.')} className="inline-flex h-7 w-7 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="More invoice actions" title="More actions"><MoreHorizontal size={15} /></button>
+
                           </div></td>}
                         </tr>
                       );
@@ -2376,6 +2543,84 @@ export const AdminInvoicing: React.FC = () => {
           </section>
         </div>
       )}
+      <Modal
+        open={!!reminderInvoice}
+        onClose={() => setReminderInvoice(null)}
+        size="md"
+        title="Payment reminder"
+        description={reminderInvoice ? reminderInvoice.invoiceNumber + ' · ' + (reminderInvoice.clientCompany || reminderInvoice.clientName) : undefined}
+        footer={
+          <div className="flex w-full items-center justify-between gap-2">
+            <button type="button" onClick={() => setReminderInvoice(null)} className={actionClass}>Close</button>
+            <button type="button" onClick={() => {
+              if (!reminderInvoice) return;
+              const balance = Number(reminderInvoice.balanceDue ?? (reminderInvoice.total - (reminderInvoice.amountPaid || 0)));
+              const message = [
+                'Payment reminder',
+                reminderInvoice.invoiceNumber,
+                reminderInvoice.clientCompany || reminderInvoice.clientName,
+                'Outstanding: ' + formatNativeAmount(balance, reminderInvoice.currency, true),
+                'Due date: ' + reminderInvoice.dueDate,
+                'Please arrange settlement at your earliest convenience.'
+              ].join('\n');
+              void navigator.clipboard?.writeText(message);
+              showNotice('success', 'Reminder draft copied to clipboard.');
+            }} className={primaryClass}><Copy size={14} />Copy reminder</button>
+          </div>
+        }
+      >
+        {reminderInvoice && (
+          <div className="space-y-3">
+            <div className="rounded-card border border-line bg-bg p-4">
+              <p className="whitespace-pre-line text-xs leading-5 text-fg">
+                {[
+                  'Payment reminder',
+                  reminderInvoice.invoiceNumber,
+                  reminderInvoice.clientCompany || reminderInvoice.clientName,
+                  'Outstanding: ' + formatNativeAmount(Number(reminderInvoice.balanceDue ?? (reminderInvoice.total - (reminderInvoice.amountPaid || 0))), reminderInvoice.currency, true),
+                  'Due date: ' + reminderInvoice.dueDate,
+                  '',
+                  'Please arrange settlement at your earliest convenience.'
+                ].join('\n')}
+              </p>
+            </div>
+            <p className="text-[10px] text-muted">This prepares the reminder in the browser; delivery remains an application/integration concern.</p>
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        open={dunningOpen}
+        onClose={() => setDunningOpen(false)}
+        size="lg"
+        title="Bulk dunning preparation"
+        description={actionRequiredInvoices.length + ' invoice' + (actionRequiredInvoices.length === 1 ? '' : 's') + ' require attention within the current collection window.'}
+        footer={
+          <div className="flex w-full items-center justify-between gap-2">
+            <button type="button" onClick={() => setDunningOpen(false)} className={actionClass}>Close</button>
+            <button type="button" onClick={() => {
+              const csv = [['Invoice #', 'Client', 'Due Date', 'Outstanding'], ...actionRequiredInvoices.map(({ invoice }) => [
+                invoice.invoiceNumber,
+                invoice.clientCompany || invoice.clientName,
+                invoice.dueDate,
+                Number(invoice.balanceDue ?? (invoice.total - (invoice.amountPaid || 0)))
+              ])].map((row) => row.map((value) => '"' + String(value ?? '').replace(/"/g, '""') + '"').join(',')).join('\n');
+              void navigator.clipboard?.writeText(csv);
+              showNotice('success', 'Dunning list copied to clipboard.');
+            }} className={primaryClass}><Copy size={14} />Copy dunning list</button>
+          </div>
+        }
+      >
+        <div className="space-y-2">
+          {actionRequiredInvoices.map(({ invoice, daysUntilDue }) => (
+            <div key={invoice.id} className="flex items-center justify-between gap-3 rounded-control border border-line bg-bg px-3 py-3">
+              <div className="min-w-0"><p className="truncate text-xs font-medium text-fg">{invoice.invoiceNumber} · {invoice.clientCompany || invoice.clientName}</p><p className="mt-0.5 text-[10px] text-muted">{isPastDueInvoice(invoice) ? Math.abs(daysUntilDue) + ' days overdue' : 'Due in ' + daysUntilDue + ' days'} · {invoice.dueDate}</p></div>
+              <span className="shrink-0 text-xs font-semibold tabular-nums text-fg">{formatNativeAmount(Number(invoice.balanceDue ?? (invoice.total - (invoice.amountPaid || 0))), invoice.currency, true)}</span>
+            </div>
+          ))}
+        </div>
+      </Modal>
+
       <Modal
         open={quotationModalOpen}
         onClose={() => {
@@ -2425,14 +2670,7 @@ export const AdminInvoicing: React.FC = () => {
                 <CustomSelect
                   value={quotationStatus}
                   onChange={(value) => setQuotationStatus(value as FinanceQuotationStatus)}
-                  options={[
-                    { value: 'draft', label: 'Draft' },
-                    { value: 'review', label: 'Internal review' },
-                    { value: 'approved', label: 'Approved' },
-                    { value: 'sent', label: 'Sent' },
-                    { value: 'accepted', label: 'Accepted' },
-                    { value: 'rejected', label: 'Rejected' }
-                  ]}
+                  options={getQuotationStatusOptions(editingQuotation?.status || quotationStatus)}
                   className="w-full"
                   triggerClassName="h-10 min-h-10 w-full"
                 />
@@ -2463,7 +2701,7 @@ export const AdminInvoicing: React.FC = () => {
                 <button type="button" onClick={() => exportQuotationsCsv()} className={actionClass}><Download size={14} />Export list</button>
               </div>
               <div className="flex items-center gap-2">
-                <button type="button" onClick={() => void convertQuotationToInvoice(quotationDetail)} disabled={Boolean(quotationDetail.invoiceId) || quotationDetail.status === 'rejected'} className={primaryClass}>
+                <button type="button" onClick={() => void convertQuotationToInvoice(quotationDetail)} disabled={Boolean(quotationDetail.invoiceId) || quotationDetail.status !== 'approved'} className={primaryClass}>
                   <Receipt size={14} />
                   {quotationDetail.invoiceId ? 'Invoice linked' : 'Convert to invoice'}
                 </button>
