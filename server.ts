@@ -14,8 +14,15 @@ import { flushAuditLogWrites, isDataEncryptionEnabled } from './server/db.ts';
 
 dotenv.config();
 
+// A bundled `dist/server.cjs` is always the production runtime. This keeps the
+// Hostinger start command portable while preventing the bundled server from
+// entering Vite development middleware when NODE_ENV is omitted.
+const isProductionRuntime =
+  process.env.NODE_ENV === 'production' ||
+  path.basename(process.argv[1] || '') === 'server.cjs';
+
 function validateProductionDataSource(): string | null {
-  if (process.env.NODE_ENV !== 'production') return null;
+  if (!isProductionRuntime) return null;
 
   const mode = (process.env.KAPITECH_DATA_SOURCE || '').trim().toLowerCase();
   if (mode !== 'postgres') {
@@ -110,7 +117,7 @@ async function startServer() {
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
     res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
 
-    if (process.env.NODE_ENV === 'production') {
+    if (isProductionRuntime) {
       res.setHeader(
         'Content-Security-Policy',
         [
@@ -276,7 +283,7 @@ async function startServer() {
   });
 
   // Vite middleware in dev, static files in prod
-  if (process.env.NODE_ENV !== 'production') {
+  if (!isProductionRuntime) {
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
