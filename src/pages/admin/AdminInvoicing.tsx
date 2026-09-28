@@ -278,7 +278,6 @@ const FinanceCashFlowChart: React.FC<{
 export const AdminInvoicing: React.FC = () => {
   const { language } = useLanguage();
   const location = useLocation();
-  const navigate = useNavigate();
   const session = getAdminSession();
   const canViewFinancials = hasAdminPermission('canViewFinancials');
   const canManageInvoices = hasAdminPermission('canManageInvoices');
@@ -1362,29 +1361,127 @@ export const AdminInvoicing: React.FC = () => {
           <div className="grid gap-3 min-[1100px]:grid-cols-3"><div className="h-72 animate-pulse rounded-card border border-line bg-panel min-[1100px]:col-span-2" /><div className="h-72 animate-pulse rounded-card border border-line bg-panel" /></div>
           <div className="h-80 animate-pulse rounded-card border border-line bg-panel" />
         </div>
-      ) : financeView === 'tax-retainers' || financeView === 'financial-reports' ? (
-        <section className="rounded-card border border-line bg-panel p-6 sm:p-8" aria-labelledby="finance-section-title">
-          <div className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-bg text-muted">
-            {financeView === 'tax-retainers' ? <DollarSign size={18} /> : <TrendingUp size={18} />}
-          </div>
-          <h2 id="finance-section-title" className="mt-4 text-base font-semibold text-fg">
-            {financeView === 'tax-retainers' ? 'Tax & Retainers' : 'Financial Reports'}
-          </h2>
-          <p className="mt-2 max-w-[62ch] text-xs leading-5 text-muted">
-            {financeView === 'tax-retainers'
-              ? 'This Finance surface is reserved for tax provisions and retainer controls. The current AMS finance API does not expose a dedicated dataset for this section yet.'
-              : 'This Finance surface is reserved for reporting packs and period summaries. The current AMS finance API does not expose a dedicated reporting dataset for this section yet.'}
-          </p>
-          <div className="mt-5 flex flex-wrap gap-2">
-            <button type="button" onClick={() => navigate('/admin/invoicing')} className={primaryClass}>
-              Open Invoices
-            </button>
-            <button type="button" onClick={() => navigate('/admin/invoicing?finance=income-expenses')} className={actionClass}>
-              Open Income &amp; Expenses
-            </button>
-          </div>
-        </section>
-      ) : (
+      ) : financeView === 'income-expenses' ? (
+        <div className="space-y-6">
+          <section aria-labelledby="income-expenses-title">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 id="income-expenses-title" className="text-base font-semibold text-fg">Income &amp; Expenses</h2>
+                <p className="mt-1 max-w-2xl text-xs leading-5 text-muted">Collected income and recorded operating expenses for the active financial year.</p>
+              </div>
+              {canManageInvoices && <button type="button" onClick={openExpenseModal} className={primaryClass}><Plus size={14} />Record expense</button>}
+            </div>
+          </section>
+
+          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Income and expenses summary">
+            <article className="rounded-card border border-line bg-panel p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">Income (YTD)</p><p className="mt-3 text-2xl font-semibold tabular-nums text-fg">{formatFinanceCardAmount(ytdCollected, currency)}</p><p className="mt-2 text-xs text-muted">Recorded collections</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">Invoiced (YTD)</p><p className="mt-3 text-2xl font-semibold tabular-nums text-fg">{formatFinanceCardAmount(ytdInvoiced, currency)}</p><p className="mt-2 text-xs text-muted">Collection rate {ytdCollectionRate.toFixed(1)}%</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">Expenses (YTD)</p><p className="mt-3 text-2xl font-semibold tabular-nums text-fg">{formatFinanceCardAmount(ytdExpenses, currency)}</p><p className="mt-2 text-xs text-muted">Actual expense records</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">Net Cash (YTD)</p><p className={'mt-3 text-2xl font-semibold tabular-nums ' + (ytdNetCash >= 0 ? 'text-success' : 'text-danger')}>{formatFinanceCardAmount(ytdNetCash, currency)}</p><p className="mt-2 text-xs text-muted">Income less recorded expenses</p></article>
+          </section>
+
+          <section className="grid grid-cols-1 gap-6 min-[1100px]:grid-cols-2">
+            <section className="rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="finance-income-title">
+              <div className="border-b border-line p-5"><h3 id="finance-income-title" className="text-sm font-semibold text-fg">Income</h3><p className="mt-1 text-xs text-muted">Invoice collections recorded in the current year.</p></div>
+              {currencyInvoices.filter((invoice) => Number(invoice.amountPaid || 0) > 0).length === 0 ? <div className="p-5"><EmptyState title="No income records yet" description="Recorded invoice collections will appear here." /></div> : (
+                <div className="overflow-x-auto custom-scrollbar">
+                  <table className="ams-table w-full min-w-[680px] border-collapse text-left text-xs">
+                    <thead className="bg-bg"><tr><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Date</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice</th><th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount</th></tr></thead>
+                    <tbody>{currencyInvoices.filter((invoice) => Number(invoice.amountPaid || 0) > 0).slice(0, 10).map((invoice) => <tr key={invoice.id} className="border-t border-line hover:bg-bg"><td className="px-4 py-3 tabular-nums text-muted">{invoice.paidDate || invoice.issueDate}</td><td className="px-4 py-3"><div className="font-medium text-fg">{invoice.clientCompany || invoice.clientName}</div><div className="mt-0.5 text-[10px] text-muted">{invoice.status}</div></td><td className="px-4 py-3"><button type="button" onClick={() => openPrintPreview(invoice)} className="font-medium tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button></td><td className="px-4 py-3 text-right font-medium tabular-nums text-success">{formatNativeAmount(invoice.amountPaid || 0, invoice.currency, true)}</td></tr>)}</tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+
+            <section className="rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="finance-expense-title">
+              <div className="border-b border-line p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div><h3 id="finance-expense-title" className="text-sm font-semibold text-fg">Expenses</h3><p className="mt-1 text-xs text-muted">Actual expense records for the current currency ledger.</p></div>
+                  <div className="flex flex-wrap gap-2">
+                    <label className="relative"><span className="sr-only">Search expenses</span><Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" /><input value={expenseSearch} onChange={(event) => setExpenseSearch(event.target.value)} placeholder="Search expense or category..." className={fieldClass + ' pl-8 sm:w-56'} /></label>
+                    <CustomSelect value={expenseTypeFilter} onChange={setExpenseTypeFilter} options={expenseTypeOptions} className="w-32" triggerClassName="h-9 min-h-9 w-full" aria-label="Expense type" />
+                  </div>
+                </div>
+              </div>
+              {filteredExpenses.length === 0 ? <div className="p-5"><EmptyState title="No expenses found" description="No actual expense records match the current filters." /></div> : (
+                <div className="overflow-x-auto custom-scrollbar">
+                  <table className="ams-table w-full min-w-[700px] border-collapse text-left text-xs">
+                    <thead className="bg-bg"><tr><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Date</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Type / Category</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Description</th><th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount</th></tr></thead>
+                    <tbody>{paginatedExpenses.slice(0, 10).map((expense) => <tr key={expense.id} className="border-t border-line hover:bg-bg"><td className="px-4 py-3 tabular-nums text-muted">{expense.date}</td><td className="px-4 py-3"><div className="font-medium text-fg">{expense.type || 'OpEx'}</div><div className="mt-0.5 text-[10px] text-muted">{expense.category}</div></td><td className="px-4 py-3 text-fg">{expense.description}</td><td className="px-4 py-3 text-right font-medium tabular-nums text-fg">{formatNativeAmount(expense.amount, expense.currency || currency, true)}</td></tr>)}</tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+          </section>
+        </div>
+      ) : financeView === 'tax-retainers' ? (
+        <div className="space-y-6">
+          <section aria-labelledby="tax-retainers-title">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div><h2 id="tax-retainers-title" className="text-base font-semibold text-fg">Tax &amp; Retainers</h2><p className="mt-1 max-w-2xl text-xs leading-5 text-muted">Tax provisions and retainer activity derived from the Finance ledger.</p></div>
+              <button type="button" onClick={exportInvoicesCsv} disabled={!currencyInvoices.length} className={actionClass}><Download size={14} />Export CSV</button>
+            </div>
+          </section>
+
+          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Tax and retainer summary">
+            <article className="rounded-card border border-line bg-panel p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">Tax Provision</p><p className="mt-3 text-2xl font-semibold tabular-nums text-fg">{formatFinanceCardAmount(taxProvision, currency)}</p><p className="mt-2 text-xs text-muted">All non-cancelled invoices</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">Tax Collected</p><p className="mt-3 text-2xl font-semibold tabular-nums text-fg">{formatFinanceCardAmount(taxCollected, currency)}</p><p className="mt-2 text-xs text-success">{taxProvision > 0 ? ((taxCollected / taxProvision) * 100).toFixed(1) : '0.0'}% of provision</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">Retainer Billed</p><p className="mt-3 text-2xl font-semibold tabular-nums text-fg">{formatFinanceCardAmount(retainerBilled, currency)}</p><p className="mt-2 text-xs text-muted">Explicit retainer records</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">Tax Outstanding</p><p className="mt-3 text-2xl font-semibold tabular-nums text-warning">{formatFinanceCardAmount(taxOutstanding, currency)}</p><p className="mt-2 text-xs text-muted">Uncollected tax exposure</p></article>
+          </section>
+
+          <section className="grid grid-cols-1 gap-6 min-[1100px]:grid-cols-3">
+            <div className="min-[1100px]:col-span-2 rounded-card border border-line bg-panel overflow-hidden">
+              <div className="border-b border-line p-5"><h3 className="text-sm font-semibold text-fg">Tax Provision Ledger</h3><p className="mt-1 text-xs text-muted">Invoice-level tax basis and collection state.</p></div>
+              {currencyInvoices.filter((invoice) => invoice.status !== 'cancelled').length === 0 ? <div className="p-5"><EmptyState title="No tax records yet" description="Tax data will appear when non-cancelled invoices are available." /></div> : (
+                <div className="overflow-x-auto custom-scrollbar"><table className="ams-table w-full min-w-[860px] border-collapse text-left text-xs"><thead className="bg-bg"><tr><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice #</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Issue Date</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Taxable Base</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Tax Rate</th><th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Provision</th><th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Outstanding</th></tr></thead>
+                  <tbody>{currencyInvoices.filter((invoice) => invoice.status !== 'cancelled').slice(0, 12).map((invoice) => { const paidRatio = invoice.total > 0 ? Math.min(1, Number(invoice.amountPaid || 0) / invoice.total) : 0; const outstandingTax = Math.max(0, Number(invoice.taxAmount || 0) * (1 - paidRatio)); return <tr key={invoice.id} className="border-t border-line hover:bg-bg"><td className="px-4 py-3"><button type="button" onClick={() => openPrintPreview(invoice)} className="font-medium tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button><p className="mt-0.5 text-[10px] text-muted">{invoice.clientCompany || invoice.clientName}</p></td><td className="px-4 py-3 tabular-nums text-muted">{invoice.issueDate}</td><td className="px-4 py-3 tabular-nums text-fg">{formatNativeAmount(invoice.subtotal, invoice.currency, true)}</td><td className="px-4 py-3 tabular-nums text-muted">{invoice.taxPercent}%</td><td className="px-4 py-3 text-right tabular-nums text-fg">{formatNativeAmount(invoice.taxAmount, invoice.currency, true)}</td><td className="px-4 py-3 text-right tabular-nums text-warning">{formatNativeAmount(outstandingTax, invoice.currency, true)}</td></tr>; })}</tbody>
+                </table></div>
+              )}
+            </div>
+            <div className="rounded-card border border-line bg-panel p-5">
+              <div className="border-b border-line pb-4"><h3 className="text-sm font-semibold text-fg">Retainer Tracking</h3><p className="mt-1 text-xs text-muted">Only invoices with explicit retainer wording are included.</p></div>
+              <div className="mt-4 space-y-2.5">
+                <div className="flex items-center justify-between rounded-control border border-line bg-bg px-3 py-2.5 text-xs"><span className="text-muted">Tracked invoices</span><span className="font-semibold tabular-nums text-fg">{retainerInvoices.length}</span></div>
+                <div className="flex items-center justify-between rounded-control border border-line bg-bg px-3 py-2.5 text-xs"><span className="text-muted">Collected</span><span className="font-semibold tabular-nums text-success">{formatNativeAmount(retainerCollected, currency, true)}</span></div>
+                <div className="flex items-center justify-between rounded-control border border-line bg-bg px-3 py-2.5 text-xs"><span className="text-muted">Balance</span><span className="font-semibold tabular-nums text-warning">{formatNativeAmount(Math.max(0, retainerBilled - retainerCollected), currency, true)}</span></div>
+              </div>
+              {!retainerInvoices.length && <p className="mt-4 rounded-control border border-dashed border-line bg-bg px-3 py-3 text-[11px] leading-5 text-muted">No explicit retainer records are present in the current Finance data.</p>}
+            </div>
+          </section>
+        </div>
+      ) : financeView === 'financial-reports' ? (
+        <div className="space-y-6">
+          <section aria-labelledby="financial-reports-title">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div><h2 id="financial-reports-title" className="text-base font-semibold text-fg">Financial Reports</h2><p className="mt-1 max-w-2xl text-xs leading-5 text-muted">Billing, collections, operating spend, cash movement, and invoice status for the reporting period.</p></div>
+              <button type="button" onClick={exportInvoicesCsv} disabled={!filteredInvoices.length} className={actionClass}><Download size={14} />Export current ledger CSV</button>
+            </div>
+          </section>
+
+          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Financial report summary">
+            <article className="rounded-card border border-line bg-panel p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">Invoiced</p><p className="mt-3 text-2xl font-semibold tabular-nums text-fg">{formatFinanceCardAmount(currentQuarterTotal, currency)}</p><p className="mt-2 text-xs text-muted">Reporting quarter</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">Collected</p><p className="mt-3 text-2xl font-semibold tabular-nums text-fg">{formatFinanceCardAmount(quarterCollected, currency)}</p><p className="mt-2 text-xs text-muted">Recorded collections</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">Outstanding</p><p className="mt-3 text-2xl font-semibold tabular-nums text-warning">{formatFinanceCardAmount(serverMetrics?.totalOutstanding || 0, currency)}</p><p className="mt-2 text-xs text-muted">Current receivable balance</p></article>
+            <article className="rounded-card border border-line bg-panel p-5"><p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted">Net Cash</p><p className={'mt-3 text-2xl font-semibold tabular-nums ' + (quarterNetCash >= 0 ? 'text-success' : 'text-danger')}>{formatFinanceCardAmount(quarterNetCash, currency)}</p><p className="mt-2 text-xs text-muted">{quarterMargin.toFixed(1)}% cash margin</p></article>
+          </section>
+
+          <section className="grid grid-cols-1 gap-3 min-[1100px]:grid-cols-3">
+            <div className="min-[1100px]:col-span-2 rounded-card border border-line bg-panel p-4 sm:p-5">
+              <div className="flex flex-col gap-3 border-b border-line pb-3 sm:flex-row sm:items-center sm:justify-between"><div><h3 className="text-sm font-semibold text-fg">Cash Flow vs Operating Burn</h3><p className="mt-1 text-xs text-muted">Monthly billing inflow, operational burn rate, and net retention.</p></div><span className="text-[10px] text-muted">{financeChartData.length} periods</span></div>
+              <div className="pt-3">{hasTrendData ? <FinanceCashFlowChart data={financeChartData} currency={currency} ariaLabel="Cash flow versus operating burn by month." /> : <EmptyState title="No cash-flow data yet" description="The chart appears after actual invoice payments or expense records are available." />}</div>
+            </div>
+            <div className="rounded-card border border-line bg-panel p-4 sm:p-5">
+              <div className="border-b border-line pb-3"><h3 className="text-sm font-semibold text-fg">Invoice Status</h3><p className="mt-1 text-xs text-muted">{quarterInvoices.length} invoices in the reporting quarter.</p></div>
+              <div className="mt-4 space-y-2">{quarterStatusRows.map((row) => <div key={row.status} className="flex items-center justify-between rounded-control border border-line bg-bg px-3 py-2.5 text-xs"><span className="text-fg">{statusLabel[row.status]}</span><span className="font-semibold tabular-nums text-fg">{row.count}</span></div>)}</div>
+            </div>
+          </section>
+
+          <section className="rounded-card border border-line bg-panel overflow-hidden">
+            <div className="border-b border-line p-5"><h3 className="text-sm font-semibold text-fg">Operating Expense Breakdown</h3><p className="mt-1 text-xs text-muted">Recorded expense categories in the reporting quarter.</p></div>
+            {quarterExpenseCategories.length === 0 ? <div className="p-5"><EmptyState title="No expense data yet" description="Expense categories will appear after actual expense records are available." /></div> : <div className="divide-y divide-line">{quarterExpenseCategories.map(([label, amount]) => { const percent = quarterExpenses > 0 ? (amount / quarterExpenses) * 100 : 0; return <div key={label} className="p-4"><div className="flex items-center justify-between gap-3 text-xs"><span className="font-medium text-fg">{label}</span><span className="tabular-nums text-fg">{formatNativeAmount(amount, currency, true)}</span></div><div className="mt-2 h-1.5 overflow-hidden rounded-full border border-line bg-bg"><div className="h-full rounded-full bg-accent" style={{ width: Math.min(100, percent) + '%' }} /></div><div className="mt-1 text-[10px] tabular-nums text-muted">{percent.toFixed(1)}% of recorded operating spend</div></div>; })}</div>}
+          </section>
+        </div>      ) : (
         <>
           <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5" aria-label="Finance KPI snapshot">
             <article className="flex min-w-0 flex-col justify-between rounded-card border border-line bg-panel p-5">
