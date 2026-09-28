@@ -443,9 +443,7 @@ export const AdminClients: React.FC = () => {
     showToast(language === 'id' ? 'Direktori berhasil diekspor.' : 'Directory exported.');
   };
 
-  const SortButton: React.FC<{ label: string; sort: SortKey }> = ({ label, sort }) => {
-    const active = sortKey === sort;
-    return (
+  return (
     <div className="min-h-full pb-8">
       <section className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
