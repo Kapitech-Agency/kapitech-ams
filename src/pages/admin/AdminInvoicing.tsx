@@ -280,6 +280,7 @@ export const AdminInvoicing: React.FC = () => {
   const location = useLocation();
   const canViewFinancials = hasAdminPermission('canViewFinancials');
   const canManageInvoices = hasAdminPermission('canManageInvoices');
+  const canCreateInvoice = canManageInvoices;
   const canDeleteInvoice = canManageInvoices;
 
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
