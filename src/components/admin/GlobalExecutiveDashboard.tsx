@@ -772,7 +772,11 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         <AdminPanel className="min-[1100px]:col-span-4" bodyClassName="p-4 sm:p-5" title="Delivery & pacing" description="Project delivery distribution across the current portfolio.">
           <div className="grid min-w-0 items-center gap-5 sm:grid-cols-[150px_minmax(0,1fr)]">
             <div className="mx-auto w-[150px] max-w-full">
-              <DonutChart data={deliveryBreakdown} ariaLabel="Project delivery distribution: 8 on schedule, 3 at risk, 1 overdue." />
+              <DonutChart
+                data={deliveryBreakdown}
+                ariaLabel="Project delivery distribution: 8 on schedule, 3 at risk, 1 overdue."
+                showLegend={false}
+              />
             </div>
             <div className="min-w-0">
               <div className="flex items-end justify-between gap-3">
