@@ -9,6 +9,7 @@ export default defineConfig(() => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
+        'lucide-react': path.resolve(__dirname, 'src/lib/untitled-ui-icon-bridge.tsx'),
       },
     },
     build: {

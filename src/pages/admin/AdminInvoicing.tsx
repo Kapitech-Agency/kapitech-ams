@@ -458,8 +458,9 @@ const FinanceCashFlowChart: React.FC<{
   currency: CurrencyCode;
   ariaLabel: string;
 }> = ({ data, currency, ariaLabel }) => {
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
   if (!data.length) return null;
-  const width = 760, height = 190, left = 8, right = 12, top = 12, bottom = 20;
+  const width = 760, height = 300, left = 52, right = 18, top = 18, bottom = 42;
   const innerWidth = width - left - right, innerHeight = height - top - bottom;
   const values = data.flatMap((point) => [point.inflow, point.outflow, point.net]);
   const minValue = Math.min(0, ...values);
@@ -488,15 +489,16 @@ const FinanceCashFlowChart: React.FC<{
         ))}
       </div>
       <div className="mt-4 rounded-control border border-line bg-bg p-3">
-        <div className="relative h-48 w-full">
+        <div className="relative h-[300px] w-full">
           <svg viewBox={'0 0 ' + width + ' ' + height} className="h-full w-full" preserveAspectRatio="none">
             {[0, .25, .5, .75, 1].map((ratio) => <line key={ratio} x1={left} x2={width - right} y1={top + ratio * innerHeight} y2={top + ratio * innerHeight} stroke="var(--line)" strokeWidth="1" />)}
             <line x1={left} x2={width - right} y1={y(0)} y2={y(0)} stroke="var(--line)" strokeWidth="1.4" strokeDasharray="4 4" />
             <polyline points={line('inflow')} fill="none" stroke="var(--series-1)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
             <polyline points={line('outflow')} fill="none" stroke="var(--series-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             <polyline points={line('net')} fill="none" stroke="var(--success)" strokeWidth="2" strokeDasharray="5 4" strokeLinecap="round" strokeLinejoin="round" />
-            {data.map((point, index) => <g key={point.label}><circle cx={x(index)} cy={y(point.inflow)} r="3" fill="var(--series-1)" /><circle cx={x(index)} cy={y(point.outflow)} r="2.5" fill="var(--series-3)" /><circle cx={x(index)} cy={y(point.net)} r="2.5" fill="var(--success)" /></g>)}
+            {data.map((point, index) => <g key={point.label} onMouseEnter={() => setActiveIndex(index)} onFocus={() => setActiveIndex(index)} tabIndex={0} aria-label={`${point.label}: collected ${formatNativeAmount(point.inflow, currency, true)}, operating burn ${formatNativeAmount(point.outflow, currency, true)}, net ${formatNativeAmount(point.net, currency, true)}`}><line x1={x(index)} x2={x(index)} y1={top} y2={top + innerHeight} stroke={activeIndex === index ? 'var(--series-4)' : 'transparent'} strokeDasharray="4 4" /><circle cx={x(index)} cy={y(point.inflow)} r={activeIndex === index ? 4.5 : 3} fill="var(--series-1)" /><circle cx={x(index)} cy={y(point.outflow)} r={activeIndex === index ? 4 : 2.5} fill="var(--series-3)" /><circle cx={x(index)} cy={y(point.net)} r={activeIndex === index ? 4 : 2.5} fill="var(--success)" /></g>)}
           </svg>
+          {activeIndex !== null && data[activeIndex] && <div className="pointer-events-none absolute left-1/2 top-3 z-10 w-[210px] -translate-x-1/2 rounded-control border border-line bg-panel px-3 py-2.5 text-[11px] shadow-sm"><p className="font-semibold text-fg">{data[activeIndex].label}</p><div className="mt-2 space-y-1.5 text-muted"><div className="flex justify-between gap-3"><span>Collected</span><span className="tabular-nums text-success">{formatNativeAmount(data[activeIndex].inflow, currency, true)}</span></div><div className="flex justify-between gap-3"><span>Operating burn</span><span className="tabular-nums text-fg">{formatNativeAmount(data[activeIndex].outflow, currency, true)}</span></div><div className="flex justify-between gap-3"><span>Net cash</span><span className={'tabular-nums ' + (data[activeIndex].net >= 0 ? 'text-success' : 'text-danger')}>{formatNativeAmount(data[activeIndex].net, currency, true)}</span></div></div></div>}
         </div>
         <div className="grid grid-cols-3 gap-2 border-t border-line pt-2 text-[10px] tabular-nums text-muted sm:grid-cols-6">{data.map((point) => <span key={point.label} className="truncate text-center">{point.label}</span>)}</div>
       </div>
@@ -622,6 +624,7 @@ export const AdminInvoicing: React.FC = () => {
   const [usingDemoFinance, setUsingDemoFinance] = useState(false);
   const [usingDemoInvoices, setUsingDemoInvoices] = useState(false);
   const [usingDemoExpenses, setUsingDemoExpenses] = useState(false);
+  const [incomeExpenseMode, setIncomeExpenseMode] = useState<'income' | 'expenses'>('income');
   const [incomeSearch, setIncomeSearch] = useState('');
   const [incomePage, setIncomePage] = useState(1);
   const incomePageSize = 10;
@@ -1084,6 +1087,11 @@ export const AdminInvoicing: React.FC = () => {
   useEffect(() => {
     setIncomePage(1);
   }, [incomeSearch, currency]);
+
+  useEffect(() => {
+    setIncomePage(1);
+    setExpensePage(1);
+  }, [incomeExpenseMode, currency]);
 
   useEffect(() => {
     setIncomePage((page) => Math.min(page, incomePageCount));
@@ -2231,16 +2239,58 @@ export const AdminInvoicing: React.FC = () => {
                 )}
               </>
             ) : financeView === 'income-expenses' ? (
-              <>
-                <button type="button" onClick={exportReportCsv} className={actionClass}><Download size={14}/>Export report</button>
-                {canManageInvoices && (
-                  <>
-                    <button type="button" onClick={openExpenseModal} className={actionClass}><Plus size={14}/>New expense</button>
-                    <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>New invoice</button>
-                  </>
+        <div className="space-y-5">
+          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+            <FinanceMetricCard label="Income YTD" value={formatFinanceCardAmount(ytdCollected,currency)} context={ytdCollectionRate.toFixed(1)+'% collected vs issued'} icon={<WalletCards size={15} className="text-success"/>} toneClassName="text-success"/>
+            <FinanceMetricCard label="Invoiced YTD" value={formatFinanceCardAmount(ytdInvoiced,currency)} context="Issued billings" icon={<Receipt size={15}/>}/>
+            <FinanceMetricCard label="Expenses YTD" value={formatFinanceCardAmount(ytdExpenses,currency)} context={currencyExpenses.length+' expense records'} icon={<ArrowDown size={15}/>}/>
+            <FinanceMetricCard label="Net cash YTD" value={formatFinanceCardAmount(ytdNetCash,currency)} context="Collected less expenses" icon={<TrendingUp size={15}/>} toneClassName={ytdNetCash>=0?'text-success':'text-danger'}/>
+          </section>
+          <section className="rounded-card border border-line bg-panel overflow-hidden">
+            <div className="border-b border-line p-4 sm:p-5">
+              <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="text-sm font-semibold text-fg">Income & Expenses ledger</h2>
+                    <div className="inline-flex rounded-control border border-line bg-bg p-0.5" role="group" aria-label="Ledger view">
+                      <button type="button" onClick={() => setIncomeExpenseMode('income')} aria-pressed={incomeExpenseMode === 'income'} className={'inline-flex h-8 items-center gap-1.5 rounded-[6px] px-2.5 text-[11px] font-medium transition-colors ' + (incomeExpenseMode === 'income' ? 'bg-panel text-fg' : 'text-muted hover:text-fg')}><WalletCards size={13} aria-hidden="true"/>Income</button>
+                      <button type="button" onClick={() => setIncomeExpenseMode('expenses')} aria-pressed={incomeExpenseMode === 'expenses'} className={'inline-flex h-8 items-center gap-1.5 rounded-[6px] px-2.5 text-[11px] font-medium transition-colors ' + (incomeExpenseMode === 'expenses' ? 'bg-panel text-fg' : 'text-muted hover:text-fg')}><ArrowDown size={13} aria-hidden="true"/>Expenses</button>
+                    </div>
+                  </div>
+                  <p className="mt-1 text-xs text-muted">{incomeExpenseMode === 'income' ? 'Actual payment activity.' : 'Operating spend by type, category, and date.'}</p>
+                </div>
+                {incomeExpenseMode === 'income' ? (
+                  <label className="relative w-full max-w-xs"><Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/><span className="sr-only">Search income</span><input value={incomeSearch} onChange={(event)=>setIncomeSearch(event.target.value)} placeholder="Search invoice or client..." className={fieldClass+' pl-8'}/></label>
+                ) : (
+                  <div className="grid w-full gap-2 sm:grid-cols-3 xl:w-auto">
+                    <label className="relative sm:col-span-3 xl:col-span-1 xl:w-64"><Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/><span className="sr-only">Search expense</span><input value={expenseSearch} onChange={(event)=>setExpenseSearch(event.target.value)} placeholder="Search expense..." className={fieldClass+' pl-8'}/></label>
+                    <CustomSelect value={expenseTypeFilter} onChange={setExpenseTypeFilter} options={expenseTypeOptions} triggerClassName="h-9 min-h-9"/>
+                    <CustomSelect value={expenseSort} onChange={(value)=>setExpenseSort(value as typeof expenseSort)} options={[{value:'date_desc',label:'Newest'},{value:'date_asc',label:'Oldest'},{value:'amount_high',label:'Highest amount'},{value:'amount_low',label:'Lowest amount'}]} triggerClassName="h-9 min-h-9"/>
+                    {canManageInvoices&&<button type="button" onClick={openExpenseModal} className={primaryClass+' sm:col-span-3 xl:col-span-1'}><Plus size={14}/>Add expense</button>}
+                  </div>
                 )}
-              </>
-            ) : financeView === 'tax-retainers' ? (
+              </div>
+            </div>
+            {incomeExpenseMode === 'income' ? (
+              <div className="overflow-hidden">
+                {incomeRows.length===0?<div className="p-5"><EmptyState title="No income recorded" description="Recorded payments will appear here."/></div>:<table className="w-full table-fixed border-separate border-spacing-0 text-xs">
+                  <thead className="sticky top-0 z-10 border-b border-line bg-panel/95 backdrop-blur-sm"><tr><th className="w-[28%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Payment</th><th className="w-[34%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client</th><th className="w-[18%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Date</th><th className="w-[20%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount</th></tr></thead>
+                  <tbody className="divide-y divide-line">{paginatedIncomeRows.map((row)=><tr key={row.id} className="group transition-colors hover:bg-bg"><td className="px-5 py-4"><button type="button" onClick={()=>{const invoice=currencyInvoices.find((item)=>item.id===row.invoiceId);if(invoice)openPrintPreview(invoice)}} className="font-semibold tabular-nums text-fg hover:text-accent-text">{row.invoiceNumber}</button><p className="mt-1 text-[11px] text-muted">Payment received</p></td><td className="px-5 py-4"><p className="font-medium text-fg">{row.clientCompany}</p><p className="mt-1 text-[11px] text-muted">Invoice payment</p></td><td className="px-4 py-5 tabular-nums text-muted">{row.date}</td><td className="px-4 py-5 text-right"><p className="font-semibold tabular-nums text-success">{formatNativeAmount(row.amount,row.currency,true)}</p><span className="mt-1 inline-flex rounded-badge border border-success/20 bg-success/10 px-1.5 py-0.5 text-[10px] font-medium text-success">Collected</span></td></tr>)}</tbody>
+                </table>}
+                {incomePageCount>1&&<div className="border-t border-line p-4"><div className="flex justify-between text-[11px] text-muted"><span>{incomeRows.length} payments</span><div className="flex gap-1"><button type="button" onClick={()=>setIncomePage((p)=>Math.max(1,p-1))} disabled={incomePage===1} className={actionClass}>Prev</button><span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control bg-line px-2 py-0.5 text-[10px] font-semibold text-fg">{incomePage}</span><button type="button" onClick={()=>setIncomePage((p)=>Math.min(incomePageCount,p+1))} disabled={incomePage===incomePageCount} className={actionClass}>Next</button></div></div></div>}
+              </div>
+            ) : (
+              <div className="overflow-hidden">
+                {paginatedExpenses.length===0?<div className="p-5"><EmptyState title="No expenses found" description="Adjust the search or filters, or add a new expense."/></div>:<table className="w-full table-fixed border-separate border-spacing-0 text-xs">
+                  <thead className="sticky top-0 z-10 border-b border-line bg-panel/95 backdrop-blur-sm"><tr><th className="w-[38%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Expense</th><th className="w-[16%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Type</th><th className="w-[18%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Date</th><th className="w-[18%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount</th><th className="w-[10%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted"></th></tr></thead>
+                  <tbody className="divide-y divide-line">{paginatedExpenses.map((expense)=><tr key={expense.id} className="group transition-colors hover:bg-bg"><td className="px-5 py-4"><p className="font-medium text-fg">{expense.description}</p><p className="mt-1 truncate text-[11px] text-muted">{expense.category}</p></td><td className="px-5 py-4"><span className="inline-flex rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">{expense.type||'OpEx'}</span></td><td className="px-4 py-5 tabular-nums text-muted">{expense.date}</td><td className="px-4 py-5 text-right"><p className="font-semibold tabular-nums text-fg">{formatNativeAmount(expense.amount,expense.currency||currency,true)}</p></td><td className="px-4 py-5 text-right">{canManageInvoices&&<button type="button" onClick={()=>setConfirmAction({type:'expense',id:expense.id,label:expense.description})} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Void expense" title="Void expense"><Trash2 size={14}/></button>}</td></tr>)}</tbody>
+                </table>}
+                {expensePageCount>1&&<div className="border-t border-line p-4"><div className="flex justify-between text-[11px] text-muted"><span>{filteredExpenses.length} expenses</span><div className="flex gap-1"><button type="button" onClick={()=>setExpensePage((p)=>Math.max(1,p-1))} disabled={expensePage===1} className={actionClass}>Prev</button><span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control bg-line px-2 py-0.5 text-[10px] font-semibold text-fg">{expensePage}</span><button type="button" onClick={()=>setExpensePage((p)=>Math.min(expensePageCount,p+1))} disabled={expensePage===expensePageCount} className={actionClass}>Next</button></div></div></div>}
+              </div>
+            )}
+          </section>
+        </div>
+      ) : financeView === 'tax-retainers' ? (
               <>
                 <button type="button" onClick={exportTaxCsv} disabled={!currencyInvoices.length} className={actionClass}><Download size={14}/>Export tax detail</button>
                 {canManageInvoices && (

@@ -143,14 +143,14 @@ export const AdminNotificationCenter: React.FC = () => {
         <Button
           ref={triggerRef}
           type="button"
-          variant="secondary"
+          variant="ghost"
           onClick={() => setOpen(v => !v)}
           aria-label={language === 'id' ? 'Notifikasi' : 'Notifications'}
           aria-haspopup="dialog"
           aria-expanded={open}
           aria-controls="ams-notification-menu"
           icon={<Bell size={16} />}
-          className={`h-10 w-10 p-0 ${open ? 'border-line bg-panel-hover text-fg' : ''}`}
+          className={`h-9 w-9 p-0 ${open ? 'bg-bg text-fg' : ''}`}
         />
         {unread > 0 && (
           <span className="pointer-events-none absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-badge border-2 border-panel bg-accent px-1 text-[9px] font-semibold text-white">

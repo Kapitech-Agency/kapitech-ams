@@ -49,7 +49,7 @@ export const TrendChart: React.FC<{
 }> = ({ data, primaryLabel, secondaryLabel, tertiaryLabel = 'Net', primaryFormat = formatCompact, ariaLabel }) => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const width = 720;
-  const height = 260;
+  const height = 320;
   const left = 52;
   const right = 18;
   const top = 20;
@@ -68,6 +68,8 @@ export const TrendChart: React.FC<{
     tertiaryY: point.tertiary === undefined ? undefined : y(point.tertiary),
   }));
   const primaryPath = points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ');
+  const primaryBaseline = y(0);
+  const primaryAreaPath = primaryPath + ` L ${points[points.length - 1].x} ${primaryBaseline} L ${points[0].x} ${primaryBaseline} Z`;
   const secondaryPath = points.filter((point) => point.secondaryY !== undefined)
     .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.secondaryY}`).join(' ');
   const tertiaryPath = points.filter((point) => point.tertiaryY !== undefined)
@@ -86,7 +88,7 @@ export const TrendChart: React.FC<{
         {data.some((point) => point.tertiary !== undefined) && <span className="inline-flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-success" />{tertiaryLabel}</span>}
       </div>
       <div className="relative overflow-hidden rounded-control border border-line bg-bg/40">
-        <svg viewBox={`0 0 ${width} ${height}`} className="block h-[220px] w-full touch-none" preserveAspectRatio="none"
+        <svg viewBox={`0 0 ${width} ${height}`} className="block h-[300px] w-full touch-none" preserveAspectRatio="none"
           onMouseLeave={() => setActiveIndex(null)}>
           {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
             const value = maxValue - ratio * range;
@@ -98,6 +100,8 @@ export const TrendChart: React.FC<{
               </g>
             );
           })}
+          <defs><linearGradient id="dashboard-trend-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--series-1)" stopOpacity="0.22" /><stop offset="100%" stopColor="var(--series-1)" stopOpacity="0" /></linearGradient></defs>
+          <path d={primaryAreaPath} fill="url(#dashboard-trend-fill)" />
           <path d={primaryPath} fill="none" stroke="var(--series-1)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           {secondaryLabel && secondaryPath && (
             <path d={secondaryPath} fill="none" stroke="var(--series-3)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
