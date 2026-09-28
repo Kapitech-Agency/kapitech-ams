@@ -670,8 +670,9 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     [projectFilter],
   );
 
-  const totalDelivery = deliveryBreakdown.reduce((total, item) => total + item.value, 0);
-  const onSchedulePercent = Math.round((deliveryBreakdown[0].value / totalDelivery) * 100);
+  const totalDelivery = deliveryBreakdown.reduce((total, item) => total + Math.max(0, item.value), 0);
+  const onScheduleValue = deliveryBreakdown.find((item) => item.label === 'On schedule')?.value ?? 0;
+  const onSchedulePercent = totalDelivery > 0 ? Math.round((Math.max(0, onScheduleValue) / totalDelivery) * 100) : 0;
   const revenueData = sampleRevenueByRange[range];
 
   return (
@@ -769,25 +770,34 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         </AdminPanel>
 
         <AdminPanel className="min-[1100px]:col-span-4" bodyClassName="p-4 sm:p-5" title="Delivery & pacing" description="Project delivery distribution across the current portfolio.">
-          <div className="grid items-center gap-4 sm:grid-cols-[150px_1fr] min-[1100px]:grid-cols-1">
-            <div className="mx-auto w-full max-w-[160px]">
+          <div className="grid min-w-0 items-center gap-5 sm:grid-cols-[150px_minmax(0,1fr)]">
+            <div className="mx-auto w-[150px] max-w-full">
               <DonutChart data={deliveryBreakdown} ariaLabel="Project delivery distribution: 8 on schedule, 3 at risk, 1 overdue." />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-end justify-between gap-3">
-                <div><div className="text-xs text-muted">On schedule</div><div className="mt-1 text-2xl font-medium tabular-nums text-fg">{onSchedulePercent}%</div></div>
-                <span className="text-[11px] text-muted">12 active projects</span>
+                <div className="min-w-0">
+                  <div className="text-xs text-muted">On schedule</div>
+                  <div className="mt-1 text-2xl font-medium tabular-nums text-fg">{onSchedulePercent}%</div>
+                </div>
+                <span className="shrink-0 text-[11px] text-muted">{totalDelivery} active projects</span>
               </div>
               <div className="mt-4 space-y-3 border-t border-line pt-4">
                 {deliveryBreakdown.map((item) => {
-                  const percent = Math.round((item.value / totalDelivery) * 100);
+                  const safeValue = Math.max(0, item.value);
+                  const percent = totalDelivery > 0 ? Math.round((safeValue / totalDelivery) * 100) : 0;
                   return (
                     <div key={item.label}>
                       <div className="flex items-center justify-between gap-3 text-xs">
-                        <span className="flex min-w-0 items-center gap-2 text-fg"><i className={['h-2 w-2 rounded-full', progressClasses[item.tone]].join(' ')} />{item.label}</span>
-                        <span className="tabular-nums text-muted">{item.value} ({percent}%)</span>
+                        <span className="flex min-w-0 items-center gap-2 text-fg">
+                          <i className={['h-2 w-2 shrink-0 rounded-full', progressClasses[item.tone]].join(' ')} />
+                          <span className="truncate">{item.label}</span>
+                        </span>
+                        <span className="shrink-0 tabular-nums text-muted">{safeValue} ({percent}%)</span>
                       </div>
-                      <div className="mt-1.5 h-1.5 overflow-hidden rounded-sm bg-line"><div className={['h-full rounded-sm', progressClasses[item.tone]].join(' ')} style={{ width: percent + '%' }} /></div>
+                      <div className="mt-1.5 h-1.5 overflow-hidden rounded-sm bg-line" aria-hidden="true">
+                        <div className={['h-full rounded-sm', progressClasses[item.tone]].join(' ')} style={{ width: percent + '%' }} />
+                      </div>
                     </div>
                   );
                 })}
