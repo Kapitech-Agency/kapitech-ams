@@ -1012,7 +1012,7 @@ export const AdminInvoicing: React.FC = () => {
               Export CSV
             </button>
             {canManageInvoices && (
-              <button type="button" onClick={openCreateInvoice} className={primaryClass} disabled={!canManageInvoices || refreshing}>
+              <button type="button" onClick={openCreateInvoice} className={primaryClass} disabled={!canManageInvoices}>
                 <Plus size={14} />
                 {language === 'id' ? 'Buat invoice' : 'New invoice'}
               </button>
@@ -1116,7 +1116,7 @@ export const AdminInvoicing: React.FC = () => {
           <section className="mt-6 grid gap-3 min-[1100px]:grid-cols-3" aria-label="Finance analytics">
             <div className="min-[1100px]:col-span-2 rounded-card border border-line bg-panel p-4 sm:p-5">
               <div className="flex flex-col gap-3 border-b border-line pb-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
+                <div className="border-b border-line pb-3">
                   <h2 className="text-sm font-semibold text-fg">Cash Flow vs Operating Burn</h2>
                   <p className="mt-1 text-xs leading-5 text-muted">Recorded revenue inflow, operating expenses, and net result for available periods.</p>
                 </div>
