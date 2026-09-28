@@ -544,8 +544,8 @@ export const AdminClients: React.FC = () => {
         </div>
         {!isLoading && filteredClients.length > 0 && <div className="flex flex-col gap-3 border-t border-line bg-bg px-4 py-3 sm:flex-row sm:items-center sm:justify-between"><p className="text-[11px] text-muted">Showing <span className="font-medium tabular-nums text-fg">${(page - 1) * pageSize + 1}</span> to <span className="font-medium tabular-nums text-fg">${Math.min(page * pageSize, filteredClients.length)}</span> of <span className="font-medium tabular-nums text-fg">${filteredClients.length}</span> records</p><div className="flex items-center gap-1.5"><button type="button" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page === 1} className="rounded-control border border-line bg-panel px-2.5 py-1 text-[11px] text-muted disabled:cursor-not-allowed disabled:opacity-40">Previous</button><div className="flex items-center gap-1 px-1">{Array.from({ length: Math.min(3, pageCount) }, (_, index) => index + 1).map((value) => <button key={value} type="button" onClick={() => setPage(value)} className={`h-6 w-6 rounded-chip text-[11px] tabular-nums ${page === value ? 'bg-line text-fg' : 'text-muted hover:bg-panel'}`}>{value}</button>)}{pageCount > 4 && <span className="px-0.5 text-muted">…</span>}{pageCount > 3 && <button type="button" onClick={() => setPage(pageCount)} className={`h-6 w-6 rounded-chip text-[11px] tabular-nums ${page === pageCount ? 'bg-line text-fg' : 'text-muted hover:bg-panel'}`}>{pageCount}</button>}</div><button type="button" onClick={() => setPage((current) => Math.min(pageCount, current + 1))} disabled={page === pageCount} className="rounded-control border border-line bg-panel px-2.5 py-1 text-[11px] text-fg disabled:cursor-not-allowed disabled:opacity-40">Next</button></div></div>}
       </section>
-    </div>
-  );
+
+
       <Modal
         open={!!selectedClient}
         onClose={() => setSelectedClient(null)}
