@@ -35,7 +35,6 @@ import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/Admi
 
 
 type SortKey = 'updated' | 'due' | 'oldest' | 'amount_high' | 'amount_low' | 'invoice';
-type Tab = 'invoices' | 'expenses';
 type LedgerPeriod = 'reporting-quarter' | 'all';
 type FinanceClient = {
   id: string;
@@ -240,17 +239,11 @@ export const AdminInvoicing: React.FC = () => {
   const canDeleteInvoice = canManageInvoices;
 
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
-  const [tab, setTab] = useState<Tab>('invoices');
 
   const financeView = useMemo(
     () => new URLSearchParams(location.search).get('finance') || 'invoices',
     [location.search]
   );
-
-  useEffect(() => {
-    if (financeView === 'income-expenses') setTab('expenses');
-    if (financeView === 'invoices') setTab('invoices');
-  }, [financeView]);
   const [invoices, setInvoices] = useState<AgencyInvoice[]>([]);
   const [expenses, setExpenses] = useState<FinanceExpense[]>([]);
   const [clients, setClients] = useState<FinanceClient[]>([]);
@@ -1257,11 +1250,11 @@ export const AdminInvoicing: React.FC = () => {
           <section className="mt-6 rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="finance-workspace-title">
             <div className="border-b border-line p-4 sm:p-5">
               <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                <div className="flex min-w-0 items-center gap-4">
-                  <button type="button" onClick={() => setTab('invoices')} className={'inline-flex min-h-9 shrink-0 items-center gap-1.5 border-b-2 px-2 text-xs font-medium transition-colors ' + (tab === 'invoices' ? 'border-accent text-fg' : 'border-transparent text-muted hover:text-fg')}><Receipt size={14} /> Invoices <span className="tabular-nums opacity-70">({currencyInvoices.length})</span></button>
-                  <button type="button" onClick={() => setTab('expenses')} className={'inline-flex min-h-9 shrink-0 items-center gap-1.5 border-b-2 px-2 text-xs font-medium transition-colors ' + (tab === 'expenses' ? 'border-accent text-fg' : 'border-transparent text-muted hover:text-fg')}><CreditCard size={14} /> Expenses <span className="tabular-nums opacity-70">({currencyExpenses.length})</span></button>
+                <div className="min-w-0">
+                  <h2 id="finance-workspace-title" className="text-sm font-semibold text-fg">{financeView === 'income-expenses' ? 'Income & Expenses' : 'Invoice Ledger'}</h2>
+                  <p className="mt-1 text-[11px] text-muted">{financeView === 'income-expenses' ? currencyExpenses.length + ' recorded expense entries' : ledgerInvoices.length + ' invoices in the active ledger period'}</p>
                 </div>
-                {tab === 'invoices' ? (
+                {financeView !== 'income-expenses' ? (
                   <div className="flex w-full flex-col gap-2 xl:w-auto xl:flex-row xl:items-center">
                     <label className="relative min-w-[220px] xl:w-64"><span className="sr-only">Search invoices</span><Search size={14} className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-muted" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search invoice # or client..." className={fieldClass + ' pl-9 pr-3'} /></label>
                     <div className="flex items-center gap-1 overflow-x-auto rounded-control border border-line bg-bg p-0.5 custom-scrollbar">
@@ -1302,10 +1295,10 @@ export const AdminInvoicing: React.FC = () => {
                   </div>
                 )}
               </div>
-              {tab === 'invoices' && <div className="mt-3 flex items-center gap-2 border-t border-line pt-3"><span className="text-[10px] uppercase tracking-[0.08em] text-muted">Ledger</span><span className="h-1 w-1 rounded-full bg-line" /><span className="text-[10px] text-muted">Current financial period</span>{statusFilter !== 'all' && <button type="button" onClick={() => setStatusFilter('all')} className="ml-auto rounded-chip px-2 py-1 text-[11px] text-muted hover:text-fg">Clear filters</button>}</div>}
+              {financeView !== 'income-expenses' && <div className="mt-3 flex items-center gap-2 border-t border-line pt-3"><span className="text-[10px] uppercase tracking-[0.08em] text-muted">Ledger</span><span className="h-1 w-1 rounded-full bg-line" /><span className="text-[10px] text-muted">Current financial period</span>{statusFilter !== 'all' && <button type="button" onClick={() => setStatusFilter('all')} className="ml-auto rounded-chip px-2 py-1 text-[11px] text-muted hover:text-fg">Clear filters</button>}</div>}
             </div>
             <div className="p-0">
-              {tab === 'invoices' ? (
+              {financeView !== 'income-expenses' ? (
                 <>
                   {filteredInvoices.length === 0 ? <EmptyState title="No invoices found" description={search || statusFilter !== 'all' ? 'No invoices match the current search or filter.' : 'No invoice records are available yet.'} action={canManageInvoices ? <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14} />Create invoice</button> : undefined} /> : (
                     <>
