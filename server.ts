@@ -1,4 +1,5 @@
 import express from 'express';
+import fs from 'node:fs';
 import path from 'path';
 import dotenv from 'dotenv';
 import { URL } from 'node:url';
@@ -283,7 +284,20 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), 'dist');
+    // Managed Node.js platforms can launch the bundle with a working directory
+    // different from the repository root. Resolve the frontend from an actual
+    // built index.html instead of assuming process.cwd() is the app root.
+    const runtimeEntry = process.argv[1] ? path.resolve(process.argv[1]) : '';
+    const runtimeDir = runtimeEntry ? path.dirname(runtimeEntry) : process.cwd();
+    const distCandidates = [
+      path.join(runtimeDir, 'index.html'),
+      path.join(process.cwd(), 'dist', 'index.html'),
+      path.join(process.cwd(), 'index.html')
+    ];
+    const distIndex = distCandidates.find((candidate) => fs.existsSync(candidate));
+    const distPath = distIndex
+      ? path.dirname(distIndex)
+      : path.join(process.cwd(), 'dist');
 
     // Never expose backend bundles or source maps as public static assets.
     app.use((req, res, next) => {
