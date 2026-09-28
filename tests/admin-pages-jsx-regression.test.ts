@@ -23,6 +23,11 @@ test('Admin invoicing keeps financial mutations permission-gated and uses the sh
   assert.ok(source.includes('serverMetrics.totalInvoicesCount'));
   assert.ok(source.includes('Cash Flow vs Operating Burn'));
   assert.ok(source.includes('Finance snapshot'));
+  assert.ok(source.includes('Cash position'));
+  assert.ok(source.includes('Total outstanding balance'));
+  assert.ok(source.includes('Collection progress'));
+  assert.ok(source.includes('How to read this:'));
+  assert.ok(source.includes('overdueInvoiceCount'));
   assert.ok(source.includes('paymentFilter'));
   assert.ok(source.includes('dueFilter'));
   assert.ok(source.includes('grid-cols-2 gap-3 xl:grid-cols-4'));

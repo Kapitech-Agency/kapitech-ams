@@ -1784,6 +1784,11 @@ export const AdminInvoicing: React.FC = () => {
     [currencyInvoices]
   );
 
+  const overdueInvoiceCount = useMemo(
+    () => currencyInvoices.filter(isPastDueInvoice).length,
+    [currencyInvoices]
+  );
+
   const operatingMarginValue = serverMetrics ? Number.parseFloat(serverMetrics.profitMargin) : NaN;
   const operatingMarginHealthy = Number.isFinite(operatingMarginValue) && operatingMarginValue >= 35;
 
@@ -2386,7 +2391,144 @@ export const AdminInvoicing: React.FC = () => {
   </tr>;
 })}
 </tbody></table>}</div>{invoicePageCount>1&&<div className="border-t border-line p-4"><div className="flex justify-between text-[11px] text-muted"><span>Showing {((invoicePage-1)*invoicePageSize)+1}–{Math.min(invoicePage*invoicePageSize,filteredInvoices.length)} of {filteredInvoices.length}</span><div className="flex gap-1"><button type="button" onClick={()=>setInvoicePage((p)=>Math.max(1,p-1))} disabled={invoicePage===1} className={actionClass}>Prev</button><span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control bg-line px-2 text-[10px] font-semibold text-fg">{invoicePage}</span><button type="button" onClick={()=>setInvoicePage((p)=>Math.min(invoicePageCount,p+1))} disabled={invoicePage===invoicePageCount} className={actionClass}>Next</button></div></div></div>}</section>
-          <section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><div className="flex justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Finance snapshot</h2><p className="mt-1 text-xs text-muted">Billing, collection, receivables, burn, margin, tax, and retainer health.</p></div><div className="flex flex-wrap gap-2 text-[10px] text-muted"><span className="rounded-badge border border-line bg-bg px-2 py-1">{ledgerInvoices.length} invoices</span><span className="rounded-badge border border-line bg-bg px-2 py-1">{currencyExpenses.length} expenses</span><span className="rounded-badge border border-line bg-bg px-2 py-1">{retainerInvoices.length} retainers</span></div></div></div><div className="p-4 sm:p-5"><div className="grid grid-cols-2 gap-2 md:grid-cols-4">{[['Quarter billed',formatFinanceCardAmount(currentQuarterTotal,currency)],['Quarter collected',formatFinanceCardAmount(quarterCollected,currency)],['Quarter expenses',formatFinanceCardAmount(quarterExpenses,currency)],['Quarter net cash',formatFinanceCardAmount(quarterNetCash,currency)],['Outstanding',formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)],['Overdue',formatFinanceCardAmount(overdueBalance,currency)],['Collection rate',ytdCollectionRate.toFixed(1)+'%'],['Operating margin',(Number.isFinite(operatingMarginValue)?operatingMarginValue:quarterMargin).toFixed(1)+'%']].map(([label,value])=><div key={label} className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">{label}</p><p className="mt-1.5 text-sm font-semibold tabular-nums">{value}</p></div>)}</div><div className="mt-4 grid gap-4 lg:grid-cols-3"><div className="rounded-control border border-line bg-bg p-4"><div className="flex justify-between gap-3"><div><p className="text-xs font-semibold text-fg">Collection health</p><p className="mt-1 text-[10px] text-muted">Collected vs issued.</p></div><span className="text-sm font-semibold tabular-nums text-success">{ytdCollectionRate.toFixed(1)}%</span></div><div className="mt-3 h-2 rounded-full bg-panel overflow-hidden"><div className="h-full rounded-full bg-success" style={{width:Math.min(100,Math.max(0,ytdCollectionRate))+'%'}}/></div><div className="mt-2 flex justify-between text-[10px] text-muted"><span>{formatFinanceCardAmount(ytdCollected,currency)}</span><span>{formatFinanceCardAmount(ytdInvoiced,currency)}</span></div></div><div className="rounded-control border border-line bg-bg p-4"><p className="text-xs font-semibold text-fg">Working capital</p><p className="mt-1 text-[10px] text-muted">Receivable pressure.</p><div className="mt-3 grid grid-cols-3 gap-2"><div><p className="text-[10px] text-muted">Open</p><p className="mt-1 text-sm font-semibold tabular-nums">{pendingInvoiceCount}</p></div><div><p className="text-[10px] text-muted">Overdue</p><p className="mt-1 text-sm font-semibold tabular-nums text-danger">{criticalOverdueCount}</p></div><div><p className="text-[10px] text-muted">Due soon</p><p className="mt-1 text-sm font-semibold tabular-nums text-warning">{dueSoonCount}</p></div></div></div><div className="rounded-control border border-line bg-bg p-4"><p className="text-xs font-semibold text-fg">Tax & retainers</p><p className="mt-1 text-[10px] text-muted">Liability and recurring billing.</p><div className="mt-3 space-y-1.5 text-[10px]"><div className="flex justify-between"><span className="text-muted">Tax due</span><span className="font-medium tabular-nums text-warning">{formatFinanceCardAmount(taxOutstanding,currency)}</span></div><div className="flex justify-between"><span className="text-muted">Retainer billed</span><span className="font-medium tabular-nums">{formatFinanceCardAmount(retainerBilled,currency)}</span></div><div className="flex justify-between"><span className="text-muted">Retainer collected</span><span className="font-medium tabular-nums text-success">{formatFinanceCardAmount(retainerCollected,currency)}</span></div></div></div></div></div></section>
+          <section className="rounded-card border border-line bg-panel overflow-hidden">
+  <div className="border-b border-line p-4 sm:p-5">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <h2 className="text-sm font-semibold text-fg">Finance snapshot</h2>
+        <p className="mt-1 max-w-2xl text-xs text-muted">A decision view of cash movement, receivables, and operating performance.</p>
+      </div>
+      <span className="inline-flex shrink-0 items-center rounded-badge border border-line bg-bg px-2.5 py-1 text-[10px] font-semibold text-muted">{reportingQuarter?.label || 'Current quarter'}</span>
+    </div>
+  </div>
+
+  <div className="p-4 sm:p-5">
+    <div className="grid gap-3 lg:grid-cols-[minmax(0,1.3fr)_minmax(300px,0.7fr)]">
+      <article className="rounded-control border border-line bg-bg p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Cash position</p>
+            <p className="mt-1 text-xs text-muted">Collected cash minus recorded operating expenses.</p>
+          </div>
+          <span className="rounded-badge border border-line bg-panel px-2 py-1 text-[10px] font-medium text-muted">Current quarter</span>
+        </div>
+
+        <div className="mt-5">
+          <p className={'text-3xl font-semibold leading-none tabular-nums ' + (quarterNetCash >= 0 ? 'text-success' : 'text-danger')}>{formatNativeAmount(quarterNetCash,currency,true)}</p>
+          <p className="mt-2 text-[10px] text-muted">Net cash available from this period's recorded movement.</p>
+        </div>
+
+        <div className="mt-5 grid gap-2 sm:grid-cols-2">
+          <div className="rounded-control border border-line bg-panel px-3 py-3">
+            <p className="text-[10px] font-medium text-muted">Cash collected</p>
+            <p className="mt-1 text-base font-semibold tabular-nums text-success">{formatNativeAmount(quarterCollected,currency,true)}</p>
+          </div>
+          <div className="rounded-control border border-line bg-panel px-3 py-3">
+            <p className="text-[10px] font-medium text-muted">Operating expenses</p>
+            <p className="mt-1 text-base font-semibold tabular-nums text-fg">{formatNativeAmount(quarterExpenses,currency,true)}</p>
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-3 gap-2 border-t border-line pt-4">
+          <div>
+            <p className="text-[10px] text-muted">Billed</p>
+            <p className="mt-1 text-sm font-semibold tabular-nums text-fg">{formatNativeAmount(currentQuarterTotal,currency,true)}</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-muted">Collection rate</p>
+            <p className="mt-1 text-sm font-semibold tabular-nums text-fg">{currentQuarterTotal > 0 ? ((quarterCollected / currentQuarterTotal) * 100).toFixed(1) : '0.0'}%</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-muted">Margin</p>
+            <p className={'mt-1 text-sm font-semibold tabular-nums ' + (quarterMargin >= 0 ? 'text-success' : 'text-danger')}>{quarterMargin.toFixed(1)}%</p>
+          </div>
+        </div>
+      </article>
+
+      <article className="rounded-control border border-line bg-bg p-4 sm:p-5">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Receivables</p>
+          <p className="mt-1 text-xs text-muted">Outstanding money still sitting on open invoices.</p>
+        </div>
+
+        <div className="mt-5">
+          <p className="text-2xl font-semibold leading-none tabular-nums text-fg">{formatNativeAmount(derivedMetrics.totalOutstanding,currency,true)}</p>
+          <p className="mt-2 text-[10px] text-muted">Total outstanding balance</p>
+        </div>
+
+        <div className="mt-5 rounded-control border border-danger/20 bg-danger/10 px-3 py-3">
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="text-[10px] font-medium text-danger">Overdue balance</span>
+            <span className="text-sm font-semibold tabular-nums text-danger">{formatNativeAmount(overdueBalance,currency,true)}</span>
+          </div>
+          <p className="mt-1 text-[10px] text-danger/80">{overdueInvoiceCount} invoice{overdueInvoiceCount === 1 ? '' : 's'} overdue</p>
+        </div>
+
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          <div className="rounded-control border border-line bg-panel px-3 py-3">
+            <p className="text-[10px] text-muted">Open</p>
+            <p className="mt-1 text-sm font-semibold tabular-nums text-fg">{pendingInvoiceCount}</p>
+          </div>
+          <div className="rounded-control border border-line bg-panel px-3 py-3">
+            <p className="text-[10px] text-muted">Due soon</p>
+            <p className="mt-1 text-sm font-semibold tabular-nums text-warning">{dueSoonCount}</p>
+          </div>
+          <div className="rounded-control border border-line bg-panel px-3 py-3">
+            <p className="text-[10px] text-muted">60+ days</p>
+            <p className="mt-1 text-sm font-semibold tabular-nums text-danger">{criticalOverdueCount}</p>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <div className="mt-3 grid gap-3 lg:grid-cols-2">
+      <article className="rounded-control border border-line bg-bg p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Collection progress</p>
+            <p className="mt-1 text-xs text-muted">How much of the current quarter's billed amount has actually been collected.</p>
+          </div>
+          <span className="text-lg font-semibold tabular-nums text-success">{currentQuarterTotal > 0 ? ((quarterCollected / currentQuarterTotal) * 100).toFixed(1) : '0.0'}%</span>
+        </div>
+        <div className="mt-4 h-2 rounded-full bg-panel">
+          <div className="h-full rounded-full bg-success" style={{width:Math.min(100,Math.max(0,currentQuarterTotal > 0 ? (quarterCollected / currentQuarterTotal) * 100 : 0))+'%'}} />
+        </div>
+        <div className="mt-2 flex items-center justify-between gap-3 text-[10px] tabular-nums text-muted">
+          <span>{formatNativeAmount(quarterCollected,currency,true)} collected</span>
+          <span>{formatNativeAmount(currentQuarterTotal,currency,true)} billed</span>
+        </div>
+      </article>
+
+      <article className="rounded-control border border-line bg-bg p-4 sm:p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Tax & retainers</p>
+            <p className="mt-1 text-xs text-muted">Current book exposure and recurring billing position.</p>
+          </div>
+          <span className="rounded-badge border border-line bg-panel px-2 py-1 text-[10px] text-muted">All current records</span>
+        </div>
+        <div className="mt-4 grid gap-2 sm:grid-cols-3">
+          <div className="rounded-control border border-line bg-panel px-3 py-3">
+            <p className="text-[10px] text-muted">Tax outstanding</p>
+            <p className="mt-1 text-sm font-semibold tabular-nums text-warning">{formatFinanceCardAmount(taxOutstanding,currency)}</p>
+          </div>
+          <div className="rounded-control border border-line bg-panel px-3 py-3">
+            <p className="text-[10px] text-muted">Retainer billed</p>
+            <p className="mt-1 text-sm font-semibold tabular-nums text-fg">{formatFinanceCardAmount(retainerBilled,currency)}</p>
+          </div>
+          <div className="rounded-control border border-line bg-panel px-3 py-3">
+            <p className="text-[10px] text-muted">Retainer collected</p>
+            <p className="mt-1 text-sm font-semibold tabular-nums text-success">{formatFinanceCardAmount(retainerCollected,currency)}</p>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <div className="mt-4 border-t border-line pt-3 text-[10px] leading-4 text-muted">
+      <span className="font-medium text-fg">How to read this:</span> net cash = collections − operating expenses. Receivables are still unpaid invoice balances. Collection rate is based on billed versus collected in the current quarter.
+    </div>
+  </div>
+</section>
         </div>
       )}
       <Modal
