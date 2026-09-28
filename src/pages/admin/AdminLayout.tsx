@@ -557,6 +557,7 @@ export const AdminLayout: React.FC = () => {
                     { key: 'income-expenses', label: 'Income & Expenses', search: '?finance=income-expenses' },
                     { key: 'tax-retainers', label: 'Tax & Retainers', search: '?finance=tax-retainers' },
                     { key: 'financial-reports', label: 'Financial Reports', search: '?finance=financial-reports' },
+                    { key: 'quotations', label: 'Quotations', search: '?finance=quotations' },
                   ].map((tab) => {
                     const activeView = new URLSearchParams(location.search).get('finance') || 'invoices';
                     return (
