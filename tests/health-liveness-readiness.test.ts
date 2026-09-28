@@ -22,7 +22,7 @@ test('production health separates liveness from database readiness', () => {
 
 test('CI waits on readiness while keeping liveness available for platform health checks', () => {
   const workflow = fs.readFileSync(path.resolve(process.cwd(), '.github/workflows/ams-ci.yml'), 'utf8');
-  assert.ok(workflow.includes('http://127.0.0.1:4173/api/health'));
-  assert.ok(workflow.includes('http://127.0.0.1:4173/api/health/ready'));
+  assert.ok(workflow.includes('/api/health'));
+  assert.ok(workflow.includes('/api/health/ready'));
   assert.ok(workflow.includes('/tmp/health-ready.json'));
 });

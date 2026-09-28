@@ -3,11 +3,10 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "main": "server.cjs",
   "scripts": {
     "dev": "tsx server.ts",
     "build": "node scripts/build-production.mjs",
-    "start": "node server.cjs",
+    "start": "node dist/server.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
@@ -23,6 +22,7 @@
     "@vitejs/plugin-react": "^5.0.4",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
+    "express": "^4.21.2",
     "fuse.js": "^7.1.0",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
@@ -32,8 +32,7 @@
     "tailwind-merge": "^3.5.0",
     "esbuild": "^0.28.2",
     "pg": "^8.23.0",
-    "@untitledui/icons": "^0.0.19",
-    "express": "^4.21.2"
+    "@untitledui/icons": "^0.0.19"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
@@ -50,10 +49,10 @@
   },
   "overrides": {
     "qs": "6.16.0",
+    "react-router": "^7.18.2",
     "browserslist": "^4.29.1",
     "postcss": "^8.5.28",
-    "nanoid": "^3.3.19",
-    "react-router": "^7.18.2"
+    "nanoid": "^3.3.19"
   },
   "packageManager": "bun@1.4.2"
 }
