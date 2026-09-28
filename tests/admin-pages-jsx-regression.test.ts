@@ -47,6 +47,18 @@ test('Admin invoicing keeps financial mutations permission-gated and uses the sh
   assert.ok(source.includes('quarterInvoices'));
   assert.ok(source.includes("expense.type !== 'CapEx'"));
   assert.ok(source.includes('min-[900px]:hidden -mx-1 mb-4 overflow-x-auto'));
+  assert.ok(source.includes('const QuotationStatusBadge'));
+  assert.ok(!source.includes('quotation.status as never'));
+  assert.ok(source.includes('Quarter net cash'));
+  assert.ok(source.includes('px-5 py-4'));
+  assert.ok(source.includes('border border-line bg-panel text-muted'));
+  const financeNavOrder = ['label: ' + String.fromCharCode(39) + 'Invoice', 'label: ' + String.fromCharCode(39) + 'Quotation', 'label: ' + String.fromCharCode(39) + 'Income & Expenses', 'label: ' + String.fromCharCode(39) + 'Tax & Retainers', 'label: ' + String.fromCharCode(39) + 'Financial Reports'];
+  let lastIndex = -1;
+  for (const marker of financeNavOrder) {
+    const index = source.indexOf(marker);
+    assert.ok(index > lastIndex);
+    lastIndex = index;
+  }
 });
 
 test('Admin projects mutation actions stay behind their permissions', () => {
@@ -54,4 +66,21 @@ test('Admin projects mutation actions stay behind their permissions', () => {
   assert.ok(source.includes('{canManageKanbanTasks && <Button'));
   assert.ok(source.includes('{canManageProjects && <Button'));
   assert.ok(!source.includes('Legacy regression guard:'));
+});
+
+test('Admin topbar keeps Finance sections in the canonical order', () => {
+  const source = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminLayout.tsx'), 'utf8');
+  const markers = [
+    "label: 'Invoice'",
+    "label: 'Quotation'",
+    "label: 'Income & Expenses'",
+    "label: 'Tax & Retainers'",
+    "label: 'Financial Reports'"
+  ];
+  let lastIndex = -1;
+  for (const marker of markers) {
+    const index = source.indexOf(marker);
+    assert.ok(index > lastIndex);
+    lastIndex = index;
+  }
 });
