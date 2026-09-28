@@ -28,7 +28,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Modal } from '../../components/ui/Modal';
 import { InvoiceStatusDropdown } from '../../components/ui/InvoiceStatusDropdown';
-import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
+import { hasAdminPermission } from '../../lib/adminAuth';
 import { api } from '../../lib/apiClient';
 import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 
@@ -277,7 +277,6 @@ const FinanceCashFlowChart: React.FC<{
 export const AdminInvoicing: React.FC = () => {
   const { language } = useLanguage();
   const location = useLocation();
-  getAdminSession();
   const canViewFinancials = hasAdminPermission('canViewFinancials');
   const canManageInvoices = hasAdminPermission('canManageInvoices');
   const canDeleteInvoice = canManageInvoices;
