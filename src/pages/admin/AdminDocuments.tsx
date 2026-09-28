@@ -273,6 +273,7 @@ export const AdminDocuments: React.FC = () => {
             {language === 'id' ? 'Belum ada dokumen di registri.' : 'No documents found in the registry.'}
           </div>
         ) : (
+          <>
           <div className="min-[900px]:hidden divide-y divide-line">
             {filteredDocs.map((doc) => {
               const docTitle = doc.name || doc.title || 'Untitled Document';
@@ -322,7 +323,6 @@ export const AdminDocuments: React.FC = () => {
               );
             })}
           </div>
-        ) : (
           <div className="hidden min-[900px]:block ams-table-scroll overflow-x-auto">
             <table className="ams-table w-full text-left border-collapse min-w-[700px]">
               <thead>
@@ -412,6 +412,7 @@ export const AdminDocuments: React.FC = () => {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
 
