@@ -32,7 +32,7 @@ export const CLIENT_EVENT_NAME = 'kapitech_clients_updated';
 export const createClientSlug = (company: string, id = ''): string => {
   const base = company
     .normalize('NFKD')
-    .replace(/[\\u0300-\\u036f]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .trim()
     .replace(/&/g, ' and ')
@@ -75,7 +75,7 @@ function hydrateClientsFromServer(): void {
     clientServerHydrationRetryCount = 0;
     clientsCache = res.data.clients.map(normalizeAgencyClient);
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent(CLIENT_EVENT_NAME, { detail: res.data.clients }));
+      window.dispatchEvent(new CustomEvent(CLIENT_EVENT_NAME, { detail: clientsCache }));
     }
   }).catch(() => {
     clientServerHydrationStarted = false;

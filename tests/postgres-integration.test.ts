@@ -177,6 +177,7 @@ test('PostgreSQL commercial workflow converts proposal to invoice and returns th
   try {
     await clientRepository.create({
       id: clientId,
+      slug: 'ci-commercial-company-' + suffix,
       name: 'CI Commercial Client',
       company: 'CI Commercial Company',
       email: 'ci-' + suffix + '@example.test',
@@ -326,6 +327,7 @@ test('PostgreSQL delivery workflow preserves client relation across project, tas
   try {
     await clientRepository.create({
       id: clientId,
+      slug: 'ci-delivery-company-' + suffix,
       name: 'CI Delivery Client',
       company: 'CI Delivery Company',
       email: 'delivery-' + suffix + '@example.test',

@@ -324,9 +324,10 @@ export const AdminClients: React.FC = () => {
     setIsSaving(true);
     setFormError(null);
 
+    const clientId = editingClient?.id || 'client_' + Date.now().toString(36);
     const clientData: AgencyClient = {
-      id: editingClient?.id || 'client_' + Date.now().toString(36),
-      slug: editingClient?.slug || createClientSlug(company.trim(), editingClient?.id || 'client_' + Date.now().toString(36)),
+      id: clientId,
+      slug: editingClient?.slug || createClientSlug(company.trim(), clientId),
       name: name.trim(),
       company: company.trim(),
       email: email.trim(),
