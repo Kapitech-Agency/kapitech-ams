@@ -808,10 +808,32 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           <Link to="/admin/projects" className="inline-flex items-center gap-1 text-xs font-medium text-muted transition-colors hover:text-accent-text">View all <ArrowUpRight size={13} /></Link>
         )}>
           <div className="border-b border-line px-4 pt-3 sm:px-5">
-            <div className="flex gap-1.5 overflow-x-auto pb-3 custom-scrollbar">
-              {(['All', 'Enterprise', 'Retainer', 'Fixed-fee'] as ProjectFilter[]).map((filter) => (
-                <button key={filter} type="button" aria-pressed={projectFilter === filter} onClick={() => setProjectFilter(filter)} className={['shrink-0 rounded-chip border px-2.5 py-1.5 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent', projectFilter === filter ? 'border-line bg-panel-hover font-medium text-fg' : 'border-transparent bg-transparent text-muted hover:border-line hover:bg-bg hover:text-fg'].join(' ')}>{filter}</button>
-              ))}
+            <div className="flex min-w-0 items-center justify-between gap-3 pb-3">
+              <div className="flex min-w-0 items-center gap-2 text-[11px] text-muted">
+                <span className="truncate">{filteredProjects.length} project{filteredProjects.length === 1 ? '' : 's'} shown</span>
+              </div>
+              <span className="shrink-0 rounded-badge border border-line bg-bg px-2 py-1 text-[10px] tabular-nums text-muted">{sampleProjects.length} active</span>
+            </div>
+            <div className="flex gap-1 overflow-x-auto rounded-control border border-line bg-bg p-1 custom-scrollbar">
+              {(['All', 'Enterprise', 'Retainer', 'Fixed-fee'] as ProjectFilter[]).map((filter) => {
+                const count = filter === 'All' ? sampleProjects.length : sampleProjects.filter((project) => project.type === filter).length;
+                const active = projectFilter === filter;
+                return (
+                  <button
+                    key={filter}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setProjectFilter(filter)}
+                    className={[
+                      'inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-chip px-2.5 text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                      active ? 'bg-panel text-fg border border-line' : 'border border-transparent text-muted hover:bg-panel hover:text-fg',
+                    ].join(' ')}
+                  >
+                    <span>{filter}</span>
+                    <span className={['rounded-badge px-1.5 py-0.5 text-[9px] tabular-nums', active ? 'bg-line text-fg' : 'bg-panel text-muted'].join(' ')}>{count}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
           <div className="min-[900px]:hidden divide-y divide-line">
