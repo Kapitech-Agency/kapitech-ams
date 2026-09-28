@@ -1122,7 +1122,7 @@ export const AdminInvoicing: React.FC = () => {
 
           <section className="mt-6 grid gap-3 min-[1100px]:grid-cols-3" aria-label="Finance visual analytics">
             <div className="min-[1100px]:col-span-2 rounded-card border border-line bg-panel p-4 sm:p-5">
-              <div className="flex flex-col gap-3 border-b border-line pb-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-3 border-b border-line pb-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 id="financial-trend-title" className="text-sm font-semibold text-fg">Cash Flow vs Operating Burn</h2>
                   <p className="mt-1 text-xs leading-5 text-muted">Monthly billing inflow, operational burn rate, and net result from recorded transactions.</p>
