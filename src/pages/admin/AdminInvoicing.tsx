@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   AlertCircle,
   ArrowUpRight,
+  CalendarDays,
   Check,
   CheckCircle2,
   CreditCard,
@@ -14,6 +15,7 @@ import {
   RefreshCw,
   Search,
   ShieldCheck,
+  SlidersHorizontal,
   Trash2,
   TrendingDown,
   TrendingUp,
@@ -33,6 +35,7 @@ import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/Admi
 
 type SortKey = 'updated' | 'due' | 'oldest' | 'amount_high' | 'amount_low' | 'invoice';
 type Tab = 'invoices' | 'expenses';
+type LedgerPeriod = 'reporting-quarter' | 'all';
 type FinanceClient = {
   id: string;
   name: string;
@@ -84,6 +87,37 @@ const getDateInputValue = (offsetDays = 0): string => {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${date.getFullYear()}-${month}-${day}`;
+};
+
+const getQuarterRange = (value: string | Date) => {
+  const date = value instanceof Date ? new Date(value) : new Date(String(value) + 'T00:00:00');
+  if (Number.isNaN(date.getTime())) return null;
+  const quarter = Math.floor(date.getMonth() / 3);
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return {
+    start: new Date(date.getFullYear(), quarter * 3, 1),
+    end: new Date(date.getFullYear(), quarter * 3 + 3, 0),
+    label: 'Q' + (quarter + 1) + ' ' + date.getFullYear() + ' (' + months[quarter * 3] + '-' + months[quarter * 3 + 2] + ')'
+  };
+};
+
+const isInQuarter = (value: string, range: ReturnType<typeof getQuarterRange>) => {
+  if (!range) return false;
+  const date = new Date(value + 'T00:00:00');
+  return !Number.isNaN(date.getTime()) && date >= range.start && date <= range.end;
+};
+
+const getDaysUntilDue = (value: string) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const due = new Date(value + 'T00:00:00');
+  if (Number.isNaN(due.getTime())) return 9999;
+  return Math.ceil((due.getTime() - today.getTime()) / 86400000);
+};
+
+const isDueSoonInvoice = (invoice: AgencyInvoice) => {
+  const days = getDaysUntilDue(invoice.dueDate);
+  return invoice.status !== 'paid' && invoice.status !== 'cancelled' && days >= 0 && days <= 7;
 };
 
 const emptyLineItem = (): InvoiceLineItem => ({
@@ -218,6 +252,8 @@ export const AdminInvoicing: React.FC = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sort, setSort] = useState<SortKey>('updated');
+  const [ledgerPeriod, setLedgerPeriod] = useState<LedgerPeriod>('reporting-quarter');
+  const [periodMenuOpen, setPeriodMenuOpen] = useState(false);
   const [expenseSearch, setExpenseSearch] = useState('');
   const [expenseTypeFilter, setExpenseTypeFilter] = useState('all');
   const [expenseSort, setExpenseSort] = useState<'date_desc' | 'date_asc' | 'amount_high' | 'amount_low'>('date_desc');
@@ -390,9 +426,21 @@ export const AdminInvoicing: React.FC = () => {
 
   const hasTrendData = cashFlow.some((point) => point.inflow !== 0 || point.outflow !== 0);
 
+  const reportingQuarter = useMemo(() => {
+    const dates = currencyInvoices.map((invoice) => invoice.issueDate).filter(Boolean).sort();
+    return getQuarterRange(dates[dates.length - 1] || new Date());
+  }, [currencyInvoices]);
+
+  const ledgerInvoices = useMemo(
+    () => ledgerPeriod === 'all'
+      ? currencyInvoices
+      : currencyInvoices.filter((invoice) => isInQuarter(invoice.issueDate, reportingQuarter)),
+    [currencyInvoices, ledgerPeriod, reportingQuarter]
+  );
+
   const filteredInvoices = useMemo(() => {
     const query = search.trim().toLowerCase();
-    const result = currencyInvoices.filter((invoice) => {
+    const result = ledgerInvoices.filter((invoice) => {
       const searchable = [
         invoice.invoiceNumber,
         invoice.clientName,
@@ -401,7 +449,11 @@ export const AdminInvoicing: React.FC = () => {
         projectsById.get(invoice.projectId)?.name || ''
       ].join(' ').toLowerCase();
       const matchesSearch = !query || searchable.includes(query);
-      const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter;
+      const matchesStatus = statusFilter === 'all'
+        ? true
+        : statusFilter === 'due_soon'
+          ? isDueSoonInvoice(invoice)
+          : invoice.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
 
@@ -413,7 +465,7 @@ export const AdminInvoicing: React.FC = () => {
       if (sort === 'invoice') return a.invoiceNumber.localeCompare(b.invoiceNumber);
       return String(b.updatedAt || '').localeCompare(String(a.updatedAt || ''));
     });
-  }, [currencyInvoices, search, statusFilter, sort, projectsById]);
+  }, [ledgerInvoices, search, statusFilter, sort, projectsById]);
 
   useEffect(() => {
     setInvoicePage(1);
@@ -450,8 +502,10 @@ export const AdminInvoicing: React.FC = () => {
 
   const invoiceStatusCounts = useMemo(() => (['draft', 'sent', 'partially_paid', 'paid', 'overdue', 'cancelled'] as InvoiceStatus[]).map((status) => ({
     status,
-    count: currencyInvoices.filter((invoice) => invoice.status === status).length
-  })), [currencyInvoices]);
+    count: ledgerInvoices.filter((invoice) => invoice.status === status).length
+  })), [ledgerInvoices]);
+
+  const dueSoonCount = useMemo(() => ledgerInvoices.filter(isDueSoonInvoice).length, [ledgerInvoices]);
 
   const filteredExpenses = useMemo(() => {
     const query = expenseSearch.trim().toLowerCase();
@@ -1043,7 +1097,7 @@ export const AdminInvoicing: React.FC = () => {
     <div className="min-h-full pb-10">
       <AdminModuleHeader
         title="Finance & Invoices"
-        description="Cash flow pacing, client accounts receivable, retainer burn, and financial health from current ledger data."
+        description="Cash flow pacing, client accounts receivable, retainer burn, and tax provisions for the active financial period."
         actions={(
           <>
             <div className="inline-flex min-h-10 items-center rounded-control border border-line bg-panel p-1" aria-label="Finance currency">
@@ -1070,6 +1124,15 @@ export const AdminInvoicing: React.FC = () => {
           </>
         )}
       />
+
+      <div className="mb-6 overflow-x-auto border-b border-line">
+        <nav className="flex min-w-max items-center gap-6" aria-label="Finance sections">
+          <button type="button" onClick={() => setTab('invoices')} className={'border-b-2 px-1 pb-2 pt-1 text-xs font-semibold transition-colors ' + (tab === 'invoices' ? 'border-accent text-fg' : 'border-transparent text-muted hover:text-fg')}>Invoices</button>
+          <button type="button" onClick={() => setTab('expenses')} className={'border-b-2 px-1 pb-2 pt-1 text-xs font-semibold transition-colors ' + (tab === 'expenses' ? 'border-accent text-fg' : 'border-transparent text-muted hover:text-fg')}>Income &amp; Expenses</button>
+          <button type="button" onClick={() => showNotice('danger', 'Tax & Retainers is not connected to a dedicated finance ledger yet.')} className="border-b-2 border-transparent px-1 pb-2 pt-1 text-xs font-semibold text-muted transition-colors hover:text-fg">Tax &amp; Retainers</button>
+          <button type="button" onClick={() => showNotice('danger', 'Financial Reports is not connected to a dedicated reporting workspace yet.')} className="border-b-2 border-transparent px-1 pb-2 pt-1 text-xs font-semibold text-muted transition-colors hover:text-fg">Financial Reports</button>
+        </nav>
+      </div>
 
       {notice && (
         <div className="fixed right-4 top-[68px] z-[60] w-[min(420px,calc(100vw-32px))]" aria-live="polite" aria-atomic="true">
@@ -1098,7 +1161,7 @@ export const AdminInvoicing: React.FC = () => {
         <>
           <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 min-[1100px]:grid-cols-5" aria-label="Finance KPI snapshot">
             {[
-              { label: 'Total Invoiced', icon: <Receipt size={12} aria-hidden="true" />, value: serverMetrics ? formatNativeAmount(serverMetrics.totalBilled, currency, true) : '—', context: serverMetrics ? serverMetrics.totalInvoicesCount + ' invoices' : '—', tone: 'text-accent-text' },
+              { label: 'Total Invoiced', icon: <Receipt size={12} aria-hidden="true" />, value: formatNativeAmount(ledgerInvoices.reduce((sum, invoice) => sum + Number(invoice.total || 0), 0), currency, true), context: (ledgerPeriod === 'reporting-quarter' ? (reportingQuarter?.label || 'Reporting period') + ' · ' : '') + ledgerInvoices.length + ' invoices', tone: 'text-accent-text' },
               { label: 'Collected (YTD)', value: serverMetrics ? formatNativeAmount(serverMetrics.totalRevenueCollected, currency, true) : '—', context: currencyInvoices.length ? derivedMetrics.collectionRate + '% collection rate' : '—', icon: <WalletCards size={17} />, tone: 'text-success' },
               { label: 'Outstanding', value: serverMetrics ? formatNativeAmount(serverMetrics.totalOutstanding, currency, true) : '—', context: serverMetrics ? serverMetrics.overdueCount + ' overdue' : '—', icon: <CreditCard size={17} />, tone: 'text-warning' },
               { label: 'Overdue Balance', value: formatNativeAmount(overdueBalance, currency, true), context: serverMetrics ? serverMetrics.overdueCount + ' critical invoices' : '—', icon: <AlertCircle size={17} />, tone: 'text-danger' },
@@ -1128,9 +1191,9 @@ export const AdminInvoicing: React.FC = () => {
                   <p className="mt-1 text-xs leading-5 text-muted">Monthly billing inflow, operational burn rate, and net result from recorded transactions.</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3 text-[11px] text-muted">
-                  <span className="inline-flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-sm bg-accent" /> Net Inflow</span>
-                  <span className="inline-flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-sm bg-success" /> Net Result</span>
-                  <span className="inline-flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-sm bg-info" /> Operating Burn</span>
+                  <span className="inline-flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-sm bg-success" /> Net Inflow</span>
+                  <span className="inline-flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-sm bg-accent" /> Retainer Target</span>
+                  <span className="inline-flex items-center gap-1.5"><i className="h-2.5 w-2.5 rounded-sm bg-info" /> Operational Burn</span>
                 </div>
               </div>
               <div className="pt-3">
@@ -1177,11 +1240,32 @@ export const AdminInvoicing: React.FC = () => {
                     <label className="relative min-w-[220px] xl:w-64"><span className="sr-only">Search invoices</span><Search size={14} className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-muted" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search invoice # or client..." className={fieldClass + ' pl-9 pr-3'} /></label>
                     <div className="flex items-center gap-1 overflow-x-auto rounded-control border border-line bg-bg p-0.5 custom-scrollbar">
                       {['All', 'Paid', 'Due Soon', 'Overdue', 'Draft'].map((label) => {
-                        const key = label === 'All' ? 'all' : label === 'Paid' ? 'paid' : label === 'Due Soon' ? 'sent' : label === 'Overdue' ? 'overdue' : 'draft';
-                        const count = key === 'all' ? currencyInvoices.length : invoiceStatusCounts.find((item) => item.status === key)?.count || 0;
+                        const key = label === 'All' ? 'all' : label === 'Paid' ? 'paid' : label === 'Due Soon' ? 'due_soon' : label === 'Overdue' ? 'overdue' : 'draft';
+                        const count = key === 'all' ? ledgerInvoices.length : key === 'due_soon' ? dueSoonCount : invoiceStatusCounts.find((item) => item.status === key)?.count || 0;
                         return <button key={label} type="button" onClick={() => setStatusFilter(key)} className={'min-h-8 shrink-0 rounded-chip px-2.5 text-[11px] font-medium transition-colors ' + (statusFilter === key ? 'bg-line text-fg' : 'text-muted hover:text-fg')}>{label}<span className="ml-1 tabular-nums opacity-70">{count}</span></button>;
                       })}
                     </div>
+                    <div className="relative">
+                      <button type="button" onClick={() => setPeriodMenuOpen((open) => !open)} className={actionClass + ' w-full justify-between xl:w-auto'} aria-expanded={periodMenuOpen}>
+                        <CalendarDays size={13} />
+                        {ledgerPeriod === 'reporting-quarter' ? (reportingQuarter?.label || 'Reporting period') : 'All periods'}
+                      </button>
+                      {periodMenuOpen && (
+                        <div className="absolute right-0 top-[calc(100%+6px)] z-30 w-56 rounded-card border border-line bg-panel p-1.5">
+                          <button type="button" onClick={() => { setLedgerPeriod('reporting-quarter'); setPeriodMenuOpen(false); setStatusFilter('all'); }} className="w-full rounded-control px-3 py-2 text-left text-xs text-fg hover:bg-bg">
+                            <span className="block font-medium">{reportingQuarter?.label || 'Reporting period'}</span>
+                            <span className="mt-0.5 block text-[10px] text-muted">Match the latest invoice quarter</span>
+                          </button>
+                          <button type="button" onClick={() => { setLedgerPeriod('all'); setPeriodMenuOpen(false); setStatusFilter('all'); }} className="mt-1 w-full rounded-control px-3 py-2 text-left text-xs text-muted hover:bg-bg hover:text-fg">
+                            <span className="block font-medium">All periods</span>
+                            <span className="mt-0.5 block text-[10px]">Show the full invoice ledger</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    <button type="button" onClick={() => setPeriodMenuOpen(false)} className={actionClass + ' w-9 px-0'} aria-label="Filter columns" title="Filter columns">
+                      <SlidersHorizontal size={14} />
+                    </button>
                     <CustomSelect value={sort} onChange={(value) => setSort(value as SortKey)} options={sortOptions} className="w-full xl:w-44" triggerClassName="h-9 min-h-9 w-full" aria-label="Invoice sort" />
                   </div>
                 ) : (
