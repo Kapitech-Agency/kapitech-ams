@@ -583,6 +583,38 @@ export const AdminInvoicing: React.FC = () => {
 
   const taxOutstanding = Math.max(0, taxProvision - taxCollected);
 
+  const retainerBilled = useMemo(
+    () => retainerInvoices.reduce((sum, invoice) => sum + Number(invoice.total || 0), 0),
+    [retainerInvoices]
+  );
+
+  const retainerCollected = useMemo(
+    () => retainerInvoices.reduce((sum, invoice) => sum + Number(invoice.amountPaid || 0), 0),
+    [retainerInvoices]
+  );
+
+  const quarterExpenseCategories = useMemo(() => {
+    const totals = new Map<string, number>();
+    quarterInvoices.forEach((expense) => {
+      const key = expense.type || 'Operating Expense';
+      totals.set(key, (totals.get(key) || 0) + Number(expense.amount || 0));
+    });
+    currencyExpenses
+      .filter((expense) => reportingQuarter && isInQuarter(expense.date, reportingQuarter))
+      .forEach((expense) => {
+        const key = expense.category || 'Other';
+        totals.set(key, (totals.get(key) || 0) + Number(expense.amount || 0));
+      });
+    return [...totals.entries()].sort((a, b) => b[1] - a[1]);
+  }, [quarterInvoices, currencyExpenses, reportingQuarter]);
+
+  const quarterStatusRows = useMemo(() => (
+    ['paid', 'sent', 'partially_paid', 'overdue', 'draft'] as InvoiceStatus[]
+  ).map((status) => ({
+    status,
+    count: quarterInvoices.filter((invoice) => invoice.status === status).length
+  })), [quarterInvoices]);
+
   const ledgerInvoices = useMemo(
     () => ledgerPeriod === 'all'
       ? currencyInvoices
