@@ -14,7 +14,7 @@ import {
   Sparkles,
   Users,
 } from 'lucide-react';
-import { AdminModuleHeader, AdminPanel } from './AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminPanel } from './AdminModulePrimitives';
 import { CustomSelect } from '../ui/CustomSelect';
 import { Modal } from '../ui/Modal';
 import { DonutChart, TrendChart } from '../charts/DashboardCharts';
@@ -356,37 +356,35 @@ const TasksView: React.FC = () => {
   );
 };
 const PerformanceView: React.FC = () => {
-  const completion = 76;
+  const completionSeries = [58, 63, 69, 76, 81, 84];
+  const blockedSeries = [12, 11, 9, 7, 5, 4];
+  const cycleTimeSeries = [4.8, 4.6, 4.4, 4.2, 4.0, 3.8];
   const totalTasks = 84;
   const completedTasks = 64;
-  const avgCycleTime = '3.8 days';
-  const blockedTasks = 7;
+  const completion = completionSeries[completionSeries.length - 1];
+  const avgCycleTime = cycleTimeSeries[cycleTimeSeries.length - 1].toFixed(1) + ' days';
+  const blockedTasks = blockedSeries[blockedSeries.length - 1];
 
   return (
-    <div className="space-y-3">
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          { label: 'Delivery score', value: '92%', context: '+4.8% vs previous period', tone: 'success' as const },
-          { label: 'Task completion', value: '76%', context: '64 of 84 tracked tasks', tone: 'info' as const },
-          { label: 'Avg. cycle time', value: avgCycleTime, context: '-0.6 days vs previous period', tone: 'success' as const },
-          { label: 'Blocked work', value: String(blockedTasks), context: '3 projects affected', tone: 'warning' as const },
-        ].map((metric) => (
-          <article key={metric.label} className="min-w-0 rounded-card border border-line bg-panel p-3.5 sm:p-4">
-            <div className="text-xs text-muted">{metric.label}</div>
-            <div className="mt-3 text-2xl font-medium tabular-nums text-fg">{metric.value}</div>
-            <div className="mt-1 text-[11px] text-muted">{metric.context}</div>
-          </article>
-        ))}
-      </section>
+    <div className="space-y-5">
+      <AdminMetricStrip
+        className="lg:grid-cols-4"
+        metrics={[
+          { id: 'delivery-score', label: 'Delivery score', value: '92%', change: '+4.8%', changeToneClassName: 'text-success', context: 'vs previous period', sparkline: completionSeries, toneClassName: 'text-success' },
+          { id: 'task-completion', label: 'Task completion', value: completion + '%', context: completedTasks + ' of ' + totalTasks + ' tracked tasks', sparkline: completionSeries, toneClassName: 'text-info' },
+          { id: 'cycle-time', label: 'Avg. cycle time', value: avgCycleTime, change: '-0.6 days', changeToneClassName: 'text-success', context: 'vs previous period', sparkline: cycleTimeSeries, toneClassName: 'text-fg' },
+          { id: 'blocked-work', label: 'Blocked work', value: String(blockedTasks), context: '3 projects affected', sparkline: blockedSeries, toneClassName: 'text-warning' }
+        ]}
+      />
 
-      <div className="grid gap-3 min-[1100px]:grid-cols-12">
+      <div className="grid gap-4 min-[1100px]:grid-cols-12">
         <AdminPanel
           className="min-[1100px]:col-span-8"
           title="Delivery performance"
           description="How projects are progressing against planned delivery windows."
           bodyClassName="p-4 sm:p-5"
         >
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-3">
             {[
               { label: 'On schedule', value: 67, tone: 'success' as const },
               { label: 'At risk', value: 25, tone: 'warning' as const },
@@ -397,25 +395,23 @@ const PerformanceView: React.FC = () => {
                   <span className="text-muted">{item.label}</span>
                   <span className="font-semibold tabular-nums text-fg">{item.value}%</span>
                 </div>
-                <div className="mt-2 h-2 overflow-hidden rounded-sm bg-line">
+                <div className="mt-2 h-2 overflow-hidden rounded-full bg-line">
                   <div
-                    className={item.tone === 'success' ? 'h-full rounded-sm bg-success' : item.tone === 'warning' ? 'h-full rounded-sm bg-warning' : 'h-full rounded-sm bg-danger'}
+                    className={item.tone === 'success' ? 'h-full rounded-full bg-success' : item.tone === 'warning' ? 'h-full rounded-full bg-warning' : 'h-full rounded-full bg-danger'}
                     style={{ width: item.value + '%' }}
                   />
                 </div>
               </div>
             ))}
           </div>
-          <div className="mt-5 border-t border-line pt-4">
+          <div className="mt-5 border-t border-line pt-5">
             <TrendChart
-              data={[
-                { label: 'W1', primary: 58, secondary: 18, tertiary: 12 },
-                { label: 'W2', primary: 63, secondary: 16, tertiary: 11 },
-                { label: 'W3', primary: 69, secondary: 14, tertiary: 9 },
-                { label: 'W4', primary: 76, secondary: 12, tertiary: 7 },
-                { label: 'W5', primary: 81, secondary: 10, tertiary: 5 },
-                { label: 'W6', primary: 84, secondary: 9, tertiary: 4 },
-              ]}
+              data={completionSeries.map((value, index) => ({
+                label: 'W' + (index + 1),
+                primary: value,
+                secondary: [18, 16, 14, 12, 10, 9][index],
+                tertiary: blockedSeries[index],
+              }))}
               primaryLabel="Completed"
               secondaryLabel="In progress"
               tertiaryLabel="Blocked"
@@ -437,8 +433,8 @@ const PerformanceView: React.FC = () => {
                   <span className="truncate text-xs font-medium text-fg">{member.name}</span>
                   <span className="text-xs font-medium tabular-nums text-fg">{member.workload}%</span>
                 </div>
-                <div className="h-1.5 overflow-hidden rounded-sm bg-line">
-                  <div className={['h-full rounded-sm', progressClasses[member.tone]].join(' ')} style={{ width: member.workload + '%' }} />
+                <div className="h-1.5 overflow-hidden rounded-full bg-line">
+                  <div className={['h-full rounded-full', progressClasses[member.tone]].join(' ')} style={{ width: member.workload + '%' }} />
                 </div>
               </div>
             ))}
@@ -450,8 +446,13 @@ const PerformanceView: React.FC = () => {
         </AdminPanel>
       </div>
 
-      <div className="grid gap-3 min-[1100px]:grid-cols-12">
-        <AdminPanel className="min-[1100px]:col-span-7" title="Workstream health" description="Sample operational indicators for the current delivery cycle." bodyClassName="p-4 sm:p-5">
+      <div className="grid gap-4 min-[1100px]:grid-cols-12">
+        <AdminPanel
+          className="min-[1100px]:col-span-7"
+          title="Workstream health"
+          description="Sample operational indicators for the current delivery cycle."
+          bodyClassName="p-4 sm:p-5"
+        >
           {[
             ['Creative production', 88, 'Ahead of plan'],
             ['Development', 71, 'On plan'],
@@ -463,14 +464,19 @@ const PerformanceView: React.FC = () => {
                 <span className="text-xs text-fg">{label}</span>
                 <span className="text-[11px] text-muted">{state} · {value}%</span>
               </div>
-              <div className="h-1.5 overflow-hidden rounded-sm bg-line">
-                <div className="h-full rounded-sm bg-success" style={{ width: String(value) + '%' }} />
+              <div className="h-1.5 overflow-hidden rounded-full bg-line">
+                <div className="h-full rounded-full bg-success" style={{ width: String(value) + '%' }} />
               </div>
             </div>
           ))}
         </AdminPanel>
 
-        <AdminPanel className="min-[1100px]:col-span-5" title="Execution summary" description="Core performance counters from the current sample period." bodyClassName="p-4 sm:p-5">
+        <AdminPanel
+          className="min-[1100px]:col-span-5"
+          title="Execution summary"
+          description="Core performance counters from the current sample period."
+          bodyClassName="p-4 sm:p-5"
+        >
           <div className="grid grid-cols-2 gap-3">
             {[
               ['Tasks tracked', String(totalTasks)],
@@ -746,29 +752,17 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       {view === 'overview' ? (
         <>
       <section className="mb-5" aria-label="Executive key performance indicators">
-        <div className="grid grid-cols-2 gap-2.5 sm:gap-3 min-[760px]:grid-cols-3 min-[1180px]:grid-cols-6">
-          {[
-            { label: 'Active projects', value: '12', change: '+2 this month', icon: <FolderKanban size={16} />, tone: 'success' },
-            { label: 'Tasks due this week', value: '18', change: '6 high priority', icon: <CalendarDays size={16} />, tone: 'info' },
-            { label: 'Overdue tasks', value: '3', change: 'Requires attention', icon: <AlertTriangle size={16} />, tone: 'danger' },
-            { label: 'Team utilization', value: '78%', change: '+6% vs last month', icon: <Users size={16} />, tone: 'warning' },
-            { label: 'Monthly revenue', value: '$84.5k', change: '+12.4% vs May', icon: <CircleDollarSign size={16} />, tone: 'success' },
-            { label: 'Outstanding invoices', value: '$32.4k', change: '$8.7k overdue', icon: <ReceiptText size={16} />, tone: 'warning' },
-          ].map((metric) => (
-            <article key={metric.label} className="rounded-card border border-line bg-panel p-4">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs text-muted">{metric.label}</span>
-                <span className={['flex h-7 w-7 items-center justify-center rounded-control border', toneClasses[metric.tone as keyof typeof toneClasses]].join(' ')}>
-                  {metric.icon}
-                </span>
-              </div>
-              <div className="mt-4">
-                <div className="truncate text-2xl font-medium tracking-[-0.02em] tabular-nums text-fg">{metric.value}</div>
-                <div className="mt-1 text-[11px] text-muted">{metric.change}</div>
-              </div>
-            </article>
-          ))}
-        </div>
+        <AdminMetricStrip
+          className="min-[760px]:grid-cols-3 min-[1180px]:grid-cols-6"
+          metrics={[
+            { id: 'active-projects', label: 'Active projects', value: '12', change: '+2', changeToneClassName: 'text-success', context: 'this month', sparkline: [8, 9, 10, 12], icon: <FolderKanban size={15} />, toneClassName: 'text-success' },
+            { id: 'tasks-due', label: 'Tasks due this week', value: '18', change: '6', changeToneClassName: 'text-warning', context: 'high priority', sparkline: [12, 14, 16, 18], icon: <CalendarDays size={15} />, toneClassName: 'text-info' },
+            { id: 'overdue', label: 'Overdue tasks', value: '3', change: 'Requires attention', changeToneClassName: 'text-danger', sparkline: [6, 5, 4, 3], icon: <AlertTriangle size={15} />, toneClassName: 'text-danger' },
+            { id: 'utilization', label: 'Team utilization', value: '78%', change: '+6%', changeToneClassName: 'text-success', context: 'vs last month', sparkline: [66, 70, 73, 78], icon: <Users size={15} />, toneClassName: 'text-warning' },
+            { id: 'revenue', label: 'Monthly revenue', value: '$84.5k', change: '+12.4%', changeToneClassName: 'text-success', context: 'vs May', sparkline: sampleRevenueByRange[range].map((point) => point.primary), icon: <CircleDollarSign size={15} />, toneClassName: 'text-success' },
+            { id: 'outstanding', label: 'Outstanding invoices', value: '$32.4k', change: '$8.7k', changeToneClassName: 'text-warning', context: 'overdue', sparkline: [22, 25, 28, 32.4], icon: <ReceiptText size={15} />, toneClassName: 'text-warning' }
+          ]}
+        />
       </section>
 
       <div className="grid gap-3 min-[1100px]:grid-cols-12">

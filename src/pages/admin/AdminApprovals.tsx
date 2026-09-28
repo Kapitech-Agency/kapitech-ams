@@ -202,10 +202,10 @@ export const AdminApprovals: React.FC = () => {
         </div>
         <AdminMetricStrip
           metrics={[
-            { id: 'pending', label: language === 'id' ? 'Menunggu Otorisasi' : 'Pending Authorization', value: metrics.pendingCount, context: language === 'id' ? 'Perlu tindakan eksekutif' : 'Action required', icon: <Clock size={16} strokeWidth={1.8} />, toneClassName: 'text-warning' },
-            { id: 'pending-value', label: language === 'id' ? 'Nilai Tertunda' : 'Pending Value', value: formatAmount(metrics.totalPendingValue, currency), context: language === 'id' ? 'Total nilai menunggu review' : 'Total financial exposure', icon: <DollarSign size={16} strokeWidth={1.8} />, toneClassName: 'text-accent-text' },
-            { id: 'risk', label: language === 'id' ? 'Tinggi Risiko' : 'High Risk Items', value: metrics.highRiskPending, context: language === 'id' ? 'Perlu hak persetujuan' : 'Requires approval permission', icon: <AlertTriangle size={16} strokeWidth={1.8} />, toneClassName: 'text-danger' },
-            { id: 'approved', label: language === 'id' ? 'Telah Disetujui' : 'Total Approved', value: metrics.approvedCount, context: language === 'id' ? 'Tercatat dalam audit trail' : 'Logged in audit trail', icon: <CheckCircle2 size={16} strokeWidth={1.8} />, toneClassName: 'text-success' }
+            { id: 'pending', label: language === 'id' ? 'Menunggu Otorisasi' : 'Pending Authorization', value: metrics.pendingCount, context: language === 'id' ? 'Perlu tindakan eksekutif' : 'Action required', sparkline: [metrics.pendingCount, metrics.highRiskPending, metrics.approvedCount, metrics.pendingCount], icon: <Clock size={16} strokeWidth={1.8} />, toneClassName: 'text-warning' },
+            { id: 'pending-value', label: language === 'id' ? 'Nilai Tertunda' : 'Pending Value', value: formatAmount(metrics.totalPendingValue, currency), context: language === 'id' ? 'Total nilai menunggu review' : 'Total financial exposure', sparkline: approvals.slice(0, 8).map((item) => Number(item.value) || 0), icon: <DollarSign size={16} strokeWidth={1.8} />, toneClassName: 'text-accent-text' },
+            { id: 'risk', label: language === 'id' ? 'Tinggi Risiko' : 'High Risk Items', value: metrics.highRiskPending, context: language === 'id' ? 'Perlu hak persetujuan' : 'Requires approval permission', sparkline: [metrics.highRiskPending, metrics.pendingCount, metrics.approvedCount], icon: <AlertTriangle size={16} strokeWidth={1.8} />, toneClassName: 'text-danger' },
+            { id: 'approved', label: language === 'id' ? 'Telah Disetujui' : 'Total Approved', value: metrics.approvedCount, context: language === 'id' ? 'Tercatat dalam audit trail' : 'Logged in audit trail', sparkline: [metrics.pendingCount, metrics.approvedCount, metrics.highRiskPending], icon: <CheckCircle2 size={16} strokeWidth={1.8} />, toneClassName: 'text-success' }
           ]}
         />
       </section>

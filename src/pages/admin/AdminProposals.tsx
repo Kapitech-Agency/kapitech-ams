@@ -559,10 +559,10 @@ export const AdminProposals: React.FC = () => {
         </div>
         <AdminMetricStrip
           metrics={[
-            { id: 'total', label: language === 'id' ? 'Total proposal' : 'Total proposals', value: metrics.total, context: language === 'id' ? 'Semua status' : 'All statuses', icon: <FileText size={16} strokeWidth={1.8} /> },
-            { id: 'active', label: language === 'id' ? 'Aktif' : 'Active', value: metrics.active, context: language === 'id' ? 'Sedang berjalan' : 'In workflow', icon: <Clock3 size={16} strokeWidth={1.8} />, toneClassName: 'text-warning' },
-            { id: 'accepted', label: language === 'id' ? 'Diterima' : 'Accepted', value: metrics.accepted, context: language === 'id' ? 'Berhasil dikonversi' : 'Commercially accepted', icon: <CheckCircle2 size={16} strokeWidth={1.8} />, toneClassName: 'text-success' },
-            { id: 'expiring', label: language === 'id' ? 'Segera berakhir' : 'Expiring soon', value: metrics.expiring, context: '≤ 7 days', icon: <AlertCircle size={16} strokeWidth={1.8} />, toneClassName: 'text-danger' }
+            { id: 'total', label: language === 'id' ? 'Total proposal' : 'Total proposals', value: metrics.total, context: language === 'id' ? 'Semua status' : 'All statuses', sparkline: [metrics.accepted, metrics.active, metrics.total, metrics.expiring], icon: <FileText size={16} strokeWidth={1.8} /> },
+            { id: 'active', label: language === 'id' ? 'Aktif' : 'Active', value: metrics.active, context: language === 'id' ? 'Sedang berjalan' : 'In workflow', sparkline: [metrics.total, metrics.active, metrics.accepted, metrics.expiring], icon: <Clock3 size={16} strokeWidth={1.8} />, toneClassName: 'text-warning' },
+            { id: 'accepted', label: language === 'id' ? 'Diterima' : 'Accepted', value: metrics.accepted, context: language === 'id' ? 'Berhasil dikonversi' : 'Commercially accepted', sparkline: [metrics.active, metrics.accepted, metrics.total, metrics.expiring], icon: <CheckCircle2 size={16} strokeWidth={1.8} />, toneClassName: 'text-success' },
+            { id: 'expiring', label: language === 'id' ? 'Segera berakhir' : 'Expiring soon', value: metrics.expiring, context: '≤ 7 days', sparkline: [metrics.total, metrics.active, metrics.expiring, metrics.accepted], icon: <AlertCircle size={16} strokeWidth={1.8} />, toneClassName: 'text-danger' }
           ]}
         />
       </section>

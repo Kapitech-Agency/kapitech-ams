@@ -627,10 +627,10 @@ export const AdminProjects: React.FC = () => {
         <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3"><div><h2 className="text-sm font-semibold text-fg">Delivery snapshot</h2><p className="mt-1 text-xs text-muted">Project health and delivery workload across the workspace.</p></div><span className="text-[11px] font-medium tabular-nums text-muted">{projectMetrics.total} projects</span></div>
         <AdminMetricStrip
           metrics={[
-            { id: 'projects', label: 'Projects', value: projectMetrics.total, context: 'All projects', icon: <Briefcase size={16} strokeWidth={1.8} /> },
-            { id: 'active', label: 'Active', value: projectMetrics.active, context: 'In delivery', icon: <Clock size={16} strokeWidth={1.8} />, toneClassName: 'text-success' },
-            { id: 'risk', label: 'At risk', value: projectMetrics.atRisk, context: 'Needs attention', icon: <ShieldAlert size={16} strokeWidth={1.8} />, toneClassName: 'text-warning' },
-            { id: 'overdue', label: 'Overdue tasks', value: projectMetrics.overdueTasks, context: 'Past due', icon: <AlertCircle size={16} strokeWidth={1.8} />, toneClassName: 'text-danger' }
+            { id: 'projects', label: 'Projects', value: projectMetrics.total, context: 'All projects', sparkline: [projectMetrics.completed, projectMetrics.onHold, projectMetrics.active, projectMetrics.total], icon: <Briefcase size={16} strokeWidth={1.8} /> },
+            { id: 'active', label: 'Active', value: projectMetrics.active, context: 'In delivery', sparkline: [projectMetrics.completed, projectMetrics.active, projectMetrics.atRisk, projectMetrics.total], icon: <Clock size={16} strokeWidth={1.8} />, toneClassName: 'text-success' },
+            { id: 'risk', label: 'At risk', value: projectMetrics.atRisk, context: 'Needs attention', sparkline: [projectMetrics.onHold, projectMetrics.atRisk, projectMetrics.overdueTasks, projectMetrics.dueToday], icon: <ShieldAlert size={16} strokeWidth={1.8} />, toneClassName: 'text-warning' },
+            { id: 'overdue', label: 'Overdue tasks', value: projectMetrics.overdueTasks, context: 'Past due', sparkline: [projectMetrics.dueToday, projectMetrics.atRisk, projectMetrics.overdueTasks, projectMetrics.onHold], icon: <AlertCircle size={16} strokeWidth={1.8} />, toneClassName: 'text-danger' }
           ]}
         />
       </section>

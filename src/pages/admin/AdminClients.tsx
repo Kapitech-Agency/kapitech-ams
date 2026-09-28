@@ -32,6 +32,7 @@ import { api } from '../../lib/apiClient';
 import { Button } from '../../components/ui/Button';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Modal } from '../../components/ui/Modal';
+import { AdminMetricStrip } from '../../components/admin/AdminModulePrimitives';
 
 
 type SortKey = 'name' | 'company' | 'industry' | 'status' | 'updatedAt' | 'projectsCount' | 'totalSpend';
@@ -492,22 +493,15 @@ export const AdminClients: React.FC = () => {
         </div>
       </section>
 
-      <section aria-label="Client metrics" className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-card border border-line bg-panel p-4">
-          <div className="flex items-center justify-between"><span className="text-[11px] leading-[14px] text-muted">TOTAL ACTIVE CLIENTS</span><Users size={18} className="text-muted" aria-hidden="true" /></div>
-          <div className="mt-3 text-[24px] font-medium leading-8 tracking-[-0.02em] tabular-nums text-fg">{isLoading ? '—' : clientMetrics.active}</div>
-          <p className="mt-1 text-[11px] leading-[14px] text-muted">+{clientMetrics.leads} onboarding / lead accounts</p>
-        </div>
-        <div className="rounded-card border border-line bg-panel p-4">
-          <div className="flex items-center justify-between"><span className="text-[11px] leading-[14px] text-muted">CUMULATIVE BILLED VALUE</span><TrendingUp size={18} className="text-success" aria-hidden="true" /></div>
-          <div className="mt-3 text-[24px] font-medium leading-8 tracking-[-0.02em] tabular-nums text-fg">{isLoading ? '—' : new Intl.NumberFormat(language === 'id' ? 'id-ID' : 'en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(clientMetrics.totalBilled)}</div>
-          <p className="mt-1 text-[11px] leading-[14px] text-muted">Cumulative value across client records</p>
-        </div>
-        <div className="rounded-card border border-line bg-panel p-4">
-          <div className="flex items-center justify-between"><span className="text-[11px] leading-[14px] text-muted">SPEND CAP COMPLIANCE</span><ShieldCheck size={18} className="text-muted" aria-hidden="true" /></div>
-          <div className="mt-3 text-[24px] font-medium leading-8 tracking-[-0.02em] tabular-nums text-fg">{isLoading ? '—' : clientMetrics.slaCompliance === null ? '—' : `${clientMetrics.slaCompliance.toFixed(1)}%`}</div>
-          <p className="mt-1 text-[11px] leading-[14px] text-muted">{clientMetrics.configuredSla} configured spend-cap records</p>
-        </div>
+      <section aria-label="Client metrics" className="mb-6">
+        <AdminMetricStrip
+          className="lg:grid-cols-3"
+          metrics={[
+            { id: 'active-clients', label: 'Active clients', value: isLoading ? '—' : clientMetrics.active, change: isLoading ? '—' : '+' + clientMetrics.leads, changeToneClassName: 'text-warning', context: 'onboarding / lead accounts', sparkline: [clientMetrics.leads, clientMetrics.active, clientMetrics.total, clientMetrics.atRisk], icon: <Users size={15} aria-hidden="true" /> },
+            { id: 'billed-value', label: 'Cumulative billed value', value: isLoading ? '—' : new Intl.NumberFormat(language === 'id' ? 'id-ID' : 'en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(clientMetrics.totalBilled), context: 'across client records', sparkline: clients.slice(0, 8).map((client) => Number(client.totalSpend || 0)), icon: <TrendingUp size={15} aria-hidden="true" />, toneClassName: 'text-success' },
+            { id: 'sla-compliance', label: 'Spend cap compliance', value: isLoading ? '—' : clientMetrics.slaCompliance === null ? '—' : `${clientMetrics.slaCompliance.toFixed(1)}%`, context: clientMetrics.configuredSla + ' configured spend-cap records', sparkline: [clientMetrics.atRisk, clientMetrics.overBudget, clientMetrics.configuredSla, clientMetrics.slaCompliance === null ? 0 : clientMetrics.slaCompliance], icon: <ShieldCheck size={15} aria-hidden="true" />, toneClassName: clientMetrics.slaCompliance !== null && clientMetrics.slaCompliance >= 90 ? 'text-success' : 'text-fg' }
+          ]}
+        />
       </section>
 
       <section aria-label="Search and filter clients" className="mb-6 rounded-card border border-line bg-panel p-3">

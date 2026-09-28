@@ -423,6 +423,7 @@ export const AdminCrm: React.FC = () => {
               label: language === 'id' ? 'Pipeline aktif' : 'Active pipeline',
               value: formatAmount(metrics.totalPipelineValue, currency),
               context: `${metrics.activeDealsCount} ${language === 'id' ? 'prospek aktif' : 'active deals'}`,
+              sparkline: [metrics.totalPipelineValue, metrics.weightedPipelineValue, metrics.totalWonValue, metrics.avgDealSize * Math.max(metrics.wonDealsCount, 1)],
               icon: <Layers size={16} strokeWidth={1.8} />,
               toneClassName: 'text-success'
             },
@@ -431,6 +432,7 @@ export const AdminCrm: React.FC = () => {
               label: language === 'id' ? 'Pipeline tertimbang' : 'Weighted pipeline',
               value: formatAmount(metrics.weightedPipelineValue, currency, true),
               context: language === 'id' ? 'Berdasarkan probabilitas tahap' : 'Weighted by stage probability',
+              sparkline: [metrics.totalPipelineValue, metrics.weightedPipelineValue, metrics.totalWonValue, metrics.avgDealSize * Math.max(metrics.activeDealsCount, 1)],
               icon: <TrendingUp size={16} strokeWidth={1.8} />,
               toneClassName: 'text-info'
             },
@@ -439,6 +441,7 @@ export const AdminCrm: React.FC = () => {
               label: language === 'id' ? 'Closed won' : 'Closed won',
               value: formatAmount(metrics.totalWonValue, currency),
               context: `${metrics.wonDealsCount} ${language === 'id' ? 'deal menang' : 'won deals'}`,
+              sparkline: [metrics.activeDealsCount, metrics.wonDealsCount, metrics.totalDeals, metrics.winRate],
               icon: <CheckCircle2 size={16} strokeWidth={1.8} />,
               toneClassName: 'text-success'
             },
@@ -447,6 +450,7 @@ export const AdminCrm: React.FC = () => {
               label: language === 'id' ? 'Win rate' : 'Win rate',
               value: `${metrics.winRate}%`,
               context: `${language === 'id' ? 'Rata-rata deal' : 'Avg deal'}: ${formatAmount(metrics.avgDealSize, currency, true)}`,
+              sparkline: [funnelStats.leadToScope, funnelStats.scopeToPitch, funnelStats.pitchToSow, funnelStats.sowToWon],
               icon: <Activity size={16} strokeWidth={1.8} />,
               toneClassName: 'text-accent-text'
             }

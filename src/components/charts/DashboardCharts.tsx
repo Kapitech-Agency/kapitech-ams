@@ -87,8 +87,8 @@ export const TrendChart: React.FC<{
         {secondaryLabel && <span className="inline-flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-series-3" />{secondaryLabel}</span>}
         {data.some((point) => point.tertiary !== undefined) && <span className="inline-flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-success" />{tertiaryLabel}</span>}
       </div>
-      <div className="relative overflow-hidden rounded-control border border-line bg-bg/40">
-        <svg viewBox={`0 0 ${width} ${height}`} className="block h-[300px] w-full touch-none" preserveAspectRatio="none"
+      <div className="relative overflow-hidden rounded-card border border-line/80 bg-bg/30">
+        <svg viewBox={`0 0 ${width} ${height}`} className="block h-[clamp(250px,34vw,360px)] w-full min-h-0 touch-none" preserveAspectRatio="none"
           onMouseLeave={() => setActiveIndex(null)}>
           {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
             const value = maxValue - ratio * range;
@@ -101,7 +101,7 @@ export const TrendChart: React.FC<{
             );
           })}
           <defs><linearGradient id="dashboard-trend-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--series-1)" stopOpacity="0.22" /><stop offset="100%" stopColor="var(--series-1)" stopOpacity="0" /></linearGradient></defs>
-          <path d={primaryAreaPath} fill="url(#dashboard-trend-fill)" />
+          <path d={primaryAreaPath} fill="url(#dashboard-trend-fill)" opacity="0.9" />
           <path d={primaryPath} fill="none" stroke="var(--series-1)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           {secondaryLabel && secondaryPath && (
             <path d={secondaryPath} fill="none" stroke="var(--series-3)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -133,7 +133,7 @@ export const TrendChart: React.FC<{
         </svg>
         {active && (
           <div className="pointer-events-none absolute top-3 z-10 w-[190px] -translate-x-1/2 rounded-control border border-line bg-bg px-3 py-2 text-xs" style={{ left: `${tooltipLeft}%` }}>
-            <p className="font-semibold text-fg">{active.label}</p>
+            <p className="font-semibold text-fg">{active.label}</p><div className="mt-1 text-[10px] text-muted">Latest plotted period</div>
             <div className="mt-2 space-y-1 text-muted">
               <div className="flex justify-between gap-3"><span>{primaryLabel}</span><span className="tabular-nums text-fg">{primaryFormat(active.primary)}</span></div>
               {secondaryLabel && active.secondary !== undefined && <div className="flex justify-between gap-3"><span>{secondaryLabel}</span><span className="tabular-nums text-fg">{primaryFormat(active.secondary)}</span></div>}
@@ -146,7 +146,7 @@ export const TrendChart: React.FC<{
         <summary className="cursor-pointer text-[11px] text-muted hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">View data table</summary>
         <div className="mt-2 overflow-x-auto rounded-control border border-line">
           <table className="w-full min-w-[480px] text-xs">
-            <thead className="border-b border-line text-left text-muted"><tr><th className="px-3 py-2 font-medium">Period</th><th className="px-3 py-2 text-right font-medium">{primaryLabel}</th>{secondaryLabel && <th className="px-3 py-2 text-right font-medium">{secondaryLabel}</th>}</tr></thead>
+            <thead className="border-b border-line text-left text-muted"><tr><th className="px-3 py-2 font-medium">Period</th><th className="px-3 py-2 text-right font-medium">{primaryLabel}</th>{secondaryLabel && <th className="px-3 py-2 text-right font-medium">{secondaryLabel}</th>}{tertiaryLabel && <th className="px-3 py-2 text-right font-medium">{tertiaryLabel}</th>}</tr></thead>
             <tbody>{data.map((point) => <tr key={point.label} className="border-b border-line last:border-0"><td className="px-3 py-2 text-fg">{point.label}</td><td className="px-3 py-2 text-right tabular-nums text-fg">{primaryFormat(point.primary)}</td>{secondaryLabel && <td className="px-3 py-2 text-right tabular-nums text-fg">{primaryFormat(point.secondary ?? 0)}</td>}</tr>)}</tbody>
           </table>
         </div>

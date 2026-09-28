@@ -553,7 +553,7 @@ export const AdminLayout: React.FC = () => {
                         key={tab.key}
                         to={tab.slug}
                         end
-                        className={'group relative inline-flex h-9 shrink-0 items-center rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (active ? 'font-semibold text-fg after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:rounded-full after:bg-accent' : 'text-muted hover:text-fg')}
+                        className={'group relative inline-flex h-9 shrink-0 items-center rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (active ? 'bg-bg font-semibold text-fg' : 'text-muted hover:bg-bg hover:text-fg')}
                       >
                         {tab.label}
                       </NavLink>
@@ -573,7 +573,7 @@ export const AdminLayout: React.FC = () => {
                       end
                       className={() => {
                         const activeView = new URLSearchParams(location.search).get('view') || 'overview';
-                        return 'group relative inline-flex h-9 shrink-0 items-center rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (activeView === tab.key ? 'font-semibold text-fg after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:rounded-full after:bg-accent' : 'text-muted hover:text-fg');
+                        return 'group relative inline-flex h-9 shrink-0 items-center rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (activeView === tab.key ? 'bg-bg font-semibold text-fg' : 'text-muted hover:bg-bg hover:text-fg');
                       }}
                     >
                       {tab.label}
@@ -595,7 +595,7 @@ export const AdminLayout: React.FC = () => {
                         key={tab.key}
                         to={'/admin/invoicing' + tab.search}
                         end
-                        className={'group relative inline-flex h-9 shrink-0 items-center rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (activeView === tab.key ? 'font-semibold text-fg after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:rounded-full after:bg-accent' : 'text-muted hover:text-fg')}
+                        className={'group relative inline-flex h-9 shrink-0 items-center rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (activeView === tab.key ? 'bg-bg font-semibold text-fg' : 'text-muted hover:bg-bg hover:text-fg')}
                       >
                         {tab.label}
                       </NavLink>
@@ -635,14 +635,29 @@ export const AdminLayout: React.FC = () => {
                 icon={theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
                 className="h-9 w-9 p-0"
               />
+              {settingsAllowed && (
+                <Link
+                  to="/admin/settings"
+                  aria-label="Open settings"
+                  title="Settings"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-control text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                >
+                  <Settings size={16} />
+                </Link>
+              )}
+              <span className="mx-1 h-5 w-px shrink-0 bg-line" aria-hidden="true" />
               <button
                 type="button"
                 onClick={() => setProfileSettingsOpen(true)}
                 aria-label="Open profile settings"
                 title="Profile settings"
-                className="flex h-9 w-9 items-center justify-center rounded-control bg-transparent text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="flex min-w-0 items-center gap-2 rounded-control px-1.5 py-1 text-left transition-colors hover:bg-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 <UserAvatar name={profileName} imageUrl={profileAvatarUrl} size="sm" />
+                <span className="min-w-0 max-w-[150px]">
+                  <span className="block truncate text-xs font-semibold text-fg">{profileName}</span>
+                  <span className="mt-0.5 block truncate text-[10px] text-muted">{profileTitle}</span>
+                </span>
               </button>
             </div>
           </div>

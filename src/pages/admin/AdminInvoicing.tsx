@@ -34,7 +34,7 @@ import { Modal } from '../../components/ui/Modal';
 import { InvoiceStatusDropdown } from '../../components/ui/InvoiceStatusDropdown';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { api } from '../../lib/apiClient';
-import { AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricCard, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 
 
 type SortKey = 'updated' | 'due' | 'oldest' | 'amount_high' | 'amount_low' | 'invoice';
@@ -460,7 +460,7 @@ const FinanceCashFlowChart: React.FC<{
 }> = ({ data, currency, ariaLabel }) => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   if (!data.length) return null;
-  const width = 760, height = 300, left = 52, right = 18, top = 18, bottom = 42;
+  const width = 760, height = 340, left = 64, right = 18, top = 20, bottom = 42;
   const innerWidth = width - left - right, innerHeight = height - top - bottom;
   const values = data.flatMap((point) => [point.inflow, point.outflow, point.net]);
   const minValue = Math.min(0, ...values);
@@ -469,11 +469,17 @@ const FinanceCashFlowChart: React.FC<{
   const x = (index: number) => left + (data.length === 1 ? innerWidth / 2 : (index / (data.length - 1)) * innerWidth);
   const y = (value: number) => top + ((maxValue - value) / range) * innerHeight;
   const line = (key: 'inflow' | 'outflow' | 'net') => data.map((point, index) => x(index) + ',' + y(point[key])).join(' ');
+  const area = (key: 'inflow' | 'net') => {
+    const pts = data.map((point, index) => ({ x: x(index), y: y(point[key]) }));
+    if (!pts.length) return '';
+    return 'M ' + pts[0].x + ' ' + y(0) + ' L ' + pts.map((point) => point.x + ' ' + point.y).join(' L ') + ' L ' + pts[pts.length - 1].x + ' ' + y(0) + ' Z';
+  };
   const latest = data[data.length - 1];
   const collected = data.reduce((sum, point) => sum + point.inflow, 0);
   const burn = data.reduce((sum, point) => sum + point.outflow, 0);
   const net = collected - burn;
   const coverage = latest.outflow > 0 ? (latest.inflow / latest.outflow) * 100 : null;
+  const tooltipLeft = activeIndex === null ? 50 : Math.max(14, Math.min(86, (x(activeIndex) / width) * 100));
   return (
     <div className="min-w-0" role="img" aria-label={ariaLabel}>
       <div className="grid grid-cols-3 gap-2">
@@ -488,40 +494,35 @@ const FinanceCashFlowChart: React.FC<{
           </div>
         ))}
       </div>
-      <div className="mt-4 rounded-control border border-line bg-bg p-3">
-        <div className="relative h-[300px] w-full">
-          <svg viewBox={'0 0 ' + width + ' ' + height} className="h-full w-full" preserveAspectRatio="none">
-            {[0, .25, .5, .75, 1].map((ratio) => <line key={ratio} x1={left} x2={width - right} y1={top + ratio * innerHeight} y2={top + ratio * innerHeight} stroke="var(--line)" strokeWidth="1" />)}
-            <line x1={left} x2={width - right} y1={y(0)} y2={y(0)} stroke="var(--line)" strokeWidth="1.4" strokeDasharray="4 4" />
-            <polyline points={line('inflow')} fill="none" stroke="var(--series-1)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            <polyline points={line('outflow')} fill="none" stroke="var(--series-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            <polyline points={line('net')} fill="none" stroke="var(--success)" strokeWidth="2" strokeDasharray="5 4" strokeLinecap="round" strokeLinejoin="round" />
-            {data.map((point, index) => <g key={point.label} onMouseEnter={() => setActiveIndex(index)} onFocus={() => setActiveIndex(index)} tabIndex={0} aria-label={`${point.label}: collected ${formatNativeAmount(point.inflow, currency, true)}, operating burn ${formatNativeAmount(point.outflow, currency, true)}, net ${formatNativeAmount(point.net, currency, true)}`}><line x1={x(index)} x2={x(index)} y1={top} y2={top + innerHeight} stroke={activeIndex === index ? 'var(--series-4)' : 'transparent'} strokeDasharray="4 4" /><circle cx={x(index)} cy={y(point.inflow)} r={activeIndex === index ? 4.5 : 3} fill="var(--series-1)" /><circle cx={x(index)} cy={y(point.outflow)} r={activeIndex === index ? 4 : 2.5} fill="var(--series-3)" /><circle cx={x(index)} cy={y(point.net)} r={activeIndex === index ? 4 : 2.5} fill="var(--success)" /></g>)}
+      <div className="mt-4 rounded-card border border-line/80 bg-bg/30 p-2 sm:p-3">
+        <div className="relative h-[clamp(270px,34vw,380px)] w-full">
+          <svg viewBox={'0 0 ' + width + ' ' + height} className="h-full w-full" preserveAspectRatio="none" onMouseLeave={() => setActiveIndex(null)}>
+            <defs>
+              <linearGradient id="finance-inflow-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--series-1)" stopOpacity="0.18"/><stop offset="100%" stopColor="var(--series-1)" stopOpacity="0"/></linearGradient>
+              <linearGradient id="finance-net-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--success)" stopOpacity="0.14"/><stop offset="100%" stopColor="var(--success)" stopOpacity="0"/></linearGradient>
+            </defs>
+            {[0, .25, .5, .75, 1].map((ratio) => <g key={ratio}><line x1={left} x2={width - right} y1={top + ratio * innerHeight} y2={top + ratio * innerHeight} stroke="var(--line)" strokeWidth="1"/><text x={left - 8} y={top + ratio * innerHeight + 4} textAnchor="end" fontSize="9" fill="var(--muted)">{formatNativeAmount(maxValue - ratio * range, currency, true)}</text></g>)}
+            <line x1={left} x2={width - right} y1={y(0)} y2={y(0)} stroke="var(--line)" strokeWidth="1.4" strokeDasharray="4 4"/>
+            <path d={area('inflow')} fill="url(#finance-inflow-fill)"/>
+            <path d={area('net')} fill="url(#finance-net-fill)"/>
+            <polyline points={line('inflow')} fill="none" stroke="var(--series-1)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"/>
+            <polyline points={line('outflow')} fill="none" stroke="var(--series-3)" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"/>
+            <polyline points={line('net')} fill="none" stroke="var(--success)" strokeWidth="2.1" strokeDasharray="5 4" strokeLinecap="round" strokeLinejoin="round"/>
+            {data.map((point, index) => <g key={point.label} onMouseEnter={() => setActiveIndex(index)} onFocus={() => setActiveIndex(index)} tabIndex={0} aria-label={`${point.label}: collected ${formatNativeAmount(point.inflow, currency, true)}, operating burn ${formatNativeAmount(point.outflow, currency, true)}, net ${formatNativeAmount(point.net, currency, true)}`}><line x1={x(index)} x2={x(index)} y1={top} y2={top + innerHeight} stroke={activeIndex === index ? 'var(--series-4)' : 'transparent'} strokeDasharray="4 4"/><circle cx={x(index)} cy={y(point.inflow)} r={activeIndex === index ? 4.8 : 3} fill="var(--series-1)"/><circle cx={x(index)} cy={y(point.outflow)} r={activeIndex === index ? 4.4 : 2.5} fill="var(--series-3)"/><circle cx={x(index)} cy={y(point.net)} r={activeIndex === index ? 4.4 : 2.5} fill="var(--success)"/></g>)}
           </svg>
-          {activeIndex !== null && data[activeIndex] && <div className="pointer-events-none absolute left-1/2 top-3 z-10 w-[210px] -translate-x-1/2 rounded-control border border-line bg-panel px-3 py-2.5 text-[11px] shadow-sm"><p className="font-semibold text-fg">{data[activeIndex].label}</p><div className="mt-2 space-y-1.5 text-muted"><div className="flex justify-between gap-3"><span>Collected</span><span className="tabular-nums text-success">{formatNativeAmount(data[activeIndex].inflow, currency, true)}</span></div><div className="flex justify-between gap-3"><span>Operating burn</span><span className="tabular-nums text-fg">{formatNativeAmount(data[activeIndex].outflow, currency, true)}</span></div><div className="flex justify-between gap-3"><span>Net cash</span><span className={'tabular-nums ' + (data[activeIndex].net >= 0 ? 'text-success' : 'text-danger')}>{formatNativeAmount(data[activeIndex].net, currency, true)}</span></div></div></div>}
+          {activeIndex !== null && data[activeIndex] && <div className="pointer-events-none absolute top-3 z-10 w-[210px] -translate-x-1/2 rounded-control border border-line bg-panel px-3 py-2.5 text-[11px] shadow-sm" style={{ left: tooltipLeft + '%' }}><p className="font-semibold text-fg">{data[activeIndex].label}</p><div className="mt-2 space-y-1.5 text-muted"><div className="flex justify-between gap-3"><span>Collected</span><span className="tabular-nums text-success">{formatNativeAmount(data[activeIndex].inflow, currency, true)}</span></div><div className="flex justify-between gap-3"><span>Operating burn</span><span className="tabular-nums text-fg">{formatNativeAmount(data[activeIndex].outflow, currency, true)}</span></div><div className="flex justify-between gap-3"><span>Net cash</span><span className={'tabular-nums ' + (data[activeIndex].net >= 0 ? 'text-success' : 'text-danger')}>{formatNativeAmount(data[activeIndex].net, currency, true)}</span></div></div></div>}
         </div>
-        <div className="grid grid-cols-3 gap-2 border-t border-line pt-2 text-[10px] tabular-nums text-muted sm:grid-cols-6">{data.map((point) => <span key={point.label} className="truncate text-center">{point.label}</span>)}</div>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(68px,1fr))] gap-2 border-t border-line pt-2 text-[10px] tabular-nums text-muted">{data.map((point) => <span key={point.label} className="truncate text-center">{point.label}</span>)}</div>
       </div>
       <div className="mt-3 flex flex-col gap-2 text-[10px] text-muted sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap gap-x-4 gap-y-1.5"><span className="flex items-center gap-1.5"><span className="h-1.5 w-4 rounded-full bg-accent" />Cash collected</span><span className="flex items-center gap-1.5"><span className="h-1.5 w-4 rounded-full bg-series-3" />Operating burn</span><span className="flex items-center gap-1.5"><span className="h-1.5 w-4 rounded-full border border-success" />Net cash</span></div>
+        <div className="flex flex-wrap gap-x-4 gap-y-1.5"><span className="flex items-center gap-1.5"><span className="h-1.5 w-4 rounded-full bg-accent"/>Cash collected</span><span className="flex items-center gap-1.5"><span className="h-1.5 w-4 rounded-full bg-series-3"/>Operating burn</span><span className="flex items-center gap-1.5"><span className="h-1.5 w-4 rounded-full bg-success"/>Net cash</span></div>
         <span className="tabular-nums text-fg">6-month net {formatNativeAmount(net, currency, true)} · {coverage === null ? '—' : coverage.toFixed(0) + '%'} coverage latest</span>
       </div>
       <p className="mt-2 text-[10px] leading-4 text-muted">Collected = actual payments received. Burn = recorded expenses. Net cash = collected minus burn.</p>
     </div>
   );
 };
-
-const FinanceMetricCard = ({
-  label, value, context, icon, toneClassName = 'text-fg'
-}: {
-  label: React.ReactNode; value: React.ReactNode; context?: React.ReactNode; icon?: React.ReactNode; toneClassName?: string;
-}) => (
-  <article className="min-w-0 rounded-card border border-line bg-panel px-4 py-3.5">
-    <div className="flex items-center justify-between gap-2"><span className="truncate text-[11px] font-medium text-muted">{label}</span>{icon && <span className={'shrink-0 ' + toneClassName}>{icon}</span>}</div>
-    <p className={'mt-1.5 truncate text-xl font-medium leading-7 tabular-nums ' + toneClassName}>{value}</p>
-    {context && <p className="mt-0.5 truncate text-[10px] text-muted">{context}</p>}
-  </article>
-);
+const FinanceMetricCard: React.FC<React.ComponentProps<typeof AdminMetricCard>> = AdminMetricCard;
 export const AdminInvoicing: React.FC = () => {
   const { language } = useLanguage();
   const location = useLocation();
@@ -2206,7 +2207,7 @@ export const AdminInvoicing: React.FC = () => {
                 key={tab.key}
                 to={`/admin/invoicing${tab.search}`}
                 aria-current={activeView === tab.key ? 'page' : undefined}
-                className={`inline-flex min-h-8 shrink-0 items-center rounded-chip px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${activeView === tab.key ? 'bg-line text-fg' : 'text-muted hover:bg-bg hover:text-fg'}`}
+                className={`inline-flex min-h-8 shrink-0 items-center rounded-chip px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${activeView === tab.key ? 'bg-bg font-semibold text-fg' : 'text-muted hover:bg-bg hover:text-fg'}`}
               >
                 {tab.label}
               </Link>
@@ -2228,92 +2229,35 @@ export const AdminInvoicing: React.FC = () => {
         actions={(
           <>
             <div className="inline-flex min-h-9 items-center rounded-control border border-line bg-panel p-1" aria-label="Finance currency">
-              {(['IDR', 'USD'] as CurrencyCode[]).map((item) => <button key={item} type="button" onClick={() => setActiveCurrency(item)} aria-pressed={currency === item} className={'min-h-7 rounded-chip px-2.5 text-[11px] font-semibold ' + (currency === item ? 'bg-line text-fg' : 'text-muted hover:text-fg')}>{item}</button>)}
+              {(['IDR', 'USD'] as CurrencyCode[]).map((item) => <button key={item} type="button" onClick={() => setActiveCurrency(item)} aria-pressed={currency === item} className={'min-h-7 rounded-chip px-2.5 text-[11px] font-semibold ' + (currency === item ? 'bg-bg text-fg' : 'text-muted hover:bg-bg hover:text-fg')}>{item}</button>)}
             </div>
             <button type="button" onClick={() => void loadData(true)} disabled={refreshing} className={actionClass} title="Refresh finance data"><RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />{refreshing ? 'Refreshing' : 'Refresh'}</button>
             {financeView === 'quotations' ? (
               <>
                 <button type="button" onClick={exportQuotationsCsv} disabled={!filteredQuotations.length} className={actionClass}><Download size={14}/>Export CSV</button>
-                {canManageInvoices && (
-                  <button type="button" onClick={openCreateQuotation} className={primaryClass}><Plus size={14}/>New quotation</button>
-                )}
+                {canManageInvoices && <button type="button" onClick={openCreateQuotation} className={primaryClass}><Plus size={14}/>New quotation</button>}
               </>
             ) : financeView === 'income-expenses' ? (
-        <div className="space-y-5">
-          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-            <FinanceMetricCard label="Income YTD" value={formatFinanceCardAmount(ytdCollected,currency)} context={ytdCollectionRate.toFixed(1)+'% collected vs issued'} icon={<WalletCards size={15} className="text-success"/>} toneClassName="text-success"/>
-            <FinanceMetricCard label="Invoiced YTD" value={formatFinanceCardAmount(ytdInvoiced,currency)} context="Issued billings" icon={<Receipt size={15}/>}/>
-            <FinanceMetricCard label="Expenses YTD" value={formatFinanceCardAmount(ytdExpenses,currency)} context={currencyExpenses.length+' expense records'} icon={<ArrowDown size={15}/>}/>
-            <FinanceMetricCard label="Net cash YTD" value={formatFinanceCardAmount(ytdNetCash,currency)} context="Collected less expenses" icon={<TrendingUp size={15}/>} toneClassName={ytdNetCash>=0?'text-success':'text-danger'}/>
-          </section>
-          <section className="rounded-card border border-line bg-panel overflow-hidden">
-            <div className="border-b border-line p-4 sm:p-5">
-              <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-sm font-semibold text-fg">Income & Expenses ledger</h2>
-                    <div className="inline-flex rounded-control border border-line bg-bg p-0.5" role="group" aria-label="Ledger view">
-                      <button type="button" onClick={() => setIncomeExpenseMode('income')} aria-pressed={incomeExpenseMode === 'income'} className={'inline-flex h-8 items-center gap-1.5 rounded-[6px] px-2.5 text-[11px] font-medium transition-colors ' + (incomeExpenseMode === 'income' ? 'bg-panel text-fg' : 'text-muted hover:text-fg')}><WalletCards size={13} aria-hidden="true"/>Income</button>
-                      <button type="button" onClick={() => setIncomeExpenseMode('expenses')} aria-pressed={incomeExpenseMode === 'expenses'} className={'inline-flex h-8 items-center gap-1.5 rounded-[6px] px-2.5 text-[11px] font-medium transition-colors ' + (incomeExpenseMode === 'expenses' ? 'bg-panel text-fg' : 'text-muted hover:text-fg')}><ArrowDown size={13} aria-hidden="true"/>Expenses</button>
-                    </div>
-                  </div>
-                  <p className="mt-1 text-xs text-muted">{incomeExpenseMode === 'income' ? 'Actual payment activity.' : 'Operating spend by type, category, and date.'}</p>
-                </div>
-                {incomeExpenseMode === 'income' ? (
-                  <label className="relative w-full max-w-xs"><Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/><span className="sr-only">Search income</span><input value={incomeSearch} onChange={(event)=>setIncomeSearch(event.target.value)} placeholder="Search invoice or client..." className={fieldClass+' pl-8'}/></label>
-                ) : (
-                  <div className="grid w-full gap-2 sm:grid-cols-3 xl:w-auto">
-                    <label className="relative sm:col-span-3 xl:col-span-1 xl:w-64"><Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/><span className="sr-only">Search expense</span><input value={expenseSearch} onChange={(event)=>setExpenseSearch(event.target.value)} placeholder="Search expense..." className={fieldClass+' pl-8'}/></label>
-                    <CustomSelect value={expenseTypeFilter} onChange={setExpenseTypeFilter} options={expenseTypeOptions} triggerClassName="h-9 min-h-9"/>
-                    <CustomSelect value={expenseSort} onChange={(value)=>setExpenseSort(value as typeof expenseSort)} options={[{value:'date_desc',label:'Newest'},{value:'date_asc',label:'Oldest'},{value:'amount_high',label:'Highest amount'},{value:'amount_low',label:'Lowest amount'}]} triggerClassName="h-9 min-h-9"/>
-                    {canManageInvoices&&<button type="button" onClick={openExpenseModal} className={primaryClass+' sm:col-span-3 xl:col-span-1'}><Plus size={14}/>Add expense</button>}
-                  </div>
-                )}
-              </div>
-            </div>
-            {incomeExpenseMode === 'income' ? (
-              <div className="overflow-hidden">
-                {incomeRows.length===0?<div className="p-5"><EmptyState title="No income recorded" description="Recorded payments will appear here."/></div>:<table className="w-full table-fixed border-separate border-spacing-0 text-xs">
-                  <thead className="sticky top-0 z-10 border-b border-line bg-panel/95 backdrop-blur-sm"><tr><th className="w-[28%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Payment</th><th className="w-[34%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client</th><th className="w-[18%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Date</th><th className="w-[20%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount</th></tr></thead>
-                  <tbody className="divide-y divide-line">{paginatedIncomeRows.map((row)=><tr key={row.id} className="group transition-colors hover:bg-bg"><td className="px-5 py-4"><button type="button" onClick={()=>{const invoice=currencyInvoices.find((item)=>item.id===row.invoiceId);if(invoice)openPrintPreview(invoice)}} className="font-semibold tabular-nums text-fg hover:text-accent-text">{row.invoiceNumber}</button><p className="mt-1 text-[11px] text-muted">Payment received</p></td><td className="px-5 py-4"><p className="font-medium text-fg">{row.clientCompany}</p><p className="mt-1 text-[11px] text-muted">Invoice payment</p></td><td className="px-4 py-5 tabular-nums text-muted">{row.date}</td><td className="px-4 py-5 text-right"><p className="font-semibold tabular-nums text-success">{formatNativeAmount(row.amount,row.currency,true)}</p><span className="mt-1 inline-flex rounded-badge border border-success/20 bg-success/10 px-1.5 py-0.5 text-[10px] font-medium text-success">Collected</span></td></tr>)}</tbody>
-                </table>}
-                {incomePageCount>1&&<div className="border-t border-line p-4"><div className="flex justify-between text-[11px] text-muted"><span>{incomeRows.length} payments</span><div className="flex gap-1"><button type="button" onClick={()=>setIncomePage((p)=>Math.max(1,p-1))} disabled={incomePage===1} className={actionClass}>Prev</button><span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control bg-line px-2 py-0.5 text-[10px] font-semibold text-fg">{incomePage}</span><button type="button" onClick={()=>setIncomePage((p)=>Math.min(incomePageCount,p+1))} disabled={incomePage===incomePageCount} className={actionClass}>Next</button></div></div></div>}
-              </div>
-            ) : (
-              <div className="overflow-hidden">
-                {paginatedExpenses.length===0?<div className="p-5"><EmptyState title="No expenses found" description="Adjust the search or filters, or add a new expense."/></div>:<table className="w-full table-fixed border-separate border-spacing-0 text-xs">
-                  <thead className="sticky top-0 z-10 border-b border-line bg-panel/95 backdrop-blur-sm"><tr><th className="w-[38%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Expense</th><th className="w-[16%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Type</th><th className="w-[18%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Date</th><th className="w-[18%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount</th><th className="w-[10%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted"></th></tr></thead>
-                  <tbody className="divide-y divide-line">{paginatedExpenses.map((expense)=><tr key={expense.id} className="group transition-colors hover:bg-bg"><td className="px-5 py-4"><p className="font-medium text-fg">{expense.description}</p><p className="mt-1 truncate text-[11px] text-muted">{expense.category}</p></td><td className="px-5 py-4"><span className="inline-flex rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">{expense.type||'OpEx'}</span></td><td className="px-4 py-5 tabular-nums text-muted">{expense.date}</td><td className="px-4 py-5 text-right"><p className="font-semibold tabular-nums text-fg">{formatNativeAmount(expense.amount,expense.currency||currency,true)}</p></td><td className="px-4 py-5 text-right">{canManageInvoices&&<button type="button" onClick={()=>setConfirmAction({type:'expense',id:expense.id,label:expense.description})} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Void expense" title="Void expense"><Trash2 size={14}/></button>}</td></tr>)}</tbody>
-                </table>}
-                {expensePageCount>1&&<div className="border-t border-line p-4"><div className="flex justify-between text-[11px] text-muted"><span>{filteredExpenses.length} expenses</span><div className="flex gap-1"><button type="button" onClick={()=>setExpensePage((p)=>Math.max(1,p-1))} disabled={expensePage===1} className={actionClass}>Prev</button><span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control bg-line px-2 py-0.5 text-[10px] font-semibold text-fg">{expensePage}</span><button type="button" onClick={()=>setExpensePage((p)=>Math.min(expensePageCount,p+1))} disabled={expensePage===expensePageCount} className={actionClass}>Next</button></div></div></div>}
-              </div>
-            )}
-          </section>
-        </div>
-      ) : financeView === 'tax-retainers' ? (
+              canManageInvoices ? <button type="button" onClick={openExpenseModal} className={primaryClass}><Plus size={14}/>Add expense</button> : null
+            ) : financeView === 'tax-retainers' ? (
               <>
                 <button type="button" onClick={exportTaxCsv} disabled={!currencyInvoices.length} className={actionClass}><Download size={14}/>Export tax detail</button>
-                {canManageInvoices && (
-                  <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>New invoice</button>
-                )}
+                {canManageInvoices && <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>New invoice</button>}
               </>
             ) : financeView === 'financial-reports' ? (
               <button type="button" onClick={exportReportCsv} disabled={!financeChartData.length} className={actionClass}><Download size={14}/>Export report</button>
             ) : (
               <>
                 <button type="button" onClick={exportInvoicesCsv} disabled={!currencyInvoices.length} className={actionClass}><Download size={14}/>Export CSV</button>
-                {canManageInvoices && (
-                  <>
-                    <button type="button" onClick={openCreateQuotation} className={actionClass}><FileText size={14}/>New quotation</button>
-                    <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>New invoice</button>
-                  </>
-                )}
+                {canManageInvoices && <>
+                  <button type="button" onClick={openCreateQuotation} className={actionClass}><FileText size={14}/>New quotation</button>
+                  <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>New invoice</button>
+                </>}
               </>
             )}
           </>
         )}
       />
-
       {notice && (
         <div className="fixed right-4 top-[68px] z-[60] w-[min(420px,calc(100vw-32px))]" aria-live="polite" aria-atomic="true">
           <div className={'flex items-start gap-3 rounded-card border px-5 py-3 text-xs ' + (notice.tone === 'success' ? 'border-success/30 bg-panel text-success' : 'border-danger/30 bg-panel text-danger')} role="status">
@@ -2339,7 +2283,7 @@ export const AdminInvoicing: React.FC = () => {
         </div>
       ) : financeView === 'quotations' ? (
         <div className="space-y-5">
-          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Total quotations" value={quotationMetrics.total} context="All records" icon={<FileText size={15}/>}/><FinanceMetricCard label="Active pipeline" value={quotationMetrics.active} context="Draft through sent" icon={<Clock3 size={15}/>}/><FinanceMetricCard label="Pipeline value" value={formatFinanceCardAmount(quotationMetrics.value,currency)} context={usingDemoQuotations?'Demo workspace data':'Server-backed records'} icon={<WalletCards size={15} />}/><FinanceMetricCard label="Accepted" value={quotationMetrics.accepted} context={quotationMetrics.approved+' approved ready to convert'} icon={<CheckCircle2 size={15} className="text-success"/>} toneClassName="text-success"/></section>
+          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Total quotations" value={quotationMetrics.total} context="All records" sparkline={[quotationMetrics.total, quotationMetrics.active, quotationMetrics.accepted, quotationMetrics.expiring]} icon={<FileText size={15}/>}/><FinanceMetricCard label="Active pipeline" value={quotationMetrics.active} context="Draft through sent" sparkline={[quotationMetrics.total, quotationMetrics.active, quotationMetrics.accepted, quotationMetrics.expiring]} icon={<Clock3 size={15}/>}/><FinanceMetricCard label="Pipeline value" value={formatFinanceCardAmount(quotationMetrics.value,currency)} context={usingDemoQuotations?'Demo workspace data':'Server-backed records'} sparkline={filteredQuotations.length ? filteredQuotations.slice(0, 8).map((quotation) => quotation.total) : [quotationMetrics.value]} icon={<WalletCards size={15} />}/><FinanceMetricCard label="Accepted" value={quotationMetrics.accepted} context={quotationMetrics.approved+' approved ready to convert'} sparkline={[quotationMetrics.active, quotationMetrics.approved, quotationMetrics.accepted]} icon={<CheckCircle2 size={15} className="text-success"/>} toneClassName="text-success"/></section>
           <section className="space-y-5">
             <section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between"><div><h2 className="text-sm font-semibold text-fg">Quotation ledger</h2><p className="mt-1 text-xs text-muted">Search, filter, and sort the commercial pipeline.</p></div><div className="grid gap-2 sm:grid-cols-2 xl:flex"><label className="relative xl:w-64"><Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/><span className="sr-only">Search quotations</span><input value={quotationSearch} onChange={(event)=>setQuotationSearch(event.target.value)} placeholder="Search quotation, client..." className={fieldClass+' pl-9'}/></label><CustomSelect value={quotationStatusFilter} onChange={(value)=>setQuotationStatusFilter(value as typeof quotationStatusFilter)} options={[{value:'all',label:'All statuses'},{value:'draft',label:'Draft'},{value:'review',label:'Internal review'},{value:'approved',label:'Approved'},{value:'sent',label:'Sent'},{value:'accepted',label:'Accepted'},{value:'rejected',label:'Rejected'}]} triggerClassName="h-9 min-h-9" aria-label="Quotation status filter"/><CustomSelect value={quotationSort} onChange={(value)=>setQuotationSort(value as QuotationSort)} options={[{value:'newest',label:'Newest'},{value:'oldest',label:'Oldest'},{value:'value_high',label:'Highest value'},{value:'value_low',label:'Lowest value'},{value:'valid_until',label:'Valid until'}]} triggerClassName="h-9 min-h-9" aria-label="Quotation sort"/></div></div></div><div className="overflow-hidden">{filteredQuotations.length===0?<div className="p-5"><EmptyState title="No quotations found" description="Adjust the search or filters."/></div>:<table className="w-full table-fixed border-separate border-spacing-0 text-xs">
 <thead className="sticky top-0 z-10 border-b border-line bg-panel/95 backdrop-blur-sm"><tr>
@@ -2367,7 +2311,7 @@ export const AdminInvoicing: React.FC = () => {
         </div>
       ) : financeView === 'income-expenses' ? (
         <div className="space-y-5">
-          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Income YTD" value={formatFinanceCardAmount(ytdCollected,currency)} context={ytdCollectionRate.toFixed(1)+'% collected vs issued'} icon={<WalletCards size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Invoiced YTD" value={formatFinanceCardAmount(ytdInvoiced,currency)} context="Issued billings" icon={<Receipt size={15}/>}/><FinanceMetricCard label="Expenses YTD" value={formatFinanceCardAmount(ytdExpenses,currency)} context={currencyExpenses.length+' expense records'} icon={<ArrowDown size={15}/>}/><FinanceMetricCard label="Net cash YTD" value={formatFinanceCardAmount(ytdNetCash,currency)} context="Collected less expenses" icon={<TrendingUp size={15}/>} toneClassName={ytdNetCash>=0?'text-success':'text-danger'}/></section>
+          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Income YTD" value={formatFinanceCardAmount(ytdCollected,currency)} context={ytdCollectionRate.toFixed(1)+'% collected vs issued'} sparkline={financeChartData.map((point) => point.inflow)} icon={<WalletCards size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Invoiced YTD" value={formatFinanceCardAmount(ytdInvoiced,currency)} context="Issued billings" sparkline={financeChartData.map((point) => point.inflow + point.retainerTarget)} icon={<Receipt size={15}/>}/><FinanceMetricCard label="Expenses YTD" value={formatFinanceCardAmount(ytdExpenses,currency)} context={currencyExpenses.length+' expense records'} sparkline={financeChartData.map((point) => point.outflow)} icon={<ArrowDown size={15}/>}/><FinanceMetricCard label="Net cash YTD" value={formatFinanceCardAmount(ytdNetCash,currency)} context="Collected less expenses" sparkline={financeChartData.map((point) => point.net)} icon={<TrendingUp size={15}/>} toneClassName={ytdNetCash>=0?'text-success':'text-danger'}/></section>
           <section className="space-y-5"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><div className="flex items-end justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Income ledger</h2><p className="mt-1 text-xs text-muted">Actual payment activity.</p></div><label className="relative w-full max-w-xs"><Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/><span className="sr-only">Search income</span><input value={incomeSearch} onChange={(event)=>setIncomeSearch(event.target.value)} placeholder="Search invoice or client..." className={fieldClass+' pl-8'}/></label></div></div><div className="overflow-hidden">{incomeRows.length===0?<div className="p-5"><EmptyState title="No income recorded" description="Recorded payments will appear here."/></div>:<table className="w-full table-fixed border-separate border-spacing-0 text-xs">
 <thead className="sticky top-0 z-10 border-b border-line bg-panel/95 backdrop-blur-sm"><tr>
   <th className="w-[28%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Payment</th>
@@ -2403,7 +2347,7 @@ export const AdminInvoicing: React.FC = () => {
         </div>
       ) : financeView === 'tax-retainers' ? (
         <div className="space-y-5">
-          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Tax provision" value={formatFinanceCardAmount(taxProvision,currency)} context="Tax across issued invoices" icon={<Receipt size={15}/>}/><FinanceMetricCard label="Tax collected" value={formatFinanceCardAmount(taxCollected,currency)} context={(taxProvision>0?((taxCollected/taxProvision)*100).toFixed(1):'0.0')+'% of provision'} icon={<BadgeCheck size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Tax outstanding" value={formatFinanceCardAmount(taxOutstanding,currency)} context="Provision not collected" icon={<Hourglass size={15} className="text-warning"/>} toneClassName="text-warning"/><FinanceMetricCard label="Retainer billed" value={formatFinanceCardAmount(retainerBilled,currency)} context={(retainerBilled>0?((retainerCollected/retainerBilled)*100).toFixed(1):'0.0')+'% collected'} icon={<TrendingUp size={15}/>}/></section>
+          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Tax provision" value={formatFinanceCardAmount(taxProvision,currency)} context="Tax across issued invoices" sparkline={[taxProvision, taxCollected, taxOutstanding, retainerBilled]} icon={<Receipt size={15}/>}/><FinanceMetricCard label="Tax collected" value={formatFinanceCardAmount(taxCollected,currency)} context={(taxProvision>0?((taxCollected/taxProvision)*100).toFixed(1):'0.0')+'% of provision'} sparkline={[taxProvision, taxCollected, taxOutstanding]} icon={<BadgeCheck size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Tax outstanding" value={formatFinanceCardAmount(taxOutstanding,currency)} context="Provision not collected" sparkline={[taxOutstanding, taxProvision, taxCollected]} icon={<Hourglass size={15} className="text-warning"/>} toneClassName="text-warning"/><FinanceMetricCard label="Retainer billed" value={formatFinanceCardAmount(retainerBilled,currency)} context={(retainerBilled>0?((retainerCollected/retainerBilled)*100).toFixed(1):'0.0')+'% collected'} sparkline={financeChartData.map((point) => point.retainerTarget)} icon={<TrendingUp size={15}/>}/></section>
           <section className="space-y-5"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><div className="flex items-start justify-between gap-4"><div><h2 className="text-sm font-semibold text-fg">Retainer ledger</h2><p className="mt-1 text-xs text-muted">Billing and collected value for retainer invoices.</p></div>{usingDemoRetainerLedger&&<span className="shrink-0 rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">Sample data</span>}</div></div><div className="overflow-hidden"><table className="w-full table-fixed border-separate border-spacing-0 text-xs">
 <thead className="sticky top-0 z-10 border-b border-line bg-panel/95 backdrop-blur-sm"><tr>
   <th className="w-[26%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice</th>
@@ -2426,13 +2370,13 @@ export const AdminInvoicing: React.FC = () => {
         </div>
       ) : financeView === 'financial-reports' ? (
         <div className="space-y-5">
-          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Net cash YTD" value={formatFinanceCardAmount(ytdNetCash,currency)} context="Collected less expenses" icon={<TrendingUp size={15}/>} toneClassName={ytdNetCash>=0?'text-success':'text-danger'}/><FinanceMetricCard label="Collection rate" value={ytdCollectionRate.toFixed(1)+'%'} context="Collected vs issued" icon={<BarChart3 size={15}/>}/><FinanceMetricCard label="Operating margin" value={(Number.isFinite(operatingMarginValue)?operatingMarginValue:quarterMargin).toFixed(1)+'%'} context="Target ≥ 35%" icon={<TrendingUp size={15}/>}/><FinanceMetricCard label="Outstanding" value={formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} context={pendingInvoiceCount+' invoices open'} icon={<Hourglass size={15} className="text-warning"/>} toneClassName="text-warning"/></section>
+          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Net cash YTD" value={formatFinanceCardAmount(ytdNetCash,currency)} context="Collected less expenses" sparkline={financeChartData.map((point) => point.net)} icon={<TrendingUp size={15}/>} toneClassName={ytdNetCash>=0?'text-success':'text-danger'}/><FinanceMetricCard label="Collection rate" value={ytdCollectionRate.toFixed(1)+'%'} context="Collected vs issued" sparkline={financeChartData.map((point) => point.inflow > 0 ? (point.inflow / Math.max(point.inflow + point.retainerTarget, 1)) * 100 : 0)} icon={<BarChart3 size={15}/>}/><FinanceMetricCard label="Operating margin" value={(Number.isFinite(operatingMarginValue)?operatingMarginValue:quarterMargin).toFixed(1)+'%'} context="Target ≥ 35%" sparkline={financeChartData.map((point) => point.inflow > 0 ? (point.net / point.inflow) * 100 : 0)} icon={<TrendingUp size={15}/>}/><FinanceMetricCard label="Outstanding" value={formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} context={pendingInvoiceCount+' invoices open'} sparkline={financeChartData.map((point) => point.outflow)} icon={<Hourglass size={15} className="text-warning"/>} toneClassName="text-warning"/></section>
           <section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><div className="flex justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Cash Flow vs Operating Burn</h2><p className="mt-1 text-xs text-muted">Actual collections versus recorded operating spend. Dotted line = net cash.</p></div><span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{reportingQuarter?.label||'Current period'}</span></div></div><div className="p-4 sm:p-5">{hasTrendData?<FinanceCashFlowChart data={financeChartData} currency={currency} ariaLabel="Finance cash flow trend comparing cash collected, operating burn, and net cash."/>:<EmptyState title="No trend data" description="Monthly payment and expense records will populate this report."/>}</div></section>
           <section className="grid gap-5 xl:grid-cols-3"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><h2 className="text-sm font-semibold text-fg">Invoice status mix</h2><p className="mt-1 text-xs text-muted">Current reporting quarter.</p></div><div className="space-y-2 p-4">{quarterStatusRows.map((row)=><div key={row.status} className="flex justify-between rounded-control border border-line bg-bg px-3 py-2.5"><StatusBadge status={row.status}/><span className="text-xs font-semibold tabular-nums">{row.count}</span></div>)}</div></section><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><h2 className="text-sm font-semibold text-fg">Expense mix</h2><p className="mt-1 text-xs text-muted">Top categories by quarter spend.</p></div><div className="space-y-3 p-4">{quarterExpenseCategories.length===0?<EmptyState title="No expense categories" description="Actual expense records will appear here."/>:quarterExpenseCategories.slice(0,5).map(([category,amount])=><div key={category}><div className="flex justify-between gap-3 text-xs"><span className="truncate text-muted">{category}</span><span className="tabular-nums font-medium">{formatNativeAmount(amount,currency,true)}</span></div><div className="mt-1.5 h-1.5 rounded-full bg-bg overflow-hidden"><div className="h-full rounded-full bg-series-3" style={{width:(quarterExpenses>0?Math.min(100,amount/quarterExpenses*100):0)+'%'}}/></div></div>)}</div></section><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><h2 className="text-sm font-semibold text-fg">Report controls</h2><p className="mt-1 text-xs text-muted">Audit context and export.</p></div><div className="grid grid-cols-2 gap-2 p-4">{[['Period',reportingQuarter?.label||'—'],['Invoices',String(serverMetrics?serverMetrics.totalInvoicesCount:ledgerInvoices.length)],['Open',String(pendingInvoiceCount)],['Overdue',String(criticalOverdueCount)],['Retainer',formatFinanceCardAmount(retainerBilled,currency)],['Tax due',formatFinanceCardAmount(taxOutstanding,currency)]].map(([label,value])=><div key={label} className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">{label}</p><p className="mt-1 text-sm font-semibold tabular-nums">{value}</p></div>)}</div><div className="border-t border-line p-4"><button type="button" onClick={exportReportCsv} disabled={!financeChartData.length} className={actionClass+' w-full'}><Download size={14}/>Export financial report</button></div></section></section>
         </div>
       ) : (
         <div className="space-y-5">
-          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Quarter billed" value={formatFinanceCardAmount(currentQuarterTotal,currency)} context={quarterChangePercent===null?'Current quarter':(quarterChangePercent>=0?'+':'')+quarterChangePercent.toFixed(1)+'% vs previous quarter'} icon={<Receipt size={15}/>}/><FinanceMetricCard label="Collected YTD" value={formatFinanceCardAmount(ytdCollected,currency)} context={ytdCollectionRate.toFixed(1)+'% collection rate'} icon={<WalletCards size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Outstanding" value={formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} context={pendingInvoiceCount+' open invoices'} icon={<Hourglass size={15} className="text-warning"/>} toneClassName="text-warning"/><FinanceMetricCard label="Overdue" value={formatFinanceCardAmount(overdueBalance,currency)} context={criticalOverdueCount+' invoices need attention'} icon={<AlertCircle size={15} className="text-danger"/>} toneClassName="text-danger"/></section>
+          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Quarter billed" value={formatFinanceCardAmount(currentQuarterTotal,currency)} context={quarterChangePercent===null?'Current quarter':(quarterChangePercent>=0?'+':'')+quarterChangePercent.toFixed(1)+'% vs previous quarter'} sparkline={financeChartData.map((point) => point.inflow + point.retainerTarget)} icon={<Receipt size={15}/>}/><FinanceMetricCard label="Collected YTD" value={formatFinanceCardAmount(ytdCollected,currency)} context={ytdCollectionRate.toFixed(1)+'% collection rate'} sparkline={financeChartData.map((point) => point.inflow)} icon={<WalletCards size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Outstanding" value={formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} context={pendingInvoiceCount+' open invoices'} icon={<Hourglass size={15} className="text-warning"/>} toneClassName="text-warning"/><FinanceMetricCard label="Overdue" value={formatFinanceCardAmount(overdueBalance,currency)} context={criticalOverdueCount+' invoices need attention'} sparkline={financeChartData.map((point) => point.outflow)} icon={<AlertCircle size={15} className="text-danger"/>} toneClassName="text-danger"/></section>
           <section className="grid gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><div className="flex justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Cash Flow vs Operating Burn</h2><p className="mt-1 text-xs text-muted">Six-month view of actual cash collected versus recorded operating spend.</p></div><div className="shrink-0 rounded-control border border-line bg-bg px-3 py-2 text-right">
   <p className="text-[9px] font-semibold uppercase tracking-[0.08em] text-muted">Quarter net cash</p>
   <p className={'mt-0.5 text-sm font-semibold tabular-nums '+(quarterNetCash>=0?'text-success':'text-danger')}>{formatFinanceCardAmount(quarterNetCash,currency)}</p>
