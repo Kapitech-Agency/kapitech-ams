@@ -36,7 +36,6 @@ import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/Admi
 type SortKey = 'updated' | 'due' | 'oldest' | 'amount_high' | 'amount_low' | 'invoice';
 type Tab = 'invoices' | 'expenses';
 type LedgerPeriod = 'reporting-quarter' | 'all';
-type InvoiceColumnKey = 'invoice' | 'client' | 'issueDate' | 'dueDate' | 'amount' | 'status' | 'actions';
 type FinanceClient = {
   id: string;
   name: string;
@@ -198,7 +197,6 @@ const FinanceCashFlowChart: React.FC<{
   const x = (index: number) => left + (data.length === 1 ? innerWidth / 2 : (index / (data.length - 1)) * innerWidth);
   const y = (value: number) => top + ((maxValue - value) / range) * innerHeight;
   const polyline = (key: 'inflow' | 'outflow' | 'net') => data.map((point, index) => x(index) + ',' + y(point[key])).join(' ');
-  const retainerTarget = data.reduce((sum, point) => sum + point.inflow, 0) / data.length;
   const current = data[data.length - 1];
   return (
     <div className="min-w-0" role="img" aria-label={ariaLabel}>
@@ -208,7 +206,6 @@ const FinanceCashFlowChart: React.FC<{
             const yy = top + ratio * innerHeight;
             return <line key={ratio} x1={left} x2={width - right} y1={yy} y2={yy} stroke="var(--line)" strokeWidth="1" />;
           })}
-          <line x1={left} x2={width - right} y1={y(retainerTarget)} y2={y(retainerTarget)} stroke="var(--accent)" strokeWidth="1.4" strokeDasharray="6 4" />
           <polyline points={polyline('outflow')} fill="none" stroke="var(--series-3)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           <polyline points={polyline('net')} fill="none" stroke="var(--success)" strokeWidth="1.8" strokeDasharray="5 4" strokeLinecap="round" strokeLinejoin="round" />
           <polyline points={polyline('inflow')} fill="none" stroke="var(--series-1)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
@@ -257,16 +254,6 @@ export const AdminInvoicing: React.FC = () => {
   const [sort, setSort] = useState<SortKey>('updated');
   const [ledgerPeriod, setLedgerPeriod] = useState<LedgerPeriod>('reporting-quarter');
   const [periodMenuOpen, setPeriodMenuOpen] = useState(false);
-  const [columnsMenuOpen, setColumnsMenuOpen] = useState(false);
-  const [visibleInvoiceColumns, setVisibleInvoiceColumns] = useState<Record<InvoiceColumnKey, boolean>>({
-    invoice: true,
-    client: true,
-    issueDate: true,
-    dueDate: true,
-    amount: true,
-    status: true,
-    actions: true
-  });
   const [expenseSearch, setExpenseSearch] = useState('');
   const [expenseTypeFilter, setExpenseTypeFilter] = useState('all');
   const [expenseSort, setExpenseSort] = useState<'date_desc' | 'date_asc' | 'amount_high' | 'amount_low'>('date_desc');
@@ -1174,7 +1161,7 @@ export const AdminInvoicing: React.FC = () => {
         <>
           <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 min-[1100px]:grid-cols-5" aria-label="Finance KPI snapshot">
             {[
-              { label: 'Total Invoiced', icon: <Receipt size={12} aria-hidden="true" />, value: formatNativeAmount(ledgerInvoices.reduce((sum, invoice) => sum + Number(invoice.total || 0), 0), currency, true), context: (ledgerPeriod === 'reporting-quarter' ? (reportingQuarter?.label || 'Reporting period') + ' · ' : '') + (serverMetrics ? serverMetrics.totalInvoicesCount + ' total invoices' : ledgerInvoices.length + ' invoices'), tone: 'text-accent-text' },
+              { label: 'Total Invoiced', icon: <Receipt size={12} aria-hidden="true" />, value: formatNativeAmount(ledgerInvoices.reduce((sum, invoice) => sum + Number(invoice.total || 0), 0), currency, true), context: (ledgerPeriod === 'reporting-quarter' ? (reportingQuarter?.label || 'Reporting period') + ' · ' : '') + ledgerInvoices.length + ' invoices', tone: 'text-accent-text' },
               { label: 'Collected (YTD)', value: serverMetrics ? formatNativeAmount(serverMetrics.totalRevenueCollected, currency, true) : '—', context: currencyInvoices.length ? derivedMetrics.collectionRate + '% collection rate' : '—', icon: <WalletCards size={17} />, tone: 'text-success' },
               { label: 'Outstanding', value: serverMetrics ? formatNativeAmount(serverMetrics.totalOutstanding, currency, true) : '—', context: serverMetrics ? serverMetrics.overdueCount + ' overdue' : '—', icon: <CreditCard size={17} />, tone: 'text-warning' },
               { label: 'Overdue Balance', value: formatNativeAmount(overdueBalance, currency, true), context: serverMetrics ? serverMetrics.overdueCount + ' critical invoices' : '—', icon: <AlertCircle size={17} />, tone: 'text-danger' },
@@ -1276,44 +1263,9 @@ export const AdminInvoicing: React.FC = () => {
                         </div>
                       )}
                     </div>
-                    <div className="relative">
-                      <button type="button" onClick={() => { setColumnsMenuOpen((open) => !open); setPeriodMenuOpen(false); }} className={actionClass + ' w-9 px-0'} aria-label="Filter columns" aria-expanded={columnsMenuOpen} title="Filter columns">
-                        <SlidersHorizontal size={14} />
-                      </button>
-                      {columnsMenuOpen && (
-                        <div className="absolute right-0 top-[calc(100%+6px)] z-30 w-56 rounded-card border border-line bg-panel p-2">
-                          <div className="flex items-center justify-between border-b border-line px-2 pb-2">
-                            <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Columns</span>
-                            <button type="button" onClick={() => setVisibleInvoiceColumns({ invoice: true, client: true, issueDate: true, dueDate: true, amount: true, status: true, actions: true })} className="text-[10px] font-medium text-accent-text hover:text-fg">Reset</button>
-                          </div>
-                          <div className="mt-1 space-y-0.5">
-                            {([
-                              ['invoice', 'Invoice #'],
-                              ['client', 'Client & Project'],
-                              ['issueDate', 'Issue Date'],
-                              ['dueDate', 'Due Date'],
-                              ['amount', 'Amount'],
-                              ['status', 'Status'],
-                              ['actions', 'Actions']
-                            ] as Array<[InvoiceColumnKey, string]>).map(([key, label]) => (
-                              <label key={key} className="flex cursor-pointer items-center gap-2 rounded-control px-2 py-2 text-xs text-muted hover:bg-bg hover:text-fg">
-                                <input
-                                  type="checkbox"
-                                  checked={visibleInvoiceColumns[key]}
-                                  onChange={() => setVisibleInvoiceColumns((current) => {
-                                    const active = Object.values(current).filter(Boolean).length;
-                                    if (current[key] && active <= 1) return current;
-                                    return { ...current, [key]: !current[key] };
-                                  })}
-                                  className="accent-[var(--accent)]"
-                                />
-                                <span>{label}</span>
-                              </label>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    <button type="button" onClick={() => setPeriodMenuOpen(false)} className={actionClass + ' w-9 px-0'} aria-label="Filter columns" title="Filter columns">
+                      <SlidersHorizontal size={14} />
+                    </button>
                     <CustomSelect value={sort} onChange={(value) => setSort(value as SortKey)} options={sortOptions} className="w-full xl:w-44" triggerClassName="h-9 min-h-9 w-full" aria-label="Invoice sort" />
                   </div>
                 ) : (
@@ -1334,13 +1286,13 @@ export const AdminInvoicing: React.FC = () => {
                       <div className="overflow-x-auto custom-scrollbar">
                         <table className="ams-table w-full min-w-[1040px] border-collapse text-left text-xs">
                           <thead className="bg-bg"><tr>
-                            {visibleInvoiceColumns.invoice && <th className="px-4 py-3 sm:px-5 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice #</th>}
-                            {visibleInvoiceColumns.client && <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client &amp; Project</th>}
-                            {visibleInvoiceColumns.issueDate && <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Issue Date</th>}
-                            {visibleInvoiceColumns.dueDate && <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Due Date</th>}
-                            {visibleInvoiceColumns.amount && <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount (IDR)</th>}
-                            {visibleInvoiceColumns.status && <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Status</th>}
-                            {visibleInvoiceColumns.actions && <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Actions</th>}
+                            <th className="px-4 py-3 sm:px-5 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice #</th>
+                            <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client &amp; Project</th>
+                            <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Issue Date</th>
+                            <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Due Date</th>
+                            <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount (IDR)</th>
+                            <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Status</th>
+                            <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Actions</th>
                           </tr></thead>
                           <tbody>
                             {paginatedInvoices.map((invoice) => {
@@ -1349,13 +1301,13 @@ export const AdminInvoicing: React.FC = () => {
                               const isOverdue = invoice.status === 'overdue';
                               return (
                                 <tr key={invoice.id} className="group border-t border-line transition-colors hover:bg-bg">
-                                  {visibleInvoiceColumns.invoice && <td className="px-4 py-3 sm:px-5"><div className="flex items-center gap-2"><span className={'h-1.5 w-1.5 rounded-full ' + (isOverdue ? 'bg-danger' : invoice.status === 'paid' ? 'bg-success' : invoice.status === 'sent' ? 'bg-info' : 'bg-warning')} /><button type="button" onClick={() => openPrintPreview(invoice)} className="font-medium tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button></div><p className="mt-1 text-[11px] text-muted">{invoice.currency}</p></td>}
-                                  {visibleInvoiceColumns.client && <td className="px-4 py-3"><div className="font-medium text-fg">{invoice.clientCompany || invoice.clientName}</div><div className="mt-0.5 text-[11px] text-muted">{project?.name || invoice.clientName}</div></td>}
-                                  {visibleInvoiceColumns.issueDate && <td className="px-4 py-3 tabular-nums text-muted">{invoice.issueDate}</td>}
-                                  {visibleInvoiceColumns.dueDate && <td className={'px-4 py-3 tabular-nums font-medium ' + (isOverdue ? 'text-danger' : 'text-muted')}>{invoice.dueDate}{isOverdue && <div className="mt-0.5 text-[10px] text-danger">Overdue</div>}</td>}
-                                  {visibleInvoiceColumns.amount && <td className="px-4 py-3 text-right"><div className="font-semibold tabular-nums text-fg">{formatNativeAmount(invoice.total, invoice.currency)}</div><div className="mt-0.5 text-[10px] tabular-nums text-muted">{balance > 0 ? 'Due ' + formatNativeAmount(balance, invoice.currency, true) : 'Settled'}</div></td>}
-                                  {visibleInvoiceColumns.status && <td className="px-4 py-3">{canManageInvoices && invoice.status !== 'cancelled' ? <InvoiceStatusDropdown status={invoice.status} allowedStatuses={['draft', 'sent', 'overdue']} disabled={updatingInvoiceId === invoice.id || !['draft', 'sent', 'overdue'].includes(invoice.status)} onChange={(next) => void updateInvoiceStatus(invoice, next)} /> : <StatusBadge status={invoice.status} />}</td>}
-                                  {visibleInvoiceColumns.actions && <td className="px-4 py-3 text-right"><div className="flex items-center justify-end gap-1">
+                                  <td className="px-4 py-3 sm:px-5"><div className="flex items-center gap-2"><span className={'h-1.5 w-1.5 rounded-full ' + (isOverdue ? 'bg-danger' : invoice.status === 'paid' ? 'bg-success' : invoice.status === 'sent' ? 'bg-info' : 'bg-warning')} /><button type="button" onClick={() => openPrintPreview(invoice)} className="font-medium tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button></div><p className="mt-1 text-[11px] text-muted">{invoice.currency}</p></td>
+                                  <td className="px-4 py-3"><div className="font-medium text-fg">{invoice.clientCompany || invoice.clientName}</div><div className="mt-0.5 text-[11px] text-muted">{project?.name || invoice.clientName}</div></td>
+                                  <td className="px-4 py-3 tabular-nums text-muted">{invoice.issueDate}</td>
+                                  <td className={'px-4 py-3 tabular-nums font-medium ' + (isOverdue ? 'text-danger' : 'text-muted')}>{invoice.dueDate}{isOverdue && <div className="mt-0.5 text-[10px] text-danger">Overdue</div>}</td>
+                                  <td className="px-4 py-3 text-right"><div className="font-semibold tabular-nums text-fg">{formatNativeAmount(invoice.total, invoice.currency)}</div><div className="mt-0.5 text-[10px] tabular-nums text-muted">{balance > 0 ? 'Due ' + formatNativeAmount(balance, invoice.currency, true) : 'Settled'}</div></td>
+                                  <td className="px-4 py-3">{canManageInvoices && invoice.status !== 'cancelled' ? <InvoiceStatusDropdown status={invoice.status} allowedStatuses={['draft', 'sent', 'overdue']} disabled={updatingInvoiceId === invoice.id || !['draft', 'sent', 'overdue'].includes(invoice.status)} onChange={(next) => void updateInvoiceStatus(invoice, next)} /> : <StatusBadge status={invoice.status} />}</td>
+                                  <td className="px-4 py-3 text-right"><div className="flex items-center justify-end gap-1">
                                     {canManageInvoices && invoice.status !== 'paid' && invoice.status !== 'cancelled' && balance > 0 && <button type="button" onClick={() => openPayment(invoice)} className="inline-flex h-7 min-h-7 items-center rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted hover:bg-panel-hover hover:text-fg">Pay</button>}
                                     <button type="button" onClick={() => openPrintPreview(invoice)} className="inline-flex h-7 w-7 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="View invoice" title="View invoice"><FileText size={15} /></button>
                                     {canManageInvoices && invoice.status !== 'cancelled' && <button type="button" onClick={() => openEditInvoice(invoice)} className="inline-flex h-7 w-7 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Edit invoice" title="Edit invoice"><Edit3 size={14} /></button>}
