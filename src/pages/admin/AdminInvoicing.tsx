@@ -1430,6 +1430,240 @@ export const AdminInvoicing: React.FC = () => {
   const operatingMarginValue = serverMetrics ? Number.parseFloat(serverMetrics.profitMargin) : NaN;
   const operatingMarginHealthy = Number.isFinite(operatingMarginValue) && operatingMarginValue >= 35;
 
+  const quotationStatusLabel = (status: FinanceQuotationStatus) => {
+    const labels: Record<FinanceQuotationStatus, string> = {
+      draft: 'Draft',
+      review: 'Internal review',
+      approved: 'Approved',
+      sent: 'Sent',
+      accepted: 'Accepted',
+      rejected: 'Rejected'
+    };
+    return labels[status];
+  };
+
+  const filteredQuotations = useMemo(() => {
+    const query = quotationSearch.trim().toLowerCase();
+    return quotations
+      .filter((quotation) => {
+        const searchable = [
+          quotation.quotationNumber,
+          quotation.title,
+          quotation.clientName,
+          quotation.clientCompany,
+          quotation.owner
+        ].join(' ').toLowerCase();
+        return (!query || searchable.includes(query))
+          && (quotationStatusFilter === 'all' || quotation.status === quotationStatusFilter);
+      })
+      .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  }, [quotations, quotationSearch, quotationStatusFilter]);
+
+  const quotationMetrics = useMemo(() => ({
+    total: quotations.length,
+    active: quotations.filter((quotation) => ['draft', 'review', 'approved', 'sent'].includes(quotation.status)).length,
+    accepted: quotations.filter((quotation) => quotation.status === 'accepted').length,
+    value: quotations.filter((quotation) => quotation.status !== 'rejected').reduce((sum, quotation) => sum + quotation.total, 0)
+  }), [quotations]);
+
+  const resetQuotationForm = () => {
+    setEditingQuotation(null);
+    setQuotationTitle('');
+    setQuotationClientName('');
+    setQuotationClientCompany('');
+    setQuotationAmount(0);
+    setQuotationValidUntil(getDateInputValue(30));
+    setQuotationStatus('draft');
+  };
+
+  const openCreateQuotation = () => {
+    resetQuotationForm();
+    setQuotationModalOpen(true);
+  };
+
+  const openEditQuotation = (quotation: FinanceQuotation) => {
+    setEditingQuotation(quotation);
+    setQuotationTitle(quotation.title);
+    setQuotationClientName(quotation.clientName);
+    setQuotationClientCompany(quotation.clientCompany);
+    setQuotationAmount(quotation.total);
+    setQuotationValidUntil(quotation.validUntil);
+    setQuotationStatus(quotation.status);
+    setQuotationModalOpen(true);
+  };
+
+  const saveQuotation = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!canManageInvoices || quotationSaving) return;
+
+    if (!quotationTitle.trim() || !quotationClientName.trim() || !quotationClientCompany.trim() || !Number.isFinite(quotationAmount) || quotationAmount <= 0) {
+      showNotice('danger', language === 'id'
+        ? 'Judul, klien, perusahaan, dan nominal quotation wajib diisi.'
+        : 'Quotation title, client, company, and a valid amount are required.');
+      return;
+    }
+
+    setQuotationSaving(true);
+    const payload = {
+      title: quotationTitle.trim(),
+      clientName: quotationClientName.trim(),
+      company: quotationClientCompany.trim(),
+      currency,
+      validityPeriod: quotationValidUntil,
+      taxPercent: 11,
+      discount: 0,
+      paymentTerms: 'Bank Transfer Net 14',
+      notes: 'Finance module quotation workspace.',
+      items: [{
+        id: 'quotation-item-' + Date.now(),
+        description: quotationTitle.trim(),
+        quantity: 1,
+        unitPrice: Math.round(quotationAmount)
+      }],
+      ...(editingQuotation ? { status: quotationStatusLabel(quotationStatus) } : {})
+    };
+
+    try {
+      if (usingDemoQuotations) {
+        const now = new Date().toISOString();
+        const localQuotation: FinanceQuotation = {
+          id: editingQuotation?.id || 'quote_slug_' + Date.now(),
+          quotationNumber: editingQuotation?.quotationNumber || 'QTN-2026-' + String(100 + quotations.length + 1).padStart(3, '0'),
+          title: quotationTitle.trim(),
+          clientName: quotationClientName.trim(),
+          clientCompany: quotationClientCompany.trim(),
+          total: Math.round(quotationAmount),
+          currency,
+          status: quotationStatus,
+          validUntil: quotationValidUntil,
+          createdAt: editingQuotation?.createdAt || now.slice(0, 10),
+          owner: editingQuotation?.owner || 'Fikri Nurlete',
+          invoiceId: editingQuotation?.invoiceId
+        };
+        setQuotations((current) => editingQuotation
+          ? current.map((item) => item.id === editingQuotation.id ? localQuotation : item)
+          : [localQuotation, ...current]);
+        setQuotationModalOpen(false);
+        resetQuotationForm();
+        showNotice('success', editingQuotation ? 'Quotation updated.' : 'Quotation created.');
+        return;
+      }
+
+      const response = editingQuotation
+        ? await api.proposals.update(editingQuotation.id, payload)
+        : await api.proposals.create(payload);
+
+      if (!response.success || !response.data?.proposal) {
+        throw new Error(response.error || 'Quotation could not be saved.');
+      }
+
+      const normalized = normalizeFinanceQuotation(response.data.proposal);
+      setQuotations((current) => editingQuotation
+        ? current.map((item) => item.id === normalized.id ? normalized : item)
+        : [normalized, ...current]);
+      setQuotationModalOpen(false);
+      resetQuotationForm();
+      showNotice('success', editingQuotation ? 'Quotation updated.' : 'Quotation created.');
+    } catch (err) {
+      showNotice('danger', err instanceof Error ? err.message : 'Quotation could not be saved.');
+    } finally {
+      setQuotationSaving(false);
+    }
+  };
+
+  const updateQuotationStatus = async (quotation: FinanceQuotation, status: FinanceQuotationStatus) => {
+    if (!canManageInvoices || quotation.status === status) return;
+
+    if (usingDemoQuotations) {
+      setQuotations((current) => current.map((item) => item.id === quotation.id ? { ...item, status } : item));
+      showNotice('success', 'Quotation status updated.');
+      return;
+    }
+
+    try {
+      const response = await api.proposals.update(quotation.id, { status: quotationStatusLabel(status) });
+      if (!response.success || !response.data?.proposal) throw new Error(response.error || 'Quotation status could not be updated.');
+      const normalized = normalizeFinanceQuotation(response.data.proposal);
+      setQuotations((current) => current.map((item) => item.id === normalized.id ? normalized : item));
+      showNotice('success', 'Quotation status updated.');
+    } catch (err) {
+      showNotice('danger', err instanceof Error ? err.message : 'Quotation status could not be updated.');
+    }
+  };
+
+  const deleteQuotation = async (quotation: FinanceQuotation) => {
+    if (!canManageInvoices) return;
+
+    if (usingDemoQuotations) {
+      setQuotations((current) => current.filter((item) => item.id !== quotation.id));
+      if (quotationDetail?.id === quotation.id) setQuotationDetail(null);
+      showNotice('success', 'Quotation removed from the demo workspace.');
+      return;
+    }
+
+    try {
+      const response = await api.proposals.delete(quotation.id);
+      if (!response.success) throw new Error(response.error || 'Quotation could not be deleted.');
+      setQuotations((current) => current.filter((item) => item.id !== quotation.id));
+      if (quotationDetail?.id === quotation.id) setQuotationDetail(null);
+      showNotice('success', 'Quotation deleted.');
+    } catch (err) {
+      showNotice('danger', err instanceof Error ? err.message : 'Quotation could not be deleted.');
+    }
+  };
+
+  const convertQuotationToInvoice = async (quotation: FinanceQuotation) => {
+    if (!canManageInvoices || quotation.invoiceId) return;
+
+    if (usingDemoQuotations) {
+      setQuotations((current) => current.map((item) => item.id === quotation.id
+        ? { ...item, status: 'accepted', invoiceId: 'slug-inv-' + Date.now() }
+        : item));
+      showNotice('success', 'Quotation converted to a demo invoice reference.');
+      return;
+    }
+
+    try {
+      const response = await api.proposals.convertToInvoice(quotation.id);
+      if (!response.success || !response.data?.invoice) {
+        throw new Error(response.error || 'Quotation could not be converted to an invoice.');
+      }
+      setQuotations((current) => current.map((item) => item.id === quotation.id
+        ? { ...item, status: 'accepted', invoiceId: response.data?.invoice?.id || item.invoiceId }
+        : item));
+      await loadData(true);
+      showNotice('success', 'Quotation converted to invoice ' + response.data.invoice.invoiceNumber + '.');
+    } catch (err) {
+      showNotice('danger', err instanceof Error ? err.message : 'Quotation could not be converted to an invoice.');
+    }
+  };
+
+  const exportQuotationsCsv = () => {
+    const rows = filteredQuotations.map((quotation) => [
+      quotation.quotationNumber,
+      quotation.title,
+      quotation.clientCompany,
+      quotation.clientName,
+      quotation.currency,
+      quotation.total,
+      quotation.status,
+      quotation.validUntil,
+      quotation.owner
+    ]);
+    const csv = [['Quotation #', 'Title', 'Company', 'Contact', 'Currency', 'Total', 'Status', 'Valid Until', 'Owner'], ...rows]
+      .map((row) => row.map((value) => '"' + String(value ?? '').replace(/"/g, '""') + '"').join(','))
+      .join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'kapitech-finance-quotations.csv';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    showNotice('success', language === 'id' ? 'CSV quotation berhasil diekspor.' : 'Quotation CSV exported successfully.');
+  };
+
   const exportTaxCsv = () => {
     const headers = ['Invoice #', 'Client', 'Issue Date', 'Currency', 'Taxable Base', 'Tax Rate', 'Tax Provision', 'Tax Collected'];
     const rows = currencyInvoices
