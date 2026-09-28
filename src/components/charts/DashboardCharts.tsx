@@ -208,7 +208,8 @@ export const BarChart: React.FC<{
 export const DonutChart: React.FC<{
   data: DonutPoint[];
   ariaLabel: string;
-}> = ({ data, ariaLabel }) => {
+  showLegend?: boolean;
+}> = ({ data, ariaLabel, showLegend = true }) => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const total = data.reduce((sum, point) => sum + Math.max(0, point.value), 0);
   const radius = 42;
@@ -226,8 +227,8 @@ export const DonutChart: React.FC<{
   if (!data.length || total === 0) return null;
 
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center" role="img" aria-label={ariaLabel}>
-      <div className="relative mx-auto h-44 w-44 shrink-0">
+    <div className={showLegend ? 'flex flex-col gap-4 sm:flex-row sm:items-center' : 'flex items-center justify-center'} role="img" aria-label={ariaLabel}>
+      <div className="relative mx-auto h-40 w-40 shrink-0">
         <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
           <circle cx="60" cy="60" r={radius} fill="none" stroke="var(--line)" strokeWidth="12" />
           {segments.map((segment, index) => (
@@ -242,14 +243,16 @@ export const DonutChart: React.FC<{
           <span className="text-xs text-muted">Projects</span>
         </div>
       </div>
-      <div className="min-w-0 flex-1 space-y-2">
-        {segments.map((segment, index) => (
-          <div key={segment.label} className="flex items-center justify-between gap-3 rounded-control px-2 py-1.5 hover:bg-bg" onMouseEnter={() => setActiveIndex(index)}>
-            <span className="flex min-w-0 items-center gap-2 text-xs text-muted"><i className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: toneVar[segment.tone] }} />{segment.label}</span>
-            <span className="shrink-0 text-xs font-medium tabular-nums text-fg">{segment.value}</span>
-          </div>
-        ))}
-      </div>
+      {showLegend && (
+        <div className="min-w-0 flex-1 space-y-2">
+          {segments.map((segment, index) => (
+            <div key={segment.label} className="flex items-center justify-between gap-3 rounded-control px-2 py-1.5 hover:bg-bg" onMouseEnter={() => setActiveIndex(index)}>
+              <span className="flex min-w-0 items-center gap-2 text-xs text-muted"><i className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: toneVar[segment.tone] }} />{segment.label}</span>
+              <span className="shrink-0 text-xs font-medium tabular-nums text-fg">{segment.value}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
