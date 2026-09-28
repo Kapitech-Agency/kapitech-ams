@@ -58,6 +58,14 @@ const statusClasses: Record<'success' | 'info' | 'warning' | 'neutral', string> 
   neutral: 'bg-bg text-muted'
 };
 
+const slaClasses = {
+  success: 'border-success/20 bg-success/10 text-success',
+  warning: 'border-warning/20 bg-warning/10 text-warning',
+  danger: 'border-danger/20 bg-danger/10 text-danger',
+  neutral: 'border-line bg-bg text-muted'
+} as const;
+
+
 const formatDate = (value: string, language: string) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '—';
