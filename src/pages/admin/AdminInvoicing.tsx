@@ -2331,7 +2331,23 @@ export const AdminInvoicing: React.FC = () => {
             </section>
             <section className="rounded-card border border-line bg-panel overflow-hidden">
               <div className="border-b border-line p-4"><h2 className="text-sm font-semibold text-fg">Expense mix</h2><p className="mt-1 text-xs text-muted">Top categories in the current quarter.</p></div>
-              <div className="space-y-3 p-4">{quarterExpenseCategories.length === 0 ? <EmptyState title="No expense categories" description="Actual expense records will appear here." /> : quarterExpenseCategories.slice(0,5).map(([category,amount]) => { const percent=quarterExpenses>0?Math.min(100,(amount/quarterExpenses)*100):0; return <div key={category}><div className="flex items-center justify-between gap-3 text-xs"><span className="truncate text-muted">{category}</span><span className="tabular-nums font-medium text-fg">{formatNativeAmount(amount,currency,true)}</span></div><div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg"><div className="h-full rounded-full bg-series-3" style={{width:percent+'%'}} /></div></div>; })}</div>
+              <div className="space-y-3 p-4">
+  {quarterExpenseCategories.length === 0 ? (
+    <EmptyState title="No expense categories" description="Actual expense records will appear here." />
+  ) : (
+    quarterExpenseCategories.slice(0, 5).map(([category, amount]) => (
+      <div key={category}>
+        <div className="flex items-center justify-between gap-3 text-xs">
+          <span className="truncate text-muted">{category}</span>
+          <span className="tabular-nums font-medium text-fg">{formatNativeAmount(amount, currency, true)}</span>
+        </div>
+        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg">
+          <div className="h-full rounded-full bg-series-3" style={{ width: (quarterExpenses > 0 ? Math.min(100, (amount / quarterExpenses) * 100) : 0) + '%' }} />
+        </div>
+      </div>
+    ))
+  )}
+</div>
             </section>
             <section className="rounded-card border border-line bg-panel overflow-hidden">
               <div className="border-b border-line p-4"><h2 className="text-sm font-semibold text-fg">Report controls</h2><p className="mt-1 text-xs text-muted">Compact reporting context for audit and export.</p></div>
@@ -2384,7 +2400,22 @@ export const AdminInvoicing: React.FC = () => {
                 </div>
                 <div className="flex flex-wrap items-center gap-2 border-t border-line pt-3">
                   <div className="inline-flex items-center rounded-control border border-line bg-bg p-0.5"><button type="button" onClick={()=>{setLedgerPeriod('reporting-quarter');setStatusFilter('all')}} className={'min-h-8 rounded-chip px-2.5 text-[11px] font-medium '+(ledgerPeriod==='reporting-quarter'?'bg-line text-fg':'text-muted hover:text-fg')}>Current quarter</button><button type="button" onClick={()=>{setLedgerPeriod('all');setStatusFilter('all')}} className={'min-h-8 rounded-chip px-2.5 text-[11px] font-medium '+(ledgerPeriod==='all'?'bg-line text-fg':'text-muted hover:text-fg')}>All periods</button></div>
-                  <div className="relative"><button type="button" onClick={()=>setColumnMenuOpen((open)=>!open)} className={actionClass+' h-9 min-h-9'} aria-expanded={columnMenuOpen}><SlidersHorizontal size={14}/>Columns</button>{columnMenuOpen && <div className="absolute left-0 top-[calc(100%+6px)] z-30 w-52 rounded-card border border-line bg-panel p-1.5">{[['client','Client'],['timeline','Timeline'],['billing','Billing'],['status','Status'],['actions','Actions']].map(([key,label])=><button key={key} type="button" role="menuitemcheckbox" aria-checked={columnVisibility[key]} onClick={()=>setColumnVisibility((current)=>({...current,[key]:!current[key]}))} className="flex w-full items-center justify-between rounded-control px-3 py-2 text-left text-xs text-muted hover:bg-bg hover:text-fg"><span>{label}</span><span className={columnVisibility[key]?'text-accent-text':'text-muted'}>{columnVisibility[key]?'Visible':'Hidden'}</span></button>)}</div>}</div>}
+                  <div className="relative">
+  <button type="button" onClick={() => setColumnMenuOpen((open) => !open)} className={actionClass + ' h-9 min-h-9'} aria-expanded={columnMenuOpen}><SlidersHorizontal size={14} />Columns</button>
+  {columnMenuOpen && (
+    <div className="absolute left-0 top-[calc(100%+6px)] z-30 w-52 rounded-card border border-line bg-panel p-1.5">
+      {(['client', 'timeline', 'billing', 'status', 'actions'] as const).map((key) => {
+        const labels: Record<typeof key, string> = { client: 'Client', timeline: 'Timeline', billing: 'Billing', status: 'Status', actions: 'Actions' };
+        return (
+          <button key={key} type="button" role="menuitemcheckbox" aria-checked={columnVisibility[key]} onClick={() => setColumnVisibility((current) => ({ ...current, [key]: !current[key] }))} className="flex w-full items-center justify-between rounded-control px-3 py-2 text-left text-xs text-muted hover:bg-bg hover:text-fg">
+            <span>{labels[key]}</span>
+            <span className={columnVisibility[key] ? 'text-accent-text' : 'text-muted'}>{columnVisibility[key] ? 'Visible' : 'Hidden'}</span>
+          </button>
+        );
+      })}
+    </div>
+  )}
+</div>}
                   {(search||statusFilter!=='all'||paymentFilter!=='all'||dueFilter!=='all') && <button type="button" onClick={()=>{setSearch('');setStatusFilter('all');setPaymentFilter('all');setDueFilter('all')}} className="rounded-chip px-2.5 py-1.5 text-[11px] text-muted hover:bg-bg hover:text-fg">Clear filters</button>}
                   <span className="ml-auto text-[10px] tabular-nums text-muted">{pendingInvoiceCount} open · {criticalOverdueCount} overdue · {dueSoonCount} due soon</span>
                 </div>
