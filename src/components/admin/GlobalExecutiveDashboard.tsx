@@ -641,29 +641,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const view = (searchParams.get('view') || 'overview') as 'overview' | 'performance' | 'analytics' | 'tasks';
   const [range, setRange] = useState<RangeKey>('Q2');
   const [projectFilter, setProjectFilter] = useState<ProjectFilter>('All');
-  const [projectActionId, setProjectActionId] = useState<string | null>(null);
   const [projectDetails, setProjectDetails] = useState<DashboardProject | null>(null);
 
-  useEffect(() => {
-    if (!projectActionId) return;
-
-    const handlePointerDown = (event: PointerEvent) => {
-      const target = event.target as HTMLElement | null;
-      if (target?.closest('[data-dashboard-project-actions]')) return;
-      setProjectActionId(null);
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setProjectActionId(null);
-    };
-
-    document.addEventListener('pointerdown', handlePointerDown, true);
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('pointerdown', handlePointerDown, true);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [projectActionId]);
 
   const filteredProjects = useMemo(
     () => projectFilter === 'All' ? sampleProjects : sampleProjects.filter((project) => project.type === projectFilter),
