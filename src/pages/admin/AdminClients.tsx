@@ -562,10 +562,11 @@ export const AdminClients: React.FC = () => {
                 const spend = Number(client.currentDailyAdSpend) || 0;
                 const spendState = budget <= 0 ? 'neutral' : spend > budget ? 'danger' : spend >= budget * 0.9 ? 'warning' : 'success';
                 const headroom = budget > 0 ? Math.max(0, Math.min(100, (1 - spend / budget) * 100)) : null;
+                const clientSlug = getAgencyClientSlug(client as AgencyClient & Record<string, unknown>) || createClientSlug(client.company || client.name || 'client account', client.id);
                 return (
                   <tr key={client.id} className="transition-colors hover:bg-bg/70">
                     <td className="px-4 py-3"><button type="button" onClick={() => setSelectedClient(client)} className="block max-w-[250px] text-left"><span className="block truncate font-medium text-fg">{client.company}</span><span className="mt-0.5 block truncate text-[11px] text-muted tabular-nums">ID: {client.id} • {client.location || '—'}</span></button></td>
-                    <td className="px-4 py-3"><span className="block max-w-[260px] truncate font-mono text-[11px] text-fg" title={getAgencyClientSlug(client as AgencyClient & Record<string, unknown>)}>{getAgencyClientSlug(client as AgencyClient & Record<string, unknown>)}</span></td>
+                    <td className="px-4 py-3"><span className="block whitespace-nowrap font-mono text-[11px] text-fg" title={clientSlug}>{clientSlug}</span></td>
                     <td className="px-4 py-3 text-muted">{client.industry || '—'}</td>
                     <td className="px-4 py-3"><span className={`inline-flex min-h-6 items-center rounded-badge border px-2 py-0.5 text-[11px] font-medium ${client.projectsCount >= 5 ? 'border-accent/30 bg-accent/10 text-accent-text' : client.status === 'lead' ? 'border-info/20 bg-info/10 text-info' : 'border-line bg-bg text-fg'}`}>{client.projectsCount >= 5 ? 'Tier 1 Strategic' : client.status === 'lead' ? 'Project-based' : 'Retainer Core'}</span></td>
                     <td className="px-4 py-3"><div className="font-medium text-fg">{client.name || '—'}</div><div className="mt-0.5 text-[11px] text-muted">{client.contactPersonRole || 'Primary contact'}</div></td>
