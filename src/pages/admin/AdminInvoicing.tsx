@@ -37,7 +37,7 @@ import { Modal } from '../../components/ui/Modal';
 import { InvoiceStatusDropdown } from '../../components/ui/InvoiceStatusDropdown';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { api } from '../../lib/apiClient';
-import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 
 
 type SortKey = 'updated' | 'due' | 'oldest' | 'amount_high' | 'amount_low' | 'invoice';
@@ -220,6 +220,9 @@ const statusTone: Record<InvoiceStatus, string> = {
 };
 
 type FinanceQuotationStatus = 'draft' | 'review' | 'approved' | 'sent' | 'accepted' | 'rejected';
+type PaymentFilter = 'all' | 'unpaid' | 'partial' | 'paid';
+type DueFilter = 'all' | 'due_soon' | 'overdue' | 'later';
+type QuotationSort = 'newest' | 'oldest' | 'value_high' | 'value_low' | 'valid_until';
 
 type FinanceQuotation = {
   id: string;
@@ -305,58 +308,74 @@ type FinanceChartPoint = {
   retainerTarget: number;
 };
 
+
 const FinanceCashFlowChart: React.FC<{
   data: FinanceChartPoint[];
   currency: CurrencyCode;
   ariaLabel: string;
 }> = ({ data, currency, ariaLabel }) => {
   if (!data.length) return null;
-  const width = 760;
-  const height = 180;
-  const left = 8;
-  const right = 12;
-  const top = 12;
-  const bottom = 18;
-  const innerWidth = width - left - right;
-  const innerHeight = height - top - bottom;
-  const values = data.flatMap((point) => [point.net, point.outflow, point.retainerTarget, 0]);
-  const minValue = Math.min(...values);
-  const maxValue = Math.max(...values);
+  const width = 760, height = 190, left = 8, right = 12, top = 12, bottom = 20;
+  const innerWidth = width - left - right, innerHeight = height - top - bottom;
+  const values = data.flatMap((point) => [point.inflow, point.outflow, point.net]);
+  const minValue = Math.min(0, ...values);
+  const maxValue = Math.max(1, ...values);
   const range = Math.max(1, maxValue - minValue);
   const x = (index: number) => left + (data.length === 1 ? innerWidth / 2 : (index / (data.length - 1)) * innerWidth);
   const y = (value: number) => top + ((maxValue - value) / range) * innerHeight;
-  const polyline = (key: 'outflow' | 'net' | 'retainerTarget') => data.map((point, index) => x(index) + ',' + y(point[key])).join(' ');
-  const current = data[data.length - 1];
+  const line = (key: 'inflow' | 'outflow' | 'net') => data.map((point, index) => x(index) + ',' + y(point[key])).join(' ');
+  const latest = data[data.length - 1];
+  const collected = data.reduce((sum, point) => sum + point.inflow, 0);
+  const burn = data.reduce((sum, point) => sum + point.outflow, 0);
+  const net = collected - burn;
+  const coverage = latest.outflow > 0 ? (latest.inflow / latest.outflow) * 100 : null;
   return (
     <div className="min-w-0" role="img" aria-label={ariaLabel}>
-      <div className="relative h-48 w-full">
-        <svg viewBox={'0 0 ' + width + ' ' + height} className="h-full w-full" preserveAspectRatio="none">
-          {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
-            const yy = top + ratio * innerHeight;
-            return <line key={ratio} x1={left} x2={width - right} y1={yy} y2={yy} stroke="var(--line)" strokeWidth="1" />;
-          })}
-          <polyline points={polyline('outflow')} fill="none" stroke="var(--series-3)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-          <polyline points={polyline('retainerTarget')} fill="none" stroke="var(--success)" strokeWidth="1.8" strokeDasharray="5 4" strokeLinecap="round" strokeLinejoin="round" />
-          <polyline points={polyline('net')} fill="none" stroke="var(--series-1)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-          {data.map((point, index) => (
-            <g key={point.label}>
-              <circle cx={x(index)} cy={y(point.net)} r="2.8" fill="var(--series-1)" />
-              <circle cx={x(index)} cy={y(point.retainerTarget)} r="2.4" fill="var(--success)" />
-              <circle cx={x(index)} cy={y(point.outflow)} r="2.4" fill="var(--series-3)" />
-            </g>
-          ))}
-        </svg>
+      <div className="grid grid-cols-3 gap-2">
+        {[
+          { label: 'Cash collected', value: latest.inflow, tone: 'text-success' },
+          { label: 'Operating burn', value: latest.outflow, tone: 'text-series-3' },
+          { label: 'Net cash', value: latest.net, tone: latest.net >= 0 ? 'text-success' : 'text-danger' }
+        ].map((item) => (
+          <div key={item.label} className="rounded-control border border-line bg-bg px-3 py-2.5">
+            <p className="truncate text-[10px] font-medium text-muted">{item.label}</p>
+            <p className={'mt-1 truncate text-sm font-semibold tabular-nums ' + item.tone}>{formatNativeAmount(item.value, currency, true)}</p>
+          </div>
+        ))}
       </div>
-      <div className="grid grid-cols-2 gap-x-3 border-t border-line px-1 pt-2 text-[10px] tabular-nums text-muted sm:grid-cols-6">
-        {data.map((point) => <span key={point.label} className="truncate text-center">{point.label}</span>)}
+      <div className="mt-4 rounded-control border border-line bg-bg p-3">
+        <div className="relative h-48 w-full">
+          <svg viewBox={'0 0 ' + width + ' ' + height} className="h-full w-full" preserveAspectRatio="none">
+            {[0, .25, .5, .75, 1].map((ratio) => <line key={ratio} x1={left} x2={width - right} y1={top + ratio * innerHeight} y2={top + ratio * innerHeight} stroke="var(--line)" strokeWidth="1" />)}
+            <line x1={left} x2={width - right} y1={y(0)} y2={y(0)} stroke="var(--line)" strokeWidth="1.4" strokeDasharray="4 4" />
+            <polyline points={line('inflow')} fill="none" stroke="var(--series-1)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            <polyline points={line('outflow')} fill="none" stroke="var(--series-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <polyline points={line('net')} fill="none" stroke="var(--success)" strokeWidth="2" strokeDasharray="5 4" strokeLinecap="round" strokeLinejoin="round" />
+            {data.map((point, index) => <g key={point.label}><circle cx={x(index)} cy={y(point.inflow)} r="3" fill="var(--series-1)" /><circle cx={x(index)} cy={y(point.outflow)} r="2.5" fill="var(--series-3)" /><circle cx={x(index)} cy={y(point.net)} r="2.5" fill="var(--success)" /></g>)}
+          </svg>
+        </div>
+        <div className="grid grid-cols-3 gap-2 border-t border-line pt-2 text-[10px] tabular-nums text-muted sm:grid-cols-6">{data.map((point) => <span key={point.label} className="truncate text-center">{point.label}</span>)}</div>
       </div>
-      <div className="mt-2 flex items-center justify-between gap-3 text-[10px] text-muted">
-        <span>Latest period</span>
-        <span className="tabular-nums text-fg">{current ? formatNativeAmount(current.net, currency, true) : '—'} net</span>
+      <div className="mt-3 flex flex-col gap-2 text-[10px] text-muted sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-x-4 gap-y-1.5"><span className="flex items-center gap-1.5"><span className="h-1.5 w-4 rounded-full bg-accent" />Cash collected</span><span className="flex items-center gap-1.5"><span className="h-1.5 w-4 rounded-full bg-series-3" />Operating burn</span><span className="flex items-center gap-1.5"><span className="h-1.5 w-4 rounded-full border border-success" />Net cash</span></div>
+        <span className="tabular-nums text-fg">6-month net {formatNativeAmount(net, currency, true)} · {coverage === null ? '—' : coverage.toFixed(0) + '%'} coverage latest</span>
       </div>
+      <p className="mt-2 text-[10px] leading-4 text-muted">Collected = actual payments received. Burn = recorded expenses. Net cash = collected minus burn.</p>
     </div>
   );
 };
+
+const FinanceMetricCard = ({
+  label, value, context, icon, toneClassName = 'text-fg'
+}: {
+  label: React.ReactNode; value: React.ReactNode; context?: React.ReactNode; icon?: React.ReactNode; toneClassName?: string;
+}) => (
+  <article className="min-w-0 rounded-card border border-line bg-panel px-4 py-3.5">
+    <div className="flex items-center justify-between gap-2"><span className="truncate text-[11px] font-medium text-muted">{label}</span>{icon && <span className={'shrink-0 ' + toneClassName}>{icon}</span>}</div>
+    <p className={'mt-1.5 truncate text-xl font-medium leading-7 tabular-nums ' + toneClassName}>{value}</p>
+    {context && <p className="mt-0.5 truncate text-[10px] text-muted">{context}</p>}
+  </article>
+);
 export const AdminInvoicing: React.FC = () => {
   const { language } = useLanguage();
   const location = useLocation();
@@ -386,6 +405,8 @@ export const AdminInvoicing: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [sort, setSort] = useState<SortKey>('updated');
   const [ledgerPeriod, setLedgerPeriod] = useState<LedgerPeriod>('reporting-quarter');
+  const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>('all');
+  const [dueFilter, setDueFilter] = useState<DueFilter>('all');
   const [periodMenuOpen, setPeriodMenuOpen] = useState(false);
   const [columnMenuOpen, setColumnMenuOpen] = useState(false);
   const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({
@@ -466,6 +487,7 @@ export const AdminInvoicing: React.FC = () => {
   const [quotationLoading, setQuotationLoading] = useState(true);
   const [quotationSearch, setQuotationSearch] = useState('');
   const [quotationStatusFilter, setQuotationStatusFilter] = useState<'all' | FinanceQuotationStatus>('all');
+  const [quotationSort, setQuotationSort] = useState<QuotationSort>('newest');
   const [quotationModalOpen, setQuotationModalOpen] = useState(false);
   const [quotationDetail, setQuotationDetail] = useState<FinanceQuotation | null>(null);
   const [editingQuotation, setEditingQuotation] = useState<FinanceQuotation | null>(null);
@@ -810,22 +832,16 @@ export const AdminInvoicing: React.FC = () => {
   const filteredInvoices = useMemo(() => {
     const query = search.trim().toLowerCase();
     const result = ledgerInvoices.filter((invoice) => {
-      const searchable = [
-        invoice.invoiceNumber,
-        invoice.clientName,
-        invoice.clientCompany,
-        invoice.clientEmail,
-        projectsById.get(invoice.projectId)?.name || ''
-      ].join(' ').toLowerCase();
-      const matchesSearch = !query || searchable.includes(query);
-      const matchesStatus = statusFilter === 'all'
-        ? true
-        : statusFilter === 'due_soon'
-          ? isDueSoonInvoice(invoice)
-          : invoice.status === statusFilter;
-      return matchesSearch && matchesStatus;
+      const balance = Math.max(0, Number(invoice.balanceDue ?? (invoice.total - (invoice.amountPaid || 0))));
+      const collected = Math.max(0, Number(invoice.total || 0) - balance);
+      const paymentState: PaymentFilter = balance <= 0 || invoice.status === 'paid' ? 'paid' : collected > 0 ? 'partial' : 'unpaid';
+      const dueState: DueFilter = isPastDueInvoice(invoice) ? 'overdue' : isDueSoonInvoice(invoice) ? 'due_soon' : 'later';
+      const searchable = [invoice.invoiceNumber, invoice.clientName, invoice.clientCompany, invoice.clientEmail, projectsById.get(invoice.projectId)?.name || ''].join(' ').toLowerCase();
+      return (!query || searchable.includes(query))
+        && (statusFilter === 'all' || (statusFilter === 'due_soon' ? isDueSoonInvoice(invoice) : invoice.status === statusFilter))
+        && (paymentFilter === 'all' || paymentState === paymentFilter)
+        && (dueFilter === 'all' || dueState === dueFilter);
     });
-
     return [...result].sort((a, b) => {
       if (sort === 'amount_high') return b.total - a.total;
       if (sort === 'amount_low') return a.total - b.total;
@@ -834,11 +850,11 @@ export const AdminInvoicing: React.FC = () => {
       if (sort === 'invoice') return a.invoiceNumber.localeCompare(b.invoiceNumber);
       return String(b.updatedAt || '').localeCompare(String(a.updatedAt || ''));
     });
-  }, [ledgerInvoices, search, statusFilter, sort, projectsById]);
+  }, [ledgerInvoices, search, statusFilter, paymentFilter, dueFilter, sort, projectsById]);
 
   useEffect(() => {
     setInvoicePage(1);
-  }, [search, statusFilter, sort, currency]);
+  }, [search, statusFilter, paymentFilter, dueFilter, sort, currency]);
 
   useEffect(() => {
     setExpensePage(1);
@@ -1694,18 +1710,19 @@ export const AdminInvoicing: React.FC = () => {
     const query = quotationSearch.trim().toLowerCase();
     return quotations
       .filter((quotation) => {
-        const searchable = [
-          quotation.quotationNumber,
-          quotation.title,
-          quotation.clientName,
-          quotation.clientCompany,
-          quotation.owner
-        ].join(' ').toLowerCase();
-        return (!query || searchable.includes(query))
-          && (quotationStatusFilter === 'all' || quotation.status === quotationStatusFilter);
+        const searchable = [quotation.quotationNumber, quotation.title, quotation.clientName, quotation.clientCompany, quotation.owner].join(' ').toLowerCase();
+        return (!query || searchable.includes(query)) && (quotationStatusFilter === 'all' || quotation.status === quotationStatusFilter);
       })
-      .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
-  }, [quotations, quotationSearch, quotationStatusFilter]);
+      .sort((a,b) => quotationSort === 'oldest'
+        ? String(a.createdAt).localeCompare(String(b.createdAt))
+        : quotationSort === 'value_high'
+          ? b.total - a.total
+          : quotationSort === 'value_low'
+            ? a.total - b.total
+            : quotationSort === 'valid_until'
+              ? String(a.validUntil).localeCompare(String(b.validUntil))
+              : String(b.createdAt).localeCompare(String(a.createdAt)));
+  }, [quotations, quotationSearch, quotationStatusFilter, quotationSort]);
 
   const quotationMetrics = useMemo(() => ({
     total: quotations.length,
@@ -2017,57 +2034,56 @@ export const AdminInvoicing: React.FC = () => {
   return (
     <div className="min-h-full pb-10">
       <AdminModuleHeader
-        title="Finance & Invoices"
-        description="Cash flow pacing, accounts receivable, quotations, retainer burn, and tax provisions for the active financial period."
+        title={financeView === 'quotations' ? 'Quotations' : financeView === 'income-expenses' ? 'Income & Expenses' : financeView === 'tax-retainers' ? 'Tax & Retainers' : financeView === 'financial-reports' ? 'Financial Reports' : 'Invoices'}
+        description={financeView === 'quotations'
+          ? 'Manage the commercial pipeline from draft through approval, acceptance, and invoice conversion.'
+          : financeView === 'income-expenses'
+            ? 'Track actual cash collections, operating expenses, and net cash movement.'
+            : financeView === 'tax-retainers'
+              ? 'Monitor tax provision, tax collection, and retainer billing and collection.'
+              : financeView === 'financial-reports'
+                ? 'Review collection performance, margin, expense mix, and financial trends.'
+                : 'Manage billing, receivables, collection risk, and invoice activity.'}
         actions={(
           <>
-            <div className="inline-flex min-h-10 items-center rounded-control border border-line bg-panel p-1" aria-label="Finance currency">
-              {(['IDR', 'USD'] as CurrencyCode[]).map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => setActiveCurrency(item)}
-                  aria-pressed={currency === item}
-                  className={'min-h-8 rounded-chip px-3 text-xs font-semibold transition-colors ' + (currency === item ? 'bg-line text-fg' : 'text-muted hover:text-fg')}
-                >
-                  {item}
-                </button>
-              ))}
+            <div className="inline-flex min-h-9 items-center rounded-control border border-line bg-panel p-1" aria-label="Finance currency">
+              {(['IDR', 'USD'] as CurrencyCode[]).map((item) => <button key={item} type="button" onClick={() => setActiveCurrency(item)} aria-pressed={currency === item} className={'min-h-7 rounded-chip px-2.5 text-[11px] font-semibold ' + (currency === item ? 'bg-line text-fg' : 'text-muted hover:text-fg')}>{item}</button>)}
             </div>
-            <button type="button" onClick={() => void loadData(true)} disabled={refreshing} className={actionClass}>
-              <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
-              {refreshing ? 'Refreshing' : 'Refresh'}
-            </button>
+            <button type="button" onClick={() => void loadData(true)} disabled={refreshing} className={actionClass} title="Refresh finance data"><RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />{refreshing ? 'Refreshing' : 'Refresh'}</button>
             {financeView === 'quotations' ? (
               <>
-                <button type="button" onClick={exportQuotationsCsv} disabled={!filteredQuotations.length} className={actionClass}>
-                  <Download size={14} />
-                  Export CSV
-                </button>
+                <button type="button" onClick={exportQuotationsCsv} disabled={!filteredQuotations.length} className={actionClass}><Download size={14}/>Export CSV</button>
                 {canManageInvoices && (
-                  <button type="button" onClick={openCreateQuotation} className={primaryClass}>
-                    <Plus size={14} />
-                    + New Quotation
-                  </button>
+                  <button type="button" onClick={openCreateQuotation} className={primaryClass}><Plus size={14}/>New quotation</button>
                 )}
               </>
+            ) : financeView === 'income-expenses' ? (
+              <>
+                <button type="button" onClick={exportReportCsv} className={actionClass}><Download size={14}/>Export report</button>
+                {canManageInvoices && (
+                  <>
+                    <button type="button" onClick={openExpenseModal} className={actionClass}><Plus size={14}/>New expense</button>
+                    <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>New invoice</button>
+                  </>
+                )}
+              </>
+            ) : financeView === 'tax-retainers' ? (
+              <>
+                <button type="button" onClick={exportTaxCsv} disabled={!currencyInvoices.length} className={actionClass}><Download size={14}/>Export tax detail</button>
+                {canManageInvoices && (
+                  <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>New invoice</button>
+                )}
+              </>
+            ) : financeView === 'financial-reports' ? (
+              <button type="button" onClick={exportReportCsv} disabled={!financeChartData.length} className={actionClass}><Download size={14}/>Export report</button>
             ) : (
               <>
-                <button type="button" onClick={financeView === 'tax-retainers' ? exportTaxCsv : financeView === 'financial-reports' ? exportReportCsv : exportInvoicesCsv} className={actionClass}>
-                  <Download size={14} />
-                  Export CSV
-                </button>
-                {financeView === 'invoices' && canManageInvoices && (
-                  <button type="button" onClick={openCreateQuotation} className={actionClass}>
-                    <FileText size={14} />
-                    New Quotation
-                  </button>
-                )}
-                {canCreateInvoice && (
-                  <button type="button" onClick={openCreateInvoice} disabled={!canManageInvoices} className={primaryClass}>
-                    <Plus size={14} />
-                    + New Invoice
-                  </button>
+                <button type="button" onClick={exportInvoicesCsv} disabled={!currencyInvoices.length} className={actionClass}><Download size={14}/>Export CSV</button>
+                {canManageInvoices && (
+                  <>
+                    <button type="button" onClick={openCreateQuotation} className={actionClass}><FileText size={14}/>New quotation</button>
+                    <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>New invoice</button>
+                  </>
                 )}
               </>
             )}
@@ -2093,454 +2109,44 @@ export const AdminInvoicing: React.FC = () => {
       )}
 
       {loading && financeView !== 'quotations' ? (
-        <div className="space-y-6" aria-label="Loading finance">
-          <div className="grid grid-cols-2 gap-3 min-[1100px]:grid-cols-6">
-            {Array.from({ length: 6 }).map((_, index) => <div key={index} className="h-24 animate-pulse rounded-card border border-line bg-panel" />)}
-          </div>
-          <div className="grid gap-6 min-[1100px]:grid-cols-3">
-            <div className="h-72 animate-pulse rounded-card border border-line bg-panel min-[1100px]:col-span-2" />
-            <div className="h-72 animate-pulse rounded-card border border-line bg-panel" />
-          </div>
-          <div className="h-80 animate-pulse rounded-card border border-line bg-panel" />
+        <div className="space-y-5" aria-label="Loading finance">
+          <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">{Array.from({ length: 4 }).map((_, index) => <div key={index} className="h-[82px] animate-pulse rounded-card border border-line bg-panel" />)}</div>
+          <div className="grid gap-5 xl:grid-cols-3"><div className="h-80 animate-pulse rounded-card border border-line bg-panel xl:col-span-2"/><div className="h-80 animate-pulse rounded-card border border-line bg-panel"/></div>
+          <div className="h-72 animate-pulse rounded-card border border-line bg-panel"/>
         </div>
       ) : financeView === 'quotations' ? (
-        <div className="space-y-6">
-          <section className="grid grid-cols-2 gap-3 min-[1100px]:grid-cols-4" aria-label="Quotation overview">
-            <article className="rounded-card border border-line bg-panel px-4 py-4">
-              <div className="flex items-center justify-between text-xs font-medium text-muted"><span>Total quotations</span><FileText size={15} /></div>
-              <div className="mt-2 text-2xl font-medium tabular-nums text-fg">{quotationMetrics.total}</div>
-              <p className="mt-1 text-[11px] text-muted">Active sales workspace</p>
-            </article>
-            <article className="rounded-card border border-line bg-panel px-4 py-4">
-              <div className="flex items-center justify-between text-xs font-medium text-muted"><span>Active</span><Clock3 size={15} /></div>
-              <div className="mt-2 text-2xl font-medium tabular-nums text-fg">{quotationMetrics.active}</div>
-              <p className="mt-1 text-[11px] text-muted">Draft → sent pipeline</p>
-            </article>
-            <article className="rounded-card border border-line bg-panel px-4 py-4">
-              <div className="flex items-center justify-between text-xs font-medium text-muted"><span>Approved</span><BadgeCheck size={15} className="text-success" /></div>
-              <div className="mt-2 text-2xl font-medium tabular-nums text-success">{quotationMetrics.approved}</div>
-              <p className="mt-1 text-[11px] text-muted">Ready for invoice conversion</p>
-            </article>
-            <article className="rounded-card border border-line bg-panel px-4 py-4">
-              <div className="flex items-center justify-between text-xs font-medium text-muted"><span>Accepted</span><CheckCircle2 size={15} className="text-info" /></div>
-              <div className="mt-2 text-2xl font-medium tabular-nums text-info">{quotationMetrics.accepted}</div>
-              <p className="mt-1 text-[11px] text-muted">Client acceptance</p>
-            </article>
-            <article className="rounded-card border border-line bg-panel px-4 py-4">
-              <div className="flex items-center justify-between text-xs font-medium text-muted"><span>Pipeline value</span><WalletCards size={15} /></div>
-              <div className="mt-2 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(quotationMetrics.value, currency)}</div>
-              <p className="mt-1 text-[11px] text-muted">{usingDemoQuotations ? 'Sample workspace data' : 'Server-backed quotations'}</p>
-            </article>
-          </section>
-
-          <section className="rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="finance-quotations-title">
-            <div className="border-b border-line p-4 sm:p-5">
-              <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h2 id="finance-quotations-title" className="text-sm font-semibold text-fg">Quotations</h2>
-                    <span className="rounded-badge border border-accent/20 bg-accent/8 px-1.5 py-0.5 text-[10px] font-semibold text-accent-text">Finance</span>
-                  </div>
-                  <p className="mt-1 text-[11px] text-muted">{usingDemoQuotations ? 'Demo quotation data is enabled so the workspace remains tangible before production data is connected.' : 'Commercial quotations from the shared proposal service.'}</p>
-                </div>
-                <div className="flex w-full flex-col gap-2 xl:w-auto xl:flex-row">
-                  <label className="relative min-w-[220px] xl:w-72"><span className="sr-only">Search quotations</span><Search size={14} className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-muted" /><input value={quotationSearch} onChange={(event) => setQuotationSearch(event.target.value)} placeholder="Search quotation, client, or company..." className={fieldClass + ' pl-9 pr-3'} /></label>
-                  <CustomSelect value={quotationStatusFilter} onChange={(value) => setQuotationStatusFilter(value as typeof quotationStatusFilter)} options={[{ value: 'all', label: 'All statuses' }, { value: 'draft', label: 'Draft' }, { value: 'review', label: 'Internal review' }, { value: 'approved', label: 'Approved' }, { value: 'sent', label: 'Sent' }, { value: 'accepted', label: 'Accepted' }, { value: 'rejected', label: 'Rejected' }]} className="w-full xl:w-44" triggerClassName="h-9 min-h-9 w-full" aria-label="Quotation status filter" />
-                </div>
-              </div>
-              <div className="mt-3 flex items-center gap-2 border-t border-line pt-3">
-                <span className="text-[10px] uppercase tracking-[0.08em] text-muted">Quotation ledger</span>
-                <span className="h-1 w-1 rounded-full bg-line" />
-                <span className="text-[10px] text-muted">{filteredQuotations.length} visible records</span>
-                {quotationStatusFilter !== 'all' && <button type="button" onClick={() => setQuotationStatusFilter('all')} className="ml-auto rounded-chip px-2 py-1 text-[11px] text-muted hover:text-fg">Clear filter</button>}
-              </div>
-            </div>
-            <div className="overflow-x-auto custom-scrollbar">
-              {quotationLoading ? (
-                <div className="grid gap-2 p-5">{Array.from({ length: 5 }).map((_, index) => <div key={index} className="h-12 animate-pulse rounded-control bg-bg" />)}</div>
-              ) : filteredQuotations.length === 0 ? (
-                <div className="p-5"><EmptyState title="No quotations found" description="Adjust the search or status filter, or create a new quotation." action={canManageInvoices ? <button type="button" onClick={openCreateQuotation} className={primaryClass}><Plus size={14} />Create quotation</button> : undefined} /></div>
-              ) : (
-                <table className="w-full min-w-[1040px] border-collapse text-left text-xs">
-                  <thead className="bg-bg">
-                    <tr>
-                      <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Quotation #</th>
-                      <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client & Project</th>
-                      <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Created</th>
-                      <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Valid Until</th>
-                      <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount</th>
-                      <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Status</th>
-                      <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredQuotations.map((quotation) => {
-                      const statusToneClass = quotation.status === 'accepted'
-                        ? 'border-success/20 bg-success/10 text-success'
-                        : quotation.status === 'rejected'
-                          ? 'border-danger/20 bg-danger/10 text-danger'
-                          : quotation.status === 'sent'
-                            ? 'border-info/20 bg-info/10 text-info'
-                            : quotation.status === 'review' || quotation.status === 'approved'
-                              ? 'border-warning/20 bg-warning/10 text-warning'
-                              : 'border-line bg-bg text-muted';
-                      return (
-                        <tr key={quotation.id} className="group border-t border-line transition-colors hover:bg-bg">
-                          <td className="px-4 py-3 sm:px-5">
-                            <button type="button" onClick={() => setQuotationDetail(quotation)} className="font-medium tabular-nums text-fg hover:text-accent-text">{quotation.quotationNumber}</button>
-                            <p className="mt-1 text-[11px] text-muted">{quotation.currency}</p>
-                          </td>
-                          <td className="px-4 py-3"><div className="font-medium text-fg">{quotation.clientCompany}</div><div className="mt-0.5 text-[11px] text-muted">{quotation.title} · {quotation.clientName}</div></td>
-                          <td className="px-4 py-3 tabular-nums text-muted">{quotation.createdAt}</td>
-                          <td className="px-4 py-3 tabular-nums text-muted">{quotation.validUntil}</td>
-                          <td className="px-4 py-3 text-right"><div className="font-semibold tabular-nums text-fg">{formatNativeAmount(quotation.total, quotation.currency, true)}</div><div className="mt-0.5 text-[10px] text-muted">{quotation.owner}</div></td>
-                          <td className="px-4 py-3"><CustomSelect value={quotation.status} onChange={(value) => void updateQuotationStatus(quotation, value as FinanceQuotationStatus)} options={getQuotationStatusOptions(quotation.status)} className="w-36" triggerClassName={'h-8 min-h-8 w-full border ' + statusToneClass} aria-label={'Status for ' + quotation.quotationNumber} /></td>
-                          <td className="px-4 py-3 text-right">
-                            <div className="flex items-center justify-end gap-1 opacity-85 group-hover:opacity-100">
-                              <button type="button" onClick={() => setQuotationDetail(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-panel-hover hover:text-fg" aria-label="View quotation" title="View quotation"><Eye size={15} /></button>
-                              {canManageInvoices && <button type="button" onClick={() => openEditQuotation(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-panel-hover hover:text-fg" aria-label="Edit quotation" title="Edit quotation"><Edit3 size={14} /></button>}
-                              {canManageInvoices && <button type="button" onClick={() => void convertQuotationToInvoice(quotation)} disabled={Boolean(quotation.invoiceId) || quotation.status !== 'approved'} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-panel-hover hover:text-fg disabled:cursor-not-allowed disabled:opacity-40" aria-label="Convert quotation to invoice" title={quotation.invoiceId ? 'Invoice already created' : quotation.status === 'approved' ? 'Convert approved quotation to invoice' : 'Only approved quotations can be converted'}><Receipt size={15} aria-hidden="true" /></button>}
-                              {canManageInvoices && <button type="button" onClick={() => void deleteQuotation(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Delete quotation" title="Delete quotation"><Trash2 size={14} /></button>}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              )}
-            </div>
+        <div className="space-y-5">
+          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Total quotations" value={quotationMetrics.total} context="All records" icon={<FileText size={15}/>}/><FinanceMetricCard label="Active pipeline" value={quotationMetrics.active} context="Draft through sent" icon={<Clock3 size={15}/>}/><FinanceMetricCard label="Pipeline value" value={formatFinanceCardAmount(quotationMetrics.value,currency)} context={usingDemoQuotations?'Demo workspace data':'Server-backed records'} icon={<WalletCards size={15} />}/><FinanceMetricCard label="Accepted" value={quotationMetrics.accepted} context={quotationMetrics.approved+' approved ready to convert'} icon={<CheckCircle2 size={15} className="text-success"/>} toneClassName="text-success"/></section>
+          <section className="grid gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+            <section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between"><div><h2 className="text-sm font-semibold text-fg">Quotation ledger</h2><p className="mt-1 text-xs text-muted">Search, filter, and sort the commercial pipeline.</p></div><div className="grid gap-2 sm:grid-cols-2 xl:flex"><label className="relative xl:w-64"><Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/><span className="sr-only">Search quotations</span><input value={quotationSearch} onChange={(event)=>setQuotationSearch(event.target.value)} placeholder="Search quotation, client..." className={fieldClass+' pl-9'}/></label><CustomSelect value={quotationStatusFilter} onChange={(value)=>setQuotationStatusFilter(value as typeof quotationStatusFilter)} options={[{value:'all',label:'All statuses'},{value:'draft',label:'Draft'},{value:'review',label:'Internal review'},{value:'approved',label:'Approved'},{value:'sent',label:'Sent'},{value:'accepted',label:'Accepted'},{value:'rejected',label:'Rejected'}]} triggerClassName="h-9 min-h-9" aria-label="Quotation status filter"/><CustomSelect value={quotationSort} onChange={(value)=>setQuotationSort(value as QuotationSort)} options={[{value:'newest',label:'Newest'},{value:'oldest',label:'Oldest'},{value:'value_high',label:'Highest value'},{value:'value_low',label:'Lowest value'},{value:'valid_until',label:'Valid until'}]} triggerClassName="h-9 min-h-9" aria-label="Quotation sort"/></div></div></div><div className="overflow-x-auto custom-scrollbar">{filteredQuotations.length===0?<div className="p-5"><EmptyState title="No quotations found" description="Adjust the search or filters."/></div>:<table className="w-full min-w-[900px] border-collapse text-xs"><thead className="bg-bg"><tr><th className="px-5 py-3 text-left text-[10px] font-semibold text-muted">Quotation</th><th className="px-4 py-3 text-left text-[10px] font-semibold text-muted">Value</th><th className="px-4 py-3 text-left text-[10px] font-semibold text-muted">Timeline</th><th className="px-4 py-3 text-left text-[10px] font-semibold text-muted">Status</th><th className="px-5 py-3 text-right text-[10px] font-semibold text-muted">Actions</th></tr></thead><tbody>{filteredQuotations.map((quotation)=><tr key={quotation.id} className="border-t border-line hover:bg-bg"><td className="px-5 py-4"><button type="button" onClick={()=>setQuotationDetail(quotation)} className="font-semibold tabular-nums text-fg hover:text-accent-text">{quotation.quotationNumber}</button><p className="mt-1 truncate text-xs text-fg">{quotation.title}</p><p className="mt-0.5 text-[10px] text-muted">{quotation.clientCompany} · {quotation.clientName}</p></td><td className="px-4 py-4"><p className="font-semibold tabular-nums">{formatNativeAmount(quotation.total,quotation.currency,true)}</p><p className="mt-1 text-[10px] text-muted">{quotation.owner}</p></td><td className="px-4 py-4 tabular-nums text-muted"><div>{quotation.createdAt}</div><div className="mt-1 text-[10px]">Valid {quotation.validUntil}</div></td><td className="px-4 py-4"><StatusBadge status={quotation.status as never}/></td><td className="px-5 py-4 text-right"><div className="flex justify-end gap-1"><button type="button" onClick={()=>setQuotationDetail(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg"><Eye size={15}/></button>{canManageInvoices&&<button type="button" onClick={()=>openEditQuotation(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg"><Edit3 size={14}/></button>}{canManageInvoices&&<button type="button" onClick={()=>void convertQuotationToInvoice(quotation)} disabled={Boolean(quotation.invoiceId)||quotation.status!=='approved'} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg disabled:opacity-40"><Receipt size={15}/></button>}{canManageInvoices&&<button type="button" onClick={()=>void deleteQuotation(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger"><Trash2 size={14}/></button>}</div></td></tr>)}</tbody></table>}</div></section>
+            <section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><h2 className="text-sm font-semibold text-fg">Pipeline stages</h2><p className="mt-1 text-xs text-muted">Count and value by stage.</p></div><div className="space-y-3 p-4 sm:p-5">{(['draft','review','approved','sent','accepted','rejected'] as FinanceQuotationStatus[]).map((status)=>{const count=quotations.filter((q)=>q.status===status).length;const value=quotations.filter((q)=>q.status===status).reduce((sum,q)=>sum+q.total,0);return <div key={status} className="rounded-control border border-line bg-bg px-3 py-3"><div className="flex justify-between text-xs"><span className="font-medium text-fg">{quotationStatusLabel(status)}</span><span className="tabular-nums font-semibold">{count}</span></div><p className="mt-1 text-[10px] tabular-nums text-muted">{formatNativeAmount(value,currency,true)}</p><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel"><div className="h-full rounded-full bg-series-3" style={{width:(quotationMetrics.value>0?Math.min(100,value/quotationMetrics.value*100):0)+'%'}}/></div></div>})}</div></section>
           </section>
         </div>
       ) : financeView === 'income-expenses' ? (
-        <div className="space-y-6">
-          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Income and expenses summary">
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Income YTD</span><WalletCards size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(ytdCollected, currency)}</p><p className="mt-2 text-xs text-muted">Collection rate {ytdCollectionRate.toFixed(1)}%</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Invoiced YTD</span><Receipt size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(ytdInvoiced, currency)}</p><p className="mt-2 text-xs text-muted">Billings issued</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Expenses YTD</span><ArrowDown size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(ytdExpenses, currency)}</p><p className="mt-2 text-xs text-muted">Actual records</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Net Cash YTD</span><TrendingUp size={15} className={ytdNetCash >= 0 ? 'text-success' : 'text-danger'} /></div><p className={'mt-3 text-2xl font-medium tabular-nums ' + (ytdNetCash >= 0 ? 'text-success' : 'text-danger')}>{formatFinanceCardAmount(ytdNetCash, currency)}</p><p className="mt-2 text-xs text-muted">Collected less expenses</p></article>
-          </section>
-
-          <section className="grid grid-cols-1 gap-6 min-[1100px]:grid-cols-2">
-            <section className="rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="finance-income-title">
-              <div className="border-b border-line p-5">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div><h2 id="finance-income-title" className="text-sm font-semibold text-fg">Income</h2><p className="mt-1 text-xs text-muted">Actual payment activity for the current year.</p></div>
-                  <label className="relative w-full sm:w-56"><span className="sr-only">Search income</span><Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" /><input value={incomeSearch} onChange={(event) => setIncomeSearch(event.target.value)} placeholder="Search payment or client..." className={fieldClass + ' pl-8'} /></label>
-                </div>
-                <div className="mt-3 flex items-center gap-2 border-t border-line pt-3 text-[10px] text-muted"><span>{incomeRows.length} payment records</span><span className="h-1 w-1 rounded-full bg-line" /><span>YTD collection</span>{incomeSearch && <button type="button" onClick={() => setIncomeSearch('')} className="ml-auto text-accent-text hover:text-fg">Clear</button>}</div>
-              </div>
-              <div className="overflow-x-auto custom-scrollbar">
-                {incomeRows.length === 0 ? (
-                  <div className="p-5"><EmptyState title="No income recorded" description="Recorded payments will appear here once invoices start collecting cash." /></div>
-                ) : (
-                  <table className="w-full min-w-[820px] border-collapse text-left text-xs">
-                    <thead className="bg-bg"><tr><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Payment date</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice</th><th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount</th></tr></thead>
-                    <tbody>{paginatedIncomeRows.map((row) => <tr key={row.id} className="border-t border-line hover:bg-bg"><td className="px-4 py-3 tabular-nums text-muted">{row.date}</td><td className="px-4 py-3 text-fg">{row.clientCompany}</td><td className="px-4 py-3"><button type="button" onClick={() => {
-                      const invoice = currencyInvoices.find((item) => item.id === row.invoiceId);
-                      if (invoice) openPrintPreview(invoice);
-                    }} className="font-medium tabular-nums text-fg hover:text-accent-text">{row.invoiceNumber}</button></td><td className="px-4 py-3 text-right font-medium tabular-nums text-success">{formatNativeAmount(row.amount, row.currency, true)}</td></tr>)}</tbody>
-                  </table>
-                )}
-              </div>
-              {incomePageCount > 1 && (
-                <div className="border-t border-line px-4 py-3">
-                  <div className="flex items-center justify-between text-[11px] text-muted">
-                    <span className="tabular-nums">Showing {((incomePage - 1) * incomePageSize) + 1}–{Math.min(incomePage * incomePageSize, incomeRows.length)} of {incomeRows.length}</span>
-                    <div className="flex items-center gap-1">
-                      <button type="button" onClick={() => setIncomePage((page) => Math.max(1, page - 1))} disabled={incomePage === 1} className={actionClass}>Previous</button>
-                      <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control border border-line bg-line px-2 text-[10px] font-semibold text-fg">{incomePage}</span>
-                      <button type="button" onClick={() => setIncomePage((page) => Math.min(incomePageCount, page + 1))} disabled={incomePage === incomePageCount} className={actionClass}>Next</button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </section>
-
-            <section className="rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="finance-expense-title">
-              <div className="border-b border-line p-5">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div><div className="flex items-center gap-2"><h2 id="finance-expense-title" className="text-sm font-semibold text-fg">Expenses</h2>{usingDemoExpenses && <span className="rounded-badge border border-warning/20 bg-warning/10 px-1.5 py-0.5 text-[10px] font-medium text-warning">Demo data</span>}</div><p className="mt-1 text-xs text-muted">Operating, rental, and capital expense records.</p></div>
-                  <div className="flex items-center gap-2">
-                    {canManageInvoices && <button type="button" onClick={openExpenseModal} className={primaryClass}><Plus size={14} />Record expense</button>}
-                  </div>
-                </div>
-                <div className="mt-3 grid gap-2 border-t border-line pt-3 sm:grid-cols-[1fr_150px_180px]">
-                  <label className="relative"><span className="sr-only">Search expenses</span><Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" /><input value={expenseSearch} onChange={(event) => setExpenseSearch(event.target.value)} placeholder="Search expense..." className={fieldClass + ' pl-8'} /></label>
-                  <CustomSelect value={expenseTypeFilter} onChange={setExpenseTypeFilter} options={expenseTypeOptions} className="w-full" triggerClassName="h-9 min-h-9 w-full" aria-label="Expense type filter" />
-                  <CustomSelect value={expenseSort} onChange={(value) => setExpenseSort(value as typeof expenseSort)} options={[{ value: 'date_desc', label: 'Newest first' }, { value: 'date_asc', label: 'Oldest first' }, { value: 'amount_high', label: 'Highest amount' }, { value: 'amount_low', label: 'Lowest amount' }]} className="w-full" triggerClassName="h-9 min-h-9 w-full" aria-label="Expense sort" />
-                </div>
-              </div>
-              <div className="overflow-x-auto custom-scrollbar">
-                <table className="w-full min-w-[820px] border-collapse text-left text-xs">
-                  <thead className="bg-bg"><tr><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Date</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Type / category</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Description</th><th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount</th><th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Action</th></tr></thead>
-                  <tbody>{paginatedExpenses.map((expense) => <tr key={expense.id} className="border-t border-line hover:bg-bg"><td className="px-4 py-3 tabular-nums text-muted">{expense.date}</td><td className="px-4 py-3"><div className="font-medium text-fg">{expense.type || 'OpEx'}</div><div className="mt-0.5 text-[10px] text-muted">{expense.category}</div></td><td className="px-4 py-3 text-fg">{expense.description}</td><td className="px-4 py-3 text-right font-medium tabular-nums text-fg">{formatNativeAmount(expense.amount, expense.currency || currency, true)}</td><td className="px-4 py-3 text-right">{canManageInvoices && <button type="button" onClick={() => setConfirmAction({ type: 'expense', id: expense.id, label: expense.description })} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Void expense" title="Void expense"><Trash2 size={14} /></button>}</td></tr>)}</tbody>
-                </table>
-              </div>
-              {expensePageCount > 1 && (
-                <div className="border-t border-line px-4 py-3">
-                  <div className="flex items-center justify-between text-[11px] text-muted">
-                    <span className="tabular-nums">Showing {((expensePage - 1) * expensePageSize) + 1}–{Math.min(expensePage * expensePageSize, filteredExpenses.length)} of {filteredExpenses.length}</span>
-                    <div className="flex items-center gap-1">
-                      <button type="button" onClick={() => setExpensePage((page) => Math.max(1, page - 1))} disabled={expensePage === 1} className={actionClass}>Previous</button>
-                      <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control border border-line bg-line px-2 text-[10px] font-semibold text-fg">{expensePage}</span>
-                      <button type="button" onClick={() => setExpensePage((page) => Math.min(expensePageCount, page + 1))} disabled={expensePage === expensePageCount} className={actionClass}>Next</button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </section>
-          </section>
+        <div className="space-y-5">
+          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Income YTD" value={formatFinanceCardAmount(ytdCollected,currency)} context={ytdCollectionRate.toFixed(1)+'% collected vs issued'} icon={<WalletCards size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Invoiced YTD" value={formatFinanceCardAmount(ytdInvoiced,currency)} context="Issued billings" icon={<Receipt size={15}/>}/><FinanceMetricCard label="Expenses YTD" value={formatFinanceCardAmount(ytdExpenses,currency)} context={currencyExpenses.length+' expense records'} icon={<ArrowDown size={15}/>}/><FinanceMetricCard label="Net cash YTD" value={formatFinanceCardAmount(ytdNetCash,currency)} context="Collected less expenses" icon={<TrendingUp size={15}/>} toneClassName={ytdNetCash>=0?'text-success':'text-danger'}/></section>
+          <section className="grid gap-5 xl:grid-cols-2"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><div className="flex items-end justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Income ledger</h2><p className="mt-1 text-xs text-muted">Actual payment activity.</p></div><label className="relative w-full max-w-xs"><Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/><span className="sr-only">Search income</span><input value={incomeSearch} onChange={(event)=>setIncomeSearch(event.target.value)} placeholder="Search invoice or client..." className={fieldClass+' pl-8'}/></label></div></div><div className="overflow-x-auto custom-scrollbar">{incomeRows.length===0?<div className="p-5"><EmptyState title="No income recorded" description="Recorded payments will appear here."/></div>:<table className="w-full min-w-[700px] border-collapse text-xs"><thead className="bg-bg"><tr><th className="px-5 py-3 text-left text-[10px] font-semibold text-muted">Invoice</th><th className="px-4 py-3 text-left text-[10px] font-semibold text-muted">Client</th><th className="px-4 py-3 text-left text-[10px] font-semibold text-muted">Date</th><th className="px-5 py-3 text-right text-[10px] font-semibold text-muted">Amount</th></tr></thead><tbody>{paginatedIncomeRows.map((row)=><tr key={row.id} className="border-t border-line hover:bg-bg"><td className="px-5 py-4"><button type="button" onClick={()=>{const invoice=currencyInvoices.find((item)=>item.id===row.invoiceId);if(invoice)openPrintPreview(invoice)}} className="font-semibold tabular-nums text-fg hover:text-accent-text">{row.invoiceNumber}</button></td><td className="px-4 py-4 text-fg">{row.clientCompany}</td><td className="px-4 py-4 tabular-nums text-muted">{row.date}</td><td className="px-5 py-4 text-right font-semibold tabular-nums text-success">{formatNativeAmount(row.amount,row.currency,true)}</td></tr>)}</tbody></table>}</div>{incomePageCount>1&&<div className="border-t border-line p-4"><div className="flex justify-between text-[11px] text-muted"><span>{incomeRows.length} payments</span><div className="flex gap-1"><button type="button" onClick={()=>setIncomePage((p)=>Math.max(1,p-1))} disabled={incomePage===1} className={actionClass}>Prev</button><span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control bg-line px-2 text-[10px] font-semibold text-fg">{incomePage}</span><button type="button" onClick={()=>setIncomePage((p)=>Math.min(incomePageCount,p+1))} disabled={incomePage===incomePageCount} className={actionClass}>Next</button></div></div></div>}</section>
+          <section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><div className="flex items-end justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Expense ledger</h2><p className="mt-1 text-xs text-muted">Operating spend by type, category, and date.</p></div>{canManageInvoices&&<button type="button" onClick={openExpenseModal} className={actionClass}><Plus size={14}/>Add expense</button>}</div><div className="mt-3 grid gap-2 sm:grid-cols-3"><label className="relative"><Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/><span className="sr-only">Search expense</span><input value={expenseSearch} onChange={(event)=>setExpenseSearch(event.target.value)} placeholder="Search expense..." className={fieldClass+' pl-8'}/></label><CustomSelect value={expenseTypeFilter} onChange={setExpenseTypeFilter} options={expenseTypeOptions} triggerClassName="h-9 min-h-9 w-full"/><CustomSelect value={expenseSort} onChange={(value)=>setExpenseSort(value as typeof expenseSort)} options={[{value:'date_desc',label:'Newest'},{value:'date_asc',label:'Oldest'},{value:'amount_high',label:'Highest amount'},{value:'amount_low',label:'Lowest amount'}]} triggerClassName="h-9 min-h-9 w-full"/></div></div><div className="overflow-x-auto custom-scrollbar"><table className="w-full min-w-[760px] border-collapse text-xs"><thead className="bg-bg"><tr><th className="px-5 py-3 text-left text-[10px] font-semibold text-muted">Expense</th><th className="px-4 py-3 text-left text-[10px] font-semibold text-muted">Type</th><th className="px-4 py-3 text-left text-[10px] font-semibold text-muted">Date</th><th className="px-5 py-3 text-right text-[10px] font-semibold text-muted">Amount</th><th className="px-4 py-3 text-right text-[10px] font-semibold text-muted">Action</th></tr></thead><tbody>{paginatedExpenses.map((expense)=><tr key={expense.id} className="border-t border-line hover:bg-bg"><td className="px-5 py-4"><p className="font-medium text-fg">{expense.description}</p><p className="mt-1 text-[10px] text-muted">{expense.category}</p></td><td className="px-4 py-4 text-muted">{expense.type||'OpEx'}</td><td className="px-4 py-4 tabular-nums text-muted">{expense.date}</td><td className="px-5 py-4 text-right tabular-nums font-medium">{formatNativeAmount(expense.amount,expense.currency||currency,true)}</td><td className="px-4 py-4 text-right">{canManageInvoices&&<button type="button" onClick={()=>setConfirmAction({type:'expense',id:expense.id,label:expense.description})} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Void expense"><Trash2 size={14}/></button>}</td></tr>)}</tbody></table></div>{expensePageCount>1&&<div className="border-t border-line p-4"><div className="flex justify-between text-[11px] text-muted"><span>{filteredExpenses.length} expenses</span><div className="flex gap-1"><button type="button" onClick={()=>setExpensePage((p)=>Math.max(1,p-1))} disabled={expensePage===1} className={actionClass}>Prev</button><span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control bg-line px-2 text-[10px] font-semibold text-fg">{expensePage}</span><button type="button" onClick={()=>setExpensePage((p)=>Math.min(expensePageCount,p+1))} disabled={expensePage===expensePageCount} className={actionClass}>Next</button></div></div></div>}</section></section>
         </div>
       ) : financeView === 'tax-retainers' ? (
-        <div className="space-y-6">
-          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Tax and retainers summary">
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Tax provision</span><Receipt size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(taxProvision, currency)}</p><p className="mt-2 text-xs text-muted">Tax across issued invoices</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Tax collected</span><BadgeCheck size={15} className="text-success" /></div><p className="mt-3 text-2xl font-medium tabular-nums text-success">{formatFinanceCardAmount(taxCollected, currency)}</p><p className="mt-2 text-xs text-muted">Recovered through payments</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Tax outstanding</span><Hourglass size={15} className="text-warning" /></div><p className="mt-3 text-2xl font-medium tabular-nums text-warning">{formatFinanceCardAmount(taxOutstanding, currency)}</p><p className="mt-2 text-xs text-muted">Waiting on collections</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Retainer billed</span><TrendingUp size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatFinanceCardAmount(retainerBilled, currency)}</p><p className="mt-2 text-xs text-muted">{retainerInvoices.length} retainer invoices</p></article>
-          </section>
-
-          <section className="grid grid-cols-1 gap-6 min-[1100px]:grid-cols-2">
-            <section className="rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="finance-retainer-title">
-              <div className="border-b border-line p-5"><h2 id="finance-retainer-title" className="text-sm font-semibold text-fg">Retainer activity</h2><p className="mt-1 text-xs text-muted">Invoices with retainer indicators across notes, terms, or line items.</p></div>
-              <div className="overflow-x-auto custom-scrollbar">
-                <table className="w-full min-w-[820px] border-collapse text-left text-xs">
-                  <thead className="bg-bg"><tr><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client</th><th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Status</th><th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Billed</th><th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Collected</th></tr></thead>
-                  <tbody>{retainerInvoices.slice(0, 10).map((invoice) => <tr key={invoice.id} className="border-t border-line hover:bg-bg"><td className="px-4 py-3"><button type="button" onClick={() => openPrintPreview(invoice)} className="font-medium tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button></td><td className="px-4 py-3 text-fg">{invoice.clientCompany}</td><td className="px-4 py-3 text-muted">{statusLabel[invoice.status]}</td><td className="px-4 py-3 text-right tabular-nums text-fg">{formatNativeAmount(invoice.total, invoice.currency, true)}</td><td className="px-4 py-3 text-right tabular-nums text-success">{formatNativeAmount(invoice.amountPaid || 0, invoice.currency, true)}</td></tr>)}</tbody>
-                </table>
-              </div>
-            </section>
-
-            <section className="rounded-card border border-line bg-panel p-5" aria-labelledby="finance-tax-breakdown-title">
-              <div className="border-b border-line pb-3"><h2 id="finance-tax-breakdown-title" className="text-sm font-semibold text-fg">Tax provision breakdown</h2><p className="mt-1 text-xs text-muted">Tax base and collected share across the current currency ledger.</p></div>
-              <div className="mt-5 space-y-3">
-                {[{ label: 'Provision', value: taxProvision, tone: 'text-fg' }, { label: 'Collected', value: taxCollected, tone: 'text-success' }, { label: 'Outstanding', value: taxOutstanding, tone: 'text-warning' }].map((item) => (
-                  <div key={item.label} className="flex items-center justify-between rounded-control border border-line bg-bg px-3 py-3">
-                    <span className="text-xs text-muted">{item.label}</span>
-                    <span className={'text-xs font-semibold tabular-nums ' + item.tone}>{formatNativeAmount(item.value, currency, true)}</span>
-                  </div>
-                ))}
-              </div>
-              <button type="button" onClick={exportTaxCsv} disabled={!currencyInvoices.length} className={actionClass + ' mt-5 w-full'}><Download size={14} />Export tax detail</button>
-            </section>
+        <div className="space-y-5">
+          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Tax provision" value={formatFinanceCardAmount(taxProvision,currency)} context="Tax across issued invoices" icon={<Receipt size={15}/>}/><FinanceMetricCard label="Tax collected" value={formatFinanceCardAmount(taxCollected,currency)} context={(taxProvision>0?((taxCollected/taxProvision)*100).toFixed(1):'0.0')+'% of provision'} icon={<BadgeCheck size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Tax outstanding" value={formatFinanceCardAmount(taxOutstanding,currency)} context="Provision not collected" icon={<Hourglass size={15} className="text-warning"/>} toneClassName="text-warning"/><FinanceMetricCard label="Retainer billed" value={formatFinanceCardAmount(retainerBilled,currency)} context={(retainerBilled>0?((retainerCollected/retainerBilled)*100).toFixed(1):'0.0')+'% collected'} icon={<TrendingUp size={15}/>}/></section>
+          <section className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.65fr)]"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><h2 className="text-sm font-semibold text-fg">Retainer ledger</h2><p className="mt-1 text-xs text-muted">Billing and collected value for retainer invoices.</p></div><div className="overflow-x-auto custom-scrollbar"><table className="w-full min-w-[720px] border-collapse text-xs"><thead className="bg-bg"><tr><th className="px-5 py-3 text-left text-[10px] font-semibold text-muted">Invoice</th><th className="px-4 py-3 text-left text-[10px] font-semibold text-muted">Client</th><th className="px-4 py-3 text-left text-[10px] font-semibold text-muted">Status</th><th className="px-4 py-3 text-right text-[10px] font-semibold text-muted">Billed</th><th className="px-5 py-3 text-right text-[10px] font-semibold text-muted">Collected</th></tr></thead><tbody>{retainerInvoices.slice(0,12).map((invoice)=><tr key={invoice.id} className="border-t border-line hover:bg-bg"><td className="px-5 py-4"><button type="button" onClick={()=>openPrintPreview(invoice)} className="font-semibold tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button><p className="mt-1 text-[10px] text-muted">Due {invoice.dueDate}</p></td><td className="px-4 py-4 text-fg">{invoice.clientCompany||invoice.clientName}</td><td className="px-4 py-4"><StatusBadge status={invoice.status}/></td><td className="px-4 py-4 text-right tabular-nums">{formatNativeAmount(invoice.total,invoice.currency,true)}</td><td className="px-5 py-4 text-right tabular-nums text-success">{formatNativeAmount(getInvoiceCollectedInRange(invoice,yearStart,yearEnd),invoice.currency,true)}</td></tr>)}</tbody></table></div></section>
+            <div className="grid gap-5"><section className="rounded-card border border-line bg-panel p-4 sm:p-5"><div className="border-b border-line pb-3"><h2 className="text-sm font-semibold text-fg">Tax provision</h2><p className="mt-1 text-xs text-muted">Provision versus collected and outstanding tax.</p></div><div className="mt-4 space-y-3">{[{label:'Provision',value:taxProvision,tone:'bg-series-1'},{label:'Collected',value:taxCollected,tone:'bg-success'},{label:'Outstanding',value:taxOutstanding,tone:'bg-warning'}].map((item)=>{const percent=taxProvision>0?Math.min(100,item.value/taxProvision*100):0;return <div key={item.label}><div className="flex justify-between text-xs"><span className="text-muted">{item.label}</span><span className="font-medium tabular-nums">{formatNativeAmount(item.value,currency,true)}</span></div><div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg"><div className={'h-full rounded-full '+item.tone} style={{width:percent+'%'}}/></div></div>})}</div><button type="button" onClick={exportTaxCsv} disabled={!currencyInvoices.length} className={actionClass+' mt-5 w-full'}><Download size={14}/>Export tax detail</button></section><section className="rounded-card border border-line bg-panel p-4 sm:p-5"><div className="flex justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Retainer collection</h2><p className="mt-1 text-xs text-muted">Collection against billed retainers.</p></div><span className="text-sm font-semibold tabular-nums">{retainerBilled>0?((retainerCollected/retainerBilled)*100).toFixed(1):'0.0'}%</span></div><div className="mt-4 h-2 rounded-full bg-bg overflow-hidden"><div className="h-full rounded-full bg-success" style={{width:(retainerBilled>0?Math.min(100,retainerCollected/retainerBilled*100):0)+'%'}}/></div><div className="mt-2 flex justify-between text-[10px] tabular-nums text-muted"><span>{formatFinanceCardAmount(retainerCollected,currency)}</span><span>{formatFinanceCardAmount(retainerBilled,currency)}</span></div></section></div>
           </section>
         </div>
       ) : financeView === 'financial-reports' ? (
-        <div className="space-y-6">
-          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Financial reporting summary">
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Net cash YTD</span><TrendingUp size={15} /></div><p className={'mt-3 text-2xl font-medium tabular-nums ' + (ytdNetCash >= 0 ? 'text-success' : 'text-danger')}>{formatFinanceCardAmount(ytdNetCash, currency)}</p><p className="mt-2 text-xs text-muted">Collected less expenses</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Collection rate</span><BarChart3 size={15} /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{ytdCollectionRate.toFixed(1)}%</p><p className="mt-2 text-xs text-muted">Collected against issued billings</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Operating margin</span><TrendingUp size={15} className="text-success" /></div><p className="mt-3 text-2xl font-medium tabular-nums text-fg">{Number.isFinite(operatingMarginValue) ? operatingMarginValue.toFixed(1) : quarterMargin.toFixed(1)}%</p><p className="mt-2 text-xs text-muted">Target ≥ 35%</p></article>
-            <article className="rounded-card border border-line bg-panel p-5"><div className="flex items-center justify-between text-xs font-medium text-muted"><span>Outstanding</span><Hourglass size={15} className="text-warning" /></div><p className="mt-3 text-2xl font-medium tabular-nums text-warning">{formatFinanceCardAmount(derivedMetrics.totalOutstanding, currency)}</p><p className="mt-2 text-xs text-muted">{pendingInvoiceCount} invoices still open</p></article>
-          </section>
-
-          <section className="grid grid-cols-1 gap-6 min-[1100px]:grid-cols-3">
-            <section className="min-[1100px]:col-span-2 rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="financial-trend-title">
-              <div className="border-b border-line p-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div><h2 id="financial-trend-title" className="text-sm font-semibold text-fg">Cash Flow vs Operating Burn</h2><p className="mt-1 text-xs text-muted">Monthly billing inflow, operational burn, and retainer target.</p></div>
-                <div className="flex flex-wrap items-center gap-3 text-[10px] text-muted"><span className="flex items-center gap-1.5"><span className="h-1.5 w-4 rounded-full bg-accent"></span>Net inflow</span><span className="flex items-center gap-1.5"><span className="h-1.5 w-4 rounded-full bg-success"></span>Retainer target</span><span className="flex items-center gap-1.5"><span className="h-1.5 w-4 rounded-full bg-series-3"></span>Operating burn</span></div>
-              </div>
-              <div className="p-5">
-                {hasTrendData ? <FinanceCashFlowChart data={financeChartData} currency={currency} ariaLabel="Finance cash flow trend showing net inflow, retainer target and operating burn." /> : <EmptyState title="No trend data" description="Monthly billing and expense records will populate this chart." />}
-              </div>
-            </section>
-
-            <section className="rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="report-status-title">
-              <div className="border-b border-line p-5"><h2 id="report-status-title" className="text-sm font-semibold text-fg">Invoice status mix</h2><p className="mt-1 text-xs text-muted">{ledgerInvoices.length} invoices in the active period.</p></div>
-              <div className="space-y-3 p-5">
-                {quarterStatusRows.map((row) => (
-                  <div key={row.status} className="flex items-center justify-between rounded-control border border-line bg-bg px-3 py-2.5">
-                    <div className="flex items-center gap-2"><Receipt size={12} aria-hidden="true" /><span className="text-xs text-muted">{statusLabel[row.status]}</span></div>
-                    <span className="text-xs font-semibold tabular-nums text-fg">{row.count}</span>
-                  </div>
-                ))}
-              </div>
-            </section>
-          </section>
-
-          <section className="grid grid-cols-1 gap-6 min-[1100px]:grid-cols-2">
-            <section className="rounded-card border border-line bg-panel overflow-hidden">
-              <div className="border-b border-line p-5"><h2 className="text-sm font-semibold text-fg">Expense categories</h2><p className="mt-1 text-xs text-muted">Top recorded expenses in the current quarter.</p></div>
-              <div className="p-5 space-y-3">
-                {quarterExpenseCategories.length === 0 ? <EmptyState title="No expense categories" description="Actual expense records will appear here." /> : quarterExpenseCategories.slice(0, 6).map(([category, amount]) => {
-                  const max = quarterExpenseCategories[0]?.[1] || 1;
-                  const percent = Math.round((amount / max) * 100);
-                  return <div key={category}><div className="flex items-center justify-between gap-3 text-xs"><span className="truncate text-muted">{category}</span><span className="tabular-nums font-medium text-fg">{formatNativeAmount(amount, currency, true)}</span></div><div className="mt-1.5 h-1.5 rounded-full bg-bg overflow-hidden"><div className="h-full rounded-full bg-series-3" style={{ width: percent + '%' }} /></div></div>;
-                })}
-              </div>
-            </section>
-            <section className="rounded-card border border-line bg-panel overflow-hidden">
-              <div className="border-b border-line p-5"><h2 className="text-sm font-semibold text-fg">Reporting controls</h2><p className="mt-1 text-xs text-muted">The report surface stays exportable and drillable without changing the underlying finance ledger.</p></div>
-              <div className="grid grid-cols-2 gap-3 p-5 sm:grid-cols-4">
-                {[
-                  ['Current quarter', reportingQuarter?.label || '—'],
-                  ['Current invoices', String(serverMetrics ? serverMetrics.totalInvoicesCount : ledgerInvoices.length)],
-                  ['Open balances', String(pendingInvoiceCount)],
-                  ['Overdue', String(criticalOverdueCount)]
-                ].map(([label, value]) => <div key={label} className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] uppercase tracking-[0.08em] text-muted">{label}</p><p className="mt-1 text-sm font-semibold tabular-nums text-fg">{value}</p></div>)}
-              </div>
-              <div className="border-t border-line p-5"><button type="button" onClick={exportReportCsv} disabled={!financeChartData.length} className={actionClass + ' w-full'}><Download size={14} />Export financial report</button></div>
-            </section>
-          </section>
+        <div className="space-y-5">
+          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Net cash YTD" value={formatFinanceCardAmount(ytdNetCash,currency)} context="Collected less expenses" icon={<TrendingUp size={15}/>} toneClassName={ytdNetCash>=0?'text-success':'text-danger'}/><FinanceMetricCard label="Collection rate" value={ytdCollectionRate.toFixed(1)+'%'} context="Collected vs issued" icon={<BarChart3 size={15}/>}/><FinanceMetricCard label="Operating margin" value={(Number.isFinite(operatingMarginValue)?operatingMarginValue:quarterMargin).toFixed(1)+'%'} context="Target ≥ 35%" icon={<TrendingUp size={15}/>}/><FinanceMetricCard label="Outstanding" value={formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} context={pendingInvoiceCount+' invoices open'} icon={<Hourglass size={15} className="text-warning"/>} toneClassName="text-warning"/></section>
+          <section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><div className="flex justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Cash Flow vs Operating Burn</h2><p className="mt-1 text-xs text-muted">Actual collections versus recorded operating spend. Dotted line = net cash.</p></div><span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{reportingQuarter?.label||'Current period'}</span></div></div><div className="p-4 sm:p-5">{hasTrendData?<FinanceCashFlowChart data={financeChartData} currency={currency} ariaLabel="Finance cash flow trend comparing cash collected, operating burn, and net cash."/>:<EmptyState title="No trend data" description="Monthly payment and expense records will populate this report."/>}</div></section>
+          <section className="grid gap-5 xl:grid-cols-3"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><h2 className="text-sm font-semibold text-fg">Invoice status mix</h2><p className="mt-1 text-xs text-muted">Current reporting quarter.</p></div><div className="space-y-2 p-4">{quarterStatusRows.map((row)=><div key={row.status} className="flex justify-between rounded-control border border-line bg-bg px-3 py-2.5"><StatusBadge status={row.status}/><span className="text-xs font-semibold tabular-nums">{row.count}</span></div>)}</div></section><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><h2 className="text-sm font-semibold text-fg">Expense mix</h2><p className="mt-1 text-xs text-muted">Top categories by quarter spend.</p></div><div className="space-y-3 p-4">{quarterExpenseCategories.length===0?<EmptyState title="No expense categories" description="Actual expense records will appear here."/>:quarterExpenseCategories.slice(0,5).map(([category,amount])=><div key={category}><div className="flex justify-between gap-3 text-xs"><span className="truncate text-muted">{category}</span><span className="tabular-nums font-medium">{formatNativeAmount(amount,currency,true)}</span></div><div className="mt-1.5 h-1.5 rounded-full bg-bg overflow-hidden"><div className="h-full rounded-full bg-series-3" style={{width:(quarterExpenses>0?Math.min(100,amount/quarterExpenses*100):0)+'%'}}/></div></div>)}</div></section><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><h2 className="text-sm font-semibold text-fg">Report controls</h2><p className="mt-1 text-xs text-muted">Audit context and export.</p></div><div className="grid grid-cols-2 gap-2 p-4">{[['Period',reportingQuarter?.label||'—'],['Invoices',String(serverMetrics?serverMetrics.totalInvoicesCount:ledgerInvoices.length)],['Open',String(pendingInvoiceCount)],['Overdue',String(criticalOverdueCount)],['Retainer',formatFinanceCardAmount(retainerBilled,currency)],['Tax due',formatFinanceCardAmount(taxOutstanding,currency)]].map(([label,value])=><div key={label} className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">{label}</p><p className="mt-1 text-sm font-semibold tabular-nums">{value}</p></div>)}</div><div className="border-t border-line p-4"><button type="button" onClick={exportReportCsv} disabled={!financeChartData.length} className={actionClass+' w-full'}><Download size={14}/>Export financial report</button></div></section></section>
         </div>
       ) : (
-        <div className="space-y-6">
-          <AdminMetricStrip
-            className="grid-cols-2 sm:grid-cols-3 min-[1100px]:grid-cols-6"
-            itemClassName="rounded-card border border-line bg-panel p-4 sm:p-5"
-            metrics={[
-              { id: 'billed', label: 'Total invoiced', value: formatFinanceCardAmount(currentQuarterTotal, currency), context: quarterChangePercent === null ? 'Current quarter' : (quarterChangePercent >= 0 ? '+' : '') + quarterChangePercent.toFixed(1) + '% vs previous quarter', icon: <Receipt size={18} aria-hidden="true" /> },
-              { id: 'collected', label: 'Collected YTD', value: formatFinanceCardAmount(ytdCollected, currency), context: ytdCollectionRate.toFixed(1) + '% collection rate' + (usingDemoInvoices ? ' · Demo' : ''), icon: <WalletCards size={18} className="text-success" aria-hidden="true" /> },
-              { id: 'outstanding', label: 'Outstanding', value: formatFinanceCardAmount(derivedMetrics.totalOutstanding, currency), context: pendingInvoiceCount + ' invoices pending', icon: <Hourglass size={18} className="text-warning" aria-hidden="true" /> },
-              { id: 'overdue', label: 'Overdue balance', value: formatFinanceCardAmount(overdueBalance, currency), context: criticalOverdueCount + ' critical invoices', icon: <AlertCircle size={18} className="text-danger" aria-hidden="true" />, toneClassName: 'text-danger' },
-              { id: 'margin', label: 'Operating margin', value: Number.isFinite(operatingMarginValue) ? operatingMarginValue.toFixed(1) + '%' : quarterMargin.toFixed(1) + '%', context: operatingMarginHealthy ? 'Healthy · target ≥ 35%' : 'Below target · monitor burn', icon: <TrendingUp size={18} className={operatingMarginHealthy ? 'text-success' : 'text-warning'} aria-hidden="true" /> },
-              { id: 'count', label: 'Total invoices', value: serverMetrics ? serverMetrics.totalInvoicesCount : 0, context: currency + ' finance ledger', icon: <FileText size={18} aria-hidden="true" /> }
-            ]}
-          />
-
-          <section className="grid grid-cols-1 gap-6 min-[1100px]:grid-cols-3">
-            <section className="min-[1100px]:col-span-2 rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="dashboard-finance-trend-title">
-              <div className="border-b border-line p-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div><h2 id="dashboard-finance-trend-title" className="text-sm font-semibold text-fg">Cash Flow vs Operating Burn</h2><p className="mt-1 text-xs text-muted">Monthly billing inflow, operating burn rate, and net retention.</p></div>
-                <div className="flex items-center gap-3 text-[10px] text-muted"><span>Net inflow</span><span>Retainer target</span><span>Operational burn</span></div>
-              </div>
-              <div className="p-5">
-                {hasTrendData ? <FinanceCashFlowChart data={financeChartData} currency={currency} ariaLabel="Finance cash flow trend." /> : <EmptyState title="No trend data" description="Billing and expense records will populate the financial trend." />}
-              </div>
-            </section>
-
-            <section className="rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="aging-receivables-title">
-              <div className="border-b border-line p-5"><h2 id="aging-receivables-title" className="text-sm font-semibold text-fg">Aging Receivables</h2><p className="mt-1 text-xs text-muted">Total outstanding {formatFinanceCardAmount(derivedMetrics.totalOutstanding, currency)} across 3 buckets.</p></div>
-              <div className="p-5">
-                <div className="h-2.5 overflow-hidden rounded-full border border-line bg-bg flex">
-                  {agingBuckets.map((bucket) => <div key={bucket.label} className={'h-full ' + (bucket.tone === 'success' ? 'bg-success' : bucket.tone === 'warning' ? 'bg-warning' : 'bg-danger')} style={{ width: bucket.percent + '%' }} title={bucket.label + ': ' + bucket.percent + '%'} />)}
-                </div>
-                <div className="mt-4 space-y-3">
-                  {agingBuckets.map((bucket) => (
-                    <div key={bucket.label} className="rounded-control border border-line bg-bg px-3 py-2.5 flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2 min-w-0"><span className={'h-2 w-2 shrink-0 rounded-full ' + (bucket.tone === 'success' ? 'bg-success' : bucket.tone === 'warning' ? 'bg-warning' : 'bg-danger')} /><div className="min-w-0"><p className="truncate text-sm font-medium text-fg">{bucket.label}</p><p className="mt-0.5 text-[10px] text-muted">{bucket.count} active account{bucket.count === 1 ? '' : 's'}</p></div></div>
-                      <div className="text-right shrink-0"><p className="text-xs font-semibold tabular-nums text-fg">{formatNativeAmount(bucket.amount, currency, true)}</p><p className="mt-0.5 text-[10px] tabular-nums text-muted">{bucket.percent}%</p></div>
-                    </div>
-                  ))}
-                </div>
-                <button type="button" onClick={() => setDunningOpen(true)} disabled={!actionRequiredInvoices.length} className={actionClass + ' mt-4 w-full'}><Send size={14} />Prepare bulk dunning notices</button>
-              </div>
-            </section>
-          </section>
-
-          <section className="rounded-card border border-line bg-panel overflow-hidden" aria-labelledby="finance-workspace-title">
-            <div className="border-b border-line p-4 sm:p-5">
-              <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h2 id="finance-workspace-title" className="text-sm font-semibold text-fg">Invoice Ledger</h2>
-                    {usingDemoInvoices && <span className="rounded-badge border border-warning/20 bg-warning/10 px-1.5 py-0.5 text-[10px] font-medium text-warning">Demo data</span>}
-                  </div>
-                  <p className="mt-1 text-[11px] text-muted">{serverMetrics ? serverMetrics.totalInvoicesCount : ledgerInvoices.length} invoices in the active ledger period</p>
-                </div>
-                <div className="flex w-full flex-col gap-2 xl:w-auto xl:flex-row xl:items-center">
-                  <label className="relative min-w-[220px] xl:w-64"><span className="sr-only">Search invoices</span><Search size={14} className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-muted" /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search invoice # or client..." className={fieldClass + ' pl-9 pr-3'} /></label>
-                  <div className="flex items-center gap-1 overflow-x-auto rounded-control border border-line bg-bg p-0.5 custom-scrollbar">
-                    {['All', 'Paid', 'Due Soon', 'Overdue', 'Draft'].map((label) => {
-                      const key = label === 'All' ? 'all' : label === 'Paid' ? 'paid' : label === 'Due Soon' ? 'due_soon' : label === 'Overdue' ? 'overdue' : 'draft';
-                      const count = key === 'all'
-                        ? ledgerInvoices.length
-                        : key === 'due_soon'
-                          ? dueSoonCount
-                          : key === 'overdue'
-                            ? ledgerInvoices.filter((invoice) => isPastDueInvoice(invoice)).length
-                            : invoiceStatusCounts.find((item) => item.status === key)?.count || 0;
-                      return <button key={label} type="button" onClick={() => setStatusFilter(key)} className={'min-h-8 shrink-0 rounded-chip px-2.5 text-[11px] font-medium transition-colors ' + (statusFilter === key ? 'bg-line text-fg' : 'text-muted hover:text-fg')}>{label}<span className="ml-1 tabular-nums opacity-70">{count}</span></button>;
-                    })}
-                  </div>
-                  <div className="relative">
-                    <button type="button" onClick={() => setPeriodMenuOpen((open) => !open)} className={actionClass + ' justify-between'} aria-expanded={periodMenuOpen}><CalendarDays size={13} />{ledgerPeriod === 'reporting-quarter' ? (reportingQuarter?.label || 'Reporting period') : 'All periods'}</button>
-                    {periodMenuOpen && <div className="absolute right-0 top-[calc(100%+6px)] z-30 w-56 rounded-card border border-line bg-panel p-1.5"><button type="button" onClick={() => { setLedgerPeriod('reporting-quarter'); setPeriodMenuOpen(false); setStatusFilter('all'); }} className="w-full rounded-control px-3 py-2 text-left text-xs text-fg hover:bg-bg"><span className="block font-medium">{reportingQuarter?.label || 'Reporting period'}</span><span className="mt-0.5 block text-[10px] text-muted">Match the latest invoice quarter</span></button><button type="button" onClick={() => { setLedgerPeriod('all'); setPeriodMenuOpen(false); setStatusFilter('all'); }} className="mt-1 w-full rounded-control px-3 py-2 text-left text-xs text-muted hover:bg-bg hover:text-fg"><span className="block font-medium">All periods</span><span className="mt-0.5 block text-[10px]">Show the full invoice ledger</span></button></div>}
-                  </div>
-                  <div className="relative">
-                    <button type="button" onClick={() => setColumnMenuOpen((open) => !open)} className={actionClass + ' w-9 px-0'} aria-label="Filter columns" title="Filter columns" aria-expanded={columnMenuOpen}><SlidersHorizontal size={14} /></button>
-                    {columnMenuOpen && <div className="absolute right-0 top-[calc(100%+6px)] z-30 w-56 rounded-card border border-line bg-panel p-1.5">{[['client','Client & Project'],['issue','Issue Date'],['due','Due Date'],['amount','Amount'],['status','Status'],['actions','Actions']].map(([key,label]) => <button key={key} type="button" role="menuitemcheckbox" aria-checked={columnVisibility[key]} onClick={() => setColumnVisibility((current) => ({ ...current, [key]: !current[key] }))} className="flex w-full items-center justify-between rounded-control px-3 py-2 text-left text-xs text-muted hover:bg-bg hover:text-fg"><span>{label}</span><span className={columnVisibility[key] ? 'text-accent-text' : 'text-muted'}>{columnVisibility[key] ? 'Visible' : 'Hidden'}</span></button>)}</div>}
-                  </div>
-                  <CustomSelect value={sort} onChange={(value) => setSort(value as SortKey)} options={sortOptions} className="w-full xl:w-44" triggerClassName="h-9 min-h-9 w-full" aria-label="Invoice sort" />
-                </div>
-              </div>
-              <div className="mt-3 flex items-center gap-2 border-t border-line pt-3">
-                <span className="text-[10px] uppercase tracking-[0.08em] text-muted">Ledger</span><span className="h-1 w-1 rounded-full bg-line" /><span className="text-[10px] text-muted">Current financial period</span>
-                {(search || statusFilter !== 'all') && <button type="button" onClick={() => { setSearch(''); setStatusFilter('all'); }} className="ml-auto rounded-chip px-2 py-1 text-[11px] text-muted hover:text-fg">Clear filters</button>}
-              </div>
-            </div>
-            <div className="overflow-x-auto custom-scrollbar">
-              {filteredInvoices.length === 0 ? (
-                <div className="p-5"><EmptyState title="No invoices found" description={search || statusFilter !== 'all' ? 'No invoices match the current search or filter.' : 'No invoice records are available yet.'} action={canManageInvoices ? <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14} />Create invoice</button> : undefined} /></div>
-              ) : (
-                <table className="w-full min-w-[1040px] border-collapse text-left text-xs">
-                  <thead className="bg-bg">
-                    <tr>
-                      <th className="px-4 py-3 sm:px-5 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice #</th>
-                      {columnVisibility.client && <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client & Project</th>}
-                      {columnVisibility.issue && <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Issue Date</th>}
-                      {columnVisibility.due && <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Due Date</th>}
-                      {columnVisibility.amount && <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Amount (IDR)</th>}
-                      {columnVisibility.status && <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Status</th>}
-                      {columnVisibility.actions && <th className="px-4 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Actions</th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedInvoices.map((invoice) => {
-                      const balance = Number(invoice.balanceDue ?? (invoice.total - (invoice.amountPaid || 0)));
-                      const project = projectsById.get(invoice.projectId);
-                      const isOverdue = isPastDueInvoice(invoice) || invoice.status === 'overdue';
-                      return (
-                        <tr key={invoice.id} className="group border-t border-line transition-colors hover:bg-bg">
-                          <td className="px-4 py-3 sm:px-5"><div className="flex items-center gap-2"><span className={'h-1.5 w-1.5 rounded-full ' + (isOverdue ? 'bg-danger' : invoice.status === 'paid' ? 'bg-success' : invoice.status === 'sent' ? 'bg-info' : 'bg-warning')} /><button type="button" onClick={() => openPrintPreview(invoice)} className="font-medium tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button></div><p className="mt-1 text-[11px] text-muted">{invoice.currency}</p></td>
-                          {columnVisibility.client && <td className="px-4 py-3"><div className="font-medium text-fg">{invoice.clientCompany || invoice.clientName}</div><div className="mt-0.5 text-[11px] text-muted">{project?.name || invoice.clientName}</div></td>}
-                          {columnVisibility.issue && <td className="px-4 py-3 tabular-nums text-muted">{invoice.issueDate}</td>}
-                          {columnVisibility.due && <td className={'px-4 py-3 tabular-nums font-medium ' + (isOverdue ? 'text-danger' : 'text-muted')}>{invoice.dueDate}{isOverdue && <div className="mt-0.5 text-[10px] text-danger">Overdue</div>}</td>}
-                          {columnVisibility.amount && <td className="px-4 py-3 text-right"><div className="font-semibold tabular-nums text-fg">{formatNativeAmount(invoice.total, invoice.currency)}</div><div className="mt-0.5 text-[10px] tabular-nums text-muted">{balance > 0 ? 'Due ' + formatNativeAmount(balance, invoice.currency, true) : 'Settled'}</div></td>}
-                          {columnVisibility.status && <td className="px-4 py-3">{canManageInvoices ? <InvoiceStatusDropdown status={invoice.status} allowedStatuses={['draft', 'sent', 'overdue']} disabled={updatingInvoiceId === invoice.id || !['draft', 'sent', 'overdue'].includes(invoice.status)} onChange={(next) => void updateInvoiceStatus(invoice, next)} /> : <StatusBadge status={invoice.status} />}</td>}
-                          {columnVisibility.actions && <td className="px-4 py-3 text-right"><div className="flex items-center justify-end gap-1 opacity-85 group-hover:opacity-100">
-                            {isPastDueInvoice(invoice) && <button type="button" onClick={() => setReminderInvoice(invoice)} className="inline-flex h-7 items-center rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-danger hover:bg-panel-hover">Reminder</button>}
-                            {canManageInvoices && invoice.status !== 'paid' && invoice.status !== 'cancelled' && balance > 0 && <button type="button" onClick={() => openPayment(invoice)} className="inline-flex h-7 min-h-7 items-center rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted hover:bg-panel-hover hover:text-fg">Pay</button>}
-                            <button type="button" onClick={() => openPrintPreview(invoice)} className="inline-flex h-7 w-7 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="View invoice" title="View invoice"><Eye size={15} /></button>
-                            {canManageInvoices && invoice.status !== 'cancelled' && <button type="button" onClick={() => openEditInvoice(invoice)} className="inline-flex h-7 w-7 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Edit invoice" title="Edit invoice"><Edit3 size={14} /></button>}
-                            {canManageInvoices && canDeleteInvoice && !['cancelled', 'paid', 'partially_paid'].includes(invoice.status) && <button type="button" onClick={() => setConfirmAction({ type: 'invoice', id: invoice.id, label: invoice.invoiceNumber })} className="inline-flex h-7 w-7 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Cancel invoice" title="Cancel invoice"><Trash2 size={14} /></button>}
-
-                          </div></td>}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              )}
-            </div>
-            {invoicePageCount > 1 && (
-              <div className="border-t border-line px-4 py-3 sm:px-5">
-                <div className="flex flex-col gap-2 text-[11px] text-muted sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-1 tabular-nums"><span>Showing</span><span className="font-medium text-fg">{((invoicePage - 1) * invoicePageSize) + 1}–{Math.min(invoicePage * invoicePageSize, filteredInvoices.length)}</span><span>of</span><span className="font-medium text-fg">{filteredInvoices.length}</span><span>invoices</span></div>
-                  <div className="flex items-center gap-1">
-                    <button type="button" onClick={() => setInvoicePage((page) => Math.max(1, page - 1))} disabled={invoicePage === 1} className={actionClass}>Previous</button>
-                    <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control border border-line bg-line px-2 text-[10px] font-semibold text-fg">{invoicePage}</span>
-                    <button type="button" onClick={() => setInvoicePage((page) => Math.min(invoicePageCount, page + 1))} disabled={invoicePage === invoicePageCount} className={actionClass}>Next</button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </section>
-
-          <section className="rounded-card border border-line bg-panel overflow-hidden">
-            <div className="flex flex-col gap-3 border-b border-line p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-              <div><h2 className="text-sm font-semibold text-fg">Finance snapshot</h2><p className="mt-1 text-xs text-muted">Period: {reportingQuarter?.label || 'Active period'} · {pendingInvoiceCount} open invoices · {currencyExpenses.length} expense records.</p></div>
-              <div className="flex items-center gap-2"><span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">Invoices {ledgerInvoices.length}</span><span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">Retainers {retainerInvoices.length}</span><span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">Expenses {currencyExpenses.length}</span></div>
-            </div>
-            <div className="grid gap-4 p-4 sm:grid-cols-3 sm:p-5">
-              {[
-                { label: 'Quarter billed', value: formatFinanceCardAmount(currentQuarterTotal, currency), icon: <Receipt size={16} /> },
-                { label: 'Quarter collected', value: formatFinanceCardAmount(quarterCollected, currency), icon: <WalletCards size={16} /> },
-                { label: 'Quarter expenses', value: formatFinanceCardAmount(quarterExpenses, currency), icon: <ArrowDown size={16} /> }
-              ].map((item) => <div key={item.label} className="rounded-control border border-line bg-bg p-3"><div className="flex items-center gap-2 text-xs text-muted">{item.icon}{item.label}</div><p className="mt-2 text-lg font-medium tabular-nums text-fg">{item.value}</p></div>)}
-            </div>
-          </section>
+        <div className="space-y-5">
+          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Quarter billed" value={formatFinanceCardAmount(currentQuarterTotal,currency)} context={quarterChangePercent===null?'Current quarter':(quarterChangePercent>=0?'+':'')+quarterChangePercent.toFixed(1)+'% vs previous quarter'} icon={<Receipt size={15}/>}/><FinanceMetricCard label="Collected YTD" value={formatFinanceCardAmount(ytdCollected,currency)} context={ytdCollectionRate.toFixed(1)+'% collection rate'} icon={<WalletCards size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Outstanding" value={formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} context={pendingInvoiceCount+' open invoices'} icon={<Hourglass size={15} className="text-warning"/>} toneClassName="text-warning"/><FinanceMetricCard label="Overdue" value={formatFinanceCardAmount(overdueBalance,currency)} context={criticalOverdueCount+' invoices need attention'} icon={<AlertCircle size={15} className="text-danger"/>} toneClassName="text-danger"/></section>
+          <section className="grid gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><div className="flex justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Cash Flow vs Operating Burn</h2><p className="mt-1 text-xs text-muted">Six-month view of actual cash collected versus recorded operating spend.</p></div><span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">Net {formatFinanceCardAmount(quarterNetCash,currency)}</span></div></div><div className="p-4 sm:p-5">{hasTrendData?<FinanceCashFlowChart data={financeChartData} currency={currency} ariaLabel="Finance cash flow trend comparing cash collected, operating burn, and net cash."/>:<EmptyState title="No trend data" description="Billing payments and expenses will populate this trend."/>}</div></section><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><h2 className="text-sm font-semibold text-fg">Aging receivables</h2><p className="mt-1 text-xs text-muted">{formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} outstanding across 3 aging buckets.</p></div><div className="p-4 sm:p-5"><div className="flex h-2.5 overflow-hidden rounded-full bg-bg border border-line">{agingBuckets.map((bucket)=><div key={bucket.label} className={'h-full '+(bucket.tone==='success'?'bg-success':bucket.tone==='warning'?'bg-warning':'bg-danger')} style={{width:bucket.percent+'%'}}/>)}</div><div className="mt-4 space-y-2.5">{agingBuckets.map((bucket)=><div key={bucket.label} className="flex items-center justify-between rounded-control border border-line bg-bg px-3 py-3"><div><p className="text-xs font-medium text-fg">{bucket.label}</p><p className="mt-1 text-[10px] text-muted">{bucket.count} account{bucket.count===1?'':'s'}</p></div><div className="text-right"><p className="text-xs font-semibold tabular-nums">{formatNativeAmount(bucket.amount,currency,true)}</p><p className="mt-1 text-[10px] text-muted">{bucket.percent}%</p></div></div>)}</div><button type="button" onClick={()=>setDunningOpen(true)} disabled={!actionRequiredInvoices.length} className={actionClass+' mt-4 w-full'}><Send size={14}/>Prepare collection notices</button></div></section></section>
+          <section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between"><div><h2 className="text-sm font-semibold text-fg">Invoice ledger</h2><p className="mt-1 text-xs text-muted">{filteredInvoices.length} visible of {ledgerInvoices.length} invoices · {ledgerPeriod==='all'?'all periods':reportingQuarter?.label||'current quarter'}</p></div><label className="relative w-full xl:w-80"><Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/><span className="sr-only">Search invoices</span><input value={search} onChange={(event)=>setSearch(event.target.value)} placeholder="Search invoice, client, project..." className={fieldClass+' pl-9'}/></label></div><div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4"><CustomSelect value={statusFilter} onChange={setStatusFilter} options={statusOptions} triggerClassName="h-9 min-h-9 w-full"/><CustomSelect value={paymentFilter} onChange={(value)=>setPaymentFilter(value as PaymentFilter)} options={[{value:'all',label:'All payment states'},{value:'unpaid',label:'Unpaid'},{value:'partial',label:'Partially paid'},{value:'paid',label:'Paid'}]} triggerClassName="h-9 min-h-9 w-full"/><CustomSelect value={dueFilter} onChange={(value)=>setDueFilter(value as DueFilter)} options={[{value:'all',label:'All due states'},{value:'due_soon',label:'Due within 7 days'},{value:'overdue',label:'Overdue'},{value:'later',label:'Due later'}]} triggerClassName="h-9 min-h-9 w-full"/><CustomSelect value={sort} onChange={(value)=>setSort(value as SortKey)} options={sortOptions} triggerClassName="h-9 min-h-9 w-full"/></div><div className="mt-3 flex flex-wrap items-center gap-2 border-t border-line pt-3"><div className="inline-flex items-center rounded-control border border-line bg-bg p-0.5"><button type="button" onClick={()=>{setLedgerPeriod('reporting-quarter');setStatusFilter('all')}} className={'min-h-8 rounded-chip px-2.5 text-[11px] '+(ledgerPeriod==='reporting-quarter'?'bg-line text-fg':'text-muted')}>Current quarter</button><button type="button" onClick={()=>{setLedgerPeriod('all');setStatusFilter('all')}} className={'min-h-8 rounded-chip px-2.5 text-[11px] '+(ledgerPeriod==='all'?'bg-line text-fg':'text-muted')}>All periods</button></div><div className="relative"><button type="button" onClick={()=>setColumnMenuOpen((open)=>!open)} className={actionClass+' h-9 min-h-9'}><SlidersHorizontal size={14}/>Columns</button>{columnMenuOpen&&<div className="absolute left-0 top-[calc(100%+6px)] z-30 w-56 rounded-card border border-line bg-panel p-1.5">{(['client','issue','due','amount','status','actions'] as const).map((key)=>{const labels:Record<typeof key,string>={client:'Client & Project',issue:'Issue Date',due:'Due Date',amount:'Amount',status:'Status',actions:'Actions'};return <button key={key} type="button" role="menuitemcheckbox" aria-checked={columnVisibility[key]} onClick={()=>setColumnVisibility((current)=>({...current,[key]:!current[key]}))} className="flex w-full justify-between rounded-control px-3 py-2 text-left text-xs text-muted hover:bg-bg hover:text-fg"><span>{labels[key]}</span><span className={columnVisibility[key]?'text-accent-text':'text-muted'}>{columnVisibility[key]?'Visible':'Hidden'}</span></button>})}</div>}</div>{(search||statusFilter!=='all'||paymentFilter!=='all'||dueFilter!=='all')&&<button type="button" onClick={()=>{setSearch('');setStatusFilter('all');setPaymentFilter('all');setDueFilter('all')}} className="rounded-chip px-2 py-1 text-[11px] text-muted hover:bg-bg hover:text-fg">Clear filters</button>}<span className="ml-auto text-[10px] text-muted">{pendingInvoiceCount} open · {criticalOverdueCount} overdue · {dueSoonCount} due soon</span></div></div><div className="overflow-x-auto custom-scrollbar">{filteredInvoices.length===0?<div className="p-5"><EmptyState title="No invoices found" description="No invoices match the current filters." action={canManageInvoices?<button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>Create invoice</button>:undefined}/></div>:<table className="w-full min-w-[1020px] border-collapse text-xs"><thead className="bg-bg"><tr><th className="px-5 py-3 text-left text-[10px] font-semibold text-muted">Invoice / client</th>{columnVisibility.client&&<th className="px-4 py-3 text-left text-[10px] font-semibold text-muted">Client & project</th>}{columnVisibility.issue&&<th className="px-4 py-3 text-left text-[10px] font-semibold text-muted">Issue</th>}{columnVisibility.due&&<th className="px-4 py-3 text-left text-[10px] font-semibold text-muted">Due</th>}{columnVisibility.amount&&<th className="px-4 py-3 text-right text-[10px] font-semibold text-muted">Billing</th>}{columnVisibility.status&&<th className="px-4 py-3 text-left text-[10px] font-semibold text-muted">Status</th>}{columnVisibility.actions&&<th className="px-5 py-3 text-right text-[10px] font-semibold text-muted">Actions</th>}</tr></thead><tbody>{paginatedInvoices.map((invoice)=>{const balance=Number(invoice.balanceDue??(invoice.total-(invoice.amountPaid||0)));const project=projectsById.get(invoice.projectId);const overdue=isPastDueInvoice(invoice);return <tr key={invoice.id} className="border-t border-line hover:bg-bg"><td className="px-5 py-4"><div className="flex items-start gap-2"><span className={'mt-1 h-1.5 w-1.5 rounded-full '+(overdue?'bg-danger':invoice.status==='paid'?'bg-success':'bg-warning')}/><div><button type="button" onClick={()=>openPrintPreview(invoice)} className="font-semibold tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button><p className="mt-1 text-xs text-fg">{invoice.clientCompany||invoice.clientName}</p></div></div></td>{columnVisibility.client&&<td className="px-4 py-4"><p className="font-medium text-fg">{invoice.clientCompany||invoice.clientName}</p><p className="mt-1 text-[10px] text-muted">{project?.name||invoice.clientEmail||invoice.clientName}</p></td>}{columnVisibility.issue&&<td className="px-4 py-4 tabular-nums text-muted">{invoice.issueDate}</td>}{columnVisibility.due&&<td className={'px-4 py-4 tabular-nums '+(overdue?'text-danger':'text-muted')}>{invoice.dueDate}{overdue&&<div className="mt-0.5 text-[10px]">Overdue</div>}</td>}{columnVisibility.amount&&<td className="px-4 py-4 text-right"><p className="font-semibold tabular-nums">{formatNativeAmount(invoice.total,invoice.currency)}</p><p className={'mt-1 text-[10px] '+(balance>0?'text-warning':'text-success')}>{balance>0?'Balance '+formatNativeAmount(balance,invoice.currency,true):'Settled'}</p></td>}{columnVisibility.status&&<td className="px-4 py-4">{canManageInvoices&&['draft','sent','overdue'].includes(invoice.status)?<InvoiceStatusDropdown status={invoice.status} allowedStatuses={['draft','sent','overdue']} disabled={updatingInvoiceId===invoice.id} onChange={(next)=>void updateInvoiceStatus(invoice,next)}/>:<StatusBadge status={invoice.status}/>}</td>}{columnVisibility.actions&&<td className="px-5 py-4 text-right"><div className="flex justify-end gap-1">{overdue&&<button type="button" onClick={()=>setReminderInvoice(invoice)} className="inline-flex h-8 items-center rounded-control border border-danger/20 bg-danger/10 px-2 text-[10px] text-danger">Reminder</button>}{canManageInvoices&&invoice.status!=='paid'&&invoice.status!=='cancelled'&&balance>0&&<button type="button" onClick={()=>openPayment(invoice)} className="inline-flex h-8 items-center rounded-control border border-line bg-bg px-2 text-[10px] text-muted">Pay</button>}<button type="button" onClick={()=>openPrintPreview(invoice)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="View invoice" title="View invoice"><Eye size={15}/></button>{canManageInvoices&&invoice.status!=='cancelled'&&<button type="button" onClick={()=>openEditInvoice(invoice)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Edit invoice" title="Edit invoice"><Edit3 size={14}/></button>}{canManageInvoices&&canDeleteInvoice&&!['cancelled','paid','partially_paid'].includes(invoice.status)&&<button type="button" onClick={()=>setConfirmAction({type:'invoice',id:invoice.id,label:invoice.invoiceNumber})} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Cancel invoice" title="Cancel invoice"><Trash2 size={14}/></button>}</div></td>}</tr>})}</tbody></table>}</div>{invoicePageCount>1&&<div className="border-t border-line p-4"><div className="flex justify-between text-[11px] text-muted"><span>Showing {((invoicePage-1)*invoicePageSize)+1}–{Math.min(invoicePage*invoicePageSize,filteredInvoices.length)} of {filteredInvoices.length}</span><div className="flex gap-1"><button type="button" onClick={()=>setInvoicePage((p)=>Math.max(1,p-1))} disabled={invoicePage===1} className={actionClass}>Prev</button><span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control bg-line px-2 text-[10px] font-semibold text-fg">{invoicePage}</span><button type="button" onClick={()=>setInvoicePage((p)=>Math.min(invoicePageCount,p+1))} disabled={invoicePage===invoicePageCount} className={actionClass}>Next</button></div></div></div>}</section>
+          <section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4 sm:p-5"><div className="flex justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Finance snapshot</h2><p className="mt-1 text-xs text-muted">Billing, collection, receivables, burn, margin, tax, and retainer health.</p></div><div className="flex flex-wrap gap-2 text-[10px] text-muted"><span className="rounded-badge border border-line bg-bg px-2 py-1">{ledgerInvoices.length} invoices</span><span className="rounded-badge border border-line bg-bg px-2 py-1">{currencyExpenses.length} expenses</span><span className="rounded-badge border border-line bg-bg px-2 py-1">{retainerInvoices.length} retainers</span></div></div></div><div className="p-4 sm:p-5"><div className="grid grid-cols-2 gap-2 md:grid-cols-4">{[['Quarter billed',formatFinanceCardAmount(currentQuarterTotal,currency)],['Quarter collected',formatFinanceCardAmount(quarterCollected,currency)],['Quarter expenses',formatFinanceCardAmount(quarterExpenses,currency)],['Quarter net cash',formatFinanceCardAmount(quarterNetCash,currency)],['Outstanding',formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)],['Overdue',formatFinanceCardAmount(overdueBalance,currency)],['Collection rate',ytdCollectionRate.toFixed(1)+'%'],['Operating margin',(Number.isFinite(operatingMarginValue)?operatingMarginValue:quarterMargin).toFixed(1)+'%']].map(([label,value])=><div key={label} className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">{label}</p><p className="mt-1.5 text-sm font-semibold tabular-nums">{value}</p></div>)}</div><div className="mt-4 grid gap-4 lg:grid-cols-3"><div className="rounded-control border border-line bg-bg p-4"><div className="flex justify-between gap-3"><div><p className="text-xs font-semibold text-fg">Collection health</p><p className="mt-1 text-[10px] text-muted">Collected vs issued.</p></div><span className="text-sm font-semibold tabular-nums text-success">{ytdCollectionRate.toFixed(1)}%</span></div><div className="mt-3 h-2 rounded-full bg-panel overflow-hidden"><div className="h-full rounded-full bg-success" style={{width:Math.min(100,Math.max(0,ytdCollectionRate))+'%'}}/></div><div className="mt-2 flex justify-between text-[10px] text-muted"><span>{formatFinanceCardAmount(ytdCollected,currency)}</span><span>{formatFinanceCardAmount(ytdInvoiced,currency)}</span></div></div><div className="rounded-control border border-line bg-bg p-4"><p className="text-xs font-semibold text-fg">Working capital</p><p className="mt-1 text-[10px] text-muted">Receivable pressure.</p><div className="mt-3 grid grid-cols-3 gap-2"><div><p className="text-[10px] text-muted">Open</p><p className="mt-1 text-sm font-semibold tabular-nums">{pendingInvoiceCount}</p></div><div><p className="text-[10px] text-muted">Overdue</p><p className="mt-1 text-sm font-semibold tabular-nums text-danger">{criticalOverdueCount}</p></div><div><p className="text-[10px] text-muted">Due soon</p><p className="mt-1 text-sm font-semibold tabular-nums text-warning">{dueSoonCount}</p></div></div></div><div className="rounded-control border border-line bg-bg p-4"><p className="text-xs font-semibold text-fg">Tax & retainers</p><p className="mt-1 text-[10px] text-muted">Liability and recurring billing.</p><div className="mt-3 space-y-1.5 text-[10px]"><div className="flex justify-between"><span className="text-muted">Tax due</span><span className="font-medium tabular-nums text-warning">{formatFinanceCardAmount(taxOutstanding,currency)}</span></div><div className="flex justify-between"><span className="text-muted">Retainer billed</span><span className="font-medium tabular-nums">{formatFinanceCardAmount(retainerBilled,currency)}</span></div><div className="flex justify-between"><span className="text-muted">Retainer collected</span><span className="font-medium tabular-nums text-success">{formatFinanceCardAmount(retainerCollected,currency)}</span></div></div></div></div></div></section>
         </div>
       )}
       <Modal

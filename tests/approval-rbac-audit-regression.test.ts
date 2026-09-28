@@ -55,7 +55,9 @@ test('Read-only admin states keep mutation UI controls behind the same permissio
   const invoicing = await fs.readFile(path.join(root, 'src/pages/admin/AdminInvoicing.tsx'), 'utf8');
   assert.ok(invoicing.includes('const canCreateInvoice = canManageInvoices;'));
   assert.ok(invoicing.includes('disabled={!canManageInvoices}'));
-  assert.ok(invoicing.includes('{canManageInvoices && ('));
+  assert.ok(invoicing.includes('const canCreateInvoice = canManageInvoices;'));
+  assert.ok(invoicing.includes('canManageInvoices &&'));
+  assert.ok(invoicing.includes('disabled={refreshing}'));
 
   const projects = await fs.readFile(path.join(root, 'src/pages/admin/AdminProjects.tsx'), 'utf8');
   assert.ok(projects.includes('canManageKanbanTasks'));
