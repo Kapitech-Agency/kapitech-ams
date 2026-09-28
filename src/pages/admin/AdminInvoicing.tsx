@@ -1098,7 +1098,7 @@ export const AdminInvoicing: React.FC = () => {
         <>
           <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 min-[1100px]:grid-cols-5" aria-label="Finance KPI snapshot">
             {[
-              { label: 'Total Invoiced', value: serverMetrics ? formatNativeAmount(serverMetrics.totalBilled, currency, true) : '—', context: serverMetrics ? serverMetrics.totalInvoicesCount + ' invoices' : '—', icon: <Receipt size={17} />, tone: 'text-accent-text' },
+              { label: 'Total Invoiced', icon: <Receipt size={12} aria-hidden="true" />, value: serverMetrics ? formatNativeAmount(serverMetrics.totalBilled, currency, true) : '—', context: serverMetrics ? serverMetrics.totalInvoicesCount + ' invoices' : '—', tone: 'text-accent-text' },
               { label: 'Collected (YTD)', value: serverMetrics ? formatNativeAmount(serverMetrics.totalRevenueCollected, currency, true) : '—', context: currencyInvoices.length ? derivedMetrics.collectionRate + '% collection rate' : '—', icon: <WalletCards size={17} />, tone: 'text-success' },
               { label: 'Outstanding', value: serverMetrics ? formatNativeAmount(serverMetrics.totalOutstanding, currency, true) : '—', context: serverMetrics ? serverMetrics.overdueCount + ' overdue' : '—', icon: <CreditCard size={17} />, tone: 'text-warning' },
               { label: 'Overdue Balance', value: formatNativeAmount(overdueBalance, currency, true), context: serverMetrics ? serverMetrics.overdueCount + ' critical invoices' : '—', icon: <AlertCircle size={17} />, tone: 'text-danger' },
