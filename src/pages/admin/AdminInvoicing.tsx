@@ -505,8 +505,7 @@ export const AdminInvoicing: React.FC = () => {
         .filter((invoice) => invoice.currency === currency)
         .map((invoice) => ({ ...invoice, items: Array.isArray(invoice.items) ? invoice.items.map((item) => ({ ...item })) : [] }));
       const demoExpenses = INITIAL_DEFAULT_EXPENSES
-        .filter((expense) => (expense.currency || 'IDR') === currency)
-        .map((expense) => ({ ...expense }));
+        .map((expense) => ({ ...expense, currency }));
 
       const shouldUseDemoInvoices = apiInvoices.length === 0;
       const shouldUseDemoExpenses = apiExpenses.length === 0;
@@ -1800,8 +1799,8 @@ export const AdminInvoicing: React.FC = () => {
                   <Download size={14} />
                   Export CSV
                 </button>
-                {canManageInvoices && (
-                  <button type="button" onClick={openCreateInvoice} disabled={!canCreateInvoice} className={primaryClass}>
+                {canCreateInvoice && (
+                  <button type="button" onClick={openCreateInvoice} disabled={!canManageInvoices} className={primaryClass}>
                     <Plus size={14} />
                     + New Invoice
                   </button>
