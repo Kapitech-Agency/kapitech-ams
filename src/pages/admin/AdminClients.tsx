@@ -24,7 +24,7 @@ import {
   Users,
   X
 } from 'lucide-react';
-import { AgencyClient, createClientSlug, normalizeAgencyClient } from '../../lib/clientStore';
+import { AgencyClient, getAgencyClientSlug, normalizeAgencyClient } from '../../lib/clientStore';
 import { formatAmount, getActiveCurrency, CURRENCY_EVENT, CurrencyCode } from '../../lib/currency';
 import { useLanguage } from '../../lib/LanguageContext';
 import { hasAdminPermission } from '../../lib/adminAuth';
@@ -565,7 +565,7 @@ export const AdminClients: React.FC = () => {
                 return (
                   <tr key={client.id} className="transition-colors hover:bg-bg/70">
                     <td className="px-4 py-3"><button type="button" onClick={() => setSelectedClient(client)} className="block max-w-[250px] text-left"><span className="block truncate font-medium text-fg">{client.company}</span><span className="mt-0.5 block truncate text-[11px] text-muted tabular-nums">ID: {client.id} • {client.location || '—'}</span></button></td>
-                    <td className="px-4 py-3"><span className="block max-w-[260px] truncate font-mono text-[11px] text-fg" title={client.slug?.trim() || createClientSlug(client.company, client.id)}>{client.slug?.trim() || createClientSlug(client.company, client.id)}</span></td>
+                    <td className="px-4 py-3"><span className="block max-w-[260px] truncate font-mono text-[11px] text-fg" title={getAgencyClientSlug(client as AgencyClient & Record<string, unknown>)}>{getAgencyClientSlug(client as AgencyClient & Record<string, unknown>)}</span></td>
                     <td className="px-4 py-3 text-muted">{client.industry || '—'}</td>
                     <td className="px-4 py-3"><span className={`inline-flex min-h-6 items-center rounded-badge border px-2 py-0.5 text-[11px] font-medium ${client.projectsCount >= 5 ? 'border-accent/30 bg-accent/10 text-accent-text' : client.status === 'lead' ? 'border-info/20 bg-info/10 text-info' : 'border-line bg-bg text-fg'}`}>{client.projectsCount >= 5 ? 'Tier 1 Strategic' : client.status === 'lead' ? 'Project-based' : 'Retainer Core'}</span></td>
                     <td className="px-4 py-3"><div className="font-medium text-fg">{client.name || '—'}</div><div className="mt-0.5 text-[11px] text-muted">{client.contactPersonRole || 'Primary contact'}</div></td>
@@ -595,7 +595,7 @@ export const AdminClients: React.FC = () => {
         onClose={() => setSelectedClient(null)}
         size="lg"
         title={selectedClient?.company || 'Client details'}
-        description={selectedClient ? `${selectedClient.name} · ${selectedClient.id} · ${selectedClient.slug?.trim() || createClientSlug(selectedClient.company, selectedClient.id)}` : undefined}
+        description={selectedClient ? `${selectedClient.name} · ${selectedClient.id} · ${getAgencyClientSlug(selectedClient as AgencyClient & Record<string, unknown>)}` : undefined}
         footer={<Button type="button" variant="secondary" onClick={() => setSelectedClient(null)}>Close</Button>}
       >
         {selectedClient && (
@@ -634,7 +634,7 @@ export const AdminClients: React.FC = () => {
               </div>
               <div className="sm:col-span-2">
                 <p className="text-xs text-muted">Slug</p>
-                <p className="mt-1 truncate font-mono text-xs text-fg">{selectedClient.slug?.trim() || createClientSlug(selectedClient.company, selectedClient.id)}</p>
+                <p className="mt-1 truncate font-mono text-xs text-fg">{getAgencyClientSlug(selectedClient as AgencyClient & Record<string, unknown>)}</p>
               </div>
               <div>
                 <p className="text-xs text-muted">Website</p>
