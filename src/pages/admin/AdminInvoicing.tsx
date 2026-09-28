@@ -417,10 +417,18 @@ const quotationStatusTone: Record<FinanceQuotationStatus, string> = {
 
 const QuotationStatusBadge = ({ status }: { status: FinanceQuotationStatus }) => {
   const icon = status === 'approved' ? <BadgeCheck size={12} /> : status === 'accepted' ? <CheckCircle2 size={12} /> : status === 'sent' ? <Send size={12} /> : status === 'review' ? <Clock3 size={12} /> : status === 'rejected' ? <AlertCircle size={12} /> : <FileText size={12} />;
+  const label: Record<FinanceQuotationStatus, string> = {
+    draft: 'Draft',
+    review: 'Internal Review',
+    approved: 'Approved',
+    sent: 'Sent',
+    accepted: 'Accepted',
+    rejected: 'Rejected'
+  };
   return (
     <span className={'inline-flex items-center gap-1.5 rounded-badge border px-2 py-1 text-[11px] font-semibold ' + quotationStatusTone[status]}>
       {icon}
-      {quotationStatusLabel(status)}
+      {label[status]}
     </span>
   );
 };
