@@ -426,9 +426,9 @@ export const AdminClients: React.FC = () => {
 
     const csv = rows
       .map((row) => row.map((value) => '"' + String(value ?? '').replace(/"/g, '""') + '"').join(','))
-      .join('\\n');
+      .join('\n');
 
-    const blob = new Blob(['\\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
     const href = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = href;
@@ -614,8 +614,45 @@ export const AdminClients: React.FC = () => {
             />
 
             <div className="flex items-center rounded-control border border-line bg-bg p-0.5">
-              {([
-                { id: 'active' as co      <section className="overflow-hidden rounded-card border border-line bg-panel" aria-label="Client directory">
+              {[
+                { id: 'active' as const, label: 'Active' },
+                { id: 'lead' as const, label: 'Leads' },
+                { id: 'at-risk' as const, label: 'At-risk' }
+              ].map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setStatusScope((current) => current === item.id ? 'all' : item.id)}
+                  className={
+                    'rounded-chip px-2.5 py-1 text-[11px] font-medium transition-colors ' +
+                    (statusScope === item.id ? 'bg-line text-fg' : 'text-muted hover:bg-panel hover:text-fg')
+                  }
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
+            {(searchQuery || statusFilter !== 'all' || industryFilter !== 'all' || slaFilter !== 'all' || statusScope !== 'all') && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setStatusFilter('all');
+                  setIndustryFilter('all');
+                  setSlaFilter('all');
+                  setStatusScope('all');
+                }}
+                className="rounded-control px-2.5 py-1.5 text-[11px] font-medium text-muted hover:bg-bg hover:text-fg"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="overflow-hidden rounded-card border border-line bg-panel" aria-label="Client directory">
         {errorMessage ? (
           <div className="flex min-h-56 flex-col items-center justify-center gap-3 px-4 py-10 text-center">
             <ShieldAlert size={20} className="text-danger" aria-hidden="true" />
