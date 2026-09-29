@@ -2593,8 +2593,8 @@ export const AdminInvoicing: React.FC = () => {
             value={statusFilter}
             onChange={setStatusFilter}
             options={statusOptions}
-            className="min-w-0"
-            triggerClassName="h-10 min-h-10 w-full whitespace-nowrap"
+            className="min-w-0 xl:shrink-0"
+            triggerClassName="h-10 min-h-10 w-full whitespace-nowrap xl:w-[150px]"
           />
           <CustomSelect
             value={paymentFilter}
@@ -2605,8 +2605,8 @@ export const AdminInvoicing: React.FC = () => {
               {value:'partial',label:'Partially paid'},
               {value:'paid',label:'Paid'}
             ]}
-            className="min-w-0"
-            triggerClassName="h-10 min-h-10 w-full whitespace-nowrap"
+            className="min-w-0 xl:shrink-0"
+            triggerClassName="h-10 min-h-10 w-full whitespace-nowrap xl:w-[176px]"
           />
           <CustomSelect
             value={dueFilter}
@@ -2617,15 +2617,15 @@ export const AdminInvoicing: React.FC = () => {
               {value:'overdue',label:'Overdue'},
               {value:'later',label:'Due later'}
             ]}
-            className="min-w-0"
-            triggerClassName="h-10 min-h-10 w-full whitespace-nowrap"
+            className="min-w-0 xl:shrink-0"
+            triggerClassName="h-10 min-h-10 w-full whitespace-nowrap xl:w-[150px]"
           />
           <CustomSelect
             value={sort}
             onChange={(value) => setSort(value as SortKey)}
             options={sortOptions}
-            className="min-w-0"
-            triggerClassName="h-10 min-h-10 w-full whitespace-nowrap"
+            className="min-w-0 xl:shrink-0"
+            triggerClassName="h-10 min-h-10 w-full whitespace-nowrap xl:w-[176px]"
           />
         </div>
       </div>
