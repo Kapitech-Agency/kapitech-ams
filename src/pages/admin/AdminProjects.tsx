@@ -1,27 +1,21 @@
 import React, { useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import {
   ArrowDownToLine,
   ArrowUpRight,
   BarChart3,
-  Calendar,
   CheckCircle2,
-  ChevronRight,
   CircleDollarSign,
-  Clock3,
   Code2,
   ExternalLink,
-  FolderKanban,
   GripVertical,
   List,
-  ListTodo,
   MoreHorizontal,
   Plus,
   Search,
   ShieldAlert,
   Table2,
   Trash2,
-  User,
   Users,
 } from 'lucide-react';
 import {
@@ -40,6 +34,7 @@ import Button from '../../components/ui/Button';
 import { AdminMetricStrip, AdminModuleHeader, AdminPanel } from '../../components/admin/AdminModulePrimitives';
 import { api } from '../../lib/apiClient';
 import { formatAmount, getActiveCurrency, CURRENCY_EVENT, CurrencyCode } from '../../lib/currency';
+import { hasAdminPermission } from '../../lib/adminAuth';
 
 type ProjectHealth = 'Good' | 'At Risk' | 'Delayed' | 'Blocked';
 type ProjectRecord = AgencyProject & {
@@ -218,6 +213,8 @@ const fieldClass =
 
 export const AdminProjects: React.FC = () => {
   const { language } = useLanguage();
+  const canManageProjects = hasAdminPermission('canManageProjects');
+  const canManageTasks = hasAdminPermission('canManageKanbanTasks');
   const [searchParams, setSearchParams] = useSearchParams();
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
   const [projects, setProjects] = useState<ProjectRecord[]>(demoProjects);
@@ -953,12 +950,16 @@ export const AdminProjects: React.FC = () => {
                   <ExternalLink size={13} /> Staging
                 </a>
               )}
-              <Button variant="secondary" onClick={() => { clearProjectSelection(); openEditProject(selectedProjectDetail); }}>
-                Edit project
-              </Button>
-              <Button variant="destructive" icon={<Trash2 size={13} />} onClick={() => { clearProjectSelection(); setDeleteProject(selectedProjectDetail); }}>
-                Delete
-              </Button>
+              {canManageProjects && (
+                <Button variant="secondary" onClick={() => { clearProjectSelection(); openEditProject(selectedProjectDetail); }}>
+                  Edit project
+                </Button>
+              )}
+              {canManageProjects && (
+                <Button variant="destructive" icon={<Trash2 size={13} />} onClick={() => { clearProjectSelection(); setDeleteProject(selectedProjectDetail); }}>
+                  Delete
+                </Button>
+              )}
             </div>
           </div>
         )}
@@ -973,7 +974,7 @@ export const AdminProjects: React.FC = () => {
         footer={(
           <>
             <Button variant="secondary" onClick={() => setSelectedTask(null)}>Close</Button>
-            {selectedTask && <Button onClick={() => { setSelectedTask(null); openEditTask(selectedTask); }}>Edit task</Button>}
+            {selectedTask && canManageTasks && <Button onClick={() => { setSelectedTask(null); openEditTask(selectedTask); }}>Edit task</Button>}
           </>
         )}
       >
@@ -1036,7 +1037,7 @@ export const AdminProjects: React.FC = () => {
                 )}
               </div>
             </div>
-            <Button variant="destructive" icon={<Trash2 size={13} />} onClick={() => { setDeleteTask(selectedTask); setSelectedTask(null); }}>Delete task</Button>
+            {canManageTasks && <Button variant="destructive" icon={<Trash2 size={13} />} onClick={() => { setDeleteTask(selectedTask); setSelectedTask(null); }}>Delete task</Button>}
           </div>
         )}
       </Modal>
@@ -1073,7 +1074,7 @@ export const AdminProjects: React.FC = () => {
               </div>
             )}
             <Button variant="secondary" icon={<ArrowDownToLine size={14} />} onClick={exportProjects}>Export</Button>
-            <Button icon={<Plus size={14} />} onClick={openNewProject}>New Project</Button>
+            {canManageProjects && <Button icon={<Plus size={14} />} onClick={openNewProject}>New Project</Button>}
           </>
         )}
       />
@@ -1296,7 +1297,7 @@ export const AdminProjects: React.FC = () => {
                           <td>
                             <div className="ams-table-actions">
                               <button type="button" className="ams-table-action" onClick={() => openProjectDetail(project)}>View</button>
-                              <button type="button" className="ams-table-action" data-primary="true" onClick={() => openEditProject(project)}>Edit</button>
+                              {canManageProjects && <button type="button" className="ams-table-action" data-primary="true" onClick={() => openEditProject(project)}>Edit</button>}
                             </div>
                           </td>
                         </tr>
@@ -1328,7 +1329,7 @@ export const AdminProjects: React.FC = () => {
                   options={activeProjects.map(project => ({ value: project.id, label: project.name }))}
                   className="w-full sm:w-56"
                 />
-                <Button icon={<Plus size={14} />} onClick={openNewTask}>New Task</Button>
+                {canManageTasks && <Button icon={<Plus size={14} />} onClick={openNewTask}>New Task</Button>}
               </div>
             )}
           >
