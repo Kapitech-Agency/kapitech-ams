@@ -1524,7 +1524,7 @@ export const AdminProjects: React.FC = () => {
                 {projectLayout === 'board' && (
                   <span className="inline-flex items-center gap-1.5 text-[10px] text-muted">
                     <GripVertical size={12} />
-                    Drag cards between stages. Use project detail to move with keyboard or touch.
+                    Drag the handle on a card to move it between stages.
                   </span>
                 )}
               </div>
@@ -1534,8 +1534,8 @@ export const AdminProjects: React.FC = () => {
                 {[1, 2, 3, 4].map(item => <div key={item} className="h-40 animate-pulse rounded-card bg-bg" />)}
               </div>
             ) : projectLayout === 'board' ? (
-              <div className="overflow-x-auto overflow-y-hidden bg-bg/45 custom-scrollbar">
-                <div className="flex min-w-max items-start gap-4 px-4 pb-28 pt-4 sm:px-5 sm:pb-32 sm:pt-5">
+              <div className="overflow-x-auto overflow-y-hidden bg-bg custom-scrollbar">
+                <div className="flex min-w-max items-start gap-4 px-5 pb-44 pt-5 sm:px-6 sm:pb-52 sm:pt-6">
                   {PROJECT_KANBAN_COLUMNS.map(column => {
                     const items = filteredProjects.filter(project => project.status === column.id);
                     const isDropTarget = dragOverProjectStatus === column.id;
@@ -1545,13 +1545,13 @@ export const AdminProjects: React.FC = () => {
                         key={column.id}
                         aria-label={column.label + ' project column'}
                         className={[
-                          'flex w-[330px] shrink-0 self-start flex-col rounded-card border bg-bg/70 transition-[border-color,background-color,box-shadow] duration-200 sm:w-[360px]',
+                          'flex w-[340px] shrink-0 self-start flex-col rounded-[14px] border bg-panel/35 transition-[border-color,background-color,box-shadow] duration-200 sm:w-[370px]',
                           isDropTarget
                             ? 'border-accent/50 bg-accent/5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--accent)_18%,transparent)]'
                             : 'border-line/80',
                         ].join(' ')}
                       >
-                        <div className="shrink-0 border-b border-line bg-bg/90 px-3.5 py-3.5">
+                        <div className="shrink-0 border-b border-line/80 bg-panel/80 px-4 py-4 backdrop-blur-sm">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
@@ -1602,7 +1602,8 @@ export const AdminProjects: React.FC = () => {
                             if (!canManageProjects) return;
                             const projectId =
                               event.dataTransfer.getData('text/project-id') ||
-                              event.dataTransfer.getData('text/plain');
+                              event.dataTransfer.getData('text/plain') ||
+                              draggingProjectId;
                             const project = projects.find(item => item.id === projectId);
                             if (project && project.status !== column.id) {
                               void updateProjectStatus(project, column.id);
@@ -1611,7 +1612,7 @@ export const AdminProjects: React.FC = () => {
                               setDragOverProjectStatus(null);
                             }
                           }}
-                          className={'min-h-[680px] flex flex-col gap-3.5 bg-bg/45 p-3 pb-28 transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
+                          className={'min-h-[760px] flex flex-col gap-3.5 bg-bg/20 p-3 pb-4 transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
                           {draggingProjectId && canManageProjects && (
                             <div className={'rounded-control border px-2.5 py-2 text-[9px] font-medium transition-colors ' + (isDropTarget ? 'border-accent/35 bg-accent/10 text-accent-text' : 'border-dashed border-line bg-bg/50 text-muted')}>
                               {isDropTarget ? 'Release to move project into ' + column.label : 'Drop here to move project into ' + column.label}
@@ -1668,8 +1669,13 @@ export const AdminProjects: React.FC = () => {
                                 >
                                   <div className="flex items-start justify-between gap-2">
                                     <div className="flex min-w-0 items-start gap-2">
-                                      <span data-drag-handle="true" className="mt-0.5 flex h-8 w-8 shrink-0 cursor-grab items-center justify-center rounded-control border border-line bg-bg/70 text-muted transition-colors group-hover:border-accent/25 group-hover:bg-bg group-hover:text-fg" title={canManageProjects ? 'Grab to move this project' : 'Project status'}>
-                                        <GripVertical size={14} />
+                                      <span
+                                        data-drag-handle="true"
+                                        aria-hidden="true"
+                                        className="mt-0.5 flex h-9 w-9 shrink-0 cursor-grab touch-none items-center justify-center rounded-control border border-line bg-bg text-muted shadow-sm transition-[background-color,border-color,color,transform] group-hover:border-accent/30 group-hover:bg-panel group-hover:text-fg group-active:scale-95"
+                                        title={canManageProjects ? 'Drag to move this project' : 'Project status'}
+                                      >
+                                        <GripVertical size={16} strokeWidth={2} />
                                       </span>
                                       <button type="button" onClick={() => openProjectDetail(project)} className="min-w-0 text-left">
                                         <div className="break-words whitespace-normal text-[10px] font-medium uppercase leading-4 tracking-[0.08em] text-muted">{project.clientCompany}</div>
@@ -1762,13 +1768,22 @@ export const AdminProjects: React.FC = () => {
                           <div
                             aria-hidden="true"
                             className={[
-                              'mt-auto min-h-24 rounded-card border border-dashed px-3 py-4 transition-colors',
+                              'mt-auto min-h-[180px] rounded-card border border-dashed px-3 py-5 transition-colors',
                               isDropTarget ? 'border-accent/35 bg-accent/5' : 'border-line/45 bg-bg/20'
                             ].join(' ')}
                           >
-                            {draggingProjectId && canManageProjects && (
-                              <div className="flex min-h-14 items-center justify-center text-center text-[10px] text-muted">
-                                {isDropTarget ? 'Release to place the project here' : 'Drop zone'}
+                            {draggingProjectId && canManageProjects ? (
+                              <div className="flex min-h-20 flex-col items-center justify-center gap-2 text-center text-[10px] text-muted">
+                                <span className="flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted">
+                                  <GripVertical size={14} />
+                                </span>
+                                <span className={isDropTarget ? 'font-semibold text-accent-text' : 'text-muted'}>
+                                  {isDropTarget ? 'Release to place the project here' : 'Drop project here'}
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="flex min-h-20 items-center justify-center text-center text-[10px] text-muted/55">
+                                Drop space
                               </div>
                             )}
                           </div>
