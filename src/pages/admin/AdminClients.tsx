@@ -32,6 +32,7 @@ import { api } from '../../lib/apiClient';
 import { Button } from '../../components/ui/Button';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
+import { Modal } from '../../components/ui/Modal';
 import { AdminMetricStrip } from '../../components/admin/AdminModulePrimitives';
 
 
