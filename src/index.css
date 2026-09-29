@@ -192,38 +192,44 @@
 .ams-shell .ams-leads-page,.ams-shell .ams-inbox-page{min-width:0;width:100%;color:var(--text)}.ams-shell .ams-leads-page>*,.ams-shell .ams-inbox-page>*{min-width:0}
 .ams-shell .ams-leads-page .ams-table-scroll,.ams-shell .ams-inbox-page .ams-table-scroll{max-width:100%;overflow-x:auto}.ams-shell .ams-table-scroll table{min-width:max-content}
 .ams-shell .ams-project-kanban-board{
-  background:color-mix(in srgb,var(--bg) 82%,var(--panel) 18%);
+  background:var(--bg);
   border:1px solid var(--line);
   border-radius:16px;
   box-shadow:inset 0 1px 0 color-mix(in srgb,var(--text) 3%,transparent);
+  min-height:0;
 }
 .ams-shell .ams-project-kanban-lane{
-  background:color-mix(in srgb,var(--panel) 94%,var(--bg) 6%);
-  box-shadow:0 1px 0 color-mix(in srgb,var(--text) 3%,transparent),0 12px 30px color-mix(in srgb,var(--bg) 45%,transparent);
+  background:color-mix(in srgb,var(--panel) 88%,var(--bg) 12%);
+  box-shadow:0 1px 0 color-mix(in srgb,var(--text) 3%,transparent),0 14px 34px color-mix(in srgb,var(--bg) 48%,transparent);
 }
 .ams-shell .ams-project-kanban-lane[data-drop-target="true"]{
-  background:color-mix(in srgb,var(--panel) 88%,var(--accent) 12%);
+  background:color-mix(in srgb,var(--panel) 82%,var(--accent) 18%);
 }
 .ams-shell .ams-project-kanban-stack{
-  background:transparent;
+  background:color-mix(in srgb,var(--bg) 94%,var(--panel) 6%);
+  min-height:0;
 }
 .ams-shell .ams-project-kanban-card{
-  background:color-mix(in srgb,var(--panel) 96%,var(--bg) 4%);
-  cursor:grab;
+  background:var(--panel);
   user-select:none;
-  -webkit-user-drag:element;
-  box-shadow:0 1px 0 color-mix(in srgb,var(--text) 4%,transparent);
+  box-shadow:0 1px 0 color-mix(in srgb,var(--text) 5%,transparent),0 8px 22px color-mix(in srgb,var(--bg) 32%,transparent);
 }
 .ams-shell .ams-project-kanban-card:hover{
-  background:color-mix(in srgb,var(--panel) 91%,var(--text) 9%);
+  background:color-mix(in srgb,var(--panel) 93%,var(--text) 7%);
+  box-shadow:0 10px 26px color-mix(in srgb,var(--bg) 36%,transparent);
 }
 .ams-shell .ams-project-kanban-card[aria-grabbed="true"]{
-  cursor:grabbing;
+  box-shadow:0 14px 34px color-mix(in srgb,var(--bg) 42%,transparent);
 }
 .ams-shell .ams-project-kanban-card [data-drag-handle="true"]{
   cursor:grab;
+  -webkit-user-drag:element;
 }
-.ams-shell .ams-project-kanban-card [data-drag-handle="true"]:active{
+.ams-shell .ams-project-kanban-card [data-drag-handle="true"]:hover{
+  background:var(--panel-hover);
+}
+.ams-shell .ams-project-kanban-card [data-drag-handle="true"]:active,
+.ams-shell .ams-project-kanban-card [data-drag-handle="true"][draggable="true"]:active{
   cursor:grabbing;
 }
 .ams-shell .ams-leads-page .ams-kanban-scroll> *{flex:0 0 300px;min-width:280px;max-width:340px}
