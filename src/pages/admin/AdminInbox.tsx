@@ -58,6 +58,7 @@ import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
 
 import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 export const AdminInbox: React.FC = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
@@ -987,9 +988,7 @@ export const AdminInbox: React.FC = () => {
                 <div className="flex items-start justify-between gap-4 pb-5 border-b border-line mb-5">
                   <div className="flex items-start gap-3">
                     {/* Client Avatar Initials */}
-                    <div className="w-12 h-12 rounded-card bg-panel border border-line flex items-center justify-center text-fg font-sans font-semibold text-lg shrink-0">
-                      {selectedSubmission.fullName.charAt(0).toUpperCase()}
-                    </div>
+                    <ProfileIdentity profile={{ name: selectedSubmission.fullName, role: selectedSubmission.positionTitle || (selectedSubmission.type === 'career' ? 'Candidate' : 'Contact'), companyEmail: selectedSubmission.email, phone: selectedSubmission.phone, division: selectedSubmission.company }} />
 
                     <div>
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
