@@ -232,7 +232,7 @@ const TasksView: React.FC = () => {
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <div className="rounded-control border border-line bg-bg p-2.5">
                   <div className="text-[10px] text-muted">Assignee</div>
-                  <div className="mt-1"><ProfileIdentity profile={{ name: item.assignee, role: item.assignee === 'Fikri' ? 'CEO' : item.assignee === 'Reynaldo' ? 'Project Manager' : item.assignee === 'Akell' ? 'HR Manager' : 'Project contributor', division: 'Delivery' }} compact size="sm" /></div>
+                  <div className="mt-1"><ProfileIdentity profile={{ name: item.assignee, contextLabel: 'Task assignee' }} compact size="sm" /></div>
                 </div>
                 <div className="rounded-control border border-line bg-bg p-2.5">
                   <div className="text-[10px] text-muted">Due</div>
@@ -281,7 +281,7 @@ const TasksView: React.FC = () => {
                     {item.status === 'Blocked' && <span className="mt-1 inline-flex rounded-badge border border-danger/25 bg-danger/10 px-1.5 py-0.5 text-[10px] font-medium text-danger">Blocked</span>}
                   </td>
                   <td className="px-3 py-3 text-xs text-muted">{item.project}</td>
-                  <td className="px-3 py-3"><ProfileIdentity profile={{ name: item.assignee, role: item.assignee === 'Fikri' ? 'CEO' : item.assignee === 'Reynaldo' ? 'Project Manager' : item.assignee === 'Akell' ? 'HR Manager' : 'Project contributor', division: 'Delivery' }} showRole={false} /></td>
+                  <td className="px-3 py-3"><ProfileIdentity profile={{ name: item.assignee, contextLabel: 'Task assignee' }} showRole={false} /></td>
                   <td className="px-3 py-3 text-xs text-muted">{item.due}</td>
                   <td className="px-3 py-3 text-right">
                     <span className={`inline-flex rounded-badge border px-2 py-1 text-[11px] font-medium ${
@@ -334,7 +334,7 @@ const TasksView: React.FC = () => {
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-control border border-line bg-bg p-3">
               <div className="text-[10px] uppercase tracking-[0.08em] text-muted">Assignee</div>
-              <div className="mt-1"><ProfileIdentity profile={{ name: selectedTask.assignee, role: selectedTask.assignee === 'Fikri' ? 'CEO' : selectedTask.assignee === 'Reynaldo' ? 'Project Manager' : selectedTask.assignee === 'Akell' ? 'HR Manager' : 'Project contributor', division: 'Delivery' }} showRole={false} /></div>
+              <div className="mt-1"><ProfileIdentity profile={{ name: selectedTask.assignee, contextLabel: 'Task assignee' }} showRole={false} /></div>
             </div>
             <div className="rounded-control border border-line bg-bg p-3">
               <div className="text-[10px] uppercase tracking-[0.08em] text-muted">Due</div>
