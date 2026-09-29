@@ -1985,8 +1985,8 @@ export const AdminProjects: React.FC = () => {
                                             profile={{
                                               id: taskAssignees.find(assignee => assignee.name === task.assignedTo)?.id,
                                               name: task.assignedTo,
-                                              role: taskAssignees.find(assignee => assignee.name === task.assignedTo)?.role || 'Project contributor',
-                                              division: taskAssignees.find(assignee => assignee.name === task.assignedTo)?.division || 'Delivery',
+                                              role: taskAssignees.find(assignee => assignee.name === task.assignedTo)?.role,
+                                              division: taskAssignees.find(assignee => assignee.name === task.assignedTo)?.division,
                                               username: taskAssignees.find(assignee => assignee.name === task.assignedTo)?.username
                                             }}
                                             size="sm"
