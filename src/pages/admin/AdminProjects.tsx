@@ -1,42 +1,54 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
-  AlertCircle,
-  Briefcase,
+  ArrowDownToLine,
+  ArrowUpRight,
+  BarChart3,
   Calendar,
-  Check,
   CheckCircle2,
   ChevronRight,
-  Clock,
+  CircleDollarSign,
+  Clock3,
   Code2,
-  Edit3,
   ExternalLink,
   FolderKanban,
   GripVertical,
+  List,
   ListTodo,
+  MoreHorizontal,
   Plus,
   Search,
   ShieldAlert,
-  Tag,
+  Table2,
   Trash2,
   User,
   Users,
-  X,
 } from 'lucide-react';
-import { AgencyProject, ProjectTask, ProjectStatus, TaskPriority, TaskStatus, TaskSubtask } from '../../lib/projectStore';
+import {
+  INITIAL_DEFAULT_PROJECTS,
+  AgencyProject,
+  ProjectTask,
+  ProjectStatus,
+  TaskPriority,
+  TaskStatus,
+} from '../../lib/projectStore';
 import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
+import { AdminMetricStrip, AdminModuleHeader, AdminPanel } from '../../components/admin/AdminModulePrimitives';
 import { api } from '../../lib/apiClient';
-import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
 import { formatAmount, getActiveCurrency, CURRENCY_EVENT, CurrencyCode } from '../../lib/currency';
 
-import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 type ProjectHealth = 'Good' | 'At Risk' | 'Delayed' | 'Blocked';
-type ProjectRecord = AgencyProject & { health?: ProjectHealth; title?: string; client?: string };
-type SortKey = 'name' | 'deadline' | 'progress' | 'updated';
-type TaskSortKey = 'dueDate' | 'priority' | 'updated' | 'title';
+type ProjectRecord = AgencyProject & {
+  health?: ProjectHealth;
+  slug: string;
+};
+
+type ProjectsView = 'all' | 'sprint' | 'budget' | 'archived';
+type ProjectLayout = 'board' | 'table';
 
 const PROJECT_STATUSES: Array<{ value: ProjectStatus; label: string }> = [
   { value: 'planning', label: 'Planning' },
@@ -46,11 +58,11 @@ const PROJECT_STATUSES: Array<{ value: ProjectStatus; label: string }> = [
   { value: 'on_hold', label: 'On Hold' },
 ];
 
-const TASK_COLUMNS: Array<{ id: TaskStatus; label: string }> = [
-  { id: 'todo', label: 'To Do' },
-  { id: 'in_progress', label: 'In Progress' },
-  { id: 'review', label: 'Review' },
-  { id: 'done', label: 'Done' },
+const TASK_COLUMNS: Array<{ id: TaskStatus; label: string; tone: string }> = [
+  { id: 'todo', label: 'To Do', tone: 'bg-info' },
+  { id: 'in_progress', label: 'In Progress', tone: 'bg-accent' },
+  { id: 'review', label: 'Review', tone: 'bg-warning' },
+  { id: 'done', label: 'Done', tone: 'bg-success' },
 ];
 
 const TASK_PRIORITIES: Array<{ value: TaskPriority; label: string }> = [
@@ -60,57 +72,21 @@ const TASK_PRIORITIES: Array<{ value: TaskPriority; label: string }> = [
   { value: 'urgent', label: 'Urgent' },
 ];
 
-const PRIORITY_ORDER: Record<TaskPriority, number> = { urgent: 4, high: 3, medium: 2, low: 1 };
+const PRIORITY_ORDER: Record<TaskPriority, number> = {
+  urgent: 4,
+  high: 3,
+  medium: 2,
+  low: 1,
+};
 
-const normalizeTask = (task: any): ProjectTask => ({
-  id: String(task?.id || ''),
-  title: String(task?.title || ''),
-  description: task?.description ? String(task.description) : undefined,
-  status: (['todo', 'in_progress', 'review', 'done'].includes(String(task?.status)) ? task.status : 'todo') as TaskStatus,
-  priority: (['low', 'medium', 'high', 'urgent'].includes(String(task?.priority)) ? task.priority : 'medium') as TaskPriority,
-  assignedTo: String(task?.assignedTo ?? task?.assignee ?? ''),
-  dueDate: String(task?.dueDate || ''),
-  createdAt: String(task?.createdAt || new Date().toISOString()),
-  subtasks: Array.isArray(task?.subtasks) ? task.subtasks : undefined,
-  tags: Array.isArray(task?.tags) ? task.tags : undefined,
-});
-
-const normalizeProject = (project: any): ProjectRecord => ({
-  ...project,
-  id: String(project?.id || ''),
-  name: String(project?.name || project?.title || 'Untitled project'),
-  clientName: String(project?.clientName || ''),
-  clientCompany: String(project?.clientCompany || project?.client || ''),
-  clientEmail: String(project?.clientEmail || ''),
-  serviceCategory: String(project?.serviceCategory || ''),
-  status: (PROJECT_STATUSES.some(item => item.value === project?.status) ? project.status : 'planning') as ProjectStatus,
-  budget: Number(project?.budget || 0),
-  progressPercent: Math.min(100, Math.max(0, Number(project?.progressPercent || 0))),
-  startDate: String(project?.startDate || ''),
-  targetEndDate: String(project?.targetEndDate || ''),
-  teamLead: String(project?.teamLead || ''),
-  teamMembers: Array.isArray(project?.teamMembers) ? project.teamMembers.map(String) : [],
-  techStack: Array.isArray(project?.techStack) ? project.techStack.map(String) : [],
-  milestones: Array.isArray(project?.milestones) ? project.milestones : [],
-  tasks: Array.isArray(project?.tasks) ? project.tasks.map(normalizeTask) : [],
-  createdAt: String(project?.createdAt || ''),
-  updatedAt: String(project?.updatedAt || ''),
-  health: ['Good', 'At Risk', 'Delayed', 'Blocked'].includes(String(project?.health)) ? project.health : undefined,
-});
+const slugify = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'project';
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
-
-const daysUntil = (date: string) => {
-  if (!date) return null;
-  const due = new Date(date + 'T23:59:59');
-  const now = new Date();
-  return Math.ceil((due.getTime() - now.getTime()) / 86400000);
-};
-
-const isOverdue = (date: string) => {
-  const days = daysUntil(date);
-  return days !== null && days < 0;
-};
 
 const formatDate = (value: string) => {
   if (!value) return 'Not set';
@@ -119,66 +95,156 @@ const formatDate = (value: string) => {
   return parsed.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
-const statusLabel = (status: ProjectStatus) => PROJECT_STATUSES.find(item => item.value === status)?.label || status;
-
-const taskStatusLabel = (status: TaskStatus) => TASK_COLUMNS.find(item => item.id === status)?.label || status;
-
-const priorityLabel = (priority: TaskPriority) => TASK_PRIORITIES.find(item => item.value === priority)?.label || priority;
-
-const fieldClass = 'mt-1 h-9 min-h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none transition-colors placeholder:text-muted focus:border-accent';
-// Shared module chrome renders the canonical ams-dashboard-header primitive.
-
-const projectHealthClass = (health?: ProjectHealth) => {
-  if (health === 'Good') return 'text-success border-success/30 bg-success/10';
-  if (health === 'At Risk') return 'text-warning border-warning/30 bg-warning/10';
-  if (health === 'Delayed' || health === 'Blocked') return 'text-danger border-danger/30 bg-danger/10';
-  return 'text-muted border-line bg-bg';
+const daysUntil = (value: string) => {
+  if (!value) return null;
+  const due = new Date(value + 'T23:59:59');
+  return Math.ceil((due.getTime() - Date.now()) / 86400000);
 };
+
+const isOverdue = (value: string) => {
+  const days = daysUntil(value);
+  return days !== null && days < 0;
+};
+
+const inferHealth = (project: Partial<AgencyProject>): ProjectHealth => {
+  if (project.status === 'completed') return 'Good';
+  if (project.status === 'on_hold') return 'Blocked';
+  if (isOverdue(project.targetEndDate || '') && Number(project.progressPercent || 0) < 90) return 'Delayed';
+  if (Number(project.progressPercent || 0) < 35) return 'At Risk';
+  return 'Good';
+};
+
+const normalizeTask = (task: any): ProjectTask => ({
+  id: String(task?.id || ''),
+  title: String(task?.title || 'Untitled task'),
+  description: task?.description ? String(task.description) : undefined,
+  status: (['todo', 'in_progress', 'review', 'done'].includes(String(task?.status)) ? task.status : 'todo') as TaskStatus,
+  priority: (['low', 'medium', 'high', 'urgent'].includes(String(task?.priority)) ? task.priority : 'medium') as TaskPriority,
+  assignedTo: String(task?.assignedTo ?? task?.assignee ?? ''),
+  dueDate: String(task?.dueDate || ''),
+  createdAt: String(task?.createdAt || new Date().toISOString()),
+  subtasks: Array.isArray(task?.subtasks) ? task.subtasks : undefined,
+  tags: Array.isArray(task?.tags) ? task.tags.map(String) : undefined,
+});
+
+const normalizeProject = (project: any): ProjectRecord => {
+  const name = String(project?.name || project?.title || 'Untitled project');
+  const status = (PROJECT_STATUSES.some(item => item.value === project?.status) ? project.status : 'planning') as ProjectStatus;
+  const normalized: ProjectRecord = {
+    ...project,
+    id: String(project?.id || ''),
+    name,
+    clientName: String(project?.clientName || ''),
+    clientCompany: String(project?.clientCompany || project?.client || ''),
+    clientEmail: String(project?.clientEmail || ''),
+    serviceCategory: String(project?.serviceCategory || ''),
+    status,
+    budget: Number(project?.budget || 0),
+    progressPercent: Math.min(100, Math.max(0, Number(project?.progressPercent || 0))),
+    startDate: String(project?.startDate || ''),
+    targetEndDate: String(project?.targetEndDate || ''),
+    teamLead: String(project?.teamLead || ''),
+    teamMembers: Array.isArray(project?.teamMembers) ? project.teamMembers.map(String) : [],
+    techStack: Array.isArray(project?.techStack) ? project.techStack.map(String) : [],
+    milestones: Array.isArray(project?.milestones) ? project.milestones : [],
+    tasks: Array.isArray(project?.tasks) ? project.tasks.map(normalizeTask) : [],
+    createdAt: String(project?.createdAt || ''),
+    updatedAt: String(project?.updatedAt || ''),
+    health: (['Good', 'At Risk', 'Delayed', 'Blocked'].includes(String(project?.health))
+      ? project.health
+      : inferHealth({ ...project, status })) as ProjectHealth,
+    slug: String(project?.slug || slugify(name)),
+  };
+  return normalized;
+};
+
+const demoProjects: ProjectRecord[] = INITIAL_DEFAULT_PROJECTS.map(item =>
+  normalizeProject({
+    ...item,
+    slug: slugify(item.name),
+    health: inferHealth(item),
+  })
+);
 
 const projectStatusClass = (status: ProjectStatus) => {
-  if (status === 'completed') return 'text-success border-success/30 bg-success/10';
-  if (status === 'on_hold') return 'text-warning border-warning/30 bg-warning/10';
-  if (status === 'review') return 'text-info border-info/30 bg-info/10';
-  if (status === 'in_progress') return 'text-accent-text border-accent/30 bg-accent/10';
-  return 'text-muted border-line bg-bg';
+  if (status === 'completed') return 'border-success/30 bg-success/10 text-success';
+  if (status === 'on_hold') return 'border-warning/30 bg-warning/10 text-warning';
+  if (status === 'review') return 'border-warning/30 bg-warning/10 text-warning';
+  if (status === 'in_progress') return 'border-accent/30 bg-accent/10 text-accent';
+  return 'border-info/30 bg-info/10 text-info';
 };
 
-const taskPriorityClass = (priority: TaskPriority) => {
-  if (priority === 'urgent') return 'text-danger border-danger/30 bg-danger/10';
-  if (priority === 'high') return 'text-warning border-warning/30 bg-warning/10';
-  if (priority === 'medium') return 'text-info border-info/30 bg-info/10';
-  return 'text-muted border-line bg-bg';
+const healthClass = (health?: ProjectHealth) => {
+  if (health === 'Good') return 'border-success/30 bg-success/10 text-success';
+  if (health === 'At Risk') return 'border-warning/30 bg-warning/10 text-warning';
+  if (health === 'Delayed' || health === 'Blocked') return 'border-danger/30 bg-danger/10 text-danger';
+  return 'border-line bg-bg text-muted';
 };
+
+const priorityClass = (priority: TaskPriority) => {
+  if (priority === 'urgent') return 'border-danger/30 bg-danger/10 text-danger';
+  if (priority === 'high') return 'border-warning/30 bg-warning/10 text-warning';
+  if (priority === 'medium') return 'border-info/30 bg-info/10 text-info';
+  return 'border-line bg-bg text-muted';
+};
+
+const statusLabel = (status: ProjectStatus) =>
+  PROJECT_STATUSES.find(item => item.value === status)?.label || status;
+
+const priorityLabel = (priority: TaskPriority) =>
+  TASK_PRIORITIES.find(item => item.value === priority)?.label || priority;
+
+const taskStatusLabel = (status: TaskStatus) =>
+  TASK_COLUMNS.find(item => item.id === status)?.label || status;
+
+const initials = (value: string) =>
+  value
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(part => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase() || '—';
+
+const laneForProject = (project: ProjectRecord) => {
+  if (project.status === 'planning') return 'discovery';
+  if (project.status === 'in_progress') return 'development';
+  if (project.status === 'review') return 'qa';
+  return 'deployed';
+};
+
+const fieldClass =
+  'mt-1 h-9 min-h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none transition-colors placeholder:text-muted focus:border-accent';
 
 export const AdminProjects: React.FC = () => {
   const { language } = useLanguage();
-  const session = getAdminSession();
-  const canManageProjects = hasAdminPermission('canManageProjects');
-  const canManageKanbanTasks = hasAdminPermission('canManageKanbanTasks');
-  const canDeleteProjects = session?.user?.role?.startsWith('Tier 1') || session?.user?.stakeholderType === 'Master';
-
-  const [projects, setProjects] = useState<ProjectRecord[]>([]);
-  const [selectedProjectId, setSelectedProjectId] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
+  const [projects, setProjects] = useState<ProjectRecord[]>(demoProjects);
+  const [loading, setLoading] = useState(false);
+  const [serverMode, setServerMode] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [projectSearch, setProjectSearch] = useState('');
   const [projectStatusFilter, setProjectStatusFilter] = useState('');
-  const [projectSort, setProjectSort] = useState<SortKey>('updated');
+  const [projectLayout, setProjectLayout] = useState<ProjectLayout>(
+    searchParams.get('layout') === 'table' ? 'table' : 'board'
+  );
   const [taskSearch, setTaskSearch] = useState('');
-  const [taskStatusFilter, setTaskStatusFilter] = useState('');
   const [taskPriorityFilter, setTaskPriorityFilter] = useState('');
-  const [taskAssigneeFilter, setTaskAssigneeFilter] = useState('');
-  const [taskSort, setTaskSort] = useState<TaskSortKey>('dueDate');
-  const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
-  const [deleteProject, setDeleteProject] = useState<ProjectRecord | null>(null);
-  const [deleteTaskTarget, setDeleteTaskTarget] = useState<ProjectTask | null>(null);
-  const [taskDrawer, setTaskDrawer] = useState<ProjectTask | null>(null);
-  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
-
-  const [projectModalOpen, setProjectModalOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<ProjectRecord | null>(null);
+  const [selectedTask, setSelectedTask] = useState<ProjectTask | null>(null);
+  const [projectDrawerOpen, setProjectDrawerOpen] = useState(false);
+  const [taskDrawerOpen, setTaskDrawerOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<ProjectRecord | null>(null);
+  const [editingTask, setEditingTask] = useState<ProjectTask | null>(null);
+  const [deleteProject, setDeleteProject] = useState<ProjectRecord | null>(null);
+  const [deleteTask, setDeleteTask] = useState<ProjectTask | null>(null);
+
+  const view = (searchParams.get('projects') || 'all') as ProjectsView;
+  const selectedProjectSlug = searchParams.get('project') || '';
+
   const [projectForm, setProjectForm] = useState({
     name: '',
     clientName: '',
@@ -200,9 +266,6 @@ export const AdminProjects: React.FC = () => {
     health: 'Good' as ProjectHealth,
   });
 
-  const [taskModalOpen, setTaskModalOpen] = useState(false);
-  const [editingTask, setEditingTask] = useState<ProjectTask | null>(null);
-  const [taskAssignees, setTaskAssignees] = useState<Array<{ id: string; name: string; username: string; role: string; division: string }>>([]);
   const [taskForm, setTaskForm] = useState({
     title: '',
     description: '',
@@ -217,34 +280,34 @@ export const AdminProjects: React.FC = () => {
 
   const showToast = (message: string) => {
     setToast(message);
-    window.setTimeout(() => setToast(null), 3500);
+    window.setTimeout(() => setToast(null), 3200);
   };
 
-  const loadData = async () => {
+  const syncProjects = async () => {
     setLoading(true);
     setError(null);
-    const res = await api.projects.getAll();
-    if (!res.success || !Array.isArray(res.data?.projects)) {
-      setError(res.error || 'Unable to load projects.');
+    try {
+      const response = await api.projects.getAll();
+      if (response.success && Array.isArray(response.data?.projects)) {
+        setProjects(response.data.projects.length ? response.data.projects.map(normalizeProject) : demoProjects);
+        setServerMode(true);
+        setLoading(false);
+        return;
+      }
+      setServerMode(false);
+      setProjects(demoProjects);
+      setError(response.error || 'Using demo project data because the project service is unavailable.');
+    } catch (requestError) {
+      setServerMode(false);
+      setProjects(demoProjects);
+      setError(requestError instanceof Error ? requestError.message : 'Using demo project data.');
+    } finally {
       setLoading(false);
-      return;
     }
-    const list = res.data.projects.map(normalizeProject);
-    setProjects(list);
-    setSelectedProjectId(current => current && list.some(project => project.id === current) ? current : (list[0]?.id || ''));
-    setLoading(false);
   };
 
-  useEffect(() => {
-    void loadData();
-    if (canManageKanbanTasks) {
-      void api.auth.getTaskAssignees().then(res => {
-        if (!res.success || !res.data?.assignees) return;
-        setTaskAssignees(res.data.assignees);
-      });
-    } else {
-      setTaskAssignees([]);
-    }
+  React.useEffect(() => {
+    void syncProjects();
     const handleCurrency = (event: Event) => {
       const detail = (event as CustomEvent<{ currency?: CurrencyCode }>).detail;
       setCurrency(detail?.currency || getActiveCurrency());
@@ -253,136 +316,206 @@ export const AdminProjects: React.FC = () => {
     return () => window.removeEventListener(CURRENCY_EVENT, handleCurrency);
   }, []);
 
-  const selectedProject = useMemo(
-    () => projects.find(project => project.id === selectedProjectId) || null,
-    [projects, selectedProjectId]
+  const activeProjects = useMemo(
+    () => projects.filter(project => project.status !== 'completed'),
+    [projects]
   );
 
-  const projectMetrics = useMemo(() => {
-    const active = projects.filter(project => project.status === 'in_progress' || project.status === 'review').length;
-    const onHold = projects.filter(project => project.status === 'on_hold').length;
-    const completed = projects.filter(project => project.status === 'completed').length;
-    const atRisk = projects.filter(project => project.health === 'At Risk' || project.health === 'Delayed' || project.health === 'Blocked').length;
-    const overdueTasks = projects.flatMap(project => project.tasks || []).filter(task => task.status !== 'done' && isOverdue(task.dueDate)).length;
-    const dueToday = projects.flatMap(project => project.tasks || []).filter(task => task.status !== 'done' && task.dueDate === todayIso()).length;
-    return { total: projects.length, active, onHold, completed, atRisk, overdueTasks, dueToday };
-  }, [projects]);
+  const archivedProjects = useMemo(
+    () => projects.filter(project => project.status === 'completed'),
+    [projects]
+  );
 
   const filteredProjects = useMemo(() => {
     const query = projectSearch.trim().toLowerCase();
-    const result = projects.filter(project => {
-      const matchesQuery = !query || [
-        project.name,
-        project.clientName,
-        project.clientCompany,
-        project.teamLead,
-        project.serviceCategory,
-        project.id,
-      ].join(' ').toLowerCase().includes(query);
+    return projects.filter(project => {
+      const matchesQuery =
+        !query ||
+        [
+          project.name,
+          project.clientCompany,
+          project.clientName,
+          project.teamLead,
+          project.serviceCategory,
+          project.slug,
+        ]
+          .join(' ')
+          .toLowerCase()
+          .includes(query);
       const matchesStatus = !projectStatusFilter || project.status === projectStatusFilter;
       return matchesQuery && matchesStatus;
     });
-    return result.sort((a, b) => {
-      if (projectSort === 'name') return a.name.localeCompare(b.name);
-      if (projectSort === 'deadline') return (a.targetEndDate || '').localeCompare(b.targetEndDate || '');
-      if (projectSort === 'progress') return b.progressPercent - a.progressPercent;
-      return (b.updatedAt || '').localeCompare(a.updatedAt || '');
-    });
-  }, [projects, projectSearch, projectStatusFilter, projectSort]);
+  }, [projects, projectSearch, projectStatusFilter]);
 
-  const allAssignees = useMemo(() => {
-    const values = new Set<string>();
-    projects.forEach(project => project.tasks.forEach(task => task.assignedTo && values.add(task.assignedTo)));
-    return Array.from(values).sort((a, b) => a.localeCompare(b));
-  }, [projects]);
+  const boardProjects = useMemo(
+    () => filteredProjects.filter(project => project.status !== 'completed'),
+    [filteredProjects]
+  );
+
+  const selectedSprintProject = useMemo(() => {
+    return (
+      projects.find(project => project.slug === selectedProjectSlug) ||
+      activeProjects.find(project => project.slug === selectedProjectSlug) ||
+      activeProjects[0] ||
+      projects[0] ||
+      null
+    );
+  }, [activeProjects, projects, selectedProjectSlug]);
 
   const visibleTasks = useMemo(() => {
-    if (!selectedProject) return [];
+    if (!selectedSprintProject) return [];
     const query = taskSearch.trim().toLowerCase();
-    const result = selectedProject.tasks.filter(task => {
-      const matchesQuery = !query || [
-        task.title,
-        task.description || '',
-        task.assignedTo,
-        ...(task.tags || []),
-      ].join(' ').toLowerCase().includes(query);
-      const matchesStatus = !taskStatusFilter || task.status === taskStatusFilter;
-      const matchesPriority = !taskPriorityFilter || task.priority === taskPriorityFilter;
-      const matchesAssignee = !taskAssigneeFilter || task.assignedTo === taskAssigneeFilter;
-      return matchesQuery && matchesStatus && matchesPriority && matchesAssignee;
-    });
-    return result.sort((a, b) => {
-      if (taskSort === 'title') return a.title.localeCompare(b.title);
-      if (taskSort === 'priority') return PRIORITY_ORDER[b.priority] - PRIORITY_ORDER[a.priority];
-      if (taskSort === 'updated') return (b.createdAt || '').localeCompare(a.createdAt || '');
-      return (a.dueDate || '').localeCompare(b.dueDate || '');
-    });
-  }, [selectedProject, taskSearch, taskStatusFilter, taskPriorityFilter, taskAssigneeFilter, taskSort]);
+    return selectedSprintProject.tasks
+      .filter(task => {
+        const matchesQuery =
+          !query ||
+          [task.title, task.description || '', task.assignedTo, ...(task.tags || [])]
+            .join(' ')
+            .toLowerCase()
+            .includes(query);
+        const matchesPriority = !taskPriorityFilter || task.priority === taskPriorityFilter;
+        return matchesQuery && matchesPriority;
+      })
+      .sort((a, b) => {
+        if (a.status !== b.status) return 0;
+        return PRIORITY_ORDER[b.priority] - PRIORITY_ORDER[a.priority];
+      });
+  }, [selectedSprintProject, taskSearch, taskPriorityFilter]);
 
-  const selectedProjectTaskStats = useMemo(() => {
-    if (!selectedProject) return { total: 0, done: 0, open: 0, overdue: 0 };
-    const total = selectedProject.tasks.length;
-    const done = selectedProject.tasks.filter(task => task.status === 'done').length;
-    const overdue = selectedProject.tasks.filter(task => task.status !== 'done' && isOverdue(task.dueDate)).length;
-    return { total, done, open: total - done, overdue };
-  }, [selectedProject]);
+  const metrics = useMemo(() => {
+    const value = activeProjects.reduce((sum, project) => sum + project.budget, 0);
+    const totalProgress = activeProjects.reduce((sum, project) => sum + project.progressPercent, 0);
+    const velocity = activeProjects.length ? Math.round(totalProgress / activeProjects.length) : 0;
+    const risks = activeProjects.filter(project => project.health !== 'Good').length;
+    const openTasks = activeProjects.reduce(
+      (sum, project) => sum + project.tasks.filter(task => task.status !== 'done').length,
+      0
+    );
+    const assignedPeople = new Set(
+      activeProjects.flatMap(project => [project.teamLead, ...project.teamMembers]).filter(Boolean)
+    );
+    const milestonesAtRisk = activeProjects.reduce(
+      (sum, project) =>
+        sum +
+        project.milestones.filter(
+          milestone =>
+            !milestone.completed &&
+            isOverdue(milestone.dueDate)
+        ).length,
+      0
+    );
+    return {
+      value,
+      velocity,
+      risks,
+      openTasks,
+      assignedPeople: assignedPeople.size,
+      milestonesAtRisk,
+    };
+  }, [activeProjects]);
 
-  const resetProjectForm = (project?: ProjectRecord) => {
-    setEditingProject(project || null);
+  const budgetRows = useMemo(
+    () =>
+      filteredProjects.map(project => {
+        const burn = Math.round(project.budget * (project.progressPercent / 100));
+        return {
+          project,
+          burn,
+          remaining: Math.max(0, project.budget - burn),
+          variance: project.budget - burn,
+        };
+      }),
+    [filteredProjects]
+  );
+
+  const openProjectDetail = (project: ProjectRecord) => {
+    setSelectedProject(project);
+    const next = new URLSearchParams(searchParams);
+    next.set('project', project.slug);
+    setSearchParams(next, { replace: true });
+  };
+
+  const clearProjectSelection = () => {
+    setSelectedProject(null);
+    const next = new URLSearchParams(searchParams);
+    next.delete('project');
+    setSearchParams(next, { replace: true });
+  };
+
+  const openNewProject = () => {
+    setEditingProject(null);
     setProjectForm({
-      name: project?.name || '',
-      clientName: project?.clientName || '',
-      clientCompany: project?.clientCompany || '',
-      clientEmail: project?.clientEmail || '',
-      serviceCategory: project?.serviceCategory || '',
-      budget: project ? String(project.budget || '') : '',
-      progressPercent: project ? String(project.progressPercent ?? 0) : '0',
-      startDate: project?.startDate || todayIso(),
-      targetEndDate: project?.targetEndDate || todayIso(),
-      teamLead: project?.teamLead || '',
-      teamMembers: project?.teamMembers.join(', ') || '',
-      techStack: project?.techStack.join(', ') || '',
-      repositoryUrl: project?.repositoryUrl || '',
-      figmaUrl: project?.figmaUrl || '',
-      liveStagingUrl: project?.liveStagingUrl || '',
-      notes: project?.notes || '',
-      status: project?.status || 'planning',
-      health: project?.health || 'Good',
+      name: '',
+      clientName: '',
+      clientCompany: '',
+      clientEmail: '',
+      serviceCategory: '',
+      budget: '',
+      progressPercent: '0',
+      startDate: todayIso(),
+      targetEndDate: todayIso(),
+      teamLead: '',
+      teamMembers: '',
+      techStack: '',
+      repositoryUrl: '',
+      figmaUrl: '',
+      liveStagingUrl: '',
+      notes: '',
+      status: 'planning',
+      health: 'Good',
     });
-    setProjectModalOpen(true);
+    setProjectDrawerOpen(true);
+  };
+
+  const openEditProject = (project: ProjectRecord) => {
+    setEditingProject(project);
+    setProjectForm({
+      name: project.name,
+      clientName: project.clientName,
+      clientCompany: project.clientCompany,
+      clientEmail: project.clientEmail,
+      serviceCategory: project.serviceCategory,
+      budget: String(project.budget || ''),
+      progressPercent: String(project.progressPercent),
+      startDate: project.startDate || todayIso(),
+      targetEndDate: project.targetEndDate || todayIso(),
+      teamLead: project.teamLead,
+      teamMembers: project.teamMembers.join(', '),
+      techStack: project.techStack.join(', '),
+      repositoryUrl: project.repositoryUrl || '',
+      figmaUrl: project.figmaUrl || '',
+      liveStagingUrl: project.liveStagingUrl || '',
+      notes: project.notes || '',
+      status: project.status,
+      health: project.health || 'Good',
+    });
+    setProjectDrawerOpen(true);
   };
 
   const saveProject = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!canManageProjects) return;
     if (!projectForm.name.trim() || !projectForm.clientCompany.trim()) {
       showToast('Project name and client company are required.');
       return;
     }
+
     const budget = Number(projectForm.budget || 0);
     const progress = Number(projectForm.progressPercent || 0);
-    if (!Number.isFinite(budget) || budget < 0 || !Number.isFinite(progress) || progress < 0 || progress > 100) {
-      showToast('Enter a valid budget and progress value.');
+    if (!Number.isFinite(budget) || budget < 0 || progress < 0 || progress > 100) {
+      showToast('Enter valid budget and progress values.');
       return;
     }
 
-    setSaving(true);
-    const payload: ProjectRecord = {
-      ...(editingProject || {
-        id: '',
-        createdAt: '',
-        updatedAt: '',
-        tasks: [],
-        milestones: [],
-      } as ProjectRecord),
+    const now = new Date().toISOString();
+    const slug = slugify(projectForm.name);
+    const localProject: ProjectRecord = normalizeProject({
+      ...(editingProject || {}),
+      id: editingProject?.id || 'demo_' + slug + '_' + Date.now(),
       name: projectForm.name.trim(),
-      title: projectForm.name.trim(),
       clientName: projectForm.clientName.trim(),
       clientCompany: projectForm.clientCompany.trim(),
       clientEmail: projectForm.clientEmail.trim(),
       serviceCategory: projectForm.serviceCategory.trim(),
-      status: projectForm.status,
-      health: projectForm.health,
       budget,
       progressPercent: progress,
       startDate: projectForm.startDate,
@@ -394,28 +527,51 @@ export const AdminProjects: React.FC = () => {
       figmaUrl: projectForm.figmaUrl.trim() || undefined,
       liveStagingUrl: projectForm.liveStagingUrl.trim() || undefined,
       notes: projectForm.notes.trim() || undefined,
+      status: projectForm.status,
+      health: projectForm.health,
+      createdAt: editingProject?.createdAt || now,
+      updatedAt: now,
       milestones: editingProject?.milestones || [],
       tasks: editingProject?.tasks || [],
-    };
+      slug,
+    });
 
-    const res = editingProject
-      ? await api.projects.update(editingProject.id, payload)
-      : await api.projects.create(payload);
+    setSaving(true);
+    try {
+      const payload = { ...localProject, id: editingProject?.id || '' };
+      const response = editingProject
+        ? await api.projects.update(editingProject.id, payload)
+        : await api.projects.create(payload);
 
-    setSaving(false);
-    if (!res.success) {
-      showToast(res.error || 'Project could not be saved.');
-      return;
+      if (response.success) {
+        setServerMode(true);
+        await syncProjects();
+        showToast(language === 'id' ? 'Proyek berhasil disimpan.' : 'Project saved.');
+      } else {
+        setProjects(current =>
+          editingProject
+            ? current.map(item => (item.id === editingProject.id ? localProject : item))
+            : [localProject, ...current]
+        );
+        setServerMode(false);
+        showToast('Saved in demo mode. Connect the project service to persist it.');
+      }
+    } catch {
+      setProjects(current =>
+        editingProject
+          ? current.map(item => (item.id === editingProject.id ? localProject : item))
+          : [localProject, ...current]
+      );
+      setServerMode(false);
+      showToast('Saved in demo mode. Connect the project service to persist it.');
+    } finally {
+      setSaving(false);
+      setProjectDrawerOpen(false);
     }
-    setProjectModalOpen(false);
-    await loadData();
-    const saved = normalizeProject(res.data?.project || payload);
-    if (saved.id) setSelectedProjectId(saved.id);
-    showToast(language === 'id' ? 'Proyek berhasil disimpan.' : 'Project saved.');
   };
 
   const openNewTask = () => {
-    if (!selectedProject) {
+    if (!selectedSprintProject) {
       showToast('Select a project first.');
       return;
     }
@@ -423,15 +579,15 @@ export const AdminProjects: React.FC = () => {
     setTaskForm({
       title: '',
       description: '',
-      projectId: selectedProject.id,
-      assignee: '',
+      projectId: selectedSprintProject.id,
+      assignee: selectedSprintProject.teamLead || '',
       priority: 'medium',
       status: 'todo',
       dueDate: todayIso(),
       tags: '',
       subtasks: '',
     });
-    setTaskModalOpen(true);
+    setTaskDrawerOpen(true);
   };
 
   const openEditTask = (task: ProjectTask) => {
@@ -439,31 +595,25 @@ export const AdminProjects: React.FC = () => {
     setTaskForm({
       title: task.title,
       description: task.description || '',
-      projectId: selectedProject?.id || '',
+      projectId: selectedSprintProject?.id || '',
       assignee: task.assignedTo,
       priority: task.priority,
       status: task.status,
       dueDate: task.dueDate,
-      tags: task.tags?.join(', ') || '',
-      subtasks: task.subtasks?.map(item => item.title).join('\n') || '',
+      tags: (task.tags || []).join(', '),
+      subtasks: (task.subtasks || []).map(item => item.title).join('\n'),
     });
-    setTaskModalOpen(true);
+    setTaskDrawerOpen(true);
   };
 
-  const handleAddTask = async (event: React.FormEvent) => {
+  const saveTask = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!canManageKanbanTasks || !taskForm.title.trim()) return;
     const project = projects.find(item => item.id === taskForm.projectId);
-    if (!project) {
-      showToast('Select a valid project.');
-      return;
-    }
-    if (!taskForm.assignee.trim()) {
-      showToast('Assignee is required.');
+    if (!project || !taskForm.title.trim()) {
+      showToast('Task title and project are required.');
       return;
     }
 
-    setSaving(true);
     const subtasks = taskForm.subtasks
       .split('\n')
       .map(item => item.trim())
@@ -474,426 +624,788 @@ export const AdminProjects: React.FC = () => {
         completed: editingTask?.subtasks?.[index]?.completed || false,
       }));
 
-    const payload = {
+    const localTask: ProjectTask = {
+      id: editingTask?.id || 'demo_task_' + slugify(taskForm.title) + '_' + Date.now(),
       title: taskForm.title.trim(),
-      description: taskForm.description.trim(),
-      projectId: project.id,
-      projectName: project.name,
-      assignee: taskForm.assignee.trim(),
-      priority: taskForm.priority,
+      description: taskForm.description.trim() || undefined,
       status: taskForm.status,
+      priority: taskForm.priority,
+      assignedTo: taskForm.assignee.trim(),
       dueDate: taskForm.dueDate,
-      tags: taskForm.tags.split(',').map(item => item.trim()).filter(Boolean),
+      createdAt: editingTask?.createdAt || new Date().toISOString(),
       subtasks,
-      ...(editingTask ? { updatedAt: (editingTask as any).updatedAt } : {}),
+      tags: taskForm.tags.split(',').map(item => item.trim()).filter(Boolean),
     };
 
-    const res = editingTask
-      ? await api.tasks.update(editingTask.id, payload)
-      : await api.tasks.create(payload);
+    setSaving(true);
+    try {
+      const payload = {
+        title: localTask.title,
+        description: localTask.description || '',
+        projectId: project.id,
+        projectName: project.name,
+        assignee: localTask.assignedTo,
+        priority: localTask.priority,
+        status: localTask.status,
+        dueDate: localTask.dueDate,
+        tags: localTask.tags || [],
+        subtasks: localTask.subtasks || [],
+      };
+      const response = editingTask
+        ? await api.tasks.update(editingTask.id, payload)
+        : await api.tasks.create(payload);
 
-    setSaving(false);
-    if (!res.success) {
-      showToast(res.error || 'Task could not be saved.');
-      return;
+      if (response.success) {
+        await syncProjects();
+        showToast(language === 'id' ? 'Tugas berhasil disimpan.' : 'Task saved.');
+      } else {
+        setProjects(current =>
+          current.map(item => {
+            if (item.id !== project.id) return item;
+            const tasks = editingTask
+              ? item.tasks.map(task => (task.id === editingTask.id ? localTask : task))
+              : [localTask, ...item.tasks];
+            return { ...item, tasks, updatedAt: new Date().toISOString() };
+          })
+        );
+        showToast('Task saved in demo mode.');
+      }
+    } catch {
+      setProjects(current =>
+        current.map(item => {
+          if (item.id !== project.id) return item;
+          const tasks = editingTask
+            ? item.tasks.map(task => (task.id === editingTask.id ? localTask : task))
+            : [localTask, ...item.tasks];
+          return { ...item, tasks, updatedAt: new Date().toISOString() };
+        })
+      );
+      showToast('Task saved in demo mode.');
+    } finally {
+      setSaving(false);
+      setTaskDrawerOpen(false);
     }
-
-    setTaskModalOpen(false);
-    setTaskDrawer(null);
-    await loadData();
-    showToast(language === 'id' ? 'Tugas berhasil disimpan.' : 'Task saved.');
   };
 
-  const changeTaskStatus = async (task: ProjectTask, status: TaskStatus) => {
-    if (!canManageKanbanTasks || task.status === status) return;
-    const res = await api.tasks.update(task.id, { status, updatedAt: (task as any).updatedAt });
-    if (!res.success) {
-      showToast(res.error || 'Task status could not be updated.');
-      return;
+  const updateTaskStatus = async (task: ProjectTask, status: TaskStatus) => {
+    if (!selectedSprintProject || task.status === status) return;
+    try {
+      const response = await api.tasks.update(task.id, { status });
+      if (response.success) {
+        await syncProjects();
+        return;
+      }
+    } catch {
+      // Fall through to demo mode.
     }
-    await loadData();
-    showToast('Task moved to ' + taskStatusLabel(status) + '.');
+    setProjects(current =>
+      current.map(project =>
+        project.id === selectedSprintProject.id
+          ? {
+              ...project,
+              tasks: project.tasks.map(item => item.id === task.id ? { ...item, status } : item),
+              updatedAt: new Date().toISOString(),
+            }
+          : project
+      )
+    );
   };
 
-  const toggleSubtask = async (task: ProjectTask, subtask: TaskSubtask) => {
-    if (!canManageKanbanTasks) return;
-    const subtasks = (task.subtasks || []).map(item => item.id === subtask.id ? { ...item, completed: !item.completed } : item);
-    const res = await api.tasks.update(task.id, { subtasks, updatedAt: (task as any).updatedAt });
-    if (!res.success) {
-      showToast(res.error || 'Checklist could not be updated.');
-      return;
+  const toggleSubtask = async (task: ProjectTask, subtaskId: string) => {
+    if (!selectedSprintProject) return;
+    const nextSubtasks = (task.subtasks || []).map(item =>
+      item.id === subtaskId ? { ...item, completed: !item.completed } : item
+    );
+    try {
+      const response = await api.tasks.update(task.id, { subtasks: nextSubtasks });
+      if (response.success) {
+        await syncProjects();
+        return;
+      }
+    } catch {
+      // Fall through to demo mode.
     }
-    await loadData();
+    setProjects(current =>
+      current.map(project =>
+        project.id === selectedSprintProject.id
+          ? {
+              ...project,
+              tasks: project.tasks.map(item => item.id === task.id ? { ...item, subtasks: nextSubtasks } : item),
+              updatedAt: new Date().toISOString(),
+            }
+          : project
+      )
+    );
+  };
+
+  const confirmDeleteProject = async () => {
+    if (!deleteProject) return;
+    const target = deleteProject;
+    try {
+      const response = await api.projects.delete(target.id);
+      if (response.success) {
+        await syncProjects();
+        showToast('Project deleted.');
+        setDeleteProject(null);
+        return;
+      }
+    } catch {
+      // Fall through to demo mode.
+    }
+    setProjects(current => current.filter(project => project.id !== target.id));
+    setDeleteProject(null);
+    showToast('Project removed from demo mode.');
   };
 
   const confirmDeleteTask = async () => {
-    if (!deleteTaskTarget || !canManageKanbanTasks) return;
-    const res = await api.tasks.delete(deleteTaskTarget.id);
-    if (!res.success) {
-      showToast(res.error || 'Task could not be deleted.');
-      setDeleteTaskTarget(null);
-      return;
+    if (!deleteTask || !selectedSprintProject) return;
+    const target = deleteTask;
+    try {
+      const response = await api.tasks.delete(target.id);
+      if (response.success) {
+        await syncProjects();
+        showToast('Task deleted.');
+        setDeleteTask(null);
+        setSelectedTask(null);
+        return;
+      }
+    } catch {
+      // Fall through to demo mode.
     }
-    setDeleteTaskTarget(null);
-    setTaskDrawer(null);
-    await loadData();
-    showToast('Task deleted.');
+    setProjects(current =>
+      current.map(project =>
+        project.id === selectedSprintProject.id
+          ? { ...project, tasks: project.tasks.filter(task => task.id !== target.id) }
+          : project
+      )
+    );
+    setDeleteTask(null);
+    setSelectedTask(null);
+    showToast('Task removed from demo mode.');
   };
 
-  const deleteProjectConfirmed = async () => {
-    if (!deleteProject || !canDeleteProjects) return;
-    const res = await api.projects.delete(deleteProject.id);
-    if (!res.success) {
-      showToast(res.error || 'Project could not be deleted.');
-      setDeleteProject(null);
-      return;
-    }
-    setDeleteProject(null);
-    await loadData();
-    showToast('Project deleted.');
+  const exportProjects = () => {
+    const rows = filteredProjects.map(project => [
+      project.slug,
+      project.name,
+      project.clientCompany,
+      statusLabel(project.status),
+      String(project.progressPercent),
+      String(project.budget),
+      String(Math.round(project.budget * (project.progressPercent / 100))),
+      project.teamLead,
+      project.targetEndDate,
+    ]);
+    const csv = [
+      ['slug', 'project', 'client', 'status', 'progress_percent', 'budget', 'budget_burn', 'owner', 'deadline'],
+      ...rows,
+    ]
+      .map(row => row.map(cell => '"' + String(cell).replace(/"/g, '""') + '"').join(','))
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'kapitech-projects-board.csv';
+    anchor.click();
+    URL.revokeObjectURL(url);
+    showToast('Projects exported.');
   };
 
-  const onDropTask = async (event: React.DragEvent, status: TaskStatus) => {
-    event.preventDefault();
-    const taskId = event.dataTransfer.getData('text/plain') || draggedTaskId;
-    setDraggedTaskId(null);
-    if (!taskId || !canManageKanbanTasks) return;
-    const task = selectedProject?.tasks.find(item => item.id === taskId);
-    if (task) await changeTaskStatus(task, status);
+  const openView = (nextView: ProjectsView) => {
+    const next = new URLSearchParams(searchParams);
+    if (nextView === 'all') next.delete('projects');
+    else next.set('projects', nextView);
+    setSearchParams(next);
   };
+
+  const openLayout = (layout: ProjectLayout) => {
+    setProjectLayout(layout);
+    const next = new URLSearchParams(searchParams);
+    if (layout === 'board') next.delete('layout');
+    else next.set('layout', layout);
+    setSearchParams(next, { replace: true });
+  };
+
+  const goToSprint = (project?: ProjectRecord) => {
+    const next = new URLSearchParams(searchParams);
+    next.set('projects', 'sprint');
+    if (project) next.set('project', project.slug);
+    setSearchParams(next);
+    setSelectedProject(null);
+  };
+
+  const selectedProjectDetail = selectedProject || (selectedProjectSlug
+    ? projects.find(project => project.slug === selectedProjectSlug) || null
+    : null);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <Modal
-        open={!!deleteProject}
+        open={Boolean(deleteProject)}
         onClose={() => setDeleteProject(null)}
         size="sm"
-        title={language === 'id' ? 'Hapus proyek?' : 'Delete project?'}
-        description={deleteProject ? (language === 'id' ? 'Proyek ' + deleteProject.name + ' akan dihapus.' : 'Project ' + deleteProject.name + ' will be removed.') : undefined}
+        title="Delete project?"
+        description={deleteProject ? 'Project "' + deleteProject.name + '" will be removed.' : undefined}
         footer={(
           <>
             <Button type="button" variant="secondary" onClick={() => setDeleteProject(null)}>Cancel</Button>
-            <Button type="button" variant="destructive" onClick={() => void deleteProjectConfirmed()} disabled={!canDeleteProjects}>Delete</Button>
+            <Button type="button" variant="destructive" onClick={() => void confirmDeleteProject()}>Delete</Button>
           </>
         )}
       >
+        <div className="text-xs text-muted">This removes the record from the current workspace. Demo mode keeps the change local.</div>
       </Modal>
 
       <Modal
-        open={!!deleteTaskTarget}
-        onClose={() => setDeleteTaskTarget(null)}
+        open={Boolean(deleteTask)}
+        onClose={() => setDeleteTask(null)}
         size="sm"
         title="Delete task?"
-        description={deleteTaskTarget ? 'Task "' + deleteTaskTarget.title + '" will be permanently removed.' : undefined}
+        description={deleteTask ? 'Task "' + deleteTask.title + '" will be removed.' : undefined}
         footer={(
           <>
-            <Button type="button" variant="secondary" onClick={() => setDeleteTaskTarget(null)}>Cancel</Button>
-            <Button type="button" variant="destructive" onClick={() => void confirmDeleteTask()} disabled={!canManageKanbanTasks}>Delete</Button>
+            <Button type="button" variant="secondary" onClick={() => setDeleteTask(null)}>Cancel</Button>
+            <Button type="button" variant="destructive" onClick={() => void confirmDeleteTask()}>Delete</Button>
           </>
         )}
       >
+        <div className="text-xs text-muted">This action can be tested with the seeded task data without changing the API contract.</div>
+      </Modal>
+
+      <Modal
+        open={Boolean(selectedProjectDetail)}
+        onClose={clearProjectSelection}
+        size="lg"
+        title={selectedProjectDetail?.name || 'Project details'}
+        description={selectedProjectDetail ? selectedProjectDetail.clientCompany : undefined}
+        footer={(
+          <>
+            <Button variant="secondary" onClick={clearProjectSelection}>Close</Button>
+            {selectedProjectDetail && (
+              <Button icon={<ArrowUpRight size={14} />} onClick={() => goToSprint(selectedProjectDetail)}>
+                Open delivery
+              </Button>
+            )}
+          </>
+        )}
+      >
+        {selectedProjectDetail && (
+          <div className="space-y-5">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={'rounded-badge border px-2 py-1 text-[10px] font-semibold ' + projectStatusClass(selectedProjectDetail.status)}>
+                {statusLabel(selectedProjectDetail.status)}
+              </span>
+              <span className={'rounded-badge border px-2 py-1 text-[10px] font-semibold ' + healthClass(selectedProjectDetail.health)}>
+                {selectedProjectDetail.health || 'Good'}
+              </span>
+              <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">
+                {selectedProjectDetail.slug}
+              </span>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[
+                ['Progress', selectedProjectDetail.progressPercent + '%'],
+                ['Budget', formatAmount(selectedProjectDetail.budget, currency)],
+                ['Owner', selectedProjectDetail.teamLead || 'Unassigned'],
+                ['Deadline', formatDate(selectedProjectDetail.targetEndDate)],
+                ['Tasks', selectedProjectDetail.tasks.filter(task => task.status === 'done').length + '/' + selectedProjectDetail.tasks.length + ' done'],
+                ['Service', selectedProjectDetail.serviceCategory || 'Delivery'],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-control border border-line bg-bg p-3">
+                  <div className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted">{label}</div>
+                  <div className="mt-1.5 truncate text-xs font-semibold text-fg">{value}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="rounded-card border border-line bg-bg p-4">
+              <div className="flex items-center justify-between gap-3 text-[11px] text-muted">
+                <span>Delivery progress</span>
+                <span className="font-semibold tabular-nums text-fg">{selectedProjectDetail.progressPercent}%</span>
+              </div>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-line">
+                <div className="h-full rounded-full bg-accent" style={{ width: selectedProjectDetail.progressPercent + '%' }} />
+              </div>
+            </div>
+
+            {selectedProjectDetail.notes && (
+              <div>
+                <div className="text-[11px] font-semibold text-muted">Notes</div>
+                <p className="mt-2 rounded-card border border-line bg-bg p-3 text-xs leading-5 text-fg">{selectedProjectDetail.notes}</p>
+              </div>
+            )}
+
+            <div className="flex flex-wrap gap-2">
+              {selectedProjectDetail.repositoryUrl && (
+                <a href={selectedProjectDetail.repositoryUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-9 items-center gap-2 rounded-control border border-line bg-bg px-3 text-xs text-fg hover:bg-panel-hover">
+                  <Code2 size={13} /> Repository
+                </a>
+              )}
+              {selectedProjectDetail.figmaUrl && (
+                <a href={selectedProjectDetail.figmaUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-9 items-center gap-2 rounded-control border border-line bg-bg px-3 text-xs text-fg hover:bg-panel-hover">
+                  <ExternalLink size={13} /> Figma
+                </a>
+              )}
+              {selectedProjectDetail.liveStagingUrl && (
+                <a href={selectedProjectDetail.liveStagingUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-9 items-center gap-2 rounded-control border border-line bg-bg px-3 text-xs text-fg hover:bg-panel-hover">
+                  <ExternalLink size={13} /> Staging
+                </a>
+              )}
+              <Button variant="secondary" onClick={() => { clearProjectSelection(); openEditProject(selectedProjectDetail); }}>
+                Edit project
+              </Button>
+              <Button variant="destructive" icon={<Trash2 size={13} />} onClick={() => { clearProjectSelection(); setDeleteProject(selectedProjectDetail); }}>
+                Delete
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        open={Boolean(selectedTask)}
+        onClose={() => setSelectedTask(null)}
+        size="md"
+        title={selectedTask?.title || 'Task details'}
+        description={selectedTask ? selectedProjectDetail?.name : undefined}
+        footer={(
+          <>
+            <Button variant="secondary" onClick={() => setSelectedTask(null)}>Close</Button>
+            {selectedTask && <Button onClick={() => { setSelectedTask(null); openEditTask(selectedTask); }}>Edit task</Button>}
+          </>
+        )}
+      >
+        {selectedTask && (
+          <div className="space-y-5">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={'rounded-badge border px-2 py-1 text-[10px] font-semibold ' + priorityClass(selectedTask.priority)}>{priorityLabel(selectedTask.priority)}</span>
+              <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{formatDate(selectedTask.dueDate)}</span>
+              {isOverdue(selectedTask.dueDate) && selectedTask.status !== 'done' && <span className="rounded-badge border border-danger/30 bg-danger/10 px-2 py-1 text-[10px] font-semibold text-danger">Overdue</span>}
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-control border border-line bg-bg p-3"><div className="text-[10px] text-muted">Status</div><div className="mt-1.5 text-xs font-semibold text-fg">{taskStatusLabel(selectedTask.status)}</div></div>
+              <div className="rounded-control border border-line bg-bg p-3"><div className="text-[10px] text-muted">Assignee</div><div className="mt-1.5 text-xs font-semibold text-fg">{selectedTask.assignedTo || 'Unassigned'}</div></div>
+            </div>
+            <div>
+              <div className="text-[11px] font-semibold text-muted">Move to</div>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                {TASK_COLUMNS.map(column => (
+                  <button
+                    key={column.id}
+                    type="button"
+                    onClick={() => { void updateTaskStatus(selectedTask, column.id); setSelectedTask({ ...selectedTask, status: column.id }); }}
+                    className={'min-h-10 rounded-control border px-3 text-xs font-medium transition-colors ' + (selectedTask.status === column.id ? 'border-accent/30 bg-accent/10 text-accent' : 'border-line bg-bg text-muted hover:text-fg')}
+                  >
+                    {column.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div className="text-[11px] font-semibold text-muted">Description</div>
+              <p className="mt-2 rounded-card border border-line bg-bg p-3 text-xs leading-5 text-fg">{selectedTask.description || 'No description provided.'}</p>
+            </div>
+            <div>
+              <div className="flex items-center justify-between text-[11px] font-semibold text-muted">
+                <span>Checklist</span>
+                <span className="font-normal">{(selectedTask.subtasks || []).filter(item => item.completed).length}/{(selectedTask.subtasks || []).length}</span>
+              </div>
+              <div className="mt-2 space-y-2">
+                {(selectedTask.subtasks || []).length === 0 ? (
+                  <div className="rounded-control border border-dashed border-line p-3 text-xs text-muted">No checklist items.</div>
+                ) : (
+                  (selectedTask.subtasks || []).map(item => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        void toggleSubtask(selectedTask, item.id);
+                        setSelectedTask({
+                          ...selectedTask,
+                          subtasks: (selectedTask.subtasks || []).map(subtask => subtask.id === item.id ? { ...subtask, completed: !subtask.completed } : subtask),
+                        });
+                      }}
+                      className="flex w-full items-center gap-2.5 rounded-control border border-line bg-bg p-3 text-left"
+                    >
+                      {item.completed ? <CheckCircle2 size={15} className="shrink-0 text-success" /> : <span className="h-4 w-4 shrink-0 rounded border border-muted" />}
+                      <span className={'text-xs ' + (item.completed ? 'text-muted line-through' : 'text-fg')}>{item.title}</span>
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+            <Button variant="destructive" icon={<Trash2 size={13} />} onClick={() => { setDeleteTask(selectedTask); setSelectedTask(null); }}>Delete task</Button>
+          </div>
+        )}
       </Modal>
 
       <AdminModuleHeader
-        title="Projects & Tasks"
-        description={language === 'id' ? 'Pantau delivery proyek, pekerjaan terbuka, deadline, dan tanggung jawab tim.' : 'Track delivery, outstanding work, deadlines, and team ownership from one workspace.'}
+        eyebrow={view === 'all' ? 'Workspace / Projects' : 'Projects'}
+        title={(
+          <span className="flex min-w-0 flex-wrap items-center gap-2.5">
+            <span>{view === 'all' ? 'Projects & Delivery Board' : view === 'sprint' ? 'Sprint & Delivery' : view === 'budget' ? 'Budget vs Actual' : 'Archived Projects'}</span>
+            <span className="rounded-badge border border-accent/25 bg-accent/10 px-2 py-1 text-[10px] font-semibold text-accent">
+              {activeProjects.length} Active Projects
+            </span>
+          </span>
+        )}
+        description={
+          view === 'all'
+            ? 'Project portfolio, delivery stages, resource ownership, and live execution from one workspace.'
+            : view === 'sprint'
+              ? 'Move work through execution stages and keep delivery ownership visible.'
+              : view === 'budget'
+                ? 'Compare committed project value with progress-based budget burn. Financial actuals can replace the demo burn when the ledger is connected.'
+                : 'Completed projects kept visible for reference, handover history, and future reuse.'
+        }
         actions={(
           <>
-            {canManageKanbanTasks && <Button variant="secondary" icon={<ListTodo size={14} />} onClick={openNewTask}>New Task</Button>}
-            {canManageProjects && <Button icon={<Plus size={14} />} onClick={() => resetProjectForm()}>New Project</Button>}
+            {view === 'all' && (
+              <div className="flex h-9 items-center gap-1 rounded-control border border-line bg-panel p-1">
+                <button type="button" onClick={() => openLayout('board')} className={'inline-flex h-7 items-center gap-1.5 rounded-chip px-3 text-xs font-medium transition-colors ' + (projectLayout === 'board' ? 'bg-accent/10 text-accent' : 'text-muted hover:bg-bg hover:text-fg')}>
+                  <Table2 size={13} /> Board
+                </button>
+                <button type="button" onClick={() => openLayout('table')} className={'inline-flex h-7 items-center gap-1.5 rounded-chip px-3 text-xs font-medium transition-colors ' + (projectLayout === 'table' ? 'bg-accent/10 text-accent' : 'text-muted hover:bg-bg hover:text-fg')}>
+                  <List size={13} /> Table
+                </button>
+              </div>
+            )}
+            <Button variant="secondary" icon={<ArrowDownToLine size={14} />} onClick={exportProjects}>Export</Button>
+            <Button icon={<Plus size={14} />} onClick={openNewProject}>New Project</Button>
           </>
         )}
       />
 
       {toast && (
-        <div role="status" className="fixed bottom-4 left-1/2 z-[70] -translate-x-1/2 rounded-control border border-line bg-panel px-4 py-3 text-xs text-fg">
+        <div role="status" className="fixed bottom-4 left-1/2 z-[80] -translate-x-1/2 rounded-control border border-line bg-panel px-4 py-3 text-xs text-fg">
           {toast}
         </div>
       )}
 
       {error && (
-        <div className="rounded-card border border-danger/30 bg-danger/5 p-4 flex items-center justify-between gap-4">
-          <div className="flex min-w-0 items-start gap-3">
-            <AlertCircle className="mt-0.5 shrink-0 text-danger" size={17} />
+        <div className="rounded-card border border-warning/25 bg-warning/5 p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-semibold text-fg">Unable to load Projects & Tasks</p>
-              <p className="mt-1 text-xs text-muted">{error}</p>
+              <p className="text-xs font-semibold text-fg">Demo data mode</p>
+              <p className="mt-1 text-[11px] leading-5 text-muted">{error}</p>
             </div>
+            <span className="rounded-badge border border-warning/25 bg-warning/10 px-2 py-1 text-[10px] font-semibold text-warning">slug-ready</span>
           </div>
-          <Button variant="secondary" onClick={() => void loadData()}>Retry</Button>
         </div>
       )}
 
-      <section aria-label="Project operations summary" className="rounded-card border border-line bg-panel p-4 sm:p-5">
-        <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3"><div><h2 className="text-sm font-semibold text-fg">Delivery snapshot</h2><p className="mt-1 text-xs text-muted">Project health and delivery workload across the workspace.</p></div><span className="text-[11px] font-medium tabular-nums text-muted">{projectMetrics.total} projects</span></div>
-        <AdminMetricStrip
-          metrics={[
-            { id: 'projects', label: 'Projects', value: projectMetrics.total, context: 'All projects', sparkline: [projectMetrics.completed, projectMetrics.onHold, projectMetrics.active, projectMetrics.total], icon: <Briefcase size={16} strokeWidth={1.8} /> },
-            { id: 'active', label: 'Active', value: projectMetrics.active, context: 'In delivery', sparkline: [projectMetrics.completed, projectMetrics.active, projectMetrics.atRisk, projectMetrics.total], icon: <Clock size={16} strokeWidth={1.8} />, toneClassName: 'text-success' },
-            { id: 'risk', label: 'At risk', value: projectMetrics.atRisk, context: 'Needs attention', sparkline: [projectMetrics.onHold, projectMetrics.atRisk, projectMetrics.overdueTasks, projectMetrics.dueToday], icon: <ShieldAlert size={16} strokeWidth={1.8} />, toneClassName: 'text-warning' },
-            { id: 'overdue', label: 'Overdue tasks', value: projectMetrics.overdueTasks, context: 'Past due', sparkline: [projectMetrics.dueToday, projectMetrics.atRisk, projectMetrics.overdueTasks, projectMetrics.onHold], icon: <AlertCircle size={16} strokeWidth={1.8} />, toneClassName: 'text-danger' }
-          ]}
-        />
-      </section>
-
-      {(projectMetrics.overdueTasks > 0 || projectMetrics.dueToday > 0) && (
-        <section className="rounded-card border border-line bg-panel p-4 sm:p-5">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h2 className="text-sm font-semibold text-fg">Action required</h2>
-              <p className="mt-1 text-xs text-muted">Focus on delivery items that need attention today.</p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {projectMetrics.overdueTasks > 0 && <span className="inline-flex items-center gap-1.5 rounded-control border border-danger/30 bg-danger/10 px-2.5 py-1.5 text-xs text-danger"><AlertCircle size={13} />{projectMetrics.overdueTasks} overdue</span>}
-              {projectMetrics.dueToday > 0 && <span className="inline-flex items-center gap-1.5 rounded-control border border-warning/30 bg-warning/10 px-2.5 py-1.5 text-xs text-warning"><Clock size={13} />{projectMetrics.dueToday} due today</span>}
-            </div>
-          </div>
-        </section>
-      )}
-
-
-
-      <section className="rounded-card border border-line bg-panel">
-        <div className="border-b border-line p-4 sm:p-5">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <div>
-              <h2 className="text-sm font-semibold text-fg">Projects</h2>
-              <p className="mt-1 text-xs text-muted">Select a project to inspect its delivery state and task board.</p>
-            </div>
-            <div className="projects-filter-bar grid w-full min-w-0 grid-cols-1 items-center gap-2.5 sm:grid-cols-[minmax(240px,1fr)_168px_190px] xl:w-auto xl:min-w-[630px]">
-              <label className="relative block min-w-0">
-                <span className="sr-only">Search projects</span>
-                <Search size={14} strokeWidth={1.8} className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-muted" aria-hidden="true" />
-                <input
-                  value={projectSearch}
-                  onChange={event => setProjectSearch(event.target.value)}
-                  placeholder="Search projects..."
-                  aria-label="Search projects"
-                  className={fieldClass + ' mt-0 min-w-0 pl-9 pr-3 leading-5'}
-                />
-              </label>
-              <CustomSelect
-                value={projectStatusFilter}
-                onChange={setProjectStatusFilter}
-                options={[{ value: '', label: 'All statuses' }, ...PROJECT_STATUSES]}
-                className="w-full min-w-0 h-10 sm:h-9"
-                triggerClassName="h-10 min-h-10 w-full sm:h-9 sm:min-h-9"
-                aria-label="Project status"
-              />
-              <CustomSelect
-                value={projectSort}
-                onChange={value => setProjectSort(value as SortKey)}
-                options={[
-                  { value: 'updated', label: 'Recently updated' },
-                  { value: 'deadline', label: 'Deadline' },
-                  { value: 'progress', label: 'Progress' },
-                  { value: 'name', label: 'Name' },
-                ]}
-                className="w-full min-w-0 h-10 sm:h-9"
-                triggerClassName="h-10 min-h-10 w-full whitespace-nowrap sm:h-9 sm:min-h-9"
-                aria-label="Project sort"
-              />
-            </div>
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="divide-y divide-line">
-            {[1, 2, 3].map(item => <div key={item} className="h-20 animate-pulse bg-panel" />)}
-          </div>
-        ) : filteredProjects.length === 0 ? (
-          <div className="p-8 text-center">
-            <Briefcase className="mx-auto text-muted" size={22} />
-            <p className="mt-3 text-sm font-semibold text-fg">{projects.length ? 'No matching projects' : 'No projects yet'}</p>
-            <p className="mt-1 text-xs text-muted">{projects.length ? 'Try a different search or clear the filters.' : 'Create a project when a delivery record is ready.'}</p>
-            {projects.length === 0 && canManageProjects && <Button className="mt-4" icon={<Plus size={14} />} onClick={() => resetProjectForm()}>New Project</Button>}
-          </div>
-        ) : (
-          <>
-            <div className="hidden overflow-x-auto custom-scrollbar md:block">
-              <table className="ams-table w-full min-w-[920px] border-collapse text-left">
-                <thead className="border-b border-line bg-bg">
-                  <tr>
-                    {['Project', 'Status', 'Progress', 'Owner', 'Deadline', 'Tasks', ''].map(label => <th key={label} className="px-4 py-3 text-[11px] font-semibold text-muted">{label}</th>)}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-line">
-                  {filteredProjects.map(project => {
-                    const isSelected = project.id === selectedProjectId;
-                    const overdue = project.tasks.filter(task => task.status !== 'done' && isOverdue(task.dueDate)).length;
-                    return (
-                      <tr key={project.id} className={isSelected ? 'bg-accent/10' : 'hover:bg-bg'}>
-                        <td className="px-4 py-3">
-                          <button className="min-w-0 text-left" onClick={() => setSelectedProjectId(project.id)}>
-                            <div className="max-w-[280px] truncate text-xs font-semibold text-fg">{project.name}</div>
-                            <div className="mt-1 max-w-[280px] truncate text-[11px] text-muted">{project.clientCompany || project.clientName || 'No client'}</div>
-                          </button>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={'inline-flex rounded-badge border px-2 py-1 text-[11px] font-semibold ' + projectStatusClass(project.status)}>{statusLabel(project.status)}</span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="w-36">
-                            <div className="flex items-center justify-between text-[10px] text-muted"><span>Progress</span><span className="tabular-nums text-fg">{project.progressPercent}%</span></div>
-                            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-bg"><div className="h-full rounded-full bg-accent" style={{ width: project.progressPercent + '%' }} /></div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-xs text-fg">{project.teamLead || 'Unassigned'}</td>
-                        <td className="px-4 py-3">
-                          <span className={isOverdue(project.targetEndDate) && project.status !== 'completed' ? 'text-danger' : 'text-fg'}>{formatDate(project.targetEndDate)}</span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2 text-xs tabular-nums"><span className="text-fg">{project.tasks.filter(task => task.status === 'done').length}/{project.tasks.length}</span>{overdue > 0 && <span className="text-danger">{overdue} overdue</span>}</div>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <button aria-label={'Open ' + project.name} onClick={() => setSelectedProjectId(project.id)} className="inline-flex min-h-10 min-w-10 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg"><ChevronRight size={15} /></button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="divide-y divide-line md:hidden">
-              {filteredProjects.map(project => {
-                const overdue = project.tasks.filter(task => task.status !== 'done' && isOverdue(task.dueDate)).length;
-                return (
-                  <button key={project.id} onClick={() => setSelectedProjectId(project.id)} className="block w-full p-4 text-left hover:bg-bg">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="truncate text-sm font-semibold text-fg">{project.name}</div>
-                        <div className="mt-1 truncate text-xs text-muted">{project.clientCompany || 'No client'}</div>
-                      </div>
-                      <ChevronRight size={16} className="mt-1 shrink-0 text-muted" />
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <span className={'rounded-badge border px-2 py-1 text-[10px] font-semibold ' + projectStatusClass(project.status)}>{statusLabel(project.status)}</span>
-                      {project.health && <span className={'rounded-badge border px-2 py-1 text-[10px] font-semibold ' + projectHealthClass(project.health)}>{project.health}</span>}
-                    </div>
-                    <div className="mt-3 flex items-center gap-4 text-[11px] text-muted">
-                      <span>{project.progressPercent}% complete</span>
-                      <span>{project.tasks.filter(task => task.status === 'done').length}/{project.tasks.length} tasks</span>
-                      {overdue > 0 && <span className="text-danger">{overdue} overdue</span>}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </>
-        )}
-      </section>
-
-      {selectedProject && (
+      {view === 'all' && (
         <>
-          {/* Task Execution Board */}
-          <section className="rounded-card border border-line bg-panel">
-            <div className="p-4 sm:p-5">
-              <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className={'rounded-badge border px-2 py-1 text-[11px] font-semibold ' + projectStatusClass(selectedProject.status)}>{statusLabel(selectedProject.status)}</span>
-                    {selectedProject.health && <span className={'rounded-badge border px-2 py-1 text-[11px] font-semibold ' + projectHealthClass(selectedProject.health)}>{selectedProject.health}</span>}
-                    <span className="text-[11px] text-muted">{selectedProject.serviceCategory || 'Delivery project'}</span>
-                  </div>
-                  <h2 className="mt-3 text-xl font-semibold tracking-[-0.01em] text-fg">{selectedProject.name}</h2>
-                  <p className="mt-1 text-xs text-muted">{selectedProject.clientCompany || selectedProject.clientName || 'No client'}{selectedProject.clientName ? ' · ' + selectedProject.clientName : ''}</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {selectedProject.repositoryUrl && <a href={selectedProject.repositoryUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center gap-2 rounded-control border border-line bg-panel px-3 text-xs text-fg hover:bg-bg"><Code2 size={14} />Repository</a>}
-                  {selectedProject.liveStagingUrl && <a href={selectedProject.liveStagingUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center gap-2 rounded-control border border-line bg-panel px-3 text-xs text-fg hover:bg-bg"><ExternalLink size={14} />Staging</a>}
-                  {canManageProjects && <Button variant="secondary" icon={<Edit3 size={14} />} onClick={() => resetProjectForm(selectedProject)}>Edit</Button>}
-                  {canDeleteProjects && <Button variant="destructive" icon={<Trash2 size={14} />} onClick={() => setDeleteProject(selectedProject)}>Delete</Button>}
-                </div>
-              </div>
-
-              <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-                {[
-                  { label: 'Progress', value: selectedProject.progressPercent + '%', icon: TrendingIcon },
-                  { label: 'Owner', value: selectedProject.teamLead || 'Unassigned', icon: User },
-                  { label: 'Deadline', value: formatDate(selectedProject.targetEndDate), icon: Calendar },
-                  { label: 'Tasks', value: selectedProjectTaskStats.done + '/' + selectedProjectTaskStats.total + ' done', icon: ListTodo },
-                  { label: 'Budget', value: formatAmount(selectedProject.budget, currency), icon: Briefcase },
-                ].map(item => (
-                  <div key={item.label} className="rounded-control border border-line bg-bg p-3">
-                    <div className="flex items-center gap-2 text-[11px] text-muted"><item.icon size={13} />{item.label}</div>
-                    <div className="mt-2 truncate text-xs font-semibold text-fg tabular-nums">{item.value}</div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-5">
-                <div className="flex items-center justify-between text-[11px] text-muted"><span>Project progress</span><span className="tabular-nums text-fg">{selectedProject.progressPercent}%</span></div>
-                <div className="mt-2 h-2 overflow-hidden rounded-full bg-bg"><div className="h-full rounded-full bg-accent" style={{ width: selectedProject.progressPercent + '%' }} /></div>
-              </div>
-
-              {(selectedProject.notes || selectedProject.techStack.length || selectedProject.teamMembers.length) && (
-                <div className="mt-5 grid gap-4 lg:grid-cols-3">
-                  {selectedProject.notes && <div className="lg:col-span-2"><div className="text-[11px] font-semibold text-muted">Project notes</div><p className="mt-2 text-xs leading-5 text-fg">{selectedProject.notes}</p></div>}
-                  <div className="space-y-3">
-                    {selectedProject.teamMembers.length > 0 && <div><div className="flex items-center gap-2 text-[11px] font-semibold text-muted"><Users size={13} />Team</div><div className="mt-2 flex flex-wrap gap-1.5">{selectedProject.teamMembers.map(member => <span key={member} className="rounded-control border border-line bg-bg px-2 py-1 text-[10px] text-fg">{member}</span>)}</div></div>}
-                    {selectedProject.techStack.length > 0 && <div><div className="flex items-center gap-2 text-[11px] font-semibold text-muted"><Tag size={13} />Stack</div><div className="mt-2 flex flex-wrap gap-1.5">{selectedProject.techStack.map(item => <span key={item} className="rounded-control border border-line bg-bg px-2 py-1 text-[10px] text-muted">{item}</span>)}</div></div>}
-                  </div>
-                </div>
-              )}
-            </div>
+          <section aria-label="Projects key performance indicators">
+            <AdminMetricStrip
+              className="sm:grid-cols-2 lg:grid-cols-4"
+              metrics={[
+                {
+                  id: 'active-value',
+                  label: 'Total active value',
+                  value: formatAmount(metrics.value, currency),
+                  change: activeProjects.length + ' active',
+                  changeToneClassName: 'text-success',
+                  context: 'Across active contracts',
+                  sparkline: activeProjects.slice(0, 5).map(project => project.budget),
+                  icon: <CircleDollarSign size={15} />,
+                  toneClassName: 'text-success',
+                },
+                {
+                  id: 'velocity',
+                  label: 'Avg delivery velocity',
+                  value: metrics.velocity + '%',
+                  change: metrics.openTasks + ' open tasks',
+                  changeToneClassName: 'text-info',
+                  context: 'Based on active project progress',
+                  sparkline: activeProjects.slice(0, 5).map(project => project.progressPercent),
+                  icon: <BarChart3 size={15} />,
+                  toneClassName: 'text-info',
+                },
+                {
+                  id: 'risk',
+                  label: 'Milestones at risk',
+                  value: String(metrics.milestonesAtRisk || metrics.risks),
+                  change: metrics.risks ? 'Action required' : 'Healthy',
+                  changeToneClassName: metrics.risks ? 'text-danger' : 'text-success',
+                  context: metrics.risks + ' projects need attention',
+                  sparkline: [metrics.risks, metrics.milestonesAtRisk, metrics.openTasks, activeProjects.length],
+                  icon: <ShieldAlert size={15} />,
+                  toneClassName: metrics.risks ? 'text-danger' : 'text-success',
+                },
+                {
+                  id: 'allocation',
+                  label: 'Resource allocation',
+                  value: metrics.assignedPeople + ' assigned',
+                  change: activeProjects.length + ' active projects',
+                  changeToneClassName: 'text-muted',
+                  context: 'Unique owners & contributors',
+                  sparkline: [1, Math.max(1, metrics.assignedPeople - 2), metrics.assignedPeople],
+                  icon: <Users size={15} />,
+                  toneClassName: 'text-fg',
+                },
+              ]}
+            />
           </section>
 
-          <section className="rounded-card border border-line bg-panel">
-            <div className="border-b border-line p-4 sm:p-5">
-              <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-                <div>
-                  <div className="flex items-center gap-2"><ListTodo size={16} className="text-accent-text" /><h2 className="text-sm font-semibold text-fg">Tasks</h2></div>
-                  <p className="mt-1 text-xs text-muted">{selectedProjectTaskStats.open} open · {selectedProjectTaskStats.done} done · {selectedProjectTaskStats.overdue} overdue</p>
+          <AdminPanel
+            title="Project portfolio"
+            description={serverMode ? 'Synced project records with slug-based navigation.' : 'Seeded slug data keeps the workspace fully testable without a connected project service.'}
+            actions={(
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative min-w-[220px]">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                  <input value={projectSearch} onChange={event => setProjectSearch(event.target.value)} placeholder="Search projects or slug..." className={fieldClass + ' mt-0 pl-9'} />
                 </div>
-                <div className="flex flex-col gap-2 lg:flex-row">
-                  <div className="relative min-w-0 lg:w-60">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-                    <input value={taskSearch} onChange={event => setTaskSearch(event.target.value)} placeholder="Search tasks..." aria-label="Search tasks" className={fieldClass + ' pl-8'} />
-                  </div>
-                  <CustomSelect value={taskStatusFilter} onChange={setTaskStatusFilter} options={[{ value: '', label: 'All statuses' }, ...TASK_COLUMNS.map(item => ({ value: item.id, label: item.label }))]} className="w-full lg:w-36" />
-                  <CustomSelect value={taskPriorityFilter} onChange={setTaskPriorityFilter} options={[{ value: '', label: 'All priorities' }, ...TASK_PRIORITIES]} className="w-full lg:w-36" />
-                  <CustomSelect value={taskAssigneeFilter} onChange={setTaskAssigneeFilter} options={[{ value: '', label: 'All assignees' }, ...allAssignees.map(value => ({ value, label: value }))]} className="w-full lg:w-40" />
-                  <CustomSelect value={taskSort} onChange={value => setTaskSort(value as TaskSortKey)} options={[{ value: 'dueDate', label: 'Due date' }, { value: 'priority', label: 'Priority' }, { value: 'updated', label: 'Recent' }, { value: 'title', label: 'Title' }]} className="w-full lg:w-32" />
-                  {canManageKanbanTasks && (
-                    <Button icon={<Plus size={14} />} onClick={openNewTask}>New Task</Button>
-                  )}
+                <CustomSelect
+                  value={projectStatusFilter}
+                  onChange={setProjectStatusFilter}
+                  options={[{ value: '', label: 'All statuses' }, ...PROJECT_STATUSES]}
+                  className="w-40"
+                />
+              </div>
+            )}
+          >
+            {loading ? (
+              <div className="grid gap-3 p-4 md:grid-cols-2 lg:grid-cols-4">
+                {[1, 2, 3, 4].map(item => <div key={item} className="h-40 animate-pulse rounded-card bg-bg" />)}
+              </div>
+            ) : projectLayout === 'board' ? (
+              <div className="overflow-x-auto custom-scrollbar p-4 sm:p-5">
+                <div className="grid min-w-[1100px] grid-cols-4 gap-3">
+                  {[
+                    { id: 'discovery', label: 'In Discovery & Design', dot: 'bg-info' },
+                    { id: 'development', label: 'Active Development', dot: 'bg-accent' },
+                    { id: 'qa', label: 'QA & Code Review', dot: 'bg-warning' },
+                    { id: 'deployed', label: 'Deployed / Handover', dot: 'bg-success' },
+                  ].map(lane => {
+                    const items = boardProjects.filter(project => laneForProject(project) === lane.id);
+                    return (
+                      <div key={lane.id} className="min-h-[460px] rounded-card border border-line bg-bg p-3">
+                        <div className="mb-3 flex items-center justify-between rounded-control border border-line bg-panel px-3 py-2">
+                          <div className="flex items-center gap-2">
+                            <span className={'h-2 w-2 rounded-full ' + lane.dot} />
+                            <span className="text-xs font-semibold text-fg">{lane.label}</span>
+                          </div>
+                          <span className="rounded-control border border-line bg-bg px-2 py-1 text-[10px] font-medium tabular-nums text-muted">{items.length}</span>
+                        </div>
+
+                        <div className="space-y-2.5">
+                          {items.length === 0 ? (
+                            <div className="rounded-card border border-dashed border-line p-6 text-center text-[11px] text-muted">No projects in this stage.</div>
+                          ) : (
+                            items.map(project => {
+                              const taskDone = project.tasks.filter(task => task.status === 'done').length;
+                              const burn = Math.round(project.budget * (project.progressPercent / 100));
+                              const milestoneDone = project.milestones.filter(milestone => milestone.completed).length;
+                              return (
+                                <article key={project.id} className="group rounded-card border border-line bg-panel p-4 transition-colors hover:border-accent/40">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <button type="button" onClick={() => openProjectDetail(project)} className="min-w-0 text-left">
+                                      <div className="truncate text-[10px] font-medium uppercase tracking-[0.08em] text-muted">{project.clientCompany}</div>
+                                      <h3 className="mt-0.5 line-clamp-2 text-xs font-semibold leading-5 text-fg">{project.name}</h3>
+                                    </button>
+                                    <button type="button" aria-label={'Actions for ' + project.name} onClick={() => openProjectDetail(project)} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg">
+                                      <MoreHorizontal size={15} />
+                                    </button>
+                                  </div>
+
+                                  <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                                    <span className={'rounded-badge border px-2 py-1 text-[10px] font-medium ' + healthClass(project.health)}>{project.health || 'Good'}</span>
+                                    <span className="text-[10px] text-muted">{milestoneDone}/{project.milestones.length || 0} milestones</span>
+                                    <span className="text-[10px] text-muted">•</span>
+                                    <span className="text-[10px] text-muted">{taskDone}/{project.tasks.length} tasks</span>
+                                  </div>
+
+                                  <div className="mt-3 space-y-1.5">
+                                    <div className="flex items-center justify-between text-[10px] text-muted">
+                                      <span>Progress</span>
+                                      <span className="font-semibold tabular-nums text-fg">{project.progressPercent}%</span>
+                                    </div>
+                                    <div className="h-1.5 overflow-hidden rounded-full bg-bg">
+                                      <div className="h-full rounded-full bg-accent" style={{ width: project.progressPercent + '%' }} />
+                                    </div>
+                                  </div>
+
+                                  <div className="mt-3 border-t border-line pt-2.5">
+                                    <div className="flex items-end justify-between gap-3">
+                                      <div className="min-w-0">
+                                        <div className="text-[10px] uppercase tracking-[0.06em] text-muted">Budget burn</div>
+                                        <div className="mt-0.5 truncate text-xs font-medium tabular-nums text-fg">
+                                          {formatAmount(burn, currency)}
+                                          <span className="text-muted"> / {formatAmount(project.budget, currency)}</span>
+                                        </div>
+                                      </div>
+                                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-[10px] font-semibold text-fg" title={project.teamLead || 'Unassigned'}>
+                                        {initials(project.teamLead || project.teamMembers[0] || 'NA')}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className="mt-3 flex items-center justify-between gap-2 text-[10px]">
+                                    <span className="truncate text-muted">{project.slug}</span>
+                                    <button type="button" onClick={() => goToSprint(project)} className="shrink-0 text-accent-text hover:text-accent">Delivery <ArrowUpRight size={11} className="inline" /></button>
+                                  </div>
+                                </article>
+                              );
+                            })
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
+            ) : (
+              <div className="overflow-x-auto custom-scrollbar">
+                <table className="ams-data-table min-w-[980px] text-left">
+                  <thead>
+                    <tr>
+                      <th>Project</th>
+                      <th>Status</th>
+                      <th>Progress</th>
+                      <th>Budget burn</th>
+                      <th>Owner</th>
+                      <th>Deadline</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredProjects.map(project => {
+                      const burn = Math.round(project.budget * (project.progressPercent / 100));
+                      return (
+                        <tr key={project.id}>
+                          <td>
+                            <button type="button" onClick={() => openProjectDetail(project)} className="min-w-0 text-left">
+                              <div className="max-w-[260px] truncate text-xs font-semibold text-fg">{project.name}</div>
+                              <div className="mt-0.5 max-w-[260px] truncate text-[11px] text-muted">{project.clientCompany}</div>
+                            </button>
+                          </td>
+                          <td><span className={'inline-flex rounded-badge border px-2 py-1 text-[10px] font-semibold ' + projectStatusClass(project.status)}>{statusLabel(project.status)}</span></td>
+                          <td>
+                            <div className="min-w-[150px]">
+                              <div className="flex items-center justify-between text-[10px] text-muted"><span>Delivery</span><span className="tabular-nums text-fg">{project.progressPercent}%</span></div>
+                              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg"><div className="h-full rounded-full bg-accent" style={{ width: project.progressPercent + '%' }} /></div>
+                            </div>
+                          </td>
+                          <td className="text-xs tabular-nums font-medium text-fg">{formatAmount(burn, currency)} <span className="text-muted">/ {formatAmount(project.budget, currency)}</span></td>
+                          <td className="text-xs text-fg">{project.teamLead || 'Unassigned'}</td>
+                          <td className={'text-xs ' + (isOverdue(project.targetEndDate) && project.status !== 'completed' ? 'text-danger' : 'text-fg')}>{formatDate(project.targetEndDate)}</td>
+                          <td>
+                            <div className="ams-table-actions">
+                              <button type="button" className="ams-table-action" onClick={() => openProjectDetail(project)}>View</button>
+                              <button type="button" className="ams-table-action" data-primary="true" onClick={() => openEditProject(project)}>Edit</button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </AdminPanel>
+        </>
+      )}
+
+      {view === 'sprint' && (
+        <div className="space-y-4">
+          <AdminPanel
+            title="Sprint workspace"
+            description="Select a project, filter tasks, then move work across the delivery stages."
+            actions={(
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                <CustomSelect
+                  value={selectedSprintProject?.id || ''}
+                  onChange={value => {
+                    const project = projects.find(item => item.id === value);
+                    const next = new URLSearchParams(searchParams);
+                    if (project) next.set('project', project.slug);
+                    setSearchParams(next, { replace: true });
+                  }}
+                  options={activeProjects.map(project => ({ value: project.id, label: project.name }))}
+                  className="w-full sm:w-56"
+                />
+                <Button icon={<Plus size={14} />} onClick={openNewTask}>New Task</Button>
+              </div>
+            )}
+          >
+            <div className="grid gap-3 border-b border-line p-4 sm:grid-cols-[1fr_180px_180px] sm:p-5">
+              <div className="relative">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                <input value={taskSearch} onChange={event => setTaskSearch(event.target.value)} placeholder="Search tasks, owner, tags..." className={fieldClass + ' mt-0 pl-9'} />
+              </div>
+              <CustomSelect value={taskPriorityFilter} onChange={setTaskPriorityFilter} options={[{ value: '', label: 'All priorities' }, ...TASK_PRIORITIES]} className="w-full" />
+              <span className="inline-flex min-h-9 items-center justify-center rounded-control border border-line bg-bg px-3 text-xs text-muted">{visibleTasks.length} tasks</span>
             </div>
 
             <div className="overflow-x-auto custom-scrollbar p-4 sm:p-5">
-              <div className="flex min-w-max gap-3 pb-1">
+              <div className="grid min-w-[1080px] grid-cols-4 gap-3">
                 {TASK_COLUMNS.map(column => {
                   const tasks = visibleTasks.filter(task => task.status === column.id);
                   return (
-                    <div key={column.id} onDragOver={event => event.preventDefault()} onDrop={event => void onDropTask(event, column.id)} className="w-[280px] rounded-card border border-line bg-bg p-3 sm:w-[300px]">
-                      <div className="flex items-center justify-between border-b border-line pb-3">
-                        <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-muted" /><span className="text-xs font-semibold text-fg">{column.label}</span></div>
-                        <span className="rounded-control border border-line bg-panel px-2 py-1 text-[10px] tabular-nums text-muted">{tasks.length}</span>
+                    <div
+                      key={column.id}
+                      onDragOver={event => event.preventDefault()}
+                      onDrop={event => {
+                        const id = event.dataTransfer.getData('text/plain');
+                        const task = selectedSprintProject?.tasks.find(item => item.id === id);
+                        if (task) void updateTaskStatus(task, column.id);
+                      }}
+                      className="min-h-[460px] rounded-card border border-line bg-bg p-3"
+                    >
+                      <div className="mb-3 flex items-center justify-between rounded-control border border-line bg-panel px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <span className={'h-2 w-2 rounded-full ' + column.tone} />
+                          <span className="text-xs font-semibold text-fg">{column.label}</span>
+                        </div>
+                        <span className="rounded-control border border-line bg-bg px-2 py-1 text-[10px] tabular-nums text-muted">{tasks.length}</span>
                       </div>
-                      <div className="mt-3 space-y-2.5">
+
+                      <div className="space-y-2.5">
                         {tasks.length === 0 ? (
-                          <div className="flex min-h-28 items-center justify-center rounded-control border border-dashed border-line px-3 text-center text-[11px] text-muted">No tasks in this stage.</div>
+                          <div className="rounded-card border border-dashed border-line p-6 text-center text-[11px] text-muted">No tasks in this stage.</div>
                         ) : tasks.map(task => {
-                          const subtasks = task.subtasks || [];
-                          const doneSubtasks = subtasks.filter(item => item.completed).length;
+                          const doneSubtasks = (task.subtasks || []).filter(item => item.completed).length;
                           const overdue = task.status !== 'done' && isOverdue(task.dueDate);
                           return (
-                            <article key={task.id} draggable={canManageKanbanTasks} onDragStart={event => { event.dataTransfer.setData('text/plain', task.id); setDraggedTaskId(task.id); }} onClick={() => setTaskDrawer(task)} className={'group rounded-card border bg-panel p-3 transition-colors ' + (draggedTaskId === task.id ? 'border-accent opacity-50' : 'border-line hover:border-accent/50')}>
+                            <article
+                              key={task.id}
+                              draggable
+                              onDragStart={event => event.dataTransfer.setData('text/plain', task.id)}
+                              className="group rounded-card border border-line bg-panel p-3 transition-colors hover:border-accent/40"
+                            >
                               <div className="flex items-start justify-between gap-2">
                                 <div className="flex min-w-0 items-center gap-1.5">
-                                  {canManageKanbanTasks && <GripVertical size={13} className="shrink-0 text-muted" aria-label="Draggable task" />}
-                                  <span className={'rounded-badge border px-2 py-1 text-[10px] font-semibold ' + taskPriorityClass(task.priority)}>{priorityLabel(task.priority)}</span>
+                                  <GripVertical size={13} className="shrink-0 text-muted" />
+                                  <span className={'rounded-badge border px-2 py-1 text-[10px] font-semibold ' + priorityClass(task.priority)}>{priorityLabel(task.priority)}</span>
                                 </div>
-                                <button aria-label={'Task actions for ' + task.title} onClick={event => { event.stopPropagation(); openEditTask(task); }} className="inline-flex min-h-10 min-w-10 sm:min-h-9 sm:min-w-9 items-center justify-center rounded-control text-muted opacity-0 transition-opacity hover:bg-bg hover:text-fg group-hover:opacity-100 focus:opacity-100"><Edit3 size={13} /></button>
+                                <button type="button" onClick={() => { setSelectedTask(task); }} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label={'Task actions for ' + task.title}>
+                                  <MoreHorizontal size={14} />
+                                </button>
                               </div>
-                              <h3 className="mt-2 text-xs font-semibold leading-5 text-fg">{task.title}</h3>
-                              {task.description && <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-muted">{task.description}</p>}
-                              {subtasks.length > 0 && <div className="mt-3"><div className="flex items-center justify-between text-[10px] text-muted"><span>Checklist</span><span className="tabular-nums">{doneSubtasks}/{subtasks.length}</span></div><div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg"><div className="h-full rounded-full bg-success" style={{ width: ((doneSubtasks / subtasks.length) * 100) + '%' }} /></div></div>}
+                              <button type="button" onClick={() => setSelectedTask(task)} className="mt-2 block w-full text-left">
+                                <h3 className="text-xs font-semibold leading-5 text-fg">{task.title}</h3>
+                                {task.description && <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-muted">{task.description}</p>}
+                              </button>
+
+                              {(task.subtasks || []).length > 0 && (
+                                <div className="mt-3">
+                                  <div className="flex items-center justify-between text-[10px] text-muted"><span>Checklist</span><span>{doneSubtasks}/{(task.subtasks || []).length}</span></div>
+                                  <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg">
+                                    <div className="h-full rounded-full bg-success" style={{ width: ((doneSubtasks / (task.subtasks || []).length) * 100) + '%' }} />
+                                  </div>
+                                </div>
+                              )}
+
                               <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-2.5 text-[10px]">
-                                <span className="flex min-w-0 items-center gap-1.5 text-muted"><span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-line bg-bg text-[9px] font-semibold text-fg">{task.assignedTo.charAt(0) || '?'}</span><span className="truncate">{task.assignedTo || 'Unassigned'}</span></span>
-                                <span className={overdue ? 'shrink-0 font-semibold text-danger' : 'shrink-0 text-muted'}>{overdue ? 'Overdue' : formatDate(task.dueDate)}</span>
+                                <span className="flex min-w-0 items-center gap-1.5 text-muted">
+                                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-line bg-bg text-[9px] font-semibold text-fg">{initials(task.assignedTo)}</span>
+                                  <span className="truncate">{task.assignedTo || 'Unassigned'}</span>
+                                </span>
+                                <span className={overdue ? 'text-danger font-semibold' : 'text-muted'}>{overdue ? 'Overdue' : formatDate(task.dueDate)}</span>
                               </div>
                             </article>
                           );
@@ -904,89 +1416,99 @@ export const AdminProjects: React.FC = () => {
                 })}
               </div>
             </div>
-          </section>
-        </>
-      )}
-
-      {!selectedProject && !loading && projects.length > 0 && (
-        <div className="rounded-card border border-dashed border-line bg-panel p-8 text-center">
-          <FolderKanban className="mx-auto text-muted" size={22} />
-          <p className="mt-3 text-sm font-semibold text-fg">Select a project</p>
-          <p className="mt-1 text-xs text-muted">Choose a project above to open its delivery workspace.</p>
+          </AdminPanel>
         </div>
       )}
 
-      {/* CONTEXTUAL TASK DETAIL DRAWER */}
-      {taskDrawer && selectedProject && (
-        <Modal
-          open={!!taskDrawer}
-          onClose={() => setTaskDrawer(null)}
-          size="lg"
-          title={taskDrawer.title}
-          description="Task details"
-        >
+      {view === 'budget' && (
+        <>
+          <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              ['Committed', formatAmount(activeProjects.reduce((sum, project) => sum + project.budget, 0), currency), 'Active portfolio'],
+              ['Burn to date', formatAmount(budgetRows.filter(row => row.project.status !== 'completed').reduce((sum, row) => sum + row.burn, 0), currency), 'Derived from progress'],
+              ['Remaining', formatAmount(budgetRows.filter(row => row.project.status !== 'completed').reduce((sum, row) => sum + row.remaining, 0), currency), 'Unburned commitment'],
+              ['At risk', String(budgetRows.filter(row => row.project.health !== 'Good').length), 'Projects to review'],
+            ].map(([label, value, context]) => (
+              <article key={label} className="rounded-card border border-line bg-panel p-4">
+                <div className="text-xs font-medium text-muted">{label}</div>
+                <div className="mt-3 text-2xl font-semibold tabular-nums text-fg">{value}</div>
+                <div className="mt-1 text-[11px] text-muted">{context}</div>
+              </article>
+            ))}
+          </section>
 
-            <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
-              <div className="flex flex-wrap gap-2">
-                <span className={'rounded-badge border px-2 py-1 text-[10px] font-semibold ' + taskPriorityClass(taskDrawer.priority)}>{priorityLabel(taskDrawer.priority)}</span>
-                <span className="rounded-control border border-line bg-bg px-2 py-1 text-[10px] text-muted">{formatDate(taskDrawer.dueDate)}</span>
-              </div>
-
-              <div className="mt-5">
-                <div className="text-[11px] font-semibold text-muted">Status</div>
-                <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  {TASK_COLUMNS.map(column => <button key={column.id} disabled={!canManageKanbanTasks} onClick={() => void changeTaskStatus(taskDrawer, column.id)} className={'min-h-10 rounded-control border px-2 text-[11px] font-semibold transition-colors ' + (taskDrawer.status === column.id ? 'border-line bg-panel-hover text-fg' : 'border-line bg-bg text-muted hover:text-fg')}>{column.label}</button>)}
-                </div>
-              </div>
-
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-control border border-line bg-bg p-3"><div className="text-[10px] text-muted">Assignee</div><div className="mt-1 flex items-center gap-2 text-xs font-semibold text-fg"><User size={13} />{taskDrawer.assignedTo || 'Unassigned'}</div></div>
-                <div className="rounded-control border border-line bg-bg p-3"><div className="text-[10px] text-muted">Due date</div><div className="mt-1 flex items-center gap-2 text-xs font-semibold text-fg"><Calendar size={13} />{formatDate(taskDrawer.dueDate)}</div></div>
-              </div>
-
-              <div className="mt-5">
-                <div className="text-[11px] font-semibold text-muted">Description</div>
-                <div className="mt-2 rounded-card border border-line bg-bg p-3 text-xs leading-5 text-fg">{taskDrawer.description || 'No description provided.'}</div>
-              </div>
-
-              <div className="mt-5">
-                <div className="flex items-center justify-between"><div className="text-[11px] font-semibold text-muted">Checklist</div><span className="text-[10px] text-muted">{(taskDrawer.subtasks || []).filter(item => item.completed).length}/{(taskDrawer.subtasks || []).length}</span></div>
-                <div className="mt-2 space-y-2">
-                  {(taskDrawer.subtasks || []).length === 0 ? <div className="rounded-control border border-dashed border-line p-3 text-xs text-muted">No checklist items.</div> : (taskDrawer.subtasks || []).map(item => (
-                    <button key={item.id} disabled={!canManageKanbanTasks} onClick={() => void toggleSubtask(taskDrawer, item)} className="flex w-full items-center gap-2.5 rounded-control border border-line bg-bg p-3 text-left">
-                      {item.completed ? <CheckCircle2 size={16} className="shrink-0 text-success" /> : <span className="h-4 w-4 shrink-0 rounded-badge border border-muted" />}
-                      <span className={'text-xs ' + (item.completed ? 'text-muted line-through' : 'text-fg')}>{item.title}</span>
-                    </button>
+          <AdminPanel title="Budget vs actual" description="Progress-based actuals keep this view useful before financial ledger integration.">
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="ams-data-table min-w-[900px] text-left">
+                <thead>
+                  <tr><th>Project</th><th>Budget</th><th>Actual to date</th><th>Remaining</th><th>Progress</th><th>Variance</th></tr>
+                </thead>
+                <tbody>
+                  {budgetRows.map(row => (
+                    <tr key={row.project.id}>
+                      <td>
+                        <button type="button" onClick={() => openProjectDetail(row.project)} className="text-left">
+                          <div className="text-xs font-semibold text-fg">{row.project.name}</div>
+                          <div className="mt-0.5 text-[11px] text-muted">{row.project.clientCompany}</div>
+                        </button>
+                      </td>
+                      <td className="text-xs tabular-nums text-fg">{formatAmount(row.project.budget, currency)}</td>
+                      <td className="text-xs tabular-nums text-fg">{formatAmount(row.burn, currency)}</td>
+                      <td className="text-xs tabular-nums text-fg">{formatAmount(row.remaining, currency)}</td>
+                      <td>
+                        <div className="min-w-[150px]"><div className="flex justify-between text-[10px] text-muted"><span>Delivery</span><span>{row.project.progressPercent}%</span></div><div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg"><div className="h-full rounded-full bg-accent" style={{ width: row.project.progressPercent + '%' }} /></div></div>
+                      </td>
+                      <td className={'text-xs tabular-nums font-medium ' + (row.variance < 0 ? 'text-danger' : 'text-success')}>{formatAmount(row.variance, currency)}</td>
+                    </tr>
                   ))}
-                </div>
-              </div>
-
-              {(taskDrawer.tags || []).length > 0 && <div className="mt-5"><div className="text-[11px] font-semibold text-muted">Tags</div><div className="mt-2 flex flex-wrap gap-1.5">{taskDrawer.tags?.map(tag => <span key={tag} className="rounded-control border border-line bg-bg px-2 py-1 text-[10px] text-muted">{tag}</span>)}</div></div>}
+                </tbody>
+              </table>
             </div>
-            <footer className="flex shrink-0 items-center justify-between gap-2 border-t border-line bg-panel px-4 py-3 sm:px-5">
-              <Button variant="destructive" icon={<Trash2 size={13} />} onClick={() => setDeleteTaskTarget(taskDrawer)} disabled={!canManageKanbanTasks}>Delete</Button>
-              <div className="flex gap-2"><Button variant="secondary" onClick={() => setTaskDrawer(null)}>Close</Button>{canManageKanbanTasks && <Button icon={<Edit3 size={13} />} onClick={() => openEditTask(taskDrawer)}>Edit task</Button>}</div>
-            </footer>
-        </Modal>
+          </AdminPanel>
+        </>
+      )}
+
+      {view === 'archived' && (
+        <AdminPanel title="Archived projects" description="Completed delivery records remain queryable and can still be opened from their slug.">
+          <div className="overflow-x-auto custom-scrollbar">
+            <table className="ams-data-table min-w-[900px] text-left">
+              <thead><tr><th>Project</th><th>Client</th><th>Completed</th><th>Budget</th><th>Owner</th><th>Slug</th><th>Actions</th></tr></thead>
+              <tbody>
+                {archivedProjects.map(project => (
+                  <tr key={project.id}>
+                    <td className="text-xs font-semibold text-fg">{project.name}</td>
+                    <td className="text-xs text-muted">{project.clientCompany}</td>
+                    <td className="text-xs text-fg">{formatDate(project.targetEndDate)}</td>
+                    <td className="text-xs tabular-nums text-fg">{formatAmount(project.budget, currency)}</td>
+                    <td className="text-xs text-fg">{project.teamLead || 'Unassigned'}</td>
+                    <td className="text-[11px] text-muted">{project.slug}</td>
+                    <td><div className="ams-table-actions"><button type="button" className="ams-table-action" onClick={() => openProjectDetail(project)}>View</button><button type="button" className="ams-table-action" data-primary="true" onClick={() => openEditProject(project)}>Edit</button></div></td>
+                  </tr>
+                ))}
+                {archivedProjects.length === 0 && <tr><td colSpan={7} className="py-12 text-center text-xs text-muted">No archived projects yet.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </AdminPanel>
       )}
 
       <Drawer
-        open={projectModalOpen}
-        onClose={() => !saving && setProjectModalOpen(false)}
+        open={projectDrawerOpen}
+        onClose={() => !saving && setProjectDrawerOpen(false)}
         size="xl"
         title={editingProject ? 'Edit project' : 'New project'}
-        description="Keep project information aligned with the delivery record."
+        description="Maintain one canonical project record for client, delivery, budget, and ownership."
         footer={(
           <>
-            <Button type="button" variant="secondary" onClick={() => setProjectModalOpen(false)} disabled={saving}>Cancel</Button>
-            <Button type="submit" form="project-form" loading={saving}>{editingProject ? 'Save changes' : 'Create project'}</Button>
+            <Button type="button" variant="secondary" onClick={() => setProjectDrawerOpen(false)} disabled={saving}>Cancel</Button>
+            <Button type="submit" form="projects-form" loading={saving}>{editingProject ? 'Save changes' : 'Create project'}</Button>
           </>
         )}
       >
-        <form id="project-form" onSubmit={saveProject} className="space-y-5">
+        <form id="projects-form" onSubmit={saveProject} className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="text-xs text-muted">Project name<input value={projectForm.name} onChange={event => setProjectForm({ ...projectForm, name: event.target.value })} className={fieldClass} required /></label>
-            <label className="text-xs text-muted">Client company<input value={projectForm.clientCompany} onChange={event => setProjectForm({ ...projectForm, clientCompany: event.target.value })} className={fieldClass} required /></label>
+            <label className="text-xs text-muted">Project name<input required value={projectForm.name} onChange={event => setProjectForm({ ...projectForm, name: event.target.value })} className={fieldClass} /></label>
+            <label className="text-xs text-muted">Client company<input required value={projectForm.clientCompany} onChange={event => setProjectForm({ ...projectForm, clientCompany: event.target.value })} className={fieldClass} /></label>
             <label className="text-xs text-muted">Client contact<input value={projectForm.clientName} onChange={event => setProjectForm({ ...projectForm, clientName: event.target.value })} className={fieldClass} /></label>
             <label className="text-xs text-muted">Client email<input type="email" value={projectForm.clientEmail} onChange={event => setProjectForm({ ...projectForm, clientEmail: event.target.value })} className={fieldClass} /></label>
             <label className="text-xs text-muted">Service category<input value={projectForm.serviceCategory} onChange={event => setProjectForm({ ...projectForm, serviceCategory: event.target.value })} className={fieldClass} /></label>
@@ -1008,35 +1530,27 @@ export const AdminProjects: React.FC = () => {
       </Drawer>
 
       <Drawer
-        open={taskModalOpen}
-        onClose={() => !saving && setTaskModalOpen(false)}
-        size="xl"
+        open={taskDrawerOpen}
+        onClose={() => !saving && setTaskDrawerOpen(false)}
+        size="lg"
         title={editingTask ? 'Edit task' : 'New task'}
-        description="Update the task record used by the project execution board."
+        description="Keep task ownership, priority, timing, and checklist detail aligned to the delivery board."
         footer={(
           <>
-            <Button type="button" variant="secondary" onClick={() => setTaskModalOpen(false)} disabled={saving}>Cancel</Button>
-            <Button type="submit" form="task-form" loading={saving}>{editingTask ? 'Save changes' : 'Create task'}</Button>
+            <Button type="button" variant="secondary" onClick={() => setTaskDrawerOpen(false)} disabled={saving}>Cancel</Button>
+            <Button type="submit" form="projects-task-form" loading={saving}>{editingTask ? 'Save changes' : 'Create task'}</Button>
           </>
         )}
       >
-        <form id="task-form" onSubmit={handleAddTask} className="space-y-5">
+        <form id="projects-task-form" onSubmit={saveTask} className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="text-xs text-muted sm:col-span-2">Task title<input value={taskForm.title} onChange={event => setTaskForm({ ...taskForm, title: event.target.value })} className={fieldClass} required /></label>
-            <div><label className="text-xs text-muted">Project</label><CustomSelect value={taskForm.projectId} onChange={value => setTaskForm({ ...taskForm, projectId: value })} options={projects.map(project => ({ value: project.id, label: project.name }))} className="mt-1 w-full" /></div>
-            <div>
-              <label className="text-xs text-muted">Assignee</label>
-              <CustomSelect
-                value={taskForm.assignee}
-                onChange={value => setTaskForm({ ...taskForm, assignee: value })}
-                options={taskAssignees.map(assignee => ({ value: assignee.username, label: assignee.name + ' · ' + assignee.username }))}
-                className="mt-1 w-full"
-              />
-            </div>
+            <label className="text-xs text-muted sm:col-span-2">Task title<input required value={taskForm.title} onChange={event => setTaskForm({ ...taskForm, title: event.target.value })} className={fieldClass} /></label>
+            <div><label className="text-xs text-muted">Project</label><CustomSelect value={taskForm.projectId} onChange={value => setTaskForm({ ...taskForm, projectId: value })} options={activeProjects.map(project => ({ value: project.id, label: project.name }))} className="mt-1 w-full" /></div>
+            <label className="text-xs text-muted">Assignee<input value={taskForm.assignee} onChange={event => setTaskForm({ ...taskForm, assignee: event.target.value })} className={fieldClass} /></label>
             <div><label className="text-xs text-muted">Status</label><CustomSelect value={taskForm.status} onChange={value => setTaskForm({ ...taskForm, status: value as TaskStatus })} options={TASK_COLUMNS.map(item => ({ value: item.id, label: item.label }))} className="mt-1 w-full" /></div>
             <div><label className="text-xs text-muted">Priority</label><CustomSelect value={taskForm.priority} onChange={value => setTaskForm({ ...taskForm, priority: value as TaskPriority })} options={TASK_PRIORITIES} className="mt-1 w-full" /></div>
-            <label className="text-xs text-muted">Due date<input type="date" value={taskForm.dueDate} onChange={event => setTaskForm({ ...taskForm, dueDate: event.target.value })} className={fieldClass} required /></label>
-            <label className="text-xs text-muted">Tags, comma separated<input value={taskForm.tags} onChange={event => setTaskForm({ ...taskForm, tags: event.target.value })} className={fieldClass} /></label>
+            <label className="text-xs text-muted">Due date<input required type="date" value={taskForm.dueDate} onChange={event => setTaskForm({ ...taskForm, dueDate: event.target.value })} className={fieldClass} /></label>
+            <label className="text-xs text-muted sm:col-span-2">Tags, comma separated<input value={taskForm.tags} onChange={event => setTaskForm({ ...taskForm, tags: event.target.value })} className={fieldClass} /></label>
             <label className="text-xs text-muted sm:col-span-2">Description<textarea value={taskForm.description} onChange={event => setTaskForm({ ...taskForm, description: event.target.value })} className={fieldClass + ' min-h-24 py-2'} /></label>
             <label className="text-xs text-muted sm:col-span-2">Checklist, one item per line<textarea value={taskForm.subtasks} onChange={event => setTaskForm({ ...taskForm, subtasks: event.target.value })} className={fieldClass + ' min-h-24 py-2'} /></label>
           </div>
@@ -1045,12 +1559,5 @@ export const AdminProjects: React.FC = () => {
     </div>
   );
 };
-
-const TrendingIcon: React.FC<{ size?: number; className?: string }> = ({ size = 14, className }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
-    <path d="m3 17 6-6 4 4 8-8" />
-    <path d="M14 7h7v7" />
-  </svg>
-);
 
 export default AdminProjects;
