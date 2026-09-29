@@ -540,7 +540,7 @@ export const AdminLayout: React.FC = () => {
       <main className="flex-1 flex flex-col min-w-0 min-h-0 h-full overflow-y-auto overscroll-none bg-bg custom-scrollbar">
         
         {/* Sticky desktop top bar */}
-        <header className="hidden min-[900px]:flex h-[52px] min-h-[52px] border-b border-line bg-panel sticky top-0 z-30 items-center shrink-0" aria-label="AMS top bar">
+        <header className="hidden min-[900px]:flex h-14 min-h-14 border-b border-line bg-panel/95 backdrop-blur-sm sticky top-0 z-30 items-center shrink-0" aria-label="AMS top bar">
           <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-5 lg:px-6 flex min-w-0 items-center justify-between gap-3">
             <div className="min-w-0 flex-1 overflow-hidden">
               {location.pathname.startsWith('/admin/clients') ? (
@@ -565,7 +565,7 @@ export const AdminLayout: React.FC = () => {
                   })}
                 </nav>
               ) : location.pathname === '/admin/dashboard' ? (
-                <nav aria-label="Dashboard view" className="flex min-w-0 items-center gap-1 overflow-x-auto ams-topnav-scroll">
+                <nav aria-label="Dashboard view" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto rounded-control border border-line/80 bg-bg/55 p-1 ams-topnav-scroll">
                   {[
                     { key: 'overview', label: 'Overview', search: '' },
                     { key: 'performance', label: 'Performance', search: '?view=performance' },
@@ -577,7 +577,7 @@ export const AdminLayout: React.FC = () => {
                       end
                       className={() => {
                         const activeView = new URLSearchParams(location.search).get('view') || 'overview';
-                        return 'group relative inline-flex h-9 shrink-0 items-center rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (activeView === tab.key ? 'border border-accent/25 bg-accent/10 font-semibold text-fg' : 'border border-transparent text-muted hover:bg-panel-hover hover:text-fg');
+                        return 'group relative inline-flex h-8 shrink-0 items-center rounded-chip px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (activeView === tab.key ? 'border border-accent/25 bg-panel font-semibold text-fg shadow-sm' : 'border border-transparent text-muted hover:bg-panel-hover hover:text-fg');
                       }}
                     >
                       {tab.label}
