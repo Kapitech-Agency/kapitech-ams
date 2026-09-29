@@ -24,7 +24,7 @@ import { AGENCY_TIER_LABELS, AgencyTier, getAgencyTier, useRbacRole } from '../.
 import { AmsBrandLogo } from '../../components/admin/AmsBrandLogo';
 import UserAvatar from '../../components/admin/UserAvatar';
 import UserProfileSettingsModal from '../../components/admin/UserProfileSettingsModal';
-import UserProfilePublicDrawer from '../../components/admin/UserProfilePublicDrawer';
+import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import Button from '../../components/ui/Button';
 
 interface NavItem {
@@ -69,7 +69,7 @@ export const AdminLayout: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
-  const [profileView, setProfileView] = useState<'public' | 'edit' | null>(null);
+  const [profileView, setProfileView] = useState<'edit' | null>(null);
   const [profileName, setProfileName] = useState(
     session?.user.profileDisplayName || DEFAULT_PROFILE_NAME
   );
@@ -368,14 +368,6 @@ export const AdminLayout: React.FC = () => {
         </div>
       </Modal>
 
-      <UserProfilePublicDrawer
-        open={profileView === 'public'}
-        onClose={() => setProfileView(null)}
-        onEdit={() => setProfileView('edit')}
-        displayName={profileName}
-        title={profileTitle}
-      />
-
       <UserProfileSettingsModal
         open={profileView === 'edit'}
         onClose={() => setProfileView('public')}
@@ -416,15 +408,26 @@ export const AdminLayout: React.FC = () => {
             icon={theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
             className="ams-topbar-icon h-8 w-8 p-0"
           />
-          <button
-            type="button"
-            onClick={() => setProfileView('public')}
-            aria-label="Open public profile"
-            title="Public profile"
-            className="flex h-8 w-8 items-center justify-center rounded-control bg-transparent text-muted transition-colors hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-          >
-            <UserAvatar name={profileName} imageUrl={profileAvatarUrl} size="sm" />
-          </button>
+          <ProfileIdentity
+            profile={{
+              id: session?.user?.id,
+              name: profileName,
+              role: profileTitle,
+              division: session?.user?.division,
+              username: session?.user?.username,
+              companyEmail: session?.user?.email,
+              personalEmail: session?.user?.personalEmail,
+              phone: session?.user?.phone,
+              additionalPhone: session?.user?.additionalPhone,
+              bio: session?.user?.bio,
+              avatarUrl: profileAvatarUrl,
+              lastActive: session?.user?.lastLogin,
+              status: 'active'
+            }}
+            compact
+            size="sm"
+            onEdit={() => setProfileView('edit')}
+          />
         </div>
       </div>
 
@@ -684,19 +687,25 @@ export const AdminLayout: React.FC = () => {
                 className="h-8 w-8 p-0"
               />
               <span className="mx-1 h-5 w-px shrink-0 bg-line" aria-hidden="true" />
-              <button
-                type="button"
-                onClick={() => setProfileView('public')}
-                aria-label="Open public profile"
-                title="Public profile"
-                className="flex min-w-0 items-center gap-2 rounded-control px-1.5 py-1 text-left transition-colors hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              >
-                <UserAvatar name={profileName} imageUrl={profileAvatarUrl} size="sm" />
-                <span className="min-w-0 max-w-[150px]">
-                  <span className="block truncate text-xs font-semibold text-fg">{profileName}</span>
-                  <span className="mt-0.5 block truncate text-[10px] text-muted">{profileTitle}</span>
-                </span>
-              </button>
+              <ProfileIdentity
+                profile={{
+                  id: session?.user?.id,
+                  name: profileName,
+                  role: profileTitle,
+                  division: session?.user?.division,
+                  username: session?.user?.username,
+                  companyEmail: session?.user?.email,
+                  personalEmail: session?.user?.personalEmail,
+                  phone: session?.user?.phone,
+                  additionalPhone: session?.user?.additionalPhone,
+                  bio: session?.user?.bio,
+                  avatarUrl: profileAvatarUrl,
+                  lastActive: session?.user?.lastLogin,
+                  status: 'active'
+                }}
+                size="sm"
+                onEdit={() => setProfileView('edit')}
+              />
             </div>
           </div>
         </header>
