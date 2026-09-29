@@ -2465,7 +2465,6 @@ export const AdminInvoicing: React.FC = () => {
     </div>
   )}
 </section>
-          </section>
         </div>
       ) : financeView === 'tax-retainers' ? (
         <div className="space-y-5">
