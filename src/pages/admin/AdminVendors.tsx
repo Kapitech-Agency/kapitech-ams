@@ -48,7 +48,11 @@ import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 export const AdminVendors: React.FC = () => {
   const { t, language } = useLanguage();
   const canManageVendors = hasAdminPermission('canManageVendors');
-  const canViewVendors = canManageVendors || hasAdminPermission('canViewFinancials');
+  const canViewVendors =
+    canManageVendors ||
+    hasAdminPermission('canViewFinancials') ||
+    hasAdminPermission('canManageProjects') ||
+    hasAdminPermission('canManageKanbanTasks');
   const [vendors, setVendors] = useState<AgencyVendor[]>([]);
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
   const [searchQuery, setSearchQuery] = useState('');
@@ -283,25 +287,7 @@ export const AdminVendors: React.FC = () => {
     <div className="space-y-6">
       {/* Top Header */}
       <div className="min-[900px]:hidden -mx-1 mb-4 overflow-x-auto px-1 custom-scrollbar">
-        <nav aria-label="Finance sections" className="inline-flex min-w-max items-center gap-1 rounded-control border border-line bg-panel p-1">
-          {[
-            { key: 'invoices', label: 'Invoice', to: '/admin/invoicing' },
-            { key: 'quotations', label: 'Quotation', to: '/admin/invoicing?finance=quotations' },
-            { key: 'income-expenses', label: 'Income & Expenses', to: '/admin/invoicing?finance=income-expenses' },
-            { key: 'tax-retainers', label: 'Tax & Retainers', to: '/admin/invoicing?finance=tax-retainers' },
-            { key: 'financial-reports', label: 'Financial Reports', to: '/admin/invoicing?finance=financial-reports' },
-            { key: 'vendors', label: 'Vendors', to: '/admin/vendors' },
-          ].map((tab) => (
-            <Link
-              key={tab.key}
-              to={tab.to}
-              aria-current={tab.key === 'vendors' ? 'page' : undefined}
-              className={'inline-flex min-h-8 shrink-0 items-center rounded-chip px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (tab.key === 'vendors' ? 'border border-accent/25 bg-accent/10 font-semibold text-fg' : 'border border-transparent text-muted hover:bg-bg hover:text-fg')}
-            >
-              {tab.label}
-            </Link>
-          ))}
-        </nav>
+  
       </div>
 
       <AdminModuleHeader
