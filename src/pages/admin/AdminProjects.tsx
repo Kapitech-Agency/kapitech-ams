@@ -1420,6 +1420,11 @@ export const AdminProjects: React.FC = () => {
                       <section
                         key={column.id}
                         aria-label={column.label + ' project column'}
+                        onDragEnter={event => {
+                          if (!canManageProjects) return;
+                          event.preventDefault();
+                          setDragOverProjectStatus(column.id);
+                        }}
                         onDragOver={event => {
                           if (!canManageProjects) return;
                           event.preventDefault();
@@ -1434,10 +1439,18 @@ export const AdminProjects: React.FC = () => {
                         }}
                         onDrop={event => {
                           event.preventDefault();
+                          event.stopPropagation();
                           if (!canManageProjects) return;
-                          const projectId = event.dataTransfer.getData('text/project-id') || event.dataTransfer.getData('text/plain');
+                          const projectId =
+                            event.dataTransfer.getData('text/project-id') ||
+                            event.dataTransfer.getData('text/plain');
                           const project = projects.find(item => item.id === projectId);
-                          if (project) void updateProjectStatus(project, column.id);
+                          if (project) {
+                            void updateProjectStatus(project, column.id);
+                          } else {
+                            setDraggingProjectId(null);
+                            setDragOverProjectStatus(null);
+                          }
                         }}
                         className={[
                           'flex w-[300px] shrink-0 flex-col overflow-hidden rounded-card border bg-bg/70 transition-[border-color,background-color,box-shadow] duration-200 sm:w-[316px] max-h-[min(68vh,760px)]',
@@ -1820,11 +1833,15 @@ export const AdminProjects: React.FC = () => {
                           }}
                           onDrop={event => {
                             event.preventDefault();
+                            event.stopPropagation();
                             if (!canManageKanbanTasks) return;
-                            const id = event.dataTransfer.getData('text/project-task-id') || event.dataTransfer.getData('text/plain');
+                            const id =
+                              event.dataTransfer.getData('text/project-task-id') ||
+                              event.dataTransfer.getData('text/plain');
                             const task = selectedSprintProject.tasks.find(item => item.id === id);
-                            if (task) void updateTaskStatus(task, column.id);
-                            else {
+                            if (task) {
+                              void updateTaskStatus(task, column.id);
+                            } else {
                               setDraggingTaskId(null);
                               setDragOverTaskStatus(null);
                             }
