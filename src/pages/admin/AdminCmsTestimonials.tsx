@@ -4,6 +4,7 @@ import { TestimonialItem } from '../../lib/cmsStore';
 import { api } from '../../lib/apiClient';
 import { useLanguage } from '../../lib/LanguageContext';
 import { Drawer } from '../../components/ui/Drawer';
+import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
 import { AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 
