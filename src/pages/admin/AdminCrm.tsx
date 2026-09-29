@@ -40,7 +40,7 @@ import { formatAmount, getActiveCurrency, setGlobalCurrency, CurrencyCode, CURRE
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { api } from '../../lib/apiClient';
 import { CustomSelect } from '../../components/ui/CustomSelect';
-import { Drawer, Modal } from '../../components/ui/Modal';
+import { Drawer } from '../../components/ui/Drawer';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 
