@@ -506,7 +506,7 @@ export const AdminClients: React.FC = () => {
         />
       </section>
 
-      <section aria-label="Search and filter clients" className="mb-6 rounded-card border border-line bg-panel p-3">
+      <section aria-label="Search and filter clients" className="mb-6 rounded-card border border-line bg-panel p-4">
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="relative w-full xl:max-w-[420px]">
             <Search size={16} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" aria-hidden="true" />
