@@ -1677,13 +1677,20 @@ export const AdminProjects: React.FC = () => {
                     </div>
                     <div className="mt-4 flex items-center justify-between gap-3 text-[10px]">
                       <div className="flex min-w-0 items-center gap-2 text-muted">
-                        <span className="shrink-0">Delivery progress</span>
+                        <span className="shrink-0">Project progress</span>
                         <span className="font-semibold tabular-nums text-fg">{selectedSprintProject.progressPercent}%</span>
                       </div>
                       <span className="shrink-0 text-muted">Deadline {formatDate(selectedSprintProject.targetEndDate)}</span>
                     </div>
                     <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-bg">
                       <div className="h-full rounded-full bg-accent transition-[width]" style={{ width: selectedSprintProject.progressPercent + '%' }} />
+                    </div>
+                    <div className="mt-3 flex items-center justify-between gap-3 text-[10px]">
+                      <span className="text-muted">Sprint completion</span>
+                      <span className="font-semibold tabular-nums text-fg">{sprintStats.completion}%</span>
+                    </div>
+                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-bg">
+                      <div className="h-full rounded-full bg-success transition-[width]" style={{ width: sprintStats.completion + '%' }} />
                     </div>
                   </div>
 
@@ -1788,7 +1795,8 @@ export const AdminProjects: React.FC = () => {
                             setDragOverTaskStatus(column.id);
                           }}
                           onDragLeave={event => {
-                            if (event.currentTarget === event.target) {
+                            const nextTarget = event.relatedTarget as Node | null;
+                            if (!nextTarget || !event.currentTarget.contains(nextTarget)) {
                               setDragOverTaskStatus(current => current === column.id ? null : current);
                             }
                           }}
@@ -1804,11 +1812,11 @@ export const AdminProjects: React.FC = () => {
                             }
                           }}
                           className={[
-                            'flex w-[310px] shrink-0 flex-col rounded-card border bg-bg/65 transition-[border-color,background-color,box-shadow] duration-150 sm:w-[324px]',
+                            'flex w-[310px] shrink-0 flex-col overflow-hidden rounded-card border bg-bg/65 transition-[border-color,background-color,box-shadow] duration-150 sm:w-[324px] max-h-[min(68vh,760px)]',
                             isDropTarget ? 'border-accent/45 bg-accent/5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--accent)_14%,transparent)]' : 'border-line/80',
                           ].join(' ')}
                         >
-                          <div className="sticky top-0 z-[1] shrink-0 border-b border-line bg-panel/95 px-3.5 py-3 backdrop-blur-sm">
+                          <div className="shrink-0 border-b border-line bg-panel/95 px-3.5 py-3">
                             <div className="flex items-start justify-between gap-3">
                               <div className="min-w-0">
                                 <div className="flex items-center gap-2">
@@ -1834,7 +1842,7 @@ export const AdminProjects: React.FC = () => {
                           </div>
 
                           <div className={[
-                            'min-h-[460px] flex-1 space-y-2.5 p-2.5 transition-colors duration-150',
+                            'min-h-[420px] max-h-[calc(min(68vh,760px)-78px)] flex-1 overflow-y-auto custom-scrollbar space-y-2.5 p-2.5 transition-colors duration-150',
                             isDropTarget ? 'bg-accent/5' : '',
                           ].join(' ')}>
                             {tasks.length === 0 ? (
@@ -1868,6 +1876,7 @@ export const AdminProjects: React.FC = () => {
                                   <article
                                     key={task.id}
                                     draggable={canManageKanbanTasks}
+                                    aria-grabbed={isDragging}
                                     onDragStart={event => {
                                       if (!canManageKanbanTasks) return;
                                       setDraggingTaskId(task.id);
