@@ -1632,7 +1632,7 @@ export const AdminProjects: React.FC = () => {
               </div>
             ) : projectLayout === 'board' ? (
               <div className="ams-project-kanban-board overflow-x-auto overflow-y-visible custom-scrollbar">
-                <div className="flex min-w-max items-start gap-4 px-5 pb-28 pt-5 sm:px-6 sm:pb-36 sm:pt-6 min-h-[1120px]">
+                <div className="flex min-w-max items-stretch gap-4 px-5 pb-12 pt-5 sm:px-6 sm:pb-16 sm:pt-6">
                   {PROJECT_KANBAN_COLUMNS.map(column => {
                     const items = filteredProjects.filter(project => project.status === column.id);
                     const isDropTarget = dragOverProjectStatus === column.id;
@@ -1642,7 +1642,7 @@ export const AdminProjects: React.FC = () => {
                         key={column.id}
                         aria-label={column.label + ' project column'}
                         className={[
-                          'ams-project-kanban-lane flex w-[352px] shrink-0 self-start flex-col rounded-[16px] border transition-[border-color,background-color,box-shadow] duration-200 sm:w-[390px]',
+                          'ams-project-kanban-lane flex min-h-[680px] w-[352px] shrink-0 self-stretch flex-col overflow-visible rounded-[16px] border transition-[border-color,background-color,box-shadow] duration-200 sm:w-[390px]',
                           isDropTarget
                             ? 'border-accent/50 bg-accent/5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--accent)_18%,transparent)]'
                             : 'border-line/80',
@@ -1710,7 +1710,7 @@ export const AdminProjects: React.FC = () => {
                               setDragOverProjectStatus(null);
                             }
                           }}
-                          className={'ams-project-kanban-stack min-h-[980px] flex flex-col gap-3.5 p-3 pb-[320px] transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
+                          className={'ams-project-kanban-stack flex min-h-[620px] flex-1 flex-col gap-3.5 overflow-visible p-3 transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
                           {draggingProjectId && canManageProjects && (
                             <div className={'rounded-control border px-2.5 py-2 text-[9px] font-medium transition-colors ' + (isDropTarget ? 'border-accent/35 bg-accent/10 text-accent-text' : 'border-dashed border-line bg-bg/50 text-muted')}>
                               {isDropTarget ? 'Release to move project into ' + column.label : 'Drop here to move project into ' + column.label}
@@ -1734,13 +1734,7 @@ export const AdminProjects: React.FC = () => {
                                 <article
                                   key={project.id}
                                   aria-grabbed={isDragging}
-                                  draggable={canManageProjects && movingProjectId !== project.id}
-                                  onDragStart={event => beginProjectDrag(event, project)}
-                                  onDragEnd={() => {
-                                    setDraggingProjectId(null);
-                                    setDragOverProjectStatus(null);
-                                  }}
-                                  className={'ams-project-kanban-card group select-none rounded-[12px] border border-line/90 p-4 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150 hover:-translate-y-px hover:border-accent/40 hover:shadow-[0_10px_28px_color-mix(in_srgb,var(--bg)_55%,transparent)] ' + (
+                                  className={'ams-project-kanban-card group cursor-default select-none rounded-[12px] border border-line/90 p-4 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150 hover:-translate-y-px hover:border-accent/40 hover:shadow-[0_10px_28px_color-mix(in_srgb,var(--bg)_55%,transparent)] ' + (
                                     isDragging ? 'rotate-[1deg] scale-[0.98] border-accent/50 opacity-70' : movingProjectId === project.id ? 'border-accent/35 opacity-80' : ''
                                   )}
                                 >
@@ -1748,17 +1742,24 @@ export const AdminProjects: React.FC = () => {
                                     <div className="flex min-w-0 items-start gap-2">
                                       <span
                                         data-drag-handle="true"
-                                        role="presentation"
+                                        draggable={canManageProjects && movingProjectId !== project.id}
+                                        onDragStart={event => beginProjectDrag(event, project)}
+                                        onDragEnd={() => {
+                                          setDraggingProjectId(null);
+                                          setDragOverProjectStatus(null);
+                                        }}
+                                        role="button"
+                                        tabIndex={canManageProjects && movingProjectId !== project.id ? 0 : -1}
                                         aria-label={canManageProjects ? 'Drag project' : 'Project status'}
                                         className={[
                                           'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted shadow-sm transition-[background-color,border-color,color,transform] select-none',
                                           canManageProjects && movingProjectId !== project.id
-                                            ? 'cursor-grab touch-none hover:border-accent/35 hover:bg-panel-hover hover:text-fg'
+                                            ? 'cursor-grab touch-none hover:border-accent/35 hover:bg-panel-hover hover:text-fg active:cursor-grabbing'
                                             : 'cursor-default opacity-70',
                                         ].join(' ')}
-                                        title={canManageProjects ? 'Drag anywhere on this card to move project' : 'Project status'}
+                                        title={canManageProjects ? 'Drag this handle to move the project' : 'Project status'}
                                       >
-                                        <GripVertical size={16} strokeWidth={2} />
+                                        <GripVertical size={16} strokeWidth={2.2} />
                                       </span>
                                       <button type="button" onClick={() => openProjectDetail(project)} className="min-w-0 text-left">
                                         <div className="break-words whitespace-normal text-[10px] font-medium uppercase leading-4 tracking-[0.08em] text-muted">{project.clientCompany}</div>
@@ -1849,26 +1850,32 @@ export const AdminProjects: React.FC = () => {
                             })
                           )}
                           <div
-                            aria-hidden="true"
+                            aria-label={canManageProjects ? 'Project drop area' : undefined}
                             className={[
-                              'mt-auto min-h-[240px] rounded-card border border-dashed px-3 py-5 transition-colors',
-                              isDropTarget ? 'border-accent/35 bg-accent/5' : 'border-line/45 bg-bg/20'
+                              'mt-auto min-h-[180px] flex-1 rounded-card border border-dashed px-3 py-5 transition-[background-color,border-color,box-shadow] duration-150',
+                              isDropTarget
+                                ? 'border-accent/40 bg-accent/8 shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--accent)_10%,transparent)]'
+                                : 'border-line/40 bg-bg/12'
                             ].join(' ')}
                           >
-                            {draggingProjectId && canManageProjects ? (
-                              <div className="flex min-h-20 flex-col items-center justify-center gap-2 text-center text-[10px] text-muted">
-                                <span className="flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted">
-                                  <GripVertical size={14} />
+                            <div className="flex h-full min-h-24 flex-col items-center justify-center gap-2 text-center">
+                              <span className={[
+                                'flex h-9 w-9 items-center justify-center rounded-control border text-muted transition-colors',
+                                isDropTarget ? 'border-accent/30 bg-accent/10 text-accent-text' : 'border-line bg-panel'
+                              ].join(' ')}>
+                                <GripVertical size={14} />
+                              </span>
+                              <span className={isDropTarget ? 'text-[10px] font-semibold text-accent-text' : 'text-[10px] font-medium text-muted'}>
+                                {draggingProjectId && canManageProjects
+                                  ? (isDropTarget ? 'Release to place the project here' : 'Drop project here')
+                                  : 'Drop area'}
+                              </span>
+                              {canManageProjects && (
+                                <span className="max-w-[200px] text-[9px] leading-4 text-muted/70">
+                                  Cards continue stacking downward. Use the drag handle above to move a project between stages.
                                 </span>
-                                <span className={isDropTarget ? 'font-semibold text-accent-text' : 'text-muted'}>
-                                  {isDropTarget ? 'Release to place the project here' : 'Drop project here'}
-                                </span>
-                              </div>
-                            ) : (
-                              <div className="flex min-h-20 items-center justify-center text-center text-[10px] text-muted/55">
-                                Drop area
-                              </div>
-                            )}
+                              )}
+                            </div>
                           </div>
                         </div>
                       </section>
