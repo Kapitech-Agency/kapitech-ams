@@ -4,6 +4,7 @@ import {
   Download,
   ArrowUpRight,
   BarChart3,
+  Briefcase,
   Clock,
   CheckCircle2,
   CircleDollarSign,
