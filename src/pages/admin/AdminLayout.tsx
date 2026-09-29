@@ -207,6 +207,10 @@ export const AdminLayout: React.FC = () => {
       return new URLSearchParams(location.search).get('view') !== 'tasks';
     }
 
+    if (itemTo === '/admin/invoicing' && location.pathname === '/admin/vendors') {
+      return true;
+    }
+
     if (path === '/admin/settings') {
       return !location.search.includes('tab=rbac');
     }
@@ -643,7 +647,7 @@ export const AdminLayout: React.FC = () => {
                     );
                   })}
                 </nav>
-              ) : location.pathname === '/admin/invoicing' ? (
+              ) : location.pathname === '/admin/invoicing' || location.pathname === '/admin/vendors' ? (
                 <nav aria-label="Finance sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
                   {[
                     { key: 'invoices', label: 'Invoice', search: '' },
@@ -651,6 +655,7 @@ export const AdminLayout: React.FC = () => {
                     { key: 'income-expenses', label: 'Income & Expenses', search: '?finance=income-expenses' },
                     { key: 'tax-retainers', label: 'Tax & Retainers', search: '?finance=tax-retainers' },
                     { key: 'financial-reports', label: 'Financial Reports', search: '?finance=financial-reports' },
+                    { key: 'vendors', label: 'Vendors', search: '/admin/vendors' },
                   ].map((tab) => {
                     const activeView = new URLSearchParams(location.search).get('finance') || 'invoices';
                     return (
