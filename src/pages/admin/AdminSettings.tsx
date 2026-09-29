@@ -44,6 +44,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { api } from '../../lib/apiClient';
 import { ProductionReadinessCard } from '../../components/admin/ProductionReadinessCard';
 import Button from '../../components/ui/Button';
+import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 
 export const AdminSettings: React.FC = () => {
@@ -710,20 +711,17 @@ export const AdminSettings: React.FC = () => {
                   >
                     <div>
                       <div className="flex items-start justify-between gap-2 mb-2.5">
-                        <div className="flex items-center gap-2.5">
-                          <div className={`w-9 h-9 rounded-card flex items-center justify-center font-semibold text-xs font-sans ${
-                            isMasterAccount ? 'bg-danger/20 text-danger border border-danger/30' :
-                            isExecutive ? 'bg-warning/20 text-warning border border-warning/30' :
-                            isIT ? 'bg-success/20 text-success border border-success/30' :
-                            'bg-series-3/20 text-series-3 border border-series-3/30'
-                          }`}>
-                            {acc.name.split(' ').map(n => n[0]).slice(0, 2).join('')}
-                          </div>
-                          <div>
-                            <h3 className="text-sm font-semibold text-fg leading-snug">{acc.name}</h3>
-                            <p className="text-[11px] font-sans text-muted">@{acc.username}</p>
-                          </div>
-                        </div>
+                        <ProfileIdentity
+                          profile={{
+                            id: acc.id,
+                            name: acc.name,
+                            role: acc.role,
+                            division: acc.division,
+                            username: acc.username,
+                            companyEmail: acc.email,
+                            status: acc.status === 'active' ? 'active' : 'offline'
+                          }}
+                        />
 
                         <span className={`text-[10px] font-sans px-2 py-0.5 rounded-badge border shrink-0 ${
                           isMasterAccount ? 'bg-danger/10 text-danger border-danger/30' :
