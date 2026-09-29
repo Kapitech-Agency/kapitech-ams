@@ -653,7 +653,7 @@ export const AdminCrm: React.FC = () => {
                             </div>
 
                             {/* Client & Company */}
-                            <ProfileIdentity profile={{ name: lead.clientName, role: 'CRM contact', companyEmail: lead.email, phone: lead.phone, division: lead.company }} size="sm" showRole={false} />
+                            <ProfileIdentity profile={{ name: lead.clientName, role: undefined, contextLabel: lead.company, companyEmail: lead.email, phone: lead.phone }} size="sm" showRole={false} />
                             <p className="text-[11px] text-muted font-sans truncate mb-2.5">
                               {lead.company}
                             </p>
@@ -866,7 +866,7 @@ export const AdminCrm: React.FC = () => {
                         className="hover:bg-panel transition-colors cursor-pointer"
                       >
                         <td className="py-3 px-4">
-                          <ProfileIdentity profile={{ name: lead.clientName, role: 'CRM contact', companyEmail: lead.email, phone: lead.phone, division: lead.company }} size="sm" showRole={false} />
+                          <ProfileIdentity profile={{ name: lead.clientName, role: undefined, contextLabel: lead.company, companyEmail: lead.email, phone: lead.phone }} size="sm" showRole={false} />
                           <div className="mt-0.5 text-[11px] text-muted">{lead.company}</div>
                         </td>
 
