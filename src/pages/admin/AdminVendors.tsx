@@ -322,7 +322,7 @@ export const AdminVendors: React.FC = () => {
       </section>
 
       {/* Filter & Search Bar */}
-      <section className="w-full rounded-card bg-panel border border-line p-4 sm:p-5 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between" aria-label="Vendor directory controls">
+      <section className="w-full rounded-card bg-panel border border-line p-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between" aria-label="Vendor directory controls">
         <div className="relative w-full lg:w-96">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
           <input
@@ -547,7 +547,7 @@ export const AdminVendors: React.FC = () => {
                   <span className="text-[10px] font-sans text-muted normal-case block mb-1">
                     {language === 'id' ? 'Kontak & Lokasi' : 'Contact & Location'}
                   </span>
-                  <div className="space-y-1.5 bg-panel p-3 rounded-card border border-line">
+                  <div className="space-y-1.5 bg-panel p-4 rounded-card border border-line">
                     <div className="flex items-center gap-2 text-muted">
                       <Mail size={13} className="text-accent" />
                       <a href={`mailto:${selectedVendor.email}`} className="text-fg hover:underline">
@@ -569,7 +569,7 @@ export const AdminVendors: React.FC = () => {
                   <span className="text-[10px] font-sans text-muted normal-case block mb-1">
                     {language === 'id' ? 'Tarif & Kontrak' : 'Rate & Contracts'}
                   </span>
-                  <div className="bg-panel p-3 rounded-card border border-line flex items-center justify-between">
+                  <div className="bg-panel p-4 rounded-card border border-line flex items-center justify-between">
                     <div>
                       <span className="text-[10px] font-sans text-muted">Standard Hourly</span>
                       <p className="text-sm font-sans font-semibold text-success">
@@ -588,7 +588,7 @@ export const AdminVendors: React.FC = () => {
                     <span className="text-[10px] font-sans text-muted normal-case block mb-1">
                       {language === 'id' ? 'Catatan Kinerja' : 'Performance Notes'}
                     </span>
-                    <div className="bg-panel p-3 rounded-card border border-line text-muted leading-relaxed">
+                    <div className="bg-panel p-4 rounded-card border border-line text-muted leading-relaxed">
                       {selectedVendor.notes}
                     </div>
                   </div>
@@ -751,7 +751,7 @@ export const AdminVendors: React.FC = () => {
               </div>
 
               {/* Vetted Status Verification Toggle */}
-              <div className="p-3 rounded-card bg-panel border border-line flex items-center justify-between">
+              <div className="p-4 rounded-card bg-panel border border-line flex items-center justify-between">
                 <div>
                   <span className="text-xs font-semibold text-fg flex items-center gap-1.5">
                     <ShieldCheck size={14} className="text-accent" />
