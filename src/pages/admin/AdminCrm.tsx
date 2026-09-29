@@ -582,7 +582,7 @@ export const AdminCrm: React.FC = () => {
                   onDrop={(e) => {
                     if (canManageCrm) handleDropOnColumn(e, stageDef.key);
                   }}
-                  className={`bg-panel border rounded-card flex flex-col flex-1 min-w-[280px] max-w-[340px] shrink-0 transition-all ${
+                  className={`bg-panel border rounded-card p-4 flex flex-col flex-1 min-w-[280px] max-w-[340px] shrink-0 transition-all ${
                     isOver ? 'border-accent ring-2 ring-accent/30 bg-accent/5' : 'border-line'
                   }`}
                 >
@@ -635,7 +635,7 @@ export const AdminCrm: React.FC = () => {
                             draggable={canManageCrm}
                             onDragStart={canManageCrm ? (e) => handleDragStart(e, lead.id) : undefined}
                             onClick={() => handleOpenLeadDrawer(lead)}
-                            className={`draggable-card kanban-card bg-panel border hover:border-muted rounded-card p-3 cursor-pointer transition-colors group relative ${
+                            className={`draggable-card kanban-card bg-panel border hover:border-muted rounded-card p-4 cursor-pointer transition-colors group relative ${
                               isDragging ? 'opacity-40 scale-95 border-accent border-dashed' : 'border-line'
                             }`}
                           >
@@ -982,7 +982,7 @@ export const AdminCrm: React.FC = () => {
 
               {/* Client Contact Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="p-3 rounded-card bg-panel border border-line">
+                <div className="p-4 rounded-card bg-panel border border-line">
                   <div className="flex items-center gap-1.5 text-muted mb-1">
                     <Mail size={13} className="text-danger" />
                     <span>{language === 'id' ? 'Email Klien' : 'Client Email'}</span>
@@ -995,7 +995,7 @@ export const AdminCrm: React.FC = () => {
                   </a>
                 </div>
 
-                <div className="p-3 rounded-card bg-panel border border-line">
+                <div className="p-4 rounded-card bg-panel border border-line">
                   <div className="flex items-center justify-between text-muted mb-1">
                     <div className="flex items-center gap-1.5">
                       <Phone size={13} className="text-danger" />
@@ -1056,7 +1056,7 @@ export const AdminCrm: React.FC = () => {
                 <div className="space-y-2 max-h-44 overflow-y-auto pr-1 custom-scrollbar">
                   {selectedLead.notes && selectedLead.notes.length > 0 ? (
                     selectedLead.notes.slice().reverse().map((note) => (
-                      <div key={note.id} className="p-3 rounded-card bg-panel border border-line text-xs">
+                      <div key={note.id} className="p-4 rounded-card bg-panel border border-line text-xs">
                         <div className="flex items-center justify-between text-[10px] text-muted mb-1">
                           <span className="text-danger font-semibold">{note.author}</span>
                           <span>{new Date(note.createdAt).toLocaleString()}</span>
