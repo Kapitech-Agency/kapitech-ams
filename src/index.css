@@ -466,12 +466,12 @@
    One geometry for data tables across every module.
    -------------------------------------------------------------------------- */
 .ams-shell table{width:100%;border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums}
-.ams-shell table thead th{height:40px!important;padding:0 12px!important;background:var(--panel)!important;border-bottom:1px solid var(--line)!important;color:var(--muted)!important;font-size:11px!important;line-height:16px!important;font-weight:600!important;letter-spacing:.035em;text-transform:uppercase;vertical-align:middle}
-.ams-shell table tbody td{height:40px;min-height:40px;padding:0 12px!important;background:var(--panel);border-bottom:1px solid var(--line);color:var(--text);font-size:13px;line-height:18px;vertical-align:middle}
+.ams-shell table thead th{height:44px!important;padding:0 16px!important;background:var(--panel)!important;border-bottom:1px solid var(--line)!important;color:var(--muted)!important;font-size:11px!important;line-height:16px!important;font-weight:600!important;letter-spacing:.035em;text-transform:uppercase;vertical-align:middle}
+.ams-shell table tbody td{height:48px;min-height:48px;padding:8px 16px!important;background:var(--panel);border-bottom:1px solid var(--line);color:var(--text);font-size:13px;line-height:18px;vertical-align:middle}
 .ams-shell table tbody tr:last-child td{border-bottom:0}
 .ams-shell table tbody tr:hover td{background:color-mix(in srgb,var(--text) 4%,transparent)}
-.ams-shell table th:first-child,.ams-shell table td:first-child{padding-left:16px!important}
-.ams-shell table th:last-child,.ams-shell table td:last-child{padding-right:16px!important}
+.ams-shell table th:first-child,.ams-shell table td:first-child{padding-left:18px!important}
+.ams-shell table th:last-child,.ams-shell table td:last-child{padding-right:18px!important}
 .ams-shell .ams-table-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:6px}
 .ams-shell .ams-table-action{min-height:34px!important;padding:7px 10px!important;border:1px solid var(--line)!important;border-radius:8px!important;background:var(--bg)!important;color:var(--muted);font-size:11px;font-weight:500;white-space:nowrap;transition:background-color .15s ease,border-color .15s ease,color .15s ease}
 .ams-shell .ams-table-action:hover{background:var(--panel)!important;color:var(--text)}
