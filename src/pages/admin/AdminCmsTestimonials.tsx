@@ -3,7 +3,7 @@ import { Users, Plus, Star, Edit3, Trash2, Check, MessageSquare, MapPin } from '
 import { TestimonialItem } from '../../lib/cmsStore';
 import { api } from '../../lib/apiClient';
 import { useLanguage } from '../../lib/LanguageContext';
-import { Modal } from '../../components/ui/Modal';
+import { Drawer, Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
 import { AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 
@@ -209,7 +209,7 @@ export const AdminCmsTestimonials: React.FC = () => {
 
       {/* Modal: Add / Edit Testimonial */}
       {isModalOpen && editingItem && (
-        <Modal
+        <Drawer
           open={isModalOpen}
           onClose={() => !isSaving && setIsModalOpen(false)}
           size="lg"
@@ -297,7 +297,7 @@ export const AdminCmsTestimonials: React.FC = () => {
 
             </form>
           </div>
-        </Modal>
+        </Drawer>
       )}
 
     </div>
