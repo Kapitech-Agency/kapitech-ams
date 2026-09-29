@@ -426,7 +426,7 @@ export const AdminCmsServices: React.FC = () => {
             {/* Metrics */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
               {selectedServiceForDetail.metrics?.map((m, idx) => (
-                <div key={idx} className="bg-panel border border-line p-3 rounded-card text-center">
+                <div key={idx} className="bg-panel border border-line p-4 rounded-card text-center">
                   <div className="text-lg font-sans font-semibold text-accent">{m.value}</div>
                   <div className="text-[10px] font-sans text-muted mt-0.5">{m.label}</div>
                 </div>
@@ -440,7 +440,7 @@ export const AdminCmsServices: React.FC = () => {
               </h4>
               <div className="space-y-2">
                 {selectedServiceForDetail.capabilities?.map((cap, cIdx) => (
-                  <div key={cIdx} className="bg-panel border border-line p-3 rounded-card">
+                  <div key={cIdx} className="bg-panel border border-line p-4 rounded-card">
                     <div className="text-xs font-semibold text-fg flex items-center gap-2">
                       <CheckCircle2 size={13} className="text-success" />
                       <span>{cap.title || cap.titleId}</span>
@@ -461,7 +461,7 @@ export const AdminCmsServices: React.FC = () => {
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {selectedServiceForDetail.processStages.map((stage, sIdx) => (
-                    <div key={sIdx} className="bg-panel border border-line p-3 rounded-card">
+                    <div key={sIdx} className="bg-panel border border-line p-4 rounded-card">
                       <div className="flex items-center gap-2 text-accent font-sans text-xs font-semibold mb-1">
                         <span>{stage.stageNumber}</span>
                         <span className="text-fg font-sans font-semibold">{stage.stageName}</span>
