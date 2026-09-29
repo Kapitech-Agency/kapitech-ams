@@ -752,7 +752,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         <>
       <section className="mb-5" aria-label="Executive key performance indicators">
         <AdminMetricStrip
-          className="min-[760px]:grid-cols-3 min-[1100px]:grid-cols-6"
+          className="min-[900px]:grid-cols-6"
           metrics={[
             { id: 'active-projects', label: 'Active projects', value: '12', change: '+2', changeToneClassName: 'text-success', context: 'this month', sparkline: [8, 9, 10, 12], icon: <FolderKanban size={15} />, toneClassName: 'text-success' },
             { id: 'tasks-due', label: 'Tasks due this week', value: '18', change: '6', changeToneClassName: 'text-warning', context: 'high priority', sparkline: [12, 14, 16, 18], icon: <CalendarDays size={15} />, toneClassName: 'text-info' },
