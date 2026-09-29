@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { BriefcaseBusiness, Building2, Camera, Mail, Phone, Save, UserRound } from 'lucide-react';
+import { Briefcase, Building2, Camera, Mail, Phone, Save, UserRound } from 'lucide-react';
 import { Drawer } from '../ui/Drawer';
 import Button from '../ui/Button';
 import UserAvatar from './UserAvatar';
@@ -251,7 +251,7 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <span className="flex items-center gap-1.5 text-xs font-medium text-muted"><BriefcaseBusiness size={13} />Role</span>
+                  <span className="flex items-center gap-1.5 text-xs font-medium text-muted"><Briefcase size={13} />Role</span>
                   <div className="flex min-h-9 items-center rounded-control border border-line bg-bg px-3 text-[13px] text-fg">
                     {title}
                   </div>
