@@ -410,7 +410,7 @@ export const AdminCrm: React.FC = () => {
       )}
 
       {/* 2. CRM performance snapshot */}
-      <section aria-label="CRM performance snapshot" className="rounded-card border border-line bg-panel p-4 sm:p-5">
+      <section aria-label="CRM performance snapshot" className="rounded-card border border-line bg-panel p-4">
         <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
           <div className="min-w-0">
             <h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan pipeline' : 'Pipeline snapshot'}</h2>
@@ -460,7 +460,7 @@ export const AdminCrm: React.FC = () => {
         />
       </section>
 
-      <section aria-label="Stage conversion funnel" className="rounded-card border border-line bg-panel p-4 sm:p-5">
+      <section aria-label="Stage conversion funnel" className="rounded-card border border-line bg-panel p-4">
         <div className="flex items-center justify-between gap-3 border-b border-line pb-3">
           <div className="flex min-w-0 items-center gap-2 text-xs font-semibold text-fg">
             <Activity size={14} className="text-accent-text" />
@@ -495,7 +495,7 @@ export const AdminCrm: React.FC = () => {
       </section>
 
       {/* 3. Filter Bar & View Mode Switcher */}
-      <div className="ams-crm-toolbar flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 rounded-card border border-line bg-panel p-4 sm:p-5">
+      <div className="ams-crm-toolbar flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 rounded-card border border-line bg-panel p-4">
         <div className="flex flex-row items-center gap-2.5 flex-1 min-w-0 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
           <div className="relative shrink-0 w-[240px] sm:flex-1 sm:min-w-0 sm:w-auto sm:max-w-none lg:max-w-md">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" size={14} />
