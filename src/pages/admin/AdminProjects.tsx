@@ -390,11 +390,11 @@ export const AdminProjects: React.FC = () => {
         return;
       }
       setServerMode(false);
-      setProjects(demoProjects);
+      setProjects(applyKanbanStatusOverrides(demoProjects));
       setError(response.error || 'Using demo project data because the project service is unavailable.');
     } catch (requestError) {
       setServerMode(false);
-      setProjects(demoProjects);
+      setProjects(applyKanbanStatusOverrides(demoProjects));
       setError(requestError instanceof Error ? requestError.message : 'Using demo project data.');
     } finally {
       setLoading(false);
