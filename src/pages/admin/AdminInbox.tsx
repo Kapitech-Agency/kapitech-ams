@@ -541,7 +541,7 @@ export const AdminInbox: React.FC = () => {
       {/* ------------------------------------------------------------- */}
       {/* 2. EXECUTIVE KPI SUMMARY RIBBON */}
       {/* ------------------------------------------------------------- */}
-      <section aria-label="Leads and inbox snapshot" className="rounded-card border border-line bg-panel p-4 sm:p-5">
+      <section aria-label="Leads and inbox snapshot" className="rounded-card border border-line bg-panel p-4">
         <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3"><div><h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan leads & inbox' : 'Leads & inbox snapshot'}</h2><p className="mt-1 text-xs text-muted">{language === 'id' ? 'Sinyal intake, triage, konversi, dan estimasi pipeline.' : 'Intake, triage, conversion, and estimated pipeline signals.'}</p></div><span className="text-[11px] font-medium tabular-nums text-muted">{metrics.total} inbound</span></div>
         <AdminMetricStrip
           className="lg:grid-cols-4"
@@ -968,7 +968,7 @@ export const AdminInbox: React.FC = () => {
 
           {/* Right: Message Reader & Command Hub Pane */}
           {selectedSubmission ? (
-            <div className="ams-inbox-reader-pane col-span-12 lg:col-span-7 bg-panel border border-line rounded-card p-5 sm:p-6 flex flex-col justify-between">
+            <div className="ams-inbox-reader-pane col-span-12 lg:col-span-7 bg-panel border border-line rounded-card p-4 flex flex-col justify-between">
               <div>
                 
                 {/* Mobile Back Button */}
