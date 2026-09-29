@@ -52,11 +52,10 @@ const sampleProjects: DashboardProject[] = [
 ];
 
 const sampleTeam: TeamMember[] = [
-  { name: 'Fikri Nurlete', role: 'Creative director', workload: 82, tasks: 11, state: 'High load', tone: 'warning' },
-  { name: 'Sarah Pratama', role: 'Account lead', workload: 74, tasks: 9, state: 'Balanced', tone: 'success' },
-  { name: 'Dimas Ardi', role: 'Product designer', workload: 68, tasks: 8, state: 'Balanced', tone: 'success' },
-  { name: 'Raka Mahendra', role: 'Developer', workload: 91, tasks: 13, state: 'Near max', tone: 'warning' },
-  { name: 'Nadia Putri', role: 'Strategist', workload: 55, tasks: 6, state: 'Available', tone: 'info' },
+  { name: 'Fikri Nurlete', role: 'Chief Creative Officer', workload: 82, tasks: 11, state: 'High load', tone: 'warning' },
+  { name: 'Reynaldo Anakotta', role: 'Project Manager', workload: 74, tasks: 9, state: 'Balanced', tone: 'success' },
+  { name: 'Akell Ahmed', role: 'HR Manager', workload: 68, tasks: 8, state: 'Balanced', tone: 'success' },
+  { name: 'IBrahim', role: 'Financial FP&A', workload: 55, tasks: 6, state: 'Available', tone: 'info' },
 ];
 
 const sampleRevenueByRange: Record<RangeKey, Array<{ label: string; primary: number; secondary: number; tertiary: number }>> = {
@@ -753,7 +752,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         <>
       <section className="mb-5" aria-label="Executive key performance indicators">
         <AdminMetricStrip
-          className="min-[760px]:grid-cols-3 min-[1180px]:grid-cols-6"
+          className="min-[760px]:grid-cols-3 min-[1100px]:grid-cols-6"
           metrics={[
             { id: 'active-projects', label: 'Active projects', value: '12', change: '+2', changeToneClassName: 'text-success', context: 'this month', sparkline: [8, 9, 10, 12], icon: <FolderKanban size={15} />, toneClassName: 'text-success' },
             { id: 'tasks-due', label: 'Tasks due this week', value: '18', change: '6', changeToneClassName: 'text-warning', context: 'high priority', sparkline: [12, 14, 16, 18], icon: <CalendarDays size={15} />, toneClassName: 'text-info' },
@@ -778,54 +777,47 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
         <AdminPanel className="min-[1100px]:col-span-4" bodyClassName="p-4 sm:p-5" title="Delivery & pacing" description="Project delivery distribution across the current portfolio.">
           <div className="space-y-4">
-            <div className="rounded-control border border-line bg-bg/45 p-3.5">
-              <div className="flex items-start justify-between gap-4">
+            <div className="rounded-control border border-line bg-bg/45 p-4">
+              <div className="flex items-end justify-between gap-3">
                 <div className="min-w-0">
                   <div className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted">On schedule</div>
                   <div className="mt-1 flex items-baseline gap-2">
-                    <span className="text-3xl font-medium tracking-[-0.03em] tabular-nums text-fg">{onSchedulePercent}%</span>
+                    <span className="text-3xl font-semibold tracking-[-0.03em] tabular-nums text-fg">{onSchedulePercent}%</span>
                     <span className="text-[11px] text-muted">{onScheduleValue} of {totalDelivery} projects</span>
                   </div>
                 </div>
                 <span className="shrink-0 rounded-badge border border-success/20 bg-success/10 px-2 py-1 text-[10px] font-medium text-success">On track</span>
               </div>
-              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-line" aria-hidden="true">
-                <div className="h-full rounded-full bg-success transition-[width] duration-300" style={{ width: onSchedulePercent + '%' }} />
-              </div>
-            </div>
-
-            <div className="grid min-w-0 grid-cols-[132px_minmax(0,1fr)] items-center gap-4">
-              <div className="mx-auto w-[132px] max-w-full">
-                <DonutChart
-                  data={deliveryBreakdown}
-                  ariaLabel="Project delivery distribution: 8 on schedule, 3 at risk, 1 overdue."
-                  showLegend={false}
-                />
-              </div>
-
-              <div className="min-w-0 space-y-1.5">
+              <div className="mt-3 flex h-2 overflow-hidden rounded-full bg-line" aria-label="Delivery pacing breakdown">
                 {deliveryBreakdown.map((item) => {
-                  const safeValue = Math.max(0, item.value);
-                  const percent = totalDelivery > 0 ? Math.round((safeValue / totalDelivery) * 100) : 0;
+                  const percent = totalDelivery > 0 ? (Math.max(0, item.value) / totalDelivery) * 100 : 0;
                   return (
-                    <div key={item.label} className="rounded-control border border-transparent px-2.5 py-2 transition-colors hover:border-line hover:bg-bg">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="flex min-w-0 items-center gap-2 text-[11px] font-medium text-fg">
-                          <i className={['h-2 w-2 shrink-0 rounded-full', progressClasses[item.tone]].join(' ')} />
-                          <span className="truncate">{item.label}</span>
-                        </span>
-                        <span className="shrink-0 text-[11px] font-medium tabular-nums text-fg">{safeValue}</span>
-                      </div>
-                      <div className="mt-1.5 flex items-center gap-2">
-                        <div className="h-1 flex-1 overflow-hidden rounded-full bg-line" aria-hidden="true">
-                          <div className={['h-full rounded-full', progressClasses[item.tone]].join(' ')} style={{ width: percent + '%' }} />
-                        </div>
-                        <span className="w-8 shrink-0 text-right text-[10px] tabular-nums text-muted">{percent}%</span>
-                      </div>
-                    </div>
+                    <div
+                      key={item.label}
+                      className={['h-full first:rounded-l-full last:rounded-r-full', progressClasses[item.tone]].join(' ')}
+                      style={{ width: percent + '%' }}
+                      title={item.label + ': ' + Math.round(percent) + '%'}
+                    />
                   );
                 })}
               </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              {deliveryBreakdown.map((item) => {
+                const safeValue = Math.max(0, item.value);
+                const percent = totalDelivery > 0 ? Math.round((safeValue / totalDelivery) * 100) : 0;
+                return (
+                  <div key={item.label} className="min-w-0 rounded-control border border-line bg-bg p-3">
+                    <div className="flex items-center gap-1.5">
+                      <i className={['h-2 w-2 shrink-0 rounded-full', progressClasses[item.tone]].join(' ')} />
+                      <span className="truncate text-[10px] font-medium text-muted">{item.label}</span>
+                    </div>
+                    <div className="mt-2 text-lg font-semibold tabular-nums text-fg">{safeValue}</div>
+                    <div className="mt-0.5 text-[10px] tabular-nums text-muted">{percent}% of portfolio</div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </AdminPanel>
@@ -965,7 +957,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           </div>
         </AdminPanel>
 
-        <AdminPanel className="min-[1100px]:col-span-4" bodyClassName="p-4 sm:p-5" title="Team capacity" description="Current task load based on the sample agency plan." actions={<span className="rounded-badge border border-line bg-bg px-2 py-1 text-[11px] text-muted">5 members</span>}>
+        <AdminPanel className="min-[1100px]:col-span-4" bodyClassName="p-4 sm:p-5" title="Team capacity" description="Current task load based on the sample agency plan." actions={<span className="rounded-badge border border-line bg-bg px-2 py-1 text-[11px] text-muted">4 members</span>}>
           <div className="space-y-4">
             {sampleTeam.map((member) => (
               <div key={member.name}>
