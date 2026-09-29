@@ -9,8 +9,7 @@ import {
   Briefcase,
   Receipt,
   Users,
-  Handshake,
-  Inbox,
+    Inbox,
   Settings,
   Command,
   ArrowRight,
@@ -170,7 +169,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       id: 'nav_vendors',
       title: language === 'id' ? 'Buka Direktori Vendor' : 'Open Vendor Directory',
       category: language === 'id' ? 'Navigasi' : 'Navigation',
-      icon: Handshake,
+      icon: Briefcase,
       shortcut: 'G V',
       moduleKey: 'vendors',
       action: () => { navigate('/admin/vendors'); onClose(); }
