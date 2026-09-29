@@ -363,12 +363,12 @@ export const AdminLayout: React.FC = () => {
       {/* ------------------------------------------------------------- */}
       {/* MOBILE TOPBAR - Single, sleek, non-cluttered header */}
       {/* ------------------------------------------------------------- */}
-      <div className="min-[900px]:hidden ams-mobile-topbar flex items-center justify-between gap-2 px-3 bg-panel border-b border-line sticky top-0 z-40 shrink-0 h-[52px] min-h-[52px] pt-[env(safe-area-inset-top)]">
+      <div className="min-[900px]:hidden ams-mobile-topbar flex items-center justify-between gap-2 px-3 bg-panel/95 backdrop-blur-sm border-b border-line sticky top-0 z-40 shrink-0 h-[56px] min-h-[56px] pt-[env(safe-area-inset-top)]">
         <div className="flex items-center gap-2.5 min-w-0">
           <button
             onClick={() => setMobileMenuOpen(true)}
             aria-label="Open navigation menu"
-            className="min-h-10 min-w-10 flex items-center justify-center rounded-control bg-bg text-fg border border-line transition-[background-color,border-color,color,transform] duration-150 hover:bg-panel-hover hover:border-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="min-h-10 min-w-10 flex items-center justify-center rounded-control bg-bg text-fg border border-line transition-[background-color,border-color,color,transform] duration-150 hover:bg-panel-hover hover:border-accent/30 hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             <Menu size={20} />
           </button>
@@ -384,7 +384,7 @@ export const AdminLayout: React.FC = () => {
           </Link>
         </div>
 
-        <div className="flex items-center gap-0.5 shrink-0">
+        <div className="flex items-center gap-1 shrink-0 rounded-control border border-line/80 bg-bg/60 p-1">
           <AdminNotificationCenter />
           <Button
             type="button"
@@ -393,14 +393,14 @@ export const AdminLayout: React.FC = () => {
             title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             icon={theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
-            className="ams-topbar-icon h-9 w-9 p-0"
+            className="ams-topbar-icon h-8 w-8 p-0"
           />
           <button
             type="button"
             onClick={() => setProfileView('public')}
             aria-label="Open public profile"
             title="Public profile"
-            className="flex h-9 w-9 items-center justify-center rounded-control bg-transparent text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="flex h-8 w-8 items-center justify-center rounded-control bg-transparent text-muted transition-colors hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             <UserAvatar name={profileName} imageUrl={profileAvatarUrl} size="sm" />
           </button>
@@ -469,30 +469,43 @@ export const AdminLayout: React.FC = () => {
               </Button>
             </div>
 
-            <nav aria-label="Primary navigation" className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-3 custom-scrollbar">
-              <div className="space-y-0.5">
-                {filteredNavItems.map((item) => {
-                  const Icon = item.icon;
-                  const active = isItemActive(item.to);
+            <nav aria-label="Primary navigation" className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-4 custom-scrollbar">
+              <div className="space-y-5">
+                {navGroups.map((group) => {
+                  const items = getGroupItems(group);
+                  if (!items.length) return null;
                   return (
-                    <Link
-                      key={item.key}
-                      to={item.to}
-                      onClick={() => setMobileMenuOpen(false)}
-                      aria-current={active ? 'page' : undefined}
-                      className={`relative flex min-h-10 items-center gap-3 rounded-control px-3 py-2.5 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${active ? 'border border-accent/25 bg-accent/10 font-semibold text-fg' : 'border border-transparent text-muted hover:bg-panel-hover hover:text-fg'}`}
-                    >
-                      <Icon size={17} className="shrink-0" />
-                      <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                      {item.badge !== null && item.badge !== undefined && (
-                        <span className="shrink-0 rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] font-semibold text-muted">{item.badge}</span>
-                      )}
-                    </Link>
+                    <section key={group} aria-label={group}>
+                      <div className="px-2 pb-1.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-muted/70">{group}</div>
+                      <div className="space-y-1">
+                        {items.map((item) => {
+                          const Icon = item.icon;
+                          const active = isItemActive(item.to);
+                          return (
+                            <Link
+                              key={item.key}
+                              to={item.to}
+                              onClick={() => setMobileMenuOpen(false)}
+                              aria-current={active ? "page" : undefined}
+                              className={["relative flex min-h-10 items-center gap-2.5 rounded-control px-2.5 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent", active ? "border border-accent/25 bg-panel font-semibold text-fg shadow-sm" : "border border-transparent text-muted hover:bg-panel-hover hover:text-fg"].join(" ")}
+                            >
+                              {active && <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-accent" aria-hidden="true" />}
+                              <span className={["flex h-7 w-7 shrink-0 items-center justify-center rounded-control", active ? "bg-bg/70 text-fg" : "text-muted"].join(" ")}>
+                                <Icon size={16} strokeWidth={active ? 2.1 : 1.8} />
+                              </span>
+                              <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                              {item.badge !== null && item.badge !== undefined && (
+                                <span className="shrink-0 rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] font-semibold text-muted">{item.badge}</span>
+                              )}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </section>
                   );
                 })}
               </div>
             </nav>
-
             <div className="shrink-0 border-t border-line bg-bg px-2.5 pb-[max(10px,env(safe-area-inset-bottom))] pt-2.5">
               <div className="grid grid-cols-2 gap-2">
                 <Link
@@ -528,10 +541,10 @@ export const AdminLayout: React.FC = () => {
         
         {/* Sticky desktop top bar */}
         <header className="hidden min-[900px]:flex h-[52px] min-h-[52px] border-b border-line bg-panel sticky top-0 z-30 items-center shrink-0" aria-label="AMS top bar">
-          <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-5 lg:px-6 flex items-center justify-between gap-4">
+          <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-5 lg:px-6 flex min-w-0 items-center justify-between gap-3">
             <div className="min-w-0 flex-1 overflow-hidden">
               {location.pathname.startsWith('/admin/clients') ? (
-                <nav aria-label="Clients sections" className="flex min-w-0 items-center gap-1 overflow-x-auto ams-topnav-scroll">
+                <nav aria-label="Clients sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto rounded-control border border-line/80 bg-bg/55 p-1 ams-topnav-scroll">
                   {[
                     { key: 'all-clients', label: 'All Clients', slug: '/admin/clients/all-clients' },
                     { key: 'retainers', label: 'Retainers', slug: '/admin/clients/retainers' },
@@ -544,7 +557,7 @@ export const AdminLayout: React.FC = () => {
                         key={tab.key}
                         to={tab.slug}
                         end
-                        className={'group relative inline-flex h-9 shrink-0 items-center rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (active ? 'border border-accent/25 bg-accent/10 font-semibold text-fg' : 'border border-transparent text-muted hover:bg-bg hover:text-fg')}
+                        className={'group relative inline-flex h-8 shrink-0 items-center rounded-chip px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (active ? 'border border-accent/25 bg-panel font-semibold text-fg shadow-sm' : 'border border-transparent text-muted hover:bg-panel-hover hover:text-fg')}
                       >
                         {tab.label}
                       </NavLink>
@@ -564,7 +577,7 @@ export const AdminLayout: React.FC = () => {
                       end
                       className={() => {
                         const activeView = new URLSearchParams(location.search).get('view') || 'overview';
-                        return 'group relative inline-flex h-9 shrink-0 items-center rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (activeView === tab.key ? 'border border-accent/25 bg-accent/10 font-semibold text-fg' : 'border border-transparent text-muted hover:bg-bg hover:text-fg');
+                        return 'group relative inline-flex h-9 shrink-0 items-center rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (activeView === tab.key ? 'border border-accent/25 bg-accent/10 font-semibold text-fg' : 'border border-transparent text-muted hover:bg-panel-hover hover:text-fg');
                       }}
                     >
                       {tab.label}
@@ -586,7 +599,7 @@ export const AdminLayout: React.FC = () => {
                         key={tab.key}
                         to={'/admin/projects' + tab.search}
                         end
-                        className={'group relative inline-flex h-9 shrink-0 items-center rounded-chip border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (active ? 'border-accent/25 bg-accent/10 font-semibold text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg')}
+                        className={'group relative inline-flex h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (active ? 'border-accent/25 bg-accent/10 font-semibold text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg')}
                       >
                         {tab.label}
                       </NavLink>
@@ -617,7 +630,7 @@ export const AdminLayout: React.FC = () => {
                 </nav>
               ) : (
                 <nav aria-label="Breadcrumb">
-                  <ol className="flex min-w-0 items-center gap-2 text-xs">
+                  <ol className="flex min-w-0 items-center gap-2 rounded-control border border-line/80 bg-bg/55 px-3 py-1.5 text-[11px]">
                     <li className="shrink-0 font-medium text-muted">{activeSectionLabel}</li>
                     <li aria-hidden="true" className="shrink-0 text-muted/60">/</li>
                     <li aria-current="page" className="min-w-0 truncate font-semibold text-fg">{activeItemLabel}</li>
@@ -625,7 +638,7 @@ export const AdminLayout: React.FC = () => {
                 </nav>
               )}
             </div>
-            <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5 shrink-0">
+            <div className="flex shrink-0 items-center gap-1 rounded-control border border-line/80 bg-bg/55 p-1">
               <AdminNotificationCenter />
               <Button
                 type="button"
@@ -634,7 +647,7 @@ export const AdminLayout: React.FC = () => {
                 title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                 icon={theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-                className="h-9 w-9 p-0"
+                className="h-8 w-8 p-0"
               />
               <span className="mx-1 h-5 w-px shrink-0 bg-line" aria-hidden="true" />
               <button
