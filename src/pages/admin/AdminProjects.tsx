@@ -987,7 +987,6 @@ export const AdminProjects: React.FC = () => {
         )}
       </Modal>
 
-      {/* CONTEXTUAL TASK DETAIL DRAWER */}
       <Modal
         open={Boolean(selectedTask)}
         onClose={() => setSelectedTask(null)}
@@ -1449,6 +1448,7 @@ export const AdminProjects: React.FC = () => {
         </div>
       )}
 
+      {/* CONTEXTUAL TASK DETAIL DRAWER */}
       {view === 'budget' && (
         <>
           <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
