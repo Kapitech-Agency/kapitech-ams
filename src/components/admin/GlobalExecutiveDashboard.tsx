@@ -750,18 +750,36 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
       {view === 'overview' ? (
         <>
-      <section className="mb-5" aria-label="Executive key performance indicators">
-        <AdminMetricStrip
-          className="min-[900px]:grid-cols-6"
-          metrics={[
-            { id: 'active-projects', label: 'Active projects', value: '12', change: '+2', changeToneClassName: 'text-success', context: 'this month', sparkline: [8, 9, 10, 12], icon: <FolderKanban size={15} />, toneClassName: 'text-success' },
-            { id: 'tasks-due', label: 'Tasks due this week', value: '18', change: '6', changeToneClassName: 'text-warning', context: 'high priority', sparkline: [12, 14, 16, 18], icon: <CalendarDays size={15} />, toneClassName: 'text-info' },
-            { id: 'overdue', label: 'Overdue tasks', value: '3', change: 'Requires attention', changeToneClassName: 'text-danger', sparkline: [6, 5, 4, 3], icon: <AlertTriangle size={15} />, toneClassName: 'text-danger' },
-            { id: 'utilization', label: 'Team utilization', value: '78%', change: '+6%', changeToneClassName: 'text-success', context: 'vs last month', sparkline: [66, 70, 73, 78], icon: <Users size={15} />, toneClassName: 'text-warning' },
-            { id: 'revenue', label: 'Monthly revenue', value: '$84.5k', change: '+12.4%', changeToneClassName: 'text-success', context: 'vs May', sparkline: sampleRevenueByRange[range].map((point) => point.primary), icon: <CircleDollarSign size={15} />, toneClassName: 'text-success' },
-            { id: 'outstanding', label: 'Outstanding invoices', value: '$32.4k', change: '$8.7k', changeToneClassName: 'text-warning', context: 'overdue', sparkline: [22, 25, 28, 32.4], icon: <ReceiptText size={15} />, toneClassName: 'text-warning' }
-          ]}
-        />
+      <section className="mb-5 grid gap-3 min-[1100px]:grid-cols-12" aria-label="Executive overview controls">
+        <div className="min-[1100px]:col-span-8">
+          <AdminMetricStrip
+            className="grid-cols-1 sm:grid-cols-2 min-[760px]:grid-cols-3"
+            metrics={[
+              { id: 'active-projects', label: 'Active projects', value: '12', change: '+2', changeToneClassName: 'text-success', context: 'this month', sparkline: [8, 9, 10, 12], icon: <FolderKanban size={15} />, toneClassName: 'text-success' },
+              { id: 'tasks-due', label: 'Tasks due this week', value: '18', change: '6', changeToneClassName: 'text-warning', context: 'high priority', sparkline: [12, 14, 16, 18], icon: <CalendarDays size={15} />, toneClassName: 'text-info' },
+              { id: 'overdue', label: 'Overdue tasks', value: '3', change: 'Requires attention', changeToneClassName: 'text-danger', sparkline: [6, 5, 4, 3], icon: <AlertTriangle size={15} />, toneClassName: 'text-danger' },
+              { id: 'utilization', label: 'Team utilization', value: '78%', change: '+6%', changeToneClassName: 'text-success', context: 'vs last month', sparkline: [66, 70, 73, 78], icon: <Users size={15} />, toneClassName: 'text-warning' },
+              { id: 'revenue', label: 'Monthly revenue', value: '$84.5k', change: '+12.4%', changeToneClassName: 'text-success', context: 'vs May', sparkline: sampleRevenueByRange[range].map((point) => point.primary), icon: <CircleDollarSign size={15} />, toneClassName: 'text-success' },
+              { id: 'outstanding', label: 'Outstanding invoices', value: '$32.4k', change: '$8.7k', changeToneClassName: 'text-warning', context: 'overdue', sparkline: [22, 25, 28, 32.4], icon: <ReceiptText size={15} />, toneClassName: 'text-warning' }
+            ]}
+          />
+        </div>
+        <AdminPanel title="Quick actions" description="Jump directly into the most common agency workflows." bodyClassName="p-3" className="min-[1100px]:col-span-4">
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { label: 'New project', icon: <Plus size={14} />, href: '/admin/projects' },
+              { label: 'Review tasks', icon: <CheckCircle2 size={14} />, href: '/admin/tasks' },
+              { label: 'Log time', icon: <Clock3 size={14} />, href: '/admin/time-logs' },
+              { label: 'View invoices', icon: <ReceiptText size={14} />, href: '/admin/finance' }
+            ].map((action) => (
+              <Link key={action.label} to={action.href} className="flex min-h-10 items-center gap-2 rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-fg transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-accent-text">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control border border-line bg-panel text-muted">{action.icon}</span>
+                <span className="truncate">{action.label}</span>
+                <ArrowUpRight size={12} className="ml-auto shrink-0 text-muted" />
+              </Link>
+            ))}
+          </div>
+        </AdminPanel>
       </section>
 
       <div className="grid gap-3 min-[1100px]:grid-cols-12">
@@ -812,7 +830,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex min-w-0 items-center gap-1.5">
                         <i className={['h-2 w-2 shrink-0 rounded-full', progressClasses[item.tone]].join(' ')} />
-                        <span className="truncate text-[10px] font-medium text-muted">{item.label}</span>
+                        <span className="whitespace-nowrap text-[10px] font-medium text-muted">{item.label}</span>
                       </div>
                       <span className={['shrink-0 rounded-badge border px-1.5 py-0.5 text-[9px] font-medium', toneClasses[item.tone]].join(' ')}>
                         {item.tone === 'success' ? 'Healthy' : item.tone === 'warning' ? 'Monitor' : 'Action'}
@@ -990,9 +1008,21 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       </div>
 
       <section className="mt-3 grid gap-3 sm:grid-cols-3" aria-label="Dashboard supporting signals">
-        <article className="rounded-card border border-line bg-panel p-4"><div className="flex items-center gap-2 text-xs text-muted"><CheckCircle2 size={15} className="text-success" /> Delivery health</div><div className="mt-2 text-lg font-medium tabular-nums text-fg">8 / 12</div><div className="mt-1 text-[11px] text-muted">Projects currently on schedule.</div></article>
-        <article className="rounded-card border border-line bg-panel p-4"><div className="flex items-center gap-2 text-xs text-muted"><Clock3 size={15} className="text-warning" /> Priority work</div><div className="mt-2 text-lg font-medium tabular-nums text-fg">6</div><div className="mt-1 text-[11px] text-muted">High-priority tasks due this week.</div></article>
-        <article className="rounded-card border border-line bg-panel p-4"><div className="flex items-center gap-2 text-xs text-muted"><ReceiptText size={15} className="text-warning" /> Invoice follow-up</div><div className="mt-2 text-lg font-medium tabular-nums text-fg">$8.7k</div><div className="mt-1 text-[11px] text-muted">Outstanding amount past due.</div></article>
+        <article className="rounded-card border border-line bg-panel p-4">
+          <div className="flex items-start justify-between gap-3"><div className="flex items-center gap-2 text-xs font-medium text-fg"><CheckCircle2 size={15} className="text-success" /> Delivery health</div><span className="rounded-badge border border-success/25 bg-success/10 px-2 py-1 text-[10px] font-medium text-success">67% on track</span></div>
+          <div className="mt-4 flex items-end justify-between gap-4"><div><div className="text-xl font-semibold tabular-nums text-fg">8 / 12</div><div className="mt-1 text-[10px] text-muted">projects on schedule</div></div><div className="text-right"><div className="text-xs font-semibold text-fg">3 at risk</div><div className="mt-1 text-[10px] text-danger">1 overdue</div></div></div>
+          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-line"><div className="h-full rounded-full bg-success" style={{ width: '67%' }} /></div>
+        </article>
+        <article className="rounded-card border border-line bg-panel p-4">
+          <div className="flex items-start justify-between gap-3"><div className="flex items-center gap-2 text-xs font-medium text-fg"><Clock3 size={15} className="text-warning" /> Priority work</div><span className="rounded-badge border border-warning/25 bg-warning/10 px-2 py-1 text-[10px] font-medium text-warning">6 high</span></div>
+          <div className="mt-4 flex items-end justify-between gap-4"><div><div className="text-xl font-semibold tabular-nums text-fg">18</div><div className="mt-1 text-[10px] text-muted">tasks due this week</div></div><div className="text-right"><div className="text-xs font-semibold text-fg">3 overdue</div><div className="mt-1 text-[10px] text-danger">1 blocked</div></div></div>
+          <div className="mt-3 flex gap-1"><span className="h-1.5 flex-[3] rounded-full bg-danger" /><span className="h-1.5 flex-[3] rounded-full bg-warning" /><span className="h-1.5 flex-[6] rounded-full bg-info" /><span className="h-1.5 flex-[6] rounded-full bg-line" /></div>
+        </article>
+        <article className="rounded-card border border-line bg-panel p-4">
+          <div className="flex items-start justify-between gap-3"><div className="flex items-center gap-2 text-xs font-medium text-fg"><ReceiptText size={15} className="text-warning" /> Invoice follow-up</div><span className="rounded-badge border border-warning/25 bg-warning/10 px-2 py-1 text-[10px] font-medium text-warning">Action needed</span></div>
+          <div className="mt-4 flex items-end justify-between gap-4"><div><div className="text-xl font-semibold tabular-nums text-fg">$8.7k</div><div className="mt-1 text-[10px] text-muted">past-due balance</div></div><div className="text-right"><div className="text-xs font-semibold text-fg">$32.4k</div><div className="mt-1 text-[10px] text-muted">total outstanding</div></div></div>
+          <div className="mt-3 flex items-center justify-between text-[10px] text-muted"><span>27% of outstanding is overdue</span><span className="font-medium text-warning">Follow up</span></div>
+        </article>
       </section>
 
         </>
