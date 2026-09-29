@@ -28,6 +28,7 @@ import { CustomSelect } from '../../components/ui/CustomSelect';
 import Button from '../../components/ui/Button';
 
 import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 interface ApprovalItem {
   id: string;
   type: string;
