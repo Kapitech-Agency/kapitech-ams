@@ -2208,7 +2208,7 @@ export const AdminInvoicing: React.FC = () => {
                 key={tab.key}
                 to={`/admin/invoicing${tab.search}`}
                 aria-current={activeView === tab.key ? 'page' : undefined}
-                className={`inline-flex min-h-8 shrink-0 items-center rounded-chip px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${activeView === tab.key ? 'bg-bg font-semibold text-fg' : 'text-muted hover:bg-bg hover:text-fg'}`}
+                className={`inline-flex min-h-8 shrink-0 items-center rounded-chip px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${activeView === tab.key ? 'border border-accent/25 bg-accent/10 font-semibold text-fg' : 'border border-transparent text-muted hover:bg-bg hover:text-fg'}`}
               >
                 {tab.label}
               </Link>
@@ -2230,7 +2230,7 @@ export const AdminInvoicing: React.FC = () => {
         actions={(
           <>
             <div className="inline-flex min-h-9 items-center rounded-control border border-line bg-panel p-1" aria-label="Finance currency">
-              {(['IDR', 'USD'] as CurrencyCode[]).map((item) => <button key={item} type="button" onClick={() => setActiveCurrency(item)} aria-pressed={currency === item} className={'min-h-7 rounded-chip px-2.5 text-[11px] font-semibold ' + (currency === item ? 'bg-bg text-fg' : 'text-muted hover:bg-bg hover:text-fg')}>{item}</button>)}
+              {(['IDR', 'USD'] as CurrencyCode[]).map((item) => <button key={item} type="button" onClick={() => setActiveCurrency(item)} aria-pressed={currency === item} className={'min-h-7 rounded-chip px-2.5 text-[11px] font-semibold ' + (currency === item ? 'bg-accent/10 text-fg border border-accent/25' : 'text-muted hover:bg-bg hover:text-fg border border-transparent')}>{item}</button>)}
             </div>
             <button type="button" onClick={() => void loadData(true)} disabled={refreshing} className={actionClass} title="Refresh finance data"><RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />{refreshing ? 'Refreshing' : 'Refresh'}</button>
             {financeView === 'quotations' ? (
