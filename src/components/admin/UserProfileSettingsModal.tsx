@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Camera, Mail, Phone, Save, UserRound } from 'lucide-react';
-import { Modal } from '../ui/Modal';
+import { Drawer } from '../ui/Drawer';
 import Button from '../ui/Button';
 import UserAvatar from './UserAvatar';
 import { api } from '../../lib/apiClient';
@@ -177,7 +177,7 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
   };
 
   return (
-    <Modal
+    <Drawer
       open={open}
       onClose={requestClose}
       closeOnOutsideClick={!isDirty && !saving}
@@ -322,7 +322,7 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
           <span>Your profile changes update the AMS account shown in the sidebar and account controls.</span>
         </div>
       </div>
-    </Modal>
+    </Drawer>
   );
 };
 
