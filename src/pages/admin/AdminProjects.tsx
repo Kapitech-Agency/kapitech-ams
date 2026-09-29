@@ -442,7 +442,13 @@ export const AdminProjects: React.FC = () => {
 
   const taskAssigneeOptions = useMemo(() => {
     if (!selectedSprintProject) return [];
-    return Array.from(new Set(selectedSprintProject.tasks.map(task => task.assignedTo).filter(Boolean))).sort((a, b) => a.localeCompare(b));
+    return Array.from(
+      new Set<string>(
+        selectedSprintProject.tasks
+          .map(task => task.assignedTo)
+          .filter((value): value is string => Boolean(value))
+      )
+    ).sort((a, b) => a.localeCompare(b));
   }, [selectedSprintProject]);
 
   const visibleTasks = useMemo(() => {
