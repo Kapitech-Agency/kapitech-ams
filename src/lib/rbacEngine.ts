@@ -5,6 +5,15 @@ import { useState, useEffect } from 'react';
 
 export type StakeholderRole = 'executive' | 'pm' | 'finance' | 'account_manager' | 'it_technical' | 'operations' | 'client_viewer';
 
+export type AgencyTier = 1 | 2 | 3 | 4;
+
+export const AGENCY_TIER_LABELS: Record<AgencyTier, string> = {
+  1: 'Agency Core',
+  2: 'Agency Management',
+  3: 'Project Operations',
+  4: 'External Network'
+};
+
 export interface RoleMetadata {
   id: StakeholderRole;
   title: string;
@@ -172,11 +181,26 @@ export function roleFromStakeholderType(
   division?: string,
   userRole?: string
 ): StakeholderRole {
-  if (stakeholderType === 'Master' || stakeholderType === 'Executive') return 'executive';
-  if (stakeholderType === 'Project_Manager') return 'pm';
-  if (stakeholderType === 'Operations' && (division === 'Finance' || userRole?.toLowerCase().includes('financial'))) return 'finance';
+  const normalizedRole = userRole?.trim().toLowerCase() || '';
+
+  // Preserve the server-provided stakeholder classification, while also
+  // normalizing common production titles such as CEO and HR on the FE.
+  if (
+    stakeholderType === 'Master' ||
+    stakeholderType === 'Executive' ||
+    /\bceo\b|chief executive|founder|owner/.test(normalizedRole)
+  ) return 'executive';
+  if (stakeholderType === 'Project_Manager' || /\bpm\b|project manager/.test(normalizedRole)) return 'pm';
+  if (
+    stakeholderType === 'Operations' &&
+    (division === 'Finance' || /finance|financial|fp\s*&?\s*a/.test(normalizedRole))
+  ) return 'finance';
   if (stakeholderType === 'IT_Technical') return 'it_technical';
-  if (stakeholderType === 'Operations' && division === 'Operations' && userRole?.toLowerCase().includes('operational')) return 'operations';
+  if (
+    stakeholderType === 'Operations' &&
+    division === 'Operations' &&
+    /operational|\bhr\b|human resources|people operations/.test(normalizedRole)
+  ) return 'operations';
   return 'account_manager';
 }
 
@@ -193,6 +217,31 @@ export function setStoredRole(role: StakeholderRole): void {
   if (typeof window === 'undefined' || !import.meta.env.DEV) return;
   localStorage.setItem(STORAGE_KEY, role);
   window.dispatchEvent(new CustomEvent(ROLE_EVENT_NAME, { detail: { role } }));
+}
+
+export function agencyTierFromRole(role: StakeholderRole): AgencyTier {
+  switch (role) {
+    case 'executive':
+      return 1;
+    case 'pm':
+    case 'finance':
+    case 'it_technical':
+      return 2;
+    case 'account_manager':
+    case 'operations':
+      return 3;
+    case 'client_viewer':
+    default:
+      return 4;
+  }
+}
+
+export function getAgencyTier(
+  actualStakeholderType?: StakeholderType | string,
+  division?: string,
+  userRole?: string
+): AgencyTier {
+  return agencyTierFromRole(roleFromStakeholderType(actualStakeholderType, division, userRole));
 }
 
 export function isModuleAllowed(role: StakeholderRole, moduleKey: string): boolean {
