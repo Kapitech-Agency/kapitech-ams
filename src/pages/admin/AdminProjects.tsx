@@ -4,10 +4,12 @@ import {
   Download,
   ArrowUpRight,
   BarChart3,
+  CalendarClock,
   CheckCircle2,
   CircleDollarSign,
   Code2,
   ExternalLink,
+  Filter,
   GripVertical,
   LayoutGrid,
   List,
@@ -15,6 +17,7 @@ import {
   Plus,
   Search,
   ShieldAlert,
+  SlidersHorizontal,
   Trash2,
   Users,
   X,
@@ -244,6 +247,10 @@ export const AdminProjects: React.FC = () => {
   const [dragOverProjectStatus, setDragOverProjectStatus] = useState<ProjectStatus | null>(null);
   const [taskSearch, setTaskSearch] = useState('');
   const [taskPriorityFilter, setTaskPriorityFilter] = useState('');
+  const [taskAssigneeFilter, setTaskAssigneeFilter] = useState('');
+  const [taskSort, setTaskSort] = useState('priority');
+  const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null);
+  const [dragOverTaskStatus, setDragOverTaskStatus] = useState<TaskStatus | null>(null);
   const [selectedProject, setSelectedProject] = useState<ProjectRecord | null>(null);
   const [selectedTask, setSelectedTask] = useState<ProjectTask | null>(null);
   const [projectDrawerOpen, setProjectDrawerOpen] = useState(false);
@@ -433,6 +440,11 @@ export const AdminProjects: React.FC = () => {
     );
   }, [activeProjects, projects, selectedProjectSlug]);
 
+  const taskAssigneeOptions = useMemo(() => {
+    if (!selectedSprintProject) return [];
+    return Array.from(new Set(selectedSprintProject.tasks.map(task => task.assignedTo).filter(Boolean))).sort((a, b) => a.localeCompare(b));
+  }, [selectedSprintProject]);
+
   const visibleTasks = useMemo(() => {
     if (!selectedSprintProject) return [];
     const query = taskSearch.trim().toLowerCase();
@@ -445,13 +457,35 @@ export const AdminProjects: React.FC = () => {
             .toLowerCase()
             .includes(query);
         const matchesPriority = !taskPriorityFilter || task.priority === taskPriorityFilter;
-        return matchesQuery && matchesPriority;
+        const matchesAssignee = !taskAssigneeFilter || task.assignedTo === taskAssigneeFilter;
+        return matchesQuery && matchesPriority && matchesAssignee;
       })
       .sort((a, b) => {
+        if (taskSort === 'due') return (a.dueDate || '9999-12-31').localeCompare(b.dueDate || '9999-12-31');
+        if (taskSort === 'title') return a.title.localeCompare(b.title);
+        if (taskSort === 'created') return (b.createdAt || '').localeCompare(a.createdAt || '');
         if (a.status !== b.status) return 0;
         return PRIORITY_ORDER[b.priority] - PRIORITY_ORDER[a.priority];
       });
-  }, [selectedSprintProject, taskSearch, taskPriorityFilter]);
+  }, [selectedSprintProject, taskSearch, taskPriorityFilter, taskAssigneeFilter, taskSort]);
+
+  const activeTaskFilters = [taskSearch, taskPriorityFilter, taskAssigneeFilter].filter(Boolean).length;
+
+  const sprintStats = useMemo(() => {
+    const tasks = selectedSprintProject?.tasks || [];
+    const done = tasks.filter(task => task.status === 'done').length;
+    const open = tasks.length - done;
+    const overdue = tasks.filter(task => task.status !== 'done' && isOverdue(task.dueDate)).length;
+    const review = tasks.filter(task => task.status === 'review').length;
+    return {
+      total: tasks.length,
+      done,
+      open,
+      overdue,
+      review,
+      completion: tasks.length ? Math.round((done / tasks.length) * 100) : 0,
+    };
+  }, [selectedSprintProject]);
 
   const metrics = useMemo(() => {
     const value = activeProjects.reduce((sum, project) => sum + project.budget, 0);
@@ -642,7 +676,7 @@ export const AdminProjects: React.FC = () => {
   };
 
   // Task creation entry point
-  const handleAddTask = () => {
+  const handleAddTask = (status: TaskStatus = 'todo') => {
     if (!selectedSprintProject) {
       showToast('Select a project first.');
       return;
@@ -654,7 +688,7 @@ export const AdminProjects: React.FC = () => {
       projectId: selectedSprintProject.id,
       assignee: selectedSprintProject.teamLead || '',
       priority: 'medium',
-      status: 'todo',
+      status,
       dueDate: todayIso(),
       tags: '',
       subtasks: '',
@@ -761,16 +795,16 @@ export const AdminProjects: React.FC = () => {
 
   // Drag & Drop Handlers
   const updateTaskStatus = async (task: ProjectTask, status: TaskStatus) => {
-    if (!selectedSprintProject || task.status === status) return;
-    try {
-      const response = await api.tasks.update(task.id, { status });
-      if (response.success) {
-        await syncProjects();
-        return;
-      }
-    } catch {
-      // Fall through to demo mode.
+    if (!selectedSprintProject || task.status === status) {
+      setDraggingTaskId(null);
+      setDragOverTaskStatus(null);
+      return;
     }
+
+    setDraggingTaskId(null);
+    setDragOverTaskStatus(null);
+
+    const previousStatus = task.status;
     setProjects(current =>
       current.map(project =>
         project.id === selectedSprintProject.id
@@ -782,6 +816,30 @@ export const AdminProjects: React.FC = () => {
           : project
       )
     );
+
+    try {
+      const response = await api.tasks.update(task.id, { status });
+      if (response.success) {
+        await syncProjects();
+        showToast(language === 'id' ? 'Status tugas diperbarui.' : 'Task status updated.');
+        return;
+      }
+    } catch {
+      // Fall through to demo mode.
+    }
+
+    setProjects(current =>
+      current.map(project =>
+        project.id === selectedSprintProject.id
+          ? {
+              ...project,
+              tasks: project.tasks.map(item => item.id === task.id ? { ...item, status: previousStatus } : item),
+              updatedAt: new Date().toISOString(),
+            }
+          : project
+      )
+    );
+    showToast('Task status saved in demo mode.');
   };
 
   const updateProjectStatus = async (project: ProjectRecord, status: ProjectStatus) => {
@@ -1547,10 +1605,10 @@ export const AdminProjects: React.FC = () => {
       {view === 'sprint' && (
         <div className="space-y-4">
           <AdminPanel
-            title="Sprint workspace"
-            description="Select a project, filter tasks, then move work across the delivery stages."
+            title="Sprint & Delivery"
+            description="Run one project from a single delivery board. Filter the workload, move tasks between stages, and open task detail without leaving the sprint."
             actions={(
-              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
                 <CustomSelect
                   value={selectedSprintProject?.id || ''}
                   onChange={value => {
@@ -1560,98 +1618,334 @@ export const AdminProjects: React.FC = () => {
                     setSearchParams(next, { replace: true });
                   }}
                   options={activeProjects.map(project => ({ value: project.id, label: project.name }))}
-                  className="w-full sm:w-56"
+                  className="w-full sm:w-64"
+                  aria-label="Select sprint project"
                 />
                 {canManageKanbanTasks && (
-                  <Button icon={<Plus size={14} />} onClick={handleAddTask}>New Task</Button>
+                  <Button icon={<Plus size={14} />} onClick={() => handleAddTask('todo')}>New task</Button>
                 )}
               </div>
             )}
           >
-            <div className="grid gap-3 border-b border-line p-4 sm:grid-cols-[1fr_180px_180px] sm:p-5">
-              <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-                <input value={taskSearch} onChange={event => setTaskSearch(event.target.value)} placeholder="Search tasks, owner, tags..." className={fieldClass + ' mt-0 pl-9'} />
-              </div>
-              <CustomSelect value={taskPriorityFilter} onChange={setTaskPriorityFilter} options={[{ value: '', label: 'All priorities' }, ...TASK_PRIORITIES]} className="w-full" />
-              <span className="inline-flex min-h-9 items-center justify-center rounded-control border border-line bg-bg px-3 text-xs text-muted">{visibleTasks.length} tasks</span>
-            </div>
-
-            <div className="overflow-x-auto custom-scrollbar p-4 sm:p-5">
-              <div className="grid min-w-[1080px] grid-cols-4 gap-3">
-                {TASK_COLUMNS.map(column => {
-                  const tasks = visibleTasks.filter(task => task.status === column.id);
-                  return (
-                    <div
-                      key={column.id}
-                      onDragOver={event => event.preventDefault()}
-                      onDrop={event => {
-                        const id = event.dataTransfer.getData('text/plain');
-                        const task = selectedSprintProject?.tasks.find(item => item.id === id);
-                        if (task) void updateTaskStatus(task, column.id);
-                      }}
-                      className="min-h-[460px] rounded-card border border-line bg-bg p-3"
-                    >
-                      <div className="mb-3 flex items-center justify-between rounded-control border border-line bg-panel px-3 py-2">
-                        <div className="flex items-center gap-2">
-                          <span className={'h-2 w-2 rounded-full ' + column.tone} />
-                          <span className="text-xs font-semibold text-fg">{column.label}</span>
+            {selectedSprintProject ? (
+              <>
+                <div className="grid gap-3 border-b border-line bg-bg/35 p-4 sm:p-5 lg:grid-cols-[minmax(0,1.6fr)_repeat(4,minmax(100px,0.5fr))]">
+                  <div className="min-w-0 rounded-card border border-line bg-panel p-4">
+                    <div className="flex min-w-0 items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded-badge border border-accent/20 bg-accent/10 px-2 py-1 text-[10px] font-semibold text-accent-text">Active sprint</span>
+                          <span className={'rounded-badge border px-2 py-1 text-[10px] font-semibold ' + healthClass(selectedSprintProject.health)}>
+                            {selectedSprintProject.health || 'Good'}
+                          </span>
                         </div>
-                        <span className="rounded-control border border-line bg-bg px-2 py-1 text-[10px] tabular-nums text-muted">{tasks.length}</span>
+                        <h2 className="mt-2 truncate text-sm font-semibold text-fg">{selectedSprintProject.name}</h2>
+                        <p className="mt-1 truncate text-[11px] text-muted">{selectedSprintProject.clientCompany} · {selectedSprintProject.serviceCategory || 'Delivery work'}</p>
                       </div>
-
-                      <div className="space-y-2.5">
-                        {tasks.length === 0 ? (
-                          <div className="rounded-card border border-dashed border-line p-6 text-center text-[11px] text-muted">No tasks in this stage.</div>
-                        ) : tasks.map(task => {
-                          const doneSubtasks = (task.subtasks || []).filter(item => item.completed).length;
-                          const overdue = task.status !== 'done' && isOverdue(task.dueDate);
-                          return (
-                            <article
-                              key={task.id}
-                              draggable={canManageKanbanTasks}
-                              onDragStart={event => event.dataTransfer.setData('text/plain', task.id)}
-                              className="group rounded-card border border-line bg-panel p-3 transition-colors hover:border-accent/40"
-                            >
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="flex min-w-0 items-center gap-1.5">
-                                  <GripVertical size={13} className="shrink-0 text-muted" />
-                                  <span className={'rounded-badge border px-2 py-1 text-[10px] font-semibold ' + priorityClass(task.priority)}>{priorityLabel(task.priority)}</span>
-                                </div>
-                                <button type="button" onClick={() => { setSelectedTask(task); }} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label={'Task actions for ' + task.title}>
-                                  <MoreHorizontal size={14} />
-                                </button>
-                              </div>
-                              <button type="button" onClick={() => setSelectedTask(task)} className="mt-2 block w-full text-left">
-                                <h3 className="text-xs font-semibold leading-5 text-fg">{task.title}</h3>
-                                {task.description && <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-muted">{task.description}</p>}
-                              </button>
-
-                              {(task.subtasks || []).length > 0 && (
-                                <div className="mt-3">
-                                  <div className="flex items-center justify-between text-[10px] text-muted"><span>Checklist</span><span>{doneSubtasks}/{(task.subtasks || []).length}</span></div>
-                                  <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg">
-                                    <div className="h-full rounded-full bg-success" style={{ width: ((doneSubtasks / (task.subtasks || []).length) * 100) + '%' }} />
-                                  </div>
-                                </div>
-                              )}
-
-                              <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-2.5 text-[10px]">
-                                <span className="flex min-w-0 items-center gap-1.5 text-muted">
-                                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-line bg-bg text-[9px] font-semibold text-fg">{initials(task.assignedTo)}</span>
-                                  <span className="truncate">{task.assignedTo || 'Unassigned'}</span>
-                                </span>
-                                <span className={overdue ? 'text-danger font-semibold' : 'text-muted'}>{overdue ? 'Overdue' : formatDate(task.dueDate)}</span>
-                              </div>
-                            </article>
-                          );
-                        })}
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => openProjectDetail(selectedSprintProject)}
+                        className="shrink-0 rounded-control border border-line bg-bg px-2.5 py-1.5 text-[10px] font-medium text-muted transition-colors hover:bg-panel-hover hover:text-fg"
+                      >
+                        Project detail
+                      </button>
                     </div>
-                  );
-                })}
+                    <div className="mt-4 flex items-center justify-between gap-3 text-[10px]">
+                      <div className="flex min-w-0 items-center gap-2 text-muted">
+                        <span className="shrink-0">Delivery progress</span>
+                        <span className="font-semibold tabular-nums text-fg">{selectedSprintProject.progressPercent}%</span>
+                      </div>
+                      <span className="shrink-0 text-muted">Deadline {formatDate(selectedSprintProject.targetEndDate)}</span>
+                    </div>
+                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-bg">
+                      <div className="h-full rounded-full bg-accent transition-[width]" style={{ width: selectedSprintProject.progressPercent + '%' }} />
+                    </div>
+                  </div>
+
+                  {[
+                    ['Tasks', sprintStats.total, 'Current workload'],
+                    ['Open', sprintStats.open, 'Needs movement'],
+                    ['Review', sprintStats.review, 'Awaiting review'],
+                    ['Overdue', sprintStats.overdue, 'Past due'],
+                  ].map(([label, value, context]) => (
+                    <div key={String(label)} className="rounded-card border border-line bg-panel p-4">
+                      <div className="text-[10px] font-medium uppercase tracking-[0.08em] text-muted">{label}</div>
+                      <div className="mt-2 text-xl font-semibold tabular-nums text-fg">{value}</div>
+                      <div className="mt-1 text-[10px] text-muted">{context}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="border-b border-line bg-bg/25 p-4 sm:p-5">
+                  <div className="grid items-center gap-2.5 lg:grid-cols-[minmax(250px,1fr)_150px_180px_165px_auto]">
+                    <div className="relative min-w-0">
+                      <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                      <input
+                        value={taskSearch}
+                        onChange={event => setTaskSearch(event.target.value)}
+                        placeholder="Search title, owner, tags..."
+                        className={fieldClass + ' mt-0 pl-9'}
+                        aria-label="Search sprint tasks"
+                      />
+                    </div>
+                    <CustomSelect
+                      value={taskPriorityFilter}
+                      onChange={setTaskPriorityFilter}
+                      options={[{ value: '', label: 'All priorities' }, ...TASK_PRIORITIES]}
+                      className="w-full"
+                      aria-label="Filter tasks by priority"
+                    />
+                    <CustomSelect
+                      value={taskAssigneeFilter}
+                      onChange={setTaskAssigneeFilter}
+                      options={[{ value: '', label: 'All assignees' }, ...taskAssigneeOptions.map(value => ({ value, label: value }))]}
+                      className="w-full"
+                      aria-label="Filter tasks by assignee"
+                    />
+                    <CustomSelect
+                      value={taskSort}
+                      onChange={setTaskSort}
+                      options={[
+                        { value: 'priority', label: 'Priority first' },
+                        { value: 'due', label: 'Nearest due date' },
+                        { value: 'created', label: 'Recently created' },
+                        { value: 'title', label: 'Title A–Z' },
+                      ]}
+                      className="w-full"
+                      aria-label="Sort sprint tasks"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTaskSearch('');
+                        setTaskPriorityFilter('');
+                        setTaskAssigneeFilter('');
+                        setTaskSort('priority');
+                      }}
+                      disabled={!activeTaskFilters && taskSort === 'priority'}
+                      className="inline-flex h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-panel-hover hover:text-fg disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <X size={13} /> Reset
+                    </button>
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[10px]">
+                    <div className="flex flex-wrap items-center gap-2 text-muted">
+                      <span><strong className="font-semibold text-fg">{visibleTasks.length}</strong> visible of {sprintStats.total} tasks</span>
+                      {activeTaskFilters > 0 && (
+                        <span className="rounded-badge border border-accent/20 bg-accent/10 px-2 py-1 font-medium text-accent-text">{activeTaskFilters} filter{activeTaskFilters === 1 ? '' : 's'} active</span>
+                      )}
+                    </div>
+                    <span className="inline-flex items-center gap-1.5 text-muted">
+                      <SlidersHorizontal size={12} />
+                      {canManageKanbanTasks ? 'Drag the handle to change stage' : 'Task movement is read-only'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto custom-scrollbar p-4 sm:p-5">
+                  <div className="flex min-w-max items-stretch gap-3">
+                    {TASK_COLUMNS.map(column => {
+                      const tasks = visibleTasks.filter(task => task.status === column.id);
+                      const isDropTarget = dragOverTaskStatus === column.id;
+                      return (
+                        <section
+                          key={column.id}
+                          aria-label={column.label + ' task column'}
+                          onDragOver={event => {
+                            if (!canManageKanbanTasks) return;
+                            event.preventDefault();
+                            event.dataTransfer.dropEffect = 'move';
+                            setDragOverTaskStatus(column.id);
+                          }}
+                          onDragEnter={event => {
+                            if (!canManageKanbanTasks) return;
+                            event.preventDefault();
+                            setDragOverTaskStatus(column.id);
+                          }}
+                          onDragLeave={event => {
+                            if (event.currentTarget === event.target) {
+                              setDragOverTaskStatus(current => current === column.id ? null : current);
+                            }
+                          }}
+                          onDrop={event => {
+                            event.preventDefault();
+                            if (!canManageKanbanTasks) return;
+                            const id = event.dataTransfer.getData('text/project-task-id') || event.dataTransfer.getData('text/plain');
+                            const task = selectedSprintProject.tasks.find(item => item.id === id);
+                            if (task) void updateTaskStatus(task, column.id);
+                            else {
+                              setDraggingTaskId(null);
+                              setDragOverTaskStatus(null);
+                            }
+                          }}
+                          className={[
+                            'flex w-[310px] shrink-0 flex-col rounded-card border bg-bg/65 transition-[border-color,background-color,box-shadow] duration-150 sm:w-[324px]',
+                            isDropTarget ? 'border-accent/45 bg-accent/5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--accent)_14%,transparent)]' : 'border-line/80',
+                          ].join(' ')}
+                        >
+                          <div className="sticky top-0 z-[1] shrink-0 border-b border-line bg-panel/95 px-3.5 py-3 backdrop-blur-sm">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className={'h-2 w-2 shrink-0 rounded-full ' + column.tone} />
+                                  <span className="text-xs font-semibold text-fg">{column.label}</span>
+                                  <span className="text-[10px] text-muted">{tasks.length}</span>
+                                </div>
+                                <p className="mt-1 text-[10px] leading-4 text-muted">
+                                  {column.id === 'todo' ? 'Ready to pick up' : column.id === 'in_progress' ? 'Actively being worked' : column.id === 'review' ? 'Waiting for review' : 'Completed delivery'}
+                                </p>
+                              </div>
+                              {canManageKanbanTasks && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleAddTask(column.id)}
+                                  className="inline-flex h-7 shrink-0 items-center gap-1 rounded-control border border-line bg-bg px-2 text-[10px] font-medium text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg"
+                                  aria-label={'Add task to ' + column.label}
+                                >
+                                  <Plus size={12} /> Add
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className={[
+                            'min-h-[460px] flex-1 space-y-2.5 p-2.5 transition-colors duration-150',
+                            isDropTarget ? 'bg-accent/5' : '',
+                          ].join(' ')}>
+                            {tasks.length === 0 ? (
+                              <div className={[
+                                'flex min-h-[210px] items-center justify-center rounded-card border border-dashed p-6 text-center transition-colors',
+                                isDropTarget ? 'border-accent/40 bg-accent/5' : 'border-line/80 bg-bg/35',
+                              ].join(' ')}>
+                                <div className="max-w-[180px]">
+                                  <span className="mx-auto flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted">
+                                    <Plus size={14} />
+                                  </span>
+                                  <span className="mt-2 block text-[11px] font-medium text-fg">{isDropTarget ? 'Drop task here' : 'No tasks here'}</span>
+                                  <span className="mt-1 block text-[10px] leading-4 text-muted">
+                                    {isDropTarget ? 'Release to move this task into the stage.' : canManageKanbanTasks ? 'Add a task or drag one here.' : 'No tasks currently in this stage.'}
+                                  </span>
+                                  {canManageKanbanTasks && !isDropTarget && (
+                                    <button type="button" onClick={() => handleAddTask(column.id)} className="mt-3 text-[10px] font-medium text-accent-text hover:text-accent">
+                                      Add task
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              tasks.map(task => {
+                                const doneSubtasks = (task.subtasks || []).filter(item => item.completed).length;
+                                const checklistTotal = (task.subtasks || []).length;
+                                const overdue = task.status !== 'done' && isOverdue(task.dueDate);
+                                const dueDays = daysUntil(task.dueDate);
+                                const isDragging = draggingTaskId === task.id;
+                                return (
+                                  <article
+                                    key={task.id}
+                                    draggable={canManageKanbanTasks}
+                                    onDragStart={event => {
+                                      if (!canManageKanbanTasks) return;
+                                      setDraggingTaskId(task.id);
+                                      event.dataTransfer.effectAllowed = 'move';
+                                      event.dataTransfer.setData('text/project-task-id', task.id);
+                                      event.dataTransfer.setData('text/plain', task.id);
+                                    }}
+                                    onDragEnd={() => {
+                                      setDraggingTaskId(null);
+                                      setDragOverTaskStatus(null);
+                                    }}
+                                    className={[
+                                      'group rounded-card border bg-panel p-3 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150',
+                                      canManageKanbanTasks ? 'cursor-grab active:cursor-grabbing' : 'cursor-default',
+                                      'border-line hover:border-accent/30 hover:bg-panel-hover',
+                                      isDragging ? 'rotate-[0.6deg] scale-[0.98] opacity-50 shadow-lg' : '',
+                                    ].join(' ')}
+                                  >
+                                    <div className="flex items-start gap-2.5">
+                                      <span
+                                        className={[
+                                          'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-control border border-transparent text-muted transition-colors',
+                                          canManageKanbanTasks ? 'group-hover:border-line group-hover:bg-bg group-hover:text-fg' : '',
+                                        ].join(' ')}
+                                        title={canManageKanbanTasks ? 'Drag to move task' : 'Task movement is read-only'}
+                                      >
+                                        <GripVertical size={14} />
+                                      </span>
+                                      <button type="button" onClick={() => setSelectedTask(task)} className="min-w-0 flex-1 text-left">
+                                        <div className="flex flex-wrap items-center gap-1.5">
+                                          <span className={'rounded-badge border px-2 py-1 text-[9px] font-semibold ' + priorityClass(task.priority)}>{priorityLabel(task.priority)}</span>
+                                          {overdue && (
+                                            <span className="inline-flex items-center gap-1 rounded-badge border border-danger/20 bg-danger/5 px-2 py-1 text-[9px] font-semibold text-danger">
+                                              <CalendarClock size={10} /> Overdue
+                                            </span>
+                                          )}
+                                        </div>
+                                        <h3 className="mt-2 text-xs font-semibold leading-5 text-fg">{task.title}</h3>
+                                        {task.description && <p className="mt-1 line-clamp-2 text-[10px] leading-4 text-muted">{task.description}</p>}
+                                      </button>
+                                      <button type="button" onClick={() => setSelectedTask(task)} className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-control text-muted transition-colors hover:bg-bg hover:text-fg" aria-label={'Open ' + task.title}>
+                                        <MoreHorizontal size={14} />
+                                      </button>
+                                    </div>
+
+                                    {(task.tags || []).length > 0 && (
+                                      <div className="mt-3 flex flex-wrap gap-1">
+                                        {(task.tags || []).slice(0, 3).map(tag => (
+                                          <span key={tag} className="rounded-badge border border-line bg-bg px-1.5 py-1 text-[9px] text-muted">{tag}</span>
+                                        ))}
+                                        {(task.tags || []).length > 3 && <span className="rounded-badge border border-line bg-bg px-1.5 py-1 text-[9px] text-muted">+{task.tags.length - 3}</span>}
+                                      </div>
+                                    )}
+
+                                    {checklistTotal > 0 && (
+                                      <div className="mt-3">
+                                        <div className="flex items-center justify-between text-[9px] text-muted">
+                                          <span>Checklist</span>
+                                          <span className="tabular-nums text-fg">{doneSubtasks}/{checklistTotal}</span>
+                                        </div>
+                                        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg">
+                                          <div className="h-full rounded-full bg-success transition-[width]" style={{ width: ((doneSubtasks / checklistTotal) * 100) + '%' }} />
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-2.5">
+                                      <div className="flex min-w-0 items-center gap-2">
+                                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-line bg-bg text-[9px] font-semibold text-fg" title={task.assignedTo || 'Unassigned'}>
+                                          {initials(task.assignedTo)}
+                                        </span>
+                                        <div className="min-w-0">
+                                          <div className="truncate text-[10px] font-medium text-fg">{task.assignedTo || 'Unassigned'}</div>
+                                          <div className="text-[9px] text-muted">{dueDays === null ? 'No due date' : overdue ? 'Past due' : dueDays === 0 ? 'Due today' : dueDays === 1 ? 'Due tomorrow' : 'Due ' + formatDate(task.dueDate)}</div>
+                                        </div>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => setSelectedTask(task)}
+                                        className="shrink-0 text-[10px] font-medium text-muted transition-colors hover:text-fg"
+                                      >
+                                        Details
+                                      </button>
+                                    </div>
+                                  </article>
+                                );
+                              })
+                            )}
+                          </div>
+                        </section>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="flex min-h-[360px] items-center justify-center p-8 text-center">
+                <div>
+                  <div className="text-sm font-semibold text-fg">No active project available</div>
+                  <div className="mt-1 text-xs text-muted">Create or activate a project to start a sprint.</div>
+                </div>
               </div>
-            </div>
+            )}
           </AdminPanel>
         </div>
       )}
