@@ -2443,7 +2443,7 @@ export const AdminInvoicing: React.FC = () => {
                 )}
               </div>
             ) : (
-              <>
+              <div className="space-y-0">
                 <div className="overflow-x-auto custom-scrollbar">
                   {filteredExpenses.length === 0 ? (
                     <div className="p-5"><EmptyState title="No expenses found" description="Adjust the search or filters."/></div>
@@ -2491,7 +2491,7 @@ export const AdminInvoicing: React.FC = () => {
                     </div>
                   </div>
                 )}
-              </>
+              </div>
             )}
           </section>
         </div>
