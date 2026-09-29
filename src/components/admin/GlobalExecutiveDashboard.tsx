@@ -11,7 +11,6 @@ import {
   MoreHorizontal,
   Plus,
   ReceiptText,
-  Sparkles,
   Users,
 } from 'lucide-react';
 import { AdminMetricStrip, AdminModuleHeader, AdminPanel } from './AdminModulePrimitives';
@@ -698,7 +697,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       <AdminModuleHeader
         title="Agency overview"
         description="Real-time metrics, project pacing, and financial health for the agency."
-        icon={<Sparkles size={18} />}
         actions={(
           <>
             <div className="flex w-full items-center gap-0.5 rounded-control bg-bg p-0.5 sm:w-auto">
@@ -753,14 +751,16 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       <section className="mb-5 grid gap-3 min-[1100px]:grid-cols-12" aria-label="Executive overview controls">
         <div className="min-[1100px]:col-span-8">
           <AdminMetricStrip
-            className="grid-cols-1 sm:grid-cols-2 min-[760px]:grid-cols-3"
+            className="grid-cols-1 sm:grid-cols-2 min-[760px]:grid-cols-3 min-[1100px]:grid-cols-4"
             metrics={[
               { id: 'active-projects', label: 'Active projects', value: '12', change: '+2', changeToneClassName: 'text-success', context: 'this month', sparkline: [8, 9, 10, 12], icon: <FolderKanban size={15} />, toneClassName: 'text-success' },
               { id: 'tasks-due', label: 'Tasks due this week', value: '18', change: '6', changeToneClassName: 'text-warning', context: 'high priority', sparkline: [12, 14, 16, 18], icon: <CalendarDays size={15} />, toneClassName: 'text-info' },
               { id: 'overdue', label: 'Overdue tasks', value: '3', change: 'Requires attention', changeToneClassName: 'text-danger', sparkline: [6, 5, 4, 3], icon: <AlertTriangle size={15} />, toneClassName: 'text-danger' },
               { id: 'revenue', label: 'Monthly revenue', value: '$84.5k', change: '+12.4%', changeToneClassName: 'text-success', context: 'vs May', sparkline: sampleRevenueByRange[range].map((point) => point.primary), icon: <CircleDollarSign size={15} />, toneClassName: 'text-success' },
               { id: 'outstanding', label: 'Outstanding invoices', value: '$32.4k', change: '$8.7k', changeToneClassName: 'text-warning', context: 'overdue', sparkline: [22, 25, 28, 32.4], icon: <ReceiptText size={15} />, toneClassName: 'text-warning' },
-              { id: 'utilization', label: 'Team utilization', value: '78%', change: '+6%', changeToneClassName: 'text-success', context: 'vs last month', sparkline: [66, 70, 73, 78], icon: <Users size={15} />, toneClassName: 'text-warning' }
+              { id: 'utilization', label: 'Team utilization', value: '78%', change: '+6%', changeToneClassName: 'text-success', context: 'vs last month', sparkline: [66, 70, 73, 78], icon: <Users size={15} />, toneClassName: 'text-warning' },
+              { id: 'active-clients', label: 'Active clients', value: '28', change: '+3', changeToneClassName: 'text-success', context: 'this month', sparkline: [22, 24, 25, 28], icon: <Users size={15} />, toneClassName: 'text-info' },
+              { id: 'avg-project-value', label: 'Avg. project value', value: '$29.8k', change: '+4.1%', changeToneClassName: 'text-success', context: 'current quarter', sparkline: [24, 25.5, 28, 29.8], icon: <FolderKanban size={15} />, toneClassName: 'text-fg' }
             ]}
           />
         </div>
