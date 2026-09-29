@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Drawer, Modal } from '../../components/ui/Modal';
+import { Drawer } from '../../components/ui/Drawer';
 import { 
   Settings, 
   ShieldCheck, 
