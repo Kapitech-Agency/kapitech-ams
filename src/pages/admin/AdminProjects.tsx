@@ -317,6 +317,7 @@ export const AdminProjects: React.FC = () => {
   );
   const [draggingProjectId, setDraggingProjectId] = useState<string | null>(null);
   const [dragOverProjectStatus, setDragOverProjectStatus] = useState<ProjectStatus | null>(null);
+  const [movingProjectId, setMovingProjectId] = useState<string | null>(null);
   const [taskSearch, setTaskSearch] = useState('');
   const [taskPriorityFilter, setTaskPriorityFilter] = useState('');
   const [taskAssigneeFilter, setTaskAssigneeFilter] = useState('');
@@ -919,16 +920,22 @@ export const AdminProjects: React.FC = () => {
   };
 
   const updateProjectStatus = async (project: ProjectRecord, status: ProjectStatus) => {
-    if (!canManageProjects || project.status === status) return;
+    if (!canManageProjects || project.status === status || movingProjectId === project.id) {
+      setDraggingProjectId(null);
+      setDragOverProjectStatus(null);
+      return;
+    }
 
-    const updatedProject = { ...project, status, updatedAt: new Date().toISOString() };
+    const updatedProject = normalizeProject({ ...project, status, updatedAt: new Date().toISOString() });
     const projectOverrides = readStatusOverrides<ProjectStatus>(PROJECT_STATUS_OVERRIDES_KEY);
     projectOverrides[project.id] = status;
     writeStatusOverrides(PROJECT_STATUS_OVERRIDES_KEY, projectOverrides);
 
+    setMovingProjectId(project.id);
     setProjects(current =>
-      current.map(item => item.id === project.id ? normalizeProject(updatedProject) : item)
+      current.map(item => item.id === project.id ? updatedProject : item)
     );
+    setSelectedProject(current => current?.id === project.id ? updatedProject : current);
     setDraggingProjectId(null);
     setDragOverProjectStatus(null);
 
@@ -939,12 +946,11 @@ export const AdminProjects: React.FC = () => {
         return;
       }
 
-      // Keep the optimistic local state when the API is unavailable or rejects
-      // the update so drag & drop remains useful for A/B testing and demos.
       showToast(language === 'id' ? 'Status proyek diperbarui lokal.' : 'Project status updated locally for this session.');
     } catch {
-      // Preserve the optimistic local state for demo / A-B testing mode.
       showToast(language === 'id' ? 'Status proyek diperbarui lokal.' : 'Project status updated locally for this session.');
+    } finally {
+      setMovingProjectId(null);
     }
   };
 
@@ -1074,9 +1080,10 @@ export const AdminProjects: React.FC = () => {
 
   const selectedProjectDetail = view === 'sprint'
     ? null
-    : selectedProject || (selectedProjectSlug
-      ? projects.find(project => project.slug === selectedProjectSlug) || null
-      : null);
+    : (
+      (selectedProject?.id ? projects.find(project => project.id === selectedProject.id) : null) ||
+      (selectedProjectSlug ? projects.find(project => project.slug === selectedProjectSlug) || null : null)
+    );
 
   return (
     <div className="space-y-5">
@@ -1167,6 +1174,39 @@ export const AdminProjects: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {canManageProjects && (
+              <div className="rounded-card border border-line bg-bg p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-[11px] font-semibold text-fg">Move project</div>
+                    <p className="mt-1 text-[10px] leading-4 text-muted">Drag is the primary workflow. These controls are the keyboard and touch fallback.</p>
+                  </div>
+                  {movingProjectId === selectedProjectDetail.id && (
+                    <span className="rounded-badge border border-accent/20 bg-accent/10 px-2 py-1 text-[9px] font-semibold text-accent-text">Updating…</span>
+                  )}
+                </div>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+                  {PROJECT_KANBAN_COLUMNS.map(column => (
+                    <button
+                      key={column.id}
+                      type="button"
+                      disabled={movingProjectId === selectedProjectDetail.id}
+                      onClick={() => { void updateProjectStatus(selectedProjectDetail, column.id); }}
+                      className={[
+                        'min-h-10 rounded-control border px-2.5 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+                        selectedProjectDetail.status === column.id
+                          ? 'border-accent/30 bg-accent/10 text-accent'
+                          : 'border-line bg-panel text-muted hover:border-accent/30 hover:bg-panel-hover hover:text-fg',
+                        movingProjectId === selectedProjectDetail.id ? 'cursor-wait opacity-60' : '',
+                      ].join(' ')}
+                    >
+                      {column.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="rounded-card border border-line bg-bg p-4">
               <div className="flex items-center justify-between gap-3 text-[11px] text-muted">
@@ -1482,7 +1522,10 @@ export const AdminProjects: React.FC = () => {
                   )}
                 </div>
                 {projectLayout === 'board' && (
-                  <span className="text-[10px] text-muted">Drag any project card between stages to update its status.</span>
+                  <span className="inline-flex items-center gap-1.5 text-[10px] text-muted">
+                    <GripVertical size={12} />
+                    Drag cards between stages. Use project detail to move with keyboard or touch.
+                  </span>
                 )}
               </div>
             </div>
@@ -1491,7 +1534,7 @@ export const AdminProjects: React.FC = () => {
                 {[1, 2, 3, 4].map(item => <div key={item} className="h-40 animate-pulse rounded-card bg-bg" />)}
               </div>
             ) : projectLayout === 'board' ? (
-              <div className="overflow-x-auto custom-scrollbar">
+              <div className="overflow-x-auto custom-scrollbar cursor-default">
                 <div className="flex min-w-max items-start gap-3 px-4 pb-12 pt-4 sm:px-5 sm:pb-16 sm:pt-5">
                   {PROJECT_KANBAN_COLUMNS.map(column => {
                     const items = filteredProjects.filter(project => project.status === column.id);
@@ -1567,7 +1610,7 @@ export const AdminProjects: React.FC = () => {
                           </div>
                         </div>
 
-                        <div className={'min-h-[260px] space-y-3 p-2.5 pb-12 transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
+                        <div className={'min-h-[560px] space-y-3 p-2.5 pb-24 transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
                           {draggingProjectId && canManageProjects && (
                             <div className={'rounded-control border px-2.5 py-2 text-[9px] font-medium transition-colors ' + (isDropTarget ? 'border-accent/35 bg-accent/10 text-accent-text' : 'border-dashed border-line bg-bg/50 text-muted')}>
                               {isDropTarget ? 'Release to move project into ' + column.label : 'Drop here to move project into ' + column.label}
@@ -1593,7 +1636,12 @@ export const AdminProjects: React.FC = () => {
                                   draggable={canManageProjects}
                                   aria-grabbed={isDragging}
                                   onDragStart={event => {
-                                    if (!canManageProjects) {
+                                    if (!canManageProjects || movingProjectId === project.id) {
+                                      event.preventDefault();
+                                      return;
+                                    }
+                                    const source = event.target as HTMLElement | null;
+                                    if (source?.closest('button, a, input, select, textarea')) {
                                       event.preventDefault();
                                       return;
                                     }
@@ -1609,7 +1657,7 @@ export const AdminProjects: React.FC = () => {
                                     setDragOverProjectStatus(null);
                                   }}
                                   className={'group cursor-grab select-none rounded-[12px] border border-line/90 bg-panel p-3.5 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150 hover:-translate-y-px hover:border-accent/35 hover:bg-panel-hover hover:shadow-[0_8px_24px_color-mix(in_srgb,var(--bg)_60%,transparent)] active:cursor-grabbing ' + (
-                                    isDragging ? 'rotate-[1deg] scale-[0.98] opacity-50' : ''
+                                    isDragging ? 'rotate-[1deg] scale-[0.98] opacity-50' : movingProjectId === project.id ? 'border-accent/35 opacity-80' : ''
                                   )}
                                 >
                                   <div className="flex items-start justify-between gap-2">
@@ -1622,9 +1670,14 @@ export const AdminProjects: React.FC = () => {
                                         <h3 className="mt-0.5 break-words whitespace-normal text-sm font-semibold leading-5 text-fg">{project.name}</h3>
                                       </button>
                                     </div>
-                                    <button type="button" aria-label={'Actions for ' + project.name} onClick={() => openProjectDetail(project)} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg">
-                                      <MoreHorizontal size={15} />
-                                    </button>
+                                    <div className="flex shrink-0 items-center gap-1.5">
+                                      {movingProjectId === project.id && (
+                                        <span className="rounded-badge border border-accent/20 bg-accent/10 px-2 py-1 text-[9px] font-semibold text-accent-text">Updating…</span>
+                                      )}
+                                      <button type="button" aria-label={'Actions for ' + project.name} onClick={() => openProjectDetail(project)} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg">
+                                        <MoreHorizontal size={15} />
+                                      </button>
+                                    </div>
                                   </div>
 
                                   <div className="mt-3 flex flex-wrap items-center gap-1.5">
@@ -1681,14 +1734,19 @@ export const AdminProjects: React.FC = () => {
                                   <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-2.5 text-[10px]">
                                     <span className="min-w-0 break-words whitespace-normal text-muted">{project.slug}</span>
                                     <div className="flex shrink-0 items-center gap-2">
-                                      <button type="button" onClick={() => openProjectDetail(project)} className="inline-flex h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-3 text-[11px] font-semibold text-fg transition-colors hover:border-accent/30 hover:bg-panel-hover">View</button>
-                                      <button type="button" onClick={() => goToSprint(project)} className="inline-flex h-9 items-center justify-center gap-1.5 rounded-control border border-accent/25 bg-accent/10 px-3 text-[11px] font-semibold text-accent-text transition-colors hover:border-accent/40 hover:bg-accent/15 hover:text-fg">Delivery <ArrowUpRight size={13} /></button>
+                                      <button type="button" onClick={() => openProjectDetail(project)} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-3.5 text-[11px] font-semibold text-fg transition-[background-color,border-color,color] hover:border-accent/30 hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+                                        View project
+                                      </button>
+                                      <button type="button" onClick={() => goToSprint(project)} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control border border-accent/25 bg-accent/10 px-3.5 text-[11px] font-semibold text-accent-text transition-[background-color,border-color,color] hover:border-accent/40 hover:bg-accent/15 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+                                        Delivery <ArrowUpRight size={13} />
+                                      </button>
                                     </div>
                                   </div>
                                 </article>
                               );
                             })
                           )}
+                          <div aria-hidden="true" className="min-h-10" />
                         </div>
                       </section>
                     );
