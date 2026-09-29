@@ -193,7 +193,7 @@ export const AdminLayout: React.FC = () => {
     }
 
     if (path === '/admin/dashboard') {
-      return !location.search;
+      return true;
     }
 
     if (path === '/admin/settings') {
@@ -228,9 +228,7 @@ export const AdminLayout: React.FC = () => {
       >
         <div className="relative flex h-14 shrink-0 items-center border-b border-line px-3.5">
           <Link to="/admin/dashboard" aria-label="Kapitech AMS dashboard" className="flex min-w-0 flex-1 items-center gap-2.5 rounded-control px-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg">
-              <AmsBrandLogo className="h-5 w-5" />
-            </div>
+            <AmsBrandLogo className="h-7 w-7 shrink-0" />
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 leading-none">
                 <span className="truncate text-[13px] font-semibold text-fg">KAPITECH</span>
@@ -251,7 +249,7 @@ export const AdminLayout: React.FC = () => {
             icon={<Search size={15} />}
             className="flex h-10 w-full justify-start border-line bg-bg px-3"
           >
-            <span className="min-w-0 flex-1 truncate text-left text-xs">Search</span>
+            <span className="min-w-0 flex-1 truncate text-left text-xs text-muted">Search</span>
             <kbd className="ml-auto rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] text-muted">⌘K</kbd>
           </Button>
         </div>
@@ -273,7 +271,7 @@ export const AdminLayout: React.FC = () => {
                           key={item.key}
                           to={item.to}
                           aria-current={active ? "page" : undefined}
-                          className={["group relative flex min-h-10 items-center gap-2.5 rounded-control px-2.5 text-[12px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent", active ? "border border-accent/25 bg-accent/10 text-fg" : "border border-transparent text-muted hover:bg-panel-hover hover:text-fg"].join(" ")}
+                          className={["group relative flex min-h-10 items-center gap-2.5 rounded-control px-2.5 text-[12px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent", active ? "border border-accent/25 bg-accent/10 text-fg" : "border border-transparent text-muted hover:border-line hover:bg-bg/70 hover:text-fg"].join(" ")}
                         >
                           {active && <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-accent" aria-hidden="true" />}
                           <span className={["flex h-7 w-7 shrink-0 items-center justify-center rounded-control", active ? "bg-bg/70 text-fg" : "text-muted group-hover:text-fg"].join(" ")}>
@@ -298,14 +296,26 @@ export const AdminLayout: React.FC = () => {
           <div className="grid grid-cols-2 gap-2">
             <Link
               to="/admin/settings"
-              className="flex min-h-10 items-center justify-center rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              aria-current={location.pathname === '/admin/settings' ? 'page' : undefined}
+              className={[
+                "flex min-h-10 items-center justify-center rounded-control border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                location.pathname === '/admin/settings'
+                  ? "border-accent/25 bg-accent/10 text-fg"
+                  : "border-line bg-bg text-muted hover:border-accent/30 hover:bg-accent/5 hover:text-fg"
+              ].join(" ")}
             >
               Settings
             </Link>
             <button
               type="button"
               onClick={handleLogout}
-              className="flex min-h-10 items-center justify-center rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted transition-colors hover:border-danger/30 hover:bg-danger/5 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              aria-pressed={logoutConfirmOpen}
+              className={[
+                "flex min-h-10 items-center justify-center rounded-control border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                logoutConfirmOpen
+                  ? "border-danger/30 bg-danger/10 text-danger"
+                  : "border-line bg-bg text-muted hover:border-danger/30 hover:bg-danger/5 hover:text-danger active:bg-danger/10 active:text-danger"
+              ].join(" ")}
             >
               Sign out
             </button>
@@ -363,7 +373,7 @@ export const AdminLayout: React.FC = () => {
       {/* ------------------------------------------------------------- */}
       {/* MOBILE TOPBAR - Single, sleek, non-cluttered header */}
       {/* ------------------------------------------------------------- */}
-      <div className="min-[900px]:hidden ams-mobile-topbar flex items-center justify-between gap-2 px-3 bg-panel/95 backdrop-blur-sm border-b border-line sticky top-0 z-40 shrink-0 h-[56px] min-h-[56px] pt-[env(safe-area-inset-top)]">
+      <div className="min-[900px]:hidden ams-mobile-topbar flex items-center justify-between gap-2 px-3 bg-transparent border-b border-line sticky top-0 z-40 shrink-0 h-[56px] min-h-[56px] pt-[env(safe-area-inset-top)]">
         <div className="flex items-center gap-2.5 min-w-0">
           <button
             onClick={() => setMobileMenuOpen(true)}
@@ -374,9 +384,7 @@ export const AdminLayout: React.FC = () => {
           </button>
 
           <Link to="/admin/dashboard" className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-control border border-line bg-bg shrink-0">
-              <AmsBrandLogo compact className="h-4 w-4" />
-            </div>
+            <AmsBrandLogo compact className="h-6 w-6 shrink-0" />
             <div className="min-w-0">
               <span className="font-sans font-semibold text-fg text-xs block truncate">KAPITECH AMS</span>
               <span className="text-[9px] font-sans text-muted block truncate -mt-0.5">{activeItemLabel}</span>
@@ -384,7 +392,7 @@ export const AdminLayout: React.FC = () => {
           </Link>
         </div>
 
-        <div className="flex items-center gap-1 shrink-0 rounded-control border border-line/80 bg-bg/60 p-1">
+        <div className="flex items-center gap-1 shrink-0">
           <AdminNotificationCenter />
           <Button
             type="button"
@@ -430,9 +438,7 @@ export const AdminLayout: React.FC = () => {
           >
             <div className="flex shrink-0 items-center justify-between gap-2 border-b border-line bg-panel p-3.5">
               <Link to="/admin/dashboard" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-control border border-line bg-bg">
-                  <AmsBrandLogo className="h-4 w-4" />
-                </div>
+                <AmsBrandLogo className="h-7 w-7 shrink-0" />
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5 text-sm font-semibold text-fg">
                     <span>KAPITECH</span>
@@ -464,7 +470,7 @@ export const AdminLayout: React.FC = () => {
                 icon={<Search size={15} />}
                 className="flex h-9 w-full justify-start border-line bg-bg px-3"
               >
-                <span className="min-w-0 flex-1 truncate text-left text-xs">Search</span>
+                <span className="min-w-0 flex-1 truncate text-left text-xs text-muted">Search</span>
                 <kbd className="ml-auto rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] text-muted">⌘K</kbd>
               </Button>
             </div>
@@ -487,7 +493,7 @@ export const AdminLayout: React.FC = () => {
                               to={item.to}
                               onClick={() => setMobileMenuOpen(false)}
                               aria-current={active ? "page" : undefined}
-                              className={["relative flex min-h-10 items-center gap-2.5 rounded-control px-2.5 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent", active ? "border border-accent/25 bg-panel font-semibold text-fg shadow-sm" : "border border-transparent text-muted hover:bg-panel-hover hover:text-fg"].join(" ")}
+                              className={["relative flex min-h-10 items-center gap-2.5 rounded-control px-2.5 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent", active ? "border border-accent/25 bg-accent/10 font-semibold text-fg" : "border border-transparent text-muted hover:border-line hover:bg-bg/70 hover:text-fg"].join(" ")}
                             >
                               {active && <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-accent" aria-hidden="true" />}
                               <span className={["flex h-7 w-7 shrink-0 items-center justify-center rounded-control", active ? "bg-bg/70 text-fg" : "text-muted"].join(" ")}>
@@ -511,7 +517,13 @@ export const AdminLayout: React.FC = () => {
                 <Link
                   to="/admin/settings"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex min-h-10 items-center justify-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted hover:border-accent/30 hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  aria-current={location.pathname === '/admin/settings' ? 'page' : undefined}
+                  className={[
+                    "flex min-h-10 items-center justify-center rounded-control border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                    location.pathname === '/admin/settings'
+                      ? "border-accent/25 bg-accent/10 text-fg"
+                      : "border-line bg-panel text-muted hover:border-accent/30 hover:bg-accent/5 hover:text-fg"
+                  ].join(" ")}
                 >
                   Settings
                 </Link>
@@ -521,7 +533,13 @@ export const AdminLayout: React.FC = () => {
                     setMobileMenuOpen(false);
                     handleLogout();
                   }}
-                  className="flex min-h-10 items-center justify-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted hover:border-danger/30 hover:bg-danger/5 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  aria-pressed={logoutConfirmOpen}
+                  className={[
+                    "flex min-h-10 items-center justify-center rounded-control border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                    logoutConfirmOpen
+                      ? "border-danger/30 bg-danger/10 text-danger"
+                      : "border-line bg-panel text-muted hover:border-danger/30 hover:bg-danger/5 hover:text-danger active:bg-danger/10 active:text-danger"
+                  ].join(" ")}
                 >
                   Sign out
                 </button>
@@ -540,11 +558,11 @@ export const AdminLayout: React.FC = () => {
       <main className="flex-1 flex flex-col min-w-0 min-h-0 h-full overflow-y-auto overscroll-none bg-bg custom-scrollbar">
         
         {/* Sticky desktop top bar */}
-        <header className="hidden min-[900px]:flex h-14 min-h-14 border-b border-line bg-panel/95 backdrop-blur-sm sticky top-0 z-30 items-center shrink-0" aria-label="AMS top bar">
+        <header className="hidden min-[900px]:flex h-14 min-h-14 border-b border-line bg-transparent sticky top-0 z-30 items-center shrink-0" aria-label="AMS top bar">
           <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-5 lg:px-6 flex min-w-0 items-center justify-between gap-3">
             <div className="min-w-0 flex-1 overflow-hidden">
               {location.pathname.startsWith('/admin/clients') ? (
-                <nav aria-label="Clients sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto rounded-control border border-line/80 bg-bg/55 p-1 ams-topnav-scroll">
+                <nav aria-label="Clients sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
                   {[
                     { key: 'all-clients', label: 'All Clients', slug: '/admin/clients/all-clients' },
                     { key: 'retainers', label: 'Retainers', slug: '/admin/clients/retainers' },
@@ -630,7 +648,7 @@ export const AdminLayout: React.FC = () => {
                 </nav>
               ) : (
                 <nav aria-label="Breadcrumb">
-                  <ol className="flex min-w-0 items-center gap-2 rounded-control border border-line/80 bg-bg/55 px-3 py-1.5 text-[11px]">
+                  <ol className="flex min-w-0 items-center gap-2 text-[11px]">
                     <li className="shrink-0 font-medium text-muted">{activeSectionLabel}</li>
                     <li aria-hidden="true" className="shrink-0 text-muted/60">/</li>
                     <li aria-current="page" className="min-w-0 truncate font-semibold text-fg">{activeItemLabel}</li>
@@ -638,7 +656,7 @@ export const AdminLayout: React.FC = () => {
                 </nav>
               )}
             </div>
-            <div className="flex shrink-0 items-center gap-1 rounded-control border border-line/80 bg-bg/55 p-1">
+            <div className="flex shrink-0 items-center gap-1">
               <AdminNotificationCenter />
               <Button
                 type="button"
