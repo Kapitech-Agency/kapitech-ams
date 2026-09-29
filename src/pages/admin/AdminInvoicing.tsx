@@ -2411,6 +2411,7 @@ export const AdminInvoicing: React.FC = () => {
             { key: 'quotations', label: 'Quotation', search: '?finance=quotations' },
             { key: 'income-expenses', label: 'Income & Expenses', search: '?finance=income-expenses' },
             { key: 'tax-retainers', label: 'Tax & Retainers', search: '?finance=tax-retainers' },
+            { key: 'vendor-payments', label: 'Vendor Payments', search: '?finance=vendor-payments' },
             { key: 'financial-reports', label: 'Financial Reports', search: '?finance=financial-reports' },
           ].map((tab) => {
             const activeView = new URLSearchParams(location.search).get('finance') || 'invoices';
@@ -2428,7 +2429,7 @@ export const AdminInvoicing: React.FC = () => {
         </nav>
       </div>
       <AdminModuleHeader
-        title={financeView === 'quotations' ? 'Quotations' : financeView === 'income-expenses' ? 'Income & Expenses' : financeView === 'tax-retainers' ? 'Tax & Retainers' : financeView === 'financial-reports' ? 'Financial Reports' : 'Invoices'}
+        title={financeView === 'quotations' ? 'Quotations' : financeView === 'income-expenses' ? 'Income & Expenses' : financeView === 'tax-retainers' ? 'Tax & Retainers' : financeView === 'vendor-payments' ? 'Vendor Payments' : financeView === 'financial-reports' ? 'Financial Reports' : 'Invoices'}
         description={financeView === 'quotations'
           ? 'Manage the commercial pipeline from draft through approval, acceptance, and invoice conversion.'
           : financeView === 'income-expenses'
@@ -2437,7 +2438,9 @@ export const AdminInvoicing: React.FC = () => {
               ? 'Monitor tax provision, tax collection, and retainer billing and collection.'
               : financeView === 'financial-reports'
                 ? 'Review collection performance, margin, expense mix, and financial trends.'
-                : 'Manage billing, receivables, collection risk, and invoice activity.'}
+                : financeView === 'vendor-payments'
+                  ? 'Schedule, review, record, and reconcile payments owed to agency vendors and contractors.'
+                  : 'Manage billing, receivables, collection risk, and invoice activity.'}
         actions={(
           <>
             <div className="inline-flex min-h-9 items-center rounded-control border border-line bg-panel p-1" aria-label="Finance currency">
@@ -2455,6 +2458,11 @@ export const AdminInvoicing: React.FC = () => {
               <>
                 <button type="button" onClick={exportTaxCsv} disabled={!currencyInvoices.length} className={actionClass}><Download size={14}/>Export tax detail</button>
                 {canManageInvoices && <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>New invoice</button>}
+              </>
+            ) : financeView === 'vendor-payments' ? (
+              <>
+                <button type="button" onClick={exportVendorPaymentsCsv} disabled={!filteredVendorPayments.length} className={actionClass}><Download size={14}/>Export CSV</button>
+                {canManageInvoices && <button type="button" onClick={() => openVendorPaymentModal()} className={primaryClass}><Plus size={14}/>Record payment</button>}
               </>
             ) : financeView === 'financial-reports' ? (
               <button type="button" onClick={exportReportCsv} disabled={!financeChartData.length} className={actionClass}><Download size={14}/>Export report</button>
@@ -2675,6 +2683,92 @@ export const AdminInvoicing: React.FC = () => {
     </div>
   )}
 </section>
+        </div>
+      ) : financeView === 'vendor-payments' ? (
+        <div className="space-y-5">
+          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+            <FinanceMetricCard label="Scheduled" value={String(vendorPaymentMetrics.scheduled)} context="Upcoming vendor payments" icon={<Clock3 size={15}/>} />
+            <FinanceMetricCard label="Overdue" value={String(vendorPaymentMetrics.overdue)} context="Payments past due" icon={<AlertCircle size={15} className="text-danger"/>} toneClassName="text-danger" />
+            <FinanceMetricCard label="Paid" value={formatFinanceCardAmount(vendorPaymentMetrics.paid, currency)} context="Recorded payments" icon={<CheckCircle2 size={15} className="text-success"/>} toneClassName="text-success" />
+            <FinanceMetricCard label="Outstanding" value={formatFinanceCardAmount(vendorPaymentMetrics.outstanding, currency)} context="Remaining obligations" icon={<WalletCards size={15} className="text-warning"/>} toneClassName="text-warning" />
+          </section>
+
+          <section className="rounded-card border border-line bg-panel overflow-hidden" aria-label="Vendor payments ledger">
+            <header className="border-b border-line bg-panel p-4 sm:px-5">
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <h2 className="text-sm font-semibold text-fg">Vendor payment ledger</h2>
+                      <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] font-medium text-muted">{filteredVendorPayments.length} visible</span>
+                    </div>
+                    <p className="mt-1 text-xs text-muted">Track contractor and partner payment obligations from vendor contracts.</p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{currency}</span>
+                    {canManageInvoices && <button type="button" onClick={() => openVendorPaymentModal()} className={primaryClass}><Plus size={14}/>Record payment</button>}
+                  </div>
+                </div>
+
+                <div className="grid gap-2 lg:grid-cols-[minmax(240px,1fr)_minmax(150px,1fr)_minmax(170px,1fr)_minmax(150px,1fr)]">
+                  <label className="relative min-w-0">
+                    <Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/>
+                    <span className="sr-only">Search vendor payments</span>
+                    <input value={vendorPaymentSearch} onChange={(event) => setVendorPaymentSearch(event.target.value)} placeholder="Search vendor, company, contract..." className={fieldClass + ' h-10 pl-8'}/>
+                  </label>
+                  <CustomSelect value={vendorPaymentVendorFilter} onChange={setVendorPaymentVendorFilter} options={[{value:'all',label:'All vendors'}, ...vendors.map((vendor) => ({value:vendor.id,label:vendor.name}))]} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap"/>
+                  <CustomSelect value={vendorPaymentStatusFilter} onChange={(value) => setVendorPaymentStatusFilter(value as VendorPaymentStatus | 'all')} options={[{value:'all',label:'All payment states'},{value:'scheduled',label:'Scheduled'},{value:'partial',label:'Partially paid'},{value:'paid',label:'Paid'},{value:'overdue',label:'Overdue'}]} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap"/>
+                  <CustomSelect value={vendorPaymentSort} onChange={(value) => setVendorPaymentSort(value as typeof vendorPaymentSort)} options={[{value:'due_asc',label:'Due soonest'},{value:'due_desc',label:'Due latest'},{value:'amount_high',label:'Highest amount'},{value:'amount_low',label:'Lowest amount'}]} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap"/>
+                </div>
+
+                {(vendorPaymentSearch || vendorPaymentStatusFilter !== 'all' || vendorPaymentVendorFilter !== 'all') && (
+                  <div className="flex items-center justify-between gap-3 border-t border-line pt-3">
+                    <span className="text-[10px] text-muted">Vendor payment filters are active</span>
+                    <button type="button" onClick={() => { setVendorPaymentSearch(''); setVendorPaymentStatusFilter('all'); setVendorPaymentVendorFilter('all'); }} className={actionClass + ' h-8 min-h-8 px-3 text-[11px]'}>Clear filters</button>
+                  </div>
+                )}
+              </div>
+            </header>
+
+            <div className="overflow-x-auto custom-scrollbar">
+              {filteredVendorPayments.length === 0 ? (
+                <div className="p-5">
+                  <EmptyState
+                    title="No vendor payments found"
+                    description={vendors.length ? 'No contracts match the current filters or there are no obligations in this currency.' : 'Vendor data is not available yet. Refresh Finance after vendor records are available.'}
+                    action={vendors.length && canManageInvoices ? <button type="button" onClick={() => openVendorPaymentModal()} className={primaryClass}><Plus size={14}/>Record payment</button> : undefined}
+                  />
+                </div>
+              ) : (
+                <table className="ams-finance-table min-w-[980px] border-separate border-spacing-0 text-xs">
+                  <thead><tr><th>Vendor</th><th>Contract</th><th>Due date</th><th>Amount</th><th>Paid</th><th>Status</th><th>Actions</th></tr></thead>
+                  <tbody>
+                    {filteredVendorPayments.map((row) => (
+                      <tr key={row.id} className="group cursor-pointer hover:bg-bg" onClick={() => setVendorPaymentDetail(row)}>
+                        <td>
+                          <div className="min-w-[210px]">
+                            <ProfileIdentity profile={{ id: row.vendor.id, name: row.vendor.name, role: row.vendor.type === 'freelancer' ? 'Freelancer' : 'Agency partner', division: row.vendor.primaryCategory }} showRole={false}/>
+                            <p className="mt-1 text-[10px] text-muted">{row.vendor.companyName || row.vendor.email}</p>
+                          </div>
+                        </td>
+                        <td><p className="max-w-[280px] truncate text-xs font-medium text-fg">{row.contract.title}</p><p className="mt-1 text-[10px] text-muted">{row.contract.rateType.replace('_',' ')}</p></td>
+                        <td><div className="text-xs tabular-nums text-fg">{vendorPaymentFormatDate(row.dueDate)}</div><div className="mt-1 text-[10px] text-muted">{row.status === 'overdue' ? Math.abs(getDaysUntilDue(row.dueDate)) + ' days overdue' : getDaysUntilDue(row.dueDate) === 0 ? 'Due today' : getDaysUntilDue(row.dueDate) > 0 ? 'Due in ' + getDaysUntilDue(row.dueDate) + ' days' : 'Past due'}</div></td>
+                        <td><span className="font-semibold tabular-nums text-fg">{formatNativeAmount(row.amount, currency, true)}</span></td>
+                        <td><span className="font-semibold tabular-nums text-success">{formatNativeAmount(row.paidAmount, currency, true)}</span></td>
+                        <td><span className={'inline-flex rounded-badge border px-2 py-1 text-[10px] font-semibold ' + vendorPaymentStatusTone[row.status]}>{vendorPaymentStatusLabel[row.status]}</span></td>
+                        <td onClick={(event) => event.stopPropagation()}>
+                          <div className="ams-table-actions">
+                            <button type="button" className="ams-table-action" onClick={() => setVendorPaymentDetail(row)}>View</button>
+                            {canManageInvoices && row.status !== 'paid' && <button type="button" className="ams-table-action" data-primary="true" onClick={() => openVendorPaymentModal(row)}>Pay</button>}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </section>
         </div>
       ) : financeView === 'tax-retainers' ? (
         <div className="space-y-5">
@@ -3249,6 +3343,125 @@ export const AdminInvoicing: React.FC = () => {
                   </button>
                 ))}
               </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Drawer
+        open={vendorPaymentModalOpen}
+        onClose={() => !savingVendorPayment && setVendorPaymentModalOpen(false)}
+        size="md"
+        title="Record vendor payment"
+        description="Record an outgoing vendor payment through the existing Finance expense ledger."
+        closeOnOutsideClick={!savingVendorPayment}
+        footer={
+          <>
+            <button type="button" onClick={() => setVendorPaymentModalOpen(false)} className={actionClass} disabled={savingVendorPayment}>Cancel</button>
+            <button type="submit" form="vendor-payment-form" className={primaryClass} disabled={savingVendorPayment || !vendorPaymentVendorId || !vendorPaymentContractId}>
+              {savingVendorPayment ? 'Saving...' : 'Record payment'}
+            </button>
+          </>
+        }
+      >
+        <form id="vendor-payment-form" onSubmit={handleSaveVendorPayment} className="space-y-5">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-muted">Vendor *</label>
+              <CustomSelect
+                value={vendorPaymentVendorId}
+                onChange={(value) => {
+                  setVendorPaymentVendorId(value);
+                  const nextVendor = vendors.find((item) => item.id === value);
+                  const nextContract = nextVendor?.contracts.find((item) => item.status === 'active' && item.currency === currency) || nextVendor?.contracts.find((item) => item.currency === currency);
+                  setVendorPaymentContractId(nextContract?.id || '');
+                  setVendorPaymentAmount(Number(nextContract?.rateAmount || 0));
+                }}
+                options={vendors.filter((vendor) => vendor.contracts.some((contract) => contract.status !== 'terminated' && contract.currency === currency)).map((vendor) => ({value:vendor.id,label:vendor.name}))}
+                className="w-full"
+                triggerClassName="h-10 min-h-10 w-full"
+                aria-label="Vendor"
+              />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-muted">Contract *</label>
+              <CustomSelect
+                value={vendorPaymentContractId}
+                onChange={(value) => {
+                  setVendorPaymentContractId(value);
+                  const contract = selectedVendorContracts.find((item) => item.id === value);
+                  if (contract) setVendorPaymentAmount(Math.max(0, Number(contract.rateAmount || 0)));
+                }}
+                options={selectedVendorContracts.map((contract) => ({value:contract.id,label:contract.title}))}
+                className="w-full"
+                triggerClassName="h-10 min-h-10 w-full"
+                aria-label="Contract"
+              />
+            </div>
+            <div>
+              <label htmlFor="vendor-payment-amount" className="mb-1.5 block text-xs font-medium text-muted">Payment amount *</label>
+              <input id="vendor-payment-amount" type="number" min="0.01" step="0.01" value={vendorPaymentAmount || ''} onChange={(event) => setVendorPaymentAmount(Number(event.target.value))} className={fieldClass} />
+            </div>
+            <div>
+              <label htmlFor="vendor-payment-date" className="mb-1.5 block text-xs font-medium text-muted">Payment date *</label>
+              <input id="vendor-payment-date" type="date" value={vendorPaymentDate} onChange={(event) => setVendorPaymentDate(event.target.value)} className={fieldClass} />
+            </div>
+            <div>
+              <label htmlFor="vendor-payment-reference" className="mb-1.5 block text-xs font-medium text-muted">Reference</label>
+              <input id="vendor-payment-reference" value={vendorPaymentReference} onChange={(event) => setVendorPaymentReference(event.target.value)} className={fieldClass} placeholder="Bank reference / transaction ID" />
+            </div>
+            <div>
+              <label htmlFor="vendor-payment-notes" className="mb-1.5 block text-xs font-medium text-muted">Notes</label>
+              <input id="vendor-payment-notes" value={vendorPaymentNotes} onChange={(event) => setVendorPaymentNotes(event.target.value)} className={fieldClass} placeholder="Optional payment note" />
+            </div>
+          </div>
+
+          {selectedVendorForPayment && vendorPaymentContractId && (
+            <div className="rounded-card border border-line bg-bg p-4">
+              <div className="flex items-start gap-3">
+                <ProfileIdentity profile={{ id: selectedVendorForPayment.id, name: selectedVendorForPayment.name, role: selectedVendorForPayment.type === 'freelancer' ? 'Freelancer' : 'Agency partner', division: selectedVendorForPayment.primaryCategory }} showRole={false}/>
+                <div className="min-w-0">
+                  <div className="text-xs font-semibold text-fg">{selectedVendorForPayment.companyName || selectedVendorForPayment.name}</div>
+                  <div className="mt-1 text-[10px] text-muted">{selectedVendorContracts.find((contract) => contract.id === vendorPaymentContractId)?.title || 'Selected contract'}</div>
+                  <div className="mt-2 text-sm font-semibold tabular-nums text-fg">{formatNativeAmount(vendorPaymentAmount, currency, true)}</div>
+                </div>
+              </div>
+            </div>
+          )}
+        </form>
+      </Drawer>
+
+      <Modal
+        open={!!vendorPaymentDetail}
+        onClose={() => setVendorPaymentDetail(null)}
+        size="md"
+        title={vendorPaymentDetail?.vendor.name || 'Vendor payment'}
+        description={vendorPaymentDetail?.contract.title}
+        footer={vendorPaymentDetail ? (
+          <div className="flex w-full items-center justify-between gap-2">
+            <button type="button" onClick={() => setVendorPaymentDetail(null)} className={actionClass}>Close</button>
+            {canManageInvoices && vendorPaymentDetail.status !== 'paid' && <button type="button" onClick={() => openVendorPaymentModal(vendorPaymentDetail)} className={primaryClass}><Check size={14}/>Record payment</button>}
+          </div>
+        ) : undefined}
+      >
+        {vendorPaymentDetail && (
+          <div className="space-y-4">
+            <div className="rounded-card border border-line bg-bg p-4">
+              <ProfileIdentity profile={{ id: vendorPaymentDetail.vendor.id, name: vendorPaymentDetail.vendor.name, role: vendorPaymentDetail.vendor.type === 'freelancer' ? 'Freelancer' : 'Agency partner', division: vendorPaymentDetail.vendor.primaryCategory }} showRole={false}/>
+              <p className="mt-2 text-xs text-muted">{vendorPaymentDetail.vendor.companyName || vendorPaymentDetail.vendor.email}</p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Contract</p><p className="mt-1 text-xs font-medium text-fg">{vendorPaymentDetail.contract.title}</p></div>
+              <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Due date</p><p className="mt-1 text-xs font-medium text-fg">{vendorPaymentFormatDate(vendorPaymentDetail.dueDate)}</p></div>
+              <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Contract value</p><p className="mt-1 text-xs font-semibold tabular-nums text-fg">{formatNativeAmount(vendorPaymentDetail.amount, currency, true)}</p></div>
+              <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Paid</p><p className="mt-1 text-xs font-semibold tabular-nums text-success">{formatNativeAmount(vendorPaymentDetail.paidAmount, currency, true)}</p></div>
+            </div>
+            <div className="rounded-card border border-line bg-bg p-4">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs text-muted">Outstanding</span>
+                <span className="text-sm font-semibold tabular-nums text-fg">{formatNativeAmount(Math.max(0, vendorPaymentDetail.amount - vendorPaymentDetail.paidAmount), currency, true)}</span>
+              </div>
+              <div className="mt-3"><span className={'inline-flex rounded-badge border px-2 py-1 text-[10px] font-semibold ' + vendorPaymentStatusTone[vendorPaymentDetail.status]}>{vendorPaymentStatusLabel[vendorPaymentDetail.status]}</span></div>
             </div>
           </div>
         )}
