@@ -1569,13 +1569,11 @@ export const AdminProjects: React.FC = () => {
                                       {project.teamLead ? (
                                         <ProfileIdentity
                                           profile={{ name: project.teamLead, role: 'Project owner', division: 'Delivery' }}
-                                          compact
                                           size="sm"
+                                          showRole={false}
                                         />
                                       ) : (
-                                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-[10px] font-semibold text-muted" title="Unassigned">
-                                          —
-                                        </div>
+                                        <span className="text-[10px] font-medium text-muted">Unassigned</span>
                                       )}
                                     </div>
                                   </div>
@@ -1991,14 +1989,13 @@ export const AdminProjects: React.FC = () => {
                                               division: taskAssignees.find(assignee => assignee.name === task.assignedTo)?.division || 'Delivery',
                                               username: taskAssignees.find(assignee => assignee.name === task.assignedTo)?.username
                                             }}
-                                            compact
                                             size="sm"
+                                            showRole={false}
                                           />
                                         ) : (
-                                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-line bg-bg text-[9px] font-semibold text-muted">—</span>
+                                          <span className="text-[10px] font-medium text-muted">Unassigned</span>
                                         )}
                                         <div className="min-w-0">
-                                          <div className="truncate text-[10px] font-medium text-fg">{task.assignedTo || 'Unassigned'}</div>
                                           <div className="text-[9px] text-muted">{dueDays === null ? 'No due date' : overdue ? 'Past due' : dueDays === 0 ? 'Due today' : dueDays === 1 ? 'Due tomorrow' : 'Due ' + formatDate(task.dueDate)}</div>
                                         </div>
                                       </div>
