@@ -1534,8 +1534,8 @@ export const AdminProjects: React.FC = () => {
                 {[1, 2, 3, 4].map(item => <div key={item} className="h-40 animate-pulse rounded-card bg-bg" />)}
               </div>
             ) : projectLayout === 'board' ? (
-              <div className="overflow-x-auto custom-scrollbar cursor-default">
-                <div className="flex min-w-max items-start gap-3 px-4 pb-12 pt-4 sm:px-5 sm:pb-16 sm:pt-5">
+              <div className="overflow-x-auto overflow-y-hidden bg-bg/45 custom-scrollbar">
+                <div className="flex min-w-max items-start gap-4 px-4 pb-28 pt-4 sm:px-5 sm:pb-32 sm:pt-5">
                   {PROJECT_KANBAN_COLUMNS.map(column => {
                     const items = filteredProjects.filter(project => project.status === column.id);
                     const isDropTarget = dragOverProjectStatus === column.id;
@@ -1544,46 +1544,14 @@ export const AdminProjects: React.FC = () => {
                       <section
                         key={column.id}
                         aria-label={column.label + ' project column'}
-                        onDragEnter={event => {
-                          if (!canManageProjects) return;
-                          event.preventDefault();
-                          setDragOverProjectStatus(column.id);
-                        }}
-                        onDragOver={event => {
-                          if (!canManageProjects) return;
-                          event.preventDefault();
-                          event.dataTransfer.dropEffect = 'move';
-                          setDragOverProjectStatus(column.id);
-                        }}
-                        onDragLeave={event => {
-                          const nextTarget = event.relatedTarget as Node | null;
-                          if (!nextTarget || !event.currentTarget.contains(nextTarget)) {
-                            setDragOverProjectStatus(current => current === column.id ? null : current);
-                          }
-                        }}
-                        onDrop={event => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          if (!canManageProjects) return;
-                          const projectId =
-                            event.dataTransfer.getData('text/project-id') ||
-                            event.dataTransfer.getData('text/plain');
-                          const project = projects.find(item => item.id === projectId);
-                          if (project && project.status !== column.id) {
-                            void updateProjectStatus(project, column.id);
-                          } else {
-                            setDraggingProjectId(null);
-                            setDragOverProjectStatus(null);
-                          }
-                        }}
                         className={[
-                          'flex w-[320px] shrink-0 self-start flex-col rounded-card border bg-bg/70 transition-[border-color,background-color,box-shadow] duration-200 sm:w-[340px]',
+                          'flex w-[330px] shrink-0 self-start flex-col rounded-card border bg-bg/70 transition-[border-color,background-color,box-shadow] duration-200 sm:w-[360px]',
                           isDropTarget
                             ? 'border-accent/50 bg-accent/5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--accent)_18%,transparent)]'
                             : 'border-line/80',
                         ].join(' ')}
                       >
-                        <div className="shrink-0 border-b border-line bg-panel/95 px-3 py-3">
+                        <div className="shrink-0 border-b border-line bg-bg/90 px-3.5 py-3.5">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
@@ -1610,7 +1578,40 @@ export const AdminProjects: React.FC = () => {
                           </div>
                         </div>
 
-                        <div className={'min-h-[560px] space-y-3 p-2.5 pb-24 transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
+                        <div
+                          onDragEnter={event => {
+                            if (!canManageProjects) return;
+                            event.preventDefault();
+                            setDragOverProjectStatus(column.id);
+                          }}
+                          onDragOver={event => {
+                            if (!canManageProjects) return;
+                            event.preventDefault();
+                            event.dataTransfer.dropEffect = 'move';
+                            setDragOverProjectStatus(column.id);
+                          }}
+                          onDragLeave={event => {
+                            const nextTarget = event.relatedTarget as Node | null;
+                            if (!nextTarget || !event.currentTarget.contains(nextTarget)) {
+                              setDragOverProjectStatus(current => current === column.id ? null : current);
+                            }
+                          }}
+                          onDrop={event => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            if (!canManageProjects) return;
+                            const projectId =
+                              event.dataTransfer.getData('text/project-id') ||
+                              event.dataTransfer.getData('text/plain');
+                            const project = projects.find(item => item.id === projectId);
+                            if (project && project.status !== column.id) {
+                              void updateProjectStatus(project, column.id);
+                            } else {
+                              setDraggingProjectId(null);
+                              setDragOverProjectStatus(null);
+                            }
+                          }}
+                          className={'min-h-[680px] flex flex-col gap-3.5 bg-bg/45 p-3 pb-28 transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
                           {draggingProjectId && canManageProjects && (
                             <div className={'rounded-control border px-2.5 py-2 text-[9px] font-medium transition-colors ' + (isDropTarget ? 'border-accent/35 bg-accent/10 text-accent-text' : 'border-dashed border-line bg-bg/50 text-muted')}>
                               {isDropTarget ? 'Release to move project into ' + column.label : 'Drop here to move project into ' + column.label}
@@ -1651,18 +1652,23 @@ export const AdminProjects: React.FC = () => {
                                     event.dataTransfer.dropEffect = 'move';
                                     event.dataTransfer.setData('text/project-id', project.id);
                                     event.dataTransfer.setData('text/plain', project.id);
+                                    try {
+                                      event.dataTransfer.setDragImage(event.currentTarget, 24, 24);
+                                    } catch {
+                                      // Browser may reject custom drag previews.
+                                    }
                                   }}
                                   onDragEnd={() => {
                                     setDraggingProjectId(null);
                                     setDragOverProjectStatus(null);
                                   }}
-                                  className={'group cursor-grab select-none rounded-[12px] border border-line/90 bg-panel p-3.5 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150 hover:-translate-y-px hover:border-accent/35 hover:bg-panel-hover hover:shadow-[0_8px_24px_color-mix(in_srgb,var(--bg)_60%,transparent)] active:cursor-grabbing ' + (
+                                  className={'ams-project-kanban-card group cursor-grab select-none rounded-[12px] border border-line/90 bg-panel p-4 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150 hover:-translate-y-px hover:border-accent/40 hover:bg-panel-hover hover:shadow-[0_10px_28px_color-mix(in_srgb,var(--bg)_55%,transparent)] active:cursor-grabbing ' + (
                                     isDragging ? 'rotate-[1deg] scale-[0.98] opacity-50' : movingProjectId === project.id ? 'border-accent/35 opacity-80' : ''
                                   )}
                                 >
                                   <div className="flex items-start justify-between gap-2">
                                     <div className="flex min-w-0 items-start gap-2">
-                                      <span className="mt-0.5 flex h-7 w-7 shrink-0 cursor-grab items-center justify-center rounded-control text-muted transition-colors group-hover:bg-bg group-hover:text-fg" title={canManageProjects ? 'Drag to change project status' : 'Project status'}>
+                                      <span data-drag-handle="true" className="mt-0.5 flex h-8 w-8 shrink-0 cursor-grab items-center justify-center rounded-control border border-line bg-bg/70 text-muted transition-colors group-hover:border-accent/25 group-hover:bg-bg group-hover:text-fg" title={canManageProjects ? 'Grab to move this project' : 'Project status'}>
                                         <GripVertical size={14} />
                                       </span>
                                       <button type="button" onClick={() => openProjectDetail(project)} className="min-w-0 text-left">
@@ -1753,7 +1759,19 @@ export const AdminProjects: React.FC = () => {
                               );
                             })
                           )}
-                          <div aria-hidden="true" className="min-h-10" />
+                          <div
+                            aria-hidden="true"
+                            className={[
+                              'mt-auto min-h-24 rounded-card border border-dashed px-3 py-4 transition-colors',
+                              isDropTarget ? 'border-accent/35 bg-accent/5' : 'border-line/45 bg-bg/20'
+                            ].join(' ')}
+                          >
+                            {draggingProjectId && canManageProjects && (
+                              <div className="flex min-h-14 items-center justify-center text-center text-[10px] text-muted">
+                                {isDropTarget ? 'Release to place the project here' : 'Drop zone'}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </section>
                     );
