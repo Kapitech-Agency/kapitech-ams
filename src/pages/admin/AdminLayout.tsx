@@ -585,7 +585,7 @@ export const AdminLayout: React.FC = () => {
                   ))}
                 </nav>
               ) : location.pathname === '/admin/projects' ? (
-                <nav aria-label="Projects sections" className="flex min-w-0 items-center gap-1 overflow-x-auto ams-topnav-scroll">
+                <nav aria-label="Projects sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto rounded-control border border-line/80 bg-bg/55 p-1 ams-topnav-scroll">
                   {[
                     { key: 'all', label: 'All Projects', search: '' },
                     { key: 'sprint', label: 'Sprint & Delivery', search: '?projects=sprint' },
@@ -607,7 +607,7 @@ export const AdminLayout: React.FC = () => {
                   })}
                 </nav>
               ) : location.pathname === '/admin/invoicing' ? (
-                <nav aria-label="Finance sections" className="flex min-w-0 items-center gap-1 overflow-x-auto ams-topnav-scroll">
+                <nav aria-label="Finance sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto rounded-control border border-line/80 bg-bg/55 p-1 ams-topnav-scroll">
                   {[
                     { key: 'invoices', label: 'Invoice', search: '' },
                     { key: 'quotations', label: 'Quotation', search: '?finance=quotations' },
@@ -655,7 +655,7 @@ export const AdminLayout: React.FC = () => {
                 onClick={() => setProfileView('public')}
                 aria-label="Open public profile"
                 title="Public profile"
-                className="flex min-w-0 items-center gap-2 rounded-control px-1.5 py-1 text-left transition-colors hover:bg-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="flex min-w-0 items-center gap-2 rounded-control px-1.5 py-1 text-left transition-colors hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 <UserAvatar name={profileName} imageUrl={profileAvatarUrl} size="sm" />
                 <span className="min-w-0 max-w-[150px]">
