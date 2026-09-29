@@ -2002,7 +2002,7 @@ export const AdminProjects: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="overflow-x-auto custom-scrollbar p-4 sm:p-5">
+                <div className="overflow-x-auto custom-scrollbar bg-bg p-5 sm:p-6">
                   <div className="flex min-w-max items-stretch gap-3">
                     {TASK_COLUMNS.map(column => {
                       const tasks = visibleTasks.filter(task => task.status === column.id);
@@ -2034,7 +2034,8 @@ export const AdminProjects: React.FC = () => {
                             if (!canManageKanbanTasks) return;
                             const id =
                               event.dataTransfer.getData('text/project-task-id') ||
-                              event.dataTransfer.getData('text/plain');
+                              event.dataTransfer.getData('text/plain') ||
+                              draggingTaskId;
                             const task = selectedSprintProject.tasks.find(item => item.id === id);
                             if (task) {
                               void updateTaskStatus(task, column.id);
@@ -2044,11 +2045,11 @@ export const AdminProjects: React.FC = () => {
                             }
                           }}
                           className={[
-                            'flex w-[310px] shrink-0 flex-col rounded-card border bg-bg/65 transition-[border-color,background-color,box-shadow] duration-150 sm:w-[324px]',
+                            'flex w-[320px] shrink-0 self-start flex-col rounded-[14px] border bg-panel/35 transition-[border-color,background-color,box-shadow] duration-150 sm:w-[340px]',
                             isDropTarget ? 'border-accent/45 bg-accent/5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--accent)_14%,transparent)]' : 'border-line/80',
                           ].join(' ')}
                         >
-                          <div className="shrink-0 border-b border-line bg-panel/95 px-3.5 py-3">
+                          <div className="shrink-0 border-b border-line/80 bg-panel/80 px-4 py-4 backdrop-blur-sm">
                             <div className="flex items-start justify-between gap-3">
                               <div className="min-w-0">
                                 <div className="flex items-center gap-2">
@@ -2074,7 +2075,7 @@ export const AdminProjects: React.FC = () => {
                           </div>
 
                           <div className={[
-                            'min-h-[520px] flex-1 space-y-2.5 p-2.5 pb-20 transition-colors duration-150',
+                            'min-h-[620px] flex flex-col gap-2.5 bg-bg/20 p-3 pb-4 transition-colors duration-150',
                             isDropTarget ? 'bg-accent/5' : '',
                           ].join(' ')}>
                             {draggingTaskId && canManageKanbanTasks && (
@@ -2140,14 +2141,14 @@ export const AdminProjects: React.FC = () => {
                                     <div className="flex items-start gap-2.5">
                                       <span
                                         className={[
-                                          'mt-0.5 flex h-7 w-7 shrink-0 cursor-grab items-center justify-center rounded-control border border-transparent text-muted transition-colors active:cursor-grabbing',
-                                          canManageKanbanTasks ? 'group-hover:border-line group-hover:bg-bg group-hover:text-fg' : '',
+                                          'mt-0.5 flex h-9 w-9 shrink-0 cursor-grab touch-none items-center justify-center rounded-control border border-line bg-bg text-muted shadow-sm transition-[background-color,border-color,color,transform] active:cursor-grabbing group-hover:border-accent/30 group-hover:bg-panel group-hover:text-fg group-active:scale-95',
+                                          canManageKanbanTasks ? '' : 'cursor-default',
                                         ].join(' ')}
                                         title={canManageKanbanTasks ? 'Drag to move task' : 'Task movement is read-only'}
                                       >
-                                        <GripVertical size={14} />
+                                        <GripVertical size={16} strokeWidth={2} />
                                       </span>
-                                      <button type="button" onClick={() => setSelectedTask(task)} className="min-w-0 flex-1 text-left">
+                                      <button type="button" onClick={() => setSelectedTask(task) className="min-w-0 flex-1 text-left">
                                         <div className="flex flex-wrap items-center gap-1.5">
                                           <span className={'rounded-badge border px-2 py-1 text-[9px] font-semibold ' + priorityClass(task.priority)}>{priorityLabel(task.priority)}</span>
                                           {overdue && (
@@ -2218,7 +2219,28 @@ export const AdminProjects: React.FC = () => {
                                 );
                               })
                             )}
-                            <div aria-hidden="true" className="min-h-10" />
+                            <div
+                              aria-hidden="true"
+                              className={[
+                                'mt-auto min-h-[160px] rounded-card border border-dashed px-3 py-5 transition-colors',
+                                isDropTarget ? 'border-accent/35 bg-accent/5' : 'border-line/20 bg-bg/10'
+                              ].join(' ')}
+                            >
+                              {draggingTaskId && canManageKanbanTasks ? (
+                                <div className="flex min-h-16 flex-col items-center justify-center gap-2 text-center text-[10px] text-muted">
+                                  <span className="flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted">
+                                    <GripVertical size={14} />
+                                  </span>
+                                  <span className={isDropTarget ? 'font-semibold text-accent-text' : 'text-muted'}>
+                                    {isDropTarget ? 'Release to place the task here' : 'Drop task here'}
+                                  </span>
+                                </div>
+                              ) : (
+                                <div className="flex min-h-16 items-center justify-center text-center text-[10px] text-muted/55">
+                                  Drop space
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </section>
                       );
