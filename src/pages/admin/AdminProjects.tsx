@@ -1550,6 +1550,7 @@ export const AdminProjects: React.FC = () => {
                             ? 'border-accent/50 bg-accent/5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--accent)_18%,transparent)]'
                             : 'border-line/80',
                         ].join(' ')}
+                        data-drop-target={isDropTarget ? 'true' : 'false'}
                       >
                         <div className="shrink-0 border-b border-line/80 bg-panel px-4 py-4">
                           <div className="flex items-start justify-between gap-3">
