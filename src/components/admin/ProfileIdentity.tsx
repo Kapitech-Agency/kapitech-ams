@@ -68,7 +68,7 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
   const [quickOpen, setQuickOpen] = useState(false);
   const [fullOpen, setFullOpen] = useState(false);
 
-  const status = profile.status || 'active';
+  const status = profile.status;
 
   const openFullProfile = () => {
     setQuickOpen(false);
@@ -145,9 +145,11 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="min-w-0 truncate text-sm font-semibold text-fg">{profile.name}</h3>
-                  <span className="rounded-badge border border-success/20 bg-success/10 px-1.5 py-0.5 text-[9px] font-semibold text-success">
-                    {statusLabel[status]}
-                  </span>
+                  {status && (
+                    <span className="rounded-badge border border-success/20 bg-success/10 px-1.5 py-0.5 text-[9px] font-semibold text-success">
+                      {statusLabel[status]}
+                    </span>
+                  )}
                 </div>
                 {profile.role && <p className="mt-1 text-xs text-muted">{profile.role}</p>}
                 {profile.division && (
@@ -224,9 +226,11 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="text-lg font-semibold text-fg">{profile.name}</h2>
-                  <span className="rounded-badge border border-success/20 bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
-                    {statusLabel[status]}
-                  </span>
+                  {status && (
+                    <span className="rounded-badge border border-success/20 bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
+                      {statusLabel[status]}
+                    </span>
+                  )}
                 </div>
                 {profile.role && <p className="mt-1 text-sm text-muted">{profile.role}</p>}
                 <div className="mt-3 flex flex-wrap gap-2">
