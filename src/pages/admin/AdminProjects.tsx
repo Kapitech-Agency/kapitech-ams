@@ -1636,45 +1636,46 @@ export const AdminProjects: React.FC = () => {
                               return (
                                 <article
                                   key={project.id}
-                                  draggable={canManageProjects}
                                   aria-grabbed={isDragging}
-                                  onDragStart={event => {
-                                    if (!canManageProjects || movingProjectId === project.id) {
-                                      event.preventDefault();
-                                      return;
-                                    }
-                                    const source = event.target as HTMLElement | null;
-                                    if (source?.closest('button, a, input, select, textarea')) {
-                                      event.preventDefault();
-                                      return;
-                                    }
-                                    setDraggingProjectId(project.id);
-                                    setDragOverProjectStatus(project.status);
-                                    event.dataTransfer.effectAllowed = 'move';
-                                    event.dataTransfer.dropEffect = 'move';
-                                    event.dataTransfer.setData('text/project-id', project.id);
-                                    event.dataTransfer.setData('text/plain', project.id);
-                                    try {
-                                      event.dataTransfer.setDragImage(event.currentTarget, 24, 24);
-                                    } catch {
-                                      // Browser may reject custom drag previews.
-                                    }
-                                  }}
-                                  onDragEnd={() => {
-                                    setDraggingProjectId(null);
-                                    setDragOverProjectStatus(null);
-                                  }}
                                   className={'ams-project-kanban-card group select-none rounded-[12px] border border-line/90 p-4 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150 hover:-translate-y-px hover:border-accent/40 hover:shadow-[0_10px_28px_color-mix(in_srgb,var(--bg)_55%,transparent)] ' + (
-                                    isDragging ? 'cursor-grabbing rotate-[1deg] scale-[0.98] border-accent/50 opacity-70' : movingProjectId === project.id ? 'border-accent/35 opacity-80' : ''
+                                    isDragging ? 'rotate-[1deg] scale-[0.98] border-accent/50 opacity-70' : movingProjectId === project.id ? 'border-accent/35 opacity-80' : ''
                                   )}
                                 >
                                   <div className="flex items-start justify-between gap-2">
                                     <div className="flex min-w-0 items-start gap-2">
                                       <span
                                         data-drag-handle="true"
-                                        aria-hidden="true"
-                                        className="mt-0.5 flex h-9 w-9 shrink-0 cursor-grab touch-none items-center justify-center rounded-control border border-line bg-bg text-muted shadow-sm transition-[background-color,border-color,color,transform] group-hover:border-accent/30 group-hover:bg-panel group-hover:text-fg group-active:scale-95"
+                                        draggable={canManageProjects && movingProjectId !== project.id}
+                                        role="button"
+                                        tabIndex={canManageProjects ? 0 : -1}
+                                        aria-label={canManageProjects ? 'Drag to move project' : 'Project status'}
+                                        className={[
+                                          'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted shadow-sm transition-[background-color,border-color,color,transform] select-none',
+                                          canManageProjects && movingProjectId !== project.id
+                                            ? 'cursor-grab touch-none hover:border-accent/35 hover:bg-panel-hover hover:text-fg active:cursor-grabbing active:scale-95'
+                                            : 'cursor-default opacity-70',
+                                        ].join(' ')}
                                         title={canManageProjects ? 'Drag to move this project' : 'Project status'}
+                                        onDragStart={event => {
+                                          if (!canManageProjects || movingProjectId === project.id) {
+                                            event.preventDefault();
+                                            return;
+                                          }
+                                          setDraggingProjectId(project.id);
+                                          setDragOverProjectStatus(project.status);
+                                          event.dataTransfer.effectAllowed = 'move';
+                                          event.dataTransfer.setData('text/project-id', project.id);
+                                          event.dataTransfer.setData('text/plain', project.id);
+                                          try {
+                                            event.dataTransfer.setDragImage(event.currentTarget.parentElement?.parentElement || event.currentTarget, 24, 24);
+                                          } catch {
+                                            // Browser may reject custom drag previews.
+                                          }
+                                        }}
+                                        onDragEnd={() => {
+                                          setDraggingProjectId(null);
+                                          setDragOverProjectStatus(null);
+                                        }}
                                       >
                                         <GripVertical size={16} strokeWidth={2} />
                                       </span>
@@ -2114,24 +2115,7 @@ export const AdminProjects: React.FC = () => {
                                 return (
                                   <article
                                     key={task.id}
-                                    draggable={canManageKanbanTasks}
                                     aria-grabbed={isDragging}
-                                    onDragStart={event => {
-                                      if (!canManageKanbanTasks) return;
-                                      const source = event.target as HTMLElement | null;
-                                      if (source?.closest('button, a, input, select, textarea')) {
-                                        event.preventDefault();
-                                        return;
-                                      }
-                                      setDraggingTaskId(task.id);
-                                      event.dataTransfer.effectAllowed = 'move';
-                                      event.dataTransfer.setData('text/project-task-id', task.id);
-                                      event.dataTransfer.setData('text/plain', task.id);
-                                    }}
-                                    onDragEnd={() => {
-                                      setDraggingTaskId(null);
-                                      setDragOverTaskStatus(null);
-                                    }}
                                     className={[
                                       'group cursor-grab select-none rounded-[12px] border bg-panel p-3.5 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150 active:cursor-grabbing',
                                       canManageKanbanTasks ? '' : 'cursor-default',
@@ -2141,11 +2125,36 @@ export const AdminProjects: React.FC = () => {
                                   >
                                     <div className="flex items-start gap-2.5">
                                       <span
+                                        draggable={canManageKanbanTasks}
+                                        role="button"
+                                        tabIndex={canManageKanbanTasks ? 0 : -1}
+                                        aria-label={canManageKanbanTasks ? 'Drag to move task' : 'Task movement is read-only'}
                                         className={[
-                                          'mt-0.5 flex h-9 w-9 shrink-0 cursor-grab touch-none items-center justify-center rounded-control border border-line bg-bg text-muted shadow-sm transition-[background-color,border-color,color,transform] active:cursor-grabbing group-hover:border-accent/30 group-hover:bg-panel group-hover:text-fg group-active:scale-95',
-                                          canManageKanbanTasks ? '' : 'cursor-default',
+                                          'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted shadow-sm transition-[background-color,border-color,color,transform] select-none',
+                                          canManageKanbanTasks
+                                            ? 'cursor-grab touch-none hover:border-accent/35 hover:bg-panel-hover hover:text-fg active:cursor-grabbing active:scale-95'
+                                            : 'cursor-default opacity-70',
                                         ].join(' ')}
                                         title={canManageKanbanTasks ? 'Drag to move task' : 'Task movement is read-only'}
+                                        onDragStart={event => {
+                                          if (!canManageKanbanTasks) {
+                                            event.preventDefault();
+                                            return;
+                                          }
+                                          setDraggingTaskId(task.id);
+                                          event.dataTransfer.effectAllowed = 'move';
+                                          event.dataTransfer.setData('text/project-task-id', task.id);
+                                          event.dataTransfer.setData('text/plain', task.id);
+                                          try {
+                                            event.dataTransfer.setDragImage(event.currentTarget.parentElement?.parentElement || event.currentTarget, 24, 24);
+                                          } catch {
+                                            // Browser may reject custom drag previews.
+                                          }
+                                        }}
+                                        onDragEnd={() => {
+                                          setDraggingTaskId(null);
+                                          setDragOverTaskStatus(null);
+                                        }}
                                       >
                                         <GripVertical size={16} strokeWidth={2} />
                                       </span>
