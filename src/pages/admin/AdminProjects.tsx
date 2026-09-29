@@ -1491,7 +1491,7 @@ export const AdminProjects: React.FC = () => {
               </div>
             ) : projectLayout === 'board' ? (
               <div className="overflow-x-auto custom-scrollbar">
-                <div className="flex min-w-max gap-3 p-4 sm:p-5">
+                <div className="flex min-w-max items-start gap-3 px-4 pb-12 pt-4 sm:px-5 sm:pb-16 sm:pt-5">
                   {PROJECT_KANBAN_COLUMNS.map(column => {
                     const items = filteredProjects.filter(project => project.status === column.id);
                     const isDropTarget = dragOverProjectStatus === column.id;
@@ -1533,7 +1533,7 @@ export const AdminProjects: React.FC = () => {
                           }
                         }}
                         className={[
-                          'flex w-[300px] shrink-0 flex-col rounded-card border bg-bg/70 transition-[border-color,background-color,box-shadow] duration-200 sm:w-[316px]',
+                          'flex w-[320px] shrink-0 self-start flex-col rounded-card border bg-bg/70 transition-[border-color,background-color,box-shadow] duration-200 sm:w-[340px]',
                           isDropTarget
                             ? 'border-accent/50 bg-accent/5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--accent)_18%,transparent)]'
                             : 'border-line/80',
@@ -1566,7 +1566,7 @@ export const AdminProjects: React.FC = () => {
                           </div>
                         </div>
 
-                        <div className={'min-h-[220px] flex-1 space-y-2.5 p-2.5 transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
+                        <div className={'min-h-[260px] space-y-3 p-2.5 pb-12 transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
                           {draggingProjectId && canManageProjects && (
                             <div className={'rounded-control border px-2.5 py-2 text-[9px] font-medium transition-colors ' + (isDropTarget ? 'border-accent/35 bg-accent/10 text-accent-text' : 'border-dashed border-line bg-bg/50 text-muted')}>
                               {isDropTarget ? 'Release to move project into ' + column.label : 'Drop here to move project into ' + column.label}
@@ -1612,8 +1612,8 @@ export const AdminProjects: React.FC = () => {
                                         <GripVertical size={14} />
                                       </span>
                                       <button type="button" onClick={() => openProjectDetail(project)} className="min-w-0 text-left">
-                                        <div className="truncate text-[10px] font-medium uppercase tracking-[0.08em] text-muted">{project.clientCompany}</div>
-                                        <h3 className="mt-0.5 line-clamp-2 text-xs font-semibold leading-5 text-fg">{project.name}</h3>
+                                        <div className="break-words whitespace-normal text-[10px] font-medium uppercase leading-4 tracking-[0.08em] text-muted">{project.clientCompany}</div>
+                                        <h3 className="mt-0.5 break-words whitespace-normal text-sm font-semibold leading-5 text-fg">{project.name}</h3>
                                       </button>
                                     </div>
                                     <button type="button" aria-label={'Actions for ' + project.name} onClick={() => openProjectDetail(project)} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg">
@@ -1626,11 +1626,17 @@ export const AdminProjects: React.FC = () => {
                                     <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{taskDone}/{project.tasks.length} tasks</span>
                                     <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{milestoneDone}/{project.milestones.length || 0} milestones</span>
                                   </div>
-                                  <div className="mt-2 flex items-center gap-1.5 text-[10px] text-muted">
-                                    <CalendarDays size={11} />
-                                    <span className={isOverdue(project.targetEndDate) && project.status !== 'completed' ? 'font-semibold text-danger' : 'text-muted'}>
-                                      {project.targetEndDate ? formatDate(project.targetEndDate) : 'No deadline'}
-                                    </span>
+                                  <div className="mt-2 space-y-1.5 text-[10px] text-muted">
+                                    <div className="flex items-start gap-1.5">
+                                      <Briefcase size={11} className="mt-0.5 shrink-0" />
+                                      <span className="break-words whitespace-normal">{project.serviceCategory || 'Delivery'}</span>
+                                    </div>
+                                    <div className="flex items-start gap-1.5">
+                                      <CalendarDays size={11} className="mt-0.5 shrink-0" />
+                                      <span className={isOverdue(project.targetEndDate) && project.status !== 'completed' ? 'break-words whitespace-normal font-semibold text-danger' : 'break-words whitespace-normal text-muted'}>
+                                        {project.targetEndDate ? formatDate(project.targetEndDate) : 'No deadline'}
+                                      </span>
+                                    </div>
                                   </div>
 
                                   <div className="mt-3 space-y-1.5">
@@ -1647,7 +1653,7 @@ export const AdminProjects: React.FC = () => {
                                     <div className="flex items-end justify-between gap-3">
                                       <div className="min-w-0">
                                         <div className="text-[10px] uppercase tracking-[0.06em] text-muted">Budget burn</div>
-                                        <div className="mt-0.5 truncate text-xs font-medium tabular-nums text-fg">
+                                        <div className="mt-0.5 break-words whitespace-normal text-xs font-medium tabular-nums text-fg">
                                           {formatAmount(burn, currency)}
                                           <span className="text-muted"> / {formatAmount(project.budget, currency)}</span>
                                         </div>
@@ -1665,10 +1671,10 @@ export const AdminProjects: React.FC = () => {
                                   </div>
 
                                   <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-2.5 text-[10px]">
-                                    <span className="truncate text-muted">{project.slug}</span>
+                                    <span className="min-w-0 break-words whitespace-normal text-muted">{project.slug}</span>
                                     <div className="flex shrink-0 items-center gap-2">
-                                      <button type="button" onClick={() => openProjectDetail(project)} className="text-muted hover:text-fg">View</button>
-                                      <button type="button" onClick={() => goToSprint(project)} className="text-accent-text hover:text-accent">Delivery <ArrowUpRight size={11} className="inline" /></button>
+                                      <button type="button" onClick={() => openProjectDetail(project)} className="inline-flex h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-3 text-[11px] font-semibold text-fg transition-colors hover:border-accent/30 hover:bg-panel-hover">View</button>
+                                      <button type="button" onClick={() => goToSprint(project)} className="inline-flex h-9 items-center justify-center gap-1.5 rounded-control border border-accent/25 bg-accent/10 px-3 text-[11px] font-semibold text-accent-text transition-colors hover:border-accent/40 hover:bg-accent/15 hover:text-fg">Delivery <ArrowUpRight size={13} /></button>
                                     </div>
                                   </div>
                                 </article>
