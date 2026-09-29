@@ -25,6 +25,7 @@ import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
 import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 type ProposalStatus = 'draft' | 'review' | 'approved' | 'sent' | 'accepted' | 'rejected';
 type SortOption = 'newest' | 'oldest' | 'amount-high' | 'amount-low' | 'expiry';
@@ -845,7 +846,16 @@ export const AdminProposals: React.FC = () => {
                 ['Valid until', detailProposal.validUntil || '—'],
                 ['Owner', detailProposal.owner || '—'],
                 ['Updated', formatDate(detailProposal.updatedAt || detailProposal.createdAt)]
-              ].map(([label, value]) => <div key={label} className="rounded-control border border-line bg-bg p-3"><div className="text-[11px] text-muted">{label}</div><div className="mt-1 truncate text-xs font-medium text-fg">{value}</div></div>)}
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-control border border-line bg-bg p-3">
+                  <div className="text-[11px] text-muted">{label}</div>
+                  <div className="mt-1">
+                    {label === 'Owner' && detailProposal.owner
+                      ? <ProfileIdentity profile={{ name: detailProposal.owner, role: 'Proposal owner', division: 'Commercial' }} showRole={false} />
+                      : <span className="truncate text-xs font-medium text-fg">{value}</span>}
+                  </div>
+                </div>
+              ))}
             </div>
 
             <section className="space-y-2">
