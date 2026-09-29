@@ -1,0 +1,374 @@
+import React, { useState } from 'react';
+import {
+  BriefcaseBusiness,
+  Building2,
+  CalendarDays,
+  ExternalLink,
+  Mail,
+  Phone,
+  UserRound,
+  X,
+} from 'lucide-react';
+import Button from '../ui/Button';
+import { Modal } from '../ui/Modal';
+import { Drawer } from '../ui/Drawer';
+import UserAvatar from './UserAvatar';
+
+export interface PublicProfileData {
+  id?: string;
+  name: string;
+  role?: string;
+  division?: string;
+  username?: string;
+  companyEmail?: string;
+  personalEmail?: string;
+  phone?: string;
+  additionalPhone?: string;
+  bio?: string;
+  avatarUrl?: string | null;
+  lastActive?: string;
+  status?: 'active' | 'away' | 'offline';
+}
+
+interface ProfileIdentityProps {
+  profile: PublicProfileData;
+  size?: 'sm' | 'md' | 'lg';
+  compact?: boolean;
+  className?: string;
+  showRole?: boolean;
+  onEdit?: () => void;
+}
+
+const statusLabel: Record<NonNullable<PublicProfileData['status']>, string> = {
+  active: 'Active',
+  away: 'Away',
+  offline: 'Offline',
+};
+
+const formatLastActive = (value?: string) => {
+  if (!value) return 'Not available';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleString(undefined, {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
+export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
+  profile,
+  size = 'md',
+  compact = false,
+  className,
+  showRole = true,
+  onEdit,
+}) => {
+  const [quickOpen, setQuickOpen] = useState(false);
+  const [fullOpen, setFullOpen] = useState(false);
+
+  const status = profile.status || 'active';
+
+  const openFullProfile = () => {
+    setQuickOpen(false);
+    setFullOpen(true);
+  };
+
+  const closeAll = () => {
+    setQuickOpen(false);
+    setFullOpen(false);
+  };
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setQuickOpen(true)}
+        className={[
+          'group/profile inline-flex min-w-0 items-center text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+          compact ? 'rounded-full' : 'gap-2 rounded-control px-1.5 py-1 hover:bg-panel-hover',
+          className || '',
+        ].join(' ')}
+        aria-haspopup="dialog"
+        aria-label={'Open profile for ' + profile.name}
+      >
+        <UserAvatar
+          name={profile.name}
+          imageUrl={profile.avatarUrl}
+          size={size}
+          online={status === 'active'}
+        />
+        {!compact && (
+          <span className="min-w-0">
+            <span className="block truncate text-xs font-medium text-fg group-hover/profile:underline group-hover/profile:decoration-line group-hover/profile:underline-offset-2">
+              {profile.name}
+            </span>
+            {showRole && profile.role && (
+              <span className="mt-0.5 block truncate text-[10px] text-muted">{profile.role}</span>
+            )}
+          </span>
+        )}
+      </button>
+
+      <Modal
+        open={quickOpen}
+        onClose={() => setQuickOpen(false)}
+        size="sm"
+        title="Profile"
+        description="A quick overview of this AMS profile."
+        footer={(
+          <>
+            <Button type="button" variant="secondary" onClick={() => setQuickOpen(false)}>
+              Close
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              icon={<ExternalLink size={14} />}
+              onClick={openFullProfile}
+            >
+              View full profile
+            </Button>
+          </>
+        )}
+      >
+        <div className="space-y-3.5">
+          <section className="rounded-card border border-line bg-bg p-4">
+            <div className="flex items-start gap-3">
+              <UserAvatar
+                name={profile.name}
+                imageUrl={profile.avatarUrl}
+                size="lg"
+                online={status === 'active'}
+              />
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="min-w-0 truncate text-sm font-semibold text-fg">{profile.name}</h3>
+                  <span className="rounded-badge border border-success/20 bg-success/10 px-1.5 py-0.5 text-[9px] font-semibold text-success">
+                    {statusLabel[status]}
+                  </span>
+                </div>
+                {profile.role && <p className="mt-1 text-xs text-muted">{profile.role}</p>}
+                {profile.division && (
+                  <div className="mt-2 inline-flex items-center gap-1.5 rounded-badge border border-line bg-panel px-2 py-1 text-[10px] text-muted">
+                    <Building2 size={11} />
+                    {profile.division}
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <div className="grid gap-2.5 sm:grid-cols-2">
+            {profile.companyEmail && (
+              <div className="rounded-control border border-line bg-bg p-3">
+                <div className="flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-muted">
+                  <Mail size={11} />
+                  Email
+                </div>
+                <div className="mt-1 break-all text-xs font-medium text-fg">{profile.companyEmail}</div>
+              </div>
+            )}
+            {profile.phone && (
+              <div className="rounded-control border border-line bg-bg p-3">
+                <div className="flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-muted">
+                  <Phone size={11} />
+                  Phone
+                </div>
+                <div className="mt-1 text-xs font-medium text-fg">{profile.phone}</div>
+              </div>
+            )}
+          </div>
+
+          {profile.bio && (
+            <div className="rounded-card border border-line bg-bg p-3.5">
+              <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">
+                <UserRound size={12} />
+                About
+              </div>
+              <p className="mt-2 text-xs leading-5 text-muted line-clamp-3">{profile.bio}</p>
+            </div>
+          )}
+        </div>
+      </Modal>
+
+      <Drawer
+        open={fullOpen}
+        onClose={closeAll}
+        size="xl"
+        title="Public profile"
+        description="Complete profile information available to your current AMS visibility scope."
+        footer={(
+          <>
+            <Button type="button" variant="secondary" onClick={closeAll}>
+              Close
+            </Button>
+            {onEdit && (
+              <Button type="button" variant="primary" onClick={() => { closeAll(); onEdit(); }}>
+                Edit profile
+              </Button>
+            )}
+          </>
+        )}
+      >
+        <div className="space-y-4">
+          <section className="rounded-card border border-line bg-bg p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <UserAvatar
+                name={profile.name}
+                imageUrl={profile.avatarUrl}
+                size="lg"
+                online={status === 'active'}
+              />
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-lg font-semibold text-fg">{profile.name}</h2>
+                  <span className="rounded-badge border border-success/20 bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
+                    {statusLabel[status]}
+                  </span>
+                </div>
+                {profile.role && <p className="mt-1 text-sm text-muted">{profile.role}</p>}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {profile.division && (
+                    <span className="inline-flex items-center gap-1.5 rounded-badge border border-line bg-panel px-2.5 py-1 text-[10px] font-medium text-muted">
+                      <Building2 size={12} />
+                      {profile.division}
+                    </span>
+                  )}
+                  {profile.username && (
+                    <span className="inline-flex items-center gap-1.5 rounded-badge border border-line bg-panel px-2.5 py-1 text-[10px] font-medium text-muted">
+                      <UserRound size={12} />
+                      {profile.username}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <section className="rounded-card border border-line bg-panel p-4">
+              <div className="mb-4 flex items-center gap-2 border-b border-line pb-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-control border border-line bg-bg text-muted">
+                  <UserRound size={15} />
+                </div>
+                <div>
+                  <h3 className="text-xs font-semibold text-fg">About</h3>
+                  <p className="mt-0.5 text-[10px] text-muted">Professional profile information.</p>
+                </div>
+              </div>
+              <p className="text-xs leading-6 text-muted">
+                {profile.bio || 'No professional bio has been added yet.'}
+              </p>
+            </section>
+
+            <section className="rounded-card border border-line bg-panel p-4">
+              <div className="mb-4 flex items-center gap-2 border-b border-line pb-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-control border border-line bg-bg text-muted">
+                  <BriefcaseBusiness size={15} />
+                </div>
+                <div>
+                  <h3 className="text-xs font-semibold text-fg">Work context</h3>
+                  <p className="mt-0.5 text-[10px] text-muted">Current AMS role and organizational context.</p>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.08em] text-muted">Role</div>
+                  <div className="mt-1 text-xs font-medium text-fg">{profile.role || 'Not available'}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.08em] text-muted">Division</div>
+                  <div className="mt-1 text-xs font-medium text-fg">{profile.division || 'Not available'}</div>
+                </div>
+                {profile.id && (
+                  <div>
+                    <div className="text-[10px] uppercase tracking-[0.08em] text-muted">Profile ID</div>
+                    <div className="mt-1 break-all text-xs font-medium text-fg">{profile.id}</div>
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
+
+          <section className="rounded-card border border-line bg-panel p-4">
+            <div className="mb-4 flex items-center gap-2 border-b border-line pb-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-control border border-line bg-bg text-muted">
+                <Mail size={15} />
+              </div>
+              <div>
+                <h3 className="text-xs font-semibold text-fg">Contact</h3>
+                <p className="mt-0.5 text-[10px] text-muted">Contact details available within the current profile scope.</p>
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-control border border-line bg-bg p-3">
+                <div className="text-[10px] uppercase tracking-[0.08em] text-muted">Company email</div>
+                <div className="mt-1 break-all text-xs font-medium text-fg">{profile.companyEmail || 'Not available'}</div>
+              </div>
+              <div className="rounded-control border border-line bg-bg p-3">
+                <div className="text-[10px] uppercase tracking-[0.08em] text-muted">Personal email</div>
+                <div className="mt-1 break-all text-xs font-medium text-fg">{profile.personalEmail || 'Not available'}</div>
+              </div>
+              <div className="rounded-control border border-line bg-bg p-3">
+                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.08em] text-muted">
+                  <Phone size={11} />
+                  Primary phone
+                </div>
+                <div className="mt-1 text-xs font-medium text-fg">{profile.phone || 'Not available'}</div>
+              </div>
+              <div className="rounded-control border border-line bg-bg p-3">
+                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.08em] text-muted">
+                  <Phone size={11} />
+                  Additional phone
+                </div>
+                <div className="mt-1 text-xs font-medium text-fg">{profile.additionalPhone || 'Not available'}</div>
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-card border border-line bg-bg p-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="flex items-start gap-2.5">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-panel text-muted">
+                  <CalendarDays size={14} />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[10px] uppercase tracking-[0.08em] text-muted">Last active</div>
+                  <div className="mt-1 text-xs font-medium text-fg">{formatLastActive(profile.lastActive)}</div>
+                </div>
+              </div>
+              {profile.username && (
+                <div className="flex items-start gap-2.5">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-panel text-muted">
+                    <UserRound size={14} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10px] uppercase tracking-[0.08em] text-muted">Username</div>
+                    <div className="mt-1 truncate text-xs font-medium text-fg">{profile.username}</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section className="rounded-card border border-accent/20 bg-accent/5 p-4">
+            <div className="flex items-start gap-3">
+              <UserAvatar name={profile.name} imageUrl={profile.avatarUrl} size="md" />
+              <div className="min-w-0">
+                <div className="text-xs font-semibold text-fg">Public profile scope</div>
+                <p className="mt-1 text-[11px] leading-5 text-muted">
+                  This profile only exposes information available to the current AMS user scope. Restricted internal access data is not presented here.
+                </p>
+              </div>
+            </div>
+          </section>
+        </div>
+      </Drawer>
+    </>
+  );
+};
+
+export default ProfileIdentity;
