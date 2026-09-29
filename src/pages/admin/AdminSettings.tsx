@@ -912,7 +912,7 @@ export const AdminSettings: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleRoleChangeForNewAccount('Stakeholder Executive')}
-                    className={`p-3.5 rounded-card border text-left transition-all ${
+                    className={`p-4 rounded-card border text-left transition-all ${
                       newAccRole === 'Stakeholder Executive'
                         ? 'bg-warning/10 border-warning/50 ring-1 ring-warning/30'
                         : 'bg-panel border-line hover:border-line'
@@ -930,7 +930,7 @@ export const AdminSettings: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleRoleChangeForNewAccount('Teknisi IT / Systems Engineer')}
-                    className={`p-3.5 rounded-card border text-left transition-all ${
+                    className={`p-4 rounded-card border text-left transition-all ${
                       newAccRole === 'Teknisi IT / Systems Engineer'
                         ? 'bg-success/10 border-success/50 ring-1 ring-success/30'
                         : 'bg-panel border-line hover:border-line'
@@ -948,7 +948,7 @@ export const AdminSettings: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleRoleChangeForNewAccount('Tier 2: Project Manager (PM)')}
-                    className={`p-3.5 rounded-card border text-left transition-all ${
+                    className={`p-4 rounded-card border text-left transition-all ${
                       newAccRole === 'Tier 2: Project Manager (PM)'
                         ? 'bg-series-3/10 border-series-3/50 ring-1 ring-series-3/30'
                         : 'bg-panel border-line hover:border-line'
@@ -966,7 +966,7 @@ export const AdminSettings: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleRoleChangeForNewAccount('Tier 3: Operational Staff')}
-                    className={`p-3.5 rounded-card border text-left transition-all ${
+                    className={`p-4 rounded-card border text-left transition-all ${
                       newAccRole === 'Tier 3: Operational Staff'
                         ? 'bg-info/10 border-info/50 ring-1 ring-info/30'
                         : 'bg-panel border-line hover:border-line'
@@ -1281,7 +1281,7 @@ export const AdminSettings: React.FC = () => {
               {logs.map((log) => (
                 <div
                   key={log.id}
-                  className="p-3.5 rounded-card bg-panel border border-line flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-sans"
+                  className="p-4 rounded-card bg-panel border border-line flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-sans"
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
@@ -1334,7 +1334,7 @@ export const AdminSettings: React.FC = () => {
           </>
         )}
       >
-        <div className="rounded-card border border-danger/20 bg-danger/5 p-3.5 text-xs text-muted">
+        <div className="rounded-card border border-danger/20 bg-danger/5 p-4 text-xs text-muted">
           {language === 'id' ? 'Tindakan ini tidak dapat dibatalkan.' : 'This action cannot be undone.'}
         </div>
       </Modal>
