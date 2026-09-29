@@ -13,7 +13,7 @@ import { api } from '../../lib/apiClient';
 import { useLanguage } from '../../lib/LanguageContext';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { CustomSelect } from '../../components/ui/CustomSelect';
-import { Modal } from '../../components/ui/Modal';
+import { Drawer } from '../../components/ui/Drawer';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import { AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
@@ -426,7 +426,7 @@ export const AdminDocuments: React.FC = () => {
       />
 
       {/* UPLOAD MODAL */}
-      <Modal
+      <Drawer
         open={isUploadModalOpen}
         onClose={() => !isSubmitting && setIsUploadModalOpen(false)}
         size="md"
@@ -483,7 +483,7 @@ export const AdminDocuments: React.FC = () => {
               </div>
 
             </form>
-      </Modal>
+      </Drawer>
     </div>
   );
 };
