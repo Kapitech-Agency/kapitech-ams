@@ -31,7 +31,7 @@ import { hasAdminPermission } from '../../lib/adminAuth';
 import { api } from '../../lib/apiClient';
 import { Button } from '../../components/ui/Button';
 import { CustomSelect } from '../../components/ui/CustomSelect';
-import { Modal } from '../../components/ui/Modal';
+import { Drawer, Modal } from '../../components/ui/Modal';
 import { AdminMetricStrip } from '../../components/admin/AdminModulePrimitives';
 
 
@@ -685,7 +685,7 @@ export const AdminClients: React.FC = () => {
         )}
       </Modal>
 
-      <Modal
+      <Drawer
         open={isClientModalOpen}
         onClose={() => !isSaving && setIsClientModalOpen(false)}
         size="xl"
@@ -770,7 +770,7 @@ export const AdminClients: React.FC = () => {
             <textarea id="client-notes" rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Client preferences, requirements, billing notes..." className="resize-y" />
           </section>
         </form>
-      </Modal>
+      </Drawer>
       <Modal
         open={!!deleteTarget}
         onClose={() => !isDeleting && setDeleteTarget(null)}
