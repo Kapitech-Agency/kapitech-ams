@@ -923,7 +923,7 @@ export const AdminInbox: React.FC = () => {
 
                     {/* Client Name & Company */}
                     <div className="flex items-baseline justify-between gap-2 mb-1">
-                      <ProfileIdentity profile={{ name: item.fullName || 'Anonymous Client', role: item.positionTitle || (item.type === 'career' ? 'Candidate' : 'Contact'), companyEmail: item.email, phone: item.phone, division: item.company }} size="sm" showRole={false} />
+                      <ProfileIdentity profile={{ name: item.fullName || 'Anonymous Client', role: item.positionTitle || (item.type === 'career' ? 'Candidate' : 'Contact'), contextLabel: item.company, companyEmail: item.email, phone: item.phone }} size="sm" showRole={false} />
                       <span className="text-xs font-sans font-semibold text-success shrink-0">
                         {formatAmount(estimateDealValue(item), currency)}
                       </span>
