@@ -1534,8 +1534,8 @@ export const AdminProjects: React.FC = () => {
                 {[1, 2, 3, 4].map(item => <div key={item} className="h-40 animate-pulse rounded-card bg-bg" />)}
               </div>
             ) : projectLayout === 'board' ? (
-              <div className="overflow-x-auto overflow-y-hidden bg-bg custom-scrollbar">
-                <div className="flex min-w-max items-start gap-4 px-5 pb-44 pt-5 sm:px-6 sm:pb-52 sm:pt-6">
+              <div className="ams-project-kanban-board overflow-x-auto overflow-y-clip custom-scrollbar">
+                <div className="flex min-w-max items-start gap-4 px-5 pb-8 pt-5 sm:px-6 sm:pb-10 sm:pt-6 min-h-[920px]">
                   {PROJECT_KANBAN_COLUMNS.map(column => {
                     const items = filteredProjects.filter(project => project.status === column.id);
                     const isDropTarget = dragOverProjectStatus === column.id;
@@ -1545,13 +1545,13 @@ export const AdminProjects: React.FC = () => {
                         key={column.id}
                         aria-label={column.label + ' project column'}
                         className={[
-                          'flex w-[340px] shrink-0 self-start flex-col rounded-[14px] border bg-panel/35 transition-[border-color,background-color,box-shadow] duration-200 sm:w-[370px]',
+                          'ams-project-kanban-lane flex w-[352px] shrink-0 self-start flex-col rounded-[16px] border transition-[border-color,background-color,box-shadow] duration-200 sm:w-[390px]',
                           isDropTarget
                             ? 'border-accent/50 bg-accent/5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--accent)_18%,transparent)]'
                             : 'border-line/80',
                         ].join(' ')}
                       >
-                        <div className="shrink-0 border-b border-line/80 bg-panel/80 px-4 py-4 backdrop-blur-sm">
+                        <div className="shrink-0 border-b border-line/80 bg-panel px-4 py-4">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
@@ -1612,7 +1612,7 @@ export const AdminProjects: React.FC = () => {
                               setDragOverProjectStatus(null);
                             }
                           }}
-                          className={'min-h-[760px] flex flex-col gap-3.5 bg-bg/20 p-3 pb-4 transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
+                          className={'ams-project-kanban-stack min-h-[820px] flex flex-col gap-3.5 p-3 pb-4 transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
                           {draggingProjectId && canManageProjects && (
                             <div className={'rounded-control border px-2.5 py-2 text-[9px] font-medium transition-colors ' + (isDropTarget ? 'border-accent/35 bg-accent/10 text-accent-text' : 'border-dashed border-line bg-bg/50 text-muted')}>
                               {isDropTarget ? 'Release to move project into ' + column.label : 'Drop here to move project into ' + column.label}
@@ -1663,8 +1663,8 @@ export const AdminProjects: React.FC = () => {
                                     setDraggingProjectId(null);
                                     setDragOverProjectStatus(null);
                                   }}
-                                  className={'ams-project-kanban-card group cursor-grab select-none rounded-[12px] border border-line/90 bg-panel p-4 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150 hover:-translate-y-px hover:border-accent/40 hover:bg-panel-hover hover:shadow-[0_10px_28px_color-mix(in_srgb,var(--bg)_55%,transparent)] active:cursor-grabbing ' + (
-                                    isDragging ? 'cursor-grabbing rotate-[1deg] scale-[0.98] border-accent/40 opacity-50' : movingProjectId === project.id ? 'border-accent/35 opacity-80' : ''
+                                  className={'ams-project-kanban-card group select-none rounded-[12px] border border-line/90 p-4 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150 hover:-translate-y-px hover:border-accent/40 hover:shadow-[0_10px_28px_color-mix(in_srgb,var(--bg)_55%,transparent)] ' + (
+                                    isDragging ? 'cursor-grabbing rotate-[1deg] scale-[0.98] border-accent/50 opacity-70' : movingProjectId === project.id ? 'border-accent/35 opacity-80' : ''
                                   )}
                                 >
                                   <div className="flex items-start justify-between gap-2">
@@ -1738,7 +1738,7 @@ export const AdminProjects: React.FC = () => {
                                       </div>
                                       {project.teamLead ? (
                                         <ProfileIdentity
-                                          profile={{ name: project.teamLead, contextLabel: 'Project owner' }}
+                                          profile={{ name: project.teamLead, role: 'Project owner', division: 'Delivery' }}
                                           compact
                                           size="sm"
                                           showRole={false}
@@ -1768,7 +1768,7 @@ export const AdminProjects: React.FC = () => {
                           <div
                             aria-hidden="true"
                             className={[
-                              'mt-auto min-h-[180px] rounded-card border border-dashed px-3 py-5 transition-colors',
+                              'mt-auto min-h-[240px] rounded-card border border-dashed px-3 py-5 transition-colors',
                               isDropTarget ? 'border-accent/35 bg-accent/5' : 'border-line/45 bg-bg/20'
                             ].join(' ')}
                           >
@@ -1783,7 +1783,7 @@ export const AdminProjects: React.FC = () => {
                               </div>
                             ) : (
                               <div className="flex min-h-20 items-center justify-center text-center text-[10px] text-muted/55">
-                                Drop space
+                                Drop area
                               </div>
                             )}
                           </div>
