@@ -405,9 +405,7 @@ export const AdminVendors: React.FC = () => {
                   <ProfileIdentity profile={{ name: vendor.name, role: vendor.primaryCategory || 'Freelance vendor', division: vendor.companyName || 'External Network', companyEmail: vendor.email, phone: vendor.phone }} size="md" showRole={false} />
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <h3 className="text-sm font-semibold text-fg group-hover:text-accent transition-colors">
-                        {vendor.name}
-                      </h3>
+
                       {(vendor.isVetted ?? true) && (
                         <span 
                           onClick={(e) => handleToggleVettedQuick(vendor, e)}
