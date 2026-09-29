@@ -650,18 +650,20 @@ export const AdminLayout: React.FC = () => {
               ) : location.pathname === '/admin/invoicing' || location.pathname === '/admin/vendors' ? (
                 <nav aria-label="Finance sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
                   {[
-                    { key: 'invoices', label: 'Invoice', search: '' },
-                    { key: 'quotations', label: 'Quotation', search: '?finance=quotations' },
-                    { key: 'income-expenses', label: 'Income & Expenses', search: '?finance=income-expenses' },
-                    { key: 'tax-retainers', label: 'Tax & Retainers', search: '?finance=tax-retainers' },
-                    { key: 'financial-reports', label: 'Financial Reports', search: '?finance=financial-reports' },
-                    { key: 'vendors', label: 'Vendors', search: '/admin/vendors' },
+                    { key: 'invoices', label: 'Invoice', to: '/admin/invoicing' },
+                    { key: 'quotations', label: 'Quotation', to: '/admin/invoicing?finance=quotations' },
+                    { key: 'income-expenses', label: 'Income & Expenses', to: '/admin/invoicing?finance=income-expenses' },
+                    { key: 'tax-retainers', label: 'Tax & Retainers', to: '/admin/invoicing?finance=tax-retainers' },
+                    { key: 'financial-reports', label: 'Financial Reports', to: '/admin/invoicing?finance=financial-reports' },
+                    { key: 'vendors', label: 'Vendors', to: '/admin/vendors' },
                   ].map((tab) => {
-                    const activeView = new URLSearchParams(location.search).get('finance') || 'invoices';
+                    const activeView = location.pathname === '/admin/vendors'
+                      ? 'vendors'
+                      : new URLSearchParams(location.search).get('finance') || 'invoices';
                     return (
                       <NavLink
                         key={tab.key}
-                        to={'/admin/invoicing' + tab.search}
+                        to={tab.to}
                         end
                         className={'group relative inline-flex h-9 shrink-0 items-center rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (activeView === tab.key ? 'border border-accent/25 bg-accent/10 font-semibold text-fg' : 'border border-transparent text-muted hover:bg-bg hover:text-fg')}
                       >
