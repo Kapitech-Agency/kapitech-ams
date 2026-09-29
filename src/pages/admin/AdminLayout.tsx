@@ -20,7 +20,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { CommandPalette } from '../../components/admin/CommandPalette';
 import { AdminNotificationCenter } from '../../components/admin/AdminNotificationCenter';
 import { Modal } from '../../components/ui/Modal';
-import { useRbacRole } from '../../lib/rbacEngine';
+import { AGENCY_TIER_LABELS, AgencyTier, getAgencyTier, useRbacRole } from '../../lib/rbacEngine';
 import { AmsBrandLogo } from '../../components/admin/AmsBrandLogo';
 import UserAvatar from '../../components/admin/UserAvatar';
 import UserProfileSettingsModal from '../../components/admin/UserProfileSettingsModal';
@@ -35,19 +35,20 @@ interface NavItem {
   badge?: string | number | null;
   badgeColor?: string;
   exact?: boolean;
-  group?: 'Workspace' | 'Delivery' | 'Records';
+  group?: 'Agency Core' | 'Agency Management' | 'Project Operations';
+  requiredTier: AgencyTier;
 }
 
 type AdminNavItem = NavItem & { accessKey?: string };
 
 const STITCH_NAV_ITEMS: AdminNavItem[] = [
-  { key: 'dashboard', to: '/admin/dashboard', label: 'Dashboard', icon: Home, group: 'Workspace' },
-  { key: 'clients', to: '/admin/clients', label: 'Clients', icon: UsersRound, group: 'Workspace' },
-  { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, badge: 14, group: 'Workspace' },
-  { key: 'tasks', to: '/admin/dashboard?view=tasks', label: 'Tasks', icon: ClipboardCheck, badge: 3, accessKey: 'projects', group: 'Delivery' },
-  { key: 'team', to: '/admin/time-logs', label: 'Team', icon: UsersRound, accessKey: 'timelogs', group: 'Delivery' },
-  { key: 'finance', to: '/admin/invoicing', label: 'Finance', icon: Landmark, accessKey: 'invoicing', group: 'Records' },
-  { key: 'documents', to: '/admin/documents', label: 'Documents', icon: LockKeyhole, badge: 'Encrypted', group: 'Records' },
+  { key: 'dashboard', to: '/admin/dashboard', label: 'Dashboard', icon: Home, requiredTier: 2, group: 'Agency Core' },
+  { key: 'finance', to: '/admin/invoicing', label: 'Finance', icon: Landmark, accessKey: 'invoicing', requiredTier: 2, group: 'Agency Core' },
+  { key: 'clients', to: '/admin/clients', label: 'Clients', icon: UsersRound, requiredTier: 3, group: 'Agency Management' },
+  { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, badge: 14, requiredTier: 3, group: 'Agency Management' },
+  { key: 'team', to: '/admin/time-logs', label: 'Team', icon: UsersRound, accessKey: 'timelogs', requiredTier: 3, group: 'Project Operations' },
+  { key: 'tasks', to: '/admin/dashboard?view=tasks', label: 'Tasks', icon: ClipboardCheck, badge: 3, accessKey: 'projects', requiredTier: 3, group: 'Project Operations' },
+  { key: 'documents', to: '/admin/documents', label: 'Documents', icon: LockKeyhole, badge: 'Encrypted', requiredTier: 3, group: 'Project Operations' },
 ];
 
 const DEFAULT_PROFILE_NAME = 'Fikri Nurlete';
@@ -173,11 +174,21 @@ export const AdminLayout: React.FC = () => {
     navigate('/admin/login', { replace: true });
   };
 
+  const agencyTier = getAgencyTier(
+    session?.user?.stakeholderType,
+    session?.user?.division,
+    session?.user?.role
+  );
+  const hasAgencyTier = (requiredTier: AgencyTier) => agencyTier <= requiredTier;
+
   const filteredNavItems = useMemo(
-    () => STITCH_NAV_ITEMS.filter((item) => isAllowed(item.accessKey || item.key)),
-    [isAllowed]
+    () => STITCH_NAV_ITEMS.filter(
+      (item) => hasAgencyTier(item.requiredTier) && isAllowed(item.accessKey || item.key)
+    ),
+    [agencyTier, isAllowed]
   );
 
+  const canOpenMasterSettings = hasAgencyTier(1) && isAllowed('settings');
   const profileTitle = session?.user?.role || DEFAULT_PROFILE_TITLE;
 
   // Helper to determine if a navigation item is active, including Stitch dashboard view query tabs.
@@ -205,8 +216,8 @@ export const AdminLayout: React.FC = () => {
 
   const activeNavItem = filteredNavItems.find((item) => isItemActive(item.to));
   const activeItemLabel = activeNavItem?.label || 'Dashboard';
-  const activeSectionLabel = activeNavItem?.group || 'Workspace';
-  const navGroups: Array<NavItem['group']> = ['Workspace', 'Delivery', 'Records'];
+  const activeSectionLabel = activeNavItem?.group || AGENCY_TIER_LABELS[agencyTier];
+  const navGroups: Array<NavItem['group']> = ['Agency Core', 'Agency Management', 'Project Operations'];
   const getGroupItems = (group: NavItem['group']) => filteredNavItems.filter(item => item.group === group);
 
   return (
@@ -294,6 +305,7 @@ export const AdminLayout: React.FC = () => {
         </div>
         <div className="shrink-0 border-t border-line bg-panel px-3.5 pb-3.5 pt-3">
           <div className="grid grid-cols-2 gap-2">
+            {canOpenMasterSettings && (
             <Link
               to="/admin/settings"
               aria-current={location.pathname === '/admin/settings' ? 'page' : undefined}
@@ -306,6 +318,7 @@ export const AdminLayout: React.FC = () => {
             >
               Settings
             </Link>
+            )}
             <button
               type="button"
               onClick={handleLogout}
@@ -320,9 +333,9 @@ export const AdminLayout: React.FC = () => {
               Sign out
             </button>
           </div>
-          <div className="mt-2 flex items-center justify-between px-2.5 pb-1 text-[10px] text-muted">
-            <span>Kapitech AMS</span>
-            <span>v2.4.0</span>
+          <div className="mt-2 flex items-center justify-between gap-2 px-2.5 pb-1 text-[10px] text-muted">
+            <span className="truncate">{AGENCY_TIER_LABELS[agencyTier]}</span>
+            <span className="shrink-0">Tier {agencyTier}</span>
           </div>
         </div>
       </motion.aside>
@@ -514,9 +527,10 @@ export const AdminLayout: React.FC = () => {
             </nav>
             <div className="shrink-0 border-t border-line bg-bg px-2.5 pb-[max(10px,env(safe-area-inset-bottom))] pt-2.5">
               <div className="grid grid-cols-2 gap-2">
-                <Link
-                  to="/admin/settings"
-                  onClick={() => setMobileMenuOpen(false)}
+                {canOpenMasterSettings && (
+                  <Link
+                    to="/admin/settings"
+                    onClick={() => setMobileMenuOpen(false)}
                   aria-current={location.pathname === '/admin/settings' ? 'page' : undefined}
                   className={[
                     "flex min-h-10 items-center justify-center rounded-control border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
@@ -526,7 +540,8 @@ export const AdminLayout: React.FC = () => {
                   ].join(" ")}
                 >
                   Settings
-                </Link>
+                  </Link>
+                )}
                 <button
                   type="button"
                   onClick={() => {
@@ -544,8 +559,9 @@ export const AdminLayout: React.FC = () => {
                   Sign out
                 </button>
               </div>
-              <div className="mt-2 flex items-center justify-between px-2.5 pb-1 text-[10px] text-muted">
-                <span>Kapitech AMS</span><span>v2.4.0</span>
+              <div className="mt-2 flex items-center justify-between gap-2 px-2.5 pb-1 text-[10px] text-muted">
+                <span className="truncate">{AGENCY_TIER_LABELS[agencyTier]}</span>
+                <span className="shrink-0">Tier {agencyTier}</span>
               </div>
             </div>
           </motion.div>
