@@ -25,7 +25,7 @@ import {
 import { AgencyProject, ProjectTask, ProjectStatus, TaskPriority, TaskStatus, TaskSubtask } from '../../lib/projectStore';
 import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
-import { Modal } from '../../components/ui/Modal';
+import { Drawer, Modal } from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
 import { api } from '../../lib/apiClient';
 import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
@@ -969,7 +969,7 @@ export const AdminProjects: React.FC = () => {
         </Modal>
       )}
 
-      <Modal
+      <Drawer
         open={projectModalOpen}
         onClose={() => !saving && setProjectModalOpen(false)}
         size="xl"
@@ -1004,9 +1004,9 @@ export const AdminProjects: React.FC = () => {
             <label className="text-xs text-muted sm:col-span-2">Notes<textarea value={projectForm.notes} onChange={event => setProjectForm({ ...projectForm, notes: event.target.value })} className={fieldClass + ' min-h-24 py-2'} /></label>
           </div>
         </form>
-      </Modal>
+      </Drawer>
 
-      <Modal
+      <Drawer
         open={taskModalOpen}
         onClose={() => !saving && setTaskModalOpen(false)}
         size="xl"
@@ -1040,7 +1040,7 @@ export const AdminProjects: React.FC = () => {
             <label className="text-xs text-muted sm:col-span-2">Checklist, one item per line<textarea value={taskForm.subtasks} onChange={event => setTaskForm({ ...taskForm, subtasks: event.target.value })} className={fieldClass + ' min-h-24 py-2'} /></label>
           </div>
         </form>
-      </Modal>
+      </Drawer>
     </div>
   );
 };
