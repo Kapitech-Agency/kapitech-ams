@@ -2287,7 +2287,44 @@ export const AdminInvoicing: React.FC = () => {
         <div className="space-y-5">
           <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Total quotations" value={quotationMetrics.total} context="All records" sparkline={[quotationMetrics.total, quotationMetrics.active, quotationMetrics.accepted, quotationMetrics.expiring]} icon={<FileText size={15}/>}/><FinanceMetricCard label="Active pipeline" value={quotationMetrics.active} context="Draft through sent" sparkline={[quotationMetrics.total, quotationMetrics.active, quotationMetrics.accepted, quotationMetrics.expiring]} icon={<Clock3 size={15}/>}/><FinanceMetricCard label="Pipeline value" value={formatFinanceCardAmount(quotationMetrics.value,currency)} context={usingDemoQuotations?'Demo workspace data':'Server-backed records'} sparkline={filteredQuotations.length ? filteredQuotations.slice(0, 8).map((quotation) => quotation.total) : [quotationMetrics.value]} icon={<WalletCards size={15} />}/><FinanceMetricCard label="Accepted" value={quotationMetrics.accepted} context={quotationMetrics.approved+' approved ready to convert'} sparkline={[quotationMetrics.active, quotationMetrics.approved, quotationMetrics.accepted]} icon={<CheckCircle2 size={15} className="text-success"/>} toneClassName="text-success"/></section>
           <section className="space-y-5">
-            <section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between"><div><h2 className="text-sm font-semibold text-fg">Quotation ledger</h2><p className="mt-1 text-xs text-muted">Search, filter, and sort the commercial pipeline.</p></div><div className="grid gap-2 sm:grid-cols-2 xl:flex"><label className="relative xl:w-64"><Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/><span className="sr-only">Search quotations</span><input value={quotationSearch} onChange={(event)=>setQuotationSearch(event.target.value)} placeholder="Search quotation, client..." className={fieldClass+' pl-9'}/></label><CustomSelect value={quotationStatusFilter} onChange={(value)=>setQuotationStatusFilter(value as typeof quotationStatusFilter)} options={[{value:'all',label:'All statuses'},{value:'draft',label:'Draft'},{value:'review',label:'Internal review'},{value:'approved',label:'Approved'},{value:'sent',label:'Sent'},{value:'accepted',label:'Accepted'},{value:'rejected',label:'Rejected'}]} triggerClassName="h-9 min-h-9" aria-label="Quotation status filter"/><CustomSelect value={quotationSort} onChange={(value)=>setQuotationSort(value as QuotationSort)} options={[{value:'newest',label:'Newest'},{value:'oldest',label:'Oldest'},{value:'value_high',label:'Highest value'},{value:'value_low',label:'Lowest value'},{value:'valid_until',label:'Valid until'}]} triggerClassName="h-9 min-h-9" aria-label="Quotation sort"/></div></div></div><div className="overflow-hidden">{filteredQuotations.length===0?<div className="p-5"><EmptyState title="No quotations found" description="Adjust the search or filters."/></div>:<table className="ams-finance-table table-fixed text-xs">
+            <section className="rounded-card border border-line bg-panel overflow-hidden">
+  <div className="border-b border-line bg-panel p-4 sm:px-5">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+        <div>
+          <h2 className="text-sm font-semibold text-fg">Quotation ledger</h2>
+          <p className="mt-1 text-xs text-muted">Search, filter, and sort the commercial pipeline.</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">
+            {filteredQuotations.length} visible
+          </span>
+          {canManageInvoices && (
+            <button type="button" onClick={openCreateQuotation} className={primaryClass}>
+              <Plus size={14}/>New quotation
+            </button>
+          )}
+        </div>
+      </div>
+      <div className="grid gap-2 lg:grid-cols-[minmax(240px,1fr)_minmax(0,2fr)]">
+        <label className="relative min-w-0">
+          <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/>
+          <span className="sr-only">Search quotations</span>
+          <input value={quotationSearch} onChange={(event)=>setQuotationSearch(event.target.value)} placeholder="Search quotation, client..." className={fieldClass+' h-10 pl-9'}/>
+        </label>
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(170px,1fr)_minmax(160px,1fr)]">
+          <CustomSelect value={quotationStatusFilter} onChange={(value)=>setQuotationStatusFilter(value as typeof quotationStatusFilter)} options={[{value:'all',label:'All statuses'},{value:'draft',label:'Draft'},{value:'review',label:'Internal review'},{value:'approved',label:'Approved'},{value:'sent',label:'Sent'},{value:'accepted',label:'Accepted'},{value:'rejected',label:'Rejected'}]} className="min-w-0" triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Quotation status filter"/>
+          <CustomSelect value={quotationSort} onChange={(value)=>setQuotationSort(value as QuotationSort)} options={[{value:'newest',label:'Newest'},{value:'oldest',label:'Oldest'},{value:'value_high',label:'Highest value'},{value:'value_low',label:'Lowest value'},{value:'valid_until',label:'Valid until'}]} className="min-w-0" triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Quotation sort"/>
+        </div>
+      </div>
+      {(quotationSearch || quotationStatusFilter !== 'all') && (
+        <div className="flex items-center justify-between gap-3 border-t border-line pt-3">
+          <span className="text-[10px] text-muted">Quotation filters are active</span>
+          <button type="button" onClick={()=>{setQuotationSearch('');setQuotationStatusFilter('all');}} className={actionClass+' h-8 min-h-8 px-3 text-[11px]'}>Clear filters</button>
+        </div>
+      )}
+    </div>
+  </div><div className="overflow-hidden">{filteredQuotations.length===0?<div className="p-5"><EmptyState title="No quotations found" description="Adjust the search or filters."/></div>:<table className="ams-finance-table table-fixed text-xs">
 <thead className="sticky top-0 z-10 border-b border-line bg-panel/95 backdrop-blur-sm"><tr>
   <th className="w-[30%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Quotation</th>
   <th className="w-[17%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Value</th>
