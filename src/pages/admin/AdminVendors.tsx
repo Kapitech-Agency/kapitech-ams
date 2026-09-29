@@ -402,7 +402,7 @@ export const AdminVendors: React.FC = () => {
               {/* Header Card */}
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <ProfileIdentity profile={{ name: vendor.name, role: vendor.primaryCategory || 'Freelance vendor', division: vendor.companyName || 'External Network', companyEmail: vendor.email, phone: vendor.phone }} size="md" showRole={false} />
+                  <ProfileIdentity profile={{ name: vendor.name, role: undefined, contextLabel: [vendor.primaryCategory, vendor.companyName].filter(Boolean).join(' · ') || undefined, companyEmail: vendor.email, phone: vendor.phone }} size="md" showRole={false} />
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
 
