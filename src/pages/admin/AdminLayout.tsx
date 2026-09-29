@@ -369,7 +369,7 @@ export const AdminLayout: React.FC = () => {
 
       <UserProfileSettingsModal
         open={profileView === 'edit'}
-        onClose={() => setProfileView('public')}
+        onClose={() => setProfileView(null)}
         displayName={profileName}
         title={profileTitle}
       />
