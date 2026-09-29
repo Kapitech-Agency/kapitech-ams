@@ -269,7 +269,7 @@ export const AdminCmsServices: React.FC = () => {
       />
 
       {/* Category Pills & Search */}
-      <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3 bg-panel p-3 rounded-card border border-line">
+      <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3 bg-panel p-4 rounded-card border border-line">
         <div className="flex flex-nowrap items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:overflow-visible sm:pb-0">
           {categories.map((cat) => (
             <button
@@ -312,7 +312,7 @@ export const AdminCmsServices: React.FC = () => {
           ))}
         </div>
       ) : loadError ? (
-        <div className="rounded-card border border-danger/30 bg-danger/10 p-6">
+        <div className="rounded-card border border-danger/30 bg-danger/10 p-4">
           <p className="text-sm font-semibold text-fg">Unable to load services</p>
           <p className="mt-1 text-xs leading-5 text-muted">{loadError}</p>
           <button type="button" onClick={() => window.location.reload()} className="mt-4 min-h-10 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">Retry</button>
