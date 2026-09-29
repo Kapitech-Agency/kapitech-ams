@@ -43,6 +43,7 @@ import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
 
 import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 export const AdminVendors: React.FC = () => {
   const { t, language } = useLanguage();
   const canManageVendors = hasAdminPermission('canManageVendors');
@@ -401,10 +402,8 @@ export const AdminVendors: React.FC = () => {
               {/* Header Card */}
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-card bg-panel border border-line flex items-center justify-center font-semibold text-sm text-fg">
-                    {vendor.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
+                  <ProfileIdentity profile={{ name: vendor.name, role: vendor.primaryCategory || 'Freelance vendor', division: vendor.companyName || 'External Network', companyEmail: vendor.email, phone: vendor.phone }} size="md" showRole={false} />
+                  <div className="min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <h3 className="text-sm font-semibold text-fg group-hover:text-accent transition-colors">
                         {vendor.name}
