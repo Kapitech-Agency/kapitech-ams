@@ -22,7 +22,6 @@ import { AdminNotificationCenter } from '../../components/admin/AdminNotificatio
 import { Modal } from '../../components/ui/Modal';
 import { AGENCY_TIER_LABELS, AgencyTier, getAgencyTier, useRbacRole } from '../../lib/rbacEngine';
 import { AmsBrandLogo } from '../../components/admin/AmsBrandLogo';
-import UserAvatar from '../../components/admin/UserAvatar';
 import UserProfileSettingsModal from '../../components/admin/UserProfileSettingsModal';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import Button from '../../components/ui/Button';
