@@ -34,14 +34,20 @@ class AppErrorBoundary extends React.Component<
   { children: React.ReactNode },
   { error: Error | null }
 > {
+  private readonly childContent: React.ReactNode;
   state: { error: Error | null } = { error: null };
+
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.childContent = props.children;
+  }
 
   static getDerivedStateFromError(error: Error) {
     return { error };
   }
 
   render() {
-    if (!this.state.error) return this.props.children;
+    if (!this.state.error) return this.childContent;
 
     return (
       <div className="min-h-screen bg-bg text-fg flex items-center justify-center p-6 font-sans">
