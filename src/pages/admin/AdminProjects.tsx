@@ -759,6 +759,7 @@ export const AdminProjects: React.FC = () => {
     }
   };
 
+  // Drag & Drop Handlers
   const updateTaskStatus = async (task: ProjectTask, status: TaskStatus) => {
     if (!selectedSprintProject || task.status === status) return;
     try {
