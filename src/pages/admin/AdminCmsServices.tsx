@@ -28,7 +28,7 @@ import { allSolutionsAndServices, ServiceItemData } from '../../data/servicesDat
 import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { api } from '../../lib/apiClient';
-import { Modal } from '../../components/ui/Modal';
+import { Drawer, Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
@@ -505,7 +505,7 @@ export const AdminCmsServices: React.FC = () => {
       </Modal>
 
       {/* Add New Service Modal */}
-      <Modal
+      <Drawer
         open={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         size="lg"
@@ -610,7 +610,7 @@ export const AdminCmsServices: React.FC = () => {
               </div>
 
             </form>
-      </Modal>
+      </Drawer>
 
     </div>
   );
