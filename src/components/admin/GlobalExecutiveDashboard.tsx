@@ -809,12 +809,28 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 const percent = totalDelivery > 0 ? Math.round((safeValue / totalDelivery) * 100) : 0;
                 return (
                   <div key={item.label} className="min-w-0 rounded-control border border-line bg-bg p-3">
-                    <div className="flex items-center gap-1.5">
-                      <i className={['h-2 w-2 shrink-0 rounded-full', progressClasses[item.tone]].join(' ')} />
-                      <span className="truncate text-[10px] font-medium text-muted">{item.label}</span>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <i className={['h-2 w-2 shrink-0 rounded-full', progressClasses[item.tone]].join(' ')} />
+                        <span className="truncate text-[10px] font-medium text-muted">{item.label}</span>
+                      </div>
+                      <span className={['shrink-0 rounded-badge border px-1.5 py-0.5 text-[9px] font-medium', toneClasses[item.tone]].join(' ')}>
+                        {item.tone === 'success' ? 'Healthy' : item.tone === 'warning' ? 'Monitor' : 'Action'}
+                      </span>
                     </div>
-                    <div className="mt-2 text-lg font-semibold tabular-nums text-fg">{safeValue}</div>
-                    <div className="mt-0.5 text-[10px] tabular-nums text-muted">{percent}% of portfolio</div>
+                    <div className="mt-2 flex items-end justify-between gap-2">
+                      <div>
+                        <div className="text-lg font-semibold tabular-nums text-fg">{safeValue}</div>
+                        <div className="mt-0.5 text-[10px] text-muted">{safeValue === 1 ? 'project' : 'projects'}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-semibold tabular-nums text-fg">{percent}%</div>
+                        <div className="mt-0.5 text-[10px] text-muted">of portfolio</div>
+                      </div>
+                    </div>
+                    <div className="mt-2 h-1 overflow-hidden rounded-full bg-line" aria-hidden="true">
+                      <div className={['h-full rounded-full', progressClasses[item.tone]].join(' ')} style={{ width: percent + '%' }} />
+                    </div>
                   </div>
                 );
               })}
