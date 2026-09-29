@@ -3,7 +3,7 @@ import { Users, Plus, Star, Edit3, Trash2, Check, MessageSquare, MapPin } from '
 import { TestimonialItem } from '../../lib/cmsStore';
 import { api } from '../../lib/apiClient';
 import { useLanguage } from '../../lib/LanguageContext';
-import { Drawer, Modal } from '../../components/ui/Modal';
+import { Drawer } from '../../components/ui/Drawer';
 import { Button } from '../../components/ui/Button';
 import { AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 
