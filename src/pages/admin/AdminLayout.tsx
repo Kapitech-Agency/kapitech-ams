@@ -14,7 +14,6 @@ import {
   ClipboardCheck,
   UsersRound,
   LockKeyhole,
-  Settings,
 } from 'lucide-react';
 import { getAdminSession, logoutAdmin } from '../../lib/adminAuth';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -68,8 +67,7 @@ export const AdminLayout: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
-  const [profileSettingsOpen, setProfileSettingsOpen] = useState(false);
-  const [profilePublicOpen, setProfilePublicOpen] = useState(false);
+  const [profileView, setProfileView] = useState<'public' | 'edit' | null>(null);
   const [profileName, setProfileName] = useState(
     session?.user.profileDisplayName || DEFAULT_PROFILE_NAME
   );
@@ -279,35 +277,19 @@ export const AdminLayout: React.FC = () => {
         </div>
 
         <div className="shrink-0 border-t border-line bg-panel px-3 pb-3 pt-3">
-          <button
-            type="button"
-            onClick={() => setProfilePublicOpen(true)}
-            aria-label="Open public profile"
-            className="flex min-h-11 w-full items-center gap-2.5 rounded-control px-2 py-2 text-left transition-colors hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-          >
-            <UserAvatar name={profileName} imageUrl={profileAvatarUrl} size="sm" online />
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-xs font-semibold text-fg">{profileName}</div>
-              <div className="mt-0.5 truncate text-[10px] text-muted">{profileTitle}</div>
-            </div>
-          </button>
-          <div className="mt-2 flex items-center justify-end gap-1.5 border-t border-line pt-2">
+          <div className="grid grid-cols-2 gap-2">
             <Link
               to="/admin/settings"
-              aria-label="Open settings"
-              title="Settings"
-              className="flex h-9 w-9 items-center justify-center rounded-control border border-line bg-bg text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              className="flex min-h-10 items-center justify-center rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
-              <Settings size={16} />
+              Settings
             </Link>
             <button
               type="button"
               onClick={handleLogout}
-              aria-label="Sign out"
-              title="Sign out"
-              className="flex h-9 w-9 items-center justify-center rounded-control border border-line bg-bg text-muted transition-colors hover:border-danger/30 hover:bg-danger/5 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              className="flex min-h-10 items-center justify-center rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted transition-colors hover:border-danger/30 hover:bg-danger/5 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
-              <LogOut size={16} />
+              Sign out
             </button>
           </div>
           <div className="mt-2 flex items-center justify-between px-2.5 pb-1 text-[10px] text-muted">
@@ -346,19 +328,16 @@ export const AdminLayout: React.FC = () => {
       </Modal>
 
       <UserProfilePublicDrawer
-        open={profilePublicOpen}
-        onClose={() => setProfilePublicOpen(false)}
-        onEdit={() => {
-          setProfilePublicOpen(false);
-          window.setTimeout(() => setProfileSettingsOpen(true), 120);
-        }}
+        open={profileView === 'public'}
+        onClose={() => setProfileView(null)}
+        onEdit={() => setProfileView('edit')}
         displayName={profileName}
         title={profileTitle}
       />
 
       <UserProfileSettingsModal
-        open={profileSettingsOpen}
-        onClose={() => setProfileSettingsOpen(false)}
+        open={profileView === 'edit'}
+        onClose={() => setProfileView('public')}
         displayName={profileName}
         title={profileTitle}
       />
@@ -400,7 +379,7 @@ export const AdminLayout: React.FC = () => {
           />
           <button
             type="button"
-            onClick={() => setProfilePublicOpen(true)}
+            onClick={() => setProfileView('public')}
             aria-label="Open public profile"
             title="Public profile"
             className="flex h-9 w-9 items-center justify-center rounded-control bg-transparent text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
@@ -497,49 +476,29 @@ export const AdminLayout: React.FC = () => {
             </nav>
 
             <div className="shrink-0 border-t border-line bg-bg px-2.5 pb-[max(10px,env(safe-area-inset-bottom))] pt-2.5">
-              <div className="rounded-card border border-line bg-panel p-1.5">
+              <div className="grid grid-cols-2 gap-2">
+                <Link
+                  to="/admin/settings"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex min-h-10 items-center justify-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted hover:border-accent/30 hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                >
+                  Settings
+                </Link>
                 <button
                   type="button"
                   onClick={() => {
                     setMobileMenuOpen(false);
-                    setProfilePublicOpen(true);
+                    handleLogout();
                   }}
-                  aria-label="Open public profile"
-                  className="flex min-h-10 w-full items-center gap-2 rounded-control px-1.5 py-1 text-left hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  className="flex min-h-10 items-center justify-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted hover:border-danger/30 hover:bg-danger/5 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 >
-                  <UserAvatar name={profileName} imageUrl={profileAvatarUrl} size="sm" online />
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-xs font-semibold text-fg">{profileName}</div>
-                    <div className="mt-0.5 truncate text-[10px] text-muted">{profileTitle}</div>
-                  </div>
+                  Sign out
                 </button>
-                <div className="mt-1.5 flex items-center justify-end gap-1.5 border-t border-line pt-1.5">
-                  <Link
-                    to="/admin/settings"
-                    onClick={() => setMobileMenuOpen(false)}
-                    aria-label="Open settings"
-                    title="Settings"
-                    className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-bg text-muted hover:border-accent/30 hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                  >
-                    <Settings size={16} />
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      handleLogout();
-                    }}
-                    aria-label="Sign out"
-                    title="Sign out"
-                    className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-bg text-muted hover:border-danger/30 hover:bg-danger/5 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                  >
-                    <LogOut size={16} />
-                  </button>
-                </div>
               </div>
               <div className="mt-2 flex items-center justify-between px-2.5 pb-1 text-[10px] text-muted">
                 <span>Kapitech AMS</span><span>v2.4.0</span>
               </div>
+            </div>
             </div>
           </motion.div>
         </div>
@@ -663,7 +622,7 @@ export const AdminLayout: React.FC = () => {
               <span className="mx-1 h-5 w-px shrink-0 bg-line" aria-hidden="true" />
               <button
                 type="button"
-                onClick={() => setProfilePublicOpen(true)}
+                onClick={() => setProfileView('public')}
                 aria-label="Open public profile"
                 title="Public profile"
                 className="flex min-w-0 items-center gap-2 rounded-control px-1.5 py-1 text-left transition-colors hover:bg-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
