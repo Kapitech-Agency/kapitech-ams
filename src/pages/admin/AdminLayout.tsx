@@ -35,18 +35,19 @@ interface NavItem {
   badge?: string | number | null;
   badgeColor?: string;
   exact?: boolean;
+  group?: 'Workspace' | 'Delivery' | 'Records';
 }
 
 type AdminNavItem = NavItem & { accessKey?: string };
 
 const STITCH_NAV_ITEMS: AdminNavItem[] = [
-  { key: 'dashboard', to: '/admin/dashboard', label: 'Dashboard', icon: Home },
-  { key: 'clients', to: '/admin/clients', label: 'Clients', icon: UsersRound },
-  { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, badge: 14 },
-  { key: 'tasks', to: '/admin/dashboard?view=tasks', label: 'Tasks', icon: ClipboardCheck, badge: 3, accessKey: 'projects' },
-  { key: 'team', to: '/admin/time-logs', label: 'Team', icon: UsersRound, accessKey: 'timelogs' },
-  { key: 'finance', to: '/admin/invoicing', label: 'Finance', icon: Landmark, accessKey: 'invoicing' },
-  { key: 'documents', to: '/admin/documents', label: 'Documents Vault', icon: LockKeyhole, badge: 'Encrypted' },
+  { key: 'dashboard', to: '/admin/dashboard', label: 'Dashboard', icon: Home, group: 'Workspace' },
+  { key: 'clients', to: '/admin/clients', label: 'Clients', icon: UsersRound, group: 'Workspace' },
+  { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, badge: 14, group: 'Workspace' },
+  { key: 'tasks', to: '/admin/dashboard?view=tasks', label: 'Tasks', icon: ClipboardCheck, badge: 3, accessKey: 'projects', group: 'Delivery' },
+  { key: 'team', to: '/admin/time-logs', label: 'Team', icon: UsersRound, accessKey: 'timelogs', group: 'Delivery' },
+  { key: 'finance', to: '/admin/invoicing', label: 'Finance', icon: Landmark, accessKey: 'invoicing', group: 'Records' },
+  { key: 'documents', to: '/admin/documents', label: 'Documents Vault', icon: LockKeyhole, badge: 'Encrypted', group: 'Records' },
 ];
 
 const DEFAULT_PROFILE_NAME = 'Fikri Nurlete';
@@ -205,6 +206,8 @@ export const AdminLayout: React.FC = () => {
   const activeNavItem = filteredNavItems.find((item) => isItemActive(item.to));
   const activeItemLabel = activeNavItem?.label || 'Dashboard';
   const activeSectionLabel = 'Workspace';
+  const navGroups: Array<NavItem['group']> = ['Workspace', 'Delivery', 'Records'];
+  const getGroupItems = (group: NavItem['group']) => filteredNavItems.filter(item => item.group === group);
 
   return (
     <div className="h-screen w-full bg-bg text-fg flex flex-col min-[900px]:flex-row selection:bg-accent selection:text-fg font-sans antialiased overflow-hidden ams-shell">
@@ -219,11 +222,11 @@ export const AdminLayout: React.FC = () => {
       {/* DESKTOP SIDEBAR */}
       <motion.aside
         initial={false}
-        animate={{ width: 220 }}
+        animate={{ width: 228 }}
         transition={{ duration: 0.18, ease: 'easeOut' }}
-        className="hidden min-[900px]:flex w-[220px] shrink-0 flex-col relative bg-panel border-r border-line h-full z-30 overflow-hidden"
+        className="hidden min-[900px]:flex w-[228px] shrink-0 flex-col relative bg-panel border-r border-line h-full z-30 overflow-hidden"
       >
-        <div className="relative flex h-[52px] shrink-0 items-center border-b border-line px-3">
+        <div className="relative flex h-14 shrink-0 items-center border-b border-line px-3.5">
           <Link to="/admin/dashboard" aria-label="Kapitech AMS dashboard" className="flex min-w-0 flex-1 items-center gap-2.5 rounded-control px-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg">
               <AmsBrandLogo className="h-5 w-5" />
@@ -238,7 +241,7 @@ export const AdminLayout: React.FC = () => {
           </Link>
         </div>
 
-        <div className="px-3 pt-3">
+        <div className="px-3.5 pt-3.5">
           <Button
             type="button"
             variant="secondary"
@@ -246,37 +249,52 @@ export const AdminLayout: React.FC = () => {
             aria-label="Search AMS"
             aria-keyshortcuts="Control+K Meta+K"
             icon={<Search size={15} />}
-            className="flex h-9 w-full justify-start border-line bg-bg px-3"
+            className="flex h-10 w-full justify-start border-line bg-bg px-3"
           >
             <span className="min-w-0 flex-1 truncate text-left text-xs">Search</span>
             <kbd className="ml-auto rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] text-muted">⌘K</kbd>
           </Button>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-3 custom-scrollbar">
-          <nav aria-label="Primary navigation" className="space-y-0.5">
-            {filteredNavItems.map((item) => {
-              const Icon = item.icon;
-              const active = isItemActive(item.to);
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3.5 py-4 custom-scrollbar">
+          <nav aria-label="Primary navigation" className="space-y-5">
+            {navGroups.map((group) => {
+              const items = getGroupItems(group);
+              if (!items.length) return null;
               return (
-                <Link
-                  key={item.key}
-                  to={item.to}
-                  aria-current={active ? 'page' : undefined}
-                  className={`group relative flex min-h-10 items-center gap-2.5 rounded-control px-2.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${active ? 'border border-accent/25 bg-accent/10 text-fg' : 'border border-transparent text-muted hover:bg-panel-hover hover:text-fg'}`}
-                >
-                  <Icon size={16} strokeWidth={active ? 2.1 : 1.8} className="shrink-0" />
-                  <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                  {item.badge !== null && item.badge !== undefined && (
-                    <span className="shrink-0 rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] font-semibold text-muted">{item.badge}</span>
-                  )}
-                </Link>
+                <section key={group} aria-label={group}>
+                  <div className="px-2 pb-1.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-muted/70">{group}</div>
+                  <div className="space-y-1">
+                    {items.map((item) => {
+                      const Icon = item.icon;
+                      const active = isItemActive(item.to);
+                      return (
+                        <Link
+                          key={item.key}
+                          to={item.to}
+                          aria-current={active ? "page" : undefined}
+                          className={["group relative flex min-h-10 items-center gap-2.5 rounded-control px-2.5 text-[12px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent", active ? "border border-accent/25 bg-accent/10 text-fg" : "border border-transparent text-muted hover:bg-panel-hover hover:text-fg"].join(" ")}
+                        >
+                          {active && <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-accent" aria-hidden="true" />}
+                          <span className={["flex h-7 w-7 shrink-0 items-center justify-center rounded-control", active ? "bg-bg/70 text-fg" : "text-muted group-hover:text-fg"].join(" ")}>
+                            <Icon size={15} strokeWidth={active ? 2.1 : 1.8} />
+                          </span>
+                          <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                          {item.badge !== null && item.badge !== undefined && (
+                            <span className={["shrink-0 rounded-badge border px-1.5 py-0.5 text-[9px] font-semibold", active ? "border-accent/15 bg-bg text-muted" : "border-line bg-bg text-muted"].join(" ")}>
+                              {item.badge}
+                            </span>
+                          )}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </section>
               );
             })}
           </nav>
         </div>
-
-        <div className="shrink-0 border-t border-line bg-panel px-3 pb-3 pt-3">
+        <div className="shrink-0 border-t border-line bg-panel px-3.5 pb-3.5 pt-3">
           <div className="grid grid-cols-2 gap-2">
             <Link
               to="/admin/settings"
