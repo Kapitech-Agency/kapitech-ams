@@ -557,7 +557,7 @@ export const AdminInbox: React.FC = () => {
       {/* ------------------------------------------------------------- */}
       {/* 3. UNIFIED FILTER TABS & TOOLBAR */}
       {/* ------------------------------------------------------------- */}
-      <div className="ams-inbox-toolbar bg-panel border border-line p-4 sm:p-5 rounded-card space-y-3">
+      <div className="ams-inbox-toolbar bg-panel border border-line p-4 rounded-card space-y-3">
         
         {/* Top Channel Category Tabs */}
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1029,7 +1029,7 @@ export const AdminInbox: React.FC = () => {
                 </div>
 
                 {/* Primary Action Ribbon (Quick Canned Replies, WA, Email, Convert to CRM) */}
-                <div className="p-3 rounded-card bg-panel border border-line flex flex-wrap items-center justify-between gap-2.5 mb-5">
+                <div className="p-4 rounded-card bg-panel border border-line flex flex-wrap items-center justify-between gap-2.5 mb-5">
                   <div className="flex items-center gap-2 flex-wrap">
                     {/* 1-Click Convert to CRM Lead */}
                     {crmDeals.some(d => (d as any).inquiryId === selectedSubmission.id) ? (
@@ -1125,7 +1125,7 @@ export const AdminInbox: React.FC = () => {
                     {/* Contact Specs Cards */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {/* Email Card */}
-                      <div className="p-3 rounded-card bg-panel border border-line">
+                      <div className="p-4 rounded-card bg-panel border border-line">
                         <div className="flex items-center justify-between text-xs font-sans text-muted mb-1">
                           <div className="flex items-center gap-1.5">
                             <Mail size={13} className="text-danger" />
@@ -1148,7 +1148,7 @@ export const AdminInbox: React.FC = () => {
                       </div>
 
                       {/* Phone Card */}
-                      <div className="p-3 rounded-card bg-panel border border-line">
+                      <div className="p-4 rounded-card bg-panel border border-line">
                         <div className="flex items-center justify-between text-xs font-sans text-muted mb-1">
                           <div className="flex items-center gap-1.5">
                             <Phone size={13} className="text-danger" />
@@ -1173,7 +1173,7 @@ export const AdminInbox: React.FC = () => {
                     {/* Scope & Budget Cards */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {/* Services */}
-                      <div className="p-3 rounded-card bg-panel border border-line">
+                      <div className="p-4 rounded-card bg-panel border border-line">
                         <div className="flex items-center gap-2 text-xs font-sans text-muted mb-1.5">
                           <Tag size={13} className="text-danger" />
                           <span>{language === 'id' ? 'Layanan / Spesialisasi' : 'Requested Services'}</span>
@@ -1194,7 +1194,7 @@ export const AdminInbox: React.FC = () => {
                       </div>
 
                       {/* Budget */}
-                      <div className="p-3 rounded-card bg-panel border border-line">
+                      <div className="p-4 rounded-card bg-panel border border-line">
                         <div className="flex items-center justify-between text-xs font-sans text-muted mb-1">
                           <div className="flex items-center gap-1.5">
                             <DollarSign size={13} className="text-danger" />
