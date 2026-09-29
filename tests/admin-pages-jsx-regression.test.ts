@@ -52,7 +52,7 @@ test('Admin invoicing keeps financial mutations permission-gated and uses the sh
   assert.ok(source.includes('Quarter net cash'));
   assert.ok(source.includes('xl:w-[150px]'));
   assert.ok(source.includes('whitespace-nowrap'));
-  assert.equal((source.match(/className="xl:shrink-0"/g) || []).length, 4);
+  assert.equal((source.match(/xl:shrink-0/g) || []).length, 4);
   assert.equal((source.match(/xl:w-\[176px\]/g) || []).length, 2);
   assert.ok(source.includes('px-5 py-4'));
   assert.ok(source.includes('border border-line bg-panel text-muted'));
