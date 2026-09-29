@@ -20,7 +20,7 @@ import {
 import { useLanguage } from '../../../lib/LanguageContext';
 import { formatAmount, getActiveCurrency, CurrencyCode } from '../../../lib/currency';
 import { CustomSelect } from '../../ui/CustomSelect';
-import { Modal } from '../../ui/Modal';
+import { Drawer } from '../../ui/Drawer';
 
 interface ConvertToCrmModalProps {
   isOpen: boolean;
@@ -113,7 +113,7 @@ export const ConvertToCrmModal: React.FC<ConvertToCrmModalProps> = ({
   ];
 
   return (
-    <Modal
+    <Drawer
       open={isOpen}
       onClose={onClose}
       size="lg"
@@ -271,6 +271,6 @@ export const ConvertToCrmModal: React.FC<ConvertToCrmModalProps> = ({
 
         </div>
 
-    </Modal>
+    </Drawer>
   );
 };
