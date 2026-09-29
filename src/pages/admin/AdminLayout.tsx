@@ -13,7 +13,6 @@ import {
   ClipboardCheck,
   UsersRound,
   LockKeyhole,
-  ServerCog
 } from 'lucide-react';
 import { getAdminSession, logoutAdmin } from '../../lib/adminAuth';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -176,7 +175,6 @@ export const AdminLayout: React.FC = () => {
     [isAllowed]
   );
 
-  const settingsAllowed = isAllowed('settings');
   const profileTitle = session?.user?.role || DEFAULT_PROFILE_TITLE;
 
   // Helper to determine if a navigation item is active, including Stitch dashboard view query tabs.
@@ -520,18 +518,6 @@ export const AdminLayout: React.FC = () => {
               )}
             </div>
             <div className="flex min-w-0 flex-1 items-center justify-end gap-1.5 shrink-0">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => setCommandPaletteOpen(true)}
-                aria-label="Search AMS"
-                aria-keyshortcuts="Control+K Meta+K"
-                icon={<Search size={14} />}
-                className="hidden h-9 w-[300px] justify-start border-line bg-bg px-3 text-muted min-[1100px]:flex"
-              >
-                <span className="min-w-0 flex-1 truncate text-left text-xs">Search AMS</span>
-                <kbd className="ml-auto rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] text-muted">⌘K</kbd>
-              </Button>
               <AdminNotificationCenter />
               <Button
                 type="button"
