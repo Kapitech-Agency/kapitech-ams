@@ -264,6 +264,8 @@ export const AdminProjects: React.FC = () => {
     health: 'Good' as ProjectHealth,
   });
 
+  const [taskAssignees, setTaskAssignees] = useState<Array<{ id: string; name: string; username: string; role: string; division: string }>>([]);
+
   const [taskForm, setTaskForm] = useState({
     title: '',
     description: '',
@@ -313,6 +315,22 @@ export const AdminProjects: React.FC = () => {
     window.addEventListener(CURRENCY_EVENT, handleCurrency);
     return () => window.removeEventListener(CURRENCY_EVENT, handleCurrency);
   }, []);
+
+  React.useEffect(() => {
+    if (!canManageKanbanTasks) return;
+    let mounted = true;
+    void api.auth.getTaskAssignees().then(response => {
+      if (!mounted) return;
+      if (response.success && Array.isArray(response.data?.assignees)) {
+        setTaskAssignees(response.data.assignees);
+      }
+    }).catch(() => {
+      if (mounted) setTaskAssignees([]);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [canManageKanbanTasks]);
 
   const activeProjects = useMemo(
     () => projects.filter(project => project.status !== 'completed'),
@@ -568,7 +586,8 @@ export const AdminProjects: React.FC = () => {
     }
   };
 
-  const openNewTask = () => {
+  // Task creation entry point
+  const handleAddTask = () => {
     if (!selectedSprintProject) {
       showToast('Select a project first.');
       return;
@@ -968,6 +987,7 @@ export const AdminProjects: React.FC = () => {
         )}
       </Modal>
 
+      {/* CONTEXTUAL TASK DETAIL DRAWER */}
       <Modal
         open={Boolean(selectedTask)}
         onClose={() => setSelectedTask(null)}
@@ -1040,7 +1060,9 @@ export const AdminProjects: React.FC = () => {
                 )}
               </div>
             </div>
-            {canManageTasks && <Button variant="destructive" icon={<Trash2 size={13} />} onClick={() => { setDeleteTask(selectedTask); setSelectedTask(null); }}>Delete task</Button>}
+            {canManageKanbanTasks && (
+              <Button variant="destructive" icon={<Trash2 size={13} />} onClick={() => { setDeleteTask(selectedTask); setSelectedTask(null); }}>Delete task</Button>
+            )}
           </div>
         )}
       </Modal>
@@ -1314,6 +1336,7 @@ export const AdminProjects: React.FC = () => {
         </>
       )}
 
+      {/* Task Execution Board */}
       {view === 'sprint' && (
         <div className="space-y-4">
           <AdminPanel
@@ -1332,7 +1355,9 @@ export const AdminProjects: React.FC = () => {
                   options={activeProjects.map(project => ({ value: project.id, label: project.name }))}
                   className="w-full sm:w-56"
                 />
-                {canManageTasks && <Button icon={<Plus size={14} />} onClick={openNewTask}>New Task</Button>}
+                {canManageKanbanTasks && (
+                  <Button icon={<Plus size={14} />} onClick={handleAddTask}>New Task</Button>
+                )}
               </div>
             )}
           >
@@ -1550,7 +1575,25 @@ export const AdminProjects: React.FC = () => {
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="text-xs text-muted sm:col-span-2">Task title<input required value={taskForm.title} onChange={event => setTaskForm({ ...taskForm, title: event.target.value })} className={fieldClass} /></label>
             <div><label className="text-xs text-muted">Project</label><CustomSelect value={taskForm.projectId} onChange={value => setTaskForm({ ...taskForm, projectId: value })} options={activeProjects.map(project => ({ value: project.id, label: project.name }))} className="mt-1 w-full" /></div>
-            <label className="text-xs text-muted">Assignee<input value={taskForm.assignee} onChange={event => setTaskForm({ ...taskForm, assignee: event.target.value })} className={fieldClass} /></label>
+            <label className="text-xs text-muted">Assignee
+              <input
+                value={taskForm.assignee}
+                onChange={event => setTaskForm({ ...taskForm, assignee: event.target.value })}
+                className={fieldClass}
+                list="project-task-assignees"
+                placeholder="Select or enter an active user"
+              />
+              <datalist id="project-task-assignees">
+                {taskAssignees.map(assignee => (
+                  <option key={assignee.id} value={assignee.name}>
+                    {assignee.username}
+                  </option>
+                ))}
+              </datalist>
+              <span className="mt-1 block text-[10px] leading-4 text-muted">
+                Active AMS users are loaded from the server directory.
+              </span>
+            </label>
             <div><label className="text-xs text-muted">Status</label><CustomSelect value={taskForm.status} onChange={value => setTaskForm({ ...taskForm, status: value as TaskStatus })} options={TASK_COLUMNS.map(item => ({ value: item.id, label: item.label }))} className="mt-1 w-full" /></div>
             <div><label className="text-xs text-muted">Priority</label><CustomSelect value={taskForm.priority} onChange={value => setTaskForm({ ...taskForm, priority: value as TaskPriority })} options={TASK_PRIORITIES} className="mt-1 w-full" /></div>
             <label className="text-xs text-muted">Due date<input required type="date" value={taskForm.dueDate} onChange={event => setTaskForm({ ...taskForm, dueDate: event.target.value })} className={fieldClass} /></label>
