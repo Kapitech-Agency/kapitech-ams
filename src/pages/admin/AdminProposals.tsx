@@ -22,6 +22,7 @@ import { CurrencyCode, CURRENCY_EVENT, formatAmount, getActiveCurrency } from '.
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
+import { Modal } from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
 import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 
