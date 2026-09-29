@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { CustomSelect } from '../../components/ui/CustomSelect';
-import { Drawer, Modal } from '../../components/ui/Modal';
+import { Drawer } from '../../components/ui/Drawer';
 
 type Stage = 'discovery' | 'proposal' | 'contract' | 'ready-to-sign';
 type SortKey = 'company' | 'annualValue' | 'stage' | 'owner' | 'probability' | 'dueAt';
