@@ -16,6 +16,7 @@ import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
+import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 
 interface DocumentItem {
@@ -306,7 +307,7 @@ export const AdminDocuments: React.FC = () => {
                       <div className="mt-1 truncate text-[11px] font-medium text-fg">{docDate}</div>
                     </div>
                   </div>
-                  <p className="mt-3 truncate text-[10px] text-muted">By {docOwner} · {doc.relatedEntity || 'General'}</p>
+                  <div className="mt-3 flex min-w-0 items-center gap-2"><ProfileIdentity profile={{ name: docOwner, role: 'Document owner', division: 'Operations' }} compact size="sm" /><span className="min-w-0 truncate text-[10px] text-muted">· {doc.relatedEntity || 'General'}</span></div>
                   <div className="mt-3 grid grid-cols-2 gap-2">
                     {(doc.downloadUrl || doc.url) ? (
                       <a href={doc.downloadUrl || doc.url} target="_blank" rel="noopener noreferrer" className="flex min-h-9 items-center justify-center rounded-control border border-line bg-bg text-xs font-medium text-fg">
@@ -378,7 +379,7 @@ export const AdminDocuments: React.FC = () => {
                       </td>
                       <td className="py-3 px-4 font-sans text-xs text-muted">
                         <div>{docDate}</div>
-                        <div className="text-xs text-muted/70">by {docOwner}</div>
+                        <div className="flex items-center gap-2 text-xs text-muted/70"><span>by</span><ProfileIdentity profile={{ name: docOwner, role: 'Document owner', division: 'Operations' }} size="sm" showRole={false} /></div>
                       </td>
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
