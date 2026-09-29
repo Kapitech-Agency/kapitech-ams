@@ -1476,6 +1476,11 @@ export const AdminProjects: React.FC = () => {
                         </div>
 
                         <div className={'min-h-[220px] flex-1 overflow-y-auto custom-scrollbar space-y-2.5 p-2.5 transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
+                          {draggingProjectId && canManageProjects && (
+                            <div className={'rounded-control border px-2.5 py-2 text-[9px] font-medium transition-colors ' + (isDropTarget ? 'border-accent/35 bg-accent/10 text-accent-text' : 'border-dashed border-line bg-bg/50 text-muted')}>
+                              {isDropTarget ? 'Release to move project into ' + column.label : 'Drop here to move project into ' + column.label}
+                            </div>
+                          )}
                           {items.length === 0 ? (
                             <div className={'flex min-h-[180px] items-center justify-center rounded-card border border-dashed p-5 text-center text-[11px] text-muted transition-colors ' + (isDropTarget ? 'border-accent/40 bg-accent/5 text-fg' : 'border-line')}>
                               <span>
@@ -1845,6 +1850,11 @@ export const AdminProjects: React.FC = () => {
                             'min-h-[420px] max-h-[calc(min(68vh,760px)-78px)] flex-1 overflow-y-auto custom-scrollbar space-y-2.5 p-2.5 transition-colors duration-150',
                             isDropTarget ? 'bg-accent/5' : '',
                           ].join(' ')}>
+                            {draggingTaskId && canManageKanbanTasks && (
+                              <div className={'rounded-control border px-2.5 py-2 text-[9px] font-medium transition-colors ' + (isDropTarget ? 'border-accent/35 bg-accent/10 text-accent-text' : 'border-dashed border-line bg-bg/50 text-muted')}>
+                                {isDropTarget ? 'Release to move task into ' + column.label : 'Drop here to move task into ' + column.label}
+                              </div>
+                            )}
                             {tasks.length === 0 ? (
                               <div className={[
                                 'flex min-h-[210px] items-center justify-center rounded-card border border-dashed p-6 text-center transition-colors',
