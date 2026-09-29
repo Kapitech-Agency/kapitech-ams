@@ -290,6 +290,7 @@ const MODULE_ANY_PERMISSION_MAP: Record<string, Array<keyof ServerPermissions>> 
   timelogs: ['canManageProjects', 'canManageKanbanTasks'],
   projects: ['canManageProjects', 'canManageKanbanTasks'],
   approvals: ['canApproveBudgets', 'canManageProjects', 'canViewFinancials'],
+  vendors: ['canManageVendors', 'canViewFinancials'],
   settings: ['canManageAdminAccounts', 'canAccessServerAndApi', 'canViewSecurityAuditLogs', 'canManageCrm', 'canManageProjects', 'canViewFinancials']
 };
 
