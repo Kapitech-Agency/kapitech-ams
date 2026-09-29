@@ -7,6 +7,7 @@ import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
 import { AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 export const AdminCmsTestimonials: React.FC = () => {
   const { language } = useLanguage();
