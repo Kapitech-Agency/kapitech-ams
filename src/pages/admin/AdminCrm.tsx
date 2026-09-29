@@ -46,6 +46,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 
 import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 export const AdminCrm: React.FC = () => {
   const { language, t } = useLanguage();
   const canManageCrm = hasAdminPermission('canManageCrm');
@@ -652,9 +653,7 @@ export const AdminCrm: React.FC = () => {
                             </div>
 
                             {/* Client & Company */}
-                            <h4 className="text-xs font-semibold text-fg font-sans leading-snug group-hover:text-danger transition-colors line-clamp-1">
-                              {lead.clientName}
-                            </h4>
+                            <ProfileIdentity profile={{ name: lead.clientName, role: 'CRM contact', companyEmail: lead.email, phone: lead.phone, division: lead.company }} size="sm" showRole={false} />
                             <p className="text-[11px] text-muted font-sans truncate mb-2.5">
                               {lead.company}
                             </p>
@@ -867,12 +866,8 @@ export const AdminCrm: React.FC = () => {
                         className="hover:bg-panel transition-colors cursor-pointer"
                       >
                         <td className="py-3 px-4">
-                          <div className="font-semibold text-fg font-sans text-sm">
-                            {lead.clientName}
-                          </div>
-                          <div className="text-[11px] text-muted">
-                            {lead.company}
-                          </div>
+                          <ProfileIdentity profile={{ name: lead.clientName, role: 'CRM contact', companyEmail: lead.email, phone: lead.phone, division: lead.company }} size="sm" showRole={false} />
+                          <div className="mt-0.5 text-[11px] text-muted">{lead.company}</div>
                         </td>
 
                         <td className="py-3 px-4">
