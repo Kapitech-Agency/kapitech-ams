@@ -154,10 +154,10 @@ export const AdminCmsTestimonials: React.FC = () => {
 
             <div className="pt-4 border-t border-line flex items-center justify-between">
               <div>
-                <div className="text-xs font-medium text-fg">{item.author}</div>
-                <div className="text-xs font-sans text-muted">
-                  {item.role}, <span className="text-fg">{item.company}</span>
-                </div>
+                <ProfileIdentity
+                  profile={{ name: item.author, role: item.role || undefined, contextLabel: item.company || undefined }}
+                  showRole
+                />
                 <div className="text-[11px] font-sans text-muted mt-0.5 flex items-center gap-1">
                   <MapPin size={10} />
                   <span>{item.location}</span>
