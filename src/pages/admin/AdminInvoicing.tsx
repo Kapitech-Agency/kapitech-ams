@@ -27,6 +27,7 @@ import {
   X
 } from 'lucide-react';
 import { AgencyExpense, AgencyInvoice, InvoiceLineItem, InvoiceStatus, INITIAL_DEFAULT_EXPENSES, INITIAL_DEFAULT_INVOICES, computeInvoiceTotals, computeFinancialMetrics, getMonthlyCashFlowSeries } from '../../lib/financeStore';
+import { AgencyVendor, getAgencyVendors } from '../../lib/vendorStore';
 import { CurrencyCode, CURRENCY_EVENT, getActiveCurrency, setActiveCurrency, formatNativeAmount } from '../../lib/currency';
 import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
@@ -62,6 +63,55 @@ type FinanceExpense = AgencyExpense & {
   projectId?: string;
   status?: string;
   version?: number;
+};
+
+type VendorPaymentStatus = 'scheduled' | 'partial' | 'paid' | 'overdue';
+
+type VendorPaymentRecord = {
+  id: string;
+  vendor: AgencyVendor;
+  contract: AgencyVendor['contracts'][number];
+  dueDate: string;
+  amount: number;
+  paidAmount: number;
+  status: VendorPaymentStatus;
+};
+
+const VENDOR_PAYMENT_MARKER = '[VENDOR_PAYMENT]';
+
+const vendorPaymentStatusLabel: Record<VendorPaymentStatus, string> = {
+  scheduled: 'Scheduled',
+  partial: 'Partially paid',
+  paid: 'Paid',
+  overdue: 'Overdue'
+};
+
+const vendorPaymentStatusTone: Record<VendorPaymentStatus, string> = {
+  scheduled: 'bg-info/10 text-info border-info/20',
+  partial: 'bg-warning/10 text-warning border-warning/20',
+  paid: 'bg-success/10 text-success border-success/20',
+  overdue: 'bg-danger/10 text-danger border-danger/20'
+};
+
+const vendorPaymentFormatDate = (value: string) => {
+  if (!value) return 'Not set';
+  const parsed = new Date(value + 'T00:00:00');
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
+const vendorPaymentDueDate = (contract: AgencyVendor['contracts'][number]) => {
+  if (contract.endDate) return contract.endDate;
+  const start = new Date(contract.startDate + 'T00:00:00');
+  if (Number.isNaN(start.getTime())) return new Date().toISOString().slice(0, 10);
+  start.setDate(start.getDate() + (contract.rateType === 'monthly_retainer' ? 30 : 14));
+  return start.toISOString().slice(0, 10);
+};
+
+const vendorPaymentExpenseMeta = (expense: FinanceExpense) => {
+  const match = expense.description.match(/^\[VENDOR_PAYMENT\]\|([^|]+)\|([^|]+)\|(.*?)(?:\|REF:([^|]*))?(?:\|NOTE:(.*))?$/);
+  if (!match) return null;
+  return { vendorId: match[1], contractId: match[2], title: match[3], reference: match[4] || '', notes: match[5] || '' };
 };
 
 type ServerMetrics = {
@@ -543,6 +593,7 @@ export const AdminInvoicing: React.FC = () => {
   const [expenses, setExpenses] = useState<FinanceExpense[]>([]);
   const [clients, setClients] = useState<FinanceClient[]>([]);
   const [projects, setProjects] = useState<FinanceProject[]>([]);
+  const [vendors, setVendors] = useState<AgencyVendor[]>(() => getAgencyVendors());
   const [serverMetrics, setServerMetrics] = useState<ServerMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -648,6 +699,21 @@ export const AdminInvoicing: React.FC = () => {
   const [quotationValidUntil, setQuotationValidUntil] = useState(getDateInputValue(30));
   const [quotationStatus, setQuotationStatus] = useState<FinanceQuotationStatus>('draft');
 
+  const [vendorPaymentSearch, setVendorPaymentSearch] = useState('');
+  const [vendorPaymentStatusFilter, setVendorPaymentStatusFilter] = useState<VendorPaymentStatus | 'all'>('all');
+  const [vendorPaymentVendorFilter, setVendorPaymentVendorFilter] = useState('all');
+  const [vendorPaymentSort, setVendorPaymentSort] = useState<'due_asc' | 'due_desc' | 'amount_high' | 'amount_low'>('due_asc');
+  const [vendorPaymentModalOpen, setVendorPaymentModalOpen] = useState(false);
+  const [vendorPaymentDetail, setVendorPaymentDetail] = useState<VendorPaymentRecord | null>(null);
+  const [vendorPaymentVendorId, setVendorPaymentVendorId] = useState('');
+  const [vendorPaymentContractId, setVendorPaymentContractId] = useState('');
+  const [vendorPaymentAmount, setVendorPaymentAmount] = useState(0);
+  const [vendorPaymentDate, setVendorPaymentDate] = useState(getDateInputValue());
+  const [vendorPaymentReference, setVendorPaymentReference] = useState('');
+  const [vendorPaymentNotes, setVendorPaymentNotes] = useState('');
+  const [savingVendorPayment, setSavingVendorPayment] = useState(false);
+  const [vendorPaymentIdempotencyKey, setVendorPaymentIdempotencyKey] = useState('');
+
   const dismissNotice = () => {
     if (noticeTimerRef.current !== null) {
       window.clearTimeout(noticeTimerRef.current);
@@ -679,12 +745,13 @@ export const AdminInvoicing: React.FC = () => {
     else setLoading(true);
     setError(null);
     try {
-      const [invoiceRes, expenseRes, metricsRes, clientRes, projectRes] = await Promise.all([
+      const [invoiceRes, expenseRes, metricsRes, clientRes, projectRes, vendorRes] = await Promise.all([
         api.finance.getInvoices(),
         api.finance.getExpenses(),
         api.finance.getMetrics(currency),
         api.clients.getAll(),
-        api.projects.getAll()
+        api.projects.getAll(),
+        api.vendors.getAll()
       ]);
 
       const apiInvoices = invoiceRes.success && Array.isArray(invoiceRes.data?.invoices)
@@ -743,6 +810,11 @@ export const AdminInvoicing: React.FC = () => {
       }
       if (projectRes.success && Array.isArray(projectRes.data?.projects)) {
         setProjects(projectRes.data.projects as FinanceProject[]);
+      }
+      if (vendorRes.success && Array.isArray(vendorRes.data?.vendors) && vendorRes.data.vendors.length) {
+        setVendors(vendorRes.data.vendors as AgencyVendor[]);
+      } else {
+        setVendors(getAgencyVendors());
       }
     } catch (err) {
       if (requestId === loadRequestId.current) {
@@ -816,6 +888,58 @@ export const AdminInvoicing: React.FC = () => {
     () => new Map(projects.map((project) => [project.id, project])),
     [projects]
   );
+
+  const vendorPaymentRecords = useMemo<VendorPaymentRecord[]>(() => {
+    const paymentExpenses = currencyExpenses.filter((expense) => (
+      expense.category === 'Salaries & Contractors' && vendorPaymentExpenseMeta(expense)
+    ));
+
+    return vendors.flatMap((vendor) => vendor.contracts
+      .filter((contract) => contract.status !== 'terminated' && contract.currency === currency)
+      .map((contract) => {
+        const matchingExpenses = paymentExpenses.filter((expense) => {
+          const meta = vendorPaymentExpenseMeta(expense);
+          return meta?.vendorId === vendor.id && meta?.contractId === contract.id;
+        });
+        const paidAmount = matchingExpenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
+        const amount = Number(contract.rateAmount || 0);
+        const dueDate = vendorPaymentDueDate(contract);
+        const dueDays = getDaysUntilDue(dueDate);
+        const status: VendorPaymentStatus = paidAmount >= amount && amount > 0
+          ? 'paid'
+          : paidAmount > 0
+            ? 'partial'
+            : dueDays < 0
+              ? 'overdue'
+              : 'scheduled';
+
+        return { id: vendor.id + ':' + contract.id, vendor, contract, dueDate, amount, paidAmount, status };
+      }));
+  }, [vendors, currencyExpenses, currency]);
+
+  const filteredVendorPayments = useMemo(() => {
+    const query = vendorPaymentSearch.trim().toLowerCase();
+    const rows = vendorPaymentRecords.filter((row) => {
+      const haystack = [row.vendor.name, row.vendor.companyName || '', row.vendor.primaryCategory, row.contract.title, row.contract.rateType].join(' ').toLowerCase();
+      return (!query || haystack.includes(query))
+        && (vendorPaymentStatusFilter === 'all' || row.status === vendorPaymentStatusFilter)
+        && (vendorPaymentVendorFilter === 'all' || row.vendor.id === vendorPaymentVendorFilter);
+    });
+    return [...rows].sort((a, b) => {
+      if (vendorPaymentSort === 'amount_high') return b.amount - a.amount;
+      if (vendorPaymentSort === 'amount_low') return a.amount - b.amount;
+      const aTime = new Date(a.dueDate + 'T00:00:00').getTime();
+      const bTime = new Date(b.dueDate + 'T00:00:00').getTime();
+      return vendorPaymentSort === 'due_desc' ? bTime - aTime : aTime - bTime;
+    });
+  }, [vendorPaymentRecords, vendorPaymentSearch, vendorPaymentStatusFilter, vendorPaymentVendorFilter, vendorPaymentSort]);
+
+  const vendorPaymentMetrics = useMemo(() => ({
+    scheduled: vendorPaymentRecords.filter((row) => row.status === 'scheduled').length,
+    overdue: vendorPaymentRecords.filter((row) => row.status === 'overdue').length,
+    paid: vendorPaymentRecords.filter((row) => row.status === 'paid').reduce((sum, row) => sum + row.paidAmount, 0),
+    outstanding: vendorPaymentRecords.reduce((sum, row) => sum + Math.max(0, row.amount - row.paidAmount), 0)
+  }), [vendorPaymentRecords]);
 
   const derivedMetrics = useMemo(
     () => computeFinancialMetrics(currencyInvoices, currencyExpenses),
@@ -1829,6 +1953,92 @@ export const AdminInvoicing: React.FC = () => {
 
   const operatingMarginValue = serverMetrics ? Number.parseFloat(serverMetrics.profitMargin) : NaN;
   const operatingMarginHealthy = Number.isFinite(operatingMarginValue) && operatingMarginValue >= 35;
+
+  const openVendorPaymentModal = (record?: VendorPaymentRecord) => {
+    const vendor = record?.vendor || vendors.find((item) => item.contracts.some((contract) => contract.currency === currency)) || vendors[0];
+    const contract = record?.contract || vendor?.contracts.find((item) => item.status === 'active' && item.currency === currency) || vendor?.contracts.find((item) => item.currency === currency);
+    setVendorPaymentVendorId(vendor?.id || '');
+    setVendorPaymentContractId(contract?.id || '');
+    setVendorPaymentAmount(record ? Math.max(0, record.amount - record.paidAmount) : Number(contract?.rateAmount || 0));
+    setVendorPaymentDate(getDateInputValue());
+    setVendorPaymentReference('');
+    setVendorPaymentNotes('');
+    setVendorPaymentIdempotencyKey(typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'vendor-payment-' + Date.now());
+    setVendorPaymentDetail(null);
+    setVendorPaymentModalOpen(true);
+  };
+
+  const selectedVendorForPayment = vendors.find((vendor) => vendor.id === vendorPaymentVendorId) || null;
+  const selectedVendorContracts = selectedVendorForPayment?.contracts.filter((contract) => contract.status !== 'terminated' && contract.currency === currency) || [];
+
+  const handleSaveVendorPayment = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!canManageInvoices || savingVendorPayment) return;
+    const vendor = vendors.find((item) => item.id === vendorPaymentVendorId);
+    const contract = vendor?.contracts.find((item) => item.id === vendorPaymentContractId);
+    const amount = Number(vendorPaymentAmount);
+    const normalizedDate = new Date(vendorPaymentDate + 'T00:00:00');
+
+    if (!vendor || !contract) {
+      showNotice('danger', 'Select a vendor and contract.');
+      return;
+    }
+    if (!Number.isFinite(amount) || amount <= 0) {
+      showNotice('danger', 'Enter a valid payment amount.');
+      return;
+    }
+    if (Number.isNaN(normalizedDate.getTime()) || normalizedDate > new Date()) {
+      showNotice('danger', 'Payment date must be valid and cannot be in the future.');
+      return;
+    }
+
+    setSavingVendorPayment(true);
+    try {
+      const cleanReference = vendorPaymentReference.trim().replace(/[|]/g, '/');
+      const cleanNotes = vendorPaymentNotes.trim().replace(/[|]/g, '/');
+      const cleanTitle = contract.title.replace(/[|]/g, '/');
+      const description = VENDOR_PAYMENT_MARKER + '|' + vendor.id + '|' + contract.id + '|' + cleanTitle + '|REF:' + cleanReference + '|NOTE:' + cleanNotes;
+      const result = await api.finance.createExpense({
+        type: 'OpEx',
+        category: 'Salaries & Contractors',
+        description,
+        amount,
+        date: vendorPaymentDate,
+        currency,
+        idempotencyKey: vendorPaymentIdempotencyKey
+      });
+      if (!result.success) throw new Error(result.error || 'Vendor payment could not be recorded.');
+      setVendorPaymentModalOpen(false);
+      setVendorPaymentIdempotencyKey('');
+      showNotice('success', language === 'id' ? 'Vendor payment berhasil dicatat.' : 'Vendor payment recorded successfully.');
+      await loadData(true);
+    } catch (err) {
+      showNotice('danger', err instanceof Error ? err.message : 'Vendor payment could not be recorded.');
+    } finally {
+      setSavingVendorPayment(false);
+    }
+  };
+
+  const exportVendorPaymentsCsv = () => {
+    const csv = [
+      ['Vendor', 'Company', 'Contract', 'Due date', 'Amount', 'Paid', 'Outstanding', 'Status'],
+      ...filteredVendorPayments.map((row) => [
+        row.vendor.name, row.vendor.companyName || '', row.contract.title, row.dueDate, row.amount, row.paidAmount,
+        Math.max(0, row.amount - row.paidAmount), vendorPaymentStatusLabel[row.status]
+      ])
+    ].map((row) => row.map((value) => '"' + String(value ?? '').replace(/"/g, '""') + '"').join(',')).join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'kapitech-vendor-payments.csv';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    showNotice('success', language === 'id' ? 'Vendor payment CSV berhasil diekspor.' : 'Vendor payment CSV exported successfully.');
+  };
 
   const getQuotationStatusOptions = (status: FinanceQuotationStatus) => {
     const options: Array<{ value: FinanceQuotationStatus; label: string }> = [
