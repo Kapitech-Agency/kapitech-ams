@@ -683,6 +683,7 @@ export const AdminProjects: React.FC = () => {
 
   // Task creation entry point
   const handleAddTask = (status: TaskStatus = 'todo') => {
+    if (!canManageKanbanTasks) return;
     if (!selectedSprintProject) {
       showToast('Select a project first.');
       return;
