@@ -102,7 +102,7 @@ const MetricSparkline: React.FC<{ values?: number[]; label: React.ReactNode; ton
 export const AdminMetricCard: React.FC<AdminMetric & { className?: string }> = ({
   label, value, context, change, changeToneClassName = 'text-muted', sparkline, icon, toneClassName = 'text-fg', className
 }) => (
-  <article className={cn('min-w-0 rounded-card border border-line bg-panel p-4 transition-colors hover:bg-panel-hover', className)}>
+  <article className={cn('ams-dashboard-card rounded-card border border-line bg-panel p-4 transition-colors hover:bg-panel-hover', className)}>
     <div className="flex items-start justify-between gap-3">
       <span className="min-w-0 truncate text-xs font-medium leading-4 text-muted">{label}</span>
       {icon && <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg', toneClassName)}>{icon}</span>}
@@ -146,7 +146,7 @@ export const AdminFilterBar: React.FC<AdminFilterBarProps> = ({
   className
 }) => (
   <section className={cn(
-    'rounded-card border border-line bg-panel p-4 sm:p-5',
+    'ams-filter-bar rounded-card border border-line bg-panel p-4',
     className
   )}>
     <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
