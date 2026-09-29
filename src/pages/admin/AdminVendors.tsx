@@ -308,7 +308,7 @@ export const AdminVendors: React.FC = () => {
       )}
 
       {/* Top Summary Metrics */}
-      <section aria-label="Vendor snapshot" className="rounded-card border border-line bg-panel p-4 sm:p-5">
+      <section aria-label="Vendor snapshot" className="rounded-card border border-line bg-panel p-4">
         <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3"><div><h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan vendor' : 'Vendor snapshot'}</h2><p className="mt-1 text-xs text-muted">{language === 'id' ? 'Komposisi talent, partner, dan kualitas operasional.' : 'Talent mix, agency partners, and operational quality signals.'}</p></div><span className="text-[11px] font-medium tabular-nums text-muted">{vendors.length} total</span></div>
         <AdminMetricStrip
           className="lg:grid-cols-4"
