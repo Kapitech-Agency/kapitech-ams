@@ -521,7 +521,7 @@ export const AdminProposals: React.FC = () => {
 
   const fieldClass = 'h-9 min-h-9 w-full rounded-control border border-line bg-panel px-3 text-xs text-fg placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg';
 // Shared module chrome renders the canonical ams-dashboard-header primitive.
-  const sectionClass = 'rounded-card border border-line bg-panel p-4 sm:p-5';
+  const sectionClass = 'rounded-card border border-line bg-panel p-4';
 
   return (
     <div className="space-y-6">
@@ -551,7 +551,7 @@ export const AdminProposals: React.FC = () => {
         )}
       />
 
-      <section aria-label="Proposal summary" className="rounded-card border border-line bg-panel p-4 sm:p-5">
+      <section aria-label="Proposal summary" className="rounded-card border border-line bg-panel p-4">
         <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
           <div>
             <h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan proposal' : 'Proposal snapshot'}</h2>
