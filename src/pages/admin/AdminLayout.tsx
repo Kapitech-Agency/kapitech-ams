@@ -235,6 +235,21 @@ export const AdminLayout: React.FC = () => {
           </Link>
         </div>
 
+        <div className="px-3 pt-3">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setCommandPaletteOpen(true)}
+            aria-label="Search AMS"
+            aria-keyshortcuts="Control+K Meta+K"
+            icon={<Search size={15} />}
+            className="flex h-9 w-full justify-start border-line bg-bg px-3"
+          >
+            <span className="min-w-0 flex-1 truncate text-left text-xs">Search</span>
+            <kbd className="ml-auto rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] text-muted">⌘K</kbd>
+          </Button>
+        </div>
+
         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-3 custom-scrollbar">
           <nav aria-label="Primary navigation" className="space-y-0.5">
             {filteredNavItems.map((item) => {
@@ -274,7 +289,58 @@ export const AdminLayout: React.FC = () => {
         description={language === 'id' ? 'Sesi Anda akan diakhiri pada perangkat ini.' : 'Your current AMS session will be ended on this device.'}
         footer={(
           <>
-  
+            <Button type="button" variant="secondary" onClick={() => setLogoutConfirmOpen(false)}>
+              {language === 'id' ? 'Tetap masuk' : 'Stay signed in'}
+            </Button>
+            <Button type="button" variant="destructive" onClick={confirmLogout} icon={<LogOut size={14} />}>
+              {language === 'id' ? 'Keluar' : 'Sign out'}
+            </Button>
+          </>
+        )}
+      >
+        <div className="flex items-start gap-3 rounded-card border border-danger/20 bg-danger/5 p-3.5">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-danger/20 bg-danger/10 text-danger">
+            <LogOut size={16} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-fg">{language === 'id' ? 'Konfirmasi keluar' : 'Confirm sign out'}</p>
+            <p className="mt-1 text-[11px] leading-5 text-muted">{language === 'id' ? 'Anda dapat masuk kembali kapan saja dengan akun AMS yang sama.' : 'You can sign in again at any time with the same AMS account.'}</p>
+          </div>
+        </div>
+      </Modal>
+
+      <UserProfileSettingsModal
+        open={profileSettingsOpen}
+        onClose={() => setProfileSettingsOpen(false)}
+        displayName={profileName}
+        title={profileTitle}
+      />
+
+      {/* ------------------------------------------------------------- */}
+      {/* MOBILE TOPBAR - Single, sleek, non-cluttered header */}
+      {/* ------------------------------------------------------------- */}
+      <div className="min-[900px]:hidden ams-mobile-topbar flex items-center justify-between gap-2 px-3 bg-panel border-b border-line sticky top-0 z-40 shrink-0 h-[52px] min-h-[52px] pt-[env(safe-area-inset-top)]">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            aria-label="Open navigation menu"
+            className="min-h-10 min-w-10 flex items-center justify-center rounded-control bg-bg text-fg border border-line transition-[background-color,border-color,color,transform] duration-150 hover:bg-panel-hover hover:border-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            <Menu size={20} />
+          </button>
+
+          <Link to="/admin/dashboard" className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-control border border-line bg-bg shrink-0">
+              <AmsBrandLogo compact className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <span className="font-sans font-semibold text-fg text-xs block truncate">KAPITECH AMS</span>
+              <span className="text-[9px] font-sans text-muted block truncate -mt-0.5">{activeItemLabel}</span>
+            </div>
+          </Link>
+        </div>
+
+        <div className="flex items-center gap-0.5 shrink-0">
           <AdminNotificationCenter />
           <Button
             type="button"
@@ -342,6 +408,21 @@ export const AdminLayout: React.FC = () => {
             </div>
 
             <div className="px-3 pt-3">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setCommandPaletteOpen(true);
+                }}
+                aria-label="Search AMS"
+                aria-keyshortcuts="Control+K Meta+K"
+                icon={<Search size={15} />}
+                className="flex h-9 w-full justify-start border-line bg-bg px-3"
+              >
+                <span className="min-w-0 flex-1 truncate text-left text-xs">Search</span>
+                <kbd className="ml-auto rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] text-muted">⌘K</kbd>
+              </Button>
             </div>
 
             <nav aria-label="Primary navigation" className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-3 custom-scrollbar">
