@@ -1067,10 +1067,10 @@ export const AdminProjects: React.FC = () => {
           <>
             {view === 'all' && (
               <div className="flex h-9 items-center gap-1 rounded-control border border-line bg-panel p-1">
-                <button type="button" onClick={() => openLayout('board')} className={'inline-flex h-7 items-center gap-1.5 rounded-chip px-3 text-xs font-medium transition-colors ' + (projectLayout === 'board' ? 'bg-accent/10 text-accent' : 'text-muted hover:bg-bg hover:text-fg')}>
+                <button type="button" onClick={() => openLayout('board')} className={'inline-flex h-7 items-center gap-1.5 rounded-chip px-3 text-xs font-medium transition-colors ' + (projectLayout === 'board' ? 'bg-accent/10 text-fg' : 'text-muted hover:bg-bg hover:text-fg')}>
                   <Table2 size={13} /> Board
                 </button>
-                <button type="button" onClick={() => openLayout('table')} className={'inline-flex h-7 items-center gap-1.5 rounded-chip px-3 text-xs font-medium transition-colors ' + (projectLayout === 'table' ? 'bg-accent/10 text-accent' : 'text-muted hover:bg-bg hover:text-fg')}>
+                <button type="button" onClick={() => openLayout('table')} className={'inline-flex h-7 items-center gap-1.5 rounded-chip px-3 text-xs font-medium transition-colors ' + (projectLayout === 'table' ? 'bg-accent/10 text-fg' : 'text-muted hover:bg-bg hover:text-fg')}>
                   <List size={13} /> Table
                 </button>
               </div>
