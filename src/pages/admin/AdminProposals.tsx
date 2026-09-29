@@ -21,7 +21,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { CurrencyCode, CURRENCY_EVENT, formatAmount, getActiveCurrency } from '../../lib/currency';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { CustomSelect } from '../../components/ui/CustomSelect';
-import { Drawer, Modal } from '../../components/ui/Modal';
+import { Drawer } from '../../components/ui/Drawer';
 import Button from '../../components/ui/Button';
 import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 
