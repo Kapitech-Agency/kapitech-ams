@@ -121,12 +121,12 @@ export const AdminCmsTestimonials: React.FC = () => {
           {[1,2,3].map(i => <div key={i} className="h-48 rounded-card border border-line bg-panel animate-pulse" />)}
         </div>
       ) : loadError ? (
-        <div className="rounded-card border border-danger/30 bg-danger/5 p-4 sm:p-5 flex items-center justify-between gap-4">
+        <div className="rounded-card border border-danger/30 bg-danger/5 p-4 flex items-center justify-between gap-4">
           <div><p className="text-sm font-semibold text-fg">Unable to load testimonials</p><p className="mt-1 text-xs text-muted">{loadError}</p></div>
           <Button variant="secondary" onClick={() => void loadData()}>Retry</Button>
         </div>
       ) : testimonials.length === 0 ? (
-        <div className="rounded-card border border-line bg-panel p-6 sm:p-8 text-center">
+        <div className="rounded-card border border-line bg-panel p-4 text-center">
           <MessageSquare className="mx-auto text-muted" size={22} />
           <p className="mt-3 text-sm font-semibold text-fg">No testimonials yet</p>
           <p className="mt-1 text-xs text-muted">Add a client testimonial to publish social proof.</p>
