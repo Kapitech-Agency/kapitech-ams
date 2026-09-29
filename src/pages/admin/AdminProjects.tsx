@@ -170,7 +170,7 @@ const demoProjects: ProjectRecord[] = INITIAL_DEFAULT_PROJECTS.map(item =>
 const PROJECT_STATUS_OVERRIDES_KEY = 'kapitech_ams_project_status_overrides_v1';
 const TASK_STATUS_OVERRIDES_KEY = 'kapitech_ams_task_status_overrides_v1';
 
-const readStatusOverrides = <T extends string>(key: string): Record<string, T> => {
+function readStatusOverrides<T extends string>(key: string): Record<string, T> {
   if (typeof window === 'undefined') return {};
   try {
     const parsed = JSON.parse(window.sessionStorage.getItem(key) || '{}');
@@ -179,9 +179,9 @@ const readStatusOverrides = <T extends string>(key: string): Record<string, T> =
   } catch {
     return {};
   }
-};
+}
 
-const writeStatusOverrides = <T extends string>(key: string, overrides: Record<string, T>) => {
+function writeStatusOverrides<T extends string>(key: string, overrides: Record<string, T>) {
   if (typeof window === 'undefined') return;
   try {
     if (Object.keys(overrides).length === 0) {
@@ -192,7 +192,7 @@ const writeStatusOverrides = <T extends string>(key: string, overrides: Record<s
   } catch {
     // Session persistence is only a front-end enhancement for A/B testing.
   }
-};
+}
 
 const applyKanbanStatusOverrides = (source: ProjectRecord[]) => {
   const projectOverrides = readStatusOverrides<ProjectStatus>(PROJECT_STATUS_OVERRIDES_KEY);
