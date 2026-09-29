@@ -499,7 +499,6 @@ export const AdminLayout: React.FC = () => {
                 <span>Kapitech AMS</span><span>v2.4.0</span>
               </div>
             </div>
-            </div>
           </motion.div>
         </div>
       )}
