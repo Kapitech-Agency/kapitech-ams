@@ -9,12 +9,12 @@ import {
   Code2,
   ExternalLink,
   GripVertical,
+  LayoutGrid,
   List,
   MoreHorizontal,
   Plus,
   Search,
   ShieldAlert,
-  Table,
   Trash2,
   Users,
 } from 'lucide-react';
@@ -201,12 +201,18 @@ const initials = (value: string) =>
     .slice(0, 2)
     .toUpperCase() || '—';
 
-const laneForProject = (project: ProjectRecord) => {
-  if (project.status === 'planning') return 'discovery';
-  if (project.status === 'in_progress') return 'development';
-  if (project.status === 'review') return 'qa';
-  return 'deployed';
-};
+const PROJECT_KANBAN_COLUMNS: Array<{
+  id: ProjectStatus;
+  label: string;
+  dot: string;
+  description: string;
+}> = [
+  { id: 'planning', label: 'Planning', dot: 'bg-info', description: 'Discovery, scope, and setup' },
+  { id: 'in_progress', label: 'In Progress', dot: 'bg-accent', description: 'Active delivery work' },
+  { id: 'review', label: 'Review', dot: 'bg-warning', description: 'QA, feedback, and approval' },
+  { id: 'completed', label: 'Completed', dot: 'bg-success', description: 'Delivered and handed over' },
+  { id: 'on_hold', label: 'On Hold', dot: 'bg-warning', description: 'Paused pending a decision' },
+];
 
 const fieldClass =
   'mt-1 h-9 min-h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none transition-colors placeholder:text-muted focus:border-accent';
@@ -229,6 +235,8 @@ export const AdminProjects: React.FC = () => {
   const [projectLayout, setProjectLayout] = useState<ProjectLayout>(
     searchParams.get('layout') === 'table' ? 'table' : 'board'
   );
+  const [draggingProjectId, setDraggingProjectId] = useState<string | null>(null);
+  const [dragOverProjectStatus, setDragOverProjectStatus] = useState<ProjectStatus | null>(null);
   const [taskSearch, setTaskSearch] = useState('');
   const [taskPriorityFilter, setTaskPriorityFilter] = useState('');
   const [selectedProject, setSelectedProject] = useState<ProjectRecord | null>(null);
@@ -728,6 +736,35 @@ export const AdminProjects: React.FC = () => {
     );
   };
 
+  const updateProjectStatus = async (project: ProjectRecord, status: ProjectStatus) => {
+    if (!canManageProjects || project.status === status) return;
+
+    const previousStatus = project.status;
+    const updatedProject = { ...project, status, updatedAt: new Date().toISOString() };
+
+    setProjects(current =>
+      current.map(item => item.id === project.id ? normalizeProject(updatedProject) : item)
+    );
+    setDraggingProjectId(null);
+    setDragOverProjectStatus(null);
+
+    try {
+      const response = await api.projects.update(project.id, { status });
+      if (response.success) {
+        await syncProjects();
+        showToast(language === 'id' ? 'Status proyek diperbarui.' : 'Project status updated.');
+        return;
+      }
+    } catch {
+      // Fall through to demo mode.
+    }
+
+    setProjects(current =>
+      current.map(item => item.id === project.id ? normalizeProject({ ...item, status: previousStatus }) : item)
+    );
+    showToast('Project status saved in demo mode.');
+  };
+
   const toggleSubtask = async (task: ProjectTask, subtaskId: string) => {
     if (!selectedSprintProject) return;
     const nextSubtasks = (task.subtasks || []).map(item =>
@@ -823,7 +860,7 @@ export const AdminProjects: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = 'kapitech-projects-board.csv';
+    anchor.download = 'kapitech-projects-kanban.csv';
     anchor.click();
     URL.revokeObjectURL(url);
     showToast('Projects exported.');
@@ -1070,7 +1107,7 @@ export const AdminProjects: React.FC = () => {
         eyebrow={view === 'all' ? 'Workspace / Projects' : 'Projects'}
         title={(
           <span className="flex min-w-0 flex-wrap items-center gap-2.5">
-            <span>{view === 'all' ? 'Projects & Delivery Board' : view === 'sprint' ? 'Sprint & Delivery' : view === 'budget' ? 'Budget vs Actual' : 'Archived Projects'}</span>
+            <span>{view === 'all' ? 'Projects & Delivery Kanban' : view === 'sprint' ? 'Sprint & Delivery' : view === 'budget' ? 'Budget vs Actual' : 'Archived Projects'}</span>
             <span className="rounded-badge border border-accent/25 bg-accent/10 px-2 py-1 text-[10px] font-semibold text-accent">
               {activeProjects.length} Active Projects
             </span>
@@ -1090,7 +1127,7 @@ export const AdminProjects: React.FC = () => {
             {view === 'all' && (
               <div className="flex h-9 items-center gap-1 rounded-control border border-line bg-panel p-1">
                 <button type="button" onClick={() => openLayout('board')} className={'inline-flex h-7 items-center gap-1.5 rounded-chip px-3 text-xs font-medium transition-colors ' + (projectLayout === 'board' ? 'bg-accent/10 text-fg' : 'text-muted hover:bg-bg hover:text-fg')}>
-                  <Table size={13} /> Board
+                  <LayoutGrid size={13} /> Kanban
                 </button>
                 <button type="button" onClick={() => openLayout('table')} className={'inline-flex h-7 items-center gap-1.5 rounded-chip px-3 text-xs font-medium transition-colors ' + (projectLayout === 'table' ? 'bg-accent/10 text-fg' : 'text-muted hover:bg-bg hover:text-fg')}>
                   <List size={13} /> Table
@@ -1177,7 +1214,7 @@ export const AdminProjects: React.FC = () => {
 
           <AdminPanel
             title="Project portfolio"
-            description={serverMode ? 'Synced project records with slug-based navigation.' : 'Seeded slug data keeps the workspace fully testable without a connected project service.'}
+            description={serverMode ? 'Kanban project records with drag-and-drop status updates and slug-based navigation.' : 'Seeded slug data keeps the Kanban workspace fully testable without a connected project service.'}
             actions={(
               <div className="flex flex-wrap items-center gap-2">
                 <div className="relative min-w-[220px]">
@@ -1199,39 +1236,91 @@ export const AdminProjects: React.FC = () => {
               </div>
             ) : projectLayout === 'board' ? (
               <div className="overflow-x-auto custom-scrollbar p-4 sm:p-5">
-                <div className="grid min-w-[1100px] grid-cols-4 gap-3">
-                  {[
-                    { id: 'discovery', label: 'In Discovery & Design', dot: 'bg-info' },
-                    { id: 'development', label: 'Active Development', dot: 'bg-accent' },
-                    { id: 'qa', label: 'QA & Code Review', dot: 'bg-warning' },
-                    { id: 'deployed', label: 'Deployed / Handover', dot: 'bg-success' },
-                  ].map(lane => {
-                    const items = boardProjects.filter(project => laneForProject(project) === lane.id);
+                <div className="grid min-w-[1380px] grid-cols-5 gap-3">
+                  {PROJECT_KANBAN_COLUMNS.map(column => {
+                    const items = filteredProjects.filter(project => project.status === column.id);
+                    const isDropTarget = dragOverProjectStatus === column.id;
+
                     return (
-                      <div key={lane.id} className="min-h-[460px] rounded-card border border-line bg-bg p-3">
-                        <div className="mb-3 flex items-center justify-between rounded-control border border-line bg-panel px-3 py-2">
-                          <div className="flex items-center gap-2">
-                            <span className={'h-2 w-2 rounded-full ' + lane.dot} />
-                            <span className="text-xs font-semibold text-fg">{lane.label}</span>
+                      <section
+                        key={column.id}
+                        aria-label={column.label + ' project column'}
+                        onDragOver={event => {
+                          if (!canManageProjects) return;
+                          event.preventDefault();
+                          event.dataTransfer.dropEffect = 'move';
+                          setDragOverProjectStatus(column.id);
+                        }}
+                        onDragLeave={event => {
+                          if (event.currentTarget === event.target) {
+                            setDragOverProjectStatus(current => current === column.id ? null : current);
+                          }
+                        }}
+                        onDrop={event => {
+                          event.preventDefault();
+                          if (!canManageProjects) return;
+                          const projectId = event.dataTransfer.getData('text/project-id') || event.dataTransfer.getData('text/plain');
+                          const project = projects.find(item => item.id === projectId);
+                          if (project) void updateProjectStatus(project, column.id);
+                        }}
+                        className={'flex min-h-[560px] min-w-0 flex-col rounded-card border bg-bg p-3 transition-colors ' + (
+                          isDropTarget ? 'border-accent/50 bg-accent/5' : 'border-line'
+                        )}
+                      >
+                        <div className="mb-3 shrink-0 rounded-control border border-line bg-panel px-3 py-2.5">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className={'h-2 w-2 shrink-0 rounded-full ' + column.dot} />
+                                <span className="text-xs font-semibold text-fg">{column.label}</span>
+                              </div>
+                              <p className="mt-1 text-[10px] leading-4 text-muted">{column.description}</p>
+                            </div>
+                            <span className="rounded-control border border-line bg-bg px-2 py-1 text-[10px] font-medium tabular-nums text-muted">{items.length}</span>
                           </div>
-                          <span className="rounded-control border border-line bg-bg px-2 py-1 text-[10px] font-medium tabular-nums text-muted">{items.length}</span>
                         </div>
 
-                        <div className="space-y-2.5">
+                        <div className="min-h-0 flex-1 space-y-2.5">
                           {items.length === 0 ? (
-                            <div className="rounded-card border border-dashed border-line p-6 text-center text-[11px] text-muted">No projects in this stage.</div>
+                            <div className={'rounded-card border border-dashed p-5 text-center text-[11px] text-muted ' + (isDropTarget ? 'border-accent/40 bg-accent/5' : 'border-line')}>
+                              {canManageProjects && isDropTarget ? 'Drop project here' : 'No projects in this stage.'}
+                            </div>
                           ) : (
                             items.map(project => {
                               const taskDone = project.tasks.filter(task => task.status === 'done').length;
                               const burn = Math.round(project.budget * (project.progressPercent / 100));
                               const milestoneDone = project.milestones.filter(milestone => milestone.completed).length;
+                              const isDragging = draggingProjectId === project.id;
+
                               return (
-                                <article key={project.id} className="group rounded-card border border-line bg-panel p-4 transition-colors hover:border-accent/40">
+                                <article
+                                  key={project.id}
+                                  draggable={canManageProjects}
+                                  onDragStart={event => {
+                                    if (!canManageProjects) return;
+                                    setDraggingProjectId(project.id);
+                                    event.dataTransfer.effectAllowed = 'move';
+                                    event.dataTransfer.setData('text/project-id', project.id);
+                                    event.dataTransfer.setData('text/plain', project.id);
+                                  }}
+                                  onDragEnd={() => {
+                                    setDraggingProjectId(null);
+                                    setDragOverProjectStatus(null);
+                                  }}
+                                  className={'group cursor-grab rounded-card border border-line bg-panel p-4 shadow-sm transition-all hover:border-accent/40 active:cursor-grabbing ' + (
+                                    isDragging ? 'scale-[0.98] opacity-50' : ''
+                                  )}
+                                >
                                   <div className="flex items-start justify-between gap-2">
-                                    <button type="button" onClick={() => openProjectDetail(project)} className="min-w-0 text-left">
-                                      <div className="truncate text-[10px] font-medium uppercase tracking-[0.08em] text-muted">{project.clientCompany}</div>
-                                      <h3 className="mt-0.5 line-clamp-2 text-xs font-semibold leading-5 text-fg">{project.name}</h3>
-                                    </button>
+                                    <div className="flex min-w-0 items-start gap-2">
+                                      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted" title={canManageProjects ? 'Drag to change project status' : 'Project status'}>
+                                        <GripVertical size={14} />
+                                      </span>
+                                      <button type="button" onClick={() => openProjectDetail(project)} className="min-w-0 text-left">
+                                        <div className="truncate text-[10px] font-medium uppercase tracking-[0.08em] text-muted">{project.clientCompany}</div>
+                                        <h3 className="mt-0.5 line-clamp-2 text-xs font-semibold leading-5 text-fg">{project.name}</h3>
+                                      </button>
+                                    </div>
                                     <button type="button" aria-label={'Actions for ' + project.name} onClick={() => openProjectDetail(project)} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg">
                                       <MoreHorizontal size={15} />
                                     </button>
@@ -1278,7 +1367,7 @@ export const AdminProjects: React.FC = () => {
                             })
                           )}
                         </div>
-                      </div>
+                      </section>
                     );
                   })}
                 </div>
