@@ -2468,8 +2468,10 @@ export const AdminInvoicing: React.FC = () => {
                             <td className="px-4 py-3"><span className="text-xs text-fg">{expense.category}</span></td>
                             <td className="px-4 py-3 text-xs tabular-nums text-muted">{expense.date}</td>
                             <td className="px-4 py-3 text-right text-xs font-semibold tabular-nums text-fg">{formatNativeAmount(expense.amount, expense.currency || currency, true)}</td>
-                            <td className="px-5 py-3 text-right">
-                              {canManageInvoices && <button type="button" onClick={() => setConfirmAction({ type: 'expense', id: expense.id, label: expense.description })} className="ams-table-action" aria-label="Void expense" title="Void expense"><Trash2 size={14}/></button>}
+                            <td className="px-5 py-3">
+                              <div className="ams-table-actions">
+                                {canManageInvoices && <button type="button" onClick={() => setConfirmAction({ type: 'expense', id: expense.id, label: expense.description })} className="ams-table-action" aria-label="Void expense" title="Void expense"><Trash2 size={14}/></button>}
+                              </div>
                             </td>
                           </tr>
                         ))}
