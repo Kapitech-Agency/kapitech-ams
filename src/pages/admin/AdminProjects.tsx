@@ -1692,8 +1692,12 @@ export const AdminProjects: React.FC = () => {
                                     </div>
                                     <div className="flex items-start gap-1.5">
                                       <CalendarDays size={11} className="mt-0.5 shrink-0" />
-                                      <span className={isOverdue(project.targetEndDate) && project.status !== 'completed' ? 'break-words whitespace-normal font-semibold text-danger' : 'break-words whitespace-normal text-muted'}>
-                                        {project.targetEndDate ? formatDate(project.targetEndDate) : 'No deadline'}
+                                      <span className="break-words whitespace-normal text-muted">
+                                        {project.startDate ? formatDate(project.startDate) : 'No start date'}
+                                        <span className="mx-1 text-muted/60">→</span>
+                                        <span className={isOverdue(project.targetEndDate) && project.status !== 'completed' ? 'font-semibold text-danger' : 'text-muted'}>
+                                          {project.targetEndDate ? formatDate(project.targetEndDate) : 'No deadline'}
+                                        </span>
                                       </span>
                                     </div>
                                   </div>
@@ -1715,6 +1719,9 @@ export const AdminProjects: React.FC = () => {
                                         <div className="mt-0.5 break-words whitespace-normal text-xs font-medium tabular-nums text-fg">
                                           {formatAmount(burn, currency)}
                                           <span className="text-muted"> / {formatAmount(project.budget, currency)}</span>
+                                        </div>
+                                        <div className="mt-1 text-[9px] text-muted">
+                                          {project.budget > 0 ? Math.round((burn / project.budget) * 100) : 0}% budget burn
                                         </div>
                                       </div>
                                       {project.teamLead ? (
@@ -2034,7 +2041,7 @@ export const AdminProjects: React.FC = () => {
                           </div>
 
                           <div className={[
-                            'min-h-[420px] flex-1 space-y-2.5 p-2.5 transition-colors duration-150',
+                            'min-h-[520px] flex-1 space-y-2.5 p-2.5 pb-20 transition-colors duration-150',
                             isDropTarget ? 'bg-accent/5' : '',
                           ].join(' ')}>
                             {draggingTaskId && canManageKanbanTasks && (
@@ -2076,6 +2083,11 @@ export const AdminProjects: React.FC = () => {
                                     aria-grabbed={isDragging}
                                     onDragStart={event => {
                                       if (!canManageKanbanTasks) return;
+                                      const source = event.target as HTMLElement | null;
+                                      if (source?.closest('button, a, input, select, textarea')) {
+                                        event.preventDefault();
+                                        return;
+                                      }
                                       setDraggingTaskId(task.id);
                                       event.dataTransfer.effectAllowed = 'move';
                                       event.dataTransfer.setData('text/project-task-id', task.id);
@@ -2173,6 +2185,7 @@ export const AdminProjects: React.FC = () => {
                                 );
                               })
                             )}
+                            <div aria-hidden="true" className="min-h-10" />
                           </div>
                         </section>
                       );
