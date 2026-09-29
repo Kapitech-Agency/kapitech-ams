@@ -10,6 +10,7 @@ import {
   LogOut,
   Sun,
   Moon,
+  Search,
   ClipboardCheck,
   UsersRound,
   LockKeyhole,
