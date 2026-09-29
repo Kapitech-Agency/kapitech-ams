@@ -36,6 +36,7 @@ import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
 import { AdminMetricStrip, AdminModuleHeader, AdminPanel } from '../../components/admin/AdminModulePrimitives';
+import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { api } from '../../lib/apiClient';
 import { formatAmount, getActiveCurrency, CURRENCY_EVENT, CurrencyCode } from '../../lib/currency';
 import { hasAdminPermission } from '../../lib/adminAuth';
@@ -1077,7 +1078,6 @@ export const AdminProjects: React.FC = () => {
               {[
                 ['Progress', selectedProjectDetail.progressPercent + '%'],
                 ['Budget', formatAmount(selectedProjectDetail.budget, currency)],
-                ['Owner', selectedProjectDetail.teamLead || 'Unassigned'],
                 ['Deadline', formatDate(selectedProjectDetail.targetEndDate)],
                 ['Tasks', selectedProjectDetail.tasks.filter(task => task.status === 'done').length + '/' + selectedProjectDetail.tasks.length + ' done'],
                 ['Service', selectedProjectDetail.serviceCategory || 'Delivery'],
@@ -1087,6 +1087,16 @@ export const AdminProjects: React.FC = () => {
                   <div className="mt-1.5 truncate text-xs font-semibold text-fg">{value}</div>
                 </div>
               ))}
+              <div className="rounded-control border border-line bg-bg p-3">
+                <div className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted">Owner</div>
+                <div className="mt-1.5">
+                  {selectedProjectDetail.teamLead ? (
+                    <ProfileIdentity profile={{ name: selectedProjectDetail.teamLead, role: 'Project owner', division: 'Delivery' }} showRole={false} />
+                  ) : (
+                    <span className="text-xs font-semibold text-muted">Unassigned</span>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="rounded-card border border-line bg-bg p-4">
@@ -1159,7 +1169,7 @@ export const AdminProjects: React.FC = () => {
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-control border border-line bg-bg p-3"><div className="text-[10px] text-muted">Status</div><div className="mt-1.5 text-xs font-semibold text-fg">{taskStatusLabel(selectedTask.status)}</div></div>
-              <div className="rounded-control border border-line bg-bg p-3"><div className="text-[10px] text-muted">Assignee</div><div className="mt-1.5 text-xs font-semibold text-fg">{selectedTask.assignedTo || 'Unassigned'}</div></div>
+              <div className="rounded-control border border-line bg-bg p-3"><div className="text-[10px] text-muted">Assignee</div><div className="mt-1.5">{selectedTask.assignedTo ? <ProfileIdentity profile={{ name: selectedTask.assignedTo, role: taskAssignees.find(assignee => assignee.name === selectedTask.assignedTo)?.role || 'Project contributor', division: taskAssignees.find(assignee => assignee.name === selectedTask.assignedTo)?.division || 'Delivery', username: taskAssignees.find(assignee => assignee.name === selectedTask.assignedTo)?.username }} showRole={false} /> : <span className="text-xs font-semibold text-muted">Unassigned</span>}</div></div>
             </div>
             <div>
               <div className="text-[11px] font-semibold text-muted">Move to</div>
@@ -1556,9 +1566,17 @@ export const AdminProjects: React.FC = () => {
                                           <span className="text-muted"> / {formatAmount(project.budget, currency)}</span>
                                         </div>
                                       </div>
-                                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-[10px] font-semibold text-fg" title={project.teamLead || 'Unassigned'}>
-                                        {initials(project.teamLead || project.teamMembers[0] || 'NA')}
-                                      </div>
+                                      {project.teamLead ? (
+                                        <ProfileIdentity
+                                          profile={{ name: project.teamLead, role: 'Project owner', division: 'Delivery' }}
+                                          compact
+                                          size="sm"
+                                        />
+                                      ) : (
+                                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-[10px] font-semibold text-muted" title="Unassigned">
+                                          —
+                                        </div>
+                                      )}
                                     </div>
                                   </div>
 
@@ -1612,7 +1630,16 @@ export const AdminProjects: React.FC = () => {
                             </div>
                           </td>
                           <td className="text-xs tabular-nums font-medium text-fg">{formatAmount(burn, currency)} <span className="text-muted">/ {formatAmount(project.budget, currency)}</span></td>
-                          <td className="text-xs text-fg">{project.teamLead || 'Unassigned'}</td>
+                          <td>
+                            {project.teamLead ? (
+                              <ProfileIdentity
+                                profile={{ name: project.teamLead, role: 'Project owner', division: 'Delivery' }}
+                                showRole={false}
+                              />
+                            ) : (
+                              <span className="text-xs text-muted">Unassigned</span>
+                            )}
+                          </td>
                           <td className={'text-xs ' + (isOverdue(project.targetEndDate) && project.status !== 'completed' ? 'text-danger' : 'text-fg')}>{formatDate(project.targetEndDate)}</td>
                           <td>
                             <div className="ams-table-actions">
@@ -1955,9 +1982,21 @@ export const AdminProjects: React.FC = () => {
 
                                     <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-2.5">
                                       <div className="flex min-w-0 items-center gap-2">
-                                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-line bg-bg text-[9px] font-semibold text-fg" title={task.assignedTo || 'Unassigned'}>
-                                          {initials(task.assignedTo)}
-                                        </span>
+                                        {task.assignedTo ? (
+                                          <ProfileIdentity
+                                            profile={{
+                                              id: taskAssignees.find(assignee => assignee.name === task.assignedTo)?.id,
+                                              name: task.assignedTo,
+                                              role: taskAssignees.find(assignee => assignee.name === task.assignedTo)?.role || 'Project contributor',
+                                              division: taskAssignees.find(assignee => assignee.name === task.assignedTo)?.division || 'Delivery',
+                                              username: taskAssignees.find(assignee => assignee.name === task.assignedTo)?.username
+                                            }}
+                                            compact
+                                            size="sm"
+                                          />
+                                        ) : (
+                                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-line bg-bg text-[9px] font-semibold text-muted">—</span>
+                                        )}
                                         <div className="min-w-0">
                                           <div className="truncate text-[10px] font-medium text-fg">{task.assignedTo || 'Unassigned'}</div>
                                           <div className="text-[9px] text-muted">{dueDays === null ? 'No due date' : overdue ? 'Past due' : dueDays === 0 ? 'Due today' : dueDays === 1 ? 'Due tomorrow' : 'Due ' + formatDate(task.dueDate)}</div>
