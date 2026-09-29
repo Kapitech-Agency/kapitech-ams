@@ -575,7 +575,7 @@ export const AdminLayout: React.FC = () => {
                         key={tab.key}
                         to={tab.slug}
                         end
-                        className={'group relative inline-flex h-8 shrink-0 items-center rounded-chip px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (active ? 'border border-accent/25 bg-panel font-semibold text-fg shadow-sm' : 'border border-transparent text-muted hover:bg-panel-hover hover:text-fg')}
+                        className={'group relative inline-flex h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (active ? 'border-accent/25 bg-accent/10 font-semibold text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg')}
                       >
                         {tab.label}
                       </NavLink>
