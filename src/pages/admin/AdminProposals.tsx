@@ -621,7 +621,7 @@ export const AdminProposals: React.FC = () => {
           </div>
         </section>
       ) : loadError ? (
-        <section className="rounded-card border border-line bg-panel p-6" role="alert">
+        <section className="rounded-card border border-line bg-panel p-4" role="alert">
           <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3">
               <AlertCircle className="mt-0.5 shrink-0 text-danger" size={18} aria-hidden="true" />
