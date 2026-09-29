@@ -47,7 +47,7 @@ const STITCH_NAV_ITEMS: AdminNavItem[] = [
   { key: 'tasks', to: '/admin/dashboard?view=tasks', label: 'Tasks', icon: ClipboardCheck, badge: 3, accessKey: 'projects', group: 'Delivery' },
   { key: 'team', to: '/admin/time-logs', label: 'Team', icon: UsersRound, accessKey: 'timelogs', group: 'Delivery' },
   { key: 'finance', to: '/admin/invoicing', label: 'Finance', icon: Landmark, accessKey: 'invoicing', group: 'Records' },
-  { key: 'documents', to: '/admin/documents', label: 'Documents Vault', icon: LockKeyhole, badge: 'Encrypted', group: 'Records' },
+  { key: 'documents', to: '/admin/documents', label: 'Documents', icon: LockKeyhole, badge: 'Encrypted', group: 'Records' },
 ];
 
 const DEFAULT_PROFILE_NAME = 'Fikri Nurlete';
@@ -193,7 +193,7 @@ export const AdminLayout: React.FC = () => {
     }
 
     if (path === '/admin/dashboard') {
-      return true;
+      return new URLSearchParams(location.search).get('view') !== 'tasks';
     }
 
     if (path === '/admin/settings') {
@@ -205,7 +205,7 @@ export const AdminLayout: React.FC = () => {
 
   const activeNavItem = filteredNavItems.find((item) => isItemActive(item.to));
   const activeItemLabel = activeNavItem?.label || 'Dashboard';
-  const activeSectionLabel = 'Workspace';
+  const activeSectionLabel = activeNavItem?.group || 'Workspace';
   const navGroups: Array<NavItem['group']> = ['Workspace', 'Delivery', 'Records'];
   const getGroupItems = (group: NavItem['group']) => filteredNavItems.filter(item => item.group === group);
 
@@ -274,7 +274,7 @@ export const AdminLayout: React.FC = () => {
                           className={["group relative flex min-h-10 items-center gap-2.5 rounded-control px-2.5 text-[12px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent", active ? "border border-accent/25 bg-accent/10 text-fg" : "border border-transparent text-muted hover:border-line hover:bg-bg/70 hover:text-fg"].join(" ")}
                         >
                           {active && <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-accent" aria-hidden="true" />}
-                          <span className={["flex h-7 w-7 shrink-0 items-center justify-center rounded-control", active ? "bg-bg/70 text-fg" : "text-muted group-hover:text-fg"].join(" ")}>
+                          <span className={["flex h-7 w-7 shrink-0 items-center justify-center", active ? "text-fg" : "text-muted group-hover:text-fg"].join(" ")}>
                             <Icon size={15} strokeWidth={active ? 2.1 : 1.8} />
                           </span>
                           <span className="min-w-0 flex-1 truncate">{item.label}</span>
@@ -301,7 +301,7 @@ export const AdminLayout: React.FC = () => {
                 "flex min-h-10 items-center justify-center rounded-control border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
                 location.pathname === '/admin/settings'
                   ? "border-accent/25 bg-accent/10 text-fg"
-                  : "border-line bg-bg text-muted hover:border-accent/30 hover:bg-accent/5 hover:text-fg"
+                  : "border-line bg-bg text-muted hover:border-accent/40 hover:bg-panel-hover hover:text-fg"
               ].join(" ")}
             >
               Settings
@@ -314,7 +314,7 @@ export const AdminLayout: React.FC = () => {
                 "flex min-h-10 items-center justify-center rounded-control border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
                 logoutConfirmOpen
                   ? "border-danger/30 bg-danger/10 text-danger"
-                  : "border-line bg-bg text-muted hover:border-danger/30 hover:bg-danger/5 hover:text-danger active:bg-danger/10 active:text-danger"
+                  : "border-line bg-bg text-muted hover:border-danger/40 hover:bg-danger/10 hover:text-danger active:bg-danger/10 active:text-danger"
               ].join(" ")}
             >
               Sign out
@@ -496,7 +496,7 @@ export const AdminLayout: React.FC = () => {
                               className={["relative flex min-h-10 items-center gap-2.5 rounded-control px-2.5 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent", active ? "border border-accent/25 bg-accent/10 font-semibold text-fg" : "border border-transparent text-muted hover:border-line hover:bg-bg/70 hover:text-fg"].join(" ")}
                             >
                               {active && <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-accent" aria-hidden="true" />}
-                              <span className={["flex h-7 w-7 shrink-0 items-center justify-center rounded-control", active ? "bg-bg/70 text-fg" : "text-muted"].join(" ")}>
+                              <span className={["flex h-7 w-7 shrink-0 items-center justify-center", active ? "text-fg" : "text-muted group-hover:text-fg"].join(" ")}>
                                 <Icon size={16} strokeWidth={active ? 2.1 : 1.8} />
                               </span>
                               <span className="min-w-0 flex-1 truncate">{item.label}</span>
@@ -522,7 +522,7 @@ export const AdminLayout: React.FC = () => {
                     "flex min-h-10 items-center justify-center rounded-control border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
                     location.pathname === '/admin/settings'
                       ? "border-accent/25 bg-accent/10 text-fg"
-                      : "border-line bg-panel text-muted hover:border-accent/30 hover:bg-accent/5 hover:text-fg"
+                      : "border-line bg-panel text-muted hover:border-accent/40 hover:bg-panel-hover hover:text-fg"
                   ].join(" ")}
                 >
                   Settings
@@ -538,7 +538,7 @@ export const AdminLayout: React.FC = () => {
                     "flex min-h-10 items-center justify-center rounded-control border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
                     logoutConfirmOpen
                       ? "border-danger/30 bg-danger/10 text-danger"
-                      : "border-line bg-panel text-muted hover:border-danger/30 hover:bg-danger/5 hover:text-danger active:bg-danger/10 active:text-danger"
+                      : "border-line bg-panel text-muted hover:border-danger/40 hover:bg-danger/10 hover:text-danger active:bg-danger/10 active:text-danger"
                   ].join(" ")}
                 >
                   Sign out
@@ -582,7 +582,7 @@ export const AdminLayout: React.FC = () => {
                     );
                   })}
                 </nav>
-              ) : location.pathname === '/admin/dashboard' ? (
+              ) : location.pathname === '/admin/dashboard' && new URLSearchParams(location.search).get('view') !== 'tasks' ? (
                 <nav aria-label="Dashboard view" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
                   {[
                     { key: 'overview', label: 'Overview', search: '' },
@@ -595,7 +595,7 @@ export const AdminLayout: React.FC = () => {
                       end
                       className={() => {
                         const activeView = new URLSearchParams(location.search).get('view') || 'overview';
-                        return 'group relative inline-flex h-8 shrink-0 items-center rounded-chip px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (activeView === tab.key ? 'border border-accent/25 bg-panel font-semibold text-fg shadow-sm' : 'border border-transparent text-muted hover:bg-panel-hover hover:text-fg');
+                        return 'group relative inline-flex h-8 shrink-0 items-center rounded-chip px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (activeView === tab.key ? 'border border-accent/25 bg-accent/10 font-semibold text-fg' : 'border border-transparent text-muted hover:bg-bg hover:text-fg');
                       }}
                     >
                       {tab.label}
