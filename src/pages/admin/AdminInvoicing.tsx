@@ -2179,7 +2179,7 @@ export const AdminInvoicing: React.FC = () => {
   if (!canViewFinancials) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <section className="w-full max-w-xl rounded-card border border-line bg-panel p-6 text-center sm:p-8">
+        <section className="w-full max-w-xl rounded-card border border-line bg-panel p-4 text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-control border border-danger/30 bg-danger/10 text-danger">
             <ShieldCheck size={22} />
           </div>
