@@ -286,15 +286,11 @@ export const AdminVendors: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="min-[900px]:hidden -mx-1 mb-4 overflow-x-auto px-1 custom-scrollbar">
-  
-      </div>
-
       <AdminModuleHeader
         title={(
-          <span className="flex items-center gap-2.5"><Users className="shrink-0 text-accent-text" size={22} />{language === 'id' ? 'Direktori Vendor & Kontraktor' : 'Vendor & Talent Directory'}</span>
+          <span className="flex items-center gap-2.5"><Users className="shrink-0 text-accent-text" size={22} />{language === 'id' ? 'Personel Vendor' : 'Vendor Personnel'}</span>
         )}
-        description={language === 'id' ? 'Database mitra agensi, freelance spesialis terverifikasi, tarif per jam, dan evaluasi performa SLA.' : 'Database of vetted agency partners, specialized freelance contractors, hourly rates, and SLA contract ratings.'}
+        description={language === 'id' ? 'Direktori personel vendor, freelance, kontraktor, dan partner operasional yang digunakan lintas project.' : 'Directory of vendor personnel, freelancers, contractors, and operational partners used across projects.'}
         actions={(
           <button type="button" onClick={handleOpenAdd} disabled={!canManageVendors} className="h-9 min-h-9 px-3.5 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-semibold flex items-center gap-2 transition-all disabled:cursor-not-allowed disabled:opacity-50">
             <Plus size={15} />
