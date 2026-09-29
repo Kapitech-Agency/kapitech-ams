@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
-  ArrowDownToLine,
+  Download,
   ArrowUpRight,
   BarChart3,
   CheckCircle2,
@@ -14,7 +14,7 @@ import {
   Plus,
   Search,
   ShieldAlert,
-  Table2,
+  Table,
   Trash2,
   Users,
 } from 'lucide-react';
@@ -1090,14 +1090,14 @@ export const AdminProjects: React.FC = () => {
             {view === 'all' && (
               <div className="flex h-9 items-center gap-1 rounded-control border border-line bg-panel p-1">
                 <button type="button" onClick={() => openLayout('board')} className={'inline-flex h-7 items-center gap-1.5 rounded-chip px-3 text-xs font-medium transition-colors ' + (projectLayout === 'board' ? 'bg-accent/10 text-fg' : 'text-muted hover:bg-bg hover:text-fg')}>
-                  <Table2 size={13} /> Board
+                  <Table size={13} /> Board
                 </button>
                 <button type="button" onClick={() => openLayout('table')} className={'inline-flex h-7 items-center gap-1.5 rounded-chip px-3 text-xs font-medium transition-colors ' + (projectLayout === 'table' ? 'bg-accent/10 text-fg' : 'text-muted hover:bg-bg hover:text-fg')}>
                   <List size={13} /> Table
                 </button>
               </div>
             )}
-            <Button variant="secondary" icon={<ArrowDownToLine size={14} />} onClick={exportProjects}>Export</Button>
+            <Button variant="secondary" icon={<Download size={14} />} onClick={exportProjects}>Export</Button>
             {canManageProjects && <Button icon={<Plus size={14} />} onClick={openNewProject}>New Project</Button>}
           </>
         )}
