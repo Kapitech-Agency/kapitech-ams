@@ -686,8 +686,12 @@ export const AdminProposals: React.FC = () => {
                         </button>
                       </td>
                       <td className="max-w-[220px] px-4 py-3.5">
-                        <div className="truncate text-xs font-medium text-fg">{proposal.clientName || '—'}</div>
-                        {proposal.clientCompany && <div className="mt-1 truncate text-xs text-muted">{proposal.clientCompany}</div>}
+                        {proposal.clientName ? (
+                          <ProfileIdentity
+                            profile={{ name: proposal.clientName, contextLabel: proposal.clientCompany }}
+                            showRole={false}
+                          />
+                        ) : <span className="text-xs text-muted">—</span>}
                       </td>
                       <td className="px-4 py-3.5 text-right tabular-nums">
                         <div className="text-xs font-semibold text-fg">{formatAmount(proposal.total, proposal.currency || currency)}</div>
@@ -851,7 +855,7 @@ export const AdminProposals: React.FC = () => {
                   <div className="text-[11px] text-muted">{label}</div>
                   <div className="mt-1">
                     {label === 'Owner' && detailProposal.owner
-                      ? <ProfileIdentity profile={{ name: detailProposal.owner, role: undefined, contextLabel: 'Proposal owner' }} showRole={false} />
+                      ? <ProfileIdentity profile={{ name: detailProposal.owner, contextLabel: 'Proposal owner' }} showRole={false} />
                       : <span className="truncate text-xs font-medium text-fg">{value}</span>}
                   </div>
                 </div>
