@@ -2487,34 +2487,153 @@ export const AdminInvoicing: React.FC = () => {
   <p className="text-[9px] font-semibold uppercase tracking-[0.08em] text-muted">Quarter net cash</p>
   <p className={'mt-0.5 text-sm font-semibold tabular-nums '+(quarterNetCash>=0?'text-success':'text-danger')}>{formatFinanceCardAmount(quarterNetCash,currency)}</p>
 </div></div></div><div className="p-4">{hasTrendData?<FinanceCashFlowChart data={financeChartData} currency={currency} ariaLabel="Finance cash flow trend comparing cash collected, operating burn, and net cash."/>:<EmptyState title="No trend data" description="Billing payments and expenses will populate this trend."/>}</div></section><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><h2 className="text-sm font-semibold text-fg">Aging receivables</h2><p className="mt-1 text-xs text-muted">{formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} outstanding across 3 aging buckets.</p></div><div className="p-4"><div className="flex h-2.5 overflow-hidden rounded-full bg-bg border border-line">{agingBuckets.map((bucket)=><div key={bucket.label} className={'h-full '+(bucket.tone==='success'?'bg-success':bucket.tone==='warning'?'bg-warning':'bg-danger')} style={{width:bucket.percent+'%'}}/>)}</div><div className="mt-4 space-y-2.5">{agingBuckets.map((bucket)=><div key={bucket.label} className="flex items-center justify-between rounded-control border border-line bg-bg px-3 py-3"><div><p className="text-xs font-medium text-fg">{bucket.label}</p><p className="mt-1 text-[10px] text-muted">{bucket.count} account{bucket.count===1?'':'s'}</p></div><div className="text-right"><p className="text-xs font-semibold tabular-nums">{formatNativeAmount(bucket.amount,currency,true)}</p><p className="mt-1 text-[10px] text-muted">{bucket.percent}%</p></div></div>)}</div><button type="button" onClick={()=>setDunningOpen(true)} disabled={!actionRequiredInvoices.length} className={actionClass+' mt-4 w-full'}><Send size={14}/>Prepare collection notices</button></div></section></section>
-          <section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line px-4 py-3.5"><div className="flex flex-col gap-2.5 xl:flex-row xl:items-center xl:gap-2.5">
-  <div className="min-w-0 shrink-0 xl:w-[170px]">
-    <h2 className="text-sm font-semibold text-fg">Invoice ledger</h2>
-    <p className="mt-0.5 truncate text-[10px] text-muted">{filteredInvoices.length} visible · {ledgerPeriod==='all'?'All periods':reportingQuarter?.label||'Current quarter'}</p>
-  </div>
-  <label className="relative min-w-0 flex-1 xl:min-w-[210px] xl:max-w-[280px]">
-    <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/>
-    <span className="sr-only">Search invoices</span>
-    <input value={search} onChange={(event)=>setSearch(event.target.value)} placeholder="Search invoice, client, project..." className={fieldClass+' pl-9'}/>
-  </label>
-  <div className="grid gap-2 sm:grid-cols-2 xl:flex xl:min-w-0 xl:flex-1 xl:items-center xl:gap-2">
-    <CustomSelect value={statusFilter} onChange={setStatusFilter} options={statusOptions} className="xl:shrink-0" triggerClassName="h-9 min-h-9 w-full whitespace-nowrap xl:w-[150px]"/>
-    <CustomSelect value={paymentFilter} onChange={(value)=>setPaymentFilter(value as PaymentFilter)} options={[{value:'all',label:'All payment states'},{value:'unpaid',label:'Unpaid'},{value:'partial',label:'Partially paid'},{value:'paid',label:'Paid'}]} className="xl:shrink-0" triggerClassName="h-9 min-h-9 w-full whitespace-nowrap xl:w-[176px]"/>
-    <CustomSelect value={dueFilter} onChange={setDueFilter} options={[{value:'all',label:'All due states'},{value:'due_soon',label:'Due within 7 days'},{value:'overdue',label:'Overdue'},{value:'later',label:'Due later'}]} className="xl:shrink-0" triggerClassName="h-9 min-h-9 w-full whitespace-nowrap xl:w-[150px]"/>
-    <CustomSelect value={sort} onChange={(value)=>setSort(value as SortKey)} options={sortOptions} className="xl:shrink-0" triggerClassName="h-9 min-h-9 w-full whitespace-nowrap xl:w-[176px]"/>
-  </div>
-  <div className="flex shrink-0 items-center gap-2">
-    <div className="inline-flex items-center rounded-control border border-line bg-bg p-0.5">
-      <button type="button" onClick={()=>{setLedgerPeriod('reporting-quarter');setStatusFilter('all')}} className={'min-h-8 rounded-chip px-2.5 text-[11px] '+(ledgerPeriod==='reporting-quarter'?'bg-line text-fg':'text-muted')}>Current quarter</button>
-      <button type="button" onClick={()=>{setLedgerPeriod('all');setStatusFilter('all')}} className={'min-h-8 rounded-chip px-2.5 text-[11px] '+(ledgerPeriod==='all'?'bg-line text-fg':'text-muted')}>All periods</button>
+          <section className="rounded-card border border-line bg-panel overflow-hidden">
+  <div className="border-b border-line bg-panel p-4 sm:px-5">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+            <h2 className="text-sm font-semibold text-fg">Invoice ledger</h2>
+            <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] font-medium text-muted">
+              {filteredInvoices.length} visible
+            </span>
+          </div>
+          <p className="mt-1 text-[10px] text-muted">
+            {ledgerPeriod === 'all' ? 'All periods' : reportingQuarter?.label || 'Current quarter'} · Search, filter, and manage receivables.
+          </p>
+        </div>
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <div className="inline-flex items-center rounded-control border border-line bg-bg p-0.5">
+            <button
+              type="button"
+              onClick={() => { setLedgerPeriod('reporting-quarter'); setStatusFilter('all'); }}
+              className={'min-h-8 rounded-chip px-3 text-[11px] font-semibold transition-colors ' + (ledgerPeriod === 'reporting-quarter' ? 'border border-accent/25 bg-accent/10 text-fg' : 'border border-transparent text-muted hover:bg-panel hover:text-fg')}
+            >
+              Current quarter
+            </button>
+            <button
+              type="button"
+              onClick={() => { setLedgerPeriod('all'); setStatusFilter('all'); }}
+              className={'min-h-8 rounded-chip px-3 text-[11px] font-semibold transition-colors ' + (ledgerPeriod === 'all' ? 'border border-accent/25 bg-accent/10 text-fg' : 'border border-transparent text-muted hover:bg-panel hover:text-fg')}
+            >
+              All periods
+            </button>
+          </div>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setColumnMenuOpen((open) => !open)}
+              className={actionClass + ' h-9 min-h-9 px-3'}
+              aria-expanded={columnMenuOpen}
+              aria-haspopup="menu"
+            >
+              <SlidersHorizontal size={14}/>Columns
+            </button>
+            {columnMenuOpen && (
+              <div className="absolute right-0 top-[calc(100%+6px)] z-30 w-56 rounded-card border border-line bg-panel p-1.5 shadow-xl" role="menu">
+                {(['client','timeline','billing','status','actions'] as const).map((key) => {
+                  const labels: Record<typeof key, string> = {
+                    client: 'Client & Project',
+                    timeline: 'Timeline',
+                    billing: 'Billing',
+                    status: 'Status',
+                    actions: 'Actions'
+                  };
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      role="menuitemcheckbox"
+                      aria-checked={columnVisibility[key]}
+                      onClick={() => setColumnVisibility((current) => ({ ...current, [key]: !current[key] }))}
+                      className="flex w-full items-center justify-between gap-3 rounded-control px-3 py-2.5 text-left text-xs text-muted hover:bg-bg hover:text-fg"
+                    >
+                      <span>{labels[key]}</span>
+                      <span className={columnVisibility[key] ? 'font-semibold text-accent-text' : 'text-muted'}>
+                        {columnVisibility[key] ? 'Visible' : 'Hidden'}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-2 lg:grid-cols-[minmax(240px,1fr)_minmax(0,3fr)]">
+        <label className="relative min-w-0">
+          <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/>
+          <span className="sr-only">Search invoices</span>
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search invoice, client, project..."
+            className={fieldClass + ' h-10 pl-9'}
+          />
+        </label>
+
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          <CustomSelect
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={statusOptions}
+            className="min-w-0"
+            triggerClassName="h-10 min-h-10 w-full whitespace-nowrap"
+          />
+          <CustomSelect
+            value={paymentFilter}
+            onChange={(value) => setPaymentFilter(value as PaymentFilter)}
+            options={[
+              {value:'all',label:'All payment states'},
+              {value:'unpaid',label:'Unpaid'},
+              {value:'partial',label:'Partially paid'},
+              {value:'paid',label:'Paid'}
+            ]}
+            className="min-w-0"
+            triggerClassName="h-10 min-h-10 w-full whitespace-nowrap"
+          />
+          <CustomSelect
+            value={dueFilter}
+            onChange={setDueFilter}
+            options={[
+              {value:'all',label:'All due states'},
+              {value:'due_soon',label:'Due within 7 days'},
+              {value:'overdue',label:'Overdue'},
+              {value:'later',label:'Due later'}
+            ]}
+            className="min-w-0"
+            triggerClassName="h-10 min-h-10 w-full whitespace-nowrap"
+          />
+          <CustomSelect
+            value={sort}
+            onChange={(value) => setSort(value as SortKey)}
+            options={sortOptions}
+            className="min-w-0"
+            triggerClassName="h-10 min-h-10 w-full whitespace-nowrap"
+          />
+        </div>
+      </div>
+
+      {(search || statusFilter !== 'all' || paymentFilter !== 'all' || dueFilter !== 'all') && (
+        <div className="flex items-center justify-between gap-3 border-t border-line pt-3">
+          <span className="text-[10px] text-muted">Filters are active</span>
+          <button
+            type="button"
+            onClick={() => {
+              setSearch('');
+              setStatusFilter('all');
+              setPaymentFilter('all');
+              setDueFilter('all');
+            }}
+            className={actionClass + ' h-8 min-h-8 px-3 text-[11px]'}
+          >
+            Clear filters
+          </button>
+        </div>
+      )}
     </div>
-    <div className="relative">
-      <button type="button" onClick={()=>setColumnMenuOpen((open)=>!open)} className={actionClass+' h-9 min-h-9 px-2.5'}><SlidersHorizontal size={14}/>Columns</button>
-      {columnMenuOpen&&<div className="absolute right-0 top-[calc(100%+6px)] z-30 w-56 rounded-card border border-line bg-panel p-1.5">{(['client','timeline','billing','status','actions'] as const).map((key)=>{const labels:Record<typeof key,string>={client:'Client & Project',timeline:'Timeline',billing:'Billing',status:'Status',actions:'Actions'};return <button key={key} type="button" role="menuitemcheckbox" aria-checked={columnVisibility[key]} onClick={()=>setColumnVisibility((current)=>({...current,[key]:!current[key]}))} className="flex w-full justify-between rounded-control px-3 py-2 text-left text-xs text-muted hover:bg-bg hover:text-fg"><span>{labels[key]}</span><span className={columnVisibility[key]?'text-accent-text':'text-muted'}>{columnVisibility[key]?'Visible':'Hidden'}</span></button>})}</div>}
-    </div>
-    {(search||statusFilter!=='all'||paymentFilter!=='all'||dueFilter!=='all')&&<button type="button" onClick={()=>{setSearch('');setStatusFilter('all');setPaymentFilter('all');setDueFilter('all')}} className="rounded-chip px-2 py-2 text-[11px] font-medium text-muted hover:bg-bg hover:text-fg">Clear</button>}
-  </div>
-</div></div><div className="overflow-hidden">{filteredInvoices.length===0?<div className="p-5"><EmptyState title="No invoices found" description="No invoices match the current filters." action={canManageInvoices?<button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>Create invoice</button>:undefined}/></div>:<table className="w-full table-fixed border-separate border-spacing-0 text-xs">
+  </div><div className="overflow-hidden">{filteredInvoices.length===0?<div className="p-5"><EmptyState title="No invoices found" description="No invoices match the current filters." action={canManageInvoices?<button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>Create invoice</button>:undefined}/></div>:<table className="w-full table-fixed border-separate border-spacing-0 text-xs">
 <thead className="sticky top-0 z-10 border-b border-line bg-panel/95 backdrop-blur-sm"><tr>
   <th className="w-[22%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice</th>
   {columnVisibility.client&&<th className="w-[18%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client & project</th>}
