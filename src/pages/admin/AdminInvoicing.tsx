@@ -2369,7 +2369,6 @@ export const AdminInvoicing: React.FC = () => {
           <button type="button" role="tab" aria-selected={incomeExpenseMode === 'expenses'} onClick={() => setIncomeExpenseMode('expenses')} className={'min-h-8 rounded-chip border px-3 text-[11px] font-semibold transition-colors ' + (incomeExpenseMode === 'expenses' ? 'border-accent/25 bg-accent/10 text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}>Expenses</button>
         </div>
       </div>
-
       {incomeExpenseMode === 'income' ? (
         <div className="grid gap-2 lg:grid-cols-[minmax(240px,1fr)_minmax(240px,320px)]">
           <div className="flex min-h-10 items-center rounded-control border border-line bg-bg px-3 text-[10px] text-muted">Showing recorded payment activity in {currency}.</div>
@@ -2395,104 +2394,77 @@ export const AdminInvoicing: React.FC = () => {
       )}
     </div>
   </header>
-  <div className="space-y-0">
-    <div className="overflow-x-auto custom-scrollbar">
-                  {incomeRows.length === 0 ? (
-                    <div className="p-5"><EmptyState title="No income recorded" description="Recorded payments will appear here."/></div>
-                  ) : (
-                    <table className="ams-finance-table min-w-[760px] text-xs">
-                      <thead className="bg-bg">
-                        <tr className="border-b border-line text-[10px] uppercase tracking-wider text-muted">
-                          <th className="px-5 py-2.5">Payment</th>
-                          <th className="px-4 py-2.5">Client</th>
-                          <th className="px-4 py-2.5">Date</th>
-                          <th className="px-5 py-2.5 text-right">Amount</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {paginatedIncomeRows.map((row) => (
-                          <tr key={row.id} className="border-b border-line last:border-0 transition-colors hover:bg-bg/70">
-                            <td className="px-5 py-3">
-                              <button type="button" onClick={() => { const invoice = currencyInvoices.find((item) => item.id === row.invoiceId); if (invoice) openPrintPreview(invoice); }} className="font-semibold tabular-nums text-xs text-fg hover:text-accent-text">{row.invoiceNumber}</button>
-                              <p className="mt-0.5 text-[10px] text-muted">Payment received</p>
-                            </td>
-                            <td className="px-4 py-3">
-                              <p className="text-xs font-medium text-fg">{row.clientCompany}</p>
-                              <p className="mt-0.5 text-[10px] text-muted">Invoice payment</p>
-                            </td>
-                            <td className="px-4 py-3 text-xs tabular-nums text-muted">{row.date}</td>
-                            <td className="px-5 py-3 text-right">
-                              <p className="text-xs font-semibold tabular-nums text-success">{formatNativeAmount(row.amount, row.currency, true)}</p>
-                              <span className="mt-1 inline-flex rounded-badge border border-success/20 bg-success/10 px-1.5 py-0.5 text-[10px] font-medium text-success">Collected</span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-                {incomePageCount > 1 && (
-                  <div className="flex flex-col gap-2 border-t border-line bg-bg px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                    <span className="text-[11px] text-muted">{incomeRows.length} payments</span>
-                    <div className="flex items-center gap-1">
-                      <button type="button" onClick={() => setIncomePage((p) => Math.max(1, p - 1))} disabled={incomePage === 1} className={actionClass}>Prev</button>
-                      <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control bg-line px-2 text-[10px] font-semibold text-fg">{incomePage}</span>
-                      <button type="button" onClick={() => setIncomePage((p) => Math.min(incomePageCount, p + 1))} disabled={incomePage === incomePageCount} className={actionClass}>Next</button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-0">
-                <div className="overflow-x-auto custom-scrollbar">
-                  {filteredExpenses.length === 0 ? (
-                    <div className="p-5"><EmptyState title="No expenses found" description="Adjust the search or filters."/></div>
-                  ) : (
-                    <table className="ams-finance-table min-w-[900px] text-xs">
-                      <thead className="bg-bg">
-                        <tr className="border-b border-line text-[10px] uppercase tracking-wider text-muted">
-                          <th className="px-5 py-2.5">Expense</th>
-                          <th className="px-4 py-2.5">Type</th>
-                          <th className="px-4 py-2.5">Category</th>
-                          <th className="px-4 py-2.5">Date</th>
-                          <th className="px-4 py-2.5 text-right">Amount</th>
-                          <th className="px-5 py-2.5 text-right">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {paginatedExpenses.map((expense) => (
-                          <tr key={expense.id} className="border-b border-line last:border-0 transition-colors hover:bg-bg/70">
-                            <td className="px-5 py-3">
-                              <p className="text-xs font-medium text-fg">{expense.description}</p>
-                              <p className="mt-0.5 text-[10px] text-muted">{expense.recordedBy || 'Finance'}</p>
-                            </td>
-                            <td className="px-4 py-3"><span className="inline-flex rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">{expense.type || 'OpEx'}</span></td>
-                            <td className="px-4 py-3"><span className="text-xs text-fg">{expense.category}</span></td>
-                            <td className="px-4 py-3 text-xs tabular-nums text-muted">{expense.date}</td>
-                            <td className="px-4 py-3 text-right text-xs font-semibold tabular-nums text-fg">{formatNativeAmount(expense.amount, expense.currency || currency, true)}</td>
-                            <td className="px-5 py-3">
-                              <div className="ams-table-actions">
-                                {canManageInvoices && <button type="button" onClick={() => setConfirmAction({ type: 'expense', id: expense.id, label: expense.description })} className="ams-table-action" aria-label="Void expense" title="Void expense"><Trash2 size={14}/></button>}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-                {expensePageCount > 1 && (
-                  <div className="flex flex-col gap-2 border-t border-line bg-bg px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                    <span className="text-[11px] text-muted">{filteredExpenses.length} expenses</span>
-                    <div className="flex items-center gap-1">
-                      <button type="button" onClick={() => setExpensePage((p) => Math.max(1, p - 1))} disabled={expensePage === 1} className={actionClass}>Prev</button>
-                      <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control bg-line px-2 text-[10px] font-semibold text-fg">{expensePage}</span>
-                      <button type="button" onClick={() => setExpensePage((p) => Math.min(expensePageCount, p + 1))} disabled={expensePage === expensePageCount} className={actionClass}>Next</button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+  {incomeExpenseMode === 'income' ? (
+    <div className="space-y-0">
+      <div className="overflow-x-auto custom-scrollbar">
+        {incomeRows.length === 0 ? (
+          <div className="p-5"><EmptyState title="No income recorded" description="Recorded payments will appear here."/></div>
+        ) : (
+          <table className="ams-finance-table min-w-[760px] text-xs">
+            <thead><tr><th>Payment</th><th>Client</th><th>Date</th><th>Amount</th></tr></thead>
+            <tbody>
+              {paginatedIncomeRows.map((row) => (
+                <tr key={row.id}>
+                  <td>
+                    <button type="button" onClick={() => { const invoice = currencyInvoices.find((item) => item.id === row.invoiceId); if (invoice) openPrintPreview(invoice); }} className="font-semibold tabular-nums text-xs text-fg hover:text-accent-text">{row.invoiceNumber}</button>
+                    <p className="mt-0.5 text-[10px] text-muted">Payment received</p>
+                  </td>
+                  <td><p className="text-xs font-medium text-fg">{row.clientCompany}</p><p className="mt-0.5 text-[10px] text-muted">Invoice payment</p></td>
+                  <td className="text-xs tabular-nums text-muted">{row.date}</td>
+                  <td><p className="text-xs font-semibold tabular-nums text-success">{formatNativeAmount(row.amount, row.currency, true)}</p><span className="mt-1 inline-flex rounded-badge border border-success/20 bg-success/10 px-1.5 py-0.5 text-[10px] font-medium text-success">Collected</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+      {incomePageCount > 1 && (
+        <div className="flex flex-col gap-2 border-t border-line bg-bg px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <span className="text-[11px] text-muted">{incomeRows.length} payments</span>
+          <div className="flex items-center gap-1">
+            <button type="button" onClick={() => setIncomePage((p) => Math.max(1, p - 1))} disabled={incomePage === 1} className={actionClass}>Prev</button>
+            <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control bg-line px-2 text-[10px] font-semibold text-fg">{incomePage}</span>
+            <button type="button" onClick={() => setIncomePage((p) => Math.min(incomePageCount, p + 1))} disabled={incomePage === incomePageCount} className={actionClass}>Next</button>
+          </div>
+        </div>
+      )}
+    </div>
+  ) : (
+    <div className="space-y-0">
+      <div className="overflow-x-auto custom-scrollbar">
+        {filteredExpenses.length === 0 ? (
+          <div className="p-5"><EmptyState title="No expenses found" description="Adjust the search or filters."/></div>
+        ) : (
+          <table className="ams-finance-table min-w-[900px] text-xs">
+            <thead><tr><th>Expense</th><th>Type</th><th>Category</th><th>Date</th><th>Amount</th><th>Actions</th></tr></thead>
+            <tbody>
+              {paginatedExpenses.map((expense) => (
+                <tr key={expense.id}>
+                  <td><p className="text-xs font-medium text-fg">{expense.description}</p><p className="mt-0.5 text-[10px] text-muted">{expense.recordedBy || 'Finance'}</p></td>
+                  <td><span className="inline-flex rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">{expense.type || 'OpEx'}</span></td>
+                  <td><span className="text-xs text-fg">{expense.category}</span></td>
+                  <td className="text-xs tabular-nums text-muted">{expense.date}</td>
+                  <td className="text-xs font-semibold tabular-nums text-fg">{formatNativeAmount(expense.amount, expense.currency || currency, true)}</td>
+                  <td><div className="ams-table-actions">{canManageInvoices && <button type="button" onClick={() => setConfirmAction({ type: 'expense', id: expense.id, label: expense.description })} className="ams-table-action" aria-label="Void expense" title="Void expense"><Trash2 size={14}/></button>}</div></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+      {expensePageCount > 1 && (
+        <div className="flex flex-col gap-2 border-t border-line bg-bg px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <span className="text-[11px] text-muted">{filteredExpenses.length} expenses</span>
+          <div className="flex items-center gap-1">
+            <button type="button" onClick={() => setExpensePage((p) => Math.max(1, p - 1))} disabled={expensePage === 1} className={actionClass}>Prev</button>
+            <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control bg-line px-2 text-[10px] font-semibold text-fg">{expensePage}</span>
+            <button type="button" onClick={() => setExpensePage((p) => Math.min(expensePageCount, p + 1))} disabled={expensePage === expensePageCount} className={actionClass}>Next</button>
+          </div>
+        </div>
+      )}
+    </div>
+  )}
+</section>
           </section>
         </div>
       ) : financeView === 'tax-retainers' ? (
