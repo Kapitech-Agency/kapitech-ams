@@ -34,6 +34,7 @@ import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import { AdminMetricStrip } from '../../components/admin/AdminModulePrimitives';
+import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 
 type SortKey = 'name' | 'company' | 'industry' | 'status' | 'updatedAt' | 'projectsCount' | 'totalSpend';
@@ -564,7 +565,7 @@ export const AdminClients: React.FC = () => {
                     <td className="px-4 py-3"><span className="block whitespace-nowrap font-mono text-[11px] text-fg" title={clientSlug}>{clientSlug}</span></td>
                     <td className="px-4 py-3 text-muted">{client.industry || '—'}</td>
                     <td className="px-4 py-3"><span className={`inline-flex min-h-6 items-center rounded-badge border px-2 py-0.5 text-[11px] font-medium ${client.projectsCount >= 5 ? 'border-accent/30 bg-accent/10 text-accent-text' : client.status === 'lead' ? 'border-info/20 bg-info/10 text-info' : 'border-line bg-bg text-fg'}`}>{client.projectsCount >= 5 ? 'Tier 1 Strategic' : client.status === 'lead' ? 'Project-based' : 'Retainer Core'}</span></td>
-                    <td className="px-4 py-3"><div className="font-medium text-fg">{client.name || '—'}</div><div className="mt-0.5 text-[11px] text-muted">{client.contactPersonRole || 'Primary contact'}</div></td>
+                    <td className="px-4 py-3">{client.name ? <ProfileIdentity profile={{ name: client.name, role: client.contactPersonRole || 'Primary contact', companyEmail: client.email, phone: client.phone }} /> : <span className="text-xs text-muted">—</span>}</td>
                     <td className="px-4 py-3 text-right font-medium tabular-nums text-fg">{new Intl.NumberFormat(language === 'id' ? 'id-ID' : 'en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(Number(client.totalSpend) || 0)}</td>
                     <td className="px-4 py-3"><div className="flex items-center gap-2"><span className={`h-2 w-2 rounded-full ${spendState === 'success' ? 'bg-success' : spendState === 'warning' ? 'bg-warning' : spendState === 'danger' ? 'bg-danger' : 'bg-line'}`} aria-hidden="true" /><span className={spendState === 'danger' ? 'font-medium text-danger tabular-nums' : 'text-fg tabular-nums'}>{headroom === null ? 'Not configured' : headroom.toFixed(1) + '% headroom'}</span></div></td>
                     <td className="px-4 py-3 text-right"><div className="ams-table-actions flex items-center justify-end gap-1">
@@ -598,8 +599,7 @@ export const AdminClients: React.FC = () => {
           <div className="space-y-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
-                <p className="text-base font-semibold text-fg">{selectedClient.name}</p>
-                <p className="mt-1 text-xs text-muted">{selectedClient.contactPersonRole || 'Primary contact'}</p>
+                <ProfileIdentity profile={{ name: selectedClient.name || selectedClient.company || 'Client contact', role: selectedClient.contactPersonRole || 'Primary contact', companyEmail: selectedClient.email, phone: selectedClient.phone }} />
               </div>
               <span className={`inline-flex w-fit shrink-0 items-center gap-1.5 rounded-badge px-2 py-1 text-xs font-semibold ${statusClasses[statusMeta[selectedClient.status].tone]}`}>
                 {statusMeta[selectedClient.status].icon}
