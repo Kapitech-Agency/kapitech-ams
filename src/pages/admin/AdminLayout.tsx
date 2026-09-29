@@ -548,6 +548,28 @@ export const AdminLayout: React.FC = () => {
                     </NavLink>
                   ))}
                 </nav>
+              ) : location.pathname === '/admin/projects' ? (
+                <nav aria-label="Projects sections" className="flex min-w-0 items-center gap-1 overflow-x-auto ams-topnav-scroll">
+                  {[
+                    { key: 'all', label: 'All Projects', search: '' },
+                    { key: 'sprint', label: 'Sprint & Delivery', search: '?projects=sprint' },
+                    { key: 'budget', label: 'Budget vs Actual', search: '?projects=budget' },
+                    { key: 'archived', label: 'Archived', search: '?projects=archived' },
+                  ].map((tab) => {
+                    const activeView = new URLSearchParams(location.search).get('projects') || 'all';
+                    const active = activeView === tab.key;
+                    return (
+                      <NavLink
+                        key={tab.key}
+                        to={'/admin/projects' + tab.search}
+                        end
+                        className={'group relative inline-flex h-9 shrink-0 items-center rounded-chip border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (active ? 'border-accent/25 bg-accent/10 font-semibold text-accent' : 'border-transparent text-muted hover:bg-bg hover:text-fg')}
+                      >
+                        {tab.label}
+                      </NavLink>
+                    );
+                  })}
+                </nav>
               ) : location.pathname === '/admin/invoicing' ? (
                 <nav aria-label="Finance sections" className="flex min-w-0 items-center gap-1 overflow-x-auto ams-topnav-scroll">
                   {[
