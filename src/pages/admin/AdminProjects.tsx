@@ -1663,7 +1663,7 @@ export const AdminProjects: React.FC = () => {
                                     setDragOverProjectStatus(null);
                                   }}
                                   className={'ams-project-kanban-card group cursor-grab select-none rounded-[12px] border border-line/90 bg-panel p-4 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150 hover:-translate-y-px hover:border-accent/40 hover:bg-panel-hover hover:shadow-[0_10px_28px_color-mix(in_srgb,var(--bg)_55%,transparent)] active:cursor-grabbing ' + (
-                                    isDragging ? 'rotate-[1deg] scale-[0.98] opacity-50' : movingProjectId === project.id ? 'border-accent/35 opacity-80' : ''
+                                    isDragging ? 'cursor-grabbing rotate-[1deg] scale-[0.98] border-accent/40 opacity-50' : movingProjectId === project.id ? 'border-accent/35 opacity-80' : ''
                                   )}
                                 >
                                   <div className="flex items-start justify-between gap-2">
