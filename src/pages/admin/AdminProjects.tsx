@@ -7,6 +7,7 @@ import {
   Clock,
   CheckCircle2,
   CircleDollarSign,
+  CalendarDays,
   Code2,
   ExternalLink,
   Filter,
@@ -166,6 +167,72 @@ const demoProjects: ProjectRecord[] = INITIAL_DEFAULT_PROJECTS.map(item =>
   })
 );
 
+const PROJECT_STATUS_OVERRIDES_KEY = 'kapitech_ams_project_status_overrides_v1';
+const TASK_STATUS_OVERRIDES_KEY = 'kapitech_ams_task_status_overrides_v1';
+
+const readStatusOverrides = <T extends string>(key: string): Record<string, T> => {
+  if (typeof window === 'undefined') return {};
+  try {
+    const parsed = JSON.parse(window.sessionStorage.getItem(key) || '{}');
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+    return parsed as Record<string, T>;
+  } catch {
+    return {};
+  }
+};
+
+const writeStatusOverrides = <T extends string>(key: string, overrides: Record<string, T>) => {
+  if (typeof window === 'undefined') return;
+  try {
+    if (Object.keys(overrides).length === 0) {
+      window.sessionStorage.removeItem(key);
+      return;
+    }
+    window.sessionStorage.setItem(key, JSON.stringify(overrides));
+  } catch {
+    // Session persistence is only a front-end enhancement for A/B testing.
+  }
+};
+
+const applyKanbanStatusOverrides = (source: ProjectRecord[]) => {
+  const projectOverrides = readStatusOverrides<ProjectStatus>(PROJECT_STATUS_OVERRIDES_KEY);
+  const taskOverrides = readStatusOverrides<TaskStatus>(TASK_STATUS_OVERRIDES_KEY);
+  const nextProjectOverrides = { ...projectOverrides };
+  const nextTaskOverrides = { ...taskOverrides };
+
+  const merged = source.map(project => {
+    const projectOverride = projectOverrides[project.id];
+    if (projectOverride === project.status) {
+      delete nextProjectOverrides[project.id];
+    }
+
+    const nextTasks = project.tasks.map(task => {
+      const taskOverride = taskOverrides[task.id];
+      if (taskOverride === task.status) {
+        delete nextTaskOverrides[task.id];
+      }
+      return taskOverride && taskOverride !== task.status
+        ? { ...task, status: taskOverride }
+        : task;
+    });
+
+    return projectOverride && projectOverride !== project.status
+      ? normalizeProject({
+          ...project,
+          status: projectOverride,
+          tasks: nextTasks,
+          updatedAt: new Date().toISOString(),
+        })
+      : nextTasks === project.tasks
+        ? project
+        : { ...project, tasks: nextTasks, updatedAt: new Date().toISOString() };
+  });
+
+  writeStatusOverrides(PROJECT_STATUS_OVERRIDES_KEY, nextProjectOverrides);
+  writeStatusOverrides(TASK_STATUS_OVERRIDES_KEY, nextTaskOverrides);
+  return merged;
+};
+
 const projectStatusClass = (status: ProjectStatus) => {
   if (status === 'completed') return 'border-success/30 bg-success/10 text-success';
   if (status === 'on_hold') return 'border-warning/30 bg-warning/10 text-warning';
@@ -310,7 +377,10 @@ export const AdminProjects: React.FC = () => {
     try {
       const response = await api.projects.getAll();
       if (response.success && Array.isArray(response.data?.projects)) {
-        setProjects(response.data.projects.length ? response.data.projects.map(normalizeProject) : demoProjects);
+        const serverProjects = response.data.projects.length
+          ? response.data.projects.map(normalizeProject)
+          : demoProjects;
+        setProjects(applyKanbanStatusOverrides(serverProjects));
         setServerMode(true);
         setLoading(false);
         return;
@@ -812,6 +882,10 @@ export const AdminProjects: React.FC = () => {
     setDraggingTaskId(null);
     setDragOverTaskStatus(null);
 
+    const taskOverrides = readStatusOverrides<TaskStatus>(TASK_STATUS_OVERRIDES_KEY);
+    taskOverrides[task.id] = status;
+    writeStatusOverrides(TASK_STATUS_OVERRIDES_KEY, taskOverrides);
+
     setProjects(current =>
       current.map(project =>
         project.id === selectedSprintProject.id
@@ -844,6 +918,9 @@ export const AdminProjects: React.FC = () => {
     if (!canManageProjects || project.status === status) return;
 
     const updatedProject = { ...project, status, updatedAt: new Date().toISOString() };
+    const projectOverrides = readStatusOverrides<ProjectStatus>(PROJECT_STATUS_OVERRIDES_KEY);
+    projectOverrides[project.id] = status;
+    writeStatusOverrides(PROJECT_STATUS_OVERRIDES_KEY, projectOverrides);
 
     setProjects(current =>
       current.map(item => item.id === project.id ? normalizeProject(updatedProject) : item)
@@ -1401,7 +1478,7 @@ export const AdminProjects: React.FC = () => {
                   )}
                 </div>
                 {projectLayout === 'board' && (
-                  <span className="text-[10px] text-muted">Drag cards between stages to update project status.</span>
+                  <span className="text-[10px] text-muted">Drag any project card between stages to update its status.</span>
                 )}
               </div>
             </div>
@@ -1453,7 +1530,7 @@ export const AdminProjects: React.FC = () => {
                           }
                         }}
                         className={[
-                          'flex w-[300px] shrink-0 flex-col overflow-hidden rounded-card border bg-bg/70 transition-[border-color,background-color,box-shadow] duration-200 sm:w-[316px] max-h-[min(68vh,760px)]',
+                          'flex w-[300px] shrink-0 flex-col rounded-card border bg-bg/70 transition-[border-color,background-color,box-shadow] duration-200 sm:w-[316px]',
                           isDropTarget
                             ? 'border-accent/50 bg-accent/5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--accent)_18%,transparent)]'
                             : 'border-line/80',
@@ -1494,7 +1571,7 @@ export const AdminProjects: React.FC = () => {
                           )}
                           {items.length === 0 ? (
                             <div className={'flex min-h-[180px] items-center justify-center rounded-card border border-dashed p-5 text-center text-[11px] text-muted transition-colors ' + (isDropTarget ? 'border-accent/40 bg-accent/5 text-fg' : 'border-line')}>
-                              <span>
+                              <span className="max-w-[190px]">
                                 <span className="block font-medium text-fg">{canManageProjects && isDropTarget ? 'Drop project here' : 'No projects here'}</span>
                                 <span className="mt-1 block text-muted">{canManageProjects ? 'Drag a card into this lane.' : 'No projects in this stage.'}</span>
                               </span>
@@ -1522,7 +1599,7 @@ export const AdminProjects: React.FC = () => {
                                     setDraggingProjectId(null);
                                     setDragOverProjectStatus(null);
                                   }}
-                                  className={'group cursor-grab rounded-[10px] border border-line/90 bg-panel p-3.5 transition-[transform,opacity,border-color,background-color] duration-150 hover:border-accent/35 hover:bg-panel-hover active:cursor-grabbing ' + (
+                                  className={'group cursor-grab select-none rounded-[12px] border border-line/90 bg-panel p-3.5 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150 hover:-translate-y-px hover:border-accent/35 hover:bg-panel-hover hover:shadow-[0_8px_24px_color-mix(in_srgb,var(--bg)_60%,transparent)] active:cursor-grabbing ' + (
                                     isDragging ? 'rotate-[1deg] scale-[0.98] opacity-50' : ''
                                   )}
                                 >
@@ -1543,9 +1620,14 @@ export const AdminProjects: React.FC = () => {
 
                                   <div className="mt-3 flex flex-wrap items-center gap-1.5">
                                     <span className={'rounded-badge border px-2 py-1 text-[10px] font-medium ' + healthClass(project.health)}>{project.health || 'Good'}</span>
-                                    <span className="text-[10px] text-muted">{milestoneDone}/{project.milestones.length || 0} milestones</span>
-                                    <span className="text-[10px] text-muted">•</span>
-                                    <span className="text-[10px] text-muted">{taskDone}/{project.tasks.length} tasks</span>
+                                    <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{taskDone}/{project.tasks.length} tasks</span>
+                                    <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{milestoneDone}/{project.milestones.length || 0} milestones</span>
+                                  </div>
+                                  <div className="mt-2 flex items-center gap-1.5 text-[10px] text-muted">
+                                    <CalendarDays size={11} />
+                                    <span className={isOverdue(project.targetEndDate) && project.status !== 'completed' ? 'font-semibold text-danger' : 'text-muted'}>
+                                      {project.targetEndDate ? formatDate(project.targetEndDate) : 'No deadline'}
+                                    </span>
                                   </div>
 
                                   <div className="mt-3 space-y-1.5">
@@ -1800,7 +1882,7 @@ export const AdminProjects: React.FC = () => {
                     </div>
                     <span className="inline-flex items-center gap-1.5 text-muted">
                       <SlidersHorizontal size={12} />
-                      {canManageKanbanTasks ? 'Drag the handle to change stage' : 'Task movement is read-only'}
+                      {canManageKanbanTasks ? 'Drag any task card to change stage' : 'Task movement is read-only'}
                     </span>
                   </div>
                 </div>
@@ -1847,7 +1929,7 @@ export const AdminProjects: React.FC = () => {
                             }
                           }}
                           className={[
-                            'flex w-[310px] shrink-0 flex-col overflow-hidden rounded-card border bg-bg/65 transition-[border-color,background-color,box-shadow] duration-150 sm:w-[324px] max-h-[min(68vh,760px)]',
+                            'flex w-[310px] shrink-0 flex-col rounded-card border bg-bg/65 transition-[border-color,background-color,box-shadow] duration-150 sm:w-[324px]',
                             isDropTarget ? 'border-accent/45 bg-accent/5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--accent)_14%,transparent)]' : 'border-line/80',
                           ].join(' ')}
                         >
@@ -1877,7 +1959,7 @@ export const AdminProjects: React.FC = () => {
                           </div>
 
                           <div className={[
-                            'min-h-[420px] max-h-[calc(min(68vh,760px)-78px)] flex-1 overflow-y-auto custom-scrollbar space-y-2.5 p-2.5 transition-colors duration-150',
+                            'min-h-[420px] flex-1 space-y-2.5 p-2.5 transition-colors duration-150',
                             isDropTarget ? 'bg-accent/5' : '',
                           ].join(' ')}>
                             {draggingTaskId && canManageKanbanTasks && (
@@ -1929,8 +2011,8 @@ export const AdminProjects: React.FC = () => {
                                       setDragOverTaskStatus(null);
                                     }}
                                     className={[
-                                      'group rounded-card border bg-panel p-3 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150',
-                                      canManageKanbanTasks ? 'cursor-grab active:cursor-grabbing' : 'cursor-default',
+                                      'group cursor-grab select-none rounded-[12px] border bg-panel p-3.5 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150 active:cursor-grabbing',
+                                      canManageKanbanTasks ? '' : 'cursor-default',
                                       'border-line hover:border-accent/30 hover:bg-panel-hover',
                                       isDragging ? 'rotate-[0.6deg] scale-[0.98] opacity-50 shadow-lg' : '',
                                     ].join(' ')}
@@ -1938,7 +2020,7 @@ export const AdminProjects: React.FC = () => {
                                     <div className="flex items-start gap-2.5">
                                       <span
                                         className={[
-                                          'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-control border border-transparent text-muted transition-colors',
+                                          'mt-0.5 flex h-7 w-7 shrink-0 cursor-grab items-center justify-center rounded-control border border-transparent text-muted transition-colors active:cursor-grabbing',
                                           canManageKanbanTasks ? 'group-hover:border-line group-hover:bg-bg group-hover:text-fg' : '',
                                         ].join(' ')}
                                         title={canManageKanbanTasks ? 'Drag to move task' : 'Task movement is read-only'}
