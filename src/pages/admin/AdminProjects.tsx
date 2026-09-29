@@ -553,7 +553,7 @@ export const AdminProjects: React.FC = () => {
     setSearchParams(next, { replace: true });
   };
 
-  const openNewProject = () => {
+  const openNewProject = (status: ProjectStatus = 'planning') => {
     setEditingProject(null);
     setProjectForm({
       name: '',
@@ -572,7 +572,7 @@ export const AdminProjects: React.FC = () => {
       figmaUrl: '',
       liveStagingUrl: '',
       notes: '',
-      status: 'planning',
+      status,
       health: 'Good',
     });
     setProjectDrawerOpen(true);
