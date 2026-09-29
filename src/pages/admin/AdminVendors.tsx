@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 // Shared module chrome renders the canonical ams-dashboard-header primitive.
 import {
   Users,
@@ -281,6 +282,28 @@ export const AdminVendors: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Header */}
+      <div className="min-[900px]:hidden -mx-1 mb-4 overflow-x-auto px-1 custom-scrollbar">
+        <nav aria-label="Finance sections" className="inline-flex min-w-max items-center gap-1 rounded-control border border-line bg-panel p-1">
+          {[
+            { key: 'invoices', label: 'Invoice', to: '/admin/invoicing' },
+            { key: 'quotations', label: 'Quotation', to: '/admin/invoicing?finance=quotations' },
+            { key: 'income-expenses', label: 'Income & Expenses', to: '/admin/invoicing?finance=income-expenses' },
+            { key: 'tax-retainers', label: 'Tax & Retainers', to: '/admin/invoicing?finance=tax-retainers' },
+            { key: 'financial-reports', label: 'Financial Reports', to: '/admin/invoicing?finance=financial-reports' },
+            { key: 'vendors', label: 'Vendors', to: '/admin/vendors' },
+          ].map((tab) => (
+            <Link
+              key={tab.key}
+              to={tab.to}
+              aria-current={tab.key === 'vendors' ? 'page' : undefined}
+              className={'inline-flex min-h-8 shrink-0 items-center rounded-chip px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (tab.key === 'vendors' ? 'border border-accent/25 bg-accent/10 font-semibold text-fg' : 'border border-transparent text-muted hover:bg-bg hover:text-fg')}
+            >
+              {tab.label}
+            </Link>
+          ))}
+        </nav>
+      </div>
+
       <AdminModuleHeader
         title={(
           <span className="flex items-center gap-2.5"><Users className="shrink-0 text-accent-text" size={22} />{language === 'id' ? 'Direktori Vendor & Kontraktor' : 'Vendor & Talent Directory'}</span>
