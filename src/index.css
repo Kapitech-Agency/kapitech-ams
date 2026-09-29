@@ -461,9 +461,9 @@
    One geometry for every data table across every module.
    -------------------------------------------------------------------------- */
 .ams-shell table{width:100%;border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums}
-.ams-shell table thead th{position:sticky;top:0;z-index:1;height:44px!important;padding:0 16px!important;background:var(--panel)!important;border-bottom:1px solid var(--line)!important;color:var(--muted)!important;font-size:11px!important;line-height:16px!important;font-weight:600!important;letter-spacing:.035em!important;text-transform:uppercase!important;text-align:left;vertical-align:middle;white-space:nowrap}
+.ams-shell table thead th{position:sticky;top:0;z-index:1;height:44px!important;padding:0 16px!important;background:var(--panel)!important;border-bottom:1px solid var(--line)!important;color:var(--muted)!important;font-size:11px!important;line-height:16px!important;font-weight:600!important;letter-spacing:.035em!important;text-transform:uppercase!important;text-align:left!important;vertical-align:middle;white-space:nowrap}
 .ams-shell table tbody tr{border-top:0!important;border-bottom:0!important}
-.ams-shell table tbody td{height:48px!important;min-height:48px;padding:8px 16px!important;background:var(--panel);border-bottom:1px solid var(--line)!important;color:var(--text);font-size:13px!important;line-height:18px!important;vertical-align:middle}
+.ams-shell table tbody td{height:48px!important;min-height:48px;padding:8px 16px!important;background:var(--panel);border-bottom:1px solid var(--line)!important;color:var(--text);font-size:13px!important;line-height:18px!important;vertical-align:middle;text-align:left!important}
 .ams-shell table tbody tr:last-child td{border-bottom:0!important}
 .ams-shell table tbody tr:hover td{background:color-mix(in srgb,var(--text) 4%,transparent)}
 .ams-shell table th:first-child,.ams-shell table td:first-child{padding-left:18px!important}
