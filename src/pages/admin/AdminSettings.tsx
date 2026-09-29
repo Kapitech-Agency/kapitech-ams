@@ -444,7 +444,7 @@ export const AdminSettings: React.FC = () => {
 
       {/* TAB 1: PROFILE & MASTER ACCOUNT */}
       {activeTab === 'profile' && (
-        <div className="w-full bg-panel border border-line rounded-card p-5 sm:p-6">
+        <div className="w-full bg-panel border border-line rounded-card p-4">
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-line">
             <div className="w-10 h-10 rounded-card bg-accent/10 border border-accent/30 flex items-center justify-center text-accent shrink-0">
               <UserCheck size={20} />
@@ -535,7 +535,7 @@ export const AdminSettings: React.FC = () => {
 
       {/* TAB 2: BRAND IDENTITY & SEO */}
       {activeTab === 'branding' && (
-        <div className="w-full max-w-4xl bg-panel border border-line rounded-card p-5 sm:p-6">
+        <div className="w-full max-w-4xl bg-panel border border-line rounded-card p-4">
           <div className="flex items-center gap-3 mb-6 pb-4 border-b border-line">
             <div className="w-10 h-10 rounded-card bg-series-3/10 border border-series-3/30 flex items-center justify-center text-series-3 shrink-0">
               <Palette size={20} />
@@ -669,7 +669,7 @@ export const AdminSettings: React.FC = () => {
           )}
 
           {/* Accounts Management Section */}
-          <div className="bg-panel border border-line rounded-card p-5 sm:p-6 space-y-6">
+          <div className="bg-panel border border-line rounded-card p-4 space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 pb-5 border-b border-line">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-card bg-accent/10 border border-accent/30 flex items-center justify-center text-danger shrink-0">
@@ -809,7 +809,7 @@ export const AdminSettings: React.FC = () => {
           </div>
 
           {/* Reference RBAC Matrix */}
-          <div className="w-full bg-panel border border-line rounded-card p-5 sm:p-6 space-y-6">
+          <div className="w-full bg-panel border border-line rounded-card p-4 space-y-6">
             <div className="flex items-center gap-3 pb-4 border-b border-line">
               <div className="w-10 h-10 rounded-card bg-info/10 border border-info/30 flex items-center justify-center text-info shrink-0">
                 <Layers size={20} />
@@ -1066,7 +1066,7 @@ export const AdminSettings: React.FC = () => {
 
       {/* TAB 4: SECURITY & MFA POLICY */}
       {activeTab === 'security' && (
-        <div className="w-full bg-panel border border-line rounded-card p-5 sm:p-6 space-y-6">
+        <div className="w-full bg-panel border border-line rounded-card p-4 space-y-6">
           <div className="flex items-center gap-3 pb-4 border-b border-line">
             <div className="w-10 h-10 rounded-card bg-warning/10 border border-warning/30 flex items-center justify-center text-warning shrink-0">
               <Lock size={20} />
@@ -1185,7 +1185,7 @@ export const AdminSettings: React.FC = () => {
       {activeTab === 'api' && canAccessServer && (
         <div className="w-full space-y-4">
           <ProductionReadinessCard language={language} />
-          <div className="w-full rounded-card border border-line bg-panel p-5 sm:p-6">
+          <div className="w-full rounded-card border border-line bg-panel p-4">
             <div className="flex items-start gap-3 border-b border-line pb-4">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-card border border-info/30 bg-info/10 text-info">
                 <Database size={20} />
@@ -1244,7 +1244,7 @@ export const AdminSettings: React.FC = () => {
 
       {/* TAB 6: AUDIT TRAIL */}
       {activeTab === 'audit' && canViewAuditLogs && (
-        <div className="w-full bg-panel border border-line rounded-card p-5 sm:p-6">
+        <div className="w-full bg-panel border border-line rounded-card p-4">
           
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 mb-6 pb-4 border-b border-line">
             <div>
