@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Camera, Mail, Phone, Save, UserRound } from 'lucide-react';
+import { BriefcaseBusiness, Building2, Camera, Mail, Phone, Save, UserRound } from 'lucide-react';
 import { Drawer } from '../ui/Drawer';
 import Button from '../ui/Button';
 import UserAvatar from './UserAvatar';
@@ -182,8 +182,8 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
       onClose={requestClose}
       closeOnOutsideClick={!isDirty && !saving}
       size="xl"
-      title="Profile settings"
-      description={isDirty ? 'You have unsaved changes. Save them or choose Cancel to discard them.' : 'Manage your visible identity and personal contact details.'}
+      title="Edit profile"
+      description={isDirty ? 'You have unsaved changes. Save them or choose Cancel to discard them.' : 'Update the information shown on your AMS public profile.'}
       footer={(
         <>
           <Button type="button" variant="secondary" onClick={cancelChanges} disabled={saving}>
@@ -249,12 +249,30 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
                 <input value={name} onChange={(event) => setName(event.target.value)} />
               </label>
 
-              <div className="space-y-1.5">
-                <span className="text-xs font-medium text-muted">Role</span>
-                <div className="flex min-h-9 items-center rounded-control border border-line bg-bg px-3 text-[13px] text-fg">
-                  {title}
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <span className="flex items-center gap-1.5 text-xs font-medium text-muted"><BriefcaseBusiness size={13} />Role</span>
+                  <div className="flex min-h-9 items-center rounded-control border border-line bg-bg px-3 text-[13px] text-fg">
+                    {title}
+                  </div>
+                  <p className="text-[10px] text-muted">Assigned by AMS access policy.</p>
                 </div>
-                <p className="text-[10px] text-muted">Assigned by AMS access policy.</p>
+
+                <div className="space-y-1.5">
+                  <span className="flex items-center gap-1.5 text-xs font-medium text-muted"><Building2 size={13} />Division</span>
+                  <div className="flex min-h-9 items-center rounded-control border border-line bg-bg px-3 text-[13px] text-fg">
+                    {user?.division || 'Operations'}
+                  </div>
+                  <p className="text-[10px] text-muted">Managed by your AMS access policy.</p>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <span className="text-xs font-medium text-muted">Username</span>
+                <div className="flex min-h-9 items-center rounded-control border border-line bg-bg px-3 text-[13px] text-fg">
+                  {user?.username || '—'}
+                </div>
+                <p className="text-[10px] text-muted">Account identifier cannot be changed from profile.</p>
               </div>
             </div>
           </section>
@@ -319,7 +337,7 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
 
         <div className="flex items-start gap-2.5 rounded-control border border-line bg-bg p-3 text-[11px] text-muted">
           <UserRound size={14} className="mt-0.5 shrink-0 text-accent-text" />
-          <span>Your profile changes update the AMS account shown in the sidebar and account controls.</span>
+          <span>These fields update the public profile shown from the AMS sidebar and account controls. Access role and account identity remain managed by AMS.</span>
         </div>
       </div>
     </Drawer>
