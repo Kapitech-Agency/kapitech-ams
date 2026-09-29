@@ -851,7 +851,7 @@ export const AdminProposals: React.FC = () => {
                   <div className="text-[11px] text-muted">{label}</div>
                   <div className="mt-1">
                     {label === 'Owner' && detailProposal.owner
-                      ? <ProfileIdentity profile={{ name: detailProposal.owner, role: 'Proposal owner', division: 'Commercial' }} showRole={false} />
+                      ? <ProfileIdentity profile={{ name: detailProposal.owner, role: undefined, contextLabel: 'Proposal owner' }} showRole={false} />
                       : <span className="truncate text-xs font-medium text-fg">{value}</span>}
                   </div>
                 </div>
