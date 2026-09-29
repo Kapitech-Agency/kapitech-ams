@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Modal } from '../../components/ui/Modal';
+import { Drawer, Modal } from '../../components/ui/Modal';
 import { 
   Settings, 
   ShieldCheck, 
@@ -885,7 +885,7 @@ export const AdminSettings: React.FC = () => {
           </div>
 
       {/* MODAL: TAMBAH AKUN BARU (MOBILE FULLSCREEN + STICKY HEADER & FOOTER) */}
-      <Modal
+      <Drawer
         open={isAddAccountModalOpen}
         onClose={() => !isCreatingAccount && setIsAddAccountModalOpen(false)}
         size="lg"
@@ -1061,7 +1061,7 @@ export const AdminSettings: React.FC = () => {
               </section>
 
             </form>
-      </Modal>
+      </Drawer>
         </div>
       )}
 
