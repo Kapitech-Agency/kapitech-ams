@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import {
-  AtSign,
-  BriefcaseBusiness,
+  Briefcase,
   Building2,
   CalendarDays,
   Edit3,
@@ -95,7 +94,7 @@ export const UserProfilePublicDrawer: React.FC<UserProfilePublicDrawerProps> = (
                   {profile.division}
                 </span>
                 <span className="inline-flex items-center gap-1.5 rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">
-                  <AtSign size={12} />
+                  <UserRound size={12} />
                   {profile.username}
                 </span>
               </div>
@@ -122,7 +121,7 @@ export const UserProfilePublicDrawer: React.FC<UserProfilePublicDrawerProps> = (
           <section className="rounded-card border border-line bg-panel p-4">
             <div className="mb-4 flex items-center gap-2 border-b border-line pb-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-control border border-line bg-bg text-muted">
-                <BriefcaseBusiness size={15} />
+                <Briefcase size={15} />
               </div>
               <div>
                 <h3 className="text-xs font-semibold text-fg">Work context</h3>
@@ -192,7 +191,7 @@ export const UserProfilePublicDrawer: React.FC<UserProfilePublicDrawerProps> = (
             </div>
             <div className="flex items-start gap-2.5">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-panel text-muted">
-                <AtSign size={14} />
+                <UserRound size={14} />
               </div>
               <div className="min-w-0">
                 <div className="text-[10px] uppercase tracking-[0.08em] text-muted">Username</div>
