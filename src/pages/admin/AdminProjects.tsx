@@ -206,14 +206,17 @@ const applyKanbanStatusOverrides = (source: ProjectRecord[]) => {
       delete nextProjectOverrides[project.id];
     }
 
+    let tasksChanged = false;
     const nextTasks = project.tasks.map(task => {
       const taskOverride = taskOverrides[task.id];
       if (taskOverride === task.status) {
         delete nextTaskOverrides[task.id];
       }
-      return taskOverride && taskOverride !== task.status
-        ? { ...task, status: taskOverride }
-        : task;
+      if (taskOverride && taskOverride !== task.status) {
+        tasksChanged = true;
+        return { ...task, status: taskOverride };
+      }
+      return task;
     });
 
     return projectOverride && projectOverride !== project.status
@@ -223,9 +226,9 @@ const applyKanbanStatusOverrides = (source: ProjectRecord[]) => {
           tasks: nextTasks,
           updatedAt: new Date().toISOString(),
         })
-      : nextTasks === project.tasks
-        ? project
-        : { ...project, tasks: nextTasks, updatedAt: new Date().toISOString() };
+      : tasksChanged
+        ? { ...project, tasks: nextTasks, updatedAt: new Date().toISOString() }
+        : project;
   });
 
   writeStatusOverrides(PROJECT_STATUS_OVERRIDES_KEY, nextProjectOverrides);
