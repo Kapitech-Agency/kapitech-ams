@@ -583,7 +583,7 @@ export const AdminLayout: React.FC = () => {
                   })}
                 </nav>
               ) : location.pathname === '/admin/dashboard' ? (
-                <nav aria-label="Dashboard view" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto rounded-control border border-line/80 bg-bg/55 p-1 ams-topnav-scroll">
+                <nav aria-label="Dashboard view" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
                   {[
                     { key: 'overview', label: 'Overview', search: '' },
                     { key: 'performance', label: 'Performance', search: '?view=performance' },
@@ -603,7 +603,7 @@ export const AdminLayout: React.FC = () => {
                   ))}
                 </nav>
               ) : location.pathname === '/admin/projects' ? (
-                <nav aria-label="Projects sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto rounded-control border border-line/80 bg-bg/55 p-1 ams-topnav-scroll">
+                <nav aria-label="Projects sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
                   {[
                     { key: 'all', label: 'All Projects', search: '' },
                     { key: 'sprint', label: 'Sprint & Delivery', search: '?projects=sprint' },
@@ -625,7 +625,7 @@ export const AdminLayout: React.FC = () => {
                   })}
                 </nav>
               ) : location.pathname === '/admin/invoicing' ? (
-                <nav aria-label="Finance sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto rounded-control border border-line/80 bg-bg/55 p-1 ams-topnav-scroll">
+                <nav aria-label="Finance sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
                   {[
                     { key: 'invoices', label: 'Invoice', search: '' },
                     { key: 'quotations', label: 'Quotation', search: '?finance=quotations' },
