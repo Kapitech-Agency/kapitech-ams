@@ -2317,26 +2317,63 @@ export const AdminProjects: React.FC = () => {
             <div className="overflow-x-auto custom-scrollbar">
               <table className="ams-data-table min-w-[900px] text-left">
                 <thead>
-                  <tr><th>Project</th><th>Budget</th><th>Actual to date</th><th>Remaining</th><th>Progress</th><th>Variance</th></tr>
+                  <tr><th>Project</th><th>Health</th><th>Budget</th><th>Actual to date</th><th>Remaining</th><th>Delivery</th><th>Budget burn</th><th>Variance</th></tr>
                 </thead>
                 <tbody>
-                  {budgetRows.map(row => (
-                    <tr key={row.project.id}>
-                      <td>
-                        <button type="button" onClick={() => openProjectDetail(row.project)} className="text-left">
-                          <div className="text-xs font-semibold text-fg">{row.project.name}</div>
-                          <div className="mt-0.5 text-[11px] text-muted">{row.project.clientCompany}</div>
-                        </button>
-                      </td>
-                      <td className="text-xs tabular-nums text-fg">{formatAmount(row.project.budget, currency)}</td>
-                      <td className="text-xs tabular-nums text-fg">{formatAmount(row.burn, currency)}</td>
-                      <td className="text-xs tabular-nums text-fg">{formatAmount(row.remaining, currency)}</td>
-                      <td>
-                        <div className="min-w-[150px]"><div className="flex justify-between text-[10px] text-muted"><span>Delivery</span><span>{row.project.progressPercent}%</span></div><div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg"><div className="h-full rounded-full bg-accent" style={{ width: row.project.progressPercent + '%' }} /></div></div>
-                      </td>
-                      <td className={'text-xs tabular-nums font-medium ' + (row.variance < 0 ? 'text-danger' : 'text-success')}>{formatAmount(row.variance, currency)}</td>
-                    </tr>
-                  ))}
+                  {budgetRows.map(row => {
+                    const burnPercent = row.project.budget > 0
+                      ? Math.min(100, Math.round((row.burn / row.project.budget) * 100))
+                      : 0;
+                    return (
+                      <tr key={row.project.id}>
+                        <td>
+                          <button type="button" onClick={() => openProjectDetail(row.project)} className="min-w-0 text-left">
+                            <div className="max-w-[240px] truncate text-xs font-semibold text-fg">{row.project.name}</div>
+                            <div className="mt-0.5 max-w-[240px] truncate text-[11px] text-muted">{row.project.clientCompany || '—'}</div>
+                          </button>
+                        </td>
+                        <td>
+                          <span className={'inline-flex rounded-badge border px-2 py-1 text-[10px] font-semibold ' + healthClass(row.project.health)}>
+                            {row.project.health || 'Good'}
+                          </span>
+                        </td>
+                        <td className="text-xs tabular-nums font-medium text-fg">{formatAmount(row.project.budget, currency)}</td>
+                        <td className="text-xs tabular-nums text-fg">{formatAmount(row.burn, currency)}</td>
+                        <td className="text-xs tabular-nums text-fg">{formatAmount(row.remaining, currency)}</td>
+                        <td>
+                          <div className="min-w-[145px]">
+                            <div className="flex items-center justify-between text-[10px] text-muted">
+                              <span>Delivery</span>
+                              <span className="tabular-nums text-fg">{row.project.progressPercent}%</span>
+                            </div>
+                            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg">
+                              <div className="h-full rounded-full bg-accent" style={{ width: row.project.progressPercent + '%' }} />
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="min-w-[145px]">
+                            <div className="flex items-center justify-between text-[10px] text-muted">
+                              <span>Burn</span>
+                              <span className="tabular-nums text-fg">{burnPercent}%</span>
+                            </div>
+                            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg">
+                              <div
+                                className={'h-full rounded-full ' + (burnPercent > row.project.progressPercent + 15 ? 'bg-danger' : burnPercent > row.project.progressPercent + 5 ? 'bg-warning' : 'bg-success')}
+                                style={{ width: burnPercent + '%' }}
+                              />
+                            </div>
+                          </div>
+                        </td>
+                        <td className={'text-xs tabular-nums font-semibold ' + (row.variance < 0 ? 'text-danger' : 'text-success')}>
+                          {formatAmount(row.variance, currency)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {budgetRows.length === 0 && (
+                    <tr><td colSpan={8} className="py-12 text-center text-xs text-muted">No projects match the current portfolio filters.</td></tr>
+                  )}
                 </tbody>
               </table>
             </div>
