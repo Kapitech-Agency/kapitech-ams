@@ -2394,7 +2394,9 @@ export const AdminInvoicing: React.FC = () => {
         </div>
       )}
     </div>
-  </header><div className="overflow-x-auto custom-scrollbar">
+  </header>
+  <>
+    <div className="overflow-x-auto custom-scrollbar">
                   {incomeRows.length === 0 ? (
                     <div className="p-5"><EmptyState title="No income recorded" description="Recorded payments will appear here."/></div>
                   ) : (
@@ -2439,6 +2441,7 @@ export const AdminInvoicing: React.FC = () => {
                     </div>
                   </div>
                 )}
+              </div>
               </>
             ) : (
               <>
