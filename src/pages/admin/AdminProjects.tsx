@@ -1429,7 +1429,8 @@ export const AdminProjects: React.FC = () => {
                           setDragOverProjectStatus(column.id);
                         }}
                         onDragLeave={event => {
-                          if (event.currentTarget === event.target) {
+                          const nextTarget = event.relatedTarget as Node | null;
+                          if (!nextTarget || !event.currentTarget.contains(nextTarget)) {
                             setDragOverProjectStatus(current => current === column.id ? null : current);
                           }
                         }}
@@ -1440,25 +1441,41 @@ export const AdminProjects: React.FC = () => {
                           const project = projects.find(item => item.id === projectId);
                           if (project) void updateProjectStatus(project, column.id);
                         }}
-                        className={'flex w-[300px] shrink-0 flex-col rounded-card border bg-bg/70 p-2.5 transition-all duration-200 sm:w-[316px] ' + (
-                          isDropTarget ? 'border-accent/50 bg-accent/5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--accent)_18%,transparent)]' : 'border-line/80'
-                        )}
+                        className={[
+                          'flex w-[300px] shrink-0 flex-col overflow-hidden rounded-card border bg-bg/70 transition-[border-color,background-color,box-shadow] duration-200 sm:w-[316px] max-h-[min(68vh,760px)]',
+                          isDropTarget
+                            ? 'border-accent/50 bg-accent/5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--accent)_18%,transparent)]'
+                            : 'border-line/80',
+                        ].join(' ')}
                       >
-                        <div className="mb-2.5 shrink-0 px-1.5 py-1">
-                          <div className="flex items-start justify-between gap-2">
+                        <div className="shrink-0 border-b border-line bg-panel/95 px-3 py-3">
+                          <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
                                 <span className={'h-2 w-2 shrink-0 rounded-full ' + column.dot} />
                                 <span className="text-xs font-semibold text-fg">{column.label}</span>
-                                <span className="text-[10px] text-muted">{items.length}</span>
+                                <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] font-semibold text-muted">{items.length}</span>
                               </div>
                               <p className="mt-1 text-[10px] leading-4 text-muted">{column.description}</p>
                             </div>
-                            <span className="hidden" aria-hidden="true">{items.length}</span>
+                            {canManageProjects && (
+                              <button
+                                type="button"
+                                onClick={() => openNewProject(column.id)}
+                                className="inline-flex h-7 shrink-0 items-center gap-1 rounded-control border border-line bg-bg px-2 text-[10px] font-medium text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg"
+                                aria-label={'Add project to ' + column.label}
+                              >
+                                <Plus size={12} /> Add
+                              </button>
+                            )}
+                          </div>
+                          <div className="mt-2 flex items-center justify-between text-[9px] text-muted">
+                            <span>{items.reduce((sum, project) => sum + project.tasks.filter(task => task.status !== 'done').length, 0)} open tasks</span>
+                            <span className="tabular-nums">{formatAmount(items.reduce((sum, project) => sum + project.budget, 0), currency)}</span>
                           </div>
                         </div>
 
-                        <div className={'min-h-[220px] space-y-2.5 rounded-card p-1 transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
+                        <div className={'min-h-[220px] flex-1 overflow-y-auto custom-scrollbar space-y-2.5 p-2.5 transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
                           {items.length === 0 ? (
                             <div className={'flex min-h-[180px] items-center justify-center rounded-card border border-dashed p-5 text-center text-[11px] text-muted transition-colors ' + (isDropTarget ? 'border-accent/40 bg-accent/5 text-fg' : 'border-line')}>
                               <span>
@@ -1477,6 +1494,7 @@ export const AdminProjects: React.FC = () => {
                                 <article
                                   key={project.id}
                                   draggable={canManageProjects}
+                                  aria-grabbed={isDragging}
                                   onDragStart={event => {
                                     if (!canManageProjects) return;
                                     setDraggingProjectId(project.id);
