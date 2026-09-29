@@ -1241,7 +1241,7 @@ export const AdminProjects: React.FC = () => {
             {selectedProjectDetail.notes && (
               <div>
                 <div className="text-[11px] font-semibold text-muted">Notes</div>
-                <p className="mt-2 rounded-card border border-line bg-bg p-3 text-xs leading-5 text-fg">{selectedProjectDetail.notes}</p>
+                <p className="mt-2 rounded-card border border-line bg-bg p-4 text-xs leading-5 text-fg">{selectedProjectDetail.notes}</p>
               </div>
             )}
 
@@ -1317,7 +1317,7 @@ export const AdminProjects: React.FC = () => {
             </div>
             <div>
               <div className="text-[11px] font-semibold text-muted">Description</div>
-              <p className="mt-2 rounded-card border border-line bg-bg p-3 text-xs leading-5 text-fg">{selectedTask.description || 'No description provided.'}</p>
+              <p className="mt-2 rounded-card border border-line bg-bg p-4 text-xs leading-5 text-fg">{selectedTask.description || 'No description provided.'}</p>
             </div>
             <div>
               <div className="flex items-center justify-between text-[11px] font-semibold text-muted">
@@ -1667,7 +1667,7 @@ export const AdminProjects: React.FC = () => {
                             </div>
                           )}
                           {items.length === 0 ? (
-                            <div className={'flex min-h-[180px] items-center justify-center rounded-card border border-dashed p-5 text-center text-[11px] text-muted transition-colors ' + (isDropTarget ? 'border-accent/40 bg-accent/5 text-fg' : 'border-line')}>
+                            <div className={'flex min-h-[180px] items-center justify-center rounded-card border border-dashed p-4 text-center text-[11px] text-muted transition-colors ' + (isDropTarget ? 'border-accent/40 bg-accent/5 text-fg' : 'border-line')}>
                               <span className="max-w-[190px]">
                                 <span className="block font-medium text-fg">{canManageProjects && isDropTarget ? 'Drop project here' : 'No projects here'}</span>
                                 <span className="mt-1 block text-muted">{canManageProjects ? 'Drag a card into this lane.' : 'No projects in this stage.'}</span>
@@ -2134,7 +2134,7 @@ export const AdminProjects: React.FC = () => {
                             )}
                             {tasks.length === 0 ? (
                               <div className={[
-                                'flex min-h-[210px] items-center justify-center rounded-card border border-dashed p-6 text-center transition-colors',
+                                'flex min-h-[210px] items-center justify-center rounded-card border border-dashed p-4 text-center transition-colors',
                                 isDropTarget ? 'border-accent/40 bg-accent/5' : 'border-line/80 bg-bg/35',
                               ].join(' ')}>
                                 <div className="max-w-[180px]">
