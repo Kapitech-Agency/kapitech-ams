@@ -1563,7 +1563,7 @@ export const AdminProjects: React.FC = () => {
                           </div>
                         </div>
 
-                        <div className={'min-h-[220px] flex-1 overflow-y-auto custom-scrollbar space-y-2.5 p-2.5 transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
+                        <div className={'min-h-[220px] flex-1 space-y-2.5 p-2.5 transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
                           {draggingProjectId && canManageProjects && (
                             <div className={'rounded-control border px-2.5 py-2 text-[9px] font-medium transition-colors ' + (isDropTarget ? 'border-accent/35 bg-accent/10 text-accent-text' : 'border-dashed border-line bg-bg/50 text-muted')}>
                               {isDropTarget ? 'Release to move project into ' + column.label : 'Drop here to move project into ' + column.label}
