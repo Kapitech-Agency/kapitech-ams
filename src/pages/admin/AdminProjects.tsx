@@ -356,8 +356,8 @@ export const AdminProjects: React.FC = () => {
   );
 
   const projectFilterOptions = useMemo(() => {
-    const clients = Array.from(new Set(projects.map(project => project.clientCompany).filter(Boolean))).sort((a, b) => a.localeCompare(b));
-    const owners = Array.from(new Set(projects.map(project => project.teamLead).filter(Boolean))).sort((a, b) => a.localeCompare(b));
+    const clients = Array.from(new Set(projects.map(project => project.clientCompany).filter((value): value is string => Boolean(value)))).sort((a, b) => a.localeCompare(b));
+    const owners = Array.from(new Set(projects.map(project => project.teamLead).filter((value): value is string => Boolean(value)))).sort((a, b) => a.localeCompare(b));
     return { clients, owners };
   }, [projects]);
 
