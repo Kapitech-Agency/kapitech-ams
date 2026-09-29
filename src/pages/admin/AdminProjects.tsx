@@ -812,7 +812,6 @@ export const AdminProjects: React.FC = () => {
     setDraggingTaskId(null);
     setDragOverTaskStatus(null);
 
-    const previousStatus = task.status;
     setProjects(current =>
       current.map(project =>
         project.id === selectedSprintProject.id
@@ -828,32 +827,22 @@ export const AdminProjects: React.FC = () => {
     try {
       const response = await api.tasks.update(task.id, { status });
       if (response.success) {
-        await syncProjects();
         showToast(language === 'id' ? 'Status tugas diperbarui.' : 'Task status updated.');
         return;
       }
-    } catch {
-      // Fall through to demo mode.
-    }
 
-    setProjects(current =>
-      current.map(project =>
-        project.id === selectedSprintProject.id
-          ? {
-              ...project,
-              tasks: project.tasks.map(item => item.id === task.id ? { ...item, status: previousStatus } : item),
-              updatedAt: new Date().toISOString(),
-            }
-          : project
-      )
-    );
-    showToast('Task status saved in demo mode.');
+      // Keep the optimistic local state when the API is unavailable or rejects
+      // the update so the board remains usable for A/B testing and demo flows.
+      showToast(language === 'id' ? 'Status tugas diperbarui lokal.' : 'Task status updated locally for this session.');
+    } catch {
+      // Preserve the optimistic local state for demo / A-B testing mode.
+      showToast(language === 'id' ? 'Status tugas diperbarui lokal.' : 'Task status updated locally for this session.');
+    }
   };
 
   const updateProjectStatus = async (project: ProjectRecord, status: ProjectStatus) => {
     if (!canManageProjects || project.status === status) return;
 
-    const previousStatus = project.status;
     const updatedProject = { ...project, status, updatedAt: new Date().toISOString() };
 
     setProjects(current =>
@@ -865,18 +854,17 @@ export const AdminProjects: React.FC = () => {
     try {
       const response = await api.projects.update(project.id, { status });
       if (response.success) {
-        await syncProjects();
         showToast(language === 'id' ? 'Status proyek diperbarui.' : 'Project status updated.');
         return;
       }
-    } catch {
-      // Fall through to demo mode.
-    }
 
-    setProjects(current =>
-      current.map(item => item.id === project.id ? normalizeProject({ ...item, status: previousStatus }) : item)
-    );
-    showToast('Project status saved in demo mode.');
+      // Keep the optimistic local state when the API is unavailable or rejects
+      // the update so drag & drop remains useful for A/B testing and demos.
+      showToast(language === 'id' ? 'Status proyek diperbarui lokal.' : 'Project status updated locally for this session.');
+    } catch {
+      // Preserve the optimistic local state for demo / A-B testing mode.
+      showToast(language === 'id' ? 'Status proyek diperbarui lokal.' : 'Project status updated locally for this session.');
+    }
   };
 
   const toggleSubtask = async (task: ProjectTask, subtaskId: string) => {
