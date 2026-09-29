@@ -259,16 +259,6 @@ export const AdminLayout: React.FC = () => {
         </div>
 
         <div className="shrink-0 border-t border-line bg-panel px-3 pb-3 pt-3">
-          {settingsAllowed && (
-            <Link
-              to="/admin/settings"
-              aria-current={location.pathname.startsWith('/admin/settings') ? 'page' : undefined}
-              className={`flex min-h-10 items-center gap-2.5 rounded-control px-2.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${location.pathname.startsWith('/admin/settings') ? 'bg-accent/10 text-accent-text' : 'text-muted hover:bg-panel-hover hover:text-fg'}`}
-            >
-              <Settings size={16} />
-              <span className="flex-1">Settings</span>
-            </Link>
-          )}
           <div className="mt-2 flex items-center justify-between px-2.5 text-[10px] text-muted">
             <span>Kapitech AMS</span>
             <span>v2.4.0</span>
@@ -396,16 +386,6 @@ export const AdminLayout: React.FC = () => {
                   </div>
                 </button>
                 <div className="mt-1.5 flex items-center gap-1.5 border-t border-line pt-1.5">
-                  {settingsAllowed && (
-                    <Link
-                      to="/admin/settings"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex h-10 min-w-0 flex-1 items-center justify-center gap-2 rounded-control border border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                    >
-                      <Settings size={16} />
-                      <span className="text-xs font-medium">Settings</span>
-                    </Link>
-                  )}
                   <button
                     type="button"
                     onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -528,16 +508,6 @@ export const AdminLayout: React.FC = () => {
                 icon={theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
                 className="h-9 w-9 p-0"
               />
-              {settingsAllowed && (
-                <Link
-                  to="/admin/settings"
-                  aria-label="Open settings"
-                  title="Settings"
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-control text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                >
-                  <Settings size={16} />
-                </Link>
-              )}
               <span className="mx-1 h-5 w-px shrink-0 bg-line" aria-hidden="true" />
               <button
                 type="button"
