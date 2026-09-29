@@ -20,7 +20,7 @@ import {
   Tag
 } from 'lucide-react';
 import { api } from '../../lib/apiClient';
-import { Modal } from '../../components/ui/Modal';
+import { Drawer } from '../../components/ui/Drawer';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import { ProjectItem } from '../../data/projectsData';
@@ -441,7 +441,7 @@ export const AdminCmsProjects: React.FC = () => {
         </div>
       )}
       {/* MODAL: ADD / EDIT PROJECT WITH LIVE PREVIEW & DRAG & DROP */}
-      <Modal
+      <Drawer
         open={isModalOpen && !!editingProject}
         onClose={() => setIsModalOpen(false)}
         size="xl"
@@ -748,7 +748,7 @@ export const AdminCmsProjects: React.FC = () => {
 
               </form>
             )}
-      </Modal>
+      </Drawer>
 
     </div>
   );
