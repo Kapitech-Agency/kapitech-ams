@@ -1525,7 +1525,7 @@ export const AdminProjects: React.FC = () => {
                             event.dataTransfer.getData('text/project-id') ||
                             event.dataTransfer.getData('text/plain');
                           const project = projects.find(item => item.id === projectId);
-                          if (project) {
+                          if (project && project.status !== column.id) {
                             void updateProjectStatus(project, column.id);
                           } else {
                             setDraggingProjectId(null);
@@ -1592,9 +1592,14 @@ export const AdminProjects: React.FC = () => {
                                   draggable={canManageProjects}
                                   aria-grabbed={isDragging}
                                   onDragStart={event => {
-                                    if (!canManageProjects) return;
+                                    if (!canManageProjects) {
+                                      event.preventDefault();
+                                      return;
+                                    }
                                     setDraggingProjectId(project.id);
+                                    setDragOverProjectStatus(project.status);
                                     event.dataTransfer.effectAllowed = 'move';
+                                    event.dataTransfer.dropEffect = 'move';
                                     event.dataTransfer.setData('text/project-id', project.id);
                                     event.dataTransfer.setData('text/plain', project.id);
                                   }}
@@ -1661,8 +1666,10 @@ export const AdminProjects: React.FC = () => {
                                       {project.teamLead ? (
                                         <ProfileIdentity
                                           profile={{ name: project.teamLead, contextLabel: 'Project owner' }}
+                                          compact
                                           size="sm"
                                           showRole={false}
+                                          className="h-8 w-8 shrink-0"
                                         />
                                       ) : (
                                         <span className="text-[10px] font-medium text-muted">Unassigned</span>
