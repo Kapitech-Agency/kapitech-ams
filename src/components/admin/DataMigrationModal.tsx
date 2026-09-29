@@ -10,7 +10,7 @@ import {
   Receipt,
   FileCheck2
 } from 'lucide-react';
-import { Modal } from '../../components/ui/Modal';
+import { Drawer } from '../../components/ui/Drawer';
 import { useLanguage } from '../../lib/LanguageContext';
 import { saveCrmLead, CrmLead } from '../../lib/crmStore';
 import { saveAgencyProject, AgencyProject } from '../../lib/projectStore';
@@ -229,7 +229,7 @@ export const DataMigrationModal: React.FC<DataMigrationModalProps> = ({
   };
 
   return (
-    <Modal open={true} onClose={onClose} size="lg" title={language === 'id' ? 'Impor Data & Migrasi Skema' : 'Data Migration & CSV Import'} description={language === 'id' ? 'Unggah file spreadsheet CSV dengan pemetaan otomatis.' : 'Upload structured CSV templates with instant schema ingestion.'}>
+    <Drawer open={true} onClose={onClose} size="lg" title={language === 'id' ? 'Impor Data & Migrasi Skema' : 'Data Migration & CSV Import'} description={language === 'id' ? 'Unggah file spreadsheet CSV dengan pemetaan otomatis.' : 'Upload structured CSV templates with instant schema ingestion.'}>
         <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4 custom-scrollbar">
           <div>
             <label className="text-[11px] font-sans text-muted normal-case block mb-2">
@@ -363,6 +363,6 @@ export const DataMigrationModal: React.FC<DataMigrationModalProps> = ({
             <span>{parsing ? 'Processing...' : language === 'id' ? 'Mulai Impor Data' : 'Execute Import'}</span>
           </button>
         </div>
-    </Modal>
+    </Drawer>
   );
 };
