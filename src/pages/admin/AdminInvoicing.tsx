@@ -36,6 +36,7 @@ import { InvoiceStatusDropdown } from '../../components/ui/InvoiceStatusDropdown
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { api } from '../../lib/apiClient';
 import { AdminMetricCard, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 
 type SortKey = 'updated' | 'due' | 'oldest' | 'amount_high' | 'amount_low' | 'invoice';
