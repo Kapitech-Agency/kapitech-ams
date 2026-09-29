@@ -21,7 +21,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { CurrencyCode, CURRENCY_EVENT, formatAmount, getActiveCurrency } from '../../lib/currency';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { CustomSelect } from '../../components/ui/CustomSelect';
-import { Modal } from '../../components/ui/Modal';
+import { Drawer, Modal } from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
 import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 
@@ -756,7 +756,7 @@ export const AdminProposals: React.FC = () => {
         </>
       )}
 
-      <Modal
+      <Drawer
         open={formOpen}
         onClose={() => !isSubmitting && setFormOpen(false)}
         size="xl"
@@ -818,9 +818,9 @@ export const AdminProposals: React.FC = () => {
           </section>
 
         </form>
-      </Modal>
+      </Drawer>
 
-      <Modal
+      <Drawer
         open={!!detailProposal}
         onClose={() => setDetailProposal(null)}
         size="xl"
@@ -899,7 +899,7 @@ export const AdminProposals: React.FC = () => {
             )}
           </div>
         )}
-      </Modal>
+      </Drawer>
 
       <Modal
         open={!!confirmAction}
