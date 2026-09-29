@@ -45,7 +45,6 @@ const STITCH_NAV_ITEMS: AdminNavItem[] = [
   { key: 'finance', to: '/admin/invoicing', label: 'Finance', icon: Landmark, accessKey: 'invoicing', requiredTier: 2, group: 'Agency Core' },
   { key: 'clients', to: '/admin/clients', label: 'Clients', icon: UsersRound, requiredTier: 3, group: 'Agency Management' },
   { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, badge: 14, requiredTier: 3, group: 'Agency Management' },
-  { key: 'vendors', to: '/admin/vendors', label: 'Vendors', icon: Briefcase, accessKey: 'vendors', requiredTier: 2, group: 'Agency Management' },
   { key: 'team', to: '/admin/time-logs', label: 'Team', icon: UsersRound, accessKey: 'timelogs', requiredTier: 3, group: 'Project Operations' },
   { key: 'tasks', to: '/admin/dashboard?view=tasks', label: 'Tasks', icon: ClipboardCheck, badge: 3, accessKey: 'projects', requiredTier: 3, group: 'Project Operations' },
   { key: 'documents', to: '/admin/documents', label: 'Documents', icon: LockKeyhole, badge: 'Encrypted', requiredTier: 3, group: 'Project Operations' },
@@ -207,7 +206,7 @@ export const AdminLayout: React.FC = () => {
       return new URLSearchParams(location.search).get('view') !== 'tasks';
     }
 
-    if (itemTo === '/admin/invoicing' && location.pathname === '/admin/vendors') {
+    if (path === '/admin/time-logs' && location.pathname === '/admin/vendors') {
       return true;
     }
 
@@ -647,7 +646,7 @@ export const AdminLayout: React.FC = () => {
                     );
                   })}
                 </nav>
-              ) : location.pathname === '/admin/invoicing' || location.pathname === '/admin/vendors' ? (
+              ) : location.pathname === '/admin/invoicing' ? (
                 <nav aria-label="Finance sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
                   {[
                     { key: 'invoices', label: 'Invoice', to: '/admin/invoicing' },
@@ -655,17 +654,35 @@ export const AdminLayout: React.FC = () => {
                     { key: 'income-expenses', label: 'Income & Expenses', to: '/admin/invoicing?finance=income-expenses' },
                     { key: 'tax-retainers', label: 'Tax & Retainers', to: '/admin/invoicing?finance=tax-retainers' },
                     { key: 'financial-reports', label: 'Financial Reports', to: '/admin/invoicing?finance=financial-reports' },
-                    { key: 'vendors', label: 'Vendors', to: '/admin/vendors' },
                   ].map((tab) => {
-                    const activeView = location.pathname === '/admin/vendors'
-                      ? 'vendors'
-                      : new URLSearchParams(location.search).get('finance') || 'invoices';
+                    const activeView = new URLSearchParams(location.search).get('finance') || 'invoices';
                     return (
                       <NavLink
                         key={tab.key}
                         to={tab.to}
                         end
-                        className={'group relative inline-flex h-9 shrink-0 items-center rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (activeView === tab.key ? 'border border-accent/25 bg-accent/10 font-semibold text-fg' : 'border border-transparent text-muted hover:bg-bg hover:text-fg')}
+                        className={'group relative inline-flex h-9 shrink-0 items-center rounded-chip border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (activeView === tab.key ? 'border-accent/25 bg-accent/10 font-semibold text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg')}
+                      >
+                        {tab.label}
+                      </NavLink>
+                    );
+                  })}
+                </nav>
+              ) : location.pathname === '/admin/time-logs' || location.pathname === '/admin/vendors' ? (
+                <nav aria-label="Team sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
+                  {[
+                    { key: 'time-logs', label: 'Time Logs', to: '/admin/time-logs' },
+                    { key: 'vendor-personnel', label: 'Vendor Personnel', to: '/admin/vendors' },
+                  ].map((tab) => {
+                    const active = tab.key === 'vendor-personnel'
+                      ? location.pathname === '/admin/vendors'
+                      : location.pathname === '/admin/time-logs';
+                    return (
+                      <NavLink
+                        key={tab.key}
+                        to={tab.to}
+                        end
+                        className={'group relative inline-flex h-9 shrink-0 items-center rounded-chip border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (active ? 'border-accent/25 bg-accent/10 font-semibold text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg')}
                       >
                         {tab.label}
                       </NavLink>
