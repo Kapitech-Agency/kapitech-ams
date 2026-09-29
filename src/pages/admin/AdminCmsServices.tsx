@@ -28,7 +28,7 @@ import { allSolutionsAndServices, ServiceItemData } from '../../data/servicesDat
 import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { api } from '../../lib/apiClient';
-import { Drawer, Modal } from '../../components/ui/Modal';
+import { Drawer } from '../../components/ui/Drawer';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
