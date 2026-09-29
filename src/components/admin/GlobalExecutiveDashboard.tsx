@@ -758,9 +758,9 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               { id: 'active-projects', label: 'Active projects', value: '12', change: '+2', changeToneClassName: 'text-success', context: 'this month', sparkline: [8, 9, 10, 12], icon: <FolderKanban size={15} />, toneClassName: 'text-success' },
               { id: 'tasks-due', label: 'Tasks due this week', value: '18', change: '6', changeToneClassName: 'text-warning', context: 'high priority', sparkline: [12, 14, 16, 18], icon: <CalendarDays size={15} />, toneClassName: 'text-info' },
               { id: 'overdue', label: 'Overdue tasks', value: '3', change: 'Requires attention', changeToneClassName: 'text-danger', sparkline: [6, 5, 4, 3], icon: <AlertTriangle size={15} />, toneClassName: 'text-danger' },
-              { id: 'utilization', label: 'Team utilization', value: '78%', change: '+6%', changeToneClassName: 'text-success', context: 'vs last month', sparkline: [66, 70, 73, 78], icon: <Users size={15} />, toneClassName: 'text-warning' },
               { id: 'revenue', label: 'Monthly revenue', value: '$84.5k', change: '+12.4%', changeToneClassName: 'text-success', context: 'vs May', sparkline: sampleRevenueByRange[range].map((point) => point.primary), icon: <CircleDollarSign size={15} />, toneClassName: 'text-success' },
-              { id: 'outstanding', label: 'Outstanding invoices', value: '$32.4k', change: '$8.7k', changeToneClassName: 'text-warning', context: 'overdue', sparkline: [22, 25, 28, 32.4], icon: <ReceiptText size={15} />, toneClassName: 'text-warning' }
+              { id: 'outstanding', label: 'Outstanding invoices', value: '$32.4k', change: '$8.7k', changeToneClassName: 'text-warning', context: 'overdue', sparkline: [22, 25, 28, 32.4], icon: <ReceiptText size={15} />, toneClassName: 'text-warning' },
+              { id: 'utilization', label: 'Team utilization', value: '78%', change: '+6%', changeToneClassName: 'text-success', context: 'vs last month', sparkline: [66, 70, 73, 78], icon: <Users size={15} />, toneClassName: 'text-warning' }
             ]}
           />
         </div>
@@ -768,9 +768,11 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           <div className="grid grid-cols-2 gap-2">
             {[
               { label: 'New project', icon: <Plus size={14} />, href: '/admin/projects' },
-              { label: 'Review tasks', icon: <CheckCircle2 size={14} />, href: '/admin/tasks' },
+              { label: 'Review tasks', icon: <CheckCircle2 size={14} />, href: '/admin/dashboard?view=tasks' },
               { label: 'Log time', icon: <Clock3 size={14} />, href: '/admin/time-logs' },
-              { label: 'View invoices', icon: <ReceiptText size={14} />, href: '/admin/finance' }
+              { label: 'View invoices', icon: <ReceiptText size={14} />, href: '/admin/invoicing' },
+              { label: 'View clients', icon: <Users size={14} />, href: '/admin/clients' },
+              { label: 'Open CRM', icon: <FolderKanban size={14} />, href: '/admin/crm' }
             ].map((action) => (
               <Link key={action.label} to={action.href} className="flex min-h-10 items-center gap-2 rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-fg transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-accent-text">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control border border-line bg-panel text-muted">{action.icon}</span>
