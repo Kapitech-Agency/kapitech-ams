@@ -8,6 +8,7 @@ import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 
 type TimeLog = {
@@ -265,7 +266,7 @@ export const AdminTimeLogs: React.FC = () => {
                         <div className="text-xs font-medium text-fg">{log.projectName || 'General'}</div>
                         <div className="text-[11px] text-muted mt-0.5">{log.taskTitle || 'General activity'}</div>
                       </td>
-                      <td className="px-4 py-3 text-xs text-fg">{log.user || '—'}</td>
+                      <td className="px-4 py-3">{log.user ? <ProfileIdentity profile={{ name: log.user, role: 'Team member', division: 'Project Operations', id: log.userId }} showRole={false} /> : <span className="text-xs text-muted">—</span>}</td>
                       <td className="px-4 py-3 text-xs font-semibold text-fg">{formatMinutes(Number(log.durationMinutes || 0))}</td>
                       <td className="px-4 py-3"><span className="inline-flex px-2 py-1 rounded-badge border border-line text-[10px] text-fg">{log.billable ? 'Billable' : 'Non-billable'}</span></td>
                       <td className="px-4 py-3 text-right">
