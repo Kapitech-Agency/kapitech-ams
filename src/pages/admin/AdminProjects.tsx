@@ -832,9 +832,11 @@ export const AdminProjects: React.FC = () => {
     setSelectedProject(null);
   };
 
-  const selectedProjectDetail = selectedProject || (selectedProjectSlug
-    ? projects.find(project => project.slug === selectedProjectSlug) || null
-    : null);
+  const selectedProjectDetail = view === 'sprint'
+    ? null
+    : selectedProject || (selectedProjectSlug
+      ? projects.find(project => project.slug === selectedProjectSlug) || null
+      : null);
 
   return (
     <div className="space-y-5">
@@ -970,7 +972,7 @@ export const AdminProjects: React.FC = () => {
         onClose={() => setSelectedTask(null)}
         size="md"
         title={selectedTask?.title || 'Task details'}
-        description={selectedTask ? selectedProjectDetail?.name : undefined}
+        description={selectedTask ? selectedSprintProject?.name : undefined}
         footer={(
           <>
             <Button variant="secondary" onClick={() => setSelectedTask(null)}>Close</Button>
