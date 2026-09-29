@@ -157,12 +157,6 @@
 .ams-shell .text-amber-400,.ams-shell .text-yellow-400{color:var(--warning)}
 .ams-shell .text-blue-400,.ams-shell .text-cyan-400{color:var(--info)}
 .ams-shell [data-status=success]{color:var(--success)}.ams-shell [data-status=warning]{color:var(--warning)}.ams-shell [data-status=danger]{color:var(--danger)}.ams-shell [data-status=info]{color:var(--info)}
-.ams-shell table{width:100%;border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums}
-.ams-shell thead th{position:sticky;top:0;z-index:1;height:44px;padding:0 16px !important;color:var(--muted);background:var(--panel);border-bottom:1px solid var(--line);font-size:12px;line-height:18px;font-weight:500;text-align:left;vertical-align:middle}
-.ams-shell tbody td{height:48px;padding:0 16px !important;color:var(--text);border-bottom:1px solid var(--line);font-size:13px;line-height:18px;vertical-align:middle}
-.ams-shell tbody tr:hover td{background:color-mix(in srgb,var(--text) 4%,transparent)}
-.ams-shell table th:first-child,.ams-shell table td:first-child{padding-left:18px !important}.ams-shell table th:last-child,.ams-shell table td:last-child{padding-right:18px !important}
-.ams-shell table th>*,.ams-shell table td>*{vertical-align:middle}
 .ams-shell .overflow-x-auto{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent;-webkit-overflow-scrolling:touch}
 .ams-shell .overflow-x-auto::-webkit-scrollbar{width:4px;height:6px}.ams-shell .overflow-x-auto::-webkit-scrollbar-track{background:transparent}.ams-shell .overflow-x-auto::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
 .ams-shell input,.ams-shell select,.ams-shell textarea{min-height:36px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);font-size:13px;line-height:18px;outline:none;transition:border-color .15s ease,box-shadow .15s ease}.ams-shell input::placeholder,.ams-shell textarea::placeholder{color:var(--muted)}.ams-shell input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not([class*="px-"]):not([class*="pl-"]){padding-left:12px}.ams-shell input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not([class*="px-"]):not([class*="pr-"]){padding-right:12px}.ams-shell input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not([class*="py-"]):not([class*="p-"]){padding-block:8px}.ams-shell select:not([class*="px-"]):not([class*="pl-"]){padding-left:12px}.ams-shell select:not([class*="px-"]):not([class*="pr-"]){padding-right:12px}.ams-shell textarea:not([class*="px-"]):not([class*="pl-"]){padding-left:12px}.ams-shell textarea:not([class*="px-"]):not([class*="pr-"]){padding-right:12px}.ams-shell textarea:not([class*="py-"]):not([class*="p-"]){padding-block:8px}.ams-shell input:focus,.ams-shell select:focus,.ams-shell textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 22%,transparent)}
@@ -464,16 +458,22 @@
 
 /* --------------------------------------------------------------------------
    AMS CANONICAL DATA TABLE
-   One geometry for data tables across every module.
-   -------------------------------------------------------------------------- */
-.ams-shell table{width:100%;border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums}
-.ams-shell table thead th{height:44px!important;padding:0 16px!important;background:var(--panel)!important;border-bottom:1px solid var(--line)!important;color:var(--muted)!important;font-size:11px!important;line-height:16px!important;font-weight:600!important;letter-spacing:.035em;text-transform:uppercase;vertical-align:middle}
-.ams-shell table tbody td{height:48px;min-height:48px;padding:8px 16px!important;background:var(--panel);border-bottom:1px solid var(--line);color:var(--text);font-size:13px;line-height:18px;vertical-align:middle}
-.ams-shell table tbody tr:last-child td{border-bottom:0}
-.ams-shell table tbody tr:hover td{background:color-mix(in srgb,var(--text) 4%,transparent)}
-.ams-shell table th:first-child,.ams-shell table td:first-child{padding-left:18px!important}
-.ams-shell table th:last-child,.ams-shell table td:last-child{padding-right:18px!important}
-.ams-shell .ams-table-actions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:6px}
+   One geometry for every data table across every module.
+   --------------------------------------------------------------------------
+   /* Canonical table geometry: every AMS data table uses the same header, row, padding, borders and interaction rhythm. */
+   .ams-shell table{width:100%;border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums}
+   .ams-shell table thead th{position:sticky;top:0;z-index:1;height:44px!important;padding:0 16px!important;background:var(--panel)!important;border-bottom:1px solid var(--line)!important;color:var(--muted)!important;font-size:11px!important;line-height:16px!important;font-weight:600!important;letter-spacing:.035em!important;text-transform:uppercase!important;text-align:left;vertical-align:middle;white-space:nowrap}
+   .ams-shell table tbody tr{border-top:0!important;border-bottom:0!important}
+   .ams-shell table tbody td{height:48px!important;min-height:48px;padding:8px 16px!important;background:var(--panel);border-bottom:1px solid var(--line)!important;color:var(--text);font-size:13px!important;line-height:18px!important;vertical-align:middle}
+   .ams-shell table tbody tr:last-child td{border-bottom:0!important}
+   .ams-shell table tbody tr:hover td{background:color-mix(in srgb,var(--text) 4%,transparent)}
+   .ams-shell table th:first-child,.ams-shell table td:first-child{padding-left:18px!important}
+   .ams-shell table th:last-child,.ams-shell table td:last-child{padding-right:18px!important}
+   .ams-shell table th>*,.ams-shell table td>*{vertical-align:middle}
+   .ams-shell table thead th>button,.ams-shell table thead th>a{min-height:28px;display:inline-flex;align-items:center;color:inherit;font:inherit;font-weight:inherit;line-height:inherit}
+   .ams-shell table .ams-table-actions{display:flex;flex-wrap:nowrap;align-items:center;justify-content:flex-end;gap:6px}
+   .ams-shell table .ams-table-actions>button,.ams-shell table .ams-table-actions>a{min-height:32px!important;min-width:32px!important;height:32px!important;width:32px!important;padding:0!important;display:inline-flex;align-items:center;justify-content:center}
+   */
 .ams-shell .ams-table-action{min-height:34px!important;padding:7px 10px!important;border:1px solid var(--line)!important;border-radius:8px!important;background:var(--bg)!important;color:var(--muted);font-size:11px;font-weight:500;white-space:nowrap;transition:background-color .15s ease,border-color .15s ease,color .15s ease}
 .ams-shell .ams-table-action:hover{background:var(--panel)!important;color:var(--text)}
 .ams-shell .ams-table-action[data-primary=true]{border-color:color-mix(in srgb,var(--accent) 35%,var(--line))!important;background:color-mix(in srgb,var(--accent) 10%,var(--bg))!important;color:var(--accent-text)}
@@ -489,10 +489,3 @@
   .ams-shell .ams-topbar-mobile-utilities .ams-topbar-profile{display:none}
 }
 
-/* Clients module: keep the canonical table language, with more breathing room for account rows. */
-.ams-shell .ams-clients-module .ams-client-table-shell{overflow:hidden}
-.ams-shell .ams-clients-module table thead th{height:44px!important;padding:0 16px!important;font-size:11px!important;letter-spacing:0;text-transform:none}
-.ams-shell .ams-clients-module table tbody td{height:48px!important;min-height:48px;padding:8px 16px!important;font-size:13px;line-height:18px}
-.ams-shell .ams-clients-module table th:first-child,.ams-shell .ams-clients-module table td:first-child{padding-left:18px!important}
-.ams-shell .ams-clients-module table th:last-child,.ams-shell .ams-clients-module table td:last-child{padding-right:18px!important}
-.ams-shell .ams-clients-module .ams-table-actions{gap:2px}
