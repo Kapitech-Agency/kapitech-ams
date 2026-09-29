@@ -4,7 +4,7 @@ import {
   Download,
   ArrowUpRight,
   BarChart3,
-  CalendarClock,
+  Clock,
   CheckCircle2,
   CircleDollarSign,
   Code2,
@@ -1883,7 +1883,7 @@ export const AdminProjects: React.FC = () => {
                                           <span className={'rounded-badge border px-2 py-1 text-[9px] font-semibold ' + priorityClass(task.priority)}>{priorityLabel(task.priority)}</span>
                                           {overdue && (
                                             <span className="inline-flex items-center gap-1 rounded-badge border border-danger/20 bg-danger/5 px-2 py-1 text-[9px] font-semibold text-danger">
-                                              <CalendarClock size={10} /> Overdue
+                                              <Clock size={10} /> Overdue
                                             </span>
                                           )}
                                         </div>
