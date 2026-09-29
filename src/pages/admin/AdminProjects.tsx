@@ -17,6 +17,7 @@ import {
   ShieldAlert,
   Trash2,
   Users,
+  X,
 } from 'lucide-react';
 import {
   INITIAL_DEFAULT_PROJECTS,
@@ -232,6 +233,10 @@ export const AdminProjects: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [projectSearch, setProjectSearch] = useState('');
   const [projectStatusFilter, setProjectStatusFilter] = useState('');
+  const [projectHealthFilter, setProjectHealthFilter] = useState('');
+  const [projectClientFilter, setProjectClientFilter] = useState('');
+  const [projectOwnerFilter, setProjectOwnerFilter] = useState('');
+  const [projectSort, setProjectSort] = useState('updated');
   const [projectLayout, setProjectLayout] = useState<ProjectLayout>(
     searchParams.get('layout') === 'table' ? 'table' : 'board'
   );
@@ -350,9 +355,23 @@ export const AdminProjects: React.FC = () => {
     [projects]
   );
 
+  const projectFilterOptions = useMemo(() => {
+    const clients = Array.from(new Set(projects.map(project => project.clientCompany).filter(Boolean))).sort((a, b) => a.localeCompare(b));
+    const owners = Array.from(new Set(projects.map(project => project.teamLead).filter(Boolean))).sort((a, b) => a.localeCompare(b));
+    return { clients, owners };
+  }, [projects]);
+
+  const activeProjectFilters = [
+    projectSearch,
+    projectStatusFilter,
+    projectHealthFilter,
+    projectClientFilter,
+    projectOwnerFilter,
+  ].filter(Boolean).length;
+
   const filteredProjects = useMemo(() => {
     const query = projectSearch.trim().toLowerCase();
-    return projects.filter(project => {
+    const result = projects.filter(project => {
       const matchesQuery =
         !query ||
         [
@@ -367,9 +386,37 @@ export const AdminProjects: React.FC = () => {
           .toLowerCase()
           .includes(query);
       const matchesStatus = !projectStatusFilter || project.status === projectStatusFilter;
-      return matchesQuery && matchesStatus;
+      const matchesHealth = !projectHealthFilter || project.health === projectHealthFilter;
+      const matchesClient = !projectClientFilter || project.clientCompany === projectClientFilter;
+      const matchesOwner = !projectOwnerFilter || project.teamLead === projectOwnerFilter;
+      return matchesQuery && matchesStatus && matchesHealth && matchesClient && matchesOwner;
     });
-  }, [projects, projectSearch, projectStatusFilter]);
+
+    return [...result].sort((a, b) => {
+      if (projectSort === 'name') return a.name.localeCompare(b.name);
+      if (projectSort === 'progress') return b.progressPercent - a.progressPercent;
+      if (projectSort === 'budget') return b.budget - a.budget;
+      if (projectSort === 'deadline') return (a.targetEndDate || '9999-12-31').localeCompare(b.targetEndDate || '9999-12-31');
+      return (b.updatedAt || b.createdAt || '').localeCompare(a.updatedAt || a.createdAt || '');
+    });
+  }, [
+    projects,
+    projectSearch,
+    projectStatusFilter,
+    projectHealthFilter,
+    projectClientFilter,
+    projectOwnerFilter,
+    projectSort,
+  ]);
+
+  const clearProjectFilters = () => {
+    setProjectSearch('');
+    setProjectStatusFilter('');
+    setProjectHealthFilter('');
+    setProjectClientFilter('');
+    setProjectOwnerFilter('');
+    setProjectSort('updated');
+  };
 
   const boardProjects = useMemo(
     () => filteredProjects.filter(project => project.status !== 'completed'),
@@ -1214,29 +1261,93 @@ export const AdminProjects: React.FC = () => {
 
           <AdminPanel
             title="Project portfolio"
-            description={serverMode ? 'Kanban project records with drag-and-drop status updates and slug-based navigation.' : 'Seeded slug data keeps the Kanban workspace fully testable without a connected project service.'}
-            actions={(
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="relative min-w-[220px]">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-                  <input value={projectSearch} onChange={event => setProjectSearch(event.target.value)} placeholder="Search projects or slug..." className={fieldClass + ' mt-0 pl-9'} />
+            description={serverMode ? 'Manage the active project portfolio, move delivery stages from Kanban, and keep the table as the structured reporting view.' : 'Seeded project data keeps the portfolio fully testable without a connected project service.'}
+          >
+            <div className="border-b border-line bg-bg/40 p-4 sm:p-5">
+              <div className="grid items-center gap-2.5 xl:grid-cols-[minmax(260px,1fr)_150px_150px_190px_170px_170px_auto]">
+                <div className="relative min-w-0">
+                  <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                  <input
+                    value={projectSearch}
+                    onChange={event => setProjectSearch(event.target.value)}
+                    placeholder="Search projects, clients, owners..."
+                    className={fieldClass + ' mt-0 pl-9'}
+                  />
                 </div>
                 <CustomSelect
                   value={projectStatusFilter}
                   onChange={setProjectStatusFilter}
                   options={[{ value: '', label: 'All statuses' }, ...PROJECT_STATUSES]}
-                  className="w-40"
+                  className="w-full"
+                  aria-label="Filter projects by status"
                 />
+                <CustomSelect
+                  value={projectHealthFilter}
+                  onChange={setProjectHealthFilter}
+                  options={[{ value: '', label: 'All health' }, ...(['Good', 'At Risk', 'Delayed', 'Blocked'] as ProjectHealth[]).map(value => ({ value, label: value }))]}
+                  className="w-full"
+                  aria-label="Filter projects by health"
+                />
+                <CustomSelect
+                  value={projectClientFilter}
+                  onChange={setProjectClientFilter}
+                  options={[{ value: '', label: 'All clients' }, ...projectFilterOptions.clients.map(value => ({ value, label: value }))]}
+                  className="w-full"
+                  aria-label="Filter projects by client"
+                />
+                <CustomSelect
+                  value={projectOwnerFilter}
+                  onChange={setProjectOwnerFilter}
+                  options={[{ value: '', label: 'All owners' }, ...projectFilterOptions.owners.map(value => ({ value, label: value }))]}
+                  className="w-full"
+                  aria-label="Filter projects by owner"
+                />
+                <CustomSelect
+                  value={projectSort}
+                  onChange={setProjectSort}
+                  options={[
+                    { value: 'updated', label: 'Recently updated' },
+                    { value: 'deadline', label: 'Nearest deadline' },
+                    { value: 'progress', label: 'Highest progress' },
+                    { value: 'budget', label: 'Highest budget' },
+                    { value: 'name', label: 'Name A–Z' },
+                  ]}
+                  className="w-full"
+                  aria-label="Sort projects"
+                />
+                <button
+                  type="button"
+                  onClick={clearProjectFilters}
+                  disabled={!activeProjectFilters && projectSort === 'updated'}
+                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-panel-hover hover:text-fg disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <X size={13} />
+                  Reset
+                </button>
               </div>
-            )}
-          >
+
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-2 text-[11px] text-muted">
+                  <span className="font-medium text-fg">{filteredProjects.length}</span>
+                  <span>of {projects.length} projects</span>
+                  {activeProjectFilters > 0 && (
+                    <span className="rounded-badge border border-accent/20 bg-accent/10 px-2 py-1 font-medium text-accent-text">
+                      {activeProjectFilters} filter{activeProjectFilters === 1 ? '' : 's'} active
+                    </span>
+                  )}
+                </div>
+                {projectLayout === 'board' && (
+                  <span className="text-[10px] text-muted">Drag cards between stages to update project status.</span>
+                )}
+              </div>
+            </div>
             {loading ? (
               <div className="grid gap-3 p-4 md:grid-cols-2 lg:grid-cols-4">
                 {[1, 2, 3, 4].map(item => <div key={item} className="h-40 animate-pulse rounded-card bg-bg" />)}
               </div>
             ) : projectLayout === 'board' ? (
-              <div className="overflow-x-auto custom-scrollbar p-4 sm:p-5">
-                <div className="grid min-w-[1380px] grid-cols-5 gap-3">
+              <div className="overflow-x-auto custom-scrollbar">
+                <div className="flex min-w-max gap-3 p-4 sm:p-5">
                   {PROJECT_KANBAN_COLUMNS.map(column => {
                     const items = filteredProjects.filter(project => project.status === column.id);
                     const isDropTarget = dragOverProjectStatus === column.id;
@@ -1263,27 +1374,31 @@ export const AdminProjects: React.FC = () => {
                           const project = projects.find(item => item.id === projectId);
                           if (project) void updateProjectStatus(project, column.id);
                         }}
-                        className={'flex min-h-[560px] min-w-0 flex-col rounded-card border bg-bg p-3 transition-colors ' + (
-                          isDropTarget ? 'border-accent/50 bg-accent/5' : 'border-line'
+                        className={'flex w-[300px] shrink-0 flex-col rounded-card border bg-bg/70 p-2.5 transition-all duration-200 sm:w-[316px] ' + (
+                          isDropTarget ? 'border-accent/50 bg-accent/5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--accent)_18%,transparent)]' : 'border-line/80'
                         )}
                       >
-                        <div className="mb-3 shrink-0 rounded-control border border-line bg-panel px-3 py-2.5">
+                        <div className="mb-2.5 shrink-0 px-1.5 py-1">
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
                                 <span className={'h-2 w-2 shrink-0 rounded-full ' + column.dot} />
                                 <span className="text-xs font-semibold text-fg">{column.label}</span>
+                                <span className="text-[10px] text-muted">{items.length}</span>
                               </div>
                               <p className="mt-1 text-[10px] leading-4 text-muted">{column.description}</p>
                             </div>
-                            <span className="rounded-control border border-line bg-bg px-2 py-1 text-[10px] font-medium tabular-nums text-muted">{items.length}</span>
+                            <span className="hidden" aria-hidden="true">{items.length}</span>
                           </div>
                         </div>
 
-                        <div className="min-h-0 flex-1 space-y-2.5">
+                        <div className={'min-h-[220px] space-y-2.5 rounded-card p-1 transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
                           {items.length === 0 ? (
-                            <div className={'rounded-card border border-dashed p-5 text-center text-[11px] text-muted ' + (isDropTarget ? 'border-accent/40 bg-accent/5' : 'border-line')}>
-                              {canManageProjects && isDropTarget ? 'Drop project here' : 'No projects in this stage.'}
+                            <div className={'flex min-h-[180px] items-center justify-center rounded-card border border-dashed p-5 text-center text-[11px] text-muted transition-colors ' + (isDropTarget ? 'border-accent/40 bg-accent/5 text-fg' : 'border-line')}>
+                              <span>
+                                <span className="block font-medium text-fg">{canManageProjects && isDropTarget ? 'Drop project here' : 'No projects here'}</span>
+                                <span className="mt-1 block text-muted">{canManageProjects ? 'Drag a card into this lane.' : 'No projects in this stage.'}</span>
+                              </span>
                             </div>
                           ) : (
                             items.map(project => {
@@ -1307,13 +1422,13 @@ export const AdminProjects: React.FC = () => {
                                     setDraggingProjectId(null);
                                     setDragOverProjectStatus(null);
                                   }}
-                                  className={'group cursor-grab rounded-card border border-line bg-panel p-4 shadow-sm transition-all hover:border-accent/40 active:cursor-grabbing ' + (
-                                    isDragging ? 'scale-[0.98] opacity-50' : ''
+                                  className={'group cursor-grab rounded-[10px] border border-line/90 bg-panel p-3.5 transition-[transform,opacity,border-color,background-color] duration-150 hover:border-accent/35 hover:bg-panel-hover active:cursor-grabbing ' + (
+                                    isDragging ? 'rotate-[1deg] scale-[0.98] opacity-50' : ''
                                   )}
                                 >
                                   <div className="flex items-start justify-between gap-2">
                                     <div className="flex min-w-0 items-start gap-2">
-                                      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted" title={canManageProjects ? 'Drag to change project status' : 'Project status'}>
+                                      <span className="mt-0.5 flex h-7 w-7 shrink-0 cursor-grab items-center justify-center rounded-control text-muted transition-colors group-hover:bg-bg group-hover:text-fg" title={canManageProjects ? 'Drag to change project status' : 'Project status'}>
                                         <GripVertical size={14} />
                                       </span>
                                       <button type="button" onClick={() => openProjectDetail(project)} className="min-w-0 text-left">
@@ -1358,9 +1473,12 @@ export const AdminProjects: React.FC = () => {
                                     </div>
                                   </div>
 
-                                  <div className="mt-3 flex items-center justify-between gap-2 text-[10px]">
+                                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-2.5 text-[10px]">
                                     <span className="truncate text-muted">{project.slug}</span>
-                                    <button type="button" onClick={() => goToSprint(project)} className="shrink-0 text-accent-text hover:text-accent">Delivery <ArrowUpRight size={11} className="inline" /></button>
+                                    <div className="flex shrink-0 items-center gap-2">
+                                      <button type="button" onClick={() => openProjectDetail(project)} className="text-muted hover:text-fg">View</button>
+                                      <button type="button" onClick={() => goToSprint(project)} className="text-accent-text hover:text-accent">Delivery <ArrowUpRight size={11} className="inline" /></button>
+                                    </div>
                                   </div>
                                 </article>
                               );
