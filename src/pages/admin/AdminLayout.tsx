@@ -181,7 +181,8 @@ export const AdminLayout: React.FC = () => {
   // Helper to determine if a navigation item is active, including Stitch dashboard view query tabs.
   const isItemActive = (itemTo: string) => {
     const [path, queryString] = itemTo.split('?');
-    if (location.pathname !== path) return false;
+    const isClientsSection = path === '/admin/clients' && location.pathname.startsWith('/admin/clients/');
+    if (location.pathname !== path && !isClientsSection) return false;
 
     if (queryString) {
       const expected = new URLSearchParams(queryString);
@@ -261,7 +262,7 @@ export const AdminLayout: React.FC = () => {
                   key={item.key}
                   to={item.to}
                   aria-current={active ? 'page' : undefined}
-                  className={`group relative flex min-h-10 items-center gap-2.5 rounded-control px-2.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${active ? 'bg-accent/10 text-accent-text' : 'text-muted hover:bg-panel-hover hover:text-fg'}`}
+                  className={`group relative flex min-h-10 items-center gap-2.5 rounded-control px-2.5 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${active ? 'border border-accent/25 bg-accent/10 text-accent' : 'border border-transparent text-muted hover:bg-panel-hover hover:text-fg'}`}
                 >
                   <Icon size={16} strokeWidth={active ? 2.1 : 1.8} className="shrink-0" />
                   <span className="min-w-0 flex-1 truncate">{item.label}</span>
@@ -437,7 +438,7 @@ export const AdminLayout: React.FC = () => {
                       to={item.to}
                       onClick={() => setMobileMenuOpen(false)}
                       aria-current={active ? 'page' : undefined}
-                      className={`relative flex min-h-10 items-center gap-3 rounded-control px-3 py-2.5 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${active ? 'bg-accent/10 font-semibold text-accent-text' : 'text-muted hover:bg-panel-hover hover:text-fg'}`}
+                      className={`relative flex min-h-10 items-center gap-3 rounded-control px-3 py-2.5 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${active ? 'border border-accent/25 bg-accent/10 font-semibold text-accent' : 'border border-transparent text-muted hover:bg-panel-hover hover:text-fg'}`}
                     >
                       <Icon size={17} className="shrink-0" />
                       <span className="min-w-0 flex-1 truncate">{item.label}</span>
@@ -520,7 +521,7 @@ export const AdminLayout: React.FC = () => {
                         key={tab.key}
                         to={tab.slug}
                         end
-                        className={'group relative inline-flex h-9 shrink-0 items-center rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (active ? 'bg-bg font-semibold text-fg' : 'text-muted hover:bg-bg hover:text-fg')}
+                        className={'group relative inline-flex h-9 shrink-0 items-center rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (active ? 'border border-accent/25 bg-accent/10 font-semibold text-accent' : 'border border-transparent text-muted hover:bg-bg hover:text-fg')}
                       >
                         {tab.label}
                       </NavLink>
@@ -540,7 +541,7 @@ export const AdminLayout: React.FC = () => {
                       end
                       className={() => {
                         const activeView = new URLSearchParams(location.search).get('view') || 'overview';
-                        return 'group relative inline-flex h-9 shrink-0 items-center rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (activeView === tab.key ? 'bg-bg font-semibold text-fg' : 'text-muted hover:bg-bg hover:text-fg');
+                        return 'group relative inline-flex h-9 shrink-0 items-center rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (activeView === tab.key ? 'border border-accent/25 bg-accent/10 font-semibold text-accent' : 'border border-transparent text-muted hover:bg-bg hover:text-fg');
                       }}
                     >
                       {tab.label}
