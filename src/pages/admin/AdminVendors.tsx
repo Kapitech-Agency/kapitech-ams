@@ -35,7 +35,7 @@ import {
 import { formatAmount, getActiveCurrency, CurrencyCode, CURRENCY_EVENT } from '../../lib/currency';
 import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
-import { Modal } from '../../components/ui/Modal';
+import { Drawer, Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import { api } from '../../lib/apiClient';
@@ -614,7 +614,7 @@ export const AdminVendors: React.FC = () => {
       )}
 
       {/* Add / Edit Modal */}
-      <Modal
+      <Drawer
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         size="lg"
@@ -800,7 +800,7 @@ export const AdminVendors: React.FC = () => {
               </div>
 
             </form>
-      </Modal>
+      </Drawer>
       <ConfirmDialog
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
