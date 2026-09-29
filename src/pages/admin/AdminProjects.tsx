@@ -1091,7 +1091,7 @@ export const AdminProjects: React.FC = () => {
                 <div className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted">Owner</div>
                 <div className="mt-1.5">
                   {selectedProjectDetail.teamLead ? (
-                    <ProfileIdentity profile={{ name: selectedProjectDetail.teamLead, role: undefined, contextLabel: 'Project owner' }} showRole={false} />
+                    <ProfileIdentity profile={{ name: selectedProjectDetail.teamLead, contextLabel: 'Project owner' }} showRole={false} />
                   ) : (
                     <span className="text-xs font-semibold text-muted">Unassigned</span>
                   )}
@@ -1568,7 +1568,7 @@ export const AdminProjects: React.FC = () => {
                                       </div>
                                       {project.teamLead ? (
                                         <ProfileIdentity
-                                          profile={{ name: project.teamLead, role: undefined, contextLabel: 'Project owner' }}
+                                          profile={{ name: project.teamLead, contextLabel: 'Project owner' }}
                                           size="sm"
                                           showRole={false}
                                         />
@@ -1631,7 +1631,7 @@ export const AdminProjects: React.FC = () => {
                           <td>
                             {project.teamLead ? (
                               <ProfileIdentity
-                                profile={{ name: project.teamLead, role: undefined, contextLabel: 'Project owner' }}
+                                profile={{ name: project.teamLead, contextLabel: 'Project owner' }}
                                 showRole={false}
                               />
                             ) : (
