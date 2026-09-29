@@ -334,7 +334,7 @@ const TasksView: React.FC = () => {
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-control border border-line bg-bg p-3">
               <div className="text-[10px] uppercase tracking-[0.08em] text-muted">Assignee</div>
-              <div className="mt-1 text-sm font-semibold text-fg">{selectedTask.assignee}</div>
+              <div className="mt-1"><ProfileIdentity profile={{ name: selectedTask.assignee, role: selectedTask.assignee === 'Fikri' ? 'CEO' : selectedTask.assignee === 'Reynaldo' ? 'Project Manager' : selectedTask.assignee === 'Akell' ? 'HR Manager' : 'Project contributor', division: 'Delivery' }} showRole={false} /></div>
             </div>
             <div className="rounded-control border border-line bg-bg p-3">
               <div className="text-[10px] uppercase tracking-[0.08em] text-muted">Due</div>
