@@ -19,6 +19,7 @@ import {
 import { Button } from '../../components/ui/Button';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
+import { Modal } from '../../components/ui/Modal';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 type Stage = 'discovery' | 'proposal' | 'contract' | 'ready-to-sign';
