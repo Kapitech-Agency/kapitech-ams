@@ -26,6 +26,7 @@ import { AgencyProject, ProjectTask, ProjectStatus, TaskPriority, TaskStatus, Ta
 import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
+import { Modal } from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
 import { api } from '../../lib/apiClient';
 import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
