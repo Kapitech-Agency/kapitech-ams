@@ -300,7 +300,7 @@ export const AdminApprovals: React.FC = () => {
                     <div className="text-xs font-sans text-muted flex items-center gap-3 mt-2">
                       <span className="flex items-center gap-1">
                         <User size={11} />
-                        <span>Requested by {item.requester}</span>
+                        <ProfileIdentity profile={{ name: item.requester, contextLabel: 'Approval requester' }} size="sm" showRole={false} />
                       </span>
                       <span>•</span>
                       <span className="flex items-center gap-1">
@@ -310,7 +310,7 @@ export const AdminApprovals: React.FC = () => {
                       {item.reviewedBy && (
                         <>
                           <span>•</span>
-                          <span className="text-success">Decided by {item.reviewedBy}</span>
+                          <span className="flex items-center gap-2 text-success"><span>Decided by</span><ProfileIdentity profile={{ name: item.reviewedBy, contextLabel: 'Approval reviewer' }} size="sm" showRole={false} className="text-success" /></span>
                         </>
                       )}
                     </div>
