@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  BriefcaseBusiness,
+  Briefcase,
   Building2,
   CalendarDays,
   ExternalLink,
@@ -266,7 +266,7 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
             <section className="rounded-card border border-line bg-panel p-4">
               <div className="mb-4 flex items-center gap-2 border-b border-line pb-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-control border border-line bg-bg text-muted">
-                  <BriefcaseBusiness size={15} />
+                  <Briefcase size={15} />
                 </div>
                 <div>
                   <h3 className="text-xs font-semibold text-fg">Work context</h3>
