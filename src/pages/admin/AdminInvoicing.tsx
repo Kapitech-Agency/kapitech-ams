@@ -2300,7 +2300,7 @@ export const AdminInvoicing: React.FC = () => {
   <td className="px-5 py-4">
     <button type="button" onClick={()=>setQuotationDetail(quotation)} className="font-semibold tabular-nums text-fg hover:text-accent-text">{quotation.quotationNumber}</button>
     <p className="mt-1 truncate font-medium text-fg">{quotation.title}</p>
-    <p className="mt-1 truncate text-[11px] text-muted">{quotation.clientCompany} · {quotation.clientName}</p>
+    <div className="mt-1"><ProfileIdentity profile={{ name: quotation.clientName, contextLabel: quotation.clientCompany }} showRole={false} size="sm" /></div>
   </td>
   <td className="px-4 py-5 text-right"><p className="font-semibold tabular-nums text-fg">{formatNativeAmount(quotation.total,quotation.currency,true)}</p><div className="mt-1"><ProfileIdentity profile={{ name: quotation.owner, role: undefined, contextLabel: 'Quotation owner' }} size="sm" showRole={false} /></div></td>
   <td className="px-5 py-4"><div className="grid gap-1.5 text-[11px]"><div className="flex items-center justify-between gap-3"><span className="text-muted">Created</span><span className="tabular-nums text-fg">{quotation.createdAt}</span></div><div className="flex items-center justify-between gap-3"><span className="text-muted">Valid</span><span className="tabular-nums text-fg">{quotation.validUntil}</span></div></div></td>
@@ -3196,7 +3196,7 @@ export const AdminInvoicing: React.FC = () => {
               <StatusBadge status={detailInvoice.status} />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div><p className="text-xs font-medium text-muted">Billed to</p><p className="mt-1 text-sm font-medium text-fg">{detailInvoice.clientName}</p><p className="text-xs text-muted">{detailInvoice.clientCompany}</p><p className="mt-1 text-xs text-muted">{detailInvoice.clientEmail}</p>{detailInvoice.clientPhone && <p className="text-xs text-muted">{detailInvoice.clientPhone}</p>}</div>
+              <div><p className="text-xs font-medium text-muted">Billed to</p><div className="mt-1"><ProfileIdentity profile={{ name: detailInvoice.clientName, contextLabel: detailInvoice.clientCompany }} showRole={false} size="sm" /></div><p className="text-xs text-muted">{detailInvoice.clientCompany}</p><p className="mt-1 text-xs text-muted">{detailInvoice.clientEmail}</p>{detailInvoice.clientPhone && <p className="text-xs text-muted">{detailInvoice.clientPhone}</p>}</div>
               <div className="sm:text-right"><p className="text-xs font-medium text-muted">Invoice metadata</p><p className="mt-1 text-xs tabular-nums text-fg">Issue {detailInvoice.issueDate}</p><p className="text-xs tabular-nums text-fg">Due {detailInvoice.dueDate}</p><p className="text-xs text-muted">{detailInvoice.currency}</p></div>
             </div>
             <div className="overflow-hidden rounded-control border border-line">
