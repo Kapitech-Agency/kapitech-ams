@@ -2352,46 +2352,49 @@ export const AdminInvoicing: React.FC = () => {
         <div className="space-y-5">
           <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Income YTD" value={formatFinanceCardAmount(ytdCollected,currency)} context={ytdCollectionRate.toFixed(1)+'% collected vs issued'} sparkline={financeChartData.map((point) => point.inflow)} icon={<WalletCards size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Invoiced YTD" value={formatFinanceCardAmount(ytdInvoiced,currency)} context="Issued billings" sparkline={financeChartData.map((point) => point.inflow + point.retainerTarget)} icon={<Receipt size={15}/>}/><FinanceMetricCard label="Expenses YTD" value={formatFinanceCardAmount(ytdExpenses,currency)} context={currencyExpenses.length+' expense records'} sparkline={financeChartData.map((point) => point.outflow)} icon={<ArrowDown size={15}/>}/><FinanceMetricCard label="Net cash YTD" value={formatFinanceCardAmount(ytdNetCash,currency)} context="Collected less expenses" sparkline={financeChartData.map((point) => point.net)} icon={<TrendingUp size={15}/>} toneClassName={ytdNetCash>=0?'text-success':'text-danger'}/></section>
           <section className="rounded-card border border-line bg-panel overflow-hidden" aria-label="Income and expenses ledger">
-            <header className="border-b border-line bg-panel px-4 py-4 sm:px-5">
-              <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-                <div className="min-w-0">
-                  <h2 className="text-sm font-semibold text-fg">Income & expenses ledger</h2>
-                  <p className="mt-1 text-xs text-muted">Review collected income and recorded operating spend from the same ledger workspace.</p>
-                </div>
-                <div className="inline-flex shrink-0 items-center rounded-control border border-line bg-bg p-1" role="tablist" aria-label="Ledger type">
-                  <button type="button" role="tab" aria-selected={incomeExpenseMode === 'income'} onClick={() => setIncomeExpenseMode('income')} className={'min-h-8 rounded-chip px-3 text-[11px] font-semibold transition-colors ' + (incomeExpenseMode === 'income' ? 'bg-panel text-fg' : 'text-muted hover:text-fg')}>Income</button>
-                  <button type="button" role="tab" aria-selected={incomeExpenseMode === 'expenses'} onClick={() => setIncomeExpenseMode('expenses')} className={'min-h-8 rounded-chip px-3 text-[11px] font-semibold transition-colors ' + (incomeExpenseMode === 'expenses' ? 'bg-panel text-fg' : 'text-muted hover:text-fg')}>Expenses</button>
-                </div>
-              </div>
+  <header className="border-b border-line bg-panel p-4 sm:px-5">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <h2 className="text-sm font-semibold text-fg">Income & expenses ledger</h2>
+            <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] font-medium text-muted">
+              {incomeExpenseMode === 'income' ? incomeRows.length + ' payments' : filteredExpenses.length + ' expenses'}
+            </span>
+          </div>
+          <p className="mt-1 text-xs text-muted">Review collected income and recorded operating spend from the same finance workspace.</p>
+        </div>
+        <div className="inline-flex shrink-0 items-center rounded-control border border-line bg-bg p-0.5" role="tablist" aria-label="Ledger type">
+          <button type="button" role="tab" aria-selected={incomeExpenseMode === 'income'} onClick={() => setIncomeExpenseMode('income')} className={'min-h-8 rounded-chip border px-3 text-[11px] font-semibold transition-colors ' + (incomeExpenseMode === 'income' ? 'border-accent/25 bg-accent/10 text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}>Income</button>
+          <button type="button" role="tab" aria-selected={incomeExpenseMode === 'expenses'} onClick={() => setIncomeExpenseMode('expenses')} className={'min-h-8 rounded-chip border px-3 text-[11px] font-semibold transition-colors ' + (incomeExpenseMode === 'expenses' ? 'border-accent/25 bg-accent/10 text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}>Expenses</button>
+        </div>
+      </div>
 
-              {incomeExpenseMode === 'income' ? (
-                <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="text-[10px] text-muted">Showing recorded payment activity in {currency}.</div>
-                  <label className="relative w-full sm:w-72">
-                    <Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/>
-                    <span className="sr-only">Search income</span>
-                    <input value={incomeSearch} onChange={(event) => setIncomeSearch(event.target.value)} placeholder="Search invoice or client..." className={fieldClass + ' pl-8'}/>
-                  </label>
-                </div>
-              ) : (
-                <div className="mt-3 flex flex-col gap-2 xl:flex-row xl:items-center">
-                  <label className="relative min-w-0 flex-1 xl:max-w-xs">
-                    <Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/>
-                    <span className="sr-only">Search expense</span>
-                    <input value={expenseSearch} onChange={(event) => setExpenseSearch(event.target.value)} placeholder="Search expense..." className={fieldClass + ' pl-8'}/>
-                  </label>
-                  <div className="grid gap-2 sm:grid-cols-2 xl:flex">
-                    <CustomSelect value={expenseTypeFilter} onChange={setExpenseTypeFilter} options={expenseTypeOptions} triggerClassName="h-9 min-h-9 w-full xl:w-40"/>
-                    <CustomSelect value={expenseSort} onChange={(value) => setExpenseSort(value as typeof expenseSort)} options={[{value:'date_desc',label:'Newest'},{value:'date_asc',label:'Oldest'},{value:'amount_high',label:'Highest amount'},{value:'amount_low',label:'Lowest amount'}]} triggerClassName="h-9 min-h-9 w-full xl:w-40"/>
-                  </div>
-                  {canManageInvoices && <button type="button" onClick={openExpenseModal} className={primaryClass + ' shrink-0'}><Plus size={14}/>Add expense</button>}
-                </div>
-              )}
-            </header>
-
-            {incomeExpenseMode === 'income' ? (
-              <>
-                <div className="overflow-x-auto custom-scrollbar">
+      {incomeExpenseMode === 'income' ? (
+        <div className="grid gap-2 lg:grid-cols-[minmax(240px,1fr)_minmax(240px,320px)]">
+          <div className="flex min-h-10 items-center rounded-control border border-line bg-bg px-3 text-[10px] text-muted">Showing recorded payment activity in {currency}.</div>
+          <label className="relative min-w-0">
+            <Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/>
+            <span className="sr-only">Search income</span>
+            <input value={incomeSearch} onChange={(event) => setIncomeSearch(event.target.value)} placeholder="Search invoice or client..." className={fieldClass + ' h-10 pl-8'}/>
+          </label>
+        </div>
+      ) : (
+        <div className="grid gap-2 lg:grid-cols-[minmax(240px,1fr)_minmax(0,2fr)]">
+          <label className="relative min-w-0">
+            <Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"/>
+            <span className="sr-only">Search expense</span>
+            <input value={expenseSearch} onChange={(event) => setExpenseSearch(event.target.value)} placeholder="Search expense..." className={fieldClass + ' h-10 pl-8'}/>
+          </label>
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(170px,1fr)_minmax(160px,1fr)_auto]">
+            <CustomSelect value={expenseTypeFilter} onChange={setExpenseTypeFilter} options={expenseTypeOptions} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap"/>
+            <CustomSelect value={expenseSort} onChange={(value) => setExpenseSort(value as typeof expenseSort)} options={[{value:'date_desc',label:'Newest'},{value:'date_asc',label:'Oldest'},{value:'amount_high',label:'Highest amount'},{value:'amount_low',label:'Lowest amount'}]} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap"/>
+            {canManageInvoices && <button type="button" onClick={openExpenseModal} className={primaryClass + ' h-10 min-h-10 shrink-0'}><Plus size={14}/>Add expense</button>}
+          </div>
+        </div>
+      )}
+    </div>
+  </header><div className="overflow-x-auto custom-scrollbar">
                   {incomeRows.length === 0 ? (
                     <div className="p-5"><EmptyState title="No income recorded" description="Recorded payments will appear here."/></div>
                   ) : (
