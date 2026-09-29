@@ -709,7 +709,7 @@ export const AdminLayout: React.FC = () => {
           </div>
         </header>
         {/* View Outlet */}
-        <div className="flex-1 min-h-0 p-6 w-full max-w-[1560px] mx-auto">
+        <div className="ams-content flex-1 min-h-0 w-full max-w-[1560px] mx-auto">
           <Outlet />
         </div>
 
