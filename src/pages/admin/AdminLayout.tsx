@@ -653,6 +653,7 @@ export const AdminLayout: React.FC = () => {
                     { key: 'quotations', label: 'Quotation', to: '/admin/invoicing?finance=quotations' },
                     { key: 'income-expenses', label: 'Income & Expenses', to: '/admin/invoicing?finance=income-expenses' },
                     { key: 'tax-retainers', label: 'Tax & Retainers', to: '/admin/invoicing?finance=tax-retainers' },
+                    { key: 'vendor-payments', label: 'Vendor Payments', to: '/admin/invoicing?finance=vendor-payments' },
                     { key: 'financial-reports', label: 'Financial Reports', to: '/admin/invoicing?finance=financial-reports' },
                   ].map((tab) => {
                     const activeView = new URLSearchParams(location.search).get('finance') || 'invoices';
