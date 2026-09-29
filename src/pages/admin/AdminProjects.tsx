@@ -939,6 +939,56 @@ export const AdminProjects: React.FC = () => {
     }
   };
 
+  const beginProjectDrag = (event: React.DragEvent<HTMLElement>, project: ProjectRecord) => {
+    if (!canManageProjects || movingProjectId === project.id) {
+      event.preventDefault();
+      return;
+    }
+
+    const target = event.target as HTMLElement | null;
+    if (target?.closest('button,a,input,textarea,select,[data-no-drag="true"]')) {
+      event.preventDefault();
+      return;
+    }
+
+    setDraggingProjectId(project.id);
+    setDragOverProjectStatus(project.status);
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/project-id', project.id);
+    event.dataTransfer.setData('text/plain', project.id);
+
+    try {
+      event.dataTransfer.setDragImage(event.currentTarget, 36, 36);
+    } catch {
+      // Browser may reject custom drag previews.
+    }
+  };
+
+  const beginTaskDrag = (event: React.DragEvent<HTMLElement>, task: ProjectTask) => {
+    if (!canManageKanbanTasks) {
+      event.preventDefault();
+      return;
+    }
+
+    const target = event.target as HTMLElement | null;
+    if (target?.closest('button,a,input,textarea,select,[data-no-drag="true"]')) {
+      event.preventDefault();
+      return;
+    }
+
+    setDraggingTaskId(task.id);
+    setDragOverTaskStatus(task.status);
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/project-task-id', task.id);
+    event.dataTransfer.setData('text/plain', task.id);
+
+    try {
+      event.dataTransfer.setDragImage(event.currentTarget, 32, 32);
+    } catch {
+      // Browser may reject custom drag previews.
+    }
+  };
+
   const updateProjectStatus = async (project: ProjectRecord, status: ProjectStatus) => {
     if (!canManageProjects || project.status === status || movingProjectId === project.id) {
       setDraggingProjectId(null);
@@ -1581,8 +1631,8 @@ export const AdminProjects: React.FC = () => {
                 {[1, 2, 3, 4].map(item => <div key={item} className="h-40 animate-pulse rounded-card bg-bg" />)}
               </div>
             ) : projectLayout === 'board' ? (
-              <div className="ams-project-kanban-board overflow-x-auto overflow-y-clip custom-scrollbar">
-                <div className="flex min-w-max items-start gap-4 px-5 pb-8 pt-5 sm:px-6 sm:pb-10 sm:pt-6 min-h-[920px]">
+              <div className="ams-project-kanban-board overflow-x-auto overflow-y-visible custom-scrollbar">
+                <div className="flex min-w-max items-start gap-4 px-5 pb-28 pt-5 sm:px-6 sm:pb-36 sm:pt-6 min-h-[1120px]">
                   {PROJECT_KANBAN_COLUMNS.map(column => {
                     const items = filteredProjects.filter(project => project.status === column.id);
                     const isDropTarget = dragOverProjectStatus === column.id;
@@ -1660,7 +1710,7 @@ export const AdminProjects: React.FC = () => {
                               setDragOverProjectStatus(null);
                             }
                           }}
-                          className={'ams-project-kanban-stack min-h-[820px] flex flex-col gap-3.5 p-3 pb-4 transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
+                          className={'ams-project-kanban-stack min-h-[980px] flex flex-col gap-3.5 p-3 pb-[320px] transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
                           {draggingProjectId && canManageProjects && (
                             <div className={'rounded-control border px-2.5 py-2 text-[9px] font-medium transition-colors ' + (isDropTarget ? 'border-accent/35 bg-accent/10 text-accent-text' : 'border-dashed border-line bg-bg/50 text-muted')}>
                               {isDropTarget ? 'Release to move project into ' + column.label : 'Drop here to move project into ' + column.label}
@@ -1684,6 +1734,12 @@ export const AdminProjects: React.FC = () => {
                                 <article
                                   key={project.id}
                                   aria-grabbed={isDragging}
+                                  draggable={canManageProjects && movingProjectId !== project.id}
+                                  onDragStart={event => beginProjectDrag(event, project)}
+                                  onDragEnd={() => {
+                                    setDraggingProjectId(null);
+                                    setDragOverProjectStatus(null);
+                                  }}
                                   className={'ams-project-kanban-card group select-none rounded-[12px] border border-line/90 p-4 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150 hover:-translate-y-px hover:border-accent/40 hover:shadow-[0_10px_28px_color-mix(in_srgb,var(--bg)_55%,transparent)] ' + (
                                     isDragging ? 'rotate-[1deg] scale-[0.98] border-accent/50 opacity-70' : movingProjectId === project.id ? 'border-accent/35 opacity-80' : ''
                                   )}
@@ -1692,37 +1748,15 @@ export const AdminProjects: React.FC = () => {
                                     <div className="flex min-w-0 items-start gap-2">
                                       <span
                                         data-drag-handle="true"
-                                        draggable={canManageProjects && movingProjectId !== project.id}
-                                        role="button"
-                                        tabIndex={canManageProjects ? 0 : -1}
-                                        aria-label={canManageProjects ? 'Drag to move project' : 'Project status'}
+                                        role="presentation"
+                                        aria-label={canManageProjects ? 'Drag project' : 'Project status'}
                                         className={[
                                           'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted shadow-sm transition-[background-color,border-color,color,transform] select-none',
                                           canManageProjects && movingProjectId !== project.id
-                                            ? 'cursor-grab touch-none hover:border-accent/35 hover:bg-panel-hover hover:text-fg active:cursor-grabbing active:scale-95'
+                                            ? 'cursor-grab touch-none hover:border-accent/35 hover:bg-panel-hover hover:text-fg'
                                             : 'cursor-default opacity-70',
                                         ].join(' ')}
-                                        title={canManageProjects ? 'Drag to move this project' : 'Project status'}
-                                        onDragStart={event => {
-                                          if (!canManageProjects || movingProjectId === project.id) {
-                                            event.preventDefault();
-                                            return;
-                                          }
-                                          setDraggingProjectId(project.id);
-                                          setDragOverProjectStatus(project.status);
-                                          event.dataTransfer.effectAllowed = 'move';
-                                          event.dataTransfer.setData('text/project-id', project.id);
-                                          event.dataTransfer.setData('text/plain', project.id);
-                                          try {
-                                            event.dataTransfer.setDragImage(event.currentTarget.parentElement?.parentElement || event.currentTarget, 24, 24);
-                                          } catch {
-                                            // Browser may reject custom drag previews.
-                                          }
-                                        }}
-                                        onDragEnd={() => {
-                                          setDraggingProjectId(null);
-                                          setDragOverProjectStatus(null);
-                                        }}
+                                        title={canManageProjects ? 'Drag anywhere on this card to move project' : 'Project status'}
                                       >
                                         <GripVertical size={16} strokeWidth={2} />
                                       </span>
@@ -2052,7 +2086,7 @@ export const AdminProjects: React.FC = () => {
                 </div>
 
                 <div className="overflow-x-auto custom-scrollbar bg-bg p-5 sm:p-6">
-                  <div className="flex min-w-max items-stretch gap-3">
+                  <div className="flex min-w-max items-start gap-3 pb-28 sm:pb-36">
                     {TASK_COLUMNS.map(column => {
                       const tasks = visibleTasks.filter(task => task.status === column.id);
                       const isDropTarget = dragOverTaskStatus === column.id;
@@ -2124,7 +2158,7 @@ export const AdminProjects: React.FC = () => {
                           </div>
 
                           <div className={[
-                            'min-h-[620px] flex flex-col gap-2.5 bg-bg/20 p-3 pb-4 transition-colors duration-150',
+                            'min-h-[860px] flex flex-col gap-2.5 bg-bg/30 p-3 pb-[280px] transition-colors duration-150',
                             isDropTarget ? 'bg-accent/5' : '',
                           ].join(' ')}>
                             {draggingTaskId && canManageKanbanTasks && (
@@ -2163,6 +2197,12 @@ export const AdminProjects: React.FC = () => {
                                   <article
                                     key={task.id}
                                     aria-grabbed={isDragging}
+                                    draggable={canManageKanbanTasks}
+                                    onDragStart={event => beginTaskDrag(event, task)}
+                                    onDragEnd={() => {
+                                      setDraggingTaskId(null);
+                                      setDragOverTaskStatus(null);
+                                    }}
                                     className={[
                                       'group select-none rounded-[12px] border bg-panel p-3.5 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150',
                                       canManageKanbanTasks ? '' : 'cursor-default',
@@ -2172,36 +2212,15 @@ export const AdminProjects: React.FC = () => {
                                   >
                                     <div className="flex items-start gap-2.5">
                                       <span
-                                        draggable={canManageKanbanTasks}
-                                        role="button"
-                                        tabIndex={canManageKanbanTasks ? 0 : -1}
-                                        aria-label={canManageKanbanTasks ? 'Drag to move task' : 'Task movement is read-only'}
+                                        role="presentation"
+                                        aria-label={canManageKanbanTasks ? 'Drag task' : 'Task movement is read-only'}
                                         className={[
                                           'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted shadow-sm transition-[background-color,border-color,color,transform] select-none',
                                           canManageKanbanTasks
-                                            ? 'cursor-grab touch-none hover:border-accent/35 hover:bg-panel-hover hover:text-fg active:cursor-grabbing active:scale-95'
+                                            ? 'cursor-grab touch-none hover:border-accent/35 hover:bg-panel-hover hover:text-fg'
                                             : 'cursor-default opacity-70',
                                         ].join(' ')}
-                                        title={canManageKanbanTasks ? 'Drag to move task' : 'Task movement is read-only'}
-                                        onDragStart={event => {
-                                          if (!canManageKanbanTasks) {
-                                            event.preventDefault();
-                                            return;
-                                          }
-                                          setDraggingTaskId(task.id);
-                                          event.dataTransfer.effectAllowed = 'move';
-                                          event.dataTransfer.setData('text/project-task-id', task.id);
-                                          event.dataTransfer.setData('text/plain', task.id);
-                                          try {
-                                            event.dataTransfer.setDragImage(event.currentTarget.parentElement?.parentElement || event.currentTarget, 24, 24);
-                                          } catch {
-                                            // Browser may reject custom drag previews.
-                                          }
-                                        }}
-                                        onDragEnd={() => {
-                                          setDraggingTaskId(null);
-                                          setDragOverTaskStatus(null);
-                                        }}
+                                        title={canManageKanbanTasks ? 'Drag anywhere on this card to move task' : 'Task movement is read-only'}
                                       >
                                         <GripVertical size={16} strokeWidth={2} />
                                       </span>
