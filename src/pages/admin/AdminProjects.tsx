@@ -526,11 +526,6 @@ export const AdminProjects: React.FC = () => {
     setProjectSort('updated');
   };
 
-  const boardProjects = useMemo(
-    () => filteredProjects.filter(project => project.status !== 'completed'),
-    [filteredProjects]
-  );
-
   const selectedSprintProject = useMemo(() => {
     return (
       projects.find(project => project.slug === selectedProjectSlug) ||
@@ -1536,6 +1531,33 @@ export const AdminProjects: React.FC = () => {
                 </button>
               </div>
 
+              <div className="mt-3 flex flex-wrap items-center gap-1.5" aria-label="Project status quick filters">
+                <button
+                  type="button"
+                  onClick={() => setProjectStatusFilter('')}
+                  className={'inline-flex min-h-8 items-center gap-1.5 rounded-chip border px-2.5 text-[10px] font-medium transition-colors ' + (!projectStatusFilter ? 'border-accent/25 bg-accent/10 text-fg' : 'border-line bg-panel text-muted hover:bg-panel-hover hover:text-fg')}
+                >
+                  All
+                  <span className="tabular-nums">{projects.length}</span>
+                </button>
+                {PROJECT_KANBAN_COLUMNS.map(column => {
+                  const count = projects.filter(project => project.status === column.id).length;
+                  const active = projectStatusFilter === column.id;
+                  return (
+                    <button
+                      key={column.id}
+                      type="button"
+                      onClick={() => setProjectStatusFilter(column.id)}
+                      className={'inline-flex min-h-8 items-center gap-1.5 rounded-chip border px-2.5 text-[10px] font-medium transition-colors ' + (active ? 'border-accent/25 bg-accent/10 text-fg' : 'border-line bg-panel text-muted hover:bg-panel-hover hover:text-fg')}
+                    >
+                      <span className={'h-1.5 w-1.5 rounded-full ' + column.dot} />
+                      {column.label}
+                      <span className="tabular-nums">{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
               <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-2 text-[11px] text-muted">
                   <span className="font-medium text-fg">{filteredProjects.length}</span>
@@ -2142,7 +2164,7 @@ export const AdminProjects: React.FC = () => {
                                     key={task.id}
                                     aria-grabbed={isDragging}
                                     className={[
-                                      'group cursor-grab select-none rounded-[12px] border bg-panel p-3.5 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150 active:cursor-grabbing',
+                                      'group select-none rounded-[12px] border bg-panel p-3.5 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150',
                                       canManageKanbanTasks ? '' : 'cursor-default',
                                       'border-line hover:border-accent/30 hover:bg-panel-hover',
                                       isDragging ? 'rotate-[0.6deg] scale-[0.98] opacity-50 shadow-lg' : '',
