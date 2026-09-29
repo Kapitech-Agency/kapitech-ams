@@ -40,7 +40,7 @@ import { formatAmount, getActiveCurrency, setGlobalCurrency, CurrencyCode, CURRE
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { api } from '../../lib/apiClient';
 import { CustomSelect } from '../../components/ui/CustomSelect';
-import { Modal } from '../../components/ui/Modal';
+import { Drawer, Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 
@@ -1119,7 +1119,7 @@ export const AdminCrm: React.FC = () => {
       )}
 
       {/* 6. CREATE / EDIT DEAL MODAL */}
-      <Modal
+      <Drawer
         open={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         size="lg"
@@ -1236,7 +1236,7 @@ export const AdminCrm: React.FC = () => {
               </div>
 
             </form>
-      </Modal>
+      </Drawer>
 
       </div>
     </>
