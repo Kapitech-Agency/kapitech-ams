@@ -20,7 +20,7 @@ import {
 import { useLanguage } from '../../lib/LanguageContext';
 import { Button } from '../../components/ui/Button';
 import { CustomSelect } from '../../components/ui/CustomSelect';
-import { Modal } from '../../components/ui/Modal';
+import { Drawer } from '../../components/ui/Drawer';
 
 type Health = 'healthy' | 'near-cap' | 'overage-risk';
 type Cycle = 'monthly' | 'quarterly' | 'annual';
@@ -224,9 +224,9 @@ export const AdminClientRetainers: React.FC = () => {
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-3"><TimerReset size={14} className="text-accent-text" /><span>Data source: <strong className="text-fg">Retainer workspace</strong></span></div>
       </section>
 
-      <Modal open={!!hoursTarget} onClose={() => setHoursTarget(null)} size="sm" title="Log retainer hours" description={hoursTarget ? `${hoursTarget.client} · ${hoursTarget.id}` : undefined} footer={<div className="flex justify-end gap-2"><Button type="button" variant="secondary" onClick={() => setHoursTarget(null)}>Cancel</Button><Button type="button" variant="primary" onClick={logHours}>Log hours</Button></div>}>
+      <Drawer open={!!hoursTarget} onClose={() => setHoursTarget(null)} size="sm" title="Log retainer hours" description={hoursTarget ? `${hoursTarget.client} · ${hoursTarget.id}` : undefined} footer={<div className="flex justify-end gap-2"><Button type="button" variant="secondary" onClick={() => setHoursTarget(null)}>Cancel</Button><Button type="button" variant="primary" onClick={logHours}>Log hours</Button></div>}>
         {hoursTarget && <div className="space-y-4"><div><label htmlFor="retainer-hours" className="mb-1.5 block text-xs font-medium text-fg">Hours to log</label><input id="retainer-hours" type="number" min="0" step="0.5" value={hours} onChange={(event) => setHours(event.target.value)} className="h-9 w-full rounded-control border border-line bg-bg px-3 text-sm text-fg focus:border-accent focus:outline-none" /></div><div className="rounded-card border border-line bg-bg p-3 text-xs text-muted">Current usage: <span className="font-medium tabular-nums text-fg">{hoursTarget.usedHours}</span> / {hoursTarget.committedHours} hrs.</div></div>}
-      </Modal>
+      </Drawer>
     </div>
   );
 };
