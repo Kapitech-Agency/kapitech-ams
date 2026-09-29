@@ -14,7 +14,7 @@ import {
   ClipboardCheck,
   UsersRound,
   LockKeyhole,
-  Settings2,
+  Settings,
 } from 'lucide-react';
 import { getAdminSession, logoutAdmin } from '../../lib/adminAuth';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -298,7 +298,7 @@ export const AdminLayout: React.FC = () => {
               title="Settings"
               className="flex h-9 w-9 items-center justify-center rounded-control border border-line bg-bg text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
-              <Settings2 size={16} />
+              <Settings size={16} />
             </Link>
             <button
               type="button"
@@ -521,7 +521,7 @@ export const AdminLayout: React.FC = () => {
                     title="Settings"
                     className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-bg text-muted hover:border-accent/30 hover:bg-panel-hover hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   >
-                    <Settings2 size={16} />
+                    <Settings size={16} />
                   </Link>
                   <button
                     type="button"
