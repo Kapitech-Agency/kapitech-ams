@@ -1091,7 +1091,7 @@ export const AdminProjects: React.FC = () => {
                 <div className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted">Owner</div>
                 <div className="mt-1.5">
                   {selectedProjectDetail.teamLead ? (
-                    <ProfileIdentity profile={{ name: selectedProjectDetail.teamLead, role: 'Project owner', division: 'Delivery' }} showRole={false} />
+                    <ProfileIdentity profile={{ name: selectedProjectDetail.teamLead, role: undefined, contextLabel: 'Project owner' }} showRole={false} />
                   ) : (
                     <span className="text-xs font-semibold text-muted">Unassigned</span>
                   )}
@@ -1169,7 +1169,7 @@ export const AdminProjects: React.FC = () => {
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-control border border-line bg-bg p-3"><div className="text-[10px] text-muted">Status</div><div className="mt-1.5 text-xs font-semibold text-fg">{taskStatusLabel(selectedTask.status)}</div></div>
-              <div className="rounded-control border border-line bg-bg p-3"><div className="text-[10px] text-muted">Assignee</div><div className="mt-1.5">{selectedTask.assignedTo ? <ProfileIdentity profile={{ name: selectedTask.assignedTo, role: taskAssignees.find(assignee => assignee.name === selectedTask.assignedTo)?.role || 'Project contributor', division: taskAssignees.find(assignee => assignee.name === selectedTask.assignedTo)?.division || 'Delivery', username: taskAssignees.find(assignee => assignee.name === selectedTask.assignedTo)?.username }} showRole={false} /> : <span className="text-xs font-semibold text-muted">Unassigned</span>}</div></div>
+              <div className="rounded-control border border-line bg-bg p-3"><div className="text-[10px] text-muted">Assignee</div><div className="mt-1.5">{selectedTask.assignedTo ? <ProfileIdentity profile={{ name: selectedTask.assignedTo, role: taskAssignees.find(assignee => assignee.name === selectedTask.assignedTo)?.role, division: taskAssignees.find(assignee => assignee.name === selectedTask.assignedTo)?.division, username: taskAssignees.find(assignee => assignee.name === selectedTask.assignedTo)?.username }} showRole={false} /> : <span className="text-xs font-semibold text-muted">Unassigned</span>}</div></div>
             </div>
             <div>
               <div className="text-[11px] font-semibold text-muted">Move to</div>
@@ -1568,7 +1568,7 @@ export const AdminProjects: React.FC = () => {
                                       </div>
                                       {project.teamLead ? (
                                         <ProfileIdentity
-                                          profile={{ name: project.teamLead, role: 'Project owner', division: 'Delivery' }}
+                                          profile={{ name: project.teamLead, role: undefined, contextLabel: 'Project owner' }}
                                           size="sm"
                                           showRole={false}
                                         />
@@ -1631,7 +1631,7 @@ export const AdminProjects: React.FC = () => {
                           <td>
                             {project.teamLead ? (
                               <ProfileIdentity
-                                profile={{ name: project.teamLead, role: 'Project owner', division: 'Delivery' }}
+                                profile={{ name: project.teamLead, role: undefined, contextLabel: 'Project owner' }}
                                 showRole={false}
                               />
                             ) : (
