@@ -2148,7 +2148,7 @@ export const AdminProjects: React.FC = () => {
                                       >
                                         <GripVertical size={16} strokeWidth={2} />
                                       </span>
-                                      <button type="button" onClick={() => setSelectedTask(task) className="min-w-0 flex-1 text-left">
+                                      <button type="button" onClick={() => setSelectedTask(task)} className="min-w-0 flex-1 text-left">
                                         <div className="flex flex-wrap items-center gap-1.5">
                                           <span className={'rounded-badge border px-2 py-1 text-[9px] font-semibold ' + priorityClass(task.priority)}>{priorityLabel(task.priority)}</span>
                                           {overdue && (
