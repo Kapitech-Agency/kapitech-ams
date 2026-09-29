@@ -196,7 +196,7 @@ export const AdminApprovals: React.FC = () => {
       />
 
       {/* KPI Cards */}
-      <section aria-label="Approval snapshot" className="rounded-card border border-line bg-panel p-4 sm:p-5">
+      <section aria-label="Approval snapshot" className="rounded-card border border-line bg-panel p-4">
         <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
           <div><h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan persetujuan' : 'Approval snapshot'}</h2><p className="mt-1 text-xs text-muted">{language === 'id' ? 'Permintaan dan exposure finansial yang menunggu keputusan.' : 'Decision queue and financial exposure across the approval workspace.'}</p></div>
           <span className="text-[11px] font-medium tabular-nums text-muted">{metrics.pendingCount} pending</span>
@@ -212,7 +212,7 @@ export const AdminApprovals: React.FC = () => {
       </section>
 
       {/* Filter and Search Bar */}
-      <section className="rounded-card border border-line bg-panel p-4 sm:p-5">
+      <section className="rounded-card border border-line bg-panel p-4">
         <div className="relative flex-1">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
           <input
