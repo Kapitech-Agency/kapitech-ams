@@ -30,6 +30,7 @@ import { AgencyExpense, AgencyInvoice, InvoiceLineItem, InvoiceStatus, INITIAL_D
 import { CurrencyCode, CURRENCY_EVENT, getActiveCurrency, setActiveCurrency, formatNativeAmount } from '../../lib/currency';
 import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
+import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import { InvoiceStatusDropdown } from '../../components/ui/InvoiceStatusDropdown';
 import { hasAdminPermission } from '../../lib/adminAuth';
@@ -2681,7 +2682,7 @@ export const AdminInvoicing: React.FC = () => {
         </div>
       </Modal>
 
-      <Modal
+      <Drawer
         open={quotationModalOpen}
         onClose={() => {
           if (!quotationSaving) {
@@ -2745,7 +2746,7 @@ export const AdminInvoicing: React.FC = () => {
             <p className="mt-1 text-[10px] text-muted">Currency follows the active Finance currency switch.</p>
           </div>
         </form>
-      </Modal>
+      </Drawer>
 
       <Modal
         open={!!quotationDetail}
@@ -2804,7 +2805,7 @@ export const AdminInvoicing: React.FC = () => {
         )}
       </Modal>
 
-      <Modal
+      <Drawer
         open={invoiceModalOpen}
         onClose={() => {
           requestCloseInvoice();
@@ -2946,9 +2947,9 @@ export const AdminInvoicing: React.FC = () => {
             </div>
           </div>
         </form>
-      </Modal>
+      </Drawer>
 
-      <Modal
+      <Drawer
         open={expenseModalOpen}
         onClose={() => {
           requestCloseExpense();
@@ -2980,9 +2981,9 @@ export const AdminInvoicing: React.FC = () => {
             <div><label htmlFor="finance-expense-date" className="mb-1.5 block text-xs font-medium text-muted">Date *</label><input id="finance-expense-date" required type="date" max={getDateInputValue()} value={expenseDate} onChange={(event) => setExpenseDate(event.target.value)} className={fieldClass} /></div>
           </div>
         </form>
-      </Modal>
+      </Drawer>
 
-      <Modal
+      <Drawer
         open={!!paymentInvoice}
         onClose={() => {
           requestClosePayment();
@@ -3021,7 +3022,7 @@ export const AdminInvoicing: React.FC = () => {
             <div><label htmlFor="finance-payment-notes" className="mb-1.5 block text-xs font-medium text-muted">Notes</label><textarea id="finance-payment-notes" maxLength={1000} value={paymentNotes} onChange={(event) => setPaymentNotes(event.target.value)} rows={3} className={fieldClass + ' py-2.5'} /></div>
           </form>
         )}
-      </Modal>
+      </Drawer>
 
       <Modal
         open={!!discardPrompt}
