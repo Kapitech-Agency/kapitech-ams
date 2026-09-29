@@ -312,6 +312,8 @@ export const AdminProjects: React.FC = () => {
   const [projectClientFilter, setProjectClientFilter] = useState('');
   const [projectOwnerFilter, setProjectOwnerFilter] = useState('');
   const [projectSort, setProjectSort] = useState('updated');
+  const [archiveSearch, setArchiveSearch] = useState('');
+  const [archiveHealthFilter, setArchiveHealthFilter] = useState('');
   const [projectLayout, setProjectLayout] = useState<ProjectLayout>(
     searchParams.get('layout') === 'table' ? 'table' : 'board'
   );
@@ -437,6 +439,29 @@ export const AdminProjects: React.FC = () => {
     () => projects.filter(project => project.status === 'completed'),
     [projects]
   );
+
+  const filteredArchivedProjects = useMemo(() => {
+    const query = archiveSearch.trim().toLowerCase();
+    return archivedProjects.filter(project => {
+      const matchesQuery =
+        !query ||
+        [project.name, project.clientCompany, project.teamLead, project.slug]
+          .join(' ')
+          .toLowerCase()
+          .includes(query);
+      const matchesHealth = !archiveHealthFilter || project.health === archiveHealthFilter;
+      return matchesQuery && matchesHealth;
+    });
+  }, [archivedProjects, archiveSearch, archiveHealthFilter]);
+
+  const archiveStats = useMemo(() => {
+    const totalValue = archivedProjects.reduce((sum, project) => sum + project.budget, 0);
+    const averageProgress = archivedProjects.length
+      ? Math.round(archivedProjects.reduce((sum, project) => sum + project.progressPercent, 0) / archivedProjects.length)
+      : 0;
+    const clients = new Set(archivedProjects.map(project => project.clientCompany).filter(Boolean)).size;
+    return { totalValue, averageProgress, clients };
+  }, [archivedProjects]);
 
   const projectFilterOptions = useMemo(() => {
     const clients = Array.from(new Set<string>(projects.map(project => project.clientCompany).filter((value): value is string => Boolean(value)))).sort((a, b) => a.localeCompare(b));
@@ -2320,27 +2345,148 @@ export const AdminProjects: React.FC = () => {
       )}
 
       {view === 'archived' && (
-        <AdminPanel title="Archived projects" description="Completed delivery records remain queryable and can still be opened from their slug.">
-          <div className="overflow-x-auto custom-scrollbar">
-            <table className="ams-data-table min-w-[900px] text-left">
-              <thead><tr><th>Project</th><th>Client</th><th>Completed</th><th>Budget</th><th>Owner</th><th>Slug</th><th>Actions</th></tr></thead>
-              <tbody>
-                {archivedProjects.map(project => (
-                  <tr key={project.id}>
-                    <td className="text-xs font-semibold text-fg">{project.name}</td>
-                    <td className="text-xs text-muted">{project.clientCompany}</td>
-                    <td className="text-xs text-fg">{formatDate(project.targetEndDate)}</td>
-                    <td className="text-xs tabular-nums text-fg">{formatAmount(project.budget, currency)}</td>
-                    <td className="text-xs text-fg">{project.teamLead || 'Unassigned'}</td>
-                    <td className="text-[11px] text-muted">{project.slug}</td>
-                    <td><div className="ams-table-actions"><button type="button" className="ams-table-action" onClick={() => openProjectDetail(project)}>View</button><button type="button" className="ams-table-action" data-primary="true" onClick={() => openEditProject(project)}>Edit</button></div></td>
-                  </tr>
-                ))}
-                {archivedProjects.length === 0 && <tr><td colSpan={7} className="py-12 text-center text-xs text-muted">No archived projects yet.</td></tr>}
-              </tbody>
-            </table>
-          </div>
-        </AdminPanel>
+        <div className="space-y-4">
+          <section aria-label="Archived project summary">
+            <AdminMetricStrip
+              className="sm:grid-cols-2 lg:grid-cols-4"
+              metrics={[
+                {
+                  id: 'archived-count',
+                  label: 'Completed projects',
+                  value: String(archivedProjects.length),
+                  change: 'Historical delivery',
+                  changeToneClassName: 'text-success',
+                  context: 'Closed project records',
+                  sparkline: archivedProjects.slice(0, 5).map(project => project.progressPercent),
+                  icon: <CheckCircle2 size={15} />,
+                  toneClassName: 'text-success',
+                },
+                {
+                  id: 'archived-value',
+                  label: 'Completed value',
+                  value: formatAmount(archiveStats.totalValue, currency),
+                  change: archiveStats.clients + ' clients',
+                  changeToneClassName: 'text-info',
+                  context: 'Historical portfolio value',
+                  sparkline: archivedProjects.slice(0, 5).map(project => project.budget),
+                  icon: <CircleDollarSign size={15} />,
+                  toneClassName: 'text-info',
+                },
+                {
+                  id: 'archived-progress',
+                  label: 'Average final progress',
+                  value: archiveStats.averageProgress + '%',
+                  change: 'Delivery completion',
+                  changeToneClassName: 'text-success',
+                  context: 'Across archived projects',
+                  sparkline: archivedProjects.slice(0, 5).map(project => project.progressPercent),
+                  icon: <BarChart3 size={15} />,
+                  toneClassName: 'text-fg',
+                },
+                {
+                  id: 'archived-clients',
+                  label: 'Historical clients',
+                  value: String(archiveStats.clients),
+                  change: filteredArchivedProjects.length + ' visible',
+                  changeToneClassName: 'text-muted',
+                  context: 'Distinct client companies',
+                  sparkline: [archiveStats.clients, archivedProjects.length, filteredArchivedProjects.length],
+                  icon: <Users size={15} />,
+                  toneClassName: 'text-fg',
+                },
+              ]}
+            />
+          </section>
+
+          <AdminPanel
+            title="Archived projects"
+            description="Completed delivery records remain queryable for reference, handover history, and future reuse."
+          >
+            <div className="border-b border-line bg-bg/40 p-4 sm:p-5">
+              <div className="grid items-center gap-2.5 md:grid-cols-[minmax(260px,1fr)_170px_auto]">
+                <div className="relative min-w-0">
+                  <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                  <input
+                    value={archiveSearch}
+                    onChange={event => setArchiveSearch(event.target.value)}
+                    placeholder="Search archived projects, clients, owners..."
+                    className={fieldClass + ' mt-0 pl-9'}
+                    aria-label="Search archived projects"
+                  />
+                </div>
+                <CustomSelect
+                  value={archiveHealthFilter}
+                  onChange={setArchiveHealthFilter}
+                  options={[{ value: '', label: 'All health' }, ...(['Good', 'At Risk', 'Delayed', 'Blocked'] as ProjectHealth[]).map(value => ({ value, label: value }))]}
+                  className="w-full"
+                  aria-label="Filter archived projects by health"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setArchiveSearch('');
+                    setArchiveHealthFilter('');
+                  }}
+                  disabled={!archiveSearch && !archiveHealthFilter}
+                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-panel-hover hover:text-fg disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <X size={13} />
+                  Reset
+                </button>
+              </div>
+              <div className="mt-3 flex items-center justify-between gap-2 text-[11px] text-muted">
+                <span><strong className="font-semibold text-fg">{filteredArchivedProjects.length}</strong> of {archivedProjects.length} completed projects</span>
+                <span className="hidden sm:inline">Historical records are read from the same canonical project model.</span>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="ams-data-table min-w-[1020px] text-left">
+                <thead><tr><th>Project</th><th>Client</th><th>Completed</th><th>Budget</th><th>Final progress</th><th>Owner</th><th>Slug</th><th>Actions</th></tr></thead>
+                <tbody>
+                  {filteredArchivedProjects.map(project => (
+                    <tr key={project.id}>
+                      <td>
+                        <button type="button" onClick={() => openProjectDetail(project)} className="min-w-0 text-left">
+                          <div className="max-w-[250px] truncate text-xs font-semibold text-fg">{project.name}</div>
+                          <div className="mt-0.5 max-w-[250px] truncate text-[11px] text-muted">{project.serviceCategory || 'Delivery'}</div>
+                        </button>
+                      </td>
+                      <td className="text-xs text-muted">{project.clientCompany || '—'}</td>
+                      <td className="text-xs text-fg">{formatDate(project.targetEndDate)}</td>
+                      <td className="text-xs tabular-nums text-fg">{formatAmount(project.budget, currency)}</td>
+                      <td>
+                        <div className="min-w-[150px]">
+                          <div className="flex items-center justify-between text-[10px] text-muted"><span>Final</span><span className="tabular-nums text-fg">{project.progressPercent}%</span></div>
+                          <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg"><div className="h-full rounded-full bg-success" style={{ width: project.progressPercent + '%' }} /></div>
+                        </div>
+                      </td>
+                      <td>
+                        {project.teamLead ? (
+                          <ProfileIdentity profile={{ name: project.teamLead, contextLabel: 'Project owner' }} showRole={false} />
+                        ) : (
+                          <span className="text-xs text-muted">Unassigned</span>
+                        )}
+                      </td>
+                      <td className="text-[11px] text-muted">{project.slug}</td>
+                      <td>
+                        <div className="ams-table-actions">
+                          <button type="button" className="ams-table-action" onClick={() => openProjectDetail(project)}>View</button>
+                          {canManageProjects && <button type="button" className="ams-table-action" data-primary="true" onClick={() => openEditProject(project)}>Edit</button>}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredArchivedProjects.length === 0 && (
+                    <tr><td colSpan={8} className="py-12 text-center text-xs text-muted">
+                      {archivedProjects.length ? 'No archived projects match the current filters.' : 'No archived projects yet.'}
+                    </td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </AdminPanel>
+        </div>
       )}
 
       <Drawer
