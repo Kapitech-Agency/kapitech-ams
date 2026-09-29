@@ -214,7 +214,8 @@ const fieldClass =
 export const AdminProjects: React.FC = () => {
   const { language } = useLanguage();
   const canManageProjects = hasAdminPermission('canManageProjects');
-  const canManageTasks = hasAdminPermission('canManageKanbanTasks');
+  const canManageKanbanTasks = hasAdminPermission('canManageKanbanTasks');
+  const canManageTasks = canManageKanbanTasks;
   const [searchParams, setSearchParams] = useSearchParams();
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
   const [projects, setProjects] = useState<ProjectRecord[]>(demoProjects);
@@ -976,7 +977,7 @@ export const AdminProjects: React.FC = () => {
         footer={(
           <>
             <Button variant="secondary" onClick={() => setSelectedTask(null)}>Close</Button>
-            {selectedTask && canManageTasks && <Button onClick={() => { setSelectedTask(null); openEditTask(selectedTask); }}>Edit task</Button>}
+            {canManageKanbanTasks && <Button onClick={() => { setSelectedTask(null); openEditTask(selectedTask); }}>Edit task</Button>}
           </>
         )}
       >
@@ -1376,7 +1377,7 @@ export const AdminProjects: React.FC = () => {
                           return (
                             <article
                               key={task.id}
-                              draggable
+                              draggable={canManageKanbanTasks}
                               onDragStart={event => event.dataTransfer.setData('text/plain', task.id)}
                               className="group rounded-card border border-line bg-panel p-3 transition-colors hover:border-accent/40"
                             >
