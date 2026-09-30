@@ -9,6 +9,8 @@ import {
   FolderKanban,
   LayoutGrid,
   List,
+  Pencil,
+  Plus,
   RefreshCw,
   Search,
   Tag,
