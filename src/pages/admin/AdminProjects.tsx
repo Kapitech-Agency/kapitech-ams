@@ -1683,7 +1683,7 @@ export const AdminProjects: React.FC = () => {
                         key={column.id}
                         aria-label={column.label + ' project column'}
                         className={[
-                          'ams-project-kanban-lane flex w-[330px] shrink-0 self-start flex-col overflow-visible rounded-card border transition-[border-color,background-color] duration-150 sm:w-[348px]',
+                          'ams-project-kanban-lane flex w-[314px] shrink-0 self-start flex-col overflow-visible rounded-card border transition-[border-color,background-color] duration-150 sm:w-[326px] lg:w-[334px]',
                           isDropTarget
                             ? 'border-accent/50 bg-accent/5'
                             : 'border-line/80',
@@ -1698,7 +1698,7 @@ export const AdminProjects: React.FC = () => {
                                 <span className="text-xs font-semibold text-fg">{column.label}</span>
                                 <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] font-semibold text-muted">{items.length}</span>
                               </div>
-                              <p className="mt-1 text-[10px] leading-4 text-muted">{column.description}</p>
+                              <p className="mt-1 hidden text-[10px] leading-4 text-muted sm:block">{column.description}</p>
                             </div>
                             {canManageProjects && (
                               <button
@@ -1711,7 +1711,7 @@ export const AdminProjects: React.FC = () => {
                               </button>
                             )}
                           </div>
-                          <div className="mt-2 flex items-center justify-between text-[9px] text-muted">
+                          <div className="mt-2 flex items-center justify-between gap-2 border-t border-line/70 pt-2 text-[9px] text-muted">
                             <span>{items.reduce((sum, project) => sum + project.tasks.filter(task => task.status !== 'done').length, 0)} open tasks</span>
                             <span className="tabular-nums">{formatAmount(items.reduce((sum, project) => sum + project.budget, 0), currency)}</span>
                           </div>
