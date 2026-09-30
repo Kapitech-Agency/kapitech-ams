@@ -1961,9 +1961,11 @@ export const AdminInvoicing: React.FC = () => {
     today.setHours(0, 0, 0, 0);
 
     const buckets = [
-      { label: 'Current / 0–30 Days', tone: 'success' as const, amount: 0, count: 0 },
-      { label: '31–60 Days', tone: 'warning' as const, amount: 0, count: 0 },
-      { label: '60+ Days', tone: 'danger' as const, amount: 0, count: 0 }
+      { label: 'Current', tone: 'success' as const, amount: 0, count: 0 },
+      { label: '1–30 Days overdue', tone: 'warning' as const, amount: 0, count: 0 },
+      { label: '31–60 Days overdue', tone: 'warning' as const, amount: 0, count: 0 },
+      { label: '61–90 Days overdue', tone: 'danger' as const, amount: 0, count: 0 },
+      { label: '90+ Days overdue', tone: 'danger' as const, amount: 0, count: 0 }
     ];
 
     currencyInvoices.forEach((invoice) => {
@@ -1973,9 +1975,17 @@ export const AdminInvoicing: React.FC = () => {
       const due = new Date(String(invoice.dueDate) + 'T00:00:00');
       const daysSinceDue = Number.isNaN(due.getTime())
         ? 0
-        : Math.max(0, Math.floor((today.getTime() - due.getTime()) / 86400000));
+        : Math.floor((today.getTime() - due.getTime()) / 86400000);
 
-      const bucket = daysSinceDue <= 30 ? buckets[0] : daysSinceDue <= 60 ? buckets[1] : buckets[2];
+      const bucket = daysSinceDue <= 0
+        ? buckets[0]
+        : daysSinceDue <= 30
+          ? buckets[1]
+          : daysSinceDue <= 60
+            ? buckets[2]
+            : daysSinceDue <= 90
+              ? buckets[3]
+              : buckets[4];
       bucket.amount += balance;
       bucket.count += 1;
     });
@@ -3384,12 +3394,51 @@ export const AdminInvoicing: React.FC = () => {
               <input id="finance-quotation-company" required maxLength={160} value={quotationClientCompany} onChange={(event) => setQuotationClientCompany(event.target.value)} className={fieldClass} placeholder="Company / account" />
             </div>
             <div>
-              <label htmlFor="finance-quotation-amount" className="mb-1.5 block text-xs font-medium text-muted">Quoted amount *</label>
-              <input id="finance-quotation-amount" required min="0.01" max="1000000000000" step="0.01" type="number" value={quotationAmount || ''} onChange={(event) => setQuotationAmount(Number(event.target.value))} className={fieldClass} />
+              <label htmlFor="finance-quotation-amount" className="mb-1.5 block text-xs font-medium text-muted">Starting amount</label>
+              <input id="finance-quotation-amount" min="0" max="1000000000000" step="0.01" type="number" value={quotationAmount || ''} onChange={(event) => setQuotationAmount(Number(event.target.value))} className={fieldClass} />
+              <p className="mt-1 text-[10px] text-muted">Use line items below for the final commercial value.</p>
             </div>
             <div>
               <label htmlFor="finance-quotation-valid-until" className="mb-1.5 block text-xs font-medium text-muted">Valid until *</label>
               <input id="finance-quotation-valid-until" required type="date" value={quotationValidUntil} onChange={(event) => setQuotationValidUntil(event.target.value)} className={fieldClass} />
+            </div>
+            <div className="sm:col-span-2">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold text-fg">Line items</p>
+                  <p className="mt-1 text-[10px] text-muted">Define the billable scope, quantities, and unit rates.</p>
+                </div>
+                <button type="button" onClick={addQuotationItem} className={actionClass + ' h-8 min-h-8 px-2.5'}><Plus size={13}/>Add item</button>
+              </div>
+              <div className="mt-3 space-y-2">
+                {quotationItems.map((item, index) => (
+                  <div key={item.id} className="rounded-control border border-line bg-bg p-3">
+                    <div className="grid gap-2 sm:grid-cols-[minmax(0,1.4fr)_80px_minmax(140px,0.8fr)_auto]">
+                      <input value={item.description} onChange={(event) => updateQuotationItem(index, { description: event.target.value })} className={fieldClass} placeholder="Deliverable / scope item" aria-label={'Quotation item ' + (index + 1)} />
+                      <input type="number" min="1" step="1" value={item.quantity} onChange={(event) => updateQuotationItem(index, { quantity: Number(event.target.value) })} className={fieldClass} aria-label={'Quantity for item ' + (index + 1)} />
+                      <input type="number" min="0" step="0.01" value={item.unitPrice || ''} onChange={(event) => updateQuotationItem(index, { unitPrice: Number(event.target.value) })} className={fieldClass} aria-label={'Unit price for item ' + (index + 1)} />
+                      <button type="button" onClick={() => removeQuotationItem(index)} disabled={quotationItems.length === 1} className="inline-flex h-9 w-9 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger disabled:opacity-30" aria-label={'Remove item ' + (index + 1)}><Trash2 size={14}/></button>
+                    </div>
+                    <div className="mt-2 flex justify-end text-[11px] tabular-nums text-muted">{formatNativeAmount(item.amount || 0, currency, true)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label htmlFor="finance-quotation-discount" className="mb-1.5 block text-xs font-medium text-muted">Discount %</label>
+              <input id="finance-quotation-discount" min="0" max="100" step="0.01" type="number" value={quotationDiscountPercent} onChange={(event) => setQuotationDiscountPercent(Number(event.target.value))} className={fieldClass} />
+            </div>
+            <div>
+              <label htmlFor="finance-quotation-tax" className="mb-1.5 block text-xs font-medium text-muted">Tax %</label>
+              <input id="finance-quotation-tax" min="0" max="100" step="0.01" type="number" value={quotationTaxPercent} onChange={(event) => setQuotationTaxPercent(Number(event.target.value))} className={fieldClass} />
+            </div>
+            <div>
+              <label htmlFor="finance-quotation-payment-terms" className="mb-1.5 block text-xs font-medium text-muted">Payment terms</label>
+              <input id="finance-quotation-payment-terms" maxLength={240} value={quotationPaymentTerms} onChange={(event) => setQuotationPaymentTerms(event.target.value)} className={fieldClass} />
+            </div>
+            <div>
+              <label htmlFor="finance-quotation-notes" className="mb-1.5 block text-xs font-medium text-muted">Notes</label>
+              <input id="finance-quotation-notes" maxLength={1000} value={quotationNotes} onChange={(event) => setQuotationNotes(event.target.value)} className={fieldClass} />
             </div>
             {editingQuotation && (
               <div>
@@ -3405,11 +3454,13 @@ export const AdminInvoicing: React.FC = () => {
             )}
           </div>
           <div className="rounded-card border border-line bg-bg px-4 py-3">
-            <div className="flex items-center justify-between gap-3 text-xs">
-              <span className="text-muted">Preview total</span>
-              <span className="font-semibold tabular-nums text-fg">{formatNativeAmount(Number(quotationAmount) || 0, currency, true)}</span>
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between gap-3"><span className="text-muted">Subtotal</span><span className="tabular-nums text-fg">{formatNativeAmount(quotationPreviewTotals.subtotal, currency, true)}</span></div>
+              <div className="flex justify-between gap-3"><span className="text-muted">Discount</span><span className="tabular-nums text-fg">- {formatNativeAmount(quotationPreviewTotals.discountAmount, currency, true)}</span></div>
+              <div className="flex justify-between gap-3"><span className="text-muted">Tax</span><span className="tabular-nums text-fg">{formatNativeAmount(quotationPreviewTotals.taxAmount, currency, true)}</span></div>
+              <div className="flex justify-between gap-3 border-t border-line pt-2 font-semibold"><span className="text-fg">Preview total</span><span className="tabular-nums text-fg">{formatNativeAmount(quotationPreviewTotals.total, currency, true)}</span></div>
             </div>
-            <p className="mt-1 text-[10px] text-muted">Currency follows the active Finance currency switch.</p>
+            <p className="mt-2 text-[10px] text-muted">Currency follows the active Finance currency switch.</p>
           </div>
         </form>
       </Drawer>
@@ -3934,6 +3985,19 @@ export const AdminInvoicing: React.FC = () => {
                   <div className="mt-2 space-y-2">{detailInvoice.payments.map((payment) => <div key={payment.id} className="flex flex-col gap-1 rounded-control border border-line bg-bg p-3 text-xs sm:flex-row sm:items-center sm:justify-between"><span className="text-muted">{payment.date} · {payment.method.replace('_', ' ')}{payment.reference ? ' · ' + payment.reference : ''}</span><span className="font-medium tabular-nums text-success">{formatNativeAmount(payment.amount, detailInvoice.currency)}</span></div>)}</div>
                 ) : <p className="mt-2 rounded-control border border-line bg-bg p-3 text-xs text-muted">No recorded payments.</p>}
                 {detailInvoice.notes && <p className="mt-3 text-xs leading-5 text-muted">{detailInvoice.notes}</p>}
+                {detailInvoice.auditTrail?.length ? (
+                  <div className="mt-4">
+                    <p className="text-xs font-medium text-muted">Activity</p>
+                    <div className="mt-2 space-y-2">
+                      {detailInvoice.auditTrail.slice().reverse().slice(0, 8).map((entry, index) => (
+                        <div key={entry.timestamp + entry.action + index} className="flex items-start justify-between gap-3 rounded-control border border-line bg-bg px-3 py-2.5 text-[11px]">
+                          <div><p className="font-medium text-fg">{entry.action}</p>{entry.user && <p className="mt-0.5 text-muted">{entry.user}</p>}{entry.note && <p className="mt-0.5 leading-4 text-muted">{entry.note}</p>}</div>
+                          <span className="shrink-0 tabular-nums text-muted">{entry.timestamp}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}}
                 {detailInvoice.paymentTerms && <p className="mt-2 text-xs text-muted">Terms: {detailInvoice.paymentTerms}</p>}
               </div>
               <div className="rounded-card border border-line bg-bg p-4 text-xs">
