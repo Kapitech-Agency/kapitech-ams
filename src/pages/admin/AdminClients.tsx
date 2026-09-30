@@ -570,7 +570,7 @@ export const AdminClients: React.FC = () => {
                 const headroom = budget > 0 ? Math.max(0, Math.min(100, (1 - spend / budget) * 100)) : null;
                 const clientSlug = getAgencyClientSlug(client as AgencyClient & Record<string, unknown>) || createClientSlug(client.company || client.name || 'client account', client.id);
                 return (
-                  <tr key={client.id} className="transition-colors hover:bg-bg/70">
+                  <tr key={client.id} data-ams-slug={'client-account-' + clientSlug} className="transition-colors hover:bg-bg/70">
                     <td className="px-4 py-3"><button type="button" onClick={() => setSelectedClient(client)} className="block max-w-[270px] text-left"><span className="block truncate font-medium text-fg">{client.company}</span><span className="mt-0.5 block truncate font-mono text-[10px] text-muted" title={clientSlug}>{clientSlug}</span><span className="mt-0.5 block truncate text-[11px] text-muted tabular-nums">ID: {client.id} • {client.location || '—'}</span></button></td>
                     <td className="px-4 py-3"><span className="block whitespace-nowrap font-mono text-[11px] text-fg" title={clientSlug}>{clientSlug}</span></td>
                     <td className="px-4 py-3 text-muted">{client.industry || '—'}</td>
