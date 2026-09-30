@@ -10,6 +10,7 @@ export type InvoiceStatus = 'draft' | 'sent' | 'partially_paid' | 'paid' | 'over
 
 export interface InvoiceLineItem {
   id: string;
+  slug?: string;
   description: string;
   quantity: number;
   unitPrice: number; // in IDR
@@ -18,6 +19,7 @@ export interface InvoiceLineItem {
 
 export interface InvoicePaymentRecord {
   id: string;
+  slug?: string;
   amount: number;
   date: string;
   method: 'bank_transfer' | 'credit_card' | 'cash' | 'other';
@@ -35,6 +37,7 @@ export interface InvoiceAuditEntry {
 
 export interface AgencyInvoice {
   id: string;
+  slug?: string;
   invoiceNumber: string;
   type?: 'invoice' | 'quotation';
   clientName: string;
@@ -78,6 +81,7 @@ export type ExpenseCategory =
 
 export interface AgencyExpense {
   id: string;
+  slug?: string;
   type?: ExpenseType;
   category: ExpenseCategory;
   description: string;
@@ -92,6 +96,42 @@ export interface AgencyExpense {
 let invoiceCache: AgencyInvoice[] | null = null;
 let expenseCache: AgencyExpense[] | null = null;
 export const FINANCE_EVENT_NAME = 'kapitech_finance_updated';
+
+export const slugifyFinance = (value: unknown): string => {
+  const normalized = String(value ?? '')
+    .trim()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return normalized || 'finance-record';
+};
+
+export const normalizeFinanceInvoice = (invoice: AgencyInvoice): AgencyInvoice => {
+  const slug = slugifyFinance(invoice.slug || invoice.invoiceNumber || invoice.id);
+  return {
+    ...invoice,
+    slug,
+    items: Array.isArray(invoice.items)
+      ? invoice.items.map((item) => ({
+          ...item,
+          slug: item.slug || slugifyFinance(slug + '-' + (item.description || item.id))
+        }))
+      : [],
+    payments: Array.isArray(invoice.payments)
+      ? invoice.payments.map((payment) => ({
+          ...payment,
+          slug: payment.slug || slugifyFinance(slug + '-payment-' + (payment.id || payment.date))
+        }))
+      : []
+  };
+};
+
+export const normalizeFinanceExpense = (expense: AgencyExpense): AgencyExpense => ({
+  ...expense,
+  slug: slugifyFinance(expense.slug || (expense.description || expense.id) + '-' + (expense.date || '') + '-' + expense.id)
+});
 
 let financeServerHydrationStarted = false;
 
@@ -114,10 +154,18 @@ function hydrateFinanceFromServer(): void {
 
   Promise.all([api.finance.getInvoices(), api.finance.getExpenses()]).then(([invoiceRes, expenseRes]) => {
     const invoices = invoiceRes.success && Array.isArray(invoiceRes.data?.invoices)
-      ? invoiceRes.data.invoices.map((inv: any) => ({ ...inv, currency: inv.currency || 'IDR', items: Array.isArray(inv.items) ? inv.items : [] }))
+      ? invoiceRes.data.invoices.map((inv: any) => normalizeFinanceInvoice({
+          ...inv,
+          slug: inv.slug || inv.metadata?.slug,
+          currency: inv.currency || 'IDR',
+          items: Array.isArray(inv.items) ? inv.items : []
+        } as AgencyInvoice))
       : [];
     const expenses = expenseRes.success && Array.isArray(expenseRes.data?.expenses)
-      ? expenseRes.data.expenses
+      ? expenseRes.data.expenses.map((expense: any) => normalizeFinanceExpense({
+          ...expense,
+          slug: expense.slug || expense.metadata?.slug
+        } as AgencyExpense))
       : [];
 
     if (invoiceRes.success) invoiceCache = invoices;
@@ -141,6 +189,7 @@ function hydrateFinanceFromServer(): void {
 export const INITIAL_DEFAULT_INVOICES: AgencyInvoice[] = [
   {
     id: 'inv_101',
+    slug: 'kapi-inv-2026-001-astradigital-ventura',
     invoiceNumber: 'KAPI-INV-2026-001',
     type: 'invoice',
     clientName: 'Budi Santoso',
@@ -167,6 +216,17 @@ export const INITIAL_DEFAULT_INVOICES: AgencyInvoice[] = [
     issueDate: '2026-08-01',
     dueDate: '2026-08-15',
     paidDate: '2026-08-14',
+    amountPaid: 183150000,
+    balanceDue: 0,
+    payments: [{
+      id: 'pay_101_20260814',
+      slug: 'kapi-inv-2026-001-payment-20260814',
+      amount: 183150000,
+      date: '2026-08-14',
+      method: 'bank_transfer',
+      reference: 'BCA-VA-101',
+      recordedBy: 'BCA Virtual Account'
+    }],
     notes: 'Sprint 1 & Sprint 2 deliverable sign-off settlement.',
     paymentTerms: 'Bank Transfer Net 14',
     auditTrail: [
@@ -179,6 +239,7 @@ export const INITIAL_DEFAULT_INVOICES: AgencyInvoice[] = [
   },
   {
     id: 'inv_102',
+    slug: 'kapi-inv-2026-002-telkomsel-innovation-labs',
     invoiceNumber: 'KAPI-INV-2026-002',
     type: 'invoice',
     clientName: 'Sarah Jenkins',
@@ -205,6 +266,17 @@ export const INITIAL_DEFAULT_INVOICES: AgencyInvoice[] = [
     issueDate: '2026-08-18',
     dueDate: '2026-09-01',
     paidDate: '2026-08-30',
+    amountPaid: 126540000,
+    balanceDue: 0,
+    payments: [{
+      id: 'pay_102_20260830',
+      slug: 'kapi-inv-2026-002-payment-20260830',
+      amount: 126540000,
+      date: '2026-08-30',
+      method: 'bank_transfer',
+      reference: 'MANDIRI-CORP-102',
+      recordedBy: 'Mandiri Corporate'
+    }],
     notes: 'Phase 1 Interactive showcase release milestone.',
     paymentTerms: 'Bank Transfer Net 14',
     auditTrail: [
@@ -216,6 +288,7 @@ export const INITIAL_DEFAULT_INVOICES: AgencyInvoice[] = [
   },
   {
     id: 'inv_103',
+    slug: 'kapi-inv-2026-003-bank-mandiri-fintech',
     invoiceNumber: 'KAPI-INV-2026-003',
     type: 'invoice',
     clientName: 'Reza Pratama',
@@ -253,6 +326,7 @@ export const INITIAL_DEFAULT_INVOICES: AgencyInvoice[] = [
   },
   {
     id: 'inv_104',
+    slug: 'kapi-inv-2026-004-shopeepay-regional-tech',
     invoiceNumber: 'KAPI-INV-2026-004',
     type: 'invoice',
     clientName: 'Jessica Halim',
@@ -285,6 +359,7 @@ export const INITIAL_DEFAULT_INVOICES: AgencyInvoice[] = [
   },
   {
     id: 'inv_105',
+    slug: 'kapi-inv-2026-005-nusa-cloud-systems',
     invoiceNumber: 'KAPI-INV-2026-005',
     type: 'invoice',
     clientName: 'Kevin Wijaya',
@@ -320,6 +395,7 @@ export const INITIAL_DEFAULT_INVOICES: AgencyInvoice[] = [
 export const INITIAL_DEFAULT_EXPENSES: AgencyExpense[] = [
   {
     id: 'exp_201',
+    slug: 'gcp-cloud-run-artifact-registry-vertex-ai-2026-09-01-exp-201',
     type: 'OpEx',
     category: 'Software & Cloud',
     description: 'GCP Cloud Run, Artifact Registry & Vertex AI Infrastructure',
@@ -331,6 +407,7 @@ export const INITIAL_DEFAULT_EXPENSES: AgencyExpense[] = [
   },
   {
     id: 'exp_202',
+    slug: 'senior-frontend-3d-webgl-contractor-retainer-2026-09-05-exp-202',
     type: 'OpEx',
     category: 'Salaries & Contractors',
     description: 'Senior Frontend & 3D WebGL Specialist Contractor Retainer',
@@ -342,6 +419,7 @@ export const INITIAL_DEFAULT_EXPENSES: AgencyExpense[] = [
   },
   {
     id: 'exp_203',
+    slug: 'kapitech-hq-studio-rental-coworking-2026-09-02-exp-203',
     type: 'Rentals',
     category: 'Office & Rentals',
     description: 'Kapitech HQ Studio Rental & Coworking Hub (Sudirman, Jakarta)',
@@ -353,6 +431,7 @@ export const INITIAL_DEFAULT_EXPENSES: AgencyExpense[] = [
   },
   {
     id: 'exp_204',
+    slug: 'apple-silicon-m3-max-workstations-2026-08-15-exp-204',
     type: 'CapEx',
     category: 'CapEx Equipment',
     description: 'Apple Silicon M3 Max Workstations for 3D Render Team',
@@ -364,6 +443,7 @@ export const INITIAL_DEFAULT_EXPENSES: AgencyExpense[] = [
   },
   {
     id: 'exp_205',
+    slug: 'b2b-enterprise-client-acquisition-showcase-campaign-2026-08-25-exp-205',
     type: 'OpEx',
     category: 'Marketing & Ads',
     description: 'B2B Enterprise Client Acquisition & Showcase Campaign',
@@ -378,7 +458,7 @@ export const INITIAL_DEFAULT_EXPENSES: AgencyExpense[] = [
 export const getAgencyInvoices = (): AgencyInvoice[] => {
   hydrateFinanceFromServer();
   if (invoiceCache) return invoiceCache;
-  invoiceCache = import.meta.env.PROD ? [] : INITIAL_DEFAULT_INVOICES;
+  invoiceCache = import.meta.env.PROD ? [] : INITIAL_DEFAULT_INVOICES.map(normalizeFinanceInvoice);
   return invoiceCache;
 };
 
@@ -396,7 +476,7 @@ export const saveAgencyInvoice = async (invoice: AgencyInvoice): Promise<void> =
     updated = [{ ...invoice, createdAt: invoice.createdAt || now, updatedAt: now }, ...current];
   }
 
-  invoiceCache = updated;
+  invoiceCache = updated.map(normalizeFinanceInvoice);
   window.dispatchEvent(new CustomEvent(FINANCE_EVENT_NAME, { detail: updated }));
 
   const request = idx >= 0
@@ -488,7 +568,7 @@ export const recordInvoicePayment = async (
 export const getAgencyExpenses = (): AgencyExpense[] => {
   hydrateFinanceFromServer();
   if (expenseCache) return expenseCache;
-  expenseCache = import.meta.env.PROD ? [] : INITIAL_DEFAULT_EXPENSES;
+  expenseCache = import.meta.env.PROD ? [] : INITIAL_DEFAULT_EXPENSES.map(normalizeFinanceExpense);
   return expenseCache;
 };
 
