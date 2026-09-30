@@ -1176,7 +1176,7 @@ export const AdminProjects: React.FC = () => {
     );
 
   return (
-    <AdminPageShell featureSlug="projects-module">
+    <AdminPageShell featureSlug="projects-module" className="projects-module pb-10">
       <Modal
         open={Boolean(deleteProject)}
         onClose={() => setDeleteProject(null)}
@@ -1449,7 +1449,7 @@ export const AdminProjects: React.FC = () => {
           <>
             {view === 'all' && (
               <div className="flex h-9 items-center gap-1 rounded-control border border-line bg-panel p-1">
-                <button type="button" onClick={() => openLayout('board')} className={'inline-flex h-7 items-center gap-1.5 rounded-chip px-3 text-xs font-medium transition-colors ' + (projectLayout === 'board' ? 'bg-accent/10 text-fg' : 'text-muted hover:bg-bg hover:text-fg')}>
+                <button type="button" onClick={() => openLayout('board')} className={'inline-flex h-7 items-center gap-1.5 rounded-chip px-3 text-xs font-medium transition-colors ' + (projectLayout === 'board' ? 'bg-line text-fg' : 'text-muted hover:bg-bg hover:text-fg')}>
                   <LayoutGrid size={13} /> Kanban
                 </button>
                 <button type="button" onClick={() => openLayout('table')} className={'inline-flex h-7 items-center gap-1.5 rounded-chip px-3 text-xs font-medium transition-colors ' + (projectLayout === 'table' ? 'bg-accent/10 text-fg' : 'text-muted hover:bg-bg hover:text-fg')}>
@@ -1552,43 +1552,98 @@ export const AdminProjects: React.FC = () => {
             title="Project portfolio"
             description={serverMode ? 'Manage the active project portfolio, move delivery stages from Kanban, and keep the table as the structured reporting view.' : 'Seeded project data keeps the portfolio fully testable without a connected project service.'}
           >
-            <div className="border-b border-line bg-bg/40 p-4 sm:p-5">
-              <div className="grid items-center gap-2.5 xl:grid-cols-[minmax(260px,1fr)_150px_150px_190px_170px_170px_auto]">
-                <div className="relative min-w-0">
-                  <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-                  <input
-                    value={projectSearch}
-                    onChange={event => setProjectSearch(event.target.value)}
-                    placeholder="Search projects, clients, owners..."
-                    className={fieldClass + ' mt-0 pl-9'}
-                  />
+            <AdminFilterBar
+              slug="projects-directory-filters"
+              searchValue={projectSearch}
+              onSearchChange={setProjectSearch}
+              searchPlaceholder="Search projects, clients, owners..."
+              searchLabel="Search projects"
+              actions={(
+                <Button
+                  type="button"
+                  variant="secondary"
+                  icon={<X size={13} />}
+                  onClick={clearProjectFilters}
+                  disabled={!activeProjectFilters && projectSort === 'updated'}
+                >
+                  Reset filters
+                </Button>
+              )}
+              footer={(
+                <div className="space-y-3">
+                  <div className="flex min-w-0 flex-wrap items-center gap-1.5" aria-label="Project status quick filters">
+                    <button
+                      type="button"
+                      onClick={() => setProjectStatusFilter('')}
+                      className={'inline-flex min-h-8 items-center gap-1.5 rounded-chip border px-2.5 text-[10px] font-medium transition-colors ' + (!projectStatusFilter ? 'border-accent/25 bg-accent/10 text-fg' : 'border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg')}
+                    >
+                      All
+                      <span className="tabular-nums">{projects.length}</span>
+                    </button>
+                    {PROJECT_KANBAN_COLUMNS.map(column => {
+                      const count = projects.filter(project => project.status === column.id).length;
+                      const active = projectStatusFilter === column.id;
+                      return (
+                        <button
+                          key={column.id}
+                          type="button"
+                          onClick={() => setProjectStatusFilter(column.id)}
+                          className={'inline-flex min-h-8 items-center gap-1.5 rounded-chip border px-2.5 text-[10px] font-medium transition-colors ' + (active ? 'border-accent/25 bg-accent/10 text-fg' : 'border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg')}
+                        >
+                          <span className={'h-1.5 w-1.5 rounded-full ' + column.dot} />
+                          {column.label}
+                          <span className="tabular-nums">{count}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="font-medium text-fg">{filteredProjects.length}</span>
+                      <span>of {projects.length} projects</span>
+                      {activeProjectFilters > 0 && (
+                        <span className="rounded-badge border border-accent/20 bg-accent/10 px-2 py-1 font-medium text-accent-text">
+                          {activeProjectFilters} filter{activeProjectFilters === 1 ? '' : 's'} active
+                        </span>
+                      )}
+                    </div>
+                    {projectLayout === 'board' && (
+                      <span className="inline-flex items-center gap-1.5 text-[10px] text-muted">
+                        <GripVertical size={12} />
+                        Drag the handle on a card to move it between stages.
+                      </span>
+                    )}
+                  </div>
                 </div>
+              )}
+            >
+              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
                 <CustomSelect
                   value={projectStatusFilter}
                   onChange={setProjectStatusFilter}
                   options={[{ value: '', label: 'All statuses' }, ...PROJECT_STATUSES]}
-                  className="w-full"
+                  className="w-full sm:w-[150px]"
                   aria-label="Filter projects by status"
                 />
                 <CustomSelect
                   value={projectHealthFilter}
                   onChange={setProjectHealthFilter}
                   options={[{ value: '', label: 'All health' }, ...(['Good', 'At Risk', 'Delayed', 'Blocked'] as ProjectHealth[]).map(value => ({ value, label: value }))]}
-                  className="w-full"
+                  className="w-full sm:w-[150px]"
                   aria-label="Filter projects by health"
                 />
                 <CustomSelect
                   value={projectClientFilter}
                   onChange={setProjectClientFilter}
                   options={[{ value: '', label: 'All clients' }, ...projectFilterOptions.clients.map(value => ({ value, label: value }))]}
-                  className="w-full"
+                  className="w-full sm:w-[160px]"
                   aria-label="Filter projects by client"
                 />
                 <CustomSelect
                   value={projectOwnerFilter}
                   onChange={setProjectOwnerFilter}
                   options={[{ value: '', label: 'All owners' }, ...projectFilterOptions.owners.map(value => ({ value, label: value }))]}
-                  className="w-full"
+                  className="w-full sm:w-[155px]"
                   aria-label="Filter projects by owner"
                 />
                 <CustomSelect
@@ -1601,65 +1656,11 @@ export const AdminProjects: React.FC = () => {
                     { value: 'budget', label: 'Highest budget' },
                     { value: 'name', label: 'Name A–Z' },
                   ]}
-                  className="w-full"
+                  className="w-full sm:w-[165px]"
                   aria-label="Sort projects"
                 />
-                <button
-                  type="button"
-                  onClick={clearProjectFilters}
-                  disabled={!activeProjectFilters && projectSort === 'updated'}
-                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-panel-hover hover:text-fg disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <X size={13} />
-                  Reset
-                </button>
               </div>
-
-              <div className="mt-3 flex flex-wrap items-center gap-1.5" aria-label="Project status quick filters">
-                <button
-                  type="button"
-                  onClick={() => setProjectStatusFilter('')}
-                  className={'inline-flex min-h-8 items-center gap-1.5 rounded-chip border px-2.5 text-[10px] font-medium transition-colors ' + (!projectStatusFilter ? 'border-accent/25 bg-accent/10 text-fg' : 'border-line bg-panel text-muted hover:bg-panel-hover hover:text-fg')}
-                >
-                  All
-                  <span className="tabular-nums">{projects.length}</span>
-                </button>
-                {PROJECT_KANBAN_COLUMNS.map(column => {
-                  const count = projects.filter(project => project.status === column.id).length;
-                  const active = projectStatusFilter === column.id;
-                  return (
-                    <button
-                      key={column.id}
-                      type="button"
-                      onClick={() => setProjectStatusFilter(column.id)}
-                      className={'inline-flex min-h-8 items-center gap-1.5 rounded-chip border px-2.5 text-[10px] font-medium transition-colors ' + (active ? 'border-accent/25 bg-accent/10 text-fg' : 'border-line bg-panel text-muted hover:bg-panel-hover hover:text-fg')}
-                    >
-                      <span className={'h-1.5 w-1.5 rounded-full ' + column.dot} />
-                      {column.label}
-                      <span className="tabular-nums">{count}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                <div className="flex min-w-0 items-center gap-2 text-[11px] text-muted">
-                  <span className="font-medium text-fg">{filteredProjects.length}</span>
-                  <span>of {projects.length} projects</span>
-                  {activeProjectFilters > 0 && (
-                    <span className="rounded-badge border border-accent/20 bg-accent/10 px-2 py-1 font-medium text-accent-text">
-                      {activeProjectFilters} filter{activeProjectFilters === 1 ? '' : 's'} active
-                    </span>
-                  )}
-                </div>
-                {projectLayout === 'board' && (
-                  <span className="inline-flex items-center gap-1.5 text-[10px] text-muted">
-                    <GripVertical size={12} />
-                    Drag the handle on a card to move it between stages.
-                  </span>
-                )}
-              </div>
-            </div>
+            </AdminFilterBar>
             {loading ? (
               <div className="grid gap-3 p-4 md:grid-cols-2 lg:grid-cols-4">
                 {[1, 2, 3, 4].map(item => <div key={item} className="h-40 animate-pulse rounded-card bg-bg" />)}
@@ -2128,7 +2129,7 @@ export const AdminProjects: React.FC = () => {
                 </div>
 
                 <div className="overflow-x-auto custom-scrollbar bg-bg p-5 sm:p-6">
-                  <div className="flex min-w-max items-start gap-3 pb-28 sm:pb-36">
+                  <div className="flex min-w-max items-start gap-3 pb-8 sm:pb-10">
                     {TASK_COLUMNS.map(column => {
                       const tasks = visibleTasks.filter(task => task.status === column.id);
                       const isDropTarget = dragOverTaskStatus === column.id;
@@ -2200,7 +2201,7 @@ export const AdminProjects: React.FC = () => {
                           </div>
 
                           <div className={[
-                            'min-h-[860px] flex flex-col gap-2.5 bg-bg/30 p-3 pb-6 transition-colors duration-150',
+                            'min-h-[600px] flex flex-col gap-2.5 bg-bg/30 p-3 pb-5 transition-colors duration-150',
                             isDropTarget ? 'bg-accent/5' : '',
                           ].join(' ')}>
                             {draggingTaskId && canManageKanbanTasks && (
@@ -2340,7 +2341,7 @@ export const AdminProjects: React.FC = () => {
                             <div
                               aria-hidden="true"
                               className={[
-                                'mt-auto min-h-[160px] rounded-card border border-dashed px-3 py-5 transition-colors',
+                                'mt-auto min-h-[96px] rounded-card border border-dashed px-3 py-4 transition-colors',
                                 isDropTarget ? 'border-accent/35 bg-accent/5' : 'border-line/20 bg-bg/10'
                               ].join(' ')}
                             >
