@@ -21,7 +21,7 @@ import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
-import { AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 type Stage = 'discovery' | 'proposal' | 'contract' | 'ready-to-sign';
 type SortKey = 'company' | 'annualValue' | 'stage' | 'owner' | 'probability' | 'dueAt';
@@ -228,54 +228,68 @@ export const AdminClientLeadAccounts: React.FC = () => {
   };
 
   return (
-    <div className="ams-clients-module min-h-full pb-8">
-      <header className="mb-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="text-2xl font-medium leading-8 tracking-[-0.02em] text-fg">Lead Accounts &amp; Pipeline</h1>
-            <span className="inline-flex items-center rounded-badge border border-accent/20 bg-accent/10 px-2 py-0.5 text-[11px] font-semibold text-accent-text">{records.length} Prospective Accounts</span>
-          </div>
-          <p className="mt-1 max-w-3xl text-[13px] leading-5 text-muted">Enterprise opportunities, qualification stages, projected retainer value, and next actions.</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 self-start md:self-auto">
-          <Button type="button" variant="secondary" onClick={exportPipeline} icon={<ArrowDown size={14} />}>Export Pipeline</Button>
-          <Button type="button" variant="primary" onClick={() => setIsAdding(true)} icon={<Plus size={14} />}>Add Lead Account</Button>
-        </div>
-      </header>
+    <AdminPageShell featureSlug="client-lead-accounts-module" className="ams-clients-module">
+      <AdminModuleHeader
+        className="mb-0"
+        title="Lead Accounts & Pipeline"
+        description="Enterprise opportunities, qualification stages, projected retainer value, and next actions."
+        eyebrow={<AdminStatusBadge tone="info">{records.length} prospective accounts</AdminStatusBadge>}
+        actions={(
+          <>
+            <Button type="button" variant="secondary" onClick={exportPipeline} icon={<ArrowDown size={14} />}>Export Pipeline</Button>
+            <Button type="button" variant="primary" onClick={() => setIsAdding(true)} icon={<Plus size={14} />}>Add Lead Account</Button>
+          </>
+        )}
+      />
+
+      <div className="min-[900px]:hidden min-w-0">
+        <AdminSectionTabs
+          ariaLabel="Clients sections"
+          activeKey="lead-accounts"
+          items={[
+            { key: 'all-clients', label: 'All Clients', to: '/admin/clients' },
+            { key: 'retainers', label: 'Retainers', to: '/admin/clients/retainers' },
+            { key: 'sla-monitoring', label: 'SLA Monitoring', to: '/admin/clients/sla-monitoring' },
+            { key: 'lead-accounts', label: 'Lead Accounts', to: '/admin/clients/lead-accounts' },
+          ]}
+        />
+      </div>
 
       {message && (
-        <div className="mb-4 flex items-center justify-between rounded-card border border-line bg-panel px-3 py-2.5 text-xs text-fg" role="status" aria-live="polite">
+        <div className="flex items-center justify-between rounded-card border border-line bg-panel px-3 py-2.5 text-xs text-fg" role="status" aria-live="polite">
           <span>{message}</span>
           <button type="button" onClick={() => setMessage(null)} className="inline-flex h-9 w-9 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Dismiss"><X size={14} /></button>
         </div>
       )}
 
-      <section className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-3" aria-label="Pipeline metrics">
+      <section className="grid grid-cols-1 gap-3 md:grid-cols-3" aria-label="Pipeline metrics">
         <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">OPEN PIPELINE VALUE</span><CircleDollarSign size={18} /></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{compactMoney(pipelineValue)}</div><p className="mt-1 text-[11px] text-muted">Combined projected annual value</p></div>
         <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">WEIGHTED WIN PROBABILITY</span><Target size={18} /></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{weightedProbability.toFixed(1)}%</div><p className="mt-1 text-[11px] text-muted">Value-weighted across {records.length} opportunities</p></div>
         <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">PROPOSALS OUT FOR REVIEW</span><MailCheck size={18} /><span className="sr-only">{proposalCount} proposal stage records</span></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{proposalCount}</div><p className="mt-1 text-[11px] text-muted">Opportunities currently in proposal stage</p></div>
       </section>
 
-      <section className="mb-4 rounded-card border border-line bg-panel p-4" aria-label="Pipeline filters">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          <div className="relative w-full xl:max-w-[420px]">
-            <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-            <label htmlFor="lead-search" className="sr-only">Search lead pipeline</label>
-            <input id="lead-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search company, contact, owner, brief, or ID..." className="h-9 w-full rounded-control border border-line bg-bg pl-9 pr-3 text-xs text-fg placeholder:text-muted focus:border-accent focus:outline-none" />
-          </div>
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
+      <AdminFilterBar
+        slug="lead-accounts-filters"
+        searchValue={query}
+        onSearchChange={setQuery}
+        searchPlaceholder="Search company, contact, owner, brief, or ID..."
+        searchLabel="Search lead pipeline"
+        actions={(
+          <>
             <CustomSelect value={owner} onChange={setOwner} options={[{ value: 'all', label: 'All owners' }, ...ownerOptions.map((value) => ({ value, label: value }))]} aria-label="Lead owner" className="min-w-[132px]" triggerClassName="w-full" />
-            <button type="button" onClick={reset} className="inline-flex h-9 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-muted hover:bg-panel hover:text-fg"><X size={13} /> Reset</button>
-          </div>
-        </div>
-        <div className="mt-3 flex min-w-0 gap-1 overflow-x-auto custom-scrollbar pb-1" role="tablist" aria-label="Pipeline stages">
+            <Button type="button" variant="secondary" icon={<X size={13} />} onClick={reset}>Reset filters</Button>
+          </>
+        )}
+        footer={(
+          <div className="flex min-w-0 gap-1 overflow-x-auto custom-scrollbar" role="tablist" aria-label="Pipeline stages">
           {stageOrder.map((value) => (
             <button key={value} type="button" role="tab" aria-selected={stage === value} onClick={() => { setStage(value); setPage(1); }} className={`inline-flex min-h-9 shrink-0 items-center rounded-control border px-3 text-[11px] font-medium transition-colors ${stage === value ? 'border-line bg-line text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg'}`}>
               {value === 'all' ? 'All leads' : stageMeta[value].label} ({stageCounts[value]})
             </button>
           ))}
-        </div>
-      </section>
+          </div>
+        )}
+      />
 
       <section className="ams-client-table-shell overflow-hidden rounded-card border border-line bg-panel" aria-label="Lead pipeline table">
         <div className="overflow-x-auto custom-scrollbar">
@@ -325,7 +339,7 @@ export const AdminClientLeadAccounts: React.FC = () => {
         )}
       </section>
 
-      <section className="mt-3 grid grid-cols-1 gap-3 text-[11px] text-muted md:grid-cols-4" aria-label="Pipeline summary">
+      <section className="grid grid-cols-1 gap-3 text-[11px] text-muted md:grid-cols-4" aria-label="Pipeline summary">
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><CircleDollarSign size={14} className="text-accent-text" /><span>Open annual value: <strong className="text-fg">{compactMoney(pipelineValue)}</strong></span></div>
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><Target size={14} className="text-info" /><span>Weighted probability: <strong className="text-fg">{weightedProbability.toFixed(1)}%</strong></span></div>
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><Clock3 size={14} className="text-warning" /><span>Contract review: <strong className="text-fg">{stageCounts.contract}</strong></span></div>
@@ -339,7 +353,7 @@ export const AdminClientLeadAccounts: React.FC = () => {
       <Drawer open={isAdding} onClose={() => setIsAdding(false)} size="sm" title="Add lead account" description="Start a new opportunity in Discovery & Audit." footer={<div className="flex justify-end gap-2"><Button type="button" variant="secondary" onClick={() => setIsAdding(false)}>Cancel</Button><Button type="button" variant="primary" onClick={addLead} icon={<Plus size={14} />}>Add lead</Button></div>}>
         <div className="space-y-4"><div><label htmlFor="lead-company" className="mb-1.5 block text-xs font-medium text-fg">Company</label><input id="lead-company" value={newCompany} onChange={(event) => setNewCompany(event.target.value)} placeholder="Company name" className="h-9 w-full rounded-control border border-line bg-bg px-3 text-sm text-fg placeholder:text-muted focus:border-accent focus:outline-none" /></div><div><label htmlFor="lead-contact" className="mb-1.5 block text-xs font-medium text-fg">Contact person</label><input id="lead-contact" value={newContact} onChange={(event) => setNewContact(event.target.value)} placeholder="Contact person" className="h-9 w-full rounded-control border border-line bg-bg px-3 text-sm text-fg placeholder:text-muted focus:border-accent focus:outline-none" /></div><div className="rounded-card border border-line bg-bg p-4 text-xs text-muted">New opportunities start in <span className="font-medium text-fg">Discovery &amp; Audit</span> with a 25% initial probability.</div></div>
       </Drawer>
-    </div>
+    </AdminPageShell>
   );
 };
 
