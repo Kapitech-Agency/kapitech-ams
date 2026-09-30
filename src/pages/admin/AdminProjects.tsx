@@ -1752,6 +1752,7 @@ export const AdminProjects: React.FC = () => {
                             } else {
                               setDraggingProjectId(null);
                               setDragOverProjectStatus(null);
+                              setDragOverProjectId(null);
                             }
                           }}
                           className={'ams-project-kanban-stack flex flex-col gap-3.5 overflow-visible p-3 transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
@@ -2159,6 +2160,7 @@ export const AdminProjects: React.FC = () => {
                             } else {
                               setDraggingTaskId(null);
                               setDragOverTaskStatus(null);
+                              setDragOverTaskId(null);
                             }
                           }}
                           className={[
