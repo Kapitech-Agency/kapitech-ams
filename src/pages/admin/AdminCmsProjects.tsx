@@ -146,7 +146,15 @@ export const AdminCmsProjects: React.FC = () => {
       setStatusMessage(language === 'id' ? 'Hanya file gambar yang didukung (PNG, JPG, WebP, SVG).' : 'Only image files are supported (PNG, JPG, WebP, SVG).');
       return;
     }
+    if (file.size > 10 * 1024 * 1024) {
+      setStatusMessage(language === 'id' ? 'Ukuran gambar maksimal 10MB.' : 'Image size must not exceed 10MB.');
+      return;
+    }
+
     const reader = new FileReader();
+    reader.onerror = () => {
+      setStatusMessage(language === 'id' ? 'Gambar gagal diproses.' : 'The image could not be processed.');
+    };
     reader.onload = (e) => {
       if (e.target?.result && editingProject) {
         setEditingProject({
