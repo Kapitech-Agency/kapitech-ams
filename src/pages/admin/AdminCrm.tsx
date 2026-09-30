@@ -45,7 +45,7 @@ import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 
-import { AdminMetricStrip, AdminModuleHeader, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminTablePagination , AdminPageShell } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 export const AdminCrm: React.FC = () => {
   const { language, t } = useLanguage();
@@ -374,7 +374,7 @@ export const AdminCrm: React.FC = () => {
   };
 
   return (
-    <>
+    <AdminPageShell featureSlug="crm-module" className="ams-leads-page">
       <ConfirmDialog
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
@@ -383,9 +383,10 @@ export const AdminCrm: React.FC = () => {
         confirmLabel={language === 'id' ? 'Hapus' : 'Delete'}
         onConfirm={() => { if (deleteTarget && canManageCrm) void confirmDeleteLead(deleteTarget.id); }}
       />
-      <div className="ams-leads-page space-y-6 pb-8">
+      <div className="space-y-6">
       
       <AdminModuleHeader
+        className="mb-0"
         title={t('admin.crm.title')}
         description={language === 'id' ? 'Kelola pipeline prospek, tahapan deal, nilai peluang, dan follow-up tim dalam satu workspace.' : 'Manage lead pipeline, deal stages, opportunity value, and team follow-up from one workspace.'}
         actions={(
@@ -1242,8 +1243,7 @@ export const AdminCrm: React.FC = () => {
             </form>
       </Drawer>
 
-      </div>
-    </>
+    </AdminPageShell>
   );
 };
 export default AdminCrm;
