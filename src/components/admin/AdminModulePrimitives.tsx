@@ -246,7 +246,7 @@ export const AdminMetricCard: React.FC<AdminMetric & { className?: string }> = (
   <article data-ams-slug={slug || (id ? 'metric-' + String(id).replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase() : undefined)} className={cn('ams-dashboard-card rounded-card border border-line bg-panel p-4 transition-colors hover:bg-panel-hover', className)}>
     <div className="flex items-start justify-between gap-3">
       <div className="min-w-0">
-        <span className="block truncate text-xs font-medium leading-4 text-muted">{label}</span>
+        <span className="block whitespace-normal text-xs font-medium leading-4 text-muted">{label}</span>
         {(slug || id) && (
           <span className="mt-1 block font-mono text-[9px] leading-3 text-muted/60">
             slug: {slug || 'metric-' + String(id).replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase()}
