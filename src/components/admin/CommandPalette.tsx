@@ -188,7 +188,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       title: language === 'id' ? 'Brankas Dokumen & Aset' : 'Documents & Asset Vault',
       category: language === 'id' ? 'Navigasi' : 'System',
       icon: FolderOpen,
-      shortcut: 'G V',
+      shortcut: 'G D O',
       moduleKey: 'documents',
       action: () => { navigate('/admin/documents'); onClose(); }
     },
@@ -200,6 +200,42 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       shortcut: 'G M',
       moduleKey: 'inbox',
       action: () => { navigate('/admin/inbox'); onClose(); }
+    },
+    {
+      id: 'nav_team',
+      title: language === 'id' ? 'Buka Team Directory & Operations' : 'Open Team Directory & Operations',
+      category: language === 'id' ? 'Navigasi' : 'Navigation',
+      icon: Users,
+      shortcut: 'G T',
+      moduleKey: 'timelogs',
+      action: () => { navigate('/admin/team'); onClose(); }
+    },
+    {
+      id: 'nav_cms_projects',
+      title: language === 'id' ? 'Kelola Project Portfolio & Case Studies' : 'Manage Project Portfolio & Case Studies',
+      category: language === 'id' ? 'CMS' : 'CMS',
+      icon: Layers,
+      shortcut: 'G P O',
+      moduleKey: 'cms_projects',
+      action: () => { navigate('/admin/cms/projects'); onClose(); }
+    },
+    {
+      id: 'nav_cms_services',
+      title: language === 'id' ? 'Kelola Services Catalog' : 'Manage Services Catalog',
+      category: language === 'id' ? 'CMS' : 'CMS',
+      icon: Briefcase,
+      shortcut: 'G S V',
+      moduleKey: 'services',
+      action: () => { navigate('/admin/cms/services'); onClose(); }
+    },
+    {
+      id: 'nav_cms_testimonials',
+      title: language === 'id' ? 'Kelola Testimonials' : 'Manage Testimonials',
+      category: language === 'id' ? 'CMS' : 'CMS',
+      icon: Users,
+      shortcut: 'G T S',
+      moduleKey: 'testimonials',
+      action: () => { navigate('/admin/cms/testimonials'); onClose(); }
     },
     {
       id: 'nav_settings',
