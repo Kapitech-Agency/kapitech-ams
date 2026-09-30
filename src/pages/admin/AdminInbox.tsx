@@ -57,7 +57,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
 
-import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 export const AdminInbox: React.FC = () => {
   const { language } = useLanguage();
@@ -72,6 +72,8 @@ export const AdminInbox: React.FC = () => {
 
   // Filters & Views
   const [filterType, setFilterType] = useState<string>('all');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterPriority, setFilterPriority] = useState<string>('all');
   const [onlyStarred, setOnlyStarred] = useState<boolean>(false);
@@ -366,6 +368,11 @@ export const AdminInbox: React.FC = () => {
       return matchesType && matchesStatus && matchesPriority && matchesStarred && matchesSearch;
     });
   }, [submissions, filterType, filterStatus, filterPriority, onlyStarred, searchQuery]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredItems.length / pageSize));
+  const pagedItems = filteredItems.slice((page - 1) * pageSize, page * pageSize);
+  useEffect(() => { setPage((current) => Math.min(current, pageCount)); }, [pageCount]);
+  useEffect(() => { setPage(1); }, [filterType, filterStatus, filterPriority, onlyStarred, searchQuery]);
 
   // Export CSV
   const handleExportCSV = () => {
@@ -702,7 +709,7 @@ export const AdminInbox: React.FC = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredItems.map((item) => {
+                  pagedItems.map((item) => {
                     const isConverted = crmDeals.some(d => (d as any).inquiryId === item.id);
                     return (
                       <tr 
@@ -811,6 +818,7 @@ export const AdminInbox: React.FC = () => {
               </tbody>
             </table>
           </div>
+          <AdminTablePagination total={filteredItems.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="inbound records" slug="inbox-table-pagination" />
         </div>
       ) : loading ? (
         <div className="rounded-card border border-line bg-panel p-4" role="status" aria-label="Loading inbox records">
