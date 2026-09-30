@@ -99,25 +99,30 @@ export const AdminTimeLogs: React.FC = () => {
     if (!canManage) return;
     setSaving(true);
     setStatus(null);
-    const res = await api.timeLogs.create({
-      projectId,
-      projectName: projectName || 'General',
-      taskTitle,
-      durationMinutes,
-      billable,
-      date,
-      notes
-    });
-    if (res.success && res.data?.timeLog) {
-      setLogs(current => [res.data!.timeLog, ...current]);
-      setPage(1);
-      setTaskTitle('');
-      setNotes('');
-      setStatus('Time entry saved.');
-    } else {
-      setStatus(res.error || 'Time entry could not be saved.');
+    try {
+      const res = await api.timeLogs.create({
+        projectId,
+        projectName: projectName || 'General',
+        taskTitle,
+        durationMinutes,
+        billable,
+        date,
+        notes
+      });
+      if (res.success && res.data?.timeLog) {
+        setLogs(current => [res.data!.timeLog, ...current]);
+        setPage(1);
+        setTaskTitle('');
+        setNotes('');
+        setStatus('Time entry saved.');
+      } else {
+        setStatus(res.error || 'Time entry could not be saved.');
+      }
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'Time entry could not be saved.');
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   const remove = async (log: TimeLog) => {
@@ -126,10 +131,19 @@ export const AdminTimeLogs: React.FC = () => {
   };
 
   const confirmRemove = async (log: TimeLog) => {
-    const res = await api.timeLogs.delete(log.id);
-    if (res.success) setLogs(current => current.filter(item => item.id !== log.id));
-    else setStatus(res.error || 'Time entry could not be deleted.');
-    setDeleteTarget(null);
+    try {
+      const res = await api.timeLogs.delete(log.id);
+      if (res.success) {
+        setLogs(current => current.filter(item => item.id !== log.id));
+        setStatus('Time entry deleted.');
+      } else {
+        setStatus(res.error || 'Time entry could not be deleted.');
+      }
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'Time entry could not be deleted.');
+    } finally {
+      setDeleteTarget(null);
+    }
   };
 
   return (
