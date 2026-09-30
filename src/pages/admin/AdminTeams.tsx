@@ -920,7 +920,7 @@ export const AdminTeams: React.FC = () => {
           <div className="h-80 animate-pulse rounded-card border border-line bg-panel" />
         </div>
       ) : currentView === 'team-directory' ? (
-        <div className="space-y-5" data-ams-feature-slug="team-directory">
+        <div className="space-y-5" data-ams-feature-slug="team-directory" data-ams-slug="team-directory">
           <AdminMetricStrip
             metrics={[
               {
@@ -1120,7 +1120,7 @@ export const AdminTeams: React.FC = () => {
           </div>
         </div>
       ) : currentView === 'vendor-directory' ? (
-        <div className="space-y-5" data-ams-feature-slug="vendor-directory">
+        <div className="space-y-5" data-ams-feature-slug="vendor-directory" data-ams-slug="vendor-directory">
           <AdminMetricStrip
             metrics={[
               {
@@ -1162,7 +1162,7 @@ export const AdminTeams: React.FC = () => {
             ]}
           />
 
-          <section className="rounded-card border border-line bg-panel p-4" data-ams-feature-slug="vendor-directory-filters">
+          <section className="rounded-card border border-line bg-panel p-4" data-ams-feature-slug="vendor-directory-filters" data-ams-slug="vendor-directory-filters">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex min-w-0 flex-1 flex-col gap-2 xl:flex-row xl:items-center">
                 <label className="relative min-w-0 flex-1 xl:max-w-sm">
@@ -1315,7 +1315,7 @@ export const AdminTeams: React.FC = () => {
           </AdminPanel>
         </div>
       ) : currentView === 'capacity-allocation' ? (
-        <div className="space-y-5" data-ams-feature-slug="capacity-allocation">
+        <div className="space-y-5" data-ams-feature-slug="capacity-allocation" data-ams-slug="capacity-allocation">
           <AdminMetricStrip
             metrics={[
               { id: 'utilization', label: 'Current utilization', value: currentCapacityStats.average.toFixed(1) + '%', context: 'Tracked vs 40h baseline', sparkline: capacityRows.slice(0, 8).map((row) => row.weeks[row.weeks.length - 1]?.utilization || 0), icon: <TrendingUp size={15} /> },
@@ -1366,7 +1366,7 @@ export const AdminTeams: React.FC = () => {
           </AdminPanel>
         </div>
       ) : currentView === 'skill-matrix' ? (
-        <div className="space-y-5" data-ams-feature-slug="skill-matrix">
+        <div className="space-y-5" data-ams-feature-slug="skill-matrix" data-ams-slug="skill-matrix">
           <AdminMetricStrip
             metrics={[
               { id: 'internal', label: 'Internal members', value: members.length, context: 'Role-aligned capability focus', sparkline: [members.length, teamMetrics.active, teamMetrics.divisions], icon: <UsersRound size={15} /> },
@@ -1431,7 +1431,7 @@ export const AdminTeams: React.FC = () => {
           </AdminPanel>
         </div>
       ) : (
-        <div className="space-y-5" data-ams-feature-slug="time-logs">
+        <div className="space-y-5" data-ams-feature-slug="time-logs" data-ams-slug="time-logs">
           <AdminMetricStrip
             metrics={[
               { id: 'tracked', label: 'Tracked time', value: formatHours(timeMetrics.total), context: 'Current filters', sparkline: [timeMetrics.total, timeMetrics.billable], icon: <Timer size={15} />, toneClassName: 'text-accent-text' },
