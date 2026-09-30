@@ -1765,7 +1765,7 @@ export const AdminProjects: React.FC = () => {
                     { value: 'budget', label: 'Highest budget' },
                     { value: 'name', label: 'Name A–Z' },
                   ]}
-                  className="w-[148px] shrink-0"
+                  className="w-[176px] shrink-0"
                   aria-label="Sort projects"
                 />
               </div>
