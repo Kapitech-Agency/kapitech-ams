@@ -1456,6 +1456,7 @@ export const AdminTeams: React.FC = () => {
               triggerClassName="h-9 min-h-9 w-full sm:w-[160px]"
             />
           </AdminFilterBar>
+          </div>
 
           {timeFormOpen && canManageTimeLogs && (
             <AdminPanel title="New time entry" description="Record actual delivery time against a project and task.">
