@@ -1380,14 +1380,14 @@ export const AdminTeams: React.FC = () => {
                           </td>
                           <td>
                             <div className="ams-table-actions">
-                              {renewalAction !== 'Manage Contract' ? (
-                                <Button type="button" variant="secondary" className="h-8 border-warning/30 bg-warning/10 px-2.5 text-[10px] text-warning" onClick={() => agreement === 'renewal' ? setVendorDetail(vendor) : openVendorForm(vendor)}>
-                                  {renewalAction}
-                                </Button>
+                              {renewalAction === 'Renew' ? (
+                                <Button type="button" variant="secondary" className="h-8 w-8 border-warning/30 bg-warning/10 px-0 text-warning" icon={<RefreshCw size={14} />} title="Renew contract" aria-label={'Renew contract for ' + (vendor.companyName || vendor.name)} onClick={() => setVendorDetail(vendor)} />
+                              ) : renewalAction === 'Review' ? (
+                                <Button type="button" variant="secondary" className="h-8 w-8 border-warning/30 bg-warning/10 px-0 text-warning" icon={<ShieldCheck size={14} />} title="Review vendor" aria-label={'Review ' + (vendor.companyName || vendor.name)} onClick={() => openVendorForm(vendor)} />
                               ) : (
-                                <Button type="button" variant="secondary" className="h-8 px-2.5 text-[10px]" onClick={() => setVendorDetail(vendor)}>Manage Contract</Button>
+                                <Button type="button" variant="secondary" className="h-8 w-8 px-0" icon={<ReceiptText size={14} />} title="Manage contract" aria-label={'Manage contract for ' + (vendor.companyName || vendor.name)} onClick={() => setVendorDetail(vendor)} />
                               )}
-                              <Link to="/admin/invoicing?finance=vendor-payments" className="ams-table-action inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-bg hover:text-fg" title="View Invoices" aria-label="View Invoices">
+                              <Link to="/admin/invoicing?finance=vendor-payments" className="ams-table-action inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-bg hover:text-fg" title="View Invoices" aria-label={'View invoices for ' + (vendor.companyName || vendor.name)}>
                                 <ReceiptText size={14} />
                               </Link>
                             </div>
