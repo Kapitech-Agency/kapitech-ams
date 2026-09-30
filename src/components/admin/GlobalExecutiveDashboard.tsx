@@ -18,6 +18,7 @@ import { CustomSelect } from '../ui/CustomSelect';
 import { Modal } from '../ui/Modal';
 import { DonutChart, TrendChart } from '../charts/DashboardCharts';
 import { ProfileIdentity } from './ProfileIdentity';
+import { getAdminSession } from '../../lib/adminAuth';
 
 type RangeKey = '30D' | 'Q2' | 'YTD' | '12M';
 type ProjectFilter = 'All' | 'Enterprise' | 'Retainer' | 'Fixed-fee';
@@ -124,19 +125,27 @@ type DashboardTask = {
   assignee: string;
   due: string;
   priority: 'Low' | 'Medium' | 'High' | 'Urgent';
-  status: 'Open' | 'Blocked' | 'Completed';
+  status: 'Open' | 'In Progress' | 'Review' | 'Blocked' | 'Completed';
 };
 
 const sampleTasks: DashboardTask[] = [
   { id: 'task-001', task: 'Approve homepage copy', project: 'Atlas Brand System', assignee: 'Fikri', due: 'Today', priority: 'High', status: 'Open' },
   { id: 'task-002', task: 'Finalize checkout UI', project: 'Meridian Commerce', assignee: 'Sarah', due: 'Tomorrow', priority: 'High', status: 'Open' },
-  { id: 'task-003', task: 'QA campaign landing page', project: 'Nova Growth Retainer', assignee: 'Dimas', due: 'Wed', priority: 'Medium', status: 'Open' },
+  { id: 'task-003', task: 'QA campaign landing page', project: 'Nova Growth Retainer', assignee: 'Dimas', due: 'Wed', priority: 'Medium', status: 'Review' },
   { id: 'task-004', task: 'Resolve API handoff', project: 'Orbit Product Launch', assignee: 'Raka', due: 'Overdue', priority: 'Urgent', status: 'Blocked' },
-  { id: 'task-005', task: 'Prepare client presentation', project: 'Northstar Campaign', assignee: 'Nadia', due: 'Thu', priority: 'Medium', status: 'Open' },
-  { id: 'task-006', task: 'Review analytics dashboard', project: 'Atlas Brand System', assignee: 'Fikri', due: 'Fri', priority: 'Low', status: 'Open' },
+  { id: 'task-005', task: 'Prepare client presentation', project: 'Northstar Campaign', assignee: 'Nadia', due: 'Thu', priority: 'Medium', status: 'In Progress' },
+  { id: 'task-006', task: 'Review analytics dashboard', project: 'Atlas Brand System', assignee: 'Fikri', due: 'Fri', priority: 'Low', status: 'Completed' },
 ];
 
 const TasksView: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const taskScope = searchParams.get('taskscope') || 'all';
+  const currentUser = getAdminSession()?.user;
+  const currentUserNames = new Set(
+    [currentUser?.profileDisplayName, currentUser?.name, currentUser?.username]
+      .filter(Boolean)
+      .map((value) => String(value).trim().toLowerCase())
+  );
   const [query, setQuery] = useState('');
   const [priority, setPriority] = useState<'All' | DashboardTask['priority']>('All');
   const [selectedTask, setSelectedTask] = useState<DashboardTask | null>(null);
@@ -149,9 +158,21 @@ const TasksView: React.FC = () => {
         .toLowerCase()
         .includes(normalized);
       const matchesPriority = priority === 'All' || item.priority === priority;
-      return matchesQuery && matchesPriority;
+      const matchesScope =
+        taskScope === 'all'
+          ? true
+          : taskScope === 'my'
+            ? currentUserNames.has(item.assignee.trim().toLowerCase())
+            : taskScope === 'due'
+              ? ['Today', 'Tomorrow', 'Overdue'].includes(item.due)
+              : taskScope === 'review'
+                ? item.status === 'Review'
+                : taskScope === 'blocked'
+                  ? item.status === 'Blocked'
+                  : item.status === 'Completed';
+      return matchesQuery && matchesPriority && matchesScope;
     });
-  }, [priority, query]);
+  }, [priority, query, taskScope, currentUserNames]);
 
   return (
     <div className="space-y-3">
