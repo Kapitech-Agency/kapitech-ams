@@ -978,20 +978,6 @@ export const AdminTeams: React.FC = () => {
                 />
 
 
-      <div className="min-[900px]:hidden min-w-0" data-ams-slug="team-mobile-tabs">
-        <AdminSectionTabs
-          ariaLabel="Team sections"
-          activeKey={currentView}
-          items={[
-            { key: 'team-directory', label: 'Team Directory', to: '/admin/team' },
-            { key: 'vendor-directory', label: 'Vendor Directory', to: '/admin/team?view=vendor-directory' },
-            { key: 'capacity-allocation', label: 'Capacity & Allocation', to: '/admin/team?view=capacity-allocation' },
-            { key: 'skill-matrix', label: 'Skill Matrix', to: '/admin/team?view=skill-matrix' },
-            { key: 'time-logs', label: 'Time Logs', to: '/admin/team?view=time-logs' },
-          ]}
-        />
-      </div>
-
                 {canManageVendors && (
                   <Button type="button" variant="primary" icon={<Plus size={14} />} onClick={() => openVendorForm()}>
                     + Add Vendor / Contractor
@@ -1032,6 +1018,20 @@ export const AdminTeams: React.FC = () => {
           </>
         }
       />
+
+      <div className="min-[900px]:hidden min-w-0" data-ams-slug="team-mobile-tabs">
+        <AdminSectionTabs
+          ariaLabel="Team sections"
+          activeKey={currentView}
+          items={[
+            { key: 'team-directory', label: 'Team Directory', to: '/admin/team' },
+            { key: 'vendor-directory', label: 'Vendor Directory', to: '/admin/team?view=vendor-directory' },
+            { key: 'capacity-allocation', label: 'Capacity & Allocation', to: '/admin/team?view=capacity-allocation' },
+            { key: 'skill-matrix', label: 'Skill Matrix', to: '/admin/team?view=skill-matrix' },
+            { key: 'time-logs', label: 'Time Logs', to: '/admin/team?view=time-logs' },
+          ]}
+        />
+      </div>
 
       {notice && (
         <div className="mb-5 flex items-start gap-3 rounded-card border border-line bg-panel px-4 py-3 text-xs" role="status">
