@@ -8,6 +8,7 @@ const date=(v:unknown)=>v==null?'':v instanceof Date?v.toISOString().slice(0,10)
 
 function mapInvoice(row:Row, items:Row[], payments:Row[]):any {
   const metadata=obj(row.metadata);
+  const slug=String(metadata.slug || String(row.invoice_number || row.id).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''));
   const mappedPayments=payments.map(p=>({
     id:p.id, amount:Number(p.amount), date:date(p.paid_at), method:p.method,
     reference:p.reference||'', recordedBy:obj(metadata.paymentUsers)[p.id] || obj(p.metadata).recordedBy || '',
@@ -15,7 +16,7 @@ function mapInvoice(row:Row, items:Row[], payments:Row[]):any {
   }));
   const amountPaid=Number(row.amount_paid||mappedPayments.reduce((s,p)=>s+p.amount,0));
   const total=Number(row.total||0);
-  return {...metadata,id:row.id,invoiceNumber:row.invoice_number,proposalId:row.proposal_id??'',clientId:row.client_id??'',
+  return {...metadata,slug,id:row.id,invoiceNumber:row.invoice_number,proposalId:row.proposal_id??'',clientId:row.client_id??'',
     projectId:row.project_id??'',type:row.type||'invoice',items:items.map(i=>({
       id:i.id,description:i.description,quantity:Number(i.quantity),unitPrice:Number(i.unit_price),amount:Number(i.amount??Number(i.quantity)*Number(i.unit_price))
     })),subtotal:Number(row.subtotal||0),discountPercent:Number(row.discount_percent||0),
