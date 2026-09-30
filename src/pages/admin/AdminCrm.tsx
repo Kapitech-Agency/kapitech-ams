@@ -45,7 +45,7 @@ import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 
-import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 export const AdminCrm: React.FC = () => {
   const { language, t } = useLanguage();
@@ -57,6 +57,8 @@ export const AdminCrm: React.FC = () => {
   const [selectedPillar, setSelectedPillar] = useState<string>('All');
   const [selectedPriority, setSelectedPriority] = useState<string>('All');
   const [selectedStageFilter, setSelectedStageFilter] = useState<string>('All');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   
   // Drag and drop state
   const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
@@ -165,6 +167,11 @@ export const AdminCrm: React.FC = () => {
       return true;
     });
   }, [leads, searchQuery, selectedPillar, selectedPriority, selectedStageFilter]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredLeads.length / pageSize));
+  const pagedLeads = filteredLeads.slice((page - 1) * pageSize, page * pageSize);
+  useEffect(() => { setPage((current) => Math.min(current, pageCount)); }, [pageCount]);
+  useEffect(() => { setPage(1); }, [searchQuery, selectedPillar, selectedPriority, selectedStageFilter]);
 
   // Drag and Drop Handlers
   const handleDragStart = (e: React.DragEvent, leadId: string) => {
@@ -947,6 +954,7 @@ export const AdminCrm: React.FC = () => {
                 </tbody>
               </table>
             </div>
+            <AdminTablePagination total={filteredLeads.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="leads" slug="crm-table-pagination" />
           </div>
         </div>
       )}
