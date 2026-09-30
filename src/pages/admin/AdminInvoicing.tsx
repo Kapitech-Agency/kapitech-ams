@@ -218,6 +218,7 @@ const isRetainerInvoice = (invoice: AgencyInvoice) =>
       .filter(Boolean)
       .join(' ')
     </div>
+    </div>
   );
 
 const getInvoiceCollectedInRange = (invoice: AgencyInvoice, start: Date, end: Date) => {
@@ -537,7 +538,6 @@ const EmptyState = ({ title, description, action }: { title: string; description
     <p className="mt-3 text-sm font-medium text-fg">{title}</p>
     <p className="mt-1 max-w-[48ch] text-xs leading-5 text-muted">{description}</p>
     {action && <div className="mt-4">{action}</div>}
-  </div>
 );
 
 type FinanceChartPoint = {
