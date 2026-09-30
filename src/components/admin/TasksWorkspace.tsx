@@ -532,23 +532,37 @@ export const TasksWorkspace: React.FC = () => {
     if (!canManageTasks || !selectedIds.length || bulkUpdating) return;
     setBulkUpdating(true);
     const selectedTasks = records.filter(task => selectedIds.includes(task.id));
+    const previousRecords = records;
     setRecords(current => current.map(task => selectedIds.includes(task.id)
       ? { ...task, status: nextStatus, blocked: nextStatus === 'done' ? false : task.blocked }
       : task));
 
+    const failedIds: string[] = [];
     let succeeded = 0;
     for (const task of selectedTasks) {
       try {
         const response = await api.tasks.update(task.id, { status: nextStatus });
         if (response.success) succeeded += 1;
-      } catch {}
+        else failedIds.push(task.id);
+      } catch {
+        failedIds.push(task.id);
+      }
+    }
+
+    if (failedIds.length) {
+      setRecords(current => current.map(task => {
+        if (!failedIds.includes(task.id)) return task;
+        return previousRecords.find(previous => previous.id === task.id) || task;
+      }));
     }
 
     setSelectedIds([]);
     setBulkUpdating(false);
-    setNotice(succeeded === selectedTasks.length
-      ? selectedTasks.length + ' tasks moved to ' + taskStatusLabel[nextStatus] + '.'
-      : 'Selected tasks were updated locally. Server confirmation was incomplete.');
+    setNotice(
+      failedIds.length === 0
+        ? selectedTasks.length + ' tasks moved to ' + taskStatusLabel[nextStatus] + '.'
+        : succeeded + ' tasks moved to ' + taskStatusLabel[nextStatus] + '; ' + failedIds.length + ' were reverted because the server rejected the update.'
+    );
   };
 
   const openNewTask = () => {
@@ -617,6 +631,7 @@ export const TasksWorkspace: React.FC = () => {
       slug: 'task-' + slugify(taskEditForm.title) + '-' + slugify(editingTask.id),
     };
 
+    const previousTask = editingTask;
     setRecords(current => current.map(item => item.id === editingTask.id ? nextTask : item));
     setSelectedTask(current => current?.id === editingTask.id ? nextTask : current);
 
@@ -633,9 +648,17 @@ export const TasksWorkspace: React.FC = () => {
         tags: nextTask.tags,
         subtasks: nextTask.subtasks,
       });
-      setNotice(response.success ? 'Task updated.' : 'Task updated locally for this session.');
-    } catch {
-      setNotice('Task updated locally for this session.');
+      if (!response.success) {
+        setRecords(current => current.map(item => item.id === previousTask.id ? previousTask : item));
+        setSelectedTask(current => current?.id === previousTask.id ? previousTask : current);
+        setNotice(response.error || 'Task could not be saved. The previous server state has been restored.');
+      } else {
+        setNotice('Task updated.');
+      }
+    } catch (error) {
+      setRecords(current => current.map(item => item.id === previousTask.id ? previousTask : item));
+      setSelectedTask(current => current?.id === previousTask.id ? previousTask : current);
+      setNotice(error instanceof Error ? error.message : 'Task could not be saved. The previous server state has been restored.');
     } finally {
       setSavingEditTask(false);
       setEditingTask(null);
