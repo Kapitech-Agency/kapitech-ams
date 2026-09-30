@@ -91,6 +91,14 @@ export const AdminClientRetainers: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [hoursTarget, setHoursTarget] = useState<Retainer | null>(null);
   const [hours, setHours] = useState('8');
+  const [retainerFormOpen, setRetainerFormOpen] = useState(false);
+  const [retainerClient, setRetainerClient] = useState('');
+  const [retainerTier, setRetainerTier] = useState<Tier>('tier-2');
+  const [retainerMonthlyValue, setRetainerMonthlyValue] = useState('100000000');
+  const [retainerCommittedHours, setRetainerCommittedHours] = useState('160');
+  const [retainerOverageRate, setRetainerOverageRate] = useState('650000');
+  const [retainerCycle, setRetainerCycle] = useState<Cycle>('monthly');
+  const [retainerRenewal, setRetainerRenewal] = useState(() => new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().slice(0, 10));
   const [message, setMessage] = useState<string | null>(null);
   const [pageSize, setPageSize] = useState(10);
 
@@ -135,6 +143,50 @@ export const AdminClientRetainers: React.FC = () => {
     setQuery(''); setCycle('all'); setTier('all'); setHealth('all'); setSortKey('renewal'); setSortDirection('asc'); setPage(1);
   };
 
+  const openRetainerForm = () => {
+    setRetainerClient('');
+    setRetainerTier('tier-2');
+    setRetainerMonthlyValue('100000000');
+    setRetainerCommittedHours('160');
+    setRetainerOverageRate('650000');
+    setRetainerCycle('monthly');
+    setRetainerRenewal(new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().slice(0, 10));
+    setRetainerFormOpen(true);
+  };
+
+  const createRetainer = (event: React.FormEvent) => {
+    event.preventDefault();
+    const client = retainerClient.trim();
+    const monthlyValue = Math.max(0, Number(retainerMonthlyValue));
+    const committedHours = Math.max(1, Number(retainerCommittedHours));
+    const overageRate = Math.max(0, Number(retainerOverageRate));
+
+    if (!client || !Number.isFinite(monthlyValue) || !Number.isFinite(committedHours) || !Number.isFinite(overageRate) || !retainerRenewal) {
+      setMessage(language === 'id' ? 'Lengkapi data retainer yang diperlukan.' : 'Complete the required retainer fields.');
+      return;
+    }
+
+    const suffix = Date.now().toString(36).toUpperCase();
+    const newRetainer: Retainer = {
+      id: 'RET-' + new Date().getFullYear() + '-' + suffix,
+      initials: client.split(/\s+/).filter(Boolean).map(part => part[0]).join('').slice(0, 2).toUpperCase() || 'CL',
+      client,
+      tier: retainerTier,
+      monthlyValue,
+      committedHours,
+      usedHours: 0,
+      overageRate,
+      cycle: retainerCycle,
+      renewal: retainerRenewal,
+      health: 'healthy'
+    };
+
+    setRecords(current => [newRetainer, ...current]);
+    setPage(1);
+    setRetainerFormOpen(false);
+    setMessage(language === 'id' ? 'Retainer baru ditambahkan ke workspace A/B.' : 'New retainer added to the A/B workspace.');
+  };
+
   const exportReport = () => {
     const rows = [
       ['Retainer ID', 'Client', 'Tier', 'Monthly Value', 'Committed Hours', 'Used Hours', 'Burn Rate', 'Overage Rate', 'Cycle', 'Renewal', 'Health'],
@@ -165,7 +217,7 @@ export const AdminClientRetainers: React.FC = () => {
         actions={(
           <>
             <Button type="button" variant="secondary" onClick={exportReport} icon={<Download size={14} />}>Export Report</Button>
-            <Button type="button" variant="primary" onClick={() => setMessage(language === 'id' ? 'Form retainer baru belum tersedia.' : 'New retainer form is not available yet.')} icon={<Plus size={14} />}>New Retainer</Button>
+            <Button type="button" variant="primary" onClick={openRetainerForm} icon={<Plus size={14} />}>New Retainer</Button>
           </>
         )}
       />
@@ -248,6 +300,53 @@ export const AdminClientRetainers: React.FC = () => {
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><ReceiptText size={14} className="text-info" /><span>Average overage: <strong className="text-fg">{money(avgRate)}/hr</strong></span></div>
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><TimerReset size={14} className="text-accent-text" /><span>Data source: <strong className="text-fg">Retainer workspace</strong></span></div>
       </section>
+
+      <Drawer
+        open={retainerFormOpen}
+        onClose={() => setRetainerFormOpen(false)}
+        size="lg"
+        title="New retainer"
+        description="Create a retainer record for the current A/B workspace."
+        footer={(
+          <>
+            <Button type="button" variant="secondary" onClick={() => setRetainerFormOpen(false)}>Cancel</Button>
+            <Button type="submit" form="retainer-create-form" variant="primary">Create retainer</Button>
+          </>
+        )}
+      >
+        <form id="retainer-create-form" onSubmit={createRetainer} className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="space-y-1.5 sm:col-span-2">
+              <span className="text-[11px] font-medium text-muted">Client</span>
+              <input required value={retainerClient} onChange={(event) => setRetainerClient(event.target.value)} placeholder="Client company" className="h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent" />
+            </label>
+            <label className="space-y-1.5">
+              <span className="text-[11px] font-medium text-muted">Tier</span>
+              <CustomSelect value={retainerTier} onChange={(value) => setRetainerTier(value as Tier)} options={[{ value: 'tier-1', label: 'Tier 1 Strategic' }, { value: 'tier-2', label: 'Tier 2 Enterprise' }, { value: 'tier-3', label: 'Tier 3 Growth' }]} className="w-full" triggerClassName="w-full" />
+            </label>
+            <label className="space-y-1.5">
+              <span className="text-[11px] font-medium text-muted">Billing cycle</span>
+              <CustomSelect value={retainerCycle} onChange={(value) => setRetainerCycle(value as Cycle)} options={[{ value: 'monthly', label: 'Monthly' }, { value: 'quarterly', label: 'Quarterly' }, { value: 'annual', label: 'Annual' }]} className="w-full" triggerClassName="w-full" />
+            </label>
+            <label className="space-y-1.5">
+              <span className="text-[11px] font-medium text-muted">Monthly value</span>
+              <input required type="number" min="0" step="1000000" value={retainerMonthlyValue} onChange={(event) => setRetainerMonthlyValue(event.target.value)} className="h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent" />
+            </label>
+            <label className="space-y-1.5">
+              <span className="text-[11px] font-medium text-muted">Committed hours</span>
+              <input required type="number" min="1" step="1" value={retainerCommittedHours} onChange={(event) => setRetainerCommittedHours(event.target.value)} className="h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent" />
+            </label>
+            <label className="space-y-1.5">
+              <span className="text-[11px] font-medium text-muted">Overage rate</span>
+              <input required type="number" min="0" step="50000" value={retainerOverageRate} onChange={(event) => setRetainerOverageRate(event.target.value)} className="h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent" />
+            </label>
+            <label className="space-y-1.5">
+              <span className="text-[11px] font-medium text-muted">Renewal date</span>
+              <input required type="date" value={retainerRenewal} onChange={(event) => setRetainerRenewal(event.target.value)} className="h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent" />
+            </label>
+          </div>
+        </form>
+      </Drawer>
 
       <Drawer open={!!hoursTarget} onClose={() => setHoursTarget(null)} size="sm" title="Log retainer hours" description={hoursTarget ? `${hoursTarget.client} · ${hoursTarget.id}` : undefined} footer={<div className="flex justify-end gap-2"><Button type="button" variant="secondary" onClick={() => setHoursTarget(null)}>Cancel</Button><Button type="button" variant="primary" onClick={logHours}>Log hours</Button></div>}>
         {hoursTarget && <div className="space-y-4"><div><label htmlFor="retainer-hours" className="mb-1.5 block text-xs font-medium text-fg">Hours to log</label><input id="retainer-hours" type="number" min="0" step="0.5" value={hours} onChange={(event) => setHours(event.target.value)} className="h-9 w-full rounded-control border border-line bg-bg px-3 text-sm text-fg focus:border-accent focus:outline-none" /></div><div className="rounded-card border border-line bg-bg p-4 text-xs text-muted">Current usage: <span className="font-medium tabular-nums text-fg">{hoursTarget.usedHours}</span> / {hoursTarget.committedHours} hrs.</div></div>}
