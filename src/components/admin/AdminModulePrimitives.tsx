@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { CustomSelect } from '../ui/CustomSelect';
