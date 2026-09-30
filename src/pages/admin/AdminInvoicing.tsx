@@ -19,6 +19,7 @@ import {
   RefreshCw,
   Search,
   Send,
+  MoreHorizontal,
   ShieldCheck,
   SlidersHorizontal,
   Trash2,
@@ -99,6 +100,22 @@ const vendorPaymentFormatDate = (value: string) => {
   const parsed = new Date(value + 'T00:00:00');
   if (Number.isNaN(parsed.getTime())) return value;
   return parsed.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
+const formatFinanceTableDate = (value: string) => {
+  if (!value) return 'Not set';
+  const parsed = new Date(value + 'T00:00:00');
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
+const formatQuotationValidity = (value: string) => {
+  const days = getDaysUntilDue(value);
+  if (days < 0) return Math.abs(days) + ' days expired';
+  if (days === 0) return 'Expires today';
+  if (days === 1) return 'Expires tomorrow';
+  if (days <= 7) return days + ' days left';
+  return 'Valid';
 };
 
 const vendorPaymentDueDate = (contract: AgencyVendor['contracts'][number]) => {
@@ -191,6 +208,8 @@ type FinanceIncomeRow = {
   date: string;
   amount: number;
   currency: CurrencyCode;
+  method?: string;
+  reference?: string;
 };
 
 const isRetainerInvoice = (invoice: AgencyInvoice) =>
@@ -719,6 +738,7 @@ export const AdminInvoicing: React.FC = () => {
   const [quotationSearch, setQuotationSearch] = useState('');
   const [quotationStatusFilter, setQuotationStatusFilter] = useState<'all' | FinanceQuotationStatus>('all');
   const [quotationSort, setQuotationSort] = useState<QuotationSort>('newest');
+  const [quotationActionMenu, setQuotationActionMenu] = useState<string | null>(null);
   const [quotationModalOpen, setQuotationModalOpen] = useState(false);
   const [quotationDetail, setQuotationDetail] = useState<FinanceQuotation | null>(null);
   const [editingQuotation, setEditingQuotation] = useState<FinanceQuotation | null>(null);
@@ -1225,7 +1245,9 @@ export const AdminInvoicing: React.FC = () => {
               clientCompany: invoice.clientCompany || invoice.clientName,
               date,
               amount: Number(payment.amount) || 0,
-              currency: invoice.currency
+              currency: invoice.currency,
+              method: String(payment.method || 'Other'),
+              reference: String(payment.reference || '')
             });
           });
         } else if (invoice.paidDate && Number(invoice.amountPaid || 0) > 0) {
@@ -1237,7 +1259,9 @@ export const AdminInvoicing: React.FC = () => {
             clientCompany: invoice.clientCompany || invoice.clientName,
             date: invoice.paidDate,
             amount: Number(invoice.amountPaid || 0),
-            currency: invoice.currency
+            currency: invoice.currency,
+            method: 'Recorded payment',
+            reference: ''
           });
         }
       });
@@ -2194,6 +2218,7 @@ export const AdminInvoicing: React.FC = () => {
     active: quotations.filter((quotation) => ['draft', 'review', 'approved', 'sent'].includes(quotation.status)).length,
     approved: quotations.filter((quotation) => quotation.status === 'approved' && !quotation.invoiceId).length,
     accepted: quotations.filter((quotation) => quotation.status === 'accepted').length,
+    expiring: quotations.filter((quotation) => ['draft', 'review', 'approved', 'sent'].includes(quotation.status) && getDaysUntilDue(quotation.validUntil) >= 0 && getDaysUntilDue(quotation.validUntil) <= 7).length,
     value: quotations.filter((quotation) => quotation.status !== 'rejected').reduce((sum, quotation) => sum + quotation.total, 0)
   }), [quotations]);
 
