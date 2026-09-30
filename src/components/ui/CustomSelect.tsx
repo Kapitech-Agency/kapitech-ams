@@ -23,6 +23,7 @@ interface CustomSelectProps {
   size?: 'xs' | 'sm' | 'md';
   disabled?: boolean;
   prefixIcon?: React.ReactNode;
+  slug?: string;
   'aria-label'?: string;
 }
 
@@ -38,6 +39,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   size = 'sm',
   disabled = false,
   prefixIcon,
+  slug,
   'aria-label': ariaLabel
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -57,7 +59,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   };
 
   return (
-    <div className={`relative inline-block text-left ${className}`}>
+    <div data-ams-slug={slug} className={`relative inline-block text-left ${className}`}>
       <button
         type="button"
         disabled={disabled}
