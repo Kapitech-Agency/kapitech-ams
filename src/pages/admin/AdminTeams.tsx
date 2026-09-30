@@ -1474,6 +1474,7 @@ export const AdminTeams: React.FC = () => {
             <AdminTablePagination total={capacityRows.length} page={capacityPage} pageSize={capacityPageSize} onPageChange={setCapacityPage} onPageSizeChange={setCapacityPageSize} itemLabel="members" slug="capacity-allocation-pagination" />
           </AdminPanel>
         </div>
+        </div>
       ) : currentView === 'skill-matrix' ? (
         <div className="space-y-4" data-ams-feature-slug="skill-matrix" data-ams-slug="skill-matrix">
           <div className="flex justify-end -mb-1"><span className="inline-flex items-center rounded-badge border border-line bg-bg px-2 py-1 font-mono text-[9px] leading-3 text-muted/60">slug: skill-matrix</span></div>
