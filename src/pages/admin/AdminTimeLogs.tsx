@@ -47,14 +47,29 @@ export const AdminTimeLogs: React.FC = () => {
 
   const load = async () => {
     setLoading(true);
-    const [logsRes, projectsRes] = await Promise.all([
-      api.timeLogs.getAll(),
-      api.projects.getAll()
-    ]);
-    if (logsRes.success && logsRes.data?.timeLogs) setLogs(logsRes.data.timeLogs);
-    else setStatus(logsRes.error || 'Unable to load time logs.');
-    if (projectsRes?.success && Array.isArray(projectsRes.data?.projects)) setProjects(projectsRes.data.projects);
-    setLoading(false);
+    setStatus(null);
+    try {
+      const [logsRes, projectsRes] = await Promise.all([
+        api.timeLogs.getAll(),
+        api.projects.getAll()
+      ]);
+
+      if (logsRes.success && Array.isArray(logsRes.data?.timeLogs)) {
+        setLogs(logsRes.data.timeLogs);
+      } else {
+        setStatus(logsRes.error || 'Unable to load time logs.');
+      }
+
+      if (projectsRes?.success && Array.isArray(projectsRes.data?.projects)) {
+        setProjects(projectsRes.data.projects);
+      } else if (!projectsRes?.success) {
+        setStatus(current => current || projectsRes?.error || 'Unable to load projects.');
+      }
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'Unable to load time logs.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { void load(); }, []);
@@ -95,6 +110,7 @@ export const AdminTimeLogs: React.FC = () => {
     });
     if (res.success && res.data?.timeLog) {
       setLogs(current => [res.data!.timeLog, ...current]);
+      setPage(1);
       setTaskTitle('');
       setNotes('');
       setStatus('Time entry saved.');
