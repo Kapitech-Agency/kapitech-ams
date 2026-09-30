@@ -45,7 +45,7 @@ import { api } from '../../lib/apiClient';
 import { ProductionReadinessCard } from '../../components/admin/ProductionReadinessCard';
 import Button from '../../components/ui/Button';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
-import { AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { AdminModuleHeader , AdminPageShell } from '../../components/admin/AdminModulePrimitives';
 
 export const AdminSettings: React.FC = () => {
   const { language, t } = useLanguage();
@@ -353,11 +353,12 @@ export const AdminSettings: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <AdminPageShell featureSlug="settings-module">
       
       {/* Top Header */}
       <AdminModuleHeader
         icon={<Settings size={20} />}
+        className="mb-0"
         title={language === 'id' ? 'Pengaturan Sistem & Keamanan' : 'Settings'}
         description={language === 'id'
           ? 'Konfigurasi akun master admin, hak akses RBAC, integrasi API, dan log audit keamanan terenkripsi.'
@@ -1339,7 +1340,7 @@ export const AdminSettings: React.FC = () => {
         </div>
       </Modal>
 
-    </div>
+    </AdminPageShell>
   );
 };
 
