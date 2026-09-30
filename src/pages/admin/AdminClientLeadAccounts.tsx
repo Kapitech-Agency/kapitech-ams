@@ -21,6 +21,7 @@ import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
+import { AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 type Stage = 'discovery' | 'proposal' | 'contract' | 'ready-to-sign';
 type SortKey = 'company' | 'annualValue' | 'stage' | 'owner' | 'probability' | 'dueAt';
@@ -122,7 +123,7 @@ export const AdminClientLeadAccounts: React.FC = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [newCompany, setNewCompany] = useState('');
   const [newContact, setNewContact] = useState('');
-  const pageSize = 6;
+  const [pageSize, setPageSize] = useState(6);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => setIsLoading(false));
@@ -320,9 +321,7 @@ export const AdminClientLeadAccounts: React.FC = () => {
         </div>
 
         {!isLoading && (
-          <div className="flex flex-col gap-3 border-t border-line bg-bg px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-[11px] text-muted">Showing <span className="font-medium tabular-nums text-fg">{filtered.length ? (page - 1) * pageSize + 1 : 0}-{Math.min(page * pageSize, filtered.length)}</span> of <span className="font-medium tabular-nums text-fg">{filtered.length}</span> pipeline accounts</p>
-            <div className="flex items-center gap-1.5"><button type="button" onClick={() => setPage((value) => Math.max(1, value - 1))} disabled={page === 1} className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-bg disabled:opacity-40" aria-label="Previous page"><ChevronLeft size={14} /></button><span className="min-w-16 text-center text-[11px] font-medium tabular-nums text-fg">{page} / {pageCount}</span><button type="button" onClick={() => setPage((value) => Math.min(pageCount, value + 1))} disabled={page === pageCount} className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-line bg-panel text-fg hover:bg-bg disabled:opacity-40" aria-label="Next page"><ChevronRight size={14} /></button></div>
+          <AdminTablePagination total={filtered.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="pipeline accounts" slug="lead-accounts-pagination" />
           </div>
         )}
       </section>
