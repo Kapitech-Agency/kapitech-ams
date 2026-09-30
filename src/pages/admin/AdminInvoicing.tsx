@@ -1216,7 +1216,6 @@ export const AdminInvoicing: React.FC = () => {
   useEffect(() => {
     setInvoicePage((page) => Math.min(page, invoicePageCount));
   }, [invoicePageCount]);
-  useEffect(() => { setQuotationPage((page) => Math.min(page, quotationPageCount)); }, [quotationPageCount]);
   useEffect(() => { setVendorPaymentPage((page) => Math.min(page, vendorPaymentPageCount)); }, [vendorPaymentPageCount]);
   useEffect(() => { setRetainerPage((page) => Math.min(page, retainerPageCount)); }, [retainerPageCount]);
 
@@ -2229,6 +2228,7 @@ export const AdminInvoicing: React.FC = () => {
 
   const quotationPageCount = Math.max(1, Math.ceil(filteredQuotations.length / quotationPageSize));
   const paginatedQuotations = filteredQuotations.slice((quotationPage - 1) * quotationPageSize, quotationPage * quotationPageSize);
+  useEffect(() => { setQuotationPage((page) => Math.min(page, quotationPageCount)); }, [quotationPageCount]);
 
   const quotationMetrics = useMemo(() => ({
     total: quotations.length,
