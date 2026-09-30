@@ -2259,7 +2259,7 @@ export const AdminProjects: React.FC = () => {
                                         className={[
                                           'mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted transition-[background-color,border-color,color,transform] select-none',
                                           canManageKanbanTasks
-                                            ? 'cursor-grab touch-none hover:border-accent/35 hover:bg-panel-hover hover:text-fg active:cursor-grabbing'
+                                            ? 'cursor-grab hover:border-accent/35 hover:bg-panel-hover hover:text-fg active:cursor-grabbing'
                                             : 'cursor-default opacity-70',
                                         ].join(' ')}
                                         title={canManageKanbanTasks ? 'Drag this handle to move task' : 'Task movement is read-only'}
