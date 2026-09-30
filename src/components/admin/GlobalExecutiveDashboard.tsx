@@ -556,7 +556,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           <div className="grid grid-cols-2 gap-2">
             {[
               { label: 'New project', icon: <Plus size={14} />, href: '/admin/projects' },
-              { label: 'Review tasks', icon: <CheckCircle2 size={14} />, href: '/admin/tasks' },
+              { label: 'Review tasks', icon: <CheckCircle2 size={14} />, href: '/admin/dashboard?view=tasks' },
               { label: 'Log time', icon: <Clock3 size={14} />, href: '/admin/time-logs' },
               { label: 'View invoices', icon: <ReceiptText size={14} />, href: '/admin/invoicing' },
               { label: 'View clients', icon: <Users size={14} />, href: '/admin/clients' },
