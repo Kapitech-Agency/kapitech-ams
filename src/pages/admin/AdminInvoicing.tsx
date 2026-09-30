@@ -2731,26 +2731,58 @@ export const AdminInvoicing: React.FC = () => {
         </div>
       )}
     </div>
-  </div><div className="overflow-hidden">{filteredQuotations.length===0?<div className="p-5"><EmptyState title="No quotations found" description="Adjust the search or filters."/></div>:<table className="ams-finance-table table-fixed border-separate border-spacing-0 text-xs">
-<thead className="sticky top-0 z-10 border-b border-line bg-panel/95 backdrop-blur-sm"><tr>
-  <th className="w-[30%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Quotation</th>
-  <th className="w-[17%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Value</th>
-  <th className="w-[21%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Timeline</th>
-  <th className="w-[16%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Status</th>
-  <th className="w-[16%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Actions</th>
+  </div><div className="overflow-hidden">{filteredQuotations.length===0?<div className="p-5"><EmptyState title="No quotations found" description="Adjust the search or filters."/></div>:<table className="ams-finance-table min-w-[1060px] border-separate border-spacing-0 text-xs">
+<thead><tr>
+  <th className="w-[25%]">Quotation</th>
+  <th className="w-[23%]">Client</th>
+  <th className="w-[14%] text-right">Value</th>
+  <th className="w-[12%]">Created</th>
+  <th className="w-[14%]">Valid until</th>
+  <th className="w-[12%]">Status</th>
+  <th className="w-[10%]">Owner</th>
+  <th className="w-[56px] text-right">Actions</th>
 </tr></thead>
-<tbody className="divide-y divide-line">
-{filteredQuotations.map((quotation)=><tr key={quotation.id} className="group align-top transition-colors hover:bg-bg">
-  <td className="px-5 py-4">
-    <button type="button" onClick={()=>setQuotationDetail(quotation)} className="font-semibold tabular-nums text-fg hover:text-accent-text">{quotation.quotationNumber}</button>
-    <p className="mt-1 truncate font-medium text-fg">{quotation.title}</p>
-    <div className="mt-1"><ProfileIdentity profile={{ name: quotation.clientName, contextLabel: quotation.clientCompany }} showRole={false} size="sm" /></div>
-  </td>
-  <td className="px-4 py-5 text-right"><p className="font-semibold tabular-nums text-fg">{formatNativeAmount(quotation.total,quotation.currency,true)}</p><div className="mt-1"><ProfileIdentity profile={{ name: quotation.owner, role: undefined, contextLabel: 'Quotation owner' }} size="sm" showRole={false} /></div></td>
-  <td className="px-5 py-4"><div className="grid gap-1.5 text-[11px]"><div className="flex items-center justify-between gap-3"><span className="text-muted">Created</span><span className="tabular-nums text-fg">{quotation.createdAt}</span></div><div className="flex items-center justify-between gap-3"><span className="text-muted">Valid</span><span className="tabular-nums text-fg">{quotation.validUntil}</span></div></div></td>
-  <td className="px-5 py-4"><QuotationStatusBadge status={quotation.status}/></td>
-  <td className="px-5 py-4"><div className="ams-table-actions"><button type="button" onClick={()=>setQuotationDetail(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="View quotation" title="View quotation"><Eye size={14}/></button>{canManageInvoices&&<button type="button" onClick={()=>openEditQuotation(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Edit quotation" title="Edit quotation"><Edit3 size={14}/></button>}{canManageInvoices&&<button type="button" onClick={()=>void convertQuotationToInvoice(quotation)} disabled={Boolean(quotation.invoiceId)||quotation.status!=='approved'} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg disabled:cursor-not-allowed disabled:opacity-40" aria-label="Convert quotation to invoice" title={quotation.invoiceId?'Invoice already created':quotation.status==='approved'?'Convert approved quotation to invoice':'Only approved quotations can be converted'}><Receipt size={14}/></button>}{canManageInvoices&&<button type="button" onClick={()=>void deleteQuotation(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Delete quotation" title="Delete quotation"><Trash2 size={14}/></button>}</div></td>
-</tr>)}
+<tbody>
+{filteredQuotations.map((quotation)=>{
+  const validityDays = getDaysUntilDue(quotation.validUntil);
+  const canConvert = canManageInvoices && quotation.status === "approved" && !quotation.invoiceId;
+  return <tr key={quotation.id}>
+    <td>
+      <button type="button" onClick={()=>setQuotationDetail(quotation)} className="font-semibold tabular-nums text-fg hover:text-accent-text">{quotation.quotationNumber}</button>
+      <p className="mt-1 max-w-[340px] truncate font-medium text-fg">{quotation.title}</p>
+      <p className="mt-1 text-[10px] text-muted">{quotation.items?.length ? quotation.items.length + " line " + (quotation.items.length === 1 ? "item" : "items") : "Commercial scope"}</p>
+    </td>
+    <td>
+      <p className="truncate font-medium text-fg">{quotation.clientCompany || quotation.clientName}</p>
+      <p className="mt-1 truncate text-[11px] text-muted">{quotation.clientName}</p>
+    </td>
+    <td className="text-right">
+      <p className="font-semibold tabular-nums text-fg">{formatNativeAmount(quotation.total,quotation.currency,true)}</p>
+      <p className="mt-1 text-[10px] text-muted">{quotation.currency}</p>
+    </td>
+    <td className="tabular-nums text-muted">{formatFinanceTableDate(quotation.createdAt)}</td>
+    <td>
+      <p className={"tabular-nums " + (validityDays < 0 ? "text-danger" : validityDays <= 7 ? "text-warning" : "text-fg")}>{formatFinanceTableDate(quotation.validUntil)}</p>
+      <p className="mt-1 text-[10px] text-muted">{formatQuotationValidity(quotation.validUntil)}</p>
+    </td>
+    <td><QuotationStatusBadge status={quotation.status}/></td>
+    <td>
+      <span className="truncate text-xs text-fg">{quotation.owner || "Finance"}</span>
+      {quotation.invoiceId&&<p className="mt-1 text-[10px] text-success">Invoice linked</p>}
+    </td>
+    <td>
+      <div className="relative flex justify-end">
+        <button type="button" onClick={()=>setQuotationActionMenu((current)=>current===quotation.id?null:quotation.id)} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-bg hover:text-fg" aria-label={"Quotation actions for " + quotation.quotationNumber} aria-expanded={quotationActionMenu===quotation.id} title="Quotation actions"><MoreHorizontal size={14}/></button>
+        {quotationActionMenu===quotation.id&&<div className="absolute right-0 top-[calc(100%+6px)] z-40 w-48 rounded-card border border-line bg-panel p-1.5 shadow-lg" role="menu">
+          <button type="button" role="menuitem" onClick={()=>{setQuotationDetail(quotation);setQuotationActionMenu(null);}} className="flex w-full items-center gap-2 rounded-control px-3 py-2.5 text-left text-xs text-muted hover:bg-bg hover:text-fg"><Eye size={14}/>View quotation</button>
+          {canManageInvoices&&<button type="button" role="menuitem" onClick={()=>{openEditQuotation(quotation);setQuotationActionMenu(null);}} className="flex w-full items-center gap-2 rounded-control px-3 py-2.5 text-left text-xs text-muted hover:bg-bg hover:text-fg"><Edit3 size={14}/>Edit quotation</button>}
+          {canConvert&&<button type="button" role="menuitem" onClick={()=>{void convertQuotationToInvoice(quotation);setQuotationActionMenu(null);}} className="flex w-full items-center gap-2 rounded-control px-3 py-2.5 text-left text-xs text-muted hover:bg-bg hover:text-fg"><Receipt size={14}/>Convert to invoice</button>}
+          {canManageInvoices&&<button type="button" role="menuitem" onClick={()=>{void deleteQuotation(quotation);setQuotationActionMenu(null);}} className="flex w-full items-center gap-2 rounded-control px-3 py-2.5 text-left text-xs text-danger hover:bg-danger/10"><Trash2 size={14}/>Delete quotation</button>}
+        </div>}
+      </div>
+    </td>
+  </tr>
+})}
 </tbody></table>}</div></section>
             <section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><h2 className="text-sm font-semibold text-fg">Pipeline stages</h2><p className="mt-1 text-xs text-muted">Count and value by stage.</p></div><div className="space-y-3 p-4">{(['draft','review','approved','sent','accepted','rejected'] as FinanceQuotationStatus[]).map((status)=>{const count=quotations.filter((q)=>q.status===status).length;const value=quotations.filter((q)=>q.status===status).reduce((sum,q)=>sum+q.total,0);return <div key={status} className="rounded-control border border-line bg-bg px-3 py-3"><div className="flex justify-between text-xs"><span className="font-medium text-fg">{quotationStatusLabel(status)}</span><span className="tabular-nums font-semibold">{count}</span></div><p className="mt-1 text-[10px] tabular-nums text-muted">{formatNativeAmount(value,currency,true)}</p><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel"><div className="h-full rounded-full bg-series-3" style={{width:(quotationMetrics.value>0?Math.min(100,value/quotationMetrics.value*100):0)+'%'}}/></div></div>})}</div></section>
           </section>
@@ -2809,18 +2841,20 @@ export const AdminInvoicing: React.FC = () => {
         {incomeRows.length === 0 ? (
           <div className="p-5"><EmptyState title="No income recorded" description="Recorded payments will appear here."/></div>
         ) : (
-          <table className="ams-finance-table min-w-[760px] border-separate border-spacing-0 text-xs">
-            <thead><tr><th>Payment</th><th>Client</th><th>Date</th><th>Amount</th></tr></thead>
+          <table className="ams-finance-table min-w-[900px] border-separate border-spacing-0 text-xs">
+            <thead><tr><th className="w-[22%]">Payment</th><th className="w-[27%]">Client</th><th className="w-[13%]">Received</th><th className="w-[18%]">Method</th><th className="w-[15%] text-right">Amount</th><th className="w-[48px] text-right">Action</th></tr></thead>
             <tbody>
               {paginatedIncomeRows.map((row) => (
                 <tr key={row.id}>
                   <td>
                     <button type="button" onClick={() => { const invoice = currencyInvoices.find((item) => item.id === row.invoiceId); if (invoice) openPrintPreview(invoice); }} className="font-semibold tabular-nums text-xs text-fg hover:text-accent-text">{row.invoiceNumber}</button>
-                    <p className="mt-0.5 text-[10px] text-muted">Payment received</p>
+                    <p className="mt-1 text-[10px] text-muted">{row.reference || "Recorded payment"}</p>
                   </td>
-                  <td><p className="text-xs font-medium text-fg">{row.clientCompany}</p><p className="mt-0.5 text-[10px] text-muted">Invoice payment</p></td>
-                  <td className="text-xs tabular-nums text-muted">{row.date}</td>
-                  <td><p className="text-xs font-semibold tabular-nums text-success">{formatNativeAmount(row.amount, row.currency, true)}</p><span className="mt-1 inline-flex rounded-badge border border-success/20 bg-success/10 px-1.5 py-0.5 text-[10px] font-medium text-success">Collected</span></td>
+                  <td><p className="truncate text-xs font-medium text-fg">{row.clientCompany}</p><p className="mt-1 text-[10px] text-muted">{row.invoiceNumber}</p></td>
+                  <td className="tabular-nums text-muted">{formatFinanceTableDate(row.date)}</td>
+                  <td><p className="text-xs text-fg capitalize">{String(row.method || "Other").replace("_"," ")}</p><p className="mt-1 text-[10px] text-muted">Collected income</p></td>
+                  <td className="text-right"><p className="text-xs font-semibold tabular-nums text-success">{formatNativeAmount(row.amount, row.currency, true)}</p></td>
+                  <td><div className="flex justify-end"><button type="button" onClick={() => { const invoice = currencyInvoices.find((item) => item.id === row.invoiceId); if (invoice) openPrintPreview(invoice); }} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-bg hover:text-fg" aria-label="View payment invoice" title="View invoice"><Eye size={14}/></button></div></td>
                 </tr>
               ))}
             </tbody>
@@ -2844,18 +2878,23 @@ export const AdminInvoicing: React.FC = () => {
         {filteredExpenses.length === 0 ? (
           <div className="p-5"><EmptyState title="No expenses found" description="Adjust the search or filters."/></div>
         ) : (
-          <table className="ams-finance-table min-w-[900px] border-separate border-spacing-0 text-xs">
-            <thead><tr><th>Expense</th><th>Type</th><th>Category</th><th>Project</th><th>Date</th><th>Amount</th><th>Actions</th></tr></thead>
+          <table className="ams-finance-table min-w-[980px] border-separate border-spacing-0 text-xs">
+            <thead><tr><th className="w-[27%]">Expense</th><th className="w-[19%]">Category</th><th className="w-[18%]">Project</th><th className="w-[12%]">Date</th><th className="w-[13%] text-right">Amount</th><th className="w-[11%]">Schedule</th><th className="w-[48px] text-right">Action</th></tr></thead>
             <tbody>
               {paginatedExpenses.map((expense) => (
                 <tr key={expense.id}>
-                  <td><button type="button" onClick={() => setExpenseDetail(expense)} className="text-left"><p className="text-xs font-medium text-fg hover:text-accent-text">{expense.description}</p><p className="mt-0.5 text-[10px] text-muted">{expense.recordedBy || 'Finance'}</p></button></td>
-                  <td><span className="inline-flex rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">{expense.type || 'OpEx'}</span></td>
-                  <td><span className="text-xs text-fg">{expense.category}</span><p className="mt-1 text-[10px] text-muted">{expense.recurringInterval && expense.recurringInterval !== 'none' ? 'Recurring · ' + expense.recurringInterval : expense.receiptUrl ? 'Receipt attached' : 'One-time'}</p></td>
-                  <td><span className="text-xs text-fg">{projectsById.get(expense.projectId || '')?.name || 'Unassigned'}</span></td>
-                  <td className="text-xs tabular-nums text-muted">{expense.date}</td>
-                  <td className="text-xs font-semibold tabular-nums text-fg">{formatNativeAmount(expense.amount, expense.currency || currency, true)}</td>
-                  <td><div className="ams-table-actions">{canManageInvoices && <button type="button" onClick={() => setConfirmAction({ type: 'expense', id: expense.id, label: expense.description })} className="ams-table-action" aria-label="Void expense" title="Void expense"><Trash2 size={14}/></button>}</div></td>
+                  <td>
+                    <button type="button" onClick={() => setExpenseDetail(expense)} className="text-left">
+                      <p className="max-w-[330px] truncate text-xs font-medium text-fg hover:text-accent-text">{expense.description}</p>
+                      <p className="mt-1 text-[10px] text-muted">{expense.recordedBy || "Finance"} · {expense.type || "OpEx"}</p>
+                    </button>
+                  </td>
+                  <td><p className="text-xs text-fg">{expense.category}</p><p className="mt-1 text-[10px] text-muted">{expense.receiptUrl ? "Receipt attached" : "No receipt"}</p></td>
+                  <td><span className="text-xs text-fg">{projectsById.get(expense.projectId || "")?.name || "Unassigned"}</span></td>
+                  <td className="tabular-nums text-muted">{formatFinanceTableDate(expense.date)}</td>
+                  <td className="text-right"><span className="text-xs font-semibold tabular-nums text-fg">{formatNativeAmount(expense.amount, expense.currency || currency, true)}</span></td>
+                  <td><p className="text-xs text-fg">{expense.recurringInterval && expense.recurringInterval !== "none" ? expense.recurringInterval : "One-time"}</p><p className="mt-1 text-[10px] text-muted">{expense.recurringInterval && expense.recurringInterval !== "none" ? "Recurring" : "Single charge"}</p></td>
+                  <td><div className="flex justify-end">{canManageInvoices&&<button type="button" onClick={() => setConfirmAction({ type: "expense", id: expense.id, label: expense.description })} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger" aria-label="Void expense" title="Void expense"><Trash2 size={14}/></button>}</div></td>
                 </tr>
               ))}
             </tbody>
@@ -2932,24 +2971,22 @@ export const AdminInvoicing: React.FC = () => {
                   />
                 </div>
               ) : (
-                <table className="ams-finance-table min-w-[980px] border-separate border-spacing-0 text-xs">
-                  <thead><tr><th>Vendor</th><th>Contract</th><th>Due date</th><th>Amount</th><th>Paid</th><th>Status</th><th>Actions</th></tr></thead>
+                <table className="ams-finance-table min-w-[1120px] border-separate border-spacing-0 text-xs">
+                  <thead><tr><th className="w-[23%]">Vendor / contract</th><th className="w-[12%]">Due date</th><th className="w-[13%] text-right">Amount</th><th className="w-[13%] text-right">Paid</th><th className="w-[13%] text-right">Outstanding</th><th className="w-[12%]">Status</th><th className="w-[48px] text-right">Action</th></tr></thead>
                   <tbody>
                     {filteredVendorPayments.map((row) => (
                       <tr key={row.id} className="group cursor-pointer hover:bg-bg" onClick={() => setVendorPaymentDetail(row)}>
                         <td>
-                          <div className="min-w-[210px]">
-                            <ProfileIdentity profile={{ id: row.vendor.id, name: row.vendor.name, role: row.vendor.type === 'freelancer' ? 'Freelancer' : 'Agency partner', division: row.vendor.primaryCategory }} showRole={false}/>
-                            <p className="mt-1 text-[10px] text-muted">{row.vendor.companyName || row.vendor.email}</p>
-                          </div>
+                          <p className="font-medium text-fg">{row.vendor.companyName || row.vendor.name}</p>
+                          <p className="mt-1 text-[10px] text-muted">{row.contract.title} · {row.vendor.name}</p>
                         </td>
-                        <td><p className="max-w-[280px] truncate text-xs font-medium text-fg">{row.contract.title}</p><p className="mt-1 text-[10px] text-muted">{row.contract.rateType.replace('_',' ')}</p></td>
-                        <td><div className="text-xs tabular-nums text-fg">{vendorPaymentFormatDate(row.dueDate)}</div><div className="mt-1 text-[10px] text-muted">{row.status === 'overdue' ? Math.abs(getDaysUntilDue(row.dueDate)) + ' days overdue' : getDaysUntilDue(row.dueDate) === 0 ? 'Due today' : getDaysUntilDue(row.dueDate) > 0 ? 'Due in ' + getDaysUntilDue(row.dueDate) + ' days' : 'Past due'}</div></td>
-                        <td><span className="font-semibold tabular-nums text-fg">{formatNativeAmount(row.amount, currency, true)}</span></td>
-                        <td><span className="font-semibold tabular-nums text-success">{formatNativeAmount(row.paidAmount, currency, true)}</span></td>
+                        <td><p className="tabular-nums text-fg">{vendorPaymentFormatDate(row.dueDate)}</p><p className="mt-1 text-[10px] text-muted">{row.status === 'overdue' ? Math.abs(getDaysUntilDue(row.dueDate)) + ' days overdue' : getDaysUntilDue(row.dueDate) === 0 ? 'Due today' : getDaysUntilDue(row.dueDate) > 0 ? 'Due in ' + getDaysUntilDue(row.dueDate) + ' days' : 'Past due'}</p></td>
+                        <td className="text-right"><span className="font-semibold tabular-nums text-fg">{formatNativeAmount(row.amount, currency, true)}</span></td>
+                        <td className="text-right"><span className="font-semibold tabular-nums text-success">{formatNativeAmount(row.paidAmount, currency, true)}</span></td>
+                        <td className="text-right"><span className={"font-semibold tabular-nums " + (row.amount - row.paidAmount > 0 ? "text-warning" : "text-success")}>{formatNativeAmount(Math.max(0,row.amount-row.paidAmount), currency, true)}</span></td>
                         <td><span className={'inline-flex rounded-badge border px-2 py-1 text-[10px] font-semibold ' + vendorPaymentStatusTone[row.status]}>{vendorPaymentStatusLabel[row.status]}</span></td>
                         <td onClick={(event) => event.stopPropagation()}>
-                          <div className="ams-table-actions">
+                          <div className="flex justify-end gap-1.5">
                             <button type="button" className="ams-table-action" onClick={() => setVendorPaymentDetail(row)}>View</button>
                             {canManageInvoices && row.status !== 'paid' && <button type="button" className="ams-table-action" data-primary="true" onClick={() => openVendorPaymentModal(row)}>Pay</button>}
                           </div>
@@ -2966,20 +3003,27 @@ export const AdminInvoicing: React.FC = () => {
         <div className="space-y-5">
           <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Tax provision" value={formatFinanceCardAmount(taxProvision,currency)} context="Tax across issued invoices" sparkline={[taxProvision, taxCollected, taxOutstanding, retainerBilled]} icon={<Receipt size={15}/>}/><FinanceMetricCard label="Tax collected" value={formatFinanceCardAmount(taxCollected,currency)} context={(taxProvision>0?((taxCollected/taxProvision)*100).toFixed(1):'0.0')+'% of provision'} sparkline={[taxProvision, taxCollected, taxOutstanding]} icon={<BadgeCheck size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Tax outstanding" value={formatFinanceCardAmount(taxOutstanding,currency)} context="Provision not collected" sparkline={[taxOutstanding, taxProvision, taxCollected]} icon={<Hourglass size={15} className="text-warning"/>} toneClassName="text-warning"/><FinanceMetricCard label="Retainer billed" value={formatFinanceCardAmount(retainerBilled,currency)} context={(retainerBilled>0?((retainerCollected/retainerBilled)*100).toFixed(1):'0.0')+'% collected'} sparkline={financeChartData.map((point) => point.retainerTarget)} icon={<TrendingUp size={15}/>}/></section>
           <section className="space-y-5"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><div className="flex items-start justify-between gap-4"><div><h2 className="text-sm font-semibold text-fg">Retainer ledger</h2><p className="mt-1 text-xs text-muted">Billing and collected value for retainer invoices.</p></div>{usingDemoRetainerLedger&&<span className="shrink-0 rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">Sample data</span>}</div></div><div className="overflow-hidden"><table className="ams-finance-table table-fixed border-separate border-spacing-0 text-xs">
-<thead className="sticky top-0 z-10 border-b border-line bg-panel/95 backdrop-blur-sm"><tr>
-  <th className="w-[26%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice</th>
-  <th className="w-[28%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client</th>
-  <th className="w-[16%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Status</th>
-  <th className="w-[15%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Billed</th>
-  <th className="w-[15%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Collected</th>
+<thead><tr>
+  <th className="w-[22%]">Invoice</th>
+  <th className="w-[24%]">Client</th>
+  <th className="w-[11%]">Issued</th>
+  <th className="w-[11%]">Due</th>
+  <th className="w-[13%] text-right">Billed</th>
+  <th className="w-[13%] text-right">Collected</th>
+  <th className="w-[10%]">Status</th>
 </tr></thead>
 <tbody className="divide-y divide-line">
-{retainerLedgerInvoices.slice(0,12).map((invoice)=><tr key={invoice.id} className="group align-top transition-colors hover:bg-bg">
-  <td className="px-5 py-4"><button type="button" onClick={()=>openPrintPreview(invoice)} className="font-semibold tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button><p className="mt-1 text-[11px] text-muted">Due {invoice.dueDate}</p></td>
-  <td className="px-5 py-4"><p className="font-medium text-fg">{invoice.clientCompany||invoice.clientName}</p><p className="mt-1 text-[11px] text-muted">Retainer invoice</p></td>
-  <td className="px-5 py-4"><StatusBadge status={invoice.status}/></td>
-  <td className="px-4 py-5 text-right font-semibold tabular-nums text-fg">{formatNativeAmount(invoice.total,invoice.currency,true)}</td>
-  <td className="px-4 py-5 text-right font-semibold tabular-nums text-success">{formatNativeAmount(getInvoiceCollectedInRange(invoice,yearStart,yearEnd),invoice.currency,true)}</td>
+{retainerLedgerInvoices.slice(0,12).map((invoice)=><tr key={invoice.id}>
+  <td>
+    <button type="button" onClick={()=>openPrintPreview(invoice)} className="font-semibold tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button>
+    <p className="mt-1 text-[10px] text-muted">{invoice.paymentTerms || "Retainer invoice"}</p>
+  </td>
+  <td><p className="font-medium text-fg">{invoice.clientCompany||invoice.clientName}</p><p className="mt-1 text-[10px] text-muted">{invoice.clientName}</p></td>
+  <td className="tabular-nums text-muted">{formatFinanceTableDate(invoice.issueDate)}</td>
+  <td className="tabular-nums text-muted">{formatFinanceTableDate(invoice.dueDate)}</td>
+  <td className="text-right font-semibold tabular-nums text-fg">{formatNativeAmount(invoice.total,invoice.currency,true)}</td>
+  <td className="text-right font-semibold tabular-nums text-success">{formatNativeAmount(getInvoiceCollectedInRange(invoice,yearStart,yearEnd),invoice.currency,true)}</td>
+  <td><StatusBadge status={invoice.status}/></td>
 </tr>)}
 </tbody></table></div></section>
             <div className="grid gap-5 lg:grid-cols-2"><section className="rounded-card border border-line bg-panel p-4"><div className="border-b border-line pb-3"><h2 className="text-sm font-semibold text-fg">Tax provision</h2><p className="mt-1 text-xs text-muted">Provision versus collected and outstanding tax.</p></div><div className="mt-4 space-y-3">{[{label:'Provision',value:taxProvision,tone:'bg-series-1'},{label:'Collected',value:taxCollected,tone:'bg-success'},{label:'Outstanding',value:taxOutstanding,tone:'bg-warning'}].map((item)=>{const percent=taxProvision>0?Math.min(100,item.value/taxProvision*100):0;return <div key={item.label}><div className="flex justify-between text-xs"><span className="text-muted">{item.label}</span><span className="font-medium tabular-nums">{formatNativeAmount(item.value,currency,true)}</span></div><div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg"><div className={'h-full rounded-full '+item.tone} style={{width:percent+'%'}}/></div></div>})}</div><button type="button" onClick={exportTaxCsv} disabled={!currencyInvoices.length} className={actionClass+' mt-5 w-full'}><Download size={14}/>Export tax detail</button></section><section className="rounded-card border border-line bg-panel p-4"><div className="flex justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Retainer collection</h2><p className="mt-1 text-xs text-muted">Collection against billed retainers.</p></div><span className="text-sm font-semibold tabular-nums">{retainerBilled>0?((retainerCollected/retainerBilled)*100).toFixed(1):'0.0'}%</span></div><div className="mt-4 h-2 rounded-full bg-bg overflow-hidden"><div className="h-full rounded-full bg-success" style={{width:(retainerBilled>0?Math.min(100,retainerCollected/retainerBilled*100):0)+'%'}}/></div><div className="mt-2 flex justify-between text-[10px] tabular-nums text-muted"><span>{formatFinanceCardAmount(retainerCollected,currency)}</span><span>{formatFinanceCardAmount(retainerBilled,currency)}</span></div></section></div>
@@ -3044,9 +3088,9 @@ export const AdminInvoicing: React.FC = () => {
               <div className="absolute right-0 top-[calc(100%+6px)] z-30 w-56 rounded-card border border-line bg-panel p-1.5 shadow-xl" role="menu">
                 {(['client','timeline','billing','status','actions'] as const).map((key) => {
                   const labels: Record<typeof key, string> = {
-                    client: 'Client & Project',
-                    timeline: 'Timeline',
-                    billing: 'Billing',
+                    client: 'Client & project',
+                    timeline: 'Issue and due dates',
+                    billing: 'Amounts',
                     status: 'Status',
                     actions: 'Actions'
                   };
@@ -3145,13 +3189,13 @@ export const AdminInvoicing: React.FC = () => {
       )}
     </div>
   </div><div className="overflow-hidden">{filteredInvoices.length===0?<div className="p-5"><EmptyState title="No invoices found" description="No invoices match the current filters." action={canManageInvoices?<button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>Create invoice</button>:undefined}/></div>:<table className="ams-finance-table table-fixed border-separate border-spacing-0 text-xs">
-<thead className="sticky top-0 z-10 border-b border-line bg-panel/95 backdrop-blur-sm"><tr>
-  <th className="w-[22%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice</th>
-  {columnVisibility.client&&<th className="w-[18%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client & project</th>}
-  {columnVisibility.timeline&&<th className="w-[17%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Timeline</th>}
-  {columnVisibility.billing&&<th className="w-[16%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Billing</th>}
-  {columnVisibility.status&&<th className="w-[10%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Status</th>}
-  {columnVisibility.actions&&<th className="w-[17%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted"> </th>}
+<thead><tr>
+  <th className="w-[20%]">Invoice</th>
+  {columnVisibility.client&&<th className="w-[19%]">Client & project</th>}
+  {columnVisibility.timeline&&<><th className="w-[10%]">Issued</th><th className="w-[10%]">Due</th></>}
+  {columnVisibility.billing&&<><th className="w-[12%] text-right">Total</th><th className="w-[12%] text-right">Balance</th></>}
+  {columnVisibility.status&&<th className="w-[10%]">Status</th>}
+  {columnVisibility.actions&&<th className="w-[17%] text-right">Actions</th>}
 </tr></thead>
 <tbody className="divide-y divide-line">
 {paginatedInvoices.map((invoice)=>{
@@ -3172,16 +3216,19 @@ export const AdminInvoicing: React.FC = () => {
       <p className="truncate font-medium text-fg">{invoice.clientCompany||invoice.clientName}</p>
       <p className="mt-1 truncate text-[11px] text-muted">{project?.name||invoice.clientEmail||invoice.clientName}</p>
     </td>}
-    {columnVisibility.timeline&&<td className="px-5 py-4">
-      <div className="grid gap-1.5 text-[11px]">
-        <div className="flex items-center justify-between gap-3"><span className="text-muted">Issued</span><span className="tabular-nums text-fg">{invoice.issueDate}</span></div>
-        <div className={'flex items-center justify-between gap-3 '+(overdue?'text-danger':'')}><span className={overdue?'text-danger':'text-muted'}>Due</span><span className="tabular-nums">{invoice.dueDate}</span></div>
-      </div>
-    </td>}
-    {columnVisibility.billing&&<td className="px-4 py-5 text-right">
-      <p className="font-semibold tabular-nums text-fg">{formatNativeAmount(invoice.total,invoice.currency)}</p>
-      <p className={'mt-1 text-[11px] tabular-nums '+(balance>0?'text-warning':'text-success')}>{balance>0?'Balance '+formatNativeAmount(balance,invoice.currency,true):'Settled'}</p>
-    </td>}
+    {columnVisibility.timeline&&<><td className="tabular-nums text-muted">{formatFinanceTableDate(invoice.issueDate)}</td>
+    <td>
+      <p className={'tabular-nums '+(overdue?'text-danger':'text-fg')}>{formatFinanceTableDate(invoice.dueDate)}</p>
+      <p className={'mt-1 text-[10px] '+(overdue?'text-danger':'text-muted')}>{overdue ? Math.abs(getDaysUntilDue(invoice.dueDate)) + ' days overdue' : getDaysUntilDue(invoice.dueDate) === 0 ? 'Due today' : getDaysUntilDue(invoice.dueDate) + ' days left'}</p>
+    </td></>}
+    {columnVisibility.billing&&<><td className="text-right">
+      <p className="font-semibold tabular-nums text-fg">{formatNativeAmount(invoice.total,invoice.currency,true)}</p>
+      <p className="mt-1 text-[10px] text-muted">{invoice.currency}</p>
+    </td>
+    <td className="text-right">
+      <p className={'font-semibold tabular-nums '+(balance>0?'text-warning':'text-success')}>{balance>0?formatNativeAmount(balance,invoice.currency,true):'Settled'}</p>
+      <p className="mt-1 text-[10px] text-muted">{balance>0?'Outstanding':'Paid in full'}</p>
+    </td></>}
     {columnVisibility.status&&<td className="px-5 py-4">
       {canManageInvoices&&['draft','sent','overdue'].includes(invoice.status)
         ? <InvoiceStatusDropdown status={invoice.status} allowedStatuses={['draft','sent','overdue']} disabled={updatingInvoiceId===invoice.id} onChange={(next)=>void updateInvoiceStatus(invoice,next)} />
