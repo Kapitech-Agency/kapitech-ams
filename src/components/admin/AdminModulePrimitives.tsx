@@ -1,5 +1,6 @@
 import React from 'react';
-import { Search } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CustomSelect } from '../ui/CustomSelect';
 import { cn } from '../../lib/cn';
 
 export interface AdminModuleHeaderProps {
@@ -222,5 +223,115 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     <div className={cn('min-w-0', bodyClassName)}>{children}</div>
   </section>
 );
+
+
+export interface AdminTablePaginationProps {
+  total: number;
+  page: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
+  itemLabel?: string;
+  pageSizeOptions?: number[];
+  slug?: string;
+  secondaryLabel?: React.ReactNode;
+}
+
+export const AdminTablePagination: React.FC<AdminTablePaginationProps> = ({
+  total,
+  page,
+  pageSize,
+  onPageChange,
+  onPageSizeChange,
+  itemLabel = 'records',
+  pageSizeOptions = [6, 10, 20, 50],
+  slug,
+  secondaryLabel
+}) => {
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const safePage = Math.min(Math.max(1, page), totalPages);
+  const first = total > 0 ? (safePage - 1) * pageSize + 1 : 0;
+  const last = Math.min(safePage * pageSize, total);
+  const pageStart = Math.max(1, Math.min(safePage - 2, totalPages - 4));
+  const pageEnd = Math.min(totalPages, pageStart + 4);
+
+  return (
+    <div
+      className="flex flex-col gap-3 border-t border-line bg-panel px-4 py-3 text-xs sm:flex-row sm:items-center sm:justify-between"
+      data-ams-slug={slug}
+    >
+      <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
+        <span className="text-muted">
+          Showing <span className="font-semibold tabular-nums text-fg">{first}</span>
+          {' '}to{' '}
+          <span className="font-semibold tabular-nums text-fg">{last}</span>
+          {' '}of{' '}
+          <span className="font-semibold tabular-nums text-fg">{total}</span>
+          {' '}{itemLabel}
+        </span>
+        {secondaryLabel && <span className="hidden text-muted sm:inline">{secondaryLabel}</span>}
+      </div>
+
+      <div className="flex min-w-0 items-center gap-2 overflow-x-auto pb-0.5 custom-scrollbar">
+        <span className="shrink-0 text-[10px] text-muted">Rows per page</span>
+        <CustomSelect
+          value={String(pageSize)}
+          onChange={(value) => {
+            const nextSize = Number(value);
+            onPageSizeChange(nextSize);
+            onPageChange(1);
+          }}
+          options={pageSizeOptions.map((value) => ({ value: String(value), label: String(value) }))}
+          triggerClassName="h-8 min-h-8 w-[72px] shrink-0"
+          aria-label="Rows per page"
+        />
+
+        <button
+          type="button"
+          disabled={safePage <= 1}
+          onClick={() => onPageChange(Math.max(1, safePage - 1))}
+          className="inline-flex h-8 shrink-0 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[11px] text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-40"
+          aria-label="Previous page"
+          data-ams-slug={slug ? slug + '-prev' : undefined}
+        >
+          <ChevronLeft size={14} />
+          <span className="hidden sm:inline">Previous</span>
+        </button>
+
+        {Array.from({ length: Math.max(0, pageEnd - pageStart + 1) }, (_, index) => {
+          const pageNumber = pageStart + index;
+          return (
+            <button
+              key={pageNumber}
+              type="button"
+              aria-current={safePage === pageNumber ? 'page' : undefined}
+              onClick={() => onPageChange(pageNumber)}
+              className={'h-8 w-8 shrink-0 rounded-control border px-0 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (
+                safePage === pageNumber
+                  ? 'border-accent bg-accent text-white'
+                  : 'border-line bg-bg text-muted hover:bg-panel hover:text-fg'
+              )}
+              data-ams-slug={slug ? slug + '-page-' + pageNumber : undefined}
+            >
+              {pageNumber}
+            </button>
+          );
+        })}
+
+        <button
+          type="button"
+          disabled={safePage >= totalPages}
+          onClick={() => onPageChange(Math.min(totalPages, safePage + 1))}
+          className="inline-flex h-8 shrink-0 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[11px] text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-40"
+          aria-label="Next page"
+          data-ams-slug={slug ? slug + '-next' : undefined}
+        >
+          <span className="hidden sm:inline">Next</span>
+          <ChevronRight size={14} />
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export default AdminModuleHeader;
