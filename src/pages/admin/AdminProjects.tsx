@@ -1722,17 +1722,20 @@ export const AdminProjects: React.FC = () => {
                             if (!canManageProjects) return;
                             event.preventDefault();
                             setDragOverProjectStatus(column.id);
+                            setDragOverProjectId(null);
                           }}
                           onDragOver={event => {
                             if (!canManageProjects) return;
                             event.preventDefault();
                             event.dataTransfer.dropEffect = 'move';
                             setDragOverProjectStatus(column.id);
+                            setDragOverProjectId(null);
                           }}
                           onDragLeave={event => {
                             const nextTarget = event.relatedTarget as Node | null;
                             if (!nextTarget || !event.currentTarget.contains(nextTarget)) {
                               setDragOverProjectStatus(current => current === column.id ? null : current);
+                              setDragOverProjectId(current => current === null ? null : null);
                             }
                           }}
                           onDrop={event => {
@@ -2139,16 +2142,19 @@ export const AdminProjects: React.FC = () => {
                             event.preventDefault();
                             event.dataTransfer.dropEffect = 'move';
                             setDragOverTaskStatus(column.id);
+                            setDragOverTaskId(null);
                           }}
                           onDragEnter={event => {
                             if (!canManageKanbanTasks) return;
                             event.preventDefault();
                             setDragOverTaskStatus(column.id);
+                            setDragOverTaskId(null);
                           }}
                           onDragLeave={event => {
                             const nextTarget = event.relatedTarget as Node | null;
                             if (!nextTarget || !event.currentTarget.contains(nextTarget)) {
                               setDragOverTaskStatus(current => current === column.id ? null : current);
+                              setDragOverTaskId(null);
                             }
                           }}
                           onDrop={event => {
