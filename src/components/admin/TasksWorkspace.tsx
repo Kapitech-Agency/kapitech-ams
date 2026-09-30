@@ -681,7 +681,7 @@ export const TasksWorkspace: React.FC = () => {
       >
         {TASK_TABS.map(tab => {
           const active = taskScope === tab.key;
-          const href = '/admin/dashboard?view=tasks' + tab.search;
+          const href = '/admin/tasks' + (tab.search ? '?' + tab.search.slice(1) : '');
           return (
             <Link
               key={tab.key}
