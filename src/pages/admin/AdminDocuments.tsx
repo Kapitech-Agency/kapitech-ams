@@ -1,33 +1,51 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Skeleton } from '../../components/ui/Skeleton';
-import { 
-  FileText, 
-  Plus, 
-  Search, 
-  Download, 
-  Trash2, 
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import {
+  Building2,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Eye,
+  FileCode2,
+  FileSpreadsheet,
+  FileText,
+  LockKeyhole,
+  Plus,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  Trash2,
+  UploadCloud,
   X,
-  Loader2
 } from 'lucide-react';
 import { api } from '../../lib/apiClient';
-import { useLanguage } from '../../lib/LanguageContext';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { CustomSelect } from '../../components/ui/CustomSelect';
-import { Drawer } from '../../components/ui/Drawer';
+import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
-import { AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import {
+  AdminFilterBar,
+  AdminMetricStrip,
+  AdminModuleHeader,
+  AdminPanel,
+} from '../../components/admin/AdminModulePrimitives';
+import { Skeleton } from '../../components/ui/Skeleton';
 
 interface DocumentItem {
   id: string;
   name?: string;
   title?: string;
-  category: string;
+  description?: string;
+  category?: string;
+  department?: string;
   type?: string;
   fileType?: string;
   size?: string | number;
   fileSize?: number;
+  sizeBytes?: number;
   url?: string;
   downloadUrl?: string;
   mimeType?: string;
@@ -37,10 +55,120 @@ interface DocumentItem {
   uploadedBy?: string;
   uploadedDate?: string;
   uploadedAt?: string;
+  updatedAt?: string;
   relatedEntity?: string;
-  relatedId?: string;
+  accessLevel?: string;
   tags?: string[];
 }
+
+type SortKey = 'name' | 'category' | 'size' | 'updated' | 'status';
+type TabKey = 'all' | 'sops' | 'legal' | 'finance' | 'infra';
+type CategoryKey = 'all' | 'sop' | 'legal' | 'finance' | 'hr' | 'security';
+
+const DOCUMENT_TABS: Array<{ key: TabKey; label: string }> = [
+  { key: 'all', label: 'All Internal Documents' },
+  { key: 'sops', label: 'SOPs & Policies' },
+  { key: 'legal', label: 'Legal & Corporate' },
+  { key: 'finance', label: 'Finance & Tax' },
+  { key: 'infra', label: 'Infrastructure & Keys' },
+];
+
+const CATEGORY_FILTERS: Array<{ key: CategoryKey; label: string }> = [
+  { key: 'all', label: 'All Files' },
+  { key: 'sop', label: 'SOP & Guides' },
+  { key: 'legal', label: 'Legal & Charters' },
+  { key: 'finance', label: 'Financial Reports' },
+  { key: 'hr', label: 'HR & People' },
+  { key: 'security', label: 'Security & Keys' },
+];
+
+const PAGE_SIZES = [10, 25, 50];
+const MAX_FILE_SIZE = 25 * 1024 * 1024;
+const ACCEPTED_TYPES = '.pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip';
+
+const titleOf = (doc: DocumentItem) => String(doc.name || doc.title || 'Untitled document');
+const ownerOf = (doc: DocumentItem) => String(doc.owner || doc.uploadedBy || 'Kapitech System');
+const categoryOf = (doc: DocumentItem) => String(doc.category || 'General');
+const readyOf = (doc: DocumentItem) => doc.status === 'ready' || doc.sourceType === 'external_link';
+const searchTextOf = (doc: DocumentItem) => [
+  titleOf(doc), doc.description, doc.category, doc.department, doc.relatedEntity,
+  doc.accessLevel, doc.type, doc.fileType, ...(doc.tags || [])
+].filter(Boolean).join(' ').toLowerCase();
+
+const sizeBytesOf = (doc: DocumentItem) => {
+  if (typeof doc.fileSize === 'number') return doc.fileSize;
+  if (typeof doc.sizeBytes === 'number') return doc.sizeBytes;
+  const raw = String(doc.size || '').trim().replace(',', '.');
+  const match = raw.match(/^([0-9.]+)\s*(B|KB|MB|GB)?$/i);
+  if (!match) return 0;
+  const n = Number(match[1]);
+  const unit = (match[2] || 'B').toUpperCase();
+  return n * ({ B: 1, KB: 1024, MB: 1024 ** 2, GB: 1024 ** 3 }[unit] || 1);
+};
+
+const formatBytes = (bytes: number) => {
+  if (!bytes) return '0 B';
+  if (bytes >= 1024 ** 3) return (bytes / 1024 ** 3).toFixed(1) + ' GB';
+  if (bytes >= 1024 ** 2) return (bytes / 1024 ** 2).toFixed(1) + ' MB';
+  if (bytes >= 1024) return Math.round(bytes / 1024) + ' KB';
+  return Math.round(bytes) + ' B';
+};
+
+const dateOf = (doc: DocumentItem) => {
+  const raw = doc.updatedAt || doc.uploadedAt || doc.uploadedDate;
+  if (!raw) return 'Not recorded';
+  const date = new Date(raw);
+  return Number.isNaN(date.getTime()) ? String(raw) : new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(date);
+};
+
+const typeOf = (doc: DocumentItem) => {
+  const direct = String(doc.type || doc.fileType || '').trim();
+  if (direct) return direct.toUpperCase();
+  const ext = titleOf(doc).split('.').pop();
+  return ext ? ext.toUpperCase() : 'FILE';
+};
+
+const matchesCategory = (doc: DocumentItem, key: CategoryKey) => {
+  if (key === 'all') return true;
+  const text = searchTextOf(doc);
+  if (key === 'sop') return /sop|policy|guide|handbook|procedure|manual/.test(text);
+  if (key === 'legal') return /legal|contract|charter|corporate|agreement|nda/.test(text);
+  if (key === 'finance') return /finance|financial|tax|invoice|audit|accounting/.test(text);
+  if (key === 'hr') return /hr|people|human|employee|culture|talent/.test(text);
+  return /security|key|credential|infra|engineering|devops|access/.test(text);
+};
+
+const matchesTab = (doc: DocumentItem, tab: TabKey) => {
+  if (tab === 'all') return true;
+  const text = searchTextOf(doc);
+  if (tab === 'sops') return /sop|policy|guide|handbook|procedure|manual/.test(text);
+  if (tab === 'legal') return /legal|contract|charter|corporate|agreement|nda/.test(text);
+  if (tab === 'finance') return /finance|financial|tax|invoice|audit|accounting/.test(text);
+  return /security|key|credential|infra|engineering|devops|access/.test(text);
+};
+
+const docIcon = (doc: DocumentItem) => {
+  const type = typeOf(doc);
+  if (type.includes('XLS') || type.includes('CSV')) return <FileSpreadsheet size={16} />;
+  if (type.includes('ZIP')) return <FileCode2 size={16} />;
+  if (/security|key|credential/i.test(searchTextOf(doc))) return <LockKeyhole size={16} />;
+  return <FileText size={16} />;
+};
+
+const categoryTone = (doc: DocumentItem) => {
+  const text = searchTextOf(doc);
+  if (/security|key|credential|infra|engineering|devops/.test(text)) return 'border-warning/25 bg-warning/10 text-warning';
+  if (/finance|financial|tax|invoice|accounting|audit/.test(text)) return 'border-success/25 bg-success/10 text-success';
+  if (/legal|contract|charter|corporate|agreement|nda/.test(text)) return 'border-accent/25 bg-accent/10 text-accent-text';
+  if (/sop|policy|guide|handbook|procedure|manual/.test(text)) return 'border-info/25 bg-info/10 text-info';
+  return 'border-line bg-bg text-muted';
+};
+
+const statusTone = (doc: DocumentItem) => readyOf(doc)
+  ? 'border-success/25 bg-success/10 text-success'
+  : 'border-warning/25 bg-warning/10 text-warning';
+
+const statusLabel = (doc: DocumentItem) => readyOf(doc) ? 'Ready' : 'Pending';
 
 export const AdminDocuments: React.FC = () => {
   const { language } = useLanguage();
