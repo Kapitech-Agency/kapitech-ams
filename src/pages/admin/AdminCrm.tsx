@@ -866,7 +866,7 @@ export const AdminCrm: React.FC = () => {
                       </td>
                     </tr>
                   ) : (
-                    filteredLeads.map((lead) => (
+                    pagedLeads.map((lead) => (
                       <tr
                         key={lead.id}
                         onClick={() => handleOpenLeadDrawer(lead)}
