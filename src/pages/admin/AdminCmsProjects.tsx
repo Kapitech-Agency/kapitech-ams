@@ -320,7 +320,7 @@ export const AdminCmsProjects: React.FC = () => {
             </div>
           </div>
 
-          <div className="relative w-[280px] shrink-0 sm:w-[320px] lg:w-[360px]">
+          <div className="relative w-[240px] shrink-0 sm:w-[260px] lg:w-[280px]">
             <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" size={14} />
             <input
               type="text"
