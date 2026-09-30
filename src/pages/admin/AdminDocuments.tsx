@@ -451,26 +451,17 @@ export const AdminDocuments: React.FC = () => {
         />
       </div>
 
-      <nav
-        aria-label="Documents sections"
-        className="flex max-w-full items-center gap-1 overflow-x-auto rounded-control border border-line bg-panel p-1 min-[900px]:hidden"
-        data-ams-slug="documents-mobile-tabs"
-      >
-        {DOCUMENT_TABS.map((tab) => (
-          <button
-            type="button"
-            key={tab.key}
-            onClick={() => selectTab(tab.key)}
-            aria-current={activeTab === tab.key ? 'page' : undefined}
-            data-ams-slug={'documents-tab-' + tab.key}
-            className={'inline-flex h-9 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ' + (
-              activeTab === tab.key ? 'border-accent/25 bg-accent/10 font-semibold text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg'
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </nav>
+      <div className="min-[900px]:hidden min-w-0" data-ams-slug="documents-mobile-tabs">
+        <AdminSectionTabs
+          ariaLabel="Documents sections"
+          activeKey={activeTab}
+          items={DOCUMENT_TABS.map((tab) => ({
+            key: tab.key,
+            label: tab.label,
+            to: tab.key === 'all' ? '/admin/documents' : '/admin/documents?documents=' + tab.key
+          }))}
+        />
+      </div>
 
       <div data-ams-feature-slug="documents-kpis">
         <AdminMetricStrip
@@ -749,7 +740,7 @@ export const AdminDocuments: React.FC = () => {
         onConfirm={() => void confirmDelete()}
         loading={deleteLoading}
       />
-    </div>
+    </AdminPageShell>
   );
 };
 
