@@ -7,7 +7,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 
@@ -30,6 +30,8 @@ export const AdminTimeLogs: React.FC = () => {
   const canManage = hasAdminPermission('canManageProjects') || hasAdminPermission('canManageKanbanTasks');
   const canDeleteAll = hasAdminPermission('canManageProjects');
   const [logs, setLogs] = useState<TimeLog[]>([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(6);
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -59,6 +61,11 @@ export const AdminTimeLogs: React.FC = () => {
 
   const totalMinutes = useMemo(() => logs.reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0), [logs]);
   const billableMinutes = useMemo(() => logs.filter(log => log.billable).reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0), [logs]);
+  const totalPages = Math.max(1, Math.ceil(logs.length / pageSize));
+  const pagedLogs = logs.slice((page - 1) * pageSize, page * pageSize);
+  useEffect(() => {
+    setPage((current) => Math.min(current, totalPages));
+  }, [totalPages]);
 
   const formatMinutes = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
@@ -259,7 +266,7 @@ export const AdminTimeLogs: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line">
-                  {logs.map(log => (
+                  {pagedLogs.map(log => (
                     <tr key={log.id} className="hover:bg-panel-hover">
                       <td className="px-4 py-3 text-xs text-fg whitespace-nowrap">{log.date}</td>
                       <td className="px-4 py-3">
@@ -280,6 +287,7 @@ export const AdminTimeLogs: React.FC = () => {
                   ))}
                 </tbody>
               </table>
+              <AdminTablePagination total={logs.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="time entries" slug="time-tracking-pagination" />
             </div>
           )}
         </section>
