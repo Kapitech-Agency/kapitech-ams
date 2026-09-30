@@ -568,6 +568,7 @@ export const TasksWorkspace: React.FC = () => {
 
   const openEditTask = (task: TaskRecord) => {
     if (!canManageTasks) return;
+    setSelectedTask(null);
     setEditingTask(task);
     setTaskEditForm({
       title: task.title,
