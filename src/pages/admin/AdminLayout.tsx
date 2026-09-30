@@ -646,6 +646,31 @@ export const AdminLayout: React.FC = () => {
                     );
                   })}
                 </nav>
+              ) : location.pathname === '/admin/dashboard' && new URLSearchParams(location.search).get('view') === 'tasks' ? (
+                <nav aria-label="Tasks sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
+                  {[
+                    { key: 'all', label: 'All Tasks', search: '' },
+                    { key: 'my', label: 'My Tasks', search: '&taskscope=my' },
+                    { key: 'due', label: 'Due & Overdue', search: '&taskscope=due' },
+                    { key: 'review', label: 'Review Queue', search: '&taskscope=review' },
+                    { key: 'blocked', label: 'Blocked', search: '&taskscope=blocked' },
+                    { key: 'completed', label: 'Completed', search: '&taskscope=completed' },
+                  ].map((tab) => {
+                    const activeScope = new URLSearchParams(location.search).get('taskscope') || 'all';
+                    const query = '/admin/dashboard?view=tasks' + tab.search;
+                    return (
+                      <NavLink
+                        key={tab.key}
+                        to={query}
+                        end
+                        data-ams-slug={'task-tab-' + tab.key}
+                        className={'group relative inline-flex h-9 shrink-0 items-center rounded-chip border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (activeScope === tab.key ? 'border-accent/25 bg-accent/10 font-semibold text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg')}
+                      >
+                        {tab.label}
+                      </NavLink>
+                    );
+                  })}
+                </nav>
               ) : location.pathname === '/admin/invoicing' ? (
                 <nav aria-label="Finance sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
                   {[
