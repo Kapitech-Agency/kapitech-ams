@@ -960,7 +960,7 @@ export const AdminTeams: React.FC = () => {
             ]}
           />
 
-          <section className="rounded-card border border-line bg-panel p-4" data-ams-feature-slug="team-directory-filters">
+          <section className="rounded-card border border-line bg-panel p-4" data-ams-feature-slug="team-directory-filters" data-ams-slug="team-directory-filters">
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
               <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
                 <label className="relative min-w-0 flex-1 sm:max-w-sm">
@@ -1207,7 +1207,7 @@ export const AdminTeams: React.FC = () => {
             </div>
           </section>
 
-          <AdminPanel title="Vendor & Contractor Directory" description={vendorRows.length + ' external vendors · sorted by rate high to low'}>
+          <AdminPanel slug="vendor-directory-table" title="Vendor & Contractor Directory" description={vendorRows.length + ' external vendors · sorted by rate high to low'}>
             <div className="overflow-x-auto custom-scrollbar">
               {pagedVendorRows.length === 0 ? (
                 <div className="min-h-[180px] px-5 py-10 text-center">
@@ -1326,6 +1326,7 @@ export const AdminTeams: React.FC = () => {
           />
 
           <AdminPanel
+            slug="capacity-allocation-table"
             title="Capacity & allocation"
             description={currentWeekCapacity ? 'Actual tracked allocation across ' + weeklyCapacity.map((week) => formatDate(dateKey(week.start))).join(' · ') : 'Four-week tracked capacity view.'}
             actions={<span className="text-[10px] text-muted">No forecast values are fabricated; cells are based on recorded time.</span>}
@@ -1375,7 +1376,7 @@ export const AdminTeams: React.FC = () => {
             ]}
           />
 
-          <AdminPanel title="Internal role matrix" description="Role-aligned focus derived from the server-provided role and division. It is not a self-reported proficiency score.">
+          <AdminPanel slug="skill-matrix-internal-role-matrix" title="Internal role matrix" description="Role-aligned focus derived from the server-provided role and division. It is not a self-reported proficiency score.">
             <div className="overflow-x-auto custom-scrollbar">
               <table className="ams-finance-table min-w-[900px] table-fixed border-separate border-spacing-0 text-xs">
                 <thead><tr>
@@ -1386,8 +1387,11 @@ export const AdminTeams: React.FC = () => {
                 </tr></thead>
                 <tbody>
                   {members.map((member) => (
-                    <tr key={member.id}>
-                      <td><ProfileIdentity profile={{ id: member.id, name: member.name, username: member.username }} showRole={false} /></td>
+                    <tr key={member.id} data-ams-slug={member.slug}>
+                      <td>
+                        <ProfileIdentity profile={{ id: member.id, name: member.name, username: member.username }} showRole={false} />
+                        <span className="mt-1 block font-mono text-[9px] text-muted/70">slug: {member.slug}</span>
+                      </td>
                       <td className="text-fg">{member.role || 'Not assigned'}</td>
                       <td className="text-muted">{member.division || 'Operations'}</td>
                       <td>
@@ -1400,7 +1404,7 @@ export const AdminTeams: React.FC = () => {
             </div>
           </AdminPanel>
 
-          <AdminPanel title="Vendor skill coverage" description={skillRows.length + ' distinct skills reported by the vendor directory.'}>
+          <AdminPanel slug="skill-matrix-vendor-skill-coverage" title="Vendor skill coverage" description={skillRows.length + ' distinct skills reported by the vendor directory.'}>
             <div className="overflow-x-auto custom-scrollbar">
               <table className="ams-finance-table min-w-[800px] table-fixed border-separate border-spacing-0 text-xs">
                 <thead><tr>
@@ -1437,7 +1441,8 @@ export const AdminTeams: React.FC = () => {
             ]}
           />
 
-          <AdminFilterBar searchValue={timeSearch} onSearchChange={setTimeSearch} searchPlaceholder="Search project, task, user..." searchLabel="Search time logs">
+          <div data-ams-feature-slug="time-logs-filters" data-ams-slug="time-logs-filters">
+            <AdminFilterBar searchValue={timeSearch} onSearchChange={setTimeSearch} searchPlaceholder="Search project, task, user..." searchLabel="Search time logs">
             <CustomSelect
               value={timeProject}
               onChange={setTimeProject}
@@ -1490,7 +1495,7 @@ export const AdminTeams: React.FC = () => {
             </AdminPanel>
           )}
 
-          <AdminPanel title="Time log ledger" description={filteredLogs.length + ' entries visible'}>
+          <AdminPanel slug="time-logs-ledger" title="Time log ledger" description={filteredLogs.length + ' entries visible'}>
             <div className="overflow-x-auto custom-scrollbar">
               {filteredLogs.length === 0 ? (
                 <div className="min-h-[180px] px-5 py-10 text-center">
