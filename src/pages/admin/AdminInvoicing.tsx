@@ -297,6 +297,11 @@ type FinanceQuotation = {
   createdAt: string;
   owner: string;
   invoiceId?: string;
+  items?: InvoiceLineItem[];
+  discountPercent?: number;
+  taxPercent?: number;
+  paymentTerms?: string;
+  notes?: string;
 };
 
 const STITCH_FINANCE_QUOTATIONS: FinanceQuotation[] = [
@@ -456,7 +461,19 @@ const normalizeFinanceQuotation = (raw: any): FinanceQuotation => ({
   validUntil: String(raw?.validUntil || raw?.validityPeriod || ''),
   createdAt: String(raw?.createdAt || raw?.createdDate || ''),
   owner: String(raw?.owner || 'Finance'),
-  invoiceId: raw?.invoiceId || raw?.invoice?.id || undefined
+  invoiceId: raw?.invoiceId || raw?.invoice?.id || undefined,
+  items: Array.isArray(raw?.items) ? raw.items.map((item: any, index: number) => ({
+    id: String(item?.id || 'quotation-item-' + index),
+    slug: slugifyFinance(item?.slug || String(raw?.slug || raw?.quotationNumber || 'quotation') + '-' + String(item?.description || item?.id || index)),
+    description: String(item?.description || ''),
+    quantity: Number(item?.quantity) || 1,
+    unitPrice: Number(item?.unitPrice) || Number(item?.amount) || 0,
+    amount: Number(item?.amount) || ((Number(item?.quantity) || 1) * (Number(item?.unitPrice) || 0))
+  })) : [],
+  discountPercent: Number(raw?.discountPercent) || 0,
+  taxPercent: Number(raw?.taxPercent) || 0,
+  paymentTerms: String(raw?.paymentTerms || ''),
+  notes: String(raw?.notes || '')
 });
 
 const StatusBadge = ({ status }: { status: InvoiceStatus }) => (
@@ -709,7 +726,12 @@ export const AdminInvoicing: React.FC = () => {
   const [quotationClientName, setQuotationClientName] = useState('');
   const [quotationClientCompany, setQuotationClientCompany] = useState('');
   const [quotationAmount, setQuotationAmount] = useState(0);
+  const [quotationItems, setQuotationItems] = useState<InvoiceLineItem[]>([emptyLineItem()]);
+  const [quotationDiscountPercent, setQuotationDiscountPercent] = useState(0);
+  const [quotationTaxPercent, setQuotationTaxPercent] = useState(11);
   const [quotationValidUntil, setQuotationValidUntil] = useState(getDateInputValue(30));
+  const [quotationPaymentTerms, setQuotationPaymentTerms] = useState('Bank Transfer Net 14');
+  const [quotationNotes, setQuotationNotes] = useState('');
   const [quotationStatus, setQuotationStatus] = useState<FinanceQuotationStatus>('draft');
 
   const [vendorPaymentSearch, setVendorPaymentSearch] = useState('');
@@ -2162,13 +2184,34 @@ export const AdminInvoicing: React.FC = () => {
     value: quotations.filter((quotation) => quotation.status !== 'rejected').reduce((sum, quotation) => sum + quotation.total, 0)
   }), [quotations]);
 
+  const quotationPreviewTotals = useMemo(
+    () => computeInvoiceTotals(quotationItems, Number(quotationTaxPercent) || 0, Number(quotationDiscountPercent) || 0),
+    [quotationItems, quotationTaxPercent, quotationDiscountPercent]
+  );
+
+  const updateQuotationItem = (index: number, patch: Partial<InvoiceLineItem>) => {
+    setQuotationItems((current) => current.map((item, itemIndex) => {
+      if (itemIndex !== index) return item;
+      const next = { ...item, ...patch };
+      return { ...next, amount: Math.max(0, Number(next.quantity) || 0) * Math.max(0, Number(next.unitPrice) || 0) };
+    }));
+  };
+
+  const addQuotationItem = () => setQuotationItems((current) => [...current, emptyLineItem()]);
+  const removeQuotationItem = (index: number) => setQuotationItems((current) => current.length > 1 ? current.filter((_, itemIndex) => itemIndex !== index) : current);
+
   const resetQuotationForm = () => {
     setEditingQuotation(null);
     setQuotationTitle('');
     setQuotationClientName('');
     setQuotationClientCompany('');
     setQuotationAmount(0);
+    setQuotationItems([emptyLineItem()]);
+    setQuotationDiscountPercent(0);
+    setQuotationTaxPercent(11);
     setQuotationValidUntil(getDateInputValue(30));
+    setQuotationPaymentTerms('Bank Transfer Net 14');
+    setQuotationNotes('');
     setQuotationStatus('draft');
   };
 
@@ -2183,7 +2226,12 @@ export const AdminInvoicing: React.FC = () => {
     setQuotationClientName(quotation.clientName);
     setQuotationClientCompany(quotation.clientCompany);
     setQuotationAmount(quotation.total);
+    setQuotationItems(quotation.items?.length ? quotation.items.map((item) => ({ ...item })) : [{ ...emptyLineItem(), description: quotation.title, unitPrice: quotation.total, amount: quotation.total }]);
+    setQuotationDiscountPercent(Number(quotation.discountPercent || 0));
+    setQuotationTaxPercent(Number(quotation.taxPercent || 11));
     setQuotationValidUntil(quotation.validUntil);
+    setQuotationPaymentTerms(quotation.paymentTerms || 'Bank Transfer Net 14');
+    setQuotationNotes(quotation.notes || '');
     setQuotationStatus(quotation.status);
     setQuotationModalOpen(true);
   };
@@ -2192,7 +2240,11 @@ export const AdminInvoicing: React.FC = () => {
     event.preventDefault();
     if (!canManageInvoices || quotationSaving) return;
 
-    if (!quotationTitle.trim() || !quotationClientName.trim() || !quotationClientCompany.trim() || !Number.isFinite(quotationAmount) || quotationAmount <= 0) {
+    const validQuotationItems = quotationItems
+      .map((item) => ({ ...item, description: item.description.trim(), quantity: Number(item.quantity) || 0, unitPrice: Number(item.unitPrice) || 0, amount: (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0) }))
+      .filter((item) => item.description && item.quantity > 0 && item.unitPrice > 0);
+
+    if (!quotationTitle.trim() || !quotationClientName.trim() || !quotationClientCompany.trim() || validQuotationItems.length === 0) {
       showNotice('danger', language === 'id'
         ? 'Judul, klien, perusahaan, dan nominal quotation wajib diisi.'
         : 'Quotation title, client, company, and a valid amount are required.');
@@ -2205,23 +2257,26 @@ export const AdminInvoicing: React.FC = () => {
     }
 
     setQuotationSaving(true);
+    const quotationSlug = editingQuotation?.slug || slugifyFinance(quotationClientCompany.trim() + '-' + quotationTitle.trim());
     const payload = {
-      slug: editingQuotation?.slug || slugifyFinance(quotationClientCompany.trim() + '-' + quotationTitle.trim()),
+      slug: quotationSlug,
       title: quotationTitle.trim(),
       clientName: quotationClientName.trim(),
       company: quotationClientCompany.trim(),
       currency,
       validityPeriod: quotationValidUntil,
-      taxPercent: 11,
-      discount: 0,
-      paymentTerms: 'Bank Transfer Net 14',
-      notes: 'Finance module quotation workspace.',
-      items: [{
-        id: 'quotation-item-' + Date.now(),
-        description: quotationTitle.trim(),
-        quantity: 1,
-        unitPrice: Math.round(quotationAmount)
-      }],
+      taxPercent: Math.min(100, Math.max(0, Number(quotationTaxPercent) || 0)),
+      discount: Math.round(Number(quotationPreviewTotals.discountAmount) || 0),
+      paymentTerms: quotationPaymentTerms.trim(),
+      notes: quotationNotes.trim(),
+      items: validQuotationItems.map((item, index) => ({
+        id: item.id || 'quotation-item-' + Date.now() + '-' + index,
+        slug: item.slug || slugifyFinance(quotationSlug + '-' + item.description + '-' + index),
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: Math.round(item.unitPrice),
+        amount: Math.round(item.amount)
+      })),
       ...(editingQuotation ? { status: quotationStatusLabel(quotationStatus) } : {})
     };
 
@@ -2235,13 +2290,18 @@ export const AdminInvoicing: React.FC = () => {
           title: quotationTitle.trim(),
           clientName: quotationClientName.trim(),
           clientCompany: quotationClientCompany.trim(),
-          total: Math.round(quotationAmount),
+          total: Math.round(quotationPreviewTotals.total),
           currency,
           status: quotationStatus,
           validUntil: quotationValidUntil,
           createdAt: editingQuotation?.createdAt || now.slice(0, 10),
           owner: editingQuotation?.owner || 'Fikri Nurlete',
-          invoiceId: editingQuotation?.invoiceId
+          invoiceId: editingQuotation?.invoiceId,
+          items: validQuotationItems,
+          discountPercent: Number(quotationDiscountPercent) || 0,
+          taxPercent: Number(quotationTaxPercent) || 0,
+          paymentTerms: quotationPaymentTerms.trim(),
+          notes: quotationNotes.trim()
         };
         setQuotations((current) => editingQuotation
           ? current.map((item) => item.id === editingQuotation.id ? localQuotation : item)
