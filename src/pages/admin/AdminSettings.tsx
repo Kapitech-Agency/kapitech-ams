@@ -506,8 +506,12 @@ export const AdminSettings: React.FC = () => {
       setSecurityStatusMessage({ success: false, text: 'New password confirmation does not match.' });
       return;
     }
-    if (newPassword.length < 8) {
-      setSecurityStatusMessage({ success: false, text: 'New password must be at least 8 characters long.' });
+    if (newPassword.length < 12 || newPassword.length > 128) {
+      setSecurityStatusMessage({ success: false, text: 'New password must be 12 to 128 characters.' });
+      return;
+    }
+    if (newPassword === currentPassword) {
+      setSecurityStatusMessage({ success: false, text: 'New password must be different from the current password.' });
       return;
     }
 
