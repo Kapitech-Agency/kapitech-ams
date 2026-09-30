@@ -1665,7 +1665,7 @@ export const AdminProjects: React.FC = () => {
                         className={[
                           'ams-project-kanban-lane flex min-h-[680px] w-[352px] shrink-0 self-stretch flex-col overflow-visible rounded-card border transition-[border-color,background-color,box-shadow] duration-200 sm:w-[390px]',
                           isDropTarget
-                            ? 'border-accent/50 bg-accent/5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--accent)_18%,transparent)]'
+                            ? 'border-accent/50 bg-accent/5'
                             : 'border-line/80',
                         ].join(' ')}
                         data-drop-target={isDropTarget ? 'true' : 'false'}
@@ -1755,7 +1755,7 @@ export const AdminProjects: React.FC = () => {
                                 <article
                                   key={project.id}
                                   aria-grabbed={isDragging}
-                                  className={'ams-project-kanban-card group cursor-default select-none rounded-card border border-line/90 p-4 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150 hover:-translate-y-px hover:border-accent/40 hover:shadow-[0_10px_28px_color-mix(in_srgb,var(--bg)_55%,transparent)] ' + (
+                                  className={'ams-project-kanban-card group cursor-default select-none rounded-card border border-line/90 p-4 transition-[transform,opacity,border-color,background-color] duration-150 hover:-translate-y-px hover:border-accent/40 ' + (
                                     isDragging ? 'rotate-[1deg] scale-[0.98] border-accent/50 opacity-70' : movingProjectId === project.id ? 'border-accent/35 opacity-80' : ''
                                   )}
                                 >
@@ -1773,7 +1773,7 @@ export const AdminProjects: React.FC = () => {
                                         tabIndex={canManageProjects && movingProjectId !== project.id ? 0 : -1}
                                         aria-label={canManageProjects ? 'Drag project' : 'Project status'}
                                         className={[
-                                          'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted shadow-sm transition-[background-color,border-color,color,transform] select-none',
+                                          'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted transition-[background-color,border-color,color,transform] select-none',
                                           canManageProjects && movingProjectId !== project.id
                                             ? 'cursor-grab touch-none hover:border-accent/35 hover:bg-panel-hover hover:text-fg active:cursor-grabbing'
                                             : 'cursor-default opacity-70',
@@ -1875,7 +1875,7 @@ export const AdminProjects: React.FC = () => {
                             className={[
                               'mt-auto min-h-[180px] flex-1 rounded-card border border-dashed px-3 py-5 transition-[background-color,border-color,box-shadow] duration-150',
                               isDropTarget
-                                ? 'border-accent/40 bg-accent/8 shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--accent)_10%,transparent)]'
+                                ? 'border-accent/40 bg-accent/8'
                                 : 'border-line/40 bg-bg/12'
                             ].join(' ')}
                           >
@@ -2157,8 +2157,8 @@ export const AdminProjects: React.FC = () => {
                             }
                           }}
                           className={[
-                            'flex w-[320px] shrink-0 self-start flex-col rounded-card border bg-panel/35 transition-[border-color,background-color,box-shadow] duration-150 sm:w-[340px]',
-                            isDropTarget ? 'border-accent/45 bg-accent/5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--accent)_14%,transparent)]' : 'border-line/80',
+                            'flex w-[320px] shrink-0 self-start flex-col rounded-card border bg-panel/35 transition-[border-color,background-color] duration-150 sm:w-[340px]',
+                            isDropTarget ? 'border-accent/45 bg-accent/5' : 'border-line/80',
                           ].join(' ')}
                         >
                           <div className="shrink-0 border-b border-line/80 bg-panel/80 px-4 py-4 backdrop-blur-sm">
@@ -2187,7 +2187,7 @@ export const AdminProjects: React.FC = () => {
                           </div>
 
                           <div className={[
-                            'min-h-[860px] flex flex-col gap-2.5 bg-bg/30 p-3 pb-[280px] transition-colors duration-150',
+                            'min-h-[860px] flex flex-col gap-2.5 bg-bg/30 p-3 pb-6 transition-colors duration-150',
                             isDropTarget ? 'bg-accent/5' : '',
                           ].join(' ')}>
                             {draggingTaskId && canManageKanbanTasks && (
@@ -2236,7 +2236,7 @@ export const AdminProjects: React.FC = () => {
                                       'group select-none rounded-card border bg-panel p-3.5 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150',
                                       canManageKanbanTasks ? '' : 'cursor-default',
                                       'border-line hover:border-accent/30 hover:bg-panel-hover',
-                                      isDragging ? 'rotate-[0.6deg] scale-[0.98] opacity-50 shadow-lg' : '',
+                                      isDragging ? 'rotate-[0.6deg] scale-[0.98] opacity-50' : '',
                                     ].join(' ')}
                                   >
                                     <div className="flex items-start gap-2.5">
