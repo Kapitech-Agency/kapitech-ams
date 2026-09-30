@@ -1,7 +1,111 @@
 import React from 'react';
 import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
 import { CustomSelect } from '../ui/CustomSelect';
 import { cn } from '../../lib/cn';
+
+
+export interface AdminPageShellProps {
+  children: React.ReactNode;
+  className?: string;
+  featureSlug?: string;
+}
+
+export const AdminPageShell: React.FC<AdminPageShellProps> = ({
+  children,
+  className,
+  featureSlug
+}) => (
+  <div
+    data-ams-feature-slug={featureSlug}
+    className={cn('min-h-full min-w-0 space-y-6 pb-8', className)}
+  >
+    {children}
+  </div>
+);
+
+export interface AdminSectionTabItem {
+  key: string;
+  label: string;
+  to: string;
+}
+
+export interface AdminSectionTabsProps {
+  items: AdminSectionTabItem[];
+  activeKey: string;
+  ariaLabel: string;
+  className?: string;
+}
+
+export const AdminSectionTabs: React.FC<AdminSectionTabsProps> = ({
+  items,
+  activeKey,
+  ariaLabel,
+  className
+}) => (
+  <nav
+    aria-label={ariaLabel}
+    className={cn(
+      'flex max-w-full min-w-0 items-center gap-1 overflow-x-auto rounded-control border border-line bg-panel p-1 ams-topnav-scroll',
+      className
+    )}
+  >
+    {items.map((item) => {
+      const active = activeKey === item.key;
+      return (
+        <NavLink
+          key={item.key}
+          to={item.to}
+          end
+          aria-current={active ? 'page' : undefined}
+          className={cn(
+            'inline-flex min-h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+            active
+              ? 'border-accent/25 bg-accent/10 font-semibold text-fg'
+              : 'border-transparent text-muted hover:bg-bg hover:text-fg'
+          )}
+        >
+          {item.label}
+        </NavLink>
+      );
+    })}
+  </nav>
+);
+
+export interface AdminStatusBadgeProps {
+  tone?: 'success' | 'warning' | 'danger' | 'info' | 'neutral';
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+}
+
+export const AdminStatusBadge: React.FC<AdminStatusBadgeProps> = ({
+  tone = 'neutral',
+  icon,
+  children,
+  className
+}) => {
+  const toneClasses = {
+    success: 'border-success/20 bg-success/10 text-success',
+    warning: 'border-warning/20 bg-warning/10 text-warning',
+    danger: 'border-danger/20 bg-danger/10 text-danger',
+    info: 'border-info/20 bg-info/10 text-info',
+    neutral: 'border-line bg-bg text-muted'
+  } as const;
+
+  return (
+    <span
+      className={cn(
+        'inline-flex min-h-6 items-center gap-1.5 rounded-badge border px-2 py-1 text-[11px] font-semibold',
+        toneClasses[tone],
+        className
+      )}
+    >
+      {icon}
+      {children}
+    </span>
+  );
+};
 
 export interface AdminModuleHeaderProps {
   title: React.ReactNode;
@@ -9,6 +113,7 @@ export interface AdminModuleHeaderProps {
   eyebrow?: React.ReactNode;
   icon?: React.ReactNode;
   actions?: React.ReactNode;
+  footer?: React.ReactNode;
   className?: string;
 }
 
@@ -21,7 +126,7 @@ export const AdminModuleHeader: React.FC<AdminModuleHeaderProps> = ({
   className
 }) => (
   <header className={cn(
-    'ams-dashboard-header mb-6 flex flex-col gap-3 border-b border-line pb-4 sm:flex-row sm:items-center sm:justify-between',
+    'ams-page-header mb-6 flex flex-col gap-3 border-b border-line pb-4 sm:flex-row sm:items-center sm:justify-between',
     className
   )}>
     <div className="min-w-0">
@@ -153,6 +258,7 @@ export const AdminFilterBar: React.FC<AdminFilterBarProps> = ({
   searchLabel = 'Search',
   children,
   actions,
+  footer,
   className,
   slug
 }) => (
@@ -187,6 +293,11 @@ export const AdminFilterBar: React.FC<AdminFilterBarProps> = ({
         </div>
       )}
     </div>
+    {footer && (
+      <div className="mt-3 border-t border-line pt-3">
+        {footer}
+      </div>
+    )}
   </section>
 );
 
@@ -244,7 +355,7 @@ export const AdminTablePagination: React.FC<AdminTablePaginationProps> = ({
   onPageChange,
   onPageSizeChange,
   itemLabel = 'records',
-  pageSizeOptions = [6, 10, 20, 50],
+  pageSizeOptions = [10, 25, 50],
   slug,
   secondaryLabel
 }) => {
