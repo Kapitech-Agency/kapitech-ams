@@ -365,9 +365,9 @@ export const AdminTeams: React.FC = () => {
       ]);
 
       let nextMembers: TeamMember[] = [];
-    let nextVendors: VendorRecord[] = [];
-    let nextProjects: ProjectRecord[] = [];
-    let nextLogs: TimeLog[] = [];
+      let nextVendors: VendorRecord[] = [];
+      let nextProjects: ProjectRecord[] = [];
+      let nextLogs: TimeLog[] = [];
 
     if (memberRes.success && Array.isArray(memberRes.data?.assignees)) {
       nextMembers = (memberRes.data!.assignees as Omit<TeamMember, 'slug'>[]).map((member) => ({
