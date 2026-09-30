@@ -297,6 +297,10 @@ type FinanceQuotation = {
   createdAt: string;
   owner: string;
   invoiceId?: string;
+  taxPercent?: number;
+  discountPercent?: number;
+  paymentTerms?: string;
+  notes?: string;
 };
 
 const STITCH_FINANCE_QUOTATIONS: FinanceQuotation[] = [
@@ -456,7 +460,11 @@ const normalizeFinanceQuotation = (raw: any): FinanceQuotation => ({
   validUntil: String(raw?.validUntil || raw?.validityPeriod || ''),
   createdAt: String(raw?.createdAt || raw?.createdDate || ''),
   owner: String(raw?.owner || 'Finance'),
-  invoiceId: raw?.invoiceId || raw?.invoice?.id || undefined
+  invoiceId: raw?.invoiceId || raw?.invoice?.id || undefined,
+  taxPercent: Number(raw?.taxPercent) || 0,
+  discountPercent: Number(raw?.discountPercent) || 0,
+  paymentTerms: String(raw?.paymentTerms || ''),
+  notes: String(raw?.notes || '')
 });
 
 const StatusBadge = ({ status }: { status: InvoiceStatus }) => (
@@ -720,7 +728,11 @@ export const AdminInvoicing: React.FC = () => {
   const [quotationClientName, setQuotationClientName] = useState('');
   const [quotationClientCompany, setQuotationClientCompany] = useState('');
   const [quotationAmount, setQuotationAmount] = useState(0);
+  const [quotationDiscountPercent, setQuotationDiscountPercent] = useState(0);
+  const [quotationTaxPercent, setQuotationTaxPercent] = useState(11);
   const [quotationValidUntil, setQuotationValidUntil] = useState(getDateInputValue(30));
+  const [quotationPaymentTerms, setQuotationPaymentTerms] = useState('Bank Transfer Net 14');
+  const [quotationNotes, setQuotationNotes] = useState('');
   const [quotationStatus, setQuotationStatus] = useState<FinanceQuotationStatus>('draft');
 
   const [vendorPaymentSearch, setVendorPaymentSearch] = useState('');
@@ -2166,7 +2178,11 @@ export const AdminInvoicing: React.FC = () => {
     setQuotationClientName('');
     setQuotationClientCompany('');
     setQuotationAmount(0);
+    setQuotationDiscountPercent(0);
+    setQuotationTaxPercent(11);
     setQuotationValidUntil(getDateInputValue(30));
+    setQuotationPaymentTerms('Bank Transfer Net 14');
+    setQuotationNotes('');
     setQuotationStatus('draft');
   };
 
@@ -2181,7 +2197,11 @@ export const AdminInvoicing: React.FC = () => {
     setQuotationClientName(quotation.clientName);
     setQuotationClientCompany(quotation.clientCompany);
     setQuotationAmount(quotation.total);
+    setQuotationDiscountPercent(Number(quotation.discountPercent || 0));
+    setQuotationTaxPercent(Number(quotation.taxPercent || 11));
     setQuotationValidUntil(quotation.validUntil);
+    setQuotationPaymentTerms(quotation.paymentTerms || 'Bank Transfer Net 14');
+    setQuotationNotes(quotation.notes || '');
     setQuotationStatus(quotation.status);
     setQuotationModalOpen(true);
   };
@@ -2210,10 +2230,10 @@ export const AdminInvoicing: React.FC = () => {
       company: quotationClientCompany.trim(),
       currency,
       validityPeriod: quotationValidUntil,
-      taxPercent: 11,
-      discount: 0,
-      paymentTerms: 'Bank Transfer Net 14',
-      notes: 'Finance module quotation workspace.',
+      taxPercent: Math.min(100, Math.max(0, Number(quotationTaxPercent) || 0)),
+      discount: Math.max(0, Math.round(Number(quotationAmount) * (Number(quotationDiscountPercent) || 0) / 100)),
+      paymentTerms: quotationPaymentTerms.trim(),
+      notes: quotationNotes.trim(),
       items: [{
         id: 'quotation-item-' + Date.now(),
         description: quotationTitle.trim(),
@@ -3323,12 +3343,28 @@ export const AdminInvoicing: React.FC = () => {
               <input id="finance-quotation-company" required maxLength={160} value={quotationClientCompany} onChange={(event) => setQuotationClientCompany(event.target.value)} className={fieldClass} placeholder="Company / account" />
             </div>
             <div>
-              <label htmlFor="finance-quotation-amount" className="mb-1.5 block text-xs font-medium text-muted">Quoted amount *</label>
+              <label htmlFor="finance-quotation-amount" className="mb-1.5 block text-xs font-medium text-muted">Subtotal *</label>
               <input id="finance-quotation-amount" required min="0.01" max="1000000000000" step="0.01" type="number" value={quotationAmount || ''} onChange={(event) => setQuotationAmount(Number(event.target.value))} className={fieldClass} />
+            </div>
+            <div>
+              <label htmlFor="finance-quotation-discount" className="mb-1.5 block text-xs font-medium text-muted">Discount %</label>
+              <input id="finance-quotation-discount" min="0" max="100" step="0.01" type="number" value={quotationDiscountPercent} onChange={(event) => setQuotationDiscountPercent(Number(event.target.value))} className={fieldClass} />
+            </div>
+            <div>
+              <label htmlFor="finance-quotation-tax" className="mb-1.5 block text-xs font-medium text-muted">Tax %</label>
+              <input id="finance-quotation-tax" min="0" max="100" step="0.01" type="number" value={quotationTaxPercent} onChange={(event) => setQuotationTaxPercent(Number(event.target.value))} className={fieldClass} />
             </div>
             <div>
               <label htmlFor="finance-quotation-valid-until" className="mb-1.5 block text-xs font-medium text-muted">Valid until *</label>
               <input id="finance-quotation-valid-until" required type="date" value={quotationValidUntil} onChange={(event) => setQuotationValidUntil(event.target.value)} className={fieldClass} />
+            </div>
+            <div>
+              <label htmlFor="finance-quotation-payment-terms" className="mb-1.5 block text-xs font-medium text-muted">Payment terms</label>
+              <input id="finance-quotation-payment-terms" maxLength={200} value={quotationPaymentTerms} onChange={(event) => setQuotationPaymentTerms(event.target.value)} className={fieldClass} placeholder="e.g. Bank Transfer Net 14" />
+            </div>
+            <div className="sm:col-span-2">
+              <label htmlFor="finance-quotation-notes" className="mb-1.5 block text-xs font-medium text-muted">Notes</label>
+              <textarea id="finance-quotation-notes" maxLength={2000} rows={3} value={quotationNotes} onChange={(event) => setQuotationNotes(event.target.value)} className={fieldClass + ' h-auto py-2.5'} placeholder="Commercial notes, scope assumptions, or approval context" />
             </div>
             {editingQuotation && (
               <div>
@@ -3344,11 +3380,20 @@ export const AdminInvoicing: React.FC = () => {
             )}
           </div>
           <div className="rounded-card border border-line bg-bg px-4 py-3">
-            <div className="flex items-center justify-between gap-3 text-xs">
-              <span className="text-muted">Preview total</span>
-              <span className="font-semibold tabular-nums text-fg">{formatNativeAmount(Number(quotationAmount) || 0, currency, true)}</span>
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between gap-3"><span className="text-muted">Subtotal</span><span className="tabular-nums text-fg">{formatNativeAmount(Number(quotationAmount) || 0, currency, true)}</span></div>
+              <div className="flex justify-between gap-3"><span className="text-muted">Discount</span><span className="tabular-nums text-fg">- {formatNativeAmount(Math.round((Number(quotationAmount) || 0) * (Number(quotationDiscountPercent) || 0) / 100), currency, true)}</span></div>
+              <div className="flex justify-between gap-3"><span className="text-muted">Tax</span><span className="tabular-nums text-fg">{formatNativeAmount(Math.round(((Number(quotationAmount) || 0) - Math.round((Number(quotationAmount) || 0) * (Number(quotationDiscountPercent) || 0) / 100)) * (Number(quotationTaxPercent) || 0) / 100), currency, true)}</span></div>
+              <div className="flex justify-between gap-3 border-t border-line pt-2 font-semibold"><span className="text-fg">Preview total</span><span className="tabular-nums text-fg">{formatNativeAmount(
+                Math.round(
+                  ((Number(quotationAmount) || 0) - Math.round((Number(quotationAmount) || 0) * (Number(quotationDiscountPercent) || 0) / 100))
+                  * (1 + (Number(quotationTaxPercent) || 0) / 100)
+                ),
+                currency,
+                true
+              )}</span></div>
             </div>
-            <p className="mt-1 text-[10px] text-muted">Currency follows the active Finance currency switch.</p>
+            <p className="mt-2 text-[10px] text-muted">Currency follows the active Finance currency switch.</p>
           </div>
         </form>
       </Drawer>
@@ -3380,30 +3425,28 @@ export const AdminInvoicing: React.FC = () => {
           <div className="space-y-5">
             <div className="flex flex-col gap-4 rounded-card border border-line bg-bg p-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="text-[10px] uppercase tracking-[0.08em] text-muted">Quotation</p>
+                <p className="text-[10px] font-medium text-muted">Quotation</p>
                 <p className="mt-1 text-lg font-semibold text-fg">{quotationDetail.quotationNumber}</p>
                 <p className="mt-1 text-xs text-muted">{quotationDetail.title}</p>
               </div>
               <span className="inline-flex min-h-7 items-center rounded-badge border border-line bg-panel px-2 py-1 text-xs font-semibold text-fg">{quotationStatusLabel(quotationDetail.status)}</span>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] uppercase tracking-[0.08em] text-muted">Client</p><p className="mt-1 text-sm font-medium text-fg">{quotationDetail.clientCompany}</p><p className="mt-0.5 text-xs text-muted">{quotationDetail.clientName}</p></div>
-              <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] uppercase tracking-[0.08em] text-muted">Commercial value</p><p className="mt-1 text-sm font-semibold tabular-nums text-fg">{formatNativeAmount(quotationDetail.total, quotationDetail.currency, true)}</p><p className="mt-0.5 text-xs text-muted">Valid until {quotationDetail.validUntil}</p></div>
-              <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] uppercase tracking-[0.08em] text-muted">Owner</p><div className="mt-1"><ProfileIdentity profile={{ name: quotationDetail.owner, role: undefined, contextLabel: 'Quotation owner' }} showRole={false} /></div></div>
-              <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] uppercase tracking-[0.08em] text-muted">Created</p><p className="mt-1 text-sm font-medium text-fg">{quotationDetail.createdAt}</p></div>
+              <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] font-medium text-muted">Client</p><p className="mt-1 text-sm font-medium text-fg">{quotationDetail.clientCompany}</p><p className="mt-0.5 text-xs text-muted">{quotationDetail.clientName}</p></div>
+              <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] font-medium text-muted">Commercial value</p><p className="mt-1 text-sm font-semibold tabular-nums text-fg">{formatNativeAmount(quotationDetail.total, quotationDetail.currency, true)}</p><p className="mt-0.5 text-xs text-muted">Valid until {quotationDetail.validUntil}</p></div>
+              <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] font-medium text-muted">Owner</p><div className="mt-1"><ProfileIdentity profile={{ name: quotationDetail.owner, role: undefined, contextLabel: 'Quotation owner' }} showRole={false} /></div></div>
+              <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] font-medium text-muted">Created</p><p className="mt-1 text-sm font-medium text-fg">{quotationDetail.createdAt}</p></div>
             </div>
             <div className="rounded-card border border-line bg-panel p-4">
               <p className="text-xs font-semibold text-fg">Next actions</p>
               <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                {([
-                  ['review', 'Internal review'],
-                  ['approved', 'Approve'],
-                  ['sent', 'Mark sent']
-                ] as Array<[FinanceQuotationStatus, string]>).map(([status, label]) => (
-                  <button key={status} type="button" onClick={() => void updateQuotationStatus(quotationDetail, status)} className={actionClass + ' w-full'} disabled={!canManageInvoices}>
-                    {label}
-                  </button>
-                ))}
+                {getQuotationStatusOptions(quotationDetail.status)
+                  .filter((option) => option.value !== quotationDetail.status)
+                  .map((option) => (
+                    <button key={option.value} type="button" onClick={() => void updateQuotationStatus(quotationDetail, option.value)} className={actionClass + ' w-full'} disabled={!canManageInvoices}>
+                      {option.label}
+                    </button>
+                  ))}
               </div>
             </div>
           </div>
