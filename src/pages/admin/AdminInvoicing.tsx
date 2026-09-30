@@ -26,7 +26,7 @@ import {
   WalletCards,
   X
 } from 'lucide-react';
-import { AgencyExpense, AgencyInvoice, InvoiceLineItem, InvoiceStatus, INITIAL_DEFAULT_EXPENSES, INITIAL_DEFAULT_INVOICES, computeInvoiceTotals, computeFinancialMetrics, getMonthlyCashFlowSeries } from '../../lib/financeStore';
+import { AgencyExpense, AgencyInvoice, InvoiceLineItem, InvoiceStatus, INITIAL_DEFAULT_EXPENSES, INITIAL_DEFAULT_INVOICES, computeInvoiceTotals, computeFinancialMetrics, getMonthlyCashFlowSeries, slugifyFinance, normalizeFinanceInvoice, normalizeFinanceExpense } from '../../lib/financeStore';
 import { AgencyVendor, getAgencyVendors } from '../../lib/vendorStore';
 import { CurrencyCode, CURRENCY_EVENT, getActiveCurrency, setActiveCurrency, formatNativeAmount } from '../../lib/currency';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -69,6 +69,7 @@ type VendorPaymentStatus = 'scheduled' | 'partial' | 'paid' | 'overdue';
 
 type VendorPaymentRecord = {
   id: string;
+  slug: string;
   vendor: AgencyVendor;
   contract: AgencyVendor['contracts'][number];
   dueDate: string;
@@ -183,6 +184,7 @@ const isDueSoonInvoice = (invoice: AgencyInvoice) => {
 
 type FinanceIncomeRow = {
   id: string;
+  slug: string;
   invoiceId: string;
   invoiceNumber: string;
   clientCompany: string;
@@ -283,6 +285,7 @@ type QuotationSort = 'newest' | 'oldest' | 'value_high' | 'value_low' | 'valid_u
 
 type FinanceQuotation = {
   id: string;
+  slug: string;
   quotationNumber: string;
   title: string;
   clientName: string;
@@ -297,17 +300,18 @@ type FinanceQuotation = {
 };
 
 const STITCH_FINANCE_QUOTATIONS: FinanceQuotation[] = [
-  { id: 'quote_slug_001', quotationNumber: 'QTN-2026-018', title: 'Enterprise Website Redesign & Design System', clientName: 'Nadia Wijaya', clientCompany: 'Astra Digital Ventures', total: 285000000, currency: 'IDR', status: 'sent', validUntil: '2026-10-10', createdAt: '2026-09-23', owner: 'Fikri Nurlete' },
-  { id: 'quote_slug_002', quotationNumber: 'QTN-2026-017', title: 'Fintech Product UX Audit & Prototype', clientName: 'Raka Prasetyo', clientCompany: 'Finova Labs', total: 92000000, currency: 'IDR', status: 'review', validUntil: '2026-10-04', createdAt: '2026-09-21', owner: 'Strategy Team' },
-  { id: 'quote_slug_003', quotationNumber: 'QTN-2026-016', title: 'Cloud Migration & Platform Hardening', clientName: 'Sarah Jenkins', clientCompany: 'Telkomsel Innovation Labs', total: 175000000, currency: 'IDR', status: 'approved', validUntil: '2026-10-16', createdAt: '2026-09-18', owner: 'Technology Team' },
-  { id: 'quote_slug_004', quotationNumber: 'QTN-2026-015', title: '3D Brand Experience Sprint', clientName: 'Jessica Halim', clientCompany: 'ShopeePay Regional Tech', total: 640000000, currency: 'IDR', status: 'accepted', validUntil: '2026-09-29', createdAt: '2026-09-12', owner: 'Creative Team', invoiceId: 'slug-inv-qtn-015' },
-  { id: 'quote_slug_005', quotationNumber: 'QTN-2026-014', title: 'Security Portal Discovery', clientName: 'Reza Pratama', clientCompany: 'Mandiri FinTech Division', total: 145000000, currency: 'IDR', status: 'draft', validUntil: '2026-10-22', createdAt: '2026-09-08', owner: 'Fikri Nurlete' },
-  { id: 'quote_slug_006', quotationNumber: 'QTN-2026-013', title: 'React Native Commerce App', clientName: 'Kevin Wijaya', clientCompany: 'Nusa Cloud Systems', total: 128000000, currency: 'IDR', status: 'rejected', validUntil: '2026-09-26', createdAt: '2026-09-03', owner: 'Product Team' }
+  { id: 'quote_slug_001', slug: 'enterprise-website-redesign-design-system', quotationNumber: 'QTN-2026-018', title: 'Enterprise Website Redesign & Design System', clientName: 'Nadia Wijaya', clientCompany: 'Astra Digital Ventures', total: 285000000, currency: 'IDR', status: 'sent', validUntil: '2026-10-10', createdAt: '2026-09-23', owner: 'Fikri Nurlete' },
+  { id: 'quote_slug_002', slug: 'fintech-product-ux-audit-prototype', quotationNumber: 'QTN-2026-017', title: 'Fintech Product UX Audit & Prototype', clientName: 'Raka Prasetyo', clientCompany: 'Finova Labs', total: 92000000, currency: 'IDR', status: 'review', validUntil: '2026-10-04', createdAt: '2026-09-21', owner: 'Strategy Team' },
+  { id: 'quote_slug_003', slug: 'cloud-migration-platform-hardening', quotationNumber: 'QTN-2026-016', title: 'Cloud Migration & Platform Hardening', clientName: 'Sarah Jenkins', clientCompany: 'Telkomsel Innovation Labs', total: 175000000, currency: 'IDR', status: 'approved', validUntil: '2026-10-16', createdAt: '2026-09-18', owner: 'Technology Team' },
+  { id: 'quote_slug_004', slug: '3d-brand-experience-sprint', quotationNumber: 'QTN-2026-015', title: '3D Brand Experience Sprint', clientName: 'Jessica Halim', clientCompany: 'ShopeePay Regional Tech', total: 640000000, currency: 'IDR', status: 'accepted', validUntil: '2026-09-29', createdAt: '2026-09-12', owner: 'Creative Team', invoiceId: 'slug-inv-qtn-015' },
+  { id: 'quote_slug_005', slug: 'security-portal-discovery', quotationNumber: 'QTN-2026-014', title: 'Security Portal Discovery', clientName: 'Reza Pratama', clientCompany: 'Mandiri FinTech Division', total: 145000000, currency: 'IDR', status: 'draft', validUntil: '2026-10-22', createdAt: '2026-09-08', owner: 'Fikri Nurlete' },
+  { id: 'quote_slug_006', slug: 'react-native-commerce-app', quotationNumber: 'QTN-2026-013', title: 'React Native Commerce App', clientName: 'Kevin Wijaya', clientCompany: 'Nusa Cloud Systems', total: 128000000, currency: 'IDR', status: 'rejected', validUntil: '2026-09-26', createdAt: '2026-09-03', owner: 'Product Team' }
 ];
 
 const STITCH_FINANCE_RETAINER_INVOICES: AgencyInvoice[] = [
   {
     id: 'retainer_demo_001',
+    slug: 'kapi-ret-2026-001-astra-digital-ventures',
     invoiceNumber: 'KAPI-RET-2026-001',
     type: 'invoice',
     clientName: 'Nadia Wijaya',
@@ -336,6 +340,7 @@ const STITCH_FINANCE_RETAINER_INVOICES: AgencyInvoice[] = [
   },
   {
     id: 'retainer_demo_002',
+    slug: 'kapi-ret-2026-002-telkomsel-innovation-labs',
     invoiceNumber: 'KAPI-RET-2026-002',
     type: 'invoice',
     clientName: 'Sarah Jenkins',
@@ -363,6 +368,7 @@ const STITCH_FINANCE_RETAINER_INVOICES: AgencyInvoice[] = [
   },
   {
     id: 'retainer_demo_003',
+    slug: 'kapi-ret-2026-003-shopeepay-regional-tech',
     invoiceNumber: 'KAPI-RET-2026-003',
     type: 'invoice',
     clientName: 'Jessica Halim',
@@ -390,6 +396,7 @@ const STITCH_FINANCE_RETAINER_INVOICES: AgencyInvoice[] = [
   },
   {
     id: 'retainer_demo_004',
+    slug: 'kapi-ret-2026-004-northstar-labs',
     invoiceNumber: 'KAPI-RET-2026-004',
     type: 'invoice',
     clientName: 'Marcus Lee',
@@ -438,6 +445,7 @@ const normalizeFinanceQuotationStatus = (value: unknown): FinanceQuotationStatus
 
 const normalizeFinanceQuotation = (raw: any): FinanceQuotation => ({
   id: String(raw?.id || ''),
+  slug: slugifyFinance(raw?.slug || raw?.quotationNumber || raw?.proposalNumber || ((raw?.clientCompany || raw?.company || 'quotation') + '-' + (raw?.title || raw?.id || 'record'))),
   quotationNumber: String(raw?.proposalNumber || raw?.quotationNumber || ''),
   title: String(raw?.title || 'Untitled quotation'),
   clientName: String(raw?.clientName || raw?.name || ''),
@@ -913,7 +921,11 @@ export const AdminInvoicing: React.FC = () => {
               ? 'overdue'
               : 'scheduled';
 
-        return { id: vendor.id + ':' + contract.id, vendor, contract, dueDate, amount, paidAmount, status };
+        return {
+          id: vendor.id + ':' + contract.id,
+          slug: slugifyFinance((vendor.companyName || vendor.name) + '-' + contract.title + '-' + dueDate),
+          vendor, contract, dueDate, amount, paidAmount, status
+        };
       }));
   }, [vendors, currencyExpenses, currency]);
 
@@ -1190,6 +1202,7 @@ export const AdminInvoicing: React.FC = () => {
         } else if (invoice.paidDate && Number(invoice.amountPaid || 0) > 0) {
           rows.push({
             id: invoice.id + '-paid',
+            slug: slugifyFinance((invoice.slug || invoice.invoiceNumber) + '-paid-' + invoice.paidDate),
             invoiceId: invoice.id,
             invoiceNumber: invoice.invoiceNumber,
             clientCompany: invoice.clientCompany || invoice.clientName,
@@ -1529,6 +1542,7 @@ export const AdminInvoicing: React.FC = () => {
         const localTotals = computeInvoiceTotals(validItems, numericTax, numericDiscount);
         const localInvoice: AgencyInvoice = {
           id: editingInvoice?.id || 'inv_slug_' + Date.now(),
+          slug: editingInvoice?.slug || slugifyFinance(invoiceNumber.trim() || clientCompany.trim() || ('invoice-' + Date.now())),
           invoiceNumber: invoiceNumber.trim() || 'INV-SLUG-' + String(100 + invoices.length + 1),
           type: 'invoice',
           clientName: clientName.trim(),
@@ -1668,6 +1682,7 @@ export const AdminInvoicing: React.FC = () => {
         const nextStatus: InvoiceStatus = nextBalance === 0 ? 'paid' : 'partially_paid';
         const paymentRecord = {
           id: 'payment_slug_' + Date.now(),
+          slug: slugifyFinance((paymentInvoice.slug || paymentInvoice.invoiceNumber) + '-payment-' + Date.now()),
           amount,
           date: paymentDate,
           method: paymentMethod,
@@ -1748,6 +1763,7 @@ export const AdminInvoicing: React.FC = () => {
       if (usingDemoExpenses) {
         const localExpense: FinanceExpense = {
           id: 'exp_slug_' + Date.now(),
+          slug: slugifyFinance(expenseDescription.trim() + '-' + expenseDate + '-' + Date.now()),
           type: expenseType,
           category: expenseCategory,
           description: expenseDescription.trim(),
@@ -2170,6 +2186,7 @@ export const AdminInvoicing: React.FC = () => {
         const now = new Date().toISOString();
         const localQuotation: FinanceQuotation = {
           id: editingQuotation?.id || 'quote_slug_' + Date.now(),
+          slug: editingQuotation?.slug || slugifyFinance(quotationClientCompany.trim() + '-' + quotationTitle.trim()),
           quotationNumber: editingQuotation?.quotationNumber || 'QTN-2026-' + String(100 + quotations.length + 1).padStart(3, '0'),
           title: quotationTitle.trim(),
           clientName: quotationClientName.trim(),
