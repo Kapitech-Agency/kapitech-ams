@@ -202,6 +202,71 @@ const roleFocus = (member: TeamMember) => {
   return member.division || member.role || 'General Operations';
 };
 
+const previewMembers: TeamMember[] = [
+  { id: 'preview_tm_001', name: 'Ari Mahendra', username: 'ari.mahendra', role: 'Frontend Developer', division: 'Engineering', status: 'active', slug: 'team-ari-mahendra-preview-tm-001' },
+  { id: 'preview_tm_002', name: 'Nadia Putri', username: 'nadia.putri', role: 'UI/UX Designer', division: 'Product & Design', status: 'active', slug: 'team-nadia-putri-preview-tm-002' },
+  { id: 'preview_tm_003', name: 'Raka Pranoto', username: 'raka.pranoto', role: 'Project Manager', division: 'Operations', status: 'active', slug: 'team-raka-pranoto-preview-tm-003' },
+  { id: 'preview_tm_004', name: 'Sinta Aulia', username: 'sinta.aulia', role: 'Marketing Communication', division: 'Marketing', status: 'active', slug: 'team-sinta-aulia-preview-tm-004' },
+  { id: 'preview_tm_005', name: 'Dio Saputra', username: 'dio.saputra', role: 'Backend Developer', division: 'Engineering', status: 'active', slug: 'team-dio-saputra-preview-tm-005' },
+  { id: 'preview_tm_006', name: 'Maya Lestari', username: 'maya.lestari', role: 'Graphic Designer', division: 'Product & Design', status: 'active', slug: 'team-maya-lestari-preview-tm-006' },
+  { id: 'preview_tm_007', name: 'Fajar Rizky', username: 'fajar.rizky', role: 'IT Support', division: 'Operations', status: 'active', slug: 'team-fajar-rizky-preview-tm-007' },
+  { id: 'preview_tm_008', name: 'Tania Kirana', username: 'tania.kirana', role: 'Content Strategist', division: 'Marketing', status: 'active', slug: 'team-tania-kirana-preview-tm-008' }
+];
+
+const previewVendors: VendorRecord[] = [
+  {
+    id: 'preview_v_001', name: 'Nusa Motion Studio', companyName: 'Nusa Motion Studio', email: 'preview@nusa-motion.example', phone: '+62 812 0000 0001',
+    type: 'contractor', primaryCategory: '3D & Motion', skills: ['After Effects', 'Blender', 'Motion Design'], hourlyRate: 450000, currency: 'IDR',
+    rating: 4.8, completedProjectsCount: 18, status: 'active', isVetted: true, location: 'Jakarta, Indonesia',
+    contracts: [{ id: 'preview_c_001', title: 'Motion Design Retainer', startDate: '2026-08-01', endDate: '2026-10-20', rateType: 'monthly_retainer', rateAmount: 15000000, currency: 'IDR', status: 'active' }],
+    notes: 'Frontend preview record for slug inspection.', createdAt: '2026-08-01T09:00:00.000Z', updatedAt: '2026-09-01T09:00:00.000Z',
+    slug: 'vendor-nusa-motion-studio-preview-v-001'
+  },
+  {
+    id: 'preview_v_002', name: 'Cloud Harbour', companyName: 'Cloud Harbour', email: 'preview@cloud-harbour.example', phone: '+62 812 0000 0002',
+    type: 'agency_partner', primaryCategory: 'DevOps & Cloud', skills: ['AWS', 'Terraform', 'Cloudflare'], hourlyRate: 800000, currency: 'IDR',
+    rating: 4.9, completedProjectsCount: 11, status: 'active', isVetted: true, location: 'Remote',
+    contracts: [{ id: 'preview_c_002', title: 'Infrastructure Partner', startDate: '2026-07-01', endDate: '2026-11-15', rateType: 'monthly_retainer', rateAmount: 22000000, currency: 'IDR', status: 'active' }],
+    notes: 'Frontend preview record for slug inspection.', createdAt: '2026-07-01T09:00:00.000Z', updatedAt: '2026-09-01T09:00:00.000Z',
+    slug: 'vendor-cloud-harbour-preview-v-002'
+  },
+  {
+    id: 'preview_v_003', name: 'Atlas Codeworks', companyName: 'Atlas Codeworks', email: 'preview@atlas-codeworks.example', phone: '+62 812 0000 0003',
+    type: 'freelancer', primaryCategory: 'Backend Dev', skills: ['Node.js', 'PostgreSQL', 'Redis'], hourlyRate: 500000, currency: 'IDR',
+    rating: 4.7, completedProjectsCount: 13, status: 'active', isVetted: true, location: 'Bandung, Indonesia',
+    contracts: [{ id: 'preview_c_003', title: 'API Delivery Sprint', startDate: '2026-08-10', endDate: '2026-10-05', rateType: 'project', rateAmount: 18000000, currency: 'IDR', status: 'active' }],
+    notes: 'Frontend preview record for slug inspection.', createdAt: '2026-08-10T09:00:00.000Z', updatedAt: '2026-09-01T09:00:00.000Z',
+    slug: 'vendor-atlas-codeworks-preview-v-003'
+  },
+  {
+    id: 'preview_v_004', name: 'Studio Form', companyName: 'Studio Form', email: 'preview@studio-form.example', phone: '+62 812 0000 0004',
+    type: 'freelancer', primaryCategory: 'UI/UX Design', skills: ['Figma', 'UX Research', 'Design Systems'], hourlyRate: 350000, currency: 'IDR',
+    rating: 4.9, completedProjectsCount: 15, status: 'under_review', isVetted: true, location: 'Yogyakarta, Indonesia',
+    contracts: [], notes: 'Frontend preview record for slug inspection.', createdAt: '2026-08-20T09:00:00.000Z', updatedAt: '2026-09-01T09:00:00.000Z',
+    slug: 'vendor-studio-form-preview-v-004'
+  }
+];
+
+const previewProjects: ProjectRecord[] = [
+  { id: 'preview_p_001', name: 'AMS Operations', status: 'in_progress', slug: 'project-ams-operations-preview-p-001', teamLead: 'preview_tm_003', teamMembers: ['preview_tm_001', 'preview_tm_002'], techStack: ['React', 'TypeScript'], tasks: [{ id: 'pt_001', title: 'Dashboard polish', status: 'in_progress', assignedTo: 'preview_tm_001' }, { id: 'pt_002', title: 'UI audit', status: 'done', assignedTo: 'preview_tm_002' }] },
+  { id: 'preview_p_002', name: 'Kapitech Website', status: 'in_progress', slug: 'project-kapitech-website-preview-p-002', teamLead: 'preview_tm_001', teamMembers: ['preview_tm_005', 'preview_tm_006'], techStack: ['Vite', 'Tailwind CSS'], tasks: [{ id: 'pt_003', title: 'Landing page', status: 'in_progress', assignedTo: 'preview_tm_006' }] },
+  { id: 'preview_p_003', name: 'Studio Forty', status: 'in_progress', slug: 'project-studio-forty-preview-p-003', teamLead: 'preview_tm_003', teamMembers: ['preview_tm_004', 'preview_tm_008'], techStack: ['Branding', 'Content'], tasks: [{ id: 'pt_004', title: 'Campaign setup', status: 'todo', assignedTo: 'preview_tm_004' }] },
+  { id: 'preview_p_004', name: 'Kamora ERP', status: 'planning', slug: 'project-kamora-erp-preview-p-004', teamLead: 'preview_tm_005', teamMembers: ['preview_tm_007'], techStack: ['Node.js', 'PostgreSQL'], tasks: [{ id: 'pt_005', title: 'Infrastructure plan', status: 'todo', assignedTo: 'preview_tm_007' }] }
+];
+
+const previewLogs: TimeLog[] = [
+  { id: 'preview_tl_001', projectId: 'preview_p_001', projectName: 'AMS Operations', taskTitle: 'Dashboard polish', user: 'Ari Mahendra', userId: 'preview_tm_001', durationMinutes: 210, billable: true, date: '2026-09-30', notes: 'Preview slug data', slug: 'time-dashboard-polish-preview-tl-001' },
+  { id: 'preview_tl_002', projectId: 'preview_p_001', projectName: 'AMS Operations', taskTitle: 'UI audit', user: 'Nadia Putri', userId: 'preview_tm_002', durationMinutes: 180, billable: true, date: '2026-09-29', notes: 'Preview slug data', slug: 'time-ui-audit-preview-tl-002' },
+  { id: 'preview_tl_003', projectId: 'preview_p_002', projectName: 'Kapitech Website', taskTitle: 'Landing page', user: 'Maya Lestari', userId: 'preview_tm_006', durationMinutes: 240, billable: true, date: '2026-09-29', notes: 'Preview slug data', slug: 'time-landing-page-preview-tl-003' },
+  { id: 'preview_tl_004', projectId: 'preview_p_003', projectName: 'Studio Forty', taskTitle: 'Campaign setup', user: 'Sinta Aulia', userId: 'preview_tm_004', durationMinutes: 150, billable: true, date: '2026-09-30', notes: 'Preview slug data', slug: 'time-campaign-setup-preview-tl-004' },
+  { id: 'preview_tl_005', projectId: 'preview_p_004', projectName: 'Kamora ERP', taskTitle: 'Infrastructure plan', user: 'Fajar Rizky', userId: 'preview_tm_007', durationMinutes: 120, billable: false, date: '2026-09-28', notes: 'Preview slug data', slug: 'time-infrastructure-plan-preview-tl-005' },
+  { id: 'preview_tl_006', projectId: 'preview_p_001', projectName: 'AMS Operations', taskTitle: 'Regression audit', user: 'Dio Saputra', userId: 'preview_tm_005', durationMinutes: 300, billable: true, date: '2026-09-24', notes: 'Preview slug data', slug: 'time-regression-audit-preview-tl-006' },
+  { id: 'preview_tl_007', projectId: 'preview_p_002', projectName: 'Kapitech Website', taskTitle: 'Design QA', user: 'Maya Lestari', userId: 'preview_tm_006', durationMinutes: 180, billable: true, date: '2026-09-23', notes: 'Preview slug data', slug: 'time-design-qa-preview-tl-007' },
+  { id: 'preview_tl_008', projectId: 'preview_p_003', projectName: 'Studio Forty', taskTitle: 'Content review', user: 'Tania Kirana', userId: 'preview_tm_008', durationMinutes: 210, billable: false, date: '2026-09-17', notes: 'Preview slug data', slug: 'time-content-review-preview-tl-008' },
+  { id: 'preview_tl_009', projectId: 'preview_p_004', projectName: 'Kamora ERP', taskTitle: 'API mapping', user: 'Dio Saputra', userId: 'preview_tm_005', durationMinutes: 270, billable: true, date: '2026-09-10', notes: 'Preview slug data', slug: 'time-api-mapping-preview-tl-009' },
+  { id: 'preview_tl_010', projectId: 'preview_p_001', projectName: 'AMS Operations', taskTitle: 'Planning workshop', user: 'Raka Pranoto', userId: 'preview_tm_003', durationMinutes: 240, billable: false, date: '2026-09-08', notes: 'Preview slug data', slug: 'time-planning-workshop-preview-tl-010' }
+];
+
 const emptyVendorForm = {
   name: '',
   companyName: '',
@@ -287,48 +352,58 @@ export const AdminTeams: React.FC = () => {
       api.timeLogs.getAll()
     ]);
 
+    let nextMembers: TeamMember[] = [];
+    let nextVendors: VendorRecord[] = [];
+    let nextProjects: ProjectRecord[] = [];
+    let nextLogs: TimeLog[] = [];
+
     if (memberRes.success && Array.isArray(memberRes.data?.assignees)) {
-      setMembers(
-        (memberRes.data!.assignees as Omit<TeamMember, 'slug'>[]).map((member) => ({
-          ...member,
-          slug: memberSlug(member),
-        }))
-      );
-    } else if (!memberRes.success) {
-      setNotice({ tone: 'danger', message: memberRes.error || 'Team directory could not be loaded.' });
+      nextMembers = (memberRes.data!.assignees as Omit<TeamMember, 'slug'>[]).map((member) => ({
+        ...member,
+        slug: memberSlug(member),
+      }));
     }
 
     if (vendorRes.success && Array.isArray(vendorRes.data?.vendors)) {
-      setVendors(
-        (vendorRes.data!.vendors as AgencyVendor[]).map((vendor) => ({
-          ...vendor,
-          slug: vendorSlug(vendor),
-        }))
-      );
+      nextVendors = (vendorRes.data!.vendors as AgencyVendor[]).map((vendor) => ({
+        ...vendor,
+        slug: vendorSlug(vendor),
+      }));
     }
 
     if (projectRes.success && Array.isArray(projectRes.data?.projects)) {
-      setProjects(
-        (projectRes.data!.projects as Omit<ProjectRecord, 'slug'>[]).map((project) => ({
-          ...project,
-          slug: projectSlug(project),
-          teamLead: String(project.teamLead || ''),
-          teamMembers: Array.isArray(project.teamMembers) ? project.teamMembers.map(String) : [],
-          tasks: Array.isArray(project.tasks) ? project.tasks as ProjectTaskRecord[] : [],
-          techStack: Array.isArray(project.techStack) ? project.techStack.map(String) : [],
-        }))
-      );
+      nextProjects = (projectRes.data!.projects as Omit<ProjectRecord, 'slug'>[]).map((project) => ({
+        ...project,
+        slug: projectSlug(project),
+        teamLead: String(project.teamLead || ''),
+        teamMembers: Array.isArray(project.teamMembers) ? project.teamMembers.map(String) : [],
+        tasks: Array.isArray(project.tasks) ? project.tasks as ProjectTaskRecord[] : [],
+        techStack: Array.isArray(project.techStack) ? project.techStack.map(String) : [],
+      }));
     }
 
     if (timeRes.success && Array.isArray(timeRes.data?.timeLogs)) {
-      setLogs(
-        (timeRes.data!.timeLogs as Omit<TimeLog, 'slug'>[]).map((log) => ({
-          ...log,
-          slug: timeLogSlug(log),
-        }))
-      );
+      nextLogs = (timeRes.data!.timeLogs as Omit<TimeLog, 'slug'>[]).map((log) => ({
+        ...log,
+        slug: timeLogSlug(log),
+      }));
     }
 
+    const usedPreviewData = nextMembers.length === 0 && nextVendors.length === 0 && nextProjects.length === 0 && nextLogs.length === 0;
+    if (usedPreviewData) {
+      nextMembers = previewMembers;
+      nextVendors = previewVendors;
+      nextProjects = previewProjects;
+      nextLogs = previewLogs;
+      setNotice({ tone: 'success', message: 'Preview slug data active because Team Operations has no server data yet.' });
+    } else if (!memberRes.success && nextMembers.length === 0) {
+      setNotice({ tone: 'danger', message: memberRes.error || 'Team directory could not be loaded.' });
+    }
+
+    setMembers(nextMembers);
+    setVendors(nextVendors);
+    setProjects(nextProjects);
+    setLogs(nextLogs);
     setLoading(false);
     setRefreshing(false);
   };
