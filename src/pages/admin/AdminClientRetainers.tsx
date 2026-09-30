@@ -21,6 +21,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { Button } from '../../components/ui/Button';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
+import { AdminFilterBar, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 type Health = 'healthy' | 'near-cap' | 'overage-risk';
 type Cycle = 'monthly' | 'quarterly' | 'annual';
