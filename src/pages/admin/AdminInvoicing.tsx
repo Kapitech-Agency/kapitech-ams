@@ -2490,6 +2490,33 @@ export const AdminInvoicing: React.FC = () => {
     showNotice('success', language === 'id' ? 'Laporan finansial berhasil diekspor.' : 'Financial report CSV exported successfully.');
   };
 
+  const exportExpensesCsv = () => {
+    const headers = ['Expense', 'Type', 'Category', 'Project', 'Date', 'Currency', 'Amount', 'Recurring', 'Receipt'];
+    const rows = filteredExpenses.map((expense) => [
+      expense.description,
+      expense.type || 'OpEx',
+      expense.category,
+      projectsById.get(expense.projectId || '')?.name || '',
+      expense.date,
+      expense.currency || currency,
+      expense.amount,
+      expense.recurringInterval || 'none',
+      expense.receiptUrl || ''
+    ]);
+    const csv = [headers, ...rows]
+      .map((row) => row.map((value) => '"' + String(value ?? '').replace(/"/g, '""') + '"').join(','))
+      .join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'kapitech-finance-expenses.csv';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    showNotice('success', language === 'id' ? 'CSV expense berhasil diekspor.' : 'Expense CSV exported successfully.');
+  };
+
   const exportInvoicesCsv = () => {
     const headers = ['Invoice #', 'Client', 'Project', 'Issue Date', 'Due Date', 'Currency', 'Total', 'Balance Due', 'Status'];
     const rows = filteredInvoices.map((invoice) => [
@@ -2587,7 +2614,10 @@ export const AdminInvoicing: React.FC = () => {
                 {canManageInvoices && <button type="button" onClick={openCreateQuotation} className={primaryClass}><Plus size={14}/>New quotation</button>}
               </>
             ) : financeView === 'income-expenses' ? (
-              canManageInvoices ? <button type="button" onClick={openExpenseModal} className={primaryClass}><Plus size={14}/>Add expense</button> : null
+              <>
+                <button type="button" onClick={() => incomeExpenseMode === 'income' ? exportInvoicesCsv() : exportExpensesCsv()} disabled={incomeExpenseMode === 'income' ? !incomeRows.length : !filteredExpenses.length} className={actionClass}><Download size={14}/>Export CSV</button>
+                {canManageInvoices && <button type="button" onClick={openExpenseModal} className={primaryClass}><Plus size={14}/>Add expense</button>}
+              </>
             ) : financeView === 'tax-retainers' ? (
               <>
                 <button type="button" onClick={exportTaxCsv} disabled={!currencyInvoices.length} className={actionClass}><Download size={14}/>Export tax detail</button>
@@ -3502,6 +3532,23 @@ export const AdminInvoicing: React.FC = () => {
               </div>
               <span className="inline-flex min-h-7 items-center rounded-badge border border-line bg-panel px-2 py-1 text-xs font-semibold text-fg">{quotationStatusLabel(quotationDetail.status)}</span>
             </div>
+            {quotationDetail.items?.length ? (
+              <div className="rounded-card border border-line bg-panel overflow-hidden">
+                <div className="border-b border-line p-4"><h2 className="text-sm font-semibold text-fg">Commercial scope</h2><p className="mt-1 text-xs text-muted">Line items used to build the quoted value.</p></div>
+                <div className="overflow-x-auto">
+                  <table className="ams-finance-table min-w-[620px] border-separate border-spacing-0 text-xs">
+                    <thead><tr><th>Description</th><th>Qty</th><th>Unit price</th><th>Amount</th></tr></thead>
+                    <tbody>{quotationDetail.items.map((item) => <tr key={item.id}><td>{item.description}</td><td className="text-right tabular-nums">{item.quantity}</td><td className="text-right tabular-nums">{formatNativeAmount(item.unitPrice, quotationDetail.currency, true)}</td><td className="text-right tabular-nums font-semibold">{formatNativeAmount(item.amount, quotationDetail.currency, true)}</td></tr>)}</tbody>
+                  </table>
+                </div>
+              </div>
+            ) : null}
+            {(quotationDetail.paymentTerms || quotationDetail.notes) && (
+              <div className="rounded-card border border-line bg-bg p-4 text-xs">
+                {quotationDetail.paymentTerms && <div><p className="text-[10px] text-muted">Payment terms</p><p className="mt-1 text-fg">{quotationDetail.paymentTerms}</p></div>}
+                {quotationDetail.notes && <div className={quotationDetail.paymentTerms ? 'mt-3 border-t border-line pt-3' : ''}><p className="text-[10px] text-muted">Notes</p><p className="mt-1 whitespace-pre-line leading-5 text-muted">{quotationDetail.notes}</p></div>}
+              </div>
+            )}
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] uppercase tracking-[0.08em] text-muted">Client</p><p className="mt-1 text-sm font-medium text-fg">{quotationDetail.clientCompany}</p><p className="mt-0.5 text-xs text-muted">{quotationDetail.clientName}</p></div>
               <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] uppercase tracking-[0.08em] text-muted">Commercial value</p><p className="mt-1 text-sm font-semibold tabular-nums text-fg">{formatNativeAmount(quotationDetail.total, quotationDetail.currency, true)}</p><p className="mt-0.5 text-xs text-muted">Valid until {quotationDetail.validUntil}</p></div>
