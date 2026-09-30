@@ -91,7 +91,7 @@ export const AdminClientRetainers: React.FC = () => {
   const [hoursTarget, setHoursTarget] = useState<Retainer | null>(null);
   const [hours, setHours] = useState('8');
   const [message, setMessage] = useState<string | null>(null);
-  const [pageSize, setPageSize] = useState(6);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => setIsLoading(false));
