@@ -4147,4 +4147,5 @@ export const AdminInvoicing: React.FC = () => {
   );
 };
 
+    </div>
 export default AdminInvoicing;
