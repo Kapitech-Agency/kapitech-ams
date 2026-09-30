@@ -1434,7 +1434,8 @@ export const AdminTeams: React.FC = () => {
           <AdminPanel
             slug="capacity-allocation-table"
             title="Capacity & allocation"
-            description={currentWeekCapacity ? 'Actual tracked allocation across ' + weeklyCapacity.map((week) = className="overflow-hidden"> formatDate(dateKey(week.start))).join(' · ') : 'Four-week tracked capacity view.'}
+            description={currentWeekCapacity ? 'Actual tracked allocation across ' + weeklyCapacity.map((week) => formatDate(dateKey(week.start))).join(' · ') : 'Four-week tracked capacity view.'}
+            className="overflow-hidden"
             actions={<span className="text-[10px] text-muted">No forecast values are fabricated; cells are based on recorded time.</span>}
           >
             <div className="overflow-x-auto custom-scrollbar">
