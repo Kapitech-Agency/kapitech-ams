@@ -45,6 +45,7 @@ type TaskRecord = {
   blocked: boolean;
   slug: string;
   createdAt: string;
+  subtasks: Array<{ id: string; title: string; completed: boolean }>;
 };
 
 const TASK_TABS = [
@@ -71,6 +72,7 @@ const buildPreviewTask = (
   dueOffset: number,
   tags: string[],
   blocked = false,
+  subtasks: Array<{ id: string; title: string; completed: boolean }> = [],
 ): TaskRecord => {
   const dueDate = new Date(Date.now() + dueOffset * 86400000).toISOString().slice(0, 10);
   return {
@@ -90,6 +92,7 @@ const buildPreviewTask = (
     blocked,
     slug: 'task-' + slugify(title) + '-' + slugify(id),
     createdAt: new Date(Date.now() - Math.max(1, Math.abs(dueOffset) + 2) * 86400000).toISOString(),
+    subtasks,
   };
 };
 
@@ -207,10 +210,12 @@ export const TasksWorkspace: React.FC = () => {
   const [page, setPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedTask, setSelectedTask] = useState<TaskRecord | null>(null);
+  const [editingTask, setEditingTask] = useState<TaskRecord | null>(null);
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
   const [bulkUpdating, setBulkUpdating] = useState(false);
   const [taskFormOpen, setTaskFormOpen] = useState(false);
   const [savingTask, setSavingTask] = useState(false);
+  const [savingEditTask, setSavingEditTask] = useState(false);
   const [taskForm, setTaskForm] = useState({
     title: '',
     description: '',
@@ -219,6 +224,16 @@ export const TasksWorkspace: React.FC = () => {
     priority: 'medium' as TaskPriority,
     dueDate: new Date().toISOString().slice(0, 10),
     tags: '',
+    subtasks: '',
+  });
+  const [taskEditForm, setTaskEditForm] = useState({
+    title: '',
+    description: '',
+    assignee: '',
+    priority: 'medium' as TaskPriority,
+    dueDate: '',
+    tags: '',
+    subtasks: '',
   });
 
   const currentUserNames = useMemo(() => new Set(
@@ -282,6 +297,14 @@ export const TasksWorkspace: React.FC = () => {
                 blocked: isTaskBlocked(task),
                 slug: 'task-' + slugify(title) + '-' + slugify(id),
                 createdAt: String(task?.createdAt || ''),
+                subtasks: Array.isArray(task?.subtasks)
+                  ? task.subtasks.map((item: any, index: number) => ({
+                      id: String(item?.id || id + '-subtask-' + index),
+                      title: String(item?.title || ''),
+                      completed: Boolean(item?.completed),
+                    })).filter((item: { title: string }) => item.title)
+                  : [],
+              });
               });
             });
           });
@@ -373,6 +396,11 @@ export const TasksWorkspace: React.FC = () => {
       blocked: false,
       slug: 'task-' + slugify(taskForm.title) + '-' + slugify(id),
       createdAt: new Date().toISOString(),
+      subtasks: taskForm.subtasks
+        .split('\n')
+        .map(value => value.trim())
+        .filter(Boolean)
+        .map((title, index) => ({ id: id + '-subtask-' + index, title, completed: false })),
     };
 
     try {
@@ -386,7 +414,7 @@ export const TasksWorkspace: React.FC = () => {
         status: localTask.status,
         dueDate: localTask.dueDate,
         tags,
-        subtasks: [],
+        subtasks: localTask.subtasks,
       });
 
       setRecords(current => [localTask, ...current]);
@@ -534,8 +562,84 @@ export const TasksWorkspace: React.FC = () => {
       priority: 'medium',
       dueDate: new Date().toISOString().slice(0, 10),
       tags: '',
+      subtasks: '',
     });
     setTaskFormOpen(true);
+  };
+
+  const openEditTask = (task: TaskRecord) => {
+    if (!canManageTasks) return;
+    setEditingTask(task);
+    setTaskEditForm({
+      title: task.title,
+      description: task.description,
+      assignee: task.assigneeId,
+      priority: task.priority,
+      dueDate: task.dueDate,
+      tags: task.tags.join(', '),
+      subtasks: task.subtasks.map(item => item.title).join('\n'),
+    });
+  };
+
+  const saveTaskEdit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!canManageTasks || !editingTask || !taskEditForm.title.trim()) {
+      setNotice('Task title is required.');
+      return;
+    }
+
+    setSavingEditTask(true);
+    const tags = taskEditForm.tags
+      .split(',')
+      .map(value => value.trim())
+      .filter(Boolean)
+      .slice(0, 6);
+    const subtasks = taskEditForm.subtasks
+      .split('\n')
+      .map(value => value.trim())
+      .filter(Boolean)
+      .map((title, index) => ({
+        id: editingTask.subtasks[index]?.id || editingTask.id + '-subtask-' + index,
+        title,
+        completed: editingTask.subtasks[index]?.completed || false,
+      }));
+
+    const nextTask: TaskRecord = {
+      ...editingTask,
+      title: taskEditForm.title.trim(),
+      description: taskEditForm.description.trim(),
+      assigneeId: taskEditForm.assignee,
+      assignee: assignees.find(item => item.id === taskEditForm.assignee)?.name || taskEditForm.assignee || 'Unassigned',
+      priority: taskEditForm.priority,
+      dueDate: taskEditForm.dueDate,
+      tags,
+      subtasks,
+      slug: 'task-' + slugify(taskEditForm.title) + '-' + slugify(editingTask.id),
+    };
+
+    setRecords(current => current.map(item => item.id === editingTask.id ? nextTask : item));
+    setSelectedTask(current => current?.id === editingTask.id ? nextTask : current);
+
+    try {
+      const response = await api.tasks.update(editingTask.id, {
+        title: nextTask.title,
+        description: nextTask.description,
+        projectId: nextTask.projectId,
+        projectName: nextTask.projectName,
+        assignee: nextTask.assigneeId,
+        priority: nextTask.priority,
+        status: nextTask.status,
+        dueDate: nextTask.dueDate,
+        tags: nextTask.tags,
+        subtasks: nextTask.subtasks,
+      });
+      setNotice(response.success ? 'Task updated.' : 'Task updated locally for this session.');
+    } catch {
+      setNotice('Task updated locally for this session.');
+    } finally {
+      setSavingEditTask(false);
+      setEditingTask(null);
+    }
   };
 
   const activeFilterCount = [query, projectFilter, priorityFilter, statusFilter, assigneeFilter]
@@ -559,12 +663,12 @@ export const TasksWorkspace: React.FC = () => {
     <div className="space-y-4 px-4 pb-10 pt-5 sm:px-5 lg:px-6" data-ams-feature-slug="tasks-module">
       <div data-ams-slug="tasks-header">
         <AdminModuleHeader
-          title={scopeLabel}
+          title="Tasks"
           description="Manage daily delivery work, due tasks, reviews, blockers, and completed work from one task workspace."
           actions={
             canManageTasks ? (
               <span data-ams-slug="tasks-action-new">
-                <Button type="button" variant="primary" icon={<CheckCircle2 size={14} />} onClick={openNewTask}>
+                <Button type="button" variant="primary" icon={<Plus size={14} />} onClick={openNewTask}>
                   New Task
                 </Button>
               </span>
@@ -930,7 +1034,11 @@ export const TasksWorkspace: React.FC = () => {
             </div>
             <p className="mt-1 text-[10px] text-muted">Use commas to add up to six tags.</p>
           </div>
-          <div data-ams-slug="task-create-description">
+          <div data-ams-slug="task-create-subtasks">
+            <label htmlFor="task-subtasks" className="text-[11px] font-medium text-muted">Subtasks</label>
+            <textarea id="task-subtasks" value={taskForm.subtasks} onChange={event => setTaskForm(current => ({ ...current, subtasks: event.target.value }))} rows={3} className="mt-1 w-full resize-none rounded-control border border-line bg-bg px-3 py-2 text-xs leading-5 text-fg outline-none focus:border-accent" placeholder="One subtask per line" />
+          </div>
+                    <div data-ams-slug="task-create-description">
             <label htmlFor="task-description" className="text-[11px] font-medium text-muted">Description</label>
             <textarea id="task-description" value={taskForm.description} onChange={event => setTaskForm(current => ({ ...current, description: event.target.value }))} rows={4} className="mt-1 w-full resize-none rounded-control border border-line bg-bg px-3 py-2 text-xs leading-5 text-fg outline-none focus:border-accent" placeholder="Task context, acceptance note, or handoff details." />
           </div>
@@ -946,6 +1054,11 @@ export const TasksWorkspace: React.FC = () => {
         footer={(
           <>
             <Button type="button" variant="secondary" onClick={() => setSelectedTask(null)} data-ams-slug="task-detail-close">Close</Button>
+            {selectedTask && canManageTasks && (
+              <Button type="button" variant="secondary" icon={<Pencil size={14} />} onClick={() => openEditTask(selectedTask)} data-ams-slug="task-detail-edit">
+                Edit
+              </Button>
+            )}
             {selectedTask && canManageTasks && selectedTask.status !== 'done' && (
               <Button type="button" variant="primary" icon={<CheckCircle2 size={14} />} onClick={() => void updateTaskStatus(selectedTask, 'done')} data-ams-slug="task-detail-done">
                 Mark done
@@ -1012,6 +1125,27 @@ export const TasksWorkspace: React.FC = () => {
               </div>
             </div>
 
+            {selectedTask.subtasks.length > 0 && (
+              <div className="rounded-card border border-line bg-bg p-4" data-ams-slug={selectedTask.slug + '-subtasks'}>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 text-[11px] font-semibold text-fg"><CheckCircle2 size={13} /> Subtasks</div>
+                  <span className="text-[10px] tabular-nums text-muted">
+                    {selectedTask.subtasks.filter(item => item.completed).length}/{selectedTask.subtasks.length} done
+                  </span>
+                </div>
+                <div className="mt-3 space-y-2">
+                  {selectedTask.subtasks.map(item => (
+                    <div key={item.id} data-ams-slug={selectedTask.slug + '-subtask-' + slugify(item.id)} className="flex items-start gap-2 rounded-control border border-line bg-panel px-3 py-2">
+                      <span className={'mt-0.5 h-4 w-4 shrink-0 rounded-full border ' + (item.completed ? 'border-success bg-success/10 text-success' : 'border-line text-muted')}>
+                        {item.completed ? <CheckCircle2 size={12} className="m-[1px]" /> : null}
+                      </span>
+                      <span className={'text-xs leading-5 ' + (item.completed ? 'text-muted line-through' : 'text-fg')}>{item.title}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {selectedTask.tags.length > 0 && (
               <div className="rounded-card border border-line bg-bg p-4" data-ams-slug={selectedTask.slug + '-tags'}>
                 <div className="flex items-center gap-2 text-[11px] font-semibold text-fg"><Tag size={13} /> Tags</div>
@@ -1039,6 +1173,55 @@ export const TasksWorkspace: React.FC = () => {
             )}
           </div>
         )}
+      </Modal>
+
+      <Modal
+        open={Boolean(editingTask)}
+        onClose={() => { if (!savingEditTask) setEditingTask(null); }}
+        size="lg"
+        title="Edit task"
+        description={editingTask ? editingTask.projectName : undefined}
+        footer={(
+          <>
+            <Button type="button" variant="secondary" onClick={() => setEditingTask(null)} disabled={savingEditTask} data-ams-slug="task-edit-cancel">Cancel</Button>
+            <Button type="submit" variant="primary" form="tasks-edit-form" loading={savingEditTask} data-ams-slug="task-edit-submit">Save changes</Button>
+          </>
+        )}
+      >
+        <form id="tasks-edit-form" onSubmit={saveTaskEdit} className="space-y-4" data-ams-feature-slug="task-edit-form">
+          <div data-ams-slug="task-edit-title">
+            <label htmlFor="task-edit-title-input" className="text-[11px] font-medium text-muted">Task title</label>
+            <input id="task-edit-title-input" required value={taskEditForm.title} onChange={event => setTaskEditForm(current => ({ ...current, title: event.target.value }))} className="mt-1 h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent" />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div data-ams-slug="task-edit-assignee">
+              <label className="text-[11px] font-medium text-muted">Assignee</label>
+              <CustomSelect value={taskEditForm.assignee} onChange={value => setTaskEditForm(current => ({ ...current, assignee: value }))} options={[{ value: '', label: 'Unassigned' }, ...assignees.map(item => ({ value: item.id, label: item.name }))]} triggerClassName="mt-1 h-9 min-h-9 w-full" />
+            </div>
+            <div data-ams-slug="task-edit-priority">
+              <label className="text-[11px] font-medium text-muted">Priority</label>
+              <CustomSelect value={taskEditForm.priority} onChange={value => setTaskEditForm(current => ({ ...current, priority: value as TaskPriority }))} options={Object.entries(taskPriorityLabel).map(([value, label]) => ({ value, label }))} triggerClassName="mt-1 h-9 min-h-9 w-full" />
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div data-ams-slug="task-edit-due">
+              <label htmlFor="task-edit-due-input" className="text-[11px] font-medium text-muted">Due date</label>
+              <input id="task-edit-due-input" type="date" required value={taskEditForm.dueDate} onChange={event => setTaskEditForm(current => ({ ...current, dueDate: event.target.value }))} className="mt-1 h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent" />
+            </div>
+            <div data-ams-slug="task-edit-tags">
+              <label htmlFor="task-edit-tags-input" className="text-[11px] font-medium text-muted">Tags</label>
+              <input id="task-edit-tags-input" value={taskEditForm.tags} onChange={event => setTaskEditForm(current => ({ ...current, tags: event.target.value }))} className="mt-1 h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent" placeholder="qa, client, launch" />
+            </div>
+          </div>
+          <div data-ams-slug="task-edit-subtasks">
+            <label htmlFor="task-edit-subtasks-input" className="text-[11px] font-medium text-muted">Subtasks</label>
+            <textarea id="task-edit-subtasks-input" value={taskEditForm.subtasks} onChange={event => setTaskEditForm(current => ({ ...current, subtasks: event.target.value }))} rows={4} className="mt-1 w-full resize-none rounded-control border border-line bg-bg px-3 py-2 text-xs leading-5 text-fg outline-none focus:border-accent" placeholder="One subtask per line" />
+          </div>
+          <div data-ams-slug="task-edit-description">
+            <label htmlFor="task-edit-description-input" className="text-[11px] font-medium text-muted">Description</label>
+            <textarea id="task-edit-description-input" value={taskEditForm.description} onChange={event => setTaskEditForm(current => ({ ...current, description: event.target.value }))} rows={5} className="mt-1 w-full resize-none rounded-control border border-line bg-bg px-3 py-2 text-xs leading-5 text-fg outline-none focus:border-accent" placeholder="Task context, acceptance note, or handoff details." />
+          </div>
+        </form>
       </Modal>
     </div>
   );
