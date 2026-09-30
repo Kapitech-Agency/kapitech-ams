@@ -88,7 +88,7 @@ export const AdminClientSlaMonitoring: React.FC = () => {
   const [message, setMessage] = useState<string | null>(null);
   const [selectedIncident, setSelectedIncident] = useState<SlaAccount | null>(null);
   const [selectedTelemetry, setSelectedTelemetry] = useState<SlaAccount | null>(null);
-  const [pageSize, setPageSize] = useState(6);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => setIsLoading(false));
