@@ -65,14 +65,6 @@ type TimeLog = {
   notes?: string;
 };
 
-const teamTabs: Array<{ key: TeamView; label: string; query: string }> = [
-  { key: 'team-directory', label: 'Team Directory', query: '' },
-  { key: 'vendor-directory', label: 'Vendor Directory', query: '?view=vendor-directory' },
-  { key: 'capacity-allocation', label: 'Capacity & Allocation', query: '?view=capacity-allocation' },
-  { key: 'skill-matrix', label: 'Skill Matrix', query: '?view=skill-matrix' },
-  { key: 'time-logs', label: 'Time Logs', query: '?view=time-logs' }
-];
-
 const vendorTypeLabel: Record<VendorType, string> = {
   freelancer: 'Freelancer',
   contractor: 'Contractor',
@@ -171,7 +163,8 @@ const emptyVendorForm = {
 export const AdminTeams: React.FC = () => {
   const location = useLocation();
   const activeView = (new URLSearchParams(location.search).get('view') || 'team-directory') as TeamView;
-  const currentView = teamTabs.some((tab) => tab.key === activeView) ? activeView : 'team-directory';
+  const validTeamViews: TeamView[] = ['team-directory', 'vendor-directory', 'capacity-allocation', 'skill-matrix', 'time-logs'];
+  const currentView = validTeamViews.includes(activeView) ? activeView : 'team-directory';
 
   const canManageVendors = hasAdminPermission('canManageVendors');
   const canManageTimeLogs = hasAdminPermission('canManageProjects') || hasAdminPermission('canManageKanbanTasks');
@@ -596,25 +589,6 @@ export const AdminTeams: React.FC = () => {
 
   return (
     <div className="min-h-full pb-10">
-      <div className="min-[900px]:hidden -mx-1 mb-4 overflow-x-auto px-1 custom-scrollbar">
-        <nav aria-label="Team sections" className="inline-flex min-w-max items-center gap-1 rounded-control border border-line bg-panel p-1">
-          {teamTabs.map((tab) => (
-            <Link
-              key={tab.key}
-              to={'/admin/team' + tab.query}
-              aria-current={currentView === tab.key ? 'page' : undefined}
-              className={'inline-flex min-h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors ' + (
-                currentView === tab.key
-                  ? 'border-accent/25 bg-accent/10 font-semibold text-fg'
-                  : 'border-transparent text-muted hover:bg-bg hover:text-fg'
-              )}
-            >
-              {tab.label}
-            </Link>
-          ))}
-        </nav>
-      </div>
-
       <AdminModuleHeader
         title={pageCopy[currentView].title}
         description={pageCopy[currentView].description}
@@ -645,25 +619,6 @@ export const AdminTeams: React.FC = () => {
           </>
         }
       />
-
-      <div className="mb-5 hidden min-[900px]:block">
-        <nav aria-label="Team sections" className="flex min-w-0 items-center gap-5 overflow-x-auto border-b border-line">
-          {teamTabs.map((tab) => (
-            <Link
-              key={tab.key}
-              to={'/admin/team' + tab.query}
-              aria-current={currentView === tab.key ? 'page' : undefined}
-              className={'inline-flex min-h-10 shrink-0 items-center border-b-2 px-1 text-xs font-medium transition-colors ' + (
-                currentView === tab.key
-                  ? 'border-accent text-fg'
-                  : 'border-transparent text-muted hover:border-line hover:text-fg'
-              )}
-            >
-              {tab.label}
-            </Link>
-          ))}
-        </nav>
-      </div>
 
       {notice && (
         <div className="mb-5 flex items-start gap-3 rounded-card border border-line bg-panel px-4 py-3 text-xs" role="status">
