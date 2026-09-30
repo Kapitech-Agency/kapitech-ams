@@ -903,7 +903,7 @@ export const AdminTeams: React.FC = () => {
     const sessionId = (() => {
       try {
         const raw = sessionStorage.getItem('kapitech_admin_profile_v2') || localStorage.getItem('kapitech_admin_profile_v2');
-        return raw ? JSON.parse(raw)?.id : undefined;
+        return raw ? JSON.parse(raw)?.user?.id : undefined;
       } catch {
         return undefined;
       }
