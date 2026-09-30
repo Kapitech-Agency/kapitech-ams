@@ -108,16 +108,36 @@ export const AdminInbox: React.FC = () => {
 
   // Server-backed inbox refresh. The API is the only source of truth.
   const refreshInbox = async () => {
-    const [res, dealsRes] = await Promise.all([api.leads.getAll(), api.crm.getDeals()]);
-    if (dealsRes.success && Array.isArray(dealsRes.data?.deals)) setCrmDeals(dealsRes.data.deals as CrmLead[]);
-    if (!res.success || !Array.isArray(res.data?.leads)) {
+    setLoading(true);
+    try {
+      const [res, dealsRes] = await Promise.all([
+        api.leads.getAll(),
+        api.crm.getDeals()
+      ]);
+
+      if (dealsRes.success && Array.isArray(dealsRes.data?.deals)) {
+        setCrmDeals(dealsRes.data.deals as CrmLead[]);
+      }
+
+      if (!res.success || !Array.isArray(res.data?.leads)) {
+        setToastMessage({
+          text: res.error || (language === 'id' ? 'Inbox gagal dimuat.' : 'Inbox could not be loaded.'),
+          tone: 'danger'
+        });
+        return;
+      }
+
+      const items = res.data.leads as ContactSubmission[];
+      setSubmissions(items);
+      setPrevCount(items.length);
+    } catch {
+      setToastMessage({
+        text: language === 'id' ? 'Inbox gagal dimuat. Coba lagi.' : 'Inbox could not be loaded. Please retry.',
+        tone: 'danger'
+      });
+    } finally {
       setLoading(false);
-      return;
     }
-    const items = res.data.leads as ContactSubmission[];
-    setSubmissions(items);
-    setPrevCount(items.length);
-    setLoading(false);
   };
 
   useEffect(() => {
