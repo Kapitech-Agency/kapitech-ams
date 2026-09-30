@@ -197,7 +197,7 @@ export const AdminDocuments: React.FC = () => {
   const [uploadCategory, setUploadCategory] = useState('Contract');
   const [uploadRelatedType, setUploadRelatedType] = useState('General');
   const [uploadFile, setUploadFile] = useState<File | null>(null);
-  const [uploadDragActive, setUploadDragActive] = useState(false);
+
   const [uploadDragActive, setUploadDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<DocumentItem | null>(null);
