@@ -784,23 +784,28 @@ export const AdminProjects: React.FC = () => {
         setServerMode(true);
         await syncProjects();
         showToast(language === 'id' ? 'Proyek berhasil disimpan.' : 'Project saved.');
+      } else if (serverMode) {
+        showToast(response.error || (language === 'id' ? 'Proyek gagal disimpan.' : 'Project could not be saved.'));
+        return;
       } else {
         setProjects(current =>
           editingProject
             ? current.map(item => (item.id === editingProject.id ? localProject : item))
             : [localProject, ...current]
         );
-        setServerMode(false);
-        showToast('Saved in demo mode. Connect the project service to persist it.');
+        showToast('Project saved to the A/B dataset.');
       }
-    } catch {
+    } catch (error) {
+      if (serverMode) {
+        showToast(error instanceof Error ? error.message : (language === 'id' ? 'Proyek gagal disimpan.' : 'Project could not be saved.'));
+        return;
+      }
       setProjects(current =>
         editingProject
           ? current.map(item => (item.id === editingProject.id ? localProject : item))
           : [localProject, ...current]
       );
-      setServerMode(false);
-      showToast('Saved in demo mode. Connect the project service to persist it.');
+      showToast('Project saved to the A/B dataset.');
     } finally {
       setSaving(false);
       setProjectDrawerOpen(false);
@@ -897,6 +902,9 @@ export const AdminProjects: React.FC = () => {
       if (response.success) {
         await syncProjects();
         showToast(language === 'id' ? 'Tugas berhasil disimpan.' : 'Task saved.');
+      } else if (serverMode) {
+        showToast(response.error || (language === 'id' ? 'Tugas gagal disimpan.' : 'Task could not be saved.'));
+        return;
       } else {
         setProjects(current =>
           current.map(item => {
@@ -907,9 +915,13 @@ export const AdminProjects: React.FC = () => {
             return { ...item, tasks, updatedAt: new Date().toISOString() };
           })
         );
-        showToast('Task saved in demo mode.');
+        showToast('Task saved to the A/B dataset.');
       }
-    } catch {
+    } catch (error) {
+      if (serverMode) {
+        showToast(error instanceof Error ? error.message : (language === 'id' ? 'Tugas gagal disimpan.' : 'Task could not be saved.'));
+        return;
+      }
       setProjects(current =>
         current.map(item => {
           if (item.id !== project.id) return item;
@@ -919,7 +931,7 @@ export const AdminProjects: React.FC = () => {
           return { ...item, tasks, updatedAt: new Date().toISOString() };
         })
       );
-      showToast('Task saved in demo mode.');
+      showToast('Task saved to the A/B dataset.');
     } finally {
       setSaving(false);
       setTaskDrawerOpen(false);
