@@ -2732,7 +2732,8 @@ export const AdminInvoicing: React.FC = () => {
       )}
     </div>
   </div><div className="overflow-hidden">{filteredQuotations.length===0?<div className="p-5"><EmptyState title="No quotations found" description="Adjust the search or filters."/></div>:<table className="ams-finance-table min-w-[1060px] border-separate border-spacing-0 text-xs">
-<thead><tr>
+<thead className="sticky top-0 z-10">
+<tr>
   <th className="w-[25%]">Quotation</th>
   <th className="w-[23%]">Client</th>
   <th className="w-[14%] text-right">Value</th>
