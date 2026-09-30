@@ -88,7 +88,7 @@ export const TrendChart: React.FC<{
   primaryFormat?: (value: number) => string;
   ariaLabel: string;
 }> = ({ data, primaryLabel, secondaryLabel, tertiaryLabel = 'Net', primaryFormat = formatCompact, ariaLabel }) => {
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [hover, setHover] = useState<{ index: number; x: number; percent: number } | null>(null);
   const gradientId = `dashboard-trend-${useId().replace(/:/g, '')}`;
   const width = 720;
   const height = 320;
@@ -121,8 +121,23 @@ export const TrendChart: React.FC<{
   const tertiaryPath = smoothLinePath(
     points.filter((point) => point.tertiaryY !== undefined).map((point) => ({ x: point.x, y: point.tertiaryY as number }))
   );
-  const active = activeIndex === null ? null : points[activeIndex];
-  const tooltipLeft = active ? Math.max(16, Math.min(84, (active.x / width) * 100)) : 50;
+  const active = hover ? points[hover.index] : null;
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const localX = Math.max(0, Math.min(rect.width, event.clientX - rect.left));
+    const percent = rect.width > 0 ? (localX / rect.width) * 100 : 50;
+    const viewBoxX = (localX / Math.max(1, rect.width)) * width;
+    let nearestIndex = 0;
+    let nearestDistance = Number.POSITIVE_INFINITY;
+    points.forEach((point, index) => {
+      const distance = Math.abs(point.x - viewBoxX);
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestIndex = index;
+      }
+    });
+    setHover({ index: nearestIndex, x: viewBoxX, percent });
+  };
 
   return (
     <div className="relative min-w-0" role="img" aria-label={ariaLabel}>
@@ -132,12 +147,12 @@ export const TrendChart: React.FC<{
         {data.some((point) => point.tertiary !== undefined) && <span className="inline-flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-success" />{tertiaryLabel}</span>}
       </div>
 
-      <div className="relative aspect-[16/7] min-h-[220px] max-h-[320px] overflow-hidden rounded-card border border-line/80 bg-bg/30">
+      <div className="relative h-[250px] w-full overflow-hidden rounded-card border border-line/80 bg-bg/30 sm:h-[280px] lg:h-[320px]" onPointerMove={handlePointerMove} onPointerLeave={() => setHover(null)}>
         <svg
           viewBox={`0 0 ${width} ${height}`}
           className="block h-full w-full touch-none"
-          preserveAspectRatio="xMidYMid meet"
-          onMouseLeave={() => setActiveIndex(null)}
+          preserveAspectRatio="none"
+          onMouseLeave={() => setHover(null)}
         >
           {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
             const value = maxValue - ratio * range;
@@ -175,13 +190,13 @@ export const TrendChart: React.FC<{
                 width={Math.min(60, innerWidth)}
                 height={innerHeight}
                 fill="transparent"
-                onMouseEnter={() => setActiveIndex(index)}
+                onMouseEnter={() => setHover((current) => current && current.index === index ? current : { index, x: point.x, percent: (point.x / width) * 100 })}
                 onFocus={() => setActiveIndex(index)}
                 onPointerDown={() => setActiveIndex(index)}
                 tabIndex={0}
                 aria-label={`${point.label}: ${primaryLabel} ${primaryFormat(point.primary)}${point.secondary !== undefined ? `, ${secondaryLabel} ${primaryFormat(point.secondary)}` : ''}`}
               />
-              {activeIndex === index && (
+              {hover?.index === index && (
                 <>
                   <circle cx={point.x} cy={point.y} r="5" fill="var(--panel)" stroke="var(--series-1)" strokeWidth="2" />
                   <circle cx={point.x} cy={point.y} r="2.4" fill="var(--series-1)" />
@@ -193,11 +208,11 @@ export const TrendChart: React.FC<{
             </g>
           ))}
 
-          {active && <line x1={active.x} x2={active.x} y1={top} y2={top + innerHeight} stroke="var(--series-4)" strokeWidth="1" strokeDasharray="3 4" opacity="0.65" vectorEffect="non-scaling-stroke" />}
+          {hover && <line x1={hover.x} x2={hover.x} y1={top} y2={top + innerHeight} stroke="var(--series-4)" strokeWidth="1" strokeDasharray="3 4" opacity="0.65" vectorEffect="non-scaling-stroke" />}
         </svg>
 
         {active && (
-          <div className="pointer-events-none absolute top-3 z-10 w-[190px] -translate-x-1/2 rounded-card border border-line bg-panel px-3 py-2 text-xs" style={{ left: `${tooltipLeft}%` }}>
+          <div className="pointer-events-none absolute top-3 z-10 w-[190px] -translate-x-1/2 rounded-card border border-line bg-panel px-3 py-2 text-xs" style={{ left: `${Math.max(12, Math.min(88, hover?.percent ?? 50))}%` }}>
             <p className="font-semibold text-fg">{active.label}</p>
             <div className="mt-1 text-[10px] text-muted">Plotted period</div>
             <div className="mt-2 space-y-1 text-muted">
@@ -244,7 +259,7 @@ export const BarChart: React.FC<{
   valueFormat?: (value: number) => string;
   ariaLabel: string;
 }> = ({ data, valueLabel, valueFormat = (value) => String(value), ariaLabel }) => {
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [hover, setHover] = useState<{ index: number; percent: number } | null>(null);
   const max = Math.max(1, ...data.map((point) => point.value));
   const width = 720;
   const height = 250;
@@ -255,17 +270,24 @@ export const BarChart: React.FC<{
   const innerWidth = width - left - right;
   const innerHeight = height - top - bottom;
   const slot = innerWidth / Math.max(data.length, 1);
-  const active = activeIndex === null ? null : data[activeIndex];
-  const tooltipLeft = activeIndex === null ? 50 : ((activeIndex + 0.5) / Math.max(data.length, 1)) * 100;
+  const active = hover === null ? null : data[hover.index];
+  const tooltipLeft = hover === null ? 50 : hover.percent;
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const localX = Math.max(0, Math.min(rect.width, event.clientX - rect.left));
+    const ratio = localX / Math.max(1, rect.width);
+    const index = Math.max(0, Math.min(data.length - 1, Math.floor(ratio * data.length)));
+    setHover({ index, percent: ratio * 100 });
+  };
 
   return (
     <div className="min-w-0" role="img" aria-label={ariaLabel}>
-      <div className="relative aspect-[16/7] min-h-[190px] max-h-[250px] overflow-hidden rounded-card border border-line/80 bg-bg/30">
+      <div className="relative h-[220px] w-full overflow-hidden rounded-card border border-line/80 bg-bg/30 sm:h-[240px] lg:h-[250px]" onPointerMove={handlePointerMove} onPointerLeave={() => setHover(null)}>
         <svg
           viewBox={`0 0 ${width} ${height}`}
           className="block h-full w-full"
-          preserveAspectRatio="xMidYMid meet"
-          onMouseLeave={() => setActiveIndex(null)}
+          preserveAspectRatio="none"
+          onMouseLeave={() => setHover(null)}
         >
           {[0, 0.5, 1].map((ratio) => {
             const yy = top + (1 - ratio) * innerHeight;
@@ -286,9 +308,9 @@ export const BarChart: React.FC<{
                   height={Math.max(1, barHeight)}
                   rx="6"
                   fill="var(--series-1)"
-                  opacity={activeIndex === null || activeIndex === index ? 0.9 : 0.35}
-                  onMouseEnter={() => setActiveIndex(index)}
-                  onFocus={() => setActiveIndex(index)}
+                  opacity={hover === null || hover.index === index ? 0.9 : 0.35}
+                  onMouseEnter={() => setHover({ index, percent: ((index + 0.5) / Math.max(data.length, 1)) * 100 })}
+                  onFocus={() => setHover({ index, percent: ((index + 0.5) / Math.max(data.length, 1)) * 100 })}
                   tabIndex={0}
                   aria-label={`${point.label}: ${valueFormat(point.value)}`}
                 />
