@@ -37,7 +37,7 @@ import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
-import { AdminMetricStrip, AdminModuleHeader, AdminPanel, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { api } from '../../lib/apiClient';
 import { formatAmount, getActiveCurrency, CURRENCY_EVENT, CurrencyCode } from '../../lib/currency';
@@ -1176,7 +1176,7 @@ export const AdminProjects: React.FC = () => {
     );
 
   return (
-    <div className="space-y-5">
+    <AdminPageShell featureSlug="projects-module">
       <Modal
         open={Boolean(deleteProject)}
         onClose={() => setDeleteProject(null)}
@@ -1662,7 +1662,7 @@ export const AdminProjects: React.FC = () => {
                         key={column.id}
                         aria-label={column.label + ' project column'}
                         className={[
-                          'ams-project-kanban-lane flex min-h-[680px] w-[352px] shrink-0 self-stretch flex-col overflow-visible rounded-[16px] border transition-[border-color,background-color,box-shadow] duration-200 sm:w-[390px]',
+                          'ams-project-kanban-lane flex min-h-[680px] w-[352px] shrink-0 self-stretch flex-col overflow-visible rounded-card border transition-[border-color,background-color,box-shadow] duration-200 sm:w-[390px]',
                           isDropTarget
                             ? 'border-accent/50 bg-accent/5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--accent)_18%,transparent)]'
                             : 'border-line/80',
@@ -1754,7 +1754,7 @@ export const AdminProjects: React.FC = () => {
                                 <article
                                   key={project.id}
                                   aria-grabbed={isDragging}
-                                  className={'ams-project-kanban-card group cursor-default select-none rounded-[12px] border border-line/90 p-4 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150 hover:-translate-y-px hover:border-accent/40 hover:shadow-[0_10px_28px_color-mix(in_srgb,var(--bg)_55%,transparent)] ' + (
+                                  className={'ams-project-kanban-card group cursor-default select-none rounded-card border border-line/90 p-4 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150 hover:-translate-y-px hover:border-accent/40 hover:shadow-[0_10px_28px_color-mix(in_srgb,var(--bg)_55%,transparent)] ' + (
                                     isDragging ? 'rotate-[1deg] scale-[0.98] border-accent/50 opacity-70' : movingProjectId === project.id ? 'border-accent/35 opacity-80' : ''
                                   )}
                                 >
@@ -2156,7 +2156,7 @@ export const AdminProjects: React.FC = () => {
                             }
                           }}
                           className={[
-                            'flex w-[320px] shrink-0 self-start flex-col rounded-[14px] border bg-panel/35 transition-[border-color,background-color,box-shadow] duration-150 sm:w-[340px]',
+                            'flex w-[320px] shrink-0 self-start flex-col rounded-card border bg-panel/35 transition-[border-color,background-color,box-shadow] duration-150 sm:w-[340px]',
                             isDropTarget ? 'border-accent/45 bg-accent/5 shadow-[0_0_0_1px_color-mix(in_srgb,var(--accent)_14%,transparent)]' : 'border-line/80',
                           ].join(' ')}
                         >
@@ -2232,7 +2232,7 @@ export const AdminProjects: React.FC = () => {
                                       setDragOverTaskStatus(null);
                                     }}
                                     className={[
-                                      'group select-none rounded-[12px] border bg-panel p-3.5 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150',
+                                      'group select-none rounded-card border bg-panel p-3.5 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150',
                                       canManageKanbanTasks ? '' : 'cursor-default',
                                       'border-line hover:border-accent/30 hover:bg-panel-hover',
                                       isDragging ? 'rotate-[0.6deg] scale-[0.98] opacity-50 shadow-lg' : '',
@@ -2679,7 +2679,7 @@ export const AdminProjects: React.FC = () => {
           </div>
         </form>
       </Drawer>
-    </div>
+    </AdminPageShell>
   );
 };
 
