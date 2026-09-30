@@ -272,9 +272,22 @@ export async function deleteAdminAccount(id: string): Promise<{ success: boolean
   return { success: false, error: res.error || res.data?.error || 'Gagal menghapus akun.' };
 }
 
-export function updateAdminAccountPermissions(id: string, permissions: Partial<StakeholderPermissions>): { success: boolean; error?: string } {
-  api.auth.updateUser(id, { permissions }).catch(() => {});
-  return { success: true };
+export async function updateAdminAccountPermissions(
+  id: string,
+  permissions: Partial<StakeholderPermissions>
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const res = await api.auth.updateUser(id, { permissions });
+    if (res.success && res.data?.success !== false) {
+      return { success: true };
+    }
+    return {
+      success: false,
+      error: res.error || res.data?.error || 'Failed to update admin permissions.'
+    };
+  } catch {
+    return { success: false, error: 'Failed to update admin permissions.' };
+  }
 }
 
 export function getStoredAdminAccounts(): AdminAccount[] {
