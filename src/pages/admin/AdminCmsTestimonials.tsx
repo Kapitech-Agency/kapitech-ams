@@ -6,7 +6,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
-import { AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { AdminModuleHeader , AdminPageShell } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 export const AdminCmsTestimonials: React.FC = () => {
@@ -88,10 +88,11 @@ export const AdminCmsTestimonials: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <AdminPageShell featureSlug="cms-testimonials-module">
       
       <AdminModuleHeader
         icon={<Users size={20} />}
+        className="mb-0"
         title="Testimonials"
         description={language === 'id'
           ? 'Kelola ulasan klien, feedback kepuasan, dan rekomendasi eksekutif yang tampil di homepage.'
@@ -302,7 +303,7 @@ export const AdminCmsTestimonials: React.FC = () => {
         </Drawer>
       )}
 
-    </div>
+    </AdminPageShell>
   );
 };
 export default AdminCmsTestimonials;
