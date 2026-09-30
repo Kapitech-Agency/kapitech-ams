@@ -33,7 +33,7 @@ import { Button } from '../../components/ui/Button';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
-import { AdminMetricStrip } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 
@@ -43,9 +43,9 @@ type SlaFilter = 'all' | 'healthy' | 'near' | 'over' | 'not-configured';
 type StatusScope = 'all' | 'active' | 'lead' | 'at-risk';
 
 const STATUS_OPTIONS: Array<{ value: AgencyClient['status']; label: string }> = [
+  { value: 'lead', label: 'Lead' },
   { value: 'active', label: 'Active' },
   { value: 'completed', label: 'Completed' },
-  { value: 'lead', label: 'Lead' },
   { value: 'inactive', label: 'Inactive' }
 ];
 
@@ -468,16 +468,31 @@ export const AdminClients: React.FC = () => {
   };
 
   return (
-    <div className="ams-clients-module min-h-full pb-8">
-      <section className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-[24px] font-semibold leading-8 tracking-[-0.02em] text-fg">Clients & Key Accounts</h1>
-            <span className="inline-flex items-center rounded-badge border border-line bg-panel px-2 py-0.5 text-[11px] font-medium text-fg">{clientMetrics.active} Accounts Active</span>
-          </div>
-          <p className="mt-1 text-[13px] leading-[18px] text-muted">Directory of enterprise clients, relationship health, spend-cap status, and account operations.</p>
-        </div>
-        <div className="flex items-center gap-2 self-start md:self-auto">
+    <AdminPageShell featureSlug="clients-module" className="ams-clients-module">
+      <AdminModuleHeader
+        className="mb-0"
+        title="Clients & Key Accounts"
+        description="Directory of enterprise clients, relationship health, spend-cap status, and account operations."
+        eyebrow={<AdminStatusBadge tone="neutral">{clientMetrics.active} active accounts</AdminStatusBadge>}
+        actions={(
+          <>
+            <Button type="button" variant="secondary" onClick={() => {
+              const rows = filteredClients.map((client) => [client.id, client.slug, client.name, client.company, client.industry || '', client.status, client.projectsCount, client.totalSpend || 0, client.location || ''].map((value) => '"' + String(value).replace(/"/g, '""') + '"').join(','));
+              const csv = ['Client ID,Slug,Contact,Company,Industry,Status,Projects,Total Spend,Location', ...rows].join('\\n');
+              const blob = new Blob(['\\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+              const url = URL.createObjectURL(blob);
+              const anchor = document.createElement('a');
+              anchor.href = url;
+              anchor.download = 'kapitech-client-directory.csv';
+              anchor.click();
+              URL.revokeObjectURL(url);
+            }} icon={<ArrowDown size={14} aria-hidden="true" />}>Export Directory</Button>
+            {canManageClients && (
+              <Button type="button" variant="primary" onClick={openCreate} icon={<Plus size={14} aria-hidden="true" />}>New Client</Button>
+            )}
+          </>
+        )}
+      />
           <Button type="button" variant="secondary" onClick={() => {
             const rows = filteredClients.map((client) => [client.id, client.slug, client.name, client.company, client.industry || '', client.status, client.projectsCount, client.totalSpend || 0, client.location || ''].map((value) => '"' + String(value).replace(/"/g, '""') + '"').join(','));
             const csv = ['Client ID,Slug,Contact,Company,Industry,Status,Projects,Total Spend,Location', ...rows].join('\\n');
@@ -492,10 +507,8 @@ export const AdminClients: React.FC = () => {
           {canManageClients && (
             <Button type="button" variant="primary" onClick={openCreate} icon={<Plus size={14} aria-hidden="true" />}>New Client</Button>
           )}
-        </div>
-      </section>
-
-      <section aria-label="Client metrics" className="mb-6">
+      
+      <section aria-label="Client metrics">
         <AdminMetricStrip
           className="lg:grid-cols-3"
           metrics={[
@@ -506,22 +519,17 @@ export const AdminClients: React.FC = () => {
         />
       </section>
 
-      <section aria-label="Search and filter clients" className="mb-6 rounded-card border border-line bg-panel p-4">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          <div className="relative w-full xl:max-w-[420px]">
-            <Search size={16} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" aria-hidden="true" />
-            <label htmlFor="client-directory-search" className="sr-only">Search client</label>
-            <input id="client-directory-search" type="search" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search by company, contact, industry, or client ID..." className="h-9 min-h-9 w-full rounded-control border border-line bg-bg pl-9 pr-3 text-[12px] text-fg placeholder:text-muted focus:border-accent focus:outline-none" autoComplete="off" />
-          </div>
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <CustomSelect value={industryFilter} onChange={setIndustryFilter} options={[{ value: 'all', label: 'All industries' }, ...industryOptions.map((value) => ({ value, label: value }))]} aria-label="Filter by industry" className="min-w-[148px]" triggerClassName="w-full" />
-            <CustomSelect value={statusFilter} onChange={(value) => setStatusFilter(value as 'all' | AgencyClient['status'])} options={[{ value: 'all', label: 'All statuses' }, ...STATUS_OPTIONS]} aria-label="Filter by client status" className="min-w-[132px]" triggerClassName="w-full" />
-            <CustomSelect value={locationFilter} onChange={setLocationFilter} options={[{ value: 'all', label: 'All locations' }, ...locationOptions.map((value) => ({ value, label: value }))]} aria-label="Filter by location" className="min-w-[136px]" triggerClassName="w-full" />
-            <CustomSelect value={slaFilter} onChange={(value) => setSlaFilter(value as SlaFilter)} options={[{ value: 'all', label: 'All spend-cap health' }, { value: 'healthy', label: 'Healthy' }, { value: 'near', label: 'Near cap' }, { value: 'over', label: 'Over cap' }, { value: 'not-configured', label: 'Not configured' }]} aria-label="Filter by spend-cap health" className="min-w-[156px]" triggerClassName="w-full" />
-            <button type="button" onClick={resetFilters} className="inline-flex h-9 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-muted hover:bg-panel hover:text-fg"><X size={13} /> Reset</button>
-          </div>
-        </div>
-        <div className="mt-3 flex min-w-0 gap-1 overflow-x-auto custom-scrollbar pb-1" aria-label="Client scopes">
+      <AdminFilterBar
+        slug="client-directory-filters"
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search by company, contact, industry, or client ID..."
+        searchLabel="Search clients"
+        actions={(
+          <Button type="button" variant="secondary" icon={<X size={13} />} onClick={resetFilters}>Reset filters</Button>
+        )}
+        footer={(
+          <div className="flex min-w-0 gap-1 overflow-x-auto custom-scrollbar" aria-label="Client scopes">
           {[
             { id: 'all', label: 'All accounts' },
             { id: 'active', label: 'Active' },
@@ -532,8 +540,9 @@ export const AdminClients: React.FC = () => {
               {item.label}
             </button>
           ))}
-        </div>
-      </section>
+          </div>
+        )}
+      />
 
       <section aria-label="Clients directory" className="ams-client-table-shell overflow-hidden rounded-card border border-line bg-panel">
         <div className="overflow-x-auto custom-scrollbar">
@@ -796,7 +805,7 @@ export const AdminClients: React.FC = () => {
           </div>
         )}
       </Modal>
-    </div>
+    </AdminPageShell>
   );
 };
 
