@@ -212,21 +212,21 @@
 .ams-shell .ams-project-kanban-board::-webkit-scrollbar,
 .ams-shell .ams-project-kanban-task-board::-webkit-scrollbar{display:none}
 .ams-shell .ams-project-kanban-board{
-  background:color-mix(in srgb,var(--bg) 97%,var(--text) 3%);
+  background:var(--bg);
   border:1px solid var(--line);
   border-radius:12px;
   box-shadow:none;
 }
 .ams-shell .ams-project-kanban-lane{
-  background:color-mix(in srgb,var(--panel) 92%,var(--text) 8%);
+  background:var(--panel);
   box-shadow:none;
 }
 .ams-shell .ams-project-kanban-lane[data-drop-target="true"]{
-  background:color-mix(in srgb,var(--panel) 84%,var(--accent) 16%);
+  background:color-mix(in srgb,var(--panel) 92%,var(--accent) 8%);
 }
 .ams-shell .ams-project-kanban-stack{
-  background:color-mix(in srgb,var(--bg) 94%,var(--panel) 6%);
-  min-height:620px;
+  background:var(--bg);
+  min-height:0;
   overflow-y:visible;
 }
 .ams-shell .ams-project-kanban-card{
@@ -237,7 +237,10 @@
 }
 .ams-shell .ams-project-kanban-card:hover{
   background:var(--panel-hover);
-  box-shadow:none;
+  border-color:color-mix(in srgb,var(--accent) 24%,var(--line));
+}
+.ams-shell .ams-project-kanban-card:focus-within{
+  border-color:color-mix(in srgb,var(--accent) 35%,var(--line));
 }
 .ams-shell .ams-project-kanban-card:active{
   cursor:default;
@@ -245,6 +248,41 @@
 .ams-shell .ams-project-kanban-card[aria-grabbed="true"]{
   cursor:grabbing;
   box-shadow:none;
+}
+.ams-shell .ams-projects-table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  font-variant-numeric:tabular-nums;
+}
+.ams-shell .ams-projects-table thead th{
+  height:42px!important;
+  padding:0 14px!important;
+  background:var(--panel)!important;
+  border-bottom:1px solid var(--line)!important;
+  color:var(--muted)!important;
+  font-size:11px!important;
+  line-height:16px!important;
+  font-weight:600!important;
+  letter-spacing:0!important;
+  text-transform:none!important;
+  text-align:left!important;
+  white-space:nowrap!important;
+}
+.ams-shell .ams-projects-table tbody td{
+  padding:11px 14px!important;
+  border-bottom:1px solid var(--line)!important;
+  color:var(--text)!important;
+  vertical-align:middle!important;
+}
+.ams-shell .ams-projects-table tbody tr:last-child td{
+  border-bottom:0!important;
+}
+.ams-shell .ams-projects-table tbody tr{
+  transition:background-color 120ms ease;
+}
+.ams-shell .ams-projects-table tbody tr:hover{
+  background:var(--panel-hover);
 }
 .ams-shell .ams-project-kanban-card [data-drag-handle="true"]{
   cursor:grab;
