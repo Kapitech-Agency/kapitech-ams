@@ -4141,10 +4141,6 @@ export const AdminInvoicing: React.FC = () => {
         )}
       </Modal>
     </div>
-    </div>
-    </div>
-    </div>
-    </div>
   );
 };
 
