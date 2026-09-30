@@ -4005,7 +4005,7 @@ export const AdminInvoicing: React.FC = () => {
                       ))}
                     </div>
                   </div>
-                ) : null}}
+                ) : null}
                 {detailInvoice.paymentTerms && <p className="mt-2 text-xs text-muted">Terms: {detailInvoice.paymentTerms}</p>}
               </div>
               <div className="rounded-card border border-line bg-bg p-4 text-xs">
