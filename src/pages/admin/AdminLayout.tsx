@@ -720,6 +720,33 @@ export const AdminLayout: React.FC = () => {
                     );
                   })}
                 </nav>
+              ) : location.pathname === '/admin/documents' ? (
+                <nav aria-label="Documents sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
+                  {[
+                    { key: 'all', label: 'All Internal Documents', to: '/admin/documents' },
+                    { key: 'sops', label: 'SOPs & Policies', to: '/admin/documents?documents=sops' },
+                    { key: 'legal', label: 'Legal & Corporate', to: '/admin/documents?documents=legal' },
+                    { key: 'finance', label: 'Finance & Tax', to: '/admin/documents?documents=finance' },
+                    { key: 'infra', label: 'Infrastructure & Keys', to: '/admin/documents?documents=infra' },
+                  ].map((tab) => {
+                    const activeTab = new URLSearchParams(location.search).get('documents') || 'all';
+                    return (
+                      <NavLink
+                        key={tab.key}
+                        to={tab.to}
+                        end
+                        data-ams-slug={'documents-tab-' + tab.key}
+                        className={'group relative inline-flex h-9 shrink-0 items-center rounded-chip border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (
+                          activeTab === tab.key
+                            ? 'border-accent/25 bg-accent/10 font-semibold text-fg'
+                            : 'border-transparent text-muted hover:bg-bg hover:text-fg'
+                        )}
+                      >
+                        {tab.label}
+                      </NavLink>
+                    );
+                  })}
+                </nav>
               ) : (
                 <nav aria-label="Breadcrumb">
                   <ol className="flex min-w-0 items-center gap-2 text-[11px]">
