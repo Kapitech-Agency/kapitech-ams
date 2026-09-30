@@ -1119,7 +1119,7 @@ export const AdminTeams: React.FC = () => {
                         const projectsForMember = memberProjects(member);
                         const skills = memberCoreSkills(member);
                         return (
-                          <tr key={member.id} data-ams-slug={member.slug}>
+                          <tr key={member.id} data-ams-slug={member.slug} className="transition-colors hover:bg-bg/40">
                             <td>
                               <button type="button" className="text-left" onClick={() => setMemberDetail(member)}>
                                 <ProfileIdentity profile={{ id: member.id, name: member.name, username: member.username }} showRole={false} />
@@ -1204,13 +1204,13 @@ export const AdminTeams: React.FC = () => {
             <span className="text-muted">
               Showing <span className="font-semibold tabular-nums text-fg">{teamRows.length ? (teamPage - 1) * teamPageSize + 1 : 0}</span> to <span className="font-semibold tabular-nums text-fg">{Math.min(teamPage * teamPageSize, teamRows.length)}</span> of <span className="font-semibold tabular-nums text-fg">{teamRows.length}</span> members
             </span>
-            <div className="flex items-center gap-1.5">
-              <button type="button" disabled={teamPage <= 1} onClick={() => setTeamPage((value) => Math.max(1, value - 1))} className="inline-flex h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[11px] text-muted disabled:opacity-40"><ChevronLeft size={14} /> Previous</button>
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 custom-scrollbar">
+              <button type="button" disabled={teamPage <= 1} onClick={() => setTeamPage((value) => Math.max(1, value - 1))} className="inline-flex h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[11px] text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-40"><ChevronLeft size={14} /> Previous</button>
               {Array.from({ length: Math.min(teamPageCount, 8) }, (_, index) => {
                 const page = index + 1;
-                return <button key={page} type="button" onClick={() => setTeamPage(page)} className={'h-8 w-8 rounded-control border px-0 text-[11px] font-semibold ' + (teamPage === page ? 'border-accent bg-accent text-white' : 'border-line bg-bg text-muted')}>{page}</button>;
+                return <button key={page} type="button" aria-current={teamPage === page ? 'page' : undefined} onClick={() => setTeamPage(page)} className={'h-8 w-8 rounded-control border px-0 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (teamPage === page ? 'border-accent bg-accent text-white' : 'border-line bg-bg text-muted hover:bg-panel hover:text-fg')}>{page}</button>;
               })}
-              <button type="button" disabled={teamPage >= teamPageCount} onClick={() => setTeamPage((value) => Math.min(teamPageCount, value + 1))} className="inline-flex h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[11px] text-muted disabled:opacity-40">Next <ChevronRight size={14} /></button>
+              <button type="button" disabled={teamPage >= teamPageCount} onClick={() => setTeamPage((value) => Math.min(teamPageCount, value + 1))} className="inline-flex h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[11px] text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-40">Next <ChevronRight size={14} /></button>
             </div>
           </div>
         </div>
@@ -1336,7 +1336,7 @@ export const AdminTeams: React.FC = () => {
                       const rateValue = contract ? formatAmount(contract.rateAmount, contract.currency) : formatAmount(vendor.hourlyRate, vendor.currency);
                       const rateSuffix = contract ? (contract.rateType === 'monthly_retainer' ? '/ mo' : contract.rateType === 'project' ? '/ project' : '/ hr') : '/ hr';
                       return (
-                        <tr key={vendor.id} data-ams-slug={vendor.slug}>
+                        <tr key={vendor.id} data-ams-slug={vendor.slug} className="transition-colors hover:bg-bg/40">
                           <td>
                             <button type="button" className="flex items-center gap-3 text-left" onClick={() => setVendorDetail(vendor)}>
                               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted">
@@ -1408,7 +1408,7 @@ export const AdminTeams: React.FC = () => {
                 <button type="button" disabled={vendorPage <= 1} onClick={() => setVendorPage((value) => Math.max(1, value - 1))} className="inline-flex h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[11px] text-muted disabled:opacity-40"><ChevronLeft size={14} /> Previous</button>
                 {Array.from({ length: Math.min(vendorPageCount, 8) }, (_, index) => {
                   const page = index + 1;
-                  return <button key={page} type="button" onClick={() => setVendorPage(page)} className={'h-8 w-8 rounded-control border px-0 text-[11px] font-semibold ' + (vendorPage === page ? 'border-accent bg-accent text-white' : 'border-line bg-bg text-muted')}>{page}</button>;
+                  return <button key={page} type="button" aria-current={vendorPage === page ? 'page' : undefined} onClick={() => setVendorPage(page)} className={'h-8 w-8 rounded-control border px-0 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (vendorPage === page ? 'border-accent bg-accent text-white' : 'border-line bg-bg text-muted hover:bg-panel hover:text-fg')}>{page}</button>;
                 })}
                 <button type="button" disabled={vendorPage >= vendorPageCount} onClick={() => setVendorPage((value) => Math.min(vendorPageCount, value + 1))} className="inline-flex h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[11px] text-muted disabled:opacity-40">Next <ChevronRight size={14} /></button>
               </div>
@@ -1445,7 +1445,7 @@ export const AdminTeams: React.FC = () => {
                 </tr></thead>
                 <tbody>
                   {capacityRows.map((row) => (
-                    <tr key={row.member.id} data-ams-slug={row.member.slug}>
+                    <tr key={row.member.id} data-ams-slug={row.member.slug} className="transition-colors hover:bg-bg/40">
                       <td>
                         <p className="font-medium text-fg">{row.member.name}</p>
                         <p className="mt-1 text-[10px] text-muted">{row.member.role} · {row.member.division}</p>
@@ -1498,7 +1498,7 @@ export const AdminTeams: React.FC = () => {
                 </tr></thead>
                 <tbody>
                   {members.map((member) => (
-                    <tr key={member.id} data-ams-slug={member.slug}>
+                    <tr key={member.id} data-ams-slug={member.slug} className="transition-colors hover:bg-bg/40">
                       <td>
                         <ProfileIdentity profile={{ id: member.id, name: member.name, username: member.username }} showRole={false} />
                         <span className="mt-1 block font-mono text-[9px] text-muted/70">slug: {member.slug}</span>
@@ -1526,7 +1526,7 @@ export const AdminTeams: React.FC = () => {
                 </tr></thead>
                 <tbody>
                   {skillRows.map((row) => (
-                    <tr key={row.slug} data-ams-slug={row.slug}>
+                    <tr key={row.slug} data-ams-slug={row.slug} className="transition-colors hover:bg-bg/40">
                       <td>
                         <p className="font-medium text-fg">{row.skill}</p>
                         <p className="mt-1 font-mono text-[9px] text-muted/70">slug: {row.slug}</p>
@@ -1633,7 +1633,7 @@ export const AdminTeams: React.FC = () => {
                   </tr></thead>
                   <tbody>
                     {filteredLogs.map((log) => (
-                      <tr key={log.id} data-ams-slug={log.slug}>
+                      <tr key={log.id} data-ams-slug={log.slug} className="transition-colors hover:bg-bg/40">
                         <td className="tabular-nums text-muted">{formatDate(log.date)}</td>
                         <td>
                           <p className="font-medium text-fg">{log.projectName || 'General'}</p>
