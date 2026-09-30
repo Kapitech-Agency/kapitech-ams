@@ -309,72 +309,74 @@ export const AdminCmsProjects: React.FC = () => {
       })()}
 
       {/* Portfolio filters */}
-      <div className="rounded-card border border-line bg-panel p-3.5 sm:p-4">
-        <div className="flex min-w-0 items-center gap-3 overflow-x-auto ams-topnav-scroll">
-          <div className="flex shrink-0 items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-control border border-line bg-bg text-muted">
-              <Sliders size={14} strokeWidth={1.8} />
+      <div className="overflow-hidden rounded-card border border-line bg-panel p-3.5 sm:p-4">
+        <div className="min-w-0 overflow-x-auto ams-topnav-scroll">
+          <div className="flex min-w-max items-center gap-3 whitespace-nowrap">
+            <div className="flex shrink-0 items-center gap-2">
+              <div className="flex h-7 w-7 items-center justify-center rounded-control border border-line bg-bg text-muted">
+                <Sliders size={14} strokeWidth={1.8} />
+              </div>
+              <div className="hidden sm:block">
+                <p className="text-xs font-semibold text-fg">Portfolio filters</p>
+              </div>
             </div>
-            <div className="hidden sm:block">
-              <p className="text-xs font-semibold text-fg">Portfolio filters</p>
+
+            <div className="relative w-[220px] shrink-0 sm:w-[240px] lg:w-[260px]">
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" size={14} />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={language === 'id' ? 'Cari proyek, klien, industri...' : 'Search projects, clients, industries...'}
+                aria-label={language === 'id' ? 'Cari portfolio' : 'Search portfolio'}
+                className="min-h-10 w-full rounded-control border border-line bg-bg pl-10 pr-4 text-xs text-fg placeholder:text-muted transition-colors focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/20"
+              />
             </div>
-          </div>
 
-          <div className="relative w-[240px] shrink-0 sm:w-[260px] lg:w-[280px]">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" size={14} />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={language === 'id' ? 'Cari proyek, klien, industri...' : 'Search projects, clients, industries...'}
-              aria-label={language === 'id' ? 'Cari portfolio' : 'Search portfolio'}
-              className="min-h-10 w-full rounded-control border border-line bg-bg pl-10 pr-4 text-xs text-fg placeholder:text-muted transition-colors focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/20"
-            />
-          </div>
+            <div className="flex shrink-0 items-center gap-1 rounded-control border border-line bg-bg p-1" role="group" aria-label="Portfolio pillar filter">
+              {[
+                { value: 'All', label: language === 'id' ? 'Semua' : 'All' },
+                { value: 'Visual Experience', label: 'Visual Experience' },
+                { value: 'Innovation Development', label: 'Innovation Development' }
+              ].map((option) => {
+                const active = filterPillar === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setFilterPillar(option.value as typeof filterPillar)}
+                    aria-pressed={active}
+                    className={[
+                      "inline-flex h-8 shrink-0 items-center justify-center rounded-chip px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                      active
+                        ? "border border-accent/25 bg-accent/10 font-semibold text-fg"
+                        : "border border-transparent text-muted hover:bg-panel hover:text-fg"
+                    ].join(" ")}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
 
-          <div className="flex shrink-0 items-center gap-1 rounded-control border border-line bg-bg p-1" role="group" aria-label="Portfolio pillar filter">
-            {[
-              { value: 'All', label: language === 'id' ? 'Semua' : 'All' },
-              { value: 'Visual Experience', label: 'Visual Experience' },
-              { value: 'Innovation Development', label: 'Innovation Development' }
-            ].map((option) => {
-              const active = filterPillar === option.value;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => setFilterPillar(option.value as typeof filterPillar)}
-                  aria-pressed={active}
-                  className={[
-                    "inline-flex h-8 shrink-0 items-center justify-center rounded-chip px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
-                    active
-                      ? "border border-accent/25 bg-accent/10 font-semibold text-fg"
-                      : "border border-transparent text-muted hover:bg-panel hover:text-fg"
-                  ].join(" ")}
-                >
-                  {option.label}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="ml-auto flex shrink-0 items-center gap-2 pl-1">
-            <span className="text-[11px] text-muted whitespace-nowrap">
-              {filteredProjects.length} of {projects.length}
-            </span>
-            {(searchQuery || filterPillar !== 'All') && (
+            <div className="flex shrink-0 items-center gap-2 pl-1">
+              <span className="text-[11px] text-muted">
+                {filteredProjects.length} of {projects.length}
+              </span>
               <button
                 type="button"
                 onClick={() => {
                   setSearchQuery('');
                   setFilterPillar('All');
                 }}
-                className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[11px] font-medium text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg"
+                disabled={!searchQuery && filterPillar === 'All'}
+                className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[11px] font-medium text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg disabled:cursor-not-allowed disabled:opacity-45"
+                aria-label="Reset portfolio filters"
               >
                 <X size={13} />
-                Clear
+                Reset
               </button>
-            )}
+            </div>
           </div>
         </div>
       </div>
