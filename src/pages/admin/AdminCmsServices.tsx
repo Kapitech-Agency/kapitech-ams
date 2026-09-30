@@ -319,7 +319,22 @@ export const AdminCmsServices: React.FC = () => {
         <div className="rounded-card border border-danger/30 bg-danger/10 p-4">
           <p className="text-sm font-semibold text-fg">Unable to load services</p>
           <p className="mt-1 text-xs leading-5 text-muted">{loadError}</p>
-          <button type="button" onClick={() => window.location.reload()} className="mt-4 min-h-10 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">Retry</button>
+          <button type="button" onClick={() => void (async () => {
+     setIsLoading(true);
+     try {
+       const res = await api.cms.getServices();
+       if (res.success && Array.isArray(res.data?.services)) {
+         setServicesList(res.data.services as ServiceItemData[]);
+         setLoadError(null);
+       } else {
+         setLoadError(res.error || 'Services could not be loaded. Try again.');
+       }
+     } catch {
+       setLoadError('Services could not be loaded. Try again.');
+     } finally {
+       setIsLoading(false);
+     }
+   })()} className="mt-4 min-h-10 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">Retry</button>
         </div>
       ) : filtered.length === 0 ? (
         <div className="rounded-card border border-line bg-panel p-10 text-center">
