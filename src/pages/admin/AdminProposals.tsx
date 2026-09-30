@@ -24,7 +24,7 @@ import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
-import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 type ProposalStatus = 'draft' | 'review' | 'approved' | 'sent' | 'accepted' | 'rejected';
@@ -199,6 +199,8 @@ export const AdminProposals: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [statusFilter, setStatusFilter] = useState<ProposalStatus | 'all'>('all');
   const [expiryFilter, setExpiryFilter] = useState<'all' | 'active' | 'expiring' | 'expired'>('all');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
@@ -343,6 +345,11 @@ export const AdminProposals: React.FC = () => {
       return sortBy === 'oldest' ? aDate - bDate : bDate - aDate;
     });
   }, [proposals, searchQuery, statusFilter, expiryFilter, sortBy]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredProposals.length / pageSize));
+  const pagedProposals = filteredProposals.slice((page - 1) * pageSize, page * pageSize);
+  useEffect(() => { setPage((current) => Math.min(current, pageCount)); }, [pageCount]);
+  useEffect(() => { setPage(1); }, [searchQuery, statusFilter, expiryFilter, sortBy]);
 
   const metrics = useMemo(() => {
     const expiring = proposals.filter((p) => {
@@ -673,7 +680,7 @@ export const AdminProposals: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredProposals.map((proposal) => (
+                  {pagedProposals.map((proposal) => (
                     <tr key={proposal.id} className="border-b border-line last:border-b-0 hover:bg-panel-hover">
                       <td className="max-w-[340px] px-4 py-3.5 sm:px-5">
                         <button type="button" onClick={() => setDetailProposal(proposal)} className="block max-w-full text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
@@ -719,6 +726,7 @@ export const AdminProposals: React.FC = () => {
                 </tbody>
               </table>
             </div>
+            <AdminTablePagination total={filteredProposals.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel={language === 'id' ? 'dokumen' : 'documents'} slug="proposals-table-pagination" />
           </section>
 
           <section className="grid gap-4 lg:grid-cols-2">
