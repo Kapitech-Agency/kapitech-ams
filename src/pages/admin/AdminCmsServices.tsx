@@ -183,10 +183,17 @@ export const AdminCmsServices: React.FC = () => {
     if (!deleteTarget) return;
     const slug = deleteTarget;
     setDeleteTarget(null);
-    const res = await api.cms.deleteService(slug);
-    if (!res.success) { setStatusMessage(res.error || 'Service could not be deleted.'); return; }
-    setServicesList(servicesList.filter(s => s.slug !== slug));
-    setStatusMessage('Service deleted successfully.');
+    try {
+      const res = await api.cms.deleteService(slug);
+      if (!res.success) {
+        setStatusMessage(res.error || 'Service could not be deleted.');
+        return;
+      }
+      setServicesList(current => current.filter(s => s.slug !== slug));
+      setStatusMessage('Service deleted successfully.');
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : 'Service could not be deleted.');
+    }
     setTimeout(() => setStatusMessage(null), 3000);
   };
 
