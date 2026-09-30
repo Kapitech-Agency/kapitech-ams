@@ -24,7 +24,7 @@ import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
-import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminTablePagination , AdminPageShell } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 type ProposalStatus = 'draft' | 'review' | 'approved' | 'sent' | 'accepted' | 'rejected';
@@ -531,7 +531,7 @@ export const AdminProposals: React.FC = () => {
   const sectionClass = 'rounded-card border border-line bg-panel p-4';
 
   return (
-    <div className="space-y-6">
+    <AdminPageShell featureSlug="proposals-module">
       {notification && (
         <div className="fixed inset-x-3 top-16 z-50 flex justify-center sm:inset-x-auto sm:right-6 sm:top-[68px]" role="status" aria-live="polite">
           <div className="flex max-w-md items-start gap-2 rounded-control border border-line bg-panel px-3 py-2.5 text-xs text-fg">
@@ -542,6 +542,7 @@ export const AdminProposals: React.FC = () => {
       )}
 
       <AdminModuleHeader
+        className="mb-0"
         title={language === 'id' ? 'Proposal & Penawaran' : 'Proposal & Quotes'}
         description={language === 'id' ? 'Kelola proposal komersial, nilai penawaran, status, dan tindak lanjut dari satu tempat.' : 'Manage commercial proposals, values, status, and follow-up from one place.'}
         actions={(
@@ -946,7 +947,7 @@ export const AdminProposals: React.FC = () => {
         )}
       >
       </Modal>
-    </div>
+    </AdminPageShell>
   );
 };
 
