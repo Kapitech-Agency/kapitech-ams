@@ -646,7 +646,7 @@ export const AdminLayout: React.FC = () => {
                     );
                   })}
                 </nav>
-              ) : location.pathname === '/admin/tasks' ? (
+              ) : location.pathname === '/admin/dashboard' && new URLSearchParams(location.search).get('view') === 'tasks' ? (
                 <nav aria-label="Tasks sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
                   {[
                     { key: 'all', label: 'All Tasks', search: '' },
@@ -657,7 +657,7 @@ export const AdminLayout: React.FC = () => {
                     { key: 'completed', label: 'Completed', search: '&taskscope=completed' },
                   ].map((tab) => {
                     const activeScope = new URLSearchParams(location.search).get('taskscope') || 'all';
-                    const query = '/admin/tasks' + (tab.search ? '?' + tab.search.slice(1) : '');
+                    const query = '/admin/dashboard?view=tasks' + tab.search;
                     return (
                       <NavLink
                         key={tab.key}
