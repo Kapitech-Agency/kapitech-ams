@@ -2,8 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   AlertTriangle,
-  ArrowDownAZ,
-  ArrowUpAZ,
+  ArrowDown,
+  ArrowUp,
   ArrowUpRight,
   CheckCircle2,
   Clock3,
@@ -656,7 +656,7 @@ export const TasksWorkspace: React.FC = () => {
 
   const sortIcon = (key: TaskSortKey) => {
     if (sortKey !== key) return null;
-    return sortDirection === 'asc' ? <ArrowUpAZ size={12} /> : <ArrowDownAZ size={12} />;
+    return sortDirection === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />;
   };
 
   return (
