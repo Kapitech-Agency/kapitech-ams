@@ -707,7 +707,7 @@ export const AdminInvoicing: React.FC = () => {
   const [incomePage, setIncomePage] = useState(1);
   const incomePageSize = 10;
   const [quotations, setQuotations] = useState<FinanceQuotation[]>([]);
-  const [usingDemoQuotations, setUsingDemoQuotations] = useState(true);
+  const [usingDemoQuotations, setUsingDemoQuotations] = useState(false);
   const [quotationLoading, setQuotationLoading] = useState(true);
   const [quotationSearch, setQuotationSearch] = useState('');
   const [quotationStatusFilter, setQuotationStatusFilter] = useState<'all' | FinanceQuotationStatus>('all');
@@ -1007,12 +1007,7 @@ export const AdminInvoicing: React.FC = () => {
     [currencyInvoices]
   );
 
-  const retainerLedgerInvoices = useMemo(() => {
-    if (retainerInvoices.length) return retainerInvoices;
-    return STITCH_FINANCE_RETAINER_INVOICES.filter((invoice) => invoice.currency === currency).map(normalizeFinanceInvoice);
-  }, [currency, retainerInvoices]);
-
-  const usingDemoRetainerLedger = retainerInvoices.length === 0 && retainerLedgerInvoices.length > 0;
+  const retainerLedgerInvoices = retainerInvoices;
 
   const financeChartData = useMemo(
     () => cashFlow.map((point) => {
@@ -2567,7 +2562,7 @@ export const AdminInvoicing: React.FC = () => {
         </div>
       ) : financeView === 'quotations' ? (
         <div className="space-y-5">
-          <section className="grid grid-cols-2 gap-y-5 divide-x divide-line sm:grid-cols-4 sm:divide-x"><FinanceMetricCard label="Total quotations" value={quotationMetrics.total} context="All records" sparkline={[quotationMetrics.total, quotationMetrics.active, quotationMetrics.accepted, quotationMetrics.expiring]} icon={<FileText size={15}/>}/><FinanceMetricCard label="Active pipeline" value={quotationMetrics.active} context="Draft through sent" sparkline={[quotationMetrics.total, quotationMetrics.active, quotationMetrics.accepted, quotationMetrics.expiring]} icon={<Clock3 size={15}/>}/><FinanceMetricCard label="Pipeline value" value={formatFinanceCardAmount(quotationMetrics.value,currency)} context={usingDemoQuotations?'Demo workspace data':'Server-backed records'} sparkline={filteredQuotations.length ? filteredQuotations.slice(0, 8).map((quotation) => quotation.total) : [quotationMetrics.value]} icon={<WalletCards size={15} />}/><FinanceMetricCard label="Accepted" value={quotationMetrics.accepted} context={quotationMetrics.approved+' approved ready to convert'} sparkline={[quotationMetrics.active, quotationMetrics.approved, quotationMetrics.accepted]} icon={<CheckCircle2 size={15} className="text-success"/>} toneClassName="text-success"/></section>
+          <section className="grid grid-cols-2 gap-y-5 divide-x divide-line sm:grid-cols-4 sm:divide-x"><FinanceMetricCard label="Total quotations" value={quotationMetrics.total} context="All records" sparkline={[quotationMetrics.total, quotationMetrics.active, quotationMetrics.accepted, quotationMetrics.expiring]} icon={<FileText size={15}/>}/><FinanceMetricCard label="Active pipeline" value={quotationMetrics.active} context="Draft through sent" sparkline={[quotationMetrics.total, quotationMetrics.active, quotationMetrics.accepted, quotationMetrics.expiring]} icon={<Clock3 size={15}/>}/><FinanceMetricCard label="Pipeline value" value={formatFinanceCardAmount(quotationMetrics.value,currency)} context="Server-backed records" sparkline={filteredQuotations.length ? filteredQuotations.slice(0, 8).map((quotation) => quotation.total) : [quotationMetrics.value]} icon={<WalletCards size={15} />}/><FinanceMetricCard label="Accepted" value={quotationMetrics.accepted} context={quotationMetrics.approved+' approved ready to convert'} sparkline={[quotationMetrics.active, quotationMetrics.approved, quotationMetrics.accepted]} icon={<CheckCircle2 size={15} className="text-success"/>} toneClassName="text-success"/></section>
           <section className="space-y-5">
             <section className="rounded-card border border-line bg-panel overflow-hidden">
   <div className="border-b border-line bg-panel p-4 sm:px-5">
@@ -2840,7 +2835,7 @@ export const AdminInvoicing: React.FC = () => {
       ) : financeView === 'tax-retainers' ? (
         <div className="space-y-5">
           <section className="grid grid-cols-2 gap-y-5 divide-x divide-line sm:grid-cols-4 sm:divide-x"><FinanceMetricCard label="Tax provision" value={formatFinanceCardAmount(taxProvision,currency)} context="Tax across issued invoices" sparkline={[taxProvision, taxCollected, taxOutstanding, retainerBilled]} icon={<Receipt size={15}/>}/><FinanceMetricCard label="Tax collected" value={formatFinanceCardAmount(taxCollected,currency)} context={(taxProvision>0?((taxCollected/taxProvision)*100).toFixed(1):'0.0')+'% of provision'} sparkline={[taxProvision, taxCollected, taxOutstanding]} icon={<BadgeCheck size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Tax outstanding" value={formatFinanceCardAmount(taxOutstanding,currency)} context="Provision not collected" sparkline={[taxOutstanding, taxProvision, taxCollected]} icon={<Hourglass size={15} className="text-warning"/>} toneClassName="text-warning"/><FinanceMetricCard label="Retainer billed" value={formatFinanceCardAmount(retainerBilled,currency)} context={(retainerBilled>0?((retainerCollected/retainerBilled)*100).toFixed(1):'0.0')+'% collected'} sparkline={financeChartData.map((point) => point.retainerTarget)} icon={<TrendingUp size={15}/>}/></section>
-          <section className="space-y-5"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><div className="flex items-start justify-between gap-4"><div><h2 className="text-sm font-semibold text-fg">Retainer ledger</h2><p className="mt-1 text-xs text-muted">Billing and collected value for retainer invoices.</p></div>{usingDemoRetainerLedger&&<span className="shrink-0 rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">Sample data</span>}</div></div><div className="overflow-hidden"><table className="ams-finance-table table-fixed border-separate border-spacing-0 text-xs">
+          <section className="space-y-5"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><div className="flex items-start justify-between gap-4"><div><h2 className="text-sm font-semibold text-fg">Retainer ledger</h2><p className="mt-1 text-xs text-muted">Billing and collected value for retainer invoices.</p></div></div></div><div className="overflow-hidden"><table className="ams-finance-table table-fixed border-separate border-spacing-0 text-xs">
 <thead className="sticky top-0 z-10 border-b border-line bg-panel/95 backdrop-blur-sm"><tr>
   <th className="w-[26%] px-5 py-3 text-left text-[10px] font-semibold text-muted">Invoice</th>
   <th className="w-[28%] px-5 py-3 text-left text-[10px] font-semibold text-muted">Client</th>
@@ -3302,7 +3297,7 @@ export const AdminInvoicing: React.FC = () => {
         }}
         size="lg"
         title={editingQuotation ? 'Edit quotation' : 'Create quotation'}
-        description="Create a commercial quotation from the Finance workspace. Demo mode keeps the record local until server data is available."
+        description="Create a commercial quotation from the Finance workspace."
         closeOnOutsideClick={!quotationSaving}
         footer={
           <>
