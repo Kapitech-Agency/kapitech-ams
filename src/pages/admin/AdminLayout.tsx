@@ -46,7 +46,7 @@ const STITCH_NAV_ITEMS: AdminNavItem[] = [
   { key: 'clients', to: '/admin/clients', label: 'Clients', icon: UsersRound, requiredTier: 3, group: 'Agency Management' },
   { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, badge: 14, requiredTier: 3, group: 'Agency Management' },
   { key: 'team', to: '/admin/team', label: 'Team', icon: UsersRound, accessKey: 'timelogs', requiredTier: 3, group: 'Project Operations' },
-  { key: 'tasks', to: '/admin/dashboard?view=tasks', label: 'Tasks', icon: ClipboardCheck, badge: 3, accessKey: 'projects', requiredTier: 3, group: 'Project Operations' },
+  { key: 'tasks', to: '/admin/tasks', label: 'Tasks', icon: ClipboardCheck, badge: 3, accessKey: 'projects', requiredTier: 3, group: 'Project Operations' },
   { key: 'documents', to: '/admin/documents', label: 'Documents', icon: LockKeyhole, badge: 'Encrypted', requiredTier: 3, group: 'Project Operations' },
 ];
 
@@ -646,7 +646,7 @@ export const AdminLayout: React.FC = () => {
                     );
                   })}
                 </nav>
-              ) : location.pathname === '/admin/dashboard' && new URLSearchParams(location.search).get('view') === 'tasks' ? (
+              ) : location.pathname === '/admin/tasks' ? (
                 <nav aria-label="Tasks sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
                   {[
                     { key: 'all', label: 'All Tasks', search: '' },
@@ -657,7 +657,7 @@ export const AdminLayout: React.FC = () => {
                     { key: 'completed', label: 'Completed', search: '&taskscope=completed' },
                   ].map((tab) => {
                     const activeScope = new URLSearchParams(location.search).get('taskscope') || 'all';
-                    const query = '/admin/dashboard?view=tasks' + tab.search;
+                    const query = '/admin/tasks' + (tab.search ? '?' + tab.search.slice(1) : '');
                     return (
                       <NavLink
                         key={tab.key}
