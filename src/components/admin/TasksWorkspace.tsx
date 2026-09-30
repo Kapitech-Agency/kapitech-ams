@@ -15,7 +15,7 @@ import {
   Search,
   Tag,
 } from 'lucide-react';
-import { AdminMetricStrip, AdminModuleHeader, AdminPanel, AdminTablePagination } from './AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminSectionTabs, AdminTablePagination } from './AdminModulePrimitives';
 import { CustomSelect } from '../ui/CustomSelect';
 import { Modal } from '../ui/Modal';
 import { ProfileIdentity } from './ProfileIdentity';
@@ -660,9 +660,10 @@ export const TasksWorkspace: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 px-4 pb-10 pt-5 sm:px-5 lg:px-6" data-ams-feature-slug="tasks-module">
+    <AdminPageShell featureSlug="tasks-module" className="tasks-module">
       <div data-ams-slug="tasks-header">
         <AdminModuleHeader
+          className="mb-0"
           title="Tasks"
           description="Manage daily delivery work, due tasks, reviews, blockers, and completed work from one task workspace."
           actions={
@@ -677,27 +678,17 @@ export const TasksWorkspace: React.FC = () => {
         />
       </div>
 
-      <nav
-        aria-label="Tasks sections"
-        className="min-[900px]:hidden flex max-w-full items-center gap-1 overflow-x-auto rounded-control border border-line bg-panel p-1 ams-topnav-scroll"
-        data-ams-slug="tasks-mobile-tabs"
-      >
-        {TASK_TABS.map(tab => {
-          const active = taskScope === tab.key;
-          const href = '/admin/dashboard?view=tasks' + tab.search;
-          return (
-            <Link
-              key={tab.key}
-              to={href}
-              data-ams-slug={'task-tab-' + tab.key}
-              aria-current={active ? 'page' : undefined}
-              className={'inline-flex h-9 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (active ? 'border-accent/25 bg-accent/10 font-semibold text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg')}
-            >
-              {tab.label}
-            </Link>
-          );
-        })}
-      </nav>
+      <div className="min-[900px]:hidden min-w-0" data-ams-slug="tasks-mobile-tabs">
+        <AdminSectionTabs
+          ariaLabel="Tasks sections"
+          activeKey={taskScope}
+          items={TASK_TABS.map((tab) => ({
+            key: tab.key,
+            label: tab.label,
+            to: '/admin/dashboard?view=tasks' + tab.search
+          }))}
+        />
+      </div>
 
       <div data-ams-feature-slug="tasks-kpis">
         <AdminMetricStrip
@@ -1209,7 +1200,7 @@ export const TasksWorkspace: React.FC = () => {
           </div>
         </form>
       </Modal>
-    </div>
+    </AdminPageShell>
   );
 };
 
