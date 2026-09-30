@@ -932,7 +932,7 @@ export const AdminProposals: React.FC = () => {
         title={confirmAction?.type === 'delete' ? (language === 'id' ? 'Hapus proposal?' : 'Delete proposal?') : (language === 'id' ? 'Terbitkan invoice?' : 'Convert to invoice?')}
         description={confirmAction?.type === 'delete'
           ? (language === 'id' ? 'Proposal Draft akan dihapus dari daftar.' : 'This Draft proposal will be removed from the list.')
-          : (language === 'id' ? 'Tindakan ini menjalankan workflow invoice untuk proposal yang diterima.' : 'This runs the invoice workflow for the accepted proposal.')}
+          : (language === 'id' ? 'Tindakan ini menjalankan workflow invoice untuk proposal yang sudah disetujui.' : 'This runs the invoice workflow for the approved proposal.')}
         footer={(
           <>
             <Button type="button" variant="secondary" onClick={() => setConfirmAction(null)}>Cancel</Button>
