@@ -6,16 +6,11 @@ import {
   BarChart3,
   Building2,
   CalendarDays,
-  Check,
   CheckCircle2,
-  Clock3,
   Download,
   Edit3,
   ExternalLink,
-  Mail,
-  MapPin,
   MoreHorizontal,
-  Phone,
   Plus,
   RefreshCw,
   Search,
@@ -38,7 +33,7 @@ import Button from '../../components/ui/Button';
 import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { AgencyVendor, VendorStatus, VendorType } from '../../lib/vendorStore';
-import { CurrencyCode, formatAmount, getActiveCurrency } from '../../lib/currency';
+import { formatAmount } from '../../lib/currency';
 
 type TeamView = 'team-directory' | 'vendor-directory' | 'capacity-allocation' | 'skill-matrix' | 'time-logs';
 
@@ -182,8 +177,6 @@ export const AdminTeams: React.FC = () => {
   const canManageTimeLogs = hasAdminPermission('canManageProjects') || hasAdminPermission('canManageKanbanTasks');
   const canDeleteAllTimeLogs = hasAdminPermission('canManageProjects');
   const canManageAdminAccounts = hasAdminPermission('canManageAdminAccounts');
-  const currency = getActiveCurrency();
-
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [vendors, setVendors] = useState<AgencyVendor[]>([]);
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
@@ -260,8 +253,6 @@ export const AdminTeams: React.FC = () => {
   useEffect(() => {
     void loadData();
   }, []);
-
-  const memberIds = useMemo(() => new Map(members.map((member) => [member.id, member])), [members]);
 
   const teamDivisions = useMemo(
     () => ['all', ...Array.from(new Set(members.map((member) => member.division).filter(Boolean))).sort()],
@@ -849,7 +840,7 @@ export const AdminTeams: React.FC = () => {
                           <p className="mt-1 max-w-[220px] truncate text-[10px] text-muted">{vendor.skills.slice(0, 3).join(' · ')}</p>
                         </td>
                         <td className="text-muted">{vendorTypeLabel[vendor.type]}</td>
-                        <td className="text-right font-semibold tabular-nums text-fg">{formatAmount(vendor.hourlyRate, currency)}/hr</td>
+                        <td className="text-right font-semibold tabular-nums text-fg">{formatAmount(vendor.hourlyRate, vendor.currency)}/hr</td>
                         <td className="text-right">
                           <span className="inline-flex items-center justify-end gap-1 font-semibold tabular-nums text-warning">
                             {vendor.rating.toFixed(1)} <Star size={13} className="fill-warning" />
@@ -1139,7 +1130,7 @@ export const AdminTeams: React.FC = () => {
           <div className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Contact</p><p className="mt-1 text-sm font-medium text-fg">{vendorDetail.name}</p><p className="mt-1 text-xs text-muted">{vendorDetail.email}</p></div>
-              <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Commercial</p><p className="mt-1 text-sm font-medium tabular-nums text-fg">{formatAmount(vendorDetail.hourlyRate, currency)}/hr</p><p className="mt-1 text-xs text-warning">{vendorDetail.rating.toFixed(1)} rating</p></div>
+              <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Commercial</p><p className="mt-1 text-sm font-medium tabular-nums text-fg">{formatAmount(vendorDetail.hourlyRate, vendorDetail.currency)}/hr</p><p className="mt-1 text-xs text-warning">{vendorDetail.rating.toFixed(1)} rating</p></div>
               <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Location</p><p className="mt-1 text-sm text-fg">{vendorDetail.location || 'Not set'}</p></div>
               <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Status</p><div className="mt-1 flex flex-wrap gap-1.5"><span className={'inline-flex rounded-badge border px-2 py-1 text-[10px] font-semibold ' + vendorStatusTone[vendorDetail.status]}>{vendorStatusLabel[vendorDetail.status]}</span>{(vendorDetail.isVetted ?? true) && <span className="inline-flex rounded-badge border border-accent/20 bg-accent/10 px-2 py-1 text-[10px] font-semibold text-accent-text">Vetted</span>}</div></div>
             </div>
