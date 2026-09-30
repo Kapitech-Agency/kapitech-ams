@@ -346,34 +346,47 @@ export const AdminSettings: React.FC = () => {
     if (!canAccessServer) return;
     setIntegrityLoading(true);
     setOverviewMessage(null);
-    const [backupCheck, auditCheck] = await Promise.all([
-      api.system.backupIntegrity(),
-      api.auditLogs.integrity()
-    ]);
-    if (backupCheck.success && backupCheck.data?.integrity) {
-      setBackupIntegrity(backupCheck.data.integrity);
+    try {
+      const [backupCheck, auditCheck] = await Promise.all([
+        api.system.backupIntegrity(),
+        api.auditLogs.integrity()
+      ]);
+      if (backupCheck.success && backupCheck.data?.integrity) {
+        setBackupIntegrity(backupCheck.data.integrity);
+      }
+      const valid = Boolean(backupCheck.success && backupCheck.data?.integrity?.valid) && Boolean(auditCheck.success && auditCheck.data?.integrity?.valid);
+      setOverviewMessage({
+        tone: valid ? 'success' : 'warning',
+        text: valid ? 'Integrity checks completed successfully.' : 'Integrity checks completed with attention required.'
+      });
+      await loadOverview();
+    } catch (error) {
+      setOverviewMessage({
+        tone: 'danger',
+        text: error instanceof Error ? error.message : 'Integrity checks could not be completed. Try again.'
+      });
+    } finally {
+      setIntegrityLoading(false);
     }
-    const valid = Boolean(backupCheck.data?.integrity?.valid) && Boolean(auditCheck.data?.integrity?.valid);
-    setOverviewMessage({
-      tone: valid ? 'success' : 'warning',
-      text: valid ? 'Integrity checks completed successfully.' : 'Integrity checks completed with attention required.'
-    });
-    await loadOverview();
-    setIntegrityLoading(false);
   };
 
   const createSnapshot = async () => {
     if (!canAccessServer) return;
     setSnapshotLoading(true);
     setOverviewMessage(null);
-    const res = await api.system.createBackup();
-    if (res.success) {
-      setOverviewMessage({ tone: 'success', text: 'Production snapshot created successfully.' });
-      await loadOverview();
-    } else {
-      setOverviewMessage({ tone: 'danger', text: res.error || 'Snapshot creation failed. Try again.' });
+    try {
+      const res = await api.system.createBackup();
+      if (res.success) {
+        setOverviewMessage({ tone: 'success', text: 'Production snapshot created successfully.' });
+        await loadOverview();
+      } else {
+        setOverviewMessage({ tone: 'danger', text: res.error || 'Snapshot creation failed. Try again.' });
+      }
+    } catch (error) {
+      setOverviewMessage({ tone: 'danger', text: error instanceof Error ? error.message : 'Snapshot creation failed. Try again.' });
+    } finally {
+      setSnapshotLoading(false);
     }
-    setSnapshotLoading(false);
   };
 
   const handleExportLogs = () => {
@@ -460,21 +473,26 @@ export const AdminSettings: React.FC = () => {
       return;
     }
     setIsCreatingAccount(true);
-    const res = await createAdminAccount({
-      name: newAccName,
-      username: newAccUsername,
-      email: newAccEmail,
-      passwordPlain: newAccPassword,
-      role: newAccRole,
-      division: newAccDivision
-    });
-    setIsCreatingAccount(false);
-    if (res.success) {
-      setIsAddAccountModalOpen(false);
-      setAccountMessage({ success: true, text: 'Account created successfully.' });
-      await loadAccounts();
-    } else {
-      setAccountMessage({ success: false, text: res.error || 'Account creation failed. Check the form and try again.' });
+    try {
+      const res = await createAdminAccount({
+        name: newAccName,
+        username: newAccUsername,
+        email: newAccEmail,
+        passwordPlain: newAccPassword,
+        role: newAccRole,
+        division: newAccDivision
+      });
+      if (res.success) {
+        setIsAddAccountModalOpen(false);
+        setAccountMessage({ success: true, text: 'Account created successfully.' });
+        await loadAccounts();
+      } else {
+        setAccountMessage({ success: false, text: res.error || 'Account creation failed. Check the form and try again.' });
+      }
+    } catch (error) {
+      setAccountMessage({ success: false, text: error instanceof Error ? error.message : 'Account creation failed. Check the form and try again.' });
+    } finally {
+      setIsCreatingAccount(false);
     }
   };
 
@@ -532,13 +550,18 @@ export const AdminSettings: React.FC = () => {
     event.preventDefault();
     setMetaSaving(true);
     setMetaMessage(null);
-    const res = await api.cms.updateSettings(metaSettings);
-    setMetaSaving(false);
-    if (!res.success) {
-      setMetaMessage(res.error || 'Settings could not be saved. Check the fields and try again.');
-      return;
+    try {
+      const res = await api.cms.updateSettings(metaSettings);
+      if (!res.success) {
+        setMetaMessage(res.error || 'Settings could not be saved. Check the fields and try again.');
+        return;
+      }
+      setMetaMessage('Brand and metadata settings saved.');
+    } catch (error) {
+      setMetaMessage(error instanceof Error ? error.message : 'Settings could not be saved. Check the fields and try again.');
+    } finally {
+      setMetaSaving(false);
     }
-    setMetaMessage('Brand and metadata settings saved.');
   };
 
   const latestBackup = backups[0] ?? null;
