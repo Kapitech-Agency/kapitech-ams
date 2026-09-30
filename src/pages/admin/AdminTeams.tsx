@@ -271,7 +271,12 @@ export const AdminTeams: React.FC = () => {
     }
 
     if (vendorRes.success && Array.isArray(vendorRes.data?.vendors)) {
-      setVendors(vendorRes.data!.vendors as VendorRecord[]);
+      setVendors(
+        (vendorRes.data!.vendors as AgencyVendor[]).map((vendor) => ({
+          ...vendor,
+          slug: vendorSlug(vendor),
+        }))
+      );
     }
 
     if (projectRes.success && Array.isArray(projectRes.data?.projects)) {
@@ -592,28 +597,28 @@ export const AdminTeams: React.FC = () => {
   const exportCurrentView = () => {
     if (currentView === 'team-directory') {
       downloadCsv('kapitech-team-directory.csv', [
-        ['Member', 'Username', 'Role', 'Division', 'Status', 'Tracked'],
-        ...teamRows.map((member) => [member.name, member.username, member.role, member.division, member.status || 'active', formatHours(teamTrackedMinutes.get(member.id) || 0)])
+        ['Slug', 'Member', 'Username', 'Role', 'Division', 'Status', 'Tracked'],
+        ...teamRows.map((member) => [member.slug, member.name, member.username, member.role, member.division, member.status || 'active', formatHours(teamTrackedMinutes.get(member.id) || 0)])
       ]);
     } else if (currentView === 'vendor-directory') {
       downloadCsv('kapitech-vendor-directory.csv', [
-        ['Vendor', 'Company', 'Type', 'Category', 'Rate', 'Rating', 'Status', 'Vetted'],
-        ...vendorRows.map((vendor) => [vendor.name, vendor.companyName || '', vendorTypeLabel[vendor.type], vendor.primaryCategory, vendor.hourlyRate, vendor.rating, vendorStatusLabel[vendor.status], vendor.isVetted ?? true ? 'Yes' : 'No'])
+        ['Slug', 'Vendor', 'Company', 'Type', 'Category', 'Rate', 'Rating', 'Status', 'Vetted'],
+        ...vendorRows.map((vendor) => [vendor.slug, vendor.name, vendor.companyName || '', vendorTypeLabel[vendor.type], vendor.primaryCategory, vendor.hourlyRate, vendor.rating, vendorStatusLabel[vendor.status], vendor.isVetted ?? true ? 'Yes' : 'No'])
       ]);
     } else if (currentView === 'capacity-allocation') {
       downloadCsv('kapitech-capacity-allocation.csv', [
-        ['Member', 'Role', ...weeklyCapacity.map((week) => week.label + ' utilization'), 'Current tracked hours'],
-        ...capacityRows.map((row) => [row.member.name, row.member.role, ...row.weeks.map((week) => week.utilization + '%'), formatHours(row.weeks[row.weeks.length - 1]?.minutes || 0)])
+        ['Slug', 'Member', 'Role', ...weeklyCapacity.map((week) => week.label + ' utilization'), 'Current tracked hours'],
+        ...capacityRows.map((row) => [row.member.slug, row.member.name, row.member.role, ...row.weeks.map((week) => week.utilization + '%'), formatHours(row.weeks[row.weeks.length - 1]?.minutes || 0)])
       ]);
     } else if (currentView === 'skill-matrix') {
       downloadCsv('kapitech-skill-matrix.csv', [
-        ['Skill', 'Vendor coverage', 'Vetted', 'Active'],
-        ...skillRows.map((row) => [row.skill, row.vendors, row.vetted, row.active])
+        ['Slug', 'Skill', 'Vendor coverage', 'Vetted', 'Active'],
+        ...skillRows.map((row) => [row.slug, row.skill, row.vendors, row.vetted, row.active])
       ]);
     } else {
       downloadCsv('kapitech-time-logs.csv', [
-        ['Date', 'Project', 'Task', 'User', 'Duration', 'Billable', 'Notes'],
-        ...filteredLogs.map((log) => [log.date, log.projectName || 'General', log.taskTitle || '', log.user || '', formatHours(log.durationMinutes), log.billable ? 'Yes' : 'No', log.notes || ''])
+        ['Slug', 'Date', 'Project', 'Task', 'User', 'Duration', 'Billable', 'Notes'],
+        ...filteredLogs.map((log) => [log.slug, log.date, log.projectName || 'General', log.taskTitle || '', log.user || '', formatHours(log.durationMinutes), log.billable ? 'Yes' : 'No', log.notes || ''])
       ]);
     }
     setNotice({ tone: 'success', message: 'CSV exported.' });
