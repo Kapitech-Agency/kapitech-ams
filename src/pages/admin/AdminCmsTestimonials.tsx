@@ -58,13 +58,21 @@ export const AdminCmsTestimonials: React.FC = () => {
   const handleDelete = async () => {
     if (!deleteTarget || isDeleting) return;
     setIsDeleting(true);
-    const res = await api.cms.deleteTestimonial(deleteTarget.id);
-    setDeleteTarget(null);
-    if (!res.success) { setStatusMessage(res.error || 'Delete failed.'); setIsDeleting(false); return; }
-    await loadData();
-    setStatusMessage('Testimoni berhasil dihapus.');
+    try {
+      const res = await api.cms.deleteTestimonial(deleteTarget.id);
+      if (!res.success) {
+        setStatusMessage(res.error || 'Delete failed.');
+        return;
+      }
+      setDeleteTarget(null);
+      await loadData();
+      setStatusMessage('Testimoni berhasil dihapus.');
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : 'Delete failed.');
+    } finally {
+      setIsDeleting(false);
+    }
     setTimeout(() => setStatusMessage(null), 3000);
-    setIsDeleting(false);
   };
 
   const handleSaveModal = async (e: React.FormEvent) => {
