@@ -142,7 +142,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         anchorRef={triggerRef}
         onClose={() => setIsOpen(false)}
         align={align}
-        className={`ams-popover-surface min-w-[140px] sm:min-w-[180px] max-w-[calc(100vw-16px)] sm:max-w-[280px] max-h-[min(320px,calc(100dvh-16px))] overflow-y-auto overscroll-contain p-1 custom-scrollbar font-sans text-xs ${menuClassName}`}
+        className={`ams-popover-surface w-max min-w-[140px] sm:min-w-[180px] max-w-[calc(100vw-16px)] max-h-[min(320px,calc(100dvh-16px))] overflow-y-auto overscroll-contain p-1 custom-scrollbar font-sans text-xs ${menuClassName}`}
       >
         <div id={listboxId} role="listbox" aria-label={placeholder}>
           {options.length === 0 ? (
@@ -168,7 +168,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                   aria-selected={isSelected}
                   data-selected={isSelected}
                   data-active={isActive}
-                  className={`ams-dropdown-item w-full flex items-center justify-between min-h-10 sm:min-h-9 text-left transition-colors focus-visible:outline-none group ${
+                  className={`ams-dropdown-item w-max min-w-full flex items-center justify-between min-h-10 sm:min-h-9 text-left transition-colors focus-visible:outline-none group ${
                     isSelected
                       ? 'bg-accent/14 text-fg font-semibold'
                       : isActive
@@ -182,8 +182,8 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                         {option.icon}
                       </span>
                     )}
-                    <div className="truncate">
-                      <div className="truncate font-medium">{option.label}</div>
+                    <div className="min-w-0">
+                      <div className="whitespace-nowrap font-medium">{option.label}</div>
                       {option.description && (
                         <div className="text-[10px] truncate text-muted">{option.description}</div>
                       )}
