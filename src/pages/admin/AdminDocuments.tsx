@@ -31,6 +31,7 @@ import {
   AdminMetricStrip,
   AdminModuleHeader,
   AdminPanel,
+  AdminTablePagination,
 } from '../../components/admin/AdminModulePrimitives';
 import { Skeleton } from '../../components/ui/Skeleton';
 
@@ -667,19 +668,7 @@ export const AdminDocuments: React.FC = () => {
               </table>
             </div>
 
-            <div className="flex flex-col gap-3 border-t border-line bg-panel px-4 py-3 text-[11px] text-muted sm:flex-row sm:items-center sm:justify-between" data-ams-feature-slug="documents-pagination">
-              <div className="flex flex-wrap items-center gap-3">
-                <span>Showing <span className="font-semibold tabular-nums text-fg">{(safePage - 1) * pageSize + 1}</span> to <span className="font-semibold tabular-nums text-fg">{Math.min(safePage * pageSize, filteredDocuments.length)}</span> of <span className="font-semibold tabular-nums text-fg">{filteredDocuments.length}</span> visible files</span>
-                <div className="hidden items-center gap-2 border-l border-line pl-3 sm:flex" data-ams-slug="documents-page-size">
-                  <span>Rows per page</span>
-                  <CustomSelect value={String(pageSize)} onChange={(value) => setPageSize(Number(value))} options={PAGE_SIZES.map((value) => ({ value: String(value), label: String(value) }))} triggerClassName="h-8 min-h-8 w-[82px]" aria-label="Rows per page" />
-                </div>
-              </div>
-              <div className="flex items-center gap-2 sm:justify-end">
-                <span data-ams-slug="documents-page-status">Page {safePage} of {totalPages}</span>
-                <button type="button" disabled={safePage <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))} data-ams-slug="documents-page-prev" className="inline-flex h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted hover:bg-panel hover:text-fg disabled:opacity-40"><ChevronLeft size={13} /><span className="hidden sm:inline">Previous</span></button>
-                <button type="button" disabled={safePage >= totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} data-ams-slug="documents-page-next" className="inline-flex h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted hover:bg-panel hover:text-fg disabled:opacity-40"><span className="hidden sm:inline">Next</span><ChevronRight size={13} /></button>
-              </div>
+            <AdminTablePagination total={filteredDocuments.length} page={safePage} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="visible files" slug="documents-pagination" />
             </div>
           </>
         )}
