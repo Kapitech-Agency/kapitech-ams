@@ -470,6 +470,7 @@ export const AdminClients: React.FC = () => {
   return (
     <AdminPageShell featureSlug="clients-module" className="ams-clients-module">
       <div data-ams-feature-slug="clients-header" data-ams-slug="clients-header">
+        <span className="sr-only" data-ams-feature-slug="clients-key-accounts-tab" data-ams-slug="clients-key-accounts-tab">Clients & Key Accounts</span>
         <AdminModuleHeader
           className="mb-0"
           title="Clients & Key Accounts"
@@ -561,7 +562,7 @@ export const AdminClients: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-line text-[13px] leading-[18px]">
               {isLoading ? Array.from({ length: 6 }).map((_, index) => <tr key={index}>{Array.from({ length: 8 }).map((__, cell) => <td key={cell} className="px-4 py-3"><div className="h-3 w-24 animate-pulse rounded-badge bg-line" /></td>)}</tr>) : paginatedClients.length === 0 ? (
-                <tr><td colSpan={8} className="px-4 py-14 text-center"><Users size={20} className="mx-auto text-muted" aria-hidden="true" /><p className="mt-3 text-sm font-medium text-fg">{clients.length ? 'No matching clients.' : 'No clients yet.'}</p><p className="mt-1 text-xs text-muted">Adjust the search or active filters.</p>{clients.length > 0 && <button type="button" onClick={resetFilters} className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg">Reset filters</button>}</td></tr>
+                <tr><td colSpan={8} className="p-0"><div className="flex min-h-[280px] w-full flex-col items-center justify-center px-5 py-12 text-center" data-ams-slug="clients-empty-state"><div className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-bg text-muted"><Users size={20} aria-hidden="true" /></div><p className="mt-3 text-sm font-medium text-fg">{clients.length ? 'No matching clients.' : 'No clients yet.'}</p><p className="mt-1 max-w-sm text-xs leading-5 text-muted">Adjust the search or active filters.</p>{clients.length > 0 && <button type="button" onClick={resetFilters} className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg">Reset filters</button>}</div></td></tr>
               ) : paginatedClients.map((client) => {
                 const budget = Number(client.slaDailyAdSpendBudget) || 0;
                 const spend = Number(client.currentDailyAdSpend) || 0;
