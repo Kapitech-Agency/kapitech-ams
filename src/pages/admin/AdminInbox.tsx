@@ -57,7 +57,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
 
-import { AdminMetricStrip, AdminModuleHeader, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminTablePagination , AdminPageShell } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 export const AdminInbox: React.FC = () => {
   const { language } = useLanguage();
@@ -553,7 +553,7 @@ export const AdminInbox: React.FC = () => {
   }, [selectedSubmission, crmDeals]);
 
   return (
-    <div className="ams-inbox-page space-y-6 pb-8">
+    <AdminPageShell featureSlug="inbox-module" className="ams-inbox-page">
       
       {/* Toast Notification */}
       {toastMessage && (
@@ -575,6 +575,7 @@ export const AdminInbox: React.FC = () => {
       )}
 
       <AdminModuleHeader
+        className="mb-0"
         title="Leads & Inbox"
         description={language === 'id' ? 'Kelola inquiry masuk, lakukan triage, balas dengan cepat, dan teruskan peluang yang siap ke CRM.' : 'Triage inbound inquiries, respond quickly, and move qualified opportunities into CRM.'}
         actions={(
@@ -1454,7 +1455,7 @@ export const AdminInbox: React.FC = () => {
       />
 
     </div>
-    </div>
+    </AdminPageShell>
   );
 };
 
