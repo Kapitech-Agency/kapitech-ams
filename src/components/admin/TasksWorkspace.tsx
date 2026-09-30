@@ -18,7 +18,7 @@ import { Modal } from '../ui/Modal';
 import { ProfileIdentity } from './ProfileIdentity';
 import Button from '../ui/Button';
 import { api } from '../../lib/apiClient';
-import { getAdminSession } from '../../lib/adminAuth';
+import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
 
 type TaskStatus = 'todo' | 'in_progress' | 'review' | 'done';
 type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
@@ -212,6 +212,7 @@ export const TasksWorkspace: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const taskScope = searchParams.get('taskscope') || 'all';
   const currentUser = getAdminSession()?.user;
+  const canManageTasks = hasAdminPermission('canManageKanbanTasks');
 
   const [records, setRecords] = useState<TaskRecord[]>([]);
   const [assignees, setAssignees] = useState<Array<{ id: string; name: string; username: string }>>([]);
@@ -225,6 +226,16 @@ export const TasksWorkspace: React.FC = () => {
   const [layout, setLayout] = useState<'table' | 'board'>('table');
   const [selectedTask, setSelectedTask] = useState<TaskRecord | null>(null);
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
+  const [taskFormOpen, setTaskFormOpen] = useState(false);
+  const [savingTask, setSavingTask] = useState(false);
+  const [taskForm, setTaskForm] = useState({
+    title: '',
+    description: '',
+    projectId: '',
+    assignee: '',
+    priority: 'medium' as TaskPriority,
+    dueDate: new Date().toISOString().slice(0, 10),
+  });
 
   const currentUserNames = useMemo(() => new Set(
     [currentUser?.profileDisplayName, currentUser?.name, currentUser?.username]
@@ -337,6 +348,79 @@ export const TasksWorkspace: React.FC = () => {
     () => Array.from(new Map(records.map(task => [task.projectId, task.projectName])).entries()).sort((a, b) => a[1].localeCompare(b[1])),
     [records]
   );
+
+  const openNewTask = () => {
+    if (!canManageTasks) return;
+    setTaskForm({
+      title: '',
+      description: '',
+      projectId: projectOptions[0]?.[0] || '',
+      assignee: '',
+      priority: 'medium',
+      dueDate: new Date().toISOString().slice(0, 10),
+    });
+    setTaskFormOpen(true);
+  };
+
+  const saveNewTask = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!taskForm.title.trim() || !taskForm.projectId) {
+      setNotice('Task title and project are required.');
+      return;
+    }
+
+    const project = projectOptions.find(([id]) => id === taskForm.projectId);
+    if (!project) {
+      setNotice('Selected project is not available.');
+      return;
+    }
+
+    setSavingTask(true);
+    const id = 'task-' + slugify(taskForm.title) + '-' + Date.now();
+    const localTask: TaskRecord = {
+      id,
+      title: taskForm.title.trim(),
+      description: taskForm.description.trim(),
+      projectId: project[0],
+      projectName: project[1],
+      projectSlug: slugify(project[1]),
+      clientName: '',
+      assigneeId: taskForm.assignee,
+      assignee: assignees.find(item => item.id === taskForm.assignee)?.name || taskForm.assignee || 'Unassigned',
+      priority: taskForm.priority,
+      status: 'todo',
+      dueDate: taskForm.dueDate,
+      tags: [],
+      blocked: false,
+      slug: 'task-' + slugify(taskForm.title) + '-' + slugify(id),
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      const response = await api.tasks.create({
+        title: localTask.title,
+        description: localTask.description,
+        projectId: localTask.projectId,
+        projectName: localTask.projectName,
+        assignee: localTask.assigneeId,
+        priority: localTask.priority,
+        status: localTask.status,
+        dueDate: localTask.dueDate,
+        tags: [],
+        subtasks: [],
+      });
+
+      setRecords(current => [localTask, ...current]);
+      setNotice(response.success ? 'Task created.' : 'Task created locally for this session.');
+      setTaskFormOpen(false);
+    } catch {
+      setRecords(current => [localTask, ...current]);
+      setNotice('Task created locally for this session.');
+      setTaskFormOpen(false);
+    } finally {
+      setSavingTask(false);
+    }
+  };
 
   const currentScopeLabel: Record<string, string> = {
     all: 'All Tasks',
@@ -461,6 +545,11 @@ export const TasksWorkspace: React.FC = () => {
         bodyClassName="p-0"
         actions={(
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
+            {canManageTasks && (
+              <Button type="button" variant="primary" icon={<CheckCircle2 size={14} />} onClick={openNewTask}>
+                New Task
+              </Button>
+            )}
             <label className="relative block min-w-0 sm:w-64">
               <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
               <input
@@ -607,6 +696,39 @@ export const TasksWorkspace: React.FC = () => {
           <span>{activeFilterCount ? activeFilterCount + ' filter' + (activeFilterCount > 1 ? 's' : '') + ' active' : 'No additional filters'}</span>
         </div>
       </AdminPanel>
+
+      <Modal
+        open={taskFormOpen}
+        onClose={() => setTaskFormOpen(false)}
+        size="md"
+        title="Create task"
+        description="Add a task to an existing project delivery queue."
+        footer={(
+          <>
+            <Button type="button" variant="secondary" onClick={() => setTaskFormOpen(false)} disabled={savingTask}>Cancel</Button>
+            <Button type="submit" variant="primary" form="tasks-create-form" loading={savingTask}>Create Task</Button>
+          </>
+        )}
+      >
+        <form id="tasks-create-form" onSubmit={saveNewTask} className="space-y-4">
+          <div>
+            <label className="text-[11px] font-medium text-muted">Task title</label>
+            <input value={taskForm.title} onChange={event => setTaskForm(current => ({ ...current, title: event.target.value }))} className="mt-1 h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent" placeholder="e.g. Finalize homepage responsive states" />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <CustomSelect value={taskForm.projectId} onChange={value => setTaskForm(current => ({ ...current, projectId: value }))} options={projectOptions.map(([value, label]) => ({ value, label }))} triggerClassName="h-9 min-h-9 w-full" />
+            <CustomSelect value={taskForm.assignee} onChange={value => setTaskForm(current => ({ ...current, assignee: value }))} options={[{ value: '', label: 'Unassigned' }, ...assignees.map(item => ({ value: item.id, label: item.name }))]} triggerClassName="h-9 min-h-9 w-full" />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <CustomSelect value={taskForm.priority} onChange={value => setTaskForm(current => ({ ...current, priority: value as TaskPriority }))} options={Object.entries(taskPriorityLabel).map(([value, label]) => ({ value, label }))} triggerClassName="h-9 min-h-9 w-full" />
+            <input type="date" value={taskForm.dueDate} onChange={event => setTaskForm(current => ({ ...current, dueDate: event.target.value }))} className="h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent" />
+          </div>
+          <div>
+            <label className="text-[11px] font-medium text-muted">Description</label>
+            <textarea value={taskForm.description} onChange={event => setTaskForm(current => ({ ...current, description: event.target.value }))} rows={4} className="mt-1 w-full resize-none rounded-control border border-line bg-bg px-3 py-2 text-xs leading-5 text-fg outline-none focus:border-accent" placeholder="Task context, acceptance note, or handoff details." />
+          </div>
+        </form>
+      </Modal>
 
       <Modal
         open={Boolean(selectedTask)}
