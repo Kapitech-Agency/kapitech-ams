@@ -1735,7 +1735,7 @@ export const AdminProjects: React.FC = () => {
                             const nextTarget = event.relatedTarget as Node | null;
                             if (!nextTarget || !event.currentTarget.contains(nextTarget)) {
                               setDragOverProjectStatus(current => current === column.id ? null : current);
-                              setDragOverProjectId(current => current === null ? null : null);
+                              setDragOverProjectId(null);
                             }
                           }}
                           onDrop={event => {
@@ -1756,7 +1756,7 @@ export const AdminProjects: React.FC = () => {
                           }}
                           className={'ams-project-kanban-stack flex flex-col gap-3.5 overflow-visible p-3 transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
                           {items.length === 0 ? (
-                            <div className={'flex min-h-[180px] items-center justify-center rounded-card border border-dashed p-4 text-center text-[11px] text-muted transition-colors ' + (isDropTarget ? 'border-accent/40 bg-accent/5 text-fg' : 'border-line')}>
+                            <div className={'flex min-h-[104px] items-center justify-center rounded-card border border-dashed p-4 text-center text-[11px] text-muted transition-colors ' + (isDropTarget ? 'border-accent/40 bg-accent/5 text-fg' : 'border-line')}>
                               <span className="max-w-[190px]">
                                 <span className="block font-medium text-fg">{canManageProjects && isDropTarget ? 'Drop project here' : 'No projects here'}</span>
                                 <span className="mt-1 block text-muted">{canManageProjects ? 'Drag a card into this lane.' : 'No projects in this stage.'}</span>
@@ -1804,7 +1804,7 @@ export const AdminProjects: React.FC = () => {
                                         className={[
                                           'mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted transition-[background-color,border-color,color,transform] select-none',
                                           canManageProjects && movingProjectId !== project.id
-                                            ? 'cursor-grab touch-none hover:border-accent/35 hover:bg-panel-hover hover:text-fg active:cursor-grabbing'
+                                            ? 'cursor-grab hover:border-accent/35 hover:bg-panel-hover hover:text-fg active:cursor-grabbing'
                                             : 'cursor-default opacity-70',
                                         ].join(' ')}
                                         title={canManageProjects ? 'Drag this handle to move the project' : 'Project status'}
@@ -1899,18 +1899,6 @@ export const AdminProjects: React.FC = () => {
                                 </React.Fragment>
                               );
                             })
-                          )}
-                          {draggingProjectId && canManageProjects && (
-                            <div className={[
-                              'mt-auto min-h-[72px] rounded-card border border-dashed px-3 py-4 transition-[background-color,border-color]',
-                              isDropTarget ? 'border-accent/40 bg-accent/5' : 'border-line/50 bg-bg/10'
-                            ].join(' ')}>
-                              <div className="flex min-h-10 items-center justify-center text-center text-[10px]">
-                                <span className={isDropTarget ? 'font-semibold text-accent-text' : 'text-muted'}>
-                                  {isDropTarget ? 'Release to place the project here' : 'Drop project here'}
-                                </span>
-                              </div>
-                            </div>
                           )}
                         </div>
                       </section>
@@ -2128,7 +2116,7 @@ export const AdminProjects: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="overflow-x-auto custom-scrollbar bg-bg p-5 sm:p-6">
+                <div className="ams-project-kanban-task-board overflow-x-auto bg-bg p-5 sm:p-6">
                   <div className="flex min-w-max items-start gap-3 pb-8 sm:pb-10">
                     {TASK_COLUMNS.map(column => {
                       const tasks = visibleTasks.filter(task => task.status === column.id);
