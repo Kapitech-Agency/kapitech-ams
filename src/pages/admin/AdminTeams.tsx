@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Download,
   Edit3,
+  Eye,
   ExternalLink,
   LayoutGrid,
   MoreHorizontal,
@@ -1155,8 +1156,8 @@ export const AdminTeams: React.FC = () => {
                             </td>
                             <td>
                               <div className="ams-table-actions">
-                                <Button type="button" variant="secondary" className="ams-table-action h-8 px-2.5 text-[11px]" onClick={() => setMemberDetail(member)}>View Profile</Button>
-                                <Button type="button" variant="primary" className="ams-table-action h-8 px-2.5 text-[11px]" onClick={() => setAllocationTarget(member)}>Allocate</Button>
+                                <Button type="button" variant="secondary" className="ams-table-action h-8 w-8 px-0" icon={<Eye size={14} />} title="View Profile" aria-label={'View profile for ' + member.name} onClick={() => setMemberDetail(member)} />
+                                <Button type="button" variant="primary" className="ams-table-action h-8 w-8 px-0" icon={<UserPlus size={14} />} title="Allocate" aria-label={'Allocate ' + member.name} onClick={() => setAllocationTarget(member)} />
                               </div>
                             </td>
                           </tr>
@@ -1190,8 +1191,8 @@ export const AdminTeams: React.FC = () => {
                       {skills.map((skill) => <span key={skill} className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-fg">{skill}</span>)}
                     </div>
                     <div className="mt-4 flex justify-end gap-2">
-                      <Button type="button" variant="secondary" className="h-8 px-2.5 text-[11px]" onClick={() => setMemberDetail(member)}>View Profile</Button>
-                      <Button type="button" variant="primary" className="h-8 px-2.5 text-[11px]" onClick={() => setAllocationTarget(member)}>Allocate</Button>
+                      <Button type="button" variant="secondary" className="h-8 w-8 px-0" icon={<Eye size={14} />} title="View Profile" aria-label={'View profile for ' + member.name} onClick={() => setMemberDetail(member)} />
+                      <Button type="button" variant="primary" className="h-8 w-8 px-0" icon={<UserPlus size={14} />} title="Allocate" aria-label={'Allocate ' + member.name} onClick={() => setAllocationTarget(member)} />
                     </div>
                   </article>
                 );
