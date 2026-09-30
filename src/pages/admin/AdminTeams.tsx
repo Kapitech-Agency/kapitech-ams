@@ -13,7 +13,6 @@ import {
   Edit3,
   ExternalLink,
   Grid2X2,
-  Handshake,
   LayoutGrid,
   MoreHorizontal,
   Plus,
@@ -921,10 +920,12 @@ export const AdminTeams: React.FC = () => {
         </div>
       ) : currentView === 'team-directory' ? (
         <div className="space-y-5" data-ams-feature-slug="team-directory" data-ams-slug="team-directory">
+          <p className="font-mono text-[9px] leading-3 text-muted/60">slug: team-directory</p>
           <AdminMetricStrip
             metrics={[
               {
                 id: 'headcount',
+                slug: 'team-directory-kpi-headcount',
                 label: 'Total Headcount',
                 value: teamMetrics.headcount,
                 context: (teamRows.filter((member) => memberAllocation(member).label === 'Allocated').length) + ' Allocated · ' + (teamMetrics.headcount - teamRows.filter((member) => memberAllocation(member).label === 'Allocated').length) + ' Bench',
@@ -933,6 +934,7 @@ export const AdminTeams: React.FC = () => {
               },
               {
                 id: 'engineering',
+                slug: 'team-directory-kpi-engineering',
                 label: 'Engineering & Tech',
                 value: members.filter((member) => /engineer|developer|devops|qa|tech|architect|frontend|backend/i.test(member.role + ' ' + member.division)).length,
                 context: 'Backend, Frontend, DevOps & QA',
@@ -942,6 +944,7 @@ export const AdminTeams: React.FC = () => {
               },
               {
                 id: 'design',
+                slug: 'team-directory-kpi-product-design',
                 label: 'Product & Design',
                 value: members.filter((member) => /design|product|ux|creative|ui/i.test(member.role + ' ' + member.division)).length,
                 context: 'UI/UX, Product Strategy & Systems',
@@ -951,16 +954,18 @@ export const AdminTeams: React.FC = () => {
               },
               {
                 id: 'operations',
+                slug: 'team-directory-kpi-operations',
                 label: 'Operations & Delivery',
                 value: members.filter((member) => /manager|operations|delivery|pm|project|marketing|account/i.test(member.role + ' ' + member.division)).length,
                 context: 'Delivery, PMs, Operations & Client Work',
                 sparkline: [members.length, members.filter((member) => /manager|operations|delivery|pm|project|marketing|account/i.test(member.role + ' ' + member.division)).length],
-                icon: <Handshake size={15} />
+                icon: <UsersRound size={15} />
               }
             ]}
           />
 
           <section className="rounded-card border border-line bg-panel p-4" data-ams-feature-slug="team-directory-filters" data-ams-slug="team-directory-filters">
+            <p className="mb-3 font-mono text-[9px] leading-3 text-muted/60">slug: team-directory-filters</p>
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
               <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
                 <label className="relative min-w-0 flex-1 sm:max-w-sm">
@@ -1121,18 +1126,21 @@ export const AdminTeams: React.FC = () => {
         </div>
       ) : currentView === 'vendor-directory' ? (
         <div className="space-y-5" data-ams-feature-slug="vendor-directory" data-ams-slug="vendor-directory">
+          <p className="font-mono text-[9px] leading-3 text-muted/60">slug: vendor-directory</p>
           <AdminMetricStrip
             metrics={[
               {
                 id: 'active-contractors',
+                slug: 'vendor-directory-kpi-active-contractors',
                 label: 'Active Contractors',
                 value: vendors.filter((vendor) => vendor.status === 'active').length,
                 context: vendorTierCounts.strategic + ' Dedicated · ' + (vendorTierCounts.specialized + vendorTierCounts.adhoc) + ' On-Demand',
                 sparkline: [vendors.length, vendors.filter((vendor) => vendor.status === 'active').length, vendorRows.length],
-                icon: <Handshake size={15} />
+                icon: <UsersRound size={15} />
               },
               {
                 id: 'external-burn',
+                slug: 'vendor-directory-kpi-external-burn',
                 label: 'Monthly External Burn',
                 value: Object.keys(vendorMonthlyBurn).length === 1
                   ? formatAmount(vendorMonthlyBurn[Object.keys(vendorMonthlyBurn)[0]], Object.keys(vendorMonthlyBurn)[0] as 'IDR' | 'USD')
@@ -1143,6 +1151,7 @@ export const AdminTeams: React.FC = () => {
               },
               {
                 id: 'sla',
+                slug: 'vendor-directory-kpi-sla',
                 label: 'Average SLA Compliance',
                 value: '—',
                 context: 'SLA data is not tracked in the current vendor model',
@@ -1152,6 +1161,7 @@ export const AdminTeams: React.FC = () => {
               },
               {
                 id: 'renewals',
+                slug: 'vendor-directory-kpi-renewals',
                 label: 'Contract Renewals Due',
                 value: vendorRenewalCount,
                 context: 'Action required within 30 days',
@@ -1163,6 +1173,7 @@ export const AdminTeams: React.FC = () => {
           />
 
           <section className="rounded-card border border-line bg-panel p-4" data-ams-feature-slug="vendor-directory-filters" data-ams-slug="vendor-directory-filters">
+            <p className="mb-3 font-mono text-[9px] leading-3 text-muted/60">slug: vendor-directory-filters</p>
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex min-w-0 flex-1 flex-col gap-2 xl:flex-row xl:items-center">
                 <label className="relative min-w-0 flex-1 xl:max-w-sm">
@@ -1239,7 +1250,7 @@ export const AdminTeams: React.FC = () => {
                           <td>
                             <button type="button" className="flex items-center gap-3 text-left" onClick={() => setVendorDetail(vendor)}>
                               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted">
-                                {tier === 'strategic' ? <Handshake size={18} /> : tier === 'specialized' ? <ShieldCheck size={18} /> : <Users size={18} />}
+                                {tier === 'strategic' ? <UsersRound size={18} /> : tier === 'specialized' ? <ShieldCheck size={18} /> : <Users size={18} />}
                               </span>
                               <span className="min-w-0">
                                 <span className="flex flex-wrap items-center gap-1.5">
@@ -1316,12 +1327,17 @@ export const AdminTeams: React.FC = () => {
         </div>
       ) : currentView === 'capacity-allocation' ? (
         <div className="space-y-5" data-ams-feature-slug="capacity-allocation" data-ams-slug="capacity-allocation">
+          <p className="font-mono text-[9px] leading-3 text-muted/60">slug: capacity-allocation</p>
           <AdminMetricStrip
             metrics={[
-              { id: 'utilization', label: 'Current utilization', value: currentCapacityStats.average.toFixed(1) + '%', context: 'Tracked vs 40h baseline', sparkline: capacityRows.slice(0, 8).map((row) => row.weeks[row.weeks.length - 1]?.utilization || 0), icon: <TrendingUp size={15} /> },
-              { id: 'risk', label: 'High workload risk', value: currentCapacityStats.highRisk, context: '>90% tracked load', sparkline: capacityRows.map((row) => row.weeks[row.weeks.length - 1]?.utilization || 0), icon: <AlertCircle size={15} className="text-danger" />, toneClassName: 'text-danger' },
-              { id: 'allocated', label: 'Tracked this week', value: formatHours(currentCapacityStats.totalMinutes), context: currentCapacityStats.active + ' active contributors', sparkline: weeklyCapacity.map((week) => logs.filter((log) => { const date = new Date(log.date + 'T00:00:00'); return date >= week.start && date < week.end; }).reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0)), icon: <Timer size={15} /> },
-              { id: 'baseline', label: 'Planning baseline', value: '40h', context: 'Per active member / week', sparkline: [40, 40, 40, 40], icon: <CalendarDays size={15} /> }
+              { id: 'utilization',
+                slug: 'capacity-allocation-kpi-utilization', label: 'Current utilization', value: currentCapacityStats.average.toFixed(1) + '%', context: 'Tracked vs 40h baseline', sparkline: capacityRows.slice(0, 8).map((row) => row.weeks[row.weeks.length - 1]?.utilization || 0), icon: <TrendingUp size={15} /> },
+              { id: 'risk',
+                slug: 'capacity-allocation-kpi-risk', label: 'High workload risk', value: currentCapacityStats.highRisk, context: '>90% tracked load', sparkline: capacityRows.map((row) => row.weeks[row.weeks.length - 1]?.utilization || 0), icon: <AlertCircle size={15} className="text-danger" />, toneClassName: 'text-danger' },
+              { id: 'allocated',
+                slug: 'capacity-allocation-kpi-tracked', label: 'Tracked this week', value: formatHours(currentCapacityStats.totalMinutes), context: currentCapacityStats.active + ' active contributors', sparkline: weeklyCapacity.map((week) => logs.filter((log) => { const date = new Date(log.date + 'T00:00:00'); return date >= week.start && date < week.end; }).reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0)), icon: <Timer size={15} /> },
+              { id: 'baseline',
+                slug: 'capacity-allocation-kpi-baseline', label: 'Planning baseline', value: '40h', context: 'Per active member / week', sparkline: [40, 40, 40, 40], icon: <CalendarDays size={15} /> }
             ]}
           />
 
@@ -1367,12 +1383,17 @@ export const AdminTeams: React.FC = () => {
         </div>
       ) : currentView === 'skill-matrix' ? (
         <div className="space-y-5" data-ams-feature-slug="skill-matrix" data-ams-slug="skill-matrix">
+          <p className="font-mono text-[9px] leading-3 text-muted/60">slug: skill-matrix</p>
           <AdminMetricStrip
             metrics={[
-              { id: 'internal', label: 'Internal members', value: members.length, context: 'Role-aligned capability focus', sparkline: [members.length, teamMetrics.active, teamMetrics.divisions], icon: <UsersRound size={15} /> },
-              { id: 'vendorSkills', label: 'Vendor skills', value: skillRows.length, context: 'Distinct external skills', sparkline: [skillRows.length, vendorMetrics.vetted, vendorMetrics.active], icon: <BarChart3 size={15} /> },
-              { id: 'vettedCoverage', label: 'Vetted coverage', value: skillRows.length ? Math.round((skillRows.filter((row) => row.vetted > 0).length / skillRows.length) * 100) + '%' : '0%', context: 'Skills with vetted coverage', sparkline: [skillRows.filter((row) => row.vetted > 0).length, skillRows.length], icon: <ShieldCheck size={15} className="text-success" />, toneClassName: 'text-success' },
-              { id: 'activeCoverage', label: 'Active skill coverage', value: skillRows.length ? Math.round((skillRows.filter((row) => row.active > 0).length / skillRows.length) * 100) + '%' : '0%', context: 'Skills with active vendors', sparkline: [skillRows.filter((row) => row.active > 0).length, skillRows.length], icon: <CheckCircle2 size={15} className="text-success" />, toneClassName: 'text-success' }
+              { id: 'internal',
+                slug: 'skill-matrix-kpi-internal-members', label: 'Internal members', value: members.length, context: 'Role-aligned capability focus', sparkline: [members.length, teamMetrics.active, teamMetrics.divisions], icon: <UsersRound size={15} /> },
+              { id: 'vendorSkills',
+                slug: 'skill-matrix-kpi-vendor-skills', label: 'Vendor skills', value: skillRows.length, context: 'Distinct external skills', sparkline: [skillRows.length, vendorMetrics.vetted, vendorMetrics.active], icon: <BarChart3 size={15} /> },
+              { id: 'vettedCoverage',
+                slug: 'skill-matrix-kpi-vetted-coverage', label: 'Vetted coverage', value: skillRows.length ? Math.round((skillRows.filter((row) => row.vetted > 0).length / skillRows.length) * 100) + '%' : '0%', context: 'Skills with vetted coverage', sparkline: [skillRows.filter((row) => row.vetted > 0).length, skillRows.length], icon: <ShieldCheck size={15} className="text-success" />, toneClassName: 'text-success' },
+              { id: 'activeCoverage',
+                slug: 'skill-matrix-kpi-active-coverage', label: 'Active skill coverage', value: skillRows.length ? Math.round((skillRows.filter((row) => row.active > 0).length / skillRows.length) * 100) + '%' : '0%', context: 'Skills with active vendors', sparkline: [skillRows.filter((row) => row.active > 0).length, skillRows.length], icon: <CheckCircle2 size={15} className="text-success" />, toneClassName: 'text-success' }
             ]}
           />
 
@@ -1432,17 +1453,22 @@ export const AdminTeams: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-5" data-ams-feature-slug="time-logs" data-ams-slug="time-logs">
+          <p className="font-mono text-[9px] leading-3 text-muted/60">slug: time-logs</p>
           <AdminMetricStrip
             metrics={[
-              { id: 'tracked', label: 'Tracked time', value: formatHours(timeMetrics.total), context: 'Current filters', sparkline: [timeMetrics.total, timeMetrics.billable], icon: <Timer size={15} />, toneClassName: 'text-accent-text' },
-              { id: 'billable', label: 'Billable time', value: formatHours(timeMetrics.billable), context: 'Billable entries', sparkline: [timeMetrics.billable, timeMetrics.total], icon: <WalletCards size={15} /> },
-              { id: 'entries', label: 'Entries', value: timeMetrics.entries, context: timeMetrics.contributors + ' contributors', sparkline: [timeMetrics.entries, timeMetrics.contributors], icon: <CalendarDays size={15} /> },
-              { id: 'contributors', label: 'Contributors', value: timeMetrics.contributors, context: 'Users in filtered log', sparkline: [timeMetrics.contributors, members.length], icon: <UsersRound size={15} /> }
+              { id: 'tracked',
+                slug: 'time-logs-kpi-tracked', label: 'Tracked time', value: formatHours(timeMetrics.total), context: 'Current filters', sparkline: [timeMetrics.total, timeMetrics.billable], icon: <Timer size={15} />, toneClassName: 'text-accent-text' },
+              { id: 'billable',
+                slug: 'time-logs-kpi-billable', label: 'Billable time', value: formatHours(timeMetrics.billable), context: 'Billable entries', sparkline: [timeMetrics.billable, timeMetrics.total], icon: <WalletCards size={15} /> },
+              { id: 'entries',
+                slug: 'time-logs-kpi-entries', label: 'Entries', value: timeMetrics.entries, context: timeMetrics.contributors + ' contributors', sparkline: [timeMetrics.entries, timeMetrics.contributors], icon: <CalendarDays size={15} /> },
+              { id: 'contributors',
+                slug: 'time-logs-kpi-contributors', label: 'Contributors', value: timeMetrics.contributors, context: 'Users in filtered log', sparkline: [timeMetrics.contributors, members.length], icon: <UsersRound size={15} /> }
             ]}
           />
 
-          <div data-ams-feature-slug="time-logs-filters" data-ams-slug="time-logs-filters">
-            <AdminFilterBar searchValue={timeSearch} onSearchChange={setTimeSearch} searchPlaceholder="Search project, task, user..." searchLabel="Search time logs">
+          <div data-ams-feature-slug="time-logs-filters">
+            <AdminFilterBar slug="time-logs-filters" searchValue={timeSearch} onSearchChange={setTimeSearch} searchPlaceholder="Search project, task, user..." searchLabel="Search time logs">
             <CustomSelect
               value={timeProject}
               onChange={setTimeProject}
