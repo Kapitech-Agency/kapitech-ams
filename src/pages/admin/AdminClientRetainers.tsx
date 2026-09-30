@@ -285,7 +285,7 @@ export const AdminClientRetainers: React.FC = () => {
               {isLoading ? Array.from({ length: pageSize }).map((_, index) => <tr key={index} className="border-b border-line last:border-0">{Array.from({ length: 8 }).map((__, cell) => <td key={cell} className="px-4 py-4"><div className="h-3 w-full max-w-28 animate-pulse rounded-badge bg-line" /></td>)}</tr>) :
                visible.length ? visible.map((item) => {
                  const usage = Math.round(item.usedHours / Math.max(1, item.committedHours) * 100); const meta = healthMeta[item.health];
-                 return <tr key={item.id} className="border-b border-line last:border-0 transition-colors hover:bg-bg/70">
+                 return <tr key={item.id} data-ams-slug={'client-retainer-' + item.id.toLowerCase()} className="border-b border-line last:border-0 transition-colors hover:bg-bg/70">
                    <td className="px-4 py-3"><div className="flex items-center gap-2.5"><div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-[11px] font-semibold text-fg">{item.initials}</div><div className="min-w-0"><div className="truncate text-xs font-semibold text-fg">{item.client}</div><div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-muted"><span className="tabular-nums">{item.id}</span><span>•</span><span>{tierLabel[item.tier]}</span></div></div></div></td>
                    <td className="px-4 py-3 text-right text-xs font-medium tabular-nums text-fg">{money(item.monthlyValue)}<span className="ml-0.5 text-[10px] text-muted">/mo</span></td>
                    <td className="px-4 py-3 text-right text-xs font-medium tabular-nums text-fg">{item.committedHours} hrs</td>
