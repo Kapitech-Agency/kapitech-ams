@@ -381,6 +381,7 @@ export const AdminCmsProjects: React.FC = () => {
         {filteredProjects.map((project) => (
           <div
             key={project.id}
+            data-ams-slug={'cms-project-' + project.id}
             className="bg-panel border border-line hover:border-line rounded-card overflow-hidden flex flex-col group transition-all"
           >
             {/* Image Thumbnail */}
@@ -463,6 +464,7 @@ export const AdminCmsProjects: React.FC = () => {
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => handleOpenEdit(project)}
+                    data-ams-slug={'cms-project-edit-' + project.id}
                     className="p-1.5 rounded-control bg-panel hover:bg-panel-hover text-muted hover:text-fg border border-line transition-colors"
                     title="Edit Case Study"
                   >
@@ -471,6 +473,7 @@ export const AdminCmsProjects: React.FC = () => {
 
                   <button
                     onClick={() => handleDelete(project.id, project.title)}
+                    data-ams-slug={'cms-project-delete-' + project.id}
                     className="p-1.5 rounded-control bg-panel hover:bg-accent/10 text-muted hover:text-danger border border-line hover:border-danger/30 transition-colors"
                     title="Delete Case Study"
                   >
