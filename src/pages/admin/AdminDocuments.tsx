@@ -215,17 +215,46 @@ export const AdminDocuments: React.FC = () => {
   const loadDocuments = async () => {
     setIsLoading(true);
     setLoadError(null);
-    try {
+
+    const requestDocuments = async () => {
       const response = await api.documents.getAll();
       if (!response.success) {
-        setDocuments([]);
-        setLoadError('Documents could not be loaded. Check your session and try again.');
-        return;
+        throw {
+          status: response.status,
+          message: response.error || 'The document service could not be reached.'
+        };
       }
-      setDocuments(Array.isArray(response.data?.documents) ? response.data.documents : []);
-    } catch {
+
+      const payload = response.data as { documents?: unknown } | undefined;
+      return Array.isArray(payload?.documents) ? payload.documents as DocumentItem[] : [];
+    };
+
+    try {
+      const loaded = await requestDocuments();
+      setDocuments(loaded);
+    } catch (firstError: any) {
+      // Retry transient server/auth races once before showing the module error state.
+      if (firstError?.status === 503 || firstError?.status === 502) {
+        await new Promise((resolve) => window.setTimeout(resolve, 800));
+        try {
+          const loaded = await requestDocuments();
+          setDocuments(loaded);
+          return;
+        } catch (retryError: any) {
+          firstError = retryError;
+        }
+      }
+
       setDocuments([]);
-      setLoadError('Documents could not be loaded. Check your session and try again.');
+      if (firstError?.status === 401) {
+        setLoadError('Your AMS session has expired. Please sign in again and retry.');
+      } else if (firstError?.status === 403) {
+        setLoadError('You do not have permission to access the document vault.');
+      } else if (firstError?.message) {
+        setLoadError(firstError.message);
+      } else {
+        setLoadError('Documents could not be loaded. Please retry.');
+      }
     } finally {
       setIsLoading(false);
     }
