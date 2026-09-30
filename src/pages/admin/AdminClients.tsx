@@ -469,7 +469,7 @@ export const AdminClients: React.FC = () => {
 
   return (
     <AdminPageShell featureSlug="clients-module" className="ams-clients-module">
-      <div data-ams-slug="clients-key-accounts">
+      <div data-ams-feature-slug="clients-header" data-ams-slug="clients-header">
         <AdminModuleHeader
           className="mb-0"
           title="Clients & Key Accounts"
