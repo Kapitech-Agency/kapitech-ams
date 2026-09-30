@@ -109,12 +109,15 @@ export const AdminCmsTestimonials: React.FC = () => {
         }
       />
 
-      {statusMessage && (
-        <div className="p-3 rounded-control bg-success/10 border border-success/25 text-success text-xs font-sans flex items-center gap-2">
-          <Check size={14} />
-          <span>{statusMessage}</span>
-        </div>
-      )}
+      {statusMessage && (() => {
+        const failed = /failed|could not|unable|error|gagal|wajib|required/i.test(statusMessage);
+        return (
+          <div className={['p-3 rounded-control border text-xs font-sans flex items-center gap-2', failed ? 'bg-danger/10 border-danger/25 text-danger' : 'bg-success/10 border-success/25 text-success'].join(' ')}>
+            {failed ? <X size={14} /> : <Check size={14} />}
+            <span>{statusMessage}</span>
+          </div>
+        );
+      })()}
 
       {/* Testimonials List */}
       {isLoading ? (
