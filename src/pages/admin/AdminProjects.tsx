@@ -37,7 +37,7 @@ import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
-import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { api } from '../../lib/apiClient';
 import { formatAmount, getActiveCurrency, CURRENCY_EVENT, CurrencyCode } from '../../lib/currency';
@@ -1462,6 +1462,19 @@ export const AdminProjects: React.FC = () => {
           </>
         )}
       />
+
+      <div className="min-[900px]:hidden min-w-0" data-ams-slug="projects-mobile-tabs">
+        <AdminSectionTabs
+          ariaLabel="Projects sections"
+          activeKey={view}
+          items={[
+            { key: 'all', label: 'All Projects', to: '/admin/projects' },
+            { key: 'sprint', label: 'Sprint & Delivery', to: '/admin/projects?projects=sprint' },
+            { key: 'budget', label: 'Budget vs Actual', to: '/admin/projects?projects=budget' },
+            { key: 'archived', label: 'Archived', to: '/admin/projects?projects=archived' },
+          ]}
+        />
+      </div>
 
       {toast && (
         <div role="status" className="fixed bottom-4 left-1/2 z-[80] -translate-x-1/2 rounded-control border border-line bg-panel px-4 py-3 text-xs text-fg">
