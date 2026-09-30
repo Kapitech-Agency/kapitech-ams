@@ -721,6 +721,7 @@ export const AdminLayout: React.FC = () => {
                   })}
                 </nav>
               ) : location.pathname === '/admin/settings' ? (
+                {/* Settings tabs use the shared AMS pill active state, not an underline. */}
                 <nav aria-label="Settings sections" className="inline-flex h-full min-w-0 max-w-full items-center gap-6 overflow-x-auto ams-topnav-scroll">
                   {[
                     { key: 'overview', label: 'Overview & Backups' },
