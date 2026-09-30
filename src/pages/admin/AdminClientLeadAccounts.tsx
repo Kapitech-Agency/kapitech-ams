@@ -314,7 +314,7 @@ export const AdminClientLeadAccounts: React.FC = () => {
                   ))
                 : visible.length
                   ? visible.map((item) => (
-                      <tr key={item.id} className="border-b border-line last:border-0 transition-colors hover:bg-bg/70">
+                      <tr key={item.id} data-ams-slug={'client-lead-' + item.id.toLowerCase()} className="border-b border-line last:border-0 transition-colors hover:bg-bg/70">
                         <td className="px-5 py-3"><div className="flex items-center gap-2.5"><div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-[11px] font-semibold text-fg">{item.initials}</div><div className="min-w-0"><div className="truncate text-xs font-semibold leading-snug text-fg">{item.company}</div><div className="mt-0.5 text-[10px] text-muted">{item.brief} · {item.location}</div></div></div></td>
                         <td className="px-4 py-3 text-right tabular-nums"><div className="text-xs font-medium text-fg">{compactMoney(item.annualValue)}</div><div className="mt-0.5 text-[10px] text-muted">{money(item.monthlyValue)}/mo</div></td>
                         <td className="px-4 py-3"><span className="inline-flex min-h-6 items-center gap-1.5 rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] font-medium text-muted"><span className={`h-1.5 w-1.5 rounded-full ${stageMeta[item.stage].dot}`} />{stageMeta[item.stage].label}</span></td>
