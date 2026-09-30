@@ -9,7 +9,6 @@ import {
   Database,
   Download,
   FileCheck2,
-  History,
   KeyRound,
   Layers,
   Lock,
@@ -640,7 +639,7 @@ export const AdminSettings: React.FC = () => {
           <section className="overflow-hidden rounded-card border border-line bg-panel">
             <div className="flex flex-col gap-3 border-b border-line px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2">
-                <History size={17} className="text-accent-text" />
+                <Clock3 size={17} className="text-accent-text" />
                 <h2 className="text-sm font-semibold text-fg">Recent Production Backups</h2>
               </div>
               <span className="text-[10px] text-muted">
@@ -752,7 +751,7 @@ export const AdminSettings: React.FC = () => {
         <section className="rounded-card border border-line bg-panel">
           <div className="flex flex-col gap-3 border-b border-line px-5 py-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="flex items-center gap-2">
-              <History size={18} className="text-muted" />
+              <Clock3 size={18} className="text-muted" />
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="text-sm font-semibold text-fg">Immutable System Audit Log</h2>
@@ -801,7 +800,7 @@ export const AdminSettings: React.FC = () => {
               <div className="px-5 py-10">{renderSkeleton()}</div>
             ) : filteredLogs.length === 0 ? (
               <div className="flex min-h-[220px] flex-col items-center justify-center px-5 py-10 text-center">
-                <History size={24} className="text-muted" />
+                <Clock3 size={24} className="text-muted" />
                 <p className="mt-3 text-sm font-medium text-fg">No audit entries found</p>
                 <p className="mt-1 max-w-md text-xs leading-5 text-muted">Adjust the filters or wait for new server-side audit activity.</p>
               </div>
