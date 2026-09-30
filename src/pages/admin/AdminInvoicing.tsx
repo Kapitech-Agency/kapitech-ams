@@ -679,6 +679,7 @@ export const AdminInvoicing: React.FC = () => {
   const [expenseDescription, setExpenseDescription] = useState('');
   const [expenseAmount, setExpenseAmount] = useState(0);
   const [expenseDate, setExpenseDate] = useState(getDateInputValue());
+  const [expenseProjectId, setExpenseProjectId] = useState('');
   const [expenseRecurringInterval, setExpenseRecurringInterval] = useState<AgencyExpense['recurringInterval']>('none');
   const [expenseReceiptUrl, setExpenseReceiptUrl] = useState('');
   const [expenseIdempotencyKey, setExpenseIdempotencyKey] = useState('');
@@ -1433,6 +1434,7 @@ export const AdminInvoicing: React.FC = () => {
     setExpenseDescription('');
     setExpenseAmount(0);
     setExpenseDate(getDateInputValue());
+    setExpenseProjectId('');
     setExpenseRecurringInterval('none');
     setExpenseReceiptUrl('');
     setExpenseIdempotencyKey(
@@ -1843,6 +1845,7 @@ export const AdminInvoicing: React.FC = () => {
         amount,
         date: expenseDate,
         currency,
+        projectId: expenseProjectId || undefined,
         recurringInterval: expenseRecurringInterval,
         receiptUrl: expenseReceiptUrl.trim(),
         idempotencyKey: expenseIdempotencyKey
@@ -2626,7 +2629,7 @@ export const AdminInvoicing: React.FC = () => {
         </section>
       )}
 
-      {loading && financeView !== 'quotations' ? (
+      {(loading || (financeView === 'quotations' && quotationLoading)) ? (
         <div className="space-y-5" aria-label="Loading finance">
           <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">{Array.from({ length: 4 }).map((_, index) => <div key={index} className="h-[82px] animate-pulse rounded-card border border-line bg-panel" />)}</div>
           <div className="grid gap-5 xl:grid-cols-3"><div className="h-80 animate-pulse rounded-card border border-line bg-panel xl:col-span-2"/><div className="h-80 animate-pulse rounded-card border border-line bg-panel"/></div>
@@ -2787,13 +2790,14 @@ export const AdminInvoicing: React.FC = () => {
           <div className="p-5"><EmptyState title="No expenses found" description="Adjust the search or filters."/></div>
         ) : (
           <table className="ams-finance-table min-w-[900px] border-separate border-spacing-0 text-xs">
-            <thead><tr><th>Expense</th><th>Type</th><th>Category</th><th>Date</th><th>Amount</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Expense</th><th>Type</th><th>Category</th><th>Project</th><th>Date</th><th>Amount</th><th>Actions</th></tr></thead>
             <tbody>
               {paginatedExpenses.map((expense) => (
                 <tr key={expense.id}>
                   <td><button type="button" onClick={() => setExpenseDetail(expense)} className="text-left"><p className="text-xs font-medium text-fg hover:text-accent-text">{expense.description}</p><p className="mt-0.5 text-[10px] text-muted">{expense.recordedBy || 'Finance'}</p></button></td>
                   <td><span className="inline-flex rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">{expense.type || 'OpEx'}</span></td>
                   <td><span className="text-xs text-fg">{expense.category}</span><p className="mt-1 text-[10px] text-muted">{expense.recurringInterval && expense.recurringInterval !== 'none' ? 'Recurring · ' + expense.recurringInterval : expense.receiptUrl ? 'Receipt attached' : 'One-time'}</p></td>
+                  <td><span className="text-xs text-fg">{projectsById.get(expense.projectId || '')?.name || 'Unassigned'}</span></td>
                   <td className="text-xs tabular-nums text-muted">{expense.date}</td>
                   <td className="text-xs font-semibold tabular-nums text-fg">{formatNativeAmount(expense.amount, expense.currency || currency, true)}</td>
                   <td><div className="ams-table-actions">{canManageInvoices && <button type="button" onClick={() => setConfirmAction({ type: 'expense', id: expense.id, label: expense.description })} className="ams-table-action" aria-label="Void expense" title="Void expense"><Trash2 size={14}/></button>}</div></td>
@@ -2938,7 +2942,7 @@ export const AdminInvoicing: React.FC = () => {
           <section className="grid gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><div className="flex justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Cash Flow vs Operating Burn</h2><p className="mt-1 text-xs text-muted">Six-month view of actual cash collected versus recorded operating spend.</p></div><div className="shrink-0 rounded-control border border-line bg-bg px-3 py-2 text-right">
   <p className="text-[9px] font-semibold uppercase tracking-[0.08em] text-muted">Quarter net cash</p>
   <p className={'mt-0.5 text-sm font-semibold tabular-nums '+(quarterNetCash>=0?'text-success':'text-danger')}>{formatFinanceCardAmount(quarterNetCash,currency)}</p>
-</div></div></div><div className="p-4">{hasTrendData?<FinanceCashFlowChart data={financeChartData} currency={currency} ariaLabel="Finance cash flow trend comparing cash collected, operating burn, and net cash."/>:<EmptyState title="No trend data" description="Billing payments and expenses will populate this trend."/>}</div></section><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><h2 className="text-sm font-semibold text-fg">Aging receivables</h2><p className="mt-1 text-xs text-muted">{formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} outstanding across 3 aging buckets.</p></div><div className="p-4"><div className="flex h-2.5 overflow-hidden rounded-full bg-bg border border-line">{agingBuckets.map((bucket)=><div key={bucket.label} className={'h-full '+(bucket.tone==='success'?'bg-success':bucket.tone==='warning'?'bg-warning':'bg-danger')} style={{width:bucket.percent+'%'}}/>)}</div><div className="mt-4 space-y-2.5">{agingBuckets.map((bucket)=><div key={bucket.label} className="flex items-center justify-between rounded-control border border-line bg-bg px-3 py-3"><div><p className="text-xs font-medium text-fg">{bucket.label}</p><p className="mt-1 text-[10px] text-muted">{bucket.count} account{bucket.count===1?'':'s'}</p></div><div className="text-right"><p className="text-xs font-semibold tabular-nums">{formatNativeAmount(bucket.amount,currency,true)}</p><p className="mt-1 text-[10px] text-muted">{bucket.percent}%</p></div></div>)}</div><button type="button" onClick={()=>setDunningOpen(true)} disabled={!actionRequiredInvoices.length} className={actionClass+' mt-4 w-full'}><Send size={14}/>Prepare collection notices</button></div></section></section>
+</div></div></div><div className="p-4">{hasTrendData?<FinanceCashFlowChart data={financeChartData} currency={currency} ariaLabel="Finance cash flow trend comparing cash collected, operating burn, and net cash."/>:<EmptyState title="No trend data" description="Billing payments and expenses will populate this trend."/>}</div></section><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><h2 className="text-sm font-semibold text-fg">Aging receivables</h2><p className="mt-1 text-xs text-muted">{formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} outstanding across 5 aging buckets.</p></div><div className="p-4"><div className="flex h-2.5 overflow-hidden rounded-full bg-bg border border-line">{agingBuckets.map((bucket)=><div key={bucket.label} className={'h-full '+(bucket.tone==='success'?'bg-success':bucket.tone==='warning'?'bg-warning':'bg-danger')} style={{width:bucket.percent+'%'}}/>)}</div><div className="mt-4 space-y-2.5">{agingBuckets.map((bucket)=><div key={bucket.label} className="flex items-center justify-between rounded-control border border-line bg-bg px-3 py-3"><div><p className="text-xs font-medium text-fg">{bucket.label}</p><p className="mt-1 text-[10px] text-muted">{bucket.count} account{bucket.count===1?'':'s'}</p></div><div className="text-right"><p className="text-xs font-semibold tabular-nums">{formatNativeAmount(bucket.amount,currency,true)}</p><p className="mt-1 text-[10px] text-muted">{bucket.percent}%</p></div></div>)}</div><button type="button" onClick={()=>setDunningOpen(true)} disabled={!actionRequiredInvoices.length} className={actionClass+' mt-4 w-full'}><Send size={14}/>Prepare collection notices</button></div></section></section>
           <section className="rounded-card border border-line bg-panel overflow-hidden">
   <div className="border-b border-line bg-panel p-4 sm:px-5">
     <div className="flex flex-col gap-4">
@@ -3812,6 +3816,10 @@ export const AdminInvoicing: React.FC = () => {
             <CustomSelect aria-label="Expense type" value={expenseType} onChange={(value) => { setExpenseDirty(true); setExpenseType(value as 'OpEx' | 'CapEx' | 'Rentals'); }} options={[{ value: 'OpEx', label: 'OpEx' }, { value: 'CapEx', label: 'CapEx' }, { value: 'Rentals', label: 'Rentals' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" /></div>
           <div><label className="mb-1.5 block text-xs font-medium text-muted">Category</label><CustomSelect aria-label="Expense category" value={expenseCategory} onChange={(value) => { setExpenseDirty(true); setExpenseCategory(value as AgencyExpense['category']); }} options={['Software & Cloud','Salaries & Contractors','Office & Hardware','Office & Rentals','Marketing & Ads','Legal & Admin','CapEx Equipment'].map((value) => ({ value, label: value }))} className="w-full" triggerClassName="h-10 min-h-10 w-full" /></div>
           <div><label htmlFor="finance-expense-description" className="mb-1.5 block text-xs font-medium text-muted">Description *</label><input id="finance-expense-description" required maxLength={500} value={expenseDescription} onChange={(event) => setExpenseDescription(event.target.value)} className={fieldClass} /></div>
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-muted">Project</label>
+            <CustomSelect aria-label="Expense project" value={expenseProjectId} onChange={(value) => { setExpenseDirty(true); setExpenseProjectId(value); }} options={[{ value: '', label: 'Unassigned' }, ...projects.map((project) => ({ value: project.id, label: project.name }))]} className="w-full" triggerClassName="h-10 min-h-10 w-full" />
+          </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className="mb-1.5 block text-xs font-medium text-muted">Recurring</label>
