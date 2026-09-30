@@ -217,8 +217,6 @@ const isRetainerInvoice = (invoice: AgencyInvoice) =>
     [invoice.paymentTerms, invoice.notes, ...invoice.items.map((item) => item.description)]
       .filter(Boolean)
       .join(' ')
-    </div>
-    </div>
   );
 
 const getInvoiceCollectedInRange = (invoice: AgencyInvoice, start: Date, end: Date) => {
@@ -4144,8 +4142,8 @@ export const AdminInvoicing: React.FC = () => {
     </div>
     </div>
     </div>
+    </div>
   );
 };
 
-    </div>
 export default AdminInvoicing;
