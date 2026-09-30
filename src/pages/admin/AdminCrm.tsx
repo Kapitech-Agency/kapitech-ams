@@ -1242,6 +1242,7 @@ export const AdminCrm: React.FC = () => {
 
             </form>
       </Drawer>
+      </div>
 
     </AdminPageShell>
   );
