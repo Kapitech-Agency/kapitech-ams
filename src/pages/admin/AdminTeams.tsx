@@ -231,9 +231,9 @@ export const AdminTeams: React.FC = () => {
   const [timeBillable, setTimeBillable] = useState('all');
 
   const [vendorFormOpen, setVendorFormOpen] = useState(false);
-  const [vendorDetail, setVendorDetail] = useState<AgencyVendor | null>(null);
+  const [vendorDetail, setVendorDetail] = useState<VendorRecord | null>(null);
   const [vendorDeleteTarget, setVendorDeleteTarget] = useState<{ id: string; name: string } | null>(null);
-  const [editingVendor, setEditingVendor] = useState<AgencyVendor | null>(null);
+  const [editingVendor, setEditingVendor] = useState<VendorRecord | null>(null);
   const [vendorForm, setVendorForm] = useState(emptyVendorForm);
   const [savingVendor, setSavingVendor] = useState(false);
 
