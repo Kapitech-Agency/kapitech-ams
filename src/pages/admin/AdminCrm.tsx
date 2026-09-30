@@ -63,6 +63,7 @@ export const AdminCrm: React.FC = () => {
   // Drag and drop state
   const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
   const [dragOverStage, setDragOverStage] = useState<CrmStage | null>(null);
+  const [dragOverLeadId, setDragOverLeadId] = useState<string | null>(null);
 
   // Modals & Drawer
   const [selectedLead, setSelectedLead] = useState<CrmLead | null>(null);
@@ -184,15 +185,23 @@ export const AdminCrm: React.FC = () => {
   const handleDragOverColumn = (e: React.DragEvent, stageKey: CrmStage) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    if (dragOverStage !== stageKey) {
-      setDragOverStage(stageKey);
-    }
+    if (dragOverStage !== stageKey) setDragOverStage(stageKey);
+    if (dragOverLeadId !== null) setDragOverLeadId(null);
+  };
+
+  const handleDragOverLead = (e: React.DragEvent, stageKey: CrmStage, leadId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverStage(stageKey);
+    if (dragOverLeadId !== leadId) setDragOverLeadId(leadId);
   };
 
   const handleDragLeaveColumn = (e: React.DragEvent) => {
     const nextTarget = e.relatedTarget as Node | null;
     if (!nextTarget || !e.currentTarget.contains(nextTarget)) {
       setDragOverStage(null);
+      setDragOverLeadId(null);
     }
   };
 
@@ -204,6 +213,7 @@ export const AdminCrm: React.FC = () => {
     }
     setDraggedLeadId(null);
     setDragOverStage(null);
+    setDragOverLeadId(null);
   };
 
   const handleStageChange = async (leadId: string, newStage: CrmStage) => {
@@ -576,8 +586,8 @@ export const AdminCrm: React.FC = () => {
 
       {/* 4. MAIN VIEW: KANBAN BOARD OR LIST TABLE */}
       {viewMode === 'kanban' ? (
-        <div className="ams-kanban-scroll custom-scrollbar overflow-x-auto pb-4 overscroll-x-contain">
-          <div className="flex gap-3 min-w-[1400px] min-[1280px]:min-w-full items-start">
+        <div className="ams-kanban-scroll overflow-x-auto overscroll-x-contain">
+          <div className="flex gap-3 min-w-max min-[1280px]:min-w-full items-start">
             
             {CRM_STAGE_DEFINITIONS.map((stageDef) => {
               const stageLeads = filteredLeads.filter(l => l.stage === stageDef.key);
@@ -594,7 +604,7 @@ export const AdminCrm: React.FC = () => {
                   onDrop={(e) => {
                     if (canManageCrm) handleDropOnColumn(e, stageDef.key);
                   }}
-                  className={`bg-panel border rounded-card p-4 flex flex-col flex-1 min-w-[280px] max-w-[340px] shrink-0 transition-all ${
+                  className={`bg-panel border rounded-card flex flex-col flex-1 min-w-[280px] max-w-[340px] shrink-0 transition-all ${
                     isOver ? 'border-accent/45 bg-accent/5' : 'border-line'
                   }`}
                 >
@@ -632,10 +642,10 @@ export const AdminCrm: React.FC = () => {
                   </div>
 
                   {/* Column Cards Stream */}
-                  <div className="min-h-[320px] flex-1 space-y-3 overflow-y-auto p-3 max-h-[calc(100dvh-300px)] custom-scrollbar">
+                  <div className="flex-1 space-y-3 p-3">
                     {stageLeads.length === 0 ? (
                       <div className={[
-                        'flex min-h-[180px] items-center justify-center rounded-card border border-dashed p-4 text-center text-[11px] font-sans transition-colors',
+                        'flex min-h-[104px] items-center justify-center rounded-card border border-dashed p-4 text-center text-[11px] font-sans transition-colors',
                         isOver ? 'border-accent/40 bg-accent/5 text-fg' : 'border-line text-muted'
                       ].join(' ')}>
                         <div className="max-w-[180px]">
@@ -650,8 +660,12 @@ export const AdminCrm: React.FC = () => {
                         const isDragging = draggedLeadId === lead.id;
 
                         return (
+                          {dragOverStage === stageDef.key && dragOverLeadId === lead.id && draggedLeadId !== lead.id && (
+                            <div className="h-2 rounded-badge border border-dashed border-accent/50 bg-accent/10" aria-hidden="true" />
+                          )}
                           <article
                             key={lead.id}
+                            onDragOver={canManageCrm ? (event) => handleDragOverLead(event, stageDef.key, lead.id) : undefined}
                             onClick={() => handleOpenLeadDrawer(lead)}
                             className={`draggable-card kanban-card group relative rounded-card border bg-panel p-4 transition-[transform,opacity,border-color,background-color] duration-150 hover:border-accent/30 ${
                               isDragging ? 'scale-[0.98] border-accent border-dashed opacity-40' : 'border-line'
@@ -673,6 +687,7 @@ export const AdminCrm: React.FC = () => {
                                   onDragEnd={() => {
                                     setDraggedLeadId(null);
                                     setDragOverStage(null);
+                                    setDragOverLeadId(null);
                                   }}
                                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted transition-colors select-none ${
                                     canManageCrm ? 'cursor-grab hover:border-accent/35 hover:bg-panel-hover hover:text-fg active:cursor-grabbing' : 'cursor-default opacity-70'
@@ -760,6 +775,9 @@ export const AdminCrm: React.FC = () => {
                           </article>
                         );
                       })
+                      {draggedLeadId && canManageCrm && dragOverStage === stageDef.key && !dragOverLeadId && (
+                        <div className="h-2 rounded-badge border border-dashed border-accent/50 bg-accent/10" aria-hidden="true" />
+                      )}
                     )}
                   </div>
                 </div>
