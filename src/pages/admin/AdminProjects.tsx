@@ -1452,7 +1452,7 @@ export const AdminProjects: React.FC = () => {
                 <button type="button" onClick={() => openLayout('board')} className={'inline-flex h-7 items-center gap-1.5 rounded-chip px-3 text-xs font-medium transition-colors ' + (projectLayout === 'board' ? 'bg-line text-fg' : 'text-muted hover:bg-bg hover:text-fg')}>
                   <LayoutGrid size={13} /> Kanban
                 </button>
-                <button type="button" onClick={() => openLayout('table')} className={'inline-flex h-7 items-center gap-1.5 rounded-chip px-3 text-xs font-medium transition-colors ' + (projectLayout === 'table' ? 'bg-accent/10 text-fg' : 'text-muted hover:bg-bg hover:text-fg')}>
+                <button type="button" onClick={() => openLayout('table')} className={'inline-flex h-7 items-center gap-1.5 rounded-chip px-3 text-xs font-medium transition-colors ' + (projectLayout === 'table' ? 'bg-line text-fg' : 'text-muted hover:bg-bg hover:text-fg')}>
                   <List size={13} /> Table
                 </button>
               </div>
@@ -1677,7 +1677,7 @@ export const AdminProjects: React.FC = () => {
                         key={column.id}
                         aria-label={column.label + ' project column'}
                         className={[
-                          'ams-project-kanban-lane flex min-h-[680px] w-[352px] shrink-0 self-stretch flex-col overflow-visible rounded-card border transition-[border-color,background-color,box-shadow] duration-200 sm:w-[390px]',
+                          'ams-project-kanban-lane flex min-h-[560px] w-[352px] shrink-0 self-stretch flex-col overflow-visible rounded-card border transition-[border-color,background-color,box-shadow] duration-200 sm:w-[390px]',
                           isDropTarget
                             ? 'border-accent/50 bg-accent/5'
                             : 'border-line/80',
@@ -1745,7 +1745,7 @@ export const AdminProjects: React.FC = () => {
                               setDragOverProjectStatus(null);
                             }
                           }}
-                          className={'ams-project-kanban-stack flex min-h-[620px] flex-1 flex-col gap-3.5 overflow-visible p-3 transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
+                          className={'ams-project-kanban-stack flex min-h-[500px] flex-1 flex-col gap-3.5 overflow-visible p-3 transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
                           {draggingProjectId && canManageProjects && (
                             <div className={'rounded-control border px-2.5 py-2 text-[9px] font-medium transition-colors ' + (isDropTarget ? 'border-accent/35 bg-accent/10 text-accent-text' : 'border-dashed border-line bg-bg/50 text-muted')}>
                               {isDropTarget ? 'Release to move project into ' + column.label : 'Drop here to move project into ' + column.label}
@@ -2346,7 +2346,7 @@ export const AdminProjects: React.FC = () => {
                               ].join(' ')}
                             >
                               {draggingTaskId && canManageKanbanTasks ? (
-                                <div className="flex min-h-16 flex-col items-center justify-center gap-2 text-center text-[10px] text-muted">
+                                <div className="flex min-h-14 flex-col items-center justify-center gap-2 text-center text-[10px] text-muted">
                                   <span className="flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted">
                                     <GripVertical size={14} />
                                   </span>
