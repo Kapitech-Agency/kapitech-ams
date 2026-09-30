@@ -2257,7 +2257,7 @@ export const AdminProjects: React.FC = () => {
                                         role="presentation"
                                         aria-label={canManageKanbanTasks ? 'Drag task' : 'Task movement is read-only'}
                                         className={[
-                                          'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted shadow-sm transition-[background-color,border-color,color,transform] select-none',
+                                          'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted transition-[background-color,border-color,color,transform] select-none',
                                           canManageKanbanTasks
                                             ? 'cursor-grab touch-none hover:border-accent/35 hover:bg-panel-hover hover:text-fg'
                                             : 'cursor-default opacity-70',
