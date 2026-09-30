@@ -269,12 +269,15 @@ export const AdminCmsProjects: React.FC = () => {
       />
 
       {/* Success alert */}
-      {statusMessage && (
-        <div className="p-3.5 rounded-card bg-success/10 border border-success/30 text-success text-xs font-sans flex items-center gap-2 animate-in fade-in duration-300">
-          <Check size={15} />
-          <span>{statusMessage}</span>
-        </div>
-      )}
+      {statusMessage && (() => {
+        const failed = /failed|could not|unable|error|gagal|wajib|required/i.test(statusMessage);
+        return (
+          <div className={['p-3.5 rounded-card border text-xs font-sans flex items-center gap-2 animate-in fade-in duration-300', failed ? 'bg-danger/10 border-danger/30 text-danger' : 'bg-success/10 border-success/30 text-success'].join(' ')}>
+            {failed ? <X size={15} /> : <Check size={15} />}
+            <span>{statusMessage}</span>
+          </div>
+        );
+      })()}
 
       {/* Portfolio filters */}
       <div className="rounded-card border border-line bg-panel p-3.5 sm:p-4">
