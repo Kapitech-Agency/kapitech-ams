@@ -1112,18 +1112,29 @@ export const AdminProjects: React.FC = () => {
 
   const toggleSubtask = async (task: ProjectTask, subtaskId: string) => {
     if (!selectedSprintProject) return;
+
     const nextSubtasks = (task.subtasks || []).map(item =>
       item.id === subtaskId ? { ...item, completed: !item.completed } : item
     );
+
     try {
       const response = await api.tasks.update(task.id, { subtasks: nextSubtasks });
       if (response.success) {
         await syncProjects();
         return;
       }
-    } catch {
-      // Fall through to demo mode.
+
+      if (serverMode) {
+        showToast(response.error || (language === 'id' ? 'Subtask gagal diperbarui.' : 'Subtask could not be updated.'));
+        return;
+      }
+    } catch (error) {
+      if (serverMode) {
+        showToast(error instanceof Error ? error.message : (language === 'id' ? 'Subtask gagal diperbarui.' : 'Subtask could not be updated.'));
+        return;
+      }
     }
+
     setProjects(current =>
       current.map(project =>
         project.id === selectedSprintProject.id
@@ -1140,37 +1151,71 @@ export const AdminProjects: React.FC = () => {
   const confirmDeleteProject = async () => {
     if (!deleteProject) return;
     const target = deleteProject;
+
     try {
       const response = await api.projects.delete(target.id);
       if (response.success) {
-        await syncProjects();
-        showToast('Project deleted.');
+        if (serverMode) {
+          await syncProjects();
+        } else {
+          setProjects(current => current.filter(project => project.id !== target.id));
+        }
+        showToast(serverMode ? 'Project deleted.' : 'Project removed from A/B dataset.');
         setDeleteProject(null);
         return;
       }
-    } catch {
-      // Fall through to demo mode.
+
+      if (serverMode) {
+        showToast(response.error || 'Project could not be deleted.');
+        return;
+      }
+    } catch (error) {
+      if (serverMode) {
+        showToast(error instanceof Error ? error.message : 'Project could not be deleted.');
+        return;
+      }
     }
+
     setProjects(current => current.filter(project => project.id !== target.id));
     setDeleteProject(null);
-    showToast('Project removed from demo mode.');
+    showToast('Project removed from A/B dataset.');
   };
 
   const confirmDeleteTask = async () => {
     if (!deleteTask || !selectedSprintProject) return;
     const target = deleteTask;
+
     try {
       const response = await api.tasks.delete(target.id);
       if (response.success) {
-        await syncProjects();
-        showToast('Task deleted.');
+        if (serverMode) {
+          await syncProjects();
+        } else {
+          setProjects(current =>
+            current.map(project =>
+              project.id === selectedSprintProject.id
+                ? { ...project, tasks: project.tasks.filter(task => task.id !== target.id) }
+                : project
+            )
+          );
+        }
+        showToast(serverMode ? 'Task deleted.' : 'Task removed from A/B dataset.');
         setDeleteTask(null);
         setSelectedTask(null);
         return;
       }
-    } catch {
-      // Fall through to demo mode.
+
+      if (serverMode) {
+        showToast(response.error || 'Task could not be deleted.');
+        return;
+      }
+    } catch (error) {
+      if (serverMode) {
+        showToast(error instanceof Error ? error.message : 'Task could not be deleted.');
+        return;
+      }
     }
+
     setProjects(current =>
       current.map(project =>
         project.id === selectedSprintProject.id
@@ -1180,7 +1225,7 @@ export const AdminProjects: React.FC = () => {
     );
     setDeleteTask(null);
     setSelectedTask(null);
-    showToast('Task removed from demo mode.');
+    showToast('Task removed from A/B dataset.');
   };
 
   const exportProjects = () => {
