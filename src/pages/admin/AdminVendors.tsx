@@ -68,6 +68,7 @@ export const AdminVendors: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [editingVendor, setEditingVendor] = useState<AgencyVendor | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Form states
   const [formName, setFormName] = useState('');
@@ -87,17 +88,23 @@ export const AdminVendors: React.FC = () => {
   const [formIsVetted, setFormIsVetted] = useState<boolean>(true);
 
   const loadVendors = async () => {
+    setIsLoading(true);
     if (!canViewVendors) {
       setVendors([]);
+      setIsLoading(false);
       return;
     }
     try {
       const res = await api.vendors.getAll();
       if (res.success && Array.isArray(res.data?.vendors)) {
         setVendors(res.data.vendors as AgencyVendor[]);
+      } else {
+        setStatusMessage(res.error || (language === 'id' ? 'Vendor gagal dimuat.' : 'Failed to load vendors.'));
       }
     } catch {
       setStatusMessage(language === 'id' ? 'Vendor gagal dimuat.' : 'Failed to load vendors.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -174,30 +181,42 @@ export const AdminVendors: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleToggleVettedQuick = (v: AgencyVendor, e: React.MouseEvent) => {
+  const handleToggleVettedQuick = async (v: AgencyVendor, e: React.MouseEvent) => {
     e.stopPropagation();
-    const updated: AgencyVendor = {
+    if (!canManageVendors) return;
+
+    const optimistic: AgencyVendor = {
       ...v,
       isVetted: !(v.isVetted ?? true),
       updatedAt: new Date().toISOString()
     };
-    if (!canManageVendors) return;
-    void api.vendors.update(updated.id, updated).then((res) => {
-      if (res.success && res.data?.vendor) {
-        setVendors(prev => prev.map(item => item.id === updated.id ? res.data!.vendor as AgencyVendor : item));
+
+    setVendors(prev => prev.map(item => item.id === v.id ? optimistic : item));
+    if (selectedVendor?.id === v.id) setSelectedVendor(optimistic);
+
+    try {
+      const res = await api.vendors.update(optimistic.id, optimistic);
+      if (!res.success || !res.data?.vendor) {
+        setVendors(prev => prev.map(item => item.id === v.id ? v : item));
+        if (selectedVendor?.id === v.id) setSelectedVendor(v);
+        setStatusMessage(res.error || (language === 'id' ? 'Gagal memperbarui vendor.' : 'Failed to update vendor.'));
+        return;
       }
-    }).catch(() => {
+
+      const savedVendor = res.data.vendor as AgencyVendor;
+      setVendors(prev => prev.map(item => item.id === v.id ? savedVendor : item));
+      if (selectedVendor?.id === v.id) setSelectedVendor(savedVendor);
+      setStatusMessage(
+        language === 'id'
+          ? `Status verifikasi ${v.name} diubah menjadi ${savedVendor.isVetted ? 'Terverifikasi (Vetted)' : 'Standar'}`
+          : `Verification status for ${v.name} set to ${savedVendor.isVetted ? 'Vetted' : 'Standard'}`
+      );
+      setTimeout(() => setStatusMessage(null), 3000);
+    } catch {
+      setVendors(prev => prev.map(item => item.id === v.id ? v : item));
+      if (selectedVendor?.id === v.id) setSelectedVendor(v);
       setStatusMessage(language === 'id' ? 'Gagal memperbarui vendor.' : 'Failed to update vendor.');
-    });
-    if (selectedVendor && selectedVendor.id === v.id) {
-      setSelectedVendor(updated);
     }
-    setStatusMessage(
-      language === 'id' 
-        ? `Status verifikasi ${v.name} diubah menjadi ${updated.isVetted ? 'Terverifikasi (Vetted)' : 'Standar'}` 
-        : `Verification status for ${v.name} set to ${updated.isVetted ? 'Vetted' : 'Standard'}`
-    );
-    setTimeout(() => setStatusMessage(null), 3000);
   };
 
   const handleSaveVendor = async (e: React.FormEvent) => {
@@ -284,6 +303,26 @@ export const AdminVendors: React.FC = () => {
       setStatusMessage(language === 'id' ? 'Vendor gagal dihapus.' : 'Failed to delete vendor.');
     }
   };
+
+  if (isLoading && vendors.length === 0) {
+    return (
+      <AdminPageShell featureSlug="vendors-module">
+        <AdminModuleHeader
+          className="mb-0"
+          title={t('admin.nav.vendors')}
+          description={language === 'id' ? 'Kelola direktori vendor, keahlian, rate, kontrak, dan status verifikasi.' : 'Manage vendor profiles, skills, rates, contracts, and verification status.'}
+        />
+        <div className="space-y-3" role="status" aria-label="Loading vendors">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="h-[116px] animate-pulse rounded-card border border-line bg-panel" />
+            ))}
+          </div>
+          <div className="h-[420px] animate-pulse rounded-card border border-line bg-panel" />
+        </div>
+      </AdminPageShell>
+    );
+  }
 
   return (
     <AdminPageShell featureSlug="vendors-module">
