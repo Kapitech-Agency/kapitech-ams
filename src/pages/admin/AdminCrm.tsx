@@ -175,6 +175,7 @@ export const AdminCrm: React.FC = () => {
 
   // Drag and Drop Handlers
   const handleDragStart = (e: React.DragEvent, leadId: string) => {
+    e.dataTransfer.setData('text/crm-lead-id', leadId);
     e.dataTransfer.setData('text/plain', leadId);
     e.dataTransfer.effectAllowed = 'move';
     setDraggedLeadId(leadId);
@@ -188,13 +189,16 @@ export const AdminCrm: React.FC = () => {
     }
   };
 
-  const handleDragLeaveColumn = () => {
-    setDragOverStage(null);
+  const handleDragLeaveColumn = (e: React.DragEvent) => {
+    const nextTarget = e.relatedTarget as Node | null;
+    if (!nextTarget || !e.currentTarget.contains(nextTarget)) {
+      setDragOverStage(null);
+    }
   };
 
   const handleDropOnColumn = (e: React.DragEvent, stageKey: CrmStage) => {
     e.preventDefault();
-    const leadId = e.dataTransfer.getData('text/plain') || draggedLeadId;
+    const leadId = e.dataTransfer.getData('text/crm-lead-id') || e.dataTransfer.getData('text/plain') || draggedLeadId;
     if (leadId) {
       handleStageChange(leadId, stageKey);
     }
@@ -591,7 +595,7 @@ export const AdminCrm: React.FC = () => {
                     if (canManageCrm) handleDropOnColumn(e, stageDef.key);
                   }}
                   className={`bg-panel border rounded-card p-4 flex flex-col flex-1 min-w-[280px] max-w-[340px] shrink-0 transition-all ${
-                    isOver ? 'border-accent ring-2 ring-accent/30 bg-accent/5' : 'border-line'
+                    isOver ? 'border-accent/45 bg-accent/5' : 'border-line'
                   }`}
                 >
                   {/* Column Header */}
@@ -628,23 +632,29 @@ export const AdminCrm: React.FC = () => {
                   </div>
 
                   {/* Column Cards Stream */}
-                  <div className="p-3 space-y-3 overflow-y-auto flex-1 max-h-[calc(100dvh-320px)] min-h-[180px] custom-scrollbar">
+                  <div className="min-h-[320px] flex-1 space-y-3 overflow-y-auto p-3 max-h-[calc(100dvh-300px)] custom-scrollbar">
                     {stageLeads.length === 0 ? (
-                      <div className="py-8 text-center text-muted text-[11px] font-sans border border-dashed border-line rounded-card">
-                        {language === 'id' ? 'Tarik deal ke sini' : 'Drop deals here'}
+                      <div className={[
+                        'flex min-h-[180px] items-center justify-center rounded-card border border-dashed p-4 text-center text-[11px] font-sans transition-colors',
+                        isOver ? 'border-accent/40 bg-accent/5 text-fg' : 'border-line text-muted'
+                      ].join(' ')}>
+                        <div className="max-w-[180px]">
+                          <span className="block font-medium text-fg">{isOver ? (language === 'id' ? 'Lepaskan deal di sini' : 'Drop deal here') : (language === 'id' ? 'Belum ada deal' : 'No deals here')}</span>
+                          <span className="mt-1 block text-muted">
+                            {isOver ? (language === 'id' ? 'Pindahkan deal ke tahap ini.' : 'Move this deal into the stage.') : (language === 'id' ? 'Tarik deal ke kolom ini.' : 'Drag a deal into this stage.')}
+                          </span>
+                        </div>
                       </div>
                     ) : (
                       stageLeads.map((lead) => {
                         const isDragging = draggedLeadId === lead.id;
 
                         return (
-                          <div
+                          <article
                             key={lead.id}
-                            draggable={canManageCrm}
-                            onDragStart={canManageCrm ? (e) => handleDragStart(e, lead.id) : undefined}
                             onClick={() => handleOpenLeadDrawer(lead)}
-                            className={`draggable-card kanban-card bg-panel border hover:border-muted rounded-card p-4 cursor-pointer transition-colors group relative ${
-                              isDragging ? 'opacity-40 scale-95 border-accent border-dashed' : 'border-line'
+                            className={`draggable-card kanban-card group relative rounded-card border bg-panel p-4 transition-[transform,opacity,border-color,background-color] duration-150 hover:border-accent/30 ${
+                              isDragging ? 'scale-[0.98] border-accent border-dashed opacity-40' : 'border-line'
                             }`}
                           >
                             {/* Top Card Info */}
@@ -654,9 +664,24 @@ export const AdminCrm: React.FC = () => {
                               </span>
                               <div className="flex items-center gap-1">
                                 {getPriorityBadge(lead.priority)}
-                                <div className={`text-muted ${canManageCrm ? 'cursor-grab' : 'cursor-default'}`} data-drag-handle>
-                                  <GripVertical size={13} />
-                                </div>
+                                <span
+                                  role="button"
+                                  tabIndex={canManageCrm ? 0 : -1}
+                                  aria-label={canManageCrm ? 'Drag deal' : 'Deal movement is read-only'}
+                                  draggable={canManageCrm}
+                                  onDragStart={canManageCrm ? (e) => handleDragStart(e, lead.id) : undefined}
+                                  onDragEnd={() => {
+                                    setDraggedLeadId(null);
+                                    setDragOverStage(null);
+                                  }}
+                                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted transition-colors select-none ${
+                                    canManageCrm ? 'cursor-grab hover:border-accent/35 hover:bg-panel-hover hover:text-fg active:cursor-grabbing' : 'cursor-default opacity-70'
+                                  }`}
+                                  data-drag-handle
+                                  title={canManageCrm ? 'Drag this handle to move the deal' : 'Deal movement is read-only'}
+                                >
+                                  <GripVertical size={14} />
+                                </span>
                               </div>
                             </div>
 
@@ -732,7 +757,7 @@ export const AdminCrm: React.FC = () => {
                                 </button>
                               </div>
                             </div>
-                          </div>
+                          </article>
                         );
                       })
                     )}
