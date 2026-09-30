@@ -32,7 +32,7 @@ import {
   WalletCards,
   X
 } from 'lucide-react';
-import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPanel, AdminTablePagination , AdminPageShell } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPanel, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Modal } from '../../components/ui/Modal';
