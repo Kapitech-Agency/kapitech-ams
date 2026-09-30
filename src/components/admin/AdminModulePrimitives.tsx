@@ -174,33 +174,68 @@ const normalizeMetricSeries = (values: number[]) => {
   return safe;
 };
 
+const buildSparklinePath = (values: number[], width: number, height: number, pad: number) => {
+  const series = normalizeMetricSeries(values);
+  const min = Math.min(...series);
+  const max = Math.max(...series);
+  const range = Math.max(1, max - min);
+  const points = series.map((value, index) => ({
+    x: pad + (series.length <= 1 ? (width - pad * 2) / 2 : (index / (series.length - 1)) * (width - pad * 2)),
+    y: height - pad - ((value - min) / range) * (height - pad * 2),
+  }));
+
+  if (points.length === 1) return { path: `M ${points[0].x} ${points[0].y}`, points };
+
+  const slopes = points.slice(0, -1).map((point, index) => {
+    const next = points[index + 1];
+    return (next.y - point.y) / Math.max(1, next.x - point.x);
+  });
+
+  const tangents = points.map((_, index) => {
+    if (index === 0) return slopes[0];
+    if (index === points.length - 1) return slopes[slopes.length - 1];
+
+    const previousSlope = slopes[index - 1];
+    const nextSlope = slopes[index];
+
+    if (previousSlope === 0 || nextSlope === 0 || Math.sign(previousSlope) !== Math.sign(nextSlope)) return 0;
+    return (previousSlope + nextSlope) / 2;
+  });
+
+  const path = points.slice(0, -1).reduce((result, point, index) => {
+    const next = points[index + 1];
+    const dx = (next.x - point.x) / 3;
+    const cp1 = { x: point.x + dx, y: point.y + tangents[index] * dx };
+    const cp2 = { x: next.x - dx, y: next.y - tangents[index + 1] * dx };
+    return `${result} C ${cp1.x.toFixed(2)} ${cp1.y.toFixed(2)}, ${cp2.x.toFixed(2)} ${cp2.y.toFixed(2)}, ${next.x.toFixed(2)} ${next.y.toFixed(2)}`;
+  }, `M ${points[0].x} ${points[0].y}`);
+
+  return { path, points };
+};
+
 const MetricSparkline: React.FC<{ values?: number[]; label: React.ReactNode; toneClassName?: string }> = ({ values = [], label, toneClassName = 'text-accent-text' }) => {
   const series = normalizeMetricSeries(values);
-  const width = 112;
+  const gradientId = `metric-fill-${useId().replace(/:/g, '')}`;
+  const width = 132;
   const height = 44;
   const pad = 4;
-  const max = Math.max(...series);
-  const min = Math.min(...series);
-  const range = Math.max(1, max - min);
-  const pointX = (index: number) => pad + (series.length <= 1 ? (width - pad * 2) / 2 : (index / (series.length - 1)) * (width - pad * 2));
-  const pointY = (value: number) => height - pad - ((value - min) / range) * (height - pad * 2);
-  const points = series.map((value, index) => ({ x: pointX(index), y: pointY(value), value }));
-  const linePath = points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ');
-  const areaPath = `${linePath} L ${points[points.length - 1].x} ${height - pad} L ${points[0].x} ${height - pad} Z`;
+  const { path, points } = buildSparklinePath(series, width, height, pad);
+  const baseline = height - pad;
+  const areaPath = `${path} L ${points[points.length - 1].x} ${baseline} L ${points[0].x} ${baseline} Z`;
   const color = toneClassName.includes('text-success') ? 'var(--success)' : toneClassName.includes('text-warning') ? 'var(--warning)' : toneClassName.includes('text-danger') ? 'var(--danger)' : toneClassName.includes('text-info') ? 'var(--info)' : 'var(--series-1)';
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="h-11 w-[112px] shrink-0 overflow-visible" role="img" aria-label={`${String(label)} metric trend`}>
+    <svg viewBox={`0 0 ${width} ${height}`} className="h-10 w-[132px] shrink-0 overflow-visible" preserveAspectRatio="xMidYMid meet" role="img" aria-label={`${String(label)} metric trend`}>
       <defs>
-        <linearGradient id={`metric-fill-${String(label).replace(/[^a-z0-9]/gi, '-').toLowerCase()}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.22" />
+        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.18" />
           <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
       </defs>
-      <line x1={pad} x2={width - pad} y1={height - pad} y2={height - pad} stroke="var(--line)" strokeWidth="1" />
-      <path d={areaPath} fill={`url(#metric-fill-${String(label).replace(/[^a-z0-9]/gi, '-').toLowerCase()})`} />
-      <path d={linePath} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx={points[points.length - 1].x} cy={points[points.length - 1].y} r="2.8" fill={color} />
+      <line x1={pad} x2={width - pad} y1={baseline} y2={baseline} stroke="var(--line)" strokeWidth="1" opacity="0.8" vectorEffect="non-scaling-stroke" />
+      <path d={areaPath} fill={`url(#${gradientId})`} />
+      <path d={path} fill="none" stroke={color} strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+      <circle cx={points[points.length - 1].x} cy={points[points.length - 1].y} r="2.75" fill="var(--panel)" stroke={color} strokeWidth="1.75" vectorEffect="non-scaling-stroke" />
     </svg>
   );
 };
