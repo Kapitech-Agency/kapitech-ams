@@ -15,7 +15,7 @@ import {
   Search,
   Tag,
 } from 'lucide-react';
-import { AdminMetricStrip, AdminModuleHeader, AdminPanel } from './AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminPanel, AdminTablePagination } from './AdminModulePrimitives';
 import { CustomSelect } from '../ui/CustomSelect';
 import { Modal } from '../ui/Modal';
 import { ProfileIdentity } from './ProfileIdentity';
@@ -56,7 +56,7 @@ const TASK_TABS = [
   { key: 'completed', label: 'Completed', search: '&taskscope=completed' },
 ] as const;
 
-const PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 10;
 
 const buildPreviewTask = (
   id: string,
@@ -207,6 +207,7 @@ export const TasksWorkspace: React.FC = () => {
   const [sortKey, setSortKey] = useState<TaskSortKey>('priority');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedTask, setSelectedTask] = useState<TaskRecord | null>(null);
   const [editingTask, setEditingTask] = useState<TaskRecord | null>(null);
@@ -480,8 +481,8 @@ export const TasksWorkspace: React.FC = () => {
     setSelectedIds([]);
   }, [taskScope, query, projectFilter, priorityFilter, statusFilter, assigneeFilter, sortKey, sortDirection]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredRecords.length / PAGE_SIZE));
-  const pagedRecords = filteredRecords.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(filteredRecords.length / pageSize));
+  const pagedRecords = filteredRecords.slice((page - 1) * pageSize, page * pageSize);
   const allVisibleSelected = pagedRecords.length > 0 && pagedRecords.every(task => selectedIds.includes(task.id));
 
   useEffect(() => {
@@ -982,21 +983,7 @@ export const TasksWorkspace: React.FC = () => {
           </div>
         )}
 
-        <div className="flex flex-col gap-2 border-t border-line bg-panel px-4 py-3 text-[11px] text-muted sm:flex-row sm:items-center sm:justify-between" data-ams-feature-slug="tasks-pagination">
-          <span>
-            Showing <span className="font-semibold tabular-nums text-fg">{filteredRecords.length ? (page - 1) * PAGE_SIZE + 1 : 0}</span>
-            {' '}to{' '}
-            <span className="font-semibold tabular-nums text-fg">{Math.min(page * PAGE_SIZE, filteredRecords.length)}</span>
-            {' '}of{' '}
-            <span className="font-semibold tabular-nums text-fg">{filteredRecords.length}</span>
-            {' '}tasks
-          </span>
-          <div className="flex items-center gap-2">
-            <span data-ams-slug="tasks-page-status">Page {page} of {totalPages}</span>
-            <button type="button" disabled={page <= 1} onClick={() => setPage(current => Math.max(1, current - 1))} data-ams-slug="tasks-page-prev" className="inline-flex h-8 items-center rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted hover:bg-panel hover:text-fg disabled:opacity-40">Previous</button>
-            <button type="button" disabled={page >= totalPages} onClick={() => setPage(current => Math.min(totalPages, current + 1))} data-ams-slug="tasks-page-next" className="inline-flex h-8 items-center rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted hover:bg-panel hover:text-fg disabled:opacity-40">Next</button>
-          </div>
-        </div>
+        <AdminTablePagination total={filteredRecords.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="tasks" slug="tasks-pagination" />
       </AdminPanel>
 
       <Modal
