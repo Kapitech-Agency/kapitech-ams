@@ -26,7 +26,7 @@ import {
   WalletCards,
   X
 } from 'lucide-react';
-import { AgencyExpense, AgencyInvoice, InvoiceLineItem, InvoiceStatus, computeInvoiceTotals, computeFinancialMetrics, getMonthlyCashFlowSeries, slugifyFinance, normalizeFinanceInvoice, normalizeFinanceExpense } from '../../lib/financeStore';
+import { AgencyExpense, AgencyInvoice, InvoiceLineItem, InvoiceStatus, INITIAL_DEFAULT_EXPENSES, INITIAL_DEFAULT_INVOICES, computeInvoiceTotals, computeFinancialMetrics, getMonthlyCashFlowSeries, slugifyFinance, normalizeFinanceInvoice, normalizeFinanceExpense } from '../../lib/financeStore';
 import { AgencyVendor, getAgencyVendors } from '../../lib/vendorStore';
 import { CurrencyCode, CURRENCY_EVENT, getActiveCurrency, setActiveCurrency, formatNativeAmount } from '../../lib/currency';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -36,7 +36,7 @@ import { Modal } from '../../components/ui/Modal';
 import { InvoiceStatusDropdown } from '../../components/ui/InvoiceStatusDropdown';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { api } from '../../lib/apiClient';
-import { AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricCard, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 
@@ -297,10 +297,6 @@ type FinanceQuotation = {
   createdAt: string;
   owner: string;
   invoiceId?: string;
-  taxPercent?: number;
-  discountPercent?: number;
-  paymentTerms?: string;
-  notes?: string;
 };
 
 const STITCH_FINANCE_QUOTATIONS: FinanceQuotation[] = [
@@ -460,11 +456,7 @@ const normalizeFinanceQuotation = (raw: any): FinanceQuotation => ({
   validUntil: String(raw?.validUntil || raw?.validityPeriod || ''),
   createdAt: String(raw?.createdAt || raw?.createdDate || ''),
   owner: String(raw?.owner || 'Finance'),
-  invoiceId: raw?.invoiceId || raw?.invoice?.id || undefined,
-  taxPercent: Number(raw?.taxPercent) || 0,
-  discountPercent: Number(raw?.discountPercent) || 0,
-  paymentTerms: String(raw?.paymentTerms || ''),
-  notes: String(raw?.notes || '')
+  invoiceId: raw?.invoiceId || raw?.invoice?.id || undefined
 });
 
 const StatusBadge = ({ status }: { status: InvoiceStatus }) => (
@@ -590,20 +582,7 @@ const FinanceCashFlowChart: React.FC<{
     </div>
   );
 };
-type FinanceMetricCardProps = {
-  label: string;
-  value: React.ReactNode;
-  context?: string;
-  toneClassName?: string;
-};
-
-const FinanceMetricCard: React.FC<FinanceMetricCardProps> = ({ label, value, context, toneClassName = 'text-fg' }) => (
-  <div className="min-w-0 px-3 py-1 first:pl-0 last:pr-0 sm:px-4">
-    <p className="text-xs font-medium text-muted">{label}</p>
-    <p className={'mt-1 text-xl font-medium leading-7 tabular-nums ' + toneClassName}>{value}</p>
-    {context && <p className="mt-1 truncate text-[11px] leading-4 text-muted">{context}</p>}
-  </div>
-);
+const FinanceMetricCard: React.FC<React.ComponentProps<typeof AdminMetricCard>> = AdminMetricCard;
 export const AdminInvoicing: React.FC = () => {
   const { language } = useLanguage();
   const location = useLocation();
@@ -647,8 +626,6 @@ export const AdminInvoicing: React.FC = () => {
   });
   const [expenseSearch, setExpenseSearch] = useState('');
   const [expenseTypeFilter, setExpenseTypeFilter] = useState('all');
-  const [expenseCategoryFilter, setExpenseCategoryFilter] = useState('all');
-  const [expensePeriodFilter, setExpensePeriodFilter] = useState<'all' | '30d' | '90d' | 'ytd'>('all');
   const [expenseSort, setExpenseSort] = useState<'date_desc' | 'date_asc' | 'amount_high' | 'amount_low'>('date_desc');
   const [invoicePage, setInvoicePage] = useState(1);
   const [expensePage, setExpensePage] = useState(1);
@@ -682,8 +659,6 @@ export const AdminInvoicing: React.FC = () => {
   const [expenseDescription, setExpenseDescription] = useState('');
   const [expenseAmount, setExpenseAmount] = useState(0);
   const [expenseDate, setExpenseDate] = useState(getDateInputValue());
-  const [expenseProjectId, setExpenseProjectId] = useState('');
-  const [expenseRecurringInterval, setExpenseRecurringInterval] = useState<AgencyExpense['recurringInterval']>('none');
   const [expenseIdempotencyKey, setExpenseIdempotencyKey] = useState('');
 
   const [paymentInvoice, setPaymentInvoice] = useState<AgencyInvoice | null>(null);
@@ -699,7 +674,7 @@ export const AdminInvoicing: React.FC = () => {
   const [detailInvoice, setDetailInvoice] = useState<AgencyInvoice | null>(null);
   const [reminderInvoice, setReminderInvoice] = useState<AgencyInvoice | null>(null);
   const [dunningOpen, setDunningOpen] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<{ type: 'invoice' | 'expense' | 'quotation'; id: string; label: string } | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ type: 'invoice' | 'expense'; id: string; label: string } | null>(null);
   const [confirmingAction, setConfirmingAction] = useState(false);
   const [discardPrompt, setDiscardPrompt] = useState<'invoice' | 'expense' | 'payment' | null>(null);
   const [pendingPaymentInvoice, setPendingPaymentInvoice] = useState<AgencyInvoice | null>(null);
@@ -708,14 +683,15 @@ export const AdminInvoicing: React.FC = () => {
   const [paymentDirty, setPaymentDirty] = useState(false);
   const loadRequestId = React.useRef(0);
 
+  const [usingDemoFinance, setUsingDemoFinance] = useState(false);
   const [usingDemoInvoices, setUsingDemoInvoices] = useState(false);
   const [usingDemoExpenses, setUsingDemoExpenses] = useState(false);
   const [incomeExpenseMode, setIncomeExpenseMode] = useState<'income' | 'expenses'>('income');
   const [incomeSearch, setIncomeSearch] = useState('');
   const [incomePage, setIncomePage] = useState(1);
   const incomePageSize = 10;
-  const [quotations, setQuotations] = useState<FinanceQuotation[]>([]);
-  const [usingDemoQuotations, setUsingDemoQuotations] = useState(false);
+  const [quotations, setQuotations] = useState<FinanceQuotation[]>(STITCH_FINANCE_QUOTATIONS);
+  const [usingDemoQuotations, setUsingDemoQuotations] = useState(true);
   const [quotationLoading, setQuotationLoading] = useState(true);
   const [quotationSearch, setQuotationSearch] = useState('');
   const [quotationStatusFilter, setQuotationStatusFilter] = useState<'all' | FinanceQuotationStatus>('all');
@@ -728,11 +704,7 @@ export const AdminInvoicing: React.FC = () => {
   const [quotationClientName, setQuotationClientName] = useState('');
   const [quotationClientCompany, setQuotationClientCompany] = useState('');
   const [quotationAmount, setQuotationAmount] = useState(0);
-  const [quotationDiscountPercent, setQuotationDiscountPercent] = useState(0);
-  const [quotationTaxPercent, setQuotationTaxPercent] = useState(11);
   const [quotationValidUntil, setQuotationValidUntil] = useState(getDateInputValue(30));
-  const [quotationPaymentTerms, setQuotationPaymentTerms] = useState('Bank Transfer Net 14');
-  const [quotationNotes, setQuotationNotes] = useState('');
   const [quotationStatus, setQuotationStatus] = useState<FinanceQuotationStatus>('draft');
 
   const [vendorPaymentSearch, setVendorPaymentSearch] = useState('');
@@ -797,10 +769,16 @@ export const AdminInvoicing: React.FC = () => {
         ? expenseRes.data.expenses as FinanceExpense[]
         : [];
 
-      const shouldUseDemoInvoices = false;
-      const shouldUseDemoExpenses = false;
-      const nextInvoices = apiInvoices;
-      const nextExpenses = apiExpenses;
+      const demoInvoices = INITIAL_DEFAULT_INVOICES
+        .filter((invoice) => invoice.currency === currency)
+        .map((invoice) => ({ ...invoice, items: Array.isArray(invoice.items) ? invoice.items.map((item) => ({ ...item })) : [] }));
+      const demoExpenses = INITIAL_DEFAULT_EXPENSES
+        .map((expense) => ({ ...expense, currency }));
+
+      const shouldUseDemoInvoices = apiInvoices.length === 0;
+      const shouldUseDemoExpenses = apiExpenses.length === 0;
+      const nextInvoices = shouldUseDemoInvoices ? demoInvoices : apiInvoices;
+      const nextExpenses = shouldUseDemoExpenses ? demoExpenses : apiExpenses;
 
       if (!nextInvoices.length && !nextExpenses.length && !metricsRes.success) {
         throw new Error(invoiceRes.error || expenseRes.error || metricsRes.error || 'Financial data is temporarily unavailable.');
@@ -808,8 +786,9 @@ export const AdminInvoicing: React.FC = () => {
 
       if (requestId !== loadRequestId.current) return;
 
-      setUsingDemoInvoices(false);
-      setUsingDemoExpenses(false);
+      setUsingDemoInvoices(shouldUseDemoInvoices);
+      setUsingDemoExpenses(shouldUseDemoExpenses);
+      setUsingDemoFinance(shouldUseDemoInvoices || shouldUseDemoExpenses);
 
       setInvoices(nextInvoices);
       setExpenses(nextExpenses);
@@ -865,11 +844,18 @@ export const AdminInvoicing: React.FC = () => {
         ? result.data.proposals.map(normalizeFinanceQuotation).filter((quotation) => quotation.currency === currency)
         : [];
 
-      setQuotations(rows);
-      setUsingDemoQuotations(false);
+      if (rows.length) {
+        setQuotations(rows);
+        setUsingDemoQuotations(false);
+      } else {
+        setQuotations(
+          STITCH_FINANCE_QUOTATIONS.filter((quotation) => quotation.currency === currency)
+        );
+        setUsingDemoQuotations(true);
+      }
     } catch {
-      setQuotations([]);
-      setUsingDemoQuotations(false);
+      setQuotations(STITCH_FINANCE_QUOTATIONS.filter((quotation) => quotation.currency === currency));
+      setUsingDemoQuotations(true);
     } finally {
       setQuotationLoading(false);
     }
@@ -1019,8 +1005,12 @@ export const AdminInvoicing: React.FC = () => {
     [currencyInvoices]
   );
 
-  const retainerLedgerInvoices = retainerInvoices;
-  const usingDemoRetainerLedger = false;
+  const retainerLedgerInvoices = useMemo(() => {
+    if (retainerInvoices.length) return retainerInvoices;
+    return STITCH_FINANCE_RETAINER_INVOICES.filter((invoice) => invoice.currency === currency).map(normalizeFinanceInvoice);
+  }, [currency, retainerInvoices]);
+
+  const usingDemoRetainerLedger = retainerInvoices.length === 0 && retainerLedgerInvoices.length > 0;
 
   const financeChartData = useMemo(
     () => cashFlow.map((point) => {
@@ -1245,30 +1235,16 @@ export const AdminInvoicing: React.FC = () => {
   }, [incomeExpenseMode, currency]);
 
   useEffect(() => {
-    setExpensePage(1);
-  }, [expenseSearch, expenseTypeFilter, expenseCategoryFilter, expensePeriodFilter, expenseSort]);
-
-  useEffect(() => {
     setIncomePage((page) => Math.min(page, incomePageCount));
   }, [incomePageCount]);
 
   const filteredExpenses = useMemo(() => {
     const query = expenseSearch.trim().toLowerCase();
     const result = currencyExpenses.filter((expense) => {
-      const searchable = [expense.description, expense.category, expense.type || 'OpEx', expense.recordedBy, expense.date, expense.projectId].join(' ').toLowerCase();
+      const searchable = [expense.description, expense.category, expense.type || 'OpEx', expense.recordedBy, expense.date].join(' ').toLowerCase();
       const matchesSearch = !query || searchable.includes(query);
       const matchesType = expenseTypeFilter === 'all' || (expense.type || 'OpEx') === expenseTypeFilter;
-      const matchesCategory = expenseCategoryFilter === 'all' || expense.category === expenseCategoryFilter;
-      const date = new Date(String(expense.date || '') + 'T00:00:00');
-      const today = new Date();
-      today.setHours(23, 59, 59, 999);
-      const days = expensePeriodFilter === '30d' ? 30 : expensePeriodFilter === '90d' ? 90 : expensePeriodFilter === 'ytd'
-        ? Math.max(1, Math.ceil((today.getTime() - new Date(today.getFullYear(), 0, 1).getTime()) / 86400000))
-        : null;
-      const matchesPeriod = days === null
-        ? true
-        : !Number.isNaN(date.getTime()) && date >= new Date(today.getTime() - days * 86400000);
-      return matchesSearch && matchesType && matchesCategory && matchesPeriod;
+      return matchesSearch && matchesType;
     });
 
     return [...result].sort((a, b) => {
@@ -1277,7 +1253,7 @@ export const AdminInvoicing: React.FC = () => {
       if (expenseSort === 'date_asc') return String(a.date || '').localeCompare(String(b.date || ''));
       return String(b.date || '').localeCompare(String(a.date || ''));
     });
-  }, [currencyExpenses, expenseSearch, expenseTypeFilter, expenseCategoryFilter, expensePeriodFilter, expenseSort]);
+  }, [currencyExpenses, expenseSearch, expenseTypeFilter, expenseSort]);
 
   const paginatedExpenses = useMemo(() => {
     const start = (expensePage - 1) * expensePageSize;
@@ -1413,8 +1389,6 @@ export const AdminInvoicing: React.FC = () => {
     setExpenseDescription('');
     setExpenseAmount(0);
     setExpenseDate(getDateInputValue());
-    setExpenseProjectId('');
-    setExpenseRecurringInterval('none');
     setExpenseIdempotencyKey(
       typeof crypto !== 'undefined' && crypto.randomUUID
         ? crypto.randomUUID()
@@ -1823,8 +1797,6 @@ export const AdminInvoicing: React.FC = () => {
         amount,
         date: expenseDate,
         currency,
-        projectId: expenseProjectId || undefined,
-        recurringInterval: expenseRecurringInterval,
         idempotencyKey: expenseIdempotencyKey
       });
       if (!result.success) throw new Error(result.error || 'Expense could not be saved.');
@@ -1833,8 +1805,6 @@ export const AdminInvoicing: React.FC = () => {
       setExpenseDirty(false);
       setExpenseDescription('');
       setExpenseAmount(0);
-      setExpenseProjectId('');
-      setExpenseRecurringInterval('none');
       showNotice('success', language === 'id' ? 'Pengeluaran berhasil dicatat.' : 'Expense recorded successfully.');
       await loadData(true);
     } catch (err) {
@@ -1861,13 +1831,6 @@ export const AdminInvoicing: React.FC = () => {
           syncDemoFinanceMetrics(invoices, nextExpenses);
           showNotice('success', 'Demo expense voided.');
         }
-        setConfirmAction(null);
-        return;
-      }
-
-      if (confirmAction.type === 'quotation') {
-        const quotation = quotations.find((item) => item.id === confirmAction.id);
-        if (quotation) await deleteQuotation(quotation);
         setConfirmAction(null);
         return;
       }
@@ -1930,19 +1893,6 @@ export const AdminInvoicing: React.FC = () => {
     { value: 'OpEx', label: 'OpEx' },
     { value: 'CapEx', label: 'CapEx' },
     { value: 'Rentals', label: 'Rentals' }
-  ];
-
-  const expenseCategoryOptions = [
-    { value: 'all', label: language === 'id' ? 'Semua kategori' : 'All categories' },
-    ...['Software & Cloud', 'Salaries & Contractors', 'Office & Hardware', 'Office & Rentals', 'Marketing & Ads', 'Legal & Admin', 'CapEx Equipment']
-      .map((value) => ({ value, label: value }))
-  ];
-
-  const expensePeriodOptions = [
-    { value: 'all', label: language === 'id' ? 'Semua periode' : 'All periods' },
-    { value: '30d', label: language === 'id' ? '30 hari terakhir' : 'Last 30 days' },
-    { value: '90d', label: language === 'id' ? '90 hari terakhir' : 'Last 90 days' },
-    { value: 'ytd', label: 'YTD' }
   ];
 
   const agingBuckets = useMemo(() => {
@@ -2179,11 +2129,7 @@ export const AdminInvoicing: React.FC = () => {
     setQuotationClientName('');
     setQuotationClientCompany('');
     setQuotationAmount(0);
-    setQuotationDiscountPercent(0);
-    setQuotationTaxPercent(11);
     setQuotationValidUntil(getDateInputValue(30));
-    setQuotationPaymentTerms('Bank Transfer Net 14');
-    setQuotationNotes('');
     setQuotationStatus('draft');
   };
 
@@ -2198,11 +2144,7 @@ export const AdminInvoicing: React.FC = () => {
     setQuotationClientName(quotation.clientName);
     setQuotationClientCompany(quotation.clientCompany);
     setQuotationAmount(quotation.total);
-    setQuotationDiscountPercent(Number(quotation.discountPercent || 0));
-    setQuotationTaxPercent(Number(quotation.taxPercent || 11));
     setQuotationValidUntil(quotation.validUntil);
-    setQuotationPaymentTerms(quotation.paymentTerms || 'Bank Transfer Net 14');
-    setQuotationNotes(quotation.notes || '');
     setQuotationStatus(quotation.status);
     setQuotationModalOpen(true);
   };
@@ -2231,10 +2173,10 @@ export const AdminInvoicing: React.FC = () => {
       company: quotationClientCompany.trim(),
       currency,
       validityPeriod: quotationValidUntil,
-      taxPercent: Math.min(100, Math.max(0, Number(quotationTaxPercent) || 0)),
-      discount: Math.max(0, Math.round(Number(quotationAmount) * (Number(quotationDiscountPercent) || 0) / 100)),
-      paymentTerms: quotationPaymentTerms.trim(),
-      notes: quotationNotes.trim(),
+      taxPercent: 11,
+      discount: 0,
+      paymentTerms: 'Bank Transfer Net 14',
+      notes: 'Finance module quotation workspace.',
       items: [{
         id: 'quotation-item-' + Date.now(),
         description: quotationTitle.trim(),
@@ -2575,7 +2517,7 @@ export const AdminInvoicing: React.FC = () => {
         </section>
       )}
 
-      {(loading || (financeView === 'quotations' && quotationLoading)) ? (
+      {loading && financeView !== 'quotations' ? (
         <div className="space-y-5" aria-label="Loading finance">
           <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">{Array.from({ length: 4 }).map((_, index) => <div key={index} className="h-[82px] animate-pulse rounded-card border border-line bg-panel" />)}</div>
           <div className="grid gap-5 xl:grid-cols-3"><div className="h-80 animate-pulse rounded-card border border-line bg-panel xl:col-span-2"/><div className="h-80 animate-pulse rounded-card border border-line bg-panel"/></div>
@@ -2583,7 +2525,7 @@ export const AdminInvoicing: React.FC = () => {
         </div>
       ) : financeView === 'quotations' ? (
         <div className="space-y-5">
-          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Total quotations" value={quotationMetrics.total} context="All records" sparkline={[quotationMetrics.total, quotationMetrics.active, quotationMetrics.accepted, quotationMetrics.expiring]} icon={<FileText size={15}/>}/><FinanceMetricCard label="Active pipeline" value={quotationMetrics.active} context="Draft through sent" sparkline={[quotationMetrics.total, quotationMetrics.active, quotationMetrics.accepted, quotationMetrics.expiring]} icon={<Clock3 size={15}/>}/><FinanceMetricCard label="Pipeline value" value={formatFinanceCardAmount(quotationMetrics.value,currency)} context="Server-backed records" sparkline={filteredQuotations.length ? filteredQuotations.slice(0, 8).map((quotation) => quotation.total) : [quotationMetrics.value]} icon={<WalletCards size={15} />}/><FinanceMetricCard label="Accepted" value={quotationMetrics.accepted} context={quotationMetrics.approved+' approved ready to convert'} sparkline={[quotationMetrics.active, quotationMetrics.approved, quotationMetrics.accepted]} icon={<CheckCircle2 size={15} className="text-success"/>} toneClassName="text-success"/></section>
+          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Total quotations" value={quotationMetrics.total} context="All records" sparkline={[quotationMetrics.total, quotationMetrics.active, quotationMetrics.accepted, quotationMetrics.expiring]} icon={<FileText size={15}/>}/><FinanceMetricCard label="Active pipeline" value={quotationMetrics.active} context="Draft through sent" sparkline={[quotationMetrics.total, quotationMetrics.active, quotationMetrics.accepted, quotationMetrics.expiring]} icon={<Clock3 size={15}/>}/><FinanceMetricCard label="Pipeline value" value={formatFinanceCardAmount(quotationMetrics.value,currency)} context={usingDemoQuotations?'Demo workspace data':'Server-backed records'} sparkline={filteredQuotations.length ? filteredQuotations.slice(0, 8).map((quotation) => quotation.total) : [quotationMetrics.value]} icon={<WalletCards size={15} />}/><FinanceMetricCard label="Accepted" value={quotationMetrics.accepted} context={quotationMetrics.approved+' approved ready to convert'} sparkline={[quotationMetrics.active, quotationMetrics.approved, quotationMetrics.accepted]} icon={<CheckCircle2 size={15} className="text-success"/>} toneClassName="text-success"/></section>
           <section className="space-y-5">
             <section className="rounded-card border border-line bg-panel overflow-hidden">
   <div className="border-b border-line bg-panel p-4 sm:px-5">
@@ -2622,13 +2564,13 @@ export const AdminInvoicing: React.FC = () => {
         </div>
       )}
     </div>
-  </div><div className="overflow-hidden">{filteredQuotations.length===0?<div className="p-5"><EmptyState title={quotationSearch || quotationStatusFilter !== 'all' ? 'No quotations found' : 'No quotations yet'} description={quotationSearch || quotationStatusFilter !== 'all' ? 'Adjust the search or filters.' : 'Create a quotation to start the commercial pipeline.'} action={canManageInvoices && !quotationSearch && quotationStatusFilter === 'all' ? <button type="button" onClick={openCreateQuotation} className={primaryClass}><Plus size={14}/>New quotation</button> : undefined}/></div>:<table className="ams-finance-table table-fixed border-separate border-spacing-0 text-xs">
+  </div><div className="overflow-hidden">{filteredQuotations.length===0?<div className="p-5"><EmptyState title="No quotations found" description="Adjust the search or filters."/></div>:<table className="ams-finance-table table-fixed border-separate border-spacing-0 text-xs">
 <thead className="sticky top-0 z-10 border-b border-line bg-panel/95 backdrop-blur-sm"><tr>
-  <th className="w-[30%] px-5 py-3 text-left text-[10px] font-semibold text-muted">Quotation</th>
-  <th className="w-[17%] px-5 py-3 text-right text-[10px] font-semibold text-muted">Value</th>
-  <th className="w-[21%] px-5 py-3 text-left text-[10px] font-semibold text-muted">Timeline</th>
-  <th className="w-[16%] px-5 py-3 text-left text-[10px] font-semibold text-muted">Status</th>
-  <th className="w-[16%] px-5 py-3 text-right text-[10px] font-semibold text-muted">Actions</th>
+  <th className="w-[30%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Quotation</th>
+  <th className="w-[17%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Value</th>
+  <th className="w-[21%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Timeline</th>
+  <th className="w-[16%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Status</th>
+  <th className="w-[16%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Actions</th>
 </tr></thead>
 <tbody className="divide-y divide-line">
 {filteredQuotations.map((quotation)=><tr key={quotation.id} className="group align-top transition-colors hover:bg-bg">
@@ -2640,7 +2582,7 @@ export const AdminInvoicing: React.FC = () => {
   <td className="px-4 py-5 text-right"><p className="font-semibold tabular-nums text-fg">{formatNativeAmount(quotation.total,quotation.currency,true)}</p><div className="mt-1"><ProfileIdentity profile={{ name: quotation.owner, role: undefined, contextLabel: 'Quotation owner' }} size="sm" showRole={false} /></div></td>
   <td className="px-5 py-4"><div className="grid gap-1.5 text-[11px]"><div className="flex items-center justify-between gap-3"><span className="text-muted">Created</span><span className="tabular-nums text-fg">{quotation.createdAt}</span></div><div className="flex items-center justify-between gap-3"><span className="text-muted">Valid</span><span className="tabular-nums text-fg">{quotation.validUntil}</span></div></div></td>
   <td className="px-5 py-4"><QuotationStatusBadge status={quotation.status}/></td>
-  <td className="px-5 py-4"><div className="ams-table-actions"><button type="button" onClick={()=>setQuotationDetail(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="View quotation" title="View quotation"><Eye size={14}/></button>{canManageInvoices&&<button type="button" onClick={()=>openEditQuotation(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Edit quotation" title="Edit quotation"><Edit3 size={14}/></button>}{canManageInvoices&&<button type="button" onClick={()=>void convertQuotationToInvoice(quotation)} disabled={Boolean(quotation.invoiceId)||quotation.status!=='approved'} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg disabled:cursor-not-allowed disabled:opacity-40" aria-label="Convert quotation to invoice" title={quotation.invoiceId?'Invoice already created':quotation.status==='approved'?'Convert approved quotation to invoice':'Only approved quotations can be converted'}><Receipt size={14}/></button>}{canManageInvoices&&<button type="button" onClick={()=>setConfirmAction({type:'quotation',id:quotation.id,label:quotation.quotationNumber})} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Delete quotation" title="Delete quotation"><Trash2 size={14}/></button>}</div></td>
+  <td className="px-5 py-4"><div className="ams-table-actions"><button type="button" onClick={()=>setQuotationDetail(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="View quotation" title="View quotation"><Eye size={14}/></button>{canManageInvoices&&<button type="button" onClick={()=>openEditQuotation(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Edit quotation" title="Edit quotation"><Edit3 size={14}/></button>}{canManageInvoices&&<button type="button" onClick={()=>void convertQuotationToInvoice(quotation)} disabled={Boolean(quotation.invoiceId)||quotation.status!=='approved'} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg disabled:cursor-not-allowed disabled:opacity-40" aria-label="Convert quotation to invoice" title={quotation.invoiceId?'Invoice already created':quotation.status==='approved'?'Convert approved quotation to invoice':'Only approved quotations can be converted'}><Receipt size={14}/></button>}{canManageInvoices&&<button type="button" onClick={()=>void deleteQuotation(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Delete quotation" title="Delete quotation"><Trash2 size={14}/></button>}</div></td>
 </tr>)}
 </tbody></table>}</div></section>
             <section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><h2 className="text-sm font-semibold text-fg">Pipeline stages</h2><p className="mt-1 text-xs text-muted">Count and value by stage.</p></div><div className="space-y-3 p-4">{(['draft','review','approved','sent','accepted','rejected'] as FinanceQuotationStatus[]).map((status)=>{const count=quotations.filter((q)=>q.status===status).length;const value=quotations.filter((q)=>q.status===status).reduce((sum,q)=>sum+q.total,0);return <div key={status} className="rounded-control border border-line bg-bg px-3 py-3"><div className="flex justify-between text-xs"><span className="font-medium text-fg">{quotationStatusLabel(status)}</span><span className="tabular-nums font-semibold">{count}</span></div><p className="mt-1 text-[10px] tabular-nums text-muted">{formatNativeAmount(value,currency,true)}</p><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel"><div className="h-full rounded-full bg-series-3" style={{width:(quotationMetrics.value>0?Math.min(100,value/quotationMetrics.value*100):0)+'%'}}/></div></div>})}</div></section>
@@ -2683,11 +2625,9 @@ export const AdminInvoicing: React.FC = () => {
             <span className="sr-only">Search expense</span>
             <input value={expenseSearch} onChange={(event) => setExpenseSearch(event.target.value)} placeholder="Search expense..." className={fieldClass + ' h-10 pl-8'}/>
           </label>
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(160px,1fr)_minmax(160px,1fr)_minmax(145px,1fr)_minmax(145px,1fr)_auto]">
-            <CustomSelect value={expenseTypeFilter} onChange={setExpenseTypeFilter} options={expenseTypeOptions} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Expense type filter"/>
-            <CustomSelect value={expenseCategoryFilter} onChange={setExpenseCategoryFilter} options={expenseCategoryOptions} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Expense category filter"/>
-            <CustomSelect value={expensePeriodFilter} onChange={(value) => setExpensePeriodFilter(value as typeof expensePeriodFilter)} options={expensePeriodOptions} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Expense period filter"/>
-            <CustomSelect value={expenseSort} onChange={(value) => setExpenseSort(value as typeof expenseSort)} options={[{value:'date_desc',label:'Newest'},{value:'date_asc',label:'Oldest'},{value:'amount_high',label:'Highest amount'},{value:'amount_low',label:'Lowest amount'}]} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Expense sort"/>
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(170px,1fr)_minmax(160px,1fr)_auto]">
+            <CustomSelect value={expenseTypeFilter} onChange={setExpenseTypeFilter} options={expenseTypeOptions} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap"/>
+            <CustomSelect value={expenseSort} onChange={(value) => setExpenseSort(value as typeof expenseSort)} options={[{value:'date_desc',label:'Newest'},{value:'date_asc',label:'Oldest'},{value:'amount_high',label:'Highest amount'},{value:'amount_low',label:'Lowest amount'}]} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap"/>
             {canManageInvoices && <button type="button" onClick={openExpenseModal} className={primaryClass + ' h-10 min-h-10 shrink-0'}><Plus size={14}/>Add expense</button>}
           </div>
         </div>
@@ -2736,14 +2676,13 @@ export const AdminInvoicing: React.FC = () => {
           <div className="p-5"><EmptyState title="No expenses found" description="Adjust the search or filters."/></div>
         ) : (
           <table className="ams-finance-table min-w-[900px] border-separate border-spacing-0 text-xs">
-            <thead><tr><th>Expense</th><th>Type</th><th>Category</th><th>Project</th><th>Date</th><th>Amount</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Expense</th><th>Type</th><th>Category</th><th>Date</th><th>Amount</th><th>Actions</th></tr></thead>
             <tbody>
               {paginatedExpenses.map((expense) => (
                 <tr key={expense.id}>
                   <td><p className="text-xs font-medium text-fg">{expense.description}</p><p className="mt-0.5 text-[10px] text-muted">{expense.recordedBy || 'Finance'}</p></td>
                   <td><span className="inline-flex rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">{expense.type || 'OpEx'}</span></td>
-                  <td><span className="text-xs text-fg">{expense.category}</span><p className="mt-1 text-[10px] text-muted">{expense.recurringInterval && expense.recurringInterval !== 'none' ? 'Recurring · ' + expense.recurringInterval : 'One-time'}</p></td>
-                  <td><span className="text-xs text-fg">{projectsById.get(expense.projectId || '')?.name || 'Unassigned'}</span></td>
+                  <td><span className="text-xs text-fg">{expense.category}</span></td>
                   <td className="text-xs tabular-nums text-muted">{expense.date}</td>
                   <td className="text-xs font-semibold tabular-nums text-fg">{formatNativeAmount(expense.amount, expense.currency || currency, true)}</td>
                   <td><div className="ams-table-actions">{canManageInvoices && <button type="button" onClick={() => setConfirmAction({ type: 'expense', id: expense.id, label: expense.description })} className="ams-table-action" aria-label="Void expense" title="Void expense"><Trash2 size={14}/></button>}</div></td>
@@ -2856,13 +2795,13 @@ export const AdminInvoicing: React.FC = () => {
       ) : financeView === 'tax-retainers' ? (
         <div className="space-y-5">
           <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Tax provision" value={formatFinanceCardAmount(taxProvision,currency)} context="Tax across issued invoices" sparkline={[taxProvision, taxCollected, taxOutstanding, retainerBilled]} icon={<Receipt size={15}/>}/><FinanceMetricCard label="Tax collected" value={formatFinanceCardAmount(taxCollected,currency)} context={(taxProvision>0?((taxCollected/taxProvision)*100).toFixed(1):'0.0')+'% of provision'} sparkline={[taxProvision, taxCollected, taxOutstanding]} icon={<BadgeCheck size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Tax outstanding" value={formatFinanceCardAmount(taxOutstanding,currency)} context="Provision not collected" sparkline={[taxOutstanding, taxProvision, taxCollected]} icon={<Hourglass size={15} className="text-warning"/>} toneClassName="text-warning"/><FinanceMetricCard label="Retainer billed" value={formatFinanceCardAmount(retainerBilled,currency)} context={(retainerBilled>0?((retainerCollected/retainerBilled)*100).toFixed(1):'0.0')+'% collected'} sparkline={financeChartData.map((point) => point.retainerTarget)} icon={<TrendingUp size={15}/>}/></section>
-          <section className="space-y-5"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><div className="flex items-start justify-between gap-4"><div><h2 className="text-sm font-semibold text-fg">Retainer ledger</h2><p className="mt-1 text-xs text-muted">Billing and collected value for retainer invoices.</p></div></div></div><div className="overflow-hidden"><table className="ams-finance-table table-fixed border-separate border-spacing-0 text-xs">
+          <section className="space-y-5"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><div className="flex items-start justify-between gap-4"><div><h2 className="text-sm font-semibold text-fg">Retainer ledger</h2><p className="mt-1 text-xs text-muted">Billing and collected value for retainer invoices.</p></div>{usingDemoRetainerLedger&&<span className="shrink-0 rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">Sample data</span>}</div></div><div className="overflow-hidden"><table className="ams-finance-table table-fixed border-separate border-spacing-0 text-xs">
 <thead className="sticky top-0 z-10 border-b border-line bg-panel/95 backdrop-blur-sm"><tr>
-  <th className="w-[26%] px-5 py-3 text-left text-[10px] font-semibold text-muted">Invoice</th>
-  <th className="w-[28%] px-5 py-3 text-left text-[10px] font-semibold text-muted">Client</th>
-  <th className="w-[16%] px-5 py-3 text-left text-[10px] font-semibold text-muted">Status</th>
-  <th className="w-[15%] px-5 py-3 text-right text-[10px] font-semibold text-muted">Billed</th>
-  <th className="w-[15%] px-5 py-3 text-right text-[10px] font-semibold text-muted">Collected</th>
+  <th className="w-[26%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice</th>
+  <th className="w-[28%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client</th>
+  <th className="w-[16%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Status</th>
+  <th className="w-[15%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Billed</th>
+  <th className="w-[15%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Collected</th>
 </tr></thead>
 <tbody className="divide-y divide-line">
 {retainerLedgerInvoices.slice(0,12).map((invoice)=><tr key={invoice.id} className="group align-top transition-colors hover:bg-bg">
@@ -2886,7 +2825,7 @@ export const AdminInvoicing: React.FC = () => {
         <div className="space-y-5">
           <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Quarter billed" value={formatFinanceCardAmount(currentQuarterTotal,currency)} context={quarterChangePercent===null?'Current quarter':(quarterChangePercent>=0?'+':'')+quarterChangePercent.toFixed(1)+'% vs previous quarter'} sparkline={financeChartData.map((point) => point.inflow + point.retainerTarget)} icon={<Receipt size={15}/>}/><FinanceMetricCard label="Collected YTD" value={formatFinanceCardAmount(ytdCollected,currency)} context={ytdCollectionRate.toFixed(1)+'% collection rate'} sparkline={financeChartData.map((point) => point.inflow)} icon={<WalletCards size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Outstanding" value={formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} context={pendingInvoiceCount+' open invoices'} icon={<Hourglass size={15} className="text-warning"/>} toneClassName="text-warning"/><FinanceMetricCard label="Overdue" value={formatFinanceCardAmount(overdueBalance,currency)} context={criticalOverdueCount+' invoices need attention'} sparkline={financeChartData.map((point) => point.outflow)} icon={<AlertCircle size={15} className="text-danger"/>} toneClassName="text-danger"/></section>
           <section className="grid gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><div className="flex justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Cash Flow vs Operating Burn</h2><p className="mt-1 text-xs text-muted">Six-month view of actual cash collected versus recorded operating spend.</p></div><div className="shrink-0 rounded-control border border-line bg-bg px-3 py-2 text-right">
-  <p className="text-[10px] font-semibold text-muted">Quarter net cash</p>
+  <p className="text-[9px] font-semibold uppercase tracking-[0.08em] text-muted">Quarter net cash</p>
   <p className={'mt-0.5 text-sm font-semibold tabular-nums '+(quarterNetCash>=0?'text-success':'text-danger')}>{formatFinanceCardAmount(quarterNetCash,currency)}</p>
 </div></div></div><div className="p-4">{hasTrendData?<FinanceCashFlowChart data={financeChartData} currency={currency} ariaLabel="Finance cash flow trend comparing cash collected, operating burn, and net cash."/>:<EmptyState title="No trend data" description="Billing payments and expenses will populate this trend."/>}</div></section><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><h2 className="text-sm font-semibold text-fg">Aging receivables</h2><p className="mt-1 text-xs text-muted">{formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} outstanding across 3 aging buckets.</p></div><div className="p-4"><div className="flex h-2.5 overflow-hidden rounded-full bg-bg border border-line">{agingBuckets.map((bucket)=><div key={bucket.label} className={'h-full '+(bucket.tone==='success'?'bg-success':bucket.tone==='warning'?'bg-warning':'bg-danger')} style={{width:bucket.percent+'%'}}/>)}</div><div className="mt-4 space-y-2.5">{agingBuckets.map((bucket)=><div key={bucket.label} className="flex items-center justify-between rounded-control border border-line bg-bg px-3 py-3"><div><p className="text-xs font-medium text-fg">{bucket.label}</p><p className="mt-1 text-[10px] text-muted">{bucket.count} account{bucket.count===1?'':'s'}</p></div><div className="text-right"><p className="text-xs font-semibold tabular-nums">{formatNativeAmount(bucket.amount,currency,true)}</p><p className="mt-1 text-[10px] text-muted">{bucket.percent}%</p></div></div>)}</div><button type="button" onClick={()=>setDunningOpen(true)} disabled={!actionRequiredInvoices.length} className={actionClass+' mt-4 w-full'}><Send size={14}/>Prepare collection notices</button></div></section></section>
           <section className="rounded-card border border-line bg-panel overflow-hidden">
@@ -3037,12 +2976,12 @@ export const AdminInvoicing: React.FC = () => {
     </div>
   </div><div className="overflow-hidden">{filteredInvoices.length===0?<div className="p-5"><EmptyState title="No invoices found" description="No invoices match the current filters." action={canManageInvoices?<button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>Create invoice</button>:undefined}/></div>:<table className="ams-finance-table table-fixed border-separate border-spacing-0 text-xs">
 <thead className="sticky top-0 z-10 border-b border-line bg-panel/95 backdrop-blur-sm"><tr>
-  <th className="w-[22%] px-5 py-3 text-left text-[10px] font-semibold text-muted">Invoice</th>
-  {columnVisibility.client&&<th className="w-[18%] px-5 py-3 text-left text-[10px] font-semibold text-muted">Client & project</th>}
-  {columnVisibility.timeline&&<th className="w-[17%] px-5 py-3 text-left text-[10px] font-semibold text-muted">Timeline</th>}
-  {columnVisibility.billing&&<th className="w-[16%] px-5 py-3 text-right text-[10px] font-semibold text-muted">Billing</th>}
-  {columnVisibility.status&&<th className="w-[10%] px-5 py-3 text-left text-[10px] font-semibold text-muted">Status</th>}
-  {columnVisibility.actions&&<th className="w-[17%] px-5 py-3 text-right text-[10px] font-semibold text-muted"> </th>}
+  <th className="w-[22%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Invoice</th>
+  {columnVisibility.client&&<th className="w-[18%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Client & project</th>}
+  {columnVisibility.timeline&&<th className="w-[17%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Timeline</th>}
+  {columnVisibility.billing&&<th className="w-[16%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Billing</th>}
+  {columnVisibility.status&&<th className="w-[10%] px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Status</th>}
+  {columnVisibility.actions&&<th className="w-[17%] px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-muted"> </th>}
 </tr></thead>
 <tbody className="divide-y divide-line">
 {paginatedInvoices.map((invoice)=>{
@@ -3106,7 +3045,7 @@ export const AdminInvoicing: React.FC = () => {
       <article className="rounded-control border border-line bg-bg p-4">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-[10px] font-semibold text-muted">Cash position</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Cash position</p>
             <p className="mt-1 text-xs text-muted">Collected cash minus recorded operating expenses.</p>
           </div>
           <span className="rounded-badge border border-line bg-panel px-2 py-1 text-[10px] font-medium text-muted">Current quarter</span>
@@ -3146,7 +3085,7 @@ export const AdminInvoicing: React.FC = () => {
 
       <article className="rounded-control border border-line bg-bg p-4">
         <div>
-          <p className="text-[10px] font-semibold text-muted">Receivables</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Receivables</p>
           <p className="mt-1 text-xs text-muted">Outstanding money still sitting on open invoices.</p>
         </div>
 
@@ -3184,7 +3123,7 @@ export const AdminInvoicing: React.FC = () => {
       <article className="rounded-control border border-line bg-bg p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[10px] font-semibold text-muted">Collection progress</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Collection progress</p>
             <p className="mt-1 text-xs text-muted">How much of the current quarter's billed amount has actually been collected.</p>
           </div>
           <span className="text-lg font-semibold tabular-nums text-success">{currentQuarterTotal > 0 ? ((quarterCollected / currentQuarterTotal) * 100).toFixed(1) : '0.0'}%</span>
@@ -3201,7 +3140,7 @@ export const AdminInvoicing: React.FC = () => {
       <article className="rounded-control border border-line bg-bg p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[10px] font-semibold text-muted">Tax & retainers</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Tax & retainers</p>
             <p className="mt-1 text-xs text-muted">Current book exposure and recurring billing position.</p>
           </div>
           <span className="rounded-badge border border-line bg-panel px-2 py-1 text-[10px] text-muted">All current records</span>
@@ -3318,7 +3257,7 @@ export const AdminInvoicing: React.FC = () => {
         }}
         size="lg"
         title={editingQuotation ? 'Edit quotation' : 'Create quotation'}
-        description="Create a commercial quotation from the Finance workspace."
+        description="Create a commercial quotation from the Finance workspace. Demo mode keeps the record local until server data is available."
         closeOnOutsideClick={!quotationSaving}
         footer={
           <>
@@ -3344,28 +3283,12 @@ export const AdminInvoicing: React.FC = () => {
               <input id="finance-quotation-company" required maxLength={160} value={quotationClientCompany} onChange={(event) => setQuotationClientCompany(event.target.value)} className={fieldClass} placeholder="Company / account" />
             </div>
             <div>
-              <label htmlFor="finance-quotation-amount" className="mb-1.5 block text-xs font-medium text-muted">Subtotal *</label>
+              <label htmlFor="finance-quotation-amount" className="mb-1.5 block text-xs font-medium text-muted">Quoted amount *</label>
               <input id="finance-quotation-amount" required min="0.01" max="1000000000000" step="0.01" type="number" value={quotationAmount || ''} onChange={(event) => setQuotationAmount(Number(event.target.value))} className={fieldClass} />
-            </div>
-            <div>
-              <label htmlFor="finance-quotation-discount" className="mb-1.5 block text-xs font-medium text-muted">Discount %</label>
-              <input id="finance-quotation-discount" min="0" max="100" step="0.01" type="number" value={quotationDiscountPercent} onChange={(event) => setQuotationDiscountPercent(Number(event.target.value))} className={fieldClass} />
-            </div>
-            <div>
-              <label htmlFor="finance-quotation-tax" className="mb-1.5 block text-xs font-medium text-muted">Tax %</label>
-              <input id="finance-quotation-tax" min="0" max="100" step="0.01" type="number" value={quotationTaxPercent} onChange={(event) => setQuotationTaxPercent(Number(event.target.value))} className={fieldClass} />
             </div>
             <div>
               <label htmlFor="finance-quotation-valid-until" className="mb-1.5 block text-xs font-medium text-muted">Valid until *</label>
               <input id="finance-quotation-valid-until" required type="date" value={quotationValidUntil} onChange={(event) => setQuotationValidUntil(event.target.value)} className={fieldClass} />
-            </div>
-            <div>
-              <label htmlFor="finance-quotation-payment-terms" className="mb-1.5 block text-xs font-medium text-muted">Payment terms</label>
-              <input id="finance-quotation-payment-terms" maxLength={200} value={quotationPaymentTerms} onChange={(event) => setQuotationPaymentTerms(event.target.value)} className={fieldClass} placeholder="e.g. Bank Transfer Net 14" />
-            </div>
-            <div className="sm:col-span-2">
-              <label htmlFor="finance-quotation-notes" className="mb-1.5 block text-xs font-medium text-muted">Notes</label>
-              <textarea id="finance-quotation-notes" maxLength={2000} rows={3} value={quotationNotes} onChange={(event) => setQuotationNotes(event.target.value)} className={fieldClass + ' h-auto py-2.5'} placeholder="Commercial notes, scope assumptions, or approval context" />
             </div>
             {editingQuotation && (
               <div>
@@ -3381,20 +3304,11 @@ export const AdminInvoicing: React.FC = () => {
             )}
           </div>
           <div className="rounded-card border border-line bg-bg px-4 py-3">
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between gap-3"><span className="text-muted">Subtotal</span><span className="tabular-nums text-fg">{formatNativeAmount(Number(quotationAmount) || 0, currency, true)}</span></div>
-              <div className="flex justify-between gap-3"><span className="text-muted">Discount</span><span className="tabular-nums text-fg">- {formatNativeAmount(Math.round((Number(quotationAmount) || 0) * (Number(quotationDiscountPercent) || 0) / 100), currency, true)}</span></div>
-              <div className="flex justify-between gap-3"><span className="text-muted">Tax</span><span className="tabular-nums text-fg">{formatNativeAmount(Math.round(((Number(quotationAmount) || 0) - Math.round((Number(quotationAmount) || 0) * (Number(quotationDiscountPercent) || 0) / 100)) * (Number(quotationTaxPercent) || 0) / 100), currency, true)}</span></div>
-              <div className="flex justify-between gap-3 border-t border-line pt-2 font-semibold"><span className="text-fg">Preview total</span><span className="tabular-nums text-fg">{formatNativeAmount(
-                Math.round(
-                  ((Number(quotationAmount) || 0) - Math.round((Number(quotationAmount) || 0) * (Number(quotationDiscountPercent) || 0) / 100))
-                  * (1 + (Number(quotationTaxPercent) || 0) / 100)
-                ),
-                currency,
-                true
-              )}</span></div>
+            <div className="flex items-center justify-between gap-3 text-xs">
+              <span className="text-muted">Preview total</span>
+              <span className="font-semibold tabular-nums text-fg">{formatNativeAmount(Number(quotationAmount) || 0, currency, true)}</span>
             </div>
-            <p className="mt-2 text-[10px] text-muted">Currency follows the active Finance currency switch.</p>
+            <p className="mt-1 text-[10px] text-muted">Currency follows the active Finance currency switch.</p>
           </div>
         </form>
       </Drawer>
@@ -3426,28 +3340,30 @@ export const AdminInvoicing: React.FC = () => {
           <div className="space-y-5">
             <div className="flex flex-col gap-4 rounded-card border border-line bg-bg p-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="text-[10px] font-medium text-muted">Quotation</p>
+                <p className="text-[10px] uppercase tracking-[0.08em] text-muted">Quotation</p>
                 <p className="mt-1 text-lg font-semibold text-fg">{quotationDetail.quotationNumber}</p>
                 <p className="mt-1 text-xs text-muted">{quotationDetail.title}</p>
               </div>
               <span className="inline-flex min-h-7 items-center rounded-badge border border-line bg-panel px-2 py-1 text-xs font-semibold text-fg">{quotationStatusLabel(quotationDetail.status)}</span>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] font-medium text-muted">Client</p><p className="mt-1 text-sm font-medium text-fg">{quotationDetail.clientCompany}</p><p className="mt-0.5 text-xs text-muted">{quotationDetail.clientName}</p></div>
-              <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] font-medium text-muted">Commercial value</p><p className="mt-1 text-sm font-semibold tabular-nums text-fg">{formatNativeAmount(quotationDetail.total, quotationDetail.currency, true)}</p><p className="mt-0.5 text-xs text-muted">Valid until {quotationDetail.validUntil}</p></div>
-              <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] font-medium text-muted">Owner</p><div className="mt-1"><ProfileIdentity profile={{ name: quotationDetail.owner, role: undefined, contextLabel: 'Quotation owner' }} showRole={false} /></div></div>
-              <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] font-medium text-muted">Created</p><p className="mt-1 text-sm font-medium text-fg">{quotationDetail.createdAt}</p></div>
+              <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] uppercase tracking-[0.08em] text-muted">Client</p><p className="mt-1 text-sm font-medium text-fg">{quotationDetail.clientCompany}</p><p className="mt-0.5 text-xs text-muted">{quotationDetail.clientName}</p></div>
+              <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] uppercase tracking-[0.08em] text-muted">Commercial value</p><p className="mt-1 text-sm font-semibold tabular-nums text-fg">{formatNativeAmount(quotationDetail.total, quotationDetail.currency, true)}</p><p className="mt-0.5 text-xs text-muted">Valid until {quotationDetail.validUntil}</p></div>
+              <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] uppercase tracking-[0.08em] text-muted">Owner</p><div className="mt-1"><ProfileIdentity profile={{ name: quotationDetail.owner, role: undefined, contextLabel: 'Quotation owner' }} showRole={false} /></div></div>
+              <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] uppercase tracking-[0.08em] text-muted">Created</p><p className="mt-1 text-sm font-medium text-fg">{quotationDetail.createdAt}</p></div>
             </div>
             <div className="rounded-card border border-line bg-panel p-4">
               <p className="text-xs font-semibold text-fg">Next actions</p>
               <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                {getQuotationStatusOptions(quotationDetail.status)
-                  .filter((option) => option.value !== quotationDetail.status)
-                  .map((option) => (
-                    <button key={option.value} type="button" onClick={() => void updateQuotationStatus(quotationDetail, option.value)} className={actionClass + ' w-full'} disabled={!canManageInvoices}>
-                      {option.label}
-                    </button>
-                  ))}
+                {([
+                  ['review', 'Internal review'],
+                  ['approved', 'Approve'],
+                  ['sent', 'Mark sent']
+                ] as Array<[FinanceQuotationStatus, string]>).map(([status, label]) => (
+                  <button key={status} type="button" onClick={() => void updateQuotationStatus(quotationDetail, status)} className={actionClass + ' w-full'} disabled={!canManageInvoices}>
+                    {label}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
@@ -3744,16 +3660,6 @@ export const AdminInvoicing: React.FC = () => {
             <CustomSelect aria-label="Expense type" value={expenseType} onChange={(value) => { setExpenseDirty(true); setExpenseType(value as 'OpEx' | 'CapEx' | 'Rentals'); }} options={[{ value: 'OpEx', label: 'OpEx' }, { value: 'CapEx', label: 'CapEx' }, { value: 'Rentals', label: 'Rentals' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" /></div>
           <div><label className="mb-1.5 block text-xs font-medium text-muted">Category</label><CustomSelect aria-label="Expense category" value={expenseCategory} onChange={(value) => { setExpenseDirty(true); setExpenseCategory(value as AgencyExpense['category']); }} options={['Software & Cloud','Salaries & Contractors','Office & Hardware','Office & Rentals','Marketing & Ads','Legal & Admin','CapEx Equipment'].map((value) => ({ value, label: value }))} className="w-full" triggerClassName="h-10 min-h-10 w-full" /></div>
           <div><label htmlFor="finance-expense-description" className="mb-1.5 block text-xs font-medium text-muted">Description *</label><input id="finance-expense-description" required maxLength={500} value={expenseDescription} onChange={(event) => setExpenseDescription(event.target.value)} className={fieldClass} /></div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-muted">Project</label>
-              <CustomSelect aria-label="Expense project" value={expenseProjectId} onChange={(value) => { setExpenseDirty(true); setExpenseProjectId(value); }} options={[{ value: '', label: 'Unassigned' }, ...projects.map((project) => ({ value: project.id, label: project.name }))]} className="w-full" triggerClassName="h-10 min-h-10 w-full" />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-muted">Recurring</label>
-              <CustomSelect aria-label="Recurring interval" value={expenseRecurringInterval || 'none'} onChange={(value) => { setExpenseDirty(true); setExpenseRecurringInterval(value as AgencyExpense['recurringInterval']); }} options={[{ value: 'none', label: 'One-time' }, { value: 'monthly', label: 'Monthly' }, { value: 'quarterly', label: 'Quarterly' }, { value: 'yearly', label: 'Yearly' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" />
-            </div>
-          </div>
           <div className="grid grid-cols-2 gap-3">
             <div><label htmlFor="finance-expense-amount" className="mb-1.5 block text-xs font-medium text-muted">Amount *</label><input id="finance-expense-amount" required type="number" min="0.01" max="100000000000" step="0.01" value={expenseAmount} onChange={(event) => setExpenseAmount(Number(event.target.value))} className={fieldClass} /></div>
             <div><label htmlFor="finance-expense-date" className="mb-1.5 block text-xs font-medium text-muted">Date *</label><input id="finance-expense-date" required type="date" max={getDateInputValue()} value={expenseDate} onChange={(event) => setExpenseDate(event.target.value)} className={fieldClass} /></div>
@@ -3832,7 +3738,7 @@ export const AdminInvoicing: React.FC = () => {
         open={!!confirmAction}
         onClose={() => { if (!confirmingAction) setConfirmAction(null); }}
         size="sm"
-        title={confirmAction?.type === 'invoice' ? 'Cancel invoice?' : confirmAction?.type === 'quotation' ? 'Delete quotation?' : 'Void expense?'}
+        title={confirmAction?.type === 'invoice' ? 'Cancel invoice?' : 'Void expense?'}
         description={confirmAction ? confirmAction.label : undefined}
         footer={
           <>
@@ -3844,9 +3750,7 @@ export const AdminInvoicing: React.FC = () => {
         <p className="text-xs leading-5 text-muted">
           {confirmAction?.type === 'invoice'
             ? 'The existing finance endpoint cancels invoices rather than hard-deleting them. Invoices with recorded payments may be rejected by the server.'
-            : confirmAction?.type === 'quotation'
-              ? 'This removes the quotation from the commercial workspace. Review the record before confirming.'
-              : 'The existing finance endpoint voids the expense record. It is not physically deleted from the server.'}
+            : 'The existing finance endpoint voids the expense record. It is not physically deleted from the server.'}
         </p>
       </Modal>
 
