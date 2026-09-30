@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   AlertTriangle,
   ArrowUpRight,
@@ -18,6 +18,7 @@ import { CustomSelect } from '../ui/CustomSelect';
 import { Modal } from '../ui/Modal';
 import { DonutChart, TrendChart } from '../charts/DashboardCharts';
 import { ProfileIdentity } from './ProfileIdentity';
+import { TasksWorkspace } from './TasksWorkspace';
 
 type RangeKey = '30D' | 'Q2' | 'YTD' | '12M';
 type ProjectFilter = 'All' | 'Enterprise' | 'Retainer' | 'Fixed-fee';
@@ -476,7 +477,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const revenueData = sampleRevenueByRange[range];
 
   if (view === 'tasks') {
-    return <Navigate to="/admin/tasks" replace />;
+    return <TasksWorkspace />;
   }
 
   return (
