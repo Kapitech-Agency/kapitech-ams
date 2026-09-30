@@ -42,6 +42,7 @@ import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { api } from '../../lib/apiClient';
 import { formatAmount, getActiveCurrency, CURRENCY_EVENT, CurrencyCode } from '../../lib/currency';
 import { hasAdminPermission } from '../../lib/adminAuth';
+import { useDragToScroll } from '../../lib/useDragToScroll';
 
 type ProjectHealth = 'Good' | 'At Risk' | 'Delayed' | 'Blocked';
 type ProjectRecord = AgencyProject & {
@@ -323,6 +324,9 @@ export const AdminProjects: React.FC = () => {
   const [projectLayout, setProjectLayout] = useState<ProjectLayout>(
     searchParams.get('layout') === 'table' ? 'table' : 'board'
   );
+  const projectKanbanScrollRef = useDragToScroll<HTMLDivElement>();
+  const taskKanbanScrollRef = useDragToScroll<HTMLDivElement>();
+
   const [draggingProjectId, setDraggingProjectId] = useState<string | null>(null);
   const [dragOverProjectStatus, setDragOverProjectStatus] = useState<ProjectStatus | null>(null);
   const [dragOverProjectId, setDragOverProjectId] = useState<string | null>(null);
@@ -1672,7 +1676,7 @@ export const AdminProjects: React.FC = () => {
                 {[1, 2, 3, 4].map(item => <div key={item} className="h-40 animate-pulse rounded-card bg-bg" />)}
               </div>
             ) : projectLayout === 'board' ? (
-              <div className="ams-project-kanban-board overflow-x-auto overflow-y-visible">
+              <div ref={projectKanbanScrollRef} className="ams-project-kanban-board overflow-x-auto overflow-y-visible cursor-grab">
                 <div className="flex min-w-max items-start gap-3 px-3 pb-5 pt-3 sm:gap-3.5 sm:px-4 sm:pb-6 sm:pt-4">
                   {PROJECT_KANBAN_COLUMNS.map(column => {
                     const items = filteredProjects.filter(project => project.status === column.id);
@@ -2116,7 +2120,7 @@ export const AdminProjects: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="ams-project-kanban-task-board overflow-x-auto bg-bg p-5 sm:p-6">
+                <div ref={taskKanbanScrollRef} className="ams-project-kanban-task-board overflow-x-auto bg-bg p-5 sm:p-6 cursor-grab">
                   <div className="flex min-w-max items-start gap-3 pb-8 sm:pb-10">
                     {TASK_COLUMNS.map(column => {
                       const tasks = visibleTasks.filter(task => task.status === column.id);
