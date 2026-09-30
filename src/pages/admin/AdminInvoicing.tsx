@@ -26,7 +26,7 @@ import {
   WalletCards,
   X
 } from 'lucide-react';
-import { AgencyExpense, AgencyInvoice, InvoiceLineItem, InvoiceStatus, INITIAL_DEFAULT_EXPENSES, INITIAL_DEFAULT_INVOICES, computeInvoiceTotals, computeFinancialMetrics, getMonthlyCashFlowSeries, slugifyFinance, normalizeFinanceInvoice, normalizeFinanceExpense } from '../../lib/financeStore';
+import { AgencyExpense, AgencyInvoice, InvoiceLineItem, InvoiceStatus, computeInvoiceTotals, computeFinancialMetrics, getMonthlyCashFlowSeries, slugifyFinance, normalizeFinanceInvoice, normalizeFinanceExpense } from '../../lib/financeStore';
 import { AgencyVendor, getAgencyVendors } from '../../lib/vendorStore';
 import { CurrencyCode, CURRENCY_EVENT, getActiveCurrency, setActiveCurrency, formatNativeAmount } from '../../lib/currency';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -691,7 +691,7 @@ export const AdminInvoicing: React.FC = () => {
   const [detailInvoice, setDetailInvoice] = useState<AgencyInvoice | null>(null);
   const [reminderInvoice, setReminderInvoice] = useState<AgencyInvoice | null>(null);
   const [dunningOpen, setDunningOpen] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<{ type: 'invoice' | 'expense'; id: string; label: string } | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ type: 'invoice' | 'expense' | 'quotation'; id: string; label: string } | null>(null);
   const [confirmingAction, setConfirmingAction] = useState(false);
   const [discardPrompt, setDiscardPrompt] = useState<'invoice' | 'expense' | 'payment' | null>(null);
   const [pendingPaymentInvoice, setPendingPaymentInvoice] = useState<AgencyInvoice | null>(null);
@@ -700,14 +700,13 @@ export const AdminInvoicing: React.FC = () => {
   const [paymentDirty, setPaymentDirty] = useState(false);
   const loadRequestId = React.useRef(0);
 
-  const [usingDemoFinance, setUsingDemoFinance] = useState(false);
   const [usingDemoInvoices, setUsingDemoInvoices] = useState(false);
   const [usingDemoExpenses, setUsingDemoExpenses] = useState(false);
   const [incomeExpenseMode, setIncomeExpenseMode] = useState<'income' | 'expenses'>('income');
   const [incomeSearch, setIncomeSearch] = useState('');
   const [incomePage, setIncomePage] = useState(1);
   const incomePageSize = 10;
-  const [quotations, setQuotations] = useState<FinanceQuotation[]>(STITCH_FINANCE_QUOTATIONS);
+  const [quotations, setQuotations] = useState<FinanceQuotation[]>([]);
   const [usingDemoQuotations, setUsingDemoQuotations] = useState(true);
   const [quotationLoading, setQuotationLoading] = useState(true);
   const [quotationSearch, setQuotationSearch] = useState('');
@@ -799,7 +798,6 @@ export const AdminInvoicing: React.FC = () => {
 
       setUsingDemoInvoices(false);
       setUsingDemoExpenses(false);
-      setUsingDemoFinance(false);
 
       setInvoices(nextInvoices);
       setExpenses(nextExpenses);
@@ -1859,6 +1857,13 @@ export const AdminInvoicing: React.FC = () => {
         return;
       }
 
+      if (confirmAction.type === 'quotation') {
+        const quotation = quotations.find((item) => item.id === confirmAction.id);
+        if (quotation) await deleteQuotation(quotation);
+        setConfirmAction(null);
+        return;
+      }
+
       const result = confirmAction.type === 'invoice'
         ? await api.finance.deleteInvoice(confirmAction.id)
         : await api.finance.deleteExpense(
@@ -2554,7 +2559,7 @@ export const AdminInvoicing: React.FC = () => {
         </section>
       )}
 
-      {loading && financeView !== 'quotations' ? (
+      {(loading || (financeView === 'quotations' && quotationLoading)) ? (
         <div className="space-y-5" aria-label="Loading finance">
           <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">{Array.from({ length: 4 }).map((_, index) => <div key={index} className="h-[82px] animate-pulse rounded-card border border-line bg-panel" />)}</div>
           <div className="grid gap-5 xl:grid-cols-3"><div className="h-80 animate-pulse rounded-card border border-line bg-panel xl:col-span-2"/><div className="h-80 animate-pulse rounded-card border border-line bg-panel"/></div>
@@ -2601,7 +2606,7 @@ export const AdminInvoicing: React.FC = () => {
         </div>
       )}
     </div>
-  </div><div className="overflow-hidden">{filteredQuotations.length===0?<div className="p-5"><EmptyState title="No quotations found" description="Adjust the search or filters."/></div>:<table className="ams-finance-table table-fixed border-separate border-spacing-0 text-xs">
+  </div><div className="overflow-hidden">{filteredQuotations.length===0?<div className="p-5"><EmptyState title={quotationSearch || quotationStatusFilter !== 'all' ? 'No quotations found' : 'No quotations yet'} description={quotationSearch || quotationStatusFilter !== 'all' ? 'Adjust the search or filters.' : 'Create a quotation to start the commercial pipeline.'} action={canManageInvoices && !quotationSearch && quotationStatusFilter === 'all' ? <button type="button" onClick={openCreateQuotation} className={primaryClass}><Plus size={14}/>New quotation</button> : undefined}/></div>:<table className="ams-finance-table table-fixed border-separate border-spacing-0 text-xs">
 <thead className="sticky top-0 z-10 border-b border-line bg-panel/95 backdrop-blur-sm"><tr>
   <th className="w-[30%] px-5 py-3 text-left text-[10px] font-semibold text-muted">Quotation</th>
   <th className="w-[17%] px-5 py-3 text-right text-[10px] font-semibold text-muted">Value</th>
@@ -2619,7 +2624,7 @@ export const AdminInvoicing: React.FC = () => {
   <td className="px-4 py-5 text-right"><p className="font-semibold tabular-nums text-fg">{formatNativeAmount(quotation.total,quotation.currency,true)}</p><div className="mt-1"><ProfileIdentity profile={{ name: quotation.owner, role: undefined, contextLabel: 'Quotation owner' }} size="sm" showRole={false} /></div></td>
   <td className="px-5 py-4"><div className="grid gap-1.5 text-[11px]"><div className="flex items-center justify-between gap-3"><span className="text-muted">Created</span><span className="tabular-nums text-fg">{quotation.createdAt}</span></div><div className="flex items-center justify-between gap-3"><span className="text-muted">Valid</span><span className="tabular-nums text-fg">{quotation.validUntil}</span></div></div></td>
   <td className="px-5 py-4"><QuotationStatusBadge status={quotation.status}/></td>
-  <td className="px-5 py-4"><div className="ams-table-actions"><button type="button" onClick={()=>setQuotationDetail(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="View quotation" title="View quotation"><Eye size={14}/></button>{canManageInvoices&&<button type="button" onClick={()=>openEditQuotation(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Edit quotation" title="Edit quotation"><Edit3 size={14}/></button>}{canManageInvoices&&<button type="button" onClick={()=>void convertQuotationToInvoice(quotation)} disabled={Boolean(quotation.invoiceId)||quotation.status!=='approved'} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg disabled:cursor-not-allowed disabled:opacity-40" aria-label="Convert quotation to invoice" title={quotation.invoiceId?'Invoice already created':quotation.status==='approved'?'Convert approved quotation to invoice':'Only approved quotations can be converted'}><Receipt size={14}/></button>}{canManageInvoices&&<button type="button" onClick={()=>void deleteQuotation(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Delete quotation" title="Delete quotation"><Trash2 size={14}/></button>}</div></td>
+  <td className="px-5 py-4"><div className="ams-table-actions"><button type="button" onClick={()=>setQuotationDetail(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="View quotation" title="View quotation"><Eye size={14}/></button>{canManageInvoices&&<button type="button" onClick={()=>openEditQuotation(quotation)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Edit quotation" title="Edit quotation"><Edit3 size={14}/></button>}{canManageInvoices&&<button type="button" onClick={()=>void convertQuotationToInvoice(quotation)} disabled={Boolean(quotation.invoiceId)||quotation.status!=='approved'} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg disabled:cursor-not-allowed disabled:opacity-40" aria-label="Convert quotation to invoice" title={quotation.invoiceId?'Invoice already created':quotation.status==='approved'?'Convert approved quotation to invoice':'Only approved quotations can be converted'}><Receipt size={14}/></button>}{canManageInvoices&&<button type="button" onClick={()=>setConfirmAction({type:'quotation',id:quotation.id,label:quotation.quotationNumber})} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Delete quotation" title="Delete quotation"><Trash2 size={14}/></button>}</div></td>
 </tr>)}
 </tbody></table>}</div></section>
             <section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><h2 className="text-sm font-semibold text-fg">Pipeline stages</h2><p className="mt-1 text-xs text-muted">Count and value by stage.</p></div><div className="space-y-3 p-4">{(['draft','review','approved','sent','accepted','rejected'] as FinanceQuotationStatus[]).map((status)=>{const count=quotations.filter((q)=>q.status===status).length;const value=quotations.filter((q)=>q.status===status).reduce((sum,q)=>sum+q.total,0);return <div key={status} className="rounded-control border border-line bg-bg px-3 py-3"><div className="flex justify-between text-xs"><span className="font-medium text-fg">{quotationStatusLabel(status)}</span><span className="tabular-nums font-semibold">{count}</span></div><p className="mt-1 text-[10px] tabular-nums text-muted">{formatNativeAmount(value,currency,true)}</p><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel"><div className="h-full rounded-full bg-series-3" style={{width:(quotationMetrics.value>0?Math.min(100,value/quotationMetrics.value*100):0)+'%'}}/></div></div>})}</div></section>
@@ -3788,7 +3793,7 @@ export const AdminInvoicing: React.FC = () => {
         open={!!confirmAction}
         onClose={() => { if (!confirmingAction) setConfirmAction(null); }}
         size="sm"
-        title={confirmAction?.type === 'invoice' ? 'Cancel invoice?' : 'Void expense?'}
+        title={confirmAction?.type === 'invoice' ? 'Cancel invoice?' : confirmAction?.type === 'quotation' ? 'Delete quotation?' : 'Void expense?'}
         description={confirmAction ? confirmAction.label : undefined}
         footer={
           <>
@@ -3800,7 +3805,9 @@ export const AdminInvoicing: React.FC = () => {
         <p className="text-xs leading-5 text-muted">
           {confirmAction?.type === 'invoice'
             ? 'The existing finance endpoint cancels invoices rather than hard-deleting them. Invoices with recorded payments may be rejected by the server.'
-            : 'The existing finance endpoint voids the expense record. It is not physically deleted from the server.'}
+            : confirmAction?.type === 'quotation'
+              ? 'This removes the quotation from the commercial workspace. Review the record before confirming.'
+              : 'The existing finance endpoint voids the expense record. It is not physically deleted from the server.'}
         </p>
       </Modal>
 
