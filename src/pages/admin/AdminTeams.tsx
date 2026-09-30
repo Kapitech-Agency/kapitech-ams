@@ -32,7 +32,7 @@ import {
   WalletCards,
   X
 } from 'lucide-react';
-import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPanel } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPanel, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Modal } from '../../components/ui/Modal';
@@ -309,6 +309,7 @@ export const AdminTeams: React.FC = () => {
   const [teamStatus, setTeamStatus] = useState('all');
   const [teamDisplay, setTeamDisplay] = useState<'table' | 'grid'>('table');
   const [teamPage, setTeamPage] = useState(1);
+  const [teamPageSize, setTeamPageSize] = useState(6);
   const [memberDetail, setMemberDetail] = useState<TeamMember | null>(null);
   const [allocationTarget, setAllocationTarget] = useState<TeamMember | null>(null);
 
@@ -319,10 +320,17 @@ export const AdminTeams: React.FC = () => {
   const [vendorTier, setVendorTier] = useState('all');
   const [vendorAgreementStatus, setVendorAgreementStatus] = useState('active-verified');
   const [vendorPage, setVendorPage] = useState(1);
+  const [vendorPageSize, setVendorPageSize] = useState(6);
 
   const [timeSearch, setTimeSearch] = useState('');
   const [timeProject, setTimeProject] = useState('all');
   const [timeBillable, setTimeBillable] = useState('all');
+  const [capacityPage, setCapacityPage] = useState(1);
+  const [capacityPageSize, setCapacityPageSize] = useState(10);
+  const [skillPage, setSkillPage] = useState(1);
+  const [skillPageSize, setSkillPageSize] = useState(10);
+  const [timePage, setTimePage] = useState(1);
+  const [timePageSize, setTimePageSize] = useState(10);
 
   const [vendorFormOpen, setVendorFormOpen] = useState(false);
   const [vendorDetail, setVendorDetail] = useState<VendorRecord | null>(null);
@@ -495,7 +503,6 @@ export const AdminTeams: React.FC = () => {
     });
   }, [members, projects, logs, teamHeaderSearch, teamSearch, teamDepartment, teamPod, teamStatus]);
 
-  const teamPageSize = 6;
   const teamPageCount = Math.max(1, Math.ceil(teamRows.length / teamPageSize));
   const pagedTeamRows = teamRows.slice((teamPage - 1) * teamPageSize, teamPage * teamPageSize);
 
@@ -648,7 +655,6 @@ export const AdminTeams: React.FC = () => {
     }).sort((a, b) => Number(b.hourlyRate || 0) - Number(a.hourlyRate || 0));
   }, [vendors, vendorHeaderSearch, vendorSearch, vendorHeaderCategory, vendorCategory, vendorTier, vendorAgreementStatus]);
 
-  const vendorPageSize = 6;
   const vendorPageCount = Math.max(1, Math.ceil(vendorRows.length / vendorPageSize));
   const pagedVendorRows = vendorRows.slice((vendorPage - 1) * vendorPageSize, vendorPage * vendorPageSize);
 
@@ -706,6 +712,9 @@ export const AdminTeams: React.FC = () => {
     });
   }, [members, logs, weeklyCapacity]);
 
+  const capacityPageCount = Math.max(1, Math.ceil(capacityRows.length / capacityPageSize));
+  const pagedCapacityRows = capacityRows.slice((capacityPage - 1) * capacityPageSize, capacityPage * capacityPageSize);
+
   const currentWeekCapacity = weeklyCapacity.length ? weeklyCapacity[weeklyCapacity.length - 1] : null;
   const currentCapacityStats = useMemo(() => {
     const rows = capacityRows.map((row) => row.weeks[row.weeks.length - 1]?.utilization || 0);
@@ -731,6 +740,17 @@ export const AdminTeams: React.FC = () => {
     });
     return Array.from(map.values()).sort((a, b) => b.active - a.active || b.vetted - a.vetted || a.skill.localeCompare(b.skill));
   }, [vendors]);
+
+  const skillPageCount = Math.max(1, Math.ceil(skillRows.length / skillPageSize));
+  const pagedSkillRows = skillRows.slice((skillPage - 1) * skillPageSize, skillPage * skillPageSize);
+  const timePageCount = Math.max(1, Math.ceil(filteredLogs.length / timePageSize));
+  const pagedTimeLogs = filteredLogs.slice((timePage - 1) * timePageSize, timePage * timePageSize);
+
+  useEffect(() => { if (teamPage > teamPageCount) setTeamPage(teamPageCount); }, [teamPage, teamPageCount]);
+  useEffect(() => { if (vendorPage > vendorPageCount) setVendorPage(vendorPageCount); }, [vendorPage, vendorPageCount]);
+  useEffect(() => { if (capacityPage > capacityPageCount) setCapacityPage(capacityPageCount); }, [capacityPage, capacityPageCount]);
+  useEffect(() => { if (skillPage > skillPageCount) setSkillPage(skillPageCount); }, [skillPage, skillPageCount]);
+  useEffect(() => { if (timePage > timePageCount) setTimePage(timePageCount); }, [timePage, timePageCount]);
 
   const openVendorForm = (vendor?: AgencyVendor) => {
     if (vendor) {
@@ -1200,19 +1220,7 @@ export const AdminTeams: React.FC = () => {
             </div>
           )}
 
-          <div className="flex flex-col gap-3 border-t border-line bg-panel px-4 py-3 text-xs sm:flex-row sm:items-center sm:justify-between">
-            <span className="text-muted">
-              Showing <span className="font-semibold tabular-nums text-fg">{teamRows.length ? (teamPage - 1) * teamPageSize + 1 : 0}</span> to <span className="font-semibold tabular-nums text-fg">{Math.min(teamPage * teamPageSize, teamRows.length)}</span> of <span className="font-semibold tabular-nums text-fg">{teamRows.length}</span> members
-            </span>
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 custom-scrollbar">
-              <button type="button" disabled={teamPage <= 1} onClick={() => setTeamPage((value) => Math.max(1, value - 1))} className="inline-flex h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[11px] text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-40"><ChevronLeft size={14} /> Previous</button>
-              {Array.from({ length: Math.min(teamPageCount, 8) }, (_, index) => {
-                const page = index + 1;
-                return <button key={page} type="button" aria-current={teamPage === page ? 'page' : undefined} onClick={() => setTeamPage(page)} className={'h-8 w-8 rounded-control border px-0 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (teamPage === page ? 'border-accent bg-accent text-white' : 'border-line bg-bg text-muted hover:bg-panel hover:text-fg')}>{page}</button>;
-              })}
-              <button type="button" disabled={teamPage >= teamPageCount} onClick={() => setTeamPage((value) => Math.min(teamPageCount, value + 1))} className="inline-flex h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[11px] text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-40">Next <ChevronRight size={14} /></button>
-            </div>
-          </div>
+          <AdminTablePagination total={teamRows.length} page={teamPage} pageSize={teamPageSize} onPageChange={setTeamPage} onPageSizeChange={setTeamPageSize} itemLabel="members" slug="team-directory-pagination" />
           </AdminPanel>
         </div>
       ) : currentView === 'vendor-directory' ? (
@@ -1399,21 +1407,7 @@ export const AdminTeams: React.FC = () => {
                 </table>
               )}
             </div>
-            <div className="flex flex-col gap-3 border-t border-line bg-panel px-4 py-3 text-xs sm:flex-row sm:items-center sm:justify-between">
-              <div className="text-muted">
-                Showing <span className="font-semibold tabular-nums text-fg">{vendorRows.length ? (vendorPage - 1) * vendorPageSize + 1 : 0}</span> to <span className="font-semibold tabular-nums text-fg">{Math.min(vendorPage * vendorPageSize, vendorRows.length)}</span> of <span className="font-semibold tabular-nums text-fg">{vendorRows.length}</span> external vendors
-                <span className="mx-2 text-line">|</span>
-                Sorted by Rate (High to Low)
-              </div>
-              <div className="flex items-center gap-1.5">
-                <button type="button" disabled={vendorPage <= 1} onClick={() => setVendorPage((value) => Math.max(1, value - 1))} className="inline-flex h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[11px] text-muted disabled:opacity-40"><ChevronLeft size={14} /> Previous</button>
-                {Array.from({ length: Math.min(vendorPageCount, 8) }, (_, index) => {
-                  const page = index + 1;
-                  return <button key={page} type="button" aria-current={vendorPage === page ? 'page' : undefined} onClick={() => setVendorPage(page)} className={'h-8 w-8 rounded-control border px-0 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (vendorPage === page ? 'border-accent bg-accent text-white' : 'border-line bg-bg text-muted hover:bg-panel hover:text-fg')}>{page}</button>;
-                })}
-                <button type="button" disabled={vendorPage >= vendorPageCount} onClick={() => setVendorPage((value) => Math.min(vendorPageCount, value + 1))} className="inline-flex h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[11px] text-muted disabled:opacity-40">Next <ChevronRight size={14} /></button>
-              </div>
-            </div>
+            <AdminTablePagination total={vendorRows.length} page={vendorPage} pageSize={vendorPageSize} onPageChange={setVendorPage} onPageSizeChange={setVendorPageSize} itemLabel="external vendors" secondaryLabel="Sorted by Rate (High to Low)" slug="vendor-directory-pagination" />
           </AdminPanel>
         </div>
       ) : currentView === 'capacity-allocation' ? (
@@ -1446,7 +1440,7 @@ export const AdminTeams: React.FC = () => {
                   {weeklyCapacity.map((week) => <th key={week.label} className="w-[19%] text-center">{week.label}</th>)}
                 </tr></thead>
                 <tbody>
-                  {capacityRows.map((row) => (
+                  {pagedCapacityRows.map((row) => (
                     <tr key={row.member.id} data-ams-slug={row.member.slug} className="transition-colors hover:bg-bg/40">
                       <td>
                         <p className="font-medium text-fg">{row.member.name}</p>
@@ -1471,6 +1465,7 @@ export const AdminTeams: React.FC = () => {
                 </tbody>
               </table>
             </div>
+            <AdminTablePagination total={capacityRows.length} page={capacityPage} pageSize={capacityPageSize} onPageChange={setCapacityPage} onPageSizeChange={setCapacityPageSize} itemLabel="members" slug="capacity-allocation-pagination" />
           </AdminPanel>
         </div>
       ) : currentView === 'skill-matrix' ? (
@@ -1499,7 +1494,7 @@ export const AdminTeams: React.FC = () => {
                   <th className="w-[33%]">Primary capability focus</th>
                 </tr></thead>
                 <tbody>
-                  {members.map((member) => (
+                  {members.slice((0) * 1, members.length).map((member) => (
                     <tr key={member.id} data-ams-slug={member.slug} className="transition-colors hover:bg-bg/40">
                       <td>
                         <ProfileIdentity profile={{ id: member.id, name: member.name, username: member.username }} showRole={false} />
@@ -1527,7 +1522,7 @@ export const AdminTeams: React.FC = () => {
                   <th className="w-[20%] text-right">Active</th>
                 </tr></thead>
                 <tbody>
-                  {skillRows.map((row) => (
+                  {pagedSkillRows.map((row) => (
                     <tr key={row.slug} data-ams-slug={row.slug} className="transition-colors hover:bg-bg/40">
                       <td>
                         <p className="font-medium text-fg">{row.skill}</p>
@@ -1541,6 +1536,7 @@ export const AdminTeams: React.FC = () => {
                 </tbody>
               </table>
             </div>
+            <AdminTablePagination total={skillRows.length} page={skillPage} pageSize={skillPageSize} onPageChange={setSkillPage} onPageSizeChange={setSkillPageSize} itemLabel="skills" slug="skill-matrix-pagination" />
           </AdminPanel>
         </div>
       ) : (
@@ -1634,7 +1630,7 @@ export const AdminTeams: React.FC = () => {
                     <th className="w-[48px] text-right">Action</th>
                   </tr></thead>
                   <tbody>
-                    {filteredLogs.map((log) => (
+                    {pagedTimeLogs.map((log) => (
                       <tr key={log.id} data-ams-slug={log.slug} className="transition-colors hover:bg-bg/40">
                         <td className="tabular-nums text-muted">{formatDate(log.date)}</td>
                         <td>
@@ -1661,6 +1657,7 @@ export const AdminTeams: React.FC = () => {
                 </table>
               )}
             </div>
+            <AdminTablePagination total={filteredLogs.length} page={timePage} pageSize={timePageSize} onPageChange={setTimePage} onPageSizeChange={setTimePageSize} itemLabel="time entries" slug="time-logs-pagination" />
           </AdminPanel>
         </div>
       )}
