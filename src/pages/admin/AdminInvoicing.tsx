@@ -667,9 +667,9 @@ export const AdminInvoicing: React.FC = () => {
   const [expenseDetail, setExpenseDetail] = useState<FinanceExpense | null>(null);
   const [expenseSort, setExpenseSort] = useState<'date_desc' | 'date_asc' | 'amount_high' | 'amount_low'>('date_desc');
   const [invoicePage, setInvoicePage] = useState(1);
+  const [invoicePageSize, setInvoicePageSize] = useState(10);
   const [expensePage, setExpensePage] = useState(1);
-  const invoicePageSize = 10;
-  const expensePageSize = 10;
+  const [expensePageSize, setExpensePageSize] = useState(10);
 
   const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<AgencyInvoice | null>(null);
@@ -731,7 +731,13 @@ export const AdminInvoicing: React.FC = () => {
   const [incomeExpenseMode, setIncomeExpenseMode] = useState<'income' | 'expenses'>('income');
   const [incomeSearch, setIncomeSearch] = useState('');
   const [incomePage, setIncomePage] = useState(1);
-  const incomePageSize = 10;
+  const [incomePageSize, setIncomePageSize] = useState(10);
+  const [quotationPage, setQuotationPage] = useState(1);
+  const [quotationPageSize, setQuotationPageSize] = useState(10);
+  const [vendorPaymentPage, setVendorPaymentPage] = useState(1);
+  const [vendorPaymentPageSize, setVendorPaymentPageSize] = useState(10);
+  const [retainerPage, setRetainerPage] = useState(1);
+  const [retainerPageSize, setRetainerPageSize] = useState(10);
   const [quotations, setQuotations] = useState<FinanceQuotation[]>(STITCH_FINANCE_QUOTATIONS);
   const [usingDemoQuotations, setUsingDemoQuotations] = useState(true);
   const [quotationLoading, setQuotationLoading] = useState(true);
@@ -994,6 +1000,9 @@ export const AdminInvoicing: React.FC = () => {
     });
   }, [vendorPaymentRecords, vendorPaymentSearch, vendorPaymentStatusFilter, vendorPaymentVendorFilter, vendorPaymentSort]);
 
+  const vendorPaymentPageCount = Math.max(1, Math.ceil(filteredVendorPayments.length / vendorPaymentPageSize));
+  const paginatedVendorPayments = filteredVendorPayments.slice((vendorPaymentPage - 1) * vendorPaymentPageSize, vendorPaymentPage * vendorPaymentPageSize);
+
   const vendorPaymentMetrics = useMemo(() => ({
     scheduled: vendorPaymentRecords.filter((row) => row.status === 'scheduled').length,
     overdue: vendorPaymentRecords.filter((row) => row.status === 'overdue').length,
@@ -1059,6 +1068,8 @@ export const AdminInvoicing: React.FC = () => {
   }, [currency, retainerInvoices]);
 
   const usingDemoRetainerLedger = retainerInvoices.length === 0 && retainerLedgerInvoices.length > 0;
+  const retainerPageCount = Math.max(1, Math.ceil(retainerLedgerInvoices.length / retainerPageSize));
+  const paginatedRetainerLedgerInvoices = retainerLedgerInvoices.slice((retainerPage - 1) * retainerPageSize, retainerPage * retainerPageSize);
 
   const financeChartData = useMemo(
     () => cashFlow.map((point) => {
@@ -1205,6 +1216,9 @@ export const AdminInvoicing: React.FC = () => {
   useEffect(() => {
     setInvoicePage((page) => Math.min(page, invoicePageCount));
   }, [invoicePageCount]);
+  useEffect(() => { setQuotationPage((page) => Math.min(page, quotationPageCount)); }, [quotationPageCount]);
+  useEffect(() => { setVendorPaymentPage((page) => Math.min(page, vendorPaymentPageCount)); }, [vendorPaymentPageCount]);
+  useEffect(() => { setRetainerPage((page) => Math.min(page, retainerPageCount)); }, [retainerPageCount]);
 
   const actionRequiredInvoices = useMemo(() => {
     const today = new Date();
@@ -2213,6 +2227,9 @@ export const AdminInvoicing: React.FC = () => {
               : String(b.createdAt).localeCompare(String(a.createdAt)));
   }, [quotations, quotationSearch, quotationStatusFilter, quotationSort]);
 
+  const quotationPageCount = Math.max(1, Math.ceil(filteredQuotations.length / quotationPageSize));
+  const paginatedQuotations = filteredQuotations.slice((quotationPage - 1) * quotationPageSize, quotationPage * quotationPageSize);
+
   const quotationMetrics = useMemo(() => ({
     total: quotations.length,
     active: quotations.filter((quotation) => ['draft', 'review', 'approved', 'sent'].includes(quotation.status)).length,
@@ -2744,7 +2761,7 @@ export const AdminInvoicing: React.FC = () => {
   <th className="w-[56px] text-right">Actions</th>
 </tr></thead>
 <tbody>
-{filteredQuotations.map((quotation)=>{
+{paginatedQuotations.map((quotation)=>{
   const validityDays = getDaysUntilDue(quotation.validUntil);
   const canConvert = canManageInvoices && quotation.status === "approved" && !quotation.invoiceId;
   return <tr key={quotation.id}>
@@ -2784,7 +2801,7 @@ export const AdminInvoicing: React.FC = () => {
     </td>
   </tr>
 })}
-</tbody></table>}</div></section>
+</tbody></table>}</div><AdminTablePagination total={filteredQuotations.length} page={quotationPage} pageSize={quotationPageSize} onPageChange={setQuotationPage} onPageSizeChange={setQuotationPageSize} itemLabel="quotations" slug="finance-quotations-pagination" /></section>
             <section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><h2 className="text-sm font-semibold text-fg">Pipeline stages</h2><p className="mt-1 text-xs text-muted">Count and value by stage.</p></div><div className="space-y-3 p-4">{(['draft','review','approved','sent','accepted','rejected'] as FinanceQuotationStatus[]).map((status)=>{const count=quotations.filter((q)=>q.status===status).length;const value=quotations.filter((q)=>q.status===status).reduce((sum,q)=>sum+q.total,0);return <div key={status} className="rounded-control border border-line bg-bg px-3 py-3"><div className="flex justify-between text-xs"><span className="font-medium text-fg">{quotationStatusLabel(status)}</span><span className="tabular-nums font-semibold">{count}</span></div><p className="mt-1 text-[10px] tabular-nums text-muted">{formatNativeAmount(value,currency,true)}</p><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel"><div className="h-full rounded-full bg-series-3" style={{width:(quotationMetrics.value>0?Math.min(100,value/quotationMetrics.value*100):0)+'%'}}/></div></div>})}</div></section>
           </section>
         </div>
@@ -2862,16 +2879,7 @@ export const AdminInvoicing: React.FC = () => {
           </table>
         )}
       </div>
-      {incomePageCount > 1 && (
-        <div className="flex flex-col gap-2 border-t border-line bg-bg px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <span className="text-[11px] text-muted">{incomeRows.length} payments</span>
-          <div className="flex items-center gap-1">
-            <button type="button" onClick={() => setIncomePage((p) => Math.max(1, p - 1))} disabled={incomePage === 1} className={actionClass}>Prev</button>
-            <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control bg-line px-2 text-[10px] font-semibold text-fg">{incomePage}</span>
-            <button type="button" onClick={() => setIncomePage((p) => Math.min(incomePageCount, p + 1))} disabled={incomePage === incomePageCount} className={actionClass}>Next</button>
-          </div>
-        </div>
-      )}
+      <AdminTablePagination total={incomeRows.length} page={incomePage} pageSize={incomePageSize} onPageChange={setIncomePage} onPageSizeChange={setIncomePageSize} itemLabel="payments" slug="finance-income-pagination" />
     </div>
   ) : (
     <div className="space-y-0">
@@ -2902,16 +2910,7 @@ export const AdminInvoicing: React.FC = () => {
           </table>
         )}
       </div>
-      {expensePageCount > 1 && (
-        <div className="flex flex-col gap-2 border-t border-line bg-bg px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <span className="text-[11px] text-muted">{filteredExpenses.length} expenses</span>
-          <div className="flex items-center gap-1">
-            <button type="button" onClick={() => setExpensePage((p) => Math.max(1, p - 1))} disabled={expensePage === 1} className={actionClass}>Prev</button>
-            <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control bg-line px-2 text-[10px] font-semibold text-fg">{expensePage}</span>
-            <button type="button" onClick={() => setExpensePage((p) => Math.min(expensePageCount, p + 1))} disabled={expensePage === expensePageCount} className={actionClass}>Next</button>
-          </div>
-        </div>
-      )}
+      <AdminTablePagination total={filteredExpenses.length} page={expensePage} pageSize={expensePageSize} onPageChange={setExpensePage} onPageSizeChange={setExpensePageSize} itemLabel="expenses" slug="finance-expenses-pagination" />
     </div>
   )}
 </section>
@@ -2975,7 +2974,7 @@ export const AdminInvoicing: React.FC = () => {
                 <table className="ams-finance-table min-w-[1120px] border-separate border-spacing-0 text-xs">
                   <thead><tr><th className="w-[23%]">Vendor / contract</th><th className="w-[12%]">Due date</th><th className="w-[13%] text-right">Amount</th><th className="w-[13%] text-right">Paid</th><th className="w-[13%] text-right">Outstanding</th><th className="w-[12%]">Status</th><th className="w-[48px] text-right">Action</th></tr></thead>
                   <tbody>
-                    {filteredVendorPayments.map((row) => (
+                    {paginatedVendorPayments.map((row) => (
                       <tr key={row.id} className="group cursor-pointer hover:bg-bg" onClick={() => setVendorPaymentDetail(row)}>
                         <td>
                           <p className="font-medium text-fg">{row.vendor.companyName || row.vendor.name}</p>
@@ -2998,6 +2997,7 @@ export const AdminInvoicing: React.FC = () => {
                 </table>
               )}
             </div>
+            <AdminTablePagination total={filteredVendorPayments.length} page={vendorPaymentPage} pageSize={vendorPaymentPageSize} onPageChange={setVendorPaymentPage} onPageSizeChange={setVendorPaymentPageSize} itemLabel="vendor payments" slug="finance-vendor-payments-pagination" />
           </section>
         </div>
       ) : financeView === 'tax-retainers' ? (
@@ -3014,7 +3014,7 @@ export const AdminInvoicing: React.FC = () => {
   <th className="w-[10%]">Status</th>
 </tr></thead>
 <tbody className="divide-y divide-line">
-{retainerLedgerInvoices.slice(0,12).map((invoice)=><tr key={invoice.id}>
+{paginatedRetainerLedgerInvoices.map((invoice)=><tr key={invoice.id}>
   <td>
     <button type="button" onClick={()=>openPrintPreview(invoice)} className="font-semibold tabular-nums text-fg hover:text-accent-text">{invoice.invoiceNumber}</button>
     <p className="mt-1 text-[10px] text-muted">{invoice.paymentTerms || "Retainer invoice"}</p>
@@ -3026,7 +3026,7 @@ export const AdminInvoicing: React.FC = () => {
   <td className="text-right font-semibold tabular-nums text-success">{formatNativeAmount(getInvoiceCollectedInRange(invoice,yearStart,yearEnd),invoice.currency,true)}</td>
   <td><StatusBadge status={invoice.status}/></td>
 </tr>)}
-</tbody></table></div></section>
+</tbody></table></div><AdminTablePagination total={retainerLedgerInvoices.length} page={retainerPage} pageSize={retainerPageSize} onPageChange={setRetainerPage} onPageSizeChange={setRetainerPageSize} itemLabel="retainer invoices" slug="finance-retainer-pagination" /></section>
             <div className="grid gap-5 lg:grid-cols-2"><section className="rounded-card border border-line bg-panel p-4"><div className="border-b border-line pb-3"><h2 className="text-sm font-semibold text-fg">Tax provision</h2><p className="mt-1 text-xs text-muted">Provision versus collected and outstanding tax.</p></div><div className="mt-4 space-y-3">{[{label:'Provision',value:taxProvision,tone:'bg-series-1'},{label:'Collected',value:taxCollected,tone:'bg-success'},{label:'Outstanding',value:taxOutstanding,tone:'bg-warning'}].map((item)=>{const percent=taxProvision>0?Math.min(100,item.value/taxProvision*100):0;return <div key={item.label}><div className="flex justify-between text-xs"><span className="text-muted">{item.label}</span><span className="font-medium tabular-nums">{formatNativeAmount(item.value,currency,true)}</span></div><div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg"><div className={'h-full rounded-full '+item.tone} style={{width:percent+'%'}}/></div></div>})}</div><button type="button" onClick={exportTaxCsv} disabled={!currencyInvoices.length} className={actionClass+' mt-5 w-full'}><Download size={14}/>Export tax detail</button></section><section className="rounded-card border border-line bg-panel p-4"><div className="flex justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Retainer collection</h2><p className="mt-1 text-xs text-muted">Collection against billed retainers.</p></div><span className="text-sm font-semibold tabular-nums">{retainerBilled>0?((retainerCollected/retainerBilled)*100).toFixed(1):'0.0'}%</span></div><div className="mt-4 h-2 rounded-full bg-bg overflow-hidden"><div className="h-full rounded-full bg-success" style={{width:(retainerBilled>0?Math.min(100,retainerCollected/retainerBilled*100):0)+'%'}}/></div><div className="mt-2 flex justify-between text-[10px] tabular-nums text-muted"><span>{formatFinanceCardAmount(retainerCollected,currency)}</span><span>{formatFinanceCardAmount(retainerBilled,currency)}</span></div></section></div>
           </section>
         </div>
@@ -3246,7 +3246,7 @@ export const AdminInvoicing: React.FC = () => {
     </td>}
   </tr>;
 })}
-</tbody></table>}</div>{invoicePageCount>1&&<div className="border-t border-line p-4"><div className="flex justify-between text-[11px] text-muted"><span>Showing {((invoicePage-1)*invoicePageSize)+1}–{Math.min(invoicePage*invoicePageSize,filteredInvoices.length)} of {filteredInvoices.length}</span><div className="flex gap-1"><button type="button" onClick={()=>setInvoicePage((p)=>Math.max(1,p-1))} disabled={invoicePage===1} className={actionClass}>Prev</button><span className="inline-flex h-8 min-w-8 items-center justify-center rounded-control bg-line px-2 text-[10px] font-semibold text-fg">{invoicePage}</span><button type="button" onClick={()=>setInvoicePage((p)=>Math.min(invoicePageCount,p+1))} disabled={invoicePage===invoicePageCount} className={actionClass}>Next</button></div></div></div>}</section>
+</tbody></table>}</div><AdminTablePagination total={filteredInvoices.length} page={invoicePage} pageSize={invoicePageSize} onPageChange={setInvoicePage} onPageSizeChange={setInvoicePageSize} itemLabel="records" slug="finance-invoices-pagination" /></section>
           <section className="rounded-card border border-line bg-panel overflow-hidden">
   <div className="border-b border-line p-4">
     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
