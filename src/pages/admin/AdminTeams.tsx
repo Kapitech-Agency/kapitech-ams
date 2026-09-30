@@ -59,11 +59,23 @@ type SkillRecord = {
   active: number;
 };
 
+type ProjectTaskRecord = {
+  id?: string;
+  title?: string;
+  status?: string;
+  assignedTo?: string;
+  assignee?: string;
+  dueDate?: string;
+};
+
 type ProjectRecord = {
   id: string;
   name: string;
   status?: string;
   slug: string;
+  teamLead?: string;
+  teamMembers?: string[];
+  tasks?: ProjectTaskRecord[];
 };
 
 type TimeLog = {
@@ -284,6 +296,9 @@ export const AdminTeams: React.FC = () => {
         (projectRes.data!.projects as Omit<ProjectRecord, 'slug'>[]).map((project) => ({
           ...project,
           slug: projectSlug(project),
+          teamLead: String(project.teamLead || ''),
+          teamMembers: Array.isArray(project.teamMembers) ? project.teamMembers.map(String) : [],
+          tasks: Array.isArray(project.tasks) ? project.tasks as ProjectTaskRecord[] : [],
         }))
       );
     }
@@ -340,6 +355,56 @@ export const AdminTeams: React.FC = () => {
     });
     return map;
   }, [logs]);
+
+  const activeProjectMap = useMemo(() => {
+    const map = new Map<string, Set<string>>();
+    projects.forEach((project) => {
+      if (project.status === 'completed') return;
+      const ids = new Set([
+        ...(project.teamLead ? [project.teamLead] : []),
+        ...(project.teamMembers || []),
+      ].filter(Boolean));
+      ids.forEach((memberId) => {
+        if (!map.has(memberId)) map.set(memberId, new Set());
+        map.get(memberId)!.add(project.id);
+      });
+    });
+    return map;
+  }, [projects]);
+
+  const taskStatusMap = useMemo(() => {
+    const map = new Map<string, { total: number; done: number; inProgress: number; todo: number }>();
+    projects.forEach((project) => {
+      (project.tasks || []).forEach((task) => {
+        const memberId = String(task.assignedTo || task.assignee || '');
+        if (!memberId) return;
+        const current = map.get(memberId) || { total: 0, done: 0, inProgress: 0, todo: 0 };
+        current.total += 1;
+        if (task.status === 'done' || task.status === 'completed') current.done += 1;
+        else if (task.status === 'in_progress' || task.status === 'review') current.inProgress += 1;
+        else current.todo += 1;
+        map.set(memberId, current);
+      });
+    });
+    return map;
+  }, [projects]);
+
+  const currentMemberWorkload = useMemo(() => {
+    const currentWeek = weeklyCapacity[weeklyCapacity.length - 1];
+    const map = new Map<string, number>();
+    if (!currentWeek) return map;
+    members.forEach((member) => {
+      const minutes = logs
+        .filter((log) => log.userId === member.id || (!log.userId && log.user === member.name))
+        .filter((log) => {
+          const date = new Date(log.date + 'T00:00:00');
+          return date >= currentWeek.start && date < currentWeek.end;
+        })
+        .reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0);
+      map.set(member.id, Math.min(160, Math.round((minutes / (40 * 60)) * 100)));
+    });
+    return map;
+  }, [members, logs, weeklyCapacity]);
 
   const teamMetrics = useMemo(() => ({
     headcount: members.length,
@@ -747,8 +812,9 @@ export const AdminTeams: React.FC = () => {
                     <th className="w-[21%]">Role</th>
                     <th className="w-[16%]">Division</th>
                     <th className="w-[12%]">Status</th>
-                    <th className="w-[13%] text-right">Tracked</th>
-                    <th className="w-[10%] text-right">Projects</th>
+                    <th className="w-[12%] text-right">Workload</th>
+                    <th className="w-[14%] text-right">Active projects</th>
+                    <th className="w-[16%]">Task status</th>
                     <th className="w-[56px] text-right">Action</th>
                   </tr></thead>
                   <tbody>
@@ -768,8 +834,27 @@ export const AdminTeams: React.FC = () => {
                             {member.status || 'active'}
                           </span>
                         </td>
-                        <td className="text-right font-semibold tabular-nums text-fg">{formatHours(teamTrackedMinutes.get(member.id) || 0)}</td>
-                        <td className="text-right font-semibold tabular-nums text-fg">{teamProjectCoverage.get(member.id)?.size || 0}</td>
+                        <td className="text-right">
+                          <span className={'font-semibold tabular-nums ' + ((currentMemberWorkload.get(member.id) || 0) > 90 ? 'text-danger' : 'text-fg')}>
+                            {(currentMemberWorkload.get(member.id) || 0) + '%'}
+                          </span>
+                          <p className="mt-1 text-[10px] tabular-nums text-muted">
+                            {formatHours(teamTrackedMinutes.get(member.id) || 0)} tracked
+                          </p>
+                        </td>
+                        <td className="text-right font-semibold tabular-nums text-fg">{activeProjectMap.get(member.id)?.size || 0}</td>
+                        <td>
+                          {(() => {
+                            const taskStatus = taskStatusMap.get(member.id);
+                            if (!taskStatus) return <span className="text-muted">No assigned tasks</span>;
+                            return (
+                              <div className="space-y-1">
+                                <p className="font-medium text-fg">{taskStatus.inProgress} active · {taskStatus.todo} open</p>
+                                <p className="text-[10px] text-muted">{taskStatus.done} done of {taskStatus.total}</p>
+                              </div>
+                            );
+                          })()}
+                        </td>
                         <td>
                           <div className="flex justify-end">
                             <Link to="/admin/settings?tab=rbac" className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-bg hover:text-fg" title="Manage account" aria-label="Manage account">
