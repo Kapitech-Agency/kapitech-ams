@@ -1104,8 +1104,8 @@ export const AdminTeams: React.FC = () => {
                     <p className="mt-1 text-xs text-muted">Adjust your search, pod, or allocation filters.</p>
                   </div>
                 ) : (
-                  <table className="ams-finance-table min-w-[1240px] table-fixed border-separate border-spacing-0 text-xs align-middle">
-                    <thead className="sticky top-0 z-10 bg-panel"><tr>
+                  <table className="ams-teams-table min-w-[1240px] table-fixed">
+                    <thead><tr>
                       <th className="w-[25%]">Team Member</th>
                       <th className="w-[18%]">Pod / Focus</th>
                       <th className="w-[11%]">Active Projects</th>
@@ -1154,9 +1154,9 @@ export const AdminTeams: React.FC = () => {
                               </div>
                             </td>
                             <td>
-                              <div className="flex items-center justify-end gap-2">
-                                <Button type="button" variant="secondary" className="h-8 px-2.5 text-[11px]" onClick={() => setMemberDetail(member)}>View Profile</Button>
-                                <Button type="button" variant="primary" className="h-8 px-2.5 text-[11px]" onClick={() => setAllocationTarget(member)}>Allocate</Button>
+                              <div className="ams-table-actions">
+                                <Button type="button" variant="secondary" className="ams-table-action h-8 px-2.5 text-[11px]" onClick={() => setMemberDetail(member)}>View Profile</Button>
+                                <Button type="button" variant="primary" className="ams-table-action h-8 px-2.5 text-[11px]" onClick={() => setAllocationTarget(member)}>Allocate</Button>
                               </div>
                             </td>
                           </tr>
@@ -1317,8 +1317,8 @@ export const AdminTeams: React.FC = () => {
                   <p className="mt-1 text-xs text-muted">Adjust search, tier, category, or agreement filters.</p>
                 </div>
               ) : (
-                <table className="ams-finance-table min-w-[1260px] table-fixed border-separate border-spacing-0 text-xs align-middle">
-                  <thead className="sticky top-0 z-10 bg-panel"><tr>
+                <table className="ams-teams-table min-w-[1260px] table-fixed">
+                  <thead><tr>
                     <th className="w-[26%]">Vendor & Specialty</th>
                     <th className="w-[13%]">Type</th>
                     <th className="w-[16%] text-right">Rate / Retainer</th>
@@ -1378,7 +1378,7 @@ export const AdminTeams: React.FC = () => {
                             <span className="inline-flex items-center gap-1.5 rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] font-semibold tabular-nums text-muted" title="SLA is not tracked by the current vendor data model">—</span>
                           </td>
                           <td>
-                            <div className="flex items-center justify-end gap-1.5">
+                            <div className="ams-table-actions">
                               {renewalAction !== 'Manage Contract' ? (
                                 <Button type="button" variant="secondary" className="h-8 border-warning/30 bg-warning/10 px-2.5 text-[10px] text-warning" onClick={() => agreement === 'renewal' ? setVendorDetail(vendor) : openVendorForm(vendor)}>
                                   {renewalAction}
@@ -1386,7 +1386,7 @@ export const AdminTeams: React.FC = () => {
                               ) : (
                                 <Button type="button" variant="secondary" className="h-8 px-2.5 text-[10px]" onClick={() => setVendorDetail(vendor)}>Manage Contract</Button>
                               )}
-                              <Link to="/admin/invoicing?finance=vendor-payments" className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-bg hover:text-fg" title="View Invoices" aria-label="View Invoices">
+                              <Link to="/admin/invoicing?finance=vendor-payments" className="ams-table-action inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-bg hover:text-fg" title="View Invoices" aria-label="View Invoices">
                                 <ReceiptText size={14} />
                               </Link>
                             </div>
@@ -1438,8 +1438,8 @@ export const AdminTeams: React.FC = () => {
             actions={<span className="text-[10px] text-muted">No forecast values are fabricated; cells are based on recorded time.</span>}
           >
             <div className="overflow-x-auto custom-scrollbar">
-              <table className="ams-finance-table min-w-[1180px] table-fixed border-separate border-spacing-0 text-xs align-middle">
-                <thead className="sticky top-0 z-10 bg-panel"><tr>
+              <table className="ams-teams-table min-w-[1180px] table-fixed">
+                <thead><tr>
                   <th className="w-[24%]">Resource & role</th>
                   {weeklyCapacity.map((week) => <th key={week.label} className="w-[19%] text-center">{week.label}</th>)}
                 </tr></thead>
@@ -1489,8 +1489,8 @@ export const AdminTeams: React.FC = () => {
 
           <AdminPanel slug="skill-matrix-internal-role-matrix" title="Internal role matrix" description="Role-aligned focus derived from the server-provided role and division. It is not a self-reported proficiency score." className="overflow-hidden">
             <div className="overflow-x-auto custom-scrollbar">
-              <table className="ams-finance-table min-w-[900px] table-fixed border-separate border-spacing-0 text-xs align-middle">
-                <thead className="sticky top-0 z-10 bg-panel"><tr>
+              <table className="ams-teams-table min-w-[900px] table-fixed">
+                <thead><tr>
                   <th className="w-[26%]">Member</th>
                   <th className="w-[23%]">Role</th>
                   <th className="w-[18%]">Division</th>
@@ -1517,8 +1517,8 @@ export const AdminTeams: React.FC = () => {
 
           <AdminPanel slug="skill-matrix-vendor-skill-coverage" title="Vendor skill coverage" description={skillRows.length + ' distinct skills reported by the vendor directory.'} className="overflow-hidden">
             <div className="overflow-x-auto custom-scrollbar">
-              <table className="ams-finance-table min-w-[800px] table-fixed border-separate border-spacing-0 text-xs align-middle">
-                <thead className="sticky top-0 z-10 bg-panel"><tr>
+              <table className="ams-teams-table min-w-[800px] table-fixed">
+                <thead><tr>
                   <th className="w-[44%]">Skill</th>
                   <th className="w-[18%] text-right">Vendors</th>
                   <th className="w-[18%] text-right">Vetted</th>
@@ -1621,8 +1621,8 @@ export const AdminTeams: React.FC = () => {
                   <p className="mt-1 text-xs text-muted">Adjust the filters or add a time entry.</p>
                 </div>
               ) : (
-                <table className="ams-finance-table min-w-[1040px] table-fixed border-separate border-spacing-0 text-xs align-middle">
-                  <thead className="sticky top-0 z-10 bg-panel"><tr>
+                <table className="ams-teams-table min-w-[1040px] table-fixed">
+                  <thead><tr>
                     <th className="w-[12%]">Date</th>
                     <th className="w-[25%]">Project & task</th>
                     <th className="w-[18%]">User</th>
@@ -1646,7 +1646,7 @@ export const AdminTeams: React.FC = () => {
                         <td className="max-w-[260px] truncate text-xs text-muted">{log.notes || '—'}</td>
                         <td>
                           {canManageTimeLogs && (
-                            <div className="flex justify-end">
+                            <div className="ams-table-actions">
                               <button type="button" onClick={() => setTimeDeleteTarget(log)} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger" title="Delete time entry" aria-label="Delete time entry">
                                 <Trash2 size={14} />
                               </button>
@@ -1813,8 +1813,8 @@ export const AdminTeams: React.FC = () => {
             </div>
             {vendorDetail.contracts.length > 0 && (
               <div className="overflow-x-auto">
-                <table className="ams-finance-table min-w-[640px] border-separate border-spacing-0 text-xs align-middle">
-                  <thead className="sticky top-0 z-10 bg-panel"><tr><th>Contract</th><th>Period</th><th>Rate</th><th>Status</th></tr></thead>
+                <table className="ams-teams-table min-w-[640px] border-separate border-spacing-0 text-xs align-middle">
+                  <thead><tr><th>Contract</th><th>Period</th><th>Rate</th><th>Status</th></tr></thead>
                   <tbody>{vendorDetail.contracts.map((contract) => <tr key={contract.id}><td className="font-medium text-fg">{contract.title}</td><td className="tabular-nums text-muted">{formatDate(contract.startDate)}{contract.endDate ? ' · ' + formatDate(contract.endDate) : ''}</td><td className="tabular-nums text-fg">{formatAmount(contract.rateAmount, contract.currency)}</td><td><span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{contract.status}</span></td></tr>)}</tbody>
                 </table>
               </div>
