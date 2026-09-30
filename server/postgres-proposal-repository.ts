@@ -9,7 +9,8 @@ const obj=(v:unknown):Record<string,unknown>=>v&&typeof v==='object'?v as Record
 
 function mapProposal(row:Row, itemRows:Row[]):any {
   const metadata=obj(row.metadata);
-  return {...metadata,id:row.id,proposalNumber:row.proposal_number,title:row.title,
+  const slug=String(metadata.slug || ((row.title || row.proposal_number || row.id) + '-' + (row.client_id || '')).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''));
+  return {...metadata,slug,id:row.id,proposalNumber:row.proposal_number,title:row.title,
     clientId:row.client_id??undefined,dealId:row.deal_id??undefined,projectId:row.project_id??undefined,
     subtotal:Number(row.subtotal),discount:Number(row.discount),taxPercent:Number(row.tax_percent),tax:Number(row.tax),
     total:Number(row.total),currency:row.currency,validityPeriod:row.validity_period??'',paymentTerms:row.payment_terms??'',
@@ -53,7 +54,7 @@ function mapExistingInvoice(row:Row,itemRows:Row[],paymentRows:Row[]):any {
   };
 }
 
-function metadata(p:any){const {id,proposalNumber,title,clientId,dealId,projectId,subtotal,discount,taxPercent,tax,total,currency,validityPeriod,paymentTerms,owner,status,notes,createdDate,sentDate,approvedDate,items,createdAt,updatedAt,...rest}=p;return rest;}
+function metadata(p:any){const {id,slug,proposalNumber,title,clientId,dealId,projectId,subtotal,discount,taxPercent,tax,total,currency,validityPeriod,paymentTerms,owner,status,notes,createdDate,sentDate,approvedDate,items,createdAt,updatedAt,...rest}=p;return {...rest,slug};}
 
 export class PostgresProposalRepository {
   private readonly creatableStatuses = new Set(['Draft','Internal Review','Sent']);
