@@ -3,8 +3,6 @@ import { useSearchParams } from 'react-router-dom';
 import {
   Building2,
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
   Download,
   Eye,
   FileCode2,
@@ -301,13 +299,6 @@ export const AdminDocuments: React.FC = () => {
     setSortDirection(key === 'size' || key === 'updated' ? 'desc' : 'asc');
   };
 
-  const selectTab = (tab: TabKey) => {
-    const next = new URLSearchParams(searchParams);
-    if (tab === 'all') next.delete('documents');
-    else next.set('documents', tab);
-    setSearchParams(next);
-  };
-
   const handleDownload = (doc: DocumentItem) => {
     const url = doc.downloadUrl || doc.url;
     if (!url) {
@@ -481,7 +472,13 @@ export const AdminDocuments: React.FC = () => {
           onDragEnter={(event) => { event.preventDefault(); setUploadDragActive(true); }}
           onDragOver={(event) => { event.preventDefault(); setUploadDragActive(true); }}
           onDragLeave={() => setUploadDragActive(false)}
-          onDrop={(event) => { event.preventDefault(); setUploadDragActive(false); pickFile(event.dataTransfer.files?.[0] || null); }}
+          onDrop={(event) => {
+            event.preventDefault();
+            setUploadDragActive(false);
+            const file = event.dataTransfer.files?.[0] || null;
+            pickFile(file);
+            if (file && canManageDocuments && !validateFile(file)) setUploadOpen(true);
+          }}
           data-ams-feature-slug="documents-dropzone"
         >
           <div className="flex min-w-0 items-center gap-3.5">
@@ -503,11 +500,22 @@ export const AdminDocuments: React.FC = () => {
             type="file"
             accept={ACCEPTED_TYPES}
             className="sr-only"
-            onChange={(event) => pickFile(event.target.files?.[0] || null)}
+            onChange={(event) => {
+              const file = event.target.files?.[0] || null;
+              pickFile(file);
+              if (file && canManageDocuments && !validateFile(file)) setUploadOpen(true);
+            }}
             data-ams-slug="documents-upload-input"
           />
           <div className="flex shrink-0 items-center gap-2">
-            <Button type="button" variant="secondary" icon={<UploadCloud size={14} />} onClick={() => fileInputRef.current?.click()} data-ams-slug="documents-upload-browse">
+            <Button
+              type="button"
+              variant="secondary"
+              icon={<UploadCloud size={14} />}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={!canManageDocuments}
+              data-ams-slug="documents-upload-browse"
+            >
               Browse files
             </Button>
             {uploadFile && <span className="max-w-[220px] truncate text-[11px] text-muted" title={uploadFile.name}>Selected: {uploadFile.name}</span>}
