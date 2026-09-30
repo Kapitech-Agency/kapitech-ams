@@ -156,6 +156,10 @@ const AdminCmsTestimonials = React.lazy(() =>
   }))
 );
 
+const AdminTasks = React.lazy(() =>
+  import('./components/admin/TasksWorkspace').then((m) => ({ default: m.TasksWorkspace }))
+);
+
 const AdminSettings = React.lazy(() =>
   import('./pages/admin/AdminSettings').then((m) => ({ default: m.AdminSettings }))
 );
@@ -218,6 +222,7 @@ const App = () => {
               <Route path="/admin" element={<ProtectedAdminRoutes />}>
                 <Route index element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="dashboard" element={<ModuleRoute moduleKey="dashboard" moduleLabel="the dashboard"><GlobalExecutiveDashboard /></ModuleRoute>} />
+                <Route path="tasks" element={<ModuleRoute moduleKey="projects" moduleLabel="tasks"><AdminTasks /></ModuleRoute>} />
                 <Route path="executive" element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="inbox" element={<ModuleRoute moduleKey="inbox" moduleLabel="the inbox"><AdminInbox /></ModuleRoute>} />
                 <Route path="crm" element={<ModuleRoute moduleKey="crm" moduleLabel="CRM"><AdminCrm /></ModuleRoute>} />
