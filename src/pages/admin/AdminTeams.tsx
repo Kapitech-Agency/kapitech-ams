@@ -1094,8 +1094,8 @@ export const AdminTeams: React.FC = () => {
             </div>
           </section>
 
-          {teamDisplay === 'table' ? (
-            <AdminPanel title="Team Directory" description={teamRows.length + ' members'} className="overflow-hidden">
+          <AdminPanel title="Team Directory" description={teamRows.length + ' members'} className="overflow-hidden">
+            {teamDisplay === 'table' ? (
               <div className="overflow-x-auto custom-scrollbar">
                 {pagedTeamRows.length === 0 ? (
                   <div className="min-h-[180px] px-5 py-10 text-center">
@@ -1166,7 +1166,6 @@ export const AdminTeams: React.FC = () => {
                   </table>
                 )}
               </div>
-            </AdminPanel>
           ) : (
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {pagedTeamRows.map((member) => {
@@ -1213,6 +1212,7 @@ export const AdminTeams: React.FC = () => {
               <button type="button" disabled={teamPage >= teamPageCount} onClick={() => setTeamPage((value) => Math.min(teamPageCount, value + 1))} className="inline-flex h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[11px] text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-40">Next <ChevronRight size={14} /></button>
             </div>
           </div>
+          </AdminPanel>
         </div>
       ) : currentView === 'vendor-directory' ? (
         <div className="space-y-4" data-ams-feature-slug="vendor-directory" data-ams-slug="vendor-directory">
