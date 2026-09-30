@@ -521,7 +521,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           ].map((tab) => (
             <Link
               key={tab.key}
-              to={tab.key === 'tasks' ? '/admin/tasks' : `/admin/dashboard${tab.search}`}
+              to={`/admin/dashboard${tab.search}`}
               className={[
                 'min-w-0 rounded-chip px-2 py-2 text-center text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
                 view === tab.key ? 'bg-line text-fg' : 'text-muted hover:bg-bg hover:text-fg',
