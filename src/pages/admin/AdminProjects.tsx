@@ -1693,21 +1693,16 @@ export const AdminProjects: React.FC = () => {
                   Reset filters
                 </Button>
               )}
-            >
-              <div
-                className="flex w-full min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto pb-0.5"
-                style={{ flexWrap: 'nowrap' }}
-                aria-label="Project filters"
-              >
+              footer={(
                 <div
-                  className="flex shrink-0 flex-nowrap items-center gap-1 rounded-control border border-line bg-bg p-1"
+                  className="flex w-full min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto pb-0.5"
                   style={{ flexWrap: 'nowrap' }}
                   aria-label="Project status quick filters"
                 >
                   <button
                     type="button"
                     onClick={() => setProjectStatusFilter('')}
-                    className={'inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-chip border px-2.5 text-[10px] font-medium transition-colors ' + (!projectStatusFilter ? 'border-accent/25 bg-accent/10 text-fg' : 'border-transparent text-muted hover:bg-panel-hover hover:text-fg')}
+                    className={'inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-chip border px-2.5 text-[10px] font-medium transition-colors ' + (!projectStatusFilter ? 'border-accent/25 bg-accent/10 text-fg' : 'border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg')}
                   >
                     All
                     <span className="tabular-nums">{projects.length}</span>
@@ -1720,7 +1715,7 @@ export const AdminProjects: React.FC = () => {
                         key={column.id}
                         type="button"
                         onClick={() => setProjectStatusFilter(column.id)}
-                        className={'inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-chip border px-2.5 text-[10px] font-medium transition-colors ' + (active ? 'border-accent/25 bg-accent/10 text-fg' : 'border-transparent text-muted hover:bg-panel-hover hover:text-fg')}
+                        className={'inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-chip border px-2.5 text-[10px] font-medium transition-colors ' + (active ? 'border-accent/25 bg-accent/10 text-fg' : 'border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg')}
                       >
                         <span className={'h-1.5 w-1.5 shrink-0 rounded-full ' + column.dot} />
                         {column.label}
@@ -1728,8 +1723,17 @@ export const AdminProjects: React.FC = () => {
                       </button>
                     );
                   })}
+                  <span className="ml-auto shrink-0 whitespace-nowrap px-1 text-[10px] text-muted">
+                    {filteredProjects.length} / {projects.length}
+                  </span>
                 </div>
-
+              )}
+            >
+              <div
+                className="flex w-full min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto pb-0.5"
+                style={{ flexWrap: 'nowrap' }}
+                aria-label="Project filters"
+              >
                 <CustomSelect
                   value={projectHealthFilter}
                   onChange={setProjectHealthFilter}
@@ -1764,9 +1768,6 @@ export const AdminProjects: React.FC = () => {
                   className="w-[148px] shrink-0"
                   aria-label="Sort projects"
                 />
-                <span className="shrink-0 whitespace-nowrap px-1 text-[10px] text-muted">
-                  {filteredProjects.length} / {projects.length}
-                </span>
               </div>
             </AdminFilterBar>
             {loading ? (
