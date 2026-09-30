@@ -7,7 +7,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { AdminMetricStrip, AdminModuleHeader, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminTablePagination , AdminPageShell } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 
@@ -117,8 +117,9 @@ export const AdminTimeLogs: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <AdminPageShell featureSlug="time-tracking-module">
       <AdminModuleHeader
+        className="mb-0"
         title="Time tracking"
         description="Record project time, billable hours, and activity notes in one consistent delivery workspace."
         actions={
@@ -299,6 +300,6 @@ export const AdminTimeLogs: React.FC = () => {
         confirmLabel="Delete"
         onConfirm={() => { if (deleteTarget) void confirmRemove(deleteTarget); }}
       />
-    </div>
+    </AdminPageShell>
   );
 };
