@@ -569,7 +569,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       {view === 'overview' ? (
         <>
       <section className="mb-5 grid gap-3 min-[1100px]:grid-cols-12" aria-label="Executive overview controls">
-        <div className="min-[1100px]:col-span-8">
+        <div className="min-[1100px]:col-span-9">
           <AdminMetricStrip
             className="grid-cols-1 sm:grid-cols-2 min-[760px]:grid-cols-3 min-[1100px]:grid-cols-4"
             metrics={[
@@ -584,7 +584,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             ]}
           />
         </div>
-        <AdminPanel title="Quick actions" description="Jump directly into the most common agency workflows." bodyClassName="p-3" className="min-[1100px]:col-span-4">
+        <AdminPanel title="Quick actions" description="Jump directly into the most common agency workflows." bodyClassName="p-3" className="min-[1100px]:col-span-3">
           <div className="grid grid-cols-2 gap-2">
             {[
               { label: 'New project', icon: <Plus size={14} />, href: '/admin/projects' },
