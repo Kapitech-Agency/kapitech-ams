@@ -2623,6 +2623,7 @@ export const AdminInvoicing: React.FC = () => {
         />
       </div>
       <AdminModuleHeader
+        className="mb-0"
         title={financeView === 'quotations' ? 'Quotations' : financeView === 'income-expenses' ? 'Income & Expenses' : financeView === 'tax-retainers' ? 'Tax & Retainers' : financeView === 'vendor-payments' ? 'Vendor Payments' : financeView === 'financial-reports' ? 'Financial Reports' : 'Invoices'}
         description={financeView === 'quotations'
           ? 'Manage the commercial pipeline from draft through approval, acceptance, and invoice conversion.'
