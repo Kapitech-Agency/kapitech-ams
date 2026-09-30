@@ -238,14 +238,21 @@ export const AdminCmsProjects: React.FC = () => {
       return;
     }
 
-    const res = editingProject.id && projects.some(p => p.id === editingProject.id)
-      ? await api.cms.updateProject(editingProject.id, editingProject)
-      : await api.cms.createProject(editingProject);
-    if (!res.success) { setStatusMessage(res.error || 'Failed to save case study.'); return; }
-    setIsModalOpen(false);
-    setEditingProject(null);
-    await loadProjects();
-    setStatusMessage('Case study published successfully to live site!');
+    try {
+      const res = editingProject.id && projects.some(p => p.id === editingProject.id)
+        ? await api.cms.updateProject(editingProject.id, editingProject)
+        : await api.cms.createProject(editingProject);
+      if (!res.success) {
+        setStatusMessage(res.error || 'Failed to save case study.');
+        return;
+      }
+      setIsModalOpen(false);
+      setEditingProject(null);
+      await loadProjects();
+      setStatusMessage('Case study published successfully to live site!');
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : 'Failed to save case study.');
+    }
     setTimeout(() => setStatusMessage(null), 3000);
   };
 
