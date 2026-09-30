@@ -279,6 +279,17 @@ const PerformanceView: React.FC = () => {
 };
 
 const AnalyticsView: React.FC<{ range: RangeKey }> = ({ range }) => {
+  const [analyticsTeamPage, setAnalyticsTeamPage] = useState(1);
+  const [analyticsTeamPageSize, setAnalyticsTeamPageSize] = useState(6);
+  const analyticsTeamPageCount = Math.max(1, Math.ceil(sampleTeam.length / analyticsTeamPageSize));
+  const pagedAnalyticsTeam = sampleTeam.slice(
+    (analyticsTeamPage - 1) * analyticsTeamPageSize,
+    analyticsTeamPage * analyticsTeamPageSize,
+  );
+  useEffect(() => {
+    setAnalyticsTeamPage((current) => Math.min(current, analyticsTeamPageCount));
+  }, [analyticsTeamPageCount]);
+
   const revenue = [61000, 68500, 74200, 71800, 80200, 84500];
   const expenses = [42000, 44700, 46300, 49200, 51400, 52200];
   const revenueTotal = revenue.reduce((sum, value) => sum + value, 0);
@@ -362,7 +373,7 @@ const AnalyticsView: React.FC<{ range: RangeKey }> = ({ range }) => {
                 </tr>
               </thead>
               <tbody>
-                {sampleTeam.map((member) => (
+                {pagedAnalyticsTeam.map((member) => (
                   <tr key={member.name} className="border-t border-line">
                     <td className="px-4 py-3 text-xs font-medium text-fg">{member.name}</td>
                     <td className="px-3 py-3 text-xs tabular-nums text-muted">{member.tasks}</td>
@@ -380,6 +391,15 @@ const AnalyticsView: React.FC<{ range: RangeKey }> = ({ range }) => {
               </tbody>
             </table>
           </div>
+          <AdminTablePagination
+            total={sampleTeam.length}
+            page={analyticsTeamPage}
+            pageSize={analyticsTeamPageSize}
+            onPageChange={setAnalyticsTeamPage}
+            onPageSizeChange={setAnalyticsTeamPageSize}
+            itemLabel="members"
+            slug="dashboard-team-analytics-pagination"
+          />
         </AdminPanel>
 
         <AdminPanel className="min-[1100px]:col-span-5" title="Client & project analytics" description="Sample health signals for decision support." bodyClassName="p-4 sm:p-5">
