@@ -123,7 +123,7 @@ export const AdminClientLeadAccounts: React.FC = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [newCompany, setNewCompany] = useState('');
   const [newContact, setNewContact] = useState('');
-  const [pageSize, setPageSize] = useState(6);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => setIsLoading(false));
