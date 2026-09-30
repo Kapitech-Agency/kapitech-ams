@@ -329,6 +329,8 @@ export const AdminTeams: React.FC = () => {
   const [capacityPageSize, setCapacityPageSize] = useState(10);
   const [skillPage, setSkillPage] = useState(1);
   const [skillPageSize, setSkillPageSize] = useState(10);
+  const [roleMatrixPage, setRoleMatrixPage] = useState(1);
+  const [roleMatrixPageSize, setRoleMatrixPageSize] = useState(10);
   const [timePage, setTimePage] = useState(1);
   const [timePageSize, setTimePageSize] = useState(10);
 
@@ -741,6 +743,9 @@ export const AdminTeams: React.FC = () => {
     return Array.from(map.values()).sort((a, b) => b.active - a.active || b.vetted - a.vetted || a.skill.localeCompare(b.skill));
   }, [vendors]);
 
+  const roleMatrixPageCount = Math.max(1, Math.ceil(members.length / roleMatrixPageSize));
+  const pagedRoleMatrixMembers = members.slice((roleMatrixPage - 1) * roleMatrixPageSize, roleMatrixPage * roleMatrixPageSize);
+
   const skillPageCount = Math.max(1, Math.ceil(skillRows.length / skillPageSize));
   const pagedSkillRows = skillRows.slice((skillPage - 1) * skillPageSize, skillPage * skillPageSize);
   const timePageCount = Math.max(1, Math.ceil(filteredLogs.length / timePageSize));
@@ -750,6 +755,7 @@ export const AdminTeams: React.FC = () => {
   useEffect(() => { if (vendorPage > vendorPageCount) setVendorPage(vendorPageCount); }, [vendorPage, vendorPageCount]);
   useEffect(() => { if (capacityPage > capacityPageCount) setCapacityPage(capacityPageCount); }, [capacityPage, capacityPageCount]);
   useEffect(() => { if (skillPage > skillPageCount) setSkillPage(skillPageCount); }, [skillPage, skillPageCount]);
+  useEffect(() => { if (roleMatrixPage > roleMatrixPageCount) setRoleMatrixPage(roleMatrixPageCount); }, [roleMatrixPage, roleMatrixPageCount]);
   useEffect(() => { if (timePage > timePageCount) setTimePage(timePageCount); }, [timePage, timePageCount]);
 
   const openVendorForm = (vendor?: AgencyVendor) => {
@@ -1494,7 +1500,7 @@ export const AdminTeams: React.FC = () => {
                   <th className="w-[33%]">Primary capability focus</th>
                 </tr></thead>
                 <tbody>
-                  {members.slice((0) * 1, members.length).map((member) => (
+                  {pagedRoleMatrixMembers.map((member) => (
                     <tr key={member.id} data-ams-slug={member.slug} className="transition-colors hover:bg-bg/40">
                       <td>
                         <ProfileIdentity profile={{ id: member.id, name: member.name, username: member.username }} showRole={false} />
@@ -1510,6 +1516,7 @@ export const AdminTeams: React.FC = () => {
                 </tbody>
               </table>
             </div>
+            <AdminTablePagination total={members.length} page={roleMatrixPage} pageSize={roleMatrixPageSize} onPageChange={setRoleMatrixPage} onPageSizeChange={setRoleMatrixPageSize} itemLabel="members" slug="skill-matrix-role-matrix-pagination" />
           </AdminPanel>
 
           <AdminPanel slug="skill-matrix-vendor-skill-coverage" title="Vendor skill coverage" description={skillRows.length + ' distinct skills reported by the vendor directory.'} className="overflow-hidden">
