@@ -95,7 +95,7 @@ export const AdminClients: React.FC = () => {
   const [sortKey, setSortKey] = useState<SortKey>('updatedAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState(10);
 
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -584,7 +584,7 @@ export const AdminClients: React.FC = () => {
             </tbody>
           </table>
         </div>
-        {!isLoading && filteredClients.length > 0 && <div className="flex flex-col gap-3 border-t border-line bg-bg px-4 py-3 sm:flex-row sm:items-center sm:justify-between"><p className="text-[11px] text-muted">Showing <span className="font-medium tabular-nums text-fg">{(page - 1) * pageSize + 1}</span> to <span className="font-medium tabular-nums text-fg">{Math.min(page * pageSize, filteredClients.length)}</span> of <span className="font-medium tabular-nums text-fg">{filteredClients.length}</span> records</p><div className="flex items-center gap-1.5"><button type="button" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page === 1} className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-line bg-panel text-muted disabled:opacity-40" aria-label="Previous page"><ChevronLeft size={14} /></button><span className="min-w-16 text-center text-[11px] font-medium tabular-nums text-fg">{page} / {pageCount}</span><button type="button" onClick={() => setPage((current) => Math.min(pageCount, current + 1))} disabled={page === pageCount} className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-line bg-panel text-fg disabled:opacity-40" aria-label="Next page"><ChevronRight size={14} /></button></div></div>}
+        {!isLoading && <AdminTablePagination total={filteredClients.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="records" slug="client-directory-pagination" />}
       </section>
 
       <Modal
