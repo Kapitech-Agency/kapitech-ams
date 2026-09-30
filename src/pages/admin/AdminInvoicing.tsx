@@ -37,7 +37,7 @@ import { Modal } from '../../components/ui/Modal';
 import { InvoiceStatusDropdown } from '../../components/ui/InvoiceStatusDropdown';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { api } from '../../lib/apiClient';
-import { AdminMetricCard, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricCard, AdminModuleHeader, AdminPageShell, AdminSectionTabs } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 
@@ -533,6 +533,7 @@ const EmptyState = ({ title, description, action }: { title: string; description
   <div className="flex min-h-[180px] flex-col items-center justify-center rounded-card border border-line bg-bg px-5 py-8 text-center">
     <div className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted">
       <Receipt size={18} strokeWidth={1.8} />
+    </div>
     <p className="mt-3 text-sm font-medium text-fg">{title}</p>
     <p className="mt-1 max-w-[48ch] text-xs leading-5 text-muted">{description}</p>
     {action && <div className="mt-4">{action}</div>}
@@ -2606,30 +2607,20 @@ export const AdminInvoicing: React.FC = () => {
   }
 
   return (
-    <div className="min-h-full pb-10">
-      <div className="min-[900px]:hidden -mx-1 mb-4 overflow-x-auto px-1 custom-scrollbar">
-        <nav aria-label="Finance sections" className="inline-flex min-w-max items-center gap-1 rounded-control border border-line bg-panel p-1">
-          {[
-            { key: 'invoices', label: 'Invoice', search: '' },
-            { key: 'quotations', label: 'Quotation', search: '?finance=quotations' },
-            { key: 'income-expenses', label: 'Income & Expenses', search: '?finance=income-expenses' },
-            { key: 'tax-retainers', label: 'Tax & Retainers', search: '?finance=tax-retainers' },
-            { key: 'vendor-payments', label: 'Vendor Payments', search: '?finance=vendor-payments' },
-            { key: 'financial-reports', label: 'Financial Reports', search: '?finance=financial-reports' },
-          ].map((tab) => {
-            const activeView = new URLSearchParams(location.search).get('finance') || 'invoices';
-            return (
-              <Link
-                key={tab.key}
-                to={`/admin/invoicing${tab.search}`}
-                aria-current={activeView === tab.key ? 'page' : undefined}
-                className={`inline-flex min-h-8 shrink-0 items-center rounded-chip px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${activeView === tab.key ? 'border border-accent/25 bg-accent/10 font-semibold text-fg' : 'border border-transparent text-muted hover:bg-bg hover:text-fg'}`}
-              >
-                {tab.label}
-              </Link>
-            );
-          })}
-        </nav>
+    <AdminPageShell featureSlug="finance-module" className="finance-module">
+      <div className="min-[900px]:hidden min-w-0">
+        <AdminSectionTabs
+          ariaLabel="Finance sections"
+          activeKey={financeView === 'invoices' ? 'invoices' : financeView}
+          items={[
+            { key: 'invoices', label: 'Invoice', to: '/admin/invoicing' },
+            { key: 'quotations', label: 'Quotation', to: '/admin/invoicing?finance=quotations' },
+            { key: 'income-expenses', label: 'Income & Expenses', to: '/admin/invoicing?finance=income-expenses' },
+            { key: 'tax-retainers', label: 'Tax & Retainers', to: '/admin/invoicing?finance=tax-retainers' },
+            { key: 'vendor-payments', label: 'Vendor Payments', to: '/admin/invoicing?finance=vendor-payments' },
+            { key: 'financial-reports', label: 'Financial Reports', to: '/admin/invoicing?finance=financial-reports' },
+          ]}
+        />
       </div>
       <AdminModuleHeader
         title={financeView === 'quotations' ? 'Quotations' : financeView === 'income-expenses' ? 'Income & Expenses' : financeView === 'tax-retainers' ? 'Tax & Retainers' : financeView === 'vendor-payments' ? 'Vendor Payments' : financeView === 'financial-reports' ? 'Financial Reports' : 'Invoices'}
@@ -4140,7 +4131,7 @@ export const AdminInvoicing: React.FC = () => {
           </div>
         )}
       </Modal>
-    </div>
+    </AdminPageShell>
   );
 };
 
