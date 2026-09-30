@@ -18,6 +18,7 @@ export const AdminPageShell: React.FC<AdminPageShellProps> = ({
 }) => (
   <div
     data-ams-feature-slug={featureSlug}
+    data-ams-slug={featureSlug}
     className={cn('ams-page-shell min-h-full min-w-0 pb-10', className)}
   >
     {children}
@@ -58,6 +59,7 @@ export const AdminSectionTabs: React.FC<AdminSectionTabsProps> = ({
           to={item.to}
           end
           aria-current={active ? 'page' : undefined}
+          data-ams-slug={item.key}
           className={cn(
             'inline-flex min-h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
             active
