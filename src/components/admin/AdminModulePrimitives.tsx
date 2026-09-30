@@ -277,6 +277,7 @@ export interface AdminFilterBarProps {
   onSearchChange?: (value: string) => void;
   searchPlaceholder?: string;
   searchLabel?: string;
+  searchClassName?: string;
   children?: React.ReactNode;
   actions?: React.ReactNode;
   footer?: React.ReactNode;
@@ -288,6 +289,7 @@ export const AdminFilterBar: React.FC<AdminFilterBarProps> = ({
   onSearchChange,
   searchPlaceholder,
   searchLabel = 'Search',
+  searchClassName,
   children,
   actions,
   footer,
@@ -301,7 +303,7 @@ export const AdminFilterBar: React.FC<AdminFilterBarProps> = ({
     <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
       <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
         {onSearchChange && (
-          <label className="relative min-w-0 flex-1">
+          <label className={cn('relative min-w-0 flex-1', searchClassName)}>
             <span className="sr-only">{searchLabel}</span>
             <Search
               size={14}
