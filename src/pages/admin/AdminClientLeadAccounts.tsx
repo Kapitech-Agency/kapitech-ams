@@ -322,7 +322,6 @@ export const AdminClientLeadAccounts: React.FC = () => {
 
         {!isLoading && (
           <AdminTablePagination total={filtered.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="pipeline accounts" slug="lead-accounts-pagination" />
-          </div>
         )}
       </section>
 
