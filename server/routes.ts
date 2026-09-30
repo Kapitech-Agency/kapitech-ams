@@ -2173,6 +2173,17 @@ apiRouter.delete('/projects/:id', requireAuth, requirePermission('canManageProje
   res.json({ success: true, message: 'Project removed.' });
 });
 
+const slugifyFinanceRecord = (value: unknown): string => {
+  const normalized = String(value ?? '')
+    .trim()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return normalized || 'finance-record';
+};
+
 // ----------------------------------------------------
 // 6. FINANCE, INVOICING & PAYMENTS (Server-Authoritative Calculations)
 // ----------------------------------------------------
@@ -2292,6 +2303,7 @@ apiRouter.post('/finance/invoices', requireAuth, requirePermission('canManageInv
   const invoice = {
     id: `inv_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
     invoiceNumber,
+    slug: slugifyFinanceRecord(input.slug || invoiceNumber || ('invoice-' + Date.now())),
     type: input.type === 'quotation' ? 'quotation' : 'invoice',
     clientName: String(input.clientName || 'Client').trim().slice(0, 160),
     clientCompany: String(input.clientCompany || '').trim().slice(0, 200),
@@ -2667,6 +2679,7 @@ apiRouter.post('/finance/expenses', requireAuth, requirePermission('canManageInv
   }
   const newExpense = {
     id: `exp_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
+    slug: slugifyFinanceRecord(exp.slug || ((exp.description || exp.category || 'expense') + '-' + (exp.date || ''))),
     type: ['OpEx', 'CapEx', 'Rentals'].includes(String(exp.type)) ? String(exp.type) : 'OpEx',
     category: cleanText(exp.category || 'General', 120),
     description: cleanText(exp.description, 500),
@@ -3510,6 +3523,7 @@ apiRouter.post('/crm/proposals', requireAuth, requirePermission('canManageCrm'),
   const currency = data.currency === 'USD' ? 'USD' : 'IDR';
   const newProposal = {
     id: `prop_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
+    slug: slugifyFinanceRecord(data.slug || ((data.company || data.clientName || 'proposal') + '-' + (data.title || data.proposalNumber || 'record'))),
     proposalNumber: cleanText(data.proposalNumber || `PROP-KAPI-${new Date().getFullYear()}-${crypto.randomInt(1000, 1000000)}`, 80),
     title: cleanText(data.title || 'Digital Engineering Proposal', 240),
     clientName: cleanText(data.clientName || 'Prospective Client', 160),
