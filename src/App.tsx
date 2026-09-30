@@ -91,74 +91,91 @@ const GlobalExecutiveDashboard = lazyWithRetry(
   'dashboard'
 );
 
-const AdminInbox = React.lazy(() =>
-  import('./pages/admin/AdminInbox').then((m) => ({ default: m.AdminInbox }))
+const AdminInbox = lazyWithRetry(
+  () => import('./pages/admin/AdminInbox').then((m) => ({ default: m.AdminInbox })),
+  'admin-inbox'
 );
 
-const AdminCrm = React.lazy(() =>
-  import('./pages/admin/AdminCrm').then((m) => ({ default: m.AdminCrm }))
+const AdminCrm = lazyWithRetry(
+  () => import('./pages/admin/AdminCrm').then((m) => ({ default: m.AdminCrm })),
+  'admin-crm'
 );
 
-const AdminProposals = React.lazy(() =>
-  import('./pages/admin/AdminProposals').then((m) => ({ default: m.AdminProposals }))
+const AdminProposals = lazyWithRetry(
+  () => import('./pages/admin/AdminProposals').then((m) => ({ default: m.AdminProposals })),
+  'admin-proposals'
 );
 
-const AdminInvoicing = React.lazy(() =>
-  import('./pages/admin/AdminInvoicing').then((m) => ({ default: m.AdminInvoicing }))
+const AdminInvoicing = lazyWithRetry(
+  () => import('./pages/admin/AdminInvoicing').then((m) => ({ default: m.AdminInvoicing })),
+  'admin-invoicing'
 );
 
-const AdminProjects = React.lazy(() =>
-  import('./pages/admin/AdminProjects').then((m) => ({ default: m.AdminProjects }))
+const AdminProjects = lazyWithRetry(
+  () => import('./pages/admin/AdminProjects').then((m) => ({ default: m.AdminProjects })),
+  'admin-projects'
 );
 
-const AdminApprovals = React.lazy(() =>
-  import('./pages/admin/AdminApprovals').then((m) => ({ default: m.AdminApprovals }))
+const AdminApprovals = lazyWithRetry(
+  () => import('./pages/admin/AdminApprovals').then((m) => ({ default: m.AdminApprovals })),
+  'admin-approvals'
 );
 
-const AdminDocuments = React.lazy(() =>
-  import('./pages/admin/AdminDocuments').then((m) => ({ default: m.AdminDocuments }))
+const AdminDocuments = lazyWithRetry(
+  () => import('./pages/admin/AdminDocuments').then((m) => ({ default: m.AdminDocuments })),
+  'admin-documents'
 );
 
-const AdminTeams = React.lazy(() =>
-  import('./pages/admin/AdminTeams').then((m) => ({ default: m.AdminTeams }))
+const AdminTeams = lazyWithRetry(
+  () => import('./pages/admin/AdminTeams').then((m) => ({ default: m.AdminTeams })),
+  'admin-teams'
 );
 
-const AdminVendors = React.lazy(() =>
-  import('./pages/admin/AdminVendors').then((m) => ({ default: m.AdminVendors }))
+const AdminVendors = lazyWithRetry(
+  () => import('./pages/admin/AdminVendors').then((m) => ({ default: m.AdminVendors })),
+  'admin-vendors'
 );
 
-const AdminClients = React.lazy(() =>
-  import('./pages/admin/AdminClients').then((m) => ({ default: m.AdminClients }))
+const AdminClients = lazyWithRetry(
+  () => import('./pages/admin/AdminClients').then((m) => ({ default: m.AdminClients })),
+  'admin-clients'
 );
 
-const AdminClientRetainers = React.lazy(() =>
-  import('./pages/admin/AdminClientRetainers').then((m) => ({ default: m.AdminClientRetainers }))
+const AdminClientRetainers = lazyWithRetry(
+  () => import('./pages/admin/AdminClientRetainers').then((m) => ({ default: m.AdminClientRetainers })),
+  'admin-client-retainers'
 );
 
-const AdminClientSlaMonitoring = React.lazy(() =>
-  import('./pages/admin/AdminClientSlaMonitoring').then((m) => ({ default: m.AdminClientSlaMonitoring }))
+const AdminClientSlaMonitoring = lazyWithRetry(
+  () => import('./pages/admin/AdminClientSlaMonitoring').then((m) => ({ default: m.AdminClientSlaMonitoring })),
+  'admin-client-sla-monitoring'
 );
 
-const AdminClientLeadAccounts = React.lazy(() =>
-  import('./pages/admin/AdminClientLeadAccounts').then((m) => ({ default: m.AdminClientLeadAccounts }))
+const AdminClientLeadAccounts = lazyWithRetry(
+  () => import('./pages/admin/AdminClientLeadAccounts').then((m) => ({ default: m.AdminClientLeadAccounts })),
+  'admin-client-lead-accounts'
 );
 
-const AdminCmsProjects = React.lazy(() =>
-  import('./pages/admin/AdminCmsProjects').then((m) => ({ default: m.AdminCmsProjects }))
+const AdminCmsProjects = lazyWithRetry(
+  () => import('./pages/admin/AdminCmsProjects').then((m) => ({ default: m.AdminCmsProjects })),
+  'admin-cms-projects'
 );
 
-const AdminCmsServices = React.lazy(() =>
-  import('./pages/admin/AdminCmsServices').then((m) => ({ default: m.AdminCmsServices }))
+const AdminCmsServices = lazyWithRetry(
+  () => import('./pages/admin/AdminCmsServices').then((m) => ({ default: m.AdminCmsServices })),
+  'admin-cms-services'
 );
 
-const AdminCmsTestimonials = React.lazy(() =>
-  import('./pages/admin/AdminCmsTestimonials').then((m) => ({
+const AdminCmsTestimonials = lazyWithRetry(
+  () => import('./pages/admin/AdminCmsTestimonials').then((m) => ({
     default: m.AdminCmsTestimonials
-  }))
+  })),
+  'admin-cms-testimonials'
 );
 
-const AdminSettings = React.lazy(() =>
-  import('./pages/admin/AdminSettings').then((m) => ({ default: m.AdminSettings }))
+const AdminSettings = lazyWithRetry(
+  () => import('./pages/admin/AdminSettings').then((m) => ({ default: m.AdminSettings })),
+  'admin-settings'
 );
 
 const LoadingScreen = () => (
