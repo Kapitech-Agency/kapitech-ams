@@ -4,6 +4,7 @@ import { MotionConfig } from 'motion/react';
 import { LanguageProvider } from './lib/LanguageContext';
 import { RequireAdminAuth } from './components/admin/RequireAdminAuth';
 import { RequireModuleAccess } from './components/admin/RequireModuleAccess';
+import { TasksWorkspace } from './components/admin/TasksWorkspace';
 
 type LazyModule = { default: React.ComponentType<any> };
 
@@ -156,11 +157,6 @@ const AdminCmsTestimonials = React.lazy(() =>
   }))
 );
 
-const AdminTasks = lazyWithRetry(
-  () => import('./components/admin/TasksWorkspace').then((m) => ({ default: m.TasksWorkspace })),
-  'admin-tasks-v2'
-);
-
 const AdminSettings = React.lazy(() =>
   import('./pages/admin/AdminSettings').then((m) => ({ default: m.AdminSettings }))
 );
@@ -223,7 +219,7 @@ const App = () => {
               <Route path="/admin" element={<ProtectedAdminRoutes />}>
                 <Route index element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="dashboard" element={<ModuleRoute moduleKey="dashboard" moduleLabel="the dashboard"><GlobalExecutiveDashboard /></ModuleRoute>} />
-                <Route path="tasks" element={<ModuleRoute moduleKey="projects" moduleLabel="tasks"><AdminTasks /></ModuleRoute>} />
+                <Route path="tasks" element={<ModuleRoute moduleKey="projects" moduleLabel="tasks"><TasksWorkspace /></ModuleRoute>} />
                 <Route path="executive" element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="inbox" element={<ModuleRoute moduleKey="inbox" moduleLabel="the inbox"><AdminInbox /></ModuleRoute>} />
                 <Route path="crm" element={<ModuleRoute moduleKey="crm" moduleLabel="CRM"><AdminCrm /></ModuleRoute>} />
