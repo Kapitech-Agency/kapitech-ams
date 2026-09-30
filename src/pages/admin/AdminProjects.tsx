@@ -1681,6 +1681,7 @@ export const AdminProjects: React.FC = () => {
               onSearchChange={setProjectSearch}
               searchPlaceholder="Search projects, clients, owners..."
               searchLabel="Search projects"
+              searchClassName="w-[210px] flex-none"
               actions={(
                 <Button
                   type="button"
@@ -1692,81 +1693,62 @@ export const AdminProjects: React.FC = () => {
                   Reset filters
                 </Button>
               )}
-              footer={(
-                <div className="space-y-3">
-                  <div className="flex min-w-0 flex-wrap items-center gap-1.5" aria-label="Project status quick filters">
-                    <button
-                      type="button"
-                      onClick={() => setProjectStatusFilter('')}
-                      className={'inline-flex min-h-8 items-center gap-1.5 rounded-chip border px-2.5 text-[10px] font-medium transition-colors ' + (!projectStatusFilter ? 'border-accent/25 bg-accent/10 text-fg' : 'border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg')}
-                    >
-                      All
-                      <span className="tabular-nums">{projects.length}</span>
-                    </button>
-                    {PROJECT_KANBAN_COLUMNS.map(column => {
-                      const count = projects.filter(project => project.status === column.id).length;
-                      const active = projectStatusFilter === column.id;
-                      return (
-                        <button
-                          key={column.id}
-                          type="button"
-                          onClick={() => setProjectStatusFilter(column.id)}
-                          className={'inline-flex min-h-8 items-center gap-1.5 rounded-chip border px-2.5 text-[10px] font-medium transition-colors ' + (active ? 'border-accent/25 bg-accent/10 text-fg' : 'border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg')}
-                        >
-                          <span className={'h-1.5 w-1.5 rounded-full ' + column.dot} />
-                          {column.label}
-                          <span className="tabular-nums">{count}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted">
-                    <div className="flex min-w-0 items-center gap-2">
-                      <span className="font-medium text-fg">{filteredProjects.length}</span>
-                      <span>of {projects.length} projects</span>
-                      {activeProjectFilters > 0 && (
-                        <span className="rounded-badge border border-accent/20 bg-accent/10 px-2 py-1 font-medium text-accent-text">
-                          {activeProjectFilters} filter{activeProjectFilters === 1 ? '' : 's'} active
-                        </span>
-                      )}
-                    </div>
-                    {projectLayout === 'board' && (
-                      <span className="inline-flex items-center gap-1.5 text-[10px] text-muted">
-                        <GripVertical size={12} />
-                        Drag the handle on a card to move it between stages.
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
             >
-              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-                <CustomSelect
-                  value={projectStatusFilter}
-                  onChange={setProjectStatusFilter}
-                  options={[{ value: '', label: 'All statuses' }, ...PROJECT_STATUSES]}
-                  className="w-full sm:w-[150px]"
-                  aria-label="Filter projects by status"
-                />
+              <div
+                className="flex min-w-max flex-nowrap items-center gap-1.5 overflow-x-auto pb-0.5"
+                style={{ flexWrap: 'nowrap' }}
+                aria-label="Project filters"
+              >
+                <div
+                  className="flex shrink-0 flex-nowrap items-center gap-1 rounded-control border border-line bg-bg p-1"
+                  style={{ flexWrap: 'nowrap' }}
+                  aria-label="Project status quick filters"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setProjectStatusFilter('')}
+                    className={'inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-chip border px-2.5 text-[10px] font-medium transition-colors ' + (!projectStatusFilter ? 'border-accent/25 bg-accent/10 text-fg' : 'border-transparent text-muted hover:bg-panel-hover hover:text-fg')}
+                  >
+                    All
+                    <span className="tabular-nums">{projects.length}</span>
+                  </button>
+                  {PROJECT_KANBAN_COLUMNS.map(column => {
+                    const count = projects.filter(project => project.status === column.id).length;
+                    const active = projectStatusFilter === column.id;
+                    return (
+                      <button
+                        key={column.id}
+                        type="button"
+                        onClick={() => setProjectStatusFilter(column.id)}
+                        className={'inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-chip border px-2.5 text-[10px] font-medium transition-colors ' + (active ? 'border-accent/25 bg-accent/10 text-fg' : 'border-transparent text-muted hover:bg-panel-hover hover:text-fg')}
+                      >
+                        <span className={'h-1.5 w-1.5 shrink-0 rounded-full ' + column.dot} />
+                        {column.label}
+                        <span className="tabular-nums">{count}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
                 <CustomSelect
                   value={projectHealthFilter}
                   onChange={setProjectHealthFilter}
                   options={[{ value: '', label: 'All health' }, ...(['Good', 'At Risk', 'Delayed', 'Blocked'] as ProjectHealth[]).map(value => ({ value, label: value }))]}
-                  className="w-full sm:w-[150px]"
+                  className="w-[128px] shrink-0"
                   aria-label="Filter projects by health"
                 />
                 <CustomSelect
                   value={projectClientFilter}
                   onChange={setProjectClientFilter}
                   options={[{ value: '', label: 'All clients' }, ...projectFilterOptions.clients.map(value => ({ value, label: value }))]}
-                  className="w-full sm:w-[160px]"
+                  className="w-[138px] shrink-0"
                   aria-label="Filter projects by client"
                 />
                 <CustomSelect
                   value={projectOwnerFilter}
                   onChange={setProjectOwnerFilter}
                   options={[{ value: '', label: 'All owners' }, ...projectFilterOptions.owners.map(value => ({ value, label: value }))]}
-                  className="w-full sm:w-[155px]"
+                  className="w-[132px] shrink-0"
                   aria-label="Filter projects by owner"
                 />
                 <CustomSelect
@@ -1779,9 +1761,12 @@ export const AdminProjects: React.FC = () => {
                     { value: 'budget', label: 'Highest budget' },
                     { value: 'name', label: 'Name A–Z' },
                   ]}
-                  className="w-full sm:w-[165px]"
+                  className="w-[148px] shrink-0"
                   aria-label="Sort projects"
                 />
+                <span className="shrink-0 whitespace-nowrap px-1 text-[10px] text-muted">
+                  {filteredProjects.length} / {projects.length}
+                </span>
               </div>
             </AdminFilterBar>
             {loading ? (
