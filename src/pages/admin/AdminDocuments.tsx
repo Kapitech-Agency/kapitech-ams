@@ -30,7 +30,9 @@ import {
   AdminFilterBar,
   AdminMetricStrip,
   AdminModuleHeader,
+  AdminPageShell,
   AdminPanel,
+  AdminSectionTabs,
   AdminTablePagination,
 } from '../../components/admin/AdminModulePrimitives';
 import { Skeleton } from '../../components/ui/Skeleton';
@@ -407,7 +409,7 @@ export const AdminDocuments: React.FC = () => {
   const tabLabel = DOCUMENT_TABS.find((tab) => tab.key === activeTab)?.label || 'All Internal Documents';
 
   return (
-    <div className="space-y-5 px-4 pb-10 pt-5 sm:px-5 lg:px-6" data-ams-feature-slug="documents-module">
+    <AdminPageShell featureSlug="documents-module" className="documents-module">
       {notice && (
         <div
           className="fixed left-3 right-3 top-16 z-50 flex items-center gap-2 rounded-card border border-line bg-panel px-4 py-2.5 text-xs text-fg sm:left-auto sm:right-6 sm:top-20"
@@ -422,6 +424,7 @@ export const AdminDocuments: React.FC = () => {
 
       <div data-ams-slug="documents-header">
         <AdminModuleHeader
+          className="mb-0"
           title="Internal Document Vault"
           description="Secure internal repository for SOPs, legal records, finance documents, and technical assets."
           eyebrow={(
