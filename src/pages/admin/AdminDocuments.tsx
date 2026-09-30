@@ -442,7 +442,7 @@ export const AdminDocuments: React.FC = () => {
         />
       </div>
 
-      <div className="min-[900px]:hidden min-w-0" data-ams-slug="documents-mobile-tabs">
+      <div className="min-[900px]:hidden min-w-0" data-ams-slug="documents-mobile-tabs" data-ams-feature-slug="documents-tabs">
         <AdminSectionTabs
           ariaLabel="Documents sections"
           activeKey={activeTab}
@@ -466,7 +466,7 @@ export const AdminDocuments: React.FC = () => {
         />
       </div>
 
-      <AdminPanel slug="documents-upload-dropzone" className="border-dashed" bodyClassName="p-4 sm:px-5">
+      <AdminPanel slug="documents-upload-dropzone" className="border-dashed" aria-label="Document upload dropzone" bodyClassName="p-4 sm:px-5">
         <div
           className={'flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between ' + (uploadDragActive ? 'rounded-card bg-accent/5 ring-1 ring-accent/30' : '')}
           onDragEnter={(event) => { event.preventDefault(); setUploadDragActive(true); }}
@@ -729,7 +729,7 @@ export const AdminDocuments: React.FC = () => {
           </>
         )}
       >
-        <form id="documents-upload-form" onSubmit={saveUpload} className="space-y-4" data-ams-feature-slug="documents-upload-form">
+        <form id="documents-upload-form" onSubmit={saveUpload} className="space-y-4" data-ams-feature-slug="documents-upload-form" data-ams-slug="documents-upload-form">
           <div data-ams-slug="documents-upload-title">
             <label htmlFor="documents-upload-title" className="text-xs font-medium text-muted">Document title</label>
             <input id="documents-upload-title" value={uploadTitle} onChange={(event) => setUploadTitle(event.target.value)} required placeholder="e.g. Master Services Agreement 2026" className="mt-1 h-10 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none placeholder:text-muted focus:border-accent" />
@@ -761,7 +761,7 @@ export const AdminDocuments: React.FC = () => {
         )}
       >
         {selectedDocument && (
-          <div className="space-y-4" data-ams-feature-slug={'document-' + selectedDocument.id + '-details'}>
+          <div className="space-y-4" data-ams-feature-slug={'document-' + selectedDocument.id + '-details'} data-ams-slug={'document-' + selectedDocument.id + '-details'}>
             <div className="flex items-start gap-3 rounded-card border border-line bg-bg p-4">
               <div className={'flex h-10 w-10 shrink-0 items-center justify-center rounded-control border ' + categoryTone(selectedDocument)}>{docIcon(selectedDocument)}</div>
               <div className="min-w-0 flex-1"><div className="truncate text-sm font-semibold text-fg">{titleOf(selectedDocument)}</div><div className="mt-1 text-xs text-muted">{typeOf(selectedDocument)} · {formatBytes(sizeBytesOf(selectedDocument))}</div></div>
