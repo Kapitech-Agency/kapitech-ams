@@ -158,7 +158,7 @@ const AdminCmsTestimonials = React.lazy(() =>
 
 const AdminTasks = lazyWithRetry(
   () => import('./components/admin/TasksWorkspace').then((m) => ({ default: m.TasksWorkspace })),
-  'admin-tasks'
+  'admin-tasks-v2'
 );
 
 const AdminSettings = React.lazy(() =>
