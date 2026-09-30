@@ -13,7 +13,7 @@ import {
   ReceiptText,
   Users,
 } from 'lucide-react';
-import { AdminMetricStrip, AdminModuleHeader, AdminPanel } from './AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminPanel, AdminTablePagination } from './AdminModulePrimitives';
 import { CustomSelect } from '../ui/CustomSelect';
 import { Modal } from '../ui/Modal';
 import { DonutChart, TrendChart } from '../charts/DashboardCharts';
@@ -432,6 +432,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const [projectActionId, setProjectActionId] = useState<string | null>(null);
   const [projectActionPosition, setProjectActionPosition] = useState<{ top: number; left: number } | null>(null);
   const [projectDetails, setProjectDetails] = useState<DashboardProject | null>(null);
+  const [dashboardProjectPage, setDashboardProjectPage] = useState(1);
+  const [dashboardProjectPageSize, setDashboardProjectPageSize] = useState(6);
 
   useEffect(() => {
     if (!projectActionId) return;
@@ -470,6 +472,16 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     () => projectFilter === 'All' ? sampleProjects : sampleProjects.filter((project) => project.type === projectFilter),
     [projectFilter],
   );
+
+  const dashboardProjectPageCount = Math.max(1, Math.ceil(filteredProjects.length / dashboardProjectPageSize));
+  const pagedDashboardProjects = filteredProjects.slice(
+    (dashboardProjectPage - 1) * dashboardProjectPageSize,
+    dashboardProjectPage * dashboardProjectPageSize,
+  );
+
+  useEffect(() => {
+    setDashboardProjectPage((current) => Math.min(current, dashboardProjectPageCount));
+  }, [dashboardProjectPageCount]);
 
   const totalDelivery = deliveryBreakdown.reduce((total, item) => total + Math.max(0, item.value), 0);
   const onScheduleValue = deliveryBreakdown.find((item) => item.label === 'On schedule')?.value ?? 0;
@@ -654,7 +666,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           <div className="border-b border-line px-4 pt-3 sm:px-5">
             <div className="flex gap-1.5 overflow-x-auto pb-3 custom-scrollbar">
               {(['All', 'Enterprise', 'Retainer', 'Fixed-fee'] as ProjectFilter[]).map((filter) => (
-                <button key={filter} type="button" aria-pressed={projectFilter === filter} onClick={() => setProjectFilter(filter)} className={['shrink-0 rounded-chip border px-2.5 py-1.5 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent', projectFilter === filter ? 'border-line bg-panel-hover font-medium text-fg' : 'border-transparent bg-transparent text-muted hover:border-line hover:bg-bg hover:text-fg'].join(' ')}>{filter}</button>
+                <button key={filter} type="button" aria-pressed={projectFilter === filter} onClick={() => { setProjectFilter(filter); setDashboardProjectPage(1); }} className={['shrink-0 rounded-chip border px-2.5 py-1.5 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent', projectFilter === filter ? 'border-line bg-panel-hover font-medium text-fg' : 'border-transparent bg-transparent text-muted hover:border-line hover:bg-bg hover:text-fg'].join(' ')}>{filter}</button>
               ))}
             </div>
           </div>
@@ -714,7 +726,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 <th className="w-10 px-2 py-3" />
               </tr></thead>
               <tbody>
-                {filteredProjects.map((project) => (
+                {pagedDashboardProjects.map((project) => (
                   <tr key={project.id} className="border-t border-line transition-colors hover:bg-panel-hover">
                     <td className="px-4 py-3 sm:px-5"><div className="font-medium text-xs text-fg">{project.name}</div><div className="mt-0.5 text-[11px] text-muted">{project.client}</div></td>
                     <td className="px-3 py-3"><span className={['inline-flex items-center rounded-badge border px-2 py-1 text-[11px] font-medium', toneClasses[project.statusTone]].join(' ')}>{project.status}</span></td>
@@ -779,6 +791,15 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               </tbody>
             </table>
           </div>
+          <AdminTablePagination
+            total={filteredProjects.length}
+            page={dashboardProjectPage}
+            pageSize={dashboardProjectPageSize}
+            onPageChange={setDashboardProjectPage}
+            onPageSizeChange={setDashboardProjectPageSize}
+            itemLabel="projects"
+            slug="dashboard-projects-pagination"
+          />
         </AdminPanel>
 
         <AdminPanel className="min-[1100px]:col-span-4" bodyClassName="p-4 sm:p-5" title="Team capacity" description="Current task load based on the sample agency plan." actions={<span className="rounded-badge border border-line bg-bg px-2 py-1 text-[11px] text-muted">4 members</span>}>
