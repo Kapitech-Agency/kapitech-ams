@@ -13,7 +13,7 @@ import {
   ReceiptText,
   Users,
 } from 'lucide-react';
-import { AdminMetricStrip, AdminModuleHeader, AdminPanel } from './AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminPanel, AdminTablePagination } from './AdminModulePrimitives';
 import { CustomSelect } from '../ui/CustomSelect';
 import { Modal } from '../ui/Modal';
 import { DonutChart, TrendChart } from '../charts/DashboardCharts';
@@ -208,7 +208,7 @@ const PerformanceView: React.FC = () => {
           bodyClassName="p-4 sm:p-5"
         >
           <div className="space-y-4">
-            {sampleTeam.map((member) => (
+            {pagedTeamAnalytics.map((member) => (
               <div key={member.name}>
                 <div className="mb-1.5 flex items-center justify-between gap-3">
                   <span className="truncate text-xs font-medium text-fg">{member.name}</span>
@@ -379,6 +379,15 @@ const AnalyticsView: React.FC<{ range: RangeKey }> = ({ range }) => {
               </tbody>
             </table>
           </div>
+          <AdminTablePagination
+            total={sampleTeam.length}
+            page={teamAnalyticsPage}
+            pageSize={teamAnalyticsPageSize}
+            onPageChange={setTeamAnalyticsPage}
+            onPageSizeChange={setTeamAnalyticsPageSize}
+            itemLabel="members"
+            slug="dashboard-team-analytics-pagination"
+          />
         </AdminPanel>
 
         <AdminPanel className="min-[1100px]:col-span-5" title="Client & project analytics" description="Sample health signals for decision support." bodyClassName="p-4 sm:p-5">
@@ -431,6 +440,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const [projectActionId, setProjectActionId] = useState<string | null>(null);
   const [projectActionPosition, setProjectActionPosition] = useState<{ top: number; left: number } | null>(null);
   const [projectDetails, setProjectDetails] = useState<DashboardProject | null>(null);
+  const [dashboardProjectPage, setDashboardProjectPage] = useState(1);
+  const [dashboardProjectPageSize, setDashboardProjectPageSize] = useState(6);
+  const [teamAnalyticsPage, setTeamAnalyticsPage] = useState(1);
+  const [teamAnalyticsPageSize, setTeamAnalyticsPageSize] = useState(6);
 
   useEffect(() => {
     if (!projectActionId) return;
@@ -469,6 +482,25 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     () => projectFilter === 'All' ? sampleProjects : sampleProjects.filter((project) => project.type === projectFilter),
     [projectFilter],
   );
+
+  const dashboardProjectPageCount = Math.max(1, Math.ceil(filteredProjects.length / dashboardProjectPageSize));
+  const pagedDashboardProjects = filteredProjects.slice(
+    (dashboardProjectPage - 1) * dashboardProjectPageSize,
+    dashboardProjectPage * dashboardProjectPageSize,
+  );
+  const teamAnalyticsPageCount = Math.max(1, Math.ceil(sampleTeam.length / teamAnalyticsPageSize));
+  const pagedTeamAnalytics = sampleTeam.slice(
+    (teamAnalyticsPage - 1) * teamAnalyticsPageSize,
+    teamAnalyticsPage * teamAnalyticsPageSize,
+  );
+
+  useEffect(() => {
+    setDashboardProjectPage((current) => Math.min(current, dashboardProjectPageCount));
+  }, [dashboardProjectPageCount]);
+
+  useEffect(() => {
+    setTeamAnalyticsPage((current) => Math.min(current, teamAnalyticsPageCount));
+  }, [teamAnalyticsPageCount]);
 
   const totalDelivery = deliveryBreakdown.reduce((total, item) => total + Math.max(0, item.value), 0);
   const onScheduleValue = deliveryBreakdown.find((item) => item.label === 'On schedule')?.value ?? 0;
@@ -653,12 +685,12 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           <div className="border-b border-line px-4 pt-3 sm:px-5">
             <div className="flex gap-1.5 overflow-x-auto pb-3 custom-scrollbar">
               {(['All', 'Enterprise', 'Retainer', 'Fixed-fee'] as ProjectFilter[]).map((filter) => (
-                <button key={filter} type="button" aria-pressed={projectFilter === filter} onClick={() => setProjectFilter(filter)} className={['shrink-0 rounded-chip border px-2.5 py-1.5 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent', projectFilter === filter ? 'border-line bg-panel-hover font-medium text-fg' : 'border-transparent bg-transparent text-muted hover:border-line hover:bg-bg hover:text-fg'].join(' ')}>{filter}</button>
+                <button key={filter} type="button" aria-pressed={projectFilter === filter} onClick={() => { setProjectFilter(filter); setDashboardProjectPage(1); }} className={['shrink-0 rounded-chip border px-2.5 py-1.5 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent', projectFilter === filter ? 'border-line bg-panel-hover font-medium text-fg' : 'border-transparent bg-transparent text-muted hover:border-line hover:bg-bg hover:text-fg'].join(' ')}>{filter}</button>
               ))}
             </div>
           </div>
           <div className="min-[900px]:hidden divide-y divide-line">
-            {filteredProjects.map((project) => (
+            {pagedDashboardProjects.map((project) => (
               <article key={project.id} className="p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
