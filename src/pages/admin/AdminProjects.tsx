@@ -1797,7 +1797,7 @@ export const AdminProjects: React.FC = () => {
                                         <GripVertical size={16} strokeWidth={2.2} />
                                       </span>
                                       <button type="button" onClick={() => openProjectDetail(project)} className="min-w-0 text-left">
-                                        <div className="break-words whitespace-normal text-[10px] font-medium uppercase leading-4 tracking-[0.08em] text-muted">{project.clientCompany}</div>
+                                        <div className="break-words whitespace-normal text-[10px] font-medium leading-4 text-muted">{project.clientCompany}</div>
                                         <h3 className="mt-0.5 break-words whitespace-normal text-sm font-semibold leading-5 text-fg">{project.name}</h3>
                                       </button>
                                     </div>
@@ -1846,7 +1846,7 @@ export const AdminProjects: React.FC = () => {
                                   <div className="mt-3 border-t border-line pt-2.5">
                                     <div className="flex items-end justify-between gap-3">
                                       <div className="min-w-0">
-                                        <div className="text-[10px] uppercase tracking-[0.06em] text-muted">Budget burn</div>
+                                        <div className="text-[10px] font-medium text-muted">Budget burn</div>
                                         <div className="mt-0.5 break-words whitespace-normal text-xs font-medium tabular-nums text-fg">
                                           {formatAmount(burn, currency)}
                                           <span className="text-muted"> / {formatAmount(project.budget, currency)}</span>
@@ -1884,34 +1884,18 @@ export const AdminProjects: React.FC = () => {
                               );
                             })
                           )}
-                          <div
-                            aria-label={canManageProjects ? 'Project drop area' : undefined}
-                            className={[
-                              'mt-auto min-h-[180px] flex-1 rounded-card border border-dashed px-3 py-5 transition-[background-color,border-color,box-shadow] duration-150',
-                              isDropTarget
-                                ? 'border-accent/40 bg-accent/8'
-                                : 'border-line/40 bg-bg/12'
-                            ].join(' ')}
-                          >
-                            <div className="flex h-full min-h-24 flex-col items-center justify-center gap-2 text-center">
-                              <span className={[
-                                'flex h-9 w-9 items-center justify-center rounded-control border text-muted transition-colors',
-                                isDropTarget ? 'border-accent/30 bg-accent/10 text-accent-text' : 'border-line bg-panel'
-                              ].join(' ')}>
-                                <GripVertical size={14} />
-                              </span>
-                              <span className={isDropTarget ? 'text-[10px] font-semibold text-accent-text' : 'text-[10px] font-medium text-muted'}>
-                                {draggingProjectId && canManageProjects
-                                  ? (isDropTarget ? 'Release to place the project here' : 'Drop project here')
-                                  : 'Drop area'}
-                              </span>
-                              {canManageProjects && (
-                                <span className="max-w-[200px] text-[9px] leading-4 text-muted/70">
-                                  Cards continue stacking downward. Use the drag handle above to move a project between stages.
+                          {draggingProjectId && canManageProjects && (
+                            <div className={[
+                              'mt-auto min-h-[72px] rounded-card border border-dashed px-3 py-4 transition-[background-color,border-color]',
+                              isDropTarget ? 'border-accent/40 bg-accent/5' : 'border-line/50 bg-bg/10'
+                            ].join(' ')}>
+                              <div className="flex min-h-10 items-center justify-center text-center text-[10px]">
+                                <span className={isDropTarget ? 'font-semibold text-accent-text' : 'text-muted'}>
+                                  {isDropTarget ? 'Release to place the project here' : 'Drop project here'}
                                 </span>
-                              )}
+                              </div>
                             </div>
-                          </div>
+                          )}
                         </div>
                       </section>
                     );
@@ -2340,28 +2324,18 @@ export const AdminProjects: React.FC = () => {
                                 );
                               })
                             )}
-                            <div
-                              aria-hidden="true"
-                              className={[
-                                'mt-auto min-h-[96px] rounded-card border border-dashed px-3 py-4 transition-colors',
-                                isDropTarget ? 'border-accent/35 bg-accent/5' : 'border-line/20 bg-bg/10'
-                              ].join(' ')}
-                            >
-                              {draggingTaskId && canManageKanbanTasks ? (
-                                <div className="flex min-h-14 flex-col items-center justify-center gap-2 text-center text-[10px] text-muted">
-                                  <span className="flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted">
-                                    <GripVertical size={14} />
-                                  </span>
+                            {draggingTaskId && canManageKanbanTasks && (
+                              <div className={[
+                                'mt-auto min-h-[72px] rounded-card border border-dashed px-3 py-3 transition-colors',
+                                isDropTarget ? 'border-accent/35 bg-accent/5' : 'border-line/30 bg-bg/10'
+                              ].join(' ')}>
+                                <div className="flex min-h-10 items-center justify-center text-center text-[10px]">
                                   <span className={isDropTarget ? 'font-semibold text-accent-text' : 'text-muted'}>
                                     {isDropTarget ? 'Release to place the task here' : 'Drop task here'}
                                   </span>
                                 </div>
-                              ) : (
-                                <div className="flex min-h-16 items-center justify-center text-center text-[10px] text-muted/55">
-                                  Drop space
-                                </div>
-                              )}
-                            </div>
+                              </div>
+                            )}
                           </div>
                         </section>
                       );
