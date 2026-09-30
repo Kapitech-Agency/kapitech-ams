@@ -28,7 +28,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { useDragToScroll } from '../../lib/useDragToScroll';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { AdminModuleHeader , AdminPageShell } from '../../components/admin/AdminModulePrimitives';
 
 export const AdminCmsProjects: React.FC = () => {
   const { language, t } = useLanguage();
@@ -239,7 +239,7 @@ export const AdminCmsProjects: React.FC = () => {
   });
 
   return (
-    <div className="space-y-6">
+    <AdminPageShell featureSlug="cms-projects-module">
         <ConfirmDialog
           open={!!deleteTarget}
           onClose={() => setDeleteTarget(null)}
@@ -251,6 +251,7 @@ export const AdminCmsProjects: React.FC = () => {
       
       <AdminModuleHeader
         icon={<Layers size={20} />}
+        className="mb-0"
         title={t('admin.nav.cmsProjects')}
         description={language === 'id'
           ? 'Kelola showcase studi kasus dan portofolio agency untuk kapitech.id/work.'
@@ -750,7 +751,7 @@ export const AdminCmsProjects: React.FC = () => {
             )}
       </Drawer>
 
-    </div>
+    </AdminPageShell>
   );
 };
 export default AdminCmsProjects;
