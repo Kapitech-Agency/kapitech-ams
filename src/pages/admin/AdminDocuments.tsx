@@ -171,448 +171,594 @@ const statusTone = (doc: DocumentItem) => readyOf(doc)
 const statusLabel = (doc: DocumentItem) => readyOf(doc) ? 'Ready' : 'Pending';
 
 export const AdminDocuments: React.FC = () => {
-  const { language } = useLanguage();
+  const [searchParams, setSearchParams] = useSearchParams();
   const canManageDocuments =
     hasAdminPermission('canManageProjects') ||
     hasAdminPermission('canManageCrm') ||
     hasAdminPermission('canAccessServerAndApi');
+
+  const requestedTab = (searchParams.get('documents') || 'all') as TabKey;
+  const activeTab = DOCUMENT_TABS.some((tab) => tab.key === requestedTab) ? requestedTab : 'all';
+
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [notification, setNotification] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<CategoryKey>('all');
+  const [sortKey, setSortKey] = useState<SortKey>('updated');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [notice, setNotice] = useState<string | null>(null);
 
-  // Upload Modal State
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadCategory, setUploadCategory] = useState('Contract');
-  const [uploadFileType, setUploadFileType] = useState('PDF');
-  const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadRelatedType, setUploadRelatedType] = useState('General');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadDragActive, setUploadDragActive] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<DocumentItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<DocumentItem | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [inputKey, setInputKey] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const showToast = (msg: string) => {
-    setNotification(msg);
-    setTimeout(() => setNotification(null), 3500);
+  const notify = (message: string) => {
+    setNotice(message);
+    window.setTimeout(() => setNotice(null), 3500);
   };
 
   const loadDocuments = async () => {
     setIsLoading(true);
+    setLoadError(null);
     try {
-      const res = await api.documents.getAll();
-      if (res.success && res.data?.documents) {
-        setDocuments(res.data.documents);
+      const response = await api.documents.getAll();
+      if (!response.success) {
+        setDocuments([]);
+        setLoadError('Documents could not be loaded. Check your session and try again.');
+        return;
       }
+      setDocuments(Array.isArray(response.data?.documents) ? response.data.documents : []);
     } catch {
-      showToast('Failed to load documents.');
+      setDocuments([]);
+      setLoadError('Documents could not be loaded. Check your session and try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    loadDocuments();
+    void loadDocuments();
   }, []);
 
-  const allowedDocumentTypes = '.pdf,.png,.jpg,.jpeg,.webp,.txt,.csv,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip';
+  useEffect(() => {
+    setPage(1);
+  }, [activeTab, categoryFilter, searchQuery, pageSize]);
 
-  const handleUploadSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const categoryCounts = useMemo(() => ({
+    all: documents.length,
+    sop: documents.filter((doc) => matchesCategory(doc, 'sop')).length,
+    legal: documents.filter((doc) => matchesCategory(doc, 'legal')).length,
+    finance: documents.filter((doc) => matchesCategory(doc, 'finance')).length,
+    hr: documents.filter((doc) => matchesCategory(doc, 'hr')).length,
+    security: documents.filter((doc) => matchesCategory(doc, 'security')).length,
+  }), [documents]);
+
+  const filteredDocuments = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    const items = documents.filter((doc) =>
+      matchesTab(doc, activeTab) &&
+      matchesCategory(doc, categoryFilter) &&
+      (!q || searchTextOf(doc).includes(q))
+    );
+
+    return items.sort((a, b) => {
+      let comparison = 0;
+      if (sortKey === 'name') comparison = titleOf(a).localeCompare(titleOf(b));
+      if (sortKey === 'category') comparison = categoryOf(a).localeCompare(categoryOf(b));
+      if (sortKey === 'size') comparison = sizeBytesOf(a) - sizeBytesOf(b);
+      if (sortKey === 'status') comparison = statusLabel(a).localeCompare(statusLabel(b));
+      if (sortKey === 'updated') {
+        comparison = new Date(a.updatedAt || a.uploadedAt || a.uploadedDate || 0).getTime()
+          - new Date(b.updatedAt || b.uploadedAt || b.uploadedDate || 0).getTime();
+      }
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+  }, [documents, activeTab, categoryFilter, searchQuery, sortKey, sortDirection]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredDocuments.length / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const pagedDocuments = filteredDocuments.slice((safePage - 1) * pageSize, safePage * pageSize);
+
+  const storageBytes = documents.reduce((sum, doc) => sum + sizeBytesOf(doc), 0);
+  const readyCount = documents.filter(readyOf).length;
+  const categoryCount = new Set(documents.map((doc) => categoryOf(doc).toLowerCase())).size;
+  const updatedThisMonth = documents.filter((doc) => {
+    const raw = doc.updatedAt || doc.uploadedAt;
+    if (!raw) return false;
+    const date = new Date(raw);
+    const now = new Date();
+    return !Number.isNaN(date.getTime()) && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+  }).length;
+
+  const resetFilters = () => {
+    setSearchQuery('');
+    setCategoryFilter('all');
+    setPage(1);
+  };
+
+  const changeSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDirection((current) => current === 'asc' ? 'desc' : 'asc');
+      return;
+    }
+    setSortKey(key);
+    setSortDirection(key === 'size' || key === 'updated' ? 'desc' : 'asc');
+  };
+
+  const selectTab = (tab: TabKey) => {
+    const next = new URLSearchParams(searchParams);
+    if (tab === 'all') next.delete('documents');
+    else next.set('documents', tab);
+    setSearchParams(next);
+  };
+
+  const handleDownload = (doc: DocumentItem) => {
+    const url = doc.downloadUrl || doc.url;
+    if (!url) {
+      notify('This document has no downloadable file yet.');
+      return;
+    }
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const validateFile = (file: File | null) => {
+    if (!file) return 'Select a document file first.';
+    if (file.size <= 0 || file.size > MAX_FILE_SIZE) return 'File size must be between 1 byte and 25 MB.';
+    return null;
+  };
+
+  const pickFile = (file: File | null) => {
+    setUploadFile(file);
+    const error = validateFile(file);
+    if (error) notify(error);
+  };
+
+  const saveUpload = async (event: React.FormEvent) => {
+    event.preventDefault();
     if (!canManageDocuments) return;
     if (!uploadTitle.trim()) {
-      showToast('Please specify a title.');
+      notify('Enter a document title.');
       return;
     }
-    if (!uploadFile) {
-      showToast(language === 'id' ? 'Pilih file dokumen terlebih dahulu.' : 'Select a document file first.');
-      return;
-    }
-    if (uploadFile.size <= 0 || uploadFile.size > 25 * 1024 * 1024) {
-      showToast(language === 'id' ? 'Ukuran file harus antara 1 byte dan 25 MB.' : 'File size must be between 1 byte and 25 MB.');
+    const fileError = validateFile(uploadFile);
+    if (fileError || !uploadFile) {
+      if (fileError) notify(fileError);
       return;
     }
 
-    setIsSubmitting(true);
-    let documentId = '';
+    setUploading(true);
+    let createdId = '';
     try {
-      const payload = {
-        name: uploadTitle,
-        title: uploadTitle,
+      const created = await api.documents.create({
+        name: uploadTitle.trim(),
+        title: uploadTitle.trim(),
         category: uploadCategory,
-        type: (uploadFile.name.split('.').pop() || uploadFileType).toUpperCase().slice(0, 40),
+        type: (uploadFile.name.split('.').pop() || 'FILE').toUpperCase().slice(0, 40),
         mimeType: uploadFile.type || 'application/octet-stream',
-        size: (uploadFile.size / (1024 * 1024)).toFixed(1) + ' MB',
+        size: formatBytes(uploadFile.size),
         sizeBytes: uploadFile.size,
-        relatedEntity: uploadRelatedType
-      };
+        relatedEntity: uploadRelatedType,
+      });
 
-      const created = await api.documents.create(payload);
       if (!created.success || !created.data?.document) {
-        showToast(created.error || 'Upload failed.');
+        notify(created.error || 'Document could not be created.');
         return;
       }
 
-      documentId = created.data.document.id;
-      const uploaded = await api.documents.uploadContent(documentId, uploadFile);
+      createdId = String(created.data.document.id);
+      const uploaded = await api.documents.uploadContent(createdId, uploadFile);
       if (!uploaded.success || !uploaded.data?.document) {
-        await api.documents.delete(documentId);
-        showToast(uploaded.error || (language === 'id' ? 'File gagal disimpan ke vault.' : 'File could not be stored in the vault.'));
+        await api.documents.delete(createdId).catch(() => {});
+        notify(uploaded.error || 'The file could not be stored in the vault.');
         return;
       }
 
-      setDocuments(prev => [uploaded.data.document, ...prev]);
-      setIsUploadModalOpen(false);
+      setDocuments((current) => [uploaded.data.document, ...current]);
+      setUploadOpen(false);
       setUploadTitle('');
+      setUploadCategory('Contract');
+      setUploadRelatedType('General');
       setUploadFile(null);
-      showToast(language === 'id' ? 'Dokumen tersimpan di private vault.' : 'Document securely stored in the private vault.');
+      setInputKey((current) => current + 1);
+      notify('Document stored in the private vault.');
     } catch {
-      if (documentId) await api.documents.delete(documentId).catch(() => {});
-      showToast(language === 'id' ? 'Terjadi kesalahan saat mengunggah dokumen.' : 'Error uploading document.');
+      if (createdId) await api.documents.delete(createdId).catch(() => {});
+      notify('The document upload failed. Check the file and try again.');
     } finally {
-      setIsSubmitting(false);
+      setUploading(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!canManageDocuments) return;
-    setDeleteTarget(id);
-  };
-
-  const confirmDelete = async (id: string) => {
+  const confirmDelete = async () => {
+    if (!deleteTarget || !canManageDocuments) return;
+    setDeleteLoading(true);
     try {
-      const res = await api.documents.delete(id);
-      if (res.success) {
-        setDocuments(prev => prev.filter(d => d.id !== id));
-        showToast('Document deleted.');
+      const response = await api.documents.delete(deleteTarget.id);
+      if (!response.success) {
+        notify(response.error || 'Document could not be deleted.');
+        return;
       }
-    } catch {
-      showToast('Failed to delete.');
-    } finally {
+      setDocuments((current) => current.filter((doc) => doc.id !== deleteTarget.id));
       setDeleteTarget(null);
+      setSelectedDocument(null);
+      notify('Document deleted.');
+    } catch {
+      notify('Document could not be deleted. Check your session and try again.');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
-  const filteredDocs = useMemo(() => {
-    return documents.filter(d => {
-      const cat = (d.category || '').toLowerCase();
-      const matchesCategory = categoryFilter === 'all' || cat.includes(categoryFilter.toLowerCase());
-      const title = (d.name || d.title || '').toLowerCase();
-      const matchesSearch = title.includes(searchQuery.toLowerCase());
-      return matchesCategory && matchesSearch;
-    });
-  }, [documents, categoryFilter, searchQuery]);
+  const activeFilterCount = [searchQuery, categoryFilter !== 'all' ? categoryFilter : ''].filter(Boolean).length;
+  const tabLabel = DOCUMENT_TABS.find((tab) => tab.key === activeTab)?.label || 'All Internal Documents';
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Toast Notification */}
-      {notification && (
-        <div className="fixed top-16 left-3 right-3 sm:left-auto sm:top-20 sm:right-6 z-50 px-4 py-2.5 rounded-card bg-panel border border-line text-fg text-xs font-sans flex items-center gap-2">
-          <span className="w-2 h-2 rounded-badge bg-accent" />
-          <span>{notification}</span>
+    <div className="space-y-5 px-4 pb-10 pt-5 sm:px-5 lg:px-6" data-ams-feature-slug="documents-module">
+      {notice && (
+        <div
+          className="fixed left-3 right-3 top-16 z-50 flex items-center gap-2 rounded-card border border-line bg-panel px-4 py-2.5 text-xs text-fg sm:left-auto sm:right-6 sm:top-20"
+          role="status"
+          aria-live="polite"
+          data-ams-slug="documents-notice"
+        >
+          <span className="h-2 w-2 rounded-full bg-accent" aria-hidden="true" />
+          <span>{notice}</span>
         </div>
       )}
 
-      {/* Header */}
-      <AdminModuleHeader
-        icon={<FileText size={20} />}
-        title={language === 'id' ? 'Brankas Dokumen & Aset Agency' : 'Documents & Asset Vault'}
-        description={language === 'id'
-          ? 'Arsip kontrak digital, NDA, proposal komersial, berkas kepatuhan pajak, dan deliverable proyek.'
-          : 'Digital contract repository, NDAs, commercial proposals, tax compliance, and project assets.'}
-        actions={
-          <Button
-            type="button"
-            variant="primary"
-            icon={<Plus size={15} />}
-            onClick={() => setIsUploadModalOpen(true)}
-          >
-            {language === 'id' ? 'Unggah dokumen' : 'Upload document'}
-          </Button>
-        }
-      />
-
-      {/* Document filters */}
-      <div className="rounded-card border border-line bg-panel p-2"><div className="mb-2 px-2 text-xs font-medium text-muted">Filter documents</div><div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-        {(['all', 'contract', 'proposal', 'invoice', 'deliverable', 'compliance'] as const).map((cat) => {
-          const count = cat === 'all' ? documents.length : documents.filter(d => (d.category || '').toLowerCase().includes(cat)).length;
-          return (
-            <button
-              key={cat}
-              onClick={() => setCategoryFilter(categoryFilter === cat ? 'all' : cat)}
-              className={`min-h-10 px-3 py-2 rounded-chip border text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-[.98] ${
-                categoryFilter === cat
-                  ? 'bg-panel-hover border-line text-fg'
-                  : 'bg-panel border-line text-muted hover:text-fg hover:border-line'
-              }`}
-            >
-              <div className="text-xs font-sans normal-case tracking-normal capitalize">{cat === 'all' ? 'All documents' : cat}</div>
-              <div className="text-lg font-semibold font-sans text-fg mt-1">{count}</div>
-            </button>
-          );
-        })}
-      </div></div>
-
-      {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 rounded-card bg-panel border border-line">
-        <div className="relative flex-1">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={language === 'id' ? 'Cari judul file, tag, atau nomor kontrak...' : 'Search document title or references...'}
-            className="w-full min-h-10 sm:h-9 pl-8 pr-3 text-xs bg-panel text-fg placeholder-muted rounded-control border border-line focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 focus:border-accent font-sans"
-          />
-        </div>
-
-        <div className="flex items-center gap-2">
-          {categoryFilter !== 'all' && (
-            <button
-              onClick={() => setCategoryFilter('all')}
-              className="px-3 min-h-10 rounded-control text-xs font-sans bg-panel border border-line text-fg flex items-center gap-1 hover:text-fg"
-            >
-              <span>Reset filter ({categoryFilter})</span>
-              <X size={12} />
-            </button>
+      <div data-ams-slug="documents-header">
+        <AdminModuleHeader
+          title="Internal Document Vault"
+          description="Secure internal repository for SOPs, legal records, finance documents, and technical assets."
+          eyebrow={(
+            <span className="inline-flex items-center gap-1.5 rounded-badge border border-info/25 bg-info/10 px-2 py-1 text-[10px] font-medium text-info">
+              <LockKeyhole size={12} />
+              Private vault
+            </span>
           )}
-        </div>
+          actions={(
+            <>
+              {canManageDocuments && (
+                <Button
+                  type="button"
+                  variant="primary"
+                  icon={<Plus size={14} />}
+                  onClick={() => setUploadOpen(true)}
+                  data-ams-slug="documents-upload-header"
+                >
+                  Upload document
+                </Button>
+              )}
+            </>
+          )}
+        />
       </div>
 
-      {/* Documents Grid / Table */}
-      <div className="rounded-card bg-panel border border-line overflow-hidden">
+      <nav
+        aria-label="Documents sections"
+        className="flex max-w-full items-center gap-1 overflow-x-auto rounded-control border border-line bg-panel p-1 min-[900px]:hidden"
+        data-ams-slug="documents-mobile-tabs"
+      >
+        {DOCUMENT_TABS.map((tab) => (
+          <button
+            type="button"
+            key={tab.key}
+            onClick={() => selectTab(tab.key)}
+            aria-current={activeTab === tab.key ? 'page' : undefined}
+            data-ams-slug={'documents-tab-' + tab.key}
+            className={'inline-flex h-9 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ' + (
+              activeTab === tab.key ? 'border-accent/25 bg-accent/10 font-semibold text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg'
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </nav>
+
+      <div data-ams-feature-slug="documents-kpis">
+        <AdminMetricStrip
+          className="sm:grid-cols-2 lg:grid-cols-4"
+          metrics={[
+            { id: 'documents-total', slug: 'documents-kpi-total', label: 'Total internal assets', value: documents.length, context: updatedThisMonth + ' updated this month', sparkline: [Math.max(0, documents.length - updatedThisMonth), documents.length], icon: <FileText size={15} /> },
+            { id: 'documents-storage', slug: 'documents-kpi-storage', label: 'Tracked storage', value: formatBytes(storageBytes), context: 'From available file metadata', sparkline: [storageBytes / 2, storageBytes], toneClassName: 'text-info', icon: <UploadCloud size={15} /> },
+            { id: 'documents-ready', slug: 'documents-kpi-ready', label: 'Ready files', value: readyCount, context: documents.length ? Math.round((readyCount / documents.length) * 100) + '% of registry' : 'No files yet', sparkline: [Math.max(0, readyCount - 1), readyCount], toneClassName: 'text-success', icon: <ShieldCheck size={15} /> },
+            { id: 'documents-categories', slug: 'documents-kpi-categories', label: 'Active categories', value: categoryCount, context: 'Across current registry', sparkline: [Math.max(0, categoryCount - 1), categoryCount], toneClassName: 'text-warning', icon: <Building2 size={15} /> },
+          ]}
+        />
+      </div>
+
+      <AdminPanel slug="documents-upload-dropzone" className="border-dashed" bodyClassName="p-4 sm:px-5">
+        <div
+          className={'flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between ' + (uploadDragActive ? 'rounded-card bg-accent/5 ring-1 ring-accent/30' : '')}
+          onDragEnter={(event) => { event.preventDefault(); setUploadDragActive(true); }}
+          onDragOver={(event) => { event.preventDefault(); setUploadDragActive(true); }}
+          onDragLeave={() => setUploadDragActive(false)}
+          onDrop={(event) => { event.preventDefault(); setUploadDragActive(false); pickFile(event.dataTransfer.files?.[0] || null); }}
+          data-ams-feature-slug="documents-dropzone"
+        >
+          <div className="flex min-w-0 items-center gap-3.5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted">
+              <UploadCloud size={19} />
+            </div>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-sm font-semibold text-fg">Upload new internal document</h2>
+                <span className="rounded-badge border border-info/25 bg-info/10 px-2 py-0.5 text-[10px] font-medium text-info">Private vault</span>
+                <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-muted">Auto-indexed</span>
+              </div>
+              <p className="mt-1 max-w-3xl text-xs leading-5 text-muted">Drag and drop or browse locally. Supported PDF, DOCX, XLSX, ZIP, images, text and common office files. Maximum 25 MB.</p>
+            </div>
+          </div>
+          <input
+            key={inputKey}
+            ref={fileInputRef}
+            type="file"
+            accept={ACCEPTED_TYPES}
+            className="sr-only"
+            onChange={(event) => pickFile(event.target.files?.[0] || null)}
+            data-ams-slug="documents-upload-input"
+          />
+          <div className="flex shrink-0 items-center gap-2">
+            <Button type="button" variant="secondary" icon={<UploadCloud size={14} />} onClick={() => fileInputRef.current?.click()} data-ams-slug="documents-upload-browse">
+              Browse files
+            </Button>
+            {uploadFile && <span className="max-w-[220px] truncate text-[11px] text-muted" title={uploadFile.name}>Selected: {uploadFile.name}</span>}
+          </div>
+        </div>
+      </AdminPanel>
+
+      <AdminPanel slug="documents-workspace" title={tabLabel} description="Search, filter, review, and download documents available to your current AMS role." bodyClassName="p-0">
+        <AdminFilterBar
+          slug="documents-filters"
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Search documents, entities, tags..."
+          searchLabel="Search documents"
+          actions={activeFilterCount ? (
+            <Button type="button" variant="secondary" icon={<RefreshCw size={13} />} onClick={resetFilters} data-ams-slug="documents-filter-reset">
+              Reset filters
+            </Button>
+          ) : undefined}
+        >
+          <div className="flex min-w-0 items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0" data-ams-slug="documents-category-filters">
+            {CATEGORY_FILTERS.map((filter) => (
+              <button
+                type="button"
+                key={filter.key}
+                onClick={() => setCategoryFilter(filter.key)}
+                aria-pressed={categoryFilter === filter.key}
+                data-ams-slug={'documents-filter-' + filter.key}
+                className={'inline-flex h-9 shrink-0 items-center gap-2 rounded-chip border px-3 text-[11px] font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ' + (
+                  categoryFilter === filter.key ? 'border-accent/25 bg-accent/10 text-fg' : 'border-transparent text-muted hover:border-line hover:bg-bg hover:text-fg'
+                )}
+              >
+                <span>{filter.label}</span>
+                <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] tabular-nums text-muted">{categoryCounts[filter.key]}</span>
+              </button>
+            ))}
+          </div>
+        </AdminFilterBar>
+
+        {loadError && (
+          <div className="mx-4 mt-4 flex flex-col gap-2 rounded-control border border-danger/20 bg-danger/5 px-3 py-3 text-xs text-danger sm:mx-5 sm:flex-row sm:items-center sm:justify-between" role="alert" data-ams-slug="documents-error">
+            <span>{loadError}</span>
+            <Button type="button" variant="secondary" onClick={() => void loadDocuments()} data-ams-slug="documents-error-retry">Retry</Button>
+          </div>
+        )}
+
         {isLoading ? (
-          <div className="space-y-0" role="status" aria-label="Loading document vault">
-            {[1, 2, 3, 4].map((item) => (
-              <div key={item} className="grid grid-cols-[minmax(180px,1fr)_120px_90px_120px_120px_72px] items-center gap-4 border-b border-line px-4 py-3 last:border-b-0">
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-48 max-w-full" />
-                  <Skeleton className="h-3 w-28" />
-                </div>
-                <Skeleton className="h-3 w-20" />
-                <Skeleton className="h-3 w-14" />
-                <Skeleton className="h-3 w-20" />
-                <Skeleton className="h-3 w-24" />
-                <Skeleton className="h-8 w-8" />
+          <div className="space-y-2 p-4 sm:p-5" role="status" aria-label="Loading documents" data-ams-slug="documents-loading">
+            {[1, 2, 3, 4, 5].map((item) => (
+              <div key={item} className="grid grid-cols-[minmax(220px,1fr)_130px_90px_140px_120px] gap-3 border-b border-line px-2 py-3 last:border-b-0">
+                <div className="flex items-center gap-3"><Skeleton className="h-8 w-8 shrink-0" /><div className="min-w-0 flex-1 space-y-2"><Skeleton className="h-3.5 w-48 max-w-full" /><Skeleton className="h-3 w-28" /></div></div>
+                <Skeleton className="h-3 w-20" /><Skeleton className="h-3 w-14" /><Skeleton className="h-3 w-24" /><Skeleton className="h-8 w-20" />
               </div>
             ))}
           </div>
-        ) : filteredDocs.length === 0 ? (
-          <div className="min-h-[160px] px-4 py-8 text-center text-xs font-sans text-muted flex flex-col items-center justify-center">
-            {language === 'id' ? 'Belum ada dokumen di registri.' : 'No documents found in the registry.'}
+        ) : filteredDocuments.length === 0 ? (
+          <div className="flex min-h-[260px] flex-col items-center justify-center px-5 py-12 text-center" data-ams-slug="documents-empty">
+            <div className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-bg text-muted"><FileText size={17} /></div>
+            <h3 className="mt-3 text-sm font-semibold text-fg">{documents.length ? 'No documents match the current filters' : 'No documents in the vault yet'}</h3>
+            <p className="mt-1 max-w-md text-xs leading-5 text-muted">{documents.length ? 'Change the search or filters to widen the current document list.' : 'Upload the first internal document to populate this vault.'}</p>
+            {documents.length && activeFilterCount ? (
+              <Button type="button" variant="secondary" onClick={resetFilters} className="mt-4" data-ams-slug="documents-empty-reset">Reset filters</Button>
+            ) : canManageDocuments ? (
+              <Button type="button" variant="primary" icon={<Plus size={14} />} onClick={() => setUploadOpen(true)} className="mt-4" data-ams-slug="documents-empty-upload">Upload document</Button>
+            ) : null}
           </div>
         ) : (
           <>
-          <div className="min-[900px]:hidden divide-y divide-line">
-            {filteredDocs.map((doc) => {
-              const docTitle = doc.name || doc.title || 'Untitled Document';
-              const docDate = doc.uploadedDate || (doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString() : 'Recent');
-              const docOwner = doc.owner || doc.uploadedBy || 'Kapitech System';
-              const docType = doc.type || doc.fileType || 'PDF';
-              const docSize = doc.size ? String(doc.size) : '1.5 MB';
-              const ready = doc.status === 'ready' || doc.sourceType === 'external_link';
-              return (
-                <article key={doc.id} className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-accent">
-                      <FileText size={15} />
+            <div className="min-[900px]:hidden divide-y divide-line" data-ams-feature-slug="documents-mobile-list">
+              {pagedDocuments.map((doc) => {
+                const canDownload = Boolean(doc.downloadUrl || doc.url);
+                return (
+                  <article key={doc.id} className="p-4" data-ams-slug={'document-' + doc.id}>
+                    <div className="flex items-start gap-3">
+                      <div className={'flex h-9 w-9 shrink-0 items-center justify-center rounded-control border ' + categoryTone(doc)}>{docIcon(doc)}</div>
+                      <button type="button" onClick={() => setSelectedDocument(doc)} className="min-w-0 flex-1 text-left" data-ams-slug={'document-' + doc.id + '-open'}>
+                        <h3 className="truncate text-xs font-semibold text-fg">{titleOf(doc)}</h3>
+                        <p className="mt-1 truncate text-[10px] text-muted">{typeOf(doc)} · {categoryOf(doc)}</p>
+                      </button>
+                      <span className={'shrink-0 rounded-badge border px-2 py-1 text-[10px] font-semibold ' + statusTone(doc)}>{statusLabel(doc)}</span>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="truncate text-xs font-semibold text-fg">{docTitle}</h3>
-                      <p className="mt-1 truncate text-[10px] text-muted">{docType} · {doc.category || 'General'}</p>
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                      <div className="rounded-control border border-line bg-bg p-2.5"><div className="text-[10px] text-muted">Size</div><div className="mt-1 text-[11px] font-medium tabular-nums text-fg">{formatBytes(sizeBytesOf(doc))}</div></div>
+                      <div className="rounded-control border border-line bg-bg p-2.5"><div className="text-[10px] text-muted">Updated</div><div className="mt-1 truncate text-[11px] font-medium text-fg">{dateOf(doc)}</div></div>
                     </div>
-                    <span className={`shrink-0 rounded-badge border px-2 py-1 text-[10px] font-semibold ${ready ? 'border-success/20 bg-success/10 text-success' : 'border-warning/20 bg-warning/10 text-warning'}`}>
-                      {ready ? 'Ready' : 'Pending'}
-                    </span>
-                  </div>
-                  <div className="mt-4 grid grid-cols-2 gap-2">
-                    <div className="rounded-control border border-line bg-bg p-2.5">
-                      <div className="text-[10px] text-muted">Size</div>
-                      <div className="mt-1 text-[11px] font-medium text-fg">{docSize}</div>
+                    <div className="mt-3 flex min-w-0 items-center gap-2">
+                      <ProfileIdentity profile={{ name: ownerOf(doc), contextLabel: 'Document owner' }} size="sm" showRole={false} />
+                      <span className="truncate text-[10px] text-muted">· {doc.relatedEntity || doc.department || 'Internal'}</span>
                     </div>
-                    <div className="rounded-control border border-line bg-bg p-2.5">
-                      <div className="text-[10px] text-muted">Uploaded</div>
-                      <div className="mt-1 truncate text-[11px] font-medium text-fg">{docDate}</div>
+                    <div className="mt-3 flex justify-end gap-1.5">
+                      <button type="button" title="Preview" aria-label={'Preview ' + titleOf(doc)} onClick={() => setSelectedDocument(doc)} data-ams-slug={'document-' + doc.id + '-preview'} className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg"><Eye size={14} /></button>
+                      <button type="button" title="Download" aria-label={'Download ' + titleOf(doc)} onClick={() => handleDownload(doc)} disabled={!canDownload} data-ams-slug={'document-' + doc.id + '-download'} className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg disabled:opacity-40"><Download size={14} /></button>
+                      {canManageDocuments && <button type="button" title="Delete" aria-label={'Delete ' + titleOf(doc)} onClick={() => setDeleteTarget(doc)} data-ams-slug={'document-' + doc.id + '-delete'} className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-danger/10 hover:text-danger"><Trash2 size={14} /></button>}
                     </div>
-                  </div>
-                  <div className="mt-3 flex min-w-0 items-center gap-2"><ProfileIdentity profile={{ name: docOwner, role: undefined, contextLabel: 'Document owner' }} size="sm" showRole={false} /><span className="min-w-0 truncate text-[10px] text-muted">· {doc.relatedEntity || 'General'}</span></div>
-                  <div className="mt-3 grid grid-cols-2 gap-2">
-                    {(doc.downloadUrl || doc.url) ? (
-                      <a href={doc.downloadUrl || doc.url} target="_blank" rel="noopener noreferrer" className="flex min-h-9 items-center justify-center rounded-control border border-line bg-bg text-xs font-medium text-fg">
-                        Open
-                      </a>
-                    ) : (
-                      <span className="flex min-h-9 items-center justify-center rounded-control border border-line bg-bg text-xs text-muted">Unavailable</span>
-                    )}
-                    <button type="button" onClick={() => handleDelete(doc.id)} className="min-h-9 rounded-control border border-line bg-bg text-xs font-medium text-danger">
-                      Delete
-                    </button>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-          <div className="hidden min-[900px]:block ams-table-scroll overflow-x-auto">
-            <table className="ams-table w-full text-left border-collapse min-w-[700px]">
-              <thead>
-                <tr className="border-b border-line bg-panel/50 text-xs font-sans text-muted normal-case">
-                  <th className="py-3 px-4">Document Title</th>
-                  <th className="py-3 px-4">Category</th>
-                  <th className="py-3 px-4">Size</th>
-                  <th className="py-3 px-4">Entity</th>
-                  <th className="py-3 px-4">Uploaded</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-line text-xs font-sans text-fg">
-                {filteredDocs.map((doc) => {
-                  const docTitle = doc.name || doc.title || 'Untitled Document';
-                  const docDate = doc.uploadedDate || (doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleDateString() : 'Recent');
-                  const docOwner = doc.owner || doc.uploadedBy || 'Kapitech System';
-                  const docType = doc.type || doc.fileType || 'PDF';
-                  const docSize = doc.size ? String(doc.size) : '1.5 MB';
+                  </article>
+                );
+              })}
+            </div>
 
-                  return (
-                    <tr key={doc.id} className="hover:bg-panel-hover transition-colors">
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-control bg-panel border border-line flex items-center justify-center text-accent shrink-0">
-                            <FileText size={14} />
+            <div className="hidden min-[900px]:block overflow-x-auto custom-scrollbar" data-ams-feature-slug="documents-table">
+              <table className="w-full min-w-[1050px] border-collapse text-left">
+                <thead className="sticky top-0 z-10 bg-panel">
+                  <tr className="border-b border-line">
+                    {[
+                      ['name', 'Document'],
+                      ['category', 'Category'],
+                      ['size', 'Size'],
+                      ['updated', 'Last updated'],
+                      ['status', 'Status'],
+                    ].map(([key, label]) => (
+                      <th key={key} className="h-11 px-3 text-[11px] font-semibold text-muted first:pl-4" data-ams-slug={'documents-column-' + key}>
+                        <button type="button" onClick={() => changeSort(key as SortKey)} data-ams-slug={'documents-sort-' + key} className="inline-flex items-center gap-1 rounded-control px-1 py-1 text-left hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+                          {label}
+                          {sortKey === key && <span aria-hidden="true">{sortDirection === 'asc' ? '↑' : '↓'}</span>}
+                        </button>
+                      </th>
+                    ))}
+                    <th className="h-11 w-32 px-4 text-right text-[11px] font-semibold text-muted" data-ams-slug="documents-column-actions">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pagedDocuments.map((doc) => {
+                    const canDownload = Boolean(doc.downloadUrl || doc.url);
+                    return (
+                      <tr key={doc.id} className="border-b border-line transition-colors last:border-b-0 hover:bg-panel-hover" data-ams-slug={'document-' + doc.id}>
+                        <td className="px-4 py-3 align-middle">
+                          <div className="flex min-w-0 items-center gap-3">
+                            <div className={'flex h-8 w-8 shrink-0 items-center justify-center rounded-control border ' + categoryTone(doc)}>{docIcon(doc)}</div>
+                            <button type="button" onClick={() => setSelectedDocument(doc)} className="min-w-0 text-left" data-ams-slug={'document-' + doc.id + '-open'}>
+                              <div className="max-w-[400px] truncate text-xs font-medium text-fg">{titleOf(doc)}</div>
+                              <div className="mt-1 flex max-w-[440px] items-center gap-2 truncate text-[10px] text-muted"><span>{typeOf(doc)}</span><span>·</span><span>{doc.relatedEntity || doc.department || 'Internal'}</span></div>
+                            </button>
                           </div>
-                          <div>
-                            <div className="font-semibold text-fg">{docTitle}</div>
-                            <div className="text-xs font-sans text-muted">{docType}</div>
+                        </td>
+                        <td className="px-3 py-3 align-middle"><span className={'inline-flex rounded-badge border px-2 py-0.5 text-[10px] font-medium ' + categoryTone(doc)}>{categoryOf(doc)}</span></td>
+                        <td className="px-3 py-3 font-mono text-xs tabular-nums text-muted align-middle">{formatBytes(sizeBytesOf(doc))}</td>
+                        <td className="px-3 py-3 align-middle"><div className="text-xs tabular-nums text-fg">{dateOf(doc)}</div><div className="mt-1"><ProfileIdentity profile={{ name: ownerOf(doc), contextLabel: 'Document owner' }} size="sm" showRole={false} /></div></td>
+                        <td className="px-3 py-3 align-middle">
+                          <div className="flex flex-wrap items-center gap-1.5"><span className={'inline-flex items-center gap-1.5 rounded-badge border px-2 py-1 text-[10px] font-semibold ' + statusTone(doc)}><CheckCircle2 size={11} />{statusLabel(doc)}</span>{doc.accessLevel && <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{doc.accessLevel}</span>}</div>
+                        </td>
+                        <td className="px-4 py-3 text-right align-middle">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button type="button" title="Preview" aria-label={'Preview ' + titleOf(doc)} onClick={() => setSelectedDocument(doc)} data-ams-slug={'document-' + doc.id + '-preview'} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg"><Eye size={14} /></button>
+                            <button type="button" title="Download" aria-label={'Download ' + titleOf(doc)} onClick={() => handleDownload(doc)} disabled={!canDownload} data-ams-slug={'document-' + doc.id + '-download'} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg disabled:opacity-40"><Download size={14} /></button>
+                            {canManageDocuments && <button type="button" title="Delete" aria-label={'Delete ' + titleOf(doc)} onClick={() => setDeleteTarget(doc)} data-ams-slug={'document-' + doc.id + '-delete'} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger"><Trash2 size={14} /></button>}
                           </div>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="px-2 py-0.5 rounded-badge text-xs font-sans normal-case bg-panel text-muted border border-line">
-                          {doc.category}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 font-sans text-xs text-muted">
-                        {docSize}
-                      </td>
-                      <td className="py-3 px-4 font-sans text-xs text-fg">
-                        {doc.relatedEntity || 'General'}
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className={'px-2 py-0.5 rounded-badge text-xs font-sans normal-case border ' + (
-                          doc.status === 'ready' || doc.sourceType === 'external_link'
-                            ? 'bg-success/10 text-success border-success/20'
-                            : 'bg-warning/10 text-warning border-warning/20'
-                        )}>
-                          {doc.status === 'ready' || doc.sourceType === 'external_link' ? 'ready' : 'pending'}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 font-sans text-xs text-muted">
-                        <div>{docDate}</div>
-                        <div className="flex items-center gap-2 text-xs text-muted/70"><span>by</span><ProfileIdentity profile={{ name: docOwner, role: undefined, contextLabel: 'Document owner' }} size="sm" showRole={false} /></div>
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {(doc.downloadUrl || doc.url) ? (
-                            <a
-                              href={doc.downloadUrl || doc.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              title={language === 'id' ? 'Buka dokumen' : 'Open document'}
-                              className="min-h-10 min-w-10 p-2 rounded-control hover:bg-panel-hover text-muted hover:text-fg transition-colors flex items-center justify-center"
-                            >
-                              <Download size={14} />
-                            </a>
-                          ) : (
-                            <span title={language === 'id' ? 'Tidak ada URL dokumen' : 'No document URL'} className="p-1.5 text-muted">
-                              <Download size={14} />
-                            </span>
-                          )}
-                          <button
-                            onClick={() => handleDelete(doc.id)}
-                            title="Delete"
-                            className="min-h-10 min-w-10 rounded-control hover:bg-danger/10 text-muted hover:text-danger transition-colors flex items-center justify-center"
-                          >
-                            <Trash2 size={13} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex flex-col gap-3 border-t border-line bg-panel px-4 py-3 text-[11px] text-muted sm:flex-row sm:items-center sm:justify-between" data-ams-feature-slug="documents-pagination">
+              <div className="flex flex-wrap items-center gap-3">
+                <span>Showing <span className="font-semibold tabular-nums text-fg">{(safePage - 1) * pageSize + 1}</span> to <span className="font-semibold tabular-nums text-fg">{Math.min(safePage * pageSize, filteredDocuments.length)}</span> of <span className="font-semibold tabular-nums text-fg">{filteredDocuments.length}</span> visible files</span>
+                <div className="hidden items-center gap-2 border-l border-line pl-3 sm:flex" data-ams-slug="documents-page-size">
+                  <span>Rows per page</span>
+                  <CustomSelect value={String(pageSize)} onChange={(value) => setPageSize(Number(value))} options={PAGE_SIZES.map((value) => ({ value: String(value), label: String(value) }))} triggerClassName="h-8 min-h-8 w-[82px]" aria-label="Rows per page" />
+                </div>
+              </div>
+              <div className="flex items-center gap-2 sm:justify-end">
+                <span data-ams-slug="documents-page-status">Page {safePage} of {totalPages}</span>
+                <button type="button" disabled={safePage <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))} data-ams-slug="documents-page-prev" className="inline-flex h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted hover:bg-panel hover:text-fg disabled:opacity-40"><ChevronLeft size={13} /><span className="hidden sm:inline">Previous</span></button>
+                <button type="button" disabled={safePage >= totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} data-ams-slug="documents-page-next" className="inline-flex h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted hover:bg-panel hover:text-fg disabled:opacity-40"><span className="hidden sm:inline">Next</span><ChevronRight size={13} /></button>
+              </div>
+            </div>
           </>
         )}
-      </div>
+      </AdminPanel>
 
-      <ConfirmDialog
-        open={!!deleteTarget}
-        onClose={() => setDeleteTarget(null)}
-        title={language === 'id' ? 'Hapus dokumen?' : 'Delete document?'}
-        description={language === 'id' ? 'Dokumen akan dihapus dari private vault dan tindakan ini tidak dapat dibatalkan.' : 'The document will be removed from the private vault and this action cannot be undone.'}
-        confirmLabel={language === 'id' ? 'Hapus permanen' : 'Delete permanently'}
-        onConfirm={() => { if (deleteTarget) void confirmDelete(deleteTarget); }}
-      />
-
-      {/* UPLOAD MODAL */}
-      <Drawer
-        open={isUploadModalOpen}
-        onClose={() => !isSubmitting && setIsUploadModalOpen(false)}
-        size="md"
-        title={language === 'id' ? 'Unggah dokumen' : 'Upload document'}
-        description={language === 'id' ? 'Tambahkan dokumen ke private vault AMS.' : 'Add a document to the AMS private vault.'}
+      <Modal
+        open={uploadOpen}
+        onClose={() => !uploading && setUploadOpen(false)}
+        size="lg"
+        title="Upload document"
+        description="Store an internal file through the current AMS document API."
         footer={(
           <>
-            <Button type="button" variant="secondary" onClick={() => setIsUploadModalOpen(false)} disabled={isSubmitting}>Cancel</Button>
-            <Button type="submit" form="document-upload-form" disabled={isSubmitting} loading={isSubmitting} icon={<Plus size={14} />}>
-              {language === 'id' ? 'Simpan ke Private Vault' : 'Store in Private Vault'}
-            </Button>
+            <Button type="button" variant="secondary" onClick={() => setUploadOpen(false)} disabled={uploading} data-ams-slug="documents-upload-cancel">Cancel</Button>
+            <Button type="submit" form="documents-upload-form" variant="primary" loading={uploading} icon={<UploadCloud size={14} />} data-ams-slug="documents-upload-submit">Store document</Button>
           </>
         )}
       >
-            <form id="document-upload-form" onSubmit={handleUploadSubmit} className="space-y-4 text-xs font-sans">
-              <div className="space-y-1">
-                <label className="text-xs font-sans text-muted">Document Title *</label>
-                <input
-                  type="text"
-                  required
-                  value={uploadTitle}
-                  onChange={(e) => setUploadTitle(e.target.value)}
-                  placeholder="e.g. Master Services Agreement 2026"
-                  className="w-full min-h-10 sm:h-9 px-3 rounded-control bg-panel text-fg border border-line focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 focus:border-accent"
-                />
-              </div>
+        <form id="documents-upload-form" onSubmit={saveUpload} className="space-y-4" data-ams-feature-slug="documents-upload-form">
+          <div data-ams-slug="documents-upload-title">
+            <label htmlFor="documents-upload-title" className="text-xs font-medium text-muted">Document title</label>
+            <input id="documents-upload-title" value={uploadTitle} onChange={(event) => setUploadTitle(event.target.value)} required placeholder="e.g. Master Services Agreement 2026" className="mt-1 h-10 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none placeholder:text-muted focus:border-accent" />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div data-ams-slug="documents-upload-category"><label className="text-xs font-medium text-muted">Category</label><CustomSelect value={uploadCategory} onChange={setUploadCategory} options={['Contract','Proposal','Invoice','Deliverable','Compliance','SOP & Guides','Legal & Charters','Financial Reports','HR & People','Security & Keys'].map((value) => ({ value, label: value }))} triggerClassName="mt-1 w-full" /></div>
+            <div data-ams-slug="documents-upload-related"><label className="text-xs font-medium text-muted">Related entity</label><CustomSelect value={uploadRelatedType} onChange={setUploadRelatedType} options={['General','Client','Deal','Project'].map((value) => ({ value, label: value }))} triggerClassName="mt-1 w-full" /></div>
+          </div>
+          <div data-ams-slug="documents-upload-file">
+            <label className="text-xs font-medium text-muted">Document file</label>
+            <input id="documents-file-input" key={inputKey} type="file" accept={ACCEPTED_TYPES} onChange={(event) => pickFile(event.target.files?.[0] || null)} className="mt-1 block h-10 w-full rounded-control border border-line bg-bg px-2 py-2 text-xs text-fg" />
+            <p className="mt-1 text-[10px] leading-4 text-muted">Maximum 25 MB. Access is handled by the current AMS session and role permissions.</p>
+          </div>
+          {uploadFile && <div className="flex items-center justify-between gap-3 rounded-control border border-line bg-bg px-3 py-2.5"><div className="min-w-0"><div className="truncate text-xs font-medium text-fg">{uploadFile.name}</div><div className="mt-1 text-[10px] text-muted">{formatBytes(uploadFile.size)} · {uploadFile.type || 'unknown type'}</div></div><button type="button" onClick={() => { setUploadFile(null); setInputKey((current) => current + 1); }} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Remove selected file"><X size={14} /></button></div>}
+        </form>
+      </Modal>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-sans text-muted">Category</label>
-                  <CustomSelect value={uploadCategory} onChange={setUploadCategory} options={['Contract','Proposal','Invoice','Deliverable','Compliance'].map(value => ({value,label:value}))} className="w-full" />
-                </div>
+      <Modal
+        open={Boolean(selectedDocument)}
+        onClose={() => setSelectedDocument(null)}
+        size="lg"
+        title={selectedDocument ? titleOf(selectedDocument) : 'Document details'}
+        description={selectedDocument ? categoryOf(selectedDocument) : undefined}
+        footer={(
+          <>
+            <Button type="button" variant="secondary" onClick={() => setSelectedDocument(null)} data-ams-slug="documents-preview-close">Close</Button>
+            {selectedDocument?.downloadUrl || selectedDocument?.url ? <Button type="button" variant="primary" icon={<Download size={14} />} onClick={() => selectedDocument && handleDownload(selectedDocument)} data-ams-slug="documents-preview-download">Download document</Button> : null}
+          </>
+        )}
+      >
+        {selectedDocument && (
+          <div className="space-y-4" data-ams-feature-slug={'document-' + selectedDocument.id + '-details'}>
+            <div className="flex items-start gap-3 rounded-card border border-line bg-bg p-4">
+              <div className={'flex h-10 w-10 shrink-0 items-center justify-center rounded-control border ' + categoryTone(selectedDocument)}>{docIcon(selectedDocument)}</div>
+              <div className="min-w-0 flex-1"><div className="truncate text-sm font-semibold text-fg">{titleOf(selectedDocument)}</div><div className="mt-1 text-xs text-muted">{typeOf(selectedDocument)} · {formatBytes(sizeBytesOf(selectedDocument))}</div></div>
+              <span className={'rounded-badge border px-2 py-1 text-[10px] font-semibold ' + statusTone(selectedDocument)}>{statusLabel(selectedDocument)}</span>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-control border border-line bg-bg p-3"><div className="text-[10px] text-muted">Category</div><div className="mt-1 text-xs font-semibold text-fg">{categoryOf(selectedDocument)}</div></div>
+              <div className="rounded-control border border-line bg-bg p-3"><div className="text-[10px] text-muted">Related entity</div><div className="mt-1 text-xs font-semibold text-fg">{selectedDocument.relatedEntity || selectedDocument.department || 'Internal'}</div></div>
+              <div className="rounded-control border border-line bg-bg p-3"><div className="text-[10px] text-muted">Last updated</div><div className="mt-1 text-xs font-semibold tabular-nums text-fg">{dateOf(selectedDocument)}</div></div>
+              <div className="rounded-control border border-line bg-bg p-3"><div className="text-[10px] text-muted">Owner</div><div className="mt-1"><ProfileIdentity profile={{ name: ownerOf(selectedDocument), contextLabel: 'Document owner' }} size="sm" showRole={false} /></div></div>
+            </div>
+            {selectedDocument.description && <div className="rounded-card border border-line bg-bg p-4"><div className="text-xs font-semibold text-fg">Description</div><p className="mt-2 text-xs leading-5 text-muted">{selectedDocument.description}</p></div>}
+            {(selectedDocument.tags || []).length > 0 && <div className="rounded-card border border-line bg-bg p-4"><div className="text-xs font-semibold text-fg">Tags</div><div className="mt-2 flex flex-wrap gap-1.5">{(selectedDocument.tags || []).map((tag) => <span key={tag} className="rounded-badge border border-line bg-panel px-2 py-1 text-[10px] text-muted">{tag}</span>)}</div></div>}
+            <div className="flex items-start gap-2 rounded-control border border-info/20 bg-info/5 px-3 py-3 text-[11px] text-muted"><LockKeyhole size={14} className="mt-0.5 shrink-0 text-info" /><span>Document access is handled through the current AMS session and role permissions. Storage URLs are not shown in the interface.</span></div>
+          </div>
+        )}
+      </Modal>
 
-                <div className="space-y-1">
-                  <label className="text-xs font-sans text-muted">Related Entity</label>
-                  <CustomSelect value={uploadRelatedType} onChange={setUploadRelatedType} options={['General','Client','Deal','Project'].map(value => ({value,label:value}))} className="w-full" />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-sans text-muted">{language === 'id' ? 'File Dokumen *' : 'Document File *'}</label>
-                <input
-                  type="file"
-                  required
-                  accept={allowedDocumentTypes}
-                  onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                  className="w-full h-10 px-2 py-2 rounded-control bg-panel text-fg border border-line focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30 focus:border-accent text-xs"
-                />
-                <p className="text-xs text-muted font-sans">
-                  {language === 'id'
-                    ? 'File disimpan di server-side private vault, di luar static web root. Maksimal 25 MB. Akses selalu melalui session + RBAC.'
-                    : 'Files are stored in a server-side private vault outside the static web root. Max 25 MB. Access requires session + RBAC.'}
-                </p>
-              </div>
-
-            </form>
-      </Drawer>
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        onClose={() => !deleteLoading && setDeleteTarget(null)}
+        title="Delete document?"
+        description={deleteTarget ? 'This will permanently remove "' + titleOf(deleteTarget) + '" from the document registry and private vault.' : 'This document will be permanently deleted.'}
+        confirmLabel="Delete permanently"
+        onConfirm={() => void confirmDelete()}
+        loading={deleteLoading}
+      />
     </div>
   );
 };
+
+export default AdminDocuments;
