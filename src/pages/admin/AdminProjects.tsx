@@ -395,18 +395,22 @@ export const AdminProjects: React.FC = () => {
     setError(null);
     try {
       const response = await api.projects.getAll();
-      if (response.success && Array.isArray(response.data?.projects)) {
-        const serverProjects = response.data.projects.length
-          ? response.data.projects.map(normalizeProject)
-          : demoProjects;
+      if (response.success && Array.isArray(response.data?.projects) && response.data.projects.length > 0) {
+        const serverProjects = response.data.projects.map(normalizeProject);
         setProjects(applyKanbanStatusOverrides(serverProjects));
         setServerMode(true);
+        setError(null);
         setLoading(false);
         return;
       }
+
       setServerMode(false);
       setProjects(applyKanbanStatusOverrides(demoProjects));
-      setError(response.error || 'Using demo project data because the project service is unavailable.');
+      setError(
+        response.success
+          ? null
+          : (response.error || 'Using demo project data because the project service is unavailable.')
+      );
     } catch (requestError) {
       setServerMode(false);
       setProjects(applyKanbanStatusOverrides(demoProjects));
@@ -953,16 +957,48 @@ export const AdminProjects: React.FC = () => {
     try {
       const response = await api.tasks.update(task.id, { status });
       if (response.success) {
+        if (serverMode) {
+          await syncProjects();
+        }
         showToast(language === 'id' ? 'Status tugas diperbarui.' : 'Task status updated.');
         return;
       }
 
-      // Keep the optimistic local state when the API is unavailable or rejects
-      // the update so the board remains usable for A/B testing and demo flows.
-      showToast(language === 'id' ? 'Status tugas diperbarui lokal.' : 'Task status updated locally for this session.');
+      if (serverMode) {
+        delete taskOverrides[task.id];
+        writeStatusOverrides(TASK_STATUS_OVERRIDES_KEY, taskOverrides);
+        setProjects(current =>
+          current.map(project =>
+            project.id === selectedSprintProject.id
+              ? {
+                  ...project,
+                  tasks: project.tasks.map(item => item.id === task.id ? { ...item, status: task.status } : item),
+                }
+              : project
+          )
+        );
+        showToast(language === 'id' ? 'Status tugas gagal diperbarui dan dikembalikan.' : 'Task status could not be saved and was reverted.');
+      } else {
+        showToast(language === 'id' ? 'Status tugas diperbarui lokal.' : 'Task status updated locally for this session.');
+      }
     } catch {
-      // Preserve the optimistic local state for demo / A-B testing mode.
-      showToast(language === 'id' ? 'Status tugas diperbarui lokal.' : 'Task status updated locally for this session.');
+      if (serverMode) {
+        delete taskOverrides[task.id];
+        writeStatusOverrides(TASK_STATUS_OVERRIDES_KEY, taskOverrides);
+        setProjects(current =>
+          current.map(project =>
+            project.id === selectedSprintProject.id
+              ? {
+                  ...project,
+                  tasks: project.tasks.map(item => item.id === task.id ? { ...item, status: task.status } : item),
+                }
+              : project
+          )
+        );
+        showToast(language === 'id' ? 'Status tugas gagal diperbarui dan dikembalikan.' : 'Task status could not be saved and was reverted.');
+      } else {
+        showToast(language === 'id' ? 'Status tugas diperbarui lokal.' : 'Task status updated locally for this session.');
+      }
     }
   };
 
@@ -1026,6 +1062,7 @@ export const AdminProjects: React.FC = () => {
       return;
     }
 
+    const previousProject = project;
     const updatedProject = normalizeProject({ ...project, status, updatedAt: new Date().toISOString() });
     const projectOverrides = readStatusOverrides<ProjectStatus>(PROJECT_STATUS_OVERRIDES_KEY);
     projectOverrides[project.id] = status;
@@ -1042,13 +1079,32 @@ export const AdminProjects: React.FC = () => {
     try {
       const response = await api.projects.update(project.id, { status });
       if (response.success) {
+        if (serverMode) {
+          await syncProjects();
+        }
         showToast(language === 'id' ? 'Status proyek diperbarui.' : 'Project status updated.');
         return;
       }
 
-      showToast(language === 'id' ? 'Status proyek diperbarui lokal.' : 'Project status updated locally for this session.');
+      if (serverMode) {
+        delete projectOverrides[project.id];
+        writeStatusOverrides(PROJECT_STATUS_OVERRIDES_KEY, projectOverrides);
+        setProjects(current => current.map(item => item.id === project.id ? previousProject : item));
+        setSelectedProject(current => current?.id === project.id ? previousProject : current);
+        showToast(language === 'id' ? 'Status proyek gagal diperbarui dan dikembalikan.' : 'Project status could not be saved and was reverted.');
+      } else {
+        showToast(language === 'id' ? 'Status proyek diperbarui lokal.' : 'Project status updated locally for this session.');
+      }
     } catch {
-      showToast(language === 'id' ? 'Status proyek diperbarui lokal.' : 'Project status updated locally for this session.');
+      if (serverMode) {
+        delete projectOverrides[project.id];
+        writeStatusOverrides(PROJECT_STATUS_OVERRIDES_KEY, projectOverrides);
+        setProjects(current => current.map(item => item.id === project.id ? previousProject : item));
+        setSelectedProject(current => current?.id === project.id ? previousProject : current);
+        showToast(language === 'id' ? 'Status proyek gagal diperbarui dan dikembalikan.' : 'Project status could not be saved and was reverted.');
+      } else {
+        showToast(language === 'id' ? 'Status proyek diperbarui lokal.' : 'Project status updated locally for this session.');
+      }
     } finally {
       setMovingProjectId(null);
     }
