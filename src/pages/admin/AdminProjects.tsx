@@ -1787,7 +1787,7 @@ export const AdminProjects: React.FC = () => {
                                         tabIndex={canManageProjects && movingProjectId !== project.id ? 0 : -1}
                                         aria-label={canManageProjects ? 'Drag project' : 'Project status'}
                                         className={[
-                                          'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted transition-[background-color,border-color,color,transform] select-none',
+                                          'mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted transition-[background-color,border-color,color,transform] select-none',
                                           canManageProjects && movingProjectId !== project.id
                                             ? 'cursor-grab touch-none hover:border-accent/35 hover:bg-panel-hover hover:text-fg active:cursor-grabbing'
                                             : 'cursor-default opacity-70',
@@ -2123,7 +2123,7 @@ export const AdminProjects: React.FC = () => {
                     </div>
                     <span className="inline-flex items-center gap-1.5 text-muted">
                       <SlidersHorizontal size={12} />
-                      {canManageKanbanTasks ? 'Drag any task card to change stage' : 'Task movement is read-only'}
+                      {canManageKanbanTasks ? 'Drag the handle to change stage' : 'Task movement is read-only'}
                     </span>
                   </div>
                 </div>
@@ -2240,14 +2240,8 @@ export const AdminProjects: React.FC = () => {
                                   <article
                                     key={task.id}
                                     aria-grabbed={isDragging}
-                                    draggable={canManageKanbanTasks}
-                                    onDragStart={event => beginTaskDrag(event, task)}
-                                    onDragEnd={() => {
-                                      setDraggingTaskId(null);
-                                      setDragOverTaskStatus(null);
-                                    }}
                                     className={[
-                                      'group select-none rounded-card border bg-panel p-3.5 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150',
+                                      'group rounded-card border bg-panel p-3.5 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150',
                                       canManageKanbanTasks ? '' : 'cursor-default',
                                       'border-line hover:border-accent/30 hover:bg-panel-hover',
                                       isDragging ? 'rotate-[0.6deg] scale-[0.98] opacity-50' : '',
@@ -2255,15 +2249,23 @@ export const AdminProjects: React.FC = () => {
                                   >
                                     <div className="flex items-start gap-2.5">
                                       <span
-                                        role="presentation"
+                                        role="button"
+                                        tabIndex={canManageKanbanTasks ? 0 : -1}
                                         aria-label={canManageKanbanTasks ? 'Drag task' : 'Task movement is read-only'}
+                                        draggable={canManageKanbanTasks}
+                                        onDragStart={canManageKanbanTasks ? event => beginTaskDrag(event, task) : undefined}
+                                        onDragEnd={() => {
+                                          setDraggingTaskId(null);
+                                          setDragOverTaskStatus(null);
+                                        }}
+                                        data-drag-handle="true"
                                         className={[
-                                          'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted transition-[background-color,border-color,color,transform] select-none',
+                                          'mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted transition-[background-color,border-color,color,transform] select-none',
                                           canManageKanbanTasks
-                                            ? 'cursor-grab touch-none hover:border-accent/35 hover:bg-panel-hover hover:text-fg'
+                                            ? 'cursor-grab touch-none hover:border-accent/35 hover:bg-panel-hover hover:text-fg active:cursor-grabbing'
                                             : 'cursor-default opacity-70',
                                         ].join(' ')}
-                                        title={canManageKanbanTasks ? 'Drag anywhere on this card to move task' : 'Task movement is read-only'}
+                                        title={canManageKanbanTasks ? 'Drag this handle to move task' : 'Task movement is read-only'}
                                       >
                                         <GripVertical size={16} strokeWidth={2} />
                                       </span>
