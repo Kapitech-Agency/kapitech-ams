@@ -345,17 +345,6 @@ export const AdminTeams: React.FC = () => {
     return map;
   }, [logs]);
 
-  const teamProjectCoverage = useMemo(() => {
-    const map = new Map<string, Set<string>>();
-    logs.forEach((log) => {
-      if (!log.userId) return;
-      const key = log.projectId || log.projectName || 'general';
-      if (!map.has(log.userId)) map.set(log.userId, new Set());
-      map.get(log.userId)!.add(key);
-    });
-    return map;
-  }, [logs]);
-
   const activeProjectMap = useMemo(() => {
     const map = new Map<string, Set<string>>();
     projects.forEach((project) => {
@@ -390,21 +379,22 @@ export const AdminTeams: React.FC = () => {
   }, [projects]);
 
   const currentMemberWorkload = useMemo(() => {
-    const currentWeek = weeklyCapacity[weeklyCapacity.length - 1];
+    const currentWeek = startOfWeek(new Date());
+    const nextWeek = new Date(currentWeek);
+    nextWeek.setDate(nextWeek.getDate() + 7);
     const map = new Map<string, number>();
-    if (!currentWeek) return map;
     members.forEach((member) => {
       const minutes = logs
         .filter((log) => log.userId === member.id || (!log.userId && log.user === member.name))
         .filter((log) => {
           const date = new Date(log.date + 'T00:00:00');
-          return date >= currentWeek.start && date < currentWeek.end;
+          return date >= currentWeek && date < nextWeek;
         })
         .reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0);
       map.set(member.id, Math.min(160, Math.round((minutes / (40 * 60)) * 100)));
     });
     return map;
-  }, [members, logs, weeklyCapacity]);
+  }, [members, logs]);
 
   const teamMetrics = useMemo(() => ({
     headcount: members.length,
