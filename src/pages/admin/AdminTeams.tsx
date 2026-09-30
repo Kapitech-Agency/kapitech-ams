@@ -421,7 +421,7 @@ export const AdminTeams: React.FC = () => {
 
     if (previewTabs.length > 0) {
       setNotice({
-        tone: 'success',
+        tone: 'warning',
         message: 'Frontend preview data is active for ' + previewTabs.join(', ') + ' so the slug structure can be inspected before server data is available.'
       });
     } else if (!memberRes.success && nextMembers.length === 0) {
