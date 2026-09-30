@@ -469,9 +469,10 @@ export const AdminClients: React.FC = () => {
 
   return (
     <AdminPageShell featureSlug="clients-module" className="ams-clients-module">
-      <AdminModuleHeader
-        className="mb-0"
-        title="Clients & Key Accounts"
+      <div data-ams-slug="clients-key-accounts">
+        <AdminModuleHeader
+          className="mb-0"
+          title="Clients & Key Accounts"
         description="Directory of enterprise clients, relationship health, spend-cap status, and account operations."
         eyebrow={<AdminStatusBadge tone="neutral">{clientMetrics.active} active accounts</AdminStatusBadge>}
         actions={(
@@ -491,8 +492,9 @@ export const AdminClients: React.FC = () => {
               <Button type="button" variant="primary" onClick={openCreate} icon={<Plus size={14} aria-hidden="true" />}>New Client</Button>
             )}
           </>
-        )}
-      />
+          )}
+        />
+      </div>
       <div className="min-[900px]:hidden min-w-0" data-ams-slug="clients-mobile-tabs">
         <AdminSectionTabs
           ariaLabel="Clients sections"
