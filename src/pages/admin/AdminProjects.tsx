@@ -1695,7 +1695,7 @@ export const AdminProjects: React.FC = () => {
               )}
             >
               <div
-                className="flex min-w-max flex-nowrap items-center gap-1.5 overflow-x-auto pb-0.5"
+                className="flex w-full min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto pb-0.5"
                 style={{ flexWrap: 'nowrap' }}
                 aria-label="Project filters"
               >
