@@ -209,7 +209,7 @@ const isTaskBlocked = (task: any) =>
   ));
 
 export const TasksWorkspace: React.FC = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const taskScope = searchParams.get('taskscope') || 'all';
   const currentUser = getAdminSession()?.user;
   const canManageTasks = hasAdminPermission('canManageKanbanTasks');
