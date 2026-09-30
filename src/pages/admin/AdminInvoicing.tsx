@@ -217,6 +217,7 @@ const isRetainerInvoice = (invoice: AgencyInvoice) =>
     [invoice.paymentTerms, invoice.notes, ...invoice.items.map((item) => item.description)]
       .filter(Boolean)
       .join(' ')
+    </div>
   );
 
 const getInvoiceCollectedInRange = (invoice: AgencyInvoice, start: Date, end: Date) => {
@@ -533,7 +534,6 @@ const EmptyState = ({ title, description, action }: { title: string; description
   <div className="flex min-h-[180px] flex-col items-center justify-center rounded-card border border-line bg-bg px-5 py-8 text-center">
     <div className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-panel text-muted">
       <Receipt size={18} strokeWidth={1.8} />
-    </div>
     <p className="mt-3 text-sm font-medium text-fg">{title}</p>
     <p className="mt-1 max-w-[48ch] text-xs leading-5 text-muted">{description}</p>
     {action && <div className="mt-4">{action}</div>}
