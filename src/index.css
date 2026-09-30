@@ -204,6 +204,13 @@
 .ams-shell .ams-crm-kpi>.ams-crm-funnel-card{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:16px}
 .ams-shell .ams-leads-page,.ams-shell .ams-inbox-page{min-width:0;width:100%;color:var(--text)}.ams-shell .ams-leads-page>*,.ams-shell .ams-inbox-page>*{min-width:0}
 .ams-shell .ams-leads-page .ams-table-scroll,.ams-shell .ams-inbox-page .ams-table-scroll{max-width:100%;overflow-x:auto}.ams-shell .ams-table-scroll table{min-width:max-content}
+.ams-shell .ams-project-kanban-board,
+.ams-shell .ams-project-kanban-task-board{
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+}
+.ams-shell .ams-project-kanban-board::-webkit-scrollbar,
+.ams-shell .ams-project-kanban-task-board::-webkit-scrollbar{display:none}
 .ams-shell .ams-project-kanban-board{
   background:color-mix(in srgb,var(--bg) 97%,var(--text) 3%);
   border:1px solid var(--line);
