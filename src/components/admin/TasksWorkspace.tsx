@@ -2,7 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   AlertTriangle,
+  ArrowDownAZ,
+  ArrowUpAZ,
   ArrowUpRight,
+  CalendarClock,
   CheckCircle2,
   Clock3,
   Eye,
@@ -11,6 +14,7 @@ import {
   List,
   RefreshCw,
   Search,
+  Tag,
 } from 'lucide-react';
 import { AdminMetricStrip, AdminModuleHeader, AdminPanel } from './AdminModulePrimitives';
 import { CustomSelect } from '../ui/CustomSelect';
@@ -22,6 +26,7 @@ import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
 
 type TaskStatus = 'todo' | 'in_progress' | 'review' | 'done';
 type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
+type TaskSortKey = 'title' | 'projectName' | 'assignee' | 'priority' | 'status' | 'dueDate' | 'createdAt';
 
 type TaskRecord = {
   id: string;
@@ -42,115 +47,65 @@ type TaskRecord = {
   createdAt: string;
 };
 
+const TASK_TABS = [
+  { key: 'all', label: 'All Tasks', search: '' },
+  { key: 'my', label: 'My Tasks', search: '&taskscope=my' },
+  { key: 'due', label: 'Due & Overdue', search: '&taskscope=due' },
+  { key: 'review', label: 'Review Queue', search: '&taskscope=review' },
+  { key: 'blocked', label: 'Blocked', search: '&taskscope=blocked' },
+  { key: 'completed', label: 'Completed', search: '&taskscope=completed' },
+] as const;
+
+const PAGE_SIZE = 10;
+
+const buildPreviewTask = (
+  id: string,
+  title: string,
+  description: string,
+  projectId: string,
+  projectName: string,
+  clientName: string,
+  assignee: string,
+  priority: TaskPriority,
+  status: TaskStatus,
+  dueOffset: number,
+  tags: string[],
+  blocked = false,
+): TaskRecord => {
+  const dueDate = new Date(Date.now() + dueOffset * 86400000).toISOString().slice(0, 10);
+  return {
+    id,
+    title,
+    description,
+    projectId,
+    projectName,
+    projectSlug: slugify(projectName),
+    clientName,
+    assigneeId: '',
+    assignee,
+    priority,
+    status,
+    dueDate,
+    tags,
+    blocked,
+    slug: 'task-' + slugify(title) + '-' + slugify(id),
+    createdAt: new Date(Date.now() - Math.max(1, Math.abs(dueOffset) + 2) * 86400000).toISOString(),
+  };
+};
+
 const fallbackTasks: TaskRecord[] = [
-  {
-    id: 'task-001',
-    title: 'Approve homepage copy',
-    description: 'Final content approval before client handoff.',
-    projectId: 'proj-001',
-    projectName: 'Atlas Brand System',
-    projectSlug: 'atlas-brand-system',
-    clientName: 'Atlas Group',
-    assigneeId: '',
-    assignee: 'Fikri',
-    priority: 'high',
-    status: 'todo',
-    dueDate: new Date().toISOString().slice(0, 10),
-    tags: ['content'],
-    blocked: false,
-    slug: 'task-approve-homepage-copy-task-001',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'task-002',
-    title: 'Finalize checkout UI',
-    description: 'Finish the checkout flow and responsive states.',
-    projectId: 'proj-002',
-    projectName: 'Meridian Commerce',
-    projectSlug: 'meridian-commerce',
-    clientName: 'Meridian Labs',
-    assigneeId: '',
-    assignee: 'Sarah',
-    priority: 'high',
-    status: 'in_progress',
-    dueDate: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
-    tags: ['frontend'],
-    blocked: false,
-    slug: 'task-finalize-checkout-ui-task-002',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'task-003',
-    title: 'QA campaign landing page',
-    description: 'Run final QA against approved campaign layouts.',
-    projectId: 'proj-003',
-    projectName: 'Nova Growth Retainer',
-    projectSlug: 'nova-growth-retainer',
-    clientName: 'Nova Ventures',
-    assigneeId: '',
-    assignee: 'Dimas',
-    priority: 'medium',
-    status: 'review',
-    dueDate: new Date(Date.now() + 172800000).toISOString().slice(0, 10),
-    tags: ['qa'],
-    blocked: false,
-    slug: 'task-qa-campaign-landing-page-task-003',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'task-004',
-    title: 'Resolve API handoff',
-    description: 'Waiting for the final API contract confirmation.',
-    projectId: 'proj-004',
-    projectName: 'Orbit Product Launch',
-    projectSlug: 'orbit-product-launch',
-    clientName: 'Orbit Health',
-    assigneeId: '',
-    assignee: 'Raka',
-    priority: 'urgent',
-    status: 'in_progress',
-    dueDate: new Date(Date.now() - 86400000).toISOString().slice(0, 10),
-    tags: ['blocked', 'api'],
-    blocked: true,
-    slug: 'task-resolve-api-handoff-task-004',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'task-005',
-    title: 'Prepare client presentation',
-    description: 'Prepare delivery deck for the next client checkpoint.',
-    projectId: 'proj-005',
-    projectName: 'Northstar Campaign',
-    projectSlug: 'northstar-campaign',
-    clientName: 'Northstar Capital',
-    assigneeId: '',
-    assignee: 'Nadia',
-    priority: 'medium',
-    status: 'in_progress',
-    dueDate: new Date(Date.now() + 259200000).toISOString().slice(0, 10),
-    tags: ['client'],
-    blocked: false,
-    slug: 'task-prepare-client-presentation-task-005',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'task-006',
-    title: 'Review analytics dashboard',
-    description: 'Review the latest dashboard metrics and document findings.',
-    projectId: 'proj-001',
-    projectName: 'Atlas Brand System',
-    projectSlug: 'atlas-brand-system',
-    clientName: 'Atlas Group',
-    assigneeId: '',
-    assignee: 'Fikri',
-    priority: 'low',
-    status: 'done',
-    dueDate: new Date().toISOString().slice(0, 10),
-    tags: ['analytics'],
-    blocked: false,
-    slug: 'task-review-analytics-dashboard-task-006',
-    createdAt: new Date().toISOString(),
-  },
+  buildPreviewTask('task-001', 'Approve homepage copy', 'Final content approval before client handoff.', 'proj-001', 'Atlas Brand System', 'Atlas Group', 'Fikri', 'high', 'todo', 0, ['content', 'client']),
+  buildPreviewTask('task-002', 'Finalize checkout UI', 'Finish the checkout flow and responsive states.', 'proj-002', 'Meridian Commerce', 'Meridian Labs', 'Sarah', 'high', 'in_progress', 1, ['frontend', 'ui']),
+  buildPreviewTask('task-003', 'QA campaign landing page', 'Run final QA against approved campaign layouts.', 'proj-003', 'Nova Growth Retainer', 'Nova Ventures', 'Dimas', 'medium', 'review', 2, ['qa', 'campaign']),
+  buildPreviewTask('task-004', 'Resolve API handoff', 'Waiting for the final API contract confirmation.', 'proj-004', 'Orbit Product Launch', 'Orbit Health', 'Raka', 'urgent', 'in_progress', -1, ['blocked', 'api'], true),
+  buildPreviewTask('task-005', 'Prepare client presentation', 'Prepare delivery deck for the next client checkpoint.', 'proj-005', 'Northstar Campaign', 'Northstar Capital', 'Nadia', 'medium', 'in_progress', 3, ['client', 'presentation']),
+  buildPreviewTask('task-006', 'Review analytics dashboard', 'Review the latest dashboard metrics and document findings.', 'proj-001', 'Atlas Brand System', 'Atlas Group', 'Fikri', 'low', 'done', 0, ['analytics']),
+  buildPreviewTask('task-007', 'Confirm sitemap structure', 'Confirm the final navigation and page hierarchy.', 'proj-001', 'Atlas Brand System', 'Atlas Group', 'Rey', 'medium', 'todo', 4, ['planning']),
+  buildPreviewTask('task-008', 'Test mobile navigation', 'Validate mobile navigation states across target breakpoints.', 'proj-002', 'Meridian Commerce', 'Meridian Labs', 'Sarah', 'high', 'in_progress', 5, ['qa', 'mobile']),
+  buildPreviewTask('task-009', 'Prepare ad creative variants', 'Prepare the approved creative variants for launch.', 'proj-003', 'Nova Growth Retainer', 'Nova Ventures', 'Tareq', 'medium', 'todo', 6, ['creative', 'ads']),
+  buildPreviewTask('task-010', 'Review staging deployment', 'Check the latest staging release against the delivery checklist.', 'proj-004', 'Orbit Product Launch', 'Orbit Health', 'Jordan', 'urgent', 'review', 1, ['release', 'qa']),
+  buildPreviewTask('task-011', 'Collect final brand assets', 'Collect final approved logos, imagery, and brand references.', 'proj-005', 'Northstar Campaign', 'Northstar Capital', 'Fikri', 'low', 'done', -2, ['assets']),
+  buildPreviewTask('task-012', 'Send launch readiness notes', 'Send the final internal launch readiness summary.', 'proj-004', 'Orbit Product Launch', 'Orbit Health', 'Reynaldo', 'high', 'todo', 7, ['launch', 'internal']),
 ];
 
 const taskStatusLabel: Record<TaskStatus, string> = {
@@ -181,17 +136,21 @@ const taskStatusClass: Record<TaskStatus, string> = {
   done: 'border-success/25 bg-success/10 text-success',
 };
 
-const slugify = (value: string) =>
-  value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'item';
+const taskPriorityWeight: Record<TaskPriority, number> = { urgent: 4, high: 3, medium: 2, low: 1 };
+const taskStatusWeight: Record<TaskStatus, number> = { todo: 1, in_progress: 2, review: 3, done: 4 };
 
-const formatTaskDue = (value: string) => {
+function slugify(value: string) {
+  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'item';
+}
+
+function formatTaskDue(value: string) {
   if (!value) return 'No due date';
   const parsed = new Date(value + (value.length === 10 ? 'T00:00:00' : ''));
   if (Number.isNaN(parsed.getTime())) return value;
   return parsed.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
-};
+}
 
-const taskDueState = (task: TaskRecord) => {
+function taskDueState(task: TaskRecord) {
   if (task.status === 'done') return 'completed';
   if (!task.dueDate) return 'none';
   const due = new Date(task.dueDate + 'T23:59:59');
@@ -200,17 +159,36 @@ const taskDueState = (task: TaskRecord) => {
   if (days <= 2) return 'due-soon';
   if (days <= 7) return 'this-week';
   return 'scheduled';
-};
+}
 
-const isTaskBlocked = (task: any) =>
-  Boolean(task?.blocked) ||
-  (Array.isArray(task?.tags) && task.tags.some((tag: unknown) =>
-    ['blocked', 'blocker', 'blocked-by', 'waiting'].includes(String(tag).trim().toLowerCase())
-  ));
+function taskDueLabel(task: TaskRecord) {
+  const state = taskDueState(task);
+  if (state === 'overdue') return 'Overdue';
+  if (state === 'due-soon') return 'Due soon';
+  if (state === 'this-week') return 'This week';
+  if (state === 'completed') return 'Completed';
+  return 'Scheduled';
+}
+
+function isTaskBlocked(task: any) {
+  return Boolean(task?.blocked) ||
+    (Array.isArray(task?.tags) && task.tags.some((tag: unknown) =>
+      ['blocked', 'blocker', 'blocked-by', 'waiting'].includes(String(tag).trim().toLowerCase())
+    ));
+}
+
+const scopeLabels: Record<string, string> = {
+  all: 'All Tasks',
+  my: 'My Tasks',
+  due: 'Due & Overdue',
+  review: 'Review Queue',
+  blocked: 'Blocked',
+  completed: 'Completed',
+};
 
 export const TasksWorkspace: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const taskScope = searchParams.get('taskscope') || 'all';
+  const taskScope = scopeLabels[searchParams.get('taskscope') || 'all'] ? (searchParams.get('taskscope') || 'all') : 'all';
   const currentUser = getAdminSession()?.user;
   const canManageTasks = hasAdminPermission('canManageKanbanTasks');
 
@@ -224,8 +202,13 @@ export const TasksWorkspace: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [assigneeFilter, setAssigneeFilter] = useState('all');
   const [layout, setLayout] = useState<'table' | 'board'>('table');
+  const [sortKey, setSortKey] = useState<TaskSortKey>('priority');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [page, setPage] = useState(1);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedTask, setSelectedTask] = useState<TaskRecord | null>(null);
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
+  const [bulkUpdating, setBulkUpdating] = useState(false);
   const [taskFormOpen, setTaskFormOpen] = useState(false);
   const [savingTask, setSavingTask] = useState(false);
   const [taskForm, setTaskForm] = useState({
@@ -235,6 +218,7 @@ export const TasksWorkspace: React.FC = () => {
     assignee: '',
     priority: 'medium' as TaskPriority,
     dueDate: new Date().toISOString().slice(0, 10),
+    tags: '',
   });
 
   const currentUserNames = useMemo(() => new Set(
@@ -324,8 +308,13 @@ export const TasksWorkspace: React.FC = () => {
     return () => { mounted = false; };
   }, []);
 
+  const projectOptions = useMemo(
+    () => Array.from(new Map(records.map(task => [task.projectId, task.projectName])).entries()).sort((a, b) => a[1].localeCompare(b[1])),
+    [records]
+  );
+
   const updateTaskStatus = async (task: TaskRecord, nextStatus: TaskStatus) => {
-    if (task.status === nextStatus || updatingTaskId === task.id) return;
+    if (!canManageTasks || task.status === nextStatus || updatingTaskId === task.id) return;
     setUpdatingTaskId(task.id);
     setRecords(current => current.map(item => item.id === task.id ? {
       ...item,
@@ -340,30 +329,15 @@ export const TasksWorkspace: React.FC = () => {
       setNotice('Task status updated locally for this session.');
     } finally {
       setUpdatingTaskId(null);
-      setSelectedTask(current => current?.id === task.id ? { ...current, status: nextStatus, blocked: nextStatus === 'done' ? false : current.blocked } : current);
+      setSelectedTask(current => current?.id === task.id
+        ? { ...current, status: nextStatus, blocked: nextStatus === 'done' ? false : current.blocked }
+        : current);
     }
-  };
-
-  const projectOptions = useMemo(
-    () => Array.from(new Map(records.map(task => [task.projectId, task.projectName])).entries()).sort((a, b) => a[1].localeCompare(b[1])),
-    [records]
-  );
-
-  const openNewTask = () => {
-    if (!canManageTasks) return;
-    setTaskForm({
-      title: '',
-      description: '',
-      projectId: projectOptions[0]?.[0] || '',
-      assignee: '',
-      priority: 'medium',
-      dueDate: new Date().toISOString().slice(0, 10),
-    });
-    setTaskFormOpen(true);
   };
 
   const saveNewTask = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (!canManageTasks) return;
     if (!taskForm.title.trim() || !taskForm.projectId) {
       setNotice('Task title and project are required.');
       return;
@@ -377,6 +351,11 @@ export const TasksWorkspace: React.FC = () => {
 
     setSavingTask(true);
     const id = 'task-' + slugify(taskForm.title) + '-' + Date.now();
+    const tags = taskForm.tags
+      .split(',')
+      .map(value => value.trim())
+      .filter(Boolean)
+      .slice(0, 6);
     const localTask: TaskRecord = {
       id,
       title: taskForm.title.trim(),
@@ -390,7 +369,7 @@ export const TasksWorkspace: React.FC = () => {
       priority: taskForm.priority,
       status: 'todo',
       dueDate: taskForm.dueDate,
-      tags: [],
+      tags,
       blocked: false,
       slug: 'task-' + slugify(taskForm.title) + '-' + slugify(id),
       createdAt: new Date().toISOString(),
@@ -406,29 +385,22 @@ export const TasksWorkspace: React.FC = () => {
         priority: localTask.priority,
         status: localTask.status,
         dueDate: localTask.dueDate,
-        tags: [],
+        tags,
         subtasks: [],
       });
 
       setRecords(current => [localTask, ...current]);
       setNotice(response.success ? 'Task created.' : 'Task created locally for this session.');
       setTaskFormOpen(false);
+      setPage(1);
     } catch {
       setRecords(current => [localTask, ...current]);
       setNotice('Task created locally for this session.');
       setTaskFormOpen(false);
+      setPage(1);
     } finally {
       setSavingTask(false);
     }
-  };
-
-  const currentScopeLabel: Record<string, string> = {
-    all: 'All Tasks',
-    my: 'My Tasks',
-    due: 'Due & Overdue',
-    review: 'Review Queue',
-    blocked: 'Blocked',
-    completed: 'Completed',
   };
 
   const scopedRecords = useMemo(() => records.filter(task => {
@@ -445,25 +417,50 @@ export const TasksWorkspace: React.FC = () => {
 
   const filteredRecords = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    return scopedRecords.filter(task => {
-      const searchable = [task.title, task.description, task.projectName, task.clientName, task.assignee, task.id, task.slug, ...task.tags]
-        .join(' ')
-        .toLowerCase();
+    const filtered = scopedRecords.filter(task => {
+      const searchable = [
+        task.title,
+        task.description,
+        task.projectName,
+        task.clientName,
+        task.assignee,
+        task.id,
+        task.slug,
+        ...task.tags,
+      ].join(' ').toLowerCase();
 
       return (!normalizedQuery || searchable.includes(normalizedQuery)) &&
         (projectFilter === 'all' || task.projectId === projectFilter) &&
         (priorityFilter === 'all' || task.priority === priorityFilter) &&
         (statusFilter === 'all' || task.status === statusFilter) &&
         (assigneeFilter === 'all' || task.assigneeId === assigneeFilter || task.assignee === assigneeFilter);
-    }).sort((a, b) => {
-      const weight: Record<TaskPriority, number> = { urgent: 4, high: 3, medium: 2, low: 1 };
-      if (taskScope === 'due' || taskScope === 'blocked') {
-        return (a.dueDate || '9999-12-31').localeCompare(b.dueDate || '9999-12-31') || weight[b.priority] - weight[a.priority];
-      }
-      if (taskScope === 'completed') return (b.createdAt || '').localeCompare(a.createdAt || '');
-      return weight[b.priority] - weight[a.priority] || a.title.localeCompare(b.title);
     });
-  }, [scopedRecords, query, projectFilter, priorityFilter, statusFilter, assigneeFilter, taskScope]);
+
+    return filtered.sort((a, b) => {
+      let comparison = 0;
+      if (sortKey === 'title') comparison = a.title.localeCompare(b.title);
+      if (sortKey === 'projectName') comparison = a.projectName.localeCompare(b.projectName);
+      if (sortKey === 'assignee') comparison = a.assignee.localeCompare(b.assignee);
+      if (sortKey === 'priority') comparison = taskPriorityWeight[a.priority] - taskPriorityWeight[b.priority];
+      if (sortKey === 'status') comparison = taskStatusWeight[a.status] - taskStatusWeight[b.status];
+      if (sortKey === 'dueDate') comparison = (a.dueDate || '9999-12-31').localeCompare(b.dueDate || '9999-12-31');
+      if (sortKey === 'createdAt') comparison = (a.createdAt || '').localeCompare(b.createdAt || '');
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+  }, [scopedRecords, query, projectFilter, priorityFilter, statusFilter, assigneeFilter, sortKey, sortDirection]);
+
+  useEffect(() => {
+    setPage(1);
+    setSelectedIds([]);
+  }, [taskScope, query, projectFilter, priorityFilter, statusFilter, assigneeFilter, sortKey, sortDirection]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredRecords.length / PAGE_SIZE));
+  const pagedRecords = filteredRecords.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const allVisibleSelected = pagedRecords.length > 0 && pagedRecords.every(task => selectedIds.includes(task.id));
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   const metrics = useMemo(() => ({
     total: scopedRecords.length,
@@ -480,9 +477,69 @@ export const TasksWorkspace: React.FC = () => {
     setPriorityFilter('all');
     setStatusFilter('all');
     setAssigneeFilter('all');
+    setPage(1);
   };
 
-  const activeFilterCount = [query, projectFilter, priorityFilter, statusFilter, assigneeFilter].filter(value => value && value !== 'all').length;
+  const setSort = (key: TaskSortKey) => {
+    if (sortKey === key) {
+      setSortDirection(current => current === 'asc' ? 'desc' : 'asc');
+      return;
+    }
+    setSortKey(key);
+    setSortDirection(key === 'dueDate' ? 'asc' : 'desc');
+  };
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds(current => current.includes(id) ? current.filter(item => item !== id) : [...current, id]);
+  };
+
+  const toggleVisibleSelection = () => {
+    if (allVisibleSelected) {
+      setSelectedIds(current => current.filter(id => !pagedRecords.some(task => task.id === id)));
+      return;
+    }
+    setSelectedIds(current => Array.from(new Set([...current, ...pagedRecords.map(task => task.id)])));
+  };
+
+  const bulkUpdateStatus = async (nextStatus: TaskStatus) => {
+    if (!canManageTasks || !selectedIds.length || bulkUpdating) return;
+    setBulkUpdating(true);
+    const selectedTasks = records.filter(task => selectedIds.includes(task.id));
+    setRecords(current => current.map(task => selectedIds.includes(task.id)
+      ? { ...task, status: nextStatus, blocked: nextStatus === 'done' ? false : task.blocked }
+      : task));
+
+    let succeeded = 0;
+    for (const task of selectedTasks) {
+      try {
+        const response = await api.tasks.update(task.id, { status: nextStatus });
+        if (response.success) succeeded += 1;
+      } catch {}
+    }
+
+    setSelectedIds([]);
+    setBulkUpdating(false);
+    setNotice(succeeded === selectedTasks.length
+      ? selectedTasks.length + ' tasks moved to ' + taskStatusLabel[nextStatus] + '.'
+      : 'Selected tasks were updated locally. Server confirmation was incomplete.');
+  };
+
+  const openNewTask = () => {
+    if (!canManageTasks) return;
+    setTaskForm({
+      title: '',
+      description: '',
+      projectId: projectOptions[0]?.[0] || '',
+      assignee: '',
+      priority: 'medium',
+      dueDate: new Date().toISOString().slice(0, 10),
+      tags: '',
+    });
+    setTaskFormOpen(true);
+  };
+
+  const activeFilterCount = [query, projectFilter, priorityFilter, statusFilter, assigneeFilter]
+    .filter(value => value && value !== 'all').length;
 
   const boardColumns: Array<{ status: TaskStatus; label: string }> = [
     { status: 'todo', label: 'To Do' },
@@ -491,118 +548,201 @@ export const TasksWorkspace: React.FC = () => {
     { status: 'done', label: 'Done' },
   ];
 
+  const scopeLabel = scopeLabels[taskScope] || 'All Tasks';
+
+  const sortIcon = (key: TaskSortKey) => {
+    if (sortKey !== key) return null;
+    return sortDirection === 'asc' ? <ArrowUpAZ size={12} /> : <ArrowDownAZ size={12} />;
+  };
+
   return (
-    <div className="space-y-4 pb-10" data-ams-feature-slug="tasks-workspace">
-      <AdminModuleHeader
-        title={currentScopeLabel[taskScope] || 'All Tasks'}
-        description="Manage project tasks, due work, review queues, blockers, and completed delivery work from one operational workspace."
-        actions={
-          canManageTasks ? (
-            <Button type="button" variant="primary" icon={<CheckCircle2 size={14} />} onClick={openNewTask}>
-              New Task
-            </Button>
-          ) : undefined
-        }
-      />
-      <AdminMetricStrip
-        className="sm:grid-cols-2 lg:grid-cols-4"
-        metrics={[
-          {
-            id: 'tasks-scope',
-            slug: 'tasks-kpi-scope',
-            label: currentScopeLabel[taskScope] || 'All Tasks',
-            value: metrics.total,
-            context: taskScope === 'all' ? 'Across project delivery work' : 'Tasks currently in this queue',
-            sparkline: [records.length, scopedRecords.length, metrics.total],
-            icon: <FolderKanban size={15} />,
-          },
-          {
-            id: 'tasks-open',
-            slug: 'tasks-kpi-open',
-            label: 'Open Work',
-            value: metrics.open,
-            context: metrics.highPriority + ' high / urgent',
-            sparkline: [metrics.open, metrics.dueSoon, metrics.blocked],
-            toneClassName: 'text-info',
-            icon: <Clock3 size={15} />,
-          },
-          {
-            id: 'tasks-review',
-            slug: 'tasks-kpi-review',
-            label: 'Review Queue',
-            value: metrics.review,
-            context: 'Awaiting review or QA',
-            sparkline: [metrics.review, metrics.blocked, metrics.open],
-            toneClassName: 'text-warning',
-            icon: <AlertTriangle size={15} />,
-          },
-          {
-            id: 'tasks-risk',
-            slug: 'tasks-kpi-risk',
-            label: taskScope === 'completed' ? 'Completed' : 'Risk Signals',
-            value: taskScope === 'completed' ? scopedRecords.length : metrics.blocked + metrics.dueSoon,
-            context: taskScope === 'completed' ? 'Completed tasks in scope' : 'Blocked + due soon / overdue',
-            sparkline: [metrics.blocked, metrics.dueSoon, metrics.total],
-            toneClassName: taskScope === 'completed' ? 'text-success' : 'text-danger',
-            icon: taskScope === 'completed' ? <CheckCircle2 size={15} /> : <AlertTriangle size={15} />,
-          },
-        ]}
-      />
+    <div className="space-y-4 px-4 pb-10 pt-5 sm:px-5 lg:px-6" data-ams-feature-slug="tasks-module">
+      <div data-ams-slug="tasks-header">
+        <AdminModuleHeader
+          title={scopeLabel}
+          description="Manage daily delivery work, due tasks, reviews, blockers, and completed work from one task workspace."
+          actions={
+            canManageTasks ? (
+              <span data-ams-slug="tasks-action-new">
+                <Button type="button" variant="primary" icon={<CheckCircle2 size={14} />} onClick={openNewTask}>
+                  New Task
+                </Button>
+              </span>
+            ) : undefined
+          }
+        />
+      </div>
+
+      <nav
+        aria-label="Tasks sections"
+        className="min-[900px]:hidden flex max-w-full items-center gap-1 overflow-x-auto rounded-control border border-line bg-panel p-1 ams-topnav-scroll"
+        data-ams-slug="tasks-mobile-tabs"
+      >
+        {TASK_TABS.map(tab => {
+          const active = taskScope === tab.key;
+          const href = '/admin/dashboard?view=tasks' + tab.search;
+          return (
+            <Link
+              key={tab.key}
+              to={href}
+              data-ams-slug={'task-tab-' + tab.key}
+              aria-current={active ? 'page' : undefined}
+              className={'inline-flex h-9 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (active ? 'border-accent/25 bg-accent/10 font-semibold text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg')}
+            >
+              {tab.label}
+            </Link>
+          );
+        })}
+      </nav>
+
+      <div data-ams-feature-slug="tasks-kpis">
+        <AdminMetricStrip
+          className="sm:grid-cols-2 lg:grid-cols-4"
+          metrics={[
+            {
+              id: 'tasks-scope',
+              slug: 'tasks-kpi-scope',
+              label: scopeLabel,
+              value: metrics.total,
+              context: taskScope === 'all' ? 'Across project delivery work' : 'Tasks currently in this queue',
+              sparkline: [records.length, scopedRecords.length, metrics.total],
+              icon: <FolderKanban size={15} />,
+            },
+            {
+              id: 'tasks-open',
+              slug: 'tasks-kpi-open',
+              label: 'Open Work',
+              value: metrics.open,
+              context: metrics.highPriority + ' high / urgent',
+              sparkline: [metrics.open, metrics.dueSoon, metrics.blocked],
+              toneClassName: 'text-info',
+              icon: <Clock3 size={15} />,
+            },
+            {
+              id: 'tasks-review',
+              slug: 'tasks-kpi-review',
+              label: 'Review Queue',
+              value: metrics.review,
+              context: 'Awaiting review or QA',
+              sparkline: [metrics.review, metrics.blocked, metrics.open],
+              toneClassName: 'text-warning',
+              icon: <AlertTriangle size={15} />,
+            },
+            {
+              id: 'tasks-risk',
+              slug: 'tasks-kpi-risk',
+              label: taskScope === 'completed' ? 'Completed' : 'Risk Signals',
+              value: taskScope === 'completed' ? metrics.total : metrics.blocked + metrics.dueSoon,
+              context: taskScope === 'completed' ? 'Completed tasks in scope' : 'Blocked + due soon / overdue',
+              sparkline: [metrics.blocked, metrics.dueSoon, metrics.total],
+              toneClassName: taskScope === 'completed' ? 'text-success' : 'text-danger',
+              icon: taskScope === 'completed' ? <CheckCircle2 size={15} /> : <AlertTriangle size={15} />,
+            },
+          ]}
+        />
+      </div>
 
       <AdminPanel
-        title={currentScopeLabel[taskScope] || 'All Tasks'}
+        title={scopeLabel}
         description="Operational task queue linked to project delivery and team assignment."
-        slug={'tasks-' + (taskScope || 'all')}
+        slug={'tasks-' + taskScope}
         bodyClassName="p-0"
-        actions={(
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
-
-            <label className="relative block min-w-0 sm:w-64">
-              <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-              <input
-                value={query}
-                onChange={event => setQuery(event.target.value)}
-                placeholder="Search tasks, projects, assignees..."
-                className="h-9 w-full rounded-control border border-line bg-bg pl-9 pr-3 text-xs text-fg outline-none placeholder:text-muted focus:border-accent"
-              />
-            </label>
-            <CustomSelect value={projectFilter} onChange={setProjectFilter} options={[{ value: 'all', label: 'All projects' }, ...projectOptions.map(([value, label]) => ({ value, label }))]} triggerClassName="h-9 min-h-9 w-full sm:w-[170px]" />
-            <CustomSelect value={priorityFilter} onChange={setPriorityFilter} options={[{ value: 'all', label: 'All priorities' }, ...Object.entries(taskPriorityLabel).map(([value, label]) => ({ value, label }))]} triggerClassName="h-9 min-h-9 w-full sm:w-[145px]" />
-            <CustomSelect value={statusFilter} onChange={setStatusFilter} options={[{ value: 'all', label: 'All statuses' }, ...Object.entries(taskStatusLabel).map(([value, label]) => ({ value, label }))]} triggerClassName="h-9 min-h-9 w-full sm:w-[145px]" />
-            <CustomSelect value={assigneeFilter} onChange={setAssigneeFilter} options={[{ value: 'all', label: 'All assignees' }, ...assignees.map(item => ({ value: item.id, label: item.name }))]} triggerClassName="h-9 min-h-9 w-full sm:w-[155px]" />
-            <button type="button" onClick={clearFilters} disabled={!activeFilterCount} title="Reset filters" aria-label="Reset filters" className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted transition-colors hover:bg-panel hover:text-fg disabled:opacity-40">
-              <RefreshCw size={14} />
-            </button>
-            <div className="inline-flex h-9 shrink-0 items-center gap-0.5 rounded-control border border-line bg-bg p-0.5" aria-label="Task layout">
-              <button type="button" title="Table view" aria-label="Table view" onClick={() => setLayout('table')} className={'inline-flex h-8 w-8 items-center justify-center rounded-control ' + (layout === 'table' ? 'bg-panel text-fg' : 'text-muted hover:text-fg')}>
-                <List size={14} />
-              </button>
-              <button type="button" title="Board view" aria-label="Board view" onClick={() => setLayout('board')} className={'inline-flex h-8 w-8 items-center justify-center rounded-control ' + (layout === 'board' ? 'bg-panel text-fg' : 'text-muted hover:text-fg')}>
-                <LayoutGrid size={14} />
+      >
+        <div className="border-b border-line px-4 py-3 sm:px-5" data-ams-feature-slug="tasks-filters">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+              <label className="relative min-w-0 flex-1 sm:min-w-[260px]" data-ams-slug="tasks-filter-search">
+                <span className="sr-only">Search tasks</span>
+                <Search size={14} className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-muted" />
+                <input
+                  value={query}
+                  onChange={event => setQuery(event.target.value)}
+                  placeholder="Search tasks, projects, clients, assignees..."
+                  aria-label="Search tasks, projects, clients, assignees"
+                  className="h-9 min-h-9 w-full rounded-control border border-line bg-bg pl-9 pr-3 text-xs text-fg outline-none placeholder:text-muted focus:border-accent"
+                />
+              </label>
+              <span data-ams-slug="tasks-filter-project">
+                <CustomSelect value={projectFilter} onChange={setProjectFilter} options={[{ value: 'all', label: 'All projects' }, ...projectOptions.map(([value, label]) => ({ value, label }))]} triggerClassName="h-9 min-h-9 w-full sm:w-[170px]" />
+              </span>
+              <span data-ams-slug="tasks-filter-priority">
+                <CustomSelect value={priorityFilter} onChange={setPriorityFilter} options={[{ value: 'all', label: 'All priorities' }, ...Object.entries(taskPriorityLabel).map(([value, label]) => ({ value, label }))]} triggerClassName="h-9 min-h-9 w-full sm:w-[145px]" />
+              </span>
+              <span data-ams-slug="tasks-filter-status">
+                <CustomSelect value={statusFilter} onChange={setStatusFilter} options={[{ value: 'all', label: 'All statuses' }, ...Object.entries(taskStatusLabel).map(([value, label]) => ({ value, label }))]} triggerClassName="h-9 min-h-9 w-full sm:w-[145px]" />
+              </span>
+              <span data-ams-slug="tasks-filter-assignee">
+                <CustomSelect value={assigneeFilter} onChange={setAssigneeFilter} options={[{ value: 'all', label: 'All assignees' }, ...assignees.map(item => ({ value: item.id, label: item.name }))]} triggerClassName="h-9 min-h-9 w-full sm:w-[155px]" />
+              </span>
+              <button
+                type="button"
+                onClick={clearFilters}
+                disabled={!activeFilterCount}
+                title="Reset filters"
+                aria-label="Reset task filters"
+                data-ams-slug="tasks-filter-reset"
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted transition-colors hover:bg-panel hover:text-fg disabled:opacity-40"
+              >
+                <RefreshCw size={14} />
               </button>
             </div>
+
+            <div className="flex min-w-0 flex-wrap items-center gap-2 xl:justify-end" data-ams-feature-slug="tasks-view-controls">
+              {selectedIds.length > 0 && canManageTasks && (
+                <div className="flex items-center gap-1.5 rounded-control border border-line bg-bg p-0.5" data-ams-slug="tasks-bulk-actions">
+                  <span className="px-2 text-[10px] font-semibold text-fg">{selectedIds.length} selected</span>
+                  <button type="button" disabled={bulkUpdating} onClick={() => void bulkUpdateStatus('in_progress')} data-ams-slug="tasks-bulk-start" className="h-8 rounded-control px-2 text-[10px] font-medium text-muted hover:bg-panel hover:text-fg disabled:opacity-40">Start</button>
+                  <button type="button" disabled={bulkUpdating} onClick={() => void bulkUpdateStatus('review')} data-ams-slug="tasks-bulk-review" className="h-8 rounded-control px-2 text-[10px] font-medium text-muted hover:bg-panel hover:text-fg disabled:opacity-40">Review</button>
+                  <button type="button" disabled={bulkUpdating} onClick={() => void bulkUpdateStatus('done')} data-ams-slug="tasks-bulk-done" className="h-8 rounded-control px-2 text-[10px] font-medium text-success hover:bg-success/10 disabled:opacity-40">Done</button>
+                </div>
+              )}
+              <div className="inline-flex h-9 shrink-0 items-center gap-0.5 rounded-control border border-line bg-bg p-0.5" aria-label="Task layout" data-ams-slug="tasks-layout-toggle">
+                <button type="button" title="Table view" aria-label="Table view" aria-pressed={layout === 'table'} onClick={() => setLayout('table')} data-ams-slug="tasks-view-table" className={'inline-flex h-8 w-8 items-center justify-center rounded-control ' + (layout === 'table' ? 'bg-panel text-fg' : 'text-muted hover:text-fg')}>
+                  <List size={14} />
+                </button>
+                <button type="button" title="Board view" aria-label="Board view" aria-pressed={layout === 'board'} onClick={() => setLayout('board')} data-ams-slug="tasks-view-board" className={'inline-flex h-8 w-8 items-center justify-center rounded-control ' + (layout === 'board' ? 'bg-panel text-fg' : 'text-muted hover:text-fg')}>
+                  <LayoutGrid size={14} />
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-[10px] text-muted" data-ams-slug="tasks-filter-summary">
+            <span>{filteredRecords.length} visible</span>
+            <span aria-hidden="true">·</span>
+            <span>{activeFilterCount ? activeFilterCount + ' filters active' : 'All filters clear'}</span>
+            <span aria-hidden="true">·</span>
+            <span>{scopeLabel}</span>
+          </div>
+        </div>
+
+        {notice && (
+          <div className="mx-4 mt-4 rounded-control border border-line bg-bg px-3 py-2 text-[11px] text-muted sm:mx-5" data-ams-slug="tasks-notice" aria-live="polite">
+            {notice}
           </div>
         )}
-      >
-        {notice && <div className="mx-4 mt-4 rounded-control border border-line bg-bg px-3 py-2 text-[11px] text-muted sm:mx-5">{notice}</div>}
 
         {loading ? (
-          <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[1, 2, 3, 4].map(item => <div key={item} className="h-24 animate-pulse rounded-control border border-line bg-bg" />)}
+          <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4" data-ams-slug="tasks-loading">
+            {[1, 2, 3, 4].map(item => <div key={item} className="h-24 animate-pulse rounded-control border border-line bg-bg" data-ams-slug={'tasks-loading-' + item} />)}
           </div>
         ) : filteredRecords.length === 0 ? (
-          <div className="px-5 py-16 text-center">
+          <div className="px-5 py-16 text-center" data-ams-slug="tasks-empty-state">
             <CheckCircle2 size={22} className="mx-auto text-success" />
-            <p className="mt-3 text-sm font-semibold text-fg">No tasks in this queue</p>
-            <p className="mt-1 text-xs text-muted">{activeFilterCount ? 'Reset the filters to see the full scope.' : 'Nothing needs attention in this task view right now.'}</p>
+            <p className="mt-3 text-sm font-semibold text-fg">{activeFilterCount ? 'No tasks match these filters' : 'No tasks in this queue'}</p>
+            <p className="mt-1 text-xs text-muted">{activeFilterCount ? 'Reset filters or change the search to widen the queue.' : 'Nothing needs attention in this task view right now.'}</p>
+            {activeFilterCount && (
+              <button type="button" onClick={clearFilters} data-ams-slug="tasks-empty-reset" className="mt-4 inline-flex min-h-9 items-center justify-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">
+                Reset filters
+              </button>
+            )}
           </div>
         ) : layout === 'board' ? (
-          <div className="overflow-x-auto custom-scrollbar">
+          <div className="overflow-x-auto custom-scrollbar" data-ams-feature-slug="tasks-board-view">
             <div className="grid min-w-[1040px] grid-cols-4 gap-3 p-4">
               {boardColumns.map(column => {
                 const columnTasks = filteredRecords.filter(task => task.status === column.status);
                 return (
-                  <section key={column.status} className="min-w-0 rounded-card border border-line bg-bg p-3">
+                  <section key={column.status} className="min-w-0 rounded-card border border-line bg-bg p-3" data-ams-slug={'tasks-column-' + column.status}>
                     <div className="flex items-center justify-between gap-2 border-b border-line pb-3">
                       <div className="flex items-center gap-2 text-xs font-semibold text-fg">
                         <span className={'h-1.5 w-1.5 rounded-full ' + (column.status === 'todo' ? 'bg-info' : column.status === 'in_progress' ? 'bg-accent' : column.status === 'review' ? 'bg-warning' : 'bg-success')} />
@@ -613,7 +753,7 @@ export const TasksWorkspace: React.FC = () => {
                     <div className="mt-3 space-y-2">
                       {columnTasks.map(task => (
                         <article key={task.id} data-ams-slug={task.slug} className="rounded-control border border-line bg-panel p-3 transition-colors hover:bg-panel-hover">
-                          <button type="button" className="block w-full text-left" onClick={() => setSelectedTask(task)}>
+                          <button type="button" className="block w-full text-left" onClick={() => setSelectedTask(task)} data-ams-slug={task.slug + '-open'}>
                             <div className="flex items-start justify-between gap-2">
                               <span className="min-w-0 text-xs font-semibold leading-5 text-fg">{task.title}</span>
                               <span className={'shrink-0 rounded-badge border px-1.5 py-0.5 text-[9px] font-semibold ' + taskPriorityClass[task.priority]}>{taskPriorityLabel[task.priority]}</span>
@@ -624,17 +764,31 @@ export const TasksWorkspace: React.FC = () => {
                               {task.blocked && <span className="text-danger">Blocked</span>}
                             </div>
                           </button>
-                          <div className="mt-3 flex items-center justify-end gap-1.5 border-t border-line pt-2">
-                            <button type="button" title="Move to review" aria-label="Move to review" disabled={updatingTaskId === task.id} onClick={() => void updateTaskStatus(task, 'review')} className="inline-flex h-7 w-7 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg disabled:opacity-40">
-                              <ArrowUpRight size={13} />
-                            </button>
-                            <button type="button" title="Mark done" aria-label="Mark done" disabled={updatingTaskId === task.id || task.status === 'done'} onClick={() => void updateTaskStatus(task, 'done')} className="inline-flex h-7 w-7 items-center justify-center rounded-control border border-line bg-bg text-muted hover:border-success/30 hover:bg-success/10 hover:text-success disabled:opacity-40">
-                              <CheckCircle2 size={13} />
-                            </button>
+                          <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-2">
+                            <span className="min-w-0 truncate font-mono text-[9px] text-muted/60">slug: {task.slug}</span>
+                            {canManageTasks && (
+                              <div className="flex shrink-0 items-center gap-1.5" data-ams-slug={task.slug + '-actions'}>
+                                {task.status === 'todo' && (
+                                  <button type="button" title="Start task" aria-label={'Start ' + task.title} disabled={updatingTaskId === task.id} onClick={() => void updateTaskStatus(task, 'in_progress')} data-ams-slug={task.slug + '-start'} className="inline-flex h-7 w-7 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg disabled:opacity-40">
+                                    <Clock3 size={13} />
+                                  </button>
+                                )}
+                                {task.status === 'in_progress' && (
+                                  <button type="button" title="Move to review" aria-label={'Move ' + task.title + ' to review'} disabled={updatingTaskId === task.id} onClick={() => void updateTaskStatus(task, 'review')} data-ams-slug={task.slug + '-review'} className="inline-flex h-7 w-7 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg disabled:opacity-40">
+                                    <ArrowUpRight size={13} />
+                                  </button>
+                                )}
+                                {task.status !== 'done' && (
+                                  <button type="button" title="Mark done" aria-label={'Mark ' + task.title + ' done'} disabled={updatingTaskId === task.id} onClick={() => void updateTaskStatus(task, 'done')} data-ams-slug={task.slug + '-done'} className="inline-flex h-7 w-7 items-center justify-center rounded-control border border-line bg-bg text-muted hover:border-success/30 hover:bg-success/10 hover:text-success disabled:opacity-40">
+                                    <CheckCircle2 size={13} />
+                                  </button>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </article>
                       ))}
-                      {!columnTasks.length && <div className="rounded-control border border-dashed border-line px-3 py-8 text-center text-[10px] text-muted">No tasks</div>}
+                      {!columnTasks.length && <div className="rounded-control border border-dashed border-line px-3 py-8 text-center text-[10px] text-muted" data-ams-slug={'tasks-column-empty-' + column.status}>No tasks</div>}
                     </div>
                   </section>
                 );
@@ -642,51 +796,78 @@ export const TasksWorkspace: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className="overflow-x-auto custom-scrollbar">
-            <table className="w-full min-w-[1080px] border-collapse text-left">
-              <thead>
-                <tr className="border-b border-line bg-panel">
-                  <th className="h-11 px-4 text-[11px] font-semibold text-muted">Task</th>
-                  <th className="h-11 px-3 text-[11px] font-semibold text-muted">Project</th>
-                  <th className="h-11 px-3 text-[11px] font-semibold text-muted">Assignee</th>
-                  <th className="h-11 px-3 text-[11px] font-semibold text-muted">Priority</th>
-                  <th className="h-11 px-3 text-[11px] font-semibold text-muted">Status</th>
-                  <th className="h-11 px-3 text-[11px] font-semibold text-muted">Due</th>
-                  <th className="h-11 px-4 text-right text-[11px] font-semibold text-muted">Actions</th>
+          <div className="overflow-x-auto custom-scrollbar" data-ams-feature-slug="tasks-table-view">
+            <table className="w-full min-w-[1120px] border-collapse text-left">
+              <thead className="sticky top-0 z-10 bg-panel">
+                <tr className="border-b border-line">
+                  {canManageTasks && (
+                    <th className="h-11 w-10 px-3">
+                      <input type="checkbox" checked={allVisibleSelected} onChange={toggleVisibleSelection} aria-label="Select visible tasks" data-ams-slug="tasks-select-visible" className="h-4 w-4 rounded border-line bg-bg accent-accent" />
+                    </th>
+                  )}
+                  {[
+                    ['title', 'Task'],
+                    ['projectName', 'Project'],
+                    ['assignee', 'Assignee'],
+                    ['priority', 'Priority'],
+                    ['status', 'Status'],
+                    ['dueDate', 'Due'],
+                  ].map(([key, label]) => (
+                    <th key={key} className="h-11 px-3 text-[11px] font-semibold text-muted" data-ams-slug={'tasks-column-' + key}>
+                      <button type="button" onClick={() => setSort(key as TaskSortKey)} data-ams-slug={'tasks-sort-' + key} className="inline-flex items-center gap-1 rounded-control px-1 py-1 text-left hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+                        {label}
+                        {sortIcon(key as TaskSortKey)}
+                      </button>
+                    </th>
+                  ))}
+                  <th className="h-11 w-32 px-4 text-right text-[11px] font-semibold text-muted" data-ams-slug="tasks-column-actions">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredRecords.map(task => (
+                {pagedRecords.map(task => (
                   <tr key={task.id} data-ams-slug={task.slug} className="border-b border-line transition-colors last:border-b-0 hover:bg-panel-hover">
-                    <td className="px-4 py-3 align-middle">
-                      <button type="button" className="block min-w-0 text-left" onClick={() => setSelectedTask(task)}>
-                        <div className="max-w-[340px] truncate text-xs font-medium text-fg">{task.title}</div>
+                    {canManageTasks && (
+                      <td className="px-3 py-3 align-middle" data-ams-slug={task.slug + '-select'}>
+                        <input type="checkbox" checked={selectedIds.includes(task.id)} onChange={() => toggleSelection(task.id)} aria-label={'Select ' + task.title} className="h-4 w-4 rounded border-line bg-bg accent-accent" />
+                      </td>
+                    )}
+                    <td className="px-3 py-3 align-middle">
+                      <button type="button" className="block min-w-0 text-left" onClick={() => setSelectedTask(task)} data-ams-slug={task.slug + '-open'}>
+                        <div className="max-w-[320px] truncate text-xs font-medium text-fg">{task.title}</div>
                         <div className="mt-1 flex items-center gap-2 text-[9px] text-muted">
                           <span className="font-mono text-muted/70">slug: {task.slug}</span>
                           {task.tags.length > 0 && <span className="truncate">{task.tags.slice(0, 2).join(' · ')}</span>}
                         </div>
                       </button>
                     </td>
-                    <td className="px-3 py-3 align-middle">
+                    <td className="px-3 py-3 align-middle" data-ams-slug={task.slug + '-project'}>
                       <div className="max-w-[210px] truncate text-xs font-medium text-fg">{task.projectName}</div>
                       <div className="mt-1 truncate text-[10px] text-muted">{task.clientName || 'Internal'}</div>
                     </td>
-                    <td className="px-3 py-3 align-middle"><ProfileIdentity profile={{ name: task.assignee || 'Unassigned', contextLabel: task.assignee ? 'Assignee' : 'Unassigned' }} showRole={false} /></td>
-                    <td className="px-3 py-3 align-middle"><span className={'inline-flex rounded-badge border px-2 py-0.5 text-[10px] font-semibold ' + taskPriorityClass[task.priority]}>{taskPriorityLabel[task.priority]}</span></td>
-                    <td className="px-3 py-3 align-middle"><span className={'inline-flex items-center gap-1.5 rounded-badge border px-2 py-0.5 text-[10px] font-semibold ' + taskStatusClass[task.status]}><span className="h-1.5 w-1.5 rounded-full bg-current" />{taskStatusLabel[task.status]}{task.blocked && <span className="text-danger">· Blocked</span>}</span></td>
-                    <td className="px-3 py-3 align-middle">
-                      <div className={'text-xs font-medium tabular-nums ' + (taskDueState(task) === 'overdue' ? 'text-danger' : taskDueState(task) === 'due-soon' ? 'text-warning' : 'text-fg')}>{formatTaskDue(task.dueDate)}</div>
-                      <div className="mt-1 text-[10px] text-muted">{taskDueState(task) === 'overdue' ? 'Overdue' : taskDueState(task) === 'due-soon' ? 'Due soon' : task.status === 'done' ? 'Completed' : 'Scheduled'}</div>
+                    <td className="px-3 py-3 align-middle" data-ams-slug={task.slug + '-assignee'}>
+                      <ProfileIdentity profile={{ name: task.assignee || 'Unassigned', contextLabel: task.assignee ? 'Assignee' : 'Unassigned' }} showRole={false} />
                     </td>
-                    <td className="px-4 py-3 text-right align-middle">
+                    <td className="px-3 py-3 align-middle" data-ams-slug={task.slug + '-priority'}>
+                      <span className={'inline-flex rounded-badge border px-2 py-0.5 text-[10px] font-semibold ' + taskPriorityClass[task.priority]}>{taskPriorityLabel[task.priority]}</span>
+                    </td>
+                    <td className="px-3 py-3 align-middle" data-ams-slug={task.slug + '-status'}>
+                      <span className={'inline-flex items-center gap-1.5 rounded-badge border px-2 py-0.5 text-[10px] font-semibold ' + taskStatusClass[task.status]}><span className="h-1.5 w-1.5 rounded-full bg-current" />{taskStatusLabel[task.status]}{task.blocked && <span className="text-danger">· Blocked</span>}</span>
+                    </td>
+                    <td className="px-3 py-3 align-middle" data-ams-slug={task.slug + '-due'}>
+                      <div className={'text-xs font-medium tabular-nums ' + (taskDueState(task) === 'overdue' ? 'text-danger' : taskDueState(task) === 'due-soon' ? 'text-warning' : 'text-fg')}>{formatTaskDue(task.dueDate)}</div>
+                      <div className="mt-1 text-[10px] text-muted">{taskDueLabel(task)}</div>
+                    </td>
+                    <td className="px-4 py-3 text-right align-middle" data-ams-slug={task.slug + '-actions'}>
                       <div className="flex items-center justify-end gap-1.5">
-                        <button type="button" title="View task" aria-label={'View ' + task.title} onClick={() => setSelectedTask(task)} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-bg hover:text-fg">
+                        <button type="button" title="View task" aria-label={'View ' + task.title} onClick={() => setSelectedTask(task)} data-ams-slug={task.slug + '-view'} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-bg hover:text-fg">
                           <Eye size={14} />
                         </button>
-                        <button type="button" title="Mark done" aria-label={'Mark ' + task.title + ' done'} disabled={updatingTaskId === task.id || task.status === 'done'} onClick={() => void updateTaskStatus(task, 'done')} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:border-success/30 hover:bg-success/10 hover:text-success disabled:opacity-40">
-                          <CheckCircle2 size={14} />
-                        </button>
-                        <Link to={'/admin/projects?projects=sprint&project=' + encodeURIComponent(task.projectSlug)} title="Open project delivery" aria-label={'Open project delivery for ' + task.title} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-bg hover:text-fg">
+                        {canManageTasks && task.status !== 'done' && (
+                          <button type="button" title={task.status === 'todo' ? 'Start task' : task.status === 'in_progress' ? 'Move to review' : 'Mark done'} aria-label={task.status === 'todo' ? 'Start ' + task.title : task.status === 'in_progress' ? 'Move ' + task.title + ' to review' : 'Mark ' + task.title + ' done'} disabled={updatingTaskId === task.id} onClick={() => void updateTaskStatus(task, task.status === 'todo' ? 'in_progress' : task.status === 'in_progress' ? 'review' : 'done')} data-ams-slug={task.slug + '-quick-action'} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:border-accent/30 hover:bg-bg hover:text-fg disabled:opacity-40">
+                            {task.status === 'todo' ? <Clock3 size={14} /> : task.status === 'in_progress' ? <ArrowUpRight size={14} /> : <CheckCircle2 size={14} />}
+                          </button>
+                        )}
+                        <Link to={'/admin/projects?projects=sprint&project=' + encodeURIComponent(task.projectSlug)} title="Open project delivery" aria-label={'Open project delivery for ' + task.title} data-ams-slug={task.slug + '-project-link'} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-bg hover:text-fg">
                           <ArrowUpRight size={14} />
                         </Link>
                       </div>
@@ -698,9 +879,20 @@ export const TasksWorkspace: React.FC = () => {
           </div>
         )}
 
-        <div className="flex flex-col gap-2 border-t border-line bg-panel px-4 py-3 text-[11px] text-muted sm:flex-row sm:items-center sm:justify-between">
-          <span>Showing <span className="font-semibold tabular-nums text-fg">{filteredRecords.length}</span> of <span className="font-semibold tabular-nums text-fg">{scopedRecords.length}</span> tasks in {(currentScopeLabel[taskScope] || 'All Tasks').toLowerCase()}</span>
-          <span>{activeFilterCount ? activeFilterCount + ' filter' + (activeFilterCount > 1 ? 's' : '') + ' active' : 'No additional filters'}</span>
+        <div className="flex flex-col gap-2 border-t border-line bg-panel px-4 py-3 text-[11px] text-muted sm:flex-row sm:items-center sm:justify-between" data-ams-feature-slug="tasks-pagination">
+          <span>
+            Showing <span className="font-semibold tabular-nums text-fg">{filteredRecords.length ? (page - 1) * PAGE_SIZE + 1 : 0}</span>
+            {' '}to{' '}
+            <span className="font-semibold tabular-nums text-fg">{Math.min(page * PAGE_SIZE, filteredRecords.length)}</span>
+            {' '}of{' '}
+            <span className="font-semibold tabular-nums text-fg">{filteredRecords.length}</span>
+            {' '}tasks
+          </span>
+          <div className="flex items-center gap-2">
+            <span data-ams-slug="tasks-page-status">Page {page} of {totalPages}</span>
+            <button type="button" disabled={page <= 1} onClick={() => setPage(current => Math.max(1, current - 1))} data-ams-slug="tasks-page-prev" className="inline-flex h-8 items-center rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted hover:bg-panel hover:text-fg disabled:opacity-40">Previous</button>
+            <button type="button" disabled={page >= totalPages} onClick={() => setPage(current => Math.min(totalPages, current + 1))} data-ams-slug="tasks-page-next" className="inline-flex h-8 items-center rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted hover:bg-panel hover:text-fg disabled:opacity-40">Next</button>
+          </div>
         </div>
       </AdminPanel>
 
@@ -712,27 +904,35 @@ export const TasksWorkspace: React.FC = () => {
         description="Add a task to an existing project delivery queue."
         footer={(
           <>
-            <Button type="button" variant="secondary" onClick={() => setTaskFormOpen(false)} disabled={savingTask}>Cancel</Button>
-            <Button type="submit" variant="primary" form="tasks-create-form" loading={savingTask}>Create Task</Button>
+            <Button type="button" variant="secondary" onClick={() => setTaskFormOpen(false)} disabled={savingTask} data-ams-slug="task-create-cancel">Cancel</Button>
+            <Button type="submit" variant="primary" form="tasks-create-form" loading={savingTask} data-ams-slug="task-create-submit">Create Task</Button>
           </>
         )}
       >
-        <form id="tasks-create-form" onSubmit={saveNewTask} className="space-y-4">
-          <div>
-            <label className="text-[11px] font-medium text-muted">Task title</label>
-            <input value={taskForm.title} onChange={event => setTaskForm(current => ({ ...current, title: event.target.value }))} className="mt-1 h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent" placeholder="e.g. Finalize homepage responsive states" />
+        <form id="tasks-create-form" onSubmit={saveNewTask} className="space-y-4" data-ams-feature-slug="task-create-form">
+          <div data-ams-slug="task-create-title">
+            <label htmlFor="task-title" className="text-[11px] font-medium text-muted">Task title</label>
+            <input id="task-title" required value={taskForm.title} onChange={event => setTaskForm(current => ({ ...current, title: event.target.value }))} className="mt-1 h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent" placeholder="e.g. Finalize homepage responsive states" />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
-            <CustomSelect value={taskForm.projectId} onChange={value => setTaskForm(current => ({ ...current, projectId: value }))} options={projectOptions.map(([value, label]) => ({ value, label }))} triggerClassName="h-9 min-h-9 w-full" />
-            <CustomSelect value={taskForm.assignee} onChange={value => setTaskForm(current => ({ ...current, assignee: value }))} options={[{ value: '', label: 'Unassigned' }, ...assignees.map(item => ({ value: item.id, label: item.name }))]} triggerClassName="h-9 min-h-9 w-full" />
+            <div data-ams-slug="task-create-project"><label className="text-[11px] font-medium text-muted">Project</label><CustomSelect value={taskForm.projectId} onChange={value => setTaskForm(current => ({ ...current, projectId: value }))} options={projectOptions.map(([value, label]) => ({ value, label }))} triggerClassName="mt-1 h-9 min-h-9 w-full" /></div>
+            <div data-ams-slug="task-create-assignee"><label className="text-[11px] font-medium text-muted">Assignee</label><CustomSelect value={taskForm.assignee} onChange={value => setTaskForm(current => ({ ...current, assignee: value }))} options={[{ value: '', label: 'Unassigned' }, ...assignees.map(item => ({ value: item.id, label: item.name }))]} triggerClassName="mt-1 h-9 min-h-9 w-full" /></div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
-            <CustomSelect value={taskForm.priority} onChange={value => setTaskForm(current => ({ ...current, priority: value as TaskPriority }))} options={Object.entries(taskPriorityLabel).map(([value, label]) => ({ value, label }))} triggerClassName="h-9 min-h-9 w-full" />
-            <input type="date" value={taskForm.dueDate} onChange={event => setTaskForm(current => ({ ...current, dueDate: event.target.value }))} className="h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent" />
+            <div data-ams-slug="task-create-priority"><label className="text-[11px] font-medium text-muted">Priority</label><CustomSelect value={taskForm.priority} onChange={value => setTaskForm(current => ({ ...current, priority: value as TaskPriority }))} options={Object.entries(taskPriorityLabel).map(([value, label]) => ({ value, label }))} triggerClassName="mt-1 h-9 min-h-9 w-full" /></div>
+            <div data-ams-slug="task-create-due"><label htmlFor="task-due" className="text-[11px] font-medium text-muted">Due date</label><input id="task-due" type="date" required value={taskForm.dueDate} onChange={event => setTaskForm(current => ({ ...current, dueDate: event.target.value }))} className="mt-1 h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent" /></div>
           </div>
-          <div>
-            <label className="text-[11px] font-medium text-muted">Description</label>
-            <textarea value={taskForm.description} onChange={event => setTaskForm(current => ({ ...current, description: event.target.value }))} rows={4} className="mt-1 w-full resize-none rounded-control border border-line bg-bg px-3 py-2 text-xs leading-5 text-fg outline-none focus:border-accent" placeholder="Task context, acceptance note, or handoff details." />
+          <div data-ams-slug="task-create-tags">
+            <label htmlFor="task-tags" className="text-[11px] font-medium text-muted">Tags</label>
+            <div className="relative mt-1">
+              <Tag size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+              <input id="task-tags" value={taskForm.tags} onChange={event => setTaskForm(current => ({ ...current, tags: event.target.value }))} className="h-9 w-full rounded-control border border-line bg-bg pl-9 pr-3 text-xs text-fg outline-none focus:border-accent" placeholder="qa, client, launch" />
+            </div>
+            <p className="mt-1 text-[10px] text-muted">Use commas to add up to six tags.</p>
+          </div>
+          <div data-ams-slug="task-create-description">
+            <label htmlFor="task-description" className="text-[11px] font-medium text-muted">Description</label>
+            <textarea id="task-description" value={taskForm.description} onChange={event => setTaskForm(current => ({ ...current, description: event.target.value }))} rows={4} className="mt-1 w-full resize-none rounded-control border border-line bg-bg px-3 py-2 text-xs leading-5 text-fg outline-none focus:border-accent" placeholder="Task context, acceptance note, or handoff details." />
           </div>
         </form>
       </Modal>
@@ -742,12 +942,12 @@ export const TasksWorkspace: React.FC = () => {
         onClose={() => setSelectedTask(null)}
         size="lg"
         title={selectedTask?.title || 'Task details'}
-        description={selectedTask?.projectName}
+        description={selectedTask ? selectedTask.projectName : undefined}
         footer={(
           <>
-            <Button type="button" variant="secondary" onClick={() => setSelectedTask(null)}>Close</Button>
-            {selectedTask && selectedTask.status !== 'done' && (
-              <Button type="button" variant="primary" icon={<CheckCircle2 size={14} />} onClick={() => void updateTaskStatus(selectedTask, 'done')}>
+            <Button type="button" variant="secondary" onClick={() => setSelectedTask(null)} data-ams-slug="task-detail-close">Close</Button>
+            {selectedTask && canManageTasks && selectedTask.status !== 'done' && (
+              <Button type="button" variant="primary" icon={<CheckCircle2 size={14} />} onClick={() => void updateTaskStatus(selectedTask, 'done')} data-ams-slug="task-detail-done">
                 Mark done
               </Button>
             )}
@@ -755,43 +955,44 @@ export const TasksWorkspace: React.FC = () => {
         )}
       >
         {selectedTask && (
-          <div className="space-y-4">
+          <div className="space-y-4" data-ams-feature-slug={selectedTask.slug + '-detail'}>
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-control border border-line bg-bg p-3">
+              <div className="rounded-control border border-line bg-bg p-3" data-ams-slug={selectedTask.slug + '-id'}>
                 <div className="text-[10px] font-medium text-muted">Task ID</div>
                 <div className="mt-1 font-mono text-xs font-semibold text-fg">{selectedTask.id}</div>
               </div>
-              <div className="rounded-control border border-line bg-bg p-3">
+              <div className="rounded-control border border-line bg-bg p-3" data-ams-slug={selectedTask.slug + '-status-detail'}>
                 <div className="text-[10px] font-medium text-muted">Status</div>
                 <span className={'mt-1 inline-flex rounded-badge border px-2 py-1 text-[10px] font-semibold ' + taskStatusClass[selectedTask.status]}>{taskStatusLabel[selectedTask.status]}</span>
               </div>
-              <div className="rounded-control border border-line bg-bg p-3">
+              <div className="rounded-control border border-line bg-bg p-3" data-ams-slug={selectedTask.slug + '-priority-detail'}>
                 <div className="text-[10px] font-medium text-muted">Priority</div>
                 <span className={'mt-1 inline-flex rounded-badge border px-2 py-1 text-[10px] font-semibold ' + taskPriorityClass[selectedTask.priority]}>{taskPriorityLabel[selectedTask.priority]}</span>
               </div>
-              <div className="rounded-control border border-line bg-bg p-3">
+              <div className="rounded-control border border-line bg-bg p-3" data-ams-slug={selectedTask.slug + '-due-detail'}>
                 <div className="text-[10px] font-medium text-muted">Due date</div>
                 <div className="mt-1 text-xs font-semibold tabular-nums text-fg">{formatTaskDue(selectedTask.dueDate)}</div>
+                <div className="mt-1 text-[10px] text-muted">{taskDueLabel(selectedTask)}</div>
               </div>
-              <div className="rounded-control border border-line bg-bg p-3">
+              <div className="rounded-control border border-line bg-bg p-3" data-ams-slug={selectedTask.slug + '-assignee-detail'}>
                 <div className="text-[10px] font-medium text-muted">Assignee</div>
                 <div className="mt-1"><ProfileIdentity profile={{ name: selectedTask.assignee || 'Unassigned', contextLabel: 'Assignee' }} showRole={false} /></div>
               </div>
-              <div className="rounded-control border border-line bg-bg p-3">
+              <div className="rounded-control border border-line bg-bg p-3" data-ams-slug={selectedTask.slug + '-client-detail'}>
                 <div className="text-[10px] font-medium text-muted">Client</div>
                 <div className="mt-1 text-xs font-semibold text-fg">{selectedTask.clientName || 'Internal'}</div>
               </div>
             </div>
 
             {selectedTask.description && (
-              <div className="rounded-card border border-line bg-bg p-4">
+              <div className="rounded-card border border-line bg-bg p-4" data-ams-slug={selectedTask.slug + '-description'}>
                 <div className="text-[11px] font-semibold text-fg">Description</div>
                 <p className="mt-2 whitespace-pre-wrap text-xs leading-5 text-muted">{selectedTask.description}</p>
               </div>
             )}
 
-            <div className="rounded-card border border-line bg-bg p-4">
-              <div className="flex items-center justify-between gap-3">
+            <div className="rounded-card border border-line bg-bg p-4" data-ams-slug={selectedTask.slug + '-flow'}>
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <span className="text-[11px] font-semibold text-fg">Task flow</span>
                 <span className="font-mono text-[9px] text-muted/70">slug: {selectedTask.slug}</span>
               </div>
@@ -800,9 +1001,10 @@ export const TasksWorkspace: React.FC = () => {
                   <button
                     key={status}
                     type="button"
-                    disabled={updatingTaskId === selectedTask.id}
-                    onClick={() => { void updateTaskStatus(selectedTask, status); }}
-                    className={'min-h-9 rounded-control border px-2 text-[10px] font-semibold transition-colors ' + (selectedTask.status === status ? taskStatusClass[status] : 'border-line bg-panel text-muted hover:text-fg')}
+                    disabled={!canManageTasks || updatingTaskId === selectedTask.id}
+                    onClick={() => void updateTaskStatus(selectedTask, status)}
+                    data-ams-slug={selectedTask.slug + '-flow-' + status}
+                    className={'min-h-9 rounded-control border px-2 text-[10px] font-semibold transition-colors ' + (selectedTask.status === status ? taskStatusClass[status] : 'border-line bg-panel text-muted hover:text-fg') + ((!canManageTasks || updatingTaskId === selectedTask.id) ? ' opacity-50' : '')}
                   >
                     {taskStatusLabel[status]}
                   </button>
@@ -810,8 +1012,28 @@ export const TasksWorkspace: React.FC = () => {
               </div>
             </div>
 
+            {selectedTask.tags.length > 0 && (
+              <div className="rounded-card border border-line bg-bg p-4" data-ams-slug={selectedTask.slug + '-tags'}>
+                <div className="flex items-center gap-2 text-[11px] font-semibold text-fg"><Tag size={13} /> Tags</div>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {selectedTask.tags.map(tag => <span key={tag} data-ams-slug={selectedTask.slug + '-tag-' + slugify(tag)} className="rounded-badge border border-line bg-panel px-2 py-1 text-[10px] text-muted">{tag}</span>)}
+                </div>
+              </div>
+            )}
+
+            <Link
+              to={'/admin/projects?projects=sprint&project=' + encodeURIComponent(selectedTask.projectSlug)}
+              onClick={() => setSelectedTask(null)}
+              data-ams-slug={selectedTask.slug + '-open-project'}
+              className="inline-flex min-h-9 items-center gap-2 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover"
+            >
+              <FolderKanban size={14} />
+              Open project delivery
+              <ArrowUpRight size={13} className="text-muted" />
+            </Link>
+
             {selectedTask.blocked && (
-              <div className="rounded-card border border-danger/20 bg-danger/5 p-3 text-xs text-danger">
+              <div className="rounded-card border border-danger/20 bg-danger/5 p-3 text-xs text-danger" data-ams-slug={selectedTask.slug + '-blocked-warning'}>
                 This task is blocked and needs its dependency cleared before completion.
               </div>
             )}
