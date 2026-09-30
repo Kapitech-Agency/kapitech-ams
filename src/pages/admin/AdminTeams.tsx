@@ -389,13 +389,29 @@ export const AdminTeams: React.FC = () => {
       }));
     }
 
-    const usedPreviewData = nextMembers.length === 0 && nextVendors.length === 0 && nextProjects.length === 0 && nextLogs.length === 0;
-    if (usedPreviewData) {
+    const previewTabs: string[] = [];
+    if (nextMembers.length === 0) {
       nextMembers = previewMembers;
+      previewTabs.push('Team Directory');
+    }
+    if (nextVendors.length === 0) {
       nextVendors = previewVendors;
+      previewTabs.push('Vendor Directory');
+    }
+    if (nextProjects.length === 0) {
       nextProjects = previewProjects;
+      previewTabs.push('Capacity & Allocation');
+    }
+    if (nextLogs.length === 0) {
       nextLogs = previewLogs;
-      setNotice({ tone: 'success', message: 'Preview slug data active because Team Operations has no server data yet.' });
+      previewTabs.push('Time Logs');
+    }
+
+    if (previewTabs.length > 0) {
+      setNotice({
+        tone: 'success',
+        message: 'Frontend preview data is active for ' + previewTabs.join(', ') + ' so the slug structure can be inspected before server data is available.'
+      });
     } else if (!memberRes.success && nextMembers.length === 0) {
       setNotice({ tone: 'danger', message: memberRes.error || 'Team directory could not be loaded.' });
     }
