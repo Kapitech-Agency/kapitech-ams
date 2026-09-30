@@ -302,7 +302,6 @@ export const TasksWorkspace: React.FC = () => {
                     })).filter((item: { title: string }) => item.title)
                   : [],
               });
-              });
             });
           });
 
