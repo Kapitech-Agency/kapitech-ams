@@ -14,6 +14,7 @@ import {
   X
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
+import { AdminFilterBar, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Modal } from '../../components/ui/Modal';
 
@@ -137,30 +138,52 @@ export const AdminClientSlaMonitoring: React.FC = () => {
   };
 
   return (
-    <div className="ams-clients-module min-h-full pb-8">
-      <header className="mb-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2.5"><h1 className="text-2xl font-medium leading-8 tracking-[-0.02em] text-fg">SLA Monitoring</h1><span className="inline-flex items-center gap-1.5 rounded-badge border border-success/20 bg-success/10 px-2 py-0.5 text-[11px] font-semibold text-success"><CheckCircle2 size={12} /> {complianceCount}/{records.length} compliant</span></div>
-          <p className="mt-1 max-w-3xl text-[13px] leading-5 text-muted">Operational SLA health across active client contracts, response performance, and recent incidents.</p>
-        </div>
-        <Button type="button" variant="secondary" onClick={exportSnapshot} icon={<Download size={14} />}>Export Snapshot</Button>
-      </header>
+    <AdminPageShell featureSlug="client-sla-monitoring-module" className="ams-clients-module">
+      <AdminModuleHeader
+        className="mb-0"
+        title="SLA Monitoring"
+        description="Operational SLA health across active client contracts, response performance, and recent incidents."
+        eyebrow={<AdminStatusBadge tone="success" icon={<CheckCircle2 size={12} />}>{complianceCount}/{records.length} compliant</AdminStatusBadge>}
+        actions={<Button type="button" variant="secondary" onClick={exportSnapshot} icon={<Download size={14} />}>Export Snapshot</Button>}
+      />
 
-      {message && <div className="mb-4 flex items-center justify-between rounded-card border border-line bg-panel px-3 py-2.5 text-xs text-fg" role="status" aria-live="polite"><span>{message}</span><button type="button" onClick={() => setMessage(null)} className="inline-flex h-9 w-9 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Dismiss"><X size={14} /></button></div>}
+      <div className="min-[900px]:hidden min-w-0">
+        <AdminSectionTabs
+          ariaLabel="Clients sections"
+          activeKey="sla-monitoring"
+          items={[
+            { key: 'all-clients', label: 'All Clients', to: '/admin/clients' },
+            { key: 'retainers', label: 'Retainers', to: '/admin/clients/retainers' },
+            { key: 'sla-monitoring', label: 'SLA Monitoring', to: '/admin/clients/sla-monitoring' },
+            { key: 'lead-accounts', label: 'Lead Accounts', to: '/admin/clients/lead-accounts' },
+          ]}
+        />
+      </div>
 
-      <section className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-4" aria-label="SLA metrics">
+      {message && <div className="flex items-center justify-between rounded-card border border-line bg-panel px-3 py-2.5 text-xs text-fg" role="status" aria-live="polite"><span>{message}</span><button type="button" onClick={() => setMessage(null)} className="inline-flex h-9 w-9 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Dismiss"><X size={14} /></button></div>}
+
+      <section className="grid grid-cols-1 gap-3 md:grid-cols-4" aria-label="SLA metrics">
         <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">AVERAGE UPTIME</span><Activity size={18} /></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatPercent(avgUptime)}</div><p className="mt-1 text-[11px] text-muted">Across the monitored account set</p></div>
         <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">AVERAGE MTTR</span><TimerReset size={18} /></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{Math.round(avgMttr)} min</div><p className="mt-1 text-[11px] text-muted">Time to service recovery</p></div>
         <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">WARNING ACCOUNTS</span><AlertTriangle size={18} className="text-warning" /></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{warnings}</div><p className="mt-1 text-[11px] text-muted">Requires active review</p></div>
         <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">DEGRADED ACCOUNTS</span><AlertTriangle size={18} className="text-danger" /></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{degraded}</div><p className="mt-1 text-[11px] text-muted">Needs corrective action</p></div>
       </section>
 
-      <section className="mb-4 rounded-card border border-line bg-panel p-4" aria-label="SLA filters">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          <div className="relative w-full xl:max-w-[420px]"><Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" /><label htmlFor="sla-search" className="sr-only">Search SLA accounts</label><input id="sla-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search account, pod, incident, or SLA ID..." className="h-9 w-full rounded-control border border-line bg-bg pl-9 pr-3 text-xs text-fg placeholder:text-muted focus:border-accent focus:outline-none" /></div>
-          <div className="flex flex-wrap items-center gap-2"><CustomSelect value={tier} onChange={(value) => setTier(value as 'all' | Tier)} options={[{ value: 'all', label: 'All tiers' }, { value: 'tier-1', label: 'Tier 1 Strategic' }, { value: 'tier-2', label: 'Tier 2 Enterprise' }, { value: 'tier-3', label: 'Tier 3 Growth' }]} aria-label="SLA tier" className="min-w-[142px]" triggerClassName="w-full" /><CustomSelect value={status} onChange={(value) => setStatus(value as 'all' | Compliance)} options={[{ value: 'all', label: 'All statuses' }, { value: 'healthy', label: 'Compliant' }, { value: 'warning', label: 'Warning' }, { value: 'degraded', label: 'Degraded' }]} aria-label="SLA status" className="min-w-[132px]" triggerClassName="w-full" /><CustomSelect value={pod} onChange={setPod} options={[{ value: 'all', label: 'All pods' }, ...podOptions.map((value) => ({ value, label: value }))]} aria-label="Service pod" className="min-w-[126px]" triggerClassName="w-full" /><button type="button" onClick={reset} className="inline-flex h-9 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-muted hover:bg-panel hover:text-fg"><X size={13} /> Reset</button></div>
-        </div>
-      </section>
+      <AdminFilterBar
+        slug="client-sla-filters"
+        searchValue={query}
+        onSearchChange={setQuery}
+        searchPlaceholder="Search account, pod, incident, or SLA ID..."
+        searchLabel="Search SLA accounts"
+        actions={(
+          <>
+            <CustomSelect value={tier} onChange={(value) => setTier(value as 'all' | Tier)} options={[{ value: 'all', label: 'All tiers' }, { value: 'tier-1', label: 'Tier 1 Strategic' }, { value: 'tier-2', label: 'Tier 2 Enterprise' }, { value: 'tier-3', label: 'Tier 3 Growth' }]} aria-label="SLA tier" className="min-w-[142px]" triggerClassName="w-full" />
+            <CustomSelect value={status} onChange={(value) => setStatus(value as 'all' | Compliance)} options={[{ value: 'all', label: 'All statuses' }, { value: 'healthy', label: 'Compliant' }, { value: 'warning', label: 'Warning' }, { value: 'degraded', label: 'Degraded' }]} aria-label="SLA status" className="min-w-[132px]" triggerClassName="w-full" />
+            <CustomSelect value={pod} onChange={setPod} options={[{ value: 'all', label: 'All pods' }, ...podOptions.map((value) => ({ value, label: value }))]} aria-label="Service pod" className="min-w-[126px]" triggerClassName="w-full" />
+            <Button type="button" variant="secondary" icon={<X size={13} />} onClick={reset}>Reset filters</Button>
+          </>
+        )}
+      />
 
       <section className="ams-client-table-shell overflow-hidden rounded-card border border-line bg-panel" aria-label="SLA monitoring table">
         <div className="overflow-x-auto custom-scrollbar">
@@ -197,7 +220,7 @@ export const AdminClientSlaMonitoring: React.FC = () => {
         {!isLoading && <AdminTablePagination total={filtered.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="monitored accounts" slug="sla-monitoring-pagination" />}
       </section>
 
-      <section className="mt-3 grid grid-cols-1 gap-3 text-[11px] text-muted md:grid-cols-4" aria-label="SLA summary">
+      <section className="grid grid-cols-1 gap-3 text-[11px] text-muted md:grid-cols-4" aria-label="SLA summary">
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><CheckCircle2 size={14} className="text-success" /><span>Compliant accounts: <strong className="text-fg">{complianceCount}</strong></span></div>
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><AlertTriangle size={14} className="text-warning" /><span>Warning accounts: <strong className="text-fg">{warnings}</strong></span></div>
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><FileText size={14} className="text-info" /><span>Degraded accounts: <strong className="text-fg">{degraded}</strong></span></div>
@@ -211,7 +234,7 @@ export const AdminClientSlaMonitoring: React.FC = () => {
       <Modal open={!!selectedTelemetry} onClose={() => setSelectedTelemetry(null)} size="lg" title="Service telemetry" description={selectedTelemetry ? `${selectedTelemetry.client} · account monitoring snapshot` : undefined} footer={<div className="flex justify-end gap-2"><Button type="button" variant="secondary" onClick={() => setSelectedTelemetry(null)}>Close</Button><Button type="button" variant="primary" onClick={() => setMessage('Telemetry export is not connected yet.')} icon={<Download size={14} />}>Export snapshot</Button></div>}>
         {selectedTelemetry && <div className="space-y-4"><div className="rounded-card border border-line bg-bg p-4"><div className="flex items-center justify-between gap-3"><div><p className="text-sm font-semibold text-fg">{selectedTelemetry.client}</p><p className="mt-0.5 text-xs text-muted">{selectedTelemetry.pod} · {tierLabel[selectedTelemetry.tier]}</p></div><span className={`inline-flex min-h-6 items-center gap-1.5 rounded-badge border px-2 py-0.5 text-[10px] font-medium ${complianceMeta[selectedTelemetry.compliance].className}`}><span className={`h-1.5 w-1.5 rounded-full ${complianceMeta[selectedTelemetry.compliance].dot}`} />{complianceMeta[selectedTelemetry.compliance].label}</span></div></div><div className="grid gap-3 sm:grid-cols-3"><div className="rounded-card border border-line bg-panel p-4"><span className="text-[10px] uppercase tracking-wider text-muted">30D uptime</span><div className="mt-1 text-lg font-medium tabular-nums text-fg">{formatPercent(selectedTelemetry.currentUptime)}</div></div><div className="rounded-card border border-line bg-panel p-4"><span className="text-[10px] uppercase tracking-wider text-muted">Target</span><div className="mt-1 text-lg font-medium tabular-nums text-fg">{formatPercent(selectedTelemetry.targetSla)}</div></div><div className="rounded-card border border-line bg-panel p-4"><span className="text-[10px] uppercase tracking-wider text-muted">MTTR</span><div className="mt-1 text-lg font-medium tabular-nums text-fg">{selectedTelemetry.mttrMinutes} min</div></div></div><div className="rounded-card border border-line bg-panel p-4"><div className="mb-2 flex items-center justify-between text-xs"><span className="font-medium text-fg">Availability</span><span className="tabular-nums text-muted">{formatPercent(selectedTelemetry.currentUptime)}</span></div><div className="h-2 overflow-hidden rounded-full bg-line/70"><div className="h-2 rounded-full bg-success" style={{ width: Math.min(100, Math.max(0, selectedTelemetry.currentUptime)) + '%' }} /></div><p className="mt-2 text-xs text-muted">Monitoring values are shown from the current client-module data set.</p></div></div>}
       </Modal>
-    </div>
+    </AdminPageShell>
   );
 };
 
