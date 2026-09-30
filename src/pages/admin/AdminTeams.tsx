@@ -32,7 +32,7 @@ import {
   WalletCards,
   X
 } from 'lucide-react';
-import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPanel, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPanel, AdminTablePagination , AdminPageShell } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Modal } from '../../components/ui/Modal';
@@ -955,8 +955,9 @@ export const AdminTeams: React.FC = () => {
   };
 
   return (
-    <div className="min-h-full pb-10">
+    <AdminPageShell featureSlug="team-module">
       <AdminModuleHeader
+        className="mb-0"
         title={currentView === 'team-directory'
           ? <>Team Directory <span className="inline-flex items-center rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] font-medium text-muted">{members.length} Internal Members</span></>
           : pageCopy[currentView].title}
@@ -1851,6 +1852,6 @@ export const AdminTeams: React.FC = () => {
         confirmLabel="Delete"
         onConfirm={() => void deleteTimeLog()}
       />
-    </div>
+    </AdminPageShell>
   );
 };
