@@ -45,6 +45,7 @@ export const AdminModuleHeader: React.FC<AdminModuleHeaderProps> = ({
 
 export interface AdminMetric {
   id?: string;
+  slug?: string;
   label: React.ReactNode;
   value: React.ReactNode;
   context?: React.ReactNode;
@@ -100,9 +101,9 @@ const MetricSparkline: React.FC<{ values?: number[]; label: React.ReactNode; ton
 };
 
 export const AdminMetricCard: React.FC<AdminMetric & { className?: string }> = ({
-  label, value, context, change, changeToneClassName = 'text-muted', sparkline, icon, toneClassName = 'text-fg', className
+  label, value, context, change, changeToneClassName = 'text-muted', sparkline, icon, toneClassName = 'text-fg', slug, id, className
 }) => (
-  <article className={cn('ams-dashboard-card rounded-card border border-line bg-panel p-4 transition-colors hover:bg-panel-hover', className)}>
+  <article data-ams-slug={slug || (id ? 'metric-' + String(id).replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase() : undefined)} className={cn('ams-dashboard-card rounded-card border border-line bg-panel p-4 transition-colors hover:bg-panel-hover', className)}>
     <div className="flex items-start justify-between gap-3">
       <span className="min-w-0 truncate text-xs font-medium leading-4 text-muted">{label}</span>
       {icon && <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg', toneClassName)}>{icon}</span>}
@@ -185,6 +186,7 @@ export interface AdminPanelProps {
   children: React.ReactNode;
   className?: string;
   bodyClassName?: string;
+  slug?: string;
 }
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({
@@ -193,9 +195,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   actions,
   children,
   className,
-  bodyClassName
+  bodyClassName,
+  slug
 }) => (
-  <section className={cn('rounded-card border border-line bg-panel', className)}>
+  <section data-ams-slug={slug} className={cn('rounded-card border border-line bg-panel', className)}>
     {(title || description || actions) && (
       <div className="flex flex-col gap-3 border-b border-line px-4 py-3 sm:flex-row sm:items-start sm:justify-between sm:px-5">
         <div className="min-w-0">
