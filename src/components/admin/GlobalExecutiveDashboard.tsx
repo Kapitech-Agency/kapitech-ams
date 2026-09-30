@@ -534,7 +534,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             statusTone,
             progress: Math.max(0, Math.min(100, Number(project.progress ?? project.progressPercent ?? 0) || 0)),
             lead: String(project.teamLead || project.ownerName || project.lead || 'Unassigned'),
-            budget: formatMoney(Number(project.budget ?? project.totalBudget ?? 0))
+            budget: formatLiveMoney(
+              Number(project.budget ?? project.totalBudget ?? 0) || 0,
+              String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase()
+            )
           };
         })
       : [];
