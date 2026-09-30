@@ -1673,7 +1673,7 @@ export const AdminProjects: React.FC = () => {
               </div>
             ) : projectLayout === 'board' ? (
               <div className="ams-project-kanban-board overflow-x-auto overflow-y-visible">
-                <div className="flex min-w-max items-stretch gap-4 px-5 pb-12 pt-5 sm:px-6 sm:pb-16 sm:pt-6">
+                <div className="flex min-w-max items-start gap-3 px-3 pb-5 pt-3 sm:gap-3.5 sm:px-4 sm:pb-6 sm:pt-4">
                   {PROJECT_KANBAN_COLUMNS.map(column => {
                     const items = filteredProjects.filter(project => project.status === column.id);
                     const isDropTarget = dragOverProjectStatus === column.id;
@@ -1683,20 +1683,20 @@ export const AdminProjects: React.FC = () => {
                         key={column.id}
                         aria-label={column.label + ' project column'}
                         className={[
-                          'ams-project-kanban-lane flex w-[352px] shrink-0 self-start flex-col overflow-visible rounded-card border transition-[border-color,background-color,box-shadow] duration-200 sm:w-[390px]',
+                          'ams-project-kanban-lane flex w-[330px] shrink-0 self-start flex-col overflow-visible rounded-card border transition-[border-color,background-color] duration-150 sm:w-[348px]',
                           isDropTarget
                             ? 'border-accent/50 bg-accent/5'
                             : 'border-line/80',
                         ].join(' ')}
                         data-drop-target={isDropTarget ? 'true' : 'false'}
                       >
-                        <div className="shrink-0 border-b border-line/80 bg-panel px-4 py-4">
+                        <div className="shrink-0 border-b border-line bg-panel px-3.5 py-3">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
                                 <span className={'h-2 w-2 shrink-0 rounded-full ' + column.dot} />
                                 <span className="text-xs font-semibold text-fg">{column.label}</span>
-                                <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] font-semibold text-muted">{items.length}</span>
+                                <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] font-semibold text-muted">{items.length}</span>
                               </div>
                               <p className="mt-1 text-[10px] leading-4 text-muted">{column.description}</p>
                             </div>
@@ -1704,7 +1704,7 @@ export const AdminProjects: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => openNewProject(column.id)}
-                                className="inline-flex h-7 shrink-0 items-center gap-1 rounded-control border border-line bg-bg px-2 text-[10px] font-medium text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg"
+                                className="inline-flex h-8 shrink-0 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg"
                                 aria-label={'Add project to ' + column.label}
                               >
                                 <Plus size={12} /> Add
@@ -1755,7 +1755,7 @@ export const AdminProjects: React.FC = () => {
                               setDragOverProjectId(null);
                             }
                           }}
-                          className={'ams-project-kanban-stack flex flex-col gap-3.5 overflow-visible p-3 transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
+                          className={'ams-project-kanban-stack flex flex-col gap-2 overflow-visible p-2.5 transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
                           {items.length === 0 ? (
                             <div className={'flex min-h-[104px] items-center justify-center rounded-card border border-dashed p-4 text-center text-[11px] text-muted transition-colors ' + (isDropTarget ? 'border-accent/40 bg-accent/5 text-fg' : 'border-line')}>
                               <span className="max-w-[190px]">
@@ -1785,7 +1785,7 @@ export const AdminProjects: React.FC = () => {
                                     setDragOverProjectStatus(column.id);
                                     setDragOverProjectId(project.id);
                                   }) : undefined}
-                                  className={'ams-project-kanban-card group cursor-default select-none rounded-card border border-line/90 p-4 transition-[transform,opacity,border-color,background-color] duration-150 hover:-translate-y-px hover:border-accent/40 ' + (
+                                  className={'ams-project-kanban-card group cursor-default select-none rounded-card border border-line p-3.5 transition-[transform,opacity,border-color,background-color] duration-150 hover:-translate-y-px ' + (
                                     isDragging ? 'rotate-[1deg] scale-[0.98] border-accent/50 opacity-70' : movingProjectId === project.id ? 'border-accent/35 opacity-80' : ''
                                   )}
                                 >
@@ -1804,7 +1804,7 @@ export const AdminProjects: React.FC = () => {
                                         tabIndex={canManageProjects && movingProjectId !== project.id ? 0 : -1}
                                         aria-label={canManageProjects ? 'Drag project' : 'Project status'}
                                         className={[
-                                          'mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted transition-[background-color,border-color,color,transform] select-none',
+                                          'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted transition-[background-color,border-color,color] select-none',
                                           canManageProjects && movingProjectId !== project.id
                                             ? 'cursor-grab hover:border-accent/35 hover:bg-panel-hover hover:text-fg active:cursor-grabbing'
                                             : 'cursor-default opacity-70',
@@ -1828,25 +1828,21 @@ export const AdminProjects: React.FC = () => {
                                     </div>
                                   </div>
 
-                                  <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                                  <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-line pt-3">
                                     <span className={'rounded-badge border px-2 py-1 text-[10px] font-medium ' + healthClass(project.health)}>{project.health || 'Good'}</span>
                                     <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{taskDone}/{project.tasks.length} tasks</span>
                                     <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{milestoneDone}/{project.milestones.length || 0} milestones</span>
                                   </div>
-                                  <div className="mt-2 space-y-1.5 text-[10px] text-muted">
-                                    <div className="flex items-start gap-1.5">
-                                      <Briefcase size={11} className="mt-0.5 shrink-0" />
-                                      <span className="break-words whitespace-normal">{project.serviceCategory || 'Delivery'}</span>
+                                  <div className="mt-3 grid grid-cols-2 gap-2">
+                                    <div className="min-w-0 rounded-control border border-line bg-bg px-2.5 py-2">
+                                      <div className="text-[9px] font-medium text-muted">Service</div>
+                                      <div className="mt-0.5 truncate text-[10px] font-medium text-fg">{project.serviceCategory || 'Delivery'}</div>
                                     </div>
-                                    <div className="flex items-start gap-1.5">
-                                      <CalendarDays size={11} className="mt-0.5 shrink-0" />
-                                      <span className="break-words whitespace-normal text-muted">
-                                        {project.startDate ? formatDate(project.startDate) : 'No start date'}
-                                        <span className="mx-1 text-muted/60">→</span>
-                                        <span className={isOverdue(project.targetEndDate) && project.status !== 'completed' ? 'font-semibold text-danger' : 'text-muted'}>
-                                          {project.targetEndDate ? formatDate(project.targetEndDate) : 'No deadline'}
-                                        </span>
-                                      </span>
+                                    <div className="min-w-0 rounded-control border border-line bg-bg px-2.5 py-2">
+                                      <div className="text-[9px] font-medium text-muted">Deadline</div>
+                                      <div className={'mt-0.5 truncate text-[10px] font-medium ' + (isOverdue(project.targetEndDate) && project.status !== 'completed' ? 'text-danger' : 'text-fg')}>
+                                        {project.targetEndDate ? formatDate(project.targetEndDate) : 'Not set'}
+                                      </div>
                                     </div>
                                   </div>
 
@@ -1860,7 +1856,7 @@ export const AdminProjects: React.FC = () => {
                                     </div>
                                   </div>
 
-                                  <div className="mt-3 border-t border-line pt-2.5">
+                                  <div className="mt-3 border-t border-line pt-3">
                                     <div className="flex items-end justify-between gap-3">
                                       <div className="min-w-0">
                                         <div className="text-[10px] font-medium text-muted">Budget burn</div>
@@ -1886,13 +1882,13 @@ export const AdminProjects: React.FC = () => {
                                     </div>
                                   </div>
 
-                                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-2.5 text-[10px]">
+                                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-3 text-[10px]">
                                     <span className="min-w-0 break-words whitespace-normal text-muted">{project.slug}</span>
                                     <div className="flex shrink-0 items-center gap-2">
-                                      <button type="button" onClick={() => openProjectDetail(project)} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-3.5 text-[11px] font-semibold text-fg transition-[background-color,border-color,color] hover:border-accent/30 hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+                                      <button type="button" onClick={() => openProjectDetail(project)} className="inline-flex h-8 min-h-8 items-center justify-center rounded-control border border-line bg-bg px-2.5 text-[10px] font-semibold text-fg transition-colors hover:border-accent/30 hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
                                         View project
                                       </button>
-                                      <button type="button" onClick={() => goToSprint(project)} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control border border-accent/25 bg-accent/10 px-3.5 text-[11px] font-semibold text-accent-text transition-[background-color,border-color,color] hover:border-accent/40 hover:bg-accent/15 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+                                      <button type="button" onClick={() => goToSprint(project)} className="inline-flex h-8 min-h-8 items-center justify-center gap-1 rounded-control border border-accent/25 bg-accent/10 px-2.5 text-[10px] font-semibold text-accent-text transition-colors hover:border-accent/40 hover:bg-accent/15 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
                                         Delivery <ArrowUpRight size={13} />
                                       </button>
                                     </div>
@@ -1910,7 +1906,7 @@ export const AdminProjects: React.FC = () => {
               </div>
             ) : (
               <div className="overflow-x-auto custom-scrollbar">
-                <table className="ams-data-table min-w-[980px] text-left">
+                <table className="ams-projects-table min-w-[1080px] text-left">
                   <thead>
                     <tr>
                       <th>Project</th>
@@ -1929,8 +1925,8 @@ export const AdminProjects: React.FC = () => {
                         <tr key={project.id}>
                           <td>
                             <button type="button" onClick={() => openProjectDetail(project)} className="min-w-0 text-left">
-                              <div className="max-w-[260px] truncate text-xs font-semibold text-fg">{project.name}</div>
-                              <div className="mt-0.5 max-w-[260px] truncate text-[11px] text-muted">{project.clientCompany}</div>
+                              <div className="max-w-[300px] truncate text-xs font-semibold text-fg">{project.name}</div>
+                              <div className="mt-1 max-w-[300px] truncate text-[10px] text-muted">{project.clientCompany || 'No client linked'}</div>
                             </button>
                           </td>
                           <td><span className={'inline-flex rounded-badge border px-2 py-1 text-[10px] font-semibold ' + projectStatusClass(project.status)}>{statusLabel(project.status)}</span></td>
