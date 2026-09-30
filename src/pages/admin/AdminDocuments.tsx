@@ -29,6 +29,7 @@ import {
   AdminMetricStrip,
   AdminModuleHeader,
   AdminPageShell,
+  AdminPanel,
   AdminSectionTabs,
   AdminStatusBadge,
   AdminTablePagination,
