@@ -13,7 +13,6 @@ import {
   Edit3,
   ExternalLink,
   LayoutGrid,
-  LayoutGrid,
   MoreHorizontal,
   Plus,
   ReceiptText,
