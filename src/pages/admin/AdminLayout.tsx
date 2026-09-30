@@ -236,9 +236,9 @@ export const AdminLayout: React.FC = () => {
       {/* DESKTOP SIDEBAR */}
       <motion.aside
         initial={false}
-        animate={{ width: 228 }}
+        animate={{ width: 220 }}
         transition={{ duration: 0.18, ease: 'easeOut' }}
-        className="hidden min-[900px]:flex w-[228px] shrink-0 flex-col relative bg-panel border-r border-line h-full z-30 overflow-hidden"
+        className="hidden min-[900px]:flex w-[220px] shrink-0 flex-col relative bg-panel border-r border-line h-full z-30 overflow-hidden"
       >
         <div className="relative flex h-14 shrink-0 items-center border-b border-line px-3.5">
           <Link to="/admin/dashboard" aria-label="Kapitech AMS dashboard" className="flex min-w-0 flex-1 items-center gap-2.5 rounded-control px-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
@@ -381,7 +381,7 @@ export const AdminLayout: React.FC = () => {
       {/* ------------------------------------------------------------- */}
       {/* MOBILE TOPBAR - Single, sleek, non-cluttered header */}
       {/* ------------------------------------------------------------- */}
-      <div className="min-[900px]:hidden ams-mobile-topbar flex items-center justify-between gap-2 px-3 bg-transparent border-b border-line sticky top-0 z-40 shrink-0 h-[56px] min-h-[56px] pt-[env(safe-area-inset-top)]">
+      <div className="min-[900px]:hidden ams-mobile-topbar flex items-center justify-between gap-2 px-3 bg-panel border-b border-line sticky top-0 z-40 shrink-0 h-[52px] min-h-[52px] pt-[env(safe-area-inset-top)]">
         <div className="flex items-center gap-2.5 min-w-0">
           <button
             onClick={() => setMobileMenuOpen(true)}
@@ -580,7 +580,7 @@ export const AdminLayout: React.FC = () => {
       <main className="flex-1 flex flex-col min-w-0 min-h-0 h-full overflow-y-auto overscroll-none bg-bg custom-scrollbar">
         
         {/* Sticky desktop top bar */}
-        <header className="hidden min-[900px]:flex h-14 min-h-14 border-b border-line bg-transparent sticky top-0 z-30 items-center shrink-0" aria-label="AMS top bar">
+        <header className="hidden min-[900px]:flex h-[52px] min-h-[52px] border-b border-line bg-panel sticky top-0 z-30 items-center shrink-0" aria-label="AMS top bar">
           <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-5 lg:px-6 flex min-w-0 items-center justify-between gap-3">
             <div className="min-w-0 flex-1 overflow-hidden">
               {location.pathname.startsWith('/admin/clients') ? (
