@@ -325,6 +325,7 @@ export const AdminProjects: React.FC = () => {
   );
   const [draggingProjectId, setDraggingProjectId] = useState<string | null>(null);
   const [dragOverProjectStatus, setDragOverProjectStatus] = useState<ProjectStatus | null>(null);
+  const [dragOverProjectId, setDragOverProjectId] = useState<string | null>(null);
   const [movingProjectId, setMovingProjectId] = useState<string | null>(null);
   const [taskSearch, setTaskSearch] = useState('');
   const [taskPriorityFilter, setTaskPriorityFilter] = useState('');
@@ -332,6 +333,7 @@ export const AdminProjects: React.FC = () => {
   const [taskSort, setTaskSort] = useState('priority');
   const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null);
   const [dragOverTaskStatus, setDragOverTaskStatus] = useState<TaskStatus | null>(null);
+  const [dragOverTaskId, setDragOverTaskId] = useState<string | null>(null);
   const [selectedProject, setSelectedProject] = useState<ProjectRecord | null>(null);
   const [selectedTask, setSelectedTask] = useState<ProjectTask | null>(null);
   const [projectDrawerOpen, setProjectDrawerOpen] = useState(false);
@@ -921,6 +923,7 @@ export const AdminProjects: React.FC = () => {
     if (!selectedSprintProject || task.status === status) {
       setDraggingTaskId(null);
       setDragOverTaskStatus(null);
+      setDragOverTaskId(null);
       return;
     }
 
@@ -973,6 +976,7 @@ export const AdminProjects: React.FC = () => {
 
     setDraggingProjectId(project.id);
     setDragOverProjectStatus(project.status);
+    setDragOverProjectId(null);
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/project-id', project.id);
     event.dataTransfer.setData('text/plain', project.id);
@@ -998,6 +1002,7 @@ export const AdminProjects: React.FC = () => {
 
     setDraggingTaskId(task.id);
     setDragOverTaskStatus(task.status);
+    setDragOverTaskId(null);
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/project-task-id', task.id);
     event.dataTransfer.setData('text/plain', task.id);
@@ -1013,6 +1018,7 @@ export const AdminProjects: React.FC = () => {
     if (!canManageProjects || project.status === status || movingProjectId === project.id) {
       setDraggingProjectId(null);
       setDragOverProjectStatus(null);
+      setDragOverProjectId(null);
       return;
     }
 
@@ -1666,7 +1672,7 @@ export const AdminProjects: React.FC = () => {
                 {[1, 2, 3, 4].map(item => <div key={item} className="h-40 animate-pulse rounded-card bg-bg" />)}
               </div>
             ) : projectLayout === 'board' ? (
-              <div className="ams-project-kanban-board overflow-x-auto overflow-y-visible custom-scrollbar">
+              <div className="ams-project-kanban-board overflow-x-auto overflow-y-visible">
                 <div className="flex min-w-max items-stretch gap-4 px-5 pb-12 pt-5 sm:px-6 sm:pb-16 sm:pt-6">
                   {PROJECT_KANBAN_COLUMNS.map(column => {
                     const items = filteredProjects.filter(project => project.status === column.id);
@@ -1677,7 +1683,7 @@ export const AdminProjects: React.FC = () => {
                         key={column.id}
                         aria-label={column.label + ' project column'}
                         className={[
-                          'ams-project-kanban-lane flex min-h-[560px] w-[352px] shrink-0 self-stretch flex-col overflow-visible rounded-card border transition-[border-color,background-color,box-shadow] duration-200 sm:w-[390px]',
+                          'ams-project-kanban-lane flex w-[352px] shrink-0 self-start flex-col overflow-visible rounded-card border transition-[border-color,background-color,box-shadow] duration-200 sm:w-[390px]',
                           isDropTarget
                             ? 'border-accent/50 bg-accent/5'
                             : 'border-line/80',
@@ -1745,12 +1751,7 @@ export const AdminProjects: React.FC = () => {
                               setDragOverProjectStatus(null);
                             }
                           }}
-                          className={'ams-project-kanban-stack flex min-h-[500px] flex-1 flex-col gap-3.5 overflow-visible p-3 transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
-                          {draggingProjectId && canManageProjects && (
-                            <div className={'rounded-control border px-2.5 py-2 text-[9px] font-medium transition-colors ' + (isDropTarget ? 'border-accent/35 bg-accent/10 text-accent-text' : 'border-dashed border-line bg-bg/50 text-muted')}>
-                              {isDropTarget ? 'Release to move project into ' + column.label : 'Drop here to move project into ' + column.label}
-                            </div>
-                          )}
+                          className={'ams-project-kanban-stack flex flex-col gap-3.5 overflow-visible p-3 transition-colors ' + (isDropTarget ? 'bg-accent/5' : '')}>
                           {items.length === 0 ? (
                             <div className={'flex min-h-[180px] items-center justify-center rounded-card border border-dashed p-4 text-center text-[11px] text-muted transition-colors ' + (isDropTarget ? 'border-accent/40 bg-accent/5 text-fg' : 'border-line')}>
                               <span className="max-w-[190px]">
@@ -1766,9 +1767,20 @@ export const AdminProjects: React.FC = () => {
                               const isDragging = draggingProjectId === project.id;
 
                               return (
+                                <React.Fragment key={project.id}>
+                                  {dragOverProjectStatus === column.id && dragOverProjectId === project.id && draggingProjectId !== project.id && (
+                                    <div className="h-2 rounded-badge border border-dashed border-accent/50 bg-accent/10" aria-hidden="true" />
+                                  )}
                                 <article
                                   key={project.id}
                                   aria-grabbed={isDragging}
+                                  onDragOver={canManageProjects ? (event => {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    event.dataTransfer.dropEffect = 'move';
+                                    setDragOverProjectStatus(column.id);
+                                    setDragOverProjectId(project.id);
+                                  }) : undefined}
                                   className={'ams-project-kanban-card group cursor-default select-none rounded-card border border-line/90 p-4 transition-[transform,opacity,border-color,background-color] duration-150 hover:-translate-y-px hover:border-accent/40 ' + (
                                     isDragging ? 'rotate-[1deg] scale-[0.98] border-accent/50 opacity-70' : movingProjectId === project.id ? 'border-accent/35 opacity-80' : ''
                                   )}
@@ -1881,6 +1893,7 @@ export const AdminProjects: React.FC = () => {
                                     </div>
                                   </div>
                                 </article>
+                                </React.Fragment>
                               );
                             })
                           )}
@@ -2185,17 +2198,12 @@ export const AdminProjects: React.FC = () => {
                           </div>
 
                           <div className={[
-                            'min-h-[600px] flex flex-col gap-2.5 bg-bg/30 p-3 pb-5 transition-colors duration-150',
+                            'flex flex-col gap-2.5 bg-bg/30 p-3 pb-3 transition-colors duration-150',
                             isDropTarget ? 'bg-accent/5' : '',
                           ].join(' ')}>
-                            {draggingTaskId && canManageKanbanTasks && (
-                              <div className={'rounded-control border px-2.5 py-2 text-[9px] font-medium transition-colors ' + (isDropTarget ? 'border-accent/35 bg-accent/10 text-accent-text' : 'border-dashed border-line bg-bg/50 text-muted')}>
-                                {isDropTarget ? 'Release to move task into ' + column.label : 'Drop here to move task into ' + column.label}
-                              </div>
-                            )}
                             {tasks.length === 0 ? (
                               <div className={[
-                                'flex min-h-[210px] items-center justify-center rounded-card border border-dashed p-4 text-center transition-colors',
+                                'flex min-h-[104px] items-center justify-center rounded-card border border-dashed p-4 text-center transition-colors',
                                 isDropTarget ? 'border-accent/40 bg-accent/5' : 'border-line/80 bg-bg/35',
                               ].join(' ')}>
                                 <div className="max-w-[180px]">
@@ -2221,9 +2229,20 @@ export const AdminProjects: React.FC = () => {
                                 const dueDays = daysUntil(task.dueDate);
                                 const isDragging = draggingTaskId === task.id;
                                 return (
+                                  <React.Fragment key={task.id}>
+                                    {dragOverTaskStatus === column.id && dragOverTaskId === task.id && draggingTaskId !== task.id && (
+                                      <div className="h-2 rounded-badge border border-dashed border-accent/50 bg-accent/10" aria-hidden="true" />
+                                    )}
                                   <article
                                     key={task.id}
                                     aria-grabbed={isDragging}
+                                    onDragOver={canManageKanbanTasks ? (event => {
+                                      event.preventDefault();
+                                      event.stopPropagation();
+                                      event.dataTransfer.dropEffect = 'move';
+                                      setDragOverTaskStatus(column.id);
+                                      setDragOverTaskId(task.id);
+                                    }) : undefined}
                                     className={[
                                       'group rounded-card border bg-panel p-3.5 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150',
                                       canManageKanbanTasks ? '' : 'cursor-default',
@@ -2321,20 +2340,9 @@ export const AdminProjects: React.FC = () => {
                                       </button>
                                     </div>
                                   </article>
+                                  </React.Fragment>
                                 );
                               })
-                            )}
-                            {draggingTaskId && canManageKanbanTasks && (
-                              <div className={[
-                                'mt-auto min-h-[72px] rounded-card border border-dashed px-3 py-3 transition-colors',
-                                isDropTarget ? 'border-accent/35 bg-accent/5' : 'border-line/30 bg-bg/10'
-                              ].join(' ')}>
-                                <div className="flex min-h-10 items-center justify-center text-center text-[10px]">
-                                  <span className={isDropTarget ? 'font-semibold text-accent-text' : 'text-muted'}>
-                                    {isDropTarget ? 'Release to place the task here' : 'Drop task here'}
-                                  </span>
-                                </div>
-                              </div>
                             )}
                           </div>
                         </section>
