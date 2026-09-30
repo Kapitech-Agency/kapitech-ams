@@ -1965,7 +1965,9 @@ export const AdminProjects: React.FC = () => {
                 </table>
               </div>
             )}
-            <AdminTablePagination total={filteredProjects.length} page={projectTablePage} pageSize={projectTablePageSize} onPageChange={setProjectTablePage} onPageSizeChange={setProjectTablePageSize} itemLabel="projects" slug="projects-directory-pagination" />
+            {projectLayout === 'table' && (
+              <AdminTablePagination total={filteredProjects.length} page={projectTablePage} pageSize={projectTablePageSize} onPageChange={setProjectTablePage} onPageSizeChange={setProjectTablePageSize} itemLabel="projects" slug="projects-directory-pagination" />
+            )}
           </AdminPanel>
         </>
       )}
