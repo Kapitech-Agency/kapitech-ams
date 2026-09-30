@@ -266,21 +266,23 @@ export const AdminVendors: React.FC = () => {
   };
 
   const confirmDeleteVendor = async (id: string) => {
-      void api.vendors.delete(id).then((res) => {
-        if (!res.success) {
-          setStatusMessage(res.error || (language === 'id' ? 'Vendor gagal dihapus.' : 'Failed to delete vendor.'));
-          return;
-        }
-        setVendors(prev => prev.filter(item => item.id !== id));
-        if (selectedVendor?.id === id) {
-          setIsDrawerOpen(false);
-          setSelectedVendor(null);
-        }
-        setStatusMessage(language === 'id' ? 'Vendor telah dihapus.' : 'Vendor deleted successfully.');
-        setTimeout(() => setStatusMessage(null), 3000);
-      }).catch(() => {
-        setStatusMessage(language === 'id' ? 'Vendor gagal dihapus.' : 'Failed to delete vendor.');
-      });
+    try {
+      const response = await api.vendors.delete(id);
+      if (!response.success) {
+        setStatusMessage(response.error || (language === 'id' ? 'Vendor gagal dihapus.' : 'Failed to delete vendor.'));
+        return;
+      }
+      setVendors(prev => prev.filter(item => item.id !== id));
+      if (selectedVendor?.id === id) {
+        setIsDrawerOpen(false);
+        setSelectedVendor(null);
+      }
+      setDeleteTarget(null);
+      setStatusMessage(language === 'id' ? 'Vendor telah dihapus.' : 'Vendor deleted successfully.');
+      setTimeout(() => setStatusMessage(null), 3000);
+    } catch {
+      setStatusMessage(language === 'id' ? 'Vendor gagal dihapus.' : 'Failed to delete vendor.');
+    }
   };
 
   return (
