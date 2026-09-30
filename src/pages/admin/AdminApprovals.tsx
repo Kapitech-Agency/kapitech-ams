@@ -27,7 +27,7 @@ import { hasAdminPermission } from '../../lib/adminAuth';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import Button from '../../components/ui/Button';
 
-import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader , AdminPageShell } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 interface ApprovalItem {
   id: string;
@@ -178,7 +178,7 @@ export const AdminApprovals: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
+    <AdminPageShell featureSlug="approvals-module">
       {/* Toast Notification */}
       {notification && (
         <div className="fixed top-16 left-3 right-3 sm:left-auto sm:top-20 sm:right-6 z-50 px-4 py-2.5 rounded-card bg-panel border border-accent/40 text-fg text-xs font-sans flex items-center gap-2">
@@ -189,6 +189,7 @@ export const AdminApprovals: React.FC = () => {
 
       {/* Header */}
       <AdminModuleHeader
+        className="mb-0"
         title={(
           <span className="flex items-center gap-2"><Shield size={20} className="text-accent-text shrink-0" />{language === 'id' ? 'Pusat Persetujuan Eksekutif' : 'Executive Approvals Center'}</span>
         )}
@@ -459,6 +460,6 @@ export const AdminApprovals: React.FC = () => {
 
             </form>
       </Modal>
-    </div>
+    </AdminPageShell>
   );
 };
