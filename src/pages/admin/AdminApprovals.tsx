@@ -83,11 +83,15 @@ export const AdminApprovals: React.FC = () => {
     setIsLoading(true);
     try {
       const res = await api.approvals.getAll();
-      if (res.success && res.data?.approvals) {
+      if (res.success && Array.isArray(res.data?.approvals)) {
         setApprovals(res.data.approvals);
+      } else {
+        setApprovals([]);
+        showToast(res.error || (language === 'id' ? 'Approval gagal dimuat.' : 'Approvals could not be loaded.'));
       }
     } catch {
-      showToast('Failed to load approvals.');
+      setApprovals([]);
+      showToast(language === 'id' ? 'Approval gagal dimuat.' : 'Approvals could not be loaded.');
     } finally {
       setIsLoading(false);
     }
