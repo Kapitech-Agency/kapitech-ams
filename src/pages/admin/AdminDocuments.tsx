@@ -29,8 +29,8 @@ import {
   AdminMetricStrip,
   AdminModuleHeader,
   AdminPageShell,
-  AdminPanel,
   AdminSectionTabs,
+  AdminStatusBadge,
   AdminTablePagination,
 } from '../../components/admin/AdminModulePrimitives';
 import { Skeleton } from '../../components/ui/Skeleton';
@@ -419,10 +419,9 @@ export const AdminDocuments: React.FC = () => {
           title="Internal Document Vault"
           description="Secure internal repository for SOPs, legal records, finance documents, and technical assets."
           eyebrow={(
-            <span className="inline-flex items-center gap-1.5 rounded-badge border border-info/25 bg-info/10 px-2 py-1 text-[10px] font-medium text-info">
-              <LockKeyhole size={12} />
+            <AdminStatusBadge tone="info" icon={<LockKeyhole size={12} />}>
               Private vault
-            </span>
+            </AdminStatusBadge>
           )}
           actions={(
             <>
@@ -523,7 +522,7 @@ export const AdminDocuments: React.FC = () => {
         </div>
       </AdminPanel>
 
-      <AdminPanel slug="documents-workspace" title={tabLabel} description="Search, filter, review, and download documents available to your current AMS role." bodyClassName="p-0">
+      <div data-ams-feature-slug="documents-workspace" className="space-y-4">
         <AdminFilterBar
           slug="documents-filters"
           searchValue={searchQuery}
@@ -535,145 +534,186 @@ export const AdminDocuments: React.FC = () => {
               Reset filters
             </Button>
           ) : undefined}
+          footer={(
+            <div className="flex min-w-0 items-center gap-1.5 overflow-x-auto custom-scrollbar" data-ams-slug="documents-category-filters" aria-label="Document categories">
+              {CATEGORY_FILTERS.map((filter) => (
+                <button
+                  type="button"
+                  key={filter.key}
+                  onClick={() => setCategoryFilter(filter.key)}
+                  aria-pressed={categoryFilter === filter.key}
+                  data-ams-slug={'documents-filter-' + filter.key}
+                  className={'inline-flex min-h-9 shrink-0 items-center gap-2 rounded-control border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (
+                    categoryFilter === filter.key
+                      ? 'border-line bg-line text-fg'
+                      : 'border-transparent text-muted hover:bg-bg hover:text-fg'
+                  )}
+                >
+                  <span>{filter.label}</span>
+                  <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] tabular-nums text-muted">{categoryCounts[filter.key]}</span>
+                </button>
+              ))}
+            </div>
+          )}
         >
-          <div className="flex min-w-0 items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0" data-ams-slug="documents-category-filters">
-            {CATEGORY_FILTERS.map((filter) => (
-              <button
-                type="button"
-                key={filter.key}
-                onClick={() => setCategoryFilter(filter.key)}
-                aria-pressed={categoryFilter === filter.key}
-                data-ams-slug={'documents-filter-' + filter.key}
-                className={'inline-flex h-9 shrink-0 items-center gap-2 rounded-chip border px-3 text-[11px] font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ' + (
-                  categoryFilter === filter.key ? 'border-accent/25 bg-accent/10 text-fg' : 'border-transparent text-muted hover:border-line hover:bg-bg hover:text-fg'
-                )}
-              >
-                <span>{filter.label}</span>
-                <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] tabular-nums text-muted">{categoryCounts[filter.key]}</span>
-              </button>
-            ))}
+          <div className="w-full shrink-0 sm:w-[180px]">
+            <CustomSelect
+              value={sortKey + ':' + sortDirection}
+              onChange={(value) => {
+                const [nextKey, nextDirection] = String(value).split(':') as [SortKey, 'asc' | 'desc'];
+                setSortKey(nextKey);
+                setSortDirection(nextDirection);
+              }}
+              size="sm"
+              aria-label="Sort documents"
+              options={[
+                { value: 'updated:desc', label: 'Recently updated' },
+                { value: 'updated:asc', label: 'Oldest updated' },
+                { value: 'name:asc', label: 'Name A–Z' },
+                { value: 'name:desc', label: 'Name Z–A' },
+                { value: 'size:desc', label: 'Largest files' },
+                { value: 'size:asc', label: 'Smallest files' },
+                { value: 'category:asc', label: 'Category A–Z' },
+                { value: 'status:asc', label: 'Status' },
+              ]}
+            />
           </div>
         </AdminFilterBar>
 
         {loadError && (
-          <div className="mx-4 mt-4 flex flex-col gap-2 rounded-control border border-danger/20 bg-danger/5 px-3 py-3 text-xs text-danger sm:mx-5 sm:flex-row sm:items-center sm:justify-between" role="alert" data-ams-slug="documents-error">
+          <div className="flex flex-col gap-2 rounded-control border border-danger/20 bg-danger/5 px-3 py-3 text-xs text-danger sm:flex-row sm:items-center sm:justify-between" role="alert" data-ams-slug="documents-error">
             <span>{loadError}</span>
             <Button type="button" variant="secondary" onClick={() => void loadDocuments()} data-ams-slug="documents-error-retry">Retry</Button>
           </div>
         )}
 
-        {isLoading ? (
-          <div className="space-y-2 p-4 sm:p-5" role="status" aria-label="Loading documents" data-ams-slug="documents-loading">
-            {[1, 2, 3, 4, 5].map((item) => (
-              <div key={item} className="grid grid-cols-[minmax(220px,1fr)_130px_90px_140px_120px] gap-3 border-b border-line px-2 py-3 last:border-b-0">
-                <div className="flex items-center gap-3"><Skeleton className="h-8 w-8 shrink-0" /><div className="min-w-0 flex-1 space-y-2"><Skeleton className="h-3.5 w-48 max-w-full" /><Skeleton className="h-3 w-28" /></div></div>
-                <Skeleton className="h-3 w-20" /><Skeleton className="h-3 w-14" /><Skeleton className="h-3 w-24" /><Skeleton className="h-8 w-20" />
-              </div>
-            ))}
-          </div>
-        ) : filteredDocuments.length === 0 ? (
-          <div className="flex min-h-[260px] flex-col items-center justify-center px-5 py-12 text-center" data-ams-slug="documents-empty">
-            <div className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-bg text-muted"><FileText size={17} /></div>
-            <h3 className="mt-3 text-sm font-semibold text-fg">{documents.length ? 'No documents match the current filters' : 'No documents in the vault yet'}</h3>
-            <p className="mt-1 max-w-md text-xs leading-5 text-muted">{documents.length ? 'Change the search or filters to widen the current document list.' : 'Upload the first internal document to populate this vault.'}</p>
-            {documents.length && activeFilterCount ? (
-              <Button type="button" variant="secondary" onClick={resetFilters} className="mt-4" data-ams-slug="documents-empty-reset">Reset filters</Button>
-            ) : canManageDocuments ? (
-              <Button type="button" variant="primary" icon={<Plus size={14} />} onClick={() => setUploadOpen(true)} className="mt-4" data-ams-slug="documents-empty-upload">Upload document</Button>
-            ) : null}
-          </div>
-        ) : (
-          <>
-            <div className="min-[900px]:hidden divide-y divide-line" data-ams-feature-slug="documents-mobile-list">
-              {pagedDocuments.map((doc) => {
-                const canDownload = Boolean(doc.downloadUrl || doc.url);
-                return (
-                  <article key={doc.id} className="p-4" data-ams-slug={'document-' + doc.id}>
-                    <div className="flex items-start gap-3">
-                      <div className={'flex h-9 w-9 shrink-0 items-center justify-center rounded-control border ' + categoryTone(doc)}>{docIcon(doc)}</div>
-                      <button type="button" onClick={() => setSelectedDocument(doc)} className="min-w-0 flex-1 text-left" data-ams-slug={'document-' + doc.id + '-open'}>
-                        <h3 className="truncate text-xs font-semibold text-fg">{titleOf(doc)}</h3>
-                        <p className="mt-1 truncate text-[10px] text-muted">{typeOf(doc)} · {categoryOf(doc)}</p>
-                      </button>
-                      <span className={'shrink-0 rounded-badge border px-2 py-1 text-[10px] font-semibold ' + statusTone(doc)}>{statusLabel(doc)}</span>
-                    </div>
-                    <div className="mt-4 grid grid-cols-2 gap-2">
-                      <div className="rounded-control border border-line bg-bg p-2.5"><div className="text-[10px] text-muted">Size</div><div className="mt-1 text-[11px] font-medium tabular-nums text-fg">{formatBytes(sizeBytesOf(doc))}</div></div>
-                      <div className="rounded-control border border-line bg-bg p-2.5"><div className="text-[10px] text-muted">Updated</div><div className="mt-1 truncate text-[11px] font-medium text-fg">{dateOf(doc)}</div></div>
-                    </div>
-                    <div className="mt-3 flex min-w-0 items-center gap-2">
-                      <ProfileIdentity profile={{ name: ownerOf(doc), contextLabel: 'Document owner' }} size="sm" showRole={false} />
-                      <span className="truncate text-[10px] text-muted">· {doc.relatedEntity || doc.department || 'Internal'}</span>
-                    </div>
-                    <div className="mt-3 flex justify-end gap-1.5">
-                      <button type="button" title="Preview" aria-label={'Preview ' + titleOf(doc)} onClick={() => setSelectedDocument(doc)} data-ams-slug={'document-' + doc.id + '-preview'} className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg"><Eye size={14} /></button>
-                      <button type="button" title="Download" aria-label={'Download ' + titleOf(doc)} onClick={() => handleDownload(doc)} disabled={!canDownload} data-ams-slug={'document-' + doc.id + '-download'} className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg disabled:opacity-40"><Download size={14} /></button>
-                      {canManageDocuments && <button type="button" title="Delete" aria-label={'Delete ' + titleOf(doc)} onClick={() => setDeleteTarget(doc)} data-ams-slug={'document-' + doc.id + '-delete'} className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-danger/10 hover:text-danger"><Trash2 size={14} /></button>}
-                    </div>
-                  </article>
-                );
-              })}
+        <section aria-label="Documents directory" data-ams-slug="documents-directory" className="ams-data-table-shell overflow-hidden">
+          <div className="flex flex-col gap-3 border-b border-line px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+            <div className="min-w-0">
+              <h2 className="text-sm font-semibold text-fg">{tabLabel}</h2>
+              <p className="mt-1 text-xs leading-5 text-muted">
+                {filteredDocuments.length} visible file{filteredDocuments.length === 1 ? '' : 's'} · private internal vault
+              </p>
             </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <span className="rounded-badge border border-info/20 bg-info/5 px-2 py-1 text-[10px] font-medium text-info">
+                <LockKeyhole size={11} className="mr-1 inline-block" />
+                Access controlled
+              </span>
+            </div>
+          </div>
 
-            <div className="hidden min-[900px]:block overflow-x-auto custom-scrollbar" data-ams-feature-slug="documents-table">
-              <table className="w-full min-w-[1050px] border-collapse text-left">
-                <thead className="sticky top-0 z-10 bg-panel">
-                  <tr className="border-b border-line">
-                    {[
-                      ['name', 'Document'],
-                      ['category', 'Category'],
-                      ['size', 'Size'],
-                      ['updated', 'Last updated'],
-                      ['status', 'Status'],
-                    ].map(([key, label]) => (
-                      <th key={key} className="h-11 px-3 text-[11px] font-semibold text-muted first:pl-4" data-ams-slug={'documents-column-' + key}>
-                        <button type="button" onClick={() => changeSort(key as SortKey)} data-ams-slug={'documents-sort-' + key} className="inline-flex items-center gap-1 rounded-control px-1 py-1 text-left hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
-                          {label}
-                          {sortKey === key && <span aria-hidden="true">{sortDirection === 'asc' ? '↑' : '↓'}</span>}
+          {isLoading ? (
+            <div className="space-y-2 p-4 sm:p-5" role="status" aria-label="Loading documents" data-ams-slug="documents-loading">
+              {[1, 2, 3, 4, 5].map((item) => (
+                <div key={item} className="grid grid-cols-[minmax(220px,1fr)_130px_90px_140px_120px] gap-3 border-b border-line px-2 py-3 last:border-b-0">
+                  <div className="flex items-center gap-3"><Skeleton className="h-8 w-8 shrink-0" /><div className="min-w-0 flex-1 space-y-2"><Skeleton className="h-3.5 w-48 max-w-full" /><Skeleton className="h-3 w-28" /></div></div>
+                  <Skeleton className="h-3 w-20" /><Skeleton className="h-3 w-14" /><Skeleton className="h-3 w-24" /><Skeleton className="h-8 w-20" />
+                </div>
+              ))}
+            </div>
+          ) : filteredDocuments.length === 0 ? (
+            <div className="flex min-h-[260px] flex-col items-center justify-center px-5 py-12 text-center" data-ams-slug="documents-empty">
+              <div className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-bg text-muted"><FileText size={17} /></div>
+              <h3 className="mt-3 text-sm font-semibold text-fg">{documents.length ? 'No documents match the current filters' : 'No documents in the vault yet'}</h3>
+              <p className="mt-1 max-w-md text-xs leading-5 text-muted">{documents.length ? 'Change the search or filters to widen the current document list.' : 'Upload the first internal document to populate this vault.'}</p>
+              {documents.length && activeFilterCount ? (
+                <Button type="button" variant="secondary" onClick={resetFilters} className="mt-4" data-ams-slug="documents-empty-reset">Reset filters</Button>
+              ) : canManageDocuments ? (
+                <Button type="button" variant="primary" icon={<Plus size={14} />} onClick={() => setUploadOpen(true)} className="mt-4" data-ams-slug="documents-empty-upload">Upload document</Button>
+              ) : null}
+            </div>
+          ) : (
+            <>
+              <div className="min-[900px]:hidden divide-y divide-line" data-ams-feature-slug="documents-mobile-list">
+                {pagedDocuments.map((doc) => {
+                  const canDownload = Boolean(doc.downloadUrl || doc.url);
+                  return (
+                    <article key={doc.id} className="p-4" data-ams-slug={'document-' + doc.id}>
+                      <div className="flex items-start gap-3">
+                        <div className={'flex h-9 w-9 shrink-0 items-center justify-center rounded-control border ' + categoryTone(doc)}>{docIcon(doc)}</div>
+                        <button type="button" onClick={() => setSelectedDocument(doc)} className="min-w-0 flex-1 text-left" data-ams-slug={'document-' + doc.id + '-open'}>
+                          <h3 className="truncate text-xs font-semibold text-fg">{titleOf(doc)}</h3>
+                          <p className="mt-1 truncate text-[10px] text-muted">{typeOf(doc)} · {categoryOf(doc)}</p>
                         </button>
-                      </th>
-                    ))}
-                    <th className="h-11 w-32 px-4 text-right text-[11px] font-semibold text-muted" data-ams-slug="documents-column-actions">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pagedDocuments.map((doc) => {
-                    const canDownload = Boolean(doc.downloadUrl || doc.url);
-                    return (
-                      <tr key={doc.id} className="border-b border-line transition-colors last:border-b-0 hover:bg-panel-hover" data-ams-slug={'document-' + doc.id}>
-                        <td className="px-4 py-3 align-middle">
-                          <div className="flex min-w-0 items-center gap-3">
-                            <div className={'flex h-8 w-8 shrink-0 items-center justify-center rounded-control border ' + categoryTone(doc)}>{docIcon(doc)}</div>
-                            <button type="button" onClick={() => setSelectedDocument(doc)} className="min-w-0 text-left" data-ams-slug={'document-' + doc.id + '-open'}>
-                              <div className="max-w-[400px] truncate text-xs font-medium text-fg">{titleOf(doc)}</div>
-                              <div className="mt-1 flex max-w-[440px] items-center gap-2 truncate text-[10px] text-muted"><span>{typeOf(doc)}</span><span>·</span><span>{doc.relatedEntity || doc.department || 'Internal'}</span></div>
-                            </button>
-                          </div>
-                        </td>
-                        <td className="px-3 py-3 align-middle"><span className={'inline-flex rounded-badge border px-2 py-0.5 text-[10px] font-medium ' + categoryTone(doc)}>{categoryOf(doc)}</span></td>
-                        <td className="px-3 py-3 font-mono text-xs tabular-nums text-muted align-middle">{formatBytes(sizeBytesOf(doc))}</td>
-                        <td className="px-3 py-3 align-middle"><div className="text-xs tabular-nums text-fg">{dateOf(doc)}</div><div className="mt-1"><ProfileIdentity profile={{ name: ownerOf(doc), contextLabel: 'Document owner' }} size="sm" showRole={false} /></div></td>
-                        <td className="px-3 py-3 align-middle">
-                          <div className="flex flex-wrap items-center gap-1.5"><span className={'inline-flex items-center gap-1.5 rounded-badge border px-2 py-1 text-[10px] font-semibold ' + statusTone(doc)}><CheckCircle2 size={11} />{statusLabel(doc)}</span>{doc.accessLevel && <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{doc.accessLevel}</span>}</div>
-                        </td>
-                        <td className="px-4 py-3 text-right align-middle">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button type="button" title="Preview" aria-label={'Preview ' + titleOf(doc)} onClick={() => setSelectedDocument(doc)} data-ams-slug={'document-' + doc.id + '-preview'} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg"><Eye size={14} /></button>
-                            <button type="button" title="Download" aria-label={'Download ' + titleOf(doc)} onClick={() => handleDownload(doc)} disabled={!canDownload} data-ams-slug={'document-' + doc.id + '-download'} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg disabled:opacity-40"><Download size={14} /></button>
-                            {canManageDocuments && <button type="button" title="Delete" aria-label={'Delete ' + titleOf(doc)} onClick={() => setDeleteTarget(doc)} data-ams-slug={'document-' + doc.id + '-delete'} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger"><Trash2 size={14} /></button>}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        <span className={'shrink-0 rounded-badge border px-2 py-1 text-[10px] font-semibold ' + statusTone(doc)}>{statusLabel(doc)}</span>
+                      </div>
+                      <div className="mt-4 grid grid-cols-2 gap-2">
+                        <div className="rounded-control border border-line bg-bg p-2.5"><div className="text-[10px] text-muted">Size</div><div className="mt-1 text-[11px] font-medium tabular-nums text-fg">{formatBytes(sizeBytesOf(doc))}</div></div>
+                        <div className="rounded-control border border-line bg-bg p-2.5"><div className="text-[10px] text-muted">Updated</div><div className="mt-1 truncate text-[11px] font-medium text-fg">{dateOf(doc)}</div></div>
+                      </div>
+                      <div className="mt-3 flex min-w-0 items-center gap-2">
+                        <ProfileIdentity profile={{ name: ownerOf(doc), contextLabel: 'Document owner' }} size="sm" showRole={false} />
+                        <span className="truncate text-[10px] text-muted">· {doc.relatedEntity || doc.department || 'Internal'}</span>
+                      </div>
+                      <div className="mt-3 flex justify-end gap-1.5">
+                        <button type="button" title="Preview" aria-label={'Preview ' + titleOf(doc)} onClick={() => setSelectedDocument(doc)} data-ams-slug={'document-' + doc.id + '-preview'} className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg"><Eye size={14} /></button>
+                        <button type="button" title="Download" aria-label={'Download ' + titleOf(doc)} onClick={() => handleDownload(doc)} disabled={!canDownload} data-ams-slug={'document-' + doc.id + '-download'} className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg disabled:opacity-40"><Download size={14} /></button>
+                        {canManageDocuments && <button type="button" title="Delete" aria-label={'Delete ' + titleOf(doc)} onClick={() => setDeleteTarget(doc)} data-ams-slug={'document-' + doc.id + '-delete'} className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-danger/10 hover:text-danger"><Trash2 size={14} /></button>}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
 
-            <AdminTablePagination total={filteredDocuments.length} page={safePage} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="visible files" slug="documents-pagination" />
-          </>
-        )}
-      </AdminPanel>
+              <div className="hidden min-[900px]:block overflow-x-auto custom-scrollbar" data-ams-feature-slug="documents-table">
+                <table className="ams-data-table min-w-[1050px] text-left">
+                  <thead>
+                    <tr>
+                      {[
+                        ['name', 'Document'],
+                        ['category', 'Category'],
+                        ['size', 'Size'],
+                        ['updated', 'Last updated'],
+                        ['status', 'Status'],
+                      ].map(([key, label]) => (
+                        <th key={key} data-ams-slug={'documents-column-' + key}>
+                          <button type="button" onClick={() => changeSort(key as SortKey)} data-ams-slug={'documents-sort-' + key} className="inline-flex min-h-8 items-center gap-1 rounded-control px-1 text-left text-[11px] font-medium text-muted hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+                            {label}
+                            {sortKey === key && <span aria-hidden="true">{sortDirection === 'asc' ? '↑' : '↓'}</span>}
+                          </button>
+                        </th>
+                      ))}
+                      <th className="w-32 text-right" data-ams-slug="documents-column-actions">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pagedDocuments.map((doc) => {
+                      const canDownload = Boolean(doc.downloadUrl || doc.url);
+                      return (
+                        <tr key={doc.id} data-ams-slug={'document-' + doc.id}>
+                          <td>
+                            <div className="flex min-w-0 items-center gap-3">
+                              <div className={'flex h-8 w-8 shrink-0 items-center justify-center rounded-control border ' + categoryTone(doc)}>{docIcon(doc)}</div>
+                              <button type="button" onClick={() => setSelectedDocument(doc)} className="min-w-0 text-left" data-ams-slug={'document-' + doc.id + '-open'}>
+                                <div className="max-w-[400px] truncate text-xs font-medium text-fg">{titleOf(doc)}</div>
+                                <div className="mt-1 flex max-w-[440px] items-center gap-2 truncate text-[10px] text-muted"><span>{typeOf(doc)}</span><span>·</span><span>{doc.relatedEntity || doc.department || 'Internal'}</span></div>
+                              </button>
+                            </div>
+                          </td>
+                          <td><span className={'inline-flex rounded-badge border px-2 py-0.5 text-[10px] font-medium ' + categoryTone(doc)}>{categoryOf(doc)}</span></td>
+                          <td className="font-mono tabular-nums text-xs text-muted">{formatBytes(sizeBytesOf(doc))}</td>
+                          <td><div className="text-xs tabular-nums text-fg">{dateOf(doc)}</div><div className="mt-1"><ProfileIdentity profile={{ name: ownerOf(doc), contextLabel: 'Document owner' }} size="sm" showRole={false} /></div></td>
+                          <td><div className="flex flex-wrap items-center gap-1.5"><span className={'inline-flex items-center gap-1.5 rounded-badge border px-2 py-1 text-[10px] font-semibold ' + statusTone(doc)}><CheckCircle2 size={11} />{statusLabel(doc)}</span>{doc.accessLevel && <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{doc.accessLevel}</span>}</div></td>
+                          <td className="text-right">
+                            <div className="ams-table-actions">
+                              <button type="button" title="Preview" aria-label={'Preview ' + titleOf(doc)} onClick={() => setSelectedDocument(doc)} data-ams-slug={'document-' + doc.id + '-preview'} className="ams-table-action"><Eye size={14} /></button>
+                              <button type="button" title="Download" aria-label={'Download ' + titleOf(doc)} onClick={() => handleDownload(doc)} disabled={!canDownload} data-ams-slug={'document-' + doc.id + '-download'} className="ams-table-action disabled:opacity-40"><Download size={14} /></button>
+                              {canManageDocuments && <button type="button" title="Delete" aria-label={'Delete ' + titleOf(doc)} onClick={() => setDeleteTarget(doc)} data-ams-slug={'document-' + doc.id + '-delete'} className="ams-table-action hover:border-danger/30 hover:bg-danger/5 hover:text-danger"><Trash2 size={14} /></button>}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              <AdminTablePagination total={filteredDocuments.length} page={safePage} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="visible files" slug="documents-pagination" />
+            </>
+          )}
+        </section>
+      </div>
 
       <Modal
         open={uploadOpen}
