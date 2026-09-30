@@ -669,7 +669,6 @@ export const AdminDocuments: React.FC = () => {
             </div>
 
             <AdminTablePagination total={filteredDocuments.length} page={safePage} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="visible files" slug="documents-pagination" />
-            </div>
           </>
         )}
       </AdminPanel>
