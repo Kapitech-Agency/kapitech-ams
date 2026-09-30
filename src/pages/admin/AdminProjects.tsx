@@ -2680,6 +2680,7 @@ export const AdminProjects: React.FC = () => {
         </form>
       </Drawer>
     </div>
+    </div>
   );
 };
 
