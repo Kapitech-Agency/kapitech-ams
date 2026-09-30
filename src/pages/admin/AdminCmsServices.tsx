@@ -33,7 +33,7 @@ import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader , AdminPageShell } from '../../components/admin/AdminModulePrimitives';
 
 export const AdminCmsServices: React.FC = () => {
   const { language } = useLanguage();
@@ -184,7 +184,7 @@ export const AdminCmsServices: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <AdminPageShell featureSlug="cms-services-module">
         <ConfirmDialog
           open={!!deleteTarget}
           onClose={() => setDeleteTarget(null)}
@@ -202,6 +202,7 @@ export const AdminCmsServices: React.FC = () => {
             <span>Service Catalog & Execution Engine</span>
           </>
         }
+        className="mb-0"
         title="Agency Services (SEO & Dev)"
         description={
           <>Manage live service offerings, SLA benchmarks, deliverables, and technical capabilities published on <code className="rounded-badge border border-line bg-panel px-1.5 py-0.5 text-fg">/services</code>.</>
@@ -613,7 +614,7 @@ export const AdminCmsServices: React.FC = () => {
             </form>
       </Drawer>
 
-    </div>
+    </AdminPageShell>
   );
 };
 
