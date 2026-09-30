@@ -626,6 +626,9 @@ export const AdminInvoicing: React.FC = () => {
   });
   const [expenseSearch, setExpenseSearch] = useState('');
   const [expenseTypeFilter, setExpenseTypeFilter] = useState('all');
+  const [expenseCategoryFilter, setExpenseCategoryFilter] = useState('all');
+  const [expensePeriodFilter, setExpensePeriodFilter] = useState<'all' | '30d' | '90d' | 'ytd'>('all');
+  const [expenseDetail, setExpenseDetail] = useState<FinanceExpense | null>(null);
   const [expenseSort, setExpenseSort] = useState<'date_desc' | 'date_asc' | 'amount_high' | 'amount_low'>('date_desc');
   const [invoicePage, setInvoicePage] = useState(1);
   const [expensePage, setExpensePage] = useState(1);
@@ -659,6 +662,8 @@ export const AdminInvoicing: React.FC = () => {
   const [expenseDescription, setExpenseDescription] = useState('');
   const [expenseAmount, setExpenseAmount] = useState(0);
   const [expenseDate, setExpenseDate] = useState(getDateInputValue());
+  const [expenseRecurringInterval, setExpenseRecurringInterval] = useState<AgencyExpense['recurringInterval']>('none');
+  const [expenseReceiptUrl, setExpenseReceiptUrl] = useState('');
   const [expenseIdempotencyKey, setExpenseIdempotencyKey] = useState('');
 
   const [paymentInvoice, setPaymentInvoice] = useState<AgencyInvoice | null>(null);
@@ -1244,7 +1249,20 @@ export const AdminInvoicing: React.FC = () => {
       const searchable = [expense.description, expense.category, expense.type || 'OpEx', expense.recordedBy, expense.date].join(' ').toLowerCase();
       const matchesSearch = !query || searchable.includes(query);
       const matchesType = expenseTypeFilter === 'all' || (expense.type || 'OpEx') === expenseTypeFilter;
-      return matchesSearch && matchesType;
+      const matchesCategory = expenseCategoryFilter === 'all' || expense.category === expenseCategoryFilter;
+      const expenseDateValue = new Date(String(expense.date || '') + 'T00:00:00');
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      const periodStart =
+        expensePeriodFilter === '30d'
+          ? new Date(today.getTime() - 30 * 86400000)
+          : expensePeriodFilter === '90d'
+            ? new Date(today.getTime() - 90 * 86400000)
+            : expensePeriodFilter === 'ytd'
+              ? new Date(today.getFullYear(), 0, 1)
+              : null;
+      const matchesPeriod = !periodStart || (!Number.isNaN(expenseDateValue.getTime()) && expenseDateValue >= periodStart && expenseDateValue <= today);
+      return matchesSearch && matchesType && matchesCategory && matchesPeriod;
     });
 
     return [...result].sort((a, b) => {
@@ -1253,7 +1271,7 @@ export const AdminInvoicing: React.FC = () => {
       if (expenseSort === 'date_asc') return String(a.date || '').localeCompare(String(b.date || ''));
       return String(b.date || '').localeCompare(String(a.date || ''));
     });
-  }, [currencyExpenses, expenseSearch, expenseTypeFilter, expenseSort]);
+  }, [currencyExpenses, expenseSearch, expenseTypeFilter, expenseCategoryFilter, expensePeriodFilter, expenseSort]);
 
   const paginatedExpenses = useMemo(() => {
     const start = (expensePage - 1) * expensePageSize;
@@ -1264,6 +1282,10 @@ export const AdminInvoicing: React.FC = () => {
   useEffect(() => {
     setExpensePage((page) => Math.min(page, expensePageCount));
   }, [expensePageCount]);
+
+  useEffect(() => {
+    setExpensePage(1);
+  }, [expenseSearch, expenseTypeFilter, expenseCategoryFilter, expensePeriodFilter, expenseSort]);
 
   const invoiceTotals = useMemo(
     () => computeInvoiceTotals(invoiceItems, taxPercent, discountPercent),
@@ -1389,6 +1411,8 @@ export const AdminInvoicing: React.FC = () => {
     setExpenseDescription('');
     setExpenseAmount(0);
     setExpenseDate(getDateInputValue());
+    setExpenseRecurringInterval('none');
+    setExpenseReceiptUrl('');
     setExpenseIdempotencyKey(
       typeof crypto !== 'undefined' && crypto.randomUUID
         ? crypto.randomUUID()
@@ -1797,6 +1821,8 @@ export const AdminInvoicing: React.FC = () => {
         amount,
         date: expenseDate,
         currency,
+        recurringInterval: expenseRecurringInterval,
+        receiptUrl: expenseReceiptUrl.trim(),
         idempotencyKey: expenseIdempotencyKey
       });
       if (!result.success) throw new Error(result.error || 'Expense could not be saved.');
@@ -1893,6 +1919,19 @@ export const AdminInvoicing: React.FC = () => {
     { value: 'OpEx', label: 'OpEx' },
     { value: 'CapEx', label: 'CapEx' },
     { value: 'Rentals', label: 'Rentals' }
+  ];
+
+  const expenseCategoryOptions = [
+    { value: 'all', label: language === 'id' ? 'Semua kategori' : 'All categories' },
+    ...['Software & Cloud', 'Salaries & Contractors', 'Office & Hardware', 'Office & Rentals', 'Marketing & Ads', 'Legal & Admin', 'CapEx Equipment']
+      .map((value) => ({ value, label: value }))
+  ];
+
+  const expensePeriodOptions = [
+    { value: 'all', label: language === 'id' ? 'Semua periode' : 'All periods' },
+    { value: '30d', label: language === 'id' ? '30 hari terakhir' : 'Last 30 days' },
+    { value: '90d', label: language === 'id' ? '90 hari terakhir' : 'Last 90 days' },
+    { value: 'ytd', label: 'YTD' }
   ];
 
   const agingBuckets = useMemo(() => {
@@ -2625,9 +2664,11 @@ export const AdminInvoicing: React.FC = () => {
             <span className="sr-only">Search expense</span>
             <input value={expenseSearch} onChange={(event) => setExpenseSearch(event.target.value)} placeholder="Search expense..." className={fieldClass + ' h-10 pl-8'}/>
           </label>
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(170px,1fr)_minmax(160px,1fr)_auto]">
-            <CustomSelect value={expenseTypeFilter} onChange={setExpenseTypeFilter} options={expenseTypeOptions} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap"/>
-            <CustomSelect value={expenseSort} onChange={(value) => setExpenseSort(value as typeof expenseSort)} options={[{value:'date_desc',label:'Newest'},{value:'date_asc',label:'Oldest'},{value:'amount_high',label:'Highest amount'},{value:'amount_low',label:'Lowest amount'}]} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap"/>
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(150px,1fr)_minmax(150px,1fr)_minmax(140px,1fr)_minmax(150px,1fr)_auto]">
+            <CustomSelect value={expenseTypeFilter} onChange={setExpenseTypeFilter} options={expenseTypeOptions} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Expense type filter"/>
+            <CustomSelect value={expenseCategoryFilter} onChange={setExpenseCategoryFilter} options={expenseCategoryOptions} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Expense category filter"/>
+            <CustomSelect value={expensePeriodFilter} onChange={(value) => setExpensePeriodFilter(value as typeof expensePeriodFilter)} options={expensePeriodOptions} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Expense period filter"/>
+            <CustomSelect value={expenseSort} onChange={(value) => setExpenseSort(value as typeof expenseSort)} options={[{value:'date_desc',label:'Newest'},{value:'date_asc',label:'Oldest'},{value:'amount_high',label:'Highest amount'},{value:'amount_low',label:'Lowest amount'}]} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Expense sort"/>
             {canManageInvoices && <button type="button" onClick={openExpenseModal} className={primaryClass + ' h-10 min-h-10 shrink-0'}><Plus size={14}/>Add expense</button>}
           </div>
         </div>
@@ -2680,9 +2721,9 @@ export const AdminInvoicing: React.FC = () => {
             <tbody>
               {paginatedExpenses.map((expense) => (
                 <tr key={expense.id}>
-                  <td><p className="text-xs font-medium text-fg">{expense.description}</p><p className="mt-0.5 text-[10px] text-muted">{expense.recordedBy || 'Finance'}</p></td>
+                  <td><button type="button" onClick={() => setExpenseDetail(expense)} className="text-left"><p className="text-xs font-medium text-fg hover:text-accent-text">{expense.description}</p><p className="mt-0.5 text-[10px] text-muted">{expense.recordedBy || 'Finance'}</p></button></td>
                   <td><span className="inline-flex rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">{expense.type || 'OpEx'}</span></td>
-                  <td><span className="text-xs text-fg">{expense.category}</span></td>
+                  <td><span className="text-xs text-fg">{expense.category}</span><p className="mt-1 text-[10px] text-muted">{expense.recurringInterval && expense.recurringInterval !== 'none' ? 'Recurring · ' + expense.recurringInterval : expense.receiptUrl ? 'Receipt attached' : 'One-time'}</p></td>
                   <td className="text-xs tabular-nums text-muted">{expense.date}</td>
                   <td className="text-xs font-semibold tabular-nums text-fg">{formatNativeAmount(expense.amount, expense.currency || currency, true)}</td>
                   <td><div className="ams-table-actions">{canManageInvoices && <button type="button" onClick={() => setConfirmAction({ type: 'expense', id: expense.id, label: expense.description })} className="ams-table-action" aria-label="Void expense" title="Void expense"><Trash2 size={14}/></button>}</div></td>
@@ -3660,12 +3701,51 @@ export const AdminInvoicing: React.FC = () => {
             <CustomSelect aria-label="Expense type" value={expenseType} onChange={(value) => { setExpenseDirty(true); setExpenseType(value as 'OpEx' | 'CapEx' | 'Rentals'); }} options={[{ value: 'OpEx', label: 'OpEx' }, { value: 'CapEx', label: 'CapEx' }, { value: 'Rentals', label: 'Rentals' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" /></div>
           <div><label className="mb-1.5 block text-xs font-medium text-muted">Category</label><CustomSelect aria-label="Expense category" value={expenseCategory} onChange={(value) => { setExpenseDirty(true); setExpenseCategory(value as AgencyExpense['category']); }} options={['Software & Cloud','Salaries & Contractors','Office & Hardware','Office & Rentals','Marketing & Ads','Legal & Admin','CapEx Equipment'].map((value) => ({ value, label: value }))} className="w-full" triggerClassName="h-10 min-h-10 w-full" /></div>
           <div><label htmlFor="finance-expense-description" className="mb-1.5 block text-xs font-medium text-muted">Description *</label><input id="finance-expense-description" required maxLength={500} value={expenseDescription} onChange={(event) => setExpenseDescription(event.target.value)} className={fieldClass} /></div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-muted">Recurring</label>
+              <CustomSelect aria-label="Recurring interval" value={expenseRecurringInterval || 'none'} onChange={(value) => { setExpenseDirty(true); setExpenseRecurringInterval(value as AgencyExpense['recurringInterval']); }} options={[{ value: 'none', label: 'One-time' }, { value: 'monthly', label: 'Monthly' }, { value: 'quarterly', label: 'Quarterly' }, { value: 'yearly', label: 'Yearly' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" />
+            </div>
+            <div>
+              <label htmlFor="finance-expense-receipt" className="mb-1.5 block text-xs font-medium text-muted">Receipt / document link</label>
+              <input id="finance-expense-receipt" type="url" maxLength={1000} value={expenseReceiptUrl} onChange={(event) => setExpenseReceiptUrl(event.target.value)} className={fieldClass} placeholder="https://..." />
+            </div>
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div><label htmlFor="finance-expense-amount" className="mb-1.5 block text-xs font-medium text-muted">Amount *</label><input id="finance-expense-amount" required type="number" min="0.01" max="100000000000" step="0.01" value={expenseAmount} onChange={(event) => setExpenseAmount(Number(event.target.value))} className={fieldClass} /></div>
             <div><label htmlFor="finance-expense-date" className="mb-1.5 block text-xs font-medium text-muted">Date *</label><input id="finance-expense-date" required type="date" max={getDateInputValue()} value={expenseDate} onChange={(event) => setExpenseDate(event.target.value)} className={fieldClass} /></div>
           </div>
         </form>
       </Drawer>
+
+      <Modal
+        open={!!expenseDetail}
+        onClose={() => setExpenseDetail(null)}
+        size="md"
+        title={expenseDetail?.description || 'Expense detail'}
+        description={expenseDetail ? expenseDetail.category : undefined}
+        footer={<button type="button" onClick={() => setExpenseDetail(null)} className={actionClass}>Close</button>}
+      >
+        {expenseDetail && (
+          <div className="space-y-4">
+            <div className="rounded-card border border-line bg-bg p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-fg">{expenseDetail.description}</p>
+                  <p className="mt-1 text-xs text-muted">{expenseDetail.category} · {expenseDetail.type || 'OpEx'}</p>
+                </div>
+                <p className="text-sm font-semibold tabular-nums text-fg">{formatNativeAmount(expenseDetail.amount, expenseDetail.currency || currency, true)}</p>
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div><p className="text-[10px] text-muted">Date</p><p className="mt-1 text-xs tabular-nums text-fg">{expenseDetail.date}</p></div>
+              <div><p className="text-[10px] text-muted">Recorded by</p><p className="mt-1 text-xs text-fg">{expenseDetail.recordedBy || 'Finance'}</p></div>
+              <div><p className="text-[10px] text-muted">Recurring</p><p className="mt-1 text-xs text-fg">{expenseDetail.recurringInterval && expenseDetail.recurringInterval !== 'none' ? expenseDetail.recurringInterval : 'One-time'}</p></div>
+              <div><p className="text-[10px] text-muted">Receipt</p>{expenseDetail.receiptUrl ? <a href={expenseDetail.receiptUrl} target="_blank" rel="noreferrer" className="mt-1 inline-flex text-xs text-accent-text hover:underline">Open document</a> : <p className="mt-1 text-xs text-muted">Not attached</p>}</div>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       <Drawer
         open={!!paymentInvoice}
@@ -3697,7 +3777,10 @@ export const AdminInvoicing: React.FC = () => {
                 <label htmlFor="finance-payment-amount" className="mb-1.5 block text-xs font-medium text-muted">Amount received</label>
                 <span className="mb-1.5 text-[11px] tabular-nums text-muted">Up to {formatNativeAmount(Number(paymentInvoice.balanceDue ?? (paymentInvoice.total - (paymentInvoice.amountPaid || 0))), paymentInvoice.currency)}</span>
               </div>
-              <input id="finance-payment-amount" required min="0.01" type="number" step="0.01" max={Number(paymentInvoice.balanceDue ?? (paymentInvoice.total - (paymentInvoice.amountPaid || 0)))} value={paymentAmount} onChange={(event) => setPaymentAmount(Number(event.target.value))} className={fieldClass} /></div>
+              <div className="flex items-center gap-2">
+                <input id="finance-payment-amount" required min="0.01" type="number" step="0.01" max={Number(paymentInvoice.balanceDue ?? (paymentInvoice.total - (paymentInvoice.amountPaid || 0)))} value={paymentAmount} onChange={(event) => setPaymentAmount(Number(event.target.value))} className={fieldClass} />
+                <button type="button" onClick={() => setPaymentAmount(Number(paymentInvoice.balanceDue ?? (paymentInvoice.total - (paymentInvoice.amountPaid || 0))))} className={actionClass + ' shrink-0'}>Full balance</button>
+              </div></div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div><label className="mb-1.5 block text-xs font-medium text-muted">Payment method</label><CustomSelect aria-label="Payment method" value={paymentMethod} onChange={(value) => { setPaymentDirty(true); setPaymentMethod(value as typeof paymentMethod); }} options={[{ value: 'bank_transfer', label: 'Bank transfer' }, { value: 'credit_card', label: 'Credit card' }, { value: 'cash', label: 'Cash' }, { value: 'other', label: 'Other' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" /></div>
               <div><label htmlFor="finance-payment-date" className="mb-1.5 block text-xs font-medium text-muted">Payment date</label><input id="finance-payment-date" required type="date" max={getDateInputValue()} value={paymentDate} onChange={(event) => setPaymentDate(event.target.value)} className={fieldClass} /></div>
