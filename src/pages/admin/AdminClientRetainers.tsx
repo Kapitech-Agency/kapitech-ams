@@ -201,9 +201,20 @@ export const AdminClientRetainers: React.FC = () => {
 
   const logHours = () => {
     if (!hoursTarget) return;
-    const amount = Math.max(0, Number(hours) || 0);
-    setRecords((current) => current.map((item) => item.id === hoursTarget.id ? { ...item, usedHours: Math.min(item.committedHours, item.usedHours + amount) } : item));
-    setMessage(`${amount} hours logged for ${hoursTarget.client}.`);
+    const amount = Number(hours);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setMessage(language === 'id' ? 'Jumlah jam harus lebih dari 0.' : 'Hours must be greater than 0.');
+      return;
+    }
+
+    setRecords((current) => current.map((item) => {
+      if (item.id !== hoursTarget.id) return item;
+      const usedHours = item.usedHours + amount;
+      const burnRatio = usedHours / Math.max(1, item.committedHours);
+      const health: Health = burnRatio > 1 ? 'overage-risk' : burnRatio >= 0.85 ? 'near-cap' : 'healthy';
+      return { ...item, usedHours, health };
+    }));
+    setMessage(amount + ' hours logged for ' + hoursTarget.client + '.');
     setHoursTarget(null);
   };
 
