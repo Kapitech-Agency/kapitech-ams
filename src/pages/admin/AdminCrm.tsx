@@ -59,6 +59,7 @@ export const AdminCrm: React.FC = () => {
   const [selectedStageFilter, setSelectedStageFilter] = useState<string>('All');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Drag and drop state
   const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
@@ -88,10 +89,19 @@ export const AdminCrm: React.FC = () => {
   const [formExpectedClose, setFormExpectedClose] = useState('');
 
   const loadLeads = async () => {
+    setIsLoading(true);
     try {
       const res = await api.crm.getDeals();
-      if (res.success && Array.isArray(res.data?.deals)) setLeads(res.data.deals as CrmLead[]);
-    } catch { showToast(language === 'id' ? 'Gagal memuat CRM.' : 'Failed to load CRM.'); }
+      if (res.success && Array.isArray(res.data?.deals)) {
+        setLeads(res.data.deals as CrmLead[]);
+      } else {
+        showToast(res.error || (language === 'id' ? 'Gagal memuat CRM.' : 'Failed to load CRM.'));
+      }
+    } catch {
+      showToast(language === 'id' ? 'Gagal memuat CRM.' : 'Failed to load CRM.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -143,10 +153,10 @@ export const AdminCrm: React.FC = () => {
     const wonCount = leads.filter(l => l.stage === 'won').length;
 
     return {
-      leadToScope: Math.max(10, Math.min(100, Math.round((pastNew / total) * 100) || 82)),
-      scopeToPitch: Math.max(10, Math.min(100, Math.round((pastContacted / Math.max(1, pastNew)) * 100) || 71)),
-      pitchToSow: Math.max(10, Math.min(100, Math.round((pastProposal / Math.max(1, pastContacted)) * 100) || 60)),
-      sowToWon: Math.max(10, Math.min(100, Math.round((wonCount / Math.max(1, pastProposal)) * 100) || 75))
+      leadToScope: Math.round((pastNew / total) * 100),
+      scopeToPitch: pastNew ? Math.round((pastContacted / pastNew) * 100) : 0,
+      pitchToSow: pastContacted ? Math.round((pastProposal / pastContacted) * 100) : 0,
+      sowToWon: pastProposal ? Math.round((wonCount / pastProposal) * 100) : 0
     };
   }, [leads]);
 
@@ -391,6 +401,26 @@ export const AdminCrm: React.FC = () => {
         return 'text-muted bg-panel/50 border-line';
     }
   };
+
+  if (isLoading && leads.length === 0) {
+    return (
+      <AdminPageShell featureSlug="crm-module">
+        <AdminModuleHeader
+          className="mb-0"
+          title={t('admin.crm.title')}
+          description={language === 'id' ? 'Kelola pipeline prospek, tahapan deal, nilai peluang, dan follow-up tim dalam satu workspace.' : 'Manage lead pipeline, deal stages, opportunity value, and team follow-up from one workspace.'}
+        />
+        <div className="space-y-3" role="status" aria-label="Loading CRM">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="h-[116px] animate-pulse rounded-card border border-line bg-panel" />
+            ))}
+          </div>
+          <div className="h-[420px] animate-pulse rounded-card border border-line bg-panel" />
+        </div>
+      </AdminPageShell>
+    );
+  }
 
   return (
     <AdminPageShell featureSlug="crm-module" className="ams-leads-page">
