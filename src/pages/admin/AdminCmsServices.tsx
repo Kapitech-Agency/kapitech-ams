@@ -222,17 +222,20 @@ export const AdminCmsServices: React.FC = () => {
         }
       />
 
-      {statusMessage && (
-        <div className="p-3.5 rounded-card bg-success/10 border border-success/30 text-success text-xs font-sans flex items-center justify-between animate-in fade-in duration-200">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-            <CheckCircle2 size={16} className="text-success" />
-            <span>{statusMessage}</span>
+      {statusMessage && (() => {
+        const failed = /failed|could not|unable|error|gagal|wajib|required/i.test(statusMessage);
+        return (
+          <div className={['p-3.5 rounded-card border text-xs font-sans flex items-center justify-between animate-in fade-in duration-200', failed ? 'bg-danger/10 border-danger/30 text-danger' : 'bg-success/10 border-success/30 text-success'].join(' ')}>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              {failed ? <X size={16} /> : <CheckCircle2 size={16} />}
+              <span>{statusMessage}</span>
+            </div>
+            <button onClick={() => setStatusMessage(null)} className="text-muted hover:text-fg" aria-label="Dismiss status">
+              <X size={14} />
+            </button>
           </div>
-          <button onClick={() => setStatusMessage(null)} className="text-muted hover:text-fg">
-            <X size={14} />
-          </button>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Catalog metrics */}
       <AdminMetricStrip
