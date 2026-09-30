@@ -219,18 +219,18 @@
   background:var(--panel);
   user-select:none;
   -webkit-user-drag:none;
-  box-shadow:0 1px 0 color-mix(in srgb,var(--text) 5%,transparent),0 8px 22px color-mix(in srgb,var(--bg) 32%,transparent);
+  box-shadow:none;
 }
 .ams-shell .ams-project-kanban-card:hover{
-  background:color-mix(in srgb,var(--panel) 84%,var(--text) 16%);
-  box-shadow:0 10px 26px color-mix(in srgb,var(--bg) 36%,transparent);
+  background:var(--panel-hover);
+  box-shadow:none;
 }
 .ams-shell .ams-project-kanban-card:active{
   cursor:default;
 }
 .ams-shell .ams-project-kanban-card[aria-grabbed="true"]{
   cursor:grabbing;
-  box-shadow:0 14px 34px color-mix(in srgb,var(--bg) 42%,transparent);
+  box-shadow:none;
 }
 .ams-shell .ams-project-kanban-card [data-drag-handle="true"]{
   cursor:grab;
