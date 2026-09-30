@@ -476,6 +476,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const onSchedulePercent = totalDelivery > 0 ? Math.round((Math.max(0, onScheduleValue) / totalDelivery) * 100) : 0;
   const revenueData = sampleRevenueByRange[range];
 
+  if (view === 'tasks') {
+    return <TasksWorkspace />;
+  }
+
   return (
     <div className="ams-dashboard min-h-full pb-10">
       <AdminModuleHeader
@@ -814,8 +818,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         </>
       ) : view === 'performance' ? (
         <PerformanceView />
-      ) : view === 'tasks' ? (
-        <TasksWorkspace />
       ) : (
         <AnalyticsView range={range} />
       )}
