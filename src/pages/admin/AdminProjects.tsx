@@ -37,7 +37,7 @@ import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
-import { AdminMetricStrip, AdminModuleHeader, AdminPanel } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminPanel, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { api } from '../../lib/apiClient';
 import { formatAmount, getActiveCurrency, CURRENCY_EVENT, CurrencyCode } from '../../lib/currency';
@@ -312,6 +312,12 @@ export const AdminProjects: React.FC = () => {
   const [projectClientFilter, setProjectClientFilter] = useState('');
   const [projectOwnerFilter, setProjectOwnerFilter] = useState('');
   const [projectSort, setProjectSort] = useState('updated');
+  const [projectTablePage, setProjectTablePage] = useState(1);
+  const [projectTablePageSize, setProjectTablePageSize] = useState(10);
+  const [budgetTablePage, setBudgetTablePage] = useState(1);
+  const [budgetTablePageSize, setBudgetTablePageSize] = useState(10);
+  const [archiveTablePage, setArchiveTablePage] = useState(1);
+  const [archiveTablePageSize, setArchiveTablePageSize] = useState(10);
   const [archiveSearch, setArchiveSearch] = useState('');
   const [archiveHealthFilter, setArchiveHealthFilter] = useState('');
   const [projectLayout, setProjectLayout] = useState<ProjectLayout>(
@@ -517,6 +523,11 @@ export const AdminProjects: React.FC = () => {
     projectSort,
   ]);
 
+  const projectTablePageCount = Math.max(1, Math.ceil(filteredProjects.length / projectTablePageSize));
+  const pagedProjectTableRows = filteredProjects.slice((projectTablePage - 1) * projectTablePageSize, projectTablePage * projectTablePageSize);
+  React.useEffect(() => { setProjectTablePage((page) => Math.min(page, projectTablePageCount)); }, [projectTablePageCount]);
+  React.useEffect(() => { setProjectTablePage(1); }, [projectSearch, projectStatusFilter, projectHealthFilter, projectClientFilter, projectOwnerFilter, projectSort]);
+
   const clearProjectFilters = () => {
     setProjectSearch('');
     setProjectStatusFilter('');
@@ -634,6 +645,15 @@ export const AdminProjects: React.FC = () => {
       }),
     [filteredProjects]
   );
+
+  const budgetTablePageCount = Math.max(1, Math.ceil(budgetRows.length / budgetTablePageSize));
+  const pagedBudgetRows = budgetRows.slice((budgetTablePage - 1) * budgetTablePageSize, budgetTablePage * budgetTablePageSize);
+  const archiveTablePageCount = Math.max(1, Math.ceil(filteredArchivedProjects.length / archiveTablePageSize));
+  const pagedArchiveTableRows = filteredArchivedProjects.slice((archiveTablePage - 1) * archiveTablePageSize, archiveTablePage * archiveTablePageSize);
+  React.useEffect(() => { setBudgetTablePage((page) => Math.min(page, budgetTablePageCount)); }, [budgetTablePageCount]);
+  React.useEffect(() => { setBudgetTablePage(1); }, [currency, projectSearch, projectStatusFilter, projectHealthFilter, projectClientFilter, projectOwnerFilter, projectSort]);
+  React.useEffect(() => { setArchiveTablePage((page) => Math.min(page, archiveTablePageCount)); }, [archiveTablePageCount]);
+  React.useEffect(() => { setArchiveTablePage(1); }, [archiveSearch, archiveHealthFilter]);
 
   const openProjectDetail = (project: ProjectRecord) => {
     setSelectedProject(project);
@@ -1898,7 +1918,7 @@ export const AdminProjects: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredProjects.map(project => {
+                    {pagedProjectTableRows.map(project => {
                       const burn = Math.round(project.budget * (project.progressPercent / 100));
                       return (
                         <tr key={project.id}>
@@ -1940,6 +1960,7 @@ export const AdminProjects: React.FC = () => {
                 </table>
               </div>
             )}
+            <AdminTablePagination total={filteredProjects.length} page={projectTablePage} pageSize={projectTablePageSize} onPageChange={setProjectTablePage} onPageSizeChange={setProjectTablePageSize} itemLabel="projects" slug="projects-directory-pagination" />
           </AdminPanel>
         </>
       )}
@@ -2368,7 +2389,7 @@ export const AdminProjects: React.FC = () => {
                   <tr><th>Project</th><th>Health</th><th>Budget</th><th>Actual to date</th><th>Remaining</th><th>Delivery</th><th>Budget burn</th><th>Variance</th></tr>
                 </thead>
                 <tbody>
-                  {budgetRows.map(row => {
+                  {pagedBudgetRows.map(row => {
                     const burnPercent = row.project.budget > 0
                       ? Math.min(100, Math.round((row.burn / row.project.budget) * 100))
                       : 0;
@@ -2425,6 +2446,7 @@ export const AdminProjects: React.FC = () => {
                 </tbody>
               </table>
             </div>
+          <AdminTablePagination total={budgetRows.length} page={budgetTablePage} pageSize={budgetTablePageSize} onPageChange={setBudgetTablePage} onPageSizeChange={setBudgetTablePageSize} itemLabel="projects" slug="budget-vs-actual-pagination" />
           </AdminPanel>
         </>
       )}
@@ -2529,7 +2551,7 @@ export const AdminProjects: React.FC = () => {
               <table className="ams-data-table min-w-[1020px] text-left">
                 <thead><tr><th>Project</th><th>Client</th><th>Completed</th><th>Budget</th><th>Final progress</th><th>Owner</th><th>Slug</th><th>Actions</th></tr></thead>
                 <tbody>
-                  {filteredArchivedProjects.map(project => (
+                  {pagedArchiveTableRows.map(project => (
                     <tr key={project.id}>
                       <td>
                         <button type="button" onClick={() => openProjectDetail(project)} className="min-w-0 text-left">
@@ -2570,6 +2592,7 @@ export const AdminProjects: React.FC = () => {
                 </tbody>
               </table>
             </div>
+          <AdminTablePagination total={filteredArchivedProjects.length} page={archiveTablePage} pageSize={archiveTablePageSize} onPageChange={setArchiveTablePage} onPageSizeChange={setArchiveTablePageSize} itemLabel="completed projects" slug="projects-archived-pagination" />
           </AdminPanel>
         </div>
       )}
