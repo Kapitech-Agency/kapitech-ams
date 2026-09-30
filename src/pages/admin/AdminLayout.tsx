@@ -742,10 +742,10 @@ export const AdminLayout: React.FC = () => {
                         to={'/admin/settings?tab=' + tab.key}
                         end
                         className={
-                          'relative inline-flex h-full shrink-0 items-center px-1 text-[12px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' +
+                          'inline-flex h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' +
                           (active
-                            ? 'text-fg after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-accent'
-                            : 'text-muted hover:text-fg')
+                            ? 'border-accent/25 bg-accent/10 font-semibold text-fg'
+                            : 'border-transparent text-muted hover:bg-bg hover:text-fg')
                         }
                       >
                         {tab.label}
