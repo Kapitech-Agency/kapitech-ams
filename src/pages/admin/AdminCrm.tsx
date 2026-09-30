@@ -776,7 +776,7 @@ export const AdminCrm: React.FC = () => {
                           </article>
                           </React.Fragment>
                         );
-                      })}
+                      })
                     )}
                   </div>
                 </div>
