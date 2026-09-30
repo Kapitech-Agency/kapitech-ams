@@ -187,7 +187,11 @@
 .ams-shell .ams-sidebar-expanded,.ams-shell .ams-sidebar-collapsed{min-width:0}
 .ams-shell .ams-topnav-scroll{scrollbar-width:none;-ms-overflow-style:none}
 .ams-shell .ams-topnav-scroll::-webkit-scrollbar{display:none}
-.ams-shell .ams-kanban-scroll{min-height:0;width:max-content;overscroll-behavior-x:contain}.ams-shell .kanban-card{min-height:126px}
+.ams-shell .ams-kanban-scroll{min-height:0;max-width:100%;overscroll-behavior-x:contain;scrollbar-width:none;-ms-overflow-style:none}
+.ams-shell .ams-kanban-scroll::-webkit-scrollbar{display:none}
+.ams-shell .kanban-card{min-height:126px}
+.ams-shell .ams-kanban-scroll [data-drag-handle="true"]{cursor:grab!important;-webkit-user-drag:element;user-select:none}
+.ams-shell .ams-kanban-scroll [data-drag-handle="true"]:active{cursor:grabbing!important}
 .ams-shell [role=dialog]{overscroll-behavior:contain}
 .ams-shell .ams-popover-surface{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;box-shadow:none}.ams-shell .ams-notification-surface{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:12px;box-shadow:none}
 .ams-shell .ams-popover-surface .ams-dropdown-item{min-height:36px;padding:8px 10px;background:transparent;color:var(--muted);border-radius:6px}
