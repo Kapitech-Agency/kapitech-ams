@@ -669,19 +669,23 @@ export const AdminLayout: React.FC = () => {
                     );
                   })}
                 </nav>
-              ) : location.pathname === '/admin/time-logs' || location.pathname === '/admin/vendors' ? (
+              ) : location.pathname === '/admin/team' || location.pathname === '/admin/time-logs' || location.pathname === '/admin/vendors' ? (
                 <nav aria-label="Team sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
                   {[
-                    { key: 'time-logs', label: 'Time Logs', to: '/admin/time-logs' },
-                    { key: 'vendor-personnel', label: 'Vendor Personnel', to: '/admin/vendors' },
+                    { key: 'team-directory', label: 'Team Directory', slug: '/admin/team' },
+                    { key: 'vendor-directory', label: 'Vendor Directory', slug: '/admin/team?view=vendor-directory' },
+                    { key: 'capacity-allocation', label: 'Capacity & Allocation', slug: '/admin/team?view=capacity-allocation' },
+                    { key: 'skill-matrix', label: 'Skill Matrix', slug: '/admin/team?view=skill-matrix' },
+                    { key: 'time-logs', label: 'Time Logs', slug: '/admin/team?view=time-logs' },
                   ].map((tab) => {
-                    const active = tab.key === 'vendor-personnel'
-                      ? location.pathname === '/admin/vendors'
-                      : location.pathname === '/admin/time-logs';
+                    const activeView = new URLSearchParams(location.search).get('view') || 'team-directory';
+                    const active = location.pathname === '/admin/team'
+                      ? activeView === tab.key
+                      : tab.key === (location.pathname === '/admin/vendors' ? 'vendor-directory' : 'time-logs');
                     return (
                       <NavLink
                         key={tab.key}
-                        to={tab.to}
+                        to={tab.slug}
                         end
                         className={'group relative inline-flex h-9 shrink-0 items-center rounded-chip border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (active ? 'border-accent/25 bg-accent/10 font-semibold text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg')}
                       >
