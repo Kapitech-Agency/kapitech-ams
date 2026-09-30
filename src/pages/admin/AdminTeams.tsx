@@ -44,12 +44,26 @@ type TeamMember = {
   role: string;
   division: string;
   status?: string;
+  slug: string;
+};
+
+type VendorRecord = AgencyVendor & {
+  slug: string;
+};
+
+type SkillRecord = {
+  skill: string;
+  slug: string;
+  vendors: number;
+  vetted: number;
+  active: number;
 };
 
 type ProjectRecord = {
   id: string;
   name: string;
   status?: string;
+  slug: string;
 };
 
 type TimeLog = {
@@ -63,7 +77,10 @@ type TimeLog = {
   billable?: boolean;
   date: string;
   notes?: string;
+  slug: string;
 };
+
+
 
 const vendorTypeLabel: Record<VendorType, string> = {
   freelancer: 'Freelancer',
@@ -85,6 +102,27 @@ const vendorStatusTone: Record<VendorStatus, string> = {
   inactive: 'bg-bg text-muted border-line',
   blacklisted: 'bg-danger/10 text-danger border-danger/20'
 };
+
+const slugify = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'item';
+
+const memberSlug = (member: Pick<TeamMember, 'id' | 'name'>) =>
+  'team-' + slugify(member.name || member.id) + '-' + slugify(member.id);
+
+const vendorSlug = (vendor: Pick<AgencyVendor, 'id' | 'name' | 'companyName'>) =>
+  'vendor-' + slugify(vendor.name || vendor.companyName || vendor.id) + '-' + slugify(vendor.id);
+
+const projectSlug = (project: Pick<ProjectRecord, 'id' | 'name'>) =>
+  'project-' + slugify(project.name || project.id) + '-' + slugify(project.id);
+
+const timeLogSlug = (log: Pick<TimeLog, 'id' | 'taskTitle' | 'projectName'>) =>
+  'time-' + slugify(log.taskTitle || log.projectName || log.id) + '-' + slugify(log.id);
+
+const skillSlug = (skill: string) => 'skill-' + slugify(skill);
 
 const dateKey = (date: Date) => {
   const year = date.getFullYear();
@@ -171,7 +209,7 @@ export const AdminTeams: React.FC = () => {
   const canDeleteAllTimeLogs = hasAdminPermission('canManageProjects');
   const canManageAdminAccounts = hasAdminPermission('canManageAdminAccounts');
   const [members, setMembers] = useState<TeamMember[]>([]);
-  const [vendors, setVendors] = useState<AgencyVendor[]>([]);
+  const [vendors, setVendors] = useState<VendorRecord[]>([]);
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [logs, setLogs] = useState<TimeLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -222,21 +260,36 @@ export const AdminTeams: React.FC = () => {
     ]);
 
     if (memberRes.success && Array.isArray(memberRes.data?.assignees)) {
-      setMembers(memberRes.data!.assignees as TeamMember[]);
+      setMembers(
+        (memberRes.data!.assignees as Omit<TeamMember, 'slug'>[]).map((member) => ({
+          ...member,
+          slug: memberSlug(member),
+        }))
+      );
     } else if (!memberRes.success) {
       setNotice({ tone: 'danger', message: memberRes.error || 'Team directory could not be loaded.' });
     }
 
     if (vendorRes.success && Array.isArray(vendorRes.data?.vendors)) {
-      setVendors(vendorRes.data!.vendors as AgencyVendor[]);
+      setVendors(vendorRes.data!.vendors as VendorRecord[]);
     }
 
     if (projectRes.success && Array.isArray(projectRes.data?.projects)) {
-      setProjects(projectRes.data!.projects as ProjectRecord[]);
+      setProjects(
+        (projectRes.data!.projects as Omit<ProjectRecord, 'slug'>[]).map((project) => ({
+          ...project,
+          slug: projectSlug(project),
+        }))
+      );
     }
 
     if (timeRes.success && Array.isArray(timeRes.data?.timeLogs)) {
-      setLogs(timeRes.data!.timeLogs as TimeLog[]);
+      setLogs(
+        (timeRes.data!.timeLogs as Omit<TimeLog, 'slug'>[]).map((log) => ({
+          ...log,
+          slug: timeLogSlug(log),
+        }))
+      );
     }
 
     setLoading(false);
@@ -380,10 +433,10 @@ export const AdminTeams: React.FC = () => {
   }, [capacityRows]);
 
   const skillRows = useMemo(() => {
-    const map = new Map<string, { skill: string; vendors: number; vetted: number; active: number }>();
+    const map = new Map<string, SkillRecord>();
     vendors.forEach((vendor) => {
       vendor.skills.forEach((skill) => {
-        const current = map.get(skill) || { skill, vendors: 0, vetted: 0, active: 0 };
+        const current = map.get(skill) || { skill, slug: skillSlug(skill), vendors: 0, vetted: 0, active: 0 };
         current.vendors += 1;
         if (vendor.isVetted ?? true) current.vetted += 1;
         if (vendor.status === 'active') current.active += 1;
@@ -457,9 +510,10 @@ export const AdminTeams: React.FC = () => {
 
     if (response.success && response.data?.vendor) {
       const saved = response.data.vendor as AgencyVendor;
+      const savedWithSlug: VendorRecord = { ...saved, slug: vendorSlug(saved) };
       setVendors((current) => editingVendor
-        ? current.map((item) => item.id === saved.id ? saved : item)
-        : [saved, ...current]);
+        ? current.map((item) => item.id === savedWithSlug.id ? savedWithSlug : item)
+        : [savedWithSlug, ...current]);
       setVendorFormOpen(false);
       setNotice({ tone: 'success', message: editingVendor ? 'Vendor profile updated.' : 'Vendor profile created.' });
     } else {
@@ -496,7 +550,8 @@ export const AdminTeams: React.FC = () => {
       notes: timeNotes.trim()
     });
     if (response.success && response.data?.timeLog) {
-      setLogs((current) => [response.data!.timeLog as TimeLog, ...current]);
+      const saved = response.data!.timeLog as Omit<TimeLog, 'slug'>;
+      setLogs((current) => [{ ...saved, slug: timeLogSlug(saved) }, ...current]);
       setTimeFormOpen(false);
       setTimeTask('');
       setTimeNotes('');
@@ -640,7 +695,7 @@ export const AdminTeams: React.FC = () => {
           <div className="h-80 animate-pulse rounded-card border border-line bg-panel" />
         </div>
       ) : currentView === 'team-directory' ? (
-        <div className="space-y-5">
+        <div className="space-y-5" data-ams-feature-slug="team-directory">
           <AdminMetricStrip
             metrics={[
               { id: 'headcount', label: 'Headcount', value: teamMetrics.headcount, context: teamMetrics.active + ' active', sparkline: [teamMetrics.headcount, teamMetrics.active, teamMetrics.contributors], icon: <UsersRound size={15} /> },
@@ -693,13 +748,14 @@ export const AdminTeams: React.FC = () => {
                   </tr></thead>
                   <tbody>
                     {teamRows.map((member) => (
-                      <tr key={member.id}>
+                      <tr key={member.id} data-ams-slug={member.slug}>
                         <td>
                           <ProfileIdentity profile={{ id: member.id, name: member.name, username: member.username }} showRole={false} />
                         </td>
                         <td>
                           <p className="font-medium text-fg">{member.role || 'Not assigned'}</p>
                           <p className="mt-1 text-[10px] text-muted">{roleFocus(member)}</p>
+                          <p className="mt-1 font-mono text-[9px] text-muted/70">slug: {member.slug}</p>
                         </td>
                         <td className="text-muted">{member.division || 'Operations'}</td>
                         <td>
@@ -725,7 +781,7 @@ export const AdminTeams: React.FC = () => {
           </AdminPanel>
         </div>
       ) : currentView === 'vendor-directory' ? (
-        <div className="space-y-5">
+        <div className="space-y-5" data-ams-feature-slug="vendor-directory">
           <AdminMetricStrip
             metrics={[
               { id: 'total', label: 'Total vendors', value: vendorMetrics.total, context: vendorMetrics.active + ' active', sparkline: [vendorMetrics.total, vendorMetrics.active, vendorMetrics.vetted], icon: <Users size={15} /> },
@@ -783,11 +839,12 @@ export const AdminTeams: React.FC = () => {
                   </tr></thead>
                   <tbody>
                     {vendorRows.map((vendor) => (
-                      <tr key={vendor.id}>
+                      <tr key={vendor.id} data-ams-slug={vendor.slug}>
                         <td>
                           <button type="button" onClick={() => setVendorDetail(vendor)} className="text-left">
                             <p className="font-medium text-fg hover:text-accent-text">{vendor.companyName || vendor.name}</p>
                             <p className="mt-1 text-[10px] text-muted">{vendor.name} · {vendor.location}</p>
+                            <p className="mt-1 font-mono text-[9px] text-muted/70">slug: {vendor.slug}</p>
                           </button>
                         </td>
                         <td>
@@ -823,7 +880,7 @@ export const AdminTeams: React.FC = () => {
           </AdminPanel>
         </div>
       ) : currentView === 'capacity-allocation' ? (
-        <div className="space-y-5">
+        <div className="space-y-5" data-ams-feature-slug="capacity-allocation">
           <AdminMetricStrip
             metrics={[
               { id: 'utilization', label: 'Current utilization', value: currentCapacityStats.average.toFixed(1) + '%', context: 'Tracked vs 40h baseline', sparkline: capacityRows.slice(0, 8).map((row) => row.weeks[row.weeks.length - 1]?.utilization || 0), icon: <TrendingUp size={15} /> },
@@ -846,10 +903,11 @@ export const AdminTeams: React.FC = () => {
                 </tr></thead>
                 <tbody>
                   {capacityRows.map((row) => (
-                    <tr key={row.member.id}>
+                    <tr key={row.member.id} data-ams-slug={row.member.slug}>
                       <td>
                         <p className="font-medium text-fg">{row.member.name}</p>
                         <p className="mt-1 text-[10px] text-muted">{row.member.role} · {row.member.division}</p>
+                        <p className="mt-1 font-mono text-[9px] text-muted/70">slug: {row.member.slug}</p>
                       </td>
                       {row.weeks.map((week, index) => (
                         <td key={index} className="text-center">
@@ -872,7 +930,7 @@ export const AdminTeams: React.FC = () => {
           </AdminPanel>
         </div>
       ) : currentView === 'skill-matrix' ? (
-        <div className="space-y-5">
+        <div className="space-y-5" data-ams-feature-slug="skill-matrix">
           <AdminMetricStrip
             metrics={[
               { id: 'internal', label: 'Internal members', value: members.length, context: 'Role-aligned capability focus', sparkline: [members.length, teamMetrics.active, teamMetrics.divisions], icon: <UsersRound size={15} /> },
@@ -918,8 +976,11 @@ export const AdminTeams: React.FC = () => {
                 </tr></thead>
                 <tbody>
                   {skillRows.map((row) => (
-                    <tr key={row.skill}>
-                      <td className="font-medium text-fg">{row.skill}</td>
+                    <tr key={row.slug} data-ams-slug={row.slug}>
+                      <td>
+                        <p className="font-medium text-fg">{row.skill}</p>
+                        <p className="mt-1 font-mono text-[9px] text-muted/70">slug: {row.slug}</p>
+                      </td>
                       <td className="text-right font-semibold tabular-nums">{row.vendors}</td>
                       <td className="text-right font-semibold tabular-nums text-success">{row.vetted}</td>
                       <td className="text-right font-semibold tabular-nums">{row.active}</td>
@@ -931,7 +992,7 @@ export const AdminTeams: React.FC = () => {
           </AdminPanel>
         </div>
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-5" data-ams-feature-slug="time-logs">
           <AdminMetricStrip
             metrics={[
               { id: 'tracked', label: 'Tracked time', value: formatHours(timeMetrics.total), context: 'Current filters', sparkline: [timeMetrics.total, timeMetrics.billable], icon: <Timer size={15} />, toneClassName: 'text-accent-text' },
@@ -1015,11 +1076,12 @@ export const AdminTeams: React.FC = () => {
                   </tr></thead>
                   <tbody>
                     {filteredLogs.map((log) => (
-                      <tr key={log.id}>
+                      <tr key={log.id} data-ams-slug={log.slug}>
                         <td className="tabular-nums text-muted">{formatDate(log.date)}</td>
                         <td>
                           <p className="font-medium text-fg">{log.projectName || 'General'}</p>
                           <p className="mt-1 truncate text-[10px] text-muted">{log.taskTitle || 'General activity'}</p>
+                          <p className="mt-1 font-mono text-[9px] text-muted/70">slug: {log.slug}</p>
                         </td>
                         <td>{log.user ? <ProfileIdentity profile={{ id: log.userId, name: log.user, contextLabel: 'Time entry' }} showRole={false} /> : <span className="text-xs text-muted">—</span>}</td>
                         <td className="text-right font-semibold tabular-nums">{formatHours(log.durationMinutes)}</td>
@@ -1078,7 +1140,7 @@ export const AdminTeams: React.FC = () => {
         open={Boolean(vendorDetail)}
         onClose={() => setVendorDetail(null)}
         title={vendorDetail?.companyName || vendorDetail?.name || 'Vendor'}
-        description={vendorDetail?.primaryCategory}
+        description={(vendorDetail?.primaryCategory || '') + (vendorDetail ? ' · ' + vendorDetail.slug : '')}
         size="lg"
       >
         {vendorDetail && (
