@@ -112,12 +112,16 @@ export const AdminCmsProjects: React.FC = () => {
     if (!deleteTarget) return;
     const { id } = deleteTarget;
     setDeleteTarget(null);
-    const res = await api.cms.deleteProject(id);
-    if (res.success) {
-      void loadProjects();
+    try {
+      const res = await api.cms.deleteProject(id);
+      if (!res.success) {
+        setStatusMessage(res.error || 'Delete failed.');
+        return;
+      }
+      await loadProjects();
       setStatusMessage('Case study deleted successfully.');
-    } else {
-      setStatusMessage(res.error || 'Delete failed.');
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : 'Delete failed.');
     }
     setTimeout(() => setStatusMessage(null), 3000);
   };
