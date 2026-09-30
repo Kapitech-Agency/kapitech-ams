@@ -118,8 +118,8 @@ const AdminDocuments = React.lazy(() =>
   import('./pages/admin/AdminDocuments').then((m) => ({ default: m.AdminDocuments }))
 );
 
-const AdminTimeLogs = React.lazy(() =>
-  import('./pages/admin/AdminTimeLogs').then((m) => ({ default: m.AdminTimeLogs }))
+const AdminTeams = React.lazy(() =>
+  import('./pages/admin/AdminTeams').then((m) => ({ default: m.AdminTeams }))
 );
 
 const AdminVendors = React.lazy(() =>
@@ -226,8 +226,9 @@ const App = () => {
                 <Route path="projects" element={<ModuleRoute moduleKey="projects" moduleLabel="projects"><AdminProjects /></ModuleRoute>} />
                 <Route path="approvals" element={<ModuleRoute moduleKey="approvals" moduleLabel="approvals"><AdminApprovals /></ModuleRoute>} />
                 <Route path="documents" element={<ModuleRoute moduleKey="documents" moduleLabel="documents"><AdminDocuments /></ModuleRoute>} />
-                <Route path="time-logs" element={<ModuleRoute moduleKey="timelogs" moduleLabel="time logs"><AdminTimeLogs /></ModuleRoute>} />
-                <Route path="vendors" element={<ModuleRoute moduleKey="timelogs" moduleLabel="vendor personnel"><AdminVendors /></ModuleRoute>} />
+                <Route path="team" element={<ModuleRoute moduleKey="timelogs" moduleLabel="team operations"><AdminTeams /></ModuleRoute>} />
+                <Route path="time-logs" element={<Navigate to="/admin/team?view=time-logs" replace />} />
+                <Route path="vendors" element={<Navigate to="/admin/team?view=vendor-directory" replace />} />
                 <Route path="clients" element={<Navigate to="/admin/clients/all-clients" replace />} />
                 <Route path="clients/all-clients" element={<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClients /></ModuleRoute>} />
                 <Route path="clients/retainers" element={<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClientRetainers /></ModuleRoute>} />
