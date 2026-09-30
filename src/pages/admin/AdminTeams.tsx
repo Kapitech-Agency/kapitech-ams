@@ -1385,7 +1385,7 @@ export const AdminTeams: React.FC = () => {
                               ) : renewalAction === 'Review' ? (
                                 <Button type="button" variant="secondary" className="h-8 w-8 border-warning/30 bg-warning/10 px-0 text-warning" icon={<ShieldCheck size={14} />} title="Review vendor" aria-label={'Review ' + (vendor.companyName || vendor.name)} onClick={() => openVendorForm(vendor)} />
                               ) : (
-                                <Button type="button" variant="secondary" className="h-8 w-8 px-0" icon={<ReceiptText size={14} />} title="Manage contract" aria-label={'Manage contract for ' + (vendor.companyName || vendor.name)} onClick={() => setVendorDetail(vendor)} />
+                                <Button type="button" variant="secondary" className="h-8 w-8 px-0" icon={<Edit3 size={14} />} title="Manage contract" aria-label={'Manage contract for ' + (vendor.companyName || vendor.name)} onClick={() => setVendorDetail(vendor)} />
                               )}
                               <Link to="/admin/invoicing?finance=vendor-payments" className="ams-table-action inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-bg hover:text-fg" title="View Invoices" aria-label={'View invoices for ' + (vendor.companyName || vendor.name)}>
                                 <ReceiptText size={14} />
