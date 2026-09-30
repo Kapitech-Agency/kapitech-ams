@@ -156,15 +156,22 @@ export const AdminCmsServices: React.FC = () => {
       faqs: []
     };
 
-    const res = await api.cms.createService(newService);
-    if (!res.success) { setStatusMessage(res.error || 'Service could not be created.'); return; }
-    setServicesList((current) => [newService, ...current]);
-    setIsAddModalOpen(false);
-    setNewTitle('');
-    setNewSlug('');
-    setNewHeadline('');
-    setNewSubtitle('');
-    setStatusMessage(language === 'id' ? `Layanan "${newTitle}" berhasil ditambahkan ke CMS!` : `Service "${newTitle}" successfully added to CMS!`);
+    try {
+      const res = await api.cms.createService(newService);
+      if (!res.success) {
+        setStatusMessage(res.error || 'Service could not be created.');
+        return;
+      }
+      setServicesList((current) => [newService, ...current]);
+      setIsAddModalOpen(false);
+      setNewTitle('');
+      setNewSlug('');
+      setNewHeadline('');
+      setNewSubtitle('');
+      setStatusMessage(language === 'id' ? `Layanan "${newTitle}" berhasil ditambahkan ke CMS!` : `Service "${newTitle}" successfully added to CMS!`);
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : 'Service could not be created.');
+    }
     setTimeout(() => setStatusMessage(null), 4000);
   };
 
