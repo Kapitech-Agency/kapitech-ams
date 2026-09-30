@@ -14,10 +14,8 @@ import {
   Layers,
   Lock,
   Palette,
-  RefreshCw,
   Save,
   Search,
-  Settings as SettingsIcon,
   ShieldAlert,
   ShieldCheck,
   Smartphone,
@@ -26,7 +24,6 @@ import {
   UserCheck,
   UserPlus,
   Users,
-  X
 } from 'lucide-react';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
@@ -669,7 +666,7 @@ export const AdminSettings: React.FC = () => {
                   </button>
                 </div>
               ) : (
-                <table className="min-w-[760px]">
+                <table className="settings-system-table min-w-[760px]">
                   <thead>
                     <tr>
                       <th>Archive Identifier</th>
@@ -809,7 +806,7 @@ export const AdminSettings: React.FC = () => {
                 <p className="mt-1 max-w-md text-xs leading-5 text-muted">Adjust the filters or wait for new server-side audit activity.</p>
               </div>
             ) : (
-              <table className="min-w-[1080px]">
+              <table className="settings-system-table min-w-[1080px]">
                 <thead>
                   <tr>
                     <th>Timestamp (UTC)</th>
@@ -1039,7 +1036,7 @@ export const AdminSettings: React.FC = () => {
                       <p className="mt-1 text-xs leading-5 text-muted">Create the first server-managed account from this section.</p>
                     </div>
                   ) : (
-                    <table className="min-w-[940px]">
+                    <table className="settings-system-table min-w-[940px]">
                       <thead>
                         <tr>
                           <th>Account</th>
@@ -1111,7 +1108,7 @@ export const AdminSettings: React.FC = () => {
                   </div>
                 </div>
                 <div className="overflow-x-auto">
-                  <table className="min-w-[900px]">
+                  <table className="settings-system-table min-w-[900px]">
                     <thead>
                       <tr>
                         <th>Tier & role</th>
