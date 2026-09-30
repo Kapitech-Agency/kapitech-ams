@@ -1,54 +1,158 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import {
+  Activity,
+  AlertCircle,
+  Check,
+  CheckCircle2,
+  Clock3,
+  Database,
+  Download,
+  FileCheck2,
+  History,
+  KeyRound,
+  Layers,
+  Lock,
+  Palette,
+  RefreshCw,
+  Save,
+  Search,
+  Settings as SettingsIcon,
+  ShieldAlert,
+  ShieldCheck,
+  Smartphone,
+  Terminal,
+  Trash2,
+  UserCheck,
+  UserPlus,
+  Users,
+  X
+} from 'lucide-react';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
-import { 
-  Settings, 
-  ShieldCheck, 
-  Check, 
-  AlertCircle, 
-  Save, 
-  Trash2, 
-  Download, 
-  Lock, 
-  Clock3,
-  RefreshCw,
-  UserCheck,
-  Palette,
-  Layers,
-  Database,
-  Smartphone,
-  UserPlus,
-  X,
-  Key,
-  Edit3,
-  Shield,
-  Briefcase,
-  Terminal,
-  Users
-} from 'lucide-react';
-import { 
-  getAdminSession, 
-  updateAdminCredentials, 
-  fetchServerAuditLogs,
-  SecurityAuditLog,
-  getStoredAdminCredentials,
+import Button from '../../components/ui/Button';
+import { AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import {
   AdminAccount,
   AdminTier,
-  fetchAdminAccounts,
+  SecurityAuditLog,
   createAdminAccount,
   deleteAdminAccount,
+  fetchAdminAccounts,
+  fetchServerAuditLogs,
+  getAdminSession,
+  getStoredAdminCredentials,
+  updateAdminCredentials
 } from '../../lib/adminAuth';
 import { SiteMetaSettings } from '../../lib/cmsStore';
-import { useLanguage } from '../../lib/LanguageContext';
 import { api } from '../../lib/apiClient';
-import { ProductionReadinessCard } from '../../components/admin/ProductionReadinessCard';
-import Button from '../../components/ui/Button';
-import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
-import { AdminModuleHeader , AdminPageShell } from '../../components/admin/AdminModulePrimitives';
+import { CustomSelect } from '../../components/ui/CustomSelect';
+
+type SettingsTab = 'overview' | 'audit' | 'security' | 'integrations';
+type AuditOutcome = 'all' | 'success' | 'attention';
+
+type BackupRecord = {
+  createdAt: string;
+  sizeBytes: number;
+};
+
+type SecurityStatus = {
+  encryptionAtRest: boolean;
+  privateDocumentEncryption: boolean;
+  mfaRequired: boolean;
+  activeUserCount: number;
+  mfaEnabledCount: number;
+  mfaCoveragePercent: number;
+  backupCount: number;
+  latestBackupAt: string | null;
+  latestBackupAgeMinutes: number | null;
+  backupFresh: boolean;
+  backupIntegrity: {
+    valid: boolean;
+    checkedAt: string;
+    latestName?: string;
+    reason?: string;
+  };
+};
+
+type ProductionReadiness = {
+  productionReady: boolean;
+  gates: Record<string, boolean>;
+  status?: {
+    datasource?: string;
+    reason?: string;
+  };
+};
+
+const formatUtc = (value?: string | null) => {
+  if (!value) return 'Not available';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Not available';
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'UTC'
+  }).format(date) + ' UTC';
+};
+
+const formatSize = (bytes: number) => {
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+  const value = bytes / Math.pow(1024, index);
+  return value >= 10 || index === 0 ? value.toFixed(0) + ' ' + units[index] : value.toFixed(2) + ' ' + units[index];
+};
+
+const archiveIdentifier = (createdAt: string, index: number) => {
+  const date = new Date(createdAt);
+  if (Number.isNaN(date.getTime())) return 'ams_prod_snapshot_' + String(index + 1).padStart(2, '0');
+  const stamp = date.toISOString().replace(/[-:]/g, '').replace(/\\.\\d{3}Z$/, '');
+  return 'ams_prod_snapshot_' + stamp + '.tar.zst';
+};
+
+const statusClasses = {
+  success: 'border-success/20 bg-success/10 text-success',
+  warning: 'border-warning/20 bg-warning/10 text-warning',
+  danger: 'border-danger/20 bg-danger/10 text-danger',
+  info: 'border-info/20 bg-info/10 text-info',
+  neutral: 'border-line bg-bg text-muted'
+} as const;
+
+const StatusBadge: React.FC<{
+  tone?: keyof typeof statusClasses;
+  label: string;
+  icon?: React.ReactNode;
+}> = ({ tone = 'neutral', label, icon }) => (
+  <span className={'inline-flex items-center gap-1.5 rounded-badge border px-2 py-1 text-[10px] font-semibold ' + statusClasses[tone]}>
+    {icon || <span className="h-1.5 w-1.5 rounded-full bg-current" />}
+    {label}
+  </span>
+);
+
+const SummaryCard: React.FC<{
+  label: string;
+  value: string;
+  context: string;
+  status: string;
+  tone: keyof typeof statusClasses;
+}> = ({ label, value, context, status, tone }) => (
+  <article className="rounded-card border border-line bg-panel p-5">
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-[11px] text-muted">{label}</span>
+      <StatusBadge tone={tone} label={status} />
+    </div>
+    <div className="mt-3 min-w-0">
+      <div className="truncate text-[20px] font-semibold leading-7 tracking-[-0.01em] text-fg tabular-nums">{value}</div>
+      <div className="mt-1 text-[10px] leading-4 text-muted">{context}</div>
+    </div>
+  </article>
+);
 
 export const AdminSettings: React.FC = () => {
-  const { language, t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const session = getAdminSession();
   const storedCreds = getStoredAdminCredentials() ?? {
@@ -59,83 +163,93 @@ export const AdminSettings: React.FC = () => {
     division: 'Operations',
     mfaEnabled: false
   };
-  const canAccessServer = session?.user?.stakeholderType === 'Master' || Boolean(session?.user?.permissions?.canAccessServerAndApi);
-  const canManageAdminAccounts = session?.user?.stakeholderType === 'Master' || Boolean(session?.user?.permissions?.canManageAdminAccounts);
-  const canViewAuditLogs = session?.user?.stakeholderType === 'Master' || Boolean(session?.user?.permissions?.canViewSecurityAuditLogs);
 
-  // Tab: profile, branding, rbac, security, api, audit
-  const paramTab = searchParams.get('tab');
-  const initialTab = (
-    paramTab === 'team' || paramTab === 'rbac' ? 'rbac' :
-    paramTab === 'audit' ? 'audit' :
-    paramTab === 'system' || paramTab === 'branding' ? 'branding' :
-    paramTab === 'security' ? 'security' :
-    paramTab === 'api' ? 'api' : 'profile'
-  ) as 'profile' | 'branding' | 'rbac' | 'security' | 'api' | 'audit';
+  const canAccessServer =
+    session?.user?.stakeholderType === 'Master' ||
+    Boolean(session?.user?.permissions?.canAccessServerAndApi);
+  const canManageAdminAccounts =
+    session?.user?.stakeholderType === 'Master' ||
+    Boolean(session?.user?.permissions?.canManageAdminAccounts);
+  const canViewAuditLogs =
+    session?.user?.stakeholderType === 'Master' ||
+    Boolean(session?.user?.permissions?.canViewSecurityAuditLogs);
+  const isCurrentMaster =
+    session?.user?.stakeholderType === 'Master' ||
+    session?.user?.username === 'admin';
 
-  const [activeTab, setActiveTab] = useState<'profile' | 'branding' | 'rbac' | 'security' | 'api' | 'audit'>(initialTab);
-  const isCurrentMaster = session?.user?.stakeholderType === 'Master' || session?.user?.username === 'admin';
+  const normalizeTab = (value: string | null): SettingsTab => {
+    if (value === 'audit') return 'audit';
+    if (value === 'security' || value === 'profile' || value === 'rbac') return 'security';
+    if (value === 'integrations' || value === 'branding' || value === 'api') return 'integrations';
+    return 'overview';
+  };
 
-  const handleTabChange = (tab: 'profile' | 'branding' | 'rbac' | 'security' | 'api' | 'audit') => {
-    if (tab === 'rbac' && !canManageAdminAccounts) return;
-    if (tab === 'api' && !canAccessServer) return;
+  const requestedTab = normalizeTab(searchParams.get('tab'));
+  const [activeTab, setActiveTab] = useState<SettingsTab>(requestedTab);
+
+  useEffect(() => {
+    const allowed = requestedTab === 'audit' && !canViewAuditLogs
+      ? 'overview'
+      : requestedTab === 'security' && !canManageAdminAccounts && !canAccessServer
+        ? 'overview'
+        : requestedTab === 'integrations' && !canAccessServer
+          ? 'overview'
+          : requestedTab;
+
+    if (activeTab !== allowed) setActiveTab(allowed);
+    if (allowed !== requestedTab || (searchParams.get('tab') === null && allowed !== 'overview')) {
+      setSearchParams({ tab: allowed }, { replace: true });
+    }
+  }, [
+    activeTab,
+    canAccessServer,
+    canManageAdminAccounts,
+    canViewAuditLogs,
+    requestedTab,
+    searchParams,
+    setSearchParams
+  ]);
+
+  const selectTab = (tab: SettingsTab) => {
     if (tab === 'audit' && !canViewAuditLogs) return;
+    if (tab === 'integrations' && !canAccessServer) return;
+    if (tab === 'security' && !canManageAdminAccounts && !canAccessServer) return;
     setActiveTab(tab);
     setSearchParams({ tab });
   };
 
-  useEffect(() => {
-    const requestedTab =
-      paramTab === 'team' || paramTab === 'rbac' ? 'rbac' :
-      paramTab === 'audit' ? 'audit' :
-      paramTab === 'system' || paramTab === 'branding' ? 'branding' :
-      paramTab === 'security' ? 'security' :
-      paramTab === 'api' ? 'api' :
-      'profile';
+  const [backups, setBackups] = useState<BackupRecord[]>([]);
+  const [backupRetentionDays, setBackupRetentionDays] = useState(0);
+  const [backupIntegrity, setBackupIntegrity] = useState<{
+    valid: boolean;
+    checkedAt?: string;
+    latestName?: string;
+    reason?: string;
+  } | null>(null);
+  const [securityStatus, setSecurityStatus] = useState<SecurityStatus | null>(null);
+  const [notificationStatus, setNotificationStatus] = useState<'connected' | 'unavailable' | 'checking'>('checking');
+  const [productionReadiness, setProductionReadiness] = useState<ProductionReadiness | null>(null);
+  const [overviewLoading, setOverviewLoading] = useState(false);
+  const [integrityLoading, setIntegrityLoading] = useState(false);
+  const [snapshotLoading, setSnapshotLoading] = useState(false);
+  const [overviewMessage, setOverviewMessage] = useState<{ tone: 'success' | 'warning' | 'danger'; text: string } | null>(null);
 
-    const allowed =
-      requestedTab !== 'rbac' || canManageAdminAccounts
-        ? requestedTab === 'api'
-          ? canAccessServer ? requestedTab : 'profile'
-          : requestedTab === 'audit'
-            ? canViewAuditLogs ? requestedTab : 'profile'
-            : requestedTab
-        : 'profile';
-
-    if (activeTab !== allowed) setActiveTab(allowed);
-    if (paramTab && allowed !== requestedTab) setSearchParams({ tab: allowed }, { replace: true });
-  }, [paramTab, canManageAdminAccounts, canAccessServer, canViewAuditLogs, activeTab, setSearchParams]);
-
-  // Security Credentials state
-  const [username, setUsername] = useState(storedCreds.username);
-  const [email, setEmail] = useState(storedCreds.email);
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [securityStatus, setSecurityStatus] = useState<{ success: boolean; message: string } | null>(null);
-  const [securityLoading, setSecurityLoading] = useState(false);
-
-  // Security / MFA state
-  const mfaActive = storedCreds.mfaEnabled === true;
-
-  // Meta & Branding Settings state
-  const [metaSettings, setMetaSettings] = useState<SiteMetaSettings>({
-    siteTitle: '', siteDescription: '', contactReceiverEmail: '', defaultLanguage: language, enableLiveChat: false, enableSoundAlerts: false, maintenanceMode: false
-  });
-  const [metaStatus, setMetaStatus] = useState<string | null>(null);
-
-  // Audit Logs state
   const [logs, setLogs] = useState<SecurityAuditLog[]>([]);
-  const [backupRetentionDays, setBackupRetentionDays] = useState(14);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditQuery, setAuditQuery] = useState('');
+  const [auditOutcome, setAuditOutcome] = useState<AuditOutcome>('all');
+  const [auditPage, setAuditPage] = useState(1);
+  const [auditPageSize, setAuditPageSize] = useState(10);
 
-  // Accounts Management state (Stakeholder Executive & Teknisi IT)
   const [accounts, setAccounts] = useState<AdminAccount[]>([]);
+  const [accountsLoading, setAccountsLoading] = useState(false);
+  const [accountPage, setAccountPage] = useState(1);
+  const [accountPageSize, setAccountPageSize] = useState(10);
   const [isAddAccountModalOpen, setIsAddAccountModalOpen] = useState(false);
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<{ type: 'account'; id?: string; name?: string } | null>(null);
-  const [accountActionMessage, setAccountActionMessage] = useState<{ success: boolean; message: string } | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
+  const [accountMessage, setAccountMessage] = useState<{ success: boolean; text: string } | null>(null);
 
-  // New Account Form State
   const [newAccName, setNewAccName] = useState('');
   const [newAccUsername, setNewAccUsername] = useState('');
   const [newAccEmail, setNewAccEmail] = useState('');
@@ -143,39 +257,183 @@ export const AdminSettings: React.FC = () => {
   const [newAccRole, setNewAccRole] = useState<AdminTier>('Stakeholder Executive');
   const [newAccDivision, setNewAccDivision] = useState<'Management' | 'Engineering' | 'Design' | 'Finance' | 'Operations'>('Management');
 
-  useEffect(() => {
-    let mounted = true;
-    if (activeTab === 'audit' && canViewAuditLogs) {
-      void fetchServerAuditLogs().then((next) => { if (mounted) setLogs(next); });
-    }
-    if (activeTab === 'rbac' && canManageAdminAccounts) {
-      void fetchAdminAccounts().then((next) => { if (mounted) setAccounts(next); });
-    }
-    if (activeTab === 'branding') {
-      void api.cms.getSettings().then((res) => {
-        if (mounted && res.success && res.data?.settings) setMetaSettings(res.data.settings as SiteMetaSettings);
-      });
-    }
-    return () => { mounted = false; };
-  }, [activeTab, canViewAuditLogs, canManageAdminAccounts]);
+  const [username] = useState(storedCreds.username);
+  const [email] = useState(storedCreds.email);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [securityStatusMessage, setSecurityStatusMessage] = useState<{ success: boolean; text: string } | null>(null);
+  const [securitySaving, setSecuritySaving] = useState(false);
 
-  useEffect(() => {
-    if (!canAccessServer || activeTab !== 'api') return;
-    let mounted = true;
-    void api.system.getBackups().then((res) => {
-      if (!mounted || !res.data) return;
-      const retention = res.data.retention ?? res.data.retentionDays ?? 14;
-      setBackupRetentionDays(Number(retention) || 14);
-    }).catch(() => {
-      if (mounted) setBackupRetentionDays(14);
-    });
-    return () => { mounted = false; };
-  }, [activeTab, canAccessServer]);
+  const [metaSettings, setMetaSettings] = useState<SiteMetaSettings>({
+    siteTitle: '',
+    siteDescription: '',
+    contactReceiverEmail: '',
+    defaultLanguage: 'en',
+    enableLiveChat: false,
+    enableSoundAlerts: false,
+    maintenanceMode: false
+  });
+  const [metaSaving, setMetaSaving] = useState(false);
+  const [metaMessage, setMetaMessage] = useState<string | null>(null);
 
-  const refreshAccounts = async () => {
+  const loadOverview = useCallback(async () => {
+    if (!canAccessServer) return;
+    setOverviewLoading(true);
+    setNotificationStatus('checking');
+    const [backupRes, securityRes, notificationRes, readinessRes] = await Promise.all([
+      api.system.getBackups(),
+      api.system.securityStatus(),
+      api.notifications.getSettings(),
+      api.system.productionReadiness()
+    ]);
+
+    if (backupRes.success && backupRes.data) {
+      setBackups(Array.isArray(backupRes.data.backups) ? backupRes.data.backups : []);
+      setBackupRetentionDays(Number(backupRes.data.retentionDays ?? backupRes.data.retention ?? 0));
+    }
+    if (securityRes.success && securityRes.data?.status) {
+      setSecurityStatus(securityRes.data.status);
+      setBackupIntegrity(securityRes.data.status.backupIntegrity);
+    }
+    if (notificationRes.success) {
+      setNotificationStatus('connected');
+    } else {
+      setNotificationStatus('unavailable');
+    }
+    if (readinessRes.success && readinessRes.data) {
+      setProductionReadiness(readinessRes.data);
+    }
+    setOverviewLoading(false);
+  }, [canAccessServer]);
+
+  const loadAuditLogs = useCallback(async () => {
+    if (!canViewAuditLogs) return;
+    setAuditLoading(true);
+    const next = await fetchServerAuditLogs();
+    setLogs(next);
+    setAuditLoading(false);
+  }, [canViewAuditLogs]);
+
+  const loadAccounts = useCallback(async () => {
+    if (!canManageAdminAccounts) return;
+    setAccountsLoading(true);
     const next = await fetchAdminAccounts();
     setAccounts(next);
+    setAccountsLoading(false);
+  }, [canManageAdminAccounts]);
+
+  const loadMeta = useCallback(async () => {
+    const res = await api.cms.getSettings();
+    if (res.success && res.data?.settings) {
+      setMetaSettings({
+        ...metaSettings,
+        ...res.data.settings
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'overview') void loadOverview();
+    if (activeTab === 'audit') void loadAuditLogs();
+    if (activeTab === 'security') {
+      if (canManageAdminAccounts) void loadAccounts();
+      if (canAccessServer) void loadOverview();
+    }
+    if (activeTab === 'integrations') {
+      if (canAccessServer) void loadOverview();
+      void loadMeta();
+    }
+  }, [activeTab, canAccessServer, canManageAdminAccounts, loadAccounts, loadAuditLogs, loadMeta, loadOverview]);
+
+  const triggerIntegrityCheck = async () => {
+    if (!canAccessServer) return;
+    setIntegrityLoading(true);
+    setOverviewMessage(null);
+    const [backupCheck, auditCheck] = await Promise.all([
+      api.system.backupIntegrity(),
+      api.auditLogs.integrity()
+    ]);
+    if (backupCheck.success && backupCheck.data?.integrity) {
+      setBackupIntegrity(backupCheck.data.integrity);
+    }
+    const valid = Boolean(backupCheck.data?.integrity?.valid) && Boolean(auditCheck.data?.integrity?.valid);
+    setOverviewMessage({
+      tone: valid ? 'success' : 'warning',
+      text: valid ? 'Integrity checks completed successfully.' : 'Integrity checks completed with attention required.'
+    });
+    await loadOverview();
+    setIntegrityLoading(false);
   };
+
+  const createSnapshot = async () => {
+    if (!canAccessServer) return;
+    setSnapshotLoading(true);
+    setOverviewMessage(null);
+    const res = await api.system.createBackup();
+    if (res.success) {
+      setOverviewMessage({ tone: 'success', text: 'Production snapshot created successfully.' });
+      await loadOverview();
+    } else {
+      setOverviewMessage({ tone: 'danger', text: res.error || 'Snapshot creation failed. Try again.' });
+    }
+    setSnapshotLoading(false);
+  };
+
+  const handleExportLogs = () => {
+    if (filteredLogs.length === 0) return;
+    const rows = [
+      ['Timestamp (UTC)', 'Actor', 'Event', 'Details', 'Origin / IP', 'Status'],
+      ...filteredLogs.map((log) => [
+        formatUtc(log.timestamp),
+        log.actor,
+        log.action,
+        log.details,
+        log.ip || 'Unknown',
+        log.severity === 'critical' ? 'Critical' : log.severity === 'warning' ? 'Warning' : 'Success'
+      ])
+    ];
+    const csv = rows
+      .map((row) => row.map((cell) => '"' + String(cell ?? '').replace(/"/g, '""') + '"').join(','))
+      .join('\\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'kapitech_security_audit_' + new Date().toISOString().slice(0, 10) + '.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const filteredLogs = useMemo(() => {
+    const query = auditQuery.trim().toLowerCase();
+    return logs.filter((log) => {
+      const matchesQuery = !query || [log.actor, log.action, log.details, log.ip].some((value) => String(value || '').toLowerCase().includes(query));
+      const matchesOutcome =
+        auditOutcome === 'all' ||
+        (auditOutcome === 'success' && log.severity === 'info') ||
+        (auditOutcome === 'attention' && (log.severity === 'warning' || log.severity === 'critical'));
+      return matchesQuery && matchesOutcome;
+    });
+  }, [auditOutcome, auditQuery, logs]);
+
+  useEffect(() => {
+    setAuditPage(1);
+  }, [auditOutcome, auditQuery]);
+
+  useEffect(() => {
+    setAccountPage(1);
+  }, [accountPageSize]);
+
+  const pagedLogs = useMemo(
+    () => filteredLogs.slice((auditPage - 1) * auditPageSize, auditPage * auditPageSize),
+    [auditPage, auditPageSize, filteredLogs]
+  );
+
+  const pagedAccounts = useMemo(
+    () => accounts.slice((accountPage - 1) * accountPageSize, accountPage * accountPageSize),
+    [accountPage, accountPageSize, accounts]
+  );
 
   const handleOpenAddAccount = () => {
     setNewAccName('');
@@ -184,7 +442,7 @@ export const AdminSettings: React.FC = () => {
     setNewAccPassword('Kapi_' + crypto.randomUUID().replace(/-/g, ''));
     setNewAccRole('Stakeholder Executive');
     setNewAccDivision('Management');
-    setAccountActionMessage(null);
+    setAccountMessage(null);
     setIsAddAccountModalOpen(true);
   };
 
@@ -194,21 +452,17 @@ export const AdminSettings: React.FC = () => {
       setNewAccDivision('Engineering');
     } else if (role === 'Stakeholder Executive' || role.includes('Top Management')) {
       setNewAccDivision('Management');
+    } else if (role.includes('Project Manager')) {
+      setNewAccDivision('Operations');
     }
   };
 
-  const handleCreateAccountSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAccountActionMessage(null);
-
+  const submitNewAccount = async (event: React.FormEvent) => {
+    event.preventDefault();
     if (newAccPassword.length < 12) {
-      setAccountActionMessage({
-        success: false,
-        message: language === 'id' ? 'Password sementara harus 12 sampai 128 karakter.' : 'Temporary password must be 12 to 128 characters.'
-      });
+      setAccountMessage({ success: false, text: 'Temporary password must be 12 to 128 characters.' });
       return;
     }
-
     setIsCreatingAccount(true);
     const res = await createAdminAccount({
       name: newAccName,
@@ -218,1128 +472,940 @@ export const AdminSettings: React.FC = () => {
       role: newAccRole,
       division: newAccDivision
     });
-
     setIsCreatingAccount(false);
-
     if (res.success) {
-      await refreshAccounts();
-      setAccountActionMessage({
-        success: true,
-        message: language === 'id' 
-          ? `Akun baru "${newAccName}" (${newAccRole}) berhasil dibuat & disimpan secara terenkripsi!` 
-          : `New account "${newAccName}" (${newAccRole}) created & securely stored!`
-      });
       setIsAddAccountModalOpen(false);
-      setTimeout(() => setAccountActionMessage(null), 5000);
+      setAccountMessage({ success: true, text: 'Account created successfully.' });
+      await loadAccounts();
     } else {
-      setAccountActionMessage({
-        success: false,
-        message: res.error || 'Gagal membuat akun.'
-      });
+      setAccountMessage({ success: false, text: res.error || 'Account creation failed. Check the form and try again.' });
     }
   };
 
-  const handleDeleteAccountClick = (id: string, name: string) => {
-    setConfirmAction({ type: 'account', id, name });
-  };
-
-  const confirmDeleteAccount = async (id: string, name: string) => {
-    const res = await deleteAdminAccount(id);
+  const confirmDeleteAccount = async () => {
+    if (!confirmDelete) return;
+    const res = await deleteAdminAccount(confirmDelete.id);
     if (res.success) {
-      await refreshAccounts();
-      setAccountActionMessage({ success: true, message: language === 'id' ? `Akun "${name}" berhasil dihapus.` : `Account "${name}" deleted.` });
-      setTimeout(() => setAccountActionMessage(null), 4000);
+      setAccountMessage({ success: true, text: 'Account deleted successfully.' });
+      await loadAccounts();
     } else {
-      setAccountActionMessage({ success: false, message: res.error || (language === 'id' ? 'Gagal menghapus akun.' : 'Failed to delete account.') });
+      setAccountMessage({ success: false, text: res.error || 'Account deletion failed. Try again.' });
     }
-    setConfirmAction(null);
+    setConfirmDelete(null);
   };
 
-
-  // Handle credentials update
-  const handleUpdateSecurity = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSecurityStatus(null);
+  const handleUpdateSecurity = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setSecurityStatusMessage(null);
 
     if (!currentPassword) {
-      setSecurityStatus({ 
-        success: false, 
-        message: language === 'id' 
-          ? 'Password saat ini wajib diisi untuk verifikasi keamanan.' 
-          : 'Current password is required for security verification.' 
-      });
+      setSecurityStatusMessage({ success: false, text: 'Current password is required for security verification.' });
+      return;
+    }
+    if (!newPassword) {
+      setSecurityStatusMessage({ success: false, text: 'Enter a new password before saving.' });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setSecurityStatusMessage({ success: false, text: 'New password confirmation does not match.' });
+      return;
+    }
+    if (newPassword.length < 8) {
+      setSecurityStatusMessage({ success: false, text: 'New password must be at least 8 characters long.' });
       return;
     }
 
-    if (newPassword && newPassword !== confirmPassword) {
-      setSecurityStatus({ 
-        success: false, 
-        message: language === 'id' 
-          ? 'Konfirmasi password baru tidak cocok.' 
-          : 'New password confirmation does not match.' 
-      });
-      return;
-    }
-
-    if (newPassword && newPassword.length < 8) {
-      setSecurityStatus({ 
-        success: false, 
-        message: language === 'id' 
-          ? 'Password baru minimal 8 karakter.' 
-          : 'New password must be at least 8 characters long.' 
-      });
-      return;
-    }
-
-    setSecurityLoading(true);
-
-    try {
-      const res = await updateAdminCredentials(currentPassword, {
-        newPassword: newPassword || undefined
-      });
-
-      if (res.success) {
-        setSecurityStatus({ 
-          success: true, 
-          message: language === 'id'
-            ? (newPassword ? 'Password admin berhasil diperbarui.' : 'Tidak ada perubahan password yang disimpan.')
-            : (newPassword ? 'Admin password updated successfully.' : 'No password change was saved.') 
-        });
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
-      } else {
-        setSecurityStatus({ 
-          success: false, 
-          message: res.error || (language === 'id' ? 'Gagal memperbarui kredensial.' : 'Failed to update credentials.') 
-        });
-      }
-    } catch (err: any) {
-      setSecurityStatus({ 
-        success: false, 
-        message: err.message || (language === 'id' ? 'Terjadi kesalahan sistem.' : 'A system error occurred.') 
-      });
-    } finally {
-      setSecurityLoading(false);
-    }
-  };
-
-  // Handle Meta Settings save
-  const handleSaveMeta = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const res = await api.cms.updateSettings(metaSettings);
+    setSecuritySaving(true);
+    const res = await updateAdminCredentials(currentPassword, { newPassword });
+    setSecuritySaving(false);
     if (!res.success) {
-      setMetaStatus(res.error || (language === 'id' ? 'Gagal menyimpan pengaturan.' : 'Failed to save settings.'));
+      setSecurityStatusMessage({ success: false, text: res.error || 'Password update failed. Check the current password and try again.' });
       return;
     }
-    setMetaStatus(
-      language === 'id' 
-        ? 'Pengaturan sistem dan metadata website berhasil disimpan!' 
-        : 'System settings and site metadata successfully saved!'
-    );
-    setTimeout(() => setMetaStatus(null), 3000);
+    setSecurityStatusMessage({ success: true, text: 'Master password updated successfully.' });
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
   };
 
-  const handleExportLogs = () => {
-    if (logs.length === 0) return;
-    const jsonStr = JSON.stringify(logs, null, 2);
-    const blob = new Blob([jsonStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `kapitech_security_audit_${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const handleSaveMeta = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setMetaSaving(true);
+    setMetaMessage(null);
+    const res = await api.cms.updateSettings(metaSettings);
+    setMetaSaving(false);
+    if (!res.success) {
+      setMetaMessage(res.error || 'Settings could not be saved. Check the fields and try again.');
+      return;
+    }
+    setMetaMessage('Brand and metadata settings saved.');
   };
+
+  const latestBackup = backups[0] ?? null;
+  const backupHealthy = Boolean(backupIntegrity?.valid);
+  const mfaEnrolled = securityStatus ? securityStatus.mfaEnabledCount + ' / ' + securityStatus.activeUserCount + ' Enrolled' : 'Checking…';
+  const backupValue = latestBackup
+    ? backupHealthy ? '100% Verified' : 'Check required'
+    : 'No snapshot';
+  const backupContext = latestBackup
+    ? 'Latest snapshot ' + formatUtc(latestBackup.createdAt)
+    : 'No production backup returned by the server';
+  const notificationContext =
+    notificationStatus === 'connected'
+      ? 'Server-managed notification settings are reachable'
+      : notificationStatus === 'unavailable'
+        ? 'Notification configuration could not be loaded'
+        : 'Checking notification connectivity';
+  const notificationLabel =
+    notificationStatus === 'connected'
+      ? 'Connected'
+      : notificationStatus === 'unavailable'
+        ? 'Unavailable'
+        : 'Checking';
+  const readinessTone: keyof typeof statusClasses = productionReadiness?.productionReady ? 'success' : 'warning';
+
+  const renderSkeleton = () => (
+    <div className="animate-pulse space-y-3" aria-hidden="true">
+      <div className="h-4 w-32 rounded bg-line" />
+      <div className="h-8 w-48 rounded bg-line" />
+      <div className="h-3 w-64 rounded bg-line" />
+    </div>
+  );
 
   return (
     <AdminPageShell featureSlug="settings-module">
-      
-      {/* Top Header */}
       <AdminModuleHeader
-        icon={<Settings size={20} />}
-        className="mb-0"
-        title={language === 'id' ? 'Pengaturan Sistem & Keamanan' : 'Settings'}
-        description={language === 'id'
-          ? 'Konfigurasi akun master admin, hak akses RBAC, integrasi API, dan log audit keamanan terenkripsi.'
-          : 'Configure master admin identity, 4-tier RBAC access matrix, API cloud integrations, and encrypted audit trail.'}
+        title="System & Security"
+        description="Automated backup verification, identity access governance, and immutable audit telemetry."
+        actions={
+          <>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => void triggerIntegrityCheck()}
+              loading={integrityLoading}
+              icon={<FileCheck2 size={15} />}
+            >
+              Trigger Integrity Check
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => void createSnapshot()}
+              loading={snapshotLoading}
+              icon={<Database size={15} />}
+            >
+              Create Snapshot
+            </Button>
+          </>
+        }
       />
 
-      {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-line pb-2 overflow-x-auto custom-scrollbar">
-        <button
-          onClick={() => handleTabChange('profile')}
-          className={`px-4 py-2.5 rounded-control border border-transparent text-xs font-sans transition-all flex items-center gap-2 shrink-0 min-h-10 ${
-            activeTab === 'profile'
-              ? 'bg-panel-hover text-fg font-semibold border-line '
-              : 'text-muted hover:text-fg hover:bg-panel'
-          }`}
-        >
-          <UserCheck size={15} />
-          <span>{language === 'id' ? 'Profil & Akun Master' : 'Profile & Master Account'}</span>
-        </button>
-
-        <button
-          onClick={() => handleTabChange('branding')}
-          className={`px-4 py-2.5 rounded-control text-xs font-sans transition-all flex items-center gap-2 shrink-0 min-h-10 ${
-            activeTab === 'branding'
-              ? 'bg-panel-hover text-fg font-semibold border-line '
-              : 'text-muted hover:text-fg hover:bg-panel'
-          }`}
-        >
-          <Palette size={15} />
-          <span>{language === 'id' ? 'Brand & SEO' : 'Brand & SEO'}</span>
-        </button>
-
-        <button
-          onClick={() => handleTabChange('rbac')}
-           disabled={!canManageAdminAccounts}
-          className={`px-4 py-2.5 rounded-control text-xs font-sans transition-all flex items-center gap-2 shrink-0 min-h-10 ${
-            activeTab === 'rbac'
-              ? 'bg-panel-hover text-fg font-semibold border-line '
-              : 'text-muted hover:text-fg hover:bg-panel'
-          }`}
-        >
-          <Layers size={15} />
-          <span>{language === 'id' ? 'Matriks Hak Akses (RBAC)' : 'RBAC Matrix'}</span>
-        </button>
-
-        <button
-          onClick={() => handleTabChange('security')}
-          className={`px-4 py-2.5 rounded-control text-xs font-sans transition-all flex items-center gap-2 shrink-0 min-h-10 ${
-            activeTab === 'security'
-              ? 'bg-panel-hover text-fg font-semibold border-line '
-              : 'text-muted hover:text-fg hover:bg-panel'
-          }`}
-        >
-          <Lock size={15} />
-          <span>{language === 'id' ? 'Keamanan & MFA' : 'Security & MFA'}</span>
-        </button>
-
-        <button
-          onClick={() => handleTabChange('api')}
-           disabled={!canAccessServer}
-          className={`px-4 py-2.5 rounded-control text-xs font-sans transition-all flex items-center gap-2 shrink-0 min-h-10 ${
-            activeTab === 'api'
-              ? 'bg-panel-hover text-fg font-semibold border-line '
-              : 'text-muted hover:text-fg hover:bg-panel'
-          }`}
-        >
-          <Database size={15} />
-          <span>{language === 'id' ? 'API & Cloud' : 'API & Cloud'}</span>
-        </button>
-
-        <button
-          onClick={() => handleTabChange('audit')}
-           disabled={!canViewAuditLogs}
-          className={`px-4 py-2.5 rounded-control text-xs font-sans transition-all flex items-center gap-2 shrink-0 min-h-10 ${
-            activeTab === 'audit'
-              ? 'bg-panel-hover text-fg font-semibold border-line '
-              : 'text-muted hover:text-fg hover:bg-panel'
-          }`}
-        >
-          <ShieldCheck size={15} />
-          <span>{language === 'id' ? `Riwayat Audit (${logs.length})` : `Audit Trail (${logs.length})`}</span>
-        </button>
-      </div>
-
-      {/* TAB 1: PROFILE & MASTER ACCOUNT */}
-      {activeTab === 'profile' && (
-        <div className="w-full bg-panel border border-line rounded-card p-4">
-          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-line">
-            <div className="w-10 h-10 rounded-card bg-accent/10 border border-accent/30 flex items-center justify-center text-accent shrink-0">
-              <UserCheck size={20} />
-            </div>
-            <div>
-              <h2 className="text-base font-semibold font-sans text-fg">
-                {language === 'id' ? 'Profil & Identitas Master' : 'Master Profile & Identity'}
-              </h2>
-              <p className="text-xs text-muted font-sans">
-                {language === 'id' 
-                  ? 'Konfigurasi identitas login pengelola sistem dan kredensial utama.' 
-                  : 'Configure system administrator login identity and primary credentials.'}
-              </p>
-            </div>
-          </div>
-
-          {securityStatus && (
-            <div className={`mb-6 p-4 rounded-card text-xs font-sans flex items-start gap-2.5 ${
-              securityStatus.success 
-                ? 'bg-success/10 border border-success/30 text-success' 
-                : 'bg-danger/10 border border-danger/30 text-danger'
-            }`}>
-              {securityStatus.success ? <Check size={16} className="shrink-0 mt-0.5" /> : <AlertCircle size={16} className="shrink-0 mt-0.5" />}
-              <span>{securityStatus.message}</span>
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-sans text-muted mb-1 font-semibold">
-                  {language === 'id' ? 'Nama Pengguna (Username)' : 'Username'}
-                </label>
-                <input
-                  type="text"
-                  value={username}
-                  readOnly
-                  aria-readonly="true"
-                  className="w-full min-h-10 rounded-control border border-line bg-bg px-3 text-xs text-muted cursor-default font-sans"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-sans text-muted mb-1 font-semibold">
-                  {language === 'id' ? 'Email Notifikasi' : 'Notification Email'}
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  readOnly
-                  aria-readonly="true"
-                  className="w-full min-h-10 rounded-control border border-line bg-bg px-3 text-xs text-muted cursor-default font-sans"
-                />
-              </div>
-            </div>
-
-            <div className="p-4 bg-panel border border-line rounded-card space-y-2">
-              <div className="flex items-center justify-between text-xs font-sans">
-                <span className="text-muted">{language === 'id' ? 'Tingkat Akses (Role Tier):' : 'Role Tier Level:'}</span>
-                <span className="text-accent font-semibold">{session?.user.role || storedCreds.role}</span>
-              </div>
-              <div className="flex items-center justify-between text-xs font-sans">
-                <span className="text-muted">{language === 'id' ? 'Divisi Agensi:' : 'Agency Division:'}</span>
-                <span className="text-fg font-semibold">{storedCreds.division || 'Management'}</span>
-              </div>
-              <div className="flex items-center justify-between text-xs font-sans">
-                <span className="text-muted">{language === 'id' ? 'Terakhir Login:' : 'Last Login:'}</span>
-                <span className="text-muted">{new Date(session?.user.lastLogin || Date.now()).toLocaleString()}</span>
-              </div>
-            </div>
-
-            <div className="rounded-card border border-line bg-bg p-4">
-              <div className="flex items-start gap-3">
-                <ShieldCheck size={16} className="mt-0.5 shrink-0 text-accent-text" />
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold text-fg">Server-managed credentials</p>
-                  <p className="mt-1 text-[11px] leading-5 text-muted">
-                    {language === 'id'
-                      ? 'Username dan email akun Master dikelola oleh server. Perubahan password dilakukan melalui tab Security & MFA.'
-                      : 'Master username and email are server-managed. Change the password from the Security & MFA tab.'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+      {overviewMessage && (
+        <div className={
+          'rounded-card border px-4 py-3 text-xs ' +
+          (overviewMessage.tone === 'success'
+            ? 'border-success/20 bg-success/10 text-success'
+            : overviewMessage.tone === 'warning'
+              ? 'border-warning/20 bg-warning/10 text-warning'
+              : 'border-danger/20 bg-danger/10 text-danger')
+        } role="status">
+          {overviewMessage.text}
         </div>
       )}
 
-      {/* TAB 2: BRAND IDENTITY & SEO */}
-      {activeTab === 'branding' && (
-        <div className="w-full max-w-4xl bg-panel border border-line rounded-card p-4">
-          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-line">
-            <div className="w-10 h-10 rounded-card bg-series-3/10 border border-series-3/30 flex items-center justify-center text-series-3 shrink-0">
-              <Palette size={20} />
-            </div>
-            <div>
-              <h2 className="text-base font-semibold font-sans text-fg">
-                {language === 'id' ? 'Identitas Brand, Metadata & Notifikasi' : 'Brand Identity, Metadata & Notification Rules'}
-              </h2>
-              <p className="text-xs text-muted font-sans">
-                {language === 'id'
-                  ? 'Konfigurasi representasi visual dan aturan SEO global untuk kapitech.id dan ams.kapitech.id.'
-                  : 'Configure visual branding, search meta tags, and global agency settings for kapitech.id.'}
-              </p>
-            </div>
+      {activeTab === 'overview' && (
+        <section aria-label="System Status Summary" className="space-y-6">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            <SummaryCard
+              label="Backup & Recovery"
+              value={overviewLoading ? 'Checking…' : backupValue}
+              context={overviewLoading ? 'Loading backup health and retention status' : backupContext}
+              status={overviewLoading ? 'Checking' : backupHealthy ? 'Healthy' : 'Needs review'}
+              tone={overviewLoading ? 'neutral' : backupHealthy ? 'success' : 'warning'}
+            />
+            <SummaryCard
+              label="Security & MFA"
+              value={overviewLoading ? 'Checking…' : mfaEnrolled}
+              context={overviewLoading ? 'Loading identity protection status' : ((securityStatus?.activeUserCount ?? 0) + ' active sessions reported by the server')}
+              status={overviewLoading ? 'Checking' : securityStatus?.mfaCoveragePercent === 100 ? 'Enforced' : 'Review'}
+              tone={overviewLoading ? 'neutral' : securityStatus?.mfaCoveragePercent === 100 ? 'success' : 'warning'}
+            />
+            <SummaryCard
+              label="Integrations & Alerts"
+              value={notificationStatus === 'connected' ? 'Notifications & API' : 'Server-managed'}
+              context={notificationContext}
+              status={notificationLabel}
+              tone={notificationStatus === 'connected' ? 'success' : notificationStatus === 'unavailable' ? 'warning' : 'neutral'}
+            />
           </div>
 
-          {metaStatus && (
-            <div className="mb-6 p-4 rounded-card text-xs font-sans flex items-start gap-2.5 bg-success/10 border border-success/30 text-success">
-              <Check size={16} className="shrink-0 mt-0.5" />
-              <span>{metaStatus}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleSaveMeta} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-sans text-muted mb-1 font-semibold">
-                  {language === 'id' ? 'Nama Agensi Global' : 'Global Agency Name'}
-                </label>
-                <input
-                  type="text"
-                  value={metaSettings.agencyName}
-                  onChange={(e) => setMetaSettings({ ...metaSettings, agencyName: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-panel border border-line rounded-control text-xs text-fg focus:outline-none focus:border-accent font-sans min-h-10"
-                />
+          <section className="overflow-hidden rounded-card border border-line bg-panel">
+            <div className="flex flex-col gap-3 border-b border-line px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2">
+                <History size={17} className="text-accent-text" />
+                <h2 className="text-sm font-semibold text-fg">Recent Production Backups</h2>
               </div>
-
-              <div>
-                <label className="block text-xs font-sans text-muted mb-1 font-semibold">
-                  {language === 'id' ? 'Domain Publik' : 'Public Domain'}
-                </label>
-                <input
-                  type="text"
-                  value="https://kapitech.id"
-                  disabled
-                  className="w-full px-3.5 py-2.5 bg-panel/50 border border-line rounded-control text-xs text-muted font-sans cursor-not-allowed min-h-10"
-                />
-              </div>
+              <span className="text-[10px] text-muted">
+                Retention: {backupRetentionDays || 'Provider-managed'} {backupRetentionDays ? 'days' : ''}
+              </span>
             </div>
 
-            <div>
-              <label className="block text-xs font-sans text-muted mb-1 font-semibold">
-                {language === 'id' ? 'Tagline / Slogan Utama' : 'Hero Tagline / Catchphrase'}
-              </label>
-              <input
-                type="text"
-                value={metaSettings.tagline}
-                onChange={(e) => setMetaSettings({ ...metaSettings, tagline: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-panel border border-line rounded-control text-xs text-fg focus:outline-none focus:border-accent font-sans min-h-10"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-sans text-muted mb-1 font-semibold">
-                {language === 'id' ? 'Deskripsi Meta (SEO Global)' : 'Meta Description (Global SEO)'}
-              </label>
-              <textarea
-                rows={3}
-                value={metaSettings.metaDescription}
-                onChange={(e) => setMetaSettings({ ...metaSettings, metaDescription: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-panel border border-line rounded-control text-xs text-fg focus:outline-none focus:border-accent font-sans"
-              />
-            </div>
-
-            <div className="pt-4 border-t border-line space-y-3">
-              <label className="flex items-center gap-3 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={metaSettings.soundEffectsEnabled}
-                  onChange={(e) => setMetaSettings({ ...metaSettings, soundEffectsEnabled: e.target.checked })}
-                  className="w-4 h-4 rounded-badge bg-panel border-line text-accent accent-accent"
-                />
-                <span className="text-xs text-fg font-sans">
-                  {language === 'id' 
-                    ? 'Aktifkan Notifikasi Suara (Chime) saat ada lead baru masuk' 
-                    : 'Enable audio chime notification on new incoming lead submission'}
-                </span>
-              </label>
-
-              <label className="flex items-center gap-3 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={metaSettings.enableLiveChat}
-                  onChange={(e) => setMetaSettings({ ...metaSettings, enableLiveChat: e.target.checked })}
-                  className="w-4 h-4 rounded-badge bg-panel border-line text-accent accent-accent"
-                />
-                <span className="text-xs text-fg font-sans">
-                  {language === 'id' 
-                    ? 'Tampilkan Floating Contact & WhatsApp Widget di pojok kanan bawah' 
-                    : 'Display Floating WhatsApp & Contact Widget on bottom-right'}
-                </span>
-              </label>
-            </div>
-
-            <div className="pt-4 flex items-center justify-end">
-              <button
-                type="submit"
-                className="px-5 py-2.5 rounded-control bg-accent text-white text-xs font-sans font-semibold hover:bg-accent-hover transition-all flex items-center gap-2 min-h-10"
-              >
-                <Save size={14} />
-                <span>{language === 'id' ? 'Simpan Pengaturan Brand' : 'Save Brand Settings'}</span>
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* TAB 3: ROLE MATRIX & ACCOUNTS MANAGEMENT (STAKEHOLDER EXECUTIVE & TEKNISI IT) */}
-      {activeTab === 'rbac' && canManageAdminAccounts && (
-        <div className="w-full space-y-6">
-          {/* Notification banner */}
-          {accountActionMessage && (
-            <div className={`p-4 rounded-card border flex items-center gap-3 text-xs font-sans animate-fadeIn ${
-              accountActionMessage.success
-                ? 'bg-success/10 border-success/30 text-success'
-                : 'bg-danger/10 border-danger/30 text-danger'
-            }`}>
-              {accountActionMessage.success ? <Check size={16} className="shrink-0 text-success" /> : <AlertCircle size={16} className="shrink-0 text-danger" />}
-              <span>{accountActionMessage.message}</span>
-            </div>
-          )}
-
-          {/* Accounts Management Section */}
-          <div className="bg-panel border border-line rounded-card p-4 space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 pb-5 border-b border-line">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-card bg-accent/10 border border-accent/30 flex items-center justify-center text-danger shrink-0">
-                  <Users size={20} />
+            <div className="overflow-x-auto">
+              {overviewLoading ? (
+                <div className="px-5 py-8">{renderSkeleton()}</div>
+              ) : backups.length === 0 ? (
+                <div className="flex min-h-[180px] flex-col items-center justify-center px-5 py-10 text-center">
+                  <FileCheck2 size={22} className="text-muted" />
+                  <p className="mt-3 text-sm font-medium text-fg">No production backups found</p>
+                  <p className="mt-1 max-w-md text-xs leading-5 text-muted">Create a snapshot to start the production backup history.</p>
+                  <button
+                    type="button"
+                    onClick={() => void createSnapshot()}
+                    className="mt-4 inline-flex min-h-9 items-center gap-2 rounded-control bg-accent px-3 text-xs font-medium text-white hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  >
+                    <Database size={14} />
+                    Create Snapshot
+                  </button>
                 </div>
+              ) : (
+                <table className="min-w-[760px]">
+                  <thead>
+                    <tr>
+                      <th>Archive Identifier</th>
+                      <th>Type</th>
+                      <th>Size</th>
+                      <th>Created</th>
+                      <th>Status</th>
+                      <th className="text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {backups.slice(0, 8).map((backup, index) => (
+                      <tr key={backup.createdAt + String(index)}>
+                        <td className="font-mono text-[11px] text-fg">{archiveIdentifier(backup.createdAt, index)}</td>
+                        <td>
+                          <span className="inline-flex rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] text-muted">Snapshot</span>
+                        </td>
+                        <td className="font-mono text-[11px] tabular-nums text-muted">{formatSize(backup.sizeBytes)}</td>
+                        <td className="text-[11px] text-muted tabular-nums">{formatUtc(backup.createdAt)}</td>
+                        <td>
+                          <StatusBadge
+                            tone={backupHealthy ? 'success' : 'warning'}
+                            label={backupHealthy ? 'Verified' : 'Needs check'}
+                          />
+                        </td>
+                        <td className="text-right">
+                          <button
+                            type="button"
+                            onClick={() => void triggerIntegrityCheck()}
+                            className="inline-flex min-h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[11px] text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                          >
+                            <CheckCircle2 size={13} />
+                            Verify
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </section>
+
+          <section className="rounded-card border border-line bg-panel p-5">
+            <div className="flex flex-col gap-3 border-b border-line pb-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2">
+                <Activity size={18} className="text-muted" />
                 <div>
-                  <h2 className="text-base font-semibold font-sans text-fg">
-                    {language === 'id' ? 'Manajemen Akun Stakeholder & Teknisi' : 'Stakeholder & Technical Accounts'}
-                  </h2>
-                  <p className="text-xs text-muted font-sans">
-                    {language === 'id'
-                      ? 'Kelola akun khusus Stakeholder Executive, Teknisi IT, dan staf dengan hak akses granular.'
-                      : 'Manage dedicated accounts for Executive Stakeholders, IT Engineers, and operations.'}
-                  </p>
+                  <h2 className="text-sm font-semibold text-fg">System Integrity</h2>
+                  <p className="mt-1 text-[10px] text-muted">Server-side checks across backup, audit, and production readiness controls.</p>
                 </div>
               </div>
+              <StatusBadge
+                tone={readinessTone}
+                label={productionReadiness?.productionReady ? 'Production ready' : 'Review gates'}
+              />
+            </div>
 
+            <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                ['Runtime', Boolean(productionReadiness?.gates?.runtime)],
+                ['PostgreSQL', Boolean(productionReadiness?.gates?.postgres)],
+                ['MFA', Boolean(productionReadiness?.gates?.mfa)],
+                ['Documents', Boolean(productionReadiness?.gates?.documentStorage)]
+              ].map(([label, ready]) => (
+                <div key={String(label)} className="flex items-center justify-between gap-2 rounded-control border border-line bg-bg px-3 py-2.5">
+                  <span className="text-[10px] text-muted">{String(label)}</span>
+                  {ready ? <Check size={14} className="text-success" /> : <AlertCircle size={14} className="text-warning" />}
+                </div>
+              ))}
+            </div>
+
+            {productionReadiness?.status?.reason && (
+              <div className="mt-3 rounded-control border border-warning/20 bg-warning/5 px-3 py-2.5 text-[11px] leading-5 text-warning">
+                {productionReadiness.status.reason}
+              </div>
+            )}
+          </section>
+        </section>
+      )}
+
+      {activeTab === 'audit' && canViewAuditLogs && (
+        <section className="rounded-card border border-line bg-panel">
+          <div className="flex flex-col gap-3 border-b border-line px-5 py-4 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex items-center gap-2">
+              <History size={18} className="text-muted" />
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm font-semibold text-fg">Immutable System Audit Log</h2>
+                  <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[9px] font-mono text-muted">Write-Once Ledger</span>
+                </div>
+                <p className="mt-1 text-[10px] leading-4 text-muted">Authentication, RBAC, and security operations reported by the server.</p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <label className="relative sm:w-56">
+                <span className="sr-only">Filter by event or actor</span>
+                <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                <input
+                  value={auditQuery}
+                  onChange={(event) => setAuditQuery(event.target.value)}
+                  placeholder="Filter by event or actor..."
+                  className="h-8 w-full bg-bg pl-9 pr-3 text-[11px]"
+                />
+              </label>
+              <CustomSelect
+                value={auditOutcome}
+                onChange={(value) => setAuditOutcome(value as AuditOutcome)}
+                options={[
+                  { value: 'all', label: 'All outcomes' },
+                  { value: 'success', label: 'Success only' },
+                  { value: 'attention', label: 'Warnings & critical' }
+                ]}
+                triggerClassName="h-8 min-h-8 w-[160px]"
+                aria-label="Filter audit outcomes"
+              />
               <button
                 type="button"
-                onClick={handleOpenAddAccount}
-                className="h-10 px-4 min-h-10 rounded-control bg-accent text-white text-xs font-sans font-semibold hover:bg-accent-hover transition-all flex items-center justify-center gap-2 self-start sm:self-auto shrink-0"
+                onClick={handleExportLogs}
+                disabled={filteredLogs.length === 0}
+                className="inline-flex h-8 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-3 text-[11px] text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-40"
               >
-                <UserPlus size={15} />
-                <span>{language === 'id' ? 'Tambah Akun Baru' : 'Add New Account'}</span>
+                <Download size={13} />
+                Export CSV
               </button>
             </div>
+          </div>
 
-            {/* Accounts Grid / List */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {accounts.map((acc) => {
-                const isExecutive = acc.role === 'Stakeholder Executive' || acc.stakeholderType === 'Executive';
-                const isIT = acc.role === 'Teknisi IT / Systems Engineer' || acc.stakeholderType === 'IT_Technical';
-                const isMasterAccount = acc.username === 'admin' || acc.stakeholderType === 'Master';
+          <div className="overflow-x-auto">
+            {auditLoading ? (
+              <div className="px-5 py-10">{renderSkeleton()}</div>
+            ) : filteredLogs.length === 0 ? (
+              <div className="flex min-h-[220px] flex-col items-center justify-center px-5 py-10 text-center">
+                <History size={24} className="text-muted" />
+                <p className="mt-3 text-sm font-medium text-fg">No audit entries found</p>
+                <p className="mt-1 max-w-md text-xs leading-5 text-muted">Adjust the filters or wait for new server-side audit activity.</p>
+              </div>
+            ) : (
+              <table className="min-w-[1080px]">
+                <thead>
+                  <tr>
+                    <th>Timestamp (UTC)</th>
+                    <th>Actor</th>
+                    <th>Event</th>
+                    <th>Details</th>
+                    <th>Origin / IP</th>
+                    <th className="text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pagedLogs.map((log) => {
+                    const isCritical = log.severity === 'critical';
+                    const isWarning = log.severity === 'warning';
+                    return (
+                      <tr key={log.id}>
+                        <td className="font-mono text-[10px] tabular-nums text-muted">{formatUtc(log.timestamp)}</td>
+                        <td>
+                          <div className="flex items-center gap-2">
+                            <span className="flex h-6 w-6 items-center justify-center rounded-control border border-line bg-bg text-[9px] font-mono font-semibold text-fg">
+                              {String(log.actor || 'SYS').slice(0, 2).toUpperCase()}
+                            </span>
+                            <span className="text-[11px] font-medium text-fg">{log.actor || 'System'}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <span className="rounded-badge border border-line bg-bg px-2 py-0.5 font-mono text-[10px] font-medium text-fg">
+                            {log.action}
+                          </span>
+                        </td>
+                        <td className="max-w-[420px] text-[11px] text-muted">{log.details}</td>
+                        <td className="font-mono text-[10px] text-muted">{log.ip || 'Internal cluster'}</td>
+                        <td className="text-right">
+                          <StatusBadge
+                            tone={isCritical ? 'danger' : isWarning ? 'warning' : 'success'}
+                            label={isCritical ? 'Critical' : isWarning ? 'Warning' : 'Success'}
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
 
-                return (
-                  <div 
-                    key={acc.id}
-                    className="p-4 rounded-card bg-panel border border-line flex flex-col justify-between hover:border-line transition-all space-y-4"
-                  >
-                    <div>
-                      <div className="flex items-start justify-between gap-2 mb-2.5">
-                        <ProfileIdentity
-                          profile={{
-                            id: acc.id,
-                            name: acc.name,
-                            role: acc.role,
-                            division: acc.division,
-                            username: acc.username,
-                            companyEmail: acc.email,
-                            status: acc.status === 'active' ? 'active' : 'offline'
-                          }}
-                        />
+          {!auditLoading && (
+            <AdminTablePagination
+              total={filteredLogs.length}
+              page={auditPage}
+              pageSize={auditPageSize}
+              onPageChange={setAuditPage}
+              onPageSizeChange={setAuditPageSize}
+              itemLabel="ledger entries"
+              slug="settings-audit-pagination"
+              secondaryLabel="Retention is server-managed."
+            />
+          )}
+        </section>
+      )}
 
-                        <span className={`text-[10px] font-sans px-2 py-0.5 rounded-badge border shrink-0 ${
-                          isMasterAccount ? 'bg-danger/10 text-danger border-danger/30' :
-                          isExecutive ? 'bg-warning/10 text-warning border-warning/30' :
-                          isIT ? 'bg-success/10 text-success border-success/30' :
-                          'bg-series-3/10 text-series-3 border-series-3/30'
-                        }`}>
-                          {acc.division || 'Operations'}
-                        </span>
+      {activeTab === 'security' && (
+        <section className="space-y-6">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <section className="rounded-card border border-line bg-panel p-5">
+              <div className="flex items-center gap-2 border-b border-line pb-4">
+                <UserCheck size={18} className="text-accent-text" />
+                <div>
+                  <h2 className="text-sm font-semibold text-fg">Master profile & identity</h2>
+                  <p className="mt-1 text-[10px] leading-4 text-muted">Identity and login state are sourced from the server session.</p>
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-[10px] font-medium text-muted">Username</label>
+                  <input value={username} readOnly aria-readonly="true" className="w-full bg-bg text-[11px] text-muted" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-[10px] font-medium text-muted">Notification email</label>
+                  <input value={email} readOnly aria-readonly="true" className="w-full bg-bg text-[11px] text-muted" />
+                </div>
+              </div>
+
+              <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <div className="rounded-control border border-line bg-bg px-3 py-3">
+                  <p className="text-[10px] text-muted">Role</p>
+                  <p className="mt-1 text-xs font-semibold text-fg">{session?.user?.role || storedCreds.role}</p>
+                </div>
+                <div className="rounded-control border border-line bg-bg px-3 py-3">
+                  <p className="text-[10px] text-muted">Division</p>
+                  <p className="mt-1 text-xs font-semibold text-fg">{storedCreds.division || 'Management'}</p>
+                </div>
+                <div className="rounded-control border border-line bg-bg px-3 py-3">
+                  <p className="text-[10px] text-muted">Last login</p>
+                  <p className="mt-1 text-xs font-semibold text-fg">{formatUtc(session?.user?.lastLogin)}</p>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-card border border-line bg-panel p-5">
+              <div className="flex items-center gap-2 border-b border-line pb-4">
+                <Lock size={18} className="text-warning" />
+                <div>
+                  <h2 className="text-sm font-semibold text-fg">Security & MFA policy</h2>
+                  <p className="mt-1 text-[10px] leading-4 text-muted">Authentication policy is enforced by the server.</p>
+                </div>
+              </div>
+
+              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="rounded-control border border-line bg-bg p-4">
+                  <div className="flex items-start gap-3">
+                    <Smartphone size={16} className={storedCreds.mfaEnabled ? 'text-success' : 'text-warning'} />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-semibold text-fg">Multi-factor authentication</p>
+                        <StatusBadge tone={storedCreds.mfaEnabled ? 'success' : 'warning'} label={storedCreds.mfaEnabled ? 'Enabled' : 'Not configured'} />
                       </div>
-
-                      <div className="space-y-1.5 pt-1 text-[11px] font-sans">
-                        <div className="text-muted flex items-center justify-between">
-                          <span>Role:</span>
-                          <span className="font-semibold text-fg truncate max-w-[170px]">{acc.role}</span>
-                        </div>
-                        <div className="text-muted flex items-center justify-between">
-                          <span>Email:</span>
-                          <span className="text-muted truncate max-w-[170px]">{acc.email}</span>
-                        </div>
-                        <div className="text-muted flex items-center justify-between">
-                          <span>Status:</span>
-                          <span className="text-success flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-success" />
-                            Aktif
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Permissions Summary Badges */}
-                      <div className="mt-3 pt-3 border-t border-line flex flex-wrap gap-1">
-                        {acc.permissions?.canManageInvoices && (
-                          <span className="text-[9px] font-sans px-1.5 py-0.5 bg-success/10 text-success border border-success/30 rounded-badge">
-                            Invoice
-                          </span>
-                        )}
-                        {acc.permissions?.canApproveBudgets && (
-                          <span className="text-[9px] font-sans px-1.5 py-0.5 bg-warning/10 text-warning border border-warning/30 rounded-badge">
-                            Budget Approval
-                          </span>
-                        )}
-                        {acc.permissions?.canAccessServerAndApi && (
-                          <span className="text-[9px] font-sans px-1.5 py-0.5 bg-info/10 text-info border border-info/30 rounded-badge">
-                            DevOps / Cloud
-                          </span>
-                        )}
-                        {acc.permissions?.canViewSecurityAuditLogs && (
-                          <span className="text-[9px] font-sans px-1.5 py-0.5 bg-panel text-muted border border-line rounded-badge">
-                            Audit Logs
-                          </span>
-                        )}
-                        {acc.permissions?.canManageCrm && (
-                          <span className="text-[9px] font-sans px-1.5 py-0.5 bg-series-3/10 text-series-3 border border-series-3/30 rounded-badge">
-                            CRM
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="pt-3 border-t border-line flex items-center justify-between gap-2">
-                      <span className="text-[10px] leading-4 text-muted">
-                        {language === 'id' ? 'Hak akses mengikuti policy role dari server.' : 'Access follows the server-managed role policy.'}
-                      </span>
-
-                      {isCurrentMaster && !isMasterAccount ? (
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteAccountClick(acc.id, acc.name)}
-                          className="min-h-10 sm:min-h-9 px-2 rounded-control border border-line bg-panel text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger text-[11px] font-medium transition-colors flex items-center gap-1"
-                          title="Delete account"
-                        >
-                          <Trash2 size={13} />
-                          <span className="hidden sm:inline">{language === 'id' ? 'Hapus' : 'Delete'}</span>
-                        </button>
-                      ) : (
-                        <span className="text-[10px] font-sans text-muted italic">
-                          {isMasterAccount ? 'Root Master' : 'Master access required'}
-                        </span>
-                      )}
+                      <p className="mt-1 text-[10px] leading-5 text-muted">MFA enrollment follows the authentication flow and remains server-backed.</p>
                     </div>
                   </div>
+                </div>
+                <div className="rounded-control border border-line bg-bg p-4">
+                  <div className="flex items-start gap-3">
+                    <Clock3 size={16} className="text-info" />
+                    <div>
+                      <p className="text-xs font-semibold text-fg">Session expiry</p>
+                      <p className="mt-1 text-[10px] leading-5 text-muted">Session timing is enforced by the authentication layer. Browser settings cannot override it.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <section className="rounded-card border border-line bg-panel p-5">
+            <div className="flex flex-col gap-3 border-b border-line pb-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2">
+                <KeyRound size={18} className="text-muted" />
+                <div>
+                  <h2 className="text-sm font-semibold text-fg">Change master password</h2>
+                  <p className="mt-1 text-[10px] leading-4 text-muted">Current password verification is required before the server saves a new password.</p>
+                </div>
+              </div>
+              {securityStatusMessage && (
+                <StatusBadge
+                  tone={securityStatusMessage.success ? 'success' : 'danger'}
+                  label={securityStatusMessage.text}
+                  icon={securityStatusMessage.success ? <Check size={13} /> : <AlertCircle size={13} />}
+                />
+              )}
+            </div>
+
+            <form onSubmit={handleUpdateSecurity} className="mt-4 space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label>
+                  <span className="mb-1 block text-[10px] font-medium text-muted">New password</span>
+                  <input
+                    type="password"
+                    required
+                    value={newPassword}
+                    onChange={(event) => setNewPassword(event.target.value)}
+                    placeholder="At least 8 characters"
+                    className="w-full"
+                  />
+                </label>
+                <label>
+                  <span className="mb-1 block text-[10px] font-medium text-muted">Confirm new password</span>
+                  <input
+                    type="password"
+                    required
+                    value={confirmPassword}
+                    onChange={(event) => setConfirmPassword(event.target.value)}
+                    placeholder="Repeat the new password"
+                    className="w-full"
+                  />
+                </label>
+              </div>
+              <label className="block">
+                <span className="mb-1 block text-[10px] font-medium text-muted">Current password</span>
+                <input
+                  type="password"
+                  required
+                  value={currentPassword}
+                  onChange={(event) => setCurrentPassword(event.target.value)}
+                  placeholder="Enter the current admin password"
+                  className="w-full"
+                />
+              </label>
+              <div className="flex justify-end">
+                <Button type="submit" variant="primary" loading={securitySaving} icon={<Save size={14} />}>
+                  Update Password
+                </Button>
+              </div>
+            </form>
+          </section>
+
+          {canManageAdminAccounts && (
+            <>
+              <section className="overflow-hidden rounded-card border border-line bg-panel">
+                <div className="flex flex-col gap-3 border-b border-line px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-2">
+                    <Users size={18} className="text-muted" />
+                    <div>
+                      <h2 className="text-sm font-semibold text-fg">Admin access accounts</h2>
+                      <p className="mt-1 text-[10px] leading-4 text-muted">Roles and permissions remain server-managed.</p>
+                    </div>
+                  </div>
+                  <Button type="button" variant="primary" onClick={handleOpenAddAccount} icon={<UserPlus size={14} />}>
+                    Add Account
+                  </Button>
+                </div>
+
+                {accountMessage && (
+                  <div className={'border-b px-5 py-3 text-xs ' + (accountMessage.success ? 'border-success/20 bg-success/10 text-success' : 'border-danger/20 bg-danger/10 text-danger')}>
+                    {accountMessage.text}
+                  </div>
+                )}
+
+                <div className="overflow-x-auto">
+                  {accountsLoading ? (
+                    <div className="px-5 py-10">{renderSkeleton()}</div>
+                  ) : pagedAccounts.length === 0 ? (
+                    <div className="flex min-h-[180px] flex-col items-center justify-center px-5 py-10 text-center">
+                      <Users size={22} className="text-muted" />
+                      <p className="mt-3 text-sm font-medium text-fg">No admin accounts found</p>
+                      <p className="mt-1 text-xs leading-5 text-muted">Create the first server-managed account from this section.</p>
+                    </div>
+                  ) : (
+                    <table className="min-w-[940px]">
+                      <thead>
+                        <tr>
+                          <th>Account</th>
+                          <th>Role</th>
+                          <th>Division</th>
+                          <th>Status</th>
+                          <th>MFA</th>
+                          <th>Last login</th>
+                          <th className="text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pagedAccounts.map((account) => {
+                          const masterAccount = account.username === 'admin' || account.stakeholderType === 'Master';
+                          return (
+                            <tr key={account.id}>
+                              <td>
+                                <div className="min-w-0">
+                                  <p className="text-[11px] font-medium text-fg">{account.name}</p>
+                                  <p className="mt-1 font-mono text-[9px] text-muted">{account.username} · {account.email}</p>
+                                </div>
+                              </td>
+                              <td className="text-[11px] text-fg">{account.role}</td>
+                              <td className="text-[11px] text-muted">{account.division}</td>
+                              <td><StatusBadge tone={account.status === 'active' ? 'success' : 'warning'} label={account.status === 'active' ? 'Active' : 'Suspended'} /></td>
+                              <td><StatusBadge tone={account.mfaEnabled ? 'success' : 'warning'} label={account.mfaEnabled ? 'Enabled' : 'Not configured'} /></td>
+                              <td className="text-[11px] tabular-nums text-muted">{formatUtc(account.lastLogin)}</td>
+                              <td className="text-right">
+                                {isCurrentMaster && !masterAccount ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => setConfirmDelete({ id: account.id, name: account.name })}
+                                    className="inline-flex min-h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[11px] text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                                  >
+                                    <Trash2 size={13} />
+                                    Delete
+                                  </button>
+                                ) : (
+                                  <span className="text-[10px] text-muted">{masterAccount ? 'Root account' : 'Master access required'}</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+
+                {!accountsLoading && (
+                  <AdminTablePagination
+                    total={accounts.length}
+                    page={accountPage}
+                    pageSize={accountPageSize}
+                    onPageChange={setAccountPage}
+                    onPageSizeChange={setAccountPageSize}
+                    itemLabel="accounts"
+                    slug="settings-account-pagination"
+                  />
+                )}
+              </section>
+
+              <section className="overflow-hidden rounded-card border border-line bg-panel">
+                <div className="flex items-center gap-2 border-b border-line px-5 py-4">
+                  <Layers size={18} className="text-muted" />
+                  <div>
+                    <h2 className="text-sm font-semibold text-fg">Stakeholder access standards</h2>
+                    <p className="mt-1 text-[10px] leading-4 text-muted">Reference matrix for financial, CRM, delivery, and system access.</p>
+                  </div>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-[900px]">
+                    <thead>
+                      <tr>
+                        <th>Tier & role</th>
+                        <th>Financial & invoicing</th>
+                        <th>CRM & client leads</th>
+                        <th>Sprint & tasks</th>
+                        <th>System & cloud API</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="font-semibold text-fg">Stakeholder Executive</td>
+                        <td className="text-success">Approval & audit</td>
+                        <td className="text-success">Full pipeline view</td>
+                        <td className="text-warning">Milestone review</td>
+                        <td className="text-muted">Governance</td>
+                      </tr>
+                      <tr>
+                        <td className="font-semibold text-fg">Teknisi IT / Systems Engineer</td>
+                        <td className="text-muted">No financial access</td>
+                        <td className="text-muted">No access</td>
+                        <td className="text-success">Technical tasks</td>
+                        <td className="text-success">Server & diagnostics</td>
+                      </tr>
+                      <tr>
+                        <td className="font-semibold text-fg">Tier 2: Project Manager</td>
+                        <td className="text-warning">View & draft invoices</td>
+                        <td className="text-success">Manage pipeline</td>
+                        <td className="text-success">Sprint planning</td>
+                        <td className="text-muted">View only</td>
+                      </tr>
+                      <tr>
+                        <td className="font-semibold text-fg">Tier 3: Operational Staff</td>
+                        <td className="text-muted">No access</td>
+                        <td className="text-info">Assigned deals</td>
+                        <td className="text-success">Assigned tasks</td>
+                        <td className="text-muted">No access</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </>
+          )}
+        </section>
+      )}
+
+      {activeTab === 'integrations' && canAccessServer && (
+        <section className="space-y-6">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <section className="rounded-card border border-line bg-panel p-5">
+              <div className="flex items-center gap-2 border-b border-line pb-4">
+                <Database size={18} className="text-info" />
+                <div>
+                  <h2 className="text-sm font-semibold text-fg">Server-managed connections</h2>
+                  <p className="mt-1 text-[10px] leading-4 text-muted">Production credentials and endpoints stay outside the browser.</p>
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                {[
+                  ['Database', productionReadiness?.status?.datasource || 'PostgreSQL', 'Production data source'],
+                  ['Document vault', productionReadiness?.gates?.documentStorage ? 'Ready' : 'Check required', 'Storage is server-managed'],
+                  ['Notifications', notificationStatus === 'connected' ? 'Connected' : 'Unavailable', 'Provider credentials remain server-side'],
+                  ['Backup / DR', securityStatus?.backupFresh ? 'Fresh' : 'Review', 'Restore policy remains infrastructure-managed']
+                ].map(([label, value, helper]) => (
+                  <div key={String(label)} className="rounded-control border border-line bg-bg p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] text-muted">{String(label)}</span>
+                      <Activity size={13} className="text-muted" />
+                    </div>
+                    <p className="mt-1 text-sm font-medium text-fg">{String(value)}</p>
+                    <p className="mt-1 text-[10px] leading-4 text-muted">{String(helper)}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="rounded-card border border-line bg-panel p-5">
+              <div className="flex items-center gap-2 border-b border-line pb-4">
+                <Palette size={18} className="text-accent-text" />
+                <div>
+                  <h2 className="text-sm font-semibold text-fg">Brand identity & metadata</h2>
+                  <p className="mt-1 text-[10px] leading-4 text-muted">Public metadata is saved through the existing CMS API.</p>
+                </div>
+              </div>
+
+              <form onSubmit={handleSaveMeta} className="mt-4 space-y-3">
+                <label>
+                  <span className="mb-1 block text-[10px] font-medium text-muted">Site title</span>
+                  <input
+                    value={metaSettings.siteTitle}
+                    onChange={(event) => setMetaSettings({ ...metaSettings, siteTitle: event.target.value })}
+                    className="w-full"
+                  />
+                </label>
+                <label>
+                  <span className="mb-1 block text-[10px] font-medium text-muted">Site description</span>
+                  <textarea
+                    rows={3}
+                    value={metaSettings.siteDescription}
+                    onChange={(event) => setMetaSettings({ ...metaSettings, siteDescription: event.target.value })}
+                    className="w-full"
+                  />
+                </label>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label>
+                    <span className="mb-1 block text-[10px] font-medium text-muted">Notification email</span>
+                    <input
+                      type="email"
+                      value={metaSettings.contactReceiverEmail}
+                      onChange={(event) => setMetaSettings({ ...metaSettings, contactReceiverEmail: event.target.value })}
+                      className="w-full"
+                    />
+                  </label>
+                  <label>
+                    <span className="mb-1 block text-[10px] font-medium text-muted">Default language</span>
+                    <CustomSelect
+                      value={metaSettings.defaultLanguage}
+                      onChange={(value) => setMetaSettings({ ...metaSettings, defaultLanguage: value as 'en' | 'id' })}
+                      options={[
+                        { value: 'en', label: 'English' },
+                        { value: 'id', label: 'Bahasa Indonesia' }
+                      ]}
+                      aria-label="Default language"
+                    />
+                  </label>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <label className="flex min-h-9 items-center gap-2 rounded-control border border-line bg-bg px-3 text-[11px] text-fg">
+                    <input
+                      type="checkbox"
+                      checked={metaSettings.enableSoundAlerts}
+                      onChange={(event) => setMetaSettings({ ...metaSettings, enableSoundAlerts: event.target.checked })}
+                      className="accent-accent"
+                    />
+                    Enable sound alerts
+                  </label>
+                  <label className="flex min-h-9 items-center gap-2 rounded-control border border-line bg-bg px-3 text-[11px] text-fg">
+                    <input
+                      type="checkbox"
+                      checked={metaSettings.enableLiveChat}
+                      onChange={(event) => setMetaSettings({ ...metaSettings, enableLiveChat: event.target.checked })}
+                      className="accent-accent"
+                    />
+                    Enable live chat
+                  </label>
+                </div>
+                {metaMessage && <div className="rounded-control border border-success/20 bg-success/10 px-3 py-2.5 text-[11px] text-success" role="status">{metaMessage}</div>}
+                <div className="flex justify-end pt-1">
+                  <Button type="submit" variant="primary" loading={metaSaving} icon={<Save size={14} />}>
+                    Save changes
+                  </Button>
+                </div>
+              </form>
+            </section>
+          </div>
+
+          <section className="rounded-card border border-line bg-panel p-5">
+            <div className="flex items-center gap-2 border-b border-line pb-4">
+              <ShieldCheck size={18} className="text-success" />
+              <div>
+                <h2 className="text-sm font-semibold text-fg">Integration health</h2>
+                <p className="mt-1 text-[10px] leading-4 text-muted">Current server-side readiness signals for the production environment.</p>
+              </div>
+            </div>
+            <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                ['Runtime', Boolean(productionReadiness?.gates?.runtime)],
+                ['Encryption', Boolean(productionReadiness?.gates?.encryption)],
+                ['MFA', Boolean(productionReadiness?.gates?.mfa)],
+                ['Notifications', Boolean(productionReadiness?.gates?.notifications)]
+              ].map(([label, ready]) => (
+                <div key={String(label)} className="flex items-center justify-between rounded-control border border-line bg-bg px-3 py-3">
+                  <span className="text-[10px] text-muted">{String(label)}</span>
+                  {ready ? <Check size={14} className="text-success" /> : <AlertCircle size={14} className="text-warning" />}
+                </div>
+              ))}
+            </div>
+          </section>
+        </section>
+      )}
+
+      <Drawer
+        open={isAddAccountModalOpen}
+        onClose={() => !isCreatingAccount && setIsAddAccountModalOpen(false)}
+        size="lg"
+        title="Add admin access account"
+        description="Create a server-managed account with the role policy already defined by AMS."
+        footer={
+          <>
+            <Button type="button" variant="secondary" onClick={() => setIsAddAccountModalOpen(false)} disabled={isCreatingAccount}>
+              Cancel
+            </Button>
+            <Button type="submit" form="add-admin-account-form" variant="primary" loading={isCreatingAccount}>
+              Create account
+            </Button>
+          </>
+        }
+      >
+        <form id="add-admin-account-form" onSubmit={submitNewAccount} className="space-y-5">
+          <div>
+            <label className="mb-2 block text-[10px] font-semibold text-muted">Select stakeholder role</label>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {[
+                ['Stakeholder Executive', 'Executive stakeholder and approval access', Users],
+                ['Teknisi IT / Systems Engineer', 'Infrastructure, cloud, and diagnostics', Terminal],
+                ['Tier 2: Project Manager (PM)', 'Delivery, pipeline, and task management', Layers],
+                ['Tier 3: Operational Staff', 'Assigned operational task access', UserCheck]
+              ].map(([role, description, Icon]) => {
+                const selected = newAccRole === role;
+                const RoleIcon = Icon as React.ComponentType<{ size?: number; className?: string }>;
+                return (
+                  <button
+                    key={String(role)}
+                    type="button"
+                    onClick={() => handleRoleChangeForNewAccount(role as AdminTier)}
+                    className={'rounded-card border p-3.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (
+                      selected
+                        ? 'border-accent/30 bg-accent/10'
+                        : 'border-line bg-panel hover:bg-bg'
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <RoleIcon size={15} className={selected ? 'text-accent-text' : 'text-muted'} />
+                      <span className="text-xs font-semibold text-fg">{String(role)}</span>
+                    </div>
+                    <p className="mt-1 text-[10px] leading-4 text-muted">{String(description)}</p>
+                  </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Reference RBAC Matrix */}
-          <div className="w-full bg-panel border border-line rounded-card p-4 space-y-6">
-            <div className="flex items-center gap-3 pb-4 border-b border-line">
-              <div className="w-10 h-10 rounded-card bg-info/10 border border-info/30 flex items-center justify-center text-info shrink-0">
-                <Layers size={20} />
-              </div>
-              <div>
-                <h2 className="text-base font-semibold font-sans text-fg">
-                  {language === 'id' ? 'Standar Hirarki Hak Akses Stakeholder Kapitech' : 'Kapitech Stakeholder Access Standards'}
-                </h2>
-                <p className="text-xs text-muted font-sans">
-                  {language === 'id'
-                    ? 'Struktur hirarki hak akses dan izin operasi di seluruh modul AMS Kapitech.'
-                    : 'Enterprise permission matrix across financial, pipeline, sprint delivery, and system configurations.'}
-                </p>
-              </div>
-            </div>
-
-            <div className="ams-table-scroll overflow-x-auto custom-scrollbar">
-              <table className="ams-table w-full text-xs font-sans text-left border-collapse min-w-[650px]">
-                <thead>
-                  <tr className="border-b border-line text-muted">
-                    <th className="py-3 px-4 font-semibold">{language === 'id' ? 'Tingkatan & Peran' : 'Tier Level & Role'}</th>
-                    <th className="py-3 px-4 font-semibold">{language === 'id' ? 'Finansial & Invoice' : 'Financial & Invoicing'}</th>
-                    <th className="py-3 px-4 font-semibold">{language === 'id' ? 'CRM & Pipeline Prospek' : 'CRM & Client Leads'}</th>
-                    <th className="py-3 px-4 font-semibold">{language === 'id' ? 'Sprint & Kanban Task' : 'Sprint & Tasks'}</th>
-                    <th className="py-3 px-4 font-semibold">{language === 'id' ? 'Sistem & Cloud API' : 'System & Cloud API'}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-line">
-                  <tr className="hover:bg-panel/60 transition-colors">
-                    <td className="py-3.5 px-4 font-semibold text-fg flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-warning shrink-0"></span>
-                      <span>Stakeholder Executive (Managing Partner)</span>
-                    </td>
-                    <td className="py-3.5 px-4 text-success font-semibold">{language === 'id' ? 'Approval & Audit Finansial Penuh' : 'Financial Approval & Audit'}</td>
-                    <td className="py-3.5 px-4 text-success font-semibold">{language === 'id' ? 'Akses Penuh Pipeline' : 'Full Pipeline View'}</td>
-                    <td className="py-3.5 px-4 text-warning">{language === 'id' ? 'Review Milestone & Delivery' : 'Milestone & Delivery Review'}</td>
-                    <td className="py-3.5 px-4 text-muted">{language === 'id' ? 'Audit Log & Governance' : 'Audit Logs & Governance'}</td>
-                  </tr>
-                  <tr className="hover:bg-panel/60 transition-colors">
-                    <td className="py-3.5 px-4 font-semibold text-fg flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-success shrink-0"></span>
-                      <span>Teknisi IT / Systems Engineer</span>
-                    </td>
-                    <td className="py-3.5 px-4 text-muted">{language === 'id' ? 'Tanpa Akses Finansial' : 'No Financial Access'}</td>
-                    <td className="py-3.5 px-4 text-muted">{language === 'id' ? 'Tanpa Akses' : 'No Access'}</td>
-                    <td className="py-3.5 px-4 text-success font-semibold">{language === 'id' ? 'Teknis Penuh & Sprint Tasks' : 'Technical & Sprint Tasks'}</td>
-                    <td className="py-3.5 px-4 text-success font-semibold">{language === 'id' ? 'Server, Cloud Run, API & Diagnostics' : 'Full Server, Cloud & Diagnostics'}</td>
-                  </tr>
-                  <tr className="hover:bg-panel/60 transition-colors">
-                    <td className="py-3.5 px-4 font-semibold text-fg flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-series-3 shrink-0"></span>
-                      <span>Tier 2: Project Manager (PM)</span>
-                    </td>
-                    <td className="py-3.5 px-4 text-warning">{language === 'id' ? 'Lihat & Draf Invoice' : 'View & Draft Invoices'}</td>
-                    <td className="py-3.5 px-4 text-success font-semibold">{language === 'id' ? 'Kelola Pipeline & Delegasi' : 'Manage Pipeline & Assign'}</td>
-                    <td className="py-3.5 px-4 text-success font-semibold">{language === 'id' ? 'Sprint Planning & Kelola Task' : 'Sprint Planning & Task Mgmt'}</td>
-                    <td className="py-3.5 px-4 text-muted">{language === 'id' ? 'Hanya Lihat' : 'View Only'}</td>
-                  </tr>
-                  <tr className="hover:bg-panel/60 transition-colors">
-                    <td className="py-3.5 px-4 font-semibold text-fg flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-info shrink-0"></span>
-                      <span>Tier 3: Operational Staff</span>
-                    </td>
-                    <td className="py-3.5 px-4 text-muted">{language === 'id' ? 'Tanpa Akses' : 'No Access'}</td>
-                    <td className="py-3.5 px-4 text-info">{language === 'id' ? 'Lihat Prospek Terkait' : 'View Assigned Deals'}</td>
-                    <td className="py-3.5 px-4 text-success font-semibold">{language === 'id' ? 'Update Task Terkait' : 'Update Assigned Tasks'}</td>
-                    <td className="py-3.5 px-4 text-muted">{language === 'id' ? 'Tanpa Akses' : 'No Access'}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label>
+              <span className="mb-1 block text-[10px] font-medium text-muted">Full name</span>
+              <input required value={newAccName} onChange={(event) => setNewAccName(event.target.value)} className="w-full" placeholder="Alexander Hartanto" />
+            </label>
+            <label>
+              <span className="mb-1 block text-[10px] font-medium text-muted">Username</span>
+              <input required value={newAccUsername} onChange={(event) => setNewAccUsername(event.target.value)} className="w-full" placeholder="exec.alex" />
+            </label>
+            <label>
+              <span className="mb-1 block text-[10px] font-medium text-muted">Email</span>
+              <input required type="email" value={newAccEmail} onChange={(event) => setNewAccEmail(event.target.value)} className="w-full" placeholder="alex@kapitech.id" />
+            </label>
+            <label>
+              <span className="mb-1 block text-[10px] font-medium text-muted">Temporary password</span>
+              <input required minLength={12} maxLength={128} value={newAccPassword} onChange={(event) => setNewAccPassword(event.target.value)} className="w-full" />
+            </label>
           </div>
 
-      {/* MODAL: TAMBAH AKUN BARU (MOBILE FULLSCREEN + STICKY HEADER & FOOTER) */}
-      <Drawer
-        open={isAddAccountModalOpen}
-        onClose={() => !isCreatingAccount && setIsAddAccountModalOpen(false)}
-        size="lg"
-        title={language === 'id' ? 'Tambah Akun Stakeholder / Teknisi' : 'Add Stakeholder / Technical Account'}
-        description={language === 'id' ? 'Pilih peran dan sesuaikan hak akses sistem.' : 'Select role and configure the server-managed account policy.'}
-        footer={(
-          <>
-            <Button type="button" variant="secondary" onClick={() => setIsAddAccountModalOpen(false)} disabled={isCreatingAccount}>
-              {language === 'id' ? 'Batal' : 'Cancel'}
-            </Button>
-            <Button type="submit" form="add-stakeholder-account-form" loading={isCreatingAccount}>
-              {language === 'id' ? 'Buat akun' : 'Create account'}
-            </Button>
-          </>
-        )}
-      >
-            <form id="add-stakeholder-account-form" onSubmit={handleCreateAccountSubmit} className="space-y-5">
-              
-              {/* Role Selection Cards */}
+          <div className="rounded-control border border-line bg-bg p-4">
+            <div className="flex items-start gap-2">
+              <ShieldAlert size={15} className="mt-0.5 text-info" />
               <div>
-                <label className="block text-xs font-sans text-muted normal-case tracking-normal mb-2 font-semibold">
-                  {language === 'id' ? 'Pilih Tipe Peran Stakeholder' : 'Select Stakeholder Role'}
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => handleRoleChangeForNewAccount('Stakeholder Executive')}
-                    className={`p-4 rounded-card border text-left transition-all ${
-                      newAccRole === 'Stakeholder Executive'
-                        ? 'bg-warning/10 border-warning/50 ring-1 ring-warning/30'
-                        : 'bg-panel border-line hover:border-line'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <Briefcase size={16} className="text-warning" />
-                      <span className="font-semibold text-xs text-fg">Stakeholder Executive</span>
-                    </div>
-                    <p className="text-[11px] text-muted leading-relaxed font-sans">
-                      C-Level, Managing Partner, Sponsor. Akses approval finansial & review strategis.
-                    </p>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleRoleChangeForNewAccount('Teknisi IT / Systems Engineer')}
-                    className={`p-4 rounded-card border text-left transition-all ${
-                      newAccRole === 'Teknisi IT / Systems Engineer'
-                        ? 'bg-success/10 border-success/50 ring-1 ring-success/30'
-                        : 'bg-panel border-line hover:border-line'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <Terminal size={16} className="text-success" />
-                      <span className="font-semibold text-xs text-fg">Teknisi IT / Engineer</span>
-                    </div>
-                    <p className="text-[11px] text-muted leading-relaxed font-sans">
-                      Lead DevOps, Infrastructure, Cloud Run & API. Akses teknis penuh tanpa finansial.
-                    </p>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleRoleChangeForNewAccount('Tier 2: Project Manager (PM)')}
-                    className={`p-4 rounded-card border text-left transition-all ${
-                      newAccRole === 'Tier 2: Project Manager (PM)'
-                        ? 'bg-series-3/10 border-series-3/50 ring-1 ring-series-3/30'
-                        : 'bg-panel border-line hover:border-line'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <Layers size={16} className="text-series-3" />
-                      <span className="font-semibold text-xs text-fg">Project Manager (PM)</span>
-                    </div>
-                    <p className="text-[11px] text-muted leading-relaxed font-sans">
-                      Sprint planning, delivery klien, task delegation & draf faktur invoice.
-                    </p>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleRoleChangeForNewAccount('Tier 3: Operational Staff')}
-                    className={`p-4 rounded-card border text-left transition-all ${
-                      newAccRole === 'Tier 3: Operational Staff'
-                        ? 'bg-info/10 border-info/50 ring-1 ring-info/30'
-                        : 'bg-panel border-line hover:border-line'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <UserCheck size={16} className="text-info" />
-                      <span className="font-semibold text-xs text-fg">Operational Staff</span>
-                    </div>
-                    <p className="text-[11px] text-muted leading-relaxed font-sans">
-                      Staf teknis / desainer operasional untuk update tugas harian.
-                    </p>
-                  </button>
-                </div>
+                <p className="text-[11px] font-semibold text-fg">Server-managed role policy</p>
+                <p className="mt-1 text-[10px] leading-5 text-muted">Permissions are applied by the server from the selected role. The browser does not override the access policy.</p>
               </div>
-
-              {/* Personal Details */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-sans text-muted normal-case tracking-normal mb-1.5 font-semibold">
-                    {language === 'id' ? 'Nama Lengkap' : 'Full Name'} *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={newAccName}
-                    onChange={(e) => setNewAccName(e.target.value)}
-                    placeholder="Contoh: Alexander Hartanto"
-                    className="w-full min-h-10 px-3.5 py-2.5 bg-panel border border-line rounded-control text-sm text-fg font-sans focus:outline-none focus:border-accent transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-sans text-muted normal-case tracking-normal mb-1.5 font-semibold">
-                    Username *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={newAccUsername}
-                    onChange={(e) => setNewAccUsername(e.target.value)}
-                    placeholder="Contoh: exec.alex"
-                    className="w-full min-h-10 px-3.5 py-2.5 bg-panel border border-line rounded-control text-sm text-fg font-sans focus:outline-none focus:border-accent transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-sans text-muted normal-case tracking-normal mb-1.5 font-semibold">
-                    Email Resmi *
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={newAccEmail}
-                    onChange={(e) => setNewAccEmail(e.target.value)}
-                    placeholder="alex@kapitech.id"
-                    className="w-full min-h-10 px-3.5 py-2.5 bg-panel border border-line rounded-control text-sm text-fg font-sans focus:outline-none focus:border-accent transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-sans text-muted normal-case tracking-normal mb-1.5 font-semibold">
-                    {language === 'id' ? 'Password Sementara' : 'Temporary Password'} *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={newAccPassword}
-                    onChange={(e) => setNewAccPassword(e.target.value)}
-                    minLength={12}
-                    maxLength={128}
-                    placeholder="12–128 characters"
-                    className="w-full min-h-10 px-3.5 py-2.5 bg-panel border border-line rounded-control text-sm text-fg font-sans focus:outline-none focus:border-accent transition-all"
-                  />
-                </div>
-              </div>
-
-              <section className="rounded-card border border-line bg-bg p-4" aria-labelledby="account-policy-note">
-                <h3 id="account-policy-note" className="text-xs font-semibold text-fg">Access policy</h3>
-                <p className="mt-1 text-[11px] leading-5 text-muted">
-                  {language === 'id'
-                    ? 'Hak akses tidak diubah satu per satu di browser. Server menerapkan permission berdasarkan role yang dipilih.'
-                    : 'Permissions are not overridden in the browser. The server applies the access policy associated with the selected role.'}
-                </p>
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  <span className="rounded-badge border border-line bg-panel px-2 py-1 text-[10px] font-medium text-muted">{newAccRole}</span>
-                  <span className="rounded-badge border border-info/20 bg-info/10 px-2 py-1 text-[10px] font-medium text-info">
-                    {language === 'id' ? 'Server policy' : 'Server policy'}
-                  </span>
-                </div>
-              </section>
-
-            </form>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              <span className="rounded-badge border border-line bg-panel px-2 py-1 text-[10px] font-medium text-muted">{newAccRole}</span>
+              <span className="rounded-badge border border-info/20 bg-info/10 px-2 py-1 text-[10px] font-medium text-info">{newAccDivision}</span>
+            </div>
+          </div>
+        </form>
       </Drawer>
-        </div>
-      )}
-
-      {/* TAB 4: SECURITY & MFA POLICY */}
-      {activeTab === 'security' && (
-        <div className="w-full bg-panel border border-line rounded-card p-4 space-y-6">
-          <div className="flex items-center gap-3 pb-4 border-b border-line">
-            <div className="w-10 h-10 rounded-card bg-warning/10 border border-warning/30 flex items-center justify-center text-warning shrink-0">
-              <Lock size={20} />
-            </div>
-            <div>
-              <h2 className="text-base font-semibold font-sans text-fg">
-                {language === 'id' ? 'Kebijakan Keamanan, MFA & Password' : 'Security, MFA & Password Policy'}
-              </h2>
-              <p className="text-xs text-muted font-sans">
-                {language === 'id'
-                  ? 'Enkripsi SHA-256 tersimulasi, autentikasi multi-faktor, dan proteksi durasi sesi login.'
-                  : 'SHA-256 secure hashing simulation, multi-factor authentication enforcement, and idle session limits.'}
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="p-4 bg-panel border border-line rounded-card">
-              <div className="flex items-start gap-3">
-                <Smartphone size={15} className={mfaActive ? 'text-success shrink-0 mt-0.5' : 'text-warning shrink-0 mt-0.5'} />
-                <div className="min-w-0">
-                  <div className="text-fg font-sans font-semibold flex items-center gap-2 text-xs">
-                    <span>Multi-factor authentication (MFA)</span>
-                    <span className={`rounded-badge border px-1.5 py-0.5 text-[10px] font-semibold ${mfaActive ? 'border-success/30 bg-success/10 text-success' : 'border-warning/30 bg-warning/10 text-warning'}`}>
-                      {mfaActive ? (language === 'id' ? 'Aktif' : 'Enabled') : (language === 'id' ? 'Belum dikonfigurasi' : 'Not configured')}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-[11px] leading-5 text-muted">
-                    {language === 'id'
-                      ? 'Status mengikuti sesi server. Enrollment MFA dilakukan melalui alur autentikasi dan bukan melalui toggle lokal.'
-                      : 'Status follows the server-backed session. MFA enrollment is an authentication flow, not a local policy toggle.'}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="p-4 bg-panel border border-line rounded-card">
-              <div className="flex items-start gap-3">
-                <Clock3 size={15} className="mt-0.5 shrink-0 text-info" />
-                <div className="min-w-0">
-                  <div className="text-xs font-semibold text-fg">
-                    {language === 'id' ? 'Kebijakan kedaluwarsa sesi' : 'Session expiry policy'}
-                  </div>
-                  <p className="mt-1 text-[11px] leading-5 text-muted">
-                    {language === 'id'
-                      ? 'Aturan sesi dikelola oleh server authentication layer. Nilai client tidak dapat mengubah kebijakan sesi.'
-                      : 'Session rules are enforced by the server authentication layer. Client-side settings cannot override the session policy.'}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <form onSubmit={handleUpdateSecurity} className="space-y-3 pt-3 border-t border-line">
-              <h3 className="text-xs font-semibold text-fg font-sans">
-                {language === 'id' ? 'Ganti Password Master' : 'Change Master Password'}
-              </h3>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-sans text-muted mb-1 font-semibold">
-                    {language === 'id' ? 'Password Baru (min 8 karakter)' : 'New Password (min 8 characters)'}
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full px-3.5 py-2.5 bg-panel border border-line rounded-control text-xs text-fg focus:outline-none focus:border-accent font-sans min-h-10"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-sans text-muted mb-1 font-semibold">
-                    {language === 'id' ? 'Konfirmasi Password Baru' : 'Confirm New Password'}
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full px-3.5 py-2.5 bg-panel border border-line rounded-control text-xs text-fg focus:outline-none focus:border-accent font-sans min-h-10"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-sans text-muted mb-1 font-semibold">
-                  {language === 'id' ? 'Password Saat Ini (Wajib Konfirmasi) *' : 'Current Password (Required for verification) *'}
-                </label>
-                <input
-                  type="password"
-                  required
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder={language === 'id' ? 'Masukkan password admin saat ini...' : 'Enter your current admin password...'}
-                  className="w-full px-3.5 py-2.5 bg-panel border border-line rounded-control text-xs text-fg focus:outline-none focus:border-accent font-sans min-h-10"
-                />
-              </div>
-
-              <div className="pt-2 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={securityLoading}
-                  className="px-5 py-2.5 rounded-control bg-accent text-white text-xs font-sans font-semibold hover:bg-accent-hover transition-all flex items-center gap-2 min-h-10"
-                >
-                  <Save size={14} />
-                  <span>{language === 'id' ? 'Update Password Terenkripsi' : 'Update Encrypted Password'}</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 5: API & CLOUD CONNECTIONS */}
-      {activeTab === 'api' && canAccessServer && (
-        <div className="w-full space-y-4">
-          <ProductionReadinessCard language={language} />
-          <div className="w-full rounded-card border border-line bg-panel p-4">
-            <div className="flex items-start gap-3 border-b border-line pb-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-card border border-info/30 bg-info/10 text-info">
-                <Database size={20} />
-              </div>
-              <div className="min-w-0">
-                <h2 className="text-base font-semibold text-fg">
-                  {language === 'id' ? 'Koneksi yang dikelola server' : 'Server-managed connections'}
-                </h2>
-                <p className="mt-1 text-xs leading-5 text-muted">
-                  {language === 'id'
-                    ? 'Credential, endpoint, dan koneksi produksi dikelola melalui environment server, bukan dari browser.'
-                    : 'Production credentials, endpoints, and connection settings are managed by the server environment, not the browser.'}
-                </p>
-              </div>
-            </div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-card border border-line bg-bg p-4">
-                <div className="text-xs font-semibold text-fg">Database</div>
-                <div className="mt-1 text-sm font-medium text-fg">PostgreSQL</div>
-                <div className="mt-1 text-xs leading-5 text-muted">
-                  {language === 'id' ? 'Sumber data production' : 'Production data source'}
-                </div>
-              </div>
-              <div className="rounded-card border border-line bg-bg p-4">
-                <div className="text-xs font-semibold text-fg">{language === 'id' ? 'Backup terkelola provider' : 'Provider-managed backup'}</div>
-                <div className="mt-1 text-sm font-medium text-fg">Provider-managed</div>
-                <div className="mt-1 text-xs leading-5 text-muted">
-                  {backupRetentionDays} {language === 'id' ? 'hari retensi' : 'days retention'}
-                </div>
-              </div>
-              <div className="rounded-card border border-line bg-bg p-4">
-                <div className="text-xs font-semibold text-fg">Document vault</div>
-                <div className="mt-1 text-sm font-medium text-fg">Server-managed</div>
-                <div className="mt-1 text-xs leading-5 text-muted">
-                  {language === 'id' ? 'Storage durable dikelola infrastructure' : 'Durable storage is managed by infrastructure'}
-                </div>
-              </div>
-              <div className="rounded-card border border-line bg-bg p-4">
-                <div className="text-xs font-semibold text-fg">{language === 'id' ? 'Notifikasi' : 'Notifications'}</div>
-                <div className="mt-1 text-sm font-medium text-fg">Server-managed</div>
-                <div className="mt-1 text-xs leading-5 text-muted">
-                  {language === 'id' ? 'Credential tidak ditampilkan di client' : 'Credentials are never exposed in the client'}
-                </div>
-              </div>
-            </div>
-            <div className="mt-4 rounded-control border border-line bg-bg px-3.5 py-3">
-              <p className="text-xs leading-5 text-muted">
-                {language === 'id'
-                  ? 'Tidak ada field credential editable di sini. Perubahan production dilakukan melalui environment/deployment configuration dan mengikuti readiness gate.'
-                  : 'There are no editable credential fields here. Production changes are made through deployment environment configuration and remain subject to the readiness gate.'}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 6: AUDIT TRAIL */}
-      {activeTab === 'audit' && canViewAuditLogs && (
-        <div className="w-full bg-panel border border-line rounded-card p-4">
-          
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 mb-6 pb-4 border-b border-line">
-            <div>
-              <h2 className="text-base font-semibold font-sans text-fg flex items-center gap-2">
-                <ShieldCheck size={18} className="text-accent" />
-                <span>{language === 'id' ? 'Riwayat Audit Aktivitas & Keamanan' : 'Security & Activity Audit Trail'}</span>
-              </h2>
-              <p className="text-xs text-muted font-sans mt-0.5">
-                {language === 'id'
-                  ? 'Catatan terenkripsi dari aktivitas autentikasi, akses RBAC, dan perubahan data sistem.'
-                  : 'Immutable encrypted trail of user authentication, RBAC transitions, and security operations.'}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleExportLogs}
-                disabled={logs.length === 0}
-                className="px-3.5 py-2 rounded-control bg-panel hover:bg-panel text-fg border border-line text-xs font-sans transition-colors flex items-center gap-1.5 disabled:opacity-50 min-h-10"
-              >
-                <Download size={13} />
-                <span>Export JSON</span>
-              </button>
-
-            </div>
-          </div>
-
-          {logs.length === 0 ? (
-            <div className="py-12 text-center text-muted text-xs font-sans">
-              {language === 'id' ? 'Belum ada log aktivitas keamanan yang tercatat.' : 'No security audit logs recorded yet.'}
-            </div>
-          ) : (
-            <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1 custom-scrollbar">
-              {logs.map((log) => (
-                <div
-                  key={log.id}
-                  className="p-4 rounded-card bg-panel border border-line flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-sans"
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className={`px-2 py-0.5 rounded-badge text-[10px] font-semibold ${
-                        log.severity === 'critical' 
-                          ? 'bg-danger/15 text-danger border border-danger/30' 
-                          : log.severity === 'warning' 
-                          ? 'bg-warning/10 text-warning border border-warning/30' 
-                          : 'bg-success/10 text-success border border-success/30'
-                      }`}>
-                        {log.action}
-                      </span>
-                      <span className="text-muted text-[11px] font-semibold">{log.actor}</span>
-                    </div>
-                    <p className="text-muted text-xs">{log.details}</p>
-                  </div>
-
-                  <div className="text-[10px] text-muted shrink-0 sm:text-right font-sans">
-                    <div>{new Date(log.timestamp).toLocaleTimeString()}</div>
-                    <div>{new Date(log.timestamp).toLocaleDateString()}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-        </div>
-      )}
 
       <Modal
-        open={!!confirmAction}
-        onClose={() => setConfirmAction(null)}
+        open={Boolean(confirmDelete)}
+        onClose={() => setConfirmDelete(null)}
         size="sm"
-        title={language === 'id' ? 'Hapus akun stakeholder?' : 'Delete stakeholder account?'}
-        description={language === 'id' ? `Akun ${confirmAction?.name || ''} akan dihapus secara permanen.` : `Account ${confirmAction?.name || ''} will be permanently deleted.`}
-        footer={(
+        title="Delete admin account?"
+        description={confirmDelete ? 'Remove ' + confirmDelete.name + ' from the server-managed account list.' : 'Remove this admin account.'}
+        footer={
           <>
-            <Button type="button" variant="secondary" onClick={() => setConfirmAction(null)}>
-              {language === 'id' ? 'Batal' : 'Cancel'}
+            <Button type="button" variant="secondary" onClick={() => setConfirmDelete(null)}>
+              Cancel
             </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={() => confirmAction?.id
-                ? void confirmDeleteAccount(confirmAction.id, confirmAction.name || '')
-                : undefined}
-            >
-              {language === 'id' ? 'Hapus' : 'Delete'}
+            <Button type="button" variant="destructive" onClick={() => void confirmDeleteAccount()}>
+              Delete
             </Button>
           </>
-        )}
+        }
       >
         <div className="rounded-card border border-danger/20 bg-danger/5 p-4 text-xs text-muted">
-          {language === 'id' ? 'Tindakan ini tidak dapat dibatalkan.' : 'This action cannot be undone.'}
+          This action removes the account. Confirm the account name before continuing.
         </div>
       </Modal>
 
+      <span className="sr-only" aria-live="polite">
+        {overviewMessage?.text || accountMessage?.text || metaMessage || securityStatusMessage?.text || ''}
+      </span>
     </AdminPageShell>
   );
 };
