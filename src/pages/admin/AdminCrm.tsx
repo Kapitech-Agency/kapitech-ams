@@ -674,7 +674,7 @@ export const AdminCrm: React.FC = () => {
                                     setDraggedLeadId(null);
                                     setDragOverStage(null);
                                   }}
-                                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted transition-colors select-none ${
+                                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted transition-colors select-none ${
                                     canManageCrm ? 'cursor-grab hover:border-accent/35 hover:bg-panel-hover hover:text-fg active:cursor-grabbing' : 'cursor-default opacity-70'
                                   }`}
                                   data-drag-handle
