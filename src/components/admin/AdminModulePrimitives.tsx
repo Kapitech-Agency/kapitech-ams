@@ -18,7 +18,7 @@ export const AdminPageShell: React.FC<AdminPageShellProps> = ({
 }) => (
   <div
     data-ams-feature-slug={featureSlug}
-    className={cn('min-h-full min-w-0 space-y-6 pb-8', className)}
+    className={cn('ams-page-shell min-h-full min-w-0 space-y-6', className)}
   >
     {children}
   </div>
