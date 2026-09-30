@@ -245,6 +245,8 @@ export const AdminTeams: React.FC = () => {
   const [teamStatus, setTeamStatus] = useState('all');
   const [teamDisplay, setTeamDisplay] = useState<'table' | 'grid'>('table');
   const [teamPage, setTeamPage] = useState(1);
+  const [memberDetail, setMemberDetail] = useState<TeamMember | null>(null);
+  const [allocationTarget, setAllocationTarget] = useState<TeamMember | null>(null);
 
   const [vendorHeaderSearch, setVendorHeaderSearch] = useState('');
   const [vendorHeaderCategory, setVendorHeaderCategory] = useState('all');
@@ -522,6 +524,17 @@ export const AdminTeams: React.FC = () => {
     });
     return totals;
   }, [vendors]);
+
+
+  const vendorMetrics = useMemo(() => ({
+    total: vendors.length,
+    active: vendors.filter((vendor) => vendor.status === 'active').length,
+    vetted: vendors.filter((vendor) => vendor.isVetted ?? true).length,
+    categories: new Set(vendors.map((vendor) => vendor.primaryCategory)).size,
+    rating: vendors.length
+      ? vendors.reduce((sum, vendor) => sum + Number(vendor.rating || 0), 0) / vendors.length
+      : 0
+  }), [vendors]);
 
   const vendorTierCounts = useMemo(() => ({
     strategic: vendors.filter((vendor) => vendorTierOf(vendor) === 'strategic').length,
@@ -1124,7 +1137,7 @@ export const AdminTeams: React.FC = () => {
                 value: Object.keys(vendorMonthlyBurn).length === 1
                   ? formatAmount(vendorMonthlyBurn[Object.keys(vendorMonthlyBurn)[0]], Object.keys(vendorMonthlyBurn)[0] as 'IDR' | 'USD')
                   : Object.keys(vendorMonthlyBurn).length > 1 ? 'Mixed' : '—',
-                context: Object.entries(vendorMonthlyBurn).map(([currency, amount]) => formatAmount(amount, currency as 'IDR' | 'USD')).join(' · ') || 'No active monthly retainers',
+                context: Object.entries(vendorMonthlyBurn).map(([currency, amount]) => formatAmount(Number(amount), currency as 'IDR' | 'USD')).join(' · ') || 'No active monthly retainers',
                 sparkline: Object.values(vendorMonthlyBurn),
                 icon: <TrendingUp size={15} />
               },
