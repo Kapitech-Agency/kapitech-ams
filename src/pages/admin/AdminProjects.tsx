@@ -2446,7 +2446,7 @@ export const AdminProjects: React.FC = () => {
                 </tbody>
               </table>
             </div>
-          <AdminTablePagination total={budgetRows.length} page={budgetTablePage} pageSize={budgetTablePageSize} onPageChange={setBudgetTablePage} onPageSizeChange={setBudgetTablePageSize} itemLabel="projects" slug="budget-vs-actual-pagination" />
+            <AdminTablePagination total={budgetRows.length} page={budgetTablePage} pageSize={budgetTablePageSize} onPageChange={setBudgetTablePage} onPageSizeChange={setBudgetTablePageSize} itemLabel="projects" slug="budget-vs-actual-pagination" />
           </AdminPanel>
         </>
       )}
