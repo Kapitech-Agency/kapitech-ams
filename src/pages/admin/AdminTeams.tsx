@@ -309,7 +309,7 @@ export const AdminTeams: React.FC = () => {
   const [teamStatus, setTeamStatus] = useState('all');
   const [teamDisplay, setTeamDisplay] = useState<'table' | 'grid'>('table');
   const [teamPage, setTeamPage] = useState(1);
-  const [teamPageSize, setTeamPageSize] = useState(6);
+  const [teamPageSize, setTeamPageSize] = useState(10);
   const [memberDetail, setMemberDetail] = useState<TeamMember | null>(null);
   const [allocationTarget, setAllocationTarget] = useState<TeamMember | null>(null);
 
@@ -320,7 +320,7 @@ export const AdminTeams: React.FC = () => {
   const [vendorTier, setVendorTier] = useState('all');
   const [vendorAgreementStatus, setVendorAgreementStatus] = useState('active-verified');
   const [vendorPage, setVendorPage] = useState(1);
-  const [vendorPageSize, setVendorPageSize] = useState(6);
+  const [vendorPageSize, setVendorPageSize] = useState(10);
 
   const [timeSearch, setTimeSearch] = useState('');
   const [timeProject, setTimeProject] = useState('all');
