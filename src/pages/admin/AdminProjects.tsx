@@ -1798,6 +1798,7 @@ export const AdminProjects: React.FC = () => {
                                         onDragEnd={() => {
                                           setDraggingProjectId(null);
                                           setDragOverProjectStatus(null);
+                                          setDragOverProjectId(null);
                                         }}
                                         role="button"
                                         tabIndex={canManageProjects && movingProjectId !== project.id ? 0 : -1}
@@ -2256,6 +2257,7 @@ export const AdminProjects: React.FC = () => {
                                         onDragEnd={() => {
                                           setDraggingTaskId(null);
                                           setDragOverTaskStatus(null);
+                                          setDragOverTaskId(null);
                                         }}
                                         data-drag-handle="true"
                                         className={[
