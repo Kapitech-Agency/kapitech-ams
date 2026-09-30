@@ -493,21 +493,6 @@ export const AdminClients: React.FC = () => {
           </>
         )}
       />
-          <Button type="button" variant="secondary" onClick={() => {
-            const rows = filteredClients.map((client) => [client.id, client.slug, client.name, client.company, client.industry || '', client.status, client.projectsCount, client.totalSpend || 0, client.location || ''].map((value) => '"' + String(value).replace(/"/g, '""') + '"').join(','));
-            const csv = ['Client ID,Slug,Contact,Company,Industry,Status,Projects,Total Spend,Location', ...rows].join('\\n');
-            const blob = new Blob(['\\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const anchor = document.createElement('a');
-            anchor.href = url;
-            anchor.download = 'kapitech-client-directory.csv';
-            anchor.click();
-            URL.revokeObjectURL(url);
-          }} icon={<ArrowDown size={14} aria-hidden="true" />}>Export Directory</Button>
-          {canManageClients && (
-            <Button type="button" variant="primary" onClick={openCreate} icon={<Plus size={14} aria-hidden="true" />}>New Client</Button>
-          )}
-      
       <div className="min-[900px]:hidden min-w-0" data-ams-slug="clients-mobile-tabs">
         <AdminSectionTabs
           ariaLabel="Clients sections"
