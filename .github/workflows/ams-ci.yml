@@ -1,12 +1,7 @@
 name: AMS CI
 
 on:
-  push:
-    branches:
-      - main
-      - 'hardening/**'
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
   verify:
