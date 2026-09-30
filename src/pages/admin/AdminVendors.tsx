@@ -300,6 +300,22 @@ export const AdminVendors: React.FC = () => {
         )}
       />
 
+
+      <div className="min-[900px]:hidden min-w-0" data-ams-slug="team-mobile-tabs">
+        <AdminSectionTabs
+          ariaLabel="Team sections"
+          activeKey="vendor-directory"
+          items={[
+            { key: 'team-directory', label: 'Team Directory', to: '/admin/team' },
+            { key: 'vendor-directory', label: 'Vendor Directory', to: '/admin/vendors' },
+            { key: 'capacity-allocation', label: 'Capacity & Allocation', to: '/admin/team?view=capacity-allocation' },
+            { key: 'skill-matrix', label: 'Skill Matrix', to: '/admin/team?view=skill-matrix' },
+            { key: 'time-logs', label: 'Time Logs', to: '/admin/time-logs' },
+          ]}
+        />
+      </div>
+
+
       {/* Success Notification */}
       {statusMessage && (
         <div className="p-3 rounded-card bg-success/10 border border-success/30 text-success text-xs font-sans flex items-center justify-between animate-in fade-in duration-200">
