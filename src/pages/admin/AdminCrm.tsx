@@ -660,9 +660,10 @@ export const AdminCrm: React.FC = () => {
                         const isDragging = draggedLeadId === lead.id;
 
                         return (
-                          {dragOverStage === stageDef.key && dragOverLeadId === lead.id && draggedLeadId !== lead.id && (
-                            <div className="h-2 rounded-badge border border-dashed border-accent/50 bg-accent/10" aria-hidden="true" />
-                          )}
+                          <React.Fragment key={lead.id}>
+                            {dragOverStage === stageDef.key && dragOverLeadId === lead.id && draggedLeadId !== lead.id && (
+                              <div className="h-2 rounded-badge border border-dashed border-accent/50 bg-accent/10" aria-hidden="true" />
+                            )}
                           <article
                             key={lead.id}
                             onDragOver={canManageCrm ? (event) => handleDragOverLead(event, stageDef.key, lead.id) : undefined}
@@ -773,6 +774,7 @@ export const AdminCrm: React.FC = () => {
                               </div>
                             </div>
                           </article>
+                          </React.Fragment>
                         );
                       })
                       {draggedLeadId && canManageCrm && dragOverStage === stageDef.key && !dragOverLeadId && (
