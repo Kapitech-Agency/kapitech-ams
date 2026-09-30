@@ -466,7 +466,7 @@ export const AdminDocuments: React.FC = () => {
         />
       </div>
 
-      <AdminPanel slug="documents-upload-dropzone" className="border-dashed" aria-label="Document upload dropzone" bodyClassName="p-4 sm:px-5">
+      <AdminPanel slug="documents-upload-dropzone" className="border-dashed" bodyClassName="p-4 sm:px-5">
         <div
           className={'flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between ' + (uploadDragActive ? 'rounded-card bg-accent/5 ring-1 ring-accent/30' : '')}
           onDragEnter={(event) => { event.preventDefault(); setUploadDragActive(true); }}
