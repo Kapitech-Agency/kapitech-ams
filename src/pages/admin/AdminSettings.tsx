@@ -277,55 +277,70 @@ export const AdminSettings: React.FC = () => {
     if (!canAccessServer) return;
     setOverviewLoading(true);
     setNotificationStatus('checking');
-    const [backupRes, securityRes, notificationRes, readinessRes] = await Promise.all([
-      api.system.getBackups(),
-      api.system.securityStatus(),
-      api.notifications.getSettings(),
-      api.system.productionReadiness()
-    ]);
+    try {
+      const [backupRes, securityRes, notificationRes, readinessRes] = await Promise.all([
+        api.system.getBackups(),
+        api.system.securityStatus(),
+        api.notifications.getSettings(),
+        api.system.productionReadiness()
+      ]);
 
-    if (backupRes.success && backupRes.data) {
-      setBackups(Array.isArray(backupRes.data.backups) ? backupRes.data.backups : []);
-      setBackupRetentionDays(Number(backupRes.data.retentionDays ?? backupRes.data.retention ?? 0));
-    }
-    if (securityRes.success && securityRes.data?.status) {
-      setSecurityStatus(securityRes.data.status);
-      setBackupIntegrity(securityRes.data.status.backupIntegrity);
-    }
-    if (notificationRes.success) {
-      setNotificationStatus('connected');
-    } else {
+      if (backupRes.success && backupRes.data) {
+        setBackups(Array.isArray(backupRes.data.backups) ? backupRes.data.backups : []);
+        setBackupRetentionDays(Number(backupRes.data.retentionDays ?? backupRes.data.retention ?? 0));
+      }
+      if (securityRes.success && securityRes.data?.status) {
+        setSecurityStatus(securityRes.data.status);
+        setBackupIntegrity(securityRes.data.status.backupIntegrity);
+      }
+      setNotificationStatus(notificationRes.success ? 'connected' : 'unavailable');
+      if (readinessRes.success && readinessRes.data) {
+        setProductionReadiness(readinessRes.data);
+      }
+    } catch {
       setNotificationStatus('unavailable');
+    } finally {
+      setOverviewLoading(false);
     }
-    if (readinessRes.success && readinessRes.data) {
-      setProductionReadiness(readinessRes.data);
-    }
-    setOverviewLoading(false);
   }, [canAccessServer]);
 
   const loadAuditLogs = useCallback(async () => {
     if (!canViewAuditLogs) return;
     setAuditLoading(true);
-    const next = await fetchServerAuditLogs();
-    setLogs(next);
-    setAuditLoading(false);
+    try {
+      const next = await fetchServerAuditLogs();
+      setLogs(next);
+    } catch {
+      setLogs([]);
+    } finally {
+      setAuditLoading(false);
+    }
   }, [canViewAuditLogs]);
 
   const loadAccounts = useCallback(async () => {
     if (!canManageAdminAccounts) return;
     setAccountsLoading(true);
-    const next = await fetchAdminAccounts();
-    setAccounts(next);
-    setAccountsLoading(false);
+    try {
+      const next = await fetchAdminAccounts();
+      setAccounts(next);
+    } catch {
+      setAccounts([]);
+    } finally {
+      setAccountsLoading(false);
+    }
   }, [canManageAdminAccounts]);
 
   const loadMeta = useCallback(async () => {
-    const res = await api.cms.getSettings();
-    if (res.success && res.data?.settings) {
-      setMetaSettings({
-        ...metaSettings,
-        ...res.data.settings
-      });
+    try {
+      const res = await api.cms.getSettings();
+      if (res.success && res.data?.settings) {
+        setMetaSettings(current => ({
+          ...current,
+          ...res.data.settings
+        }));
+      }
+    } catch {
+      // Keep the last known metadata state when the server is temporarily unavailable.
     }
   }, []);
 
