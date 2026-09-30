@@ -12,7 +12,7 @@ import {
   RefreshCw,
   Search,
 } from 'lucide-react';
-import { AdminMetricStrip, AdminPanel } from './AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminPanel } from './AdminModulePrimitives';
 import { CustomSelect } from '../ui/CustomSelect';
 import { Modal } from '../ui/Modal';
 import { ProfileIdentity } from './ProfileIdentity';
@@ -493,6 +493,17 @@ export const TasksWorkspace: React.FC = () => {
 
   return (
     <div className="space-y-4 pb-10" data-ams-feature-slug="tasks-workspace">
+      <AdminModuleHeader
+        title={currentScopeLabel[taskScope] || 'All Tasks'}
+        description="Manage project tasks, due work, review queues, blockers, and completed delivery work from one operational workspace."
+        actions={
+          canManageTasks ? (
+            <Button type="button" variant="primary" icon={<CheckCircle2 size={14} />} onClick={openNewTask}>
+              New Task
+            </Button>
+          ) : undefined
+        }
+      />
       <AdminMetricStrip
         className="sm:grid-cols-2 lg:grid-cols-4"
         metrics={[
@@ -545,11 +556,7 @@ export const TasksWorkspace: React.FC = () => {
         bodyClassName="p-0"
         actions={(
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
-            {canManageTasks && (
-              <Button type="button" variant="primary" icon={<CheckCircle2 size={14} />} onClick={openNewTask}>
-                New Task
-              </Button>
-            )}
+
             <label className="relative block min-w-0 sm:w-64">
               <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
               <input
