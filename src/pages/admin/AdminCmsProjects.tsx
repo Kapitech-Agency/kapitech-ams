@@ -276,30 +276,76 @@ export const AdminCmsProjects: React.FC = () => {
         </div>
       )}
 
-      {/* Filter & Search Bar (In-Card) */}
-      <div className="bg-panel border border-line p-4 rounded-card">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="relative sm:col-span-2">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" size={14} />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={language === 'id' ? 'Cari proyek, klien, industri, teknologi...' : 'Search projects, client names, industries, tech stack...'}
-              className="w-full pl-10 pr-4 py-2.5 bg-panel border border-line rounded-control text-xs text-fg focus:outline-none focus:border-accent placeholder:text-muted font-sans min-h-10 py-2.5"
-            />
+      {/* Portfolio filters */}
+      <div className="rounded-card border border-line bg-panel p-3.5 sm:p-4">
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-2">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted">
+                <Sliders size={14} strokeWidth={1.8} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-fg">Portfolio filters</p>
+                <p className="text-[11px] text-muted">
+                  {filteredProjects.length} of {projects.length} projects
+                </p>
+              </div>
+            </div>
+            {(searchQuery || filterPillar !== 'All') && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setFilterPillar('All');
+                }}
+                className="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 self-start rounded-control border border-line bg-bg px-2.5 text-[11px] font-medium text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg sm:self-auto"
+              >
+                <X size={13} />
+                Clear filters
+              </button>
+            )}
           </div>
 
-          <div>
-            <CustomSelect
-              value={filterPillar}
-              onChange={(val) => setFilterPillar(val as any)}
-              options={[
-                { value: 'All', label: language === 'id' ? 'Semua Pilar Studio' : 'All Studio Pillars' },
-                { value: 'Visual Experience', label: 'Visual Experience' },
-                { value: 'Innovation Development', label: 'Innovation Development' }
-              ]}
-            />
+          <div className="grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+            <div className="relative min-w-0">
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" size={14} />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={language === 'id' ? 'Cari proyek, klien, industri, teknologi...' : 'Search projects, client names, industries, tech stack...'}
+                aria-label={language === 'id' ? 'Cari portfolio' : 'Search portfolio'}
+                className="min-h-10 w-full rounded-control border border-line bg-bg pl-10 pr-4 text-xs text-fg placeholder:text-muted transition-colors focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/20"
+              />
+            </div>
+
+            <div className="min-w-0 overflow-x-auto pb-0.5 ams-topnav-scroll" role="group" aria-label="Portfolio pillar filter">
+              <div className="inline-flex min-w-max items-center gap-1 rounded-control border border-line bg-bg p-1">
+                {[
+                  { value: 'All', label: language === 'id' ? 'Semua' : 'All' },
+                  { value: 'Visual Experience', label: 'Visual Experience' },
+                  { value: 'Innovation Development', label: 'Innovation Development' }
+                ].map((option) => {
+                  const active = filterPillar === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setFilterPillar(option.value as typeof filterPillar)}
+                      aria-pressed={active}
+                      className={[
+                        "inline-flex h-8 shrink-0 items-center justify-center rounded-chip px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                        active
+                          ? "border border-accent/25 bg-accent/10 font-semibold text-fg"
+                          : "border border-transparent text-muted hover:bg-panel hover:text-fg"
+                      ].join(" ")}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       </div>
