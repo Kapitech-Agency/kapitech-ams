@@ -84,15 +84,25 @@ export const AdminCmsTestimonials: React.FC = () => {
     }
 
     setIsSaving(true);
-    const exists = testimonials.some(item => item.id === editingItem.id);
-    const res = exists ? await api.cms.updateTestimonial(editingItem.id, editingItem) : await api.cms.createTestimonial(editingItem);
-    if (!res.success) { setStatusMessage(res.error || 'Failed to save testimonial.'); setIsSaving(false); return; }
-    setIsModalOpen(false);
-    setEditingItem(null);
-    await loadData();
-    setStatusMessage('Testimoni berhasil disimpan ke database CMS!');
+    try {
+      const exists = testimonials.some(item => item.id === editingItem.id);
+      const res = exists
+        ? await api.cms.updateTestimonial(editingItem.id, editingItem)
+        : await api.cms.createTestimonial(editingItem);
+      if (!res.success) {
+        setStatusMessage(res.error || 'Failed to save testimonial.');
+        return;
+      }
+      setIsModalOpen(false);
+      setEditingItem(null);
+      await loadData();
+      setStatusMessage('Testimoni berhasil disimpan ke database CMS!');
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : 'Failed to save testimonial.');
+    } finally {
+      setIsSaving(false);
+    }
     setTimeout(() => setStatusMessage(null), 3000);
-    setIsSaving(false);
   };
 
   return (
