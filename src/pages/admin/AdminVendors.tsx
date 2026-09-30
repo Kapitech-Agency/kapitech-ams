@@ -43,7 +43,7 @@ import Button from '../../components/ui/Button';
 import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
 
-import { AdminMetricStrip, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader , AdminPageShell } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 export const AdminVendors: React.FC = () => {
   const { t, language } = useLanguage();
@@ -284,9 +284,10 @@ export const AdminVendors: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <AdminPageShell featureSlug="vendors-module">
       {/* Top Header */}
       <AdminModuleHeader
+        className="mb-0"
         title={(
           <span className="flex items-center gap-2.5"><Users className="shrink-0 text-accent-text" size={22} />{language === 'id' ? 'Personel Vendor' : 'Vendor Personnel'}</span>
         )}
@@ -812,6 +813,6 @@ export const AdminVendors: React.FC = () => {
         confirmLabel={language === 'id' ? 'Hapus' : 'Delete'}
         onConfirm={() => { if (deleteTarget) void confirmDeleteVendor(deleteTarget.id); }}
       />
-    </div>
+    </AdminPageShell>
   );
 };
