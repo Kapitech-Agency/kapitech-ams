@@ -7,18 +7,27 @@ import {
   Building2,
   CalendarDays,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   Download,
   Edit3,
   ExternalLink,
+  Grid2X2,
+  Handshake,
+  LayoutGrid,
   MoreHorizontal,
   Plus,
+  ReceiptText,
   RefreshCw,
+  RotateCcw,
   Search,
   ShieldCheck,
   Star,
+  Table2,
   Timer,
   Trash2,
   TrendingUp,
+  UserPlus,
   Users,
   UsersRound,
   WalletCards,
@@ -76,6 +85,7 @@ type ProjectRecord = {
   teamLead?: string;
   teamMembers?: string[];
   tasks?: ProjectTaskRecord[];
+  techStack?: string[];
 };
 
 type TimeLog = {
@@ -228,15 +238,21 @@ export const AdminTeams: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [notice, setNotice] = useState<{ tone: 'success' | 'danger'; message: string } | null>(null);
 
+  const [teamHeaderSearch, setTeamHeaderSearch] = useState('');
   const [teamSearch, setTeamSearch] = useState('');
-  const [teamDivision, setTeamDivision] = useState('all');
+  const [teamDepartment, setTeamDepartment] = useState('all');
+  const [teamPod, setTeamPod] = useState('all');
   const [teamStatus, setTeamStatus] = useState('all');
+  const [teamDisplay, setTeamDisplay] = useState<'table' | 'grid'>('table');
+  const [teamPage, setTeamPage] = useState(1);
 
+  const [vendorHeaderSearch, setVendorHeaderSearch] = useState('');
+  const [vendorHeaderCategory, setVendorHeaderCategory] = useState('all');
   const [vendorSearch, setVendorSearch] = useState('');
   const [vendorCategory, setVendorCategory] = useState('all');
-  const [vendorType, setVendorType] = useState('all');
-  const [vendorStatus, setVendorStatus] = useState('all');
-  const [vendorVetted, setVendorVetted] = useState('all');
+  const [vendorTier, setVendorTier] = useState('all');
+  const [vendorAgreementStatus, setVendorAgreementStatus] = useState('active-verified');
+  const [vendorPage, setVendorPage] = useState(1);
 
   const [timeSearch, setTimeSearch] = useState('');
   const [timeProject, setTimeProject] = useState('all');
@@ -299,6 +315,7 @@ export const AdminTeams: React.FC = () => {
           teamLead: String(project.teamLead || ''),
           teamMembers: Array.isArray(project.teamMembers) ? project.teamMembers.map(String) : [],
           tasks: Array.isArray(project.tasks) ? project.tasks as ProjectTaskRecord[] : [],
+          techStack: Array.isArray(project.techStack) ? project.techStack.map(String) : [],
         }))
       );
     }
@@ -320,21 +337,76 @@ export const AdminTeams: React.FC = () => {
     void loadData();
   }, []);
 
+  useEffect(() => { setTeamPage(1); }, [teamHeaderSearch, teamSearch, teamDepartment, teamPod, teamStatus, teamDisplay]);
+  useEffect(() => { setVendorPage(1); }, [vendorHeaderSearch, vendorHeaderCategory, vendorSearch, vendorCategory, vendorTier, vendorAgreementStatus]);
+
   const teamDivisions = useMemo(
     () => ['all', ...Array.from(new Set(members.map((member) => member.division).filter(Boolean))).sort()],
     [members]
   );
 
+  const teamPods = useMemo(
+    () => ['all', ...Array.from(new Set(projects.map((project) => project.name).filter(Boolean))).sort()],
+    [projects]
+  );
+
+  const memberAllocation = (member: TeamMember) => {
+    const start = startOfWeek(new Date());
+    const end = new Date(start);
+    end.setDate(end.getDate() + 7);
+    const minutes = logs
+      .filter((log) => log.userId === member.id || (!log.userId && log.user === member.name))
+      .filter((log) => {
+        const date = new Date(log.date + 'T00:00:00');
+        return date >= start && date < end;
+      })
+      .reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0);
+    const percent = Math.min(160, Math.round((minutes / (40 * 60)) * 100));
+    const status = String(member.status || '').toLowerCase();
+    if (status.includes('leave')) return { label: 'On Leave', tone: 'warning', percent };
+    if (percent > 0) return { label: 'Allocated', tone: 'success', percent };
+    return { label: 'Available / Bench', tone: 'warning', percent: 0 };
+  };
+
+  const memberProjects = (member: TeamMember) => projects.filter((project) => {
+    if (project.status === 'completed') return false;
+    const values = [
+      project.teamLead || '',
+      ...(project.teamMembers || [])
+    ].map((value) => String(value).toLowerCase());
+    const targets = [member.id, member.name, member.username, member.role].map((value) => String(value || '').toLowerCase());
+    return values.some((value) => targets.some((target) => target && value.includes(target)));
+  });
+
+  const memberCoreSkills = (member: TeamMember) => {
+    const projectSkills = memberProjects(member).flatMap((project) => project.techStack || []);
+    return Array.from(new Set([roleFocus(member), ...projectSkills].filter(Boolean))).slice(0, 3);
+  };
+
   const teamRows = useMemo(() => {
-    const query = teamSearch.trim().toLowerCase();
+    const headerQuery = teamHeaderSearch.trim().toLowerCase();
+    const toolbarQuery = teamSearch.trim().toLowerCase();
     return members.filter((member) => {
-      const haystack = [member.name, member.username, member.role, member.division].join(' ').toLowerCase();
-      const matchesSearch = !query || haystack.includes(query);
-      const matchesDivision = teamDivision === 'all' || member.division === teamDivision;
-      const matchesStatus = teamStatus === 'all' || String(member.status || 'active') === teamStatus;
-      return matchesSearch && matchesDivision && matchesStatus;
+      const searchable = [member.name, member.username, member.role, member.division, member.id].join(' ').toLowerCase();
+      const matchesHeaderSearch = !headerQuery || searchable.includes(headerQuery);
+      const matchesToolbarSearch = !toolbarQuery || searchable.includes(toolbarQuery);
+      const projectsForMember = memberProjects(member);
+      const allocation = memberAllocation(member);
+      const matchesDepartment = teamDepartment === 'all' || member.division === teamDepartment;
+      const matchesPod = teamPod === 'all' || projectsForMember.some((project) => project.name === teamPod);
+      const matchesStatus =
+        teamStatus === 'all' ||
+        (teamStatus === 'allocated' && allocation.label === 'Allocated') ||
+        (teamStatus === 'bench' && allocation.label === 'Available / Bench') ||
+        (teamStatus === 'leave' && allocation.label === 'On Leave');
+      return matchesHeaderSearch && matchesToolbarSearch && matchesDepartment && matchesPod && matchesStatus;
     });
-  }, [members, teamSearch, teamDivision, teamStatus]);
+  }, [members, projects, logs, teamHeaderSearch, teamSearch, teamDepartment, teamPod, teamStatus]);
+
+  const teamPageSize = 6;
+  const teamPageCount = Math.max(1, Math.ceil(teamRows.length / teamPageSize));
+  const pagedTeamRows = teamRows.slice((teamPage - 1) * teamPageSize, teamPage * teamPageSize);
+
 
   const teamTrackedMinutes = useMemo(() => {
     const map = new Map<string, number>();
@@ -403,28 +475,79 @@ export const AdminTeams: React.FC = () => {
     contributors: new Set(logs.map((log) => log.userId || log.user || '').filter(Boolean)).size
   }), [members, logs]);
 
-  const vendorRows = useMemo(() => {
-    const query = vendorSearch.trim().toLowerCase();
-    return vendors.filter((vendor) => {
-      const haystack = [vendor.name, vendor.companyName || '', vendor.email, vendor.primaryCategory, ...vendor.skills].join(' ').toLowerCase();
-      return (!query || haystack.includes(query))
-        && (vendorCategory === 'all' || vendor.primaryCategory === vendorCategory)
-        && (vendorType === 'all' || vendor.type === vendorType)
-        && (vendorStatus === 'all' || vendor.status === vendorStatus)
-        && (vendorVetted === 'all' || (vendorVetted === 'vetted' ? Boolean(vendor.isVetted ?? true) : !Boolean(vendor.isVetted ?? true)));
-    });
-  }, [vendors, vendorSearch, vendorCategory, vendorType, vendorStatus, vendorVetted]);
+  const vendorTierOf = (vendor: AgencyVendor) => {
+    if (vendor.type === 'agency_partner') return 'strategic';
+    if (vendor.type === 'contractor') return 'specialized';
+    return 'adhoc';
+  };
 
-  const vendorMetrics = useMemo(() => {
-    const active = vendors.filter((vendor) => vendor.status === 'active');
-    return {
-      total: vendors.length,
-      active: active.length,
-      vetted: vendors.filter((vendor) => vendor.isVetted ?? true).length,
-      categories: new Set(vendors.map((vendor) => vendor.primaryCategory)).size,
-      rating: vendors.length ? vendors.reduce((sum, vendor) => sum + Number(vendor.rating || 0), 0) / vendors.length : 0
-    };
+  const vendorAgreementState = (vendor: AgencyVendor) => {
+    const contracts = vendor.contracts || [];
+    const now = new Date();
+    const renewal = contracts.some((contract) => {
+      if (!contract.endDate || contract.status !== 'active') return false;
+      const end = new Date(contract.endDate + 'T23:59:59');
+      const days = Math.ceil((end.getTime() - now.getTime()) / 86400000);
+      return days >= 0 && days <= 30;
+    });
+    if (renewal) return 'renewal';
+    if (vendor.status === 'under_review') return 'review';
+    if (vendor.status === 'inactive' || vendor.status === 'blacklisted') return 'archived';
+    if ((vendor.contracts || []).some((contract) => contract.status === 'active') || (vendor.isVetted ?? true)) return 'active-verified';
+    return 'pending';
+  };
+
+  const vendorCurrentContract = (vendor: AgencyVendor) =>
+    vendor.contracts?.find((contract) => contract.status === 'active') ||
+    vendor.contracts?.[0] ||
+    null;
+
+  const vendorRenewalCount = useMemo(() => {
+    const now = new Date();
+    return vendors.reduce((count, vendor) => count + (vendor.contracts || []).filter((contract) => {
+      if (!contract.endDate || contract.status !== 'active') return false;
+      const end = new Date(contract.endDate + 'T23:59:59');
+      const days = Math.ceil((end.getTime() - now.getTime()) / 86400000);
+      return days >= 0 && days <= 30;
+    }).length, 0);
   }, [vendors]);
+
+  const vendorMonthlyBurn = useMemo(() => {
+    const totals: Record<string, number> = {};
+    vendors.forEach((vendor) => {
+      (vendor.contracts || []).forEach((contract) => {
+        if (contract.status !== 'active' || contract.rateType !== 'monthly_retainer') return;
+        totals[contract.currency] = (totals[contract.currency] || 0) + Number(contract.rateAmount || 0);
+      });
+    });
+    return totals;
+  }, [vendors]);
+
+  const vendorTierCounts = useMemo(() => ({
+    strategic: vendors.filter((vendor) => vendorTierOf(vendor) === 'strategic').length,
+    specialized: vendors.filter((vendor) => vendorTierOf(vendor) === 'specialized').length,
+    adhoc: vendors.filter((vendor) => vendorTierOf(vendor) === 'adhoc').length
+  }), [vendors]);
+
+  const vendorRows = useMemo(() => {
+    const headerQuery = vendorHeaderSearch.trim().toLowerCase();
+    const toolbarQuery = vendorSearch.trim().toLowerCase();
+    return vendors.filter((vendor) => {
+      const searchable = [vendor.name, vendor.companyName || '', vendor.email, vendor.primaryCategory, ...vendor.skills, vendor.id].join(' ').toLowerCase();
+      const matchesHeaderSearch = !headerQuery || searchable.includes(headerQuery);
+      const matchesToolbarSearch = !toolbarQuery || searchable.includes(toolbarQuery);
+      return matchesHeaderSearch &&
+        matchesToolbarSearch &&
+        (vendorHeaderCategory === 'all' || vendor.primaryCategory === vendorHeaderCategory) &&
+        (vendorCategory === 'all' || vendor.primaryCategory === vendorCategory) &&
+        (vendorTier === 'all' || vendorTierOf(vendor) === vendorTier) &&
+        (vendorAgreementStatus === 'all' || vendorAgreementState(vendor) === vendorAgreementStatus);
+    }).sort((a, b) => Number(b.hourlyRate || 0) - Number(a.hourlyRate || 0));
+  }, [vendors, vendorHeaderSearch, vendorSearch, vendorHeaderCategory, vendorCategory, vendorTier, vendorAgreementStatus]);
+
+  const vendorPageSize = 6;
+  const vendorPageCount = Math.max(1, Math.ceil(vendorRows.length / vendorPageSize));
+  const pagedVendorRows = vendorRows.slice((vendorPage - 1) * vendorPageSize, vendorPage * vendorPageSize);
 
   const filteredLogs = useMemo(() => {
     const query = timeSearch.trim().toLowerCase();
@@ -682,11 +805,11 @@ export const AdminTeams: React.FC = () => {
   const pageCopy: Record<TeamView, { title: string; description: string }> = {
     'team-directory': {
       title: 'Team Directory',
-      description: 'Manage the internal delivery team, roles, divisions, and current activity coverage.'
+      description: 'Manage full-time agency staff, core engineering pods, design teams, and direct reports.'
     },
     'vendor-directory': {
-      title: 'Vendor Directory',
-      description: 'Manage freelancers, contractors, agency partners, and external specialists used across projects.'
+      title: 'Vendor & Contractor Directory',
+      description: 'External specialized agencies, freelance contractors, cloud vendors, and SLA compliance.'
     },
     'capacity-allocation': {
       title: 'Capacity & Allocation',
@@ -705,25 +828,54 @@ export const AdminTeams: React.FC = () => {
   return (
     <div className="min-h-full pb-10">
       <AdminModuleHeader
-        title={pageCopy[currentView].title}
+        title={currentView === 'team-directory'
+          ? <>Team Directory <span className="inline-flex items-center rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] font-medium text-muted">{members.length} Internal Members</span></>
+          : pageCopy[currentView].title}
         description={pageCopy[currentView].description}
         actions={
           <>
-            {currentView === 'vendor-directory' && canManageVendors && (
-              <Button type="button" variant="primary" icon={<Plus size={15} />} onClick={() => openVendorForm()}>
-                Add Vendor
-              </Button>
+            {currentView === 'vendor-directory' && (
+              <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+                <label className="relative w-full sm:w-[190px]">
+                  <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                  <input value={vendorHeaderSearch} onChange={(event) => setVendorHeaderSearch(event.target.value)} placeholder="Filter vendors..." aria-label="Filter vendors" className="h-9 w-full rounded-control border border-line bg-bg pl-9 pr-3 text-xs text-fg outline-none placeholder:text-muted focus:border-accent" />
+                </label>
+                <CustomSelect
+                  value={vendorHeaderCategory}
+                  onChange={setVendorHeaderCategory}
+                  options={[{ value: 'all', label: 'All Categories' }, ...Array.from(new Set(vendors.map((vendor) => vendor.primaryCategory))).sort().map((value) => ({ value, label: value }))]}
+                  triggerClassName="h-9 min-h-9 w-full sm:w-[165px]"
+                />
+                {canManageVendors && (
+                  <Button type="button" variant="primary" icon={<Plus size={14} />} onClick={() => openVendorForm()}>
+                    + Add Vendor / Contractor
+                  </Button>
+                )}
+              </div>
             )}
             {currentView === 'time-logs' && canManageTimeLogs && (
               <Button type="button" variant="primary" icon={<Plus size={15} />} onClick={() => setTimeFormOpen(true)}>
                 Add Time Entry
               </Button>
             )}
-            {currentView === 'team-directory' && canManageAdminAccounts && (
-              <Link to="/admin/settings?tab=rbac" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-control border border-line bg-panel px-3 text-xs font-semibold text-fg hover:bg-bg">
-                <Plus size={15} />
-                Manage Accounts
-              </Link>
+            {currentView === 'team-directory' && (
+              <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+                <label className="relative w-full sm:w-[190px]">
+                  <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                  <input value={teamHeaderSearch} onChange={(event) => setTeamHeaderSearch(event.target.value)} placeholder="Search team..." aria-label="Search team" className="h-9 w-full rounded-control border border-line bg-bg pl-9 pr-3 text-xs text-fg outline-none placeholder:text-muted focus:border-accent" />
+                </label>
+                <CustomSelect
+                  value={teamDepartment}
+                  onChange={setTeamDepartment}
+                  options={teamDivisions.map((value) => ({ value, label: value === 'all' ? 'All Departments' : value }))}
+                  triggerClassName="h-9 min-h-9 w-full sm:w-[165px]"
+                />
+                {canManageAdminAccounts && (
+                  <Link to="/admin/settings?tab=rbac" className="inline-flex h-9 items-center justify-center gap-2 rounded-control bg-accent px-3 text-xs font-semibold text-white hover:bg-accent/90">
+                    <UserPlus size={14} /> Invite Member
+                  </Link>
+                )}
+              </div>
             )}
             <Button type="button" variant="secondary" icon={<Download size={14} />} onClick={exportCurrentView}>
               Export
@@ -758,204 +910,394 @@ export const AdminTeams: React.FC = () => {
         <div className="space-y-5" data-ams-feature-slug="team-directory">
           <AdminMetricStrip
             metrics={[
-              { id: 'headcount', label: 'Headcount', value: teamMetrics.headcount, context: teamMetrics.active + ' active', sparkline: [teamMetrics.headcount, teamMetrics.active, teamMetrics.contributors], icon: <UsersRound size={15} /> },
-              { id: 'active', label: 'Active members', value: teamMetrics.active, context: 'Server directory', sparkline: [teamMetrics.active, teamMetrics.headcount], icon: <CheckCircle2 size={15} className="text-success" />, toneClassName: 'text-success' },
-              { id: 'divisions', label: 'Divisions', value: teamMetrics.divisions, context: 'Across active team', sparkline: [teamMetrics.divisions, teamMetrics.headcount], icon: <Building2 size={15} /> },
-              { id: 'contributors', label: 'Recent contributors', value: teamMetrics.contributors, context: 'Based on time logs', sparkline: [teamMetrics.contributors, teamMetrics.active], icon: <Activity size={15} /> }
+              {
+                id: 'headcount',
+                label: 'Total Headcount',
+                value: teamMetrics.headcount,
+                context: (teamRows.filter((member) => memberAllocation(member).label === 'Allocated').length) + ' Allocated · ' + (teamMetrics.headcount - teamRows.filter((member) => memberAllocation(member).label === 'Allocated').length) + ' Bench',
+                sparkline: [teamMetrics.headcount, members.length, teamRows.length],
+                icon: <UsersRound size={15} />
+              },
+              {
+                id: 'engineering',
+                label: 'Engineering & Tech',
+                value: members.filter((member) => /engineer|developer|devops|qa|tech|architect|frontend|backend/i.test(member.role + ' ' + member.division)).length,
+                context: 'Backend, Frontend, DevOps & QA',
+                sparkline: [members.length, members.filter((member) => /engineer|developer|devops|qa|tech|architect|frontend|backend/i.test(member.role + ' ' + member.division)).length],
+                icon: <BarChart3 size={15} />,
+                toneClassName: 'text-info'
+              },
+              {
+                id: 'design',
+                label: 'Product & Design',
+                value: members.filter((member) => /design|product|ux|creative|ui/i.test(member.role + ' ' + member.division)).length,
+                context: 'UI/UX, Product Strategy & Systems',
+                sparkline: [members.length, members.filter((member) => /design|product|ux|creative|ui/i.test(member.role + ' ' + member.division)).length],
+                icon: <LayoutGrid size={15} />,
+                toneClassName: 'text-info'
+              },
+              {
+                id: 'operations',
+                label: 'Operations & Delivery',
+                value: members.filter((member) => /manager|operations|delivery|pm|project|marketing|account/i.test(member.role + ' ' + member.division)).length,
+                context: 'Delivery, PMs, Operations & Client Work',
+                sparkline: [members.length, members.filter((member) => /manager|operations|delivery|pm|project|marketing|account/i.test(member.role + ' ' + member.division)).length],
+                icon: <Handshake size={15} />
+              }
             ]}
           />
 
-          <AdminFilterBar searchValue={teamSearch} onSearchChange={setTeamSearch} searchPlaceholder="Search member, role, division..." searchLabel="Search team">
-            <CustomSelect
-              value={teamDivision}
-              onChange={setTeamDivision}
-              options={teamDivisions.map((division) => ({ value: division, label: division === 'all' ? 'All divisions' : division }))}
-              triggerClassName="h-9 min-h-9 w-full sm:w-[180px]"
-            />
-            <CustomSelect
-              value={teamStatus}
-              onChange={setTeamStatus}
-              options={[
-                { value: 'all', label: 'All statuses' },
-                { value: 'active', label: 'Active' },
-                { value: 'inactive', label: 'Inactive' }
-              ]}
-              triggerClassName="h-9 min-h-9 w-full sm:w-[150px]"
-            />
-          </AdminFilterBar>
-
-          <AdminPanel
-            title={'Team directory'}
-            description={teamRows.length + ' members visible'}
-          >
-            <div className="overflow-x-auto custom-scrollbar">
-              {teamRows.length === 0 ? (
-                <div className="min-h-[180px] px-5 py-10 text-center">
-                  <UsersRound size={22} className="mx-auto text-muted" />
-                  <p className="mt-3 text-sm font-medium text-fg">No team members found</p>
-                  <p className="mt-1 text-xs text-muted">Adjust the search or directory filters.</p>
+          <section className="rounded-card border border-line bg-panel p-4" data-ams-feature-slug="team-directory-filters">
+            <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+              <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+                <label className="relative min-w-0 flex-1 sm:max-w-sm">
+                  <span className="sr-only">Search by name, role, email</span>
+                  <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                  <input value={teamSearch} onChange={(event) => setTeamSearch(event.target.value)} placeholder="Search by name, role, email..." aria-label="Search by name, role, email" className="h-9 w-full rounded-control border border-line bg-bg pl-9 pr-3 text-xs text-fg outline-none placeholder:text-muted focus:border-accent" />
+                </label>
+                <CustomSelect value={teamPod} onChange={setTeamPod} options={[{ value: 'all', label: 'All Pods' }, ...teamPods.slice(1).map((value) => ({ value, label: 'Pod: ' + value }))]} triggerClassName="h-9 min-h-9 w-full sm:w-[205px]" />
+                <CustomSelect
+                  value={teamStatus}
+                  onChange={setTeamStatus}
+                  options={[
+                    { value: 'all', label: 'Status: All' },
+                    { value: 'allocated', label: 'Allocated' },
+                    { value: 'bench', label: 'Available / Bench' },
+                    { value: 'leave', label: 'On Leave' }
+                  ]}
+                  triggerClassName="h-9 min-h-9 w-full sm:w-[165px]"
+                />
+                <Button type="button" variant="ghost" icon={<RotateCcw size={14} />} onClick={() => { setTeamHeaderSearch(''); setTeamSearch(''); setTeamDepartment('all'); setTeamPod('all'); setTeamStatus('all'); }}>
+                  Clear
+                </Button>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-muted">Display:</span>
+                <div className="inline-flex items-center gap-0.5 rounded-control border border-line bg-bg p-0.5">
+                  <button type="button" onClick={() => setTeamDisplay('table')} className={'inline-flex h-8 items-center gap-1.5 rounded-control px-2.5 text-[11px] font-medium ' + (teamDisplay === 'table' ? 'bg-panel text-fg' : 'text-muted hover:text-fg')} title="Table View">
+                    <Table2 size={14} /> Table
+                  </button>
+                  <button type="button" onClick={() => setTeamDisplay('grid')} className={'inline-flex h-8 items-center gap-1.5 rounded-control px-2.5 text-[11px] font-medium ' + (teamDisplay === 'grid' ? 'bg-panel text-fg' : 'text-muted hover:text-fg')} title="Grid View">
+                    <Grid2X2 size={14} /> Grid
+                  </button>
                 </div>
-              ) : (
-                <table className="ams-finance-table min-w-[980px] table-fixed border-separate border-spacing-0 text-xs">
-                  <thead><tr>
-                    <th className="w-[24%]">Member</th>
-                    <th className="w-[21%]">Role</th>
-                    <th className="w-[16%]">Division</th>
-                    <th className="w-[12%]">Status</th>
-                    <th className="w-[12%] text-right">Workload</th>
-                    <th className="w-[14%] text-right">Active projects</th>
-                    <th className="w-[16%]">Task status</th>
-                    <th className="w-[56px] text-right">Action</th>
-                  </tr></thead>
-                  <tbody>
-                    {teamRows.map((member) => (
-                      <tr key={member.id} data-ams-slug={member.slug}>
-                        <td>
-                          <ProfileIdentity profile={{ id: member.id, name: member.name, username: member.username }} showRole={false} />
-                        </td>
-                        <td>
-                          <p className="font-medium text-fg">{member.role || 'Not assigned'}</p>
-                          <p className="mt-1 text-[10px] text-muted">{roleFocus(member)}</p>
-                          <p className="mt-1 font-mono text-[9px] text-muted/70">slug: {member.slug}</p>
-                        </td>
-                        <td className="text-muted">{member.division || 'Operations'}</td>
-                        <td>
-                          <span className="inline-flex rounded-badge border border-success/20 bg-success/10 px-2 py-1 text-[10px] font-semibold text-success">
-                            {member.status || 'active'}
-                          </span>
-                        </td>
-                        <td className="text-right">
-                          <span className={'font-semibold tabular-nums ' + ((currentMemberWorkload.get(member.id) || 0) > 90 ? 'text-danger' : 'text-fg')}>
-                            {(currentMemberWorkload.get(member.id) || 0) + '%'}
-                          </span>
-                          <p className="mt-1 text-[10px] tabular-nums text-muted">
-                            {formatHours(teamTrackedMinutes.get(member.id) || 0)} tracked
-                          </p>
-                        </td>
-                        <td className="text-right font-semibold tabular-nums text-fg">{activeProjectMap.get(member.id)?.size || 0}</td>
-                        <td>
-                          {(() => {
-                            const taskStatus = taskStatusMap.get(member.id);
-                            if (!taskStatus) return <span className="text-muted">No assigned tasks</span>;
-                            return (
-                              <div className="space-y-1">
-                                <p className="font-medium text-fg">{taskStatus.inProgress} active · {taskStatus.todo} open</p>
-                                <p className="text-[10px] text-muted">{taskStatus.done} done of {taskStatus.total}</p>
-                              </div>
-                            );
-                          })()}
-                        </td>
-                        <td>
-                          <div className="flex justify-end">
-                            <Link to="/admin/settings?tab=rbac" className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-bg hover:text-fg" title="Manage account" aria-label="Manage account">
-                              <ExternalLink size={14} />
-                            </Link>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
+                <Button type="button" variant="secondary" icon={<Download size={14} />} onClick={exportCurrentView}>Export</Button>
+              </div>
             </div>
-          </AdminPanel>
+          </section>
+
+          {teamDisplay === 'table' ? (
+            <AdminPanel title="Team Directory" description={teamRows.length + ' members'}>
+              <div className="overflow-x-auto custom-scrollbar">
+                {pagedTeamRows.length === 0 ? (
+                  <div className="min-h-[180px] px-5 py-10 text-center">
+                    <UsersRound size={22} className="mx-auto text-muted" />
+                    <p className="mt-3 text-sm font-medium text-fg">No team members found</p>
+                    <p className="mt-1 text-xs text-muted">Adjust your search, pod, or allocation filters.</p>
+                  </div>
+                ) : (
+                  <table className="ams-finance-table min-w-[1240px] table-fixed border-separate border-spacing-0 text-xs">
+                    <thead><tr>
+                      <th className="w-[25%]">Team Member</th>
+                      <th className="w-[18%]">Pod / Focus</th>
+                      <th className="w-[11%]">Active Projects</th>
+                      <th className="w-[14%]">Allocation Status</th>
+                      <th className="w-[17%]">Core Skills</th>
+                      <th className="w-[15%] text-right">Actions</th>
+                    </tr></thead>
+                    <tbody>
+                      {pagedTeamRows.map((member) => {
+                        const allocation = memberAllocation(member);
+                        const projectsForMember = memberProjects(member);
+                        const skills = memberCoreSkills(member);
+                        return (
+                          <tr key={member.id} data-ams-slug={member.slug}>
+                            <td>
+                              <button type="button" className="text-left" onClick={() => setMemberDetail(member)}>
+                                <ProfileIdentity profile={{ id: member.id, name: member.name, username: member.username }} showRole={false} />
+                                <span className="mt-1 block font-mono text-[9px] text-muted/70">slug: {member.slug}</span>
+                              </button>
+                            </td>
+                            <td>
+                              <p className="font-medium text-fg">{projectsForMember[0]?.name || member.division || 'Unassigned'}</p>
+                              <p className="mt-1 text-[10px] text-muted">{roleFocus(member)}</p>
+                            </td>
+                            <td>
+                              <p className="font-semibold tabular-nums text-fg">{projectsForMember.length}</p>
+                              <p className="mt-1 text-[10px] text-muted">{projectsForMember.length === 1 ? 'Pod assigned' : 'Pods assigned'}</p>
+                            </td>
+                            <td>
+                              <div className="w-36 space-y-1.5">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className={'inline-flex items-center gap-1.5 rounded-badge border px-2 py-0.5 text-[10px] font-medium ' + (allocation.tone === 'success' ? 'border-success/20 bg-success/10 text-success' : 'border-warning/20 bg-warning/10 text-warning')}>
+                                    <span className={'h-1.5 w-1.5 rounded-full ' + (allocation.tone === 'success' ? 'bg-success' : 'bg-warning')} />
+                                    {allocation.label}
+                                  </span>
+                                  <span className={'text-[10px] font-semibold tabular-nums ' + (allocation.tone === 'success' ? 'text-success' : 'text-warning')}>{allocation.percent}%</span>
+                                </div>
+                                <div className="h-1.5 overflow-hidden rounded-full bg-bg">
+                                  <div className={'h-full rounded-full ' + (allocation.tone === 'success' ? 'bg-success' : 'bg-warning')} style={{ width: Math.min(100, allocation.percent) + '%' }} />
+                                </div>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="flex max-w-[260px] flex-wrap gap-1.5">
+                                {skills.map((skill) => <span key={skill} className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] font-medium text-fg">{skill}</span>)}
+                              </div>
+                            </td>
+                            <td>
+                              <div className="flex items-center justify-end gap-2">
+                                <Button type="button" variant="secondary" className="h-8 px-2.5 text-[11px]" onClick={() => setMemberDetail(member)}>View Profile</Button>
+                                <Button type="button" variant="primary" className="h-8 px-2.5 text-[11px]" onClick={() => setAllocationTarget(member)}>Allocate</Button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </AdminPanel>
+          ) : (
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {pagedTeamRows.map((member) => {
+                const allocation = memberAllocation(member);
+                const projectsForMember = memberProjects(member);
+                const skills = memberCoreSkills(member);
+                return (
+                  <article key={member.id} data-ams-slug={member.slug} className="rounded-card border border-line bg-panel p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <ProfileIdentity profile={{ id: member.id, name: member.name, username: member.username }} showRole={true} />
+                      <span className="rounded-badge border border-line bg-bg px-2 py-0.5 font-mono text-[9px] text-muted">slug: {member.slug}</span>
+                    </div>
+                    <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
+                      <div><p className="text-muted">Pod / Focus</p><p className="mt-1 font-medium text-fg">{projectsForMember[0]?.name || member.division || 'Unassigned'}</p></div>
+                      <div><p className="text-muted">Active Projects</p><p className="mt-1 font-semibold tabular-nums text-fg">{projectsForMember.length}</p></div>
+                    </div>
+                    <div className="mt-4 rounded-control border border-line bg-bg p-3">
+                      <div className="flex items-center justify-between gap-2"><span className="text-[10px] text-muted">Allocation Status</span><span className="text-[11px] font-semibold text-fg">{allocation.label} · {allocation.percent}%</span></div>
+                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel"><div className="h-full rounded-full bg-accent" style={{ width: Math.min(100, allocation.percent) + '%' }} /></div>
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-1.5">
+                      {skills.map((skill) => <span key={skill} className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-fg">{skill}</span>)}
+                    </div>
+                    <div className="mt-4 flex justify-end gap-2">
+                      <Button type="button" variant="secondary" className="h-8 px-2.5 text-[11px]" onClick={() => setMemberDetail(member)}>View Profile</Button>
+                      <Button type="button" variant="primary" className="h-8 px-2.5 text-[11px]" onClick={() => setAllocationTarget(member)}>Allocate</Button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="flex flex-col gap-3 border-t border-line bg-panel px-4 py-3 text-xs sm:flex-row sm:items-center sm:justify-between">
+            <span className="text-muted">
+              Showing <span className="font-semibold tabular-nums text-fg">{teamRows.length ? (teamPage - 1) * teamPageSize + 1 : 0}</span> to <span className="font-semibold tabular-nums text-fg">{Math.min(teamPage * teamPageSize, teamRows.length)}</span> of <span className="font-semibold tabular-nums text-fg">{teamRows.length}</span> members
+            </span>
+            <div className="flex items-center gap-1.5">
+              <button type="button" disabled={teamPage <= 1} onClick={() => setTeamPage((value) => Math.max(1, value - 1))} className="inline-flex h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[11px] text-muted disabled:opacity-40"><ChevronLeft size={14} /> Previous</button>
+              {Array.from({ length: Math.min(teamPageCount, 8) }, (_, index) => {
+                const page = index + 1;
+                return <button key={page} type="button" onClick={() => setTeamPage(page)} className={'h-8 w-8 rounded-control border px-0 text-[11px] font-semibold ' + (teamPage === page ? 'border-accent bg-accent text-white' : 'border-line bg-bg text-muted')}>{page}</button>;
+              })}
+              <button type="button" disabled={teamPage >= teamPageCount} onClick={() => setTeamPage((value) => Math.min(teamPageCount, value + 1))} className="inline-flex h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[11px] text-muted disabled:opacity-40">Next <ChevronRight size={14} /></button>
+            </div>
+          </div>
         </div>
       ) : currentView === 'vendor-directory' ? (
         <div className="space-y-5" data-ams-feature-slug="vendor-directory">
           <AdminMetricStrip
             metrics={[
-              { id: 'total', label: 'Total vendors', value: vendorMetrics.total, context: vendorMetrics.active + ' active', sparkline: [vendorMetrics.total, vendorMetrics.active, vendorMetrics.vetted], icon: <Users size={15} /> },
-              { id: 'vetted', label: 'Vetted', value: vendorMetrics.vetted, context: 'Verified network', sparkline: [vendorMetrics.vetted, vendorMetrics.active], icon: <ShieldCheck size={15} className="text-success" />, toneClassName: 'text-success' },
-              { id: 'categories', label: 'Capabilities', value: vendorMetrics.categories, context: 'Primary categories', sparkline: [vendorMetrics.categories, vendorMetrics.total], icon: <BarChart3 size={15} /> },
-              { id: 'rating', label: 'Average rating', value: vendorMetrics.rating ? vendorMetrics.rating.toFixed(1) : '—', context: 'Vendor directory', sparkline: vendors.slice(0, 8).map((vendor) => vendor.rating), icon: <Star size={15} className="text-warning" />, toneClassName: 'text-warning' }
+              {
+                id: 'active-contractors',
+                label: 'Active Contractors',
+                value: vendors.filter((vendor) => vendor.status === 'active').length,
+                context: vendorTierCounts.strategic + ' Dedicated · ' + (vendorTierCounts.specialized + vendorTierCounts.adhoc) + ' On-Demand',
+                sparkline: [vendors.length, vendors.filter((vendor) => vendor.status === 'active').length, vendorRows.length],
+                icon: <Handshake size={15} />
+              },
+              {
+                id: 'external-burn',
+                label: 'Monthly External Burn',
+                value: Object.keys(vendorMonthlyBurn).length === 1
+                  ? formatAmount(vendorMonthlyBurn[Object.keys(vendorMonthlyBurn)[0]], Object.keys(vendorMonthlyBurn)[0] as 'IDR' | 'USD')
+                  : Object.keys(vendorMonthlyBurn).length > 1 ? 'Mixed' : '—',
+                context: Object.entries(vendorMonthlyBurn).map(([currency, amount]) => formatAmount(amount, currency as 'IDR' | 'USD')).join(' · ') || 'No active monthly retainers',
+                sparkline: Object.values(vendorMonthlyBurn),
+                icon: <TrendingUp size={15} />
+              },
+              {
+                id: 'sla',
+                label: 'Average SLA Compliance',
+                value: '—',
+                context: 'SLA data is not tracked in the current vendor model',
+                sparkline: [0, 0],
+                icon: <ShieldCheck size={15} />,
+                toneClassName: 'text-muted'
+              },
+              {
+                id: 'renewals',
+                label: 'Contract Renewals Due',
+                value: vendorRenewalCount,
+                context: 'Action required within 30 days',
+                sparkline: [vendorRenewalCount, vendors.length],
+                icon: <CalendarDays size={15} className="text-warning" />,
+                toneClassName: 'text-warning'
+              }
             ]}
           />
 
-          <AdminFilterBar searchValue={vendorSearch} onSearchChange={setVendorSearch} searchPlaceholder="Search vendor, company, skill..." searchLabel="Search vendors">
-            <CustomSelect
-              value={vendorCategory}
-              onChange={setVendorCategory}
-              options={[{ value: 'all', label: 'All capabilities' }, ...Array.from(new Set(vendors.map((vendor) => vendor.primaryCategory))).map((value) => ({ value, label: value }))]}
-              triggerClassName="h-9 min-h-9 w-full sm:w-[180px]"
-            />
-            <CustomSelect
-              value={vendorType}
-              onChange={setVendorType}
-              options={[{ value: 'all', label: 'All types' }, ...Object.keys(vendorTypeLabel).map((value) => ({ value, label: vendorTypeLabel[value as VendorType] }))]}
-              triggerClassName="h-9 min-h-9 w-full sm:w-[150px]"
-            />
-            <CustomSelect
-              value={vendorStatus}
-              onChange={setVendorStatus}
-              options={[{ value: 'all', label: 'All statuses' }, ...Object.keys(vendorStatusLabel).map((value) => ({ value, label: vendorStatusLabel[value as VendorStatus] }))]}
-              triggerClassName="h-9 min-h-9 w-full sm:w-[150px]"
-            />
-            <CustomSelect
-              value={vendorVetted}
-              onChange={setVendorVetted}
-              options={[{ value: 'all', label: 'All verification' }, { value: 'vetted', label: 'Vetted only' }, { value: 'unvetted', label: 'Unvetted' }]}
-              triggerClassName="h-9 min-h-9 w-full sm:w-[160px]"
-            />
-          </AdminFilterBar>
+          <section className="rounded-card border border-line bg-panel p-4" data-ams-feature-slug="vendor-directory-filters">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex min-w-0 flex-1 flex-col gap-2 xl:flex-row xl:items-center">
+                <label className="relative min-w-0 flex-1 xl:max-w-sm">
+                  <span className="sr-only">Search vendor directory</span>
+                  <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                  <input value={vendorSearch} onChange={(event) => setVendorSearch(event.target.value)} placeholder="Search by company or freelancer name..." aria-label="Search by company or freelancer name" className="h-9 w-full rounded-control border border-line bg-bg pl-9 pr-3 text-xs text-fg outline-none placeholder:text-muted focus:border-accent" />
+                </label>
+                <div className="hidden xl:flex items-center gap-1.5 rounded-control border border-line bg-bg p-0.5">
+                  {[
+                    { value: 'all', label: 'All Tiers' },
+                    { value: 'strategic', label: 'Strategic' },
+                    { value: 'specialized', label: 'Specialized' },
+                    { value: 'adhoc', label: 'Ad-hoc' }
+                  ].map((option) => (
+                    <button key={option.value} type="button" onClick={() => setVendorTier(option.value)} className={'inline-flex h-8 items-center rounded-control px-2.5 text-[10px] font-medium ' + (vendorTier === option.value ? 'bg-panel text-fg border border-line' : 'text-muted hover:text-fg')}>
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <CustomSelect
+                  value={vendorCategory}
+                  onChange={setVendorCategory}
+                  options={[{ value: 'all', label: 'Service Category: All' }, ...Array.from(new Set(vendors.map((vendor) => vendor.primaryCategory))).sort().map((value) => ({ value, label: value }))]}
+                  triggerClassName="h-9 min-h-9 w-full sm:w-[185px]"
+                />
+                <CustomSelect
+                  value={vendorAgreementStatus}
+                  onChange={setVendorAgreementStatus}
+                  options={[
+                    { value: 'active-verified', label: 'Status: Active & Verified' },
+                    { value: 'renewal', label: 'Under Renewal Review' },
+                    { value: 'pending', label: 'Pending Signature' },
+                    { value: 'archived', label: 'Archived' },
+                    { value: 'all', label: 'Status: All' }
+                  ]}
+                  triggerClassName="h-9 min-h-9 w-full sm:w-[185px]"
+                />
+                <Button type="button" variant="secondary" icon={<Download size={14} />} onClick={exportCurrentView}>Export</Button>
+              </div>
+            </div>
+          </section>
 
-          <AdminPanel title="Vendor directory" description={vendorRows.length + ' vendors visible'}>
+          <AdminPanel title="Vendor & Contractor Directory" description={vendorRows.length + ' external vendors · sorted by rate high to low'}>
             <div className="overflow-x-auto custom-scrollbar">
-              {vendorRows.length === 0 ? (
+              {pagedVendorRows.length === 0 ? (
                 <div className="min-h-[180px] px-5 py-10 text-center">
                   <Users size={22} className="mx-auto text-muted" />
                   <p className="mt-3 text-sm font-medium text-fg">No vendors found</p>
-                  <p className="mt-1 text-xs text-muted">Adjust the search or filters.</p>
+                  <p className="mt-1 text-xs text-muted">Adjust search, tier, category, or agreement filters.</p>
                 </div>
               ) : (
-                <table className="ams-finance-table min-w-[1120px] table-fixed border-separate border-spacing-0 text-xs">
+                <table className="ams-finance-table min-w-[1260px] table-fixed border-separate border-spacing-0 text-xs">
                   <thead><tr>
-                    <th className="w-[22%]">Vendor</th>
-                    <th className="w-[16%]">Capability</th>
-                    <th className="w-[14%]">Type</th>
-                    <th className="w-[14%] text-right">Rate</th>
-                    <th className="w-[10%] text-right">Rating</th>
-                    <th className="w-[12%]">Status</th>
-                    <th className="w-[48px] text-right">Actions</th>
+                    <th className="w-[26%]">Vendor & Specialty</th>
+                    <th className="w-[13%]">Type</th>
+                    <th className="w-[16%] text-right">Rate / Retainer</th>
+                    <th className="w-[16%]">Current Projects</th>
+                    <th className="w-[14%]">NDA & Contract</th>
+                    <th className="w-[8%] text-center">SLA</th>
+                    <th className="w-[17%] text-right">Actions</th>
                   </tr></thead>
                   <tbody>
-                    {vendorRows.map((vendor) => (
-                      <tr key={vendor.id} data-ams-slug={vendor.slug}>
-                        <td>
-                          <button type="button" onClick={() => setVendorDetail(vendor)} className="text-left">
-                            <p className="font-medium text-fg hover:text-accent-text">{vendor.companyName || vendor.name}</p>
-                            <p className="mt-1 text-[10px] text-muted">{vendor.name} · {vendor.location}</p>
-                            <p className="mt-1 font-mono text-[9px] text-muted/70">slug: {vendor.slug}</p>
-                          </button>
-                        </td>
-                        <td>
-                          <p className="font-medium text-fg">{vendor.primaryCategory}</p>
-                          <p className="mt-1 max-w-[220px] truncate text-[10px] text-muted">{vendor.skills.slice(0, 3).join(' · ')}</p>
-                        </td>
-                        <td className="text-muted">{vendorTypeLabel[vendor.type]}</td>
-                        <td className="text-right font-semibold tabular-nums text-fg">{formatAmount(vendor.hourlyRate, vendor.currency)}/hr</td>
-                        <td className="text-right">
-                          <span className="inline-flex items-center justify-end gap-1 font-semibold tabular-nums text-warning">
-                            {vendor.rating.toFixed(1)} <Star size={13} className="fill-warning" />
-                          </span>
-                        </td>
-                        <td>
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <span className={'inline-flex rounded-badge border px-2 py-1 text-[10px] font-semibold ' + vendorStatusTone[vendor.status]}>{vendorStatusLabel[vendor.status]}</span>
-                            {(vendor.isVetted ?? true) && <span className="inline-flex rounded-badge border border-accent/20 bg-accent/10 px-2 py-1 text-[10px] font-semibold text-accent-text">Vetted</span>}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="relative flex justify-end gap-1">
-                            <button type="button" onClick={() => setVendorDetail(vendor)} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-bg hover:text-fg" title="View vendor" aria-label="View vendor"><MoreHorizontal size={14} /></button>
-                            {canManageVendors && <button type="button" onClick={() => openVendorForm(vendor)} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-bg hover:text-fg" title="Edit vendor" aria-label="Edit vendor"><Edit3 size={14} /></button>}
-                            {canManageVendors && <button type="button" onClick={() => setVendorDeleteTarget({ id: vendor.id, name: vendor.name })} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-danger/10 hover:text-danger" title="Delete vendor" aria-label="Delete vendor"><Trash2 size={14} /></button>}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                    {pagedVendorRows.map((vendor, index) => {
+                      const agreement = vendorAgreementState(vendor);
+                      const contract = vendorCurrentContract(vendor);
+                      const tier = vendorTierOf(vendor);
+                      const renewalAction = agreement === 'renewal' ? 'Renew' : agreement === 'review' ? 'Review' : 'Manage Contract';
+                      const rateValue = contract ? formatAmount(contract.rateAmount, contract.currency) : formatAmount(vendor.hourlyRate, vendor.currency);
+                      const rateSuffix = contract ? (contract.rateType === 'monthly_retainer' ? '/ mo' : contract.rateType === 'project' ? '/ project' : '/ hr') : '/ hr';
+                      return (
+                        <tr key={vendor.id} data-ams-slug={vendor.slug}>
+                          <td>
+                            <button type="button" className="flex items-center gap-3 text-left" onClick={() => setVendorDetail(vendor)}>
+                              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted">
+                                {tier === 'strategic' ? <Handshake size={18} /> : tier === 'specialized' ? <ShieldCheck size={18} /> : <Users size={18} />}
+                              </span>
+                              <span className="min-w-0">
+                                <span className="flex flex-wrap items-center gap-1.5">
+                                  <span className="font-medium text-fg hover:text-accent-text">{vendor.companyName || vendor.name}</span>
+                                  <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 font-mono text-[8px] font-semibold text-muted">{tier.toUpperCase()}</span>
+                                </span>
+                                <span className="mt-1 block text-[10px] text-muted">{vendor.primaryCategory}</span>
+                                <span className="mt-1 block font-mono text-[9px] text-muted/70">slug: {vendor.slug}</span>
+                              </span>
+                            </button>
+                          </td>
+                          <td>
+                            <span className="inline-flex rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] font-medium text-fg">{vendorTypeLabel[vendor.type]}</span>
+                          </td>
+                          <td className="text-right font-semibold tabular-nums whitespace-nowrap text-fg">{rateValue} <span className="text-[10px] font-normal text-muted">{rateSuffix}</span></td>
+                          <td>
+                            <div className="min-w-0">
+                              <p className="truncate font-medium text-fg">{contract?.status === 'active' ? contract.title : 'No active project'}</p>
+                              <p className="mt-1 text-[10px] text-muted">{vendor.completedProjectsCount || 0} completed assignments</p>
+                            </div>
+                          </td>
+                          <td>
+                            <span className={'inline-flex items-center gap-1.5 rounded-badge border px-2.5 py-0.5 text-[10px] font-semibold ' + (
+                              agreement === 'active-verified' ? 'border-success/20 bg-success/10 text-success' :
+                              agreement === 'renewal' ? 'border-warning/20 bg-warning/10 text-warning' :
+                              agreement === 'review' ? 'border-warning/20 bg-warning/10 text-warning' :
+                              agreement === 'archived' ? 'border-line bg-bg text-muted' :
+                              'border-info/20 bg-info/10 text-info'
+                            )}>
+                              <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                              {agreement === 'active-verified' ? 'Signed & Valid' : agreement === 'renewal' ? 'Renewal Due' : agreement === 'review' ? 'Under Review' : agreement === 'archived' ? 'Archived' : 'Pending Signature'}
+                            </span>
+                          </td>
+                          <td className="text-center">
+                            <span className="inline-flex items-center gap-1.5 rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] font-semibold tabular-nums text-muted" title="SLA is not tracked by the current vendor data model">—</span>
+                          </td>
+                          <td>
+                            <div className="flex items-center justify-end gap-1.5">
+                              {renewalAction !== 'Manage Contract' ? (
+                                <Button type="button" variant="secondary" className="h-8 border-warning/30 bg-warning/10 px-2.5 text-[10px] text-warning" onClick={() => agreement === 'renewal' ? setVendorDetail(vendor) : openVendorForm(vendor)}>
+                                  {renewalAction}
+                                </Button>
+                              ) : (
+                                <Button type="button" variant="secondary" className="h-8 px-2.5 text-[10px]" onClick={() => setVendorDetail(vendor)}>Manage Contract</Button>
+                              )}
+                              <Link to="/admin/invoicing?finance=vendor-payments" className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-bg hover:text-fg" title="View Invoices" aria-label="View Invoices">
+                                <ReceiptText size={14} />
+                              </Link>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               )}
+            </div>
+            <div className="flex flex-col gap-3 border-t border-line bg-panel px-4 py-3 text-xs sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-muted">
+                Showing <span className="font-semibold tabular-nums text-fg">{vendorRows.length ? (vendorPage - 1) * vendorPageSize + 1 : 0}</span> to <span className="font-semibold tabular-nums text-fg">{Math.min(vendorPage * vendorPageSize, vendorRows.length)}</span> of <span className="font-semibold tabular-nums text-fg">{vendorRows.length}</span> external vendors
+                <span className="mx-2 text-line">|</span>
+                Sorted by Rate (High to Low)
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button type="button" disabled={vendorPage <= 1} onClick={() => setVendorPage((value) => Math.max(1, value - 1))} className="inline-flex h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[11px] text-muted disabled:opacity-40"><ChevronLeft size={14} /> Previous</button>
+                {Array.from({ length: Math.min(vendorPageCount, 8) }, (_, index) => {
+                  const page = index + 1;
+                  return <button key={page} type="button" onClick={() => setVendorPage(page)} className={'h-8 w-8 rounded-control border px-0 text-[11px] font-semibold ' + (vendorPage === page ? 'border-accent bg-accent text-white' : 'border-line bg-bg text-muted')}>{page}</button>;
+                })}
+                <button type="button" disabled={vendorPage >= vendorPageCount} onClick={() => setVendorPage((value) => Math.min(vendorPageCount, value + 1))} className="inline-flex h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[11px] text-muted disabled:opacity-40">Next <ChevronRight size={14} /></button>
+              </div>
             </div>
           </AdminPanel>
         </div>
@@ -1185,6 +1527,105 @@ export const AdminTeams: React.FC = () => {
           </AdminPanel>
         </div>
       )}
+
+      <Modal
+        open={Boolean(memberDetail)}
+        onClose={() => setMemberDetail(null)}
+        title={memberDetail?.name || 'Team Member'}
+        description={memberDetail ? 'Team member profile · ' + memberDetail.slug : undefined}
+        size="lg"
+      >
+        {memberDetail && (
+          <div className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-control border border-line bg-bg p-3">
+                <p className="text-[10px] text-muted">Role</p>
+                <p className="mt-1 text-sm font-medium text-fg">{memberDetail.role || 'Not assigned'}</p>
+              </div>
+              <div className="rounded-control border border-line bg-bg p-3">
+                <p className="text-[10px] text-muted">Department</p>
+                <p className="mt-1 text-sm font-medium text-fg">{memberDetail.division || 'Not assigned'}</p>
+              </div>
+              <div className="rounded-control border border-line bg-bg p-3">
+                <p className="text-[10px] text-muted">Allocation</p>
+                <p className="mt-1 text-sm font-semibold text-fg">{memberAllocation(memberDetail).label} · {memberAllocation(memberDetail).percent}%</p>
+              </div>
+              <div className="rounded-control border border-line bg-bg p-3">
+                <p className="text-[10px] text-muted">Slug</p>
+                <p className="mt-1 break-all font-mono text-[10px] text-fg">{memberDetail.slug}</p>
+              </div>
+            </div>
+            <div className="rounded-control border border-line bg-bg p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-muted">Active Projects</p>
+              <div className="mt-2 space-y-2">
+                {memberProjects(memberDetail).length ? memberProjects(memberDetail).map((project) => (
+                  <div key={project.id} className="flex items-center justify-between gap-3 rounded-control border border-line bg-panel px-3 py-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-medium text-fg">{project.name}</p>
+                      <p className="mt-1 text-[10px] text-muted">{project.status || 'Active'}</p>
+                    </div>
+                    <span className="font-mono text-[9px] text-muted">{project.slug}</span>
+                  </div>
+                )) : <p className="text-xs text-muted">No active project assignments found.</p>}
+              </div>
+            </div>
+            <div className="rounded-control border border-line bg-bg p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-muted">Core Skills</p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {memberCoreSkills(memberDetail).map((skill) => <span key={skill} className="rounded-badge border border-line bg-panel px-2.5 py-1 text-[10px] text-fg">{skill}</span>)}
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 border-t border-line pt-4">
+              <Link to="/admin/projects" className="inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg">Open Projects</Link>
+              <Button type="button" variant="primary" onClick={() => { const member = memberDetail; setMemberDetail(null); setAllocationTarget(member); }}>Allocate</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        open={Boolean(allocationTarget)}
+        onClose={() => setAllocationTarget(null)}
+        title="Allocate Team Member"
+        description={allocationTarget ? 'Current allocation for ' + allocationTarget.name + '. Allocation controls are presented from existing project data.' : undefined}
+        size="lg"
+      >
+        {allocationTarget && (
+          <div className="space-y-4">
+            <div className="rounded-control border border-line bg-bg p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-fg">{allocationTarget.name}</p>
+                  <p className="mt-1 text-xs text-muted">{allocationTarget.role} · {allocationTarget.division}</p>
+                </div>
+                <span className="font-mono text-[9px] text-muted">{allocationTarget.slug}</span>
+              </div>
+              <div className="mt-3">
+                <p className="text-[10px] text-muted">Current workload</p>
+                <p className="mt-1 text-lg font-semibold tabular-nums text-fg">{memberAllocation(allocationTarget).percent}%</p>
+              </div>
+            </div>
+            <div className="rounded-control border border-line bg-bg p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-muted">Available active projects</p>
+              <div className="mt-2 space-y-2">
+                {projects.filter((project) => project.status !== 'completed').slice(0, 8).map((project) => (
+                  <div key={project.id} className="flex items-center justify-between gap-3 rounded-control border border-line bg-panel px-3 py-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-medium text-fg">{project.name}</p>
+                      <p className="mt-1 text-[10px] text-muted">{project.clientName || project.clientCompany || 'Active project'}</p>
+                    </div>
+                    <span className="font-mono text-[9px] text-muted">{project.slug}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 border-t border-line pt-4">
+              <Link to="/admin/projects" className="inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg">Open Project Workspace</Link>
+              <Button type="button" variant="secondary" onClick={() => setAllocationTarget(null)}>Close</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       <Modal
         open={vendorFormOpen}
