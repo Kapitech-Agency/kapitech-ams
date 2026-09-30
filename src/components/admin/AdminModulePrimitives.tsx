@@ -247,12 +247,7 @@ export const AdminMetricCard: React.FC<AdminMetric & { className?: string }> = (
     <div className="flex items-start justify-between gap-3">
       <div className="min-w-0">
         <span className="block whitespace-normal text-xs font-medium leading-4 text-muted">{label}</span>
-        {(slug || id) && (
-          <span className="mt-1 block font-mono text-[9px] leading-3 text-muted/60">
-            slug: {slug || 'metric-' + String(id).replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase()}
-          </span>
-        )}
-      </div>
+          </div>
       {icon && <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg', toneClassName)}>{icon}</span>}
     </div>
     <div className="mt-3 flex min-w-0 items-end justify-between gap-4">
@@ -301,7 +296,6 @@ export const AdminFilterBar: React.FC<AdminFilterBarProps> = ({
     'ams-filter-bar rounded-card border border-line bg-panel p-4',
     className
   )}>
-    {slug && <div className="mb-3 font-mono text-[9px] leading-3 text-muted/60">slug: {slug}</div>}
     <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
       <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
         {onSearchChange && (
@@ -361,7 +355,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         <div className="min-w-0">
           {title && <h2 className="text-sm font-semibold text-fg">{title}</h2>}
           {description && <p className="mt-1 text-xs leading-5 text-muted">{description}</p>}
-          {slug && <p className="mt-1 font-mono text-[9px] leading-3 text-muted/60">slug: {slug}</p>}
         </div>
         {actions && <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:shrink-0 sm:flex-wrap sm:items-center">{actions}</div>}
       </div>
