@@ -31,7 +31,7 @@ export const AdminTimeLogs: React.FC = () => {
   const canDeleteAll = hasAdminPermission('canManageProjects');
   const [logs, setLogs] = useState<TimeLog[]>([]);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(6);
+  const [pageSize, setPageSize] = useState(10);
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
