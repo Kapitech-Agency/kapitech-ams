@@ -720,6 +720,39 @@ export const AdminLayout: React.FC = () => {
                     );
                   })}
                 </nav>
+              ) : location.pathname === '/admin/settings' ? (
+                <nav aria-label="Settings sections" className="inline-flex h-full min-w-0 max-w-full items-center gap-6 overflow-x-auto ams-topnav-scroll">
+                  {[
+                    { key: 'overview', label: 'Overview & Backups' },
+                    { key: 'audit', label: 'Audit Logs' },
+                    { key: 'security', label: 'Security & MFA' },
+                    { key: 'integrations', label: 'Integrations' }
+                  ].map((tab) => {
+                    const activeTab = new URLSearchParams(location.search).get('tab') || 'overview';
+                    const active = activeTab === tab.key || (
+                      tab.key === 'security' &&
+                      ['profile', 'rbac'].includes(activeTab)
+                    ) || (
+                      tab.key === 'integrations' &&
+                      ['branding', 'api'].includes(activeTab)
+                    );
+                    return (
+                      <NavLink
+                        key={tab.key}
+                        to={'/admin/settings?tab=' + tab.key}
+                        end
+                        className={
+                          'relative inline-flex h-full shrink-0 items-center px-1 text-[12px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' +
+                          (active
+                            ? 'text-fg after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-accent'
+                            : 'text-muted hover:text-fg')
+                        }
+                      >
+                        {tab.label}
+                      </NavLink>
+                    );
+                  })}
+                </nav>
               ) : location.pathname === '/admin/documents' ? (
                 <nav aria-label="Documents sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
                   {[
