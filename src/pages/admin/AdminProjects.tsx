@@ -1426,6 +1426,7 @@ export const AdminProjects: React.FC = () => {
       </Modal>
 
       <AdminModuleHeader
+        className="mb-0"
         eyebrow={view === 'all' ? 'Workspace / Projects' : 'Projects'}
         title={(
           <span className="flex min-w-0 flex-wrap items-center gap-2.5">
