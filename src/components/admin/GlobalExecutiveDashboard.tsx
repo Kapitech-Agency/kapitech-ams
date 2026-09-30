@@ -19,6 +19,7 @@ import { Modal } from '../ui/Modal';
 import { DonutChart, TrendChart } from '../charts/DashboardCharts';
 import { ProfileIdentity } from './ProfileIdentity';
 import { TasksWorkspace } from './TasksWorkspace';
+import { api } from '../../lib/apiClient';
 
 type RangeKey = '30D' | 'Q2' | 'YTD' | '12M';
 type ProjectFilter = 'All' | 'Enterprise' | 'Retainer' | 'Fixed-fee';
@@ -454,6 +455,26 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const [projectDetails, setProjectDetails] = useState<DashboardProject | null>(null);
   const [dashboardProjectPage, setDashboardProjectPage] = useState(1);
   const [dashboardProjectPageSize, setDashboardProjectPageSize] = useState(6);
+  const [dashboardOverview, setDashboardOverview] = useState<{ metrics?: any; financials?: any; projects?: any[]; source: 'server' | 'ab' }>({ source: 'ab' });
+
+  useEffect(() => {
+    let active = true;
+    api.dashboard.getOverview()
+      .then((response) => {
+        if (!active || !response.success) return;
+        const projects = Array.isArray(response.data?.projects) ? response.data.projects : [];
+        setDashboardOverview({
+          metrics: response.data?.metrics,
+          financials: response.data?.financials,
+          projects,
+          source: projects.length > 0 || Boolean(response.data?.metrics) ? 'server' : 'ab'
+        });
+      })
+      .catch(() => {
+        if (active) setDashboardOverview({ source: 'ab' });
+      });
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     if (!projectActionId) return;
@@ -488,9 +509,40 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   }, [projectActionId]);
 
 
+  const dashboardProjects = useMemo<DashboardProject[]>(() => {
+    const serverProjects = Array.isArray(dashboardOverview.projects)
+      ? dashboardOverview.projects.map((project: any, index: number) => {
+          const rawType = String(project.type || project.projectType || project.billingType || 'Fixed-fee').toLowerCase();
+          const type: Exclude<ProjectFilter, 'All'> = rawType.includes('retainer')
+            ? 'Retainer'
+            : rawType.includes('enterprise')
+              ? 'Enterprise'
+              : 'Fixed-fee';
+          const health = String(project.health || project.status || '').toLowerCase();
+          const statusTone: DashboardProject['statusTone'] =
+            health.includes('delay') || health.includes('blocked') ? 'danger'
+              : health.includes('risk') ? 'warning'
+                : health.includes('review') ? 'info'
+                  : 'success';
+          return {
+            id: String(project.id || project.slug || 'server-project-' + index),
+            name: String(project.name || project.title || project.projectName || 'Untitled project'),
+            client: String(project.clientName || project.client || 'Unassigned client'),
+            type,
+            status: String(project.status || project.health || 'Active'),
+            statusTone,
+            progress: Math.max(0, Math.min(100, Number(project.progress ?? project.progressPercent ?? 0) || 0)),
+            lead: String(project.teamLead || project.ownerName || project.lead || 'Unassigned'),
+            budget: formatMoney(Number(project.budget ?? project.totalBudget ?? 0))
+          };
+        })
+      : [];
+    return serverProjects.length ? serverProjects : sampleProjects;
+  }, [dashboardOverview.projects]);
+
   const filteredProjects = useMemo(
-    () => projectFilter === 'All' ? sampleProjects : sampleProjects.filter((project) => project.type === projectFilter),
-    [projectFilter],
+    () => projectFilter === 'All' ? dashboardProjects : dashboardProjects.filter((project) => project.type === projectFilter),
+    [dashboardProjects, projectFilter],
   );
 
   const dashboardProjectPageCount = Math.max(1, Math.ceil(filteredProjects.length / dashboardProjectPageSize));
@@ -573,14 +625,14 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           <AdminMetricStrip
             className="grid-cols-1 sm:grid-cols-2 min-[760px]:grid-cols-3 min-[1100px]:grid-cols-4"
             metrics={[
-              { id: 'active-projects', label: 'Active projects', value: '12', change: '+2', changeToneClassName: 'text-success', context: 'this month', sparkline: [8, 9, 10, 12], icon: <FolderKanban size={15} />, toneClassName: 'text-success' },
-              { id: 'tasks-due', label: 'Tasks due this week', value: '18', change: '6', changeToneClassName: 'text-warning', context: 'high priority', sparkline: [12, 14, 16, 18], icon: <CalendarDays size={15} />, toneClassName: 'text-info' },
-              { id: 'overdue', label: 'Overdue tasks', value: '3', change: 'Requires attention', changeToneClassName: 'text-danger', sparkline: [6, 5, 4, 3], icon: <AlertTriangle size={15} />, toneClassName: 'text-danger' },
-              { id: 'revenue', label: 'Monthly revenue', value: '$84.5k', change: '+12.4%', changeToneClassName: 'text-success', context: 'vs May', sparkline: sampleRevenueByRange[range].map((point) => point.primary), icon: <CircleDollarSign size={15} />, toneClassName: 'text-success' },
-              { id: 'outstanding', label: 'Outstanding invoices', value: '$32.4k', change: '$8.7k', changeToneClassName: 'text-warning', context: 'overdue', sparkline: [22, 25, 28, 32.4], icon: <ReceiptText size={15} />, toneClassName: 'text-warning' },
-              { id: 'utilization', label: 'Team utilization', value: '78%', change: '+6%', changeToneClassName: 'text-success', context: 'vs last month', sparkline: [66, 70, 73, 78], icon: <Users size={15} />, toneClassName: 'text-warning' },
-              { id: 'active-clients', label: 'Active clients', value: '28', change: '+3', changeToneClassName: 'text-success', context: 'this month', sparkline: [22, 24, 25, 28], icon: <Users size={15} />, toneClassName: 'text-info' },
-              { id: 'avg-project-value', label: 'Avg. project value', value: '$29.8k', change: '+4.1%', changeToneClassName: 'text-success', context: 'current quarter', sparkline: [24, 25.5, 28, 29.8], icon: <FolderKanban size={15} />, toneClassName: 'text-fg' }
+              { id: 'active-projects', label: 'Active projects', value: String(Number(dashboardOverview.metrics?.activeProjects ?? 12)), context: dashboardOverview.source === 'server' ? 'live data' : 'A/B dataset', sparkline: [8, 9, 10, Number(dashboardOverview.metrics?.activeProjects ?? 12)], icon: <FolderKanban size={15} />, toneClassName: 'text-success', slug: 'dashboard-active-projects' },
+              { id: 'tasks-due', label: 'Tasks due this week', value: String(Number(dashboardOverview.metrics?.overdueTasks ?? 18)), context: dashboardOverview.source === 'server' ? 'current operations' : 'A/B dataset', sparkline: [12, 14, 16, Number(dashboardOverview.metrics?.overdueTasks ?? 18)], icon: <CalendarDays size={15} />, toneClassName: 'text-info', slug: 'dashboard-tasks-due' },
+              { id: 'overdue', label: 'Projects at risk', value: String(Number(dashboardOverview.metrics?.projectsAtRisk ?? 3)), change: 'Requires attention', changeToneClassName: 'text-danger', sparkline: [6, 5, 4, Number(dashboardOverview.metrics?.projectsAtRisk ?? 3)], icon: <AlertTriangle size={15} />, toneClassName: 'text-danger', slug: 'dashboard-projects-risk' },
+              { id: 'revenue', label: 'Monthly revenue', value: formatMoney(Number(dashboardOverview.financials?.revenueThisMonth ?? 84500)), context: dashboardOverview.source === 'server' ? 'current month' : 'A/B dataset', sparkline: sampleRevenueByRange[range].map((point) => point.primary), icon: <CircleDollarSign size={15} />, toneClassName: 'text-success', slug: 'dashboard-revenue' },
+              { id: 'outstanding', label: 'Outstanding invoices', value: formatMoney(Number(dashboardOverview.financials?.outstandingReceivables ?? 32400)), context: dashboardOverview.source === 'server' ? 'receivables' : 'A/B dataset', sparkline: [22, 25, 28, 32.4], icon: <ReceiptText size={15} />, toneClassName: 'text-warning', slug: 'dashboard-outstanding' },
+              { id: 'utilization', label: 'Team utilization', value: '78%', context: dashboardOverview.source === 'server' ? 'tracked operations' : 'A/B dataset', sparkline: [66, 70, 73, 78], icon: <Users size={15} />, toneClassName: 'text-warning', slug: 'dashboard-utilization' },
+              { id: 'active-clients', label: 'Open leads', value: String(Number(dashboardOverview.metrics?.openLeads ?? 28)), context: dashboardOverview.source === 'server' ? 'current pipeline' : 'A/B dataset', sparkline: [22, 24, 25, Number(dashboardOverview.metrics?.openLeads ?? 28)], icon: <Users size={15} />, toneClassName: 'text-info', slug: 'dashboard-open-leads' },
+              { id: 'avg-project-value', label: 'Avg. project value', value: dashboardOverview.source === 'server' ? formatMoney(Number(dashboardOverview.metrics?.totalBilled || 0) / Math.max(1, Number(dashboardOverview.metrics?.activeProjects || 1))) : '$29.8k', context: dashboardOverview.source === 'server' ? 'current project base' : 'A/B dataset', sparkline: [24, 25.5, 28, 29.8], icon: <FolderKanban size={15} />, toneClassName: 'text-fg', slug: 'dashboard-avg-project-value' }
             ]}
           />
         </div>
