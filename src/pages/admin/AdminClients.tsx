@@ -33,7 +33,7 @@ import { Button } from '../../components/ui/Button';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
-import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 
@@ -508,6 +508,19 @@ export const AdminClients: React.FC = () => {
             <Button type="button" variant="primary" onClick={openCreate} icon={<Plus size={14} aria-hidden="true" />}>New Client</Button>
           )}
       
+      <div className="min-[900px]:hidden min-w-0" data-ams-slug="clients-mobile-tabs">
+        <AdminSectionTabs
+          ariaLabel="Clients sections"
+          activeKey="all-clients"
+          items={[
+            { key: 'all-clients', label: 'All Clients', to: '/admin/clients' },
+            { key: 'retainers', label: 'Retainers', to: '/admin/clients/retainers' },
+            { key: 'sla-monitoring', label: 'SLA Monitoring', to: '/admin/clients/sla-monitoring' },
+            { key: 'lead-accounts', label: 'Lead Accounts', to: '/admin/clients/lead-accounts' },
+          ]}
+        />
+      </div>
+
       <section aria-label="Client metrics">
         <AdminMetricStrip
           className="lg:grid-cols-3"
