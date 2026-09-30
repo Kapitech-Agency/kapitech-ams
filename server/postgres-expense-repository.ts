@@ -6,7 +6,8 @@ const iso=(v:any)=>!v?'':v instanceof Date?v.toISOString():String(v);
 const dateValue=(v:any)=>!v?'':v instanceof Date?v.toISOString().slice(0,10):String(v).slice(0,10);
 function mapExpense(row:Row):Record<string,any>{
   const metadata=row.metadata&&typeof row.metadata==='object'&&!Array.isArray(row.metadata)?row.metadata:{};
-  return {...metadata,id:row.id,type:row.type,category:row.category,description:row.description,
+  const slug=String(metadata.slug || ((row.description || row.category || row.id) + '-' + dateValue(row.expense_date) + '-' + row.id).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''));
+  return {...metadata,slug,id:row.id,type:row.type,category:row.category,description:row.description,
     amount:Number(row.amount||0),currency:row.currency||'IDR',date:dateValue(row.expense_date),
     expenseDate:dateValue(row.expense_date),recurringInterval:row.recurring_interval??metadata.recurringInterval??'none',
     projectId:row.project_id??undefined,recordedByUserId:row.recorded_by_user_id??undefined,
@@ -56,7 +57,7 @@ export class PostgresExpenseRepository{
         }
       }
       if(projectId){const project=await client.query<Row>('SELECT id FROM projects WHERE id=$1 FOR SHARE',[projectId]);if(!project.rows[0])throw new ExpenseProjectNotFoundError('Project not found.');}
-      const metadata={...(input.metadata&&typeof input.metadata==='object'?input.metadata:{}),recurringInterval:input.recurringInterval??'none',requestFingerprint};
+      const metadata={...(input.metadata&&typeof input.metadata==='object'?input.metadata:{}),slug:String(input.slug || ((input.description || input.category || input.id) + '-' + expenseDate + '-' + input.id).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')),recurringInterval:input.recurringInterval??'none',requestFingerprint};
       const result=await client.query<Row>('INSERT INTO expenses (id,type,category,description,amount,currency,expense_date,recurring_interval,project_id,recorded_by_user_id,recorded_by,status,version,idempotency_key,metadata,created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,1,$13,$14,NOW()) RETURNING *',
         [String(input.id),String(input.type||'OpEx'),String(input.category||'General'),String(input.description||''),Math.round(amount*100)/100,currency,expenseDate,String(input.recurringInterval||'none'),projectId,userId,String(input.recordedBy||''),'posted',idempotencyKey,JSON.stringify(metadata)]);
       if (audit) await postgresAuditLogRepository.appendWithinTransaction(client, audit);
