@@ -18,7 +18,6 @@ import { CustomSelect } from '../ui/CustomSelect';
 import { Modal } from '../ui/Modal';
 import { DonutChart, TrendChart } from '../charts/DashboardCharts';
 import { ProfileIdentity } from './ProfileIdentity';
-import { TasksWorkspace } from './TasksWorkspace';
 
 type RangeKey = '30D' | 'Q2' | 'YTD' | '12M';
 type ProjectFilter = 'All' | 'Enterprise' | 'Retainer' | 'Fixed-fee';
@@ -477,7 +476,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const revenueData = sampleRevenueByRange[range];
 
   if (view === 'tasks') {
-    return <TasksWorkspace />;
+    return <Navigate to="/admin/tasks" replace />;
   }
 
   return (
@@ -517,7 +516,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             { key: 'overview', label: 'Overview', search: '' },
             { key: 'performance', label: 'Performance', search: '?view=performance' },
             { key: 'analytics', label: 'Analytics', search: '?view=analytics' },
-            { key: 'tasks', label: 'Tasks', search: '?view=tasks' },
+            { key: 'tasks', label: 'Tasks', search: '' },
           ].map((tab) => (
             <Link
               key={tab.key}
@@ -556,7 +555,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           <div className="grid grid-cols-2 gap-2">
             {[
               { label: 'New project', icon: <Plus size={14} />, href: '/admin/projects' },
-              { label: 'Review tasks', icon: <CheckCircle2 size={14} />, href: '/admin/dashboard?view=tasks' },
+              { label: 'Review tasks', icon: <CheckCircle2 size={14} />, href: '/admin/tasks' },
               { label: 'Log time', icon: <Clock3 size={14} />, href: '/admin/time-logs' },
               { label: 'View invoices', icon: <ReceiptText size={14} />, href: '/admin/invoicing' },
               { label: 'View clients', icon: <Users size={14} />, href: '/admin/clients' },
