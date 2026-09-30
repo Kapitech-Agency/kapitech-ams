@@ -113,7 +113,6 @@ export interface AdminModuleHeaderProps {
   eyebrow?: React.ReactNode;
   icon?: React.ReactNode;
   actions?: React.ReactNode;
-  footer?: React.ReactNode;
   className?: string;
 }
 
@@ -248,6 +247,7 @@ export interface AdminFilterBarProps {
   searchLabel?: string;
   children?: React.ReactNode;
   actions?: React.ReactNode;
+  footer?: React.ReactNode;
   className?: string;
 }
 
