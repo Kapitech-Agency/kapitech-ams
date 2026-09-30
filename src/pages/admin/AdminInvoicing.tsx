@@ -1191,6 +1191,7 @@ export const AdminInvoicing: React.FC = () => {
             if (!date) return;
             rows.push({
               id: String(payment.id || invoice.id + '-' + date),
+              slug: slugifyFinance((invoice.slug || invoice.invoiceNumber) + '-payment-' + (payment.id || date)),
               invoiceId: invoice.id,
               invoiceNumber: invoice.invoiceNumber,
               clientCompany: invoice.clientCompany || invoice.clientName,
