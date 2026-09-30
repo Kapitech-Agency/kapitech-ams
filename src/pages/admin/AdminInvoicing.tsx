@@ -1007,7 +1007,7 @@ export const AdminInvoicing: React.FC = () => {
 
   const retainerLedgerInvoices = useMemo(() => {
     if (retainerInvoices.length) return retainerInvoices;
-    return STITCH_FINANCE_RETAINER_INVOICES.filter((invoice) => invoice.currency === currency);
+    return STITCH_FINANCE_RETAINER_INVOICES.filter((invoice) => invoice.currency === currency).map(normalizeFinanceInvoice);
   }, [currency, retainerInvoices]);
 
   const usingDemoRetainerLedger = retainerInvoices.length === 0 && retainerLedgerInvoices.length > 0;
@@ -1481,8 +1481,9 @@ export const AdminInvoicing: React.FC = () => {
       return;
     }
 
-    const validItems = invoiceItems.map((item) => ({
+    const validItems = invoiceItems.map((item, index) => ({
       ...item,
+      slug: item.slug || slugifyFinance((invoiceNumber.trim() || clientCompany.trim() || 'invoice') + '-item-' + (index + 1)),
       description: item.description.trim(),
       quantity: Number(item.quantity),
       unitPrice: Number(item.unitPrice),
@@ -1517,6 +1518,7 @@ export const AdminInvoicing: React.FC = () => {
     setSavingInvoice(true);
     try {
       const payload = {
+        slug: editingInvoice?.slug || slugifyFinance(invoiceNumber.trim() || clientCompany.trim() || ('invoice-' + Date.now())),
         invoiceNumber: invoiceNumber.trim() || undefined,
         clientId: clientId || undefined,
         clientName: clientName.trim(),
@@ -1787,6 +1789,7 @@ export const AdminInvoicing: React.FC = () => {
       }
 
       const result = await api.finance.createExpense({
+        slug: slugifyFinance(expenseDescription.trim() + '-' + expenseDate),
         type: expenseType,
         category: expenseCategory,
         description: expenseDescription.trim(),
@@ -2163,6 +2166,7 @@ export const AdminInvoicing: React.FC = () => {
 
     setQuotationSaving(true);
     const payload = {
+      slug: editingQuotation?.slug || slugifyFinance(quotationClientCompany.trim() + '-' + quotationTitle.trim()),
       title: quotationTitle.trim(),
       clientName: quotationClientName.trim(),
       company: quotationClientCompany.trim(),
