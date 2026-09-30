@@ -217,7 +217,6 @@ const isRetainerInvoice = (invoice: AgencyInvoice) =>
     [invoice.paymentTerms, invoice.notes, ...invoice.items.map((item) => item.description)]
       .filter(Boolean)
       .join(' ')
-    </div>
   );
 
 const getInvoiceCollectedInRange = (invoice: AgencyInvoice, start: Date, end: Date) => {
