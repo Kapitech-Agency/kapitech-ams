@@ -243,12 +243,17 @@ export const AdminCrm: React.FC = () => {
         showToast(res.error || (language === 'id' ? 'Konversi deal gagal.' : 'Deal conversion failed.'));
         return;
       }
+      await loadLeads();
+      if (selectedLead?.id === lead.id) {
+        setSelectedLead(null);
+        setIsDrawerOpen(false);
+      }
       showToast(
         res.data?.replayed
-          ? (language === 'id' ? 'Konversi deal sudah pernah diproses.' : 'This deal conversion was already processed.')
+          ? (language === 'id' ? 'Konversi deal sudah pernah diproses; CRM disinkronkan kembali.' : 'This deal conversion was already processed; CRM has been synchronized.')
           : (language === 'id'
-            ? 'Deal berhasil dikonversi melalui workflow server.'
-            : 'Deal converted through the server workflow.')
+            ? 'Deal berhasil dikonversi melalui workflow server dan CRM sudah diperbarui.'
+            : 'Deal converted through the server workflow and CRM has been refreshed.')
       );
     } catch {
       showToast(language === 'id' ? 'Konversi deal gagal.' : 'Deal conversion failed.');
