@@ -310,19 +310,22 @@ export const AdminCmsProjects: React.FC = () => {
 
       {/* Portfolio filters */}
       <div className="overflow-hidden rounded-card border border-line bg-panel p-3.5 sm:p-4">
-        <div className="min-w-0 overflow-x-auto ams-topnav-scroll">
-          <div className="flex w-max min-w-full flex-nowrap items-center gap-2.5">
-            <div className="flex shrink-0 items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-control border border-line bg-bg text-muted">
-                <Sliders size={14} strokeWidth={1.8} />
-              </div>
-              <div className="hidden lg:block">
-                <p className="text-xs font-semibold text-fg">Portfolio filters</p>
-              </div>
-            </div>
-
-            <div className="relative w-[180px] shrink-0 sm:w-[200px] lg:w-[220px]">
-              <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={14} />
+        <div
+          className="ams-topnav-scroll w-full overflow-x-auto"
+          style={{ overflowX: 'auto' }}
+        >
+          <div
+            className="flex w-max items-center gap-2"
+            style={{ flexWrap: 'nowrap', minWidth: 'max-content', whiteSpace: 'nowrap' }}
+          >
+            <div
+              className="relative shrink-0"
+              style={{ width: '180px', minWidth: '180px' }}
+            >
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+                size={14}
+              />
               <input
                 type="text"
                 value={searchQuery}
@@ -333,7 +336,12 @@ export const AdminCmsProjects: React.FC = () => {
               />
             </div>
 
-            <div className="inline-flex h-9 shrink-0 flex-nowrap items-center gap-0.5 rounded-control border border-line bg-bg p-1" role="group" aria-label="Portfolio pillar filter">
+            <div
+              className="inline-flex h-9 shrink-0 items-center rounded-control border border-line bg-bg p-1"
+              style={{ flexWrap: 'nowrap' }}
+              role="group"
+              aria-label="Portfolio pillar filter"
+            >
               {[
                 { value: 'All', label: language === 'id' ? 'Semua' : 'All' },
                 { value: 'Visual Experience', label: 'Visual Experience' },
@@ -352,6 +360,7 @@ export const AdminCmsProjects: React.FC = () => {
                         ? "border border-accent/25 bg-accent/10 font-semibold text-fg"
                         : "border border-transparent text-muted hover:bg-panel hover:text-fg"
                     ].join(" ")}
+                    style={{ flexShrink: 0, whiteSpace: 'nowrap' }}
                   >
                     {option.label}
                   </button>
@@ -359,24 +368,27 @@ export const AdminCmsProjects: React.FC = () => {
               })}
             </div>
 
-            <div className="flex shrink-0 flex-nowrap items-center gap-2">
-              <span className="whitespace-nowrap text-[11px] text-muted">
-                {filteredProjects.length} of {projects.length}
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery('');
-                  setFilterPillar('All');
-                }}
-                disabled={!searchQuery && filterPillar === 'All'}
-                className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[11px] font-medium text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg disabled:cursor-not-allowed disabled:opacity-45"
-                aria-label="Reset portfolio filters"
-              >
-                <X size={13} />
-                Reset
-              </button>
-            </div>
+            <span
+              className="shrink-0 text-[11px] text-muted"
+              style={{ whiteSpace: 'nowrap' }}
+            >
+              {filteredProjects.length} of {projects.length}
+            </span>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery('');
+                setFilterPillar('All');
+              }}
+              disabled={!searchQuery && filterPillar === 'All'}
+              className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[11px] font-medium text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg disabled:cursor-not-allowed disabled:opacity-45"
+              style={{ flexShrink: 0, whiteSpace: 'nowrap' }}
+              aria-label="Reset portfolio filters"
+            >
+              <X size={13} />
+              Reset
+            </button>
           </div>
         </div>
       </div>
