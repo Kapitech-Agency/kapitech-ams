@@ -234,7 +234,9 @@ export const AdminDocuments: React.FC = () => {
       setDocuments(loaded);
     } catch (firstError: any) {
       // Retry transient server/auth races once before showing the module error state.
-      if (firstError?.status === 503 || firstError?.status === 502) {
+      // A 401 can occur briefly while the authenticated session cookie is being
+      // restored after navigation or a fresh login.
+      if (firstError?.status === 401 || firstError?.status === 502 || firstError?.status === 503) {
         await new Promise((resolve) => window.setTimeout(resolve, 800));
         try {
           const loaded = await requestDocuments();
