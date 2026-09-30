@@ -1009,8 +1009,8 @@ export const AdminTeams: React.FC = () => {
           <div className="h-80 animate-pulse rounded-card border border-line bg-panel" />
         </div>
       ) : currentView === 'team-directory' ? (
-        <div className="space-y-5" data-ams-feature-slug="team-directory" data-ams-slug="team-directory">
-          <p className="font-mono text-[9px] leading-3 text-muted/60">slug: team-directory</p>
+        <div className="space-y-4" data-ams-feature-slug="team-directory" data-ams-slug="team-directory">
+          <div className="flex justify-end -mb-1"><span className="inline-flex items-center rounded-badge border border-line bg-bg px-2 py-1 font-mono text-[9px] leading-3 text-muted/60">slug: team-directory</span></div>
           <AdminMetricStrip
             metrics={[
               {
@@ -1082,10 +1082,10 @@ export const AdminTeams: React.FC = () => {
               <div className="flex items-center gap-2">
                 <span className="text-[11px] text-muted">Display:</span>
                 <div className="inline-flex items-center gap-0.5 rounded-control border border-line bg-bg p-0.5">
-                  <button type="button" onClick={() => setTeamDisplay('table')} className={'inline-flex h-8 items-center gap-1.5 rounded-control px-2.5 text-[11px] font-medium ' + (teamDisplay === 'table' ? 'bg-panel text-fg' : 'text-muted hover:text-fg')} title="Table View">
+                  <button type="button" onClick={() => setTeamDisplay('table')} className={'inline-flex h-8 items-center gap-1.5 rounded-control px-2.5 text-[11px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (teamDisplay === 'table' ? 'bg-panel text-fg' : 'text-muted hover:text-fg')} title="Table View">
                     <Table size={14} /> Table
                   </button>
-                  <button type="button" onClick={() => setTeamDisplay('grid')} className={'inline-flex h-8 items-center gap-1.5 rounded-control px-2.5 text-[11px] font-medium ' + (teamDisplay === 'grid' ? 'bg-panel text-fg' : 'text-muted hover:text-fg')} title="Grid View">
+                  <button type="button" onClick={() => setTeamDisplay('grid')} className={'inline-flex h-8 items-center gap-1.5 rounded-control px-2.5 text-[11px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (teamDisplay === 'grid' ? 'bg-panel text-fg' : 'text-muted hover:text-fg')} title="Grid View">
                     <LayoutGrid size={14} /> Grid
                   </button>
                 </div>
@@ -1095,7 +1095,7 @@ export const AdminTeams: React.FC = () => {
           </section>
 
           {teamDisplay === 'table' ? (
-            <AdminPanel title="Team Directory" description={teamRows.length + ' members'}>
+            <AdminPanel title="Team Directory" description={teamRows.length + ' members'} className="overflow-hidden">
               <div className="overflow-x-auto custom-scrollbar">
                 {pagedTeamRows.length === 0 ? (
                   <div className="min-h-[180px] px-5 py-10 text-center">
@@ -1104,8 +1104,8 @@ export const AdminTeams: React.FC = () => {
                     <p className="mt-1 text-xs text-muted">Adjust your search, pod, or allocation filters.</p>
                   </div>
                 ) : (
-                  <table className="ams-finance-table min-w-[1240px] table-fixed border-separate border-spacing-0 text-xs">
-                    <thead><tr>
+                  <table className="ams-finance-table min-w-[1240px] table-fixed border-separate border-spacing-0 text-xs align-middle">
+                    <thead className="sticky top-0 z-10 bg-panel"><tr>
                       <th className="w-[25%]">Team Member</th>
                       <th className="w-[18%]">Pod / Focus</th>
                       <th className="w-[11%]">Active Projects</th>
@@ -1174,7 +1174,7 @@ export const AdminTeams: React.FC = () => {
                 const projectsForMember = memberProjects(member);
                 const skills = memberCoreSkills(member);
                 return (
-                  <article key={member.id} data-ams-slug={member.slug} className="rounded-card border border-line bg-panel p-4">
+                  <article key={member.id} data-ams-slug={member.slug} className="rounded-card border border-line bg-panel p-4 transition-colors hover:bg-panel-hover">
                     <div className="flex items-start justify-between gap-3">
                       <ProfileIdentity profile={{ id: member.id, name: member.name, username: member.username }} showRole={true} />
                       <span className="rounded-badge border border-line bg-bg px-2 py-0.5 font-mono text-[9px] text-muted">slug: {member.slug}</span>
@@ -1215,8 +1215,8 @@ export const AdminTeams: React.FC = () => {
           </div>
         </div>
       ) : currentView === 'vendor-directory' ? (
-        <div className="space-y-5" data-ams-feature-slug="vendor-directory" data-ams-slug="vendor-directory">
-          <p className="font-mono text-[9px] leading-3 text-muted/60">slug: vendor-directory</p>
+        <div className="space-y-4" data-ams-feature-slug="vendor-directory" data-ams-slug="vendor-directory">
+          <div className="flex justify-end -mb-1"><span className="inline-flex items-center rounded-badge border border-line bg-bg px-2 py-1 font-mono text-[9px] leading-3 text-muted/60">slug: vendor-directory</span></div>
           <AdminMetricStrip
             metrics={[
               {
@@ -1271,14 +1271,14 @@ export const AdminTeams: React.FC = () => {
                   <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
                   <input value={vendorSearch} onChange={(event) => setVendorSearch(event.target.value)} placeholder="Search by company or freelancer name..." aria-label="Search by company or freelancer name" className="h-9 w-full rounded-control border border-line bg-bg pl-9 pr-3 text-xs text-fg outline-none placeholder:text-muted focus:border-accent" />
                 </label>
-                <div className="hidden xl:flex items-center gap-1.5 rounded-control border border-line bg-bg p-0.5">
+                <div className="flex max-w-full items-center gap-1.5 overflow-x-auto rounded-control border border-line bg-bg p-0.5 custom-scrollbar">
                   {[
                     { value: 'all', label: 'All Tiers' },
                     { value: 'strategic', label: 'Strategic' },
                     { value: 'specialized', label: 'Specialized' },
                     { value: 'adhoc', label: 'Ad-hoc' }
                   ].map((option) => (
-                    <button key={option.value} type="button" onClick={() => setVendorTier(option.value)} className={'inline-flex h-8 items-center rounded-control px-2.5 text-[10px] font-medium ' + (vendorTier === option.value ? 'bg-panel text-fg border border-line' : 'text-muted hover:text-fg')}>
+                    <button key={option.value} type="button" onClick={() => setVendorTier(option.value)} className={'inline-flex h-8 shrink-0 items-center rounded-control px-2.5 text-[10px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (vendorTier === option.value ? 'bg-panel text-fg border border-line' : 'text-muted hover:text-fg')}>
                       {option.label}
                     </button>
                   ))}
@@ -1308,7 +1308,7 @@ export const AdminTeams: React.FC = () => {
             </div>
           </section>
 
-          <AdminPanel slug="vendor-directory-table" title="Vendor & Contractor Directory" description={vendorRows.length + ' external vendors · sorted by rate high to low'}>
+          <AdminPanel slug="vendor-directory-table" title="Vendor & Contractor Directory" description={vendorRows.length + ' external vendors · sorted by rate high to low'} className="overflow-hidden">
             <div className="overflow-x-auto custom-scrollbar">
               {pagedVendorRows.length === 0 ? (
                 <div className="min-h-[180px] px-5 py-10 text-center">
@@ -1317,8 +1317,8 @@ export const AdminTeams: React.FC = () => {
                   <p className="mt-1 text-xs text-muted">Adjust search, tier, category, or agreement filters.</p>
                 </div>
               ) : (
-                <table className="ams-finance-table min-w-[1260px] table-fixed border-separate border-spacing-0 text-xs">
-                  <thead><tr>
+                <table className="ams-finance-table min-w-[1260px] table-fixed border-separate border-spacing-0 text-xs align-middle">
+                  <thead className="sticky top-0 z-10 bg-panel"><tr>
                     <th className="w-[26%]">Vendor & Specialty</th>
                     <th className="w-[13%]">Type</th>
                     <th className="w-[16%] text-right">Rate / Retainer</th>
@@ -1416,8 +1416,8 @@ export const AdminTeams: React.FC = () => {
           </AdminPanel>
         </div>
       ) : currentView === 'capacity-allocation' ? (
-        <div className="space-y-5" data-ams-feature-slug="capacity-allocation" data-ams-slug="capacity-allocation">
-          <p className="font-mono text-[9px] leading-3 text-muted/60">slug: capacity-allocation</p>
+        <div className="space-y-4" data-ams-feature-slug="capacity-allocation" data-ams-slug="capacity-allocation">
+          <div className="flex justify-end -mb-1"><span className="inline-flex items-center rounded-badge border border-line bg-bg px-2 py-1 font-mono text-[9px] leading-3 text-muted/60">slug: capacity-allocation</span></div>
           <AdminMetricStrip
             metrics={[
               { id: 'utilization',
@@ -1434,12 +1434,12 @@ export const AdminTeams: React.FC = () => {
           <AdminPanel
             slug="capacity-allocation-table"
             title="Capacity & allocation"
-            description={currentWeekCapacity ? 'Actual tracked allocation across ' + weeklyCapacity.map((week) => formatDate(dateKey(week.start))).join(' · ') : 'Four-week tracked capacity view.'}
+            description={currentWeekCapacity ? 'Actual tracked allocation across ' + weeklyCapacity.map((week) = className="overflow-hidden"> formatDate(dateKey(week.start))).join(' · ') : 'Four-week tracked capacity view.'}
             actions={<span className="text-[10px] text-muted">No forecast values are fabricated; cells are based on recorded time.</span>}
           >
             <div className="overflow-x-auto custom-scrollbar">
-              <table className="ams-finance-table min-w-[1180px] table-fixed border-separate border-spacing-0 text-xs">
-                <thead><tr>
+              <table className="ams-finance-table min-w-[1180px] table-fixed border-separate border-spacing-0 text-xs align-middle">
+                <thead className="sticky top-0 z-10 bg-panel"><tr>
                   <th className="w-[24%]">Resource & role</th>
                   {weeklyCapacity.map((week) => <th key={week.label} className="w-[19%] text-center">{week.label}</th>)}
                 </tr></thead>
@@ -1472,8 +1472,8 @@ export const AdminTeams: React.FC = () => {
           </AdminPanel>
         </div>
       ) : currentView === 'skill-matrix' ? (
-        <div className="space-y-5" data-ams-feature-slug="skill-matrix" data-ams-slug="skill-matrix">
-          <p className="font-mono text-[9px] leading-3 text-muted/60">slug: skill-matrix</p>
+        <div className="space-y-4" data-ams-feature-slug="skill-matrix" data-ams-slug="skill-matrix">
+          <div className="flex justify-end -mb-1"><span className="inline-flex items-center rounded-badge border border-line bg-bg px-2 py-1 font-mono text-[9px] leading-3 text-muted/60">slug: skill-matrix</span></div>
           <AdminMetricStrip
             metrics={[
               { id: 'internal',
@@ -1487,10 +1487,10 @@ export const AdminTeams: React.FC = () => {
             ]}
           />
 
-          <AdminPanel slug="skill-matrix-internal-role-matrix" title="Internal role matrix" description="Role-aligned focus derived from the server-provided role and division. It is not a self-reported proficiency score.">
+          <AdminPanel slug="skill-matrix-internal-role-matrix" title="Internal role matrix" description="Role-aligned focus derived from the server-provided role and division. It is not a self-reported proficiency score." className="overflow-hidden">
             <div className="overflow-x-auto custom-scrollbar">
-              <table className="ams-finance-table min-w-[900px] table-fixed border-separate border-spacing-0 text-xs">
-                <thead><tr>
+              <table className="ams-finance-table min-w-[900px] table-fixed border-separate border-spacing-0 text-xs align-middle">
+                <thead className="sticky top-0 z-10 bg-panel"><tr>
                   <th className="w-[26%]">Member</th>
                   <th className="w-[23%]">Role</th>
                   <th className="w-[18%]">Division</th>
@@ -1515,10 +1515,10 @@ export const AdminTeams: React.FC = () => {
             </div>
           </AdminPanel>
 
-          <AdminPanel slug="skill-matrix-vendor-skill-coverage" title="Vendor skill coverage" description={skillRows.length + ' distinct skills reported by the vendor directory.'}>
+          <AdminPanel slug="skill-matrix-vendor-skill-coverage" title="Vendor skill coverage" description={skillRows.length + ' distinct skills reported by the vendor directory.'} className="overflow-hidden">
             <div className="overflow-x-auto custom-scrollbar">
-              <table className="ams-finance-table min-w-[800px] table-fixed border-separate border-spacing-0 text-xs">
-                <thead><tr>
+              <table className="ams-finance-table min-w-[800px] table-fixed border-separate border-spacing-0 text-xs align-middle">
+                <thead className="sticky top-0 z-10 bg-panel"><tr>
                   <th className="w-[44%]">Skill</th>
                   <th className="w-[18%] text-right">Vendors</th>
                   <th className="w-[18%] text-right">Vetted</th>
@@ -1542,8 +1542,8 @@ export const AdminTeams: React.FC = () => {
           </AdminPanel>
         </div>
       ) : (
-        <div className="space-y-5" data-ams-feature-slug="time-logs" data-ams-slug="time-logs">
-          <p className="font-mono text-[9px] leading-3 text-muted/60">slug: time-logs</p>
+        <div className="space-y-4" data-ams-feature-slug="time-logs" data-ams-slug="time-logs">
+          <div className="flex justify-end -mb-1"><span className="inline-flex items-center rounded-badge border border-line bg-bg px-2 py-1 font-mono text-[9px] leading-3 text-muted/60">slug: time-logs</span></div>
           <AdminMetricStrip
             metrics={[
               { id: 'tracked',
@@ -1575,7 +1575,7 @@ export const AdminTeams: React.FC = () => {
           </div>
 
           {timeFormOpen && canManageTimeLogs && (
-            <AdminPanel title="New time entry" description="Record actual delivery time against a project and task.">
+            <AdminPanel title="New time entry" description="Record actual delivery time against a project and task." className="overflow-hidden">
               <form onSubmit={saveTimeLog} className="space-y-4 p-4">
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                   <label className="space-y-1.5">
@@ -1612,7 +1612,7 @@ export const AdminTeams: React.FC = () => {
             </AdminPanel>
           )}
 
-          <AdminPanel slug="time-logs-ledger" title="Time log ledger" description={filteredLogs.length + ' entries visible'}>
+          <AdminPanel slug="time-logs-ledger" title="Time log ledger" description={filteredLogs.length + ' entries visible'} className="overflow-hidden">
             <div className="overflow-x-auto custom-scrollbar">
               {filteredLogs.length === 0 ? (
                 <div className="min-h-[180px] px-5 py-10 text-center">
@@ -1621,8 +1621,8 @@ export const AdminTeams: React.FC = () => {
                   <p className="mt-1 text-xs text-muted">Adjust the filters or add a time entry.</p>
                 </div>
               ) : (
-                <table className="ams-finance-table min-w-[1040px] table-fixed border-separate border-spacing-0 text-xs">
-                  <thead><tr>
+                <table className="ams-finance-table min-w-[1040px] table-fixed border-separate border-spacing-0 text-xs align-middle">
+                  <thead className="sticky top-0 z-10 bg-panel"><tr>
                     <th className="w-[12%]">Date</th>
                     <th className="w-[25%]">Project & task</th>
                     <th className="w-[18%]">User</th>
@@ -1671,7 +1671,7 @@ export const AdminTeams: React.FC = () => {
         size="lg"
       >
         {memberDetail && (
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-control border border-line bg-bg p-3">
                 <p className="text-[10px] text-muted">Role</p>
@@ -1726,7 +1726,7 @@ export const AdminTeams: React.FC = () => {
         size="lg"
       >
         {allocationTarget && (
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div className="rounded-control border border-line bg-bg p-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
@@ -1813,8 +1813,8 @@ export const AdminTeams: React.FC = () => {
             </div>
             {vendorDetail.contracts.length > 0 && (
               <div className="overflow-x-auto">
-                <table className="ams-finance-table min-w-[640px] border-separate border-spacing-0 text-xs">
-                  <thead><tr><th>Contract</th><th>Period</th><th>Rate</th><th>Status</th></tr></thead>
+                <table className="ams-finance-table min-w-[640px] border-separate border-spacing-0 text-xs align-middle">
+                  <thead className="sticky top-0 z-10 bg-panel"><tr><th>Contract</th><th>Period</th><th>Rate</th><th>Status</th></tr></thead>
                   <tbody>{vendorDetail.contracts.map((contract) => <tr key={contract.id}><td className="font-medium text-fg">{contract.title}</td><td className="tabular-nums text-muted">{formatDate(contract.startDate)}{contract.endDate ? ' · ' + formatDate(contract.endDate) : ''}</td><td className="tabular-nums text-fg">{formatAmount(contract.rateAmount, contract.currency)}</td><td><span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{contract.status}</span></td></tr>)}</tbody>
                 </table>
               </div>
