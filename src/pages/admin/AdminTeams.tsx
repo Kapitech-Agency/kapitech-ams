@@ -356,14 +356,15 @@ export const AdminTeams: React.FC = () => {
     else setLoading(true);
     setNotice(null);
 
-    const [memberRes, vendorRes, projectRes, timeRes] = await Promise.all([
-      api.auth.getTaskAssignees(),
-      api.vendors.getAll(),
-      api.projects.getAll(),
-      api.timeLogs.getAll()
-    ]);
+    try {
+      const [memberRes, vendorRes, projectRes, timeRes] = await Promise.all([
+        api.auth.getTaskAssignees(),
+        api.vendors.getAll(),
+        api.projects.getAll(),
+        api.timeLogs.getAll()
+      ]);
 
-    let nextMembers: TeamMember[] = [];
+      let nextMembers: TeamMember[] = [];
     let nextVendors: VendorRecord[] = [];
     let nextProjects: ProjectRecord[] = [];
     let nextLogs: TimeLog[] = [];
@@ -427,12 +428,19 @@ export const AdminTeams: React.FC = () => {
       setNotice({ tone: 'danger', message: memberRes.error || 'Team directory could not be loaded.' });
     }
 
-    setMembers(nextMembers);
-    setVendors(nextVendors);
-    setProjects(nextProjects);
-    setLogs(nextLogs);
-    setLoading(false);
-    setRefreshing(false);
+      setMembers(nextMembers);
+      setVendors(nextVendors);
+      setProjects(nextProjects);
+      setLogs(nextLogs);
+    } catch (error) {
+      setNotice({
+        tone: 'danger',
+        message: error instanceof Error ? error.message : 'Team operations data could not be loaded.'
+      });
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   };
 
   useEffect(() => {
@@ -816,35 +824,45 @@ export const AdminTeams: React.FC = () => {
       updatedAt: new Date().toISOString()
     };
 
-    const response = editingVendor
-      ? await api.vendors.update(payload.id, payload)
-      : await api.vendors.create(payload);
+    try {
+      const response = editingVendor
+        ? await api.vendors.update(payload.id, payload)
+        : await api.vendors.create(payload);
 
-    if (response.success && response.data?.vendor) {
-      const saved = response.data.vendor as AgencyVendor;
-      const savedWithSlug: VendorRecord = { ...saved, slug: vendorSlug(saved) };
-      setVendors((current) => editingVendor
-        ? current.map((item) => item.id === savedWithSlug.id ? savedWithSlug : item)
-        : [savedWithSlug, ...current]);
-      setVendorFormOpen(false);
-      setNotice({ tone: 'success', message: editingVendor ? 'Vendor profile updated.' : 'Vendor profile created.' });
-    } else {
-      setNotice({ tone: 'danger', message: response.error || 'Vendor could not be saved.' });
+      if (response.success && response.data?.vendor) {
+        const saved = response.data.vendor as AgencyVendor;
+        const savedWithSlug: VendorRecord = { ...saved, slug: vendorSlug(saved) };
+        setVendors((current) => editingVendor
+          ? current.map((item) => item.id === savedWithSlug.id ? savedWithSlug : item)
+          : [savedWithSlug, ...current]);
+        setVendorFormOpen(false);
+        setNotice({ tone: 'success', message: editingVendor ? 'Vendor profile updated.' : 'Vendor profile created.' });
+      } else {
+        setNotice({ tone: 'danger', message: response.error || 'Vendor could not be saved.' });
+      }
+    } catch (error) {
+      setNotice({ tone: 'danger', message: error instanceof Error ? error.message : 'Vendor could not be saved.' });
+    } finally {
+      setSavingVendor(false);
     }
-    setSavingVendor(false);
   };
 
   const deleteVendor = async () => {
     if (!vendorDeleteTarget || !canManageVendors) return;
-    const response = await api.vendors.delete(vendorDeleteTarget.id);
-    if (response.success) {
-      setVendors((current) => current.filter((vendor) => vendor.id !== vendorDeleteTarget.id));
-      setVendorDetail((current) => current?.id === vendorDeleteTarget.id ? null : current);
-      setNotice({ tone: 'success', message: 'Vendor removed.' });
-    } else {
-      setNotice({ tone: 'danger', message: response.error || 'Vendor could not be removed.' });
+    try {
+      const response = await api.vendors.delete(vendorDeleteTarget.id);
+      if (response.success) {
+        setVendors((current) => current.filter((vendor) => vendor.id !== vendorDeleteTarget.id));
+        setVendorDetail((current) => current?.id === vendorDeleteTarget.id ? null : current);
+        setNotice({ tone: 'success', message: 'Vendor removed.' });
+      } else {
+        setNotice({ tone: 'danger', message: response.error || 'Vendor could not be removed.' });
+      }
+    } catch (error) {
+      setNotice({ tone: 'danger', message: error instanceof Error ? error.message : 'Vendor could not be removed.' });
+    } finally {
+      setVendorDeleteTarget(null);
     }
-    setVendorDeleteTarget(null);
   };
 
   const saveTimeLog = async (event: React.FormEvent) => {
@@ -852,26 +870,32 @@ export const AdminTeams: React.FC = () => {
     if (!canManageTimeLogs || savingTime) return;
     setSavingTime(true);
     const project = projects.find((item) => item.id === timeProjectId);
-    const response = await api.timeLogs.create({
-      projectId: timeProjectId,
-      projectName: project?.name || 'General',
-      taskTitle: timeTask.trim(),
-      durationMinutes: Number(timeMinutes),
-      billable: timeIsBillable,
-      date: timeDate,
-      notes: timeNotes.trim()
-    });
-    if (response.success && response.data?.timeLog) {
-      const saved = response.data!.timeLog as Omit<TimeLog, 'slug'>;
-      setLogs((current) => [{ ...saved, slug: timeLogSlug(saved) }, ...current]);
-      setTimeFormOpen(false);
-      setTimeTask('');
-      setTimeNotes('');
-      setNotice({ tone: 'success', message: 'Time entry saved.' });
-    } else {
-      setNotice({ tone: 'danger', message: response.error || 'Time entry could not be saved.' });
+    try {
+      const response = await api.timeLogs.create({
+        projectId: timeProjectId,
+        projectName: project?.name || 'General',
+        taskTitle: timeTask.trim(),
+        durationMinutes: Number(timeMinutes),
+        billable: timeIsBillable,
+        date: timeDate,
+        notes: timeNotes.trim()
+      });
+      if (response.success && response.data?.timeLog) {
+        const saved = response.data!.timeLog as Omit<TimeLog, 'slug'>;
+        setLogs((current) => [{ ...saved, slug: timeLogSlug(saved) }, ...current]);
+        setTimeFormOpen(false);
+        setTimeTask('');
+        setTimeNotes('');
+        setTimePage(1);
+        setNotice({ tone: 'success', message: 'Time entry saved.' });
+      } else {
+        setNotice({ tone: 'danger', message: response.error || 'Time entry could not be saved.' });
+      }
+    } catch (error) {
+      setNotice({ tone: 'danger', message: error instanceof Error ? error.message : 'Time entry could not be saved.' });
+    } finally {
+      setSavingTime(false);
     }
-    setSavingTime(false);
   };
 
   const deleteTimeLog = async () => {
@@ -891,14 +915,19 @@ export const AdminTeams: React.FC = () => {
       return;
     }
 
-    const response = await api.timeLogs.delete(timeDeleteTarget.id);
-    if (response.success) {
-      setLogs((current) => current.filter((log) => log.id !== timeDeleteTarget.id));
-      setNotice({ tone: 'success', message: 'Time entry removed.' });
-    } else {
-      setNotice({ tone: 'danger', message: response.error || 'Time entry could not be removed.' });
+    try {
+      const response = await api.timeLogs.delete(timeDeleteTarget.id);
+      if (response.success) {
+        setLogs((current) => current.filter((log) => log.id !== timeDeleteTarget.id));
+        setNotice({ tone: 'success', message: 'Time entry removed.' });
+      } else {
+        setNotice({ tone: 'danger', message: response.error || 'Time entry could not be removed.' });
+      }
+    } catch (error) {
+      setNotice({ tone: 'danger', message: error instanceof Error ? error.message : 'Time entry could not be removed.' });
+    } finally {
+      setTimeDeleteTarget(null);
     }
-    setTimeDeleteTarget(null);
   };
 
   const exportCurrentView = () => {
