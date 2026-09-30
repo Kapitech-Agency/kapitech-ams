@@ -776,10 +776,7 @@ export const AdminCrm: React.FC = () => {
                           </article>
                           </React.Fragment>
                         );
-                      })
-                      {draggedLeadId && canManageCrm && dragOverStage === stageDef.key && !dragOverLeadId && (
-                        <div className="h-2 rounded-badge border border-dashed border-accent/50 bg-accent/10" aria-hidden="true" />
-                      )}
+                      })}
                     )}
                   </div>
                 </div>
