@@ -15,6 +15,7 @@ import {
   ClipboardCheck,
   UsersRound,
   LockKeyhole,
+  LayoutGrid,
 } from 'lucide-react';
 import { getAdminSession, logoutAdmin } from '../../lib/adminAuth';
 import { useLanguage } from '../../lib/LanguageContext';
