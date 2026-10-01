@@ -612,7 +612,7 @@ export const AdminSettings: React.FC = () => {
 
   return (
     <AdminPageShell featureSlug="settings-module">
-      <AdminModuleHeader
+      <AdminModuleHeader slug="settings-header"
         title="System & Security"
         description="Automated backup verification, identity access governance, and immutable audit telemetry."
         actions={
@@ -653,7 +653,7 @@ export const AdminSettings: React.FC = () => {
       )}
 
       {activeTab === 'overview' && (
-        <section aria-label="System Status Summary" className="space-y-6">
+        <section data-ams-feature-slug="settings-overview" data-ams-slug="settings-overview" aria-label="System Status Summary" className="space-y-6">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             <SummaryCard
               label="Backup & Recovery"
@@ -678,7 +678,7 @@ export const AdminSettings: React.FC = () => {
             />
           </div>
 
-          <section className="overflow-hidden rounded-card border border-line bg-panel">
+          <section data-ams-feature-slug="settings-backup-history" data-ams-slug="settings-backup-history" className="overflow-hidden rounded-card border border-line bg-panel">
             <div className="flex flex-col gap-3 border-b border-line px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-2">
                 <Clock3 size={17} className="text-accent-text" />
@@ -1001,7 +1001,7 @@ export const AdminSettings: React.FC = () => {
               )}
             </div>
 
-            <form onSubmit={handleUpdateSecurity} className="mt-4 space-y-4">
+            <form onSubmit={handleUpdateSecurity} data-ams-feature-slug="settings-password-form" data-ams-slug="settings-password-form" className="mt-4 space-y-4">
               <div className="grid gap-3 sm:grid-cols-2">
                 <label>
                   <span className="mb-1 block text-[10px] font-medium text-muted">New password</span>
@@ -1237,7 +1237,7 @@ export const AdminSettings: React.FC = () => {
                 </div>
               </div>
 
-              <form onSubmit={handleSaveMeta} className="mt-4 space-y-3">
+              <form onSubmit={handleSaveMeta} data-ams-feature-slug="settings-meta-form" data-ams-slug="settings-meta-form" className="mt-4 space-y-3">
                 <label>
                   <span className="mb-1 block text-[10px] font-medium text-muted">Site title</span>
                   <input
@@ -1350,7 +1350,7 @@ export const AdminSettings: React.FC = () => {
           </>
         }
       >
-        <form id="add-admin-account-form" onSubmit={submitNewAccount} className="space-y-5">
+        <form id="add-admin-account-form" data-ams-feature-slug="settings-add-account-form" data-ams-slug="settings-add-account-form" onSubmit={submitNewAccount} className="space-y-5">
           <div>
             <label className="mb-2 block text-[10px] font-semibold text-muted">Select stakeholder role</label>
             <div className="grid gap-2 sm:grid-cols-2">
