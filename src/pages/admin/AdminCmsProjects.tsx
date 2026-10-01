@@ -431,6 +431,7 @@ export const AdminCmsProjects: React.FC = () => {
           )}
         </div>
       ) : (
+        <>
         <div ref={galleryScrollRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {pagedProjects.map((project) => (
           <div
@@ -541,6 +542,7 @@ export const AdminCmsProjects: React.FC = () => {
 
         </div>
         <AdminTablePagination total={filteredProjects.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="case studies" slug="cms-projects-pagination" />
+        </>
       )}
       {/* MODAL: ADD / EDIT PROJECT WITH LIVE PREVIEW & DRAG & DROP */}
       </div>
