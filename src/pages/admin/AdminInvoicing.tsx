@@ -27,7 +27,7 @@ import {
   WalletCards,
   X
 } from 'lucide-react';
-import { AgencyExpense, AgencyInvoice, InvoiceLineItem, InvoiceStatus, INITIAL_DEFAULT_EXPENSES, INITIAL_DEFAULT_INVOICES, computeInvoiceTotals, computeFinancialMetrics, getMonthlyCashFlowSeries, slugifyFinance, normalizeFinanceInvoice, normalizeFinanceExpense, getEffectiveInvoiceStatus } from '../../lib/financeStore';
+import { AgencyExpense, AgencyInvoice, InvoiceLineItem, InvoiceStatus, INITIAL_DEFAULT_EXPENSES, INITIAL_DEFAULT_INVOICES, computeInvoiceTotals, computeFinancialMetrics, getMonthlyCashFlowSeries, slugifyFinance, normalizeFinanceInvoice, normalizeFinanceExpense } from '../../lib/financeStore';
 import { AgencyVendor, getAgencyVendors } from '../../lib/vendorStore';
 import { CurrencyCode, CURRENCY_EVENT, getActiveCurrency, setActiveCurrency, formatNativeAmount } from '../../lib/currency';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -1115,7 +1115,7 @@ export const AdminInvoicing: React.FC = () => {
 
   const ytdCollected = useMemo(
     () => currencyInvoices
-      .filter((invoice) => invoice.status !== 'cancelled')
+      .filter((invoice) => !['draft', 'cancelled'].includes(invoice.status))
       .reduce((sum, invoice) => sum + getInvoiceCollectedInRange(invoice, yearStart, yearEnd), 0),
     [currencyInvoices, currentYear]
   );
@@ -1140,8 +1140,9 @@ export const AdminInvoicing: React.FC = () => {
 
   const retainerLedgerInvoices = useMemo(() => {
     if (retainerInvoices.length) return retainerInvoices;
+    if (!slugDataMode) return [];
     return STITCH_FINANCE_RETAINER_INVOICES.filter((invoice) => invoice.currency === currency).map(normalizeFinanceInvoice);
-  }, [currency, retainerInvoices]);
+  }, [currency, retainerInvoices, slugDataMode]);
 
   const usingDemoRetainerLedger = retainerInvoices.length === 0 && retainerLedgerInvoices.length > 0;
   const retainerPageCount = Math.max(1, Math.ceil(retainerLedgerInvoices.length / retainerPageSize));
