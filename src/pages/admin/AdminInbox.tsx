@@ -811,7 +811,8 @@ export const AdminInbox: React.FC = () => {
                       { value: 'shortlisted', label: 'Status: Shortlisted' },
                       { value: 'interview', label: 'Status: Interview' },
                       { value: 'hired', label: 'Status: Hired' },
-                      { value: 'rejected', label: 'Status: Rejected' }
+                      { value: 'rejected', label: 'Status: Rejected' },
+                      { value: 'withdrawn', label: 'Status: Withdrawn' }
                     ]
                   : [
                       { value: 'all', label: language === 'id' ? 'Semua Status' : 'All Status' },
