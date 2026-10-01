@@ -38,6 +38,7 @@ import {
   fetchServerAuditLogs,
   getAdminSession,
   getStoredAdminCredentials,
+  isMasterAdministrator,
   updateAdminCredentials
 } from '../../lib/adminAuth';
 import { SiteMetaSettings } from '../../lib/cmsStore';
@@ -160,18 +161,17 @@ export const AdminSettings: React.FC = () => {
     mfaEnabled: false
   };
 
+  const isSuperAdmin = isMasterAdministrator(session?.user);
   const canAccessServer =
-    session?.user?.stakeholderType === 'Master' ||
+    isSuperAdmin ||
     Boolean(session?.user?.permissions?.canAccessServerAndApi);
   const canManageAdminAccounts =
-    session?.user?.stakeholderType === 'Master' ||
+    isSuperAdmin ||
     Boolean(session?.user?.permissions?.canManageAdminAccounts);
   const canViewAuditLogs =
-    session?.user?.stakeholderType === 'Master' ||
+    isSuperAdmin ||
     Boolean(session?.user?.permissions?.canViewSecurityAuditLogs);
-  const isCurrentMaster =
-    session?.user?.stakeholderType === 'Master' ||
-    session?.user?.username === 'admin';
+  const isCurrentMaster = isSuperAdmin;
 
   const normalizeTab = (value: string | null): SettingsTab => {
     if (value === 'audit') return 'audit';
