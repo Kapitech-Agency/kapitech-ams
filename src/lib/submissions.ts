@@ -9,7 +9,7 @@ export interface ContactSubmission {
   services?: string[];
   budget?: string;
   message: string;
-  status: 'new' | 'in-review' | 'contacted' | 'closed';
+  status: 'new' | 'in-review' | 'contacted' | 'closed' | 'screening' | 'shortlisted' | 'interview' | 'hired' | 'rejected' | 'withdrawn';
   source?: string;
   type?: 'inquiry' | 'career' | 'vendor' | 'newsletter';
   positionTitle?: string;
@@ -18,6 +18,10 @@ export interface ContactSubmission {
   rateCard?: string;
   experienceYears?: string;
   tools?: string;
+  resumeUrl?: string;
+  linkedinUrl?: string;
+  availability?: string;
+  location?: string;
   createdAt: string;
   userAgent?: string;
   priority?: 'urgent' | 'high' | 'normal' | 'low';
@@ -78,8 +82,120 @@ export const DEFAULT_INBOX_SUBMISSIONS: ContactSubmission[] = [
     type: 'inquiry',
     starred: false,
     createdAt: '2026-09-16T14:45:00.000Z'
-  }
-];
+  },
+  {
+    id: 'job_inb_001',
+    fullName: 'Nadia Prameswari',
+    email: 'nadia.prameswari@example.com',
+    phone: '+62 812-4455-7788',
+    company: '',
+    message: 'Frontend engineer with agency experience, focused on React, TypeScript, performance, and design system implementation.',
+    status: 'new',
+    priority: 'high',
+    source: 'Website Careers',
+    type: 'career',
+    positionTitle: 'Frontend Engineer',
+    specialty: 'React / TypeScript',
+    experienceYears: '4',
+    tools: 'React, TypeScript, Vite, Tailwind CSS, GitHub',
+    resumeUrl: 'https://example.com/resume/nadia-prameswari.pdf',
+    linkedinUrl: 'https://www.linkedin.com/in/nadia-prameswari',
+    portfolioUrl: 'https://nadia.dev',
+    availability: '1 month notice',
+    location: 'Jakarta',
+    starred: true,
+    createdAt: '2026-09-19T03:15:00.000Z'
+  },
+  {
+    id: 'job_inb_002',
+    fullName: 'Fajar Mahendra',
+    email: 'fajar.mahendra@example.com',
+    phone: '+62 813-2211-3344',
+    company: '',
+    message: 'Product designer with strong B2B SaaS and agency portfolio. Comfortable leading discovery, flows, and UI systems.',
+    status: 'screening',
+    priority: 'normal',
+    source: 'Website Careers',
+    type: 'career',
+    positionTitle: 'UI/UX Designer',
+    specialty: 'Product Design / Design Systems',
+    experienceYears: '5',
+    tools: 'Figma, FigJam, Adobe Illustrator, Notion',
+    resumeUrl: 'https://example.com/resume/fajar-mahendra.pdf',
+    linkedinUrl: 'https://www.linkedin.com/in/fajar-mahendra',
+    portfolioUrl: 'https://fajarmahendra.design',
+    availability: 'Immediate',
+    location: 'Bandung',
+    starred: false,
+    createdAt: '2026-09-18T08:10:00.000Z'
+  },
+  {
+    id: 'job_inb_003',
+    fullName: 'Kevin Santoso',
+    email: 'kevin.santoso@example.com',
+    phone: '+62 811-6677-8899',
+    company: '',
+    message: 'Interested in project and account coordination roles. Experienced coordinating designers, developers, and client communication.',
+    status: 'shortlisted',
+    priority: 'high',
+    source: 'Website Careers',
+    type: 'career',
+    positionTitle: 'Project Manager',
+    specialty: 'Agency Operations / Client Delivery',
+    experienceYears: '6',
+    tools: 'Jira, Notion, Slack, Google Workspace',
+    resumeUrl: 'https://example.com/resume/kevin-santoso.pdf',
+    linkedinUrl: 'https://www.linkedin.com/in/kevin-santoso',
+    availability: '2 weeks',
+    location: 'Jakarta',
+    starred: true,
+    createdAt: '2026-09-17T06:40:00.000Z'
+  },
+  {
+    id: 'job_inb_004',
+    fullName: 'Alya Kurnia',
+    email: 'alya.kurnia@example.com',
+    phone: '+62 812-9900-1122',
+    company: '',
+    message: 'Motion designer with 2D animation and social content experience. Strong visual storytelling and fast turnaround in agency environments.',
+    status: 'interview',
+    priority: 'normal',
+    source: 'Website Careers',
+    type: 'career',
+    positionTitle: 'Motion Designer',
+    specialty: '2D Animation / Motion Design',
+    experienceYears: '3',
+    tools: 'After Effects, Premiere Pro, Illustrator, Blender',
+    resumeUrl: 'https://example.com/resume/alya-kurnia.pdf',
+    linkedinUrl: 'https://www.linkedin.com/in/alya-kurnia',
+    portfolioUrl: 'https://alyakurnia.studio',
+    availability: 'Immediate',
+    location: 'Surabaya',
+    starred: false,
+    createdAt: '2026-09-16T12:25:00.000Z'
+  },
+  {
+    id: 'job_inb_005',
+    fullName: 'Rizky Adhitya',
+    email: 'rizky.adhitya@example.com',
+    phone: '+62 851-2233-4455',
+    company: '',
+    message: 'Full-stack developer with strong Node.js and PostgreSQL experience. Previously worked on ERP and internal business applications.',
+    status: 'hired',
+    priority: 'high',
+    source: 'Website Careers',
+    type: 'career',
+    positionTitle: 'Full-stack Developer',
+    specialty: 'Node.js / PostgreSQL',
+    experienceYears: '7',
+    tools: 'Node.js, Express, PostgreSQL, React, Docker',
+    resumeUrl: 'https://example.com/resume/rizky-adhitya.pdf',
+    linkedinUrl: 'https://www.linkedin.com/in/rizky-adhitya',
+    availability: 'Immediate',
+    location: 'Yogyakarta',
+    starred: false,
+    createdAt: '2026-09-15T09:30:00.000Z'
+  }];
 
 // Helper to get local stored submissions
 export const getLocalSubmissions = (): ContactSubmission[] => {

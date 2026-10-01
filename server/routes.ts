@@ -243,6 +243,12 @@ async function dispatchLeadTelegramNotification(
     services: string[];
     budget: string;
     message: string;
+    type?: string;
+    positionTitle?: string;
+    experienceYears?: string;
+    specialty?: string;
+    tools?: string;
+    location?: string;
   },
   settings: {
     isTelegramActive: boolean;
@@ -255,15 +261,25 @@ async function dispatchLeadTelegramNotification(
 
   if (!settings.isTelegramActive || !botToken || !chatId) return;
 
-  const telegramText =
-    `🔔 *New Kapitech Lead Received*\\n\\n` +
-    `👤 *Name:* ${lead.fullName}\\n` +
-    `🏢 *Company:* ${lead.company || '-'}\\n` +
-    `✉️ *Email:* ${lead.email}\\n` +
-    `📞 *Phone:* ${lead.phone || '-'}\\n` +
-    `🛠️ *Services:* ${lead.services.join(', ') || '-'}\\n` +
-    `💰 *Budget:* ${lead.budget || '-'}\\n\\n` +
-    `💬 *Message:*\\n_${lead.message.slice(0, 300)}_`;
+  const isCareer = lead.type === 'career';
+  const telegramText = isCareer
+    ? `🔔 *New Kapitech Job Application*\\n\\n` +
+      `👤 *Candidate:* ${lead.fullName}\\n` +
+      `💼 *Position:* ${lead.positionTitle || lead.specialty || '-'}\\n` +
+      `✉️ *Email:* ${lead.email}\\n` +
+      `📞 *Phone:* ${lead.phone || '-'}\\n` +
+      `📍 *Location:* ${lead.location || '-'}\\n` +
+      `⏱️ *Experience:* ${lead.experienceYears || '-'}\\n` +
+      `🛠️ *Tools:* ${lead.tools || '-'}\\n\\n` +
+      `💬 *Message:*\\n_${lead.message.slice(0, 300)}_`
+    : `🔔 *New Kapitech Lead Received*\\n\\n` +
+      `👤 *Name:* ${lead.fullName}\\n` +
+      `🏢 *Company:* ${lead.company || '-'}\\n` +
+      `✉️ *Email:* ${lead.email}\\n` +
+      `📞 *Phone:* ${lead.phone || '-'}\\n` +
+      `🛠️ *Services:* ${lead.services.join(', ') || '-'}\\n` +
+      `💰 *Budget:* ${lead.budget || '-'}\\n\\n` +
+      `💬 *Message:*\\n_${lead.message.slice(0, 300)}_`;
 
   try {
     await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
@@ -1298,7 +1314,28 @@ apiRouter.delete('/auth/users/:id', requireAuth, requireMaster, async (req: Auth
 // ----------------------------------------------------
 
 apiRouter.post('/leads/submit', rateLimitPublic(10, 60 * 1000), async (req: Request, res: Response): Promise<void> => {
-  const { fullName, email, company, phone, services, budget, message, source, type, portfolioUrl, rateCard, specialty, website } = req.body;
+  const {
+    fullName,
+    email,
+    company,
+    phone,
+    services,
+    budget,
+    message,
+    source,
+    type,
+    portfolioUrl,
+    rateCard,
+    specialty,
+    positionTitle,
+    experienceYears,
+    tools,
+    resumeUrl,
+    linkedinUrl,
+    availability,
+    location,
+    website
+  } = req.body;
 
   if (website) {
     res.status(400).json({ success: false, error: 'Submission rejected.' });
@@ -1343,6 +1380,13 @@ apiRouter.post('/leads/submit', rateLimitPublic(10, 60 * 1000), async (req: Requ
     portfolioUrl: cleanOptionalUrl(portfolioUrl),
     rateCard: cleanText(rateCard, 120),
     specialty: cleanText(specialty, 160),
+    positionTitle: cleanText(positionTitle, 160),
+    experienceYears: cleanText(experienceYears, 80),
+    tools: cleanText(tools, 500),
+    resumeUrl: cleanOptionalUrl(resumeUrl),
+    linkedinUrl: cleanOptionalUrl(linkedinUrl),
+    availability: cleanText(availability, 160),
+    location: cleanText(location, 160),
     createdAt: now,
     updatedAt: now
   };
@@ -1378,9 +1422,12 @@ apiRouter.post('/leads/submit', rateLimitPublic(10, 60 * 1000), async (req: Requ
 
   void dispatchLeadTelegramNotification(newLead, notificationSettings);
 
+  const careerSubmission = newLead.type === 'career';
   pushNotification(getDataSourceMode() === 'json' ? jsonDb : undefined, {
-    title: 'New inbound lead',
-    message: `${newLead.fullName}${newLead.company ? ` from ${newLead.company}` : ''} submitted a new inquiry.`,
+    title: careerSubmission ? 'New job application' : 'New inbound lead',
+    message: careerSubmission
+      ? `${newLead.fullName} applied for ${newLead.positionTitle || 'a role'}.`
+      : `${newLead.fullName}${newLead.company ? ` from ${newLead.company}` : ''} submitted a new inquiry.`,
     type: 'lead',
     severity: 'info',
     linkUrl: '/admin/inbox'
@@ -1398,7 +1445,11 @@ apiRouter.post('/leads/submit', rateLimitPublic(10, 60 * 1000), async (req: Requ
     severity: 'info'
   });
 
-  res.json({ success: true, message: 'Inquiry submitted successfully.', id: newLead.id });
+  res.json({
+    success: true,
+    message: newLead.type === 'career' ? 'Job application submitted successfully.' : 'Inquiry submitted successfully.',
+    id: newLead.id
+  });
 });
 
 apiRouter.get('/leads', requireAuth, requirePermission('canManageCrm'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -1411,7 +1462,10 @@ apiRouter.put('/leads/:id', requireAuth, requirePermission('canManageCrm'), asyn
   const updates = req.body || {};
   const patch = pickFields(updates, [
     'fullName', 'email', 'company', 'phone', 'services', 'budget', 'message',
-    'status', 'source', 'type', 'portfolioUrl', 'rateCard', 'specialty'
+    'status', 'source', 'type', 'portfolioUrl', 'rateCard', 'specialty',
+    'positionTitle', 'experienceYears', 'tools', 'resumeUrl', 'linkedinUrl',
+    'availability', 'location', 'priority', 'assignedTo', 'internalNotes',
+    'tags', 'starred'
   ]);
   if (patch.email !== undefined) patch.email = cleanText(patch.email, 254).toLowerCase();
   if (patch.fullName !== undefined) patch.fullName = cleanText(patch.fullName, 160);
@@ -1419,6 +1473,31 @@ apiRouter.put('/leads/:id', requireAuth, requirePermission('canManageCrm'), asyn
   if (patch.message !== undefined) patch.message = cleanText(patch.message, MAX_PUBLIC_TEXT);
   if (patch.services !== undefined) patch.services = Array.isArray(patch.services) ? patch.services.slice(0, 20).map((v) => cleanText(v, 120)) : [];
   if (patch.portfolioUrl !== undefined) patch.portfolioUrl = cleanOptionalUrl(patch.portfolioUrl);
+  if (patch.resumeUrl !== undefined) patch.resumeUrl = cleanOptionalUrl(patch.resumeUrl);
+  if (patch.linkedinUrl !== undefined) patch.linkedinUrl = cleanOptionalUrl(patch.linkedinUrl);
+  if (patch.positionTitle !== undefined) patch.positionTitle = cleanText(patch.positionTitle, 160);
+  if (patch.experienceYears !== undefined) patch.experienceYears = cleanText(patch.experienceYears, 80);
+  if (patch.tools !== undefined) patch.tools = cleanText(patch.tools, 500);
+  if (patch.availability !== undefined) patch.availability = cleanText(patch.availability, 160);
+  if (patch.location !== undefined) patch.location = cleanText(patch.location, 160);
+  if (patch.assignedTo !== undefined) patch.assignedTo = cleanText(patch.assignedTo, 160);
+  if (patch.internalNotes !== undefined) patch.internalNotes = cleanText(patch.internalNotes, 5000);
+  if (patch.tags !== undefined) patch.tags = Array.isArray(patch.tags) ? patch.tags.slice(0, 20).map((v) => cleanText(v, 80)) : [];
+  if (patch.starred !== undefined) patch.starred = Boolean(patch.starred);
+  if (patch.priority !== undefined) {
+    const nextPriority = String(patch.priority);
+    if (!['urgent', 'high', 'normal', 'low'].includes(nextPriority)) {
+      res.status(400).json({ success: false, error: 'Invalid lead priority.' });
+      return;
+    }
+  }
+  if (patch.status !== undefined) {
+    const nextStatus = String(patch.status);
+    if (!['new', 'in-review', 'contacted', 'closed', 'screening', 'shortlisted', 'interview', 'hired', 'rejected', 'withdrawn'].includes(nextStatus)) {
+      res.status(400).json({ success: false, error: 'Invalid inbox status.' });
+      return;
+    }
+  }
 
   if (getDataSourceMode() === 'postgres') {
     const lead = await postgresLeadRepository.update(id, patch, makeAuditEntry(req, 'LEAD_UPDATED', `Updated lead ${patch.fullName || id} (status: ${patch.status || 'unchanged'}).`, 'info'));
