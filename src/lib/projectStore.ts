@@ -37,6 +37,7 @@ export interface ProjectMilestone {
 
 export interface AgencyProject {
   id: string;
+  slug?: string;
   name: string;
   clientName: string;
   clientCompany: string;
@@ -65,7 +66,18 @@ export interface AgencyProject {
 let projectsCache: AgencyProject[] | null = null;
 export const PROJECT_EVENT_NAME = 'kapitech_projects_updated';
 
+export const normalizeAgencyProject = (project: AgencyProject): AgencyProject => ({
+  ...project,
+  slug: toSlug(project.slug || project.name || project.id, 'project-record'),
+  teamMembers: Array.isArray(project.teamMembers) ? project.teamMembers : [],
+  techStack: Array.isArray(project.techStack) ? project.techStack : [],
+  milestones: Array.isArray(project.milestones) ? project.milestones : [],
+  tasks: Array.isArray(project.tasks) ? project.tasks : []
+});
+
+
 import { api } from './apiClient';
+import { toSlug } from './slug';
 
 let projectServerHydrationStarted = false;
 
@@ -92,7 +104,7 @@ function hydrateProjectsFromServer(): void {
       return;
     }
     projectServerHydrationRetryCount = 0;
-    projectsCache = res.data.projects;
+    projectsCache = res.data.projects.map(normalizeAgencyProject);
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(PROJECT_EVENT_NAME, { detail: res.data.projects }));
     }
@@ -284,7 +296,7 @@ export const INITIAL_DEFAULT_PROJECTS: AgencyProject[] = [
 export const getAgencyProjects = (): AgencyProject[] => {
   hydrateProjectsFromServer();
   if (projectsCache) return projectsCache;
-  projectsCache = import.meta.env.PROD ? [] : INITIAL_DEFAULT_PROJECTS;
+  projectsCache = import.meta.env.PROD ? [] : INITIAL_DEFAULT_PROJECTS.map(normalizeAgencyProject);
   return projectsCache;
 };
 
@@ -299,9 +311,9 @@ export const saveAgencyProject = async (project: AgencyProject): Promise<void> =
   let updated: AgencyProject[];
   if (idx >= 0) {
     updated = [...current];
-    updated[idx] = { ...project, updatedAt: now };
+    updated[idx] = normalizeAgencyProject({ ...project, updatedAt: now });
   } else {
-    updated = [{ ...project, createdAt: project.createdAt || now, updatedAt: now }, ...current];
+    updated = [normalizeAgencyProject({ ...project, createdAt: project.createdAt || now, updatedAt: now }), ...current];
   }
 
   projectsCache = updated;
