@@ -478,7 +478,7 @@ export const INITIAL_DEFAULT_EXPENSES: AgencyExpense[] = [
 export const getAgencyInvoices = (): AgencyInvoice[] => {
   hydrateFinanceFromServer();
   if (invoiceCache) return invoiceCache;
-  invoiceCache = import.meta.env.PROD ? [] : INITIAL_DEFAULT_INVOICES.map(normalizeFinanceInvoice);
+  invoiceCache = isSlugFixtureMode() ? INITIAL_DEFAULT_INVOICES.map(normalizeFinanceInvoice) : [];
   return invoiceCache;
 };
 
@@ -588,7 +588,7 @@ export const recordInvoicePayment = async (
 export const getAgencyExpenses = (): AgencyExpense[] => {
   hydrateFinanceFromServer();
   if (expenseCache) return expenseCache;
-  expenseCache = import.meta.env.PROD ? [] : INITIAL_DEFAULT_EXPENSES.map(normalizeFinanceExpense);
+  expenseCache = isSlugFixtureMode() ? INITIAL_DEFAULT_EXPENSES.map(normalizeFinanceExpense) : [];
   return expenseCache;
 };
 
