@@ -250,7 +250,7 @@ export const AdminLayout: React.FC = () => {
         transition={{ duration: 0.18, ease: 'easeOut' }}
         className="hidden min-[900px]:flex w-[220px] shrink-0 flex-col relative bg-panel border-r border-line h-full z-30 overflow-hidden"
       >
-        <div className="relative flex h-14 shrink-0 items-center border-b border-line px-3.5">
+        <div className="relative flex h-[52px] min-h-[52px] shrink-0 items-center border-b border-line px-3.5">
           <Link to="/admin/dashboard" aria-label="Kapitech AMS dashboard" className="flex min-w-0 flex-1 items-center gap-2.5 rounded-control px-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
             <AmsBrandLogo className="h-7 w-7 shrink-0" />
             <div className="min-w-0">
@@ -682,7 +682,33 @@ export const AdminLayout: React.FC = () => {
                     );
                   })}
                 </nav>
-              ) : location.pathname === '/admin/invoicing' ? (
+              ) : location.pathname === '/admin/inbox' ? (
+                <nav aria-label="Inbox sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
+                  {[
+                    { key: 'overview', label: 'Overview', to: '/admin/inbox?view=overview' },
+                    { key: 'client', label: 'Client Inbox', to: '/admin/inbox' },
+                    { key: 'jobs', label: 'Job Applications', to: '/admin/inbox?view=jobs' },
+                    { key: 'starred', label: 'Starred', to: '/admin/inbox?view=starred' }
+                  ].map((tab) => {
+                    const activeView = new URLSearchParams(location.search).get('view') || 'client';
+                    const active = activeView === tab.key;
+                    return (
+                      <NavLink
+                        key={tab.key}
+                        to={tab.to}
+                        end
+                        data-ams-slug={'inbox-tab-' + tab.key}
+                        className={'group relative inline-flex h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (
+                          active
+                            ? 'border-accent/25 bg-accent/10 font-semibold text-fg'
+                            : 'border-transparent text-muted hover:bg-bg hover:text-fg'
+                        )}
+                      >
+                        {tab.label}
+                      </NavLink>
+                    );
+                  })}
+                </nav>              ) : location.pathname === '/admin/invoicing' ? (
                 <nav aria-label="Finance sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
                   {[
                     { key: 'invoices', label: 'Invoice', to: '/admin/invoicing' },
