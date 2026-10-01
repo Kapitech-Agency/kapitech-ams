@@ -691,6 +691,31 @@ export const AdminInbox: React.FC = () => {
           </>
         )}
       />
+      <div data-ams-feature-slug="inbox-top-navigation" data-ams-slug="inbox-top-navigation" className="mb-6 min-w-0">
+        <nav aria-label="Inbox sections" className="flex min-w-0 items-center gap-1 overflow-x-auto rounded-control border border-line bg-panel p-1 custom-scrollbar">
+          {inboxTabs.map((tab) => {
+            const active = activeInboxTab === tab.key;
+            return (
+              <Link
+                key={tab.key}
+                to={inboxTabHref(tab.key)}
+                aria-current={active ? 'page' : undefined}
+                data-ams-slug={'inbox-tab-' + tab.key}
+                className={'inline-flex h-9 min-h-9 shrink-0 items-center gap-2 rounded-chip border px-3 text-xs font-medium transition-colors ' + (
+                  active
+                    ? 'border-accent/25 bg-accent/10 text-fg font-semibold'
+                    : 'border-transparent text-muted hover:bg-bg hover:text-fg'
+                )}
+              >
+                <span>{tab.label}</span>
+                <span className={'rounded-badge px-1.5 py-0.5 text-[10px] tabular-nums ' + (active ? 'bg-accent/15 text-accent-text' : 'bg-bg text-muted')}>
+                  {tab.count}
+                </span>
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
 
       {/* ------------------------------------------------------------- */}
       {/* 2. EXECUTIVE KPI SUMMARY RIBBON */}
@@ -752,51 +777,12 @@ export const AdminInbox: React.FC = () => {
         />
       </section>
 
-      {/* 3. UNIFIED FILTER TABS & TOOLBAR */}
+      {/* 3. INBOX CONTROLS */}
       <section
-        data-ams-feature-slug="inbox-filters"
-        data-ams-slug="inbox-filters"
-        className="ams-inbox-toolbar overflow-hidden rounded-card border border-line bg-panel"
+        data-ams-feature-slug="inbox-controls"
+        data-ams-slug="inbox-controls"
+        className="overflow-hidden rounded-card border border-line bg-panel"
       >
-        <div className="flex min-w-0 items-center gap-1 overflow-x-auto border-b border-line px-3 py-2 custom-scrollbar" role="tablist" aria-label="Inbox type">
-          {[
-            {
-              key: 'client' as const,
-              label: 'Client Inbox',
-              icon: <MessageSquare size={14} />,
-              count: submissions.filter((item) => item.type !== 'career').length
-            },
-            {
-              key: 'jobs' as const,
-              label: 'Job Applications',
-              icon: <Briefcase size={14} />,
-              count: submissions.filter((item) => item.type === 'career').length
-            }
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              role="tab"
-              aria-selected={activeInboxTab === tab.key}
-              onClick={() => setActiveInboxTab(tab.key)}
-              data-ams-slug={'inbox-tab-' + tab.key}
-              className={'inline-flex h-9 min-h-9 shrink-0 items-center gap-2 rounded-control border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (
-                activeInboxTab === tab.key
-                  ? 'border-accent/25 bg-accent/10 text-fg font-semibold'
-                  : 'border-transparent bg-transparent text-muted hover:border-line hover:bg-bg hover:text-fg'
-              )}
-            >
-              {tab.icon}
-              <span>{tab.label}</span>
-              <span className={'rounded-chip px-1.5 py-0.5 text-[10px] tabular-nums ' + (
-                activeInboxTab === tab.key ? 'bg-accent/15 text-accent-text' : 'bg-bg text-muted'
-              )}>
-                {tab.count}
-              </span>
-            </button>
-          ))}
-        </div>
-
         <div className="flex flex-col gap-2.5 p-3 sm:p-4 xl:flex-row xl:items-center">
           <label className="relative min-w-0 flex-1">
             <span className="sr-only">Search inbox</span>
@@ -807,7 +793,9 @@ export const AdminInbox: React.FC = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={activeInboxTab === 'jobs'
                 ? (language === 'id' ? 'Cari kandidat, posisi, email, skill, atau tools...' : 'Search candidate, role, email, skills, or tools...')
-                : (language === 'id' ? 'Cari nama, email, perusahaan, jasa, atau isi brief...' : 'Search name, email, company, services, or message...')}
+                : isMixedInboxTab
+                  ? (language === 'id' ? 'Cari nama, perusahaan, kandidat, posisi, atau email...' : 'Search names, companies, candidates, roles, or email...')
+                  : (language === 'id' ? 'Cari nama, email, perusahaan, jasa, atau isi brief...' : 'Search name, email, company, services, or message...')}
               className="h-9 min-h-9 w-full rounded-control border border-line bg-bg pl-9 pr-8 text-xs text-fg outline-none placeholder:text-muted focus:border-accent"
             />
             {searchQuery && (
@@ -822,79 +810,41 @@ export const AdminInbox: React.FC = () => {
             )}
           </label>
 
-          <div className="flex min-w-0 items-center gap-2 overflow-x-auto pb-0.5 custom-scrollbar xl:shrink-0">
+          <div className="flex min-w-0 items-center gap-2 overflow-x-auto custom-scrollbar xl:shrink-0">
             <div className="w-[150px] shrink-0">
-              <CustomSelect
-                value={filterStatus}
-                onChange={setFilterStatus}
-                options={activeInboxTab === 'jobs'
-                  ? [
-                      { value: 'all', label: language === 'id' ? 'Semua Status' : 'All Status' },
-                      { value: 'new', label: 'Status: New' },
-                      { value: 'screening', label: 'Status: Screening' },
-                      { value: 'shortlisted', label: 'Status: Shortlisted' },
-                      { value: 'interview', label: 'Status: Interview' },
-                      { value: 'hired', label: 'Status: Hired' },
-                      { value: 'rejected', label: 'Status: Rejected' },
-                      { value: 'withdrawn', label: 'Status: Withdrawn' }
-                    ]
-                  : [
-                      { value: 'all', label: language === 'id' ? 'Semua Status' : 'All Status' },
-                      { value: 'new', label: 'Status: New' },
-                      { value: 'in-review', label: 'Status: In Review' },
-                      { value: 'contacted', label: 'Status: Contacted' },
-                      { value: 'closed', label: 'Status: Closed Deal' }
-                    ]}
-              />
+              <CustomSelect value={filterStatus} onChange={setFilterStatus} options={inboxStatusOptions} />
             </div>
-
             <div className="w-[150px] shrink-0">
               <CustomSelect
                 value={filterPriority}
                 onChange={setFilterPriority}
                 options={[
-                  {value:'all',label:language === 'id' ? 'Semua Prioritas' : 'All Priorities'},
-                  {value:'urgent',label:'Urgent'},
-                  {value:'high',label:'High'},
-                  {value:'normal',label:'Normal'},
-                  {value:'low',label:'Low'}
+                  { value: 'all', label: language === 'id' ? 'Semua Prioritas' : 'All Priorities' },
+                  { value: 'urgent', label: 'Urgent' },
+                  { value: 'high', label: 'High' },
+                  { value: 'normal', label: 'Normal' },
+                  { value: 'low', label: 'Low' }
                 ]}
               />
             </div>
-
             <button
               type="button"
               onClick={() => setOnlyStarred(!onlyStarred)}
               className={'inline-flex h-9 min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-control border px-3 text-xs font-medium transition-colors ' + (
                 onlyStarred
                   ? 'border-warning/30 bg-warning/10 text-warning'
-                  : 'border-line bg-bg text-muted hover:border-line hover:bg-panel hover:text-fg'
+                  : 'border-line bg-bg text-muted hover:bg-panel hover:text-fg'
               )}
             >
               <Star size={14} className={onlyStarred ? 'fill-warning text-warning' : ''} />
               <span>{language === 'id' ? 'Ditandai' : 'Starred'}</span>
             </button>
-
             <div className="ml-auto flex shrink-0 items-center rounded-control border border-line bg-bg p-0.5">
-              <button
-                type="button"
-                onClick={() => setViewMode('split')}
-                aria-pressed={viewMode === 'split'}
-                className={'inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip px-2.5 text-[11px] font-medium transition-colors ' + (
-                  viewMode === 'split' ? 'bg-panel border border-line text-fg' : 'text-muted hover:text-fg'
-                )}
-              >
+              <button type="button" onClick={() => setViewMode('split')} aria-pressed={viewMode === 'split'} className={'inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip px-2.5 text-[11px] font-medium ' + (viewMode === 'split' ? 'bg-panel border border-line text-fg' : 'text-muted hover:text-fg')}>
                 <LayoutGrid size={13} />
                 <span className="hidden sm:inline">Split</span>
               </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('table')}
-                aria-pressed={viewMode === 'table'}
-                className={'inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip px-2.5 text-[11px] font-medium transition-colors ' + (
-                  viewMode === 'table' ? 'bg-panel border border-line text-fg' : 'text-muted hover:text-fg'
-                )}
-              >
+              <button type="button" onClick={() => setViewMode('table')} aria-pressed={viewMode === 'table'} className={'inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip px-2.5 text-[11px] font-medium ' + (viewMode === 'table' ? 'bg-panel border border-line text-fg' : 'text-muted hover:text-fg')}>
                 <TableIcon size={13} />
                 <span className="hidden sm:inline">Table</span>
               </button>
