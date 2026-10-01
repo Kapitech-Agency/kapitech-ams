@@ -2741,24 +2741,99 @@ apiRouter.delete('/finance/expenses/:id', requireAuth, requirePermission('canMan
 // Financial Metrics (Authoritative server-calculated metrics)
 apiRouter.get('/finance/metrics', requireAuth, requirePermission('canViewFinancials'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
-    const usePostgres=getDataSourceMode()==='postgres';
-    const invoices=usePostgres?await postgresInvoiceRepository.list():getDatabase().invoices;
-    const expenses=usePostgres?await postgresExpenseRepository.list():getDatabase().expenses.filter((expense:any)=>expense.status!=='voided');
-    const byCurrency=new Map<string,any>();
-    const getBucket=(value:unknown)=>{const currency=String(value||'IDR').toUpperCase();if(!byCurrency.has(currency))byCurrency.set(currency,{currency,totalRevenueCollected:0,totalBilled:0,totalOutstanding:0,totalExpense:0,paidCount:0,partiallyPaidCount:0,overdueCount:0,draftCount:0});return byCurrency.get(currency);};
-    for(const inv of invoices){const b=getBucket(inv.currency);b.totalBilled+=Number(inv.total)||0;b.totalRevenueCollected+=getInvoicePaidAmount(inv);if(inv.status!=='paid'&&inv.status!=='cancelled')b.totalOutstanding+=getInvoiceBalanceDue(inv);if(inv.status==='paid')b.paidCount++;else if(inv.status==='partially_paid')b.partiallyPaidCount++;else if(inv.status==='overdue')b.overdueCount++;else if(inv.status==='draft')b.draftCount++;}
-    for(const exp of expenses){const b=getBucket(exp.currency);b.totalExpense+=Number(exp.amount)||0;}
+    const usePostgres = getDataSourceMode() === 'postgres';
+    const invoices = usePostgres ? await postgresInvoiceRepository.list() : getDatabase().invoices;
+    const expenses = usePostgres
+      ? await postgresExpenseRepository.list()
+      : getDatabase().expenses.filter((expense: any) => expense.status !== 'voided');
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const byCurrency = new Map<string, any>();
+    const getBucket = (value: unknown) => {
+      const currency = String(value || 'IDR').toUpperCase();
+      if (!byCurrency.has(currency)) {
+        byCurrency.set(currency, {
+          currency,
+          totalRevenueCollected: 0,
+          totalBilled: 0,
+          totalOutstanding: 0,
+          totalOverdue: 0,
+          totalExpense: 0,
+          operatingExpense: 0,
+          paidCount: 0,
+          partiallyPaidCount: 0,
+          overdueCount: 0,
+          draftCount: 0
+        });
+      }
+      return byCurrency.get(currency);
+    };
+
+    for (const inv of invoices) {
+      const bucket = getBucket(inv.currency);
+      const total = Math.max(0, Number(inv.total) || 0);
+      const paid = Math.min(total, getInvoicePaidAmount(inv));
+      const balance = Math.max(0, total - paid);
+      const rawStatus = String(inv.status || 'draft');
+      const due = inv.dueDate ? new Date(String(inv.dueDate) + 'T00:00:00') : null;
+      const pastDue = balance > 0 && rawStatus !== 'draft' && rawStatus !== 'cancelled'
+        && !!due && !Number.isNaN(due.getTime()) && due.getTime() < today.getTime();
+      const effectiveStatus = rawStatus === 'cancelled'
+        ? 'cancelled'
+        : total > 0 && balance <= 0
+          ? 'paid'
+          : paid > 0 && balance > 0
+            ? 'partially_paid'
+            : pastDue
+              ? 'overdue'
+              : rawStatus;
+
+      if (effectiveStatus !== 'draft' && effectiveStatus !== 'cancelled') {
+        bucket.totalBilled += total;
+        bucket.totalOutstanding += balance;
+      }
+      bucket.totalRevenueCollected += paid;
+
+      if (effectiveStatus === 'paid') bucket.paidCount++;
+      else if (effectiveStatus === 'partially_paid') bucket.partiallyPaidCount++;
+      else if (effectiveStatus === 'overdue') {
+        bucket.overdueCount++;
+        bucket.totalOverdue += balance;
+      } else if (effectiveStatus === 'draft') {
+        bucket.draftCount++;
+      }
+    }
+
+    for (const exp of expenses) {
+      const bucket = getBucket(exp.currency);
+      const amount = Math.max(0, Number(exp.amount) || 0);
+      bucket.totalExpense += amount;
+      if (String(exp.type || 'OpEx') !== 'CapEx') bucket.operatingExpense += amount;
+    }
+
     const currency = String(req.query.currency || 'IDR').toUpperCase();
     const primary = byCurrency.get(currency) || getBucket(currency);
     const netProfit = primary.totalRevenueCollected - primary.totalExpense;
+    const operatingProfit = primary.totalRevenueCollected - primary.operatingExpense;
     const profitMargin = primary.totalRevenueCollected > 0
       ? ((netProfit / primary.totalRevenueCollected) * 100).toFixed(1)
       : '0';
+    const operatingMargin = primary.totalRevenueCollected > 0
+      ? ((operatingProfit / primary.totalRevenueCollected) * 100).toFixed(1)
+      : '0';
+
     const byCurrencyMetrics = Array.from(byCurrency.values()).map((bucket: any) => ({
       ...bucket,
       netProfit: bucket.totalRevenueCollected - bucket.totalExpense,
+      cashNetProfit: bucket.totalRevenueCollected - bucket.totalExpense,
+      operatingProfit: bucket.totalRevenueCollected - bucket.operatingExpense,
       profitMargin: bucket.totalRevenueCollected > 0
         ? (((bucket.totalRevenueCollected - bucket.totalExpense) / bucket.totalRevenueCollected) * 100).toFixed(1)
+        : '0',
+      operatingMargin: bucket.totalRevenueCollected > 0
+        ? (((bucket.totalRevenueCollected - bucket.operatingExpense) / bucket.totalRevenueCollected) * 100).toFixed(1)
         : '0'
     }));
 
@@ -2769,10 +2844,16 @@ apiRouter.get('/finance/metrics', requireAuth, requirePermission('canViewFinanci
         totalRevenueCollected: primary.totalRevenueCollected,
         totalBilled: primary.totalBilled,
         totalOutstanding: primary.totalOutstanding,
+        totalOverdue: primary.totalOverdue,
         totalExpense: primary.totalExpense,
+        operatingExpense: primary.operatingExpense,
         netProfit,
+        cashNetProfit: netProfit,
+        operatingProfit,
         profitMargin,
+        operatingMargin,
         totalInvoicesCount: invoices.filter((invoice: any) => String(invoice.currency || 'IDR').toUpperCase() === currency).length,
+        issuedInvoiceCount: invoices.filter((invoice: any) => String(invoice.currency || 'IDR').toUpperCase() === currency && !['draft', 'cancelled'].includes(String(invoice.status || 'draft'))).length,
         paidCount: primary.paidCount,
         partiallyPaidCount: primary.partiallyPaidCount,
         overdueCount: primary.overdueCount,
@@ -2780,7 +2861,10 @@ apiRouter.get('/finance/metrics', requireAuth, requirePermission('canViewFinanci
         byCurrency: byCurrencyMetrics
       }
     });
-  }catch(error){console.error('[Finance Metrics] Failed:',error);res.status(503).json({success:false,error:'Financial metrics are temporarily unavailable.'});}
+  } catch (error) {
+    console.error('[Finance Metrics] Failed:', error);
+    res.status(503).json({ success: false, error: 'Financial metrics are temporarily unavailable.' });
+  }
 });
 
 // ----------------------------------------------------
