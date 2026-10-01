@@ -1,5 +1,6 @@
 export interface ProjectItem {
   id: string;
+  slug: string;
   title: string;
   client: string;
   industry: string;
@@ -1375,4 +1376,4 @@ export const allProjects: ProjectItem[] = [
     ],
     year: '2024'
   }
-];
+].map((project) => ({ ...project, slug: project.id }));
