@@ -28,6 +28,7 @@ export type CrmSource =
 
 export interface CrmNote {
   id: string;
+  slug?: string;
   author: string;
   text: string;
   createdAt: string;
@@ -36,6 +37,7 @@ export interface CrmNote {
 
 export interface CrmDocumentItem {
   id: string;
+  slug?: string;
   title: string;
   status: 'draft' | 'sent' | 'signed' | 'approved';
   updatedAt: string;
@@ -89,8 +91,12 @@ function normalizeServerDeal(deal: any): CrmLead {
     inquiryId: deal.inquiryId,
     expectedCloseDate: deal.expectedCloseDate,
     assignedTo: String(deal.assignedTo || deal.owner || 'Unassigned'),
-    notes: Array.isArray(deal.notes) ? deal.notes : [],
-    documents: Array.isArray(deal.documents) ? deal.documents : [],
+    notes: Array.isArray(deal.notes)
+      ? deal.notes.map((note: CrmNote) => ({ ...note, slug: toSlug(note.slug || note.text || note.id, 'crm-note-record') }))
+      : [],
+    documents: Array.isArray(deal.documents)
+      ? deal.documents.map((document: CrmDocumentItem) => ({ ...document, slug: toSlug(document.slug || document.title || document.id, 'crm-document-record') }))
+      : [],
     createdAt: String(deal.createdAt || new Date().toISOString()),
     updatedAt: String(deal.updatedAt || deal.createdAt || new Date().toISOString())
   };
