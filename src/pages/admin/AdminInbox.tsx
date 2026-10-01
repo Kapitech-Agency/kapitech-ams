@@ -727,7 +727,7 @@ export const AdminInbox: React.FC = () => {
 
       {/* ------------------------------------------------------------- */}
       {/* 2. EXECUTIVE KPI SUMMARY RIBBON */}
-      <section data-ams-feature-slug="inbox-performance-snapshot" data-ams-slug="inbox-performance-snapshot" aria-label="Inbox performance snapshot" className="rounded-card border border-line bg-panel p-4">
+      <section data-ams-feature-slug={'inbox-' + activeInboxTab + '-performance-snapshot'} data-ams-slug={'inbox-' + activeInboxTab + '-performance-snapshot'} aria-label="Inbox performance snapshot" className="rounded-card border border-line bg-panel p-4">
         <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
           <div>
             <h2 className="text-sm font-semibold text-fg">
@@ -754,9 +754,19 @@ export const AdminInbox: React.FC = () => {
           metrics={[
             {
               id: 'total',
-              label: activeInboxTab === 'jobs' ? (language === 'id' ? 'Total Lamaran' : 'Total Applications') : (language === 'id' ? 'Total Inquiry' : 'Total Inquiries'),
+              label: activeInboxTab === 'jobs'
+                ? (language === 'id' ? 'Total Lamaran' : 'Total Applications')
+                : activeInboxTab === 'client'
+                  ? (language === 'id' ? 'Total Inquiry' : 'Total Inquiries')
+                  : (language === 'id' ? 'Total Inbound' : 'Total Inbound'),
               value: metrics.total,
-              context: activeInboxTab === 'jobs' ? (language === 'id' ? 'Semua lamaran masuk' : 'All applications received') : (language === 'id' ? 'Semua inbound klien' : 'All client inbound'),
+              context: activeInboxTab === 'jobs'
+                ? (language === 'id' ? 'Semua lamaran masuk' : 'All applications received')
+                : activeInboxTab === 'client'
+                  ? (language === 'id' ? 'Semua inbound klien' : 'All client inbound')
+                  : activeInboxTab === 'starred'
+                    ? (language === 'id' ? 'Semua record ditandai' : 'All starred records')
+                    : (language === 'id' ? 'Semua inbound AMS' : 'All AMS inbound'),
               sparkline: [metrics.total, metrics.newCount, metrics.convertedCount, metrics.conversionRate],
               icon: <Inbox size={16} strokeWidth={1.8} />
             },
@@ -793,7 +803,9 @@ export const AdminInbox: React.FC = () => {
                   : (language === 'id' ? 'Volume Peluang' : 'Opportunity Volume'),
               value: activeInboxTab === 'jobs' ? metrics.interviewCount : formatAmount(metrics.totalPipelineValue, currency),
               context: activeInboxTab === 'jobs' ? (language === 'id' ? 'Tahap interview aktif' : 'Active interview stage') : (language === 'id' ? 'Estimasi nilai brief masuk' : 'Estimated inbound opportunity value'),
-              sparkline: activeInboxTab === 'jobs' ? [metrics.newCount, metrics.interviewCount, metrics.convertedCount] : activeTabItems.slice(0, 8).map(estimateDealValue),
+              sparkline: activeInboxTab === 'jobs'
+                ? [metrics.newCount, metrics.interviewCount, metrics.convertedCount]
+                : activeTabItems.filter((item) => item.type !== 'career').slice(0, 8).map(estimateDealValue),
               icon: activeInboxTab === 'jobs' ? <Calendar size={16} strokeWidth={1.8} /> : <TrendingUp size={16} strokeWidth={1.8} />,
               toneClassName: 'text-success'
             }
