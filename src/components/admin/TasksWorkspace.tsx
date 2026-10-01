@@ -591,8 +591,7 @@ export const TasksWorkspace: React.FC = () => {
       priority: task.priority,
       dueDate: task.dueDate,
       tags: task.tags.join(', '),
-      subtasks: task.subtasks.map(item => item.title).join('
-'),
+      subtasks: task.subtasks.map(item => item.title).join('\n'),
     });
   };
 
