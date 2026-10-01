@@ -403,7 +403,7 @@ export const AdminCmsProjects: React.FC = () => {
 
       <div className="flex items-center justify-between gap-3 text-[11px] text-muted">
         <span>{filteredProjects.length} of {projects.length} case studies</span>
-        <span className="tabular-nums">Page {page} of {totalProjectPages}</span>
+        <span>Case study directory</span>
       </div>
 
       {/* Projects Grid with Drag-to-scroll support */}
@@ -438,114 +438,51 @@ export const AdminCmsProjects: React.FC = () => {
         </div>
       ) : (
         <>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-        {pagedProjects.map((project) => (
-          <div
-            key={project.id}
-            data-ams-slug={'cms-project-' + project.id}
-            className="bg-panel border border-line hover:border-line rounded-card overflow-hidden flex flex-col group transition-all"
-          >
-            {/* Image Thumbnail */}
-            <div className="relative h-48 w-full bg-bg overflow-hidden">
-              {project.image ? (
-                <img
-                  src={project.image}
-                  alt={project.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-panel text-muted">
-                  <ImageIcon size={28} aria-hidden="true" />
-                </div>
-              )}
-              <div className="absolute inset-0 bg-bg/30" />
-
-              {/* Badges on image */}
-              <div className="absolute top-3 left-3 flex items-center gap-1.5">
-                <span className={`px-2 py-0.5 rounded-badge text-[10px] font-sans font-semibold border ${
-                  project.pillar === 'Visual Experience'
-                    ? 'bg-info/10 text-info border-info/30'
-                    : 'bg-info/10 text-info border-info/30'
-                }`}>
-                  {project.pillar}
-                </span>
-              </div>
-
-              <div className="absolute top-3 right-3 flex items-center gap-1">
-                <button
-                  onClick={() => handleToggleFeatured(project)}
-                  className={`p-1.5 rounded-control border text-xs transition-colors  ${
-                    project.featured
-                      ? 'bg-warning/10 text-warning border-warning/30'
-                      : 'bg-panel text-muted border-line hover:text-fg'
-                  }`}
-                  title={project.featured ? 'Status: Featured (Click to toggle)' : 'Click to feature'}
-                >
-                  <Star size={13} fill={project.featured ? 'currentColor' : 'none'} />
-                </button>
-              </div>
-
-              <div className="absolute bottom-3 left-3 right-3">
-                <div className="text-[11px] font-sans text-fg/80">{project.client}</div>
-                <div className="text-base font-semibold font-sans text-fg truncate">
-                  {project.title}
-                </div>
-              </div>
-            </div>
-
-            {/* Body */}
-            <div className="p-4 flex-1 flex flex-col justify-between space-y-4 font-sans text-xs">
-              <p className="text-muted line-clamp-2 font-sans text-xs">
-                {project.descId || project.desc || 'No case study summary entered.'}
-              </p>
-
-              {/* Tech Tags */}
-              <div className="flex flex-wrap gap-1.5">
-                {project.technologies.slice(0, 4).map((tech, idx) => (
-                  <span
-                    key={idx}
-                    className="text-[10px] font-sans px-2 py-0.5 rounded-badge bg-panel border border-line text-muted"
-                  >
-                    {tech}
-                  </span>
-                ))}
-                {project.technologies.length > 4 && (
-                  <span className="text-[10px] font-sans px-1.5 py-0.5 rounded-badge bg-panel border border-line text-muted">
-                    +{project.technologies.length - 4}
-                  </span>
-                )}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="pt-3 border-t border-line flex items-center justify-between">
-                <div className="text-[10px] text-muted">
-                  Release {project.year || '2025'}
-                </div>
-
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => handleOpenEdit(project)}
-                    data-ams-slug={'cms-project-edit-' + project.id}
-                    className="p-1.5 rounded-control bg-panel hover:bg-panel-hover text-muted hover:text-fg border border-line transition-colors"
-                    title="Edit Case Study"
-                  >
-                    <Edit3 size={13} />
-                  </button>
-
-                  <button
-                    onClick={() => handleDelete(project.id, project.title)}
-                    data-ams-slug={'cms-project-delete-' + project.id}
-                    className="p-1.5 rounded-control bg-panel hover:bg-accent/10 text-muted hover:text-danger border border-line hover:border-danger/30 transition-colors"
-                    title="Delete Case Study"
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-
+                <div className="overflow-x-auto rounded-card border border-line bg-panel">
+          <table className="ams-table w-full min-w-[980px] border-collapse text-left text-xs">
+            <thead>
+              <tr className="border-b border-line bg-bg text-[10px] font-medium text-muted">
+                <th className="px-4 py-3">Project</th>
+                <th className="px-4 py-3">Pillar</th>
+                <th className="px-4 py-3">Service</th>
+                <th className="px-4 py-3">Year</th>
+                <th className="px-4 py-3">Featured</th>
+                <th className="px-4 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-line">
+              {pagedProjects.map((project) => (
+                <tr key={project.id} data-ams-slug={'cms-project-' + project.id} className="h-12 transition-colors hover:bg-bg/60">
+                  <td className="px-4 py-2.5">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="h-9 w-12 shrink-0 overflow-hidden rounded-control border border-line bg-bg">
+                        {project.image ? <img src={project.image} alt="" className="h-full w-full object-cover" /> : <div className="flex h-full w-full items-center justify-center text-muted"><ImageIcon size={14} /></div>}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-semibold text-fg">{project.title || 'Untitled case study'}</p>
+                        <p className="mt-0.5 truncate text-[10px] text-muted">{project.client || 'Client not set'} · /{project.slug || project.id}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-2.5"><span className="inline-flex max-w-[180px] truncate rounded-badge border border-info/20 bg-info/10 px-2 py-1 text-[10px] font-medium text-info">{project.pillar || 'Unspecified'}</span></td>
+                  <td className="max-w-[220px] px-4 py-2.5"><span className="block truncate text-[11px] text-muted">{project.service || 'Not set'}</span></td>
+                  <td className="px-4 py-2.5 font-mono text-[11px] tabular-nums text-fg">{project.year || '—'}</td>
+                  <td className="px-4 py-2.5">
+                    <button type="button" onClick={() => handleToggleFeatured(project)} className={`inline-flex h-8 items-center gap-1 rounded-control border px-2.5 text-[10px] font-semibold ${project.featured ? 'border-warning/20 bg-warning/10 text-warning' : 'border-line bg-bg text-muted hover:text-fg'}`} aria-pressed={project.featured}>
+                      <Star size={11} fill={project.featured ? 'currentColor' : 'none'} />
+                      {project.featured ? 'Featured' : 'Standard'}
+                    </button>
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <button type="button" onClick={() => handleOpenEdit(project)} data-ams-slug={'cms-project-edit-' + project.id} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label={'Edit ' + project.title} title="Edit case study"><Edit3 size={13} /></button>
+                      <button type="button" onClick={() => handleDelete(project.id, project.title)} data-ams-slug={'cms-project-delete-' + project.id} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-bg text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label={'Delete ' + project.title} title="Delete case study"><Trash2 size={13} /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
         <AdminTablePagination total={filteredProjects.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="case studies" slug="cms-projects-pagination" />
         </>
