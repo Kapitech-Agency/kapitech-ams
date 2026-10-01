@@ -28,7 +28,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { useDragToScroll } from '../../lib/useDragToScroll';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { AdminModuleHeader , AdminPageShell } from '../../components/admin/AdminModulePrimitives';
+import { AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 export const AdminCmsProjects: React.FC = () => {
   const { language, t } = useLanguage();
@@ -540,6 +540,7 @@ export const AdminCmsProjects: React.FC = () => {
         ))}
 
         </div>
+        <AdminTablePagination total={filteredProjects.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="case studies" slug="cms-projects-pagination" />
       )}
       {/* MODAL: ADD / EDIT PROJECT WITH LIVE PREVIEW & DRAG & DROP */}
       </div>
