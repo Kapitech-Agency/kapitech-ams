@@ -828,7 +828,7 @@ export const AdminInbox: React.FC = () => {
       {activeInboxTab === 'overview' ? (
         <section data-ams-feature-slug="inbox-overview-controls" data-ams-slug="inbox-overview-controls" className="rounded-card border border-line bg-panel">
           <div className="flex flex-col gap-3 p-3 sm:p-4 lg:flex-row lg:items-center lg:justify-between">
-            <div><p className="text-xs font-semibold text-fg">Live intake monitor</p><p className="mt-0.5 text-[11px] text-muted">Triage exceptions here, then open the dedicated workspace when you need deeper review.</p></div>
+            <div><p className="text-xs font-semibold text-fg">Intake controls</p><p className="mt-0.5 text-[11px] text-muted">The inbox refreshes automatically every 30 seconds. Use these controls for manual refresh, export, or full review.</p></div>
             <div className="flex flex-wrap items-center gap-2">
               <button type="button" onClick={() => void refreshInbox()} className="inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted hover:bg-bg hover:text-fg"><RefreshCw size={14} />Refresh</button>
               <button type="button" onClick={handleExportCSV} disabled={activeTabItems.length === 0} className="inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted hover:bg-bg hover:text-fg disabled:opacity-50"><Download size={14} />Export overview</button>
@@ -907,37 +907,21 @@ export const AdminInbox: React.FC = () => {
       {/* 4. MAIN CONTENT VIEW: SPLIT VIEW vs TABLE VIEW */}
       {/* ------------------------------------------------------------- */}
       {viewMode === 'overview' ? (
-        <section data-ams-feature-slug="inbox-overview-workspace" data-ams-slug="inbox-overview-workspace" className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.45fr)]">
+        <section data-ams-feature-slug="inbox-overview-workspace" data-ams-slug="inbox-overview-workspace" className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
           <div className="overflow-hidden rounded-card border border-line bg-panel">
             <div className="border-b border-line px-4 py-3.5">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-semibold text-fg">Triage queue</h3>
                     <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-muted">{triageItems.length}</span>
                   </div>
-                  <p className="mt-1 text-[11px] leading-4 text-muted">Work the next record, take the action, then move on.</p>
+                  <p className="mt-1 max-w-xl text-[11px] leading-4 text-muted">Review the next inbound records that need a decision, response, or follow-up.</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => void refreshInbox()}
-                    className="inline-flex min-h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted hover:bg-panel hover:text-fg"
-                  >
-                    <RefreshCw size={12} />
-                    Refresh
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setViewMode('split')}
-                    className="inline-flex min-h-8 items-center gap-1.5 rounded-control bg-accent px-2.5 text-[10px] font-medium text-white hover:bg-accent/90"
-                  >
-                    <Inbox size={12} />
-                    Open inbox
-                  </button>
-                </div>
+                <button type="button" onClick={() => setViewMode('split')} className="inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-fg hover:bg-panel">
+                  <Inbox size={12} />Open full inbox
+                </button>
               </div>
-
               <div className="mt-3 flex items-center gap-1.5 overflow-x-auto custom-scrollbar">
                 {[
                   { key: 'action' as TriageScope, label: 'Needs action', count: filteredItems.filter((item) => item.status === 'new').length },
@@ -947,16 +931,16 @@ export const AdminInbox: React.FC = () => {
                   <button
                     key={scope.key}
                     type="button"
-                    onClick={() => setTriageScope(scope.key)}
+                    onClick={() => {
+                      setTriageScope(scope.key);
+                      setSelectedSubmission(null);
+                    }}
                     className={
                       'inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-chip border px-2.5 text-[10px] font-medium transition-colors ' +
-                      (triageScope === scope.key
-                        ? 'border-accent/30 bg-accent/10 text-accent-text'
-                        : 'border-line bg-bg text-muted hover:text-fg')
+                      (triageScope === scope.key ? 'border-accent/30 bg-accent/10 text-accent-text' : 'border-line bg-bg text-muted hover:text-fg')
                     }
                   >
-                    <span>{scope.label}</span>
-                    <span className="tabular-nums">{scope.count}</span>
+                    <span>{scope.label}</span><span className="tabular-nums">{scope.count}</span>
                   </button>
                 ))}
               </div>
@@ -964,151 +948,59 @@ export const AdminInbox: React.FC = () => {
 
             <div className="divide-y divide-line">
               {triageItems.length === 0 ? (
-                <div className="flex min-h-[260px] flex-col items-center justify-center px-6 py-10 text-center">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-card border border-line bg-bg">
-                    <Check size={17} className="text-success" />
+                <div className="min-h-[180px] px-4 py-6">
+                  <div className="rounded-control border border-line bg-bg p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-panel">
+                        <Check size={15} className="text-success" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium text-fg">{triageScope === 'action' ? 'No records need action' : triageScope === 'priority' ? 'No priority records' : 'No saved records'}</p>
+                        <p className="mt-0.5 text-[10px] leading-4 text-muted">{triageScope === 'action' ? 'New inbound records will appear here automatically.' : triageScope === 'priority' ? 'Urgent and high-priority records are clear.' : 'Star a record when the team needs to keep it on the follow-up list.'}</p>
+                      </div>
+                    </div>
                   </div>
-                  <p className="mt-3 text-sm font-medium text-fg">
-                    {triageScope === 'action' ? 'No records need action' : triageScope === 'priority' ? 'No priority records' : 'No saved records'}
-                  </p>
-                  <p className="mt-1 max-w-sm text-[11px] leading-5 text-muted">
-                    {triageScope === 'action'
-                      ? 'New inbound records will appear here as soon as they arrive.'
-                      : triageScope === 'priority'
-                        ? 'Urgent and high-priority records are clear.'
-                        : 'Star a record when the team needs to keep it on the follow-up list.'}
-                  </p>
                 </div>
               ) : (
                 triageItems.map((item) => {
                   const isCareer = item.type === 'career';
-                  const nextStatus: ContactSubmission['status'] | null = item.status === 'new'
-                    ? isCareer ? 'screening' : 'in-review'
-                    : null;
-                  const actionLabel = item.status === 'new'
-                    ? isCareer ? 'Start screening' : 'Start review'
-                    : 'Review';
-
                   return (
-                    <article key={item.id} className="group px-4 py-3 transition-colors hover:bg-panel-hover">
-                      <div className="grid grid-cols-[4px_minmax(0,1fr)_auto] items-start gap-3">
-                        <span
-                          className={
-                            'mt-0.5 h-8 w-1 rounded-full ' +
-                            (item.priority === 'urgent'
-                              ? 'bg-danger'
-                              : item.priority === 'high'
-                                ? 'bg-warning'
-                                : item.status === 'new'
-                                  ? 'bg-info'
-                                  : 'bg-line')
-                          }
-                          aria-hidden="true"
-                        />
-
+                    <button
+                      type="button"
+                      key={item.id}
+                      onClick={() => handleSelectSubmission(item)}
+                      className={'block w-full px-4 py-3 text-left transition-colors hover:bg-panel-hover ' + (selectedSubmission?.id === item.id ? 'bg-accent/5' : '')}
+                    >
+                      <div className="grid grid-cols-[4px_minmax(0,1fr)] gap-3">
+                        <span className={'mt-0.5 h-full min-h-12 w-1 rounded-full ' + (item.priority === 'urgent' ? 'bg-danger' : item.priority === 'high' ? 'bg-warning' : item.status === 'new' ? 'bg-info' : 'bg-line')} aria-hidden="true" />
                         <div className="min-w-0">
-                          <div className="flex min-w-0 items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                handleSelectSubmission(item);
-                                setViewMode('split');
-                              }}
-                              className="min-w-0 truncate text-left text-xs font-semibold text-fg hover:text-accent-text"
-                            >
-                              {item.fullName || 'Anonymous'}
-                            </button>
-                            <span className="hidden truncate text-[10px] text-muted sm:inline">
-                              {isCareer ? (item.positionTitle || item.specialty || item.email) : (item.company || item.email)}
-                            </span>
-                            {item.starred && <Star size={11} className="shrink-0 fill-warning text-warning" />}
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                {renderChannelBadge(item.type)}
+                                {renderStatusBadge(item.status)}
+                                {renderPriorityBadge(item.priority)}
+                                {item.starred && <Star size={11} className="fill-warning text-warning" />}
+                              </div>
+                              <div className="mt-1.5 flex items-center gap-2">
+                                <p className="truncate text-xs font-semibold text-fg">{item.fullName || 'Anonymous'}</p>
+                                <span className="hidden truncate text-[10px] text-muted sm:inline">{isCareer ? (item.positionTitle || item.specialty || item.email) : (item.company || item.email)}</span>
+                              </div>
+                            </div>
+                            <span className="shrink-0 text-[10px] tabular-nums text-muted">{formatRelativeTime(item.createdAt)}</span>
                           </div>
-
-                          <div className="mt-1 flex min-w-0 items-center gap-1.5 overflow-hidden">
-                            {renderChannelBadge(item.type)}
-                            {renderStatusBadge(item.status)}
-                            {renderPriorityBadge(item.priority)}
-                            {item.assignedTo && (
-                              <span className="hidden max-w-[150px] truncate rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] text-muted md:inline">
-                                {item.assignedTo}
-                              </span>
-                            )}
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              handleSelectSubmission(item);
-                              setViewMode('split');
-                            }}
-                            className="mt-1.5 block max-w-3xl text-left"
-                          >
-                            <p className="line-clamp-1 text-[11px] leading-4 text-muted">
-                              {item.message || (language === 'id' ? 'Tidak ada isi brief.' : 'No brief content provided.')}
-                            </p>
-                          </button>
-                        </div>
-
-                        <div className="flex shrink-0 flex-col items-end gap-1.5">
-                          <span className="text-[10px] tabular-nums text-muted">{formatRelativeTime(item.createdAt)}</span>
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                handleToggleStar(event, item.id, item.starred);
-                              }}
-                              disabled={!canManageCrm}
-                              className="inline-flex min-h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted hover:border-warning/30 hover:bg-warning/10 hover:text-warning disabled:opacity-50"
-                            >
-                              <Star size={11} className={item.starred ? 'fill-warning text-warning' : ''} />
-                              {item.starred ? 'Saved' : 'Save'}
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                handleSelectSubmission(item);
-                                setViewMode('split');
-                              }}
-                              className={
-                                'inline-flex min-h-8 items-center gap-1 rounded-control px-2.5 text-[10px] font-medium ' +
-                                (nextStatus
-                                  ? 'border border-line bg-bg text-fg hover:bg-panel'
-                                  : 'border border-accent/25 bg-accent/10 text-accent-text hover:bg-accent/15')
-                              }
-                            >
-                              <ChevronRight size={11} />
-                              {nextStatus ? 'Review' : 'Open'}
-                            </button>
-
-                            {nextStatus && (
-                              <button
-                                type="button"
-                                onClick={() => void handleStatusChange(item.id, nextStatus)}
-                                disabled={!canManageCrm || isUpdating}
-                                className="hidden min-h-8 items-center gap-1 rounded-control bg-accent px-2.5 text-[10px] font-medium text-white hover:bg-accent/90 disabled:opacity-50 sm:inline-flex"
-                              >
-                                <Check size={11} />
-                                {actionLabel}
-                              </button>
-                            )}
+                          <p className="mt-1 line-clamp-1 text-[11px] leading-4 text-muted">{item.message || 'No brief content provided.'}</p>
+                          <div className="mt-2 flex items-center justify-between gap-2">
+                            <span className="min-w-0 truncate font-mono text-[9px] text-muted/70">/{getSubmissionSlug(item)}</span>
+                            <div className="flex shrink-0 items-center gap-1.5">
+                              {item.assignedTo && <span className="hidden max-w-[120px] truncate rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] text-muted md:inline">{item.assignedTo}</span>}
+                              <span className="text-[10px] text-muted">Open monitor</span>
+                              <ChevronRight size={12} className="text-muted" />
+                            </div>
                           </div>
                         </div>
                       </div>
-
-                      {nextStatus && (
-                        <button
-                          type="button"
-                          onClick={() => void handleStatusChange(item.id, nextStatus)}
-                          disabled={!canManageCrm || isUpdating}
-                          className="mt-2 inline-flex min-h-8 w-full items-center justify-center gap-1 rounded-control bg-accent px-2.5 text-[10px] font-medium text-white hover:bg-accent/90 disabled:opacity-50 sm:hidden"
-                        >
-                          <Check size={11} />
-                          {actionLabel}
-                        </button>
-                      )}
-                    </article>
+                    </button>
                   );
                 })
               )}
@@ -1116,92 +1008,79 @@ export const AdminInbox: React.FC = () => {
 
             <div className="border-t border-line bg-bg/50 px-4 py-2.5">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-[10px] leading-4 text-muted">
-                  {triageItems.length > 0
-                    ? 'Showing the next 8 records in this scope, ordered by priority and age.'
-                    : 'This queue updates automatically when new inbound records arrive.'}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setViewMode('split')}
-                  className="inline-flex min-h-8 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-2.5 text-[10px] font-medium text-fg hover:bg-bg"
-                >
-                  <Filter size={11} />
-                  Open full list
+                <p className="text-[10px] leading-4 text-muted">{triageItems.length > 0 ? 'Showing the next 8 records, ordered by priority and age.' : 'The queue updates automatically as new inbound records arrive.'}</p>
+                <button type="button" onClick={() => { setViewMode('split'); setFilterStatus('new'); }} className="inline-flex min-h-8 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-2.5 text-[10px] font-medium text-fg hover:bg-bg">
+                  <Filter size={11} />Open filtered list
                 </button>
               </div>
             </div>
           </div>
 
-          <aside className="space-y-3">
-            <div className="rounded-card border border-line bg-panel p-4">
+          <aside className="flex min-h-[420px] flex-col overflow-hidden rounded-card border border-line bg-panel">
+            <div className="border-b border-line px-4 py-3.5">
               <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h3 className="text-sm font-semibold text-fg">Queue summary</h3>
-                  <p className="mt-1 text-[11px] leading-4 text-muted">Current work at a glance.</p>
+                <div className="min-w-0">
+                  <h3 className="text-sm font-semibold text-fg">Live intake monitor</h3>
+                  <p className="mt-1 text-[11px] leading-4 text-muted">Select a record to inspect its current state and next action.</p>
                 </div>
-                <Inbox size={15} className="text-muted" />
-              </div>
-              <div className="mt-4 grid grid-cols-2 gap-2">
-                {[
-                  { label: 'Needs action', value: filteredItems.filter((item) => item.status === 'new').length, tone: 'text-danger' },
-                  { label: 'Urgent', value: filteredItems.filter((item) => item.priority === 'urgent').length, tone: 'text-danger' },
-                  { label: 'High priority', value: filteredItems.filter((item) => item.priority === 'high').length, tone: 'text-warning' },
-                  { label: 'Saved', value: filteredItems.filter((item) => !!item.starred).length, tone: 'text-warning' }
-                ].map((metric) => (
-                  <div key={metric.label} className="rounded-control border border-line bg-bg p-3">
-                    <p className="text-[10px] text-muted">{metric.label}</p>
-                    <p className={'mt-1 text-lg font-medium tabular-nums ' + metric.tone}>{metric.value}</p>
-                  </div>
-                ))}
+                <span className="inline-flex shrink-0 items-center gap-1.5 rounded-badge border border-success/20 bg-success/10 px-1.5 py-1 text-[9px] font-medium text-success"><span className="h-1.5 w-1.5 rounded-full bg-success" />Live</span>
               </div>
             </div>
 
-            {(() => {
-              const nextUp = [...filteredItems]
-                .filter((item) => item.status === 'new' || item.priority === 'urgent')
-                .sort((a, b) => {
-                  const aRank = a.priority === 'urgent' ? 0 : a.status === 'new' ? 1 : 2;
-                  const bRank = b.priority === 'urgent' ? 0 : b.status === 'new' ? 1 : 2;
-                  return aRank - bRank || new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-                })[0];
-
-              if (!nextUp) return null;
-
-              return (
-                <div className="rounded-card border border-line bg-panel p-4">
-                  <p className="text-[10px] font-medium text-muted">Next up</p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleSelectSubmission(nextUp);
-                      setViewMode('split');
-                    }}
-                    className="mt-1.5 block w-full text-left"
-                  >
-                    <p className="truncate text-sm font-semibold text-fg hover:text-accent-text">{nextUp.fullName || 'Anonymous'}</p>
-                    <p className="mt-0.5 truncate text-[11px] text-muted">
-                      {nextUp.type === 'career' ? (nextUp.positionTitle || nextUp.specialty || nextUp.email) : (nextUp.company || nextUp.email)}
-                    </p>
-                  </button>
-                  <div className="mt-3 flex items-center gap-1.5 flex-wrap">
-                    {renderStatusBadge(nextUp.status)}
-                    {renderPriorityBadge(nextUp.priority)}
+            {selectedSubmission ? (
+              <div className="flex min-h-0 flex-1 flex-col">
+                <div className="border-b border-line px-4 py-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {renderChannelBadge(selectedSubmission.type)}
+                        {renderStatusBadge(selectedSubmission.status)}
+                        {renderPriorityBadge(selectedSubmission.priority)}
+                      </div>
+                      <h4 className="mt-2 truncate text-sm font-semibold text-fg">{selectedSubmission.fullName || 'Anonymous'}</h4>
+                      <p className="mt-0.5 truncate text-[11px] text-muted">{selectedSubmission.type === 'career' ? (selectedSubmission.positionTitle || selectedSubmission.specialty || selectedSubmission.email) : (selectedSubmission.company || selectedSubmission.email)}</p>
+                      <p className="mt-1 font-mono text-[9px] text-muted/70">/{getSubmissionSlug(selectedSubmission)}</p>
+                    </div>
+                    <button type="button" onClick={() => setSelectedSubmission(null)} className="inline-flex h-8 min-w-8 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel hover:text-fg" aria-label="Clear selected record">×</button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleSelectSubmission(nextUp);
-                      setViewMode('split');
-                    }}
-                    className="mt-3 inline-flex min-h-8 w-full items-center justify-center gap-1.5 rounded-control bg-accent px-2.5 text-[10px] font-medium text-white hover:bg-accent/90"
-                  >
-                    Review next
-                    <ChevronRight size={11} />
-                  </button>
                 </div>
-              );
-            })()}
+
+                <div className="flex-1 px-4 py-4">
+                  <div className="space-y-3">
+                    <div className="rounded-control border border-line bg-bg p-3">
+                      <p className="text-[10px] font-medium text-muted">Brief</p>
+                      <p className="mt-1.5 text-[11px] leading-5 text-fg">{selectedSubmission.message || 'No brief content provided.'}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Status</p><p className="mt-1 text-xs font-medium text-fg">{selectedSubmission.status}</p></div>
+                      <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Received</p><p className="mt-1 text-xs font-medium tabular-nums text-fg">{formatRelativeTime(selectedSubmission.createdAt)}</p></div>
+                    </div>
+                    <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] font-medium text-muted">Ownership</p><p className="mt-1 text-xs font-medium text-fg">{selectedSubmission.assignedTo || 'Unassigned'}</p></div>
+                    {selectedSubmission.internalNotes && <div className="rounded-control border border-warning/20 bg-warning/10 p-3"><p className="text-[10px] font-medium text-warning">Internal note</p><p className="mt-1 text-[11px] leading-4 text-fg">{selectedSubmission.internalNotes}</p></div>}
+                  </div>
+                </div>
+
+                <div className="border-t border-line bg-bg/50 px-4 py-3">
+                  <div className="flex flex-wrap gap-2">
+                    {selectedSubmission.status === 'new' && (
+                      <button type="button" onClick={() => void handleStatusChange(selectedSubmission.id, selectedSubmission.type === 'career' ? 'screening' : 'in-review')} disabled={!canManageCrm || isUpdating} className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-control bg-accent px-3 text-[10px] font-medium text-white hover:bg-accent/90 disabled:opacity-50">
+                        <Check size={12} />{selectedSubmission.type === 'career' ? 'Start screening' : 'Start review'}
+                      </button>
+                    )}
+                    <button type="button" onClick={() => setViewMode('split')} className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-[10px] font-medium text-fg hover:bg-bg"><ExternalLink size={12} />Open full review</button>
+                    <button type="button" onClick={(event) => handleToggleStar(event, selectedSubmission.id, selectedSubmission.starred)} disabled={!canManageCrm} className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-[10px] font-medium text-muted hover:text-warning disabled:opacity-50">
+                      <Star size={12} className={selectedSubmission.starred ? 'fill-warning text-warning' : ''} />{selectedSubmission.starred ? 'Saved' : 'Save'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex min-h-[420px] flex-1 flex-col items-center justify-center px-8 py-12 text-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-card border border-line bg-bg text-muted"><Inbox size={20} /></div>
+                <p className="mt-3 text-sm font-medium text-fg">Select an inbound record</p>
+                <p className="mt-1 max-w-xs text-[11px] leading-5 text-muted">Choose a record from the queue to see its status, ownership, brief, and next action here.</p>
+              </div>
+            )}
           </aside>
         </section>
 ) : viewMode === 'board' ? (
