@@ -513,6 +513,7 @@ export const AdminCmsServices: React.FC = () => {
       {/* Service Detail / Inspection Modal */}
       <Modal slug="cms-service-detail-modal" open={!!selectedServiceForDetail} onClose={() => setSelectedServiceForDetail(null)} size="lg" title={selectedServiceForDetail?.title || 'Service detail'} description={selectedServiceForDetail?.heroSubtitle || selectedServiceForDetail?.heroSubtitleId}>
         {selectedServiceForDetail && (
+          <>
             <div className="flex items-center gap-2 font-sans text-xs text-accent font-semibold mb-2">
               <span>{selectedServiceForDetail.category}</span>
               <span>•</span>
@@ -606,6 +607,7 @@ export const AdminCmsServices: React.FC = () => {
                 </a>
               </div>
             </div>
+          </>
         )}
       </Modal>
 
