@@ -25,16 +25,16 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import type { ProjectItem } from '../../data/projectsData';
 import { useLanguage } from '../../lib/LanguageContext';
-import { useDragToScroll } from '../../lib/useDragToScroll';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { AdminModuleHeader , AdminPageShell } from '../../components/admin/AdminModulePrimitives';
+import { AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 export const AdminCmsProjects: React.FC = () => {
   const { language, t } = useLanguage();
-  const galleryScrollRef = useDragToScroll<HTMLDivElement>();
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [filterPillar, setFilterPillar] = useState<'All' | 'Visual Experience' | 'Innovation Development'>('All');
   const [editingProject, setEditingProject] = useState<ProjectItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -266,6 +266,17 @@ export const AdminCmsProjects: React.FC = () => {
       p.service.toLowerCase().includes(query);
     return matchesPillar && matchesSearch;
   });
+
+  const totalProjectPages = Math.max(1, Math.ceil(filteredProjects.length / pageSize));
+  const pagedProjects = filteredProjects.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, filterPillar, pageSize]);
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, totalProjectPages));
+  }, [totalProjectPages]);
 
   return (
     <AdminPageShell featureSlug="cms-projects-module">
