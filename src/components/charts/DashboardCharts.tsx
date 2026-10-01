@@ -192,7 +192,7 @@ export const TrendChart: React.FC<{
                 fill="transparent"
                 onMouseEnter={() => setHover((current) => current && current.index === index ? current : { index, x: point.x, percent: (point.x / width) * 100 })}
                 onFocus={() => setHover({ index, x: point.x, percent: (point.x / width) * 100 })}
-                onPointerDown={() => setHover({ index, x: point.x, percent: (point.x / width) * 100 })
+                onPointerDown={() => setHover({ index, x: point.x, percent: (point.x / width) * 100 })}
                 tabIndex={0}
                 aria-label={`${point.label}: ${primaryLabel} ${primaryFormat(point.primary)}${point.secondary !== undefined ? `, ${secondaryLabel} ${primaryFormat(point.secondary)}` : ''}`}
               />
