@@ -33,7 +33,7 @@ import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 export const AdminCmsServices: React.FC = () => {
   const { language } = useLanguage();
@@ -216,14 +216,8 @@ export const AdminCmsServices: React.FC = () => {
       
       <AdminModuleHeader slug="cms-services-header"
         icon={<Layers size={20} />}
-        eyebrow={
-          <>
-            <Cpu size={14} className="text-accent" />
-            <span>Service Catalog & Execution Engine</span>
-          </>
-        }
         className="mb-0"
-        title="Agency Services (SEO & Dev)"
+        title="Services"
         description={
           <>Manage live service offerings, SLA benchmarks, deliverables, and technical capabilities published on <code className="rounded-badge border border-line bg-panel px-1.5 py-0.5 text-fg">/services</code>.</>
         }
@@ -240,6 +234,16 @@ export const AdminCmsServices: React.FC = () => {
             </Button>
           </>
         }
+      />
+
+      <AdminSectionTabs
+        ariaLabel="CMS sections"
+        activeKey="services"
+        items={[
+          { key: 'projects', label: 'Projects', to: '/admin/cms/projects' },
+          { key: 'services', label: 'Services', to: '/admin/cms/services' },
+          { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials' }
+        ]}
       />
 
       {statusMessage && (() => {
@@ -292,34 +296,54 @@ export const AdminCmsServices: React.FC = () => {
         ]}
       />
 
-      {/* Category Pills & Search */}
-      <div data-ams-feature-slug="cms-services-filters" data-ams-slug="cms-services-filters" className="w-full flex flex-col sm:flex-row items-center justify-between gap-3 bg-panel p-4 rounded-card border border-line">
-        <div className="flex flex-nowrap items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:overflow-visible sm:pb-0">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`shrink-0 px-3 py-1.5 rounded-control text-xs font-sans transition-all ${
-                selectedCategory === cat
-                  ? 'bg-panel-hover text-fg font-semibold border border-line'
-                  : 'text-muted border border-transparent hover:text-fg hover:bg-panel'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+      <AdminFilterBar
+        slug="cms-services-filters"
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search service name, slug, or capability..."
+        searchLabel="Search services"
+        actions={(
+          <button
+            type="button"
+            onClick={() => {
+              setSearchQuery('');
+              setSelectedCategory('All');
+              setPage(1);
+            }}
+            disabled={!searchQuery && selectedCategory === 'All'}
+            className="inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <X size={13} />
+            Reset
+          </button>
+        )}
+      >
+        <div className="flex min-w-0 items-center gap-1 overflow-x-auto pb-0.5 custom-scrollbar">
+          {categories.map((category) => {
+            const active = selectedCategory === category;
+            return (
+              <button
+                key={category}
+                type="button"
+                onClick={() => setSelectedCategory(category)}
+                aria-pressed={active}
+                className={[
+                  'inline-flex min-h-8 shrink-0 items-center justify-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+                  active
+                    ? 'border-accent/25 bg-accent/10 font-semibold text-fg'
+                    : 'border-transparent text-muted hover:bg-bg hover:text-fg'
+                ].join(' ')}
+              >
+                {category}
+              </button>
+            );
+          })}
         </div>
+      </AdminFilterBar>
 
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={14} />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={language === 'id' ? 'Cari layanan berdasarkan nama atau slug...' : 'Search service by name or slug...'}
-            className="w-full pl-9 pr-3 py-2 bg-panel border border-line rounded-control text-xs text-fg placeholder:text-muted focus:outline-none focus:border-accent font-sans transition-colors min-h-10 py-2.5"
-          />
-        </div>
+      <div className="flex items-center justify-between gap-3 text-[11px] text-muted">
+        <span>{filtered.length} of {servicesList.length} services</span>
+        <span className="tabular-nums">Page {page} of {totalServicePages}</span>
       </div>
 
       {/* Services List Grid */}

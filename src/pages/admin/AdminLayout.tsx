@@ -15,6 +15,7 @@ import {
   ClipboardCheck,
   UsersRound,
   LockKeyhole,
+  Layers,
 } from 'lucide-react';
 import { getAdminSession, logoutAdmin } from '../../lib/adminAuth';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -50,6 +51,7 @@ const STITCH_NAV_ITEMS: AdminNavItem[] = [
   { key: 'team', to: '/admin/team', label: 'Team', icon: UsersRound, accessKey: 'timelogs', requiredTier: 3, group: 'Project Operations' },
   { key: 'tasks', to: '/admin/tasks', label: 'Tasks', icon: ClipboardCheck, badge: 3, accessKey: 'projects', requiredTier: 3, group: 'Project Operations' },
   { key: 'documents', to: '/admin/documents', label: 'Documents', icon: LockKeyhole, badge: 'Encrypted', requiredTier: 3, group: 'Project Operations' },
+  { key: 'cms', to: '/admin/cms/projects', label: 'CMS', icon: Layers, accessKey: 'cms_projects', requiredTier: 3, group: 'Project Operations' },
 ];
 
 const DEFAULT_PROFILE_NAME = 'Fikri Nurlete';
@@ -222,6 +224,10 @@ export const AdminLayout: React.FC = () => {
 
     if (path === '/admin/team') {
       return location.pathname === '/admin/team' || location.pathname === '/admin/time-logs' || location.pathname === '/admin/vendors';
+    }
+
+    if (path === '/admin/cms/projects') {
+      return location.pathname.startsWith('/admin/cms/');
     }
 
     if (path === '/admin/settings') {

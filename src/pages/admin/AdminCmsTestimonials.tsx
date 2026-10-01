@@ -6,7 +6,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
-import { AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 export const AdminCmsTestimonials: React.FC = () => {
@@ -21,7 +21,8 @@ export const AdminCmsTestimonials: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(9);
+  const [pageSize, setPageSize] = useState(10);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const loadData = async () => {
     setIsLoading(true); setLoadError(null);
@@ -37,9 +38,23 @@ export const AdminCmsTestimonials: React.FC = () => {
     void loadData();
   }, []);
 
-  const totalTestimonialPages = Math.max(1, Math.ceil(testimonials.length / pageSize));
-  const pagedTestimonials = testimonials.slice((page - 1) * pageSize, page * pageSize);
-  useEffect(() => { setPage((current) => Math.min(current, totalTestimonialPages)); }, [totalTestimonialPages]);
+  const filteredTestimonials = testimonials.filter((item) => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return true;
+    return [item.author, item.role, item.company, item.location, item.quote, item.quoteId]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(query));
+  });
+  const totalTestimonialPages = Math.max(1, Math.ceil(filteredTestimonials.length / pageSize));
+  const pagedTestimonials = filteredTestimonials.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, pageSize]);
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, totalTestimonialPages));
+  }, [totalTestimonialPages]);
 
   const handleOpenAdd = () => {
     const template: TestimonialItem = {
@@ -133,6 +148,16 @@ export const AdminCmsTestimonials: React.FC = () => {
         }
       />
 
+      <AdminSectionTabs
+        ariaLabel="CMS sections"
+        activeKey="testimonials"
+        items={[
+          { key: 'projects', label: 'Projects', to: '/admin/cms/projects' },
+          { key: 'services', label: 'Services', to: '/admin/cms/services' },
+          { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials' }
+        ]}
+      />
+
       {statusMessage && (() => {
         const failed = /failed|could not|unable|error|gagal|wajib|required/i.test(statusMessage);
         return (
@@ -143,78 +168,96 @@ export const AdminCmsTestimonials: React.FC = () => {
         );
       })()}
 
-      {/* Testimonials List */}
+      <AdminFilterBar
+        slug="cms-testimonials-filters"
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search author, company, role, location, or quote..."
+        searchLabel="Search testimonials"
+        actions={(
+          <button
+            type="button"
+            onClick={() => {
+              setSearchQuery('');
+              setPage(1);
+            }}
+            disabled={!searchQuery}
+            className="inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <X size={13} />
+            Reset
+          </button>
+        )}
+      />
+
+      <div className="flex items-center justify-between gap-3 text-[11px] text-muted">
+        <span>{filteredTestimonials.length} of {testimonials.length} testimonials</span>
+        <span className="tabular-nums">Page {page} of {totalTestimonialPages}</span>
+      </div>
+
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" aria-label="Loading testimonials">
-          {[1,2,3].map(i => <div key={i} className="h-48 rounded-card border border-line bg-panel animate-pulse" />)}
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3" aria-label="Loading testimonials">
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <div key={i} className="rounded-card border border-line bg-panel p-4">
+              <div className="h-4 w-20 rounded-control bg-line/60" />
+              <div className="mt-5 h-14 w-full rounded-control bg-line/40" />
+              <div className="mt-5 h-9 w-32 rounded-control bg-line/50" />
+            </div>
+          ))}
         </div>
       ) : loadError ? (
-        <div className="rounded-card border border-danger/30 bg-danger/5 p-4 flex items-center justify-between gap-4">
-          <div><p className="text-sm font-semibold text-fg">Unable to load testimonials</p><p className="mt-1 text-xs text-muted">{loadError}</p></div>
-          <Button variant="secondary" onClick={() => void loadData()}>Retry</Button>
+        <div className="rounded-card border border-danger/20 bg-danger/10 p-4">
+          <p className="text-sm font-semibold text-fg">Unable to load testimonials</p>
+          <p className="mt-1 text-xs leading-5 text-muted">{loadError}</p>
+          <Button className="mt-4" variant="secondary" onClick={() => void loadData()}>Retry</Button>
         </div>
-      ) : testimonials.length === 0 ? (
-        <div className="rounded-card border border-line bg-panel p-4 text-center">
-          <MessageSquare className="mx-auto text-muted" size={22} />
-          <p className="mt-3 text-sm font-semibold text-fg">No testimonials yet</p>
-          <p className="mt-1 text-xs text-muted">Add a client testimonial to publish social proof.</p>
-          <Button className="mt-4" icon={<Plus size={14} />} onClick={handleOpenAdd}>Add Testimonial</Button>
+      ) : filteredTestimonials.length === 0 ? (
+        <div className="flex min-h-[260px] flex-col items-center justify-center rounded-card border border-line bg-panel p-10 text-center">
+          <MessageSquare className="text-muted" size={22} />
+          <p className="mt-3 text-sm font-semibold text-fg">{testimonials.length === 0 ? 'No testimonials yet' : 'No matching testimonials'}</p>
+          <p className="mt-1 max-w-md text-xs leading-5 text-muted">
+            {testimonials.length === 0 ? 'Add a client testimonial to publish social proof.' : 'Adjust the search to find another testimonial.'}
+          </p>
+          {testimonials.length === 0 && (
+            <Button className="mt-4" icon={<Plus size={14} />} onClick={handleOpenAdd}>Add testimonial</Button>
+          )}
         </div>
       ) : (
-      <>
-      <div data-ams-feature-slug="cms-testimonials-directory" data-ams-slug="cms-testimonials-directory" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {pagedTestimonials.map((item) => (
-          <div
-            key={item.id}
-            className="bg-panel border border-line rounded-card p-4 flex flex-col justify-between hover:border-line transition-all"
-          >
-            <div>
-              {/* Rating stars */}
-              <div className="flex items-center gap-1 text-warning mb-4">
-                {[...Array(item.rating || 5)].map((_, i) => (
-                  <Star key={i} size={14} fill="currentColor" />
-                ))}
-              </div>
-
-              {/* Quote */}
-              <p className="text-xs text-muted leading-relaxed italic mb-6">
-                "{item.quoteId || item.quote}"
-              </p>
-            </div>
-
-            <div className="pt-4 border-t border-line flex items-center justify-between">
-              <div>
-                <ProfileIdentity
-                  profile={{ name: item.author, role: item.role || undefined, contextLabel: item.company || undefined }}
-                  showRole
-                />
-                <div className="text-[11px] font-sans text-muted mt-0.5 flex items-center gap-1">
-                  <MapPin size={10} />
-                  <span>{item.location}</span>
+        <>
+          <div data-ams-feature-slug="cms-testimonials-directory" data-ams-slug="cms-testimonials-directory" className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {pagedTestimonials.map((item) => (
+              <div key={item.id} className="group flex min-h-[220px] flex-col justify-between rounded-card border border-line bg-panel p-4 transition-colors hover:bg-panel-hover">
+                <div>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-1 text-warning" aria-label={String(item.rating || 5) + ' out of 5 stars'}>
+                      {[...Array(item.rating || 5)].map((_, i) => <Star key={i} size={13} fill="currentColor" />)}
+                    </div>
+                    <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] font-mono text-muted">#{item.id}</span>
+                  </div>
+                  <p className="mt-4 line-clamp-5 text-xs leading-5 text-muted">“{item.quoteId || item.quote}”</p>
+                </div>
+                <div className="mt-4 flex items-end justify-between gap-3 border-t border-line pt-3">
+                  <div className="min-w-0">
+                    <ProfileIdentity profile={{ name: item.author, role: item.role || undefined, contextLabel: item.company || undefined }} showRole />
+                    <div className="mt-1 flex items-center gap-1 text-[10px] text-muted">
+                      <MapPin size={10} />
+                      <span className="truncate">{item.location || 'Location not set'}</span>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <button type="button" onClick={() => handleOpenEdit(item)} className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel hover:text-fg" aria-label={'Edit ' + item.author}>
+                      <Edit3 size={14} />
+                    </button>
+                    <button type="button" onClick={() => setDeleteTarget({ id: item.id, author: item.author })} className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-control border border-line bg-bg text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger" aria-label={'Delete ' + item.author}>
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               </div>
-
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() => handleOpenEdit(item)}
-                  className="min-h-10 min-w-10 sm:min-h-9 sm:min-w-9 rounded-control bg-panel hover:bg-panel-hover text-muted hover:text-fg border border-line transition-colors flex items-center justify-center"
-                >
-                  <Edit3 size={14} />
-                </button>
-                <button
-                  onClick={() => setDeleteTarget({ id: item.id, author: item.author })}
-                  className="min-h-10 min-w-10 sm:min-h-9 sm:min-w-9 rounded-control bg-panel hover:bg-danger/10 text-muted hover:text-danger border border-line hover:border-danger/30 transition-colors flex items-center justify-center"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            </div>
-
+            ))}
           </div>
-        ))}
-      </div>
-        <AdminTablePagination total={testimonials.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="testimonials" slug="cms-testimonials-pagination" />
-      </>
+          <AdminTablePagination total={filteredTestimonials.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="testimonials" slug="cms-testimonials-pagination" />
+        </>
       )}
 
       {deleteTarget && (
