@@ -1628,13 +1628,17 @@ export const AdminInbox: React.FC = () => {
               <h3 className="text-fg font-medium mb-1 font-sans text-base">
                 {activeInboxTab === 'jobs'
                   ? (language === 'id' ? 'Pilih Lamaran untuk Meninjau Kandidat' : 'Select an Application to Review')
-                  : (language === 'id' ? 'Pilih Pesan untuk Membaca Brief' : 'Select a Brief to Inspect')}
+                  : activeInboxTab === 'client'
+                    ? (language === 'id' ? 'Pilih Pesan untuk Membaca Brief' : 'Select a Brief to Inspect')
+                    : (language === 'id' ? 'Pilih Record untuk Ditinjau' : 'Select a Record to Review')}
               </h3>
               <p className="text-xs text-muted max-w-sm font-sans leading-relaxed">
                 {language === 'id'
                   ? (activeInboxTab === 'jobs'
                     ? 'Klik salah satu lamaran untuk melihat detail kandidat, tautan resume/portfolio, catatan internal, dan status rekrutmen.'
-                    : 'Klik salah satu inquiry untuk melihat detail brief, respon cepat, kontak WhatsApp/Email, dan konversi ke pipeline CRM.')
+                    : activeInboxTab === 'client'
+                      ? 'Klik salah satu inquiry untuk melihat detail brief, respon cepat, kontak WhatsApp/Email, dan konversi ke pipeline CRM.'
+                      : 'Klik salah satu record untuk melihat detail inbound, status, catatan internal, dan tindak lanjut.')
                   : (activeInboxTab === 'jobs'
                     ? 'Select an application to review candidate details, resume or portfolio links, internal notes, and hiring stage.'
                     : 'Select an inquiry to review the brief, quick responses, WhatsApp/Email contact, and CRM conversion.')}
@@ -1657,16 +1661,22 @@ export const AdminInbox: React.FC = () => {
           ? (language === 'id' ? 'Hapus pesan?' : 'Delete message?')
           : activeInboxTab === 'jobs'
             ? (language === 'id' ? 'Pindahkan lamaran ke Screening?' : 'Move applications to Screening?')
-            : (language === 'id' ? 'Tandai pesan sebagai ditinjau?' : 'Mark messages as reviewed?')}
+            : isMixedInboxTab
+              ? (language === 'id' ? 'Proses record baru?' : 'Process new records?')
+              : (language === 'id' ? 'Tandai pesan sebagai ditinjau?' : 'Mark messages as reviewed?')}
         description={confirmAction?.type === 'delete'
           ? (language === 'id' ? 'Tindakan ini menghapus data inbox secara permanen dan tidak dapat dibatalkan.' : 'This permanently removes the inbox record and cannot be undone.')
           : activeInboxTab === 'jobs'
             ? (language === 'id'
               ? `Sebanyak ${confirmAction?.count ?? 0} lamaran baru akan dipindahkan ke Screening.`
               : `${confirmAction?.count ?? 0} new applications will be moved to Screening.`)
-            : (language === 'id'
-              ? `Sebanyak ${confirmAction?.count ?? 0} pesan baru akan diubah menjadi In Review.`
-              : `${confirmAction?.count ?? 0} new messages will be moved to In Review.`)}
+            : isMixedInboxTab
+              ? (language === 'id'
+                ? `Sebanyak ${confirmAction?.count ?? 0} record baru akan diproses sesuai jenis inbound.`
+                : `${confirmAction?.count ?? 0} new records will be moved to their next workflow stage.`)
+              : (language === 'id'
+                ? `Sebanyak ${confirmAction?.count ?? 0} pesan baru akan diubah menjadi In Review.`
+                : `${confirmAction?.count ?? 0} new messages will be moved to In Review.`)}
         footer={(
           <>
             <button type="button" onClick={() => setConfirmAction(null)} className="min-h-10 rounded-control border border-line bg-panel px-4 text-xs font-medium text-muted hover:bg-bg hover:text-fg">Cancel</button>
@@ -1675,7 +1685,7 @@ export const AdminInbox: React.FC = () => {
               onClick={() => confirmAction?.type === 'delete' && confirmAction.id
                 ? void confirmDelete(confirmAction.id)
                 : confirmAction?.count
-                  ? void confirmMarkAllRead(confirmAction.count, confirmAction.targetStatus || (activeInboxTab === 'jobs' ? 'screening' : 'in-review'))
+                  ? void confirmMarkAllRead(confirmAction.count, confirmAction.targetStatus)
                   : setConfirmAction(null)}
               className={`min-h-10 rounded-control px-4 text-xs font-semibold text-white ${confirmAction?.type === 'delete' ? 'bg-danger hover:bg-danger/90' : 'bg-accent hover:bg-accent/90'}`}
             >
@@ -1683,7 +1693,9 @@ export const AdminInbox: React.FC = () => {
                 ? (language === 'id' ? 'Hapus Permanen' : 'Delete Permanently')
                 : activeInboxTab === 'jobs'
                   ? (language === 'id' ? 'Pindahkan ke Screening' : 'Move to Screening')
-                  : (language === 'id' ? 'Tandai In Review' : 'Mark In Review')}
+                  : isMixedInboxTab
+                    ? (language === 'id' ? 'Proses Record' : 'Process Records')
+                    : (language === 'id' ? 'Tandai In Review' : 'Mark In Review')}
             </button>
           </>
         )}
