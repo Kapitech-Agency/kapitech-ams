@@ -28,7 +28,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { useDragToScroll } from '../../lib/useDragToScroll';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 export const AdminCmsProjects: React.FC = () => {
   const { language, t } = useLanguage();
@@ -287,7 +287,7 @@ export const AdminCmsProjects: React.FC = () => {
       <AdminModuleHeader slug="cms-projects-header"
         icon={<Layers size={20} />}
         className="mb-0"
-        title={t('admin.nav.cmsProjects')}
+        title="Projects"
         description={language === 'id'
           ? 'Kelola showcase studi kasus dan portofolio agency untuk kapitech.id/work.'
           : 'Manage case studies, portfolio showcases, and technical deliverables at kapitech.id/work.'}
@@ -303,7 +303,17 @@ export const AdminCmsProjects: React.FC = () => {
         }
       />
 
-      {/* Success alert */}
+      <AdminSectionTabs
+        ariaLabel="CMS sections"
+        activeKey="projects"
+        items={[
+          { key: 'projects', label: 'Projects', to: '/admin/cms/projects' },
+          { key: 'services', label: 'Services', to: '/admin/cms/services' },
+          { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials' }
+        ]}
+      />
+
+      {/* Success alert */
       {statusMessage && (() => {
         const failed = /failed|could not|unable|error|gagal|wajib|required/i.test(statusMessage);
         return (
@@ -314,90 +324,59 @@ export const AdminCmsProjects: React.FC = () => {
         );
       })()}
 
-      {/* Portfolio filters */}
-      <div className="overflow-hidden rounded-card border border-line bg-panel p-3.5 sm:p-4">
-        <div
-          className="ams-topnav-scroll w-full overflow-x-auto"
-          style={{ overflowX: 'auto' }}
-        >
-          <div
-            className="flex w-max items-center gap-2"
-            style={{ flexWrap: 'nowrap', minWidth: 'max-content', whiteSpace: 'nowrap' }}
+      <AdminFilterBar
+        slug="cms-projects-filters"
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search project, client, industry, or service..."
+        searchLabel="Search case studies"
+        className="mt-4"
+        actions={(
+          <button
+            type="button"
+            onClick={() => {
+              setSearchQuery('');
+              setFilterPillar('All');
+              setPage(1);
+            }}
+            disabled={!searchQuery && filterPillar === 'All'}
+            className="inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <div
-              className="relative shrink-0"
-              style={{ width: '180px', minWidth: '180px' }}
-            >
-              <Search
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"
-                size={14}
-              />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={language === 'id' ? 'Cari proyek atau klien...' : 'Search projects or clients...'}
-                aria-label={language === 'id' ? 'Cari portfolio' : 'Search portfolio'}
-                className="h-9 min-h-9 w-full rounded-control border border-line bg-bg pl-9 pr-3 text-xs text-fg placeholder:text-muted transition-colors focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/20"
-              />
-            </div>
-
-            <div
-              className="inline-flex h-9 shrink-0 items-center rounded-control border border-line bg-bg p-1"
-              style={{ flexWrap: 'nowrap' }}
-              role="group"
-              aria-label="Portfolio pillar filter"
-            >
-              {[
-                { value: 'All', label: language === 'id' ? 'Semua' : 'All' },
-                { value: 'Visual Experience', label: 'Visual Experience' },
-                { value: 'Innovation Development', label: 'Innovation Development' }
-              ].map((option) => {
-                const active = filterPillar === option.value;
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => setFilterPillar(option.value as typeof filterPillar)}
-                    aria-pressed={active}
-                    className={[
-                      "inline-flex h-7 shrink-0 items-center justify-center whitespace-nowrap rounded-chip px-2.5 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
-                      active
-                        ? "border border-accent/25 bg-accent/10 font-semibold text-fg"
-                        : "border border-transparent text-muted hover:bg-panel hover:text-fg"
-                    ].join(" ")}
-                    style={{ flexShrink: 0, whiteSpace: 'nowrap' }}
-                  >
-                    {option.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            <span
-              className="shrink-0 text-[11px] text-muted"
-              style={{ whiteSpace: 'nowrap' }}
-            >
-              {filteredProjects.length} of {projects.length}
-            </span>
-
-            <button
-              type="button"
-              onClick={() => {
-                setSearchQuery('');
-                setFilterPillar('All');
-                setPage(1);
-              }}
-              disabled={!searchQuery && filterPillar === 'All'}
-              className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[11px] font-medium text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg disabled:cursor-not-allowed disabled:opacity-45"
-              style={{ flexShrink: 0, whiteSpace: 'nowrap' }}
-              aria-label="Reset portfolio filters"
-            >
-              <X size={13} />
-              Reset
-            </button>
-          </div>
+            <X size={13} />
+            Reset
+          </button>
+        )}
+      >
+        <div className="flex min-w-0 items-center gap-1 overflow-x-auto pb-0.5 custom-scrollbar">
+          {[
+            { value: 'All', label: 'All' },
+            { value: 'Visual Experience', label: 'Visual Experience' },
+            { value: 'Innovation Development', label: 'Innovation Development' }
+          ].map((option) => {
+            const active = filterPillar === option.value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setFilterPillar(option.value as typeof filterPillar)}
+                aria-pressed={active}
+                className={[
+                  'inline-flex min-h-8 shrink-0 items-center justify-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+                  active
+                    ? 'border-accent/25 bg-accent/10 font-semibold text-fg'
+                    : 'border-transparent text-muted hover:bg-bg hover:text-fg'
+                ].join(' ')}
+              >
+                {option.label}
+              </button>
+            );
+          })}
         </div>
+      </AdminFilterBar>
+
+      <div className="flex items-center justify-between gap-3 text-[11px] text-muted">
+        <span>{filteredProjects.length} of {projects.length} case studies</span>
+        <span className="tabular-nums">Page {page} of {totalProjectPages}</span>
       </div>
 
       {/* Projects Grid with Drag-to-scroll support */}
