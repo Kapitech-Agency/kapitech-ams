@@ -1114,54 +1114,49 @@ export const AdminInbox: React.FC = () => {
             )}
           </aside>
         </section>
-) : viewMode === 'board' ? (
+      ) : viewMode === 'board' ? (
         <section data-ams-feature-slug="inbox-jobs-board" data-ams-slug="inbox-jobs-board" className="overflow-hidden rounded-card border border-line bg-panel">
-          <div className="border-b border-line px-4 py-4 sm:px-5">
+          <div className="border-b border-line bg-panel px-4 py-4 sm:px-5">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <h3 className="text-sm font-semibold text-fg">Candidate pipeline</h3>
                   <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-muted">{filteredItems.length}</span>
                 </div>
-                <p className="mt-1 max-w-2xl text-[11px] leading-5 text-muted">Move applications through the hiring process without losing candidate context or next action.</p>
+                <p className="mt-1 max-w-2xl text-[11px] leading-5 text-muted">Move each application through the hiring stages while keeping the candidate context and next action visible.</p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex min-h-8 items-center rounded-badge border border-line bg-bg px-2 text-[10px] tabular-nums text-muted">{filteredItems.filter((item) => item.status === 'new').length} need screening</span>
-                <span className="inline-flex min-h-8 items-center rounded-badge border border-line bg-bg px-2 text-[10px] tabular-nums text-muted">{filteredItems.filter((item) => item.status === 'interview').length} interview</span>
-                <button type="button" onClick={() => setViewMode('split')} className="inline-flex min-h-8 items-center gap-1.5 rounded-control bg-accent px-2.5 text-[10px] font-medium text-white hover:bg-accent/90"><User size={12}/>Open review</button>
+                <span className="inline-flex min-h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium tabular-nums text-muted"><span className="h-1.5 w-1.5 rounded-full bg-danger" />{filteredItems.filter((item) => item.status === 'new').length} new</span>
+                <span className="inline-flex min-h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium tabular-nums text-muted"><span className="h-1.5 w-1.5 rounded-full bg-info" />{filteredItems.filter((item) => item.status === 'interview').length} interview</span>
+                <button type="button" onClick={() => setViewMode('split')} className="inline-flex min-h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-fg hover:bg-panel"><User size={12} />Review</button>
               </div>
             </div>
           </div>
-
           <div className="overflow-x-auto custom-scrollbar">
             <div className="grid min-w-[1180px] grid-cols-5 divide-x divide-line">
               {[
-                { key: 'new', label: 'New', next: 'screening' as ContactSubmission['status'], action: 'Start screening' },
-                { key: 'screening', label: 'Screening', next: 'shortlisted' as ContactSubmission['status'], action: 'Shortlist' },
-                { key: 'shortlisted', label: 'Shortlisted', next: 'interview' as ContactSubmission['status'], action: 'Schedule interview' },
-                { key: 'interview', label: 'Interview', next: 'hired' as ContactSubmission['status'], action: 'Mark hired' },
-                { key: 'hired', label: 'Hired', next: null, action: null }
+                { key: 'new', label: 'New', next: 'screening' as ContactSubmission['status'], action: 'Start screening', tone: 'bg-danger' },
+                { key: 'screening', label: 'Screening', next: 'shortlisted' as ContactSubmission['status'], action: 'Shortlist', tone: 'bg-warning' },
+                { key: 'shortlisted', label: 'Shortlisted', next: 'interview' as ContactSubmission['status'], action: 'Move to interview', tone: 'bg-accent' },
+                { key: 'interview', label: 'Interview', next: 'hired' as ContactSubmission['status'], action: 'Mark hired', tone: 'bg-info' },
+                { key: 'hired', label: 'Hired', next: null, action: null, tone: 'bg-success' }
               ].map((stage) => {
-                const stageItems = filteredItems
-                  .filter((item) => item.status === stage.key)
-                  .sort((x, y) => {
-                    const rank = (item: ContactSubmission) => item.priority === 'urgent' ? 0 : item.priority === 'high' ? 1 : item.priority === 'normal' ? 2 : 3;
-                    return rank(x) - rank(y) || new Date(x.createdAt).getTime() - new Date(y.createdAt).getTime();
-                  });
-
+                const stageItems = filteredItems.filter((item) => item.status === stage.key).sort((a, b) => {
+                  const priorityRank = (item: ContactSubmission) => item.priority === 'urgent' ? 0 : item.priority === 'high' ? 1 : item.priority === 'normal' ? 2 : 3;
+                  return priorityRank(a) - priorityRank(b) || new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+                });
                 return (
-                  <section key={stage.key} className="min-h-[500px] bg-bg/30">
+                  <section key={stage.key} className="min-h-[520px] bg-bg/30">
                     <div className="border-b border-line bg-panel px-3.5 py-3">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex min-w-0 items-center gap-2">
-                          <span className={'h-2 w-2 shrink-0 rounded-full ' + (stage.key === 'new' ? 'bg-danger' : stage.key === 'screening' ? 'bg-warning' : stage.key === 'shortlisted' ? 'bg-accent' : stage.key === 'interview' ? 'bg-info' : 'bg-success')} />
+                          <span className={'h-2 w-2 shrink-0 rounded-full ' + stage.tone} aria-hidden="true" />
                           <h4 className="truncate text-xs font-semibold text-fg">{stage.label}</h4>
                         </div>
                         <span className="min-w-6 rounded-badge border border-line bg-bg px-1.5 py-0.5 text-center text-[10px] font-semibold tabular-nums text-muted">{stageItems.length}</span>
                       </div>
                     </div>
-
-                    <div className="space-y-2.5 p-3">
+                    <div className="space-y-2 p-3">
                       {stageItems.map((item) => (
                         <article key={item.id} className={'rounded-card border border-line bg-panel p-3 transition-colors hover:border-muted ' + (selectedSubmission?.id === item.id ? 'border-accent/30 bg-accent/5' : '')}>
                           <div className="flex items-start gap-2.5">
@@ -1169,37 +1164,36 @@ export const AdminInbox: React.FC = () => {
                               <p className="truncate text-xs font-semibold text-fg">{item.fullName || 'Anonymous candidate'}</p>
                               <p className="mt-0.5 truncate text-[10px] text-muted">{item.positionTitle || item.specialty || 'Role not specified'}</p>
                             </button>
-                            <button type="button" onClick={(event) => handleToggleStar(event, item.id, item.starred)} disabled={!canManageCrm} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted hover:border-warning/30 hover:bg-warning/10 hover:text-warning disabled:opacity-50" aria-label={item.starred ? 'Unstar application' : 'Star application'}><Star size={12} className={item.starred ? 'fill-warning text-warning' : ''}/></button>
+                            <button type="button" onClick={(event) => handleToggleStar(event, item.id, item.starred)} disabled={!canManageCrm} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted hover:border-warning/30 hover:bg-warning/10 hover:text-warning disabled:opacity-50" aria-label={item.starred ? 'Unstar application' : 'Star application'}>
+                              <Star size={12} className={item.starred ? 'fill-warning text-warning' : ''} />
+                            </button>
                           </div>
-
                           <div className="mt-2 flex flex-wrap gap-1">
                             {renderPriorityBadge(item.priority)}
-                            {item.specialty && <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] text-muted">{item.specialty}</span>}
+                            {renderStatusBadge(item.status)}
                             {item.experienceYears && <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] tabular-nums text-muted">{item.experienceYears} yrs</span>}
                             {item.location && <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] text-muted">{item.location}</span>}
                           </div>
-
                           <p className="mt-2 line-clamp-2 text-[10px] leading-4 text-muted">{item.message || 'No candidate summary provided.'}</p>
-
                           <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-2.5">
                             <div className="min-w-0">
                               <p className="truncate text-[9px] text-muted">{item.assignedTo ? 'Assigned to ' + item.assignedTo : 'Unassigned'}</p>
                               <p className="mt-0.5 text-[9px] tabular-nums text-muted">{formatRelativeTime(item.createdAt)}</p>
                             </div>
-                            <button type="button" onClick={() => { handleSelectSubmission(item); setViewMode('split'); }} className="inline-flex min-h-8 shrink-0 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-fg hover:bg-panel">Review <ChevronRight size={11}/></button>
+                            <button type="button" onClick={() => { handleSelectSubmission(item); setViewMode('split'); }} className="inline-flex min-h-8 shrink-0 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-fg hover:bg-panel">Review <ChevronRight size={11} /></button>
                           </div>
-
                           {stage.next && (
-                            <button type="button" disabled={!canManageCrm || isUpdating} onClick={() => void handleStatusChange(item.id, stage.next as ContactSubmission['status'])} className="mt-2 inline-flex min-h-8 w-full items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-2 text-[10px] font-medium text-muted hover:bg-bg hover:text-fg disabled:pointer-events-none disabled:opacity-50"><Check size={11}/>{stage.action}</button>
+                            <button type="button" disabled={!canManageCrm || isUpdating} onClick={() => void handleStatusChange(item.id, stage.next as ContactSubmission['status'])} className="mt-2 inline-flex min-h-8 w-full items-center justify-center gap-1.5 rounded-control bg-accent px-2 text-[10px] font-medium text-white hover:bg-accent/90 disabled:pointer-events-none disabled:opacity-50">
+                              <Check size={11} />{stage.action}
+                            </button>
                           )}
                         </article>
                       ))}
-
                       {stageItems.length === 0 && (
-                        <div className="flex min-h-[120px] flex-col items-center justify-center rounded-card border border-dashed border-line bg-bg/40 px-4 py-6 text-center">
-                          <Briefcase size={16} className="text-line"/>
+                        <div className="flex min-h-[150px] flex-col items-center justify-center rounded-card border border-dashed border-line bg-bg/40 px-4 py-8 text-center">
+                          <Briefcase size={16} className="text-line" />
                           <p className="mt-2 text-[10px] font-medium text-muted">No applications</p>
-                          <p className="mt-0.5 text-[9px] text-muted/80">{filterStatus !== 'all' || filterPriority !== 'all' ? 'Try clearing filters.' : 'Applications will appear here.'}</p>
+                          <p className="mt-0.5 max-w-[150px] text-[9px] leading-4 text-muted/80">{filterStatus !== 'all' || filterPriority !== 'all' ? 'Clear a filter to see more applications.' : 'Applications will appear here as candidates enter the pipeline.'}</p>
                         </div>
                       )}
                     </div>
@@ -1208,15 +1202,14 @@ export const AdminInbox: React.FC = () => {
               })}
             </div>
           </div>
-
           <div className="border-t border-line bg-bg/50 px-4 py-3">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-[10px] leading-4 text-muted">{filteredItems.filter((item) => item.status === 'rejected' || item.status === 'withdrawn').length} archived applications are outside the active hiring pipeline.</p>
-              <button type="button" onClick={() => setViewMode('split')} className="inline-flex min-h-8 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-2.5 text-[10px] font-medium text-fg hover:bg-bg"><LayoutGrid size={11}/>Open candidate review</button>
+              <p className="text-[10px] leading-4 text-muted">{filteredItems.filter((item) => item.status === 'rejected' || item.status === 'withdrawn').length} applications are outside the active hiring pipeline.</p>
+              <button type="button" onClick={() => setViewMode('split')} className="inline-flex min-h-8 items-center gap-1.5 rounded-control border border-line bg-panel px-2.5 text-[10px] font-medium text-fg hover:bg-bg"><LayoutGrid size={11} />Open candidate review</button>
             </div>
           </div>
         </section>
-      ) : viewMode === 'queue' ? (
+) : viewMode === 'queue' ? (
         <section data-ams-feature-slug="inbox-starred-queue" data-ams-slug="inbox-starred-queue" className="space-y-3">
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             {[
@@ -1399,135 +1392,57 @@ export const AdminInbox: React.FC = () => {
         <div className="ams-inbox-workspace grid grid-cols-1 items-start gap-3 lg:grid-cols-[minmax(300px,0.82fr)_minmax(0,1.18fr)]">
           
           {/* Left: Master Briefs List Pane */}
-          <div className={`ams-inbox-list-pane space-y-3 ${
-            selectedSubmission 
-              ? 'hidden lg:block' 
-              : 'block'
-          }`}>
-            {filteredItems.length > 0 ? filteredItems.map((item) => {
-              const isSelected = selectedSubmission?.id === item.id;
-              const isConverted = crmDeals.some(d => (d as any).inquiryId === item.id);
-
-              return (
-                <div
-                  key={item.id}
-                  onClick={() => handleSelectSubmission(item)}
-                  className={`group relative rounded-card border p-3.5 font-sans transition-all cursor-pointer ${
-                    isSelected
-                      ? 'bg-accent/8 border-accent/30'
-                      : item.status === 'new'
-                      ? 'bg-panel border-danger/30 hover:border-danger/50'
-                      : 'bg-panel border-line hover:border-line hover:bg-panel-hover'
-                  }`}
-                >
-                    {/* Top Row: Channel, Status, Star, Timestamp */}
+          <div className={`ams-inbox-list-pane space-y-3 ${selectedSubmission ? 'hidden lg:block' : 'block'}`}>
+            {filteredItems.length > 0 ? (
+              filteredItems.map((item) => {
+                const isSelected = selectedSubmission?.id === item.id;
+                const isConverted = crmDeals.some(d => (d as any).inquiryId === item.id);
+                return (
+                  <div key={item.id} onClick={() => handleSelectSubmission(item)} className={`group relative cursor-pointer rounded-card border p-3.5 font-sans transition-colors ${
+                    isSelected ? 'border-accent/30 bg-accent/8' : item.status === 'new' ? 'border-danger/30 bg-panel hover:border-danger/50' : 'border-line bg-panel hover:bg-panel-hover'
+                  }`}>
                     <div className="mb-2 flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+                      <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                         {renderChannelBadge(item.type)}
                         {renderStatusBadge(item.status)}
                         {renderPriorityBadge(item.priority)}
-                        {isConverted && (
-                          <span className="px-1.5 py-0.5 rounded-badge text-[9px] font-sans bg-success/10 text-success border border-success/30 font-semibold">
-                            CRM ✓
-                          </span>
-                        )}
+                        {isConverted && <span className="rounded-badge border border-success/30 bg-success/10 px-1.5 py-0.5 text-[9px] font-semibold text-success">CRM ✓</span>}
                       </div>
-
-                      <div className="flex items-center gap-2 shrink-0">
-                        <button
-                          onClick={(e) => handleToggleStar(e, item.id, item.starred)}
-                          disabled={!canManageCrm}
-                          className="min-h-10 min-w-10 rounded-control flex items-center justify-center text-muted hover:text-warning hover:bg-warning/10 transition-colors focus-visible:outline-none" aria-label={item.starred ? "Unstar brief" : "Star brief"}
-                        >
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        <button type="button" onClick={(event) => handleToggleStar(event, item.id, item.starred)} disabled={!canManageCrm} className="inline-flex h-9 w-9 items-center justify-center rounded-control text-muted hover:bg-warning/10 hover:text-warning focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-50" aria-label={item.starred ? 'Unstar record' : 'Star record'}>
                           <Star size={13} className={item.starred ? 'fill-warning text-warning' : ''} />
                         </button>
-                        <span className="text-[10px] text-muted">
-                          {formatRelativeTime(item.createdAt)}
-                        </span>
+                        <span className="text-[10px] tabular-nums text-muted">{formatRelativeTime(item.createdAt)}</span>
                       </div>
                     </div>
-
-                    {/* Client Name & Company */}
-                    <div className="mb-1 flex items-center justify-between gap-2">
-                      <ProfileIdentity profile={{ name: item.fullName || 'Anonymous Client', role: item.positionTitle || (item.type === 'career' ? 'Candidate' : 'Contact'), contextLabel: item.type === 'career' ? item.positionTitle : item.company, companyEmail: item.email, phone: item.phone }} size="sm" showRole={false} />
-                      <span className="text-xs font-sans font-semibold text-success shrink-0">
-                        {item.type === 'career' ? (item.experienceYears ? item.experienceYears + ' yrs' : '-') : formatAmount(estimateDealValue(item), currency)}
-                      </span>
-                    </div>
-
-                    <div className="text-xs text-muted truncate mb-2">
-                      {item.type === 'career'
-                        ? [item.positionTitle || 'Role not specified', item.specialty, item.location].filter(Boolean).join(' · ')
-                        : (item.company || item.email)}
-                    </div>
-
-                    {/* Service / Skill Tags */}
-                    {(
-                      item.type === 'career'
-                        ? [item.positionTitle, item.specialty, item.experienceYears ? item.experienceYears + ' yrs' : undefined].filter(Boolean)
-                        : (item.services || [])
-                    ).length > 0 && (
-                      <div className="flex flex-wrap gap-1 mb-2.5">
-                        {(
-                          item.type === 'career'
-                            ? [item.positionTitle, item.specialty, item.experienceYears ? item.experienceYears + ' yrs' : undefined].filter(Boolean) as string[]
-                            : (item.services || [])
-                        ).slice(0, 3).map((value, i) => (
-                          <span key={i} className="text-[9px] font-sans px-1.5 py-0.5 rounded-badge bg-panel border border-line text-muted">
-                            {value}
-                          </span>
-                        ))}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <ProfileIdentity profile={{ name: item.fullName || 'Anonymous', role: item.positionTitle || (item.type === 'career' ? 'Candidate' : 'Contact'), contextLabel: item.type === 'career' ? item.positionTitle : item.company, companyEmail: item.email, phone: item.phone }} size="sm" showRole={false} />
+                        <p className="mt-1 truncate text-[11px] text-muted">{item.type === 'career' ? [item.positionTitle, item.specialty, item.location].filter(Boolean).join(' · ') : (item.company || item.email)}</p>
                       </div>
-                    )}
-
-                    <div className="mb-2 text-[9px] font-mono text-muted/75 truncate">/{getSubmissionSlug(item)}</div>
-
-                    {/* Message Preview */}
-                    <p className="text-xs text-muted line-clamp-2 leading-relaxed font-sans">
-                      {item.message || (language === 'id' ? 'Tidak ada isi brief.' : 'No brief body provided.')}
-                    </p>
-
-                    {/* Bottom notes indicator if present */}
-                    {item.internalNotes && (
-                      <div className="mt-2.5 pt-2 border-t border-line flex items-center gap-1.5 text-[10px] text-warning/80">
-                        <FileText size={11} />
-                        <span className="truncate">{item.internalNotes}</span>
-                      </div>
-                    )}
+                      <span className="shrink-0 text-xs font-semibold tabular-nums text-fg">{item.type === 'career' ? (item.experienceYears ? item.experienceYears + ' yrs' : '-') : formatAmount(estimateDealValue(item), currency)}</span>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {(item.type === 'career' ? [item.positionTitle, item.specialty, item.experienceYears ? item.experienceYears + ' yrs' : undefined] : (item.services || [])).filter(Boolean).slice(0, 3).map((value, index) => (
+                        <span key={index} className="rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[9px] text-muted">{value}</span>
+                      ))}
+                    </div>
+                    <p className="mt-2 line-clamp-2 text-[11px] leading-5 text-muted">{item.message || (language === 'id' ? 'Tidak ada isi brief.' : 'No brief content provided.')}</p>
+                    <p className="mt-2 truncate font-mono text-[9px] text-muted/70">/{getSubmissionSlug(item)}</p>
                   </div>
                 );
-              }) : (
-                <div className="flex min-h-[440px] flex-col items-center justify-center rounded-card border border-line bg-panel px-5 py-10 text-center">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-control border border-line bg-bg text-muted">
-                    <Inbox size={17} />
-                  </div>
-                  <p className="mt-3 text-sm font-medium text-fg">
-                    {submissions.length === 0
-                      ? (language === 'id' ? 'Inbox belum memiliki record' : 'No inbound records yet')
-                      : (language === 'id' ? 'Tidak ada record yang cocok' : 'No records match these filters')}
-                  </p>
-                  <p className="mt-1 max-w-xs text-[11px] leading-5 text-muted">
-                    {submissions.length === 0
-                      ? (language === 'id' ? 'Record baru akan muncul di panel ini saat ada inbound.' : 'New inbound records will appear here as they arrive.')
-                      : (language === 'id' ? 'Ubah pencarian atau filter untuk melihat record lain.' : 'Adjust the search or filters to see other records.')}
-                  </p>
-                  {(searchQuery || filterStatus !== 'all' || filterPriority !== 'all') && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSearchQuery('');
-                        setFilterStatus('all');
-                        setFilterPriority('all');
-                      }}
-                      className="mt-4 inline-flex min-h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-[10px] font-medium text-fg hover:bg-panel"
-                    >
-                      <Filter size={11} />
-                      Reset filters
-                    </button>
-                  )}
-                </div>
-              )}
-          </div>
+              })
+            ) : (
+              <div className="flex min-h-[420px] flex-col items-center justify-center rounded-card border border-line bg-panel px-6 py-10 text-center">
+                <div className="flex h-10 w-10 items-center justify-center rounded-card border border-line bg-bg text-muted"><Inbox size={18} /></div>
+                <p className="mt-3 text-xs font-medium text-fg">{submissions.length === 0 ? 'No inbound records yet' : 'No matching records'}</p>
+                <p className="mt-1 max-w-xs text-[10px] leading-4 text-muted">{submissions.length === 0 ? 'New inquiries and applications will appear here as they arrive.' : 'Try another search or reset the active filters.'}</p>
+                {(searchQuery || filterStatus !== 'all' || filterPriority !== 'all') && (
+                  <button type="button" onClick={() => { setSearchQuery(''); setFilterStatus('all'); setFilterPriority('all'); }} className="mt-4 inline-flex min-h-8 items-center gap-1.5 rounded-control border border-line bg-panel px-2.5 text-[10px] font-medium text-fg hover:bg-bg"><Filter size={11} />Reset filters</button>
+                )}
+              </div>
+            )}
+          </div>          </div>
 
           {/* Right: Message Reader & Command Hub Pane */}
           {selectedSubmission ? (
