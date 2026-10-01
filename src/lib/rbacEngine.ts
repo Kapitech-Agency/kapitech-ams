@@ -335,7 +335,11 @@ export function useRbacRole(
     setRole: switchRole,
     roleMeta: meta,
     isAllowed: (key: string) => {
-      if (actualStakeholderType === 'Master') return true;
+      const isMasterIdentity =
+        actualStakeholderType === 'Master' ||
+        userRole === 'Tier 1: Top Management / Sponsor' ||
+        /\bmaster\b|super admin|root admin/i.test(normalizedRole);
+      if (isMasterIdentity) return true;
       if (serverPermissions) {
         const anyPermissions = MODULE_ANY_PERMISSION_MAP[key];
         if (anyPermissions) return anyPermissions.some(permission => Boolean(serverPermissions[permission]));
