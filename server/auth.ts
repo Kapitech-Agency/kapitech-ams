@@ -641,7 +641,7 @@ export function requireAnyPermission(...permissionKeys: Array<keyof StoredUser['
       return;
     }
     if (!requireMfaForProtectedAccess(req, res)) return;
-    if (req.user.stakeholderType === 'Master') {
+    if (isMasterAdministrator(req.user)) {
       next();
       return;
     }
