@@ -6,6 +6,7 @@
 
 import { api } from './apiClient';
 import { toSlug } from './slug';
+import { isSlugFixtureMode } from './runtimeMode';
 
 export type InvoiceStatus = 'draft' | 'sent' | 'partially_paid' | 'paid' | 'overdue' | 'cancelled';
 
