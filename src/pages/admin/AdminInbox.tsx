@@ -793,17 +793,17 @@ export const AdminInbox: React.FC = () => {
         </section>
       ) : activeInboxTab === 'jobs' ? (
         <section data-ams-feature-slug="inbox-jobs-kpis" data-ams-slug="inbox-jobs-kpis" aria-label="Job application KPIs" className="rounded-card border border-line bg-panel p-4">
-          <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
-            <div>
+          <div className="mb-3 flex items-start justify-between gap-3 border-b border-line pb-3">
+            <div className="min-w-0">
               <h2 className="text-sm font-semibold text-fg">Recruitment pipeline</h2>
-              <p className="mt-1 text-xs text-muted">Screen candidates by stage, keep interview slots visible, and move decisions forward.</p>
+              <p className="mt-1 max-w-2xl text-xs leading-5 text-muted">Screen candidates by stage, keep ownership visible, and move each application to its next decision.</p>
             </div>
-            <span className="text-[11px] font-medium tabular-nums text-muted">{activeTabItems.length} applications</span>
+            <span className="shrink-0 text-[11px] font-medium tabular-nums text-muted">{activeTabItems.length} applications</span>
           </div>
           <AdminMetricStrip slug="inbox-jobs-kpis" className="lg:grid-cols-4" metrics={[
             { id: 'jobs-total', label: 'Applications', value: activeTabItems.length, context: 'All candidate intake', sparkline: [Math.max(0, activeTabItems.length - 2), activeTabItems.length], icon: <Briefcase size={16} strokeWidth={1.8} /> },
-            { id: 'jobs-screening', label: 'Screening queue', value: activeTabItems.filter((item) => item.status === 'new' || item.status === 'screening').length, context: 'New + screening', sparkline: [activeTabItems.filter((item) => item.status === 'new').length, activeTabItems.filter((item) => item.status === 'screening').length], toneClassName: 'text-warning' },
-            { id: 'jobs-interview', label: 'Interview', value: activeTabItems.filter((item) => item.status === 'interview').length, context: 'Active interview stage', sparkline: [0, activeTabItems.filter((item) => item.status === 'interview').length], toneClassName: 'text-info' },
+            { id: 'jobs-new', label: 'Needs screening', value: activeTabItems.filter((item) => item.status === 'new').length, context: 'New applications', sparkline: [0, activeTabItems.filter((item) => item.status === 'new').length], toneClassName: 'text-danger' },
+            { id: 'jobs-active', label: 'In process', value: activeTabItems.filter((item) => ['screening', 'shortlisted', 'interview'].includes(item.status)).length, context: 'Screening to interview', sparkline: [0, activeTabItems.filter((item) => ['screening', 'shortlisted', 'interview'].includes(item.status)).length], toneClassName: 'text-info' },
             { id: 'jobs-hired', label: 'Hired', value: activeTabItems.filter((item) => item.status === 'hired').length, context: metrics.conversionRate + '% of applications', sparkline: [0, activeTabItems.filter((item) => item.status === 'hired').length], toneClassName: 'text-success' }
           ]} />
         </section>
@@ -842,14 +842,23 @@ export const AdminInbox: React.FC = () => {
           slug="inbox-jobs-controls"
           searchValue={searchQuery}
           onSearchChange={setSearchQuery}
-          searchPlaceholder="Search candidate, role, skill, or tools..."
+          searchPlaceholder="Search candidate, role, skill, or location..."
           searchLabel="Search applications"
           actions={(
             <div className="flex min-w-0 items-center gap-2 overflow-x-auto custom-scrollbar">
               <div className="w-[150px] shrink-0"><CustomSelect value={filterStatus} onChange={setFilterStatus} options={inboxStatusOptions} /></div>
               <div className="w-[150px] shrink-0"><CustomSelect value={filterPriority} onChange={setFilterPriority} options={[{value:'all',label:'All Priorities'},{value:'urgent',label:'Urgent'},{value:'high',label:'High'},{value:'normal',label:'Normal'},{value:'low',label:'Low'}]} /></div>
-              <button type="button" onClick={()=>setViewMode('board')} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg"><LayoutGrid size={13}/>Board</button>
-              <button type="button" onClick={()=>setViewMode('split')} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control bg-accent px-3 text-xs font-medium text-white hover:bg-accent/90"><User size={13}/>Review</button>
+              <div className="flex shrink-0 items-center rounded-control border border-line bg-bg p-0.5">
+                <button type="button" onClick={() => setViewMode('board')} className={'inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip px-2.5 text-[11px] font-medium transition-colors ' + (viewMode === 'board' ? 'border border-line bg-panel text-fg' : 'border border-transparent text-muted hover:text-fg')}><LayoutGrid size={13}/>Board</button>
+                <button type="button" onClick={() => setViewMode('split')} className={'inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip px-2.5 text-[11px] font-medium transition-colors ' + (viewMode === 'split' ? 'border border-line bg-panel text-fg' : 'border border-transparent text-muted hover:text-fg')}><User size={13}/>Review</button>
+              </div>
+              <button type="button" onClick={() => { setSearchQuery(''); setFilterStatus('all'); setFilterPriority('all'); }} disabled={!searchQuery && filterStatus === 'all' && filterPriority === 'all'} className="inline-flex h-9 min-h-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg disabled:pointer-events-none disabled:opacity-40">Reset</button>
+            </div>
+          )}
+          footer={(
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-[10px] text-muted">{filteredItems.length} matching applications · board stages follow the current application status.</p>
+              <button type="button" onClick={() => void refreshInbox()} className="inline-flex min-h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted hover:bg-panel hover:text-fg"><RefreshCw size={11}/>Refresh</button>
             </div>
           )}
         />
@@ -1085,14 +1094,106 @@ export const AdminInbox: React.FC = () => {
           </aside>
         </section>
 ) : viewMode === 'board' ? (
-        <section data-ams-feature-slug="inbox-jobs-board" data-ams-slug="inbox-jobs-board" className="rounded-card border border-line bg-panel overflow-hidden">
-          <div className="border-b border-line px-4 py-3.5 flex items-center justify-between gap-3"><div><h3 className="text-sm font-semibold text-fg">Candidate pipeline</h3><p className="mt-0.5 text-[11px] text-muted">Move candidates forward directly from the Inbox board.</p></div><span className="text-[11px] text-muted tabular-nums">{filteredItems.length} visible applications</span></div>
-          <div className="overflow-x-auto custom-scrollbar"><div className="grid min-w-[1050px] grid-cols-5 divide-x divide-line">
-            {[
-              {key:'new',label:'New',next:'screening' as ContactSubmission['status']},{key:'screening',label:'Screening',next:'shortlisted' as ContactSubmission['status']},{key:'shortlisted',label:'Shortlisted',next:'interview' as ContactSubmission['status']},{key:'interview',label:'Interview',next:'hired' as ContactSubmission['status']},{key:'hired',label:'Hired',next:null}
-            ].map((stage)=>{const stageItems=filteredItems.filter((item)=>item.status===stage.key);return <div key={stage.key} className="min-h-[470px] bg-bg/30"><div className="border-b border-line bg-panel px-3 py-3"><div className="flex items-center justify-between gap-2"><span className="text-xs font-semibold text-fg">{stage.label}</span><span className="min-w-6 rounded-badge border border-line bg-bg px-1.5 py-0.5 text-center text-[10px] font-medium tabular-nums text-muted">{stageItems.length}</span></div></div><div className="space-y-2 p-2.5">{stageItems.map((item)=><div key={item.id} className="rounded-card border border-line bg-panel p-3 hover:border-muted transition-colors"><div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="truncate text-xs font-semibold text-fg">{item.fullName}</p><p className="mt-0.5 truncate text-[10px] text-muted">{item.positionTitle||item.specialty||'Role not specified'}</p></div><button type="button" onClick={(e)=>handleToggleStar(e,item.id,item.starred)} disabled={!canManageCrm} className="shrink-0 p-1 text-muted hover:text-warning" aria-label={item.starred?'Unstar application':'Star application'}><Star size={13} className={item.starred?'fill-warning text-warning':''}/></button></div><div className="mt-2 flex flex-wrap items-center gap-1">{renderPriorityBadge(item.priority)}{item.specialty&&<span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] text-muted">{item.specialty}</span>}{item.experienceYears&&<span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] text-muted">{item.experienceYears} yrs</span>}</div><div className="mt-3 flex items-center justify-between gap-2"><span className="text-[10px] text-muted">{formatRelativeTime(item.createdAt)}</span><button type="button" onClick={()=>{handleSelectSubmission(item);setViewMode('split');}} className="inline-flex min-h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-fg hover:bg-panel">Review<ChevronRight size={11}/></button></div>{stage.next&&<button type="button" disabled={!canManageCrm||isUpdating} onClick={()=>{if(stage.next) void handleStatusChange(item.id,stage.next);}} className="mt-2 w-full min-h-8 rounded-control border border-line bg-panel px-2 text-[10px] font-medium text-muted hover:bg-bg hover:text-fg disabled:opacity-50">{stage.next==='screening'?'Start screening':stage.next==='shortlisted'?'Shortlist':stage.next==='interview'?'Move to interview':'Mark hired'}</button>}</div>)}{stageItems.length===0&&<div className="p-8 text-center text-[10px] text-muted">No candidates</div>}</div></div>})}
-          </div></div>
-          <div className="border-t border-line px-4 py-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-muted"><span>{filteredItems.filter((item)=>item.status==='rejected'||item.status==='withdrawn').length} archived or closed applications outside the active board</span><button type="button" onClick={()=>setViewMode('split')} className="inline-flex min-h-8 items-center gap-1.5 rounded-control border border-line bg-panel px-3 font-medium text-fg hover:bg-bg"><LayoutGrid size={12}/>Open candidate review</button></div>
+        <section data-ams-feature-slug="inbox-jobs-board" data-ams-slug="inbox-jobs-board" className="overflow-hidden rounded-card border border-line bg-panel">
+          <div className="border-b border-line px-4 py-4 sm:px-5">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-fg">Candidate pipeline</h3>
+                  <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-muted">{filteredItems.length}</span>
+                </div>
+                <p className="mt-1 max-w-2xl text-[11px] leading-5 text-muted">Move applications through the hiring process without losing candidate context or next action.</p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex min-h-8 items-center rounded-badge border border-line bg-bg px-2 text-[10px] tabular-nums text-muted">{filteredItems.filter((item) => item.status === 'new').length} need screening</span>
+                <span className="inline-flex min-h-8 items-center rounded-badge border border-line bg-bg px-2 text-[10px] tabular-nums text-muted">{filteredItems.filter((item) => item.status === 'interview').length} interview</span>
+                <button type="button" onClick={() => setViewMode('split')} className="inline-flex min-h-8 items-center gap-1.5 rounded-control bg-accent px-2.5 text-[10px] font-medium text-white hover:bg-accent/90"><User size={12}/>Open review</button>
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto custom-scrollbar">
+            <div className="grid min-w-[1180px] grid-cols-5 divide-x divide-line">
+              {[
+                { key: 'new', label: 'New', next: 'screening' as ContactSubmission['status'], action: 'Start screening' },
+                { key: 'screening', label: 'Screening', next: 'shortlisted' as ContactSubmission['status'], action: 'Shortlist' },
+                { key: 'shortlisted', label: 'Shortlisted', next: 'interview' as ContactSubmission['status'], action: 'Schedule interview' },
+                { key: 'interview', label: 'Interview', next: 'hired' as ContactSubmission['status'], action: 'Mark hired' },
+                { key: 'hired', label: 'Hired', next: null, action: null }
+              ].map((stage) => {
+                const stageItems = filteredItems
+                  .filter((item) => item.status === stage.key)
+                  .sort((x, y) => {
+                    const rank = (item: ContactSubmission) => item.priority === 'urgent' ? 0 : item.priority === 'high' ? 1 : item.priority === 'normal' ? 2 : 3;
+                    return rank(x) - rank(y) || new Date(x.createdAt).getTime() - new Date(y.createdAt).getTime();
+                  });
+
+                return (
+                  <section key={stage.key} className="min-h-[500px] bg-bg/30">
+                    <div className="border-b border-line bg-panel px-3.5 py-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <span className={'h-2 w-2 shrink-0 rounded-full ' + (stage.key === 'new' ? 'bg-danger' : stage.key === 'screening' ? 'bg-warning' : stage.key === 'shortlisted' ? 'bg-accent' : stage.key === 'interview' ? 'bg-info' : 'bg-success')} />
+                          <h4 className="truncate text-xs font-semibold text-fg">{stage.label}</h4>
+                        </div>
+                        <span className="min-w-6 rounded-badge border border-line bg-bg px-1.5 py-0.5 text-center text-[10px] font-semibold tabular-nums text-muted">{stageItems.length}</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2.5 p-3">
+                      {stageItems.map((item) => (
+                        <article key={item.id} className={'rounded-card border border-line bg-panel p-3 transition-colors hover:border-muted ' + (selectedSubmission?.id === item.id ? 'border-accent/30 bg-accent/5' : '')}>
+                          <div className="flex items-start gap-2.5">
+                            <button type="button" onClick={() => { handleSelectSubmission(item); setViewMode('split'); }} className="min-w-0 flex-1 text-left">
+                              <p className="truncate text-xs font-semibold text-fg">{item.fullName || 'Anonymous candidate'}</p>
+                              <p className="mt-0.5 truncate text-[10px] text-muted">{item.positionTitle || item.specialty || 'Role not specified'}</p>
+                            </button>
+                            <button type="button" onClick={(event) => handleToggleStar(event, item.id, item.starred)} disabled={!canManageCrm} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted hover:border-warning/30 hover:bg-warning/10 hover:text-warning disabled:opacity-50" aria-label={item.starred ? 'Unstar application' : 'Star application'}><Star size={12} className={item.starred ? 'fill-warning text-warning' : ''}/></button>
+                          </div>
+
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {renderPriorityBadge(item.priority)}
+                            {item.specialty && <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] text-muted">{item.specialty}</span>}
+                            {item.experienceYears && <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] tabular-nums text-muted">{item.experienceYears} yrs</span>}
+                            {item.location && <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] text-muted">{item.location}</span>}
+                          </div>
+
+                          <p className="mt-2 line-clamp-2 text-[10px] leading-4 text-muted">{item.message || 'No candidate summary provided.'}</p>
+
+                          <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-2.5">
+                            <div className="min-w-0">
+                              <p className="truncate text-[9px] text-muted">{item.assignedTo ? 'Assigned to ' + item.assignedTo : 'Unassigned'}</p>
+                              <p className="mt-0.5 text-[9px] tabular-nums text-muted">{formatRelativeTime(item.createdAt)}</p>
+                            </div>
+                            <button type="button" onClick={() => { handleSelectSubmission(item); setViewMode('split'); }} className="inline-flex min-h-8 shrink-0 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-fg hover:bg-panel">Review <ChevronRight size={11}/></button>
+                          </div>
+
+                          {stage.next && (
+                            <button type="button" disabled={!canManageCrm || isUpdating} onClick={() => void handleStatusChange(item.id, stage.next as ContactSubmission['status'])} className="mt-2 inline-flex min-h-8 w-full items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-2 text-[10px] font-medium text-muted hover:bg-bg hover:text-fg disabled:pointer-events-none disabled:opacity-50"><Check size={11}/>{stage.action}</button>
+                          )}
+                        </article>
+                      ))}
+
+                      {stageItems.length === 0 && (
+                        <div className="flex min-h-[120px] flex-col items-center justify-center rounded-card border border-dashed border-line bg-bg/40 px-4 py-6 text-center">
+                          <Briefcase size={16} className="text-line"/>
+                          <p className="mt-2 text-[10px] font-medium text-muted">No applications</p>
+                          <p className="mt-0.5 text-[9px] text-muted/80">{filterStatus !== 'all' || filterPriority !== 'all' ? 'Try clearing filters.' : 'Applications will appear here.'}</p>
+                        </div>
+                      )}
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="border-t border-line bg-bg/50 px-4 py-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-[10px] leading-4 text-muted">{filteredItems.filter((item) => item.status === 'rejected' || item.status === 'withdrawn').length} archived applications are outside the active hiring pipeline.</p>
+              <button type="button" onClick={() => setViewMode('split')} className="inline-flex min-h-8 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-2.5 text-[10px] font-medium text-fg hover:bg-bg"><LayoutGrid size={11}/>Open candidate review</button>
+            </div>
+          </div>
         </section>
       ) : viewMode === 'queue' ? (
         <section data-ams-feature-slug="inbox-starred-queue" data-ams-slug="inbox-starred-queue" className="space-y-3">
