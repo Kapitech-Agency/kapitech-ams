@@ -471,7 +471,7 @@ export const AdminClients: React.FC = () => {
     <AdminPageShell featureSlug="clients-module" className="ams-clients-module">
       <div data-ams-feature-slug="clients-header" data-ams-slug="clients-header">
         <span className="sr-only" data-ams-feature-slug="clients-key-accounts-tab" data-ams-slug="clients-key-accounts-tab">Clients & Key Accounts</span>
-        <AdminModuleHeader
+        <AdminModuleHeader slug="clients-header"
           className="mb-0"
           title="Clients & Key Accounts"
         description="Directory of enterprise clients, relationship health, spend-cap status, and account operations."
@@ -509,8 +509,8 @@ export const AdminClients: React.FC = () => {
         />
       </div>
 
-      <section aria-label="Client metrics">
-        <AdminMetricStrip
+      <section data-ams-feature-slug="clients-metrics" data-ams-slug="clients-metrics" aria-label="Client metrics">
+        <AdminMetricStrip slug="clients-kpis"
           className="lg:grid-cols-3"
           metrics={[
             { id: 'active-clients', label: 'Active clients', value: isLoading ? '—' : clientMetrics.active, change: isLoading ? '—' : '+' + clientMetrics.leads, changeToneClassName: 'text-warning', context: 'onboarding / lead accounts', sparkline: [clientMetrics.leads, clientMetrics.active, clientMetrics.total, clientMetrics.atRisk], icon: <Users size={15} aria-hidden="true" /> },
@@ -520,7 +520,7 @@ export const AdminClients: React.FC = () => {
         />
       </section>
 
-      <AdminFilterBar
+      <AdminFilterBar slug="client-directory-filters"
         slug="client-directory-filters"
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
@@ -545,7 +545,7 @@ export const AdminClients: React.FC = () => {
         )}
       />
 
-      <section aria-label="Clients directory" className="ams-client-table-shell overflow-hidden rounded-card border border-line bg-panel">
+      <section data-ams-feature-slug="clients-directory-table" data-ams-slug="clients-directory-table" aria-label="Clients directory" className="ams-client-table-shell overflow-hidden rounded-card border border-line bg-panel">
         <div className="overflow-x-auto custom-scrollbar">
           <table className="ams-client-table w-full min-w-[1240px] border-collapse text-left">
             <thead className="bg-bg">
@@ -597,7 +597,7 @@ export const AdminClients: React.FC = () => {
         {!isLoading && <AdminTablePagination total={filteredClients.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="records" slug="client-directory-pagination" />}
       </section>
 
-      <Modal
+      <Modal slug="client-directory-delete-modal"
         open={!!selectedClient}
         onClose={() => setSelectedClient(null)}
         size="lg"
@@ -696,7 +696,7 @@ export const AdminClients: React.FC = () => {
         )}
       </Modal>
 
-      <Drawer
+      <Drawer slug="client-editor-drawer"
         open={isClientModalOpen}
         onClose={() => !isSaving && setIsClientModalOpen(false)}
         size="xl"
@@ -715,7 +715,7 @@ export const AdminClients: React.FC = () => {
           </>
         }
       >
-        <form id="client-form" onSubmit={handleSaveClient} className="space-y-5">
+        <form id="client-form" data-ams-feature-slug="client-editor-form" data-ams-slug="client-editor-form" onSubmit={handleSaveClient} className="space-y-5">
           {formError && (
             <div role="alert" className="flex items-start gap-2 rounded-control border border-danger/30 bg-danger/10 p-3 text-xs leading-5 text-danger">
               <ShieldAlert size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
