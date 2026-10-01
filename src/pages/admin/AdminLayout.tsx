@@ -439,7 +439,7 @@ export const AdminLayout: React.FC = () => {
             size="sm"
             directOpen
             onEdit={() => setProfileView('edit')}
-                slug="topbar-profile-desktop"
+            slug="topbar-profile-mobile"
               />
         </div>
       </div>
