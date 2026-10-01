@@ -19,6 +19,7 @@ export const AdminLogin: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [mfaRequired, setMfaRequired] = useState(false);
   const [mfaRecoveryMode, setMfaRecoveryMode] = useState(false);
+  const [trustDevice, setTrustDevice] = useState(true);
   const [mfaCode, setMfaCode] = useState('');
   const mfaInputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
@@ -81,7 +82,7 @@ export const AdminLogin: React.FC = () => {
 
     setLoading(true);
     try {
-      const result = await api.auth.mfaVerify(normalizedCode);
+      const result = await api.auth.mfaVerify(normalizedCode, trustDevice);
       if (result.success && result.data?.success && result.data.user) {
         cacheAdminSession(result.data.user, rememberMe);
         window.dispatchEvent(new Event('kapitech_auth_state_changed'));
@@ -227,6 +228,16 @@ export const AdminLogin: React.FC = () => {
                   : (language === 'id' ? 'Buka aplikasi authenticator Anda dan masukkan kode TOTP 6 digit untuk menyelesaikan login.' : 'Open your authenticator app and enter the 6-digit TOTP code to complete sign-in.')}
               </p>
             </div>
+
+            <label className="flex items-center gap-2 text-xs text-muted cursor-pointer">
+              <input
+                type="checkbox"
+                checked={trustDevice}
+                onChange={(e) => setTrustDevice(e.target.checked)}
+                className="accent-accent"
+              />
+              {language === 'id' ? 'Percayai perangkat ini selama 30 hari' : 'Trust this device for 30 days'}
+            </label>
 
             <div>
               <label className="block text-xs font-sans text-muted mb-1.5">
