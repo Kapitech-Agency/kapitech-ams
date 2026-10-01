@@ -37,6 +37,7 @@ interface ProfileIdentityProps {
   className?: string;
   showRole?: boolean;
   onEdit?: () => void;
+  directOpen?: boolean;
 }
 
 const statusLabel: Record<NonNullable<PublicProfileData['status']>, string> = {
@@ -65,6 +66,7 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
   className,
   showRole = true,
   onEdit,
+  directOpen = false,
 }) => {
   const [quickOpen, setQuickOpen] = useState(false);
   const [fullOpen, setFullOpen] = useState(false);
@@ -89,7 +91,7 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
     <>
       <button
         type="button"
-        onClick={() => setQuickOpen(true)}
+        onClick={() => directOpen ? setFullOpen(true) : setQuickOpen(true)}
         className={[
           'group/profile inline-flex min-w-0 items-center text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
           compact
