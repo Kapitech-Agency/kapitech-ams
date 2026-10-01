@@ -201,7 +201,6 @@ export const AdminInbox: React.FC = () => {
     { key: 'jobs', label: 'Job Applications', count: submissions.filter((item) => item.type === 'career').length },
     { key: 'starred', label: 'Starred', count: submissions.filter((item) => !!item.starred).length }
   ];
-  const inboxTabHref = (tab: InboxTab) => tab === 'client' ? '/admin/inbox' : '/admin/inbox?view=' + tab;
 
   useEffect(() => {
     setSelectedSubmission(null);
@@ -699,31 +698,7 @@ export const AdminInbox: React.FC = () => {
           </>
         )}
       />
-      <div data-ams-feature-slug="inbox-top-navigation" data-ams-slug="inbox-top-navigation" className="mb-6 min-w-0">
-        <nav aria-label="Inbox sections" className="flex min-w-0 items-center gap-1 overflow-x-auto rounded-control border border-line bg-panel p-1 custom-scrollbar">
-          {inboxTabs.map((tab) => {
-            const active = activeInboxTab === tab.key;
-            return (
-              <Link
-                key={tab.key}
-                to={inboxTabHref(tab.key)}
-                aria-current={active ? 'page' : undefined}
-                data-ams-slug={'inbox-tab-' + tab.key}
-                className={'inline-flex h-9 min-h-9 shrink-0 items-center gap-2 rounded-chip border px-3 text-xs font-medium transition-colors ' + (
-                  active
-                    ? 'border-accent/25 bg-accent/10 text-fg font-semibold'
-                    : 'border-transparent text-muted hover:bg-bg hover:text-fg'
-                )}
-              >
-                <span>{tab.label}</span>
-                <span className={'rounded-badge px-1.5 py-0.5 text-[10px] tabular-nums ' + (active ? 'bg-accent/15 text-accent-text' : 'bg-bg text-muted')}>
-                  {tab.count}
-                </span>
-              </Link>
-            );
-          })}
-        </nav>
-      </div>
+
 
       {/* ------------------------------------------------------------- */}
       {/* 2. EXECUTIVE KPI SUMMARY RIBBON */}
