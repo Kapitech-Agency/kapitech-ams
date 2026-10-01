@@ -170,10 +170,10 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ password })
       }),
-    mfaVerify: (code: string) =>
+    mfaVerify: (code: string, trustDevice = false) =>
       apiRequest<{ success: boolean; user: any }>('/api/auth/mfa/verify', {
         method: 'POST',
-        body: JSON.stringify({ code })
+        body: JSON.stringify({ code, trustDevice })
       }),
     mfaSetupStart: () =>
       apiRequest<{ success: boolean; secret: string; otpAuthUri: string }>('/api/auth/mfa/setup/start', {

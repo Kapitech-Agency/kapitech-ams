@@ -310,6 +310,103 @@ export function clearMfaChallengeCookie(res: Response): void {
   res.append('Set-Cookie', `kapi_mfa_challenge=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0;${secure}`);
 }
 
+const MFA_TRUST_COOKIE = 'kapi_mfa_trust';
+const MFA_TRUST_LIFETIME_MS = 30 * 24 * 60 * 60 * 1000;
+
+function getMfaTrustKey(): Buffer | null {
+  const raw = process.env.KAPITECH_DATA_ENCRYPTION_KEY?.trim();
+  if (!raw) return null;
+  try {
+    const key = /^[0-9a-f]{64}$/i.test(raw)
+      ? Buffer.from(raw, 'hex')
+      : Buffer.from(raw, 'base64');
+    return key.length === 32 ? key : null;
+  } catch {
+    return null;
+  }
+}
+
+function encodeBase64Url(value: string | Buffer): string {
+  return Buffer.from(value).toString('base64url');
+}
+
+function decodeBase64Url(value: string): Buffer {
+  return Buffer.from(value, 'base64url');
+}
+
+function fingerprintMfaSecret(secret: string): string {
+  return crypto.createHash('sha256').update(secret).digest('hex');
+}
+
+function fingerprintUserAgent(userAgent: string): string {
+  return crypto.createHash('sha256').update(userAgent).digest('hex');
+}
+
+export function createMfaTrustToken(user: StoredUser, userAgent: string, now = Date.now()): string | null {
+  if (!user.mfaEnabled || !user.mfaSecret) return null;
+  const key = getMfaTrustKey();
+  if (!key) return null;
+
+  const payload = encodeBase64Url(JSON.stringify({
+    v: 1,
+    userId: user.id,
+    expiresAt: now + MFA_TRUST_LIFETIME_MS,
+    userAgent: fingerprintUserAgent(userAgent),
+    mfaSecret: fingerprintMfaSecret(user.mfaSecret)
+  }));
+  const signature = encodeBase64Url(crypto.createHmac('sha256', key).update(payload).digest());
+  return payload + '.' + signature;
+}
+
+export function verifyMfaTrustToken(token: string, user: StoredUser, userAgent: string, now = Date.now()): boolean {
+  if (!token || !user.mfaEnabled || !user.mfaSecret) return false;
+  const key = getMfaTrustKey();
+  if (!key) return false;
+
+  const [payloadPart, signaturePart] = token.split('.');
+  if (!payloadPart || !signaturePart) return false;
+
+  try {
+    const expectedSignature = crypto.createHmac('sha256', key).update(payloadPart).digest();
+    const actualSignature = decodeBase64Url(signaturePart);
+    if (expectedSignature.length !== actualSignature.length || !crypto.timingSafeEqual(expectedSignature, actualSignature)) return false;
+
+    const payload = JSON.parse(decodeBase64Url(payloadPart).toString('utf8')) as {
+      v?: number;
+      userId?: string;
+      expiresAt?: number;
+      userAgent?: string;
+      mfaSecret?: string;
+    };
+    return payload.v === 1 &&
+      payload.userId === user.id &&
+      Number.isFinite(payload.expiresAt) &&
+      Number(payload.expiresAt) > now &&
+      payload.userAgent === fingerprintUserAgent(userAgent) &&
+      payload.mfaSecret === fingerprintMfaSecret(user.mfaSecret);
+  } catch {
+    return false;
+  }
+}
+
+export function setMfaTrustCookie(res: Response, token: string): void {
+  const secure = process.env.NODE_ENV === 'production' ? ' Secure;' : '';
+  res.append(
+    'Set-Cookie',
+    MFA_TRUST_COOKIE + '=' + encodeURIComponent(token) + '; Path=/; HttpOnly; SameSite=Strict; Max-Age=' + String(MFA_TRUST_LIFETIME_MS / 1000) + ';' + secure
+  );
+}
+
+export function clearMfaTrustCookie(res: Response): void {
+  const secure = process.env.NODE_ENV === 'production' ? ' Secure;' : '';
+  res.append(
+    'Set-Cookie',
+    MFA_TRUST_COOKIE + '=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0;' + secure
+  );
+}
+
+export { MFA_TRUST_COOKIE };
+
 export function createCsrfToken(): string {
   return crypto.randomBytes(32).toString('hex');
 }
