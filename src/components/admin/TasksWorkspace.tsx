@@ -714,7 +714,7 @@ export const TasksWorkspace: React.FC = () => {
       </div>
 
       <div data-ams-feature-slug="tasks-kpis">
-        <AdminMetricStrip
+        <AdminMetricStrip slug="tasks-kpis"
           className="sm:grid-cols-2 lg:grid-cols-4"
           metrics={[
             {
@@ -1000,7 +1000,7 @@ export const TasksWorkspace: React.FC = () => {
         <AdminTablePagination total={filteredRecords.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="tasks" slug="tasks-pagination" />
       </AdminPanel>
 
-      <Modal
+      <Modal slug="task-create-modal"
         open={taskFormOpen}
         onClose={() => setTaskFormOpen(false)}
         size="md"
@@ -1045,7 +1045,7 @@ export const TasksWorkspace: React.FC = () => {
         </form>
       </Modal>
 
-      <Modal
+      <Modal slug="task-detail-modal"
         open={Boolean(selectedTask)}
         onClose={() => setSelectedTask(null)}
         size="lg"
@@ -1175,7 +1175,7 @@ export const TasksWorkspace: React.FC = () => {
         )}
       </Modal>
 
-      <Modal
+      <Modal slug="task-edit-modal"
         open={Boolean(editingTask)}
         onClose={() => { if (!savingEditTask) setEditingTask(null); }}
         size="lg"
