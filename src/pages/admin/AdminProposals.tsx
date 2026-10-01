@@ -541,7 +541,7 @@ export const AdminProposals: React.FC = () => {
         </div>
       )}
 
-      <AdminModuleHeader
+      <AdminModuleHeader slug="proposals-header"
         className="mb-0"
         title={language === 'id' ? 'Proposal & Penawaran' : 'Proposal & Quotes'}
         description={language === 'id' ? 'Kelola proposal komersial, nilai penawaran, status, dan tindak lanjut dari satu tempat.' : 'Manage commercial proposals, values, status, and follow-up from one place.'}
@@ -559,7 +559,7 @@ export const AdminProposals: React.FC = () => {
         )}
       />
 
-      <section aria-label="Proposal summary" className="rounded-card border border-line bg-panel p-4">
+      <section data-ams-feature-slug="proposals-summary" data-ams-slug="proposals-summary" aria-label="Proposal summary" className="rounded-card border border-line bg-panel p-4">
         <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
           <div>
             <h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan proposal' : 'Proposal snapshot'}</h2>
@@ -567,7 +567,7 @@ export const AdminProposals: React.FC = () => {
           </div>
           <span className="text-[11px] font-medium tabular-nums text-muted">{metrics.total} {language === 'id' ? 'total' : 'total'}</span>
         </div>
-        <AdminMetricStrip
+        <AdminMetricStrip slug="proposals-kpis"
           metrics={[
             { id: 'total', label: language === 'id' ? 'Total proposal' : 'Total proposals', value: metrics.total, context: language === 'id' ? 'Semua status' : 'All statuses', sparkline: [metrics.accepted, metrics.active, metrics.total, metrics.expiring], icon: <FileText size={16} strokeWidth={1.8} /> },
             { id: 'active', label: language === 'id' ? 'Aktif' : 'Active', value: metrics.active, context: language === 'id' ? 'Sedang berjalan' : 'In workflow', sparkline: [metrics.total, metrics.active, metrics.accepted, metrics.expiring], icon: <Clock3 size={16} strokeWidth={1.8} />, toneClassName: 'text-warning' },
@@ -577,7 +577,7 @@ export const AdminProposals: React.FC = () => {
         />
       </section>
 
-      <AdminFilterBar
+      <AdminFilterBar slug="proposals-filters"
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
         searchPlaceholder={language === 'id' ? 'Cari nomor, judul, klien, perusahaan, atau owner…' : 'Search number, title, client, company, or owner…'}
@@ -660,7 +660,7 @@ export const AdminProposals: React.FC = () => {
         </section>
       ) : (
         <>
-          <section className="overflow-hidden rounded-card border border-line bg-panel" aria-label={language === 'id' ? 'Daftar proposal' : 'Proposal list'}>
+          <section data-ams-feature-slug="proposals-directory" data-ams-slug="proposals-directory" className="overflow-hidden rounded-card border border-line bg-panel" aria-label={language === 'id' ? 'Daftar proposal' : 'Proposal list'}>
             <div className="flex items-center justify-between border-b border-line px-4 py-3 sm:px-5">
               <div>
                 <h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Daftar proposal' : 'Proposal list'}</h2>
@@ -771,7 +771,7 @@ export const AdminProposals: React.FC = () => {
         </>
       )}
 
-      <Drawer
+      <Drawer slug="proposal-editor-drawer"
         open={formOpen}
         onClose={() => !isSubmitting && setFormOpen(false)}
         size="xl"
@@ -925,7 +925,7 @@ export const AdminProposals: React.FC = () => {
         )}
       </Drawer>
 
-      <Modal
+      <Modal slug="proposal-modal"
         open={!!confirmAction}
         onClose={() => setConfirmAction(null)}
         size="sm"
