@@ -269,7 +269,6 @@ export const AdminClientLeadAccounts: React.FC = () => {
       </section>
 
       <AdminFilterBar slug="lead-accounts-filters"
-        slug="lead-accounts-filters"
         searchValue={query}
         onSearchChange={setQuery}
         searchPlaceholder="Search company, contact, owner, brief, or ID..."
