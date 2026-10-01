@@ -93,6 +93,7 @@ export const normalizeAgencyProject = (project: AgencyProject): AgencyProject =>
 
 import { api } from './apiClient';
 import { toSlug } from './slug';
+import { isSlugFixtureMode } from './runtimeMode';
 
 let projectServerHydrationStarted = false;
 
@@ -311,7 +312,7 @@ export const INITIAL_DEFAULT_PROJECTS: AgencyProject[] = [
 export const getAgencyProjects = (): AgencyProject[] => {
   hydrateProjectsFromServer();
   if (projectsCache) return projectsCache;
-  projectsCache = import.meta.env.PROD ? [] : INITIAL_DEFAULT_PROJECTS.map(normalizeAgencyProject);
+  projectsCache = isSlugFixtureMode() ? INITIAL_DEFAULT_PROJECTS.map(normalizeAgencyProject) : [];
   return projectsCache;
 };
 
