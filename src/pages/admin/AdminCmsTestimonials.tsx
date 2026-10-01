@@ -222,7 +222,7 @@ export const AdminCmsTestimonials: React.FC = () => {
             </>
           )}
         >
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div className="rounded-control border border-danger/30 bg-danger/5 p-3">
               <p className="text-sm font-semibold text-fg">{deleteTarget.author}</p>
               <p className="mt-1 text-xs text-muted">The testimonial will no longer appear on the public site.</p>
@@ -236,7 +236,8 @@ export const AdminCmsTestimonials: React.FC = () => {
         <Drawer slug="cms-testimonial-editor-drawer"
           open={isModalOpen}
           onClose={() => !isSaving && setIsModalOpen(false)}
-          size="lg"
+          size="xl"
+          dialogClassName="border-l border-line bg-panel"
           title={editingItem.author ? `Edit: ${editingItem.author}` : (language === 'id' ? 'Tambah Testimoni Klien' : 'Add Client Testimonial')}
           footer={(
             <>
@@ -249,7 +250,7 @@ export const AdminCmsTestimonials: React.FC = () => {
             </>
           )}
         >
-          <div className="space-y-4">
+          <div className="space-y-5">
             <form id="testimonial-form" data-ams-feature-slug="cms-testimonial-form" data-ams-slug="cms-testimonial-form" onSubmit={handleSaveModal} className="space-y-4">
               <div>
                 <label className="block text-xs font-sans text-muted mb-1 font-semibold">
@@ -261,11 +262,11 @@ export const AdminCmsTestimonials: React.FC = () => {
                   value={editingItem.author}
                   onChange={(e) => setEditingItem({ ...editingItem, author: e.target.value })}
                   placeholder="e.g., Marcus Thorne"
-                  className="w-full ams-control text-xs text-fg font-sans min-h-10"
+                  className="ams-control w-full text-xs"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="block text-xs font-sans text-muted mb-1 font-semibold">
                     {language === 'id' ? 'Jabatan' : 'Role / Position'}
