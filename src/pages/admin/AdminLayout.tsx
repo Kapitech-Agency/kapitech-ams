@@ -256,7 +256,6 @@ export const AdminLayout: React.FC = () => {
                 <span className="truncate text-[13px] font-semibold text-fg">KAPITECH</span>
                 <span className="rounded-badge border border-accent/25 bg-accent/8 px-1.5 py-0.5 text-[9px] font-semibold text-accent-text">AMS</span>
               </div>
-              <p className="mt-1 truncate text-[10px] text-muted">Agency Management System</p>
             </div>
           </Link>
         </div>
@@ -276,7 +275,7 @@ export const AdminLayout: React.FC = () => {
           </Button>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3.5 py-4 custom-scrollbar">
+        <div className="flex-1 min-h-0 overflow-hidden px-3.5 py-4">
           <nav aria-label="Primary navigation" className="space-y-5">
             {navGroups.map((group) => {
               const items = getGroupItems(group);
