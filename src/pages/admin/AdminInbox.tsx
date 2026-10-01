@@ -701,21 +701,22 @@ export const AdminInbox: React.FC = () => {
       </section>
 
       {/* 3. UNIFIED FILTER TABS & TOOLBAR */}
-      {/* ------------------------------------------------------------- */}
-      <div className="ams-inbox-toolbar bg-panel border border-line p-4 rounded-card space-y-3">
-        
-        {/* Inbox Type Tabs */}
-        <div className="flex min-w-0 items-center overflow-x-auto pb-1 custom-scrollbar" role="tablist" aria-label="Inbox type">
+      <section
+        data-ams-feature-slug="inbox-filters"
+        data-ams-slug="inbox-filters"
+        className="ams-inbox-toolbar overflow-hidden rounded-card border border-line bg-panel"
+      >
+        <div className="flex min-w-0 items-center gap-1 overflow-x-auto border-b border-line px-3 py-2 custom-scrollbar" role="tablist" aria-label="Inbox type">
           {[
             {
               key: 'client' as const,
-              label: language === 'id' ? 'Client Inbox' : 'Client Inbox',
+              label: 'Client Inbox',
               icon: <MessageSquare size={14} />,
               count: submissions.filter((item) => item.type !== 'career').length
             },
             {
               key: 'jobs' as const,
-              label: language === 'id' ? 'Job Applications' : 'Job Applications',
+              label: 'Job Applications',
               icon: <Briefcase size={14} />,
               count: submissions.filter((item) => item.type === 'career').length
             }
@@ -729,8 +730,8 @@ export const AdminInbox: React.FC = () => {
               data-ams-slug={'inbox-tab-' + tab.key}
               className={'inline-flex h-9 min-h-9 shrink-0 items-center gap-2 rounded-control border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (
                 activeInboxTab === tab.key
-                  ? 'border-accent/30 bg-accent/10 text-fg font-semibold'
-                  : 'border-line bg-panel text-muted hover:bg-bg hover:text-fg'
+                  ? 'border-accent/25 bg-accent/10 text-fg font-semibold'
+                  : 'border-transparent bg-transparent text-muted hover:border-line hover:bg-bg hover:text-fg'
               )}
             >
               {tab.icon}
@@ -744,62 +745,33 @@ export const AdminInbox: React.FC = () => {
           ))}
         </div>
 
-        {/* View Switcher: Split View vs Data Table View */}
-          <div className="flex items-center bg-panel border border-line rounded-control p-0.5">
-            <button
-              onClick={() => setViewMode('split')}
-              className={`px-2.5 py-1.5 rounded-control text-xs font-sans transition-all flex items-center gap-1.5 ${
-                viewMode === 'split'
-                  ? 'bg-line text-fg font-semibold border border-line'
-                  : 'text-muted hover:text-fg'
-              }`}
-              title="Split Master-Detail View"
-            >
-              <LayoutGrid size={13} />
-              <span className="hidden sm:inline">Split</span>
-            </button>
-            <button
-              onClick={() => setViewMode('table')}
-              className={`px-2.5 py-1.5 rounded-control text-xs font-sans transition-all flex items-center gap-1.5 ${
-                viewMode === 'table'
-                  ? 'bg-panel text-fg font-semibold border border-line'
-                  : 'text-muted hover:text-fg'
-              }`}
-              title="Spreadsheet Table View"
-            >
-              <TableIcon size={13} />
-              <span className="hidden sm:inline">Table</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Search & Secondary Filter Dropdowns */}
-        <div className="flex flex-col md:flex-row md:items-center gap-2 pt-1">
-          {/* Universal Search */}
-          <div className="relative w-full md:flex-1 md:min-w-0 md:w-auto">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" size={15} />
+        <div className="flex flex-col gap-2.5 p-3 sm:p-4 xl:flex-row xl:items-center">
+          <label className="relative min-w-0 flex-1">
+            <span className="sr-only">Search inbox</span>
+            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={15} />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={activeInboxTab === 'jobs'
                 ? (language === 'id' ? 'Cari kandidat, posisi, email, skill, atau tools...' : 'Search candidate, role, email, skills, or tools...')
-                : (language === 'id' ? 'Cari nama, email, perusahaan, jasa, atau isi brief...' : 'Search name, email, company, requested stack, or message...')}
-              className="w-full h-9 min-h-9 pl-9 pr-8 rounded-control bg-bg border border-line text-xs text-fg focus:outline-none focus:border-accent placeholder:text-muted font-sans"
+                : (language === 'id' ? 'Cari nama, email, perusahaan, jasa, atau isi brief...' : 'Search name, email, company, services, or message...')}
+              className="h-9 min-h-9 w-full rounded-control border border-line bg-bg pl-9 pr-8 text-xs text-fg outline-none placeholder:text-muted focus:border-accent"
             />
             {searchQuery && (
               <button
+                type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-fg text-xs"
+                aria-label="Clear search"
+                className="absolute right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-badge text-muted hover:bg-panel hover:text-fg"
               >
-                ✕
+                <span aria-hidden="true">×</span>
               </button>
             )}
-          </div>
+          </label>
 
-          <div className="ams-inbox-filter-controls flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1 custom-scrollbar touch-pan-x md:overflow-visible md:pb-0 md:mx-0 md:px-0">
-            {/* Status Dropdown */}
-            <div className="w-[148px] shrink-0">
+          <div className="flex min-w-0 items-center gap-2 overflow-x-auto pb-0.5 custom-scrollbar xl:shrink-0">
+            <div className="w-[150px] shrink-0">
               <CustomSelect
                 value={filterStatus}
                 onChange={setFilterStatus}
@@ -824,29 +796,63 @@ export const AdminInbox: React.FC = () => {
               />
             </div>
 
-            {/* Priority Dropdown */}
-            <div className="w-[148px] shrink-0">
-              <CustomSelect value={filterPriority} onChange={setFilterPriority} options={[{value:'all',label:language === 'id' ? 'Semua Prioritas' : 'All Priorities'},{value:'urgent',label:'Urgent'},{value:'high',label:'High'},{value:'normal',label:'Normal'},{value:'low',label:'Low'}]} />
+            <div className="w-[150px] shrink-0">
+              <CustomSelect
+                value={filterPriority}
+                onChange={setFilterPriority}
+                options={[
+                  {value:'all',label:language === 'id' ? 'Semua Prioritas' : 'All Priorities'},
+                  {value:'urgent',label:'Urgent'},
+                  {value:'high',label:'High'},
+                  {value:'normal',label:'Normal'},
+                  {value:'low',label:'Low'}
+                ]}
+              />
             </div>
 
-            {/* Starred Only Toggle */}
-            <div className="w-[124px] shrink-0 flex items-center">
-              <button
+            <button
+              type="button"
               onClick={() => setOnlyStarred(!onlyStarred)}
-              className={`w-full min-h-10 px-3 rounded-control border text-xs font-sans transition-colors flex items-center justify-center gap-2 ${
+              className={'inline-flex h-9 min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-control border px-3 text-xs font-medium transition-colors ' + (
                 onlyStarred
-                  ? 'bg-warning/10 border-warning/30 text-warning font-semibold'
-                  : 'bg-panel border-line text-muted hover:text-fg'
-              }`}
+                  ? 'border-warning/30 bg-warning/10 text-warning'
+                  : 'border-line bg-bg text-muted hover:border-line hover:bg-panel hover:text-fg'
+              )}
             >
               <Star size={14} className={onlyStarred ? 'fill-warning text-warning' : ''} />
               <span>{language === 'id' ? 'Ditandai' : 'Starred'}</span>
             </button>
+
+            <div className="ml-auto flex shrink-0 items-center rounded-control border border-line bg-bg p-0.5">
+              <button
+                type="button"
+                onClick={() => setViewMode('split')}
+                aria-pressed={viewMode === 'split'}
+                className={'inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip px-2.5 text-[11px] font-medium transition-colors ' + (
+                  viewMode === 'split' ? 'bg-panel border border-line text-fg' : 'text-muted hover:text-fg'
+                )}
+              >
+                <LayoutGrid size={13} />
+                <span className="hidden sm:inline">Split</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('table')}
+                aria-pressed={viewMode === 'table'}
+                className={'inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip px-2.5 text-[11px] font-medium transition-colors ' + (
+                  viewMode === 'table' ? 'bg-panel border border-line text-fg' : 'text-muted hover:text-fg'
+                )}
+              >
+                <TableIcon size={13} />
+                <span className="hidden sm:inline">Table</span>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* ------------------------------------------------------------- */}
+      
       {/* 4. MAIN CONTENT VIEW: SPLIT VIEW vs TABLE VIEW */}
       {/* ------------------------------------------------------------- */}
       {viewMode === 'table' ? (
@@ -1057,13 +1063,13 @@ export const AdminInbox: React.FC = () => {
         </div>
       ) : (
         /* SPLIT MASTER-DETAIL VIEW (when items exist) */
-        <div className="ams-inbox-workspace grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
+        <div className="ams-inbox-workspace grid grid-cols-1 items-start gap-3 lg:grid-cols-[minmax(300px,0.82fr)_minmax(0,1.18fr)]">
           
           {/* Left: Master Briefs List Pane */}
           <div className={`ams-inbox-list-pane space-y-3 ${
             selectedSubmission 
-              ? 'hidden lg:block lg:col-span-5' 
-              : 'col-span-12 lg:col-span-5'
+              ? 'hidden lg:block' 
+              : 'block'
           }`}>
             {filteredItems.map((item) => {
               const isSelected = selectedSubmission?.id === item.id;
@@ -1073,7 +1079,7 @@ export const AdminInbox: React.FC = () => {
                 <div
                   key={item.id}
                   onClick={() => handleSelectSubmission(item)}
-                  className={`relative p-4 rounded-card border transition-all cursor-pointer font-sans group ${
+                  className={`group relative rounded-card border p-3.5 font-sans transition-all cursor-pointer ${
                     isSelected
                       ? 'bg-accent/8 border-accent/30'
                       : item.status === 'new'
@@ -1082,7 +1088,7 @@ export const AdminInbox: React.FC = () => {
                   }`}
                 >
                     {/* Top Row: Channel, Status, Star, Timestamp */}
-                    <div className="flex items-center justify-between gap-2 mb-2">
+                    <div className="mb-2 flex items-start justify-between gap-2">
                       <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
                         {renderChannelBadge(item.type)}
                         {renderStatusBadge(item.status)}
@@ -1109,7 +1115,7 @@ export const AdminInbox: React.FC = () => {
                     </div>
 
                     {/* Client Name & Company */}
-                    <div className="flex items-baseline justify-between gap-2 mb-1">
+                    <div className="mb-1 flex items-center justify-between gap-2">
                       <ProfileIdentity profile={{ name: item.fullName || 'Anonymous Client', role: item.positionTitle || (item.type === 'career' ? 'Candidate' : 'Contact'), contextLabel: item.type === 'career' ? item.positionTitle : item.company, companyEmail: item.email, phone: item.phone }} size="sm" showRole={false} />
                       <span className="text-xs font-sans font-semibold text-success shrink-0">
                         {item.type === 'career' ? (item.experienceYears ? item.experienceYears + ' yrs' : '-') : formatAmount(estimateDealValue(item), currency)}
@@ -1160,7 +1166,7 @@ export const AdminInbox: React.FC = () => {
 
           {/* Right: Message Reader & Command Hub Pane */}
           {selectedSubmission ? (
-            <div className="ams-inbox-reader-pane col-span-12 lg:col-span-7 bg-panel border border-line rounded-card p-4 flex flex-col justify-between">
+            <div className="ams-inbox-reader-pane min-w-0 rounded-card border border-line bg-panel p-4 sm:p-5 lg:sticky lg:top-4 lg:min-h-[calc(100vh-250px)]">
               <div>
                 
                 {/* Mobile Back Button */}
@@ -1189,7 +1195,7 @@ export const AdminInbox: React.FC = () => {
                         </span>
                       </div>
                       
-                      <h2 className="text-xl sm:text-2xl font-semibold font-sans text-fg tracking-[-0.01em]">
+                      <h2 className="text-lg font-semibold tracking-[-0.01em] text-fg sm:text-xl">
                         {selectedSubmission.fullName}
                       </h2>
 
@@ -1225,7 +1231,7 @@ export const AdminInbox: React.FC = () => {
                 </div>
 
                 {/* Primary Action Ribbon (Quick Canned Replies, WA, Email, Convert to CRM) */}
-                <div className="p-4 rounded-card bg-panel border border-line flex flex-wrap items-center justify-between gap-2.5 mb-5">
+                <div className="mb-5 flex flex-wrap items-center justify-between gap-2.5 rounded-card border border-line bg-bg p-3.5">
                   <div className="flex items-center gap-2 flex-wrap">
                     {activeInboxTab === 'client' ? (
                       <>
@@ -1314,7 +1320,7 @@ export const AdminInbox: React.FC = () => {
                 </div>
 
                 {/* Reader Sub-Tabs */}
-                <div className="flex items-center gap-2 border-b border-line pb-3 mb-5">
+                <div className="mb-5 flex items-center gap-1 border-b border-line pb-2">
                   <button
                     onClick={() => setDetailTab('brief')}
                     className={`pb-1 text-xs font-sans font-semibold transition-colors border-b-2 ${
