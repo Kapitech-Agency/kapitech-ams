@@ -1227,28 +1227,27 @@ export const AdminInbox: React.FC = () => {
                 <div className="p-4 rounded-card bg-panel border border-line flex flex-wrap items-center justify-between gap-2.5 mb-5">
                   <div className="flex items-center gap-2 flex-wrap">
                     {activeInboxTab === 'client' ? (
-                                          {/* 1-Click Convert to CRM Lead */}
-                    {crmDeals.some(d => (d as any).inquiryId === selectedSubmission.id) ? (
-                      <Link
-                        to="/admin/crm"
-                        className="h-9 px-3.5 rounded-control bg-success/10 text-success border border-success/30 hover:bg-success/20 text-xs font-sans font-semibold transition-all flex items-center gap-1.5"
-                      >
-                        <ShieldCheck size={14} />
-                        <span>{language === 'id' ? 'Buka Deal di CRM' : 'View CRM Deal'}</span>
-                        <ExternalLink size={11} />
-                      </Link>
-                    ) : (
-                      <button
-                        onClick={() => setIsCrmModalOpen(true)}
-                        disabled={!canManageCrm}
-                        className="h-9 px-3.5 rounded-control bg-success hover:bg-accent-hover text-fg text-xs font-sans font-semibold transition-colors flex items-center gap-1.5"
-                      >
-                        <Briefcase size={14} />
-                        <span>{language === 'id' ? 'Konversi ke CRM' : 'Convert to CRM'}</span>
-                      </button>
-                    )}
-
-
+                      <>
+                        {crmDeals.some(d => (d as any).inquiryId === selectedSubmission.id) ? (
+                          <Link
+                            to="/admin/crm"
+                            className="h-9 px-3.5 rounded-control bg-success/10 text-success border border-success/30 hover:bg-success/20 text-xs font-sans font-semibold transition-all flex items-center gap-1.5"
+                          >
+                            <ShieldCheck size={14} />
+                            <span>{language === 'id' ? 'Buka Deal di CRM' : 'View CRM Deal'}</span>
+                            <ExternalLink size={11} />
+                          </Link>
+                        ) : (
+                          <button
+                            onClick={() => setIsCrmModalOpen(true)}
+                            disabled={!canManageCrm}
+                            className="h-9 px-3.5 rounded-control bg-success hover:bg-accent-hover text-fg text-xs font-sans font-semibold transition-colors flex items-center gap-1.5"
+                          >
+                            <Briefcase size={14} />
+                            <span>{language === 'id' ? 'Konversi ke CRM' : 'Convert to CRM'}</span>
+                          </button>
+                        )}
+                      </>
                     ) : (
                       <div className="flex items-center gap-1.5">
                         {selectedSubmission.resumeUrl && (
