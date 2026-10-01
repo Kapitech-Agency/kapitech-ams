@@ -397,89 +397,117 @@ export const AdminTablePagination: React.FC<AdminTablePaginationProps> = ({
   slug,
   secondaryLabel
 }) => {
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const totalPages = Math.max(1, Math.ceil(total / Math.max(1, pageSize)));
   const safePage = Math.min(Math.max(1, page), totalPages);
   const first = total > 0 ? (safePage - 1) * pageSize + 1 : 0;
   const last = Math.min(safePage * pageSize, total);
-  const pageStart = Math.max(1, Math.min(safePage - 2, totalPages - 4));
-  const pageEnd = Math.min(totalPages, pageStart + 4);
+
+  const pageItems: Array<number | 'ellipsis'> = (() => {
+    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, index) => index + 1);
+    if (safePage <= 3) return [1, 2, 3, 4, 'ellipsis', totalPages];
+    if (safePage >= totalPages - 2) return [1, 'ellipsis', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    return [1, 'ellipsis', safePage - 1, safePage, safePage + 1, 'ellipsis', totalPages];
+  })();
+
+  const handlePageSizeChange = (value: string) => {
+    const nextSize = Number(value);
+    if (!Number.isFinite(nextSize) || nextSize <= 0) return;
+    onPageSizeChange(nextSize);
+    onPageChange(1);
+  };
 
   return (
-    <div
-      className="flex flex-col gap-3 border-t border-line bg-panel px-4 py-3 text-xs sm:flex-row sm:items-center sm:justify-between"
+    <nav
+      aria-label="Table pagination"
       data-ams-slug={slug}
+      className="border-t border-line bg-panel px-4 py-3 sm:px-5"
     >
-      <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
-        <span className="text-muted">
-          Showing <span className="font-semibold tabular-nums text-fg">{first}</span>
-          {' '}to{' '}
-          <span className="font-semibold tabular-nums text-fg">{last}</span>
-          {' '}of{' '}
-          <span className="font-semibold tabular-nums text-fg">{total}</span>
-          {' '}{itemLabel}
-        </span>
-        {secondaryLabel && <span className="hidden text-muted sm:inline">{secondaryLabel}</span>}
-      </div>
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0">
+          <p className="truncate text-[11px] leading-4 text-muted">
+            {total > 0 ? (
+              <>
+                Showing <span className="font-semibold tabular-nums text-fg">{first}</span>
+                {' '}to{' '}
+                <span className="font-semibold tabular-nums text-fg">{last}</span>
+                {' '}of{' '}
+                <span className="font-semibold tabular-nums text-fg">{total}</span>
+                {' '}{itemLabel}
+              </>
+            ) : (
+              <>No {itemLabel}</>
+            )}
+          </p>
+          {secondaryLabel && <p className="mt-0.5 truncate text-[10px] leading-4 text-muted">{secondaryLabel}</p>}
+        </div>
 
-      <div className="flex min-w-0 items-center gap-2 overflow-x-auto pb-0.5 custom-scrollbar">
-        <span className="shrink-0 text-[10px] text-muted">Rows per page</span>
-        <CustomSelect
-          value={String(pageSize)}
-          onChange={(value) => {
-            const nextSize = Number(value);
-            onPageSizeChange(nextSize);
-            onPageChange(1);
-          }}
-          options={pageSizeOptions.map((value) => ({ value: String(value), label: String(value) }))}
-          triggerClassName="h-8 min-h-8 w-[72px] shrink-0"
-          aria-label="Rows per page"
-        />
+        <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 lg:justify-end">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] text-muted">Rows</span>
+            <CustomSelect
+              value={String(pageSize)}
+              onChange={handlePageSizeChange}
+              options={pageSizeOptions.map((value) => ({ value: String(value), label: String(value) }))}
+              triggerClassName="h-8 min-h-8 w-[68px] shrink-0"
+              aria-label="Rows per page"
+            />
+          </div>
 
-        <button
-          type="button"
-          disabled={safePage <= 1}
-          onClick={() => onPageChange(Math.max(1, safePage - 1))}
-          className="inline-flex h-8 shrink-0 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[11px] text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-40"
-          aria-label="Previous page"
-          data-ams-slug={slug ? slug + '-prev' : undefined}
-        >
-          <ChevronLeft size={14} />
-          <span className="hidden sm:inline">Previous</span>
-        </button>
-
-        {Array.from({ length: Math.max(0, pageEnd - pageStart + 1) }, (_, index) => {
-          const pageNumber = pageStart + index;
-          return (
+          <div className="flex items-center gap-1" aria-label="Page navigation">
             <button
-              key={pageNumber}
               type="button"
-              aria-current={safePage === pageNumber ? 'page' : undefined}
-              onClick={() => onPageChange(pageNumber)}
-              className={'h-8 w-8 shrink-0 rounded-control border px-0 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (
-                safePage === pageNumber
-                  ? 'border-accent bg-accent text-white'
-                  : 'border-line bg-bg text-muted hover:bg-panel hover:text-fg'
-              )}
-              data-ams-slug={slug ? slug + '-page-' + pageNumber : undefined}
+              disabled={safePage <= 1}
+              onClick={() => onPageChange(Math.max(1, safePage - 1))}
+              className="inline-flex h-8 min-w-8 items-center justify-center gap-1 rounded-control border border-line bg-bg px-2 text-[11px] font-medium text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:pointer-events-none disabled:opacity-40"
+              aria-label="Previous page"
+              data-ams-slug={slug ? slug + '-prev' : undefined}
             >
-              {pageNumber}
+              <ChevronLeft size={14} />
+              <span className="hidden md:inline">Previous</span>
             </button>
-          );
-        })}
 
-        <button
-          type="button"
-          disabled={safePage >= totalPages}
-          onClick={() => onPageChange(Math.min(totalPages, safePage + 1))}
-          className="inline-flex h-8 shrink-0 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[11px] text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-40"
-          aria-label="Next page"
-          data-ams-slug={slug ? slug + '-next' : undefined}
-        >
-          <span className="hidden sm:inline">Next</span>
-          <ChevronRight size={14} />
-        </button>
+            {pageItems.map((item, index) =>
+              item === 'ellipsis' ? (
+                <span
+                  key={'ellipsis-' + index}
+                  className="inline-flex h-8 w-6 items-center justify-center text-[11px] text-muted"
+                  aria-hidden="true"
+                >
+                  …
+                </span>
+              ) : (
+                <button
+                  key={item}
+                  type="button"
+                  aria-current={safePage === item ? 'page' : undefined}
+                  onClick={() => onPageChange(item)}
+                  className={'inline-flex h-8 w-8 items-center justify-center rounded-control border text-[11px] font-semibold tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (
+                    safePage === item
+                      ? 'border-accent bg-accent text-white'
+                      : 'border-line bg-bg text-muted hover:bg-panel hover:text-fg'
+                  )}
+                  data-ams-slug={slug ? slug + '-page-' + item : undefined}
+                >
+                  {item}
+                </button>
+              )
+            )}
+
+            <button
+              type="button"
+              disabled={safePage >= totalPages}
+              onClick={() => onPageChange(Math.min(totalPages, safePage + 1))}
+              className="inline-flex h-8 min-w-8 items-center justify-center gap-1 rounded-control border border-line bg-bg px-2 text-[11px] font-medium text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:pointer-events-none disabled:opacity-40"
+              aria-label="Next page"
+              data-ams-slug={slug ? slug + '-next' : undefined}
+            >
+              <span className="hidden md:inline">Next</span>
+              <ChevronRight size={14} />
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
+    </nav>
   );
 };
 
