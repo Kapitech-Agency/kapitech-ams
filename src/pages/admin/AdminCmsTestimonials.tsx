@@ -215,7 +215,7 @@ export const AdminCmsTestimonials: React.FC = () => {
 
       <div className="flex items-center justify-between gap-3 text-[11px] text-muted">
         <span>{filteredTestimonials.length} of {testimonials.length} testimonials</span>
-        <span className="tabular-nums">Page {page} of {totalTestimonialPages}</span>
+        <span>Testimonial directory</span>
       </div>
 
       {isLoading ? (
@@ -247,37 +247,51 @@ export const AdminCmsTestimonials: React.FC = () => {
         </div>
       ) : (
         <>
-          <div data-ams-feature-slug="cms-testimonials-directory" data-ams-slug="cms-testimonials-directory" className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {pagedTestimonials.map((item) => (
-              <div key={item.id} className="group flex min-h-[220px] flex-col justify-between rounded-card border border-line bg-panel p-4 transition-colors hover:bg-panel-hover">
-                <div>
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-1 text-warning" aria-label={String(item.rating || 5) + ' out of 5 stars'}>
-                      {[...Array(item.rating || 5)].map((_, i) => <Star key={i} size={13} fill="currentColor" />)}
-                    </div>
-                    <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] font-mono text-muted">#{item.id}</span>
-                  </div>
-                  <p className="mt-4 line-clamp-5 text-xs leading-5 text-muted">“{item.quoteId || item.quote}”</p>
-                </div>
-                <div className="mt-4 flex items-end justify-between gap-3 border-t border-line pt-3">
-                  <div className="min-w-0">
-                    <ProfileIdentity profile={{ name: item.author, role: item.role || undefined, contextLabel: item.company || undefined }} showRole />
-                    <div className="mt-1 flex items-center gap-1 text-[10px] text-muted">
-                      <MapPin size={10} />
-                      <span className="truncate">{item.location || 'Location not set'}</span>
-                    </div>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-1.5">
-                    <button type="button" onClick={() => handleOpenEdit(item)} className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel hover:text-fg" aria-label={'Edit ' + item.author}>
-                      <Edit3 size={14} />
-                    </button>
-                    <button type="button" onClick={() => setDeleteTarget({ id: item.id, author: item.author })} className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-control border border-line bg-bg text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger" aria-label={'Delete ' + item.author}>
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+                    <div data-ams-feature-slug="cms-testimonials-directory" data-ams-slug="cms-testimonials-directory" className="overflow-x-auto rounded-card border border-line bg-panel">
+            <table className="ams-table w-full min-w-[980px] border-collapse text-left text-xs">
+              <thead>
+                <tr className="border-b border-line bg-bg text-[10px] font-medium text-muted">
+                  <th className="px-4 py-3">Client</th>
+                  <th className="px-4 py-3">Company / role</th>
+                  <th className="px-4 py-3">Rating</th>
+                  <th className="px-4 py-3">Quote</th>
+                  <th className="px-4 py-3">Location</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {pagedTestimonials.map((item) => (
+                  <tr key={item.id} className="h-12 transition-colors hover:bg-bg/60">
+                    <td className="px-4 py-2.5">
+                      <ProfileIdentity profile={{ name: item.author, role: item.role || undefined, contextLabel: item.company || undefined }} showRole={false} size="sm" />
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <div className="min-w-[180px]">
+                        <p className="truncate text-[11px] font-medium text-fg">{item.company || 'Company not set'}</p>
+                        <p className="mt-0.5 truncate text-[10px] text-muted">{item.role || 'Role not set'}</p>
+                      </div>
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center gap-1 text-warning" aria-label={String(item.rating || 5) + ' out of 5 stars'}>
+                        {[...Array(item.rating || 5)].map((_, i) => <Star key={i} size={12} fill="currentColor" />)}
+                      </div>
+                    </td>
+                    <td className="max-w-[360px] px-4 py-2.5">
+                      <p className="line-clamp-2 text-[11px] leading-4 text-muted">“{item.quoteId || item.quote || 'No quote provided.'}”</p>
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <span className="inline-flex items-center gap-1 text-[10px] text-muted"><MapPin size={11} />{item.location || 'Not set'}</span>
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button type="button" onClick={() => handleOpenEdit(item)} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label={'Edit ' + item.author} title="Edit testimonial"><Edit3 size={13} /></button>
+                        <button type="button" onClick={() => setDeleteTarget({ id: item.id, author: item.author })} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-bg text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label={'Delete ' + item.author} title="Delete testimonial"><Trash2 size={13} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
           <AdminTablePagination total={filteredTestimonials.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="testimonials" slug="cms-testimonials-pagination" />
         </>
