@@ -845,8 +845,7 @@ export const AdminProjects: React.FC = () => {
       status: task.status,
       dueDate: task.dueDate,
       tags: (task.tags || []).join(', '),
-      subtasks: (task.subtasks || []).map(item => item.title).join('
-'),
+      subtasks: (task.subtasks || []).map(item => item.title).join('\n'),
     });
     setTaskDrawerOpen(true);
   };
@@ -860,8 +859,7 @@ export const AdminProjects: React.FC = () => {
     }
 
     const subtasks = taskForm.subtasks
-      .split('
-')
+      .split('\n')
       .map(item => item.trim())
       .filter(Boolean)
       .map((title, index) => ({
@@ -1259,8 +1257,7 @@ export const AdminProjects: React.FC = () => {
       ...rows,
     ]
       .map(row => row.map(cell => '"' + String(cell).replace(/"/g, '""') + '"').join(','))
-      .join('
-');
+      .join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
