@@ -25,7 +25,6 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import { ProjectItem } from '../../data/projectsData';
 import { useLanguage } from '../../lib/LanguageContext';
-import { useDragToScroll } from '../../lib/useDragToScroll';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
@@ -53,7 +52,6 @@ const normalizeCmsProject = (project: ProjectItem): ProjectItem => ({
 
 export const AdminCmsProjects: React.FC = () => {
   const { language, t } = useLanguage();
-  const galleryScrollRef = useDragToScroll<HTMLDivElement>();
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
@@ -80,7 +78,7 @@ export const AdminCmsProjects: React.FC = () => {
     try {
       const res = await api.cms.getProjects();
       if (res.success && Array.isArray(res.data?.projects)) {
-        setProjects((res.data.projects as ProjectItem[]).map(normalizeCmsProject));
+        setProjects((Array.isArray(res.data.projects) ? res.data.projects : []).filter(Boolean).map(normalizeCmsProject));
       } else {
         setLoadError(res.error || (language === 'id' ? 'Daftar case study gagal dimuat.' : 'Case studies could not be loaded.'));
       }
@@ -279,15 +277,12 @@ export const AdminCmsProjects: React.FC = () => {
     setTimeout(() => setStatusMessage(null), 3000);
   };
 
-  const filteredProjects = projects.filter((p) => {
-    const matchesPillar = filterPillar === 'All' || p.pillar === filterPillar;
-    const query = searchQuery.toLowerCase();
-    const matchesSearch = 
-      p.title.toLowerCase().includes(query) ||
-      p.client.toLowerCase().includes(query) ||
-      p.industry.toLowerCase().includes(query) ||
-      p.service.toLowerCase().includes(query);
-    return matchesPillar && matchesSearch;
+  const filteredProjects = projects.filter((project) => {
+    const matchesPillar = filterPillar === 'All' || project.pillar === filterPillar;
+    const query = searchQuery.trim().toLowerCase();
+    const searchable = [project.title, project.client, project.industry, project.service]
+      .map((value) => String(value || '').toLowerCase());
+    return matchesPillar && (!query || searchable.some((value) => value.includes(query)));
   });
   const totalProjectPages = Math.max(1, Math.ceil(filteredProjects.length / pageSize));
   const pagedProjects = filteredProjects.slice((page - 1) * pageSize, page * pageSize);
@@ -443,7 +438,7 @@ export const AdminCmsProjects: React.FC = () => {
         </div>
       ) : (
         <>
-        <div ref={galleryScrollRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {pagedProjects.map((project) => (
           <div
             key={project.id}

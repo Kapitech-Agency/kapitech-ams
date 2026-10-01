@@ -79,7 +79,7 @@ export const AdminCmsServices: React.FC = () => {
       .then((res) => {
         if (!mounted) return;
         if (res.success && Array.isArray(res.data?.services)) {
-          setServicesList((res.data.services as ServiceItemData[]).map(normalizeCmsService));
+          setServicesList((Array.isArray(res.data.services) ? res.data.services : []).filter(Boolean).map(normalizeCmsService));
         } else {
           setLoadError(res.error || (language === 'id' ? 'Daftar layanan gagal dimuat.' : 'Services could not be loaded.'));
         }
@@ -111,15 +111,12 @@ export const AdminCmsServices: React.FC = () => {
 
   const categories = ['All', 'Development', 'Design', 'Branding', 'Solutions'];
 
-  const filtered = servicesList.filter((s) => {
-    const matchesCat = selectedCategory === 'All' || s.category === selectedCategory;
-    const q = searchQuery.toLowerCase();
-    const matchesSearch = 
-      s.title.toLowerCase().includes(q) ||
-      (s.heroHeadline && s.heroHeadline.toLowerCase().includes(q)) ||
-      (s.heroSubtitle && s.heroSubtitle.toLowerCase().includes(q)) ||
-      s.slug.toLowerCase().includes(q);
-    return matchesCat && matchesSearch;
+  const filtered = servicesList.filter((service) => {
+    const matchesCat = selectedCategory === 'All' || service.category === selectedCategory;
+    const q = searchQuery.trim().toLowerCase();
+    const searchable = [service.title, service.heroHeadline, service.heroSubtitle, service.slug]
+      .map((value) => String(value || '').toLowerCase());
+    return matchesCat && (!q || searchable.some((value) => value.includes(q)));
   });
   const totalServicePages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const pagedServices = filtered.slice((page - 1) * pageSize, page * pageSize);
