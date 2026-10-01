@@ -473,7 +473,7 @@ export const AdminCmsProjects: React.FC = () => {
 
               <div className="absolute bottom-3 left-3 right-3">
                 <div className="text-[11px] font-sans text-fg/80">{project.client}</div>
-                <div className="text-base font-semibold font-sans text-fg truncate">
+                <div className="text-sm font-semibold font-sans text-fg truncate">
                   {project.title}
                 </div>
               </div>
@@ -540,7 +540,7 @@ export const AdminCmsProjects: React.FC = () => {
       <Drawer slug="cms-project-editor-drawer"
         open={isModalOpen && !!editingProject}
         onClose={() => setIsModalOpen(false)}
-        size="xl"
+        size="lg"
         title={editingProject?.title ? 'Edit: ' + editingProject.title : 'Add New Case Study'}
         description="Manage the case study content and live card preview."
         footer={modalTab === 'details'
@@ -579,7 +579,7 @@ export const AdminCmsProjects: React.FC = () => {
             </div>
 
             {modalTab === 'preview' ? (
-              <div className="py-6 flex flex-col items-center">
+              <div className="py-4 flex flex-col items-center">
                 <div className="text-[11px] text-muted mb-4">
                   Live Showcase Preview (as rendered on <code className="text-fg">kapitech.id/work</code>):
                 </div>
@@ -597,7 +597,7 @@ export const AdminCmsProjects: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="p-4 space-y-3 font-sans text-xs">
+                  <div className="p-3 space-y-2.5 font-sans text-xs">
                     <p className="text-muted text-xs font-sans">
                       {editingProject.descId || editingProject.desc || 'No description entered.'}
                     </p>
