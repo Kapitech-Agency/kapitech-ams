@@ -692,8 +692,32 @@ export const AdminInbox: React.FC = () => {
 
       <AdminModuleHeader slug="inbox-header"
         className="mb-0"
-        title="Inbox"
-        description={language === 'id' ? 'Kelola seluruh inbound dari website: inquiry klien dan lamaran kerja dalam satu alur operasional AMS.' : 'Manage all website inbound in one operational flow: client inquiries and job applications.'}
+        title={
+          activeInboxTab === 'overview'
+            ? 'Overview'
+            : activeInboxTab === 'client'
+              ? 'Client Inbox'
+              : activeInboxTab === 'jobs'
+                ? 'Job Applications'
+                : 'Starred'
+        }
+        description={
+          activeInboxTab === 'overview'
+            ? (language === 'id'
+              ? 'Pusat kendali seluruh inbound untuk triage, monitoring, dan tindak lanjut.'
+              : 'Operational control center for inbound triage, monitoring, and follow-up.')
+            : activeInboxTab === 'client'
+              ? (language === 'id'
+                ? 'Kelola inquiry klien, kualifikasi peluang, dan konversi lead ke CRM.'
+                : 'Qualify client inquiries, manage opportunities, and move qualified leads into CRM.')
+              : activeInboxTab === 'jobs'
+                ? (language === 'id'
+                  ? 'Kelola lamaran kerja dari screening sampai keputusan hiring.'
+                  : 'Manage job applications from screening through hiring decisions.')
+                : (language === 'id'
+                  ? 'Kelola record yang disimpan untuk follow-up prioritas.'
+                  : 'Manage records intentionally saved for priority follow-up.')
+        }
         actions={(
           <>
             <span className="text-[11px] tabular-nums text-muted">{activeTabItems.length} inbound</span>
