@@ -1699,7 +1699,8 @@ export const AdminInbox: React.FC = () => {
       <EmailForwardingGuideModal
         isOpen={isEmailModalOpen}
         onClose={() => setIsEmailModalOpen(false)}
-        adminEmail="kapitechagency@gmail.com"\n      />
+        adminEmail="kapitechagency@gmail.com"
+      />
 
     </AdminPageShell>
   );
