@@ -1476,11 +1476,11 @@ export const AdminInbox: React.FC = () => {
         <div className={'ams-inbox-workspace grid grid-cols-1 items-start gap-3 ' + (detailContext === 'overview' ? '' : 'lg:grid-cols-[minmax(300px,0.82fr)_minmax(0,1.18fr)]')}>
           
           {/* Left: Master Briefs List Pane */}
-          <div className={`ams-inbox-list-pane space-y-3 ${
-            selectedSubmission || detailContext === 'overview'
-              ? 'hidden lg:block'
+          <div className={'ams-inbox-list-pane space-y-3 ' + (
+            selectedSubmission
+              ? (detailContext === 'overview' ? 'hidden' : 'hidden lg:block')
               : 'block'
-          } ${detailContext === 'overview' ? 'lg:hidden' : ''}`}>
+          )}>
             {filteredItems.map((item) => {
               const isSelected = selectedSubmission?.id === item.id;
               const isConverted = crmDeals.some(d => (d as any).inquiryId === item.id);
@@ -1578,7 +1578,7 @@ export const AdminInbox: React.FC = () => {
 
           {/* Right: Message Reader & Command Hub Pane */}
           {selectedSubmission ? (
-            <div className={\`ams-inbox-reader-pane min-w-0 rounded-card border border-line bg-panel p-4 sm:p-5 \${detailContext === 'overview' ? '' : 'lg:sticky lg:top-4 lg:min-h-[calc(100vh-250px)]'}\` }>
+            <div className={'ams-inbox-reader-pane min-w-0 rounded-card border border-line bg-panel p-4 sm:p-5 ' + (detailContext === 'overview' ? '' : 'lg:sticky lg:top-4 lg:min-h-[calc(100vh-250px)]')}>
               <div>
                 
                 {/* Mobile Back Button */}
