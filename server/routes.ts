@@ -243,6 +243,12 @@ async function dispatchLeadTelegramNotification(
     services: string[];
     budget: string;
     message: string;
+    type?: string;
+    positionTitle?: string;
+    experienceYears?: string;
+    specialty?: string;
+    tools?: string;
+    location?: string;
   },
   settings: {
     isTelegramActive: boolean;
@@ -255,15 +261,25 @@ async function dispatchLeadTelegramNotification(
 
   if (!settings.isTelegramActive || !botToken || !chatId) return;
 
-  const telegramText =
-    `🔔 *New Kapitech Lead Received*\\n\\n` +
-    `👤 *Name:* ${lead.fullName}\\n` +
-    `🏢 *Company:* ${lead.company || '-'}\\n` +
-    `✉️ *Email:* ${lead.email}\\n` +
-    `📞 *Phone:* ${lead.phone || '-'}\\n` +
-    `🛠️ *Services:* ${lead.services.join(', ') || '-'}\\n` +
-    `💰 *Budget:* ${lead.budget || '-'}\\n\\n` +
-    `💬 *Message:*\\n_${lead.message.slice(0, 300)}_`;
+  const isCareer = lead.type === 'career';
+  const telegramText = isCareer
+    ? `🔔 *New Kapitech Job Application*\\n\\n` +
+      `👤 *Candidate:* ${lead.fullName}\\n` +
+      `💼 *Position:* ${lead.positionTitle || lead.specialty || '-'}\\n` +
+      `✉️ *Email:* ${lead.email}\\n` +
+      `📞 *Phone:* ${lead.phone || '-'}\\n` +
+      `📍 *Location:* ${lead.location || '-'}\\n` +
+      `⏱️ *Experience:* ${lead.experienceYears || '-'}\\n` +
+      `🛠️ *Tools:* ${lead.tools || '-'}\\n\\n` +
+      `💬 *Message:*\\n_${lead.message.slice(0, 300)}_`
+    : `🔔 *New Kapitech Lead Received*\\n\\n` +
+      `👤 *Name:* ${lead.fullName}\\n` +
+      `🏢 *Company:* ${lead.company || '-'}\\n` +
+      `✉️ *Email:* ${lead.email}\\n` +
+      `📞 *Phone:* ${lead.phone || '-'}\\n` +
+      `🛠️ *Services:* ${lead.services.join(', ') || '-'}\\n` +
+      `💰 *Budget:* ${lead.budget || '-'}\\n\\n` +
+      `💬 *Message:*\\n_${lead.message.slice(0, 300)}_`;
 
   try {
     await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
@@ -1406,9 +1422,12 @@ apiRouter.post('/leads/submit', rateLimitPublic(10, 60 * 1000), async (req: Requ
 
   void dispatchLeadTelegramNotification(newLead, notificationSettings);
 
+  const careerSubmission = newLead.type === 'career';
   pushNotification(getDataSourceMode() === 'json' ? jsonDb : undefined, {
-    title: 'New inbound lead',
-    message: `${newLead.fullName}${newLead.company ? ` from ${newLead.company}` : ''} submitted a new inquiry.`,
+    title: careerSubmission ? 'New job application' : 'New inbound lead',
+    message: careerSubmission
+      ? `${newLead.fullName} applied for ${newLead.positionTitle || 'a role'}.`
+      : `${newLead.fullName}${newLead.company ? ` from ${newLead.company}` : ''} submitted a new inquiry.`,
     type: 'lead',
     severity: 'info',
     linkUrl: '/admin/inbox'
@@ -1426,7 +1445,11 @@ apiRouter.post('/leads/submit', rateLimitPublic(10, 60 * 1000), async (req: Requ
     severity: 'info'
   });
 
-  res.json({ success: true, message: 'Inquiry submitted successfully.', id: newLead.id });
+  res.json({
+    success: true,
+    message: newLead.type === 'career' ? 'Job application submitted successfully.' : 'Inquiry submitted successfully.',
+    id: newLead.id
+  });
 });
 
 apiRouter.get('/leads', requireAuth, requirePermission('canManageCrm'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
