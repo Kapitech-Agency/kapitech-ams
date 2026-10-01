@@ -978,15 +978,22 @@ export const AdminInvoicing: React.FC = () => {
       if (rows.length) {
         setQuotations(rows);
         setUsingDemoQuotations(false);
-      } else {
+      } else if (slugDataMode) {
         setQuotations(
           STITCH_FINANCE_QUOTATIONS.filter((quotation) => quotation.currency === currency)
         );
         setUsingDemoQuotations(true);
+      } else {
+        setQuotations([]);
+        setUsingDemoQuotations(false);
       }
     } catch {
-      setQuotations(STITCH_FINANCE_QUOTATIONS.filter((quotation) => quotation.currency === currency));
-      setUsingDemoQuotations(true);
+      setQuotations(
+        slugDataMode
+          ? STITCH_FINANCE_QUOTATIONS.filter((quotation) => quotation.currency === currency)
+          : []
+      );
+      setUsingDemoQuotations(slugDataMode);
     } finally {
       setQuotationLoading(false);
     }
