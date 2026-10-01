@@ -6,6 +6,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
   loading?: boolean;
   icon?: React.ReactNode;
+  slug?: string;
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
@@ -16,6 +17,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
   children,
   disabled,
   type = 'button',
+  slug,
   ...props
 }, ref) => (
   <button
@@ -24,6 +26,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
     type={type}
     disabled={disabled || loading}
     aria-busy={loading || undefined}
+    data-ams-slug={slug}
     className={cn(
       'inline-flex min-h-10 sm:min-h-9 items-center justify-center gap-2 rounded-control px-3 text-xs font-medium transition-[background-color,border-color,color,transform] duration-150 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-50',
       variant === 'primary' && 'bg-accent text-white hover:bg-accent-hover active:bg-accent-pressed',
