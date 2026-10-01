@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Plus, Star, Edit3, Trash2, Check, MessageSquare, MapPin, X } from 'lucide-react';
-import { TestimonialItem } from '../../lib/cmsStore';
+import type { TestimonialItem } from '../../lib/cmsStore';
 import { api } from '../../lib/apiClient';
 import { useLanguage } from '../../lib/LanguageContext';
 import { Drawer } from '../../components/ui/Drawer';

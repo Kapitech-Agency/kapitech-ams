@@ -192,12 +192,16 @@ export const AdminLayout: React.FC = () => {
   );
   const hasAgencyTier = (requiredTier: AgencyTier) => agencyTier <= requiredTier;
 
-  const filteredNavItems = useMemo(
-    () => STITCH_NAV_ITEMS.filter(
+  const filteredNavItems = useMemo(() => {
+    const seen = new Set<string>();
+    return STITCH_NAV_ITEMS.filter(
       (item) => hasAgencyTier(item.requiredTier) && isAllowed(item.accessKey || item.key)
-    ),
-    [agencyTier, isAllowed]
-  );
+    ).filter((item) => {
+      if (seen.has(item.key)) return false;
+      seen.add(item.key);
+      return true;
+    });
+  }, [agencyTier, isAllowed]);
 
   const canOpenMasterSettings = hasAgencyTier(1) && isAllowed('settings');
   const profileTitle = session?.user?.role || DEFAULT_PROFILE_TITLE;
@@ -232,10 +236,6 @@ export const AdminLayout: React.FC = () => {
 
     if (path === '/admin/settings') {
       return !location.search.includes('tab=rbac');
-    }
-
-    if (path === '/admin/cms/projects') {
-      return location.pathname.startsWith('/admin/cms/');
     }
 
     return true;

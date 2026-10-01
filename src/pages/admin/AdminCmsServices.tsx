@@ -24,7 +24,7 @@ import {
   DollarSign,
   TrendingUp
 } from 'lucide-react';
-import { allSolutionsAndServices, ServiceItemData } from '../../data/servicesData';
+import type { ServiceItemData } from '../../data/servicesData';
 import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { api } from '../../lib/apiClient';
@@ -36,10 +36,24 @@ import { Skeleton } from '../../components/ui/Skeleton';
 import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 
-const normalizeCmsService = (service: ServiceItemData): ServiceItemData => ({
-  ...service,
-  slug: service.slug || service.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
-  title: service.title || 'Untitled service',
+const normalizeCmsService = (service: ServiceItemData | null | undefined): ServiceItemData => {
+  const source = (service || {}) as Partial<ServiceItemData>;
+  const title = typeof source.title === 'string' && source.title.trim() ? source.title.trim() : 'Untitled service';
+  const slug = typeof source.slug === 'string' && source.slug.trim()
+    ? source.slug.trim()
+    : title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  const type: ServiceItemData['type'] = source.type === 'solution' ? 'solution' : 'service';
+  const category: ServiceItemData['category'] =
+    source.category === 'Solutions' || source.category === 'Branding' || source.category === 'Design' || source.category === 'Development'
+      ? source.category
+      : 'Development';
+
+  return {
+  ...source,
+  slug,
+  type,
+  category,
+  title,
   navSubtitle: service.navSubtitle || '',
   navSubtitleId: service.navSubtitleId || '',
   heroHeadline: service.heroHeadline || '',
@@ -55,9 +69,10 @@ const normalizeCmsService = (service: ServiceItemData): ServiceItemData => ({
   capabilities: Array.isArray(service.capabilities) ? service.capabilities : [],
   processStages: Array.isArray(service.processStages) ? service.processStages : [],
   businessOutcomes: service.businessOutcomes || { heading: '', headingId: '', benefits: [], benefitsId: [] },
-  tools: Array.isArray(service.tools) ? service.tools : [],
-  faqs: Array.isArray(service.faqs) ? service.faqs : []
-});
+  tools: Array.isArray(source.tools) ? source.tools : [],
+  faqs: Array.isArray(source.faqs) ? source.faqs : []
+  };
+};
 
 export const AdminCmsServices: React.FC = () => {
   const { language } = useLanguage();
@@ -497,6 +512,8 @@ export const AdminCmsServices: React.FC = () => {
       )}
       {/* Service Detail / Inspection Modal */}
       <Modal slug="cms-service-detail-modal" open={!!selectedServiceForDetail} onClose={() => setSelectedServiceForDetail(null)} size="lg" title={selectedServiceForDetail?.title || 'Service detail'} description={selectedServiceForDetail?.heroSubtitle || selectedServiceForDetail?.heroSubtitleId}>
+        {selectedServiceForDetail && (
+          <>
             <div className="flex items-center gap-2 font-sans text-xs text-accent font-semibold mb-2">
               <span>{selectedServiceForDetail.category}</span>
               <span>•</span>
@@ -590,6 +607,8 @@ export const AdminCmsServices: React.FC = () => {
                 </a>
               </div>
             </div>
+          </>
+        )}
       </Modal>
 
       {/* Add New Service Modal */}

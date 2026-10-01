@@ -23,7 +23,7 @@ import { api } from '../../lib/apiClient';
 import { Drawer } from '../../components/ui/Drawer';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
-import { ProjectItem } from '../../data/projectsData';
+import type { ProjectItem } from '../../data/projectsData';
 import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Skeleton } from '../../components/ui/Skeleton';
@@ -553,8 +553,9 @@ export const AdminCmsProjects: React.FC = () => {
       {/* MODAL: ADD / EDIT PROJECT WITH LIVE PREVIEW & DRAG & DROP */}
       </div>
 
+      {editingProject && (
       <Drawer slug="cms-project-editor-drawer"
-        open={isModalOpen && !!editingProject}
+        open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         size="xl"
         title={editingProject?.title ? 'Edit: ' + editingProject.title : 'Add New Case Study'}
@@ -861,6 +862,7 @@ export const AdminCmsProjects: React.FC = () => {
               </form>
             )}
       </Drawer>
+      )}
 
     </AdminPageShell>
   );
