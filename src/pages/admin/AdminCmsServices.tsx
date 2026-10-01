@@ -54,21 +54,21 @@ const normalizeCmsService = (service: ServiceItemData | null | undefined): Servi
   type,
   category,
   title,
-  navSubtitle: service.navSubtitle || '',
-  navSubtitleId: service.navSubtitleId || '',
-  heroHeadline: service.heroHeadline || '',
-  heroHeadlineId: service.heroHeadlineId || '',
-  heroSubtitle: service.heroSubtitle || '',
-  heroSubtitleId: service.heroSubtitleId || '',
-  badge: service.badge || 'Active',
-  badgeId: service.badgeId || service.badge || 'Active',
+  navSubtitle: source.navSubtitle || '',
+  navSubtitleId: source.navSubtitleId || '',
+  heroHeadline: source.heroHeadline || '',
+  heroHeadlineId: source.heroHeadlineId || '',
+  heroSubtitle: source.heroSubtitle || '',
+  heroSubtitleId: source.heroSubtitleId || '',
+  badge: source.badge || 'Active',
+  badgeId: source.badgeId || source.badge || 'Active',
   metrics: Array.isArray(service.metrics) ? service.metrics : [],
-  testimonial: service.testimonial || { quote: '', quoteId: '', highlight: '', highlightId: '', author: '', role: '', company: '', avatar: '' },
-  caseStudySlugs: Array.isArray(service.caseStudySlugs) ? service.caseStudySlugs : [],
-  problemsSolutions: Array.isArray(service.problemsSolutions) ? service.problemsSolutions : [],
-  capabilities: Array.isArray(service.capabilities) ? service.capabilities : [],
-  processStages: Array.isArray(service.processStages) ? service.processStages : [],
-  businessOutcomes: service.businessOutcomes || { heading: '', headingId: '', benefits: [], benefitsId: [] },
+  testimonial: source.testimonial || { quote: '', quoteId: '', highlight: '', highlightId: '', author: '', role: '', company: '', avatar: '' },
+  caseStudySlugs: Array.isArray(source.caseStudySlugs) ? source.caseStudySlugs : [],
+  problemsSolutions: Array.isArray(source.problemsSolutions) ? source.problemsSolutions : [],
+  capabilities: Array.isArray(source.capabilities) ? source.capabilities : [],
+  processStages: Array.isArray(source.processStages) ? source.processStages : [],
+  businessOutcomes: source.businessOutcomes || { heading: '', headingId: '', benefits: [], benefitsId: [] },
   tools: Array.isArray(source.tools) ? source.tools : [],
   faqs: Array.isArray(source.faqs) ? source.faqs : []
   };
@@ -483,15 +483,15 @@ export const AdminCmsServices: React.FC = () => {
               <span className="text-muted">/{selectedServiceForDetail.slug}</span>
             </div>
 
-            <h2 className="text-xl font-sans font-semibold text-fg mb-2">
+            <h2 className="text-sm font-semibold text-fg mb-1.5">
               {selectedServiceForDetail.title}
             </h2>
-            <p className="text-xs text-muted mb-5 leading-relaxed">
+            <p className="text-[11px] leading-5 text-muted mb-4">
               {selectedServiceForDetail.heroSubtitle || selectedServiceForDetail.heroSubtitleId}
             </p>
 
             {/* Metrics */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 mb-4">
               {selectedServiceForDetail.metrics?.map((m, idx) => (
                 <div key={idx} className="bg-panel border border-line p-4 rounded-card text-center">
                   <div className="text-lg font-sans font-semibold text-accent">{m.value}</div>
@@ -505,9 +505,9 @@ export const AdminCmsServices: React.FC = () => {
               <h4 className="text-xs font-sans normal-case text-muted font-semibold tracking-normal mb-2">
                 Detailed Capabilities & SLA Scope
               </h4>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {selectedServiceForDetail.capabilities?.map((cap, cIdx) => (
-                  <div key={cIdx} className="bg-panel border border-line p-4 rounded-card">
+                  <div key={cIdx} className="bg-panel border border-line p-3 rounded-card">
                     <div className="text-xs font-semibold text-fg flex items-center gap-2">
                       <CheckCircle2 size={13} className="text-success" />
                       <span>{cap.title || cap.titleId}</span>
@@ -528,7 +528,7 @@ export const AdminCmsServices: React.FC = () => {
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {selectedServiceForDetail.processStages.map((stage, sIdx) => (
-                    <div key={sIdx} className="bg-panel border border-line p-4 rounded-card">
+                    <div key={sIdx} className="bg-panel border border-line p-3 rounded-card">
                       <div className="flex items-center gap-2 text-accent font-sans text-xs font-semibold mb-1">
                         <span>{stage.stageNumber}</span>
                         <span className="text-fg font-sans font-semibold">{stage.stageName}</span>
@@ -547,7 +547,7 @@ export const AdminCmsServices: React.FC = () => {
               </div>
             )}
 
-            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2.5 pt-4 border-t border-line">
+            <div className="flex flex-col-reverse gap-2 border-t border-line pt-3 sm:flex-row sm:items-center sm:justify-between">
               <Button
                 type="button"
                 variant="destructive"
@@ -578,7 +578,7 @@ export const AdminCmsServices: React.FC = () => {
       <Drawer slug="cms-service-editor-drawer"
         open={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        size="xl"
+        size="lg"
         dialogClassName="border-l border-line bg-panel"
         title="Add agency service"
         description="Create a service entry for the public agency catalog."
@@ -589,7 +589,7 @@ export const AdminCmsServices: React.FC = () => {
           </>
         )}
       >
-            <form id="service-form" data-ams-feature-slug="cms-service-form" data-ams-slug="cms-service-form" onSubmit={handleCreateService} className="space-y-5 text-xs font-sans">
+            <form id="service-form" data-ams-feature-slug="cms-service-form" data-ams-slug="cms-service-form" onSubmit={handleCreateService} className="space-y-4 text-xs font-sans">
               <div>
                 <label className="block text-muted mb-1 font-medium">Service Title *</label>
                 <input
@@ -605,7 +605,7 @@ export const AdminCmsServices: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                 <div>
                   <label className="block text-muted mb-1 font-medium">URL Slug *</label>
                   <input
