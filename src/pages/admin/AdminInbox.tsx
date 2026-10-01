@@ -632,7 +632,9 @@ export const AdminInbox: React.FC = () => {
           <>
             <span className="text-[11px] tabular-nums text-muted">{activeTabItems.length} inbound</span>
             <button type="button" onClick={() => setIsEmailModalOpen(true)} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent" title={language === 'id' ? 'Buka pengaturan notifikasi email' : 'Open email alert settings'}><Mail size={14} /><span>{language === 'id' ? 'Notifikasi Email' : 'Email Alerts'}</span></button>
-            {metrics.newCount > 0 && <button type="button" onClick={handleMarkAllRead} disabled={!canManageCrm} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"><Check size={14} /><span>{language === 'id' ? 'Tandai Dibaca' : 'Mark Read'}</span></button>}
+            {metrics.newCount > 0 && <button type="button" onClick={handleMarkAllRead} disabled={!canManageCrm} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"><Check size={14} /><span>{activeInboxTab === 'jobs'
+    ? (language === 'id' ? 'Mulai Screening' : 'Start Screening')
+    : (language === 'id' ? 'Tandai Dibaca' : 'Mark Read')}</span></button>}
             {activeTabItems.length > 0 && <button type="button" onClick={handleExportCSV} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"><Download size={14} /><span>Export CSV</span></button>}
           </>
         )}
@@ -1524,7 +1526,24 @@ export const AdminInbox: React.FC = () => {
                         <User size={13} className="text-success" />
                         <span>{language === 'id' ? 'Penanggung Jawab Kualifikasi' : 'Assigned Triage Lead'}</span>
                       </label>
-                      <CustomSelect disabled={!canManageCrm} value={selectedSubmission.assignedTo || 'Lead Full-Stack Tech'} onChange={(value) => handleAssigneeChange(selectedSubmission.id, value)} options={[{value:'Lead Full-Stack Tech',label:'Lead Full-Stack Tech (Engineering)'},{value:'Senior UI/UX Designer',label:'Senior UI/UX Designer (Design)'},{value:'Technical Project Manager',label:'Technical Project Manager (Scoping)'},{value:'Business Director',label:'Business Director (Accounts)'}]} />
+                      <CustomSelect
+                        disabled={!canManageCrm}
+                        value={selectedSubmission.assignedTo || (activeInboxTab === 'jobs' ? 'People & Operations' : 'Lead Full-Stack Tech')}
+                        onChange={(value) => handleAssigneeChange(selectedSubmission.id, value)}
+                        options={activeInboxTab === 'jobs'
+                          ? [
+                              { value: 'People & Operations', label: 'People & Operations' },
+                              { value: 'Engineering Lead', label: 'Engineering Lead' },
+                              { value: 'Design Lead', label: 'Design Lead' },
+                              { value: 'Executive Management', label: 'Executive Management' }
+                            ]
+                          : [
+                              { value: 'Lead Full-Stack Tech', label: 'Lead Full-Stack Tech (Engineering)' },
+                              { value: 'Senior UI/UX Designer', label: 'Senior UI/UX Designer (Design)' },
+                              { value: 'Technical Project Manager', label: 'Technical Project Manager (Scoping)' },
+                              { value: 'Business Director', label: 'Business Director (Accounts)' }
+                            ]}
+                      />
                     </div>
                   </div>
                 )}
@@ -1586,12 +1605,18 @@ export const AdminInbox: React.FC = () => {
                 <Inbox size={32} />
               </div>
               <h3 className="text-fg font-medium mb-1 font-sans text-base">
-                {language === 'id' ? 'Pilih Pesan untuk Membaca Brief' : 'Select a Brief to Inspect'}
+                {activeInboxTab === 'jobs'
+                  ? (language === 'id' ? 'Pilih Lamaran untuk Meninjau Kandidat' : 'Select an Application to Review')
+                  : (language === 'id' ? 'Pilih Pesan untuk Membaca Brief' : 'Select a Brief to Inspect')}
               </h3>
               <p className="text-xs text-muted max-w-sm font-sans leading-relaxed">
                 {language === 'id'
-                  ? 'Klik salah satu pesan di sebelah kiri untuk melihat rincian brief, template respon cepat, kontak WhatsApp/Email, dan konversi ke pipeline CRM.'
-                  : 'Click any submission on the left to examine technical brief specs, dispatch executive canned responses, and convert into active CRM deals.'}
+                  ? (activeInboxTab === 'jobs'
+                    ? 'Klik salah satu lamaran untuk melihat detail kandidat, tautan resume/portfolio, catatan internal, dan status rekrutmen.'
+                    : 'Klik salah satu inquiry untuk melihat detail brief, respon cepat, kontak WhatsApp/Email, dan konversi ke pipeline CRM.')
+                  : (activeInboxTab === 'jobs'
+                    ? 'Select an application to review candidate details, resume or portfolio links, internal notes, and hiring stage.'
+                    : 'Select an inquiry to review the brief, quick responses, WhatsApp/Email contact, and CRM conversion.')}
               </p>
             </div>
           )}
@@ -1607,10 +1632,20 @@ export const AdminInbox: React.FC = () => {
       <Modal slug="inbox-modal"
         open={Boolean(confirmAction)}
         onClose={() => setConfirmAction(null)}
-        title={confirmAction?.type === 'delete' ? (language === 'id' ? 'Hapus pesan?' : 'Delete message?') : (language === 'id' ? 'Tandai pesan sebagai ditinjau?' : 'Mark messages as reviewed?')}
+        title={confirmAction?.type === 'delete'
+          ? (language === 'id' ? 'Hapus pesan?' : 'Delete message?')
+          : activeInboxTab === 'jobs'
+            ? (language === 'id' ? 'Pindahkan lamaran ke Screening?' : 'Move applications to Screening?')
+            : (language === 'id' ? 'Tandai pesan sebagai ditinjau?' : 'Mark messages as reviewed?')}
         description={confirmAction?.type === 'delete'
           ? (language === 'id' ? 'Tindakan ini menghapus data inbox secara permanen dan tidak dapat dibatalkan.' : 'This permanently removes the inbox record and cannot be undone.')
-          : (language === 'id' ? `Sebanyak ${confirmAction?.count ?? 0} pesan baru akan diubah menjadi In Review.` : `${confirmAction?.count ?? 0} new messages will be moved to In Review.`)}
+          : activeInboxTab === 'jobs'
+            ? (language === 'id'
+              ? `Sebanyak ${confirmAction?.count ?? 0} lamaran baru akan dipindahkan ke Screening.`
+              : `${confirmAction?.count ?? 0} new applications will be moved to Screening.`)
+            : (language === 'id'
+              ? `Sebanyak ${confirmAction?.count ?? 0} pesan baru akan diubah menjadi In Review.`
+              : `${confirmAction?.count ?? 0} new messages will be moved to In Review.`)}
         footer={(
           <>
             <button type="button" onClick={() => setConfirmAction(null)} className="min-h-10 rounded-control border border-line bg-panel px-4 text-xs font-medium text-muted hover:bg-bg hover:text-fg">Cancel</button>
@@ -1619,11 +1654,15 @@ export const AdminInbox: React.FC = () => {
               onClick={() => confirmAction?.type === 'delete' && confirmAction.id
                 ? void confirmDelete(confirmAction.id)
                 : confirmAction?.count
-                  ? void confirmMarkAllRead(confirmAction.count)
+                  ? void confirmMarkAllRead(confirmAction.count, confirmAction.targetStatus || (activeInboxTab === 'jobs' ? 'screening' : 'in-review'))
                   : setConfirmAction(null)}
               className={`min-h-10 rounded-control px-4 text-xs font-semibold text-white ${confirmAction?.type === 'delete' ? 'bg-danger hover:bg-danger/90' : 'bg-accent hover:bg-accent/90'}`}
             >
-              {confirmAction?.type === 'delete' ? (language === 'id' ? 'Hapus Permanen' : 'Delete Permanently') : (language === 'id' ? 'Tandai In Review' : 'Mark In Review')}
+              {confirmAction?.type === 'delete'
+                ? (language === 'id' ? 'Hapus Permanen' : 'Delete Permanently')
+                : activeInboxTab === 'jobs'
+                  ? (language === 'id' ? 'Pindahkan ke Screening' : 'Move to Screening')
+                  : (language === 'id' ? 'Tandai In Review' : 'Mark In Review')}
             </button>
           </>
         )}
