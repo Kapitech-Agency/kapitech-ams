@@ -46,7 +46,10 @@ import {
   incrementMfaChallengeFailures,
   consumeMfaChallenge,
   setMfaChallengeCookie,
-  clearMfaChallengeCookie
+  clearMfaChallengeCookie,
+  verifyMfaTrustToken,
+  createMfaTrustToken,
+  setMfaTrustCookie
 } from './auth';
 import { getDataSourceMode } from './data-source.ts';
 import { createClientSlug } from '../src/lib/clientStore.ts';
@@ -449,7 +452,17 @@ apiRouter.post('/auth/login', rateLimitPublic(10, 15 * 60 * 1000), async (req: R
       else saveDatabase(db);
     }
 
-    if (user.mfaEnabled) {
+    const trustedMfaDevice = user.mfaEnabled && verifyMfaTrustToken(
+      req.headers.cookie
+        ?.split(';')
+        .map(part => part.trim())
+        .find(part => part.startsWith('kapi_mfa_trust='))
+        ?.slice('kapi_mfa_trust='.length) || '',
+      user,
+      userAgent
+    );
+
+    if (user.mfaEnabled && !trustedMfaDevice) {
       if (!user.mfaSecret) {
         res.status(503).json({
           success: false,
@@ -601,7 +614,17 @@ apiRouter.post('/auth/firebase-login', rateLimitPublic(10, 15 * 60 * 1000), asyn
       return;
     }
 
-    if (user.mfaEnabled) {
+    const trustedMfaDevice = user.mfaEnabled && verifyMfaTrustToken(
+      req.headers.cookie
+        ?.split(';')
+        .map(part => part.trim())
+        .find(part => part.startsWith('kapi_mfa_trust='))
+        ?.slice('kapi_mfa_trust='.length) || '',
+      user,
+      userAgent
+    );
+
+    if (user.mfaEnabled && !trustedMfaDevice) {
       if (!user.mfaSecret) {
         res.status(503).json({ success: false, error: 'MFA is enabled but not configured correctly. Contact a Master administrator.' });
         return;
@@ -708,6 +731,7 @@ apiRouter.post('/auth/mfa/verify', rateLimitPublic(10, 5 * 60 * 1000), async (re
   const db = getDataSourceMode() === 'json' ? getDatabase() : undefined;
   const user = getDataSourceMode() === 'postgres' ? await postgresAuthRepository.findUserById(challenge.userId) : db!.users.find(item => item.id === challenge.userId) || null;
   const code = String(req.body?.code || '').trim();
+  const trustDevice = Boolean(req.body?.trustDevice);
   const validTotp = Boolean(user?.mfaEnabled && user?.mfaSecret && verifyTotpCode(user.mfaSecret, code));
   const validRecovery = Boolean(user?.mfaEnabled && user && verifyMfaRecoveryCode(user, code));
   if (validRecovery && getDataSourceMode() === 'postgres' && user) {
@@ -741,6 +765,10 @@ apiRouter.post('/auth/mfa/verify', rateLimitPublic(10, 5 * 60 * 1000), async (re
   const secureCookie = process.env.NODE_ENV === 'production' ? ' Secure;' : '';
   res.append('Set-Cookie', `kapi_session=${session.token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${cookieMaxAge};${secureCookie}`);
   clearMfaChallengeCookie(res);
+  if (trustDevice) {
+    const trustToken = createMfaTrustToken(user, req.headers['user-agent'] || 'unknown');
+    if (trustToken) setMfaTrustCookie(res, trustToken);
+  }
   setCsrfCookie(res);
 
   await writeAuditLog({
