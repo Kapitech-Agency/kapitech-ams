@@ -4,6 +4,7 @@ import { Lock, KeyRound, Mail, Eye, EyeOff, AlertCircle, ArrowRight, ArrowLeft, 
 import { api } from '../../lib/apiClient';
 import { authenticateAdmin, cacheAdminSession } from '../../lib/adminAuth';
 import { useLanguage } from '../../lib/LanguageContext';
+import { Button } from '../../components/ui/Button';
 
 export const AdminLogin: React.FC = () => {
   const { language } = useLanguage();
@@ -180,14 +181,15 @@ export const AdminLogin: React.FC = () => {
                   className="w-full pl-10 pr-10 h-10 min-h-10 bg-panel border border-line rounded-control text-sm text-fg focus-visible:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent focus:border-accent font-sans"
                   placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                 />
-                <button
+                <Button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 min-h-10 min-w-10 sm:min-h-9 sm:min-w-9 flex items-center justify-center rounded-control text-muted hover:text-fg"
+                  variant="ghost"
+                  onClick={() => setShowPassword((current) => !current)}
+                  className="absolute right-1.5 top-1/2 h-8 min-h-8 w-8 min-w-8 -translate-y-1/2 p-0"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -291,28 +293,30 @@ export const AdminLogin: React.FC = () => {
               {!loading && <ArrowRight size={14} />}
             </button>
 
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={() => {
                 setMfaRecoveryMode((current) => !current);
                 setMfaCode('');
                 setErrorMessage(null);
               }}
               disabled={loading}
-              className="w-full h-10 rounded-control bg-transparent border border-line text-muted hover:text-fg text-xs font-sans font-semibold transition-colors flex items-center justify-center gap-2"
+              className="w-full h-10"
             >
               {mfaRecoveryMode ? (language === 'id' ? 'Gunakan kode authenticator' : 'Use authenticator code') : (language === 'id' ? 'Gunakan recovery code' : 'Use recovery code')}
-            </button>
+            </Button>
 
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={handleBackToPassword}
               disabled={loading}
-              className="w-full h-10 rounded-control bg-panel text-muted hover:text-fg text-xs font-sans font-semibold transition-colors flex items-center justify-center gap-2"
+              icon={<ArrowLeft size={14} />}
+              className="w-full h-10 border border-line bg-panel"
             >
-              <ArrowLeft size={14} />
               {language === 'id' ? 'Kembali ke login password' : 'Back to password sign-in'}
-            </button>
+            </Button>
           </form>
           )}
 
