@@ -15,6 +15,7 @@ import {
   ClipboardCheck,
   UsersRound,
   LockKeyhole,
+  LayoutGrid,
   Layers,
 } from 'lucide-react';
 import { getAdminSession, logoutAdmin } from '../../lib/adminAuth';
@@ -51,6 +52,7 @@ const STITCH_NAV_ITEMS: AdminNavItem[] = [
   { key: 'team', to: '/admin/team', label: 'Team', icon: UsersRound, accessKey: 'timelogs', requiredTier: 3, group: 'Project Operations' },
   { key: 'tasks', to: '/admin/tasks', label: 'Tasks', icon: ClipboardCheck, badge: 3, accessKey: 'projects', requiredTier: 3, group: 'Project Operations' },
   { key: 'documents', to: '/admin/documents', label: 'Documents', icon: LockKeyhole, badge: 'Encrypted', requiredTier: 3, group: 'Project Operations' },
+  { key: 'cms', to: '/admin/cms/projects', label: 'CMS', icon: LayoutGrid, accessKey: 'cms_projects', requiredTier: 3, group: 'Project Operations' },
   { key: 'cms', to: '/admin/cms/projects', label: 'CMS', icon: Layers, accessKey: 'cms_projects', requiredTier: 3, group: 'Project Operations' },
 ];
 
@@ -232,6 +234,10 @@ export const AdminLayout: React.FC = () => {
 
     if (path === '/admin/settings') {
       return !location.search.includes('tab=rbac');
+    }
+
+    if (path === '/admin/cms/projects') {
+      return location.pathname.startsWith('/admin/cms/');
     }
 
     return true;
