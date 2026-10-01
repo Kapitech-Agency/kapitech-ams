@@ -1443,6 +1443,8 @@ export const AdminInbox: React.FC = () => {
               </div>
             )}
 
+          </div>
+
           {/* Right: Message Reader & Command Hub Pane */}
           {selectedSubmission ? (
             <div className="ams-inbox-reader-pane min-w-0 rounded-card border border-line bg-panel p-4 sm:p-5 lg:sticky lg:top-4 lg:min-h-[calc(100vh-250px)]">
