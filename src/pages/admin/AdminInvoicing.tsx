@@ -140,6 +140,7 @@ type ServerMetrics = {
   totalExpense: number;
   netProfit: number;
   profitMargin: string;
+  operatingMargin?: string;
   totalInvoicesCount: number;
   paidCount: number;
   partiallyPaidCount: number;
@@ -926,6 +927,7 @@ export const AdminInvoicing: React.FC = () => {
           totalExpense: derived.totalExpenses,
           netProfit: derived.netOperatingProfit,
           profitMargin: String(derived.netMarginPercent),
+          operatingMargin: String(derived.operatingProfit !== undefined ? derived.netMarginPercent : 0),
           totalInvoicesCount: derived.totalInvoicesCount,
           paidCount: derived.paidCount,
           partiallyPaidCount: derived.partiallyPaidCount,
@@ -1460,6 +1462,7 @@ export const AdminInvoicing: React.FC = () => {
       totalExpense: metrics.totalExpenses,
       netProfit: metrics.netOperatingProfit,
       profitMargin: String(metrics.netMarginPercent),
+      operatingMargin: String(metrics.netMarginPercent),
       totalInvoicesCount: metrics.totalInvoicesCount,
       paidCount: metrics.paidCount,
       partiallyPaidCount: metrics.partiallyPaidCount,
@@ -2151,7 +2154,7 @@ export const AdminInvoicing: React.FC = () => {
     [currencyInvoices]
   );
 
-  const operatingMarginValue = serverMetrics ? Number.parseFloat(serverMetrics.profitMargin) : NaN;
+  const operatingMarginValue = serverMetrics ? Number.parseFloat(serverMetrics.operatingMargin ?? serverMetrics.profitMargin) : NaN;
   const operatingMarginHealthy = Number.isFinite(operatingMarginValue) && operatingMarginValue >= 35;
 
   const openVendorPaymentModal = (record?: VendorPaymentRecord) => {
