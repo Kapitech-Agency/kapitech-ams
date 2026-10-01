@@ -28,7 +28,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { useDragToScroll } from '../../lib/useDragToScroll';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { AdminFilterBar, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 
 const normalizeCmsProject = (project: ProjectItem): ProjectItem => ({
@@ -331,6 +331,17 @@ export const AdminCmsProjects: React.FC = () => {
           { key: 'projects', label: 'Projects', to: '/admin/cms/projects' },
           { key: 'services', label: 'Services', to: '/admin/cms/services' },
           { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials' }
+        ]}
+      />
+      
+      <AdminMetricStrip
+        slug="cms-projects-kpis"
+        className="grid-cols-2 sm:grid-cols-4"
+        metrics={[
+          { id: 'projects-total', label: 'Case studies', value: projects.length, icon: <Layers size={15} />, toneClassName: 'text-accent-text' },
+          { id: 'projects-featured', label: 'Featured', value: projects.filter((project) => project.featured).length, icon: <Star size={15} />, toneClassName: 'text-warning' },
+          { id: 'projects-visual', label: 'Visual experience', value: projects.filter((project) => project.pillar === 'Visual Experience').length, icon: <Eye size={15} />, toneClassName: 'text-info' },
+          { id: 'projects-development', label: 'Innovation development', value: projects.filter((project) => project.pillar === 'Innovation Development').length, icon: <TrendingUp size={15} />, toneClassName: 'text-success' }
         ]}
       />
 
