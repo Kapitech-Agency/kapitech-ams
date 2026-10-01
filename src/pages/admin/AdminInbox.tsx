@@ -1442,7 +1442,6 @@ export const AdminInbox: React.FC = () => {
                 )}
               </div>
             )}
-          </div>          </div>
 
           {/* Right: Message Reader & Command Hub Pane */}
           {selectedSubmission ? (
