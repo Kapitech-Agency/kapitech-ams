@@ -631,6 +631,31 @@ export const AdminLayout: React.FC = () => {
                     );
                   })}
                 </nav>
+              ) : location.pathname.startsWith('/admin/cms/') ? (
+                <nav aria-label="CMS sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
+                  {[
+                    { key: 'projects', label: 'Projects', to: '/admin/cms/projects' },
+                    { key: 'services', label: 'Services', to: '/admin/cms/services' },
+                    { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials' }
+                  ].map((tab) => {
+                    const active = location.pathname === tab.to;
+                    return (
+                      <NavLink
+                        key={tab.key}
+                        to={tab.to}
+                        end
+                        data-ams-slug={'cms-tab-' + tab.key}
+                        className={'group relative inline-flex h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (
+                          active
+                            ? 'border-accent/25 bg-accent/10 font-semibold text-fg'
+                            : 'border-transparent text-muted hover:bg-bg hover:text-fg'
+                        )}
+                      >
+                        {tab.label}
+                      </NavLink>
+                    );
+                  })}
+                </nav>
               ) : location.pathname === '/admin/dashboard' && new URLSearchParams(location.search).get('view') !== 'tasks' ? (
                 <nav aria-label="Dashboard view" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
                   {[
