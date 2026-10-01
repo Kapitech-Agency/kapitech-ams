@@ -570,7 +570,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
   return (
     <div className="ams-dashboard min-h-full pb-10">
-      <AdminModuleHeader
+      <AdminModuleHeader slug="dashboard-header"
         title="Agency overview"
         description="Real-time metrics, project pacing, and financial health for the agency."
         actions={(
@@ -624,7 +624,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
       {view === 'overview' ? (
         <>
-      <section className="mb-5 grid gap-3 min-[1100px]:grid-cols-12" aria-label="Executive overview controls">
+      <section data-ams-feature-slug="dashboard-overview" data-ams-slug="dashboard-overview" className="mb-5 grid gap-3 min-[1100px]:grid-cols-12" aria-label="Executive overview controls">
         <div className="min-[1100px]:col-span-9">
           <AdminMetricStrip
             className="grid-cols-1 sm:grid-cols-2 min-[760px]:grid-cols-3 min-[1100px]:grid-cols-4"
