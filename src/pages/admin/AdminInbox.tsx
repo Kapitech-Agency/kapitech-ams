@@ -384,23 +384,24 @@ export const AdminInbox: React.FC = () => {
       setConfirmAction({
         type: 'mark-read',
         count,
-        targetStatus: activeInboxTab === 'jobs' ? 'screening' : 'in-review'
+        targetStatus: activeInboxTab === 'jobs' ? 'screening' : activeInboxTab === 'client' ? 'in-review' : undefined
       });
     }
   };
 
-  const confirmMarkAllRead = async (count: number, targetStatus: ContactSubmission['status']) => {
+  const confirmMarkAllRead = async (count: number, targetStatus?: ContactSubmission['status']) => {
     try {
       const unread = activeTabItems.filter((item) => item.status === 'new');
       for (const item of unread) {
-        const res = await api.leads.update(item.id, { status: targetStatus });
+        const nextStatus = targetStatus || (item.type === 'career' ? 'screening' : 'in-review');
+        const res = await api.leads.update(item.id, { status: nextStatus });
         if (!res.success) throw new Error(res.error || 'Bulk status update failed');
       }
       await refreshInbox();
       setToastMessage({
         text: language === 'id'
-          ? String(count) + (activeInboxTab === 'jobs' ? ' lamaran dipindahkan ke screening.' : ' pesan ditandai telah ditinjau.')
-          : String(count) + (activeInboxTab === 'jobs' ? ' applications moved to Screening.' : ' messages marked as In Review.')
+          ? String(count) + (activeInboxTab === 'jobs' ? ' lamaran dipindahkan ke screening.' : isMixedInboxTab ? ' record baru diproses.' : ' pesan ditandai telah ditinjau.')
+          : String(count) + (activeInboxTab === 'jobs' ? ' applications moved to Screening.' : isMixedInboxTab ? ' new records processed.' : ' messages marked as In Review.')
       });
       setTimeout(() => setToastMessage(null), 3000);
     } catch {
@@ -464,15 +465,19 @@ export const AdminInbox: React.FC = () => {
   const metrics = useMemo(() => {
     const total = activeTabItems.length;
     const newCount = activeTabItems.filter((item) => item.status === 'new').length;
-    const convertedCount = activeInboxTab === 'jobs'
-      ? activeTabItems.filter((item) => item.status === 'hired').length
-      : activeTabItems.filter((item) => crmDeals.some((deal) => (deal as any).inquiryId === item.id)).length;
+    const convertedCount = activeTabItems.filter((item) =>
+      item.type === 'career'
+        ? item.status === 'hired'
+        : crmDeals.some((deal) => (deal as any).inquiryId === item.id)
+    ).length;
     const conversionRate = total > 0 ? Math.round((convertedCount / total) * 100) : 0;
-    const totalPipelineValue = activeTabItems.reduce((acc, item) => acc + estimateDealValue(item), 0);
+    const totalPipelineValue = activeTabItems
+      .filter((item) => item.type !== 'career')
+      .reduce((acc, item) => acc + estimateDealValue(item), 0);
     const interviewCount = activeTabItems.filter((item) => item.status === 'interview').length;
 
     return { total, newCount, convertedCount, conversionRate, totalPipelineValue, interviewCount };
-  }, [activeInboxTab, activeTabItems, crmDeals]);
+  }, [activeTabItems, crmDeals]);
 
   // Filtering
   const filteredItems = useMemo(() => {
@@ -509,9 +514,10 @@ export const AdminInbox: React.FC = () => {
   // Export CSV
   const handleExportCSV = () => {
     if (submissions.length === 0) return;
-    const headers = ['ID', 'Date', 'Type', 'Status', 'Priority', 'Full Name', 'Email', 'Company', 'Phone', 'Services', 'Budget', 'Converted To CRM', 'Message', 'Source'];
+    const headers = ['ID', 'Slug', 'Date', 'Type', 'Status', 'Priority', 'Full Name', 'Email', 'Company', 'Phone', 'Services', 'Budget', 'Converted To CRM', 'Message', 'Source'];
     const rows = activeTabItems.map(s => [
       `"${s.id}"`,
+      `"${getSubmissionSlug(s)}"`,
       `"${new Date(s.createdAt).toLocaleString()}"`,
       `"${s.type || 'inquiry'}"`,
       `"${s.status}"`,
@@ -531,7 +537,7 @@ export const AdminInbox: React.FC = () => {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', 'kapitech_' + (activeInboxTab === 'jobs' ? 'job_applications' : 'client_inbox') + '_' + new Date().toISOString().split('T')[0] + '.csv');
+    link.setAttribute('download', 'kapitech_' + ({ overview: 'all_inbound', client: 'client_inbox', jobs: 'job_applications', starred: 'starred' }[activeInboxTab]) + '_' + new Date().toISOString().split('T')[0] + '.csv');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -757,16 +763,26 @@ export const AdminInbox: React.FC = () => {
             },
             {
               id: 'progress',
-              label: activeInboxTab === 'jobs' ? 'Hired' : (language === 'id' ? 'Dikonversi ke CRM' : 'Converted to CRM'),
+              label: activeInboxTab === 'jobs'
+                ? 'Hired'
+                : isMixedInboxTab
+                  ? (language === 'id' ? 'Selesai / Konversi' : 'Completed / Converted')
+                  : (language === 'id' ? 'Dikonversi ke CRM' : 'Converted to CRM'),
               value: metrics.convertedCount,
-              context: activeInboxTab === 'jobs' ? (language === 'id' ? metrics.conversionRate + '% dari total lamaran' : metrics.conversionRate + '% of total applications') : metrics.conversionRate + '% conversion',
+              context: activeInboxTab === 'jobs'
+                ? (language === 'id' ? metrics.conversionRate + '% dari total lamaran' : metrics.conversionRate + '% of total applications')
+                : metrics.conversionRate + '% conversion',
               sparkline: [0, metrics.newCount, metrics.convertedCount, metrics.conversionRate],
               icon: activeInboxTab === 'jobs' ? <User size={16} strokeWidth={1.8} /> : <Briefcase size={16} strokeWidth={1.8} />,
               toneClassName: 'text-success'
             },
             {
               id: 'pipeline',
-              label: activeInboxTab === 'jobs' ? 'Interview' : (language === 'id' ? 'Volume Peluang' : 'Opportunity Volume'),
+              label: activeInboxTab === 'jobs'
+                ? 'Interview'
+                : isMixedInboxTab
+                  ? (language === 'id' ? 'Peluang Klien' : 'Client Opportunity')
+                  : (language === 'id' ? 'Volume Peluang' : 'Opportunity Volume'),
               value: activeInboxTab === 'jobs' ? metrics.interviewCount : formatAmount(metrics.totalPipelineValue, currency),
               context: activeInboxTab === 'jobs' ? (language === 'id' ? 'Tahap interview aktif' : 'Active interview stage') : (language === 'id' ? 'Estimasi nilai brief masuk' : 'Estimated inbound opportunity value'),
               sparkline: activeInboxTab === 'jobs' ? [metrics.newCount, metrics.interviewCount, metrics.convertedCount] : activeTabItems.slice(0, 8).map(estimateDealValue),
