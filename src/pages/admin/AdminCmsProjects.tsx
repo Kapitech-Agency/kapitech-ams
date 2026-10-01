@@ -290,7 +290,7 @@ export const AdminCmsProjects: React.FC = () => {
   useEffect(() => { setPage((current) => Math.min(current, totalProjectPages)); }, [totalProjectPages]);
 
   return (
-    <AdminPageShell featureSlug="cms-projects-module">
+    <AdminPageShell featureSlug="cms-projects-module" className="ams-cms-module">
         <ConfirmDialog
           open={!!deleteTarget}
           onClose={() => setDeleteTarget(null)}
