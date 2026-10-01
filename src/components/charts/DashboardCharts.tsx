@@ -44,36 +44,50 @@ type ChartCoordinate = { x: number; y: number };
 const smoothLinePath = (points: ChartCoordinate[]) => {
   if (!points.length) return '';
   if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+  if (points.length === 2) {
+    return `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y}`;
+  }
 
+  const distances = points.slice(1).map((point, index) => Math.max(1, point.x - points[index].x));
   const slopes = points.slice(0, -1).map((point, index) => {
     const next = points[index + 1];
-    return (next.y - point.y) / Math.max(1, next.x - point.x);
+    return (next.y - point.y) / distances[index];
   });
 
-  const tangents = points.map((_, index) => {
-    if (index === 0) return slopes[0];
-    if (index === points.length - 1) return slopes[slopes.length - 1];
+  const tangents = new Array<number>(points.length);
+  tangents[0] = slopes[0];
+  tangents[points.length - 1] = slopes[slopes.length - 1];
 
+  for (let index = 1; index < points.length - 1; index += 1) {
     const previousSlope = slopes[index - 1];
     const nextSlope = slopes[index];
 
     if (previousSlope === 0 || nextSlope === 0 || Math.sign(previousSlope) !== Math.sign(nextSlope)) {
-      return 0;
+      tangents[index] = 0;
+    } else {
+      const w1 = 2 * distances[index] + distances[index - 1];
+      const w2 = distances[index] + 2 * distances[index - 1];
+      tangents[index] = (w1 + w2) / (w1 / previousSlope + w2 / nextSlope);
     }
+  }
 
-    return (previousSlope + nextSlope) / 2;
-  });
+  const clampTangent = (tangent: number, index: number) => {
+    const slope = slopes[Math.min(index, slopes.length - 1)];
+    if (slope === 0 || !Number.isFinite(tangent)) return 0;
+    const limit = Math.abs(slope) * 3;
+    return Math.max(-limit, Math.min(limit, tangent));
+  };
 
   return points.slice(0, -1).reduce((path, point, index) => {
     const next = points[index + 1];
     const dx = (next.x - point.x) / 3;
     const cp1 = {
       x: point.x + dx,
-      y: point.y + tangents[index] * dx,
+      y: point.y + clampTangent(tangents[index], index) * dx,
     };
     const cp2 = {
       x: next.x - dx,
-      y: next.y - tangents[index + 1] * dx,
+      y: next.y - clampTangent(tangents[index + 1], index) * dx,
     };
 
     return `${path} C ${cp1.x.toFixed(2)} ${cp1.y.toFixed(2)}, ${cp2.x.toFixed(2)} ${cp2.y.toFixed(2)}, ${next.x.toFixed(2)} ${next.y.toFixed(2)}`;
@@ -89,6 +103,7 @@ export const TrendChart: React.FC<{
   ariaLabel: string;
 }> = ({ data, primaryLabel, secondaryLabel, tertiaryLabel = 'Net', primaryFormat = formatCompact, ariaLabel }) => {
   const [hover, setHover] = useState<{ index: number; x: number; percent: number } | null>(null);
+  const [dragging, setDragging] = useState(false);
   const gradientId = `dashboard-trend-${useId().replace(/:/g, '')}`;
   const width = 720;
   const height = 320;
@@ -98,10 +113,12 @@ export const TrendChart: React.FC<{
   const bottom = 42;
   const innerWidth = width - left - right;
   const innerHeight = height - top - bottom;
+
   const maxValue = Math.max(1, ...data.flatMap((point) => [point.primary, point.secondary ?? 0, point.tertiary ?? 0]));
   const minValue = Math.min(0, ...data.flatMap((point) => [point.primary, point.secondary ?? 0, point.tertiary ?? 0]));
   const range = Math.max(1, maxValue - minValue);
   const y = (value: number) => top + ((maxValue - value) / range) * innerHeight;
+
   const points = data.map((point, index) => ({
     ...point,
     x: chartPoint(index, data.length, width, left, right),
@@ -121,12 +138,12 @@ export const TrendChart: React.FC<{
   const tertiaryPath = smoothLinePath(
     points.filter((point) => point.tertiaryY !== undefined).map((point) => ({ x: point.x, y: point.tertiaryY as number }))
   );
-  const active = hover ? points[hover.index] : null;
-  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const localX = Math.max(0, Math.min(rect.width, event.clientX - rect.left));
-    const percent = rect.width > 0 ? (localX / rect.width) * 100 : 50;
+
+  const updateHover = (clientX: number, element: HTMLElement) => {
+    const rect = element.getBoundingClientRect();
+    const localX = Math.max(0, Math.min(rect.width, clientX - rect.left));
     const viewBoxX = (localX / Math.max(1, rect.width)) * width;
+
     let nearestIndex = 0;
     let nearestDistance = Number.POSITIVE_INFINITY;
     points.forEach((point, index) => {
@@ -136,8 +153,35 @@ export const TrendChart: React.FC<{
         nearestIndex = index;
       }
     });
-    setHover({ index: nearestIndex, x: viewBoxX, percent });
+
+    setHover({
+      index: nearestIndex,
+      x: points[nearestIndex].x,
+      percent: (points[nearestIndex].x / width) * 100,
+    });
   };
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!points.length) return;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setDragging(true);
+    updateHover(event.clientX, event.currentTarget);
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (dragging || event.pointerType === 'mouse') {
+      updateHover(event.clientX, event.currentTarget);
+    }
+  };
+
+  const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    setDragging(false);
+  };
+
+  const active = hover ? points[hover.index] : null;
 
   return (
     <div className="relative min-w-0" role="img" aria-label={ariaLabel}>
@@ -147,81 +191,102 @@ export const TrendChart: React.FC<{
         {data.some((point) => point.tertiary !== undefined) && <span className="inline-flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-success" />{tertiaryLabel}</span>}
       </div>
 
-      <div className="relative h-[250px] w-full overflow-hidden rounded-card border border-line/80 bg-bg/30 sm:h-[280px] lg:h-[320px]" onPointerMove={handlePointerMove} onPointerLeave={() => setHover(null)}>
+      <div
+        className={[
+          'relative h-[250px] w-full overflow-hidden rounded-card border border-line/80 bg-bg/30 sm:h-[280px] lg:h-[320px]',
+          dragging ? 'cursor-grabbing select-none' : 'cursor-crosshair',
+        ].join(' ')}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        onPointerLeave={() => {
+          if (!dragging) setHover(null);
+        }}
+        style={{ touchAction: 'pan-y' }}
+      >
         <svg
           viewBox={`0 0 ${width} ${height}`}
-          className="block h-full w-full touch-none"
+          className="block h-full w-full"
           preserveAspectRatio="none"
-          onMouseLeave={() => setHover(null)}
+          aria-hidden="true"
         >
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--series-1)" stopOpacity="0.24" />
+              <stop offset="68%" stopColor="var(--series-1)" stopOpacity="0.075" />
+              <stop offset="100%" stopColor="var(--series-1)" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+
           {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
             const value = maxValue - ratio * range;
             const yy = top + ratio * innerHeight;
             return (
               <g key={ratio}>
-                <line x1={left} x2={width - right} y1={yy} y2={yy} stroke="var(--line)" strokeWidth="1" strokeDasharray="2 5" opacity="0.75" />
+                <line x1={left} x2={width - right} y1={yy} y2={yy} stroke="var(--line)" strokeWidth="1" strokeDasharray="2 5" opacity="0.55" vectorEffect="non-scaling-stroke" />
                 <text x={left - 9} y={yy + 4} textAnchor="end" fontSize="10" fill="var(--muted)">{primaryFormat(value)}</text>
               </g>
             );
           })}
 
-          <defs>
-            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--series-1)" stopOpacity="0.24" />
-              <stop offset="72%" stopColor="var(--series-1)" stopOpacity="0.06" />
-              <stop offset="100%" stopColor="var(--series-1)" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-
           <path d={primaryAreaPath} fill={`url(#${gradientId})`} />
-          <path d={primaryPath} fill="none" stroke="var(--series-1)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+          <path d={primaryPath} fill="none" stroke="var(--series-1)" strokeWidth="2.7" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
           {secondaryLabel && secondaryPath && (
-            <path d={secondaryPath} fill="none" stroke="var(--series-3)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" opacity="0.95" />
+            <path d={secondaryPath} fill="none" stroke="var(--series-3)" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" opacity="0.9" />
           )}
           {tertiaryPath && (
-            <path d={tertiaryPath} fill="none" stroke="var(--success)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" opacity="0.9" />
+            <path d={tertiaryPath} fill="none" stroke="var(--success)" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" opacity="0.86" />
           )}
 
-          {points.map((point, index) => (
-            <g key={point.label}>
-              <rect
-                x={Math.max(left, point.x - 30)}
-                y={top}
-                width={Math.min(60, innerWidth)}
-                height={innerHeight}
-                fill="transparent"
-                onMouseEnter={() => setHover((current) => current && current.index === index ? current : { index, x: point.x, percent: (point.x / width) * 100 })}
-                onFocus={() => setHover({ index, x: point.x, percent: (point.x / width) * 100 })}
-                onPointerDown={() => setHover({ index, x: point.x, percent: (point.x / width) * 100 })}
-                tabIndex={0}
-                aria-label={`${point.label}: ${primaryLabel} ${primaryFormat(point.primary)}${point.secondary !== undefined ? `, ${secondaryLabel} ${primaryFormat(point.secondary)}` : ''}`}
-              />
-              {hover?.index === index && (
-                <>
-                  <circle cx={point.x} cy={point.y} r="5" fill="var(--panel)" stroke="var(--series-1)" strokeWidth="2" />
-                  <circle cx={point.x} cy={point.y} r="2.4" fill="var(--series-1)" />
-                  {point.secondaryY !== undefined && <circle cx={point.x} cy={point.secondaryY} r="4" fill="var(--panel)" stroke="var(--series-3)" strokeWidth="2" />}
-                  {point.tertiaryY !== undefined && <circle cx={point.x} cy={point.tertiaryY} r="4" fill="var(--panel)" stroke="var(--success)" strokeWidth="2" />}
-                </>
-              )}
-              <text x={point.x} y={height - 15} textAnchor="middle" fontSize="10" fill="var(--muted)">{point.label}</text>
-            </g>
-          ))}
+          {hover && (
+            <line
+              x1={hover.x}
+              x2={hover.x}
+              y1={top}
+              y2={top + innerHeight}
+              stroke="var(--series-4)"
+              strokeWidth="1"
+              strokeDasharray="3 4"
+              opacity="0.7"
+              vectorEffect="non-scaling-stroke"
+            />
+          )}
 
-          {hover && <line x1={hover.x} x2={hover.x} y1={top} y2={top + innerHeight} stroke="var(--series-4)" strokeWidth="1" strokeDasharray="3 4" opacity="0.65" vectorEffect="non-scaling-stroke" />}
+          {points.map((point, index) => {
+            const activePoint = hover?.index === index;
+            return (
+              <g key={point.label}>
+                <text x={point.x} y={height - 15} textAnchor="middle" fontSize="10" fill="var(--muted)">{point.label}</text>
+                {activePoint && (
+                  <>
+                    <circle cx={point.x} cy={point.y} r="5.5" fill="var(--panel)" stroke="var(--series-1)" strokeWidth="2.2" vectorEffect="non-scaling-stroke" />
+                    <circle cx={point.x} cy={point.y} r="2.4" fill="var(--series-1)" />
+                    {point.secondaryY !== undefined && <circle cx={point.x} cy={point.secondaryY} r="4.2" fill="var(--panel)" stroke="var(--series-3)" strokeWidth="2" vectorEffect="non-scaling-stroke" />}
+                    {point.tertiaryY !== undefined && <circle cx={point.x} cy={point.tertiaryY} r="4.2" fill="var(--panel)" stroke="var(--success)" strokeWidth="2" vectorEffect="non-scaling-stroke" />}
+                  </>
+                )}
+              </g>
+            );
+          })}
         </svg>
 
-        {active && (
-          <div className="pointer-events-none absolute top-3 z-10 w-[190px] -translate-x-1/2 rounded-card border border-line bg-panel px-3 py-2 text-xs" style={{ left: `${Math.max(12, Math.min(88, hover?.percent ?? 50))}%` }}>
-            <p className="font-semibold text-fg">{active.label}</p>
-            <div className="mt-1 text-[10px] text-muted">Plotted period</div>
-            <div className="mt-2 space-y-1 text-muted">
-              <div className="flex justify-between gap-3"><span>{primaryLabel}</span><span className="tabular-nums text-fg">{primaryFormat(active.primary)}</span></div>
-              {secondaryLabel && active.secondary !== undefined && <div className="flex justify-between gap-3"><span>{secondaryLabel}</span><span className="tabular-nums text-fg">{primaryFormat(active.secondary)}</span></div>}
-              {active.tertiary !== undefined && <div className="flex justify-between gap-3"><span>{tertiaryLabel}</span><span className="tabular-nums text-fg">{primaryFormat(active.tertiary)}</span></div>}
+        <div className="pointer-events-none absolute inset-x-3 top-3 bottom-3">
+          {active && (
+            <div
+              className="absolute top-0 z-10 w-[190px] -translate-x-1/2 rounded-card border border-line bg-panel px-3 py-2 text-xs"
+              style={{ left: `${Math.max(8, Math.min(92, hover?.percent ?? 50))}%` }}
+            >
+              <p className="font-semibold text-fg">{active.label}</p>
+              <div className="mt-1 text-[10px] text-muted">{dragging ? 'Drag to inspect another period' : 'Hover or drag across the chart'}</div>
+              <div className="mt-2 space-y-1 text-muted">
+                <div className="flex justify-between gap-3"><span>{primaryLabel}</span><span className="tabular-nums text-fg">{primaryFormat(active.primary)}</span></div>
+                {secondaryLabel && active.secondary !== undefined && <div className="flex justify-between gap-3"><span>{secondaryLabel}</span><span className="tabular-nums text-fg">{primaryFormat(active.secondary)}</span></div>}
+                {active.tertiary !== undefined && <div className="flex justify-between gap-3"><span>{tertiaryLabel}</span><span className="tabular-nums text-fg">{primaryFormat(active.tertiary)}</span></div>}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <details className="mt-2">
