@@ -6,7 +6,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
-import { AdminModuleHeader , AdminPageShell } from '../../components/admin/AdminModulePrimitives';
+import { AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 export const AdminCmsTestimonials: React.FC = () => {
@@ -20,6 +20,8 @@ export const AdminCmsTestimonials: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; author: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(9);
 
   const loadData = async () => {
     setIsLoading(true); setLoadError(null);
@@ -34,6 +36,10 @@ export const AdminCmsTestimonials: React.FC = () => {
   useEffect(() => {
     void loadData();
   }, []);
+
+  const totalTestimonialPages = Math.max(1, Math.ceil(testimonials.length / pageSize));
+  const pagedTestimonials = testimonials.slice((page - 1) * pageSize, page * pageSize);
+  useEffect(() => { setPage((current) => Math.min(current, totalTestimonialPages)); }, [totalTestimonialPages]);
 
   const handleOpenAdd = () => {
     const template: TestimonialItem = {
@@ -156,7 +162,7 @@ export const AdminCmsTestimonials: React.FC = () => {
         </div>
       ) : (
       <div data-ams-feature-slug="cms-testimonials-directory" data-ams-slug="cms-testimonials-directory" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {testimonials.map((item) => (
+        {pagedTestimonials.map((item) => (
           <div
             key={item.id}
             className="bg-panel border border-line rounded-card p-4 flex flex-col justify-between hover:border-line transition-all"
@@ -206,6 +212,7 @@ export const AdminCmsTestimonials: React.FC = () => {
           </div>
         ))}
       </div>
+        <AdminTablePagination total={testimonials.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="testimonials" slug="cms-testimonials-pagination" />
       )}
 
       {deleteTarget && (
