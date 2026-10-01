@@ -1,5 +1,6 @@
 import { api } from './apiClient';
 import { toSlug } from './slug';
+import { isSlugFixtureMode } from './runtimeMode';
 
 /**
  * Kapitech Agency Vendor & Contractor Directory Store
@@ -212,7 +213,9 @@ const defaultVendors: AgencyVendor[] = [
 export function getAgencyVendors(): AgencyVendor[] {
   hydrateVendorsFromServer();
   if (vendorsCache) return vendorsCache;
-  vendorsCache = import.meta.env.PROD ? [] : defaultVendors.map((vendor) => ({ ...vendor, slug: toSlug(vendor.slug || vendor.companyName || vendor.name || vendor.id, 'vendor-record'), contracts: normalizeVendorContracts(vendor.contracts) }));
+  vendorsCache = isSlugFixtureMode()
+    ? defaultVendors.map((vendor) => ({ ...vendor, slug: toSlug(vendor.slug || vendor.companyName || vendor.name || vendor.id, 'vendor-record'), contracts: normalizeVendorContracts(vendor.contracts) }))
+    : [];
   return vendorsCache;
 }
 
