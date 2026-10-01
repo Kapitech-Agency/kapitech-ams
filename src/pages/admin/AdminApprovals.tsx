@@ -27,7 +27,7 @@ import { hasAdminPermission } from '../../lib/adminAuth';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import Button from '../../components/ui/Button';
 
-import { AdminMetricStrip, AdminModuleHeader , AdminPageShell } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 interface ApprovalItem {
   id: string;
