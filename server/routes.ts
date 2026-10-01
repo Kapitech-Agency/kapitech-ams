@@ -34,6 +34,7 @@ import {
   rateLimitAuthenticated,
   requireAnyPermission,
   requireMaster,
+  isMasterAdministrator,
   generateMfaSecret,
   buildMfaOtpUri,
   verifyTotpCode,
@@ -2010,7 +2011,7 @@ apiRouter.post('/projects', requireAuth, requirePermission('canManageProjects'),
     }
   }
 
-  if (newProject.tasks.length > 0 && req.user!.stakeholderType !== 'Master' && !req.user!.permissions?.canManageKanbanTasks) {
+  if (newProject.tasks.length > 0 && !isMasterAdministrator(req.user) && !req.user!.permissions?.canManageKanbanTasks) {
     res.status(403).json({ success: false, error: 'Task mutations require task-management permission.' });
     return;
   }
@@ -2067,7 +2068,7 @@ apiRouter.put('/projects/:id', requireAuth, requirePermission('canManageProjects
     if (patch.techStack !== undefined) patch.techStack = normalizeStringArray(patch.techStack, 50, 120);
     if (patch.tasks !== undefined) {
       patch.tasks = Array.isArray(patch.tasks) ? patch.tasks.slice(0, 200) : [];
-      if (req.user!.stakeholderType !== 'Master' && !req.user!.permissions?.canManageKanbanTasks) {
+      if (!isMasterAdministrator(req.user) && !req.user!.permissions?.canManageKanbanTasks) {
         if (taskMutationFingerprint(existingProject.tasks) !== taskMutationFingerprint(patch.tasks)) {
           res.status(403).json({ success: false, error: 'Task mutations require task-management permission.' });
           return;
@@ -2139,7 +2140,7 @@ apiRouter.put('/projects/:id', requireAuth, requirePermission('canManageProjects
         return;
       }
     }
-    if (req.user!.stakeholderType !== 'Master' && !req.user!.permissions?.canManageKanbanTasks) {
+    if (!isMasterAdministrator(req.user) && !req.user!.permissions?.canManageKanbanTasks) {
       if (taskMutationFingerprint(db.projects[idx].tasks) !== taskMutationFingerprint(nextTasks)) {
         res.status(403).json({ success: false, error: 'Task mutations require task-management permission.' });
         return;
@@ -2919,7 +2920,7 @@ apiRouter.delete('/vendors/:id', requireAuth, requirePermission('canManageVendor
 // CMS Services (Public GET for published services, protected for drafts)
 apiRouter.get('/cms/services', rateLimitPublic(), async (req: Request, res: Response): Promise<void> => {
   const user = (req as AuthenticatedRequest).user;
-  const canManage = Boolean(user && (user.stakeholderType === 'Master' || user.permissions?.canManageCmsContent));
+  const canManage = Boolean(user && (isMasterAdministrator(user) || user.permissions?.canManageCmsContent));
   const source = getDataSourceMode() === 'postgres'
     ? await postgresCmsRepository.list('service')
     : getDatabase().cmsServices;
@@ -2997,7 +2998,7 @@ apiRouter.delete('/cms/services/:id', requireAuth, requirePermission('canManageC
 // CMS Projects
 apiRouter.get('/cms/projects', rateLimitPublic(), async (req: Request, res: Response): Promise<void> => {
   const user = (req as AuthenticatedRequest).user;
-  const canManage = Boolean(user && (user.stakeholderType === 'Master' || user.permissions?.canManageCmsContent));
+  const canManage = Boolean(user && (isMasterAdministrator(user) || user.permissions?.canManageCmsContent));
   const source = getDataSourceMode() === 'postgres'
     ? await postgresCmsRepository.list('project')
     : getDatabase().cmsProjects;
@@ -3071,7 +3072,7 @@ apiRouter.delete('/cms/projects/:id', requireAuth, requirePermission('canManageC
 // CMS Testimonials
 apiRouter.get('/cms/testimonials', rateLimitPublic(), async (req: Request, res: Response): Promise<void> => {
   const user = (req as AuthenticatedRequest).user;
-  const canManage = Boolean(user && (user.stakeholderType === 'Master' || user.permissions?.canManageCmsContent));
+  const canManage = Boolean(user && (isMasterAdministrator(user) || user.permissions?.canManageCmsContent));
   const source = getDataSourceMode() === 'postgres'
     ? await postgresCmsRepository.list('testimonial')
     : getDatabase().cmsTestimonials;
@@ -3595,7 +3596,7 @@ apiRouter.put('/crm/proposals/:id', requireAuth, requirePermission('canManageCrm
     for (const key of ['title','clientName','company','dealId','projectId','validityPeriod','paymentTerms','notes'] as const) if (patch[key] !== undefined) patch[key] = cleanText(patch[key], key === 'notes' ? 3000 : 300);
     if (patch.currency !== undefined && !['IDR','USD'].includes(String(patch.currency))) { res.status(400).json({ success: false, error: 'Invalid proposal currency.' }); return; }
     if (patch.status !== undefined && !['Draft','Internal Review','Sent','Approved','Rejected','Accepted'].includes(String(patch.status))) { res.status(400).json({ success: false, error: 'Invalid proposal status.' }); return; }
-    if (['Approved', 'Rejected'].includes(String(patch.status)) && !Boolean(req.user!.permissions?.canApproveBudgets) && req.user!.stakeholderType !== 'Master') {
+    if (['Approved', 'Rejected'].includes(String(patch.status)) && !Boolean(req.user!.permissions?.canApproveBudgets) && !isMasterAdministrator(req.user)) {
       res.status(403).json({ success: false, error: 'Proposal approval status requires approval permission.' });
       return;
     }
@@ -3629,7 +3630,7 @@ apiRouter.put('/crm/proposals/:id', requireAuth, requirePermission('canManageCrm
       res.status(400).json({ success: false, error: 'Invalid proposal status.' });
       return;
     }
-    if (['Approved', 'Rejected'].includes(requestedStatus) && req.user!.stakeholderType !== 'Master' && !req.user!.permissions?.canApproveBudgets) {
+    if (['Approved', 'Rejected'].includes(requestedStatus) && !isMasterAdministrator(req.user) && !req.user!.permissions?.canApproveBudgets) {
       res.status(403).json({ success: false, error: 'Proposal approval status requires approval permission.' });
       return;
     }
@@ -3687,7 +3688,7 @@ apiRouter.put('/crm/proposals/:id', requireAuth, requirePermission('canManageCrm
     res.status(409).json({ success: false, error: 'Accepted status can only be created by the proposal-to-invoice workflow.' });
     return;
   }
-  if (['Approved', 'Rejected'].includes(String(patch.status)) && !Boolean(req.user!.permissions?.canApproveBudgets) && req.user!.stakeholderType !== 'Master') {
+  if (['Approved', 'Rejected'].includes(String(patch.status)) && !Boolean(req.user!.permissions?.canApproveBudgets) && !isMasterAdministrator(req.user)) {
     res.status(403).json({ success: false, error: 'Proposal approval status requires approval permission.' });
     return;
   }
@@ -4001,7 +4002,7 @@ apiRouter.post('/projects/timelogs', requireAuth, requireAnyPermission('canManag
 
 apiRouter.delete('/projects/timelogs/:id', requireAuth, requireAnyPermission('canManageKanbanTasks', 'canManageProjects'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const { id } = req.params;
-  const canManageAllTimeLogs = Boolean(req.user!.permissions?.canManageProjects);
+  const canManageAllTimeLogs = isMasterAdministrator(req.user) || Boolean(req.user!.permissions?.canManageProjects);
   if (getDataSourceMode() === 'postgres') {
     const existing = await postgresTimeLogRepository.findById(id);
     if (!existing) { res.status(404).json({ success: false, error: 'Time entry not found.' }); return; }
@@ -4202,7 +4203,7 @@ function publicDocument(document: any): any {
 }
 
 function canAccessDocument(req: AuthenticatedRequest, document: any): boolean {
-  if (!req.user || req.user.stakeholderType === 'Master') return true;
+  if (!req.user || isMasterAdministrator(req.user)) return true;
 
   const ownerUserId = String(document?.ownerUserId || '');
   const accessUserIds = Array.isArray(document?.accessUserIds)
@@ -5173,7 +5174,7 @@ apiRouter.get('/system/production-readiness', requireAuth, requireAnyPermission(
 // ----------------------------------------------------
 
 apiRouter.get('/notifications', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  const isMaster = req.user!.stakeholderType === 'Master';
+  const isMaster = isMasterAdministrator(req.user);
   const canViewFinance = isMaster || Boolean(req.user!.permissions?.canViewFinancials || req.user!.permissions?.canManageInvoices);
   const canViewCrm = isMaster || Boolean(req.user!.permissions?.canManageCrm);
   const canViewApprovals = isMaster || Boolean(req.user!.permissions?.canApproveBudgets || req.user!.permissions?.canManageProjects);
@@ -5302,7 +5303,7 @@ apiRouter.get('/search', requireAuth, async (req: AuthenticatedRequest, res: Res
   }
 
   const usePostgres = getDataSourceMode() === 'postgres';
-  const isMaster = req.user!.stakeholderType === 'Master';
+  const isMaster = isMasterAdministrator(req.user);
   const canCrm = isMaster || Boolean(req.user!.permissions.canManageCrm);
   const canClients = isMaster || Boolean(req.user!.permissions.canManageClients);
   const canProjects = isMaster || Boolean(req.user!.permissions.canManageProjects);
@@ -5456,7 +5457,7 @@ const handleOverview = async (req: AuthenticatedRequest, res: Response): Promise
   try {
     const usePostgres=getDataSourceMode()==='postgres';
     const db=usePostgres?undefined:getDatabase();
-    const isMaster=req.user!.stakeholderType==='Master';
+    const isMaster=isMasterAdministrator(req.user);
     const canViewFinancials=isMaster||Boolean(req.user!.permissions?.canViewFinancials);
     const canViewCrm=isMaster||Boolean(req.user!.permissions?.canManageCrm);
     const canViewProjects=isMaster||Boolean(req.user!.permissions?.canManageProjects||req.user!.permissions?.canManageKanbanTasks);
