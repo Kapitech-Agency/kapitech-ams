@@ -6,7 +6,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
-import { AdminFilterBar, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 export const AdminCmsTestimonials: React.FC = () => {
@@ -155,6 +155,17 @@ export const AdminCmsTestimonials: React.FC = () => {
           { key: 'projects', label: 'Projects', to: '/admin/cms/projects' },
           { key: 'services', label: 'Services', to: '/admin/cms/services' },
           { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials' }
+        ]}
+      />
+      
+      <AdminMetricStrip
+        slug="cms-testimonials-kpis"
+        className="grid-cols-2 sm:grid-cols-4"
+        metrics={[
+          { id: 'testimonials-total', label: 'Testimonials', value: testimonials.length, icon: <MessageSquare size={15} />, toneClassName: 'text-accent-text' },
+          { id: 'testimonials-published', label: 'Published', value: testimonials.filter((item) => item.isPublished !== false).length, icon: <Check size={15} />, toneClassName: 'text-success' },
+          { id: 'testimonials-five-star', label: 'Five star', value: testimonials.filter((item) => (item.rating || 5) === 5).length, icon: <Star size={15} />, toneClassName: 'text-warning' },
+          { id: 'testimonials-companies', label: 'Companies', value: new Set(testimonials.map((item) => item.company).filter(Boolean)).size, icon: <Users size={15} />, toneClassName: 'text-info' }
         ]}
       />
 
