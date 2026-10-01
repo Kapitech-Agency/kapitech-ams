@@ -1066,12 +1066,46 @@ export const AdminInbox: React.FC = () => {
 
           <aside className="flex min-h-[420px] flex-col overflow-hidden rounded-card border border-line bg-panel">
             <div className="border-b border-line px-4 py-3.5">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h3 className="text-sm font-semibold text-fg">Live intake monitor</h3>
-                  <p className="mt-1 text-[11px] leading-4 text-muted">Select a record to inspect its current state and next action.</p>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-fg">Live intake monitor</h3>
+                    <span className="inline-flex items-center gap-1.5 rounded-badge border border-success/20 bg-success/10 px-1.5 py-1 text-[9px] font-medium text-success">
+                      <span className="h-1.5 w-1.5 rounded-full bg-success" />Live
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[11px] leading-4 text-muted">Monitor the next actions without leaving the Overview workspace.</p>
                 </div>
-                <span className="inline-flex shrink-0 items-center gap-1.5 rounded-badge border border-success/20 bg-success/10 px-1.5 py-1 text-[9px] font-medium text-success"><span className="h-1.5 w-1.5 rounded-full bg-success" />Live</span>
+                <button
+                  type="button"
+                  onClick={() => void refreshInbox()}
+                  disabled={loading}
+                  className="inline-flex h-9 min-h-9 w-9 min-w-9 shrink-0 aspect-square items-center justify-center rounded-control border border-line bg-bg p-0 text-muted hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-50"
+                  aria-label="Refresh intake"
+                  title="Refresh intake"
+                >
+                  <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+                </button>
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {[
+                  { key: 'action' as TriageScope, label: 'New', value: filteredItems.filter((item) => item.status === 'new').length },
+                  { key: 'priority' as TriageScope, label: 'Priority', value: filteredItems.filter((item) => item.priority === 'urgent' || item.priority === 'high').length },
+                  { key: 'saved' as TriageScope, label: 'Saved', value: filteredItems.filter((item) => !!item.starred).length }
+                ].map((metric) => (
+                  <button
+                    key={metric.key}
+                    type="button"
+                    onClick={() => {
+                      setTriageScope(metric.key);
+                      setSelectedSubmission(null);
+                    }}
+                    className="rounded-control border border-line bg-bg px-2.5 py-2 text-left transition-colors hover:bg-panel"
+                  >
+                    <span className="block text-[9px] text-muted">{metric.label}</span>
+                    <span className="mt-0.5 block text-sm font-medium tabular-nums text-fg">{metric.value}</span>
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -1089,7 +1123,7 @@ export const AdminInbox: React.FC = () => {
                       <p className="mt-0.5 truncate text-[11px] text-muted">{selectedSubmission.type === 'career' ? (selectedSubmission.positionTitle || selectedSubmission.specialty || selectedSubmission.email) : (selectedSubmission.company || selectedSubmission.email)}</p>
                       <p className="mt-1 font-mono text-[9px] text-muted/70">/{getSubmissionSlug(selectedSubmission)}</p>
                     </div>
-                    <button type="button" onClick={() => setSelectedSubmission(null)} className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg p-0 text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label="Clear selected record" title="Clear selected record"><X size={14} /></button>
+                    <button type="button" onClick={() => setSelectedSubmission(null)} className="inline-flex h-9 w-9 min-h-9 min-w-9 shrink-0 aspect-square items-center justify-center rounded-control border border-line bg-bg p-0 text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label="Clear selected record" title="Clear selected record"><X size={14} /></button>
                   </div>
                 </div>
 
