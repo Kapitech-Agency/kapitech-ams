@@ -9,7 +9,7 @@ export interface ContactSubmission {
   services?: string[];
   budget?: string;
   message: string;
-  status: 'new' | 'in-review' | 'contacted' | 'closed';
+  status: 'new' | 'in-review' | 'contacted' | 'closed' | 'screening' | 'shortlisted' | 'interview' | 'hired' | 'rejected' | 'withdrawn';
   source?: string;
   type?: 'inquiry' | 'career' | 'vendor' | 'newsletter';
   positionTitle?: string;
@@ -18,6 +18,10 @@ export interface ContactSubmission {
   rateCard?: string;
   experienceYears?: string;
   tools?: string;
+  resumeUrl?: string;
+  linkedinUrl?: string;
+  availability?: string;
+  location?: string;
   createdAt: string;
   userAgent?: string;
   priority?: 'urgent' | 'high' | 'normal' | 'low';
