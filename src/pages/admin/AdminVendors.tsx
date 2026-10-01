@@ -42,6 +42,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
+import { toSlug } from '../../lib/slug';
 
 import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
@@ -97,7 +98,13 @@ export const AdminVendors: React.FC = () => {
     try {
       const res = await api.vendors.getAll();
       if (res.success && Array.isArray(res.data?.vendors)) {
-        setVendors(res.data.vendors as AgencyVendor[]);
+        setVendors((res.data.vendors as AgencyVendor[]).map((vendor) => ({
+          ...vendor,
+          slug: vendor.slug || toSlug(vendor.companyName || vendor.name || vendor.id, 'vendor-record'),
+          contracts: Array.isArray(vendor.contracts)
+            ? vendor.contracts.map((contract) => ({ ...contract, slug: contract.slug || toSlug(contract.title || contract.id, 'vendor-contract-record') }))
+            : []
+        })));
       } else {
         setStatusMessage(res.error || (language === 'id' ? 'Vendor gagal dimuat.' : 'Failed to load vendors.'));
       }
