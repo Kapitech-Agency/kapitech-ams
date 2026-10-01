@@ -30,6 +30,27 @@ import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { AdminFilterBar, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
+
+const normalizeCmsProject = (project: ProjectItem): ProjectItem => ({
+  ...project,
+  slug: project.slug || project.id || '',
+  title: project.title || '',
+  client: project.client || '',
+  industry: project.industry || 'Unspecified',
+  service: project.service || 'Web Application',
+  image: project.image || '',
+  desc: project.desc || '',
+  descId: project.descId || '',
+  challenge: project.challenge || '',
+  challengeId: project.challengeId || '',
+  solution: project.solution || '',
+  solutionId: project.solutionId || '',
+  deliverables: Array.isArray(project.deliverables) ? project.deliverables : [],
+  technologies: Array.isArray(project.technologies) ? project.technologies : [],
+  impact: Array.isArray(project.impact) ? project.impact : [],
+  year: project.year || ''
+});
+
 export const AdminCmsProjects: React.FC = () => {
   const { language, t } = useLanguage();
   const galleryScrollRef = useDragToScroll<HTMLDivElement>();
@@ -59,7 +80,7 @@ export const AdminCmsProjects: React.FC = () => {
     try {
       const res = await api.cms.getProjects();
       if (res.success && Array.isArray(res.data?.projects)) {
-        setProjects(res.data.projects as ProjectItem[]);
+        setProjects((res.data.projects as ProjectItem[]).map(normalizeCmsProject));
       } else {
         setLoadError(res.error || (language === 'id' ? 'Daftar case study gagal dimuat.' : 'Case studies could not be loaded.'));
       }
@@ -101,7 +122,7 @@ export const AdminCmsProjects: React.FC = () => {
   };
 
   const handleOpenEdit = (project: ProjectItem) => {
-    setEditingProject({ ...project });
+    setEditingProject(normalizeCmsProject(project));
     setModalTab('details');
     setIsModalOpen(true);
   };
