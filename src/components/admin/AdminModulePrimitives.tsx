@@ -75,6 +75,7 @@ export const AdminSectionTabs: React.FC<AdminSectionTabsProps> = ({
 );
 
 export interface AdminStatusBadgeProps {
+  slug?: string;
   tone?: 'success' | 'warning' | 'danger' | 'info' | 'neutral';
   icon?: React.ReactNode;
   children: React.ReactNode;
@@ -85,7 +86,8 @@ export const AdminStatusBadge: React.FC<AdminStatusBadgeProps> = ({
   tone = 'neutral',
   icon,
   children,
-  className
+  className,
+  slug
 }) => {
   const toneClasses = {
     success: 'border-success/20 bg-success/10 text-success',
@@ -97,6 +99,7 @@ export const AdminStatusBadge: React.FC<AdminStatusBadgeProps> = ({
 
   return (
     <span
+      data-ams-slug={slug}
       className={cn(
         'inline-flex min-h-6 items-center gap-1.5 rounded-badge border px-2 py-1 text-[11px] font-semibold',
         toneClasses[tone],
@@ -116,6 +119,7 @@ export interface AdminModuleHeaderProps {
   icon?: React.ReactNode;
   actions?: React.ReactNode;
   className?: string;
+  slug?: string;
 }
 
 export const AdminModuleHeader: React.FC<AdminModuleHeaderProps> = ({
@@ -124,9 +128,10 @@ export const AdminModuleHeader: React.FC<AdminModuleHeaderProps> = ({
   eyebrow,
   icon,
   actions,
-  className
+  className,
+  slug
 }) => (
-  <header className={cn(
+  <header data-ams-feature-slug={slug} data-ams-slug={slug || (typeof title === 'string' ? 'header-' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') : undefined)} className={cn(
     'ams-page-header mb-6 flex flex-col gap-3 border-b border-line pb-4 sm:flex-row sm:items-center sm:justify-between',
     className
   )}>
@@ -166,6 +171,7 @@ export interface AdminMetric {
 
 export interface AdminMetricStripProps {
   metrics: AdminMetric[];
+  slug?: string;
   className?: string;
   itemClassName?: string;
 }
@@ -265,8 +271,8 @@ export const AdminMetricCard: React.FC<AdminMetric & { className?: string }> = (
   </article>
 );
 
-export const AdminMetricStrip: React.FC<AdminMetricStripProps> = ({ metrics, className, itemClassName }) => (
-  <div className={cn('grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4', className)}>
+export const AdminMetricStrip: React.FC<AdminMetricStripProps> = ({ metrics, className, itemClassName, slug }) => (
+  <div data-ams-feature-slug={slug} data-ams-slug={slug} className={cn('grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4', className)}>
     {metrics.map((metric) => <AdminMetricCard key={metric.id || String(metric.label)} {...metric} className={itemClassName} />)}
   </div>
 );
