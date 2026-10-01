@@ -871,6 +871,8 @@ export const AdminInvoicing: React.FC = () => {
     }
   }, []);
 
+  const slugDataMode = !import.meta.env.PROD || import.meta.env.VITE_AB_TEST_DATA === 'true';
+
   const loadData = async (silent = false) => {
     const requestId = ++loadRequestId.current;
     if (silent) setRefreshing(true);
@@ -893,14 +895,17 @@ export const AdminInvoicing: React.FC = () => {
         ? expenseRes.data.expenses as FinanceExpense[]
         : [];
 
-      const demoInvoices = INITIAL_DEFAULT_INVOICES
-        .filter((invoice) => invoice.currency === currency)
-        .map((invoice) => ({ ...invoice, items: Array.isArray(invoice.items) ? invoice.items.map((item) => ({ ...item })) : [] }));
-      const demoExpenses = INITIAL_DEFAULT_EXPENSES
-        .map((expense) => ({ ...expense, currency }));
+      const demoInvoices = slugDataMode
+        ? INITIAL_DEFAULT_INVOICES
+            .filter((invoice) => invoice.currency === currency)
+            .map((invoice) => ({ ...invoice, items: Array.isArray(invoice.items) ? invoice.items.map((item) => ({ ...item })) : [] }))
+        : [];
+      const demoExpenses = slugDataMode
+        ? INITIAL_DEFAULT_EXPENSES.map((expense) => ({ ...expense, currency }))
+        : [];
 
-      const shouldUseDemoInvoices = apiInvoices.length === 0;
-      const shouldUseDemoExpenses = apiExpenses.length === 0;
+      const shouldUseDemoInvoices = slugDataMode && apiInvoices.length === 0;
+      const shouldUseDemoExpenses = slugDataMode && apiExpenses.length === 0;
       const nextInvoices = shouldUseDemoInvoices ? demoInvoices : apiInvoices;
       const nextExpenses = shouldUseDemoExpenses ? demoExpenses : apiExpenses;
 
