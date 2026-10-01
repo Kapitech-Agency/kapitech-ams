@@ -488,6 +488,7 @@ export const AdminInbox: React.FC = () => {
 
       const queryLower = searchQuery.toLowerCase().trim();
       const matchesSearch = !queryLower || (
+        getSubmissionSlug(item).toLowerCase().includes(queryLower) ||
         (item.fullName || '').toLowerCase().includes(queryLower) ||
         (item.email || '').toLowerCase().includes(queryLower) ||
         (item.company || '').toLowerCase().includes(queryLower) ||
@@ -741,7 +742,7 @@ export const AdminInbox: React.FC = () => {
           </div>
           <span className="text-[11px] font-medium tabular-nums text-muted">{metrics.total} inbound</span>
         </div>
-        <AdminMetricStrip slug="inbox-kpis"
+        <AdminMetricStrip slug={'inbox-' + activeInboxTab + '-kpis'}
           className="lg:grid-cols-4"
           metrics={[
             {
@@ -843,18 +844,6 @@ export const AdminInbox: React.FC = () => {
                 ]}
               />
             </div>
-            <button
-              type="button"
-              onClick={() => setOnlyStarred(!onlyStarred)}
-              className={'inline-flex h-9 min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-control border px-3 text-xs font-medium transition-colors ' + (
-                onlyStarred
-                  ? 'border-warning/30 bg-warning/10 text-warning'
-                  : 'border-line bg-bg text-muted hover:bg-panel hover:text-fg'
-              )}
-            >
-              <Star size={14} className={onlyStarred ? 'fill-warning text-warning' : ''} />
-              <span>{language === 'id' ? 'Ditandai' : 'Starred'}</span>
-            </button>
             <div className="ml-auto flex shrink-0 items-center rounded-control border border-line bg-bg p-0.5">
               <button type="button" onClick={() => setViewMode('split')} aria-pressed={viewMode === 'split'} className={'inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip px-2.5 text-[11px] font-medium ' + (viewMode === 'split' ? 'bg-panel border border-line text-fg' : 'text-muted hover:text-fg')}>
                 <LayoutGrid size={13} />
@@ -881,10 +870,10 @@ export const AdminInbox: React.FC = () => {
               <thead>
                 <tr className="bg-panel border-b border-line text-muted">
                   <th className="p-3 w-10 text-center">★</th>
-                  <th className="p-3">{activeInboxTab === 'jobs' ? (language === 'id' ? 'Kandidat & Posisi' : 'Candidate & Role') : (language === 'id' ? 'Klien & Perusahaan' : 'Client & Company')}</th>
+                  <th className="p-3">{activeInboxTab === 'jobs' ? (language === 'id' ? 'Kandidat & Posisi' : 'Candidate & Role') : activeInboxTab === 'client' ? (language === 'id' ? 'Klien & Perusahaan' : 'Client & Company') : (language === 'id' ? 'Inbound & Konteks' : 'Inbound & Context')}</th>
                   <th className="p-3">{language === 'id' ? 'Kanal' : 'Channel'}</th>
-                  <th className="p-3">{activeInboxTab === 'jobs' ? (language === 'id' ? 'Skill / Spesialisasi' : 'Skills / Specialty') : (language === 'id' ? 'Layanan Diminta' : 'Requested Services')}</th>
-                  <th className="p-3">{activeInboxTab === 'jobs' ? (language === 'id' ? 'Pengalaman' : 'Experience') : (language === 'id' ? 'Estimasi Nilai' : 'Valuation')}</th>
+                  <th className="p-3">{activeInboxTab === 'jobs' ? (language === 'id' ? 'Skill / Spesialisasi' : 'Skills / Specialty') : activeInboxTab === 'client' ? (language === 'id' ? 'Layanan Diminta' : 'Requested Services') : (language === 'id' ? 'Layanan / Spesialisasi' : 'Services / Specialty')}</th>
+                  <th className="p-3">{activeInboxTab === 'jobs' ? (language === 'id' ? 'Pengalaman' : 'Experience') : activeInboxTab === 'client' ? (language === 'id' ? 'Estimasi Nilai' : 'Valuation') : (language === 'id' ? 'Nilai / Pengalaman' : 'Value / Experience')}</th>
                   <th className="p-3">{language === 'id' ? 'Status' : 'Status'}</th>
                   <th className="p-3">{language === 'id' ? 'Waktu' : 'Date'}</th>
                   <th className="p-3 text-right">{language === 'id' ? 'Aksi' : 'Actions'}</th>
@@ -1165,6 +1154,8 @@ export const AdminInbox: React.FC = () => {
                       </div>
                     )}
 
+                    <div className="mb-2 text-[9px] font-mono text-muted/75 truncate">/{getSubmissionSlug(item)}</div>
+
                     {/* Message Preview */}
                     <p className="text-xs text-muted line-clamp-2 leading-relaxed font-sans">
                       {item.message || (language === 'id' ? 'Tidak ada isi brief.' : 'No brief body provided.')}
@@ -1251,7 +1242,7 @@ export const AdminInbox: React.FC = () => {
                 {/* Primary Action Ribbon (Quick Canned Replies, WA, Email, Convert to CRM) */}
                 <div className="mb-5 flex flex-wrap items-center justify-between gap-2.5 rounded-card border border-line bg-bg p-3.5">
                   <div className="flex items-center gap-2 flex-wrap">
-                    {activeInboxTab === 'client' ? (
+                    {selectedSubmission.type !== 'career' ? (
                       <>
                         {crmDeals.some(d => (d as any).inquiryId === selectedSubmission.id) ? (
                           <Link
@@ -1551,9 +1542,9 @@ export const AdminInbox: React.FC = () => {
                       </label>
                       <CustomSelect
                         disabled={!canManageCrm}
-                        value={selectedSubmission.assignedTo || (activeInboxTab === 'jobs' ? 'People & Operations' : 'Lead Full-Stack Tech')}
+                        value={selectedSubmission.assignedTo || (selectedSubmission.type === 'career' ? 'People & Operations' : 'Lead Full-Stack Tech')}
                         onChange={(value) => handleAssigneeChange(selectedSubmission.id, value)}
-                        options={activeInboxTab === 'jobs'
+                        options={selectedSubmission.type === 'career'
                           ? [
                               { value: 'People & Operations', label: 'People & Operations' },
                               { value: 'Engineering Lead', label: 'Engineering Lead' },
@@ -1583,7 +1574,7 @@ export const AdminInbox: React.FC = () => {
                       disabled={isUpdating || !canManageCrm}
                       value={selectedSubmission.status}
                       onChange={(value) => handleStatusChange(selectedSubmission.id, value as ContactSubmission['status'])}
-                      options={activeInboxTab === 'jobs'
+                      options={selectedSubmission.type === 'career'
                         ? [
                             { value: 'new', label: 'New' },
                             { value: 'screening', label: 'Screening' },
