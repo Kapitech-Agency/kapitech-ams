@@ -1038,13 +1038,12 @@ export const AdminInbox: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-            {(searchQuery || filterStatus !== 'all' || filterPriority !== 'all' || filterType !== 'all' || onlyStarred) && (
+            {(searchQuery || filterStatus !== 'all' || filterPriority !== 'all' || onlyStarred) && (
               <button
                 onClick={() => {
                   setSearchQuery('');
                   setFilterStatus('all');
                   setFilterPriority('all');
-                  setFilterType('all');
                   setOnlyStarred(false);
                 }}
                 className="min-h-10 px-4 rounded-control bg-panel hover:bg-panel-hover text-fg border border-line text-xs font-sans font-medium transition-colors"
