@@ -56,6 +56,8 @@ export const AdminApprovals: React.FC = () => {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [notification, setNotification] = useState<string | null>(null);
+  const [approvalPage, setApprovalPage] = useState(1);
+  const [approvalPageSize, setApprovalPageSize] = useState(10);
 
   // Decision Modal State
   const [activeItem, setActiveItem] = useState<ApprovalItem | null>(null);
@@ -161,6 +163,17 @@ export const AdminApprovals: React.FC = () => {
       return matchesStatus && matchesType && matchesSearch;
     });
   }, [approvals, statusFilter, typeFilter, searchQuery]);
+
+  const approvalPageCount = Math.max(1, Math.ceil(filteredApprovals.length / approvalPageSize));
+  const paginatedApprovals = filteredApprovals.slice((approvalPage - 1) * approvalPageSize, approvalPage * approvalPageSize);
+
+  useEffect(() => {
+    setApprovalPage(1);
+  }, [statusFilter, typeFilter, searchQuery]);
+
+  useEffect(() => {
+    setApprovalPage((current) => Math.min(current, approvalPageCount));
+  }, [approvalPageCount]);
 
   const getTypeIcon = (type: string) => {
     const t = type.toLowerCase();
@@ -282,7 +295,7 @@ export const AdminApprovals: React.FC = () => {
             {language === 'id' ? 'Tidak ada permintaan otorisasi.' : 'No authorization items match criteria.'}
           </div>
         ) : (
-          filteredApprovals.map((item) => (
+          paginatedApprovals.map((item) => (
             <div 
               key={item.id}
               className="p-4 rounded-card bg-bg border border-line hover:border-line transition-all space-y-3"
@@ -382,6 +395,16 @@ export const AdminApprovals: React.FC = () => {
           ))
         )}
       </div>
+
+      <AdminTablePagination
+        total={filteredApprovals.length}
+        page={approvalPage}
+        pageSize={approvalPageSize}
+        onPageChange={setApprovalPage}
+        onPageSizeChange={setApprovalPageSize}
+        itemLabel="approval items"
+        slug="approvals-pagination"
+      />
 
       {/* DECISION MODAL */}
       <Modal slug="approvals-decision-modal"
