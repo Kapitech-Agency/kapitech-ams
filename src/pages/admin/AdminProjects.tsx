@@ -1619,7 +1619,7 @@ export const AdminProjects: React.FC = () => {
 
       {view === 'all' && (
         <>
-          <section aria-label="Projects key performance indicators">
+          <section data-ams-feature-slug="projects-kpis" data-ams-slug="projects-kpis" aria-label="Projects key performance indicators">
             <AdminMetricStrip
               className="sm:grid-cols-2 lg:grid-cols-4"
               metrics={[
@@ -2551,7 +2551,7 @@ export const AdminProjects: React.FC = () => {
 
       {view === 'archived' && (
         <div className="space-y-4">
-          <section aria-label="Archived project summary">
+          <section data-ams-feature-slug="projects-archived-kpis" data-ams-slug="projects-archived-kpis" aria-label="Archived project summary">
             <AdminMetricStrip
               className="sm:grid-cols-2 lg:grid-cols-4"
               metrics={[
@@ -2708,7 +2708,7 @@ export const AdminProjects: React.FC = () => {
           </>
         )}
       >
-        <form id="projects-form" onSubmit={saveProject} className="space-y-5">
+        <form id="projects-form" data-ams-feature-slug="projects-editor-form" data-ams-slug="projects-editor-form" onSubmit={saveProject} className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="text-xs text-muted">Project name<input required value={projectForm.name} onChange={event => setProjectForm({ ...projectForm, name: event.target.value })} className={fieldClass} /></label>
             <label className="text-xs text-muted">Client company<input required value={projectForm.clientCompany} onChange={event => setProjectForm({ ...projectForm, clientCompany: event.target.value })} className={fieldClass} /></label>
@@ -2745,7 +2745,7 @@ export const AdminProjects: React.FC = () => {
           </>
         )}
       >
-        <form id="projects-task-form" onSubmit={saveTask} className="space-y-5">
+        <form id="projects-task-form" data-ams-feature-slug="projects-task-form" data-ams-slug="projects-task-form" onSubmit={saveTask} className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="text-xs text-muted sm:col-span-2">Task title<input required value={taskForm.title} onChange={event => setTaskForm({ ...taskForm, title: event.target.value })} className={fieldClass} /></label>
             <div><label className="text-xs text-muted">Project</label><CustomSelect value={taskForm.projectId} onChange={value => setTaskForm({ ...taskForm, projectId: value })} options={activeProjects.map(project => ({ value: project.id, label: project.name }))} className="mt-1 w-full" /></div>
