@@ -82,7 +82,7 @@ export const AdminInbox: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterPriority, setFilterPriority] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [viewMode, setViewMode] = useState<'split' | 'table'>('split');
+  const [viewMode, setViewMode] = useState<'split' | 'table' | 'overview' | 'board' | 'queue'>('split');
 
   // Selection & Panels
   const [selectedSubmission, setSelectedSubmission] = useState<ContactSubmission | null>(null);
@@ -208,6 +208,15 @@ export const AdminInbox: React.FC = () => {
     setFilterStatus('all');
     setFilterPriority('all');
     setSearchQuery('');
+    setViewMode(
+      activeInboxTab === 'overview'
+        ? 'overview'
+        : activeInboxTab === 'jobs'
+          ? 'board'
+          : activeInboxTab === 'starred'
+            ? 'queue'
+            : 'split'
+    );
   }, [activeInboxTab]);
 
   // Keep selected submission in sync with store
@@ -701,163 +710,632 @@ export const AdminInbox: React.FC = () => {
 
 
       {/* ------------------------------------------------------------- */}
-      {/* 2. EXECUTIVE KPI SUMMARY RIBBON */}
-      <section data-ams-feature-slug={'inbox-' + activeInboxTab + '-performance-snapshot'} data-ams-slug={'inbox-' + activeInboxTab + '-performance-snapshot'} aria-label="Inbox performance snapshot" className="rounded-card border border-line bg-panel p-4">
-        <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
-          <div>
-            <h2 className="text-sm font-semibold text-fg">
-              {activeInboxTab === 'jobs'
-                ? (language === 'id' ? 'Ringkasan rekrutmen' : 'Recruitment snapshot')
-                : activeInboxTab === 'client'
-                  ? (language === 'id' ? 'Ringkasan client inbox' : 'Client inbox snapshot')
-                  : activeInboxTab === 'starred'
-                    ? (language === 'id' ? 'Ringkasan record ditandai' : 'Starred records snapshot')
-                    : (language === 'id' ? 'Ringkasan seluruh inbound' : 'All inbound snapshot')}
-            </h2>
-            <p className="mt-1 text-xs text-muted">
-              {activeInboxTab === 'jobs'
-                ? (language === 'id' ? 'Intake, screening, interview, dan hiring pipeline.' : 'Intake, screening, interview, and hiring pipeline.')
-                : activeInboxTab === 'client'
-                  ? (language === 'id' ? 'Intake, triage, konversi, dan estimasi peluang.' : 'Intake, triage, conversion, and estimated opportunity volume.')
-                  : (language === 'id' ? 'Pantau inbound lintas kanal dan tindak lanjut yang perlu diproses.' : 'Monitor inbound across channels and track follow-up work.')}
-            </p>
+      {/* 2. TAB-SPECIFIC KPI WORKSPACE */}
+      {activeInboxTab === 'overview' ? (
+        <section data-ams-feature-slug="inbox-overview-kpis" data-ams-slug="inbox-overview-kpis" aria-label="Inbox overview KPIs" className="rounded-card border border-line bg-panel p-4">
+          <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
+            <div>
+              <h2 className="text-sm font-semibold text-fg">Operational control center</h2>
+              <p className="mt-1 text-xs text-muted">A single view of client demand, hiring intake, and saved follow-up work.</p>
+            </div>
+            <span className="text-[11px] font-medium tabular-nums text-muted">{submissions.length} total inbound</span>
           </div>
-          <span className="text-[11px] font-medium tabular-nums text-muted">{metrics.total} inbound</span>
-        </div>
-        <AdminMetricStrip slug={'inbox-' + activeInboxTab + '-kpis'}
-          className="lg:grid-cols-4"
-          metrics={[
+          <AdminMetricStrip slug="inbox-overview-kpis" className="lg:grid-cols-4" metrics={[
             {
-              id: 'total',
-              label: activeInboxTab === 'jobs'
-                ? (language === 'id' ? 'Total Lamaran' : 'Total Applications')
-                : activeInboxTab === 'client'
-                  ? (language === 'id' ? 'Total Inquiry' : 'Total Inquiries')
-                  : (language === 'id' ? 'Total Inbound' : 'Total Inbound'),
-              value: metrics.total,
-              context: activeInboxTab === 'jobs'
-                ? (language === 'id' ? 'Semua lamaran masuk' : 'All applications received')
-                : activeInboxTab === 'client'
-                  ? (language === 'id' ? 'Semua inbound klien' : 'All client inbound')
-                  : activeInboxTab === 'starred'
-                    ? (language === 'id' ? 'Semua record ditandai' : 'All starred records')
-                    : (language === 'id' ? 'Semua inbound AMS' : 'All AMS inbound'),
-              sparkline: [metrics.total, metrics.newCount, metrics.convertedCount, metrics.conversionRate],
+              id: 'overview-total',
+              label: 'Total inbound',
+              value: submissions.length,
+              context: 'All website submissions',
+              sparkline: [Math.max(0, submissions.length - 3), Math.max(0, submissions.length - 1), submissions.length],
               icon: <Inbox size={16} strokeWidth={1.8} />
             },
             {
-              id: 'action',
-              label: language === 'id' ? 'Perlu Ditinjau' : 'Action Needed',
-              value: <span className="inline-flex items-center gap-2 text-danger">{metrics.newCount}{metrics.newCount > 0 && <span className="h-2 w-2 rounded-full bg-danger" />}</span>,
-              context: activeInboxTab === 'jobs' ? (language === 'id' ? 'Belum masuk screening' : 'Awaiting screening') : (language === 'id' ? 'Belum dikualifikasi' : 'Pending initial triage'),
-              sparkline: [metrics.total, metrics.newCount, metrics.convertedCount],
-              icon: <AlertCircle size={16} strokeWidth={1.8} />,
+              id: 'overview-client-new',
+              label: 'New client leads',
+              value: submissions.filter((item) => item.type !== 'career' && item.status === 'new').length,
+              context: 'Awaiting client triage',
+              sparkline: [0, submissions.filter((item) => item.type !== 'career' && item.status === 'new').length, submissions.filter((item) => item.type !== 'career').length],
+              icon: <MessageSquare size={16} strokeWidth={1.8} />,
               toneClassName: 'text-danger'
             },
             {
-              id: 'progress',
-              label: activeInboxTab === 'jobs'
-                ? 'Hired'
-                : isMixedInboxTab
-                  ? (language === 'id' ? 'Selesai / Konversi' : 'Completed / Converted')
-                  : (language === 'id' ? 'Dikonversi ke CRM' : 'Converted to CRM'),
-              value: metrics.convertedCount,
-              context: activeInboxTab === 'jobs'
-                ? (language === 'id' ? metrics.conversionRate + '% dari total lamaran' : metrics.conversionRate + '% of total applications')
-                : metrics.conversionRate + '% conversion',
-              sparkline: [0, metrics.newCount, metrics.convertedCount, metrics.conversionRate],
-              icon: activeInboxTab === 'jobs' ? <User size={16} strokeWidth={1.8} /> : <Briefcase size={16} strokeWidth={1.8} />,
-              toneClassName: 'text-success'
+              id: 'overview-jobs-new',
+              label: 'New applications',
+              value: submissions.filter((item) => item.type === 'career' && item.status === 'new').length,
+              context: 'Awaiting screening',
+              sparkline: [0, submissions.filter((item) => item.type === 'career' && item.status === 'new').length, submissions.filter((item) => item.type === 'career').length],
+              icon: <Briefcase size={16} strokeWidth={1.8} />,
+              toneClassName: 'text-warning'
             },
             {
-              id: 'pipeline',
-              label: activeInboxTab === 'jobs'
-                ? 'Interview'
-                : isMixedInboxTab
-                  ? (language === 'id' ? 'Peluang Klien' : 'Client Opportunity')
-                  : (language === 'id' ? 'Volume Peluang' : 'Opportunity Volume'),
-              value: activeInboxTab === 'jobs' ? metrics.interviewCount : formatAmount(metrics.totalPipelineValue, currency),
-              context: activeInboxTab === 'jobs' ? (language === 'id' ? 'Tahap interview aktif' : 'Active interview stage') : (language === 'id' ? 'Estimasi nilai brief masuk' : 'Estimated inbound opportunity value'),
-              sparkline: activeInboxTab === 'jobs'
-                ? [metrics.newCount, metrics.interviewCount, metrics.convertedCount]
-                : activeTabItems.filter((item) => item.type !== 'career').slice(0, 8).map(estimateDealValue),
-              icon: activeInboxTab === 'jobs' ? <Calendar size={16} strokeWidth={1.8} /> : <TrendingUp size={16} strokeWidth={1.8} />,
+              id: 'overview-starred',
+              label: 'Starred queue',
+              value: submissions.filter((item) => !!item.starred).length,
+              context: 'Saved for follow-up',
+              sparkline: [0, submissions.filter((item) => !!item.starred).length, submissions.filter((item) => !!item.starred && item.priority === 'urgent').length],
+              icon: <Star size={16} strokeWidth={1.8} />,
+              toneClassName: 'text-warning'
+            }
+          ]} />
+        </section>
+      ) : activeInboxTab === 'client' ? (
+        <section data-ams-feature-slug="inbox-client-kpis" data-ams-slug="inbox-client-kpis" aria-label="Client inbox KPIs" className="rounded-card border border-line bg-panel p-4">
+          <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
+            <div>
+              <h2 className="text-sm font-semibold text-fg">Client sales intake</h2>
+              <p className="mt-1 text-xs text-muted">Qualify website inquiries, protect response time, and move real opportunities into CRM.</p>
+            </div>
+            <span className="text-[11px] font-medium tabular-nums text-muted">{activeTabItems.length} client inquiries</span>
+          </div>
+          <AdminMetricStrip slug="inbox-client-kpis" className="lg:grid-cols-4" metrics={[
+            {
+              id: 'client-total',
+              label: 'Total inquiries',
+              value: activeTabItems.length,
+              context: 'Inbound client requests',
+              sparkline: [Math.max(0, activeTabItems.length - 2), activeTabItems.length]
+            },
+            {
+              id: 'client-new',
+              label: 'New',
+              value: activeTabItems.filter((item) => item.status === 'new').length,
+              context: 'Needs first review',
+              sparkline: [0, activeTabItems.filter((item) => item.status === 'new').length],
+              toneClassName: 'text-danger'
+            },
+            {
+              id: 'client-review',
+              label: 'In review',
+              value: activeTabItems.filter((item) => item.status === 'in-review').length,
+              context: 'Being qualified',
+              sparkline: [0, activeTabItems.filter((item) => item.status === 'in-review').length],
+              toneClassName: 'text-warning'
+            },
+            {
+              id: 'client-value',
+              label: 'Opportunity value',
+              value: formatAmount(metrics.totalPipelineValue, currency),
+              context: 'Estimated active inbound',
+              sparkline: activeTabItems.slice(0, 8).map(estimateDealValue),
+              icon: <DollarSign size={16} strokeWidth={1.8} />,
               toneClassName: 'text-success'
             }
-          ]}
-        />
-      </section>
-
-      {/* 3. INBOX CONTROLS */}
-      <section
-        data-ams-feature-slug="inbox-controls"
-        data-ams-slug="inbox-controls"
-        className="overflow-hidden rounded-card border border-line bg-panel"
-      >
-        <div className="flex flex-col gap-2.5 p-3 sm:p-4 xl:flex-row xl:items-center">
-          <label className="relative min-w-0 flex-1">
-            <span className="sr-only">Search inbox</span>
-            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={15} />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={activeInboxTab === 'jobs'
-                ? (language === 'id' ? 'Cari kandidat, posisi, email, skill, atau tools...' : 'Search candidate, role, email, skills, or tools...')
-                : isMixedInboxTab
-                  ? (language === 'id' ? 'Cari nama, perusahaan, kandidat, posisi, atau email...' : 'Search names, companies, candidates, roles, or email...')
-                  : (language === 'id' ? 'Cari nama, email, perusahaan, jasa, atau isi brief...' : 'Search name, email, company, services, or message...')}
-              className="h-9 min-h-9 w-full rounded-control border border-line bg-bg pl-9 pr-8 text-xs text-fg outline-none placeholder:text-muted focus:border-accent"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                aria-label="Clear search"
-                className="absolute right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-badge text-muted hover:bg-panel hover:text-fg"
-              >
-                <span aria-hidden="true">×</span>
-              </button>
-            )}
-          </label>
-
-          <div className="flex min-w-0 items-center gap-2 overflow-x-auto custom-scrollbar xl:shrink-0">
-            <div className="w-[150px] shrink-0">
-              <CustomSelect value={filterStatus} onChange={setFilterStatus} options={inboxStatusOptions} />
+          ]} />
+        </section>
+      ) : activeInboxTab === 'jobs' ? (
+        <section data-ams-feature-slug="inbox-jobs-kpis" data-ams-slug="inbox-jobs-kpis" aria-label="Job application KPIs" className="rounded-card border border-line bg-panel p-4">
+          <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
+            <div>
+              <h2 className="text-sm font-semibold text-fg">Recruitment pipeline</h2>
+              <p className="mt-1 text-xs text-muted">Screen candidates by stage, keep interview slots visible, and move decisions forward.</p>
             </div>
-            <div className="w-[150px] shrink-0">
-              <CustomSelect
-                value={filterPriority}
-                onChange={setFilterPriority}
-                options={[
-                  { value: 'all', label: language === 'id' ? 'Semua Prioritas' : 'All Priorities' },
-                  { value: 'urgent', label: 'Urgent' },
-                  { value: 'high', label: 'High' },
-                  { value: 'normal', label: 'Normal' },
-                  { value: 'low', label: 'Low' }
-                ]}
-              />
+            <span className="text-[11px] font-medium tabular-nums text-muted">{activeTabItems.length} applications</span>
+          </div>
+          <AdminMetricStrip slug="inbox-jobs-kpis" className="lg:grid-cols-4" metrics={[
+            {
+              id: 'jobs-total',
+              label: 'Applications',
+              value: activeTabItems.length,
+              context: 'All candidate intake',
+              sparkline: [Math.max(0, activeTabItems.length - 2), activeTabItems.length],
+              icon: <Briefcase size={16} strokeWidth={1.8} />
+            },
+            {
+              id: 'jobs-screening',
+              label: 'Screening',
+              value: activeTabItems.filter((item) => item.status === 'screening').length + activeTabItems.filter((item) => item.status === 'new').length,
+              context: 'New + screening queue',
+              sparkline: [activeTabItems.filter((item) => item.status === 'new').length, activeTabItems.filter((item) => item.status === 'screening').length],
+              toneClassName: 'text-warning'
+            },
+            {
+              id: 'jobs-interview',
+              label: 'Interview',
+              value: activeTabItems.filter((item) => item.status === 'interview').length,
+              context: 'Active interview stage',
+              sparkline: [0, activeTabItems.filter((item) => item.status === 'interview').length],
+              toneClassName: 'text-info'
+            },
+            {
+              id: 'jobs-hired',
+              label: 'Hired',
+              value: activeTabItems.filter((item) => item.status === 'hired').length,
+              context: metrics.conversionRate + '% of applications',
+              sparkline: [0, activeTabItems.filter((item) => item.status === 'hired').length],
+              toneClassName: 'text-success'
+            }
+          ]} />
+        </section>
+      ) : (
+        <section data-ams-feature-slug="inbox-starred-kpis" data-ams-slug="inbox-starred-kpis" aria-label="Starred queue KPIs" className="rounded-card border border-line bg-panel p-4">
+          <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
+            <div>
+              <h2 className="text-sm font-semibold text-fg">Priority queue</h2>
+              <p className="mt-1 text-xs text-muted">A focused workspace for records the team intentionally saved for follow-up.</p>
             </div>
-            <div className="ml-auto flex shrink-0 items-center rounded-control border border-line bg-bg p-0.5">
-              <button type="button" onClick={() => setViewMode('split')} aria-pressed={viewMode === 'split'} className={'inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip px-2.5 text-[11px] font-medium ' + (viewMode === 'split' ? 'bg-panel border border-line text-fg' : 'text-muted hover:text-fg')}>
-                <LayoutGrid size={13} />
-                <span className="hidden sm:inline">Split</span>
+            <span className="text-[11px] font-medium tabular-nums text-muted">{activeTabItems.length} starred</span>
+          </div>
+          <AdminMetricStrip slug="inbox-starred-kpis" className="lg:grid-cols-4" metrics={[
+            {
+              id: 'starred-total',
+              label: 'Starred',
+              value: activeTabItems.length,
+              context: 'Saved records',
+              sparkline: [Math.max(0, activeTabItems.length - 2), activeTabItems.length],
+              icon: <Star size={16} strokeWidth={1.8} />
+            },
+            {
+              id: 'starred-critical',
+              label: 'Urgent / high',
+              value: activeTabItems.filter((item) => item.priority === 'urgent' || item.priority === 'high').length,
+              context: 'Priority follow-up',
+              sparkline: [0, activeTabItems.filter((item) => item.priority === 'urgent' || item.priority === 'high').length],
+              toneClassName: 'text-danger'
+            },
+            {
+              id: 'starred-clients',
+              label: 'Client records',
+              value: activeTabItems.filter((item) => item.type !== 'career').length,
+              context: 'Sales opportunities',
+              sparkline: [0, activeTabItems.filter((item) => item.type !== 'career').length]
+            },
+            {
+              id: 'starred-candidates',
+              label: 'Candidates',
+              value: activeTabItems.filter((item) => item.type === 'career').length,
+              context: 'Recruitment follow-up',
+              sparkline: [0, activeTabItems.filter((item) => item.type === 'career').length]
+            }
+          ]} />
+        </section>
+      )}
+
+      {/* 3. TAB-SPECIFIC CONTROLS */}
+      {activeInboxTab === 'overview' ? (
+        <section data-ams-feature-slug="inbox-overview-controls" data-ams-slug="inbox-overview-controls" className="rounded-card border border-line bg-panel">
+          <div className="flex flex-col gap-3 p-3 sm:p-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs font-semibold text-fg">Live intake monitor</p>
+              <p className="mt-0.5 text-[11px] text-muted">Use Overview to triage exceptions before opening a specific workspace.</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <button type="button" onClick={() => void refreshInbox()} className="inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted hover:bg-bg hover:text-fg">
+                <RefreshCw size={14} />
+                Refresh
               </button>
-              <button type="button" onClick={() => setViewMode('table')} aria-pressed={viewMode === 'table'} className={'inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip px-2.5 text-[11px] font-medium ' + (viewMode === 'table' ? 'bg-panel border border-line text-fg' : 'text-muted hover:text-fg')}>
-                <TableIcon size={13} />
-                <span className="hidden sm:inline">Table</span>
+              <button type="button" onClick={handleExportCSV} disabled={activeTabItems.length === 0} className="inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted hover:bg-bg hover:text-fg disabled:opacity-50">
+                <Download size={14} />
+                Export overview
+              </button>
+              <button type="button" onClick={() => setViewMode('split')} className="inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control bg-accent px-3 text-xs font-medium text-white hover:bg-accent/90">
+                <Inbox size={14} />
+                Open inbox
               </button>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : activeInboxTab === 'jobs' ? (
+        <section data-ams-feature-slug="inbox-jobs-controls" data-ams-slug="inbox-jobs-controls" className="rounded-card border border-line bg-panel">
+          <div className="flex flex-col gap-2.5 p-3 sm:p-4 lg:flex-row lg:items-center">
+            <label className="relative min-w-0 flex-1">
+              <span className="sr-only">Search applications</span>
+              <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={15} />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search candidate, role, skill, or tools..."
+                className="h-9 min-h-9 w-full rounded-control border border-line bg-bg pl-9 pr-8 text-xs text-fg outline-none placeholder:text-muted focus:border-accent"
+              />
+              {searchQuery && (
+                <button type="button" onClick={() => setSearchQuery('')} aria-label="Clear search" className="absolute right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-badge text-muted hover:bg-panel hover:text-fg">
+                  <span aria-hidden="true">×</span>
+                </button>
+              )}
+            </label>
+            <div className="flex min-w-0 items-center gap-2 overflow-x-auto custom-scrollbar">
+              <div className="w-[150px] shrink-0"><CustomSelect value={filterStatus} onChange={setFilterStatus} options={inboxStatusOptions} /></div>
+              <div className="w-[150px] shrink-0"><CustomSelect value={filterPriority} onChange={setFilterPriority} options={[
+                { value: 'all', label: 'All Priorities' },
+                { value: 'urgent', label: 'Urgent' },
+                { value: 'high', label: 'High' },
+                { value: 'normal', label: 'Normal' },
+                { value: 'low', label: 'Low' }
+              ]} /></div>
+              <button type="button" onClick={() => setViewMode('table')} className="inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted hover:bg-bg hover:text-fg">
+                <TableIcon size={13} />
+                Table
+              </button>
+            </div>
+          </div>
+        </section>
+      ) : (
+        <section data-ams-feature-slug={'inbox-' + activeInboxTab + '-controls'} data-ams-slug={'inbox-' + activeInboxTab + '-controls'} className="rounded-card border border-line bg-panel">
+          <div className="flex flex-col gap-2.5 p-3 sm:p-4 lg:flex-row lg:items-center">
+            <label className="relative min-w-0 flex-1">
+              <span className="sr-only">{activeInboxTab === 'starred' ? 'Search starred records' : 'Search client inquiries'}</span>
+              <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={15} />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={activeInboxTab === 'starred' ? 'Search saved records, company, candidate, or slug...' : 'Search company, contact, service, budget, or brief...'}
+                className="h-9 min-h-9 w-full rounded-control border border-line bg-bg pl-9 pr-8 text-xs text-fg outline-none placeholder:text-muted focus:border-accent"
+              />
+              {searchQuery && (
+                <button type="button" onClick={() => setSearchQuery('')} aria-label="Clear search" className="absolute right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-badge text-muted hover:bg-panel hover:text-fg">
+                  <span aria-hidden="true">×</span>
+                </button>
+              )}
+            </label>
+            <div className="flex min-w-0 items-center gap-2 overflow-x-auto custom-scrollbar">
+              <div className="w-[150px] shrink-0"><CustomSelect value={filterStatus} onChange={setFilterStatus} options={inboxStatusOptions} /></div>
+              <div className="w-[150px] shrink-0"><CustomSelect value={filterPriority} onChange={setFilterPriority} options={[
+                { value: 'all', label: 'All Priorities' },
+                { value: 'urgent', label: 'Urgent' },
+                { value: 'high', label: 'High' },
+                { value: 'normal', label: 'Normal' },
+                { value: 'low', label: 'Low' }
+              ]} /></div>
+              <div className="ml-auto flex shrink-0 items-center rounded-control border border-line bg-bg p-0.5">
+                {activeInboxTab === 'starred' && (
+                  <button type="button" onClick={() => setViewMode('queue')} className="inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip bg-panel border border-line px-2.5 text-[11px] font-medium text-fg">
+                    <Star size={13} />
+                    Queue
+                  </button>
+                )}
+                <button type="button" onClick={() => setViewMode('split')} className="inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip px-2.5 text-[11px] font-medium text-muted hover:text-fg">
+                  <LayoutGrid size={13} />
+                  Review
+                </button>
+                {activeInboxTab === 'client' && (
+                  <button type="button" onClick={() => setViewMode('table')} className="inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip px-2.5 text-[11px] font-medium text-muted hover:text-fg">
+                    <TableIcon size={13} />
+                    Table
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ------------------------------------------------------------- */}
       
       {/* 4. MAIN CONTENT VIEW: SPLIT VIEW vs TABLE VIEW */}
       {/* ------------------------------------------------------------- */}
-      {viewMode === 'table' ? (
+      {viewMode === 'overview' ? (
+        <section data-ams-feature-slug="inbox-overview-workspace" data-ams-slug="inbox-overview-workspace" className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
+          <div className="rounded-card border border-line bg-panel overflow-hidden">
+            <div className="border-b border-line px-4 py-3.5 flex items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold text-fg">Triage queue</h3>
+                <p className="mt-0.5 text-[11px] text-muted">The records most likely to require action now.</p>
+              </div>
+              <span className="text-[11px] tabular-nums text-muted">{filteredItems.length} visible</span>
+            </div>
+            <div className="divide-y divide-line">
+              {filteredItems
+                .filter((item) => item.status === 'new' || item.priority === 'urgent' || item.starred)
+                .slice(0, 7)
+                .map((item) => (
+                  <button
+                    type="button"
+                    key={item.id}
+                    onClick={() => {
+                      handleSelectSubmission(item);
+                      setViewMode('split');
+                    }}
+                    className="w-full px-4 py-3 text-left hover:bg-panel-hover transition-colors"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {renderChannelBadge(item.type)}
+                          {renderStatusBadge(item.status)}
+                          {renderPriorityBadge(item.priority)}
+                        </div>
+                        <div className="mt-1.5 flex items-center justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate text-xs font-semibold text-fg">{item.fullName || 'Anonymous'}</p>
+                            <p className="truncate text-[11px] text-muted">{item.type === 'career' ? (item.positionTitle || item.specialty || item.email) : (item.company || item.email)}</p>
+                          </div>
+                          <span className="shrink-0 text-[10px] tabular-nums text-muted">{formatRelativeTime(item.createdAt)}</span>
+                        </div>
+                      </div>
+                      <ChevronRight size={14} className="mt-1 shrink-0 text-muted" />
+                    </div>
+                  </button>
+                ))}
+              {filteredItems.filter((item) => item.status === 'new' || item.priority === 'urgent' || item.starred).length === 0 && (
+                <div className="p-12 text-center text-muted">
+                  <Check size={20} className="mx-auto mb-2 text-success" />
+                  <p className="text-xs text-fg font-medium">No urgent triage records.</p>
+                  <p className="mt-1 text-[11px]">Your intake queue is currently clear.</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="rounded-card border border-line bg-panel p-4">
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-fg">Inbound mix</h3>
+                  <p className="mt-0.5 text-[11px] text-muted">Where today's intake is coming from.</p>
+                </div>
+                <Layers size={16} className="text-muted" />
+              </div>
+              <div className="space-y-4">
+                {[
+                  { label: 'Client inquiries', count: submissions.filter((item) => item.type !== 'career').length, tone: 'bg-info' },
+                  { label: 'Job applications', count: submissions.filter((item) => item.type === 'career').length, tone: 'bg-accent' },
+                  { label: 'Starred records', count: submissions.filter((item) => !!item.starred).length, tone: 'bg-warning' }
+                ].map((row) => {
+                  const base = Math.max(1, submissions.length);
+                  const pct = Math.round((row.count / base) * 100);
+                  return (
+                    <div key={row.label}>
+                      <div className="mb-1.5 flex items-center justify-between gap-3 text-[11px]">
+                        <span className="text-muted">{row.label}</span>
+                        <span className="tabular-nums text-fg">{row.count} · {pct}%</span>
+                      </div>
+                      <div className="h-1.5 overflow-hidden rounded-[3px] bg-line">
+                        <div className={`h-full rounded-[3px] ${row.tone}`} style={{ width: pct + '%' }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="rounded-card border border-line bg-panel p-4">
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-fg">Workflow health</h3>
+                  <p className="mt-0.5 text-[11px] text-muted">Client and recruitment stages at a glance.</p>
+                </div>
+                <TrendingUp size={16} className="text-muted" />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { label: 'Client review', count: submissions.filter((item) => item.type !== 'career' && item.status === 'in-review').length },
+                  { label: 'Client closed', count: submissions.filter((item) => item.type !== 'career' && item.status === 'closed').length },
+                  { label: 'In interview', count: submissions.filter((item) => item.type === 'career' && item.status === 'interview').length },
+                  { label: 'Hired', count: submissions.filter((item) => item.type === 'career' && item.status === 'hired').length }
+                ].map((row) => (
+                  <div key={row.label} className="rounded-control border border-line bg-bg p-3">
+                    <p className="text-[10px] text-muted">{row.label}</p>
+                    <p className="mt-1 text-lg font-medium tabular-nums text-fg">{row.count}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : viewMode === 'board' ? (
+        <section data-ams-feature-slug="inbox-jobs-board" data-ams-slug="inbox-jobs-board" className="rounded-card border border-line bg-panel overflow-hidden">
+          <div className="border-b border-line px-4 py-3.5 flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold text-fg">Candidate pipeline</h3>
+              <p className="mt-0.5 text-[11px] text-muted">Move candidates through screening, shortlist, interview, and hiring without leaving Inbox.</p>
+            </div>
+            <div className="text-[11px] text-muted tabular-nums">{filteredItems.length} visible applications</div>
+          </div>
+          <div className="overflow-x-auto custom-scrollbar">
+            <div className="grid min-w-[1050px] grid-cols-5 divide-x divide-line">
+              {[
+                { key: 'new', label: 'New', next: 'screening' as ContactSubmission['status'] },
+                { key: 'screening', label: 'Screening', next: 'shortlisted' as ContactSubmission['status'] },
+                { key: 'shortlisted', label: 'Shortlisted', next: 'interview' as ContactSubmission['status'] },
+                { key: 'interview', label: 'Interview', next: 'hired' as ContactSubmission['status'] },
+                { key: 'hired', label: 'Hired', next: null }
+              ].map((stage) => {
+                const stageItems = filteredItems.filter((item) => item.status === stage.key);
+                return (
+                  <div key={stage.key} className="min-h-[470px] bg-bg/30">
+                    <div className="sticky top-0 z-10 border-b border-line bg-panel px-3 py-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-semibold text-fg">{stage.label}</span>
+                        <span className="min-w-6 rounded-badge border border-line bg-bg px-1.5 py-0.5 text-center text-[10px] font-medium tabular-nums text-muted">{stageItems.length}</span>
+                      </div>
+                    </div>
+                    <div className="space-y-2 p-2.5">
+                      {stageItems.map((item) => (
+                        <div key={item.id} className="rounded-card border border-line bg-panel p-3 hover:border-muted transition-colors">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="truncate text-xs font-semibold text-fg">{item.fullName}</p>
+                              <p className="mt-0.5 truncate text-[10px] text-muted">{item.positionTitle || item.specialty || 'Role not specified'}</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => handleToggleStar(e, item.id, item.starred)}
+                              disabled={!canManageCrm}
+                              className="shrink-0 p-1 text-muted hover:text-warning"
+                              aria-label={item.starred ? 'Unstar application' : 'Star application'}
+                            >
+                              <Star size={13} className={item.starred ? 'fill-warning text-warning' : ''} />
+                            </button>
+                          </div>
+                          <div className="mt-2 flex flex-wrap items-center gap-1">
+                            {renderPriorityBadge(item.priority)}
+                            {item.specialty && <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] text-muted">{item.specialty}</span>}
+                            {item.experienceYears && <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] text-muted">{item.experienceYears} yrs</span>}
+                          </div>
+                          <div className="mt-3 flex items-center justify-between gap-2">
+                            <span className="text-[10px] text-muted">{formatRelativeTime(item.createdAt)}</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleSelectSubmission(item);
+                                setViewMode('split');
+                              }}
+                              className="inline-flex min-h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-fg hover:bg-panel"
+                            >
+                              Review
+                              <ChevronRight size={11} />
+                            </button>
+                          </div>
+                          {stage.next && (
+                            <button
+                              type="button"
+                              disabled={!canManageCrm || isUpdating}
+                              onClick={() => void handleStatusChange(item.id, stage.next)}
+                              className="mt-2 w-full min-h-8 rounded-control border border-line bg-panel px-2 text-[10px] font-medium text-muted hover:bg-bg hover:text-fg disabled:opacity-50"
+                            >
+                              {stage.next === 'screening' ? 'Start screening' : stage.next === 'shortlisted' ? 'Shortlist' : stage.next === 'interview' ? 'Move to interview' : 'Mark hired'}
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      {stageItems.length === 0 && (
+                        <div className="p-8 text-center">
+                          <p className="text-[10px] text-muted">No candidates</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div className="border-t border-line px-4 py-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-muted">
+            <span>{filteredItems.filter((item) => item.status === 'rejected' || item.status === 'withdrawn').length} archived or closed applications outside the active board</span>
+            <button type="button" onClick={() => setViewMode('split')} className="inline-flex min-h-8 items-center gap-1.5 rounded-control border border-line bg-panel px-3 font-medium text-fg hover:bg-bg">
+              <LayoutGrid size={12} />
+              Open candidate review
+            </button>
+          </div>
+        </section>
+      ) : viewMode === 'queue' ? (
+        <section data-ams-feature-slug="inbox-starred-queue" data-ams-slug="inbox-starred-queue" className="space-y-3">
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+            {[
+              { key: 'client', title: 'Starred client work', description: 'Saved sales opportunities and follow-up threads.', items: filteredItems.filter((item) => item.type !== 'career') },
+              { key: 'jobs', title: 'Starred candidate work', description: 'Saved recruitment records and hiring decisions.', items: filteredItems.filter((item) => item.type === 'career') }
+            ].map((group) => (
+              <div key={group.key} className="rounded-card border border-line bg-panel overflow-hidden">
+                <div className="border-b border-line px-4 py-3.5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-semibold text-fg">{group.title}</h3>
+                      <p className="mt-0.5 text-[11px] text-muted">{group.description}</p>
+                    </div>
+                    <span className="text-[11px] tabular-nums text-muted">{group.items.length}</span>
+                  </div>
+                </div>
+                <div className="divide-y divide-line">
+                  {group.items.map((item) => (
+                    <div key={item.id} className="px-4 py-3 hover:bg-panel-hover transition-colors">
+                      <div className="flex items-start gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {renderChannelBadge(item.type)}
+                            {renderStatusBadge(item.status)}
+                            {renderPriorityBadge(item.priority)}
+                          </div>
+                          <div className="mt-1.5 flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="truncate text-xs font-semibold text-fg">{item.fullName}</p>
+                              <p className="truncate text-[11px] text-muted">{item.type === 'career' ? (item.positionTitle || item.specialty || item.email) : (item.company || item.email)}</p>
+                            </div>
+                            <span className="shrink-0 text-[10px] tabular-nums text-muted">{formatRelativeTime(item.createdAt)}</span>
+                          </div>
+                          <p className="mt-1.5 line-clamp-2 text-[11px] leading-relaxed text-muted">
+                            {item.message || 'No message content.'}
+                          </p>
+                          <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                            <span className="font-mono text-[9px] text-muted/75">/{getSubmissionSlug(item)}</span>
+                            <div className="flex items-center gap-1.5">
+                              <button type="button" onClick={(e) => handleToggleStar(e, item.id, item.starred)} disabled={!canManageCrm} className="inline-flex min-h-8 items-center gap-1 rounded-control border border-warning/30 bg-warning/10 px-2.5 text-[10px] font-medium text-warning hover:bg-warning/15">
+                                <Star size={11} className="fill-warning" />
+                                Remove
+                              </button>
+                              <button type="button" onClick={() => { handleSelectSubmission(item); setViewMode('split'); }} className="inline-flex min-h-8 items-center gap-1 rounded-control border border-line bg-panel px-2.5 text-[10px] font-medium text-fg hover:bg-bg">
+                                Review
+                                <ChevronRight size={11} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {group.items.length === 0 && (
+                    <div className="p-12 text-center">
+                      <Star size={20} className="mx-auto mb-2 text-line" />
+                      <p className="text-xs text-muted">No starred records in this queue.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="rounded-card border border-line bg-panel p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold text-fg">Next follow-up</p>
+                <p className="mt-0.5 text-[11px] text-muted">Open the most urgent saved record without scanning the whole queue.</p>
+              </div>
+              {(() => {
+                const next = [...filteredItems].sort((a, b) => {
+                  const rank = (item: ContactSubmission) => item.priority === 'urgent' ? 0 : item.priority === 'high' ? 1 : item.status === 'new' ? 2 : 3;
+                  return rank(a) - rank(b);
+                })[0];
+                return next ? (
+                  <button type="button" onClick={() => { handleSelectSubmission(next); setViewMode('split'); }} className="inline-flex min-h-9 items-center gap-1.5 rounded-control bg-accent px-3 text-xs font-medium text-white hover:bg-accent/90">
+                    <ChevronRight size={14} />
+                    Review {next.fullName}
+                  </button>
+                ) : (
+                  <span className="text-[11px] text-muted">Queue is clear.</span>
+                );
+              })()}
+            </div>
+          </div>
+        </section>
+      ) : 
         /* DENSE SPREADSHEET TABLE VIEW */
+      {/* Client pipeline context card */}
+      {activeInboxTab === 'client' && viewMode === 'split' && (
+        <section data-ams-feature-slug="inbox-client-pipeline" data-ams-slug="inbox-client-pipeline" className="rounded-card border border-line bg-panel p-3.5">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold text-fg">Lead pipeline</h3>
+              <p className="mt-0.5 text-[11px] text-muted">Qualify each inquiry before sending it into CRM.</p>
+            </div>
+            <span className="text-[11px] tabular-nums text-muted">{activeTabItems.length} inquiries</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {[
+              { key: 'new', label: 'New' },
+              { key: 'in-review', label: 'In review' },
+              { key: 'contacted', label: 'Contacted' },
+              { key: 'closed', label: 'Closed' }
+            ].map((stage) => {
+              const count = activeTabItems.filter((item) => item.status === stage.key).length;
+              const value = activeTabItems.filter((item) => item.status === stage.key).reduce((sum, item) => sum + estimateDealValue(item), 0);
+              return (
+                <button
+                  type="button"
+                  key={stage.key}
+                  onClick={() => setFilterStatus(filterStatus === stage.key ? 'all' : stage.key)}
+                  className={'rounded-control border p-3 text-left transition-colors ' + (filterStatus === stage.key ? 'border-accent/30 bg-accent/10' : 'border-line bg-bg hover:bg-panel')}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] text-muted">{stage.label}</span>
+                    <span className="text-sm font-medium tabular-nums text-fg">{count}</span>
+                  </div>
+                  <p className="mt-2 truncate text-[11px] font-medium tabular-nums text-fg">{formatAmount(value, currency)}</p>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
         <div className="bg-panel border border-line rounded-card overflow-hidden">
           <div className="ams-table-scroll overflow-x-auto custom-scrollbar">
             <div data-ams-feature-slug="inbox-leads-directory" data-ams-slug="inbox-leads-directory" className="overflow-x-auto"><table className="ams-table w-full text-left border-collapse text-xs font-sans">
