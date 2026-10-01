@@ -1011,7 +1011,7 @@ export const AdminSettings: React.FC = () => {
                     value={newPassword}
                     onChange={(event) => setNewPassword(event.target.value)}
                     placeholder="At least 8 characters"
-                    className="w-full"
+                    className="w-full bg-bg"
                   />
                 </label>
                 <label>
@@ -1022,7 +1022,7 @@ export const AdminSettings: React.FC = () => {
                     value={confirmPassword}
                     onChange={(event) => setConfirmPassword(event.target.value)}
                     placeholder="Repeat the new password"
-                    className="w-full"
+                    className="w-full bg-bg"
                   />
                 </label>
               </div>
@@ -1034,7 +1034,7 @@ export const AdminSettings: React.FC = () => {
                   value={currentPassword}
                   onChange={(event) => setCurrentPassword(event.target.value)}
                   placeholder="Enter the current admin password"
-                  className="w-full"
+                  className="w-full bg-bg"
                 />
               </label>
               <div className="flex justify-end">
@@ -1243,7 +1243,7 @@ export const AdminSettings: React.FC = () => {
                   <input
                     value={metaSettings.siteTitle}
                     onChange={(event) => setMetaSettings({ ...metaSettings, siteTitle: event.target.value })}
-                    className="w-full"
+                    className="w-full bg-bg"
                   />
                 </label>
                 <label>
@@ -1252,7 +1252,7 @@ export const AdminSettings: React.FC = () => {
                     rows={3}
                     value={metaSettings.siteDescription}
                     onChange={(event) => setMetaSettings({ ...metaSettings, siteDescription: event.target.value })}
-                    className="w-full"
+                    className="w-full bg-bg"
                   />
                 </label>
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -1262,7 +1262,7 @@ export const AdminSettings: React.FC = () => {
                       type="email"
                       value={metaSettings.contactReceiverEmail}
                       onChange={(event) => setMetaSettings({ ...metaSettings, contactReceiverEmail: event.target.value })}
-                      className="w-full"
+                      className="w-full bg-bg"
                     />
                   </label>
                   <label>
@@ -1387,19 +1387,19 @@ export const AdminSettings: React.FC = () => {
           <div className="grid gap-3 sm:grid-cols-2">
             <label>
               <span className="mb-1 block text-[10px] font-medium text-muted">Full name</span>
-              <input required value={newAccName} onChange={(event) => setNewAccName(event.target.value)} className="w-full" placeholder="Alexander Hartanto" />
+              <input required value={newAccName} onChange={(event) => setNewAccName(event.target.value)} className="w-full bg-bg" placeholder="Alexander Hartanto" />
             </label>
             <label>
               <span className="mb-1 block text-[10px] font-medium text-muted">Username</span>
-              <input required value={newAccUsername} onChange={(event) => setNewAccUsername(event.target.value)} className="w-full" placeholder="exec.alex" />
+              <input required value={newAccUsername} onChange={(event) => setNewAccUsername(event.target.value)} className="w-full bg-bg" placeholder="exec.alex" />
             </label>
             <label>
               <span className="mb-1 block text-[10px] font-medium text-muted">Email</span>
-              <input required type="email" value={newAccEmail} onChange={(event) => setNewAccEmail(event.target.value)} className="w-full" placeholder="alex@kapitech.id" />
+              <input required type="email" value={newAccEmail} onChange={(event) => setNewAccEmail(event.target.value)} className="w-full bg-bg" placeholder="alex@kapitech.id" />
             </label>
             <label>
               <span className="mb-1 block text-[10px] font-medium text-muted">Temporary password</span>
-              <input required minLength={12} maxLength={128} value={newAccPassword} onChange={(event) => setNewAccPassword(event.target.value)} className="w-full" />
+              <input required minLength={12} maxLength={128} value={newAccPassword} onChange={(event) => setNewAccPassword(event.target.value)} className="w-full bg-bg" />
             </label>
           </div>
 
