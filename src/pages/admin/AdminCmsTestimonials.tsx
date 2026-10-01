@@ -139,7 +139,7 @@ export const AdminCmsTestimonials: React.FC = () => {
   };
 
   return (
-    <AdminPageShell featureSlug="cms-testimonials-module">
+    <AdminPageShell featureSlug="cms-testimonials-module" className="ams-cms-module">
       
       <AdminModuleHeader slug="cms-testimonials-header"
         icon={<Users size={20} />}
