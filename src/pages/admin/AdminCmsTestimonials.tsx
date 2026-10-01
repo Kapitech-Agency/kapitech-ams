@@ -9,6 +9,18 @@ import { Button } from '../../components/ui/Button';
 import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
+const normalizeCmsTestimonial = (item: TestimonialItem): TestimonialItem => ({
+  ...item,
+  id: String(item?.id || 'testimonial-' + Date.now().toString(36)),
+  quote: String(item?.quote || ''),
+  quoteId: String(item?.quoteId || ''),
+  author: String(item?.author || 'Anonymous client'),
+  role: String(item?.role || ''),
+  company: String(item?.company || ''),
+  location: String(item?.location || ''),
+  rating: Number.isFinite(Number(item?.rating)) ? Math.min(5, Math.max(1, Number(item.rating))) : 5,
+});
+
 export const AdminCmsTestimonials: React.FC = () => {
   const { language } = useLanguage();
   const [testimonials, setTestimonials] = useState<TestimonialItem[]>([]);
@@ -28,7 +40,7 @@ export const AdminCmsTestimonials: React.FC = () => {
     setIsLoading(true); setLoadError(null);
     try {
       const res = await api.cms.getTestimonials();
-      if (res.success && Array.isArray(res.data?.testimonials)) setTestimonials(res.data.testimonials as TestimonialItem[]);
+      if (res.success && Array.isArray(res.data?.testimonials)) setTestimonials(res.data.testimonials.filter(Boolean).map(normalizeCmsTestimonial));
       else setLoadError(res.error || 'Unable to load testimonials.');
     } catch { setLoadError('Unable to load testimonials. Check the connection and retry.'); }
     finally { setIsLoading(false); }
@@ -42,8 +54,8 @@ export const AdminCmsTestimonials: React.FC = () => {
     const query = searchQuery.trim().toLowerCase();
     if (!query) return true;
     return [item.author, item.role, item.company, item.location, item.quote, item.quoteId]
-      .filter(Boolean)
-      .some((value) => String(value).toLowerCase().includes(query));
+      .map((value) => String(value || '').toLowerCase())
+      .some((value) => value.includes(query));
   });
   const totalTestimonialPages = Math.max(1, Math.ceil(filteredTestimonials.length / pageSize));
   const pagedTestimonials = filteredTestimonials.slice((page - 1) * pageSize, page * pageSize);
