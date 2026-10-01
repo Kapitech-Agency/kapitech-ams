@@ -1050,7 +1050,7 @@ export const AdminInbox: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => {
-                                handleSelectSubmission(item);
+                                handleSelectSubmission(item, 'overview');
                                 setViewMode('split');
                               }}
                               className="min-w-0 truncate text-left text-xs font-semibold text-fg hover:text-accent-text"
@@ -1077,8 +1077,8 @@ export const AdminInbox: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => {
-                              handleSelectSubmission(item);
-                              setViewMode('split');
+                              handleSelectSubmission(item, 'overview');
+                                setViewMode('split');
                             }}
                             className="mt-1.5 block max-w-3xl text-left"
                           >
@@ -1107,7 +1107,7 @@ export const AdminInbox: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => {
-                                handleSelectSubmission(item);
+                                handleSelectSubmission(item, 'overview');
                                 setViewMode('split');
                               }}
                               className={
@@ -1473,14 +1473,14 @@ export const AdminInbox: React.FC = () => {
         </div>
       ) : (
         /* SPLIT MASTER-DETAIL VIEW (when items exist) */
-        <div className="ams-inbox-workspace grid grid-cols-1 items-start gap-3 lg:grid-cols-[minmax(300px,0.82fr)_minmax(0,1.18fr)]">
+        <div className={'ams-inbox-workspace grid grid-cols-1 items-start gap-3 ' + (detailContext === 'overview' ? '' : 'lg:grid-cols-[minmax(300px,0.82fr)_minmax(0,1.18fr)]')}>
           
           {/* Left: Master Briefs List Pane */}
           <div className={`ams-inbox-list-pane space-y-3 ${
-            selectedSubmission 
-              ? 'hidden lg:block' 
+            selectedSubmission || detailContext === 'overview'
+              ? 'hidden lg:block'
               : 'block'
-          }`}>
+          } ${detailContext === 'overview' ? 'lg:hidden' : ''}`}>
             {filteredItems.map((item) => {
               const isSelected = selectedSubmission?.id === item.id;
               const isConverted = crmDeals.some(d => (d as any).inquiryId === item.id);
@@ -1578,13 +1578,16 @@ export const AdminInbox: React.FC = () => {
 
           {/* Right: Message Reader & Command Hub Pane */}
           {selectedSubmission ? (
-            <div className="ams-inbox-reader-pane min-w-0 rounded-card border border-line bg-panel p-4 sm:p-5 lg:sticky lg:top-4 lg:min-h-[calc(100vh-250px)]">
+            <div className={\`ams-inbox-reader-pane min-w-0 rounded-card border border-line bg-panel p-4 sm:p-5 \${detailContext === 'overview' ? '' : 'lg:sticky lg:top-4 lg:min-h-[calc(100vh-250px)]'}\` }>
               <div>
                 
                 {/* Mobile Back Button */}
                 <div className="lg:hidden mb-4 pb-3 border-b border-line">
                   <button
-                    onClick={() => setSelectedSubmission(null)}
+                    onClick={() => {
+                      setSelectedSubmission(null);
+                      if (detailContext === 'overview') setViewMode('overview');
+                    }}
                     className="flex items-center gap-2 text-xs font-sans text-muted hover:text-fg transition-colors min-h-[44px]"
                   >
                     <ArrowLeft size={16} />
@@ -1634,7 +1637,10 @@ export const AdminInbox: React.FC = () => {
 
                     {/* Close button on desktop */}
                     <button
-                      onClick={() => setSelectedSubmission(null)}
+                      onClick={() => {
+                        setSelectedSubmission(null);
+                        if (detailContext === 'overview') setViewMode('overview');
+                      }}
                       className="hidden lg:inline-flex text-xs text-muted hover:text-fg px-3 py-2 rounded-control bg-panel border border-line min-h-10 items-center" aria-label="Close brief"
                     >
                       ✕
