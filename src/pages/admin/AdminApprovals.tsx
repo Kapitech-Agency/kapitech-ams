@@ -192,7 +192,7 @@ export const AdminApprovals: React.FC = () => {
       )}
 
       {/* Header */}
-      <AdminModuleHeader
+      <AdminModuleHeader slug="approvals-header"
         className="mb-0"
         title={(
           <span className="flex items-center gap-2"><Shield size={20} className="text-accent-text shrink-0" />{language === 'id' ? 'Pusat Persetujuan Eksekutif' : 'Executive Approvals Center'}</span>
@@ -201,12 +201,12 @@ export const AdminApprovals: React.FC = () => {
       />
 
       {/* KPI Cards */}
-      <section aria-label="Approval snapshot" className="rounded-card border border-line bg-panel p-4">
+      <section data-ams-feature-slug="approvals-snapshot" data-ams-slug="approvals-snapshot" aria-label="Approval snapshot" className="rounded-card border border-line bg-panel p-4">
         <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
           <div><h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan persetujuan' : 'Approval snapshot'}</h2><p className="mt-1 text-xs text-muted">{language === 'id' ? 'Permintaan dan exposure finansial yang menunggu keputusan.' : 'Decision queue and financial exposure across the approval workspace.'}</p></div>
           <span className="text-[11px] font-medium tabular-nums text-muted">{metrics.pendingCount} pending</span>
         </div>
-        <AdminMetricStrip
+        <AdminMetricStrip slug="approvals-kpis"
           metrics={[
             { id: 'pending', label: language === 'id' ? 'Menunggu Otorisasi' : 'Pending Authorization', value: metrics.pendingCount, context: language === 'id' ? 'Perlu tindakan eksekutif' : 'Action required', sparkline: [metrics.pendingCount, metrics.highRiskPending, metrics.approvedCount, metrics.pendingCount], icon: <Clock size={16} strokeWidth={1.8} />, toneClassName: 'text-warning' },
             { id: 'pending-value', label: language === 'id' ? 'Nilai Tertunda' : 'Pending Value', value: formatAmount(metrics.totalPendingValue, currency), context: language === 'id' ? 'Total nilai menunggu review' : 'Total financial exposure', sparkline: approvals.slice(0, 8).map((item) => Number(item.value) || 0), icon: <DollarSign size={16} strokeWidth={1.8} />, toneClassName: 'text-accent-text' },
@@ -217,7 +217,7 @@ export const AdminApprovals: React.FC = () => {
       </section>
 
       {/* Filter and Search Bar */}
-      <section className="rounded-card border border-line bg-panel p-4">
+      <section data-ams-feature-slug="approvals-queue" data-ams-slug="approvals-queue" className="rounded-card border border-line bg-panel p-4">
         <div className="relative flex-1">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
           <input
@@ -384,7 +384,7 @@ export const AdminApprovals: React.FC = () => {
       </div>
 
       {/* DECISION MODAL */}
-      <Modal
+      <Modal slug="approvals-decision-modal"
         open={!!activeItem && canApproveBudgets}
         onClose={() => setActiveItem(null)}
         size="md"
@@ -399,7 +399,7 @@ export const AdminApprovals: React.FC = () => {
           </>
         )}
       >
-            <form id="approval-decision-form" onSubmit={handleDecisionSubmit} className="space-y-4 text-xs font-sans">
+            <form id="approval-decision-form" data-ams-feature-slug="approvals-decision-form" onSubmit={handleDecisionSubmit} className="space-y-4 text-xs font-sans">
               <div>
                 <div className="font-semibold text-fg text-sm">{activeItem.title}</div>
                 <div className="text-xs font-sans text-muted mt-0.5">
