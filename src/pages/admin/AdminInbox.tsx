@@ -908,7 +908,7 @@ export const AdminInbox: React.FC = () => {
       {/* 4. MAIN CONTENT VIEW: SPLIT VIEW vs TABLE VIEW */}
       {/* ------------------------------------------------------------- */}
       {viewMode === 'overview' ? (
-        <section data-ams-feature-slug="inbox-overview-workspace" data-ams-slug="inbox-overview-workspace" className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
+        <section data-ams-feature-slug="inbox-overview-workspace" data-ams-slug="inbox-overview-workspace" className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
           <div className="overflow-hidden rounded-card border border-line bg-panel">
             <div className="border-b border-line px-4 py-3.5">
               <div className="flex items-start justify-between gap-3">
@@ -1042,7 +1042,7 @@ export const AdminInbox: React.FC = () => {
                       <p className="mt-0.5 truncate text-[11px] text-muted">{selectedSubmission.type === 'career' ? (selectedSubmission.positionTitle || selectedSubmission.specialty || selectedSubmission.email) : (selectedSubmission.company || selectedSubmission.email)}</p>
                       <p className="mt-1 font-mono text-[9px] text-muted/70">/{getSubmissionSlug(selectedSubmission)}</p>
                     </div>
-                    <button type="button" onClick={() => setSelectedSubmission(null)} className="inline-flex h-8 min-w-8 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel hover:text-fg" aria-label="Clear selected record">×</button>
+                    <button type="button" onClick={() => setSelectedSubmission(null)} className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg p-0 text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label="Clear selected record" title="Clear selected record"><X size={14} /></button>
                   </div>
                 </div>
 
