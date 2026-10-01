@@ -1193,7 +1193,11 @@ export const AdminInbox: React.FC = () => {
 
                       <p className="text-xs text-success font-sans mt-0.5 font-semibold flex items-center gap-1.5">
                         <Building2 size={12} />
-                        <span>{selectedSubmission.company || selectedSubmission.positionTitle || 'Individual Client'}</span>
+                        <span>
+                          {selectedSubmission.type === 'career'
+                            ? ('Position: ' + (selectedSubmission.positionTitle || selectedSubmission.specialty || 'Role not specified'))
+                            : (selectedSubmission.company || 'Individual Client')}
+                        </span>
                       </p>
                     </div>
                   </div>
@@ -1221,7 +1225,8 @@ export const AdminInbox: React.FC = () => {
                 {/* Primary Action Ribbon (Quick Canned Replies, WA, Email, Convert to CRM) */}
                 <div className="p-4 rounded-card bg-panel border border-line flex flex-wrap items-center justify-between gap-2.5 mb-5">
                   <div className="flex items-center gap-2 flex-wrap">
-                    {/* 1-Click Convert to CRM Lead */}
+                    {activeInboxTab === 'client' ? (
+                                          {/* 1-Click Convert to CRM Lead */}
                     {crmDeals.some(d => (d as any).inquiryId === selectedSubmission.id) ? (
                       <Link
                         to="/admin/crm"
@@ -1240,6 +1245,32 @@ export const AdminInbox: React.FC = () => {
                         <Briefcase size={14} />
                         <span>{language === 'id' ? 'Konversi ke CRM' : 'Convert to CRM'}</span>
                       </button>
+                    )}
+
+
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        {selectedSubmission.resumeUrl && (
+                          <a href={selectedSubmission.resumeUrl} target="_blank" rel="noopener noreferrer" className="h-9 px-3.5 rounded-control bg-info/10 text-info border border-info/30 hover:bg-info/15 text-xs font-sans font-semibold transition-colors flex items-center gap-1.5">
+                            <FileText size={13} />
+                            <span>Resume</span>
+                            <ExternalLink size={11} />
+                          </a>
+                        )}
+                        {selectedSubmission.portfolioUrl && (
+                          <a href={selectedSubmission.portfolioUrl} target="_blank" rel="noopener noreferrer" className="h-9 px-3.5 rounded-control bg-panel text-fg border border-line hover:bg-panel-hover text-xs font-sans font-semibold transition-colors flex items-center gap-1.5">
+                            <Globe size={13} />
+                            <span>Portfolio</span>
+                            <ExternalLink size={11} />
+                          </a>
+                        )}
+                        {selectedSubmission.linkedinUrl && (
+                          <a href={selectedSubmission.linkedinUrl} target="_blank" rel="noopener noreferrer" className="h-9 px-3.5 rounded-control bg-panel text-fg border border-line hover:bg-panel-hover text-xs font-sans font-semibold transition-colors flex items-center gap-1.5">
+                            <span>LinkedIn</span>
+                            <ExternalLink size={11} />
+                          </a>
+                        )}
+                      </div>
                     )}
 
                     {/* Quick Canned Response Template Picker */}
@@ -1291,7 +1322,9 @@ export const AdminInbox: React.FC = () => {
                         : 'text-muted border-transparent hover:text-fg'
                     }`}
                   >
-                    {language === 'id' ? 'Detail Brief & Kontak' : 'Brief & Contact Specs'}
+                    {selectedSubmission.type === 'career'
+                      ? (language === 'id' ? 'Detail Lamaran' : 'Application Details')
+                      : (language === 'id' ? 'Detail Brief & Kontak' : 'Brief & Contact Specs')}
                   </button>
 
                   <button
@@ -1366,7 +1399,9 @@ export const AdminInbox: React.FC = () => {
                       <div className="p-4 rounded-card bg-panel border border-line">
                         <div className="flex items-center gap-2 text-xs font-sans text-muted mb-1.5">
                           <Tag size={13} className="text-danger" />
-                          <span>{language === 'id' ? 'Layanan / Spesialisasi' : 'Requested Services'}</span>
+                          <span>{selectedSubmission.type === 'career'
+                            ? (language === 'id' ? 'Posisi / Spesialisasi' : 'Position / Specialty')
+                            : (language === 'id' ? 'Layanan / Spesialisasi' : 'Requested Services')}</span>
                         </div>
                         <div className="flex flex-wrap gap-1.5">
                           {selectedSubmission.services && selectedSubmission.services.length > 0 ? (
@@ -1377,25 +1412,33 @@ export const AdminInbox: React.FC = () => {
                             ))
                           ) : (
                             <span className="text-xs text-fg font-sans">
-                              {selectedSubmission.specialty || selectedSubmission.positionTitle || 'General Consultation'}
+                              {selectedSubmission.type === 'career'
+                                ? (selectedSubmission.specialty || selectedSubmission.positionTitle || 'Specialty not provided')
+                                : (selectedSubmission.specialty || selectedSubmission.positionTitle || 'General Consultation')}
                             </span>
                           )}
                         </div>
                       </div>
 
-                      {/* Budget */}
+                      {/* Budget / Experience */}
                       <div className="p-4 rounded-card bg-panel border border-line">
                         <div className="flex items-center justify-between text-xs font-sans text-muted mb-1">
                           <div className="flex items-center gap-1.5">
-                            <DollarSign size={13} className="text-danger" />
-                            <span>{language === 'id' ? 'Estimasi Anggaran' : 'Budget Bracket'}</span>
+                            {selectedSubmission.type === 'career' ? <Clock size={13} className="text-danger" /> : <DollarSign size={13} className="text-danger" />}
+                            <span>{selectedSubmission.type === 'career'
+                              ? (language === 'id' ? 'Pengalaman' : 'Experience')
+                              : (language === 'id' ? 'Estimasi Anggaran' : 'Budget Bracket')}</span>
                           </div>
                           <span className="text-success font-semibold">
-                            {formatAmount(estimateDealValue(selectedSubmission), currency)}
+                            {selectedSubmission.type === 'career'
+                              ? (selectedSubmission.experienceYears ? selectedSubmission.experienceYears + ' yrs' : '-')
+                              : formatAmount(estimateDealValue(selectedSubmission), currency)}
                           </span>
                         </div>
                         <p className="text-xs font-sans font-semibold text-fg">
-                          {selectedSubmission.budget || selectedSubmission.rateCard || (language === 'id' ? 'Tidak ditentukan' : 'Unspecified')}
+                          {selectedSubmission.type === 'career'
+                            ? (selectedSubmission.availability || selectedSubmission.location || (language === 'id' ? 'Ketersediaan belum ditentukan' : 'Availability not provided'))
+                            : (selectedSubmission.budget || selectedSubmission.rateCard || (language === 'id' ? 'Tidak ditentukan' : 'Unspecified'))}
                         </p>
                       </div>
                     </div>
@@ -1404,7 +1447,9 @@ export const AdminInbox: React.FC = () => {
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <label className="text-xs font-sans text-muted normal-case tracking-normal block font-semibold">
-                          {language === 'id' ? 'Detail Pesan / Brief Klien' : 'Client Brief Statement'}
+                          {selectedSubmission.type === 'career'
+                            ? (language === 'id' ? 'Cover Letter / Pesan Kandidat' : 'Candidate Message / Cover Letter')
+                            : (language === 'id' ? 'Detail Pesan / Brief Klien' : 'Client Brief Statement')}
                         </label>
                         <button
                           onClick={() => handleCopyText(selectedSubmission.message, 'msg')}
@@ -1422,6 +1467,12 @@ export const AdminInbox: React.FC = () => {
                     {/* Metadata Specs */}
                     <div className="p-4 rounded-card bg-panel/50 border border-line text-[11px] font-sans text-muted grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>{language === 'id' ? 'Kanal Sumber:' : 'Intake Source:'} <span className="text-fg">{selectedSubmission.source || 'Website Form'}</span></div>
+                      {selectedSubmission.type === 'career' && selectedSubmission.tools && (
+                        <div>{language === 'id' ? 'Tools:' : 'Tools:'} <span className="text-fg">{selectedSubmission.tools}</span></div>
+                      )}
+                      {selectedSubmission.type === 'career' && selectedSubmission.linkedinUrl && (
+                        <div className="truncate">{language === 'id' ? 'LinkedIn:' : 'LinkedIn:'} <a href={selectedSubmission.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-fg hover:text-accent-text">{selectedSubmission.linkedinUrl}</a></div>
+                      )}
                       <div>{language === 'id' ? 'Waktu Diterima:' : 'Timestamp:'} <span className="text-fg">{new Date(selectedSubmission.createdAt).toLocaleString()}</span></div>
                       {selectedSubmission.userAgent && (
                         <div className="sm:col-span-2 truncate">{language === 'id' ? 'Klien Browser:' : 'User Agent:'} <span className="text-fg">{selectedSubmission.userAgent}</span></div>
@@ -1486,7 +1537,27 @@ export const AdminInbox: React.FC = () => {
                   {/* Status Selector */}
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs font-sans text-muted">Status:</span>
-                    <CustomSelect disabled={isUpdating || !canManageCrm} value={selectedSubmission.status} onChange={(value) => handleStatusChange(selectedSubmission.id, value as ContactSubmission['status'])} options={[{value:'new',label:'New'},{value:'in-review',label:'In Review'},{value:'contacted',label:'Contacted'},{value:'closed',label:'Closed Deal'}]} />
+                    <CustomSelect
+                      disabled={isUpdating || !canManageCrm}
+                      value={selectedSubmission.status}
+                      onChange={(value) => handleStatusChange(selectedSubmission.id, value as ContactSubmission['status'])}
+                      options={activeInboxTab === 'jobs'
+                        ? [
+                            { value: 'new', label: 'New' },
+                            { value: 'screening', label: 'Screening' },
+                            { value: 'shortlisted', label: 'Shortlisted' },
+                            { value: 'interview', label: 'Interview' },
+                            { value: 'hired', label: 'Hired' },
+                            { value: 'rejected', label: 'Rejected' },
+                            { value: 'withdrawn', label: 'Withdrawn' }
+                          ]
+                        : [
+                            { value: 'new', label: 'New' },
+                            { value: 'in-review', label: 'In Review' },
+                            { value: 'contacted', label: 'Contacted' },
+                            { value: 'closed', label: 'Closed Deal' }
+                          ]}
+                    />
                   </div>
 
                   {/* Priority Selector */}
