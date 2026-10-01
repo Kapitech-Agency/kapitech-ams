@@ -39,6 +39,7 @@ import { hasAdminPermission } from '../../lib/adminAuth';
 import { api } from '../../lib/apiClient';
 import { AdminMetricCard, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination, AdminStatusBadge } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
+import { isSlugFixtureMode } from '../../lib/runtimeMode';
 
 
 type SortKey = 'updated' | 'due' | 'oldest' | 'amount_high' | 'amount_low' | 'invoice';
@@ -871,7 +872,7 @@ export const AdminInvoicing: React.FC = () => {
     }
   }, []);
 
-  const slugDataMode = !import.meta.env.PROD || import.meta.env.VITE_AB_TEST_DATA === 'true';
+  const slugDataMode = isSlugFixtureMode();
 
   const loadData = async (silent = false) => {
     const requestId = ++loadRequestId.current;
