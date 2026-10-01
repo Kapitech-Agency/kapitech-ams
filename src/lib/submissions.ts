@@ -2,6 +2,7 @@ import { api } from './apiClient';
 
 export interface ContactSubmission {
   id: string;
+  slug?: string;
   fullName: string;
   email: string;
   company?: string;
@@ -33,6 +34,29 @@ export interface ContactSubmission {
 
 let submissionsCache: ContactSubmission[] | null = null;
 const SUBMISSION_EVENT = 'kapitech_submission_updated';
+
+const slugifySubmissionPart = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+export const createSubmissionSlug = (submission: Pick<ContactSubmission, 'id' | 'fullName' | 'company' | 'positionTitle' | 'type'>): string => {
+  const scope = submission.type === 'career' ? 'job-application' : 'client-inquiry';
+  const subject = submission.type === 'career'
+    ? submission.positionTitle || submission.fullName
+    : submission.company || submission.fullName;
+  return [scope, slugifySubmissionPart(subject || 'inbox-record'), slugifySubmissionPart(submission.id)].filter(Boolean).join('-');
+};
+
+export const getSubmissionSlug = (submission: ContactSubmission): string =>
+  submission.slug?.trim() || createSubmissionSlug(submission);
+
+export const normalizeContactSubmission = (submission: ContactSubmission): ContactSubmission => ({
+  ...submission,
+  slug: getSubmissionSlug(submission)
+});
 
 export const DEFAULT_INBOX_SUBMISSIONS: ContactSubmission[] = [
   {
@@ -199,11 +223,11 @@ export const DEFAULT_INBOX_SUBMISSIONS: ContactSubmission[] = [
 
 // Helper to get local stored submissions
 export const getLocalSubmissions = (): ContactSubmission[] => {
-  return submissionsCache || (submissionsCache = (import.meta.env.PROD ? [] : DEFAULT_INBOX_SUBMISSIONS));
+  return submissionsCache || (submissionsCache = (import.meta.env.PROD ? [] : DEFAULT_INBOX_SUBMISSIONS).map(normalizeContactSubmission));
 };
 
 const saveLocalSubmissions = (items: ContactSubmission[]) => {
-  submissionsCache = items.slice(0, 200);
+  submissionsCache = items.slice(0, 200).map(normalizeContactSubmission);
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(SUBMISSION_EVENT, { detail: submissionsCache }));
   }
@@ -223,13 +247,13 @@ export const submitToInbox = async (data: Omit<ContactSubmission, 'id' | 'create
     throw new Error(result.error || 'Lead submission failed.');
   }
 
-  const record: ContactSubmission = {
+  const record: ContactSubmission = normalizeContactSubmission({
     id: result.data.id,
     status: 'new',
     createdAt: nowIso,
     userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
     ...data
-  };
+  });
 
   const existing = getLocalSubmissions();
   saveLocalSubmissions([record, ...existing.filter((item) => item.id !== record.id)].slice(0, 200));
@@ -285,10 +309,10 @@ export const subscribeToInbox = (onUpdate: (submissions: ContactSubmission[]) =>
       const res = await api.leads.getAll();
       if (!res.success || !Array.isArray(res.data?.leads)) return;
 
-      const serverLeads = res.data.leads;
+      const serverLeads = (res.data.leads as ContactSubmission[]).map(normalizeContactSubmission);
       const mergedMap = new Map<string, ContactSubmission>();
 
-      localCache.forEach((lead) => mergedMap.set(lead.id, lead));
+      localCache.map(normalizeContactSubmission).forEach((lead) => mergedMap.set(lead.id, lead));
       serverLeads.forEach((lead) => mergedMap.set(lead.id, lead));
 
       const combined = Array.from(mergedMap.values()).sort((a, b) =>
