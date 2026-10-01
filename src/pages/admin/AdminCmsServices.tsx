@@ -578,9 +578,10 @@ export const AdminCmsServices: React.FC = () => {
       <Drawer slug="cms-service-editor-drawer"
         open={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        size="lg"
-        title="Add New Agency Service Offering"
-        description="Publish a new technical capability or SEO service package into the agency catalog."
+        size="xl"
+        dialogClassName="border-l border-line bg-panel"
+        title="Add agency service"
+        description="Create a service entry for the public agency catalog."
         footer={(
           <>
             <Button type="button" variant="secondary" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
@@ -588,7 +589,7 @@ export const AdminCmsServices: React.FC = () => {
           </>
         )}
       >
-            <form id="service-form" data-ams-feature-slug="cms-service-form" data-ams-slug="cms-service-form" onSubmit={handleCreateService} className="space-y-4 text-xs font-sans">
+            <form id="service-form" data-ams-feature-slug="cms-service-form" data-ams-slug="cms-service-form" onSubmit={handleCreateService} className="space-y-5 text-xs font-sans">
               <div>
                 <label className="block text-muted mb-1 font-medium">Service Title *</label>
                 <input
@@ -600,11 +601,11 @@ export const AdminCmsServices: React.FC = () => {
                     setNewSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '-'));
                   }}
                   placeholder="e.g. Enterprise SEO & Core Web Vitals"
-                  className="w-full px-3 py-2.5 rounded-control bg-panel border border-line text-fg focus:outline-none focus:border-accent min-h-10"
+                  className="ams-control w-full text-xs"
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="block text-muted mb-1 font-medium">URL Slug *</label>
                   <input
@@ -613,7 +614,7 @@ export const AdminCmsServices: React.FC = () => {
                     value={newSlug}
                     onChange={(e) => setNewSlug(e.target.value)}
                     placeholder="e.g. enterprise-seo"
-                    className="w-full px-3 py-2 rounded-card bg-panel border border-line text-fg font-sans text-[11px] focus:outline-none focus:border-accent"
+                    className="ams-control w-full text-xs font-mono"
                   />
                 </div>
                 <div>
@@ -629,7 +630,7 @@ export const AdminCmsServices: React.FC = () => {
                   value={newHeadline}
                   onChange={(e) => setNewHeadline(e.target.value)}
                   placeholder="e.g. High-Impact Technical SEO for Scaling Ventures"
-                  className="w-full px-3 py-2.5 rounded-control bg-panel border border-line text-fg focus:outline-none focus:border-accent min-h-10"
+                  className="ams-control w-full text-xs"
                 />
               </div>
 
@@ -640,7 +641,7 @@ export const AdminCmsServices: React.FC = () => {
                   value={newSubtitle}
                   onChange={(e) => setNewSubtitle(e.target.value)}
                   placeholder="Explain client value proposition, measurable KPI improvements, and SLA guarantee..."
-                  className="w-full px-3 py-2.5 rounded-control bg-panel border border-line text-fg focus:outline-none focus:border-accent min-h-10"
+                  className="ams-control w-full text-xs"
                 />
               </div>
 
@@ -653,7 +654,7 @@ export const AdminCmsServices: React.FC = () => {
                     value={newCapability}
                     onChange={(e) => setNewCapability(e.target.value)}
                     placeholder="Add deliverable point..."
-                    className="flex-1 px-3 py-1.5 rounded-card bg-panel border border-line text-fg text-xs focus:outline-none focus:border-accent"
+                    className="ams-control flex-1 text-xs"
                   />
                   <button
                     type="button"
