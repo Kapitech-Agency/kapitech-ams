@@ -2705,7 +2705,7 @@ export const AdminInvoicing: React.FC = () => {
         <div className="space-y-5">
           <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Total quotations" value={quotationMetrics.total} context="All records" sparkline={[quotationMetrics.total, quotationMetrics.active, quotationMetrics.accepted, quotationMetrics.expiring]} icon={<FileText size={15}/>}/><FinanceMetricCard label="Active pipeline" value={quotationMetrics.active} context="Draft through sent" sparkline={[quotationMetrics.total, quotationMetrics.active, quotationMetrics.accepted, quotationMetrics.expiring]} icon={<Clock3 size={15}/>}/><FinanceMetricCard label="Pipeline value" value={formatFinanceCardAmount(quotationMetrics.value,currency)} context={usingDemoQuotations?'Demo workspace data':'Server-backed records'} sparkline={filteredQuotations.length ? filteredQuotations.slice(0, 8).map((quotation) => quotation.total) : [quotationMetrics.value]} icon={<WalletCards size={15} />}/><FinanceMetricCard label="Accepted" value={quotationMetrics.accepted} context={quotationMetrics.approved+' approved ready to convert'} sparkline={[quotationMetrics.active, quotationMetrics.approved, quotationMetrics.accepted]} icon={<CheckCircle2 size={15} className="text-success"/>} toneClassName="text-success"/></section>
           <section className="space-y-5">
-            <section className="rounded-card border border-line bg-panel overflow-hidden">
+            <section data-ams-feature-slug="finance-records-section" data-ams-slug="finance-records-section" className="rounded-card border border-line bg-panel overflow-hidden">
   <div className="border-b border-line bg-panel p-4 sm:px-5">
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
@@ -2802,7 +2802,7 @@ export const AdminInvoicing: React.FC = () => {
       ) : financeView === 'income-expenses' ? (
         <div className="space-y-5">
           <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Income YTD" value={formatFinanceCardAmount(ytdCollected,currency)} context={ytdCollectionRate.toFixed(1)+'% collected vs issued'} sparkline={financeChartData.map((point) => point.inflow)} icon={<WalletCards size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Invoiced YTD" value={formatFinanceCardAmount(ytdInvoiced,currency)} context="Issued billings" sparkline={financeChartData.map((point) => point.inflow + point.retainerTarget)} icon={<Receipt size={15}/>}/><FinanceMetricCard label="Expenses YTD" value={formatFinanceCardAmount(ytdExpenses,currency)} context={currencyExpenses.length+' expense records'} sparkline={financeChartData.map((point) => point.outflow)} icon={<ArrowDown size={15}/>}/><FinanceMetricCard label="Net cash YTD" value={formatFinanceCardAmount(ytdNetCash,currency)} context="Collected less expenses" sparkline={financeChartData.map((point) => point.net)} icon={<TrendingUp size={15}/>} toneClassName={ytdNetCash>=0?'text-success':'text-danger'}/></section>
-          <section className="rounded-card border border-line bg-panel overflow-hidden" aria-label="Income and expenses ledger">
+          <section data-ams-feature-slug="finance-income-expenses-ledger" data-ams-slug="finance-income-expenses-ledger" className="rounded-card border border-line bg-panel overflow-hidden" aria-label="Income and expenses ledger">
   <header className="border-b border-line bg-panel p-4 sm:px-5">
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
@@ -2918,7 +2918,7 @@ export const AdminInvoicing: React.FC = () => {
             <FinanceMetricCard label="Outstanding" value={formatFinanceCardAmount(vendorPaymentMetrics.outstanding, currency)} context="Remaining obligations" icon={<WalletCards size={15} className="text-warning"/>} toneClassName="text-warning" />
           </section>
 
-          <section className="rounded-card border border-line bg-panel overflow-hidden" aria-label="Vendor payments ledger">
+          <section data-ams-feature-slug="finance-vendor-payments-ledger" data-ams-slug="finance-vendor-payments-ledger" className="rounded-card border border-line bg-panel overflow-hidden" aria-label="Vendor payments ledger">
             <header className="border-b border-line bg-panel p-4 sm:px-5">
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
@@ -3480,7 +3480,7 @@ export const AdminInvoicing: React.FC = () => {
           </>
         }
       >
-        <form id="finance-quotation-form" onSubmit={saveQuotation} className="space-y-5">
+        <form id="finance-quotation-form" data-ams-feature-slug="finance-quotation-form" data-ams-slug="finance-quotation-form" onSubmit={saveQuotation} className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <label htmlFor="finance-quotation-title" className="mb-1.5 block text-xs font-medium text-muted">Quotation title *</label>
@@ -3656,7 +3656,7 @@ export const AdminInvoicing: React.FC = () => {
           </>
         }
       >
-        <form id="vendor-payment-form" onSubmit={handleSaveVendorPayment} className="space-y-5">
+        <form id="vendor-payment-form" data-ams-feature-slug="finance-vendor-payment-form" data-ams-slug="finance-vendor-payment-form" onSubmit={handleSaveVendorPayment} className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1.5 block text-xs font-medium text-muted">Vendor *</label>
@@ -3777,7 +3777,7 @@ export const AdminInvoicing: React.FC = () => {
           </>
         }
       >
-        <form id="finance-invoice-form" onSubmit={handleSaveInvoice} onChange={() => setInvoiceDirty(true)} className="space-y-5">
+        <form id="finance-invoice-form" data-ams-feature-slug="finance-invoice-form" data-ams-slug="finance-invoice-form" onSubmit={handleSaveInvoice} onChange={() => setInvoiceDirty(true)} className="space-y-5">
           {invoiceBillingLocked && (
             <div className="flex items-start gap-3 rounded-card border border-warning/30 bg-warning/10 px-5 py-3 text-xs text-fg" role="note">
               <ShieldCheck size={15} className="mt-0.5 shrink-0 text-warning" />
@@ -3921,7 +3921,7 @@ export const AdminInvoicing: React.FC = () => {
           </>
         }
       >
-        <form id="finance-expense-form" onSubmit={handleSaveExpense} onChange={() => setExpenseDirty(true)} className="space-y-4">
+        <form id="finance-expense-form" data-ams-feature-slug="finance-expense-form" data-ams-slug="finance-expense-form" onSubmit={handleSaveExpense} onChange={() => setExpenseDirty(true)} className="space-y-4">
           <div>
             <div className="flex items-center justify-between gap-3">
               <span className="mb-1.5 block text-xs font-medium text-muted">Type</span>
@@ -3999,7 +3999,7 @@ export const AdminInvoicing: React.FC = () => {
         }
       >
         {paymentInvoice && (
-          <form id="finance-payment-form" onSubmit={handlePayment} onChange={() => setPaymentDirty(true)} className="space-y-4">
+          <form id="finance-payment-form" data-ams-feature-slug="finance-payment-form" data-ams-slug="finance-payment-form" onSubmit={handlePayment} onChange={() => setPaymentDirty(true)} className="space-y-4">
             <div className="rounded-card border border-line bg-bg p-4">
               <div className="flex justify-between gap-3 text-xs"><span className="text-muted">Invoice total</span><span className="tabular-nums text-fg">{formatNativeAmount(paymentInvoice.total, paymentInvoice.currency)}</span></div>
               <div className="mt-2 flex justify-between gap-3 text-xs"><span className="text-muted">Already paid</span><span className="tabular-nums text-success">{formatNativeAmount(paymentInvoice.amountPaid || 0, paymentInvoice.currency)}</span></div>
