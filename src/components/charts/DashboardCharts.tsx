@@ -41,56 +41,44 @@ const chartPoint = (index: number, count: number, width: number, left: number, r
 
 type ChartCoordinate = { x: number; y: number };
 
-const smoothLinePath = (points: ChartCoordinate[]) => {
+const smoothLinePath = (points: ChartCoordinate[], tension = 0.82) => {
   if (!points.length) return '';
   if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
   if (points.length === 2) {
-    return `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y}`;
+    return `M ${points[0].x} ${points[0].y} C ${points[0].x} ${points[0].y}, ${points[1].x} ${points[1].y}, ${points[1].x} ${points[1].y}`;
   }
 
-  const distances = points.slice(1).map((point, index) => Math.max(1, point.x - points[index].x));
-  const slopes = points.slice(0, -1).map((point, index) => {
-    const next = points[index + 1];
-    return (next.y - point.y) / distances[index];
-  });
-
-  const tangents = new Array<number>(points.length);
-  tangents[0] = slopes[0];
-  tangents[points.length - 1] = slopes[slopes.length - 1];
-
-  for (let index = 1; index < points.length - 1; index += 1) {
-    const previousSlope = slopes[index - 1];
-    const nextSlope = slopes[index];
-
-    if (previousSlope === 0 || nextSlope === 0 || Math.sign(previousSlope) !== Math.sign(nextSlope)) {
-      tangents[index] = 0;
-    } else {
-      const w1 = 2 * distances[index] + distances[index - 1];
-      const w2 = distances[index] + 2 * distances[index - 1];
-      tangents[index] = (w1 + w2) / (w1 / previousSlope + w2 / nextSlope);
-    }
-  }
-
-  const clampTangent = (tangent: number, index: number) => {
-    const slope = slopes[Math.min(index, slopes.length - 1)];
-    if (slope === 0 || !Number.isFinite(tangent)) return 0;
-    const limit = Math.abs(slope) * 3;
-    return Math.max(-limit, Math.min(limit, tangent));
+  const get = (index: number) => points[Math.max(0, Math.min(points.length - 1, index))];
+  const clampY = (value: number, a: number, b: number) => {
+    const min = Math.min(a, b);
+    const max = Math.max(a, b);
+    return Math.max(min, Math.min(max, value));
   };
 
   return points.slice(0, -1).reduce((path, point, index) => {
+    const previous = get(index - 1);
     const next = points[index + 1];
-    const dx = (next.x - point.x) / 3;
-    const cp1 = {
-      x: point.x + dx,
-      y: point.y + clampTangent(tangents[index], index) * dx,
+    const afterNext = get(index + 2);
+    const dx = next.x - point.x;
+
+    const control1 = {
+      x: point.x + dx * 0.34,
+      y: clampY(
+        point.y + (next.y - previous.y) * (tension / 6),
+        point.y,
+        next.y
+      ),
     };
-    const cp2 = {
-      x: next.x - dx,
-      y: next.y - clampTangent(tangents[index + 1], index) * dx,
+    const control2 = {
+      x: next.x - dx * 0.34,
+      y: clampY(
+        next.y - (afterNext.y - point.y) * (tension / 6),
+        point.y,
+        next.y
+      ),
     };
 
-    return `${path} C ${cp1.x.toFixed(2)} ${cp1.y.toFixed(2)}, ${cp2.x.toFixed(2)} ${cp2.y.toFixed(2)}, ${next.x.toFixed(2)} ${next.y.toFixed(2)}`;
+    return `${path} C ${control1.x.toFixed(2)} ${control1.y.toFixed(2)}, ${control2.x.toFixed(2)} ${control2.y.toFixed(2)}, ${next.x.toFixed(2)} ${next.y.toFixed(2)}`;
   }, `M ${points[0].x} ${points[0].y}`);
 };
 
@@ -179,6 +167,7 @@ export const TrendChart: React.FC<{
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
     setDragging(false);
+    updateHover(event.clientX, event.currentTarget);
   };
 
   const active = hover ? points[hover.index] : null;
@@ -194,7 +183,7 @@ export const TrendChart: React.FC<{
       <div
         className={[
           'relative h-[250px] w-full overflow-hidden rounded-card border border-line/80 bg-bg/30 sm:h-[280px] lg:h-[320px]',
-          dragging ? 'cursor-grabbing select-none' : 'cursor-crosshair',
+          dragging ? 'cursor-grabbing select-none' : 'cursor-grab',
         ].join(' ')}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
@@ -203,7 +192,7 @@ export const TrendChart: React.FC<{
         onPointerLeave={() => {
           if (!dragging) setHover(null);
         }}
-        style={{ touchAction: 'pan-y' }}
+        style={{ touchAction: 'none' }}
       >
         <svg
           viewBox={`0 0 ${width} ${height}`}
@@ -231,12 +220,12 @@ export const TrendChart: React.FC<{
           })}
 
           <path d={primaryAreaPath} fill={`url(#${gradientId})`} />
-          <path d={primaryPath} fill="none" stroke="var(--series-1)" strokeWidth="2.7" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+          <path d={primaryPath} fill="none" stroke="var(--series-1)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
           {secondaryLabel && secondaryPath && (
-            <path d={secondaryPath} fill="none" stroke="var(--series-3)" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" opacity="0.9" />
+            <path d={secondaryPath} fill="none" stroke="var(--series-3)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" opacity="0.82" />
           )}
           {tertiaryPath && (
-            <path d={tertiaryPath} fill="none" stroke="var(--success)" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" opacity="0.86" />
+            <path d={tertiaryPath} fill="none" stroke="var(--success)" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" opacity="0.78" />
           )}
 
           {hover && (
