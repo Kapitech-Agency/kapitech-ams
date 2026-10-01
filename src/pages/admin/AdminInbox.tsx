@@ -929,7 +929,24 @@ export const AdminInbox: React.FC = () => {
             ].map((stage)=>{
               const count=activeTabItems.filter((item)=>item.status===stage.key).length;
               const value=activeTabItems.filter((item)=>item.status===stage.key).reduce((sum,item)=>sum+estimateDealValue(item),0);
-              return <button type="button" key={stage.key} onClick={()=>setFilterStatus(filterStatus===stage.key?'all':stage.key)} className={'rounded-control border p-3 text-left transition-colors '+(filterStatus===stage.key?'border-accent/30 bg-accent/10':'border-line bg-bg hover:bg-panel')}><div className="flex items-center justify-between gap-2"><span className="text-[10px] text-muted">{stage.label}</span><span className="text-sm font-medium tabular-nums text-fg">{count}</span></div><p className="mt-2 truncate text-[11px] font-medium tabular-nums text-fg">{formatAmount(value,currency)}</p></button>;
+              const active = filterStatus === stage.key;
+              return <button
+                type="button"
+                key={stage.key}
+                onClick={() => setFilterStatus(active ? 'all' : stage.key)}
+                aria-pressed={active}
+                className={'group rounded-card border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (
+                  active
+                    ? 'border-accent/25 bg-accent/10'
+                    : 'border-line bg-bg hover:border-muted hover:bg-panel'
+                )}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className={'text-[10px] font-medium ' + (active ? 'text-fg' : 'text-muted')}>{stage.label}</span>
+                  <span className={'rounded-badge border px-1.5 py-0.5 text-[10px] font-medium tabular-nums ' + (active ? 'border-accent/20 bg-bg text-fg' : 'border-line bg-panel text-muted')}>{count}</span>
+                </div>
+                <p className={'mt-2 truncate text-[11px] font-medium tabular-nums ' + (active ? 'text-fg' : 'text-muted')}>{formatAmount(value, currency)}</p>
+              </button>;
             })}
           </div>
         </section>
