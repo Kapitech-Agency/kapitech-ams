@@ -271,6 +271,7 @@ export const AdminSettings: React.FC = () => {
   const [mfaDisablePassword, setMfaDisablePassword] = useState('');
   const [mfaDisableCode, setMfaDisableCode] = useState('');
   const [mfaRecoveryCodes, setMfaRecoveryCodes] = useState<string[] | null>(null);
+  const [mfaRecoverySaved, setMfaRecoverySaved] = useState(false);
   const [mfaLoading, setMfaLoading] = useState(false);
   const [mfaMessage, setMfaMessage] = useState<{ success: boolean; text: string } | null>(null);
 
@@ -300,6 +301,7 @@ export const AdminSettings: React.FC = () => {
       });
       setMfaSetupCode('');
       setMfaRecoveryCodes(null);
+      setMfaRecoverySaved(false);
       setMfaMode('setup');
     } catch (error) {
       setMfaMessage({
@@ -328,6 +330,7 @@ export const AdminSettings: React.FC = () => {
       }
       setMfaEnabled(true);
       setMfaRecoveryCodes(Array.isArray(res.data.mfaRecoveryCodes) ? res.data.mfaRecoveryCodes : []);
+      setMfaRecoverySaved(false);
       setMfaMode('idle');
       setMfaSetupCode('');
       setMfaMessage({ success: true, text: 'MFA is enabled. Save the recovery codes before leaving this page.' });
@@ -1256,6 +1259,25 @@ export const AdminSettings: React.FC = () => {
                       {mfaRecoveryCodes.map((code) => (
                         <code key={code} className="rounded-control border border-line bg-bg px-3 py-2 text-center font-mono text-[11px] text-fg">{code}</code>
                       ))}
+                    </div>
+                    <div className="mt-3 flex flex-col gap-3 border-t border-warning/20 pt-3 sm:flex-row sm:items-center sm:justify-between">
+                      <label className="flex items-start gap-2 text-[10px] text-muted">
+                        <input
+                          type="checkbox"
+                          checked={mfaRecoverySaved}
+                          onChange={(event) => setMfaRecoverySaved(event.target.checked)}
+                          className="mt-0.5 accent-accent"
+                        />
+                        <span>I saved these recovery codes somewhere secure.</span>
+                      </label>
+                      <button
+                        type="button"
+                        disabled={!mfaRecoverySaved}
+                        onClick={() => setMfaRecoveryCodes(null)}
+                        className="inline-flex min-h-9 items-center justify-center rounded-control border border-line bg-panel px-3 text-[10px] font-medium text-muted hover:bg-bg hover:text-fg disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Done
+                      </button>
                     </div>
                   </div>
                 )}
