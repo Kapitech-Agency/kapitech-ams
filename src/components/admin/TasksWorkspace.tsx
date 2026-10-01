@@ -331,7 +331,7 @@ export const TasksWorkspace: React.FC = () => {
   }, []);
 
   const projectOptions = useMemo(
-    () => Array.from(new Map(records.map(task => [task.projectId, task.projectName])).entries()).sort((a, b) => a[1].localeCompare(b[1])),
+    () => Array.from(new Map<string, string>(records.map(task => [task.projectId, task.projectName])).entries()).sort((a, b) => a[1].localeCompare(b[1])),
     [records]
   );
 
