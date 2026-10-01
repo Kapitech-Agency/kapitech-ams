@@ -1,7 +1,7 @@
 import React from 'react';
 import { ArrowLeft, ShieldAlert } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getAdminSession } from '../../lib/adminAuth';
+import { getAdminSession, isMasterAdministrator } from '../../lib/adminAuth';
 import { useRbacRole } from '../../lib/rbacEngine';
 
 interface RequireModuleAccessProps {
@@ -23,6 +23,7 @@ export const RequireModuleAccess: React.FC<RequireModuleAccessProps> = ({
     session?.user?.permissions
   );
 
+  if (session?.user && isMasterAdministrator(session.user)) return <>{children}</>;
   if (isAllowed(moduleKey)) return <>{children}</>;
 
   return (
