@@ -278,7 +278,7 @@ export const AdminCmsProjects: React.FC = () => {
           onConfirm={() => void confirmDeleteProject()}
         />
       
-      <AdminModuleHeader
+      <AdminModuleHeader slug="cms-projects-header"
         icon={<Layers size={20} />}
         className="mb-0"
         title={t('admin.nav.cmsProjects')}
@@ -394,7 +394,7 @@ export const AdminCmsProjects: React.FC = () => {
       </div>
 
       {/* Projects Grid with Drag-to-scroll support */}
-      {isLoading ? (
+      <div data-ams-feature-slug="cms-projects-directory" data-ams-slug="cms-projects-directory">\n      {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4" role="status" aria-label="Loading case studies">
           {[1, 2, 3, 4, 5, 6].map((item) => (
             <div key={item} className="overflow-hidden rounded-card border border-line bg-panel">
@@ -534,7 +534,7 @@ export const AdminCmsProjects: React.FC = () => {
         </div>
       )}
       {/* MODAL: ADD / EDIT PROJECT WITH LIVE PREVIEW & DRAG & DROP */}
-      <Drawer
+      <Drawer slug="cms-project-editor-drawer"
         open={isModalOpen && !!editingProject}
         onClose={() => setIsModalOpen(false)}
         size="xl"
@@ -619,7 +619,7 @@ export const AdminCmsProjects: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <form id="case-study-form" onSubmit={handleSaveModal} className="space-y-4">
+              <form id="case-study-form" data-ams-feature-slug="cms-project-form" data-ams-slug="cms-project-form" onSubmit={handleSaveModal} className="space-y-4">
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
