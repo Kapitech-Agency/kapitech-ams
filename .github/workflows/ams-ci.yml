@@ -1,6 +1,8 @@
 name: AMS CI
 
 on:
+  push:
+  pull_request:
   workflow_dispatch:
 
 jobs:
@@ -115,5 +117,3 @@ jobs:
           test "$readiness_status" = "403"
           node -e "const fs=require('fs'); const x=JSON.parse(fs.readFileSync('/tmp/readiness-auth.json','utf8')); if(x.code!=='MFA_REQUIRED') process.exit(1)"
           kill $PID
-
-# CI trigger: keep workflow execution explicit on main.
