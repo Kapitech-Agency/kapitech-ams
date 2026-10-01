@@ -170,7 +170,6 @@ export const AdminClientSlaMonitoring: React.FC = () => {
       </section>
 
       <AdminFilterBar slug="client-sla-filters"
-        slug="client-sla-filters"
         searchValue={query}
         onSearchChange={setQuery}
         searchPlaceholder="Search account, pod, incident, or SLA ID..."
