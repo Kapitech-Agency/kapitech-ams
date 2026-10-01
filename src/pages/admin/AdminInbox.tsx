@@ -1421,6 +1421,32 @@ export const AdminInbox: React.FC = () => {
                   </div>
                 );
               })}
+            {filteredItems.length === 0 && (
+              <div className="flex min-h-[360px] flex-col items-center justify-center rounded-card border border-line bg-panel p-8 text-center">
+                <div className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-bg text-muted">
+                  <Inbox size={18} />
+                </div>
+                <p className="mt-3 text-xs font-medium text-fg">
+                  {searchQuery || filterStatus !== 'all' || filterPriority !== 'all' ? 'No matching client inquiries' : 'No client inquiries yet'}
+                </p>
+                <p className="mt-1 max-w-xs text-[10px] leading-4 text-muted">
+                  {searchQuery || filterStatus !== 'all' || filterPriority !== 'all' ? 'Adjust the filters to see other client records.' : 'New client inquiries will appear here when they arrive.'}
+                </p>
+                {(searchQuery || filterStatus !== 'all' || filterPriority !== 'all') && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setFilterStatus('all');
+                      setFilterPriority('all');
+                    }}
+                    className="mt-3 inline-flex min-h-8 items-center rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-fg hover:bg-panel"
+                  >
+                    Reset filters
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Right: Message Reader & Command Hub Pane */}
