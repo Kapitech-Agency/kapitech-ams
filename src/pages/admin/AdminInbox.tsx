@@ -161,6 +161,9 @@ export const AdminInbox: React.FC = () => {
     }
   }, [activeInboxTab, submissions]);
 
+  type TriageScope = 'action' | 'priority' | 'saved';
+  const [triageScope, setTriageScope] = useState<TriageScope>('action');
+
   const isMixedInboxTab = activeInboxTab === 'overview' || activeInboxTab === 'starred';
   const inboxStatusOptions = activeInboxTab === 'jobs'
     ? [
@@ -856,17 +859,321 @@ export const AdminInbox: React.FC = () => {
       {/* 4. MAIN CONTENT VIEW: SPLIT VIEW vs TABLE VIEW */}
       {/* ------------------------------------------------------------- */}
       {viewMode === 'overview' ? (
-        <section data-ams-feature-slug="inbox-overview-workspace" data-ams-slug="inbox-overview-workspace" className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
-          <div className="rounded-card border border-line bg-panel overflow-hidden">
-            <div className="border-b border-line px-4 py-3.5 flex items-center justify-between gap-3"><div><h3 className="text-sm font-semibold text-fg">Triage queue</h3><p className="mt-0.5 text-[11px] text-muted">Records requiring attention or intentionally saved for follow-up.</p></div><span className="text-[11px] tabular-nums text-muted">{filteredItems.length} visible</span></div>
+        <section data-ams-feature-slug="inbox-overview-workspace" data-ams-slug="inbox-overview-workspace" className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.55fr)]">
+          <div className="overflow-hidden rounded-card border border-line bg-panel">
+            <div className="border-b border-line px-4 py-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-fg">Triage queue</h3>
+                    <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-muted">
+                      {filteredItems.filter((item) => item.status === 'new' || item.priority === 'urgent' || item.priority === 'high' || item.starred).length}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[11px] leading-5 text-muted">Review the next inbound records that need a decision, response, or intentional follow-up.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('split')}
+                  className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-fg hover:bg-panel"
+                >
+                  <Inbox size={13} />
+                  Open full inbox
+                </button>
+              </div>
+
+              <div className="mt-4 flex items-center gap-1.5 overflow-x-auto pb-0.5 custom-scrollbar">
+                {[
+                  { key: 'action' as TriageScope, label: 'Needs action', count: filteredItems.filter((item) => item.status === 'new').length },
+                  { key: 'priority' as TriageScope, label: 'Priority', count: filteredItems.filter((item) => item.priority === 'urgent' || item.priority === 'high').length },
+                  { key: 'saved' as TriageScope, label: 'Saved', count: filteredItems.filter((item) => !!item.starred).length }
+                ].map((scope) => (
+                  <button
+                    type="button"
+                    key={scope.key}
+                    onClick={() => setTriageScope(scope.key)}
+                    className={
+                      'inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-chip border px-2.5 text-[10px] font-medium transition-colors ' +
+                      (triageScope === scope.key
+                        ? 'border-accent/30 bg-accent/10 text-accent-text'
+                        : 'border-line bg-bg text-muted hover:text-fg')
+                    }
+                  >
+                    <span>{scope.label}</span>
+                    <span className="tabular-nums">{scope.count}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="divide-y divide-line">
-              {filteredItems.filter((item)=>item.status==='new'||item.priority==='urgent'||item.starred).slice(0,8).map((item)=><button type="button" key={item.id} onClick={()=>{handleSelectSubmission(item);setViewMode('split');}} className="w-full px-4 py-3 text-left hover:bg-panel-hover transition-colors"><div className="flex items-start gap-3"><div className="min-w-0 flex-1"><div className="flex items-center gap-1.5 flex-wrap">{renderChannelBadge(item.type)}{renderStatusBadge(item.status)}{renderPriorityBadge(item.priority)}</div><div className="mt-1.5 flex items-center justify-between gap-3"><div className="min-w-0"><p className="truncate text-xs font-semibold text-fg">{item.fullName||'Anonymous'}</p><p className="truncate text-[11px] text-muted">{item.type==='career'?(item.positionTitle||item.specialty||item.email):(item.company||item.email)}</p></div><span className="shrink-0 text-[10px] tabular-nums text-muted">{formatRelativeTime(item.createdAt)}</span></div></div><ChevronRight size={14} className="mt-1 shrink-0 text-muted"/></div></button>)}
-              {filteredItems.filter((item)=>item.status==='new'||item.priority==='urgent'||item.starred).length===0&&<div className="p-12 text-center"><Check size={20} className="mx-auto mb-2 text-success"/><p className="text-xs font-medium text-fg">No urgent triage records.</p><p className="mt-1 text-[11px] text-muted">Your intake queue is clear.</p></div>}
+              {(() => {
+                const scopeItems = filteredItems
+                  .filter((item) =>
+                    triageScope === 'action'
+                      ? item.status === 'new'
+                      : triageScope === 'priority'
+                        ? item.priority === 'urgent' || item.priority === 'high'
+                        : !!item.starred
+                  )
+                  .sort((a, b) => {
+                    const score = (item: ContactSubmission) => {
+                      const statusScore = item.status === 'new' ? 0 : item.status === 'in-review' ? 2 : 4;
+                      const priorityScore = item.priority === 'urgent' ? 0 : item.priority === 'high' ? 1 : item.priority === 'normal' ? 2 : 3;
+                      const savedScore = item.starred ? 0 : 1;
+                      return triageScope === 'action'
+                        ? statusScore * 10 + priorityScore
+                        : triageScope === 'saved'
+                          ? priorityScore * 10 + statusScore + savedScore
+                          : priorityScore * 10 + statusScore;
+                    };
+                    return score(a) - score(b) || new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+                  })
+                  .slice(0, 8);
+
+                if (scopeItems.length === 0) {
+                  return (
+                    <div className="flex min-h-[260px] flex-col items-center justify-center px-6 py-10 text-center">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-card border border-line bg-bg text-muted">
+                        <Check size={18} className="text-success" />
+                      </div>
+                      <p className="mt-3 text-sm font-medium text-fg">
+                        {triageScope === 'action' ? 'No records need action' : triageScope === 'priority' ? 'No priority records' : 'No saved records'}
+                      </p>
+                      <p className="mt-1 max-w-sm text-[11px] leading-5 text-muted">
+                        {triageScope === 'action'
+                          ? 'New inbound records will appear here as soon as they arrive.'
+                          : triageScope === 'priority'
+                            ? 'Urgent and high-priority records are clear.'
+                            : 'Star a record when the team needs to keep it on a follow-up list.'}
+                      </p>
+                    </div>
+                  );
+                }
+
+                return scopeItems.map((item) => {
+                  const isCareer = item.type === 'career';
+                  const nextStatus: ContactSubmission['status'] | null = item.status === 'new'
+                    ? isCareer ? 'screening' : 'in-review'
+                    : null;
+                  const actionLabel = item.status === 'new'
+                    ? isCareer ? 'Start screening' : 'Start review'
+                    : 'Review';
+
+                  return (
+                    <div key={item.id} className="group px-4 py-3.5 transition-colors hover:bg-panel-hover">
+                      <div className="flex items-start gap-3">
+                        <div className={
+                          'mt-0.5 h-9 w-1 shrink-0 rounded-full ' +
+                          (item.priority === 'urgent' ? 'bg-danger' : item.priority === 'high' ? 'bg-warning' : item.status === 'new' ? 'bg-info' : 'bg-line')
+                        } aria-hidden="true" />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-start justify-between gap-3">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleSelectSubmission(item);
+                                setViewMode('split');
+                              }}
+                              className="min-w-0 text-left"
+                            >
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                {renderChannelBadge(item.type)}
+                                {renderPriorityBadge(item.priority)}
+                                {item.starred && <Star size={11} className="fill-warning text-warning" />}
+                              </div>
+                              <div className="mt-1.5 flex items-center gap-2">
+                                <p className="truncate text-xs font-semibold text-fg">{item.fullName || 'Anonymous'}</p>
+                                <span className="hidden truncate text-[10px] text-muted sm:inline">
+                                  {isCareer ? (item.positionTitle || item.specialty || item.email) : (item.company || item.email)}
+                                </span>
+                              </div>
+                            </button>
+                            <div className="shrink-0 text-right">
+                              <p className="text-[10px] tabular-nums text-muted">{formatRelativeTime(item.createdAt)}</p>
+                              <p className="mt-0.5 text-[9px] font-mono text-muted/70">/{getSubmissionSlug(item)}</p>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleSelectSubmission(item);
+                              setViewMode('split');
+                            }}
+                            className="mt-1.5 block max-w-3xl text-left"
+                          >
+                            <p className="line-clamp-2 text-[11px] leading-5 text-muted">
+                              {item.message || (language === 'id' ? 'Tidak ada isi brief.' : 'No brief content provided.')}
+                            </p>
+                          </button>
+
+                          <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-1.5">
+                              {renderStatusBadge(item.status)}
+                              {item.assignedTo && (
+                                <span className="max-w-[170px] truncate rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] text-muted">
+                                  {item.assignedTo}
+                                </span>
+                              )}
+                              {isCareer && item.experienceYears && (
+                                <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] text-muted">
+                                  {item.experienceYears} yrs
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  handleToggleStar(event, item.id, item.starred);
+                                }}
+                                disabled={!canManageCrm}
+                                className="inline-flex min-h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted hover:border-warning/30 hover:bg-warning/10 hover:text-warning disabled:opacity-50"
+                              >
+                                <Star size={11} className={item.starred ? 'fill-warning text-warning' : ''} />
+                                {item.starred ? 'Saved' : 'Save'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  handleSelectSubmission(item);
+                                  setViewMode('split');
+                                }}
+                                className="inline-flex min-h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-fg hover:border-muted"
+                              >
+                                Review
+                                <ChevronRight size={11} />
+                              </button>
+                              {nextStatus && (
+                                <button
+                                  type="button"
+                                  onClick={() => void handleStatusChange(item.id, nextStatus)}
+                                  disabled={!canManageCrm || isUpdating}
+                                  className="inline-flex min-h-8 items-center gap-1 rounded-control bg-accent px-2.5 text-[10px] font-medium text-white hover:bg-accent/90 disabled:opacity-50"
+                                >
+                                  <Check size={11} />
+                                  {actionLabel}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+
+            <div className="border-t border-line bg-bg/50 px-4 py-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-[10px] text-muted">
+                  Queue shows the first 8 records in the selected triage scope, ordered by priority and age.
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setViewMode('split');
+                      setFilterStatus('new');
+                    }}
+                    className="inline-flex min-h-8 items-center gap-1.5 rounded-control border border-line bg-panel px-2.5 text-[10px] font-medium text-fg hover:bg-bg"
+                  >
+                    <Filter size={11} />
+                    Open filtered list
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void refreshInbox()}
+                    className="inline-flex min-h-8 items-center gap-1.5 rounded-control border border-line bg-panel px-2.5 text-[10px] font-medium text-muted hover:bg-bg hover:text-fg"
+                  >
+                    <RefreshCw size={11} />
+                    Refresh
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
+
           <div className="space-y-3">
-            <div className="rounded-card border border-line bg-panel p-4"><div className="mb-4 flex items-start justify-between gap-3"><div><h3 className="text-sm font-semibold text-fg">Inbound mix</h3><p className="mt-0.5 text-[11px] text-muted">Client demand, recruitment intake, and saved records.</p></div><Layers size={16} className="text-muted"/></div><div className="space-y-4">{[{label:'Client inquiries',count:submissions.filter((item)=>item.type!=='career').length,tone:'bg-info'},{label:'Job applications',count:submissions.filter((item)=>item.type==='career').length,tone:'bg-accent'},{label:'Starred records',count:submissions.filter((item)=>!!item.starred).length,tone:'bg-warning'}].map((row)=>{const pct=Math.round((row.count/Math.max(1,submissions.length))*100);return <div key={row.label}><div className="mb-1.5 flex items-center justify-between gap-3 text-[11px]"><span className="text-muted">{row.label}</span><span className="tabular-nums text-fg">{row.count} · {pct}%</span></div><div className="h-1.5 overflow-hidden rounded-[3px] bg-line"><div className={'h-full rounded-[3px] '+row.tone} style={{width:pct+'%'}}/></div></div>})}</div></div>
-            <div className="rounded-card border border-line bg-panel p-4"><div className="mb-4 flex items-start justify-between gap-3"><div><h3 className="text-sm font-semibold text-fg">Workflow health</h3><p className="mt-0.5 text-[11px] text-muted">Current movement in sales and recruitment.</p></div><TrendingUp size={16} className="text-muted"/></div><div className="grid grid-cols-2 gap-2">{[{label:'Client review',count:submissions.filter((item)=>item.type!=='career'&&item.status==='in-review').length},{label:'Client closed',count:submissions.filter((item)=>item.type!=='career'&&item.status==='closed').length},{label:'In interview',count:submissions.filter((item)=>item.type==='career'&&item.status==='interview').length},{label:'Hired',count:submissions.filter((item)=>item.type==='career'&&item.status==='hired').length}].map((row)=><div key={row.label} className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">{row.label}</p><p className="mt-1 text-lg font-medium tabular-nums text-fg">{row.count}</p></div>)}</div></div>
+            <div className="rounded-card border border-line bg-panel p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-fg">Triage summary</h3>
+                  <p className="mt-1 text-[11px] leading-5 text-muted">A quick view of work volume before you open the full inbox.</p>
+                </div>
+                <TrendingUp size={16} className="text-muted" />
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                {[
+                  { label: 'Needs action', value: filteredItems.filter((item) => item.status === 'new').length, tone: 'text-danger' },
+                  { label: 'Priority', value: filteredItems.filter((item) => item.priority === 'urgent' || item.priority === 'high').length, tone: 'text-warning' },
+                  { label: 'Saved', value: filteredItems.filter((item) => !!item.starred).length, tone: 'text-warning' },
+                  { label: 'Assigned', value: filteredItems.filter((item) => !!item.assignedTo).length, tone: 'text-info' }
+                ].map((metric) => (
+                  <div key={metric.label} className="rounded-control border border-line bg-bg p-3">
+                    <p className="text-[10px] text-muted">{metric.label}</p>
+                    <p className={'mt-1 text-lg font-medium tabular-nums ' + metric.tone}>{metric.value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-card border border-line bg-panel p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-fg">Inbound mix</h3>
+                  <p className="mt-1 text-[11px] leading-5 text-muted">Where today’s inbound work is coming from.</p>
+                </div>
+                <Layers size={16} className="text-muted" />
+              </div>
+              <div className="mt-4 space-y-4">
+                {[
+                  { label: 'Client inquiries', count: submissions.filter((item) => item.type !== 'career').length, tone: 'bg-info' },
+                  { label: 'Job applications', count: submissions.filter((item) => item.type === 'career').length, tone: 'bg-accent' },
+                  { label: 'Starred records', count: submissions.filter((item) => !!item.starred).length, tone: 'bg-warning' }
+                ].map((row) => {
+                  const pct = Math.round((row.count / Math.max(1, submissions.length)) * 100);
+                  return (
+                    <div key={row.label}>
+                      <div className="mb-1.5 flex items-center justify-between gap-3 text-[11px]">
+                        <span className="text-muted">{row.label}</span>
+                        <span className="tabular-nums text-fg">{row.count} · {pct}%</span>
+                      </div>
+                      <div className="h-1.5 overflow-hidden rounded-[3px] bg-line">
+                        <div className={'h-full rounded-[3px] ' + row.tone} style={{ width: pct + '%' }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="rounded-card border border-line bg-panel p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-fg">Workflow health</h3>
+                  <p className="mt-1 text-[11px] leading-5 text-muted">Current movement in sales and recruitment.</p>
+                </div>
+                <TrendingUp size={16} className="text-muted" />
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                {[
+                  { label: 'Client review', count: submissions.filter((item) => item.type !== 'career' && item.status === 'in-review').length },
+                  { label: 'Client closed', count: submissions.filter((item) => item.type !== 'career' && item.status === 'closed').length },
+                  { label: 'In interview', count: submissions.filter((item) => item.type === 'career' && item.status === 'interview').length },
+                  { label: 'Hired', count: submissions.filter((item) => item.type === 'career' && item.status === 'hired').length }
+                ].map((row) => (
+                  <div key={row.label} className="rounded-control border border-line bg-bg p-3">
+                    <p className="text-[10px] text-muted">{row.label}</p>
+                    <p className="mt-1 text-lg font-medium tabular-nums text-fg">{row.count}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
       ) : viewMode === 'board' ? (
