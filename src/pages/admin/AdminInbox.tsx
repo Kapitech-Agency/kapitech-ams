@@ -1108,29 +1108,34 @@ export const AdminInbox: React.FC = () => {
 
                     {/* Client Name & Company */}
                     <div className="flex items-baseline justify-between gap-2 mb-1">
-                      <ProfileIdentity profile={{ name: item.fullName || 'Anonymous Client', role: item.positionTitle || (item.type === 'career' ? 'Candidate' : 'Contact'), contextLabel: item.company, companyEmail: item.email, phone: item.phone }} size="sm" showRole={false} />
+                      <ProfileIdentity profile={{ name: item.fullName || 'Anonymous Client', role: item.positionTitle || (item.type === 'career' ? 'Candidate' : 'Contact'), contextLabel: item.type === 'career' ? item.positionTitle : item.company, companyEmail: item.email, phone: item.phone }} size="sm" showRole={false} />
                       <span className="text-xs font-sans font-semibold text-success shrink-0">
-                        {formatAmount(estimateDealValue(item), currency)}
+                        {item.type === 'career' ? (item.experienceYears ? item.experienceYears + ' yrs' : '-') : formatAmount(estimateDealValue(item), currency)}
                       </span>
                     </div>
 
                     <div className="text-xs text-muted truncate mb-2">
-                      {item.company || item.positionTitle || item.email}
+                      {item.type === 'career'
+                        ? [item.positionTitle || 'Role not specified', item.specialty, item.location].filter(Boolean).join(' · ')
+                        : (item.company || item.email)}
                     </div>
 
-                    {/* Service Tags */}
-                    {item.services && item.services.length > 0 && (
+                    {/* Service / Skill Tags */}
+                    {(
+                      item.type === 'career'
+                        ? [item.positionTitle, item.specialty, item.experienceYears ? item.experienceYears + ' yrs' : undefined].filter(Boolean)
+                        : (item.services || [])
+                    ).length > 0 && (
                       <div className="flex flex-wrap gap-1 mb-2.5">
-                        {item.services.slice(0, 3).map((svc, i) => (
+                        {(
+                          item.type === 'career'
+                            ? [item.positionTitle, item.specialty, item.experienceYears ? item.experienceYears + ' yrs' : undefined].filter(Boolean) as string[]
+                            : (item.services || [])
+                        ).slice(0, 3).map((value, i) => (
                           <span key={i} className="text-[9px] font-sans px-1.5 py-0.5 rounded-badge bg-panel border border-line text-muted">
-                            {svc}
+                            {value}
                           </span>
                         ))}
-                        {item.services.length > 3 && (
-                          <span className="text-[9px] font-sans text-muted self-center">
-                            +{item.services.length - 3}
-                          </span>
-                        )}
                       </div>
                     )}
 
