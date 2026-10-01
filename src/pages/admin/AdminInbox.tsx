@@ -424,8 +424,7 @@ export const AdminInbox: React.FC = () => {
 
   // Filtering
   const filteredItems = useMemo(() => {
-    return submissions.filter(item => {
-      const matchesType = filterType === 'all' || (item.type || 'inquiry') === filterType;
+    return activeTabItems.filter(item => {
       const matchesStatus = filterStatus === 'all' || item.status === filterStatus;
       const matchesPriority = filterPriority === 'all' || (item.priority || 'normal') === filterPriority;
       const matchesStarred = !onlyStarred || !!item.starred;
@@ -438,23 +437,28 @@ export const AdminInbox: React.FC = () => {
         (item.message || '').toLowerCase().includes(queryLower) ||
         (item.positionTitle || '').toLowerCase().includes(queryLower) ||
         (item.services || []).some(s => s.toLowerCase().includes(queryLower)) ||
-        (item.source || '').toLowerCase().includes(queryLower)
+        (item.source || '').toLowerCase().includes(queryLower) ||
+        (item.positionTitle || '').toLowerCase().includes(queryLower) ||
+        (item.specialty || '').toLowerCase().includes(queryLower) ||
+        (item.tools || '').toLowerCase().includes(queryLower) ||
+        (item.resumeUrl || '').toLowerCase().includes(queryLower) ||
+        (item.linkedinUrl || '').toLowerCase().includes(queryLower)
       );
 
-      return matchesType && matchesStatus && matchesPriority && matchesStarred && matchesSearch;
+      return matchesStatus && matchesPriority && matchesStarred && matchesSearch;
     });
-  }, [submissions, filterType, filterStatus, filterPriority, onlyStarred, searchQuery]);
+  }, [activeTabItems, filterStatus, filterPriority, onlyStarred, searchQuery]);
 
   const pageCount = Math.max(1, Math.ceil(filteredItems.length / pageSize));
   const pagedItems = filteredItems.slice((page - 1) * pageSize, page * pageSize);
   useEffect(() => { setPage((current) => Math.min(current, pageCount)); }, [pageCount]);
-  useEffect(() => { setPage(1); }, [filterType, filterStatus, filterPriority, onlyStarred, searchQuery]);
+  useEffect(() => { setPage(1); }, [activeInboxTab, filterStatus, filterPriority, onlyStarred, searchQuery]);
 
   // Export CSV
   const handleExportCSV = () => {
     if (submissions.length === 0) return;
     const headers = ['ID', 'Date', 'Type', 'Status', 'Priority', 'Full Name', 'Email', 'Company', 'Phone', 'Services', 'Budget', 'Converted To CRM', 'Message', 'Source'];
-    const rows = submissions.map(s => [
+    const rows = activeTabItems.map(s => [
       `"${s.id}"`,
       `"${new Date(s.createdAt).toLocaleString()}"`,
       `"${s.type || 'inquiry'}"`,
@@ -475,7 +479,7 @@ export const AdminInbox: React.FC = () => {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `kapitech_leads_inbox_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', 'kapitech_' + (activeInboxTab === 'jobs' ? 'job_applications' : 'client_inbox') + '_' + new Date().toISOString().split('T')[0] + '.csv');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -488,7 +492,7 @@ export const AdminInbox: React.FC = () => {
         return (
           <span className="px-2 py-0.5 rounded-chip bg-info/10 border border-info/30 text-info text-[10px] font-sans flex items-center gap-1">
             <Briefcase size={10} />
-            <span>Studio Role</span>
+            <span>Job Application</span>
           </span>
         );
       case 'vendor':
@@ -510,7 +514,7 @@ export const AdminInbox: React.FC = () => {
         return (
           <span className="px-2 py-0.5 rounded-chip bg-info/10 border border-info/30 text-info text-[10px] font-sans flex items-center gap-1 font-semibold">
             <MessageSquare size={10} />
-            <span>Client Brief</span>
+            <span>Client Inquiry</span>
           </span>
         );
     }
@@ -544,6 +548,18 @@ export const AdminInbox: React.FC = () => {
             Closed Deal
           </span>
         );
+      case 'screening':
+        return <span className="px-2 py-0.5 rounded-chip text-[10px] font-sans bg-warning/10 text-warning border border-warning/30">Screening</span>;
+      case 'shortlisted':
+        return <span className="px-2 py-0.5 rounded-chip text-[10px] font-sans bg-info/10 text-info border border-info/30">Shortlisted</span>;
+      case 'interview':
+        return <span className="px-2 py-0.5 rounded-chip text-[10px] font-sans bg-info/10 text-info border border-info/30">Interview</span>;
+      case 'hired':
+        return <span className="px-2 py-0.5 rounded-chip text-[10px] font-sans bg-success/10 text-success border border-success/30 font-semibold">Hired</span>;
+      case 'rejected':
+        return <span className="px-2 py-0.5 rounded-chip text-[10px] font-sans bg-danger/10 text-danger border border-danger/30">Rejected</span>;
+      case 'withdrawn':
+        return <span className="px-2 py-0.5 rounded-chip text-[10px] font-sans bg-panel text-muted border border-line">Withdrawn</span>;
       default:
         return (
           <span className="px-2 py-0.5 rounded-chip text-[10px] font-sans bg-panel text-muted border border-line">
