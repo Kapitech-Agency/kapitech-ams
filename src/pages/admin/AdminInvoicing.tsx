@@ -927,7 +927,7 @@ export const AdminInvoicing: React.FC = () => {
           totalExpense: derived.totalExpenses,
           netProfit: derived.netOperatingProfit,
           profitMargin: String(derived.netMarginPercent),
-          operatingMargin: String(derived.operatingProfit !== undefined ? derived.netMarginPercent : 0),
+          operatingMargin: String(derived.netMarginPercent),
           totalInvoicesCount: derived.totalInvoicesCount,
           paidCount: derived.paidCount,
           partiallyPaidCount: derived.partiallyPaidCount,
