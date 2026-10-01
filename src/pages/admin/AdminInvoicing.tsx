@@ -27,7 +27,7 @@ import {
   WalletCards,
   X
 } from 'lucide-react';
-import { AgencyExpense, AgencyInvoice, InvoiceLineItem, InvoiceStatus, INITIAL_DEFAULT_EXPENSES, INITIAL_DEFAULT_INVOICES, computeInvoiceTotals, computeFinancialMetrics, getMonthlyCashFlowSeries, slugifyFinance, normalizeFinanceInvoice, normalizeFinanceExpense } from '../../lib/financeStore';
+import { AgencyExpense, AgencyInvoice, InvoiceLineItem, InvoiceStatus, INITIAL_DEFAULT_EXPENSES, INITIAL_DEFAULT_INVOICES, computeInvoiceTotals, computeFinancialMetrics, getMonthlyCashFlowSeries, slugifyFinance, normalizeFinanceInvoice, normalizeFinanceExpense, getEffectiveInvoiceStatus } from '../../lib/financeStore';
 import { AgencyVendor, getAgencyVendors } from '../../lib/vendorStore';
 import { CurrencyCode, CURRENCY_EVENT, getActiveCurrency, setActiveCurrency, formatNativeAmount } from '../../lib/currency';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -190,7 +190,7 @@ const getDaysUntilDue = (value: string) => {
 };
 
 const isPastDueInvoice = (invoice: AgencyInvoice) => {
-  if (invoice.status === 'paid' || invoice.status === 'cancelled') return false;
+  if (invoice.status === 'paid' || invoice.status === 'cancelled' || invoice.status === 'draft') return false;
   const days = getDaysUntilDue(invoice.dueDate);
   return days < 0;
 };
@@ -1104,7 +1104,7 @@ export const AdminInvoicing: React.FC = () => {
 
   const ytdInvoiced = useMemo(
     () => currencyInvoices
-      .filter((invoice) => invoice.status !== 'cancelled')
+      .filter((invoice) => !['draft', 'cancelled'].includes(invoice.status))
       .filter((invoice) => {
         const date = new Date(invoice.issueDate + 'T00:00:00');
         return !Number.isNaN(date.getTime()) && date >= yearStart && date <= yearEnd;
@@ -1134,7 +1134,7 @@ export const AdminInvoicing: React.FC = () => {
   const ytdCollectionRate = ytdInvoiced > 0 ? (ytdCollected / ytdInvoiced) * 100 : 0;
 
   const retainerInvoices = useMemo(
-    () => currencyInvoices.filter((invoice) => invoice.status !== 'cancelled' && isRetainerInvoice(invoice)),
+    () => currencyInvoices.filter((invoice) => !['draft', 'cancelled'].includes(invoice.status) && isRetainerInvoice(invoice)),
     [currencyInvoices]
   );
 
@@ -1178,7 +1178,7 @@ export const AdminInvoicing: React.FC = () => {
       const end = new Date(reportingQuarter.end);
       end.setHours(23, 59, 59, 999);
       return quarterInvoices
-        .filter((invoice) => invoice.status !== 'cancelled')
+        .filter((invoice) => !['draft', 'cancelled'].includes(invoice.status))
         .reduce((sum, invoice) => sum + getInvoiceCollectedInRange(invoice, reportingQuarter.start, end), 0);
     },
     [quarterInvoices, reportingQuarter]
@@ -1198,14 +1198,14 @@ export const AdminInvoicing: React.FC = () => {
 
   const taxProvision = useMemo(
     () => currencyInvoices
-      .filter((invoice) => invoice.status !== 'cancelled')
+      .filter((invoice) => !['draft', 'cancelled'].includes(invoice.status))
       .reduce((sum, invoice) => sum + Number(invoice.taxAmount || 0), 0),
     [currencyInvoices]
   );
 
   const taxCollected = useMemo(
     () => currencyInvoices
-      .filter((invoice) => invoice.status !== 'cancelled')
+      .filter((invoice) => !['draft', 'cancelled'].includes(invoice.status))
       .reduce((sum, invoice) => {
         const collected = getInvoiceCollectedTotal(invoice);
         const paidRatio = invoice.total > 0 ? Math.min(1, collected / Number(invoice.total)) : 0;
@@ -1299,7 +1299,7 @@ export const AdminInvoicing: React.FC = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     return currencyInvoices
-      .filter((invoice) => invoice.status !== 'paid' && invoice.status !== 'cancelled')
+      .filter((invoice) => !['paid', 'cancelled', 'draft'].includes(invoice.status))
       .map((invoice) => {
         const due = new Date(invoice.dueDate + 'T00:00:00');
         const daysUntilDue = Math.ceil((due.getTime() - today.getTime()) / 86400000);
@@ -1319,7 +1319,7 @@ export const AdminInvoicing: React.FC = () => {
   const incomeRows = useMemo<FinanceIncomeRow[]>(() => {
     const rows: FinanceIncomeRow[] = [];
     currencyInvoices
-      .filter((invoice) => invoice.status !== 'cancelled')
+      .filter((invoice) => !['draft', 'cancelled'].includes(invoice.status))
       .forEach((invoice) => {
         const payments = Array.isArray(invoice.payments) ? invoice.payments : [];
         if (payments.length) {
