@@ -81,7 +81,6 @@ export const AdminInbox: React.FC = () => {
   const [pageSize, setPageSize] = useState(10);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterPriority, setFilterPriority] = useState<string>('all');
-  const [onlyStarred, setOnlyStarred] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [viewMode, setViewMode] = useState<'split' | 'table'>('split');
 
@@ -484,7 +483,7 @@ export const AdminInbox: React.FC = () => {
     return activeTabItems.filter(item => {
       const matchesStatus = filterStatus === 'all' || item.status === filterStatus;
       const matchesPriority = filterPriority === 'all' || (item.priority || 'normal') === filterPriority;
-      const matchesStarred = !onlyStarred || !!item.starred;
+      const matchesStarred = activeInboxTab === 'starred' ? !!item.starred : true;
 
       const queryLower = searchQuery.toLowerCase().trim();
       const matchesSearch = !queryLower || (
@@ -505,7 +504,7 @@ export const AdminInbox: React.FC = () => {
 
       return matchesStatus && matchesPriority && matchesStarred && matchesSearch;
     });
-  }, [activeTabItems, filterStatus, filterPriority, onlyStarred, searchQuery]);
+  }, [activeTabItems, filterStatus, filterPriority, searchQuery]);
 
   const pageCount = Math.max(1, Math.ceil(filteredItems.length / pageSize));
   const pagedItems = filteredItems.slice((page - 1) * pageSize, page * pageSize);
@@ -1058,7 +1057,7 @@ export const AdminInbox: React.FC = () => {
                   setSearchQuery('');
                   setFilterStatus('all');
                   setFilterPriority('all');
-                  setOnlyStarred(false);
+
                 }}
                 className="min-h-10 px-4 rounded-control bg-panel hover:bg-panel-hover text-fg border border-line text-xs font-sans font-medium transition-colors"
               >
@@ -1200,7 +1199,7 @@ export const AdminInbox: React.FC = () => {
                         {renderChannelBadge(selectedSubmission.type)}
                         {renderStatusBadge(selectedSubmission.status)}
                         <span className="text-[10px] font-sans text-muted">
-                          ID: {selectedSubmission.id}
+                          /{getSubmissionSlug(selectedSubmission)}
                         </span>
                       </div>
                       
