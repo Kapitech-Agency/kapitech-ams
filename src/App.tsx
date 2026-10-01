@@ -240,7 +240,6 @@ const App = () => {
                 <Route path="projects" element={<ModuleRoute moduleKey="projects" moduleLabel="projects"><AdminProjects /></ModuleRoute>} />
                 <Route path="approvals" element={<ModuleRoute moduleKey="approvals" moduleLabel="approvals"><AdminApprovals /></ModuleRoute>} />
                 <Route path="documents" element={<ModuleRoute moduleKey="documents" moduleLabel="documents"><AdminDocuments /></ModuleRoute>} />
-                <Route path="cms" element={<Navigate to="/admin/cms/projects" replace />} />
                 <Route path="team" element={<ModuleRoute moduleKey="timelogs" moduleLabel="team operations"><AdminTeams /></ModuleRoute>} />
                 <Route path="time-logs" element={<Navigate to="/admin/team?view=time-logs" replace />} />
                 <Route path="vendors" element={<Navigate to="/admin/team?view=vendor-directory" replace />} />
@@ -249,7 +248,6 @@ const App = () => {
                 <Route path="clients/retainers" element={<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClientRetainers /></ModuleRoute>} />
                 <Route path="clients/sla-monitoring" element={<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClientSlaMonitoring /></ModuleRoute>} />
                 <Route path="clients/lead-accounts" element={<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClientLeadAccounts /></ModuleRoute>} />
-                <Route path="cms" element={<Navigate to="/admin/cms/projects" replace />} />
                 <Route path="cms/projects" element={<ModuleRoute moduleKey="cms_projects" moduleLabel="case studies"><AdminCmsProjects /></ModuleRoute>} />
                 <Route path="cms/services" element={<ModuleRoute moduleKey="services" moduleLabel="the services catalog"><AdminCmsServices /></ModuleRoute>} />
                 <Route path="cms/testimonials" element={<ModuleRoute moduleKey="testimonials" moduleLabel="testimonials"><AdminCmsTestimonials /></ModuleRoute>} />
