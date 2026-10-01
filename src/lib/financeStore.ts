@@ -143,7 +143,7 @@ export const getEffectiveInvoiceStatus = (invoice: AgencyInvoice, referenceDate:
     day.setHours(0, 0, 0, 0);
     if (!Number.isNaN(due.getTime()) && due.getTime() < day.getTime()) return 'overdue';
   }
-  if (balance > 0 && (invoice.status === 'paid' || invoice.status === 'partially_paid')) return 'partially_paid';
+  if (balance > 0 && (Number(invoice.amountPaid || 0) > 0 || invoice.status === 'paid' || invoice.status === 'partially_paid')) return 'partially_paid';
   return invoice.status;
 };
 
