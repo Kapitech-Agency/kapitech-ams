@@ -335,6 +335,7 @@ export function useRbacRole(
     setRole: switchRole,
     roleMeta: meta,
     isAllowed: (key: string) => {
+      const normalizedRole = String(userRole || '').trim();
       const isMasterIdentity =
         actualStakeholderType === 'Master' ||
         userRole === 'Tier 1: Top Management / Sponsor' ||
