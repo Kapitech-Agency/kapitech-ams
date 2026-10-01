@@ -42,10 +42,17 @@ const normalizeCmsService = (service: ServiceItemData | null | undefined): Servi
   const slug = typeof source.slug === 'string' && source.slug.trim()
     ? source.slug.trim()
     : title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  const type: ServiceItemData['type'] = source.type === 'solution' ? 'solution' : 'service';
+  const category: ServiceItemData['category'] =
+    source.category === 'Solutions' || source.category === 'Branding' || source.category === 'Design' || source.category === 'Development'
+      ? source.category
+      : 'Development';
 
   return {
   ...source,
   slug,
+  type,
+  category,
   title,
   navSubtitle: service.navSubtitle || '',
   navSubtitleId: service.navSubtitleId || '',
