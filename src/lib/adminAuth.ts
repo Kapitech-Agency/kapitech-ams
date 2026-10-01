@@ -294,7 +294,7 @@ export async function updateAdminAccountPermissions(
     }
     return {
       success: false,
-      error: res.error || res.data?.error || 'Failed to update admin permissions.'
+      error: res.error || 'Failed to update admin permissions.'
     };
   } catch {
     return { success: false, error: 'Failed to update admin permissions.' };
