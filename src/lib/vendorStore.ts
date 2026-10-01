@@ -1,4 +1,5 @@
 import { api } from './apiClient';
+import { toSlug } from './slug';
 
 /**
  * Kapitech Agency Vendor & Contractor Directory Store
@@ -21,6 +22,7 @@ export interface VendorContract {
 
 export interface AgencyVendor {
   id: string;
+  slug?: string;
   name: string;
   companyName?: string;
   email: string;
@@ -71,7 +73,7 @@ function hydrateVendorsFromServer(): void {
       return;
     }
     vendorServerHydrationRetryCount = 0;
-    vendorsCache = res.data.vendors;
+    vendorsCache = res.data.vendors.map((vendor) => ({ ...vendor, slug: toSlug(vendor.slug || vendor.companyName || vendor.name || vendor.id, 'vendor-record') }));
     if (typeof window !== 'undefined') window.dispatchEvent(new Event(VENDOR_EVENT_NAME));
   }).catch(() => {
     vendorServerHydrationStarted = false;
@@ -203,7 +205,7 @@ const defaultVendors: AgencyVendor[] = [
 export function getAgencyVendors(): AgencyVendor[] {
   hydrateVendorsFromServer();
   if (vendorsCache) return vendorsCache;
-  vendorsCache = import.meta.env.PROD ? [] : defaultVendors;
+  vendorsCache = import.meta.env.PROD ? [] : defaultVendors.map((vendor) => ({ ...vendor, slug: toSlug(vendor.slug || vendor.companyName || vendor.name || vendor.id, 'vendor-record') }));
   return vendorsCache;
 }
 
