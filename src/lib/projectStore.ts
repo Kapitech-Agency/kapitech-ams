@@ -10,12 +10,14 @@ export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
 
 export interface TaskSubtask {
   id: string;
+  slug?: string;
   title: string;
   completed: boolean;
 }
 
 export interface ProjectTask {
   id: string;
+  slug?: string;
   title: string;
   description?: string;
   status: TaskStatus;
@@ -29,6 +31,7 @@ export interface ProjectTask {
 
 export interface ProjectMilestone {
   id: string;
+  slug?: string;
   title: string;
   dueDate: string;
   completed: boolean;
@@ -71,8 +74,20 @@ export const normalizeAgencyProject = (project: AgencyProject): AgencyProject =>
   slug: toSlug(project.slug || project.name || project.id, 'project-record'),
   teamMembers: Array.isArray(project.teamMembers) ? project.teamMembers : [],
   techStack: Array.isArray(project.techStack) ? project.techStack : [],
-  milestones: Array.isArray(project.milestones) ? project.milestones : [],
-  tasks: Array.isArray(project.tasks) ? project.tasks : []
+  milestones: (Array.isArray(project.milestones) ? project.milestones : []).map((milestone) => ({
+    ...milestone,
+    slug: toSlug(milestone.slug || milestone.title || milestone.id, 'milestone-record')
+  })),
+  tasks: (Array.isArray(project.tasks) ? project.tasks : []).map((task) => ({
+    ...task,
+    slug: toSlug(task.slug || task.title || task.id, 'task-record'),
+    subtasks: Array.isArray(task.subtasks)
+      ? task.subtasks.map((subtask) => ({
+          ...subtask,
+          slug: toSlug(subtask.slug || subtask.title || subtask.id, 'subtask-record')
+        }))
+      : []
+  }))
 });
 
 
