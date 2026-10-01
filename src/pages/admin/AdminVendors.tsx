@@ -307,7 +307,7 @@ export const AdminVendors: React.FC = () => {
   if (isLoading && vendors.length === 0) {
     return (
       <AdminPageShell featureSlug="vendors-module">
-        <AdminModuleHeader
+        <AdminModuleHeader slug="vendors-header"
           className="mb-0"
           title={t('admin.nav.vendors')}
           description={language === 'id' ? 'Kelola direktori vendor, keahlian, rate, kontrak, dan status verifikasi.' : 'Manage vendor profiles, skills, rates, contracts, and verification status.'}
@@ -371,9 +371,9 @@ export const AdminVendors: React.FC = () => {
       )}
 
       {/* Top Summary Metrics */}
-      <section aria-label="Vendor snapshot" className="rounded-card border border-line bg-panel p-4">
+      <section data-ams-feature-slug="vendor-snapshot" data-ams-slug="vendor-snapshot" aria-label="Vendor snapshot" className="rounded-card border border-line bg-panel p-4">
         <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3"><div><h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan vendor' : 'Vendor snapshot'}</h2><p className="mt-1 text-xs text-muted">{language === 'id' ? 'Komposisi talent, partner, dan kualitas operasional.' : 'Talent mix, agency partners, and operational quality signals.'}</p></div><span className="text-[11px] font-medium tabular-nums text-muted">{vendors.length} total</span></div>
-        <AdminMetricStrip
+        <AdminMetricStrip slug="vendor-kpis"
           className="lg:grid-cols-4"
           metrics={[
             { id: 'total', label: language === 'id' ? 'Total Mitra Terdaftar' : 'Total Vetted Vendors', value: vendors.length, context: vendors.filter(v => v.status === 'active').length + ' Active', sparkline: [vendors.filter(v => v.type === 'freelancer' || v.type === 'contractor').length, vendors.filter(v => v.type === 'agency_partner').length, vendors.length], icon: <Users size={16} strokeWidth={1.8} /> },
@@ -385,7 +385,7 @@ export const AdminVendors: React.FC = () => {
       </section>
 
       {/* Filter & Search Bar */}
-      <section className="w-full rounded-card bg-panel border border-line p-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between" aria-label="Vendor directory controls">
+      <section data-ams-feature-slug="vendor-directory-filters" data-ams-slug="vendor-directory-filters" className="w-full rounded-card bg-panel border border-line p-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between" aria-label="Vendor directory controls">
         <div className="relative w-full lg:w-96">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
           <input
@@ -455,7 +455,7 @@ export const AdminVendors: React.FC = () => {
       </section>
 
       {/* Vendors Grid */}
-      <section aria-label="Vendor directory list"><div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <section data-ams-feature-slug="vendor-directory-list" data-ams-slug="vendor-directory-list" aria-label="Vendor directory list"><div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {filteredVendors.map(vendor => (
           <div
             key={vendor.id}
@@ -596,7 +596,7 @@ export const AdminVendors: React.FC = () => {
 
       {/* Detail Slideover Drawer */}
       {isDrawerOpen && selectedVendor && (
-        <Modal
+        <Modal slug="vendor-delete-modal"
           open={isDrawerOpen}
           onClose={() => setIsDrawerOpen(false)}
           size="xl"
@@ -675,7 +675,7 @@ export const AdminVendors: React.FC = () => {
       )}
 
       {/* Add / Edit Modal */}
-      <Drawer
+      <Drawer slug="vendor-editor-drawer"
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         size="lg"
@@ -692,7 +692,7 @@ export const AdminVendors: React.FC = () => {
           </>
         )}
       >
-            <form id="vendor-form" onSubmit={handleSaveVendor} className="space-y-3.5">
+            <form id="vendor-form" data-ams-feature-slug="vendor-form" data-ams-slug="vendor-form" onSubmit={handleSaveVendor} className="space-y-3.5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="text-[11px] font-sans text-muted normal-case block mb-1">
