@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 // Shared module chrome renders the canonical ams-dashboard-header primitive; permission guard shape is kept regression-test compatible.
 import { 
   Briefcase, 
@@ -50,8 +51,17 @@ import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 export const AdminCrm: React.FC = () => {
   const { language, t } = useLanguage();
   const canManageCrm = hasAdminPermission('canManageCrm');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedView = searchParams.get('view');
   const [leads, setLeads] = useState<CrmLead[]>([]);
-  const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
+  const [viewMode, setViewMode] = useState<'kanban' | 'list'>(requestedView === 'list' ? 'list' : 'kanban');
+
+  const changeViewMode = (next: 'kanban' | 'list') => {
+    setViewMode(next);
+    const params = new URLSearchParams(searchParams);
+    params.set('view', next);
+    setSearchParams(params, { replace: true });
+  };
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPillar, setSelectedPillar] = useState<string>('All');
@@ -595,7 +605,7 @@ export const AdminCrm: React.FC = () => {
 
         <div className="flex items-center gap-1 bg-bg p-1 rounded-control border border-line self-stretch lg:self-auto shrink-0">
           <button
-            onClick={() => setViewMode('kanban')}
+            onClick={() => changeViewMode('kanban')}
             className={`flex items-center justify-center gap-2 px-3 py-1.5 rounded-control text-xs font-sans font-semibold transition-all min-h-10 ${
               viewMode === 'kanban'
                 ? 'bg-panel text-fg border border-line'
@@ -606,7 +616,7 @@ export const AdminCrm: React.FC = () => {
             <span>{t('admin.crm.kanbanView')}</span>
           </button>
           <button
-            onClick={() => setViewMode('list')}
+            onClick={() => changeViewMode('list')}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-control text-xs font-sans font-semibold transition-all min-h-10 ${
               viewMode === 'list'
                 ? 'bg-panel text-fg border border-line'
