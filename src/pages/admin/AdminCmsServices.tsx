@@ -210,14 +210,8 @@ export const AdminCmsServices: React.FC = () => {
       
       <AdminModuleHeader slug="cms-services-header"
         icon={<Layers size={20} />}
-        eyebrow={
-          <>
-            <Cpu size={14} className="text-accent" />
-            <span>Service Catalog & Execution Engine</span>
-          </>
-        }
         className="mb-0"
-        title="Agency Services (SEO & Dev)"
+        title="Services"
         description={
           <>Manage live service offerings, SLA benchmarks, deliverables, and technical capabilities published on <code className="rounded-badge border border-line bg-panel px-1.5 py-0.5 text-fg">/services</code>.</>
         }
