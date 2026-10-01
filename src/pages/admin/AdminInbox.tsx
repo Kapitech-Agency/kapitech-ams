@@ -509,7 +509,7 @@ export const AdminInbox: React.FC = () => {
   const pageCount = Math.max(1, Math.ceil(filteredItems.length / pageSize));
   const pagedItems = filteredItems.slice((page - 1) * pageSize, page * pageSize);
   useEffect(() => { setPage((current) => Math.min(current, pageCount)); }, [pageCount]);
-  useEffect(() => { setPage(1); }, [activeInboxTab, filterStatus, filterPriority, onlyStarred, searchQuery]);
+  useEffect(() => { setPage(1); }, [activeInboxTab, filterStatus, filterPriority, searchQuery]);
 
   // Export CSV
   const handleExportCSV = () => {
