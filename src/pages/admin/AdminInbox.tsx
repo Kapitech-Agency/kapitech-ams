@@ -1002,6 +1002,44 @@ export const AdminInbox: React.FC = () => {
 
       {/* ------------------------------------------------------------- */}
       
+      {/* Client pipeline context card */}
+      {activeInboxTab === 'client' && viewMode === 'split' && (
+        <section data-ams-feature-slug="inbox-client-pipeline" data-ams-slug="inbox-client-pipeline" className="rounded-card border border-line bg-panel p-3.5">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold text-fg">Lead pipeline</h3>
+              <p className="mt-0.5 text-[11px] text-muted">Qualify each inquiry before sending it into CRM.</p>
+            </div>
+            <span className="text-[11px] tabular-nums text-muted">{activeTabItems.length} inquiries</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {[
+              { key: 'new', label: 'New' },
+              { key: 'in-review', label: 'In review' },
+              { key: 'contacted', label: 'Contacted' },
+              { key: 'closed', label: 'Closed' }
+            ].map((stage) => {
+              const count = activeTabItems.filter((item) => item.status === stage.key).length;
+              const value = activeTabItems.filter((item) => item.status === stage.key).reduce((sum, item) => sum + estimateDealValue(item), 0);
+              return (
+                <button
+                  type="button"
+                  key={stage.key}
+                  onClick={() => setFilterStatus(filterStatus === stage.key ? 'all' : stage.key)}
+                  className={'rounded-control border p-3 text-left transition-colors ' + (filterStatus === stage.key ? 'border-accent/30 bg-accent/10' : 'border-line bg-bg hover:bg-panel')}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] text-muted">{stage.label}</span>
+                    <span className="text-sm font-medium tabular-nums text-fg">{count}</span>
+                  </div>
+                  <p className="mt-2 truncate text-[11px] font-medium tabular-nums text-fg">{formatAmount(value, currency)}</p>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {/* 4. MAIN CONTENT VIEW: SPLIT VIEW vs TABLE VIEW */}
       {/* ------------------------------------------------------------- */}
       {viewMode === 'overview' ? (
@@ -1296,9 +1334,8 @@ export const AdminInbox: React.FC = () => {
             </div>
           </div>
         </section>
-      ) : 
+      ) : viewMode === 'table' ? (
         /* DENSE SPREADSHEET TABLE VIEW */
-      {/* Client pipeline context card */}
       {activeInboxTab === 'client' && viewMode === 'split' && (
         <section data-ams-feature-slug="inbox-client-pipeline" data-ams-slug="inbox-client-pipeline" className="rounded-card border border-line bg-panel p-3.5">
           <div className="mb-3 flex items-center justify-between gap-3">
