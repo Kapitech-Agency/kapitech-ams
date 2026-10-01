@@ -449,15 +449,15 @@ export const AdminCmsServices: React.FC = () => {
               <span className="text-muted">/{selectedServiceForDetail.slug}</span>
             </div>
 
-            <h2 className="text-xl font-sans font-semibold text-fg mb-2">
+            <h2 className="text-sm font-semibold text-fg mb-1.5">
               {selectedServiceForDetail.title}
             </h2>
-            <p className="text-xs text-muted mb-5 leading-relaxed">
+            <p className="text-[11px] leading-5 text-muted mb-4">
               {selectedServiceForDetail.heroSubtitle || selectedServiceForDetail.heroSubtitleId}
             </p>
 
             {/* Metrics */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 mb-4">
               {selectedServiceForDetail.metrics?.map((m, idx) => (
                 <div key={idx} className="bg-panel border border-line p-4 rounded-card text-center">
                   <div className="text-lg font-sans font-semibold text-accent">{m.value}</div>
@@ -471,9 +471,9 @@ export const AdminCmsServices: React.FC = () => {
               <h4 className="text-xs font-sans normal-case text-muted font-semibold tracking-normal mb-2">
                 Detailed Capabilities & SLA Scope
               </h4>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {selectedServiceForDetail.capabilities?.map((cap, cIdx) => (
-                  <div key={cIdx} className="bg-panel border border-line p-4 rounded-card">
+                  <div key={cIdx} className="bg-panel border border-line p-3 rounded-card">
                     <div className="text-xs font-semibold text-fg flex items-center gap-2">
                       <CheckCircle2 size={13} className="text-success" />
                       <span>{cap.title || cap.titleId}</span>
@@ -494,7 +494,7 @@ export const AdminCmsServices: React.FC = () => {
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {selectedServiceForDetail.processStages.map((stage, sIdx) => (
-                    <div key={sIdx} className="bg-panel border border-line p-4 rounded-card">
+                    <div key={sIdx} className="bg-panel border border-line p-3 rounded-card">
                       <div className="flex items-center gap-2 text-accent font-sans text-xs font-semibold mb-1">
                         <span>{stage.stageNumber}</span>
                         <span className="text-fg font-sans font-semibold">{stage.stageName}</span>
@@ -513,7 +513,7 @@ export const AdminCmsServices: React.FC = () => {
               </div>
             )}
 
-            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2.5 pt-4 border-t border-line">
+            <div className="flex flex-col-reverse gap-2 border-t border-line pt-3 sm:flex-row sm:items-center sm:justify-between">
               <Button
                 type="button"
                 variant="destructive"
@@ -529,7 +529,7 @@ export const AdminCmsServices: React.FC = () => {
                   href={`https://kapitech.id/services/${selectedServiceForDetail.slug}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-sans font-semibold flex items-center gap-1 transition-all"
+                  className="inline-flex min-h-9 items-center gap-1.5 rounded-control bg-accent px-3 text-xs font-medium text-white hover:bg-accent-hover"
                 >
                   <span>Open Public Page</span>
                   <ExternalLink size={12} />
