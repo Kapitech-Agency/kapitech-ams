@@ -38,7 +38,8 @@ import {
   Table as TableIcon,
   ChevronRight,
   ShieldCheck,
-  AlertCircle
+  AlertCircle,
+  Activity
 } from 'lucide-react';
 import { ContactSubmission, getSubmissionSlug, normalizeContactSubmission } from '../../lib/submissions';
 import { CrmLead } from '../../lib/crmStore';
