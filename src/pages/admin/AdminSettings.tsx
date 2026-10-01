@@ -46,6 +46,7 @@ import {
 import { SiteMetaSettings } from '../../lib/cmsStore';
 import { api } from '../../lib/apiClient';
 import { CustomSelect } from '../../components/ui/CustomSelect';
+import { createQrCode, qrCodeToPath } from '../../lib/qrcodegen';
 
 type SettingsTab = 'overview' | 'audit' | 'security' | 'integrations';
 type AuditOutcome = 'all' | 'success' | 'attention';
@@ -274,6 +275,10 @@ export const AdminSettings: React.FC = () => {
   const [mfaRecoverySaved, setMfaRecoverySaved] = useState(false);
   const [mfaLoading, setMfaLoading] = useState(false);
   const [mfaMessage, setMfaMessage] = useState<{ success: boolean; text: string } | null>(null);
+  const mfaQrCode = useMemo(
+    () => (mfaSetupData ? createQrCode(mfaSetupData.otpAuthUri) : null),
+    [mfaSetupData]
+  );
 
   const syncSecuritySession = useCallback(async () => {
     try {
@@ -1151,25 +1156,54 @@ export const AdminSettings: React.FC = () => {
                       <p className="mt-1 text-[10px] leading-5 text-muted">Use the manual setup key below in Google Authenticator, Microsoft Authenticator, 1Password, or another compatible TOTP app.</p>
                     </div>
 
-                    <div className="grid gap-3 lg:grid-cols-2">
+                    <div className="grid gap-3 lg:grid-cols-[220px_minmax(0,1fr)]">
                       <div className="rounded-control border border-line bg-panel p-3">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-[10px] font-medium text-muted">Setup key</span>
-                          <button type="button" onClick={() => void copyMfaValue(mfaSetupData.secret)} className="inline-flex min-h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[10px] text-muted hover:text-fg">
-                            <Copy size={11} />Copy
-                          </button>
+                          <div>
+                            <span className="text-[10px] font-medium text-muted">Scan with your phone</span>
+                            <p className="mt-1 text-[9px] leading-4 text-muted">Open your authenticator app and scan this QR code.</p>
+                          </div>
+                          <Smartphone size={14} className="text-accent-text" />
                         </div>
-                        <p className="mt-2 break-all rounded-control border border-line bg-bg px-3 py-2 font-mono text-[11px] font-semibold tracking-[0.08em] text-fg">{mfaSetupData.secret}</p>
+                        <div className="mt-3 flex justify-center rounded-control bg-white p-3 text-black">
+                          {mfaQrCode ? (
+                            <svg
+                              viewBox={`0 0 ${mfaQrCode.size + 8} ${mfaQrCode.size + 8}`}
+                              className="h-[180px] w-[180px] max-w-full"
+                              role="img"
+                              aria-label="MFA authenticator QR code"
+                              shapeRendering="crispEdges"
+                            >
+                              <path d={qrCodeToPath(mfaQrCode, 4)} fill="currentColor" />
+                            </svg>
+                          ) : (
+                            <div className="flex h-[180px] w-[180px] items-center justify-center text-center text-[10px] text-muted">
+                              QR code unavailable
+                            </div>
+                          )}
+                        </div>
                       </div>
 
-                      <div className="rounded-control border border-line bg-panel p-3">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-[10px] font-medium text-muted">Authenticator URI</span>
-                          <button type="button" onClick={() => void copyMfaValue(mfaSetupData.otpAuthUri)} className="inline-flex min-h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[10px] text-muted hover:text-fg">
-                            <Copy size={11} />Copy
-                          </button>
+                      <div className="space-y-3">
+                        <div className="rounded-control border border-line bg-panel p-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-medium text-muted">Setup key</span>
+                            <button type="button" onClick={() => void copyMfaValue(mfaSetupData.secret)} className="inline-flex min-h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[10px] text-muted hover:text-fg">
+                              <Copy size={11} />Copy
+                            </button>
+                          </div>
+                          <p className="mt-2 break-all rounded-control border border-line bg-bg px-3 py-2 font-mono text-[11px] font-semibold tracking-[0.08em] text-fg">{mfaSetupData.secret}</p>
                         </div>
-                        <p className="mt-2 max-h-24 overflow-y-auto break-all rounded-control border border-line bg-bg px-3 py-2 font-mono text-[9px] leading-4 text-muted">{mfaSetupData.otpAuthUri}</p>
+
+                        <div className="rounded-control border border-line bg-panel p-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10px] font-medium text-muted">Authenticator URI</span>
+                            <button type="button" onClick={() => void copyMfaValue(mfaSetupData.otpAuthUri)} className="inline-flex min-h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[10px] text-muted hover:text-fg">
+                              <Copy size={11} />Copy
+                            </button>
+                          </div>
+                          <p className="mt-2 max-h-24 overflow-y-auto break-all rounded-control border border-line bg-bg px-3 py-2 font-mono text-[9px] leading-4 text-muted">{mfaSetupData.otpAuthUri}</p>
+                        </div>
                       </div>
                     </div>
 
