@@ -66,6 +66,17 @@ export interface AuthenticatedRequest extends Request {
   sessionToken?: string;
 }
 
+export function isMasterAdministrator(user?: Pick<StoredUser, 'id' | 'username' | 'role' | 'stakeholderType'> | null): boolean {
+  if (!user) return false;
+  return (
+    user.stakeholderType === 'Master' ||
+    user.id === 'usr_root_admin' ||
+    user.username === 'admin' ||
+    user.role === 'Tier 1: Top Management / Sponsor' ||
+    /\bmaster\b|super admin|root admin/i.test(String(user.role || ''))
+  );
+}
+
 function cleanupMaps(): void {
   const now = Date.now();
   for (const [key, entry] of loginLockouts) {
@@ -580,7 +591,7 @@ export function requirePermission(permissionKey: keyof StoredUser['permissions']
       return;
     }
     if (!requireMfaForProtectedAccess(req, res)) return;
-    if (req.user.stakeholderType === 'Master') {
+    if (isMasterAdministrator(req.user)) {
       next();
       return;
     }
@@ -607,7 +618,7 @@ export function requireMaster(req: AuthenticatedRequest, res: Response, next: Ne
     return;
   }
   if (!requireMfaForProtectedAccess(req, res)) return;
-  if (req.user.stakeholderType !== 'Master') {
+  if (!isMasterAdministrator(req.user)) {
     recordSecurityAudit({
       action: 'ACCESS_DENIED',
       actor: req.user.username,
