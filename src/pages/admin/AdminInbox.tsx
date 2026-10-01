@@ -98,6 +98,7 @@ export const AdminInbox: React.FC = () => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [testSending, setTestSending] = useState(false);
   const [prevCount, setPrevCount] = useState<number | null>(null);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null);
   const [toastMessage, setToastMessage] = useState<{ text: string; link?: string; linkText?: string; tone?: 'success' | 'danger' } | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ type: 'delete' | 'mark-read'; id?: string; count?: number; targetStatus?: ContactSubmission['status'] } | null>(null);
 
@@ -134,6 +135,7 @@ export const AdminInbox: React.FC = () => {
       const items = (res.data.leads as ContactSubmission[]).map(normalizeContactSubmission);
       setSubmissions(items);
       setPrevCount(items.length);
+      setLastRefreshedAt(new Date());
     } catch {
       setToastMessage({
         text: language === 'id' ? 'Inbox gagal dimuat. Coba lagi.' : 'Inbox could not be loaded. Please retry.',
@@ -806,13 +808,84 @@ export const AdminInbox: React.FC = () => {
       
       {/* 3. TAB-SPECIFIC CONTROLS */}
       {activeInboxTab === 'overview' ? (
-        <section data-ams-feature-slug="inbox-overview-controls" data-ams-slug="inbox-overview-controls" className="rounded-card border border-line bg-panel">
-          <div className="flex flex-col gap-3 p-3 sm:p-4 lg:flex-row lg:items-center lg:justify-between">
-            <div><p className="text-xs font-semibold text-fg">Live intake monitor</p><p className="mt-0.5 text-[11px] text-muted">Triage exceptions here, then open the dedicated workspace when you need deeper review.</p></div>
-            <div className="flex flex-wrap items-center gap-2">
-              <button type="button" onClick={() => void refreshInbox()} className="inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted hover:bg-bg hover:text-fg"><RefreshCw size={14} />Refresh</button>
-              <button type="button" onClick={handleExportCSV} disabled={activeTabItems.length === 0} className="inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted hover:bg-bg hover:text-fg disabled:opacity-50"><Download size={14} />Export overview</button>
-              <button type="button" onClick={() => setViewMode('split')} className="inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control bg-accent px-3 text-xs font-medium text-white hover:bg-accent/90"><Inbox size={14} />Open inbox</button>
+        <section data-ams-feature-slug="inbox-overview-controls" data-ams-slug="inbox-overview-controls" aria-label="Live intake monitor" className="rounded-card border border-line bg-panel">
+          <div className="flex flex-col gap-3 px-4 py-3.5 sm:px-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-success/20 bg-success/10 text-success">
+                <Activity size={14} />
+              </div>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <h2 className="text-[13px] font-semibold leading-5 text-fg">Live intake monitor</h2>
+                  <span className="inline-flex items-center gap-1 rounded-badge border border-success/20 bg-success/10 px-1.5 py-0.5 text-[9px] font-semibold text-success">
+                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                    Live
+                  </span>
+                </div>
+                <p className="mt-0.5 text-[10px] leading-4 text-muted">
+                  Auto-refresh every 30s
+                  {lastRefreshedAt ? ' · Last sync ' + lastRefreshedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : ''}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center">
+              {[
+                {
+                  label: 'New',
+                  value: activeTabItems.filter((item) => item.status === 'new').length,
+                  tone: 'text-info',
+                  bg: 'bg-info/10',
+                  border: 'border-info/20'
+                },
+                {
+                  label: 'Priority',
+                  value: activeTabItems.filter((item) => item.priority === 'urgent' || item.priority === 'high').length,
+                  tone: 'text-warning',
+                  bg: 'bg-warning/10',
+                  border: 'border-warning/20'
+                },
+                {
+                  label: 'Starred',
+                  value: activeTabItems.filter((item) => !!item.starred).length,
+                  tone: 'text-warning',
+                  bg: 'bg-warning/10',
+                  border: 'border-warning/20'
+                }
+              ].map((metric) => (
+                <button
+                  type="button"
+                  key={metric.label}
+                  onClick={() => {
+                    setViewMode('overview');
+                    setTriageScope(metric.label === 'New' ? 'action' : metric.label === 'Priority' ? 'priority' : 'saved');
+                  }}
+                  className={`min-w-[84px] rounded-control border px-2.5 py-2 text-left transition-colors hover:bg-bg sm:min-w-[92px] ${metric.bg} ${metric.border}`}
+                >
+                  <span className="block text-[9px] font-medium text-muted">{metric.label}</span>
+                  <span className={`mt-0.5 block text-[15px] font-semibold leading-5 tabular-nums ${metric.tone}`}>{metric.value}</span>
+                </button>
+              ))}
+
+              <div className="col-span-3 flex items-center justify-end gap-2 pt-1 sm:pt-0">
+                <button
+                  type="button"
+                  onClick={() => void refreshInbox()}
+                  disabled={loading}
+                  className="inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-muted transition-colors hover:bg-panel hover:text-fg disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+                  {loading ? 'Syncing' : 'Refresh'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('split')}
+                  className="inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control bg-accent px-3 text-[11px] font-medium text-white transition-colors hover:bg-accent/90"
+                >
+                  <Inbox size={13} />
+                  Open inbox
+                </button>
+              </div>
             </div>
           </div>
         </section>
