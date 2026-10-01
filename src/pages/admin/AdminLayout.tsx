@@ -739,10 +739,10 @@ export const AdminLayout: React.FC = () => {
                         to={tab.to}
                         end
                         data-ams-slug={'inbox-tab-' + tab.key}
-                        className={'group relative inline-flex h-9 shrink-0 items-center border-b-2 px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (
+                        className={'group relative inline-flex h-9 shrink-0 items-center px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (
                           active
-                            ? 'border-accent text-fg font-semibold'
-                            : 'border-transparent text-muted hover:text-fg'
+                            ? 'font-semibold text-fg after:absolute after:inset-x-3 after:-bottom-px after:h-0.5 after:rounded-full after:bg-accent'
+                            : 'text-muted hover:text-fg'
                         )}
                       >
                         {tab.label}
