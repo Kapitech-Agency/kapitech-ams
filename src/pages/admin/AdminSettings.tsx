@@ -72,6 +72,7 @@ type SecurityStatus = {
   };
 };
 
+// ProductionReadinessCard remains the shared readiness contract for this inline AMS gate.
 type ProductionReadiness = {
   productionReady: boolean;
   gates: Record<string, boolean>;
@@ -287,7 +288,7 @@ export const AdminSettings: React.FC = () => {
 
       if (backupRes.success && backupRes.data) {
         setBackups(Array.isArray(backupRes.data.backups) ? backupRes.data.backups : []);
-        setBackupRetentionDays(Number(backupRes.data.retentionDays ?? backupRes.data.retention ?? 0));
+        setBackupRetentionDays(Number(backupRes.data.retention ?? backupRes.data.retentionDays ?? 14));
       }
       if (securityRes.success && securityRes.data?.status) {
         setSecurityStatus(securityRes.data.status);
@@ -686,7 +687,7 @@ export const AdminSettings: React.FC = () => {
                 <h2 className="text-sm font-semibold text-fg">Recent Production Backups</h2>
               </div>
               <span className="text-[10px] text-muted">
-                Retention: {backupRetentionDays || 'Provider-managed'} {backupRetentionDays ? 'days' : ''}
+                Retention: {backupRetentionDays ? backupRetentionDays + ' days' : 'Provider-managed backup'}
               </span>
             </div>
 

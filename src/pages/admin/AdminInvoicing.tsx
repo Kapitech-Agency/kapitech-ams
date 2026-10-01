@@ -2607,7 +2607,7 @@ export const AdminInvoicing: React.FC = () => {
 
   return (
     <AdminPageShell featureSlug="finance-module" className="finance-module">
-      <div className="min-[900px]:hidden min-w-0">
+      <div className="min-[900px]:hidden -mx-1 mb-4 overflow-x-auto min-w-0">
         <AdminSectionTabs
           ariaLabel="Finance sections"
           activeKey={financeView === 'invoices' ? 'invoices' : financeView}
@@ -2849,7 +2849,7 @@ export const AdminInvoicing: React.FC = () => {
   </header>
   {incomeExpenseMode === 'income' ? (
     <div className="space-y-0">
-      <div className="overflow-x-auto custom-scrollbar">
+      <div className="overflow-x-auto px-1 custom-scrollbar">
         {incomeRows.length === 0 ? (
           <div className="p-5"><EmptyState title="No income recorded" description="Recorded payments will appear here."/></div>
         ) : (

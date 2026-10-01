@@ -3596,7 +3596,7 @@ apiRouter.put('/crm/proposals/:id', requireAuth, requirePermission('canManageCrm
     for (const key of ['title','clientName','company','dealId','projectId','validityPeriod','paymentTerms','notes'] as const) if (patch[key] !== undefined) patch[key] = cleanText(patch[key], key === 'notes' ? 3000 : 300);
     if (patch.currency !== undefined && !['IDR','USD'].includes(String(patch.currency))) { res.status(400).json({ success: false, error: 'Invalid proposal currency.' }); return; }
     if (patch.status !== undefined && !['Draft','Internal Review','Sent','Approved','Rejected','Accepted'].includes(String(patch.status))) { res.status(400).json({ success: false, error: 'Invalid proposal status.' }); return; }
-    if (['Approved', 'Rejected'].includes(String(patch.status)) && !Boolean(req.user!.permissions?.canApproveBudgets) && !isMasterAdministrator(req.user)) {
+    if (['Approved', 'Rejected'].includes(String(patch.status)) && !Boolean(req.user!.permissions?.canApproveBudgets) && req.user!.stakeholderType !== 'Master' && !isMasterAdministrator(req.user)) {
       res.status(403).json({ success: false, error: 'Proposal approval status requires approval permission.' });
       return;
     }
@@ -4002,11 +4002,12 @@ apiRouter.post('/projects/timelogs', requireAuth, requireAnyPermission('canManag
 
 apiRouter.delete('/projects/timelogs/:id', requireAuth, requireAnyPermission('canManageKanbanTasks', 'canManageProjects'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const { id } = req.params;
-  const canManageAllTimeLogs = isMasterAdministrator(req.user) || Boolean(req.user!.permissions?.canManageProjects);
+  const canManageAllTimeLogs = Boolean(req.user!.permissions?.canManageProjects);
+  const hasMasterTimeLogAuthority = isMasterAdministrator(req.user);
   if (getDataSourceMode() === 'postgres') {
     const existing = await postgresTimeLogRepository.findById(id);
     if (!existing) { res.status(404).json({ success: false, error: 'Time entry not found.' }); return; }
-    if (!canManageAllTimeLogs && String(existing.userId || '') !== String(req.user!.id)) {
+    if (!canManageAllTimeLogs && !hasMasterTimeLogAuthority && String(existing.userId || '') !== String(req.user!.id)) {
       res.status(403).json({ success: false, error: 'You can only delete your own time entries.' });
       return;
     }
