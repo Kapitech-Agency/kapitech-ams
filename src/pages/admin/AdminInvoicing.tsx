@@ -555,6 +555,7 @@ const FinanceCashFlowChart: React.FC<{
   ariaLabel: string;
 }> = ({ data, currency, ariaLabel }) => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [dragging, setDragging] = useState(false);
   if (!data.length) return null;
   const width = 760, height = 340, left = 64, right = 18, top = 20, bottom = 42;
   const innerWidth = width - left - right, innerHeight = height - top - bottom;
@@ -564,11 +565,63 @@ const FinanceCashFlowChart: React.FC<{
   const range = Math.max(1, maxValue - minValue);
   const x = (index: number) => left + (data.length === 1 ? innerWidth / 2 : (index / (data.length - 1)) * innerWidth);
   const y = (value: number) => top + ((maxValue - value) / range) * innerHeight;
-  const line = (key: 'inflow' | 'outflow' | 'net') => data.map((point, index) => x(index) + ',' + y(point[key])).join(' ');
+
+  const buildSmoothPath = (key: 'inflow' | 'outflow' | 'net') => {
+    const points = data.map((point, index) => ({ x: x(index), y: y(point[key]) }));
+    if (!points.length) return '';
+    if (points.length === 1) return 'M ' + points[0].x + ' ' + points[0].y;
+
+    const slopes = points.slice(0, -1).map((point, index) => {
+      const next = points[index + 1];
+      const dx = next.x - point.x;
+      return dx === 0 ? 0 : (next.y - point.y) / dx;
+    });
+
+    const tangents = points.map((_point, index) => {
+      if (index === 0) return slopes[0];
+      if (index === points.length - 1) return slopes[slopes.length - 1];
+
+      const previous = slopes[index - 1];
+      const next = slopes[index];
+      if (previous === 0 || next === 0 || previous * next <= 0) return 0;
+
+      const dxPrevious = points[index].x - points[index - 1].x;
+      const dxNext = points[index + 1].x - points[index].x;
+      return ((dxPrevious + dxNext) / ((dxPrevious / previous) + (dxNext / next)));
+    });
+
+    let path = 'M ' + points[0].x + ' ' + points[0].y;
+    for (let index = 0; index < points.length - 1; index += 1) {
+      const current = points[index];
+      const next = points[index + 1];
+      const dx = next.x - current.x;
+      const controlOneX = current.x + dx / 3;
+      const controlTwoX = next.x - dx / 3;
+      const controlOneY = current.y + tangents[index] * dx / 3;
+      const controlTwoY = next.y - tangents[index + 1] * dx / 3;
+      path += ' C ' + controlOneX + ' ' + controlOneY + ', ' + controlTwoX + ' ' + controlTwoY + ', ' + next.x + ' ' + next.y;
+    }
+    return path;
+  };
+
+  const line = (key: 'inflow' | 'outflow' | 'net') => buildSmoothPath(key);
   const area = (key: 'inflow' | 'net') => {
-    const pts = data.map((point, index) => ({ x: x(index), y: y(point[key]) }));
-    if (!pts.length) return '';
-    return 'M ' + pts[0].x + ' ' + y(0) + ' L ' + pts.map((point) => point.x + ' ' + point.y).join(' L ') + ' L ' + pts[pts.length - 1].x + ' ' + y(0) + ' Z';
+    const linePath = buildSmoothPath(key);
+    if (!linePath) return '';
+    const firstX = x(0);
+    const lastX = x(data.length - 1);
+    const zeroY = y(0);
+    return linePath + ' L ' + lastX + ' ' + zeroY + ' L ' + firstX + ' ' + zeroY + ' Z';
+  };
+
+  const pickIndexFromPointer = (event: React.PointerEvent<SVGSVGElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    if (!rect.width) return;
+    const relativeX = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+    const svgX = relativeX * width;
+    const rawIndex = data.length <= 1 ? 0 : ((svgX - left) / innerWidth) * (data.length - 1);
+    const nextIndex = Math.max(0, Math.min(data.length - 1, Math.round(rawIndex)));
+    setActiveIndex(nextIndex);
   };
   const latest = data[data.length - 1];
   const collected = data.reduce((sum, point) => sum + point.inflow, 0);
@@ -592,7 +645,23 @@ const FinanceCashFlowChart: React.FC<{
       </div>
       <div className="mt-4 rounded-card border border-line/80 bg-bg/30 p-2 sm:p-3">
         <div className="relative h-[clamp(270px,34vw,380px)] w-full">
-          <svg viewBox={'0 0 ' + width + ' ' + height} className="h-full w-full" preserveAspectRatio="none" onMouseLeave={() => setActiveIndex(null)}>
+          <svg viewBox={'0 0 ' + width + ' ' + height} className={'h-full w-full ' + (dragging ? 'cursor-grabbing' : 'cursor-crosshair')} preserveAspectRatio="none"
+            onPointerDown={(event) => {
+              setDragging(true);
+              event.currentTarget.setPointerCapture(event.pointerId);
+              pickIndexFromPointer(event);
+            }}
+            onPointerMove={(event) => {
+              if (dragging || event.pointerType === 'mouse') pickIndexFromPointer(event);
+            }}
+            onPointerUp={(event) => {
+              setDragging(false);
+              if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+            }}
+            onPointerCancel={() => setDragging(false)}
+            onPointerLeave={() => {
+              if (!dragging) setActiveIndex(null);
+            }}>
             <defs>
               <linearGradient id="finance-inflow-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--series-1)" stopOpacity="0.18"/><stop offset="100%" stopColor="var(--series-1)" stopOpacity="0"/></linearGradient>
               <linearGradient id="finance-net-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="var(--success)" stopOpacity="0.14"/><stop offset="100%" stopColor="var(--success)" stopOpacity="0"/></linearGradient>
@@ -601,9 +670,9 @@ const FinanceCashFlowChart: React.FC<{
             <line x1={left} x2={width - right} y1={y(0)} y2={y(0)} stroke="var(--line)" strokeWidth="1.4" strokeDasharray="4 4"/>
             <path d={area('inflow')} fill="url(#finance-inflow-fill)"/>
             <path d={area('net')} fill="url(#finance-net-fill)"/>
-            <polyline points={line('inflow')} fill="none" stroke="var(--series-1)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"/>
-            <polyline points={line('outflow')} fill="none" stroke="var(--series-3)" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"/>
-            <polyline points={line('net')} fill="none" stroke="var(--success)" strokeWidth="2.1" strokeDasharray="5 4" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d={line('inflow')} fill="none" stroke="var(--series-1)" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d={line('outflow')} fill="none" stroke="var(--series-3)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d={line('net')} fill="none" stroke="var(--success)" strokeWidth="2.2" strokeDasharray="5 4" strokeLinecap="round" strokeLinejoin="round"/>
             {data.map((point, index) => <g key={point.label} onMouseEnter={() => setActiveIndex(index)} onFocus={() => setActiveIndex(index)} tabIndex={0} aria-label={`${point.label}: collected ${formatNativeAmount(point.inflow, currency, true)}, operating burn ${formatNativeAmount(point.outflow, currency, true)}, net ${formatNativeAmount(point.net, currency, true)}`}><line x1={x(index)} x2={x(index)} y1={top} y2={top + innerHeight} stroke={activeIndex === index ? 'var(--series-4)' : 'transparent'} strokeDasharray="4 4"/><circle cx={x(index)} cy={y(point.inflow)} r={activeIndex === index ? 4.8 : 3} fill="var(--series-1)"/><circle cx={x(index)} cy={y(point.outflow)} r={activeIndex === index ? 4.4 : 2.5} fill="var(--series-3)"/><circle cx={x(index)} cy={y(point.net)} r={activeIndex === index ? 4.4 : 2.5} fill="var(--success)"/></g>)}
           </svg>
           {activeIndex !== null && data[activeIndex] && <div className="pointer-events-none absolute top-3 z-10 w-[210px] -translate-x-1/2 rounded-control border border-line bg-panel px-3 py-2.5 text-[11px]" style={{ left: tooltipLeft + '%' }}><p className="font-semibold text-fg">{data[activeIndex].label}</p><div className="mt-2 space-y-1.5 text-muted"><div className="flex justify-between gap-3"><span>Collected</span><span className="tabular-nums text-success">{formatNativeAmount(data[activeIndex].inflow, currency, true)}</span></div><div className="flex justify-between gap-3"><span>Operating burn</span><span className="tabular-nums text-fg">{formatNativeAmount(data[activeIndex].outflow, currency, true)}</span></div><div className="flex justify-between gap-3"><span>Net cash</span><span className={'tabular-nums ' + (data[activeIndex].net >= 0 ? 'text-success' : 'text-danger')}>{formatNativeAmount(data[activeIndex].net, currency, true)}</span></div></div></div>}
