@@ -6,6 +6,7 @@
 
 import { ContactSubmission, getLocalSubmissions } from './submissions';
 import { api } from './apiClient';
+import { toSlug } from './slug';
 
 export type CrmStage = 'new' | 'contacted' | 'proposal' | 'negotiation' | 'won' | 'lost';
 export type CrmPriority = 'low' | 'medium' | 'high' | 'urgent';
@@ -42,6 +43,7 @@ export interface CrmDocumentItem {
 
 export interface CrmLead {
   id: string;
+  slug?: string;
   clientName: string;
   company: string;
   email: string;
@@ -69,6 +71,7 @@ let crmServerHydrationStarted = false;
 function normalizeServerDeal(deal: any): CrmLead {
   return {
     id: String(deal.id),
+    slug: toSlug(deal.slug || deal.company || deal.clientName || deal.id, 'lead-record'),
     clientName: String(deal.clientName || deal.name || 'Prospective Client'),
     company: String(deal.company || deal.clientCompany || ''),
     email: String(deal.email || ''),
@@ -332,7 +335,7 @@ export const getCmsLeads = (): CrmLead[] => {
   if (import.meta.env.PROD) {
     crmCache = [];
   } else {
-    crmCache = INITIAL_DEFAULT_LEADS;
+    crmCache = INITIAL_DEFAULT_LEADS.map((lead) => ({ ...lead, slug: toSlug(lead.slug || lead.company || lead.clientName || lead.id, 'lead-record') }));
   }
   return crmCache;
 };
