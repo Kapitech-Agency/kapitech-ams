@@ -240,7 +240,7 @@ export const AdminCmsServices: React.FC = () => {
   };
 
   return (
-    <AdminPageShell featureSlug="cms-services-module">
+    <AdminPageShell featureSlug="cms-services-module" className="ams-cms-module">
         <ConfirmDialog
           open={!!deleteTarget}
           onClose={() => setDeleteTarget(null)}
