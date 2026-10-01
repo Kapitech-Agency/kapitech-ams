@@ -288,7 +288,8 @@ export const AdminSettings: React.FC = () => {
 
       if (backupRes.success && backupRes.data) {
         setBackups(Array.isArray(backupRes.data.backups) ? backupRes.data.backups : []);
-        setBackupRetentionDays(Number(backupRes.data.retention ?? backupRes.data.retentionDays ?? 14));
+        const res = backupRes;
+        setBackupRetentionDays(Number(res.data.retention ?? res.data.retentionDays ?? 14));
       }
       if (securityRes.success && securityRes.data?.status) {
         setSecurityStatus(securityRes.data.status);
