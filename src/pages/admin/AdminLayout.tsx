@@ -48,7 +48,7 @@ const STITCH_NAV_ITEMS: AdminNavItem[] = [
   { key: 'clients', to: '/admin/clients', label: 'Clients', icon: UsersRound, requiredTier: 3, group: 'Agency Management' },
   { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, badge: 14, requiredTier: 3, group: 'Agency Management' },
   { key: 'team', to: '/admin/team', label: 'Team', icon: UsersRound, accessKey: 'timelogs', requiredTier: 3, group: 'Project Operations' },
-  { key: 'tasks', to: '/admin/dashboard?view=tasks', label: 'Tasks', icon: ClipboardCheck, badge: 3, accessKey: 'projects', requiredTier: 3, group: 'Project Operations' },
+  { key: 'tasks', to: '/admin/tasks', label: 'Tasks', icon: ClipboardCheck, badge: 3, accessKey: 'projects', requiredTier: 3, group: 'Project Operations' },
   { key: 'documents', to: '/admin/documents', label: 'Documents', icon: LockKeyhole, badge: 'Encrypted', requiredTier: 3, group: 'Project Operations' },
 ];
 
@@ -214,6 +214,10 @@ export const AdminLayout: React.FC = () => {
 
     if (path === '/admin/dashboard') {
       return new URLSearchParams(location.search).get('view') !== 'tasks';
+    }
+
+    if (path === '/admin/tasks') {
+      return location.pathname === '/admin/tasks' || (location.pathname === '/admin/dashboard' && new URLSearchParams(location.search).get('view') === 'tasks');
     }
 
     if (path === '/admin/team') {

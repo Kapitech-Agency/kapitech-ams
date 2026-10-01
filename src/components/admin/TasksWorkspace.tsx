@@ -708,7 +708,7 @@ export const TasksWorkspace: React.FC = () => {
           items={TASK_TABS.map((tab) => ({
             key: tab.key,
             label: tab.label,
-            to: '/admin/dashboard?view=tasks' + tab.search
+            to: '/admin/tasks' + (tab.search ? '?' + tab.search.replace(/^&/, '') : '')
           }))}
         />
       </div>

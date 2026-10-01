@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Layers, 
   Plus, 
@@ -33,13 +33,15 @@ import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { AdminMetricStrip, AdminModuleHeader , AdminPageShell } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 export const AdminCmsServices: React.FC = () => {
   const { language } = useLanguage();
   const [servicesList, setServicesList] = useState<ServiceItemData[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(9);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -95,6 +97,10 @@ export const AdminCmsServices: React.FC = () => {
       s.slug.toLowerCase().includes(q);
     return matchesCat && matchesSearch;
   });
+  const totalServicePages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const pagedServices = filtered.slice((page - 1) * pageSize, page * pageSize);
+  useEffect(() => { setPage(1); }, [searchQuery, selectedCategory, pageSize]);
+  useEffect(() => { setPage((current) => Math.min(current, totalServicePages)); }, [totalServicePages]);
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -359,8 +365,9 @@ export const AdminCmsServices: React.FC = () => {
           )}
         </div>
       ) : (
+        <>
         <div data-ams-feature-slug="cms-services-directory" data-ams-slug="cms-services-directory" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full">
-        {filtered.map((item) => (
+        {pagedServices.map((item) => (
           <div
             key={item.slug}
             className="w-full h-full bg-panel border border-line rounded-card p-4 flex flex-col justify-between hover:border-line transition-all group"
@@ -440,6 +447,8 @@ export const AdminCmsServices: React.FC = () => {
         ))}
 
         </div>
+        <AdminTablePagination total={filtered.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="services" slug="cms-services-pagination" />
+        </>
       )}
       {/* Service Detail / Inspection Modal */}
       <Modal slug="cms-service-detail-modal" open={!!selectedServiceForDetail} onClose={() => setSelectedServiceForDetail(null)} size="lg" title={selectedServiceForDetail?.title || 'Service detail'} description={selectedServiceForDetail?.heroSubtitle || selectedServiceForDetail?.heroSubtitleId}>

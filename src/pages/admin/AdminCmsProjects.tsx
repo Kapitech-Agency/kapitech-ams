@@ -28,13 +28,15 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { useDragToScroll } from '../../lib/useDragToScroll';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { AdminModuleHeader , AdminPageShell } from '../../components/admin/AdminModulePrimitives';
+import { AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 export const AdminCmsProjects: React.FC = () => {
   const { language, t } = useLanguage();
   const galleryScrollRef = useDragToScroll<HTMLDivElement>();
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(9);
   const [filterPillar, setFilterPillar] = useState<'All' | 'Visual Experience' | 'Innovation Development'>('All');
   const [editingProject, setEditingProject] = useState<ProjectItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -266,6 +268,10 @@ export const AdminCmsProjects: React.FC = () => {
       p.service.toLowerCase().includes(query);
     return matchesPillar && matchesSearch;
   });
+  const totalProjectPages = Math.max(1, Math.ceil(filteredProjects.length / pageSize));
+  const pagedProjects = filteredProjects.slice((page - 1) * pageSize, page * pageSize);
+  useEffect(() => { setPage(1); }, [searchQuery, filterPillar, pageSize]);
+  useEffect(() => { setPage((current) => Math.min(current, totalProjectPages)); }, [totalProjectPages]);
 
   return (
     <AdminPageShell featureSlug="cms-projects-module">
@@ -380,6 +386,7 @@ export const AdminCmsProjects: React.FC = () => {
               onClick={() => {
                 setSearchQuery('');
                 setFilterPillar('All');
+                setPage(1);
               }}
               disabled={!searchQuery && filterPillar === 'All'}
               className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[11px] font-medium text-muted transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-fg disabled:cursor-not-allowed disabled:opacity-45"
@@ -424,8 +431,9 @@ export const AdminCmsProjects: React.FC = () => {
           )}
         </div>
       ) : (
+        <>
         <div ref={galleryScrollRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-        {filteredProjects.map((project) => (
+        {pagedProjects.map((project) => (
           <div
             key={project.id}
             data-ams-slug={'cms-project-' + project.id}
@@ -533,6 +541,8 @@ export const AdminCmsProjects: React.FC = () => {
         ))}
 
         </div>
+        <AdminTablePagination total={filteredProjects.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="case studies" slug="cms-projects-pagination" />
+        </>
       )}
       {/* MODAL: ADD / EDIT PROJECT WITH LIVE PREVIEW & DRAG & DROP */}
       </div>
