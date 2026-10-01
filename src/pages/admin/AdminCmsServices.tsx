@@ -365,6 +365,7 @@ export const AdminCmsServices: React.FC = () => {
           )}
         </div>
       ) : (
+        <>
         <div data-ams-feature-slug="cms-services-directory" data-ams-slug="cms-services-directory" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full">
         {pagedServices.map((item) => (
           <div
@@ -447,6 +448,7 @@ export const AdminCmsServices: React.FC = () => {
 
         </div>
         <AdminTablePagination total={filtered.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="services" slug="cms-services-pagination" />
+        </>
       )}
       {/* Service Detail / Inspection Modal */}
       <Modal slug="cms-service-detail-modal" open={!!selectedServiceForDetail} onClose={() => setSelectedServiceForDetail(null)} size="lg" title={selectedServiceForDetail?.title || 'Service detail'} description={selectedServiceForDetail?.heroSubtitle || selectedServiceForDetail?.heroSubtitleId}>
