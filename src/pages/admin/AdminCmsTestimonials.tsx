@@ -139,7 +139,7 @@ export const AdminCmsTestimonials: React.FC = () => {
   };
 
   return (
-    <AdminPageShell featureSlug="cms-testimonials-module">
+    <AdminPageShell featureSlug="cms-testimonials-module" className="ams-cms-module">
       
       <AdminModuleHeader slug="cms-testimonials-header"
         icon={<Users size={20} />}
@@ -261,17 +261,17 @@ export const AdminCmsTestimonials: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-line">
                 {pagedTestimonials.map((item) => (
-                  <tr key={item.id} className="h-12 transition-colors hover:bg-bg/60">
-                    <td className="px-4 py-2.5">
+                  <tr key={item.id} className="h-10 transition-colors hover:bg-bg/60">
+                    <td className="px-3 py-2">
                       <ProfileIdentity profile={{ name: item.author, role: item.role || undefined, contextLabel: item.company || undefined }} showRole={false} size="sm" />
                     </td>
-                    <td className="px-4 py-2.5">
+                    <td className="px-3 py-2">
                       <div className="min-w-[180px]">
                         <p className="truncate text-[11px] font-medium text-fg">{item.company || 'Company not set'}</p>
                         <p className="mt-0.5 truncate text-[10px] text-muted">{item.role || 'Role not set'}</p>
                       </div>
                     </td>
-                    <td className="px-4 py-2.5">
+                    <td className="px-3 py-2">
                       <div className="flex items-center gap-1 text-warning" aria-label={String(item.rating || 5) + ' out of 5 stars'}>
                         {[...Array(item.rating || 5)].map((_, i) => <Star key={i} size={12} fill="currentColor" />)}
                       </div>
@@ -279,10 +279,10 @@ export const AdminCmsTestimonials: React.FC = () => {
                     <td className="max-w-[360px] px-4 py-2.5">
                       <p className="line-clamp-2 text-[11px] leading-4 text-muted">“{item.quoteId || item.quote || 'No quote provided.'}”</p>
                     </td>
-                    <td className="px-4 py-2.5">
+                    <td className="px-3 py-2">
                       <span className="inline-flex items-center gap-1 text-[10px] text-muted"><MapPin size={11} />{item.location || 'Not set'}</span>
                     </td>
-                    <td className="px-4 py-2.5">
+                    <td className="px-3 py-2">
                       <div className="flex items-center justify-end gap-1.5">
                         <button type="button" onClick={() => handleOpenEdit(item)} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label={'Edit ' + item.author} title="Edit testimonial"><Edit3 size={13} /></button>
                         <button type="button" onClick={() => setDeleteTarget({ id: item.id, author: item.author })} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-bg text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label={'Delete ' + item.author} title="Delete testimonial"><Trash2 size={13} /></button>
@@ -311,7 +311,7 @@ export const AdminCmsTestimonials: React.FC = () => {
             </>
           )}
         >
-          <div className="space-y-5">
+          <div className="space-y-4">
             <div className="rounded-control border border-danger/30 bg-danger/5 p-3">
               <p className="text-sm font-semibold text-fg">{deleteTarget.author}</p>
               <p className="mt-1 text-xs text-muted">The testimonial will no longer appear on the public site.</p>
@@ -325,7 +325,7 @@ export const AdminCmsTestimonials: React.FC = () => {
         <Drawer slug="cms-testimonial-editor-drawer"
           open={isModalOpen}
           onClose={() => !isSaving && setIsModalOpen(false)}
-          size="xl"
+          size="lg"
           dialogClassName="border-l border-line bg-panel"
           title={editingItem.author ? `Edit: ${editingItem.author}` : (language === 'id' ? 'Tambah Testimoni Klien' : 'Add client testimonial')}
           footer={(
@@ -339,7 +339,7 @@ export const AdminCmsTestimonials: React.FC = () => {
             </>
           )}
         >
-          <div className="space-y-5">
+          <div className="space-y-4">
             <form id="testimonial-form" data-ams-feature-slug="cms-testimonial-form" data-ams-slug="cms-testimonial-form" onSubmit={handleSaveModal} className="space-y-4">
               <div>
                 <label className="block text-xs font-sans text-muted mb-1 font-semibold">
@@ -355,7 +355,7 @@ export const AdminCmsTestimonials: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                 <div>
                   <label className="block text-xs font-sans text-muted mb-1 font-semibold">
                     {language === 'id' ? 'Jabatan' : 'Role / Position'}

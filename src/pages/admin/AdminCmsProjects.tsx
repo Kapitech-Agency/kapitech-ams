@@ -290,7 +290,7 @@ export const AdminCmsProjects: React.FC = () => {
   useEffect(() => { setPage((current) => Math.min(current, totalProjectPages)); }, [totalProjectPages]);
 
   return (
-    <AdminPageShell featureSlug="cms-projects-module">
+    <AdminPageShell featureSlug="cms-projects-module" className="ams-cms-module">
         <ConfirmDialog
           open={!!deleteTarget}
           onClose={() => setDeleteTarget(null)}
@@ -452,8 +452,8 @@ export const AdminCmsProjects: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-line">
               {pagedProjects.map((project) => (
-                <tr key={project.id} data-ams-slug={'cms-project-' + project.id} className="h-12 transition-colors hover:bg-bg/60">
-                  <td className="px-4 py-2.5">
+                <tr key={project.id} data-ams-slug={'cms-project-' + project.id} className="h-10 transition-colors hover:bg-bg/60">
+                  <td className="px-3 py-2">
                     <div className="flex min-w-0 items-center gap-3">
                       <div className="h-9 w-12 shrink-0 overflow-hidden rounded-control border border-line bg-bg">
                         {project.image ? <img src={project.image} alt="" className="h-full w-full object-cover" /> : <div className="flex h-full w-full items-center justify-center text-muted"><ImageIcon size={14} /></div>}
@@ -464,16 +464,16 @@ export const AdminCmsProjects: React.FC = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-2.5"><span className="inline-flex max-w-[180px] truncate rounded-badge border border-info/20 bg-info/10 px-2 py-1 text-[10px] font-medium text-info">{project.pillar || 'Unspecified'}</span></td>
+                  <td className="px-3 py-2"><span className="inline-flex max-w-[180px] truncate rounded-badge border border-info/20 bg-info/10 px-2 py-1 text-[10px] font-medium text-info">{project.pillar || 'Unspecified'}</span></td>
                   <td className="max-w-[220px] px-4 py-2.5"><span className="block truncate text-[11px] text-muted">{project.service || 'Not set'}</span></td>
                   <td className="px-4 py-2.5 font-mono text-[11px] tabular-nums text-fg">{project.year || '—'}</td>
-                  <td className="px-4 py-2.5">
+                  <td className="px-3 py-2">
                     <button type="button" onClick={() => handleToggleFeatured(project)} className={`inline-flex h-8 items-center gap-1 rounded-control border px-2.5 text-[10px] font-semibold ${project.featured ? 'border-warning/20 bg-warning/10 text-warning' : 'border-line bg-bg text-muted hover:text-fg'}`} aria-pressed={project.featured}>
                       <Star size={11} fill={project.featured ? 'currentColor' : 'none'} />
                       {project.featured ? 'Featured' : 'Standard'}
                     </button>
                   </td>
-                  <td className="px-4 py-2.5">
+                  <td className="px-3 py-2">
                     <div className="flex items-center justify-end gap-1.5">
                       <button type="button" onClick={() => handleOpenEdit(project)} data-ams-slug={'cms-project-edit-' + project.id} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label={'Edit ' + project.title} title="Edit case study"><Edit3 size={13} /></button>
                       <button type="button" onClick={() => handleDelete(project.id, project.title)} data-ams-slug={'cms-project-delete-' + project.id} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-bg text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label={'Delete ' + project.title} title="Delete case study"><Trash2 size={13} /></button>
@@ -494,7 +494,7 @@ export const AdminCmsProjects: React.FC = () => {
       <Drawer slug="cms-project-editor-drawer"
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        size="xl"
+        size="lg"
         dialogClassName="border-l border-line bg-panel"
         title={editingProject?.title ? 'Edit: ' + editingProject.title : 'Add new case study'}
         description="Maintain the public case study content, media, and presentation."
@@ -534,7 +534,7 @@ export const AdminCmsProjects: React.FC = () => {
             </div>
 
             {modalTab === 'preview' ? (
-              <div className="py-6 flex flex-col items-center">
+              <div className="py-4 flex flex-col items-center">
                 <div className="text-[11px] text-muted mb-4">
                   Live Showcase Preview (as rendered on <code className="text-fg">kapitech.id/work</code>):
                 </div>
@@ -552,7 +552,7 @@ export const AdminCmsProjects: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="p-4 space-y-3 font-sans text-xs">
+                  <div className="p-3 space-y-2.5 font-sans text-xs">
                     <p className="text-muted text-xs font-sans">
                       {editingProject.descId || editingProject.desc || 'No description entered.'}
                     </p>
@@ -577,7 +577,7 @@ export const AdminCmsProjects: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <form id="case-study-form" data-ams-feature-slug="cms-project-form" data-ams-slug="cms-project-form" onSubmit={handleSaveModal} className="space-y-5">
+              <form id="case-study-form" data-ams-feature-slug="cms-project-form" data-ams-slug="cms-project-form" onSubmit={handleSaveModal} className="space-y-4">
                 
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
