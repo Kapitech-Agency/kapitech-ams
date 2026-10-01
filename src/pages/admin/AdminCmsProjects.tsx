@@ -281,7 +281,7 @@ export const AdminCmsProjects: React.FC = () => {
       <AdminModuleHeader slug="cms-projects-header"
         icon={<Layers size={20} />}
         className="mb-0"
-        title={t('admin.nav.cmsProjects')}
+        title="Projects"
         description={language === 'id'
           ? 'Kelola showcase studi kasus dan portofolio agency untuk kapitech.id/work.'
           : 'Manage case studies, portfolio showcases, and technical deliverables at kapitech.id/work.'}
