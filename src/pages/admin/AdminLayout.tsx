@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Link, NavLink, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import {
   Home,
+  Inbox,
   Briefcase,
   Landmark,
   Menu,
@@ -42,6 +43,7 @@ type AdminNavItem = NavItem & { accessKey?: string };
 
 const STITCH_NAV_ITEMS: AdminNavItem[] = [
   { key: 'dashboard', to: '/admin/dashboard', label: 'Dashboard', icon: Home, requiredTier: 2, group: 'Agency Core' },
+  { key: 'inbox', to: '/admin/inbox', label: 'Inbox', icon: Inbox, accessKey: 'inbox', requiredTier: 2, group: 'Agency Core' },
   { key: 'finance', to: '/admin/invoicing', label: 'Finance', icon: Landmark, accessKey: 'invoicing', requiredTier: 2, group: 'Agency Core' },
   { key: 'clients', to: '/admin/clients', label: 'Clients', icon: UsersRound, requiredTier: 3, group: 'Agency Management' },
   { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, badge: 14, requiredTier: 3, group: 'Agency Management' },
