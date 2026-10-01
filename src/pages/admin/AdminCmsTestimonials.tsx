@@ -108,7 +108,7 @@ export const AdminCmsTestimonials: React.FC = () => {
   return (
     <AdminPageShell featureSlug="cms-testimonials-module">
       
-      <AdminModuleHeader
+      <AdminModuleHeader slug="cms-testimonials-header"
         icon={<Users size={20} />}
         className="mb-0"
         title="Testimonials"
@@ -155,7 +155,7 @@ export const AdminCmsTestimonials: React.FC = () => {
           <Button className="mt-4" icon={<Plus size={14} />} onClick={handleOpenAdd}>Add Testimonial</Button>
         </div>
       ) : (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div data-ams-feature-slug="cms-testimonials-directory" data-ams-slug="cms-testimonials-directory" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {testimonials.map((item) => (
           <div
             key={item.id}
@@ -209,7 +209,7 @@ export const AdminCmsTestimonials: React.FC = () => {
       )}
 
       {deleteTarget && (
-        <Modal
+        <Modal slug="cms-testimonial-delete-modal"
           open={!!deleteTarget}
           onClose={() => !isDeleting && setDeleteTarget(null)}
           size="sm"
@@ -233,7 +233,7 @@ export const AdminCmsTestimonials: React.FC = () => {
 
       {/* Modal: Add / Edit Testimonial */}
       {isModalOpen && editingItem && (
-        <Drawer
+        <Drawer slug="cms-testimonial-editor-drawer"
           open={isModalOpen}
           onClose={() => !isSaving && setIsModalOpen(false)}
           size="lg"
@@ -250,7 +250,7 @@ export const AdminCmsTestimonials: React.FC = () => {
           )}
         >
           <div className="space-y-4">
-            <form id="testimonial-form" onSubmit={handleSaveModal} className="space-y-4">
+            <form id="testimonial-form" data-ams-feature-slug="cms-testimonial-form" data-ams-slug="cms-testimonial-form" onSubmit={handleSaveModal} className="space-y-4">
               <div>
                 <label className="block text-xs font-sans text-muted mb-1 font-semibold">
                   {language === 'id' ? 'Nama Klien / Eksekutif *' : 'Client / Executive Name *'}
