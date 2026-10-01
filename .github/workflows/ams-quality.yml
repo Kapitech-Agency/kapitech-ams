@@ -1,9 +1,6 @@
 name: AMS Quality Gate
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
