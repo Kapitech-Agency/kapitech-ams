@@ -75,6 +75,10 @@ export const AdminLayout: React.FC = () => {
   const [profileAvatarUrl, setProfileAvatarUrl] = useState<string | null>(
     () => session?.user.avatarUrl || null
   );
+  const [profileBio, setProfileBio] = useState(() => session?.user.bio || '');
+  const [profilePersonalEmail, setProfilePersonalEmail] = useState(() => session?.user.personalEmail || '');
+  const [profileAdditionalPhone, setProfileAdditionalPhone] = useState(() => session?.user.additionalPhone || '');
+  const [profilePhone, setProfilePhone] = useState(() => session?.user.phone || '');
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     try {
       const saved = window.localStorage.getItem('kapitech_ams_theme');
@@ -102,9 +106,13 @@ export const AdminLayout: React.FC = () => {
 
   useEffect(() => {
     const handleProfileUpdated = (event: Event) => {
-      const detail = (event as CustomEvent<{ name?: string; avatarUrl?: string | null }>).detail;
+      const detail = (event as CustomEvent<{ name?: string; avatarUrl?: string | null; bio?: string; personalEmail?: string; additionalPhone?: string; phone?: string }>).detail;
       if (detail?.name) setProfileName(detail.name);
-      setProfileAvatarUrl(detail?.avatarUrl || null);
+      if ('avatarUrl' in (detail || {})) setProfileAvatarUrl(detail?.avatarUrl || null);
+      if (typeof detail?.bio === 'string') setProfileBio(detail.bio);
+      if (typeof detail?.personalEmail === 'string') setProfilePersonalEmail(detail.personalEmail);
+      if (typeof detail?.additionalPhone === 'string') setProfileAdditionalPhone(detail.additionalPhone);
+      if (typeof detail?.phone === 'string') setProfilePhone(detail.phone);
     };
 
     window.addEventListener('kapitech_profile_updated', handleProfileUpdated);
@@ -419,10 +427,10 @@ export const AdminLayout: React.FC = () => {
               division: session?.user?.division,
               username: session?.user?.username,
               companyEmail: session?.user?.email,
-              personalEmail: session?.user?.personalEmail,
-              phone: session?.user?.phone,
-              additionalPhone: session?.user?.additionalPhone,
-              bio: session?.user?.bio,
+              personalEmail: profilePersonalEmail,
+              phone: profilePhone,
+              additionalPhone: profileAdditionalPhone,
+              bio: profileBio,
               avatarUrl: profileAvatarUrl,
               lastActive: session?.user?.lastLogin,
               status: 'active'

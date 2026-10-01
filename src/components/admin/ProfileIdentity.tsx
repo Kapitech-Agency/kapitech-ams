@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Briefcase,
   Building2,
   CalendarDays,
+  Check,
+  Copy,
   ExternalLink,
   Mail,
   Phone,
@@ -66,6 +68,28 @@ const formatLastActive = (value?: string) => {
   });
 };
 
+const getProfileCompleteness = (profile: PublicProfileData) => {
+  const fields = [
+    Boolean(profile.name.trim()),
+    Boolean(profile.avatarUrl),
+    Boolean(profile.role),
+    Boolean(profile.division),
+    Boolean(profile.companyEmail),
+    Boolean(profile.bio?.trim())
+  ];
+  return Math.round(fields.filter(Boolean).length / fields.length * 100);
+};
+
+const copyProfileValue = async (value: string) => {
+  if (!value) return false;
+  try {
+    await navigator.clipboard.writeText(value);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
   profile,
   size = 'md',
@@ -78,12 +102,20 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
 }) => {
   const [quickOpen, setQuickOpen] = useState(false);
   const [fullOpen, setFullOpen] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
 
   const status = profile.status;
   const hasContact = Boolean(
     profile.companyEmail || profile.personalEmail || profile.phone || profile.additionalPhone
   );
   const formattedLastActive = formatLastActive(profile.lastActive);
+  const completeness = useMemo(() => getProfileCompleteness(profile), [profile]);
+
+  const handleCopy = async (key: string, value: string) => {
+    if (!(await copyProfileValue(value))) return;
+    setCopied(key);
+    window.setTimeout(() => setCopied(current => current === key ? null : current), 1400);
+  };
 
   const openFullProfile = () => {
     setQuickOpen(false);
@@ -161,8 +193,8 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
           </>
         )}
       >
-        <div className="space-y-3">
-          <section className="rounded-card border border-line bg-bg p-4">
+        <div className="space-y-3" data-ams-feature-slug={slug + '-quick-view'}>
+          <section className="rounded-card border border-line bg-bg p-4" data-ams-slug={slug + '-quick-identity'}>
             <div className="flex items-start gap-3">
               <UserAvatar
                 name={profile.name}
@@ -197,22 +229,50 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
             </div>
           </section>
 
+          <section className="rounded-card border border-line bg-panel p-3.5" data-ams-slug={slug + '-quick-completeness'}>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Profile completeness</div>
+                <div className="mt-1 text-xs font-medium text-fg">{completeness}% ready</div>
+              </div>
+              <span className="text-[10px] text-muted">{completeness === 100 ? 'Complete' : 'Review profile details'}</span>
+            </div>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-line">
+              <div className="h-full rounded-full bg-accent" style={{ width: completeness + '%' }} />
+            </div>
+          </section>
+
           {(profile.companyEmail || profile.phone || profile.bio) && (
             <div className="grid gap-2.5 sm:grid-cols-2">
               {profile.companyEmail && (
                 <div className="rounded-control border border-line bg-bg p-3">
-                  <div className="flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-muted">
-                    <Mail size={11} />
-                    Email
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-muted">
+                      <Mail size={11} />
+                      Email
+                    </div>
+                    <button type="button" data-ams-slug={slug + '-quick-copy-email'} className="flex h-7 w-7 items-center justify-center rounded-control border border-line bg-panel text-muted hover:text-fg" aria-label="Copy company email" onClick={() => void handleCopy('quick-email', profile.companyEmail || '')}>
+                      {copied === 'quick-email' ? <Check size={12} className="text-success" /> : <Copy size={12} />}
+                    </button>
                   </div>
-                  <div className="mt-1 break-all text-xs font-medium text-fg">{profile.companyEmail}</div>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="mt-1 break-all text-xs font-medium text-fg">{profile.companyEmail}</div>
+                    <button type="button" data-ams-slug={slug + '-public-copy-email'} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted hover:text-fg" aria-label="Copy company email" onClick={() => void handleCopy('public-email', profile.companyEmail || '')}>
+                      {copied === 'public-email' ? <Check size={12} className="text-success" /> : <Copy size={12} />}
+                    </button>
+                  </div>
                 </div>
               )}
               {profile.phone && (
                 <div className="rounded-control border border-line bg-bg p-3">
-                  <div className="flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-muted">
-                    <Phone size={11} />
-                    Phone
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.08em] text-muted">
+                      <Phone size={11} />
+                      Phone
+                    </div>
+                    <button type="button" data-ams-slug={slug + '-quick-copy-phone'} className="flex h-7 w-7 items-center justify-center rounded-control border border-line bg-panel text-muted hover:text-fg" aria-label="Copy phone" onClick={() => void handleCopy('quick-phone', profile.phone || '')}>
+                      {copied === 'quick-phone' ? <Check size={12} className="text-success" /> : <Copy size={12} />}
+                    </button>
                   </div>
                   <div className="mt-1 text-xs font-medium text-fg">{profile.phone}</div>
                 </div>
@@ -259,8 +319,8 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
           </>
         )}
       >
-        <div className="space-y-4">
-          <section className="rounded-card border border-line bg-bg p-5">
+        <div className="space-y-4" data-ams-feature-slug={slug + '-public-profile'}>
+          <section className="rounded-card border border-line bg-bg p-5" data-ams-slug={slug + '-public-identity'}>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <UserAvatar
                 name={profile.name}
@@ -298,6 +358,19 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
                   )}
                 </div>
               </div>
+            </div>
+          </section>
+
+          <section className="rounded-card border border-line bg-panel p-3.5" data-ams-slug={slug + '-public-completeness'}>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Profile completeness</div>
+                <div className="mt-1 text-xs font-medium text-fg">{completeness}% ready</div>
+              </div>
+              <span className="text-[10px] text-muted">{completeness === 100 ? 'Complete profile' : 'Some optional details are missing'}</span>
+            </div>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-line">
+              <div className="h-full rounded-full bg-accent" style={{ width: completeness + '%' }} />
             </div>
           </section>
 
@@ -415,6 +488,18 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
               </div>
             </section>
           )}
+
+          <section className="rounded-card border border-line bg-bg p-4" data-ams-slug={slug + '-public-visibility'}>
+            <div className="flex items-start gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-accent/20 bg-accent/8 text-accent-text">
+                <UserRound size={15} />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-semibold text-fg">Profile visibility</div>
+                <p className="mt-1 text-[11px] leading-5 text-muted">This drawer shows the professional identity shared inside AMS. Private contact fields remain available from Edit profile.</p>
+              </div>
+            </div>
+          </section>
 
           {!profile.bio &&
             !profile.role &&

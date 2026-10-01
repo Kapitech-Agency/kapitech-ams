@@ -19,6 +19,7 @@ interface UserProfilePublicDrawerProps {
   onEdit: () => void;
   displayName: string;
   title: string;
+  slug?: string;
 }
 
 const formatLastLogin = (value?: string) => {
@@ -40,6 +41,7 @@ export const UserProfilePublicDrawer: React.FC<UserProfilePublicDrawerProps> = (
   onEdit,
   displayName,
   title,
+  slug = 'profile-public'
 }) => {
   const session = getAdminSession();
   const user = session?.user;
@@ -63,6 +65,7 @@ export const UserProfilePublicDrawer: React.FC<UserProfilePublicDrawerProps> = (
       open={open}
       onClose={onClose}
       size="lg"
+      slug={slug}
       title="Public profile"
       description="The profile view other AMS users see for your workspace identity."
       footer={(
@@ -76,7 +79,7 @@ export const UserProfilePublicDrawer: React.FC<UserProfilePublicDrawerProps> = (
         </>
       )}
     >
-      <div className="space-y-4">
+      <div className="space-y-4" data-ams-feature-slug={slug}>
         <section className="rounded-card border border-line bg-panel p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             <UserAvatar name={profile.name} imageUrl={profile.avatarUrl} size="lg" online />

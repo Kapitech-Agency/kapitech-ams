@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Briefcase, Building2, Camera, Mail, Phone, Save, UserRound } from 'lucide-react';
+import { Briefcase, Building2, Camera, Mail, Phone, Save, Trash2, UserRound } from 'lucide-react';
 import { Drawer } from '../ui/Drawer';
 import Button from '../ui/Button';
 import UserAvatar from './UserAvatar';
@@ -11,6 +11,7 @@ interface UserProfileSettingsModalProps {
   onClose: () => void;
   displayName: string;
   title: string;
+  slug?: string;
 }
 
 const MAX_PHOTO_BYTES = 1_500_000;
@@ -26,7 +27,8 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
   open,
   onClose,
   displayName,
-  title
+  title,
+  slug = 'profile-edit'
 }) => {
   const session = getAdminSession();
   const user = session?.user;
@@ -38,6 +40,7 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [status, setStatus] = useState<{ success: boolean; message: string } | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [initialDraft, setInitialDraft] = useState({
     name: displayName,
@@ -78,6 +81,13 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
     avatarUrl
   }), [name, bio, personalEmail, additionalPhone, avatarUrl]);
   const isDirty = JSON.stringify(currentDraft) !== JSON.stringify(initialDraft);
+  const emailValid = !personalEmail.trim() || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personalEmail.trim());
+
+  const removePhoto = () => {
+    if (saving) return;
+    setAvatarUrl(null);
+    setPhotoError(null);
+  };
 
   const handlePhotoChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -104,7 +114,14 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
 
   const handleSave = async () => {
     if (!user?.id || !isDirty || saving) return;
-
+    if (!name.trim()) {
+      setStatus({ success: false, message: 'Full name is required.' });
+      return;
+    }
+    if (!emailValid) {
+      setEmailError('Enter a valid personal email address.');
+      return;
+    }
     setSaving(true);
     setStatus(null);
 
@@ -141,7 +158,7 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
           current.rememberMe
         );
         window.dispatchEvent(new CustomEvent('kapitech_profile_updated', {
-          detail: { name: payload.name, avatarUrl: payload.avatarUrl || null }
+          detail: { name: payload.name, avatarUrl: payload.avatarUrl || null, bio: payload.bio, personalEmail: payload.personalEmail, additionalPhone: payload.additionalPhone, phone: current.user.phone || '' }
         }));
       }
 
@@ -182,18 +199,20 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
       onClose={requestClose}
       closeOnOutsideClick={!isDirty && !saving}
       size="xl"
+      slug={slug}
       title="Edit profile"
       description={isDirty ? 'You have unsaved changes. Save them or choose Cancel to discard them.' : 'Update the information shown on your AMS public profile.'}
       footer={(
         <>
-          <Button type="button" variant="secondary" onClick={cancelChanges} disabled={saving}>
+          <Button type="button" variant="secondary" slug={slug + '-cancel'} onClick={cancelChanges} disabled={saving}>
             Cancel
           </Button>
           <Button
             type="button"
             variant="primary"
             loading={saving}
-            disabled={!isDirty}
+            disabled={!isDirty || !emailValid}
+            slug={slug + '-save'}
             icon={<Save size={14} />}
             onClick={() => void handleSave()}
           >
@@ -202,7 +221,7 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
         </>
       )}
     >
-      <div className="space-y-4">
+      <div className="space-y-4" data-ams-feature-slug={slug}
         <section className="rounded-card border border-line bg-bg p-4 sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             <UserAvatar name={name} imageUrl={initialsPreview} size="lg" online />
@@ -212,11 +231,14 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
                 <span className="rounded-badge border border-accent/20 bg-accent/8 px-1.5 py-0.5 text-[10px] font-semibold text-accent-text">AMS profile</span>
               </div>
               <div className="mt-1 text-xs text-muted">{title}</div>
-              <label className="mt-3 inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:border-muted hover:bg-panel-hover hover:text-fg">
+              <div className="mt-3 flex flex-wrap gap-2">
+                <label className="inline-flex min-h-9 cursor-pointer items-center gap-2 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:border-muted hover:bg-panel-hover hover:text-fg">
                 <Camera size={14} />
                 Change photo
-                <input type="file" accept="image/*" className="sr-only" onChange={handlePhotoChange} />
-              </label>
+                  <input type="file" accept="image/*" className="sr-only" onChange={handlePhotoChange} />
+                </label>
+                {avatarUrl && <Button type="button" variant="secondary" slug={slug + '-remove-photo'} icon={<Trash2 size={14} />} onClick={removePhoto} disabled={saving}>Remove photo</Button>}
+              </div>
               {photoError && <p className="mt-2 text-[11px] text-danger">{photoError}</p>}
             </div>
           </div>
@@ -294,11 +316,11 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
                 <span className="flex items-center gap-1.5 text-xs font-medium text-muted"><Mail size={13} />Personal email</span>
                 <input
                   value={personalEmail}
-                  onChange={(event) => setPersonalEmail(event.target.value)}
+                  onChange={(event) => { setPersonalEmail(event.target.value); setEmailError(null); }}
                   type="email"
                   placeholder="name@example.com"
                 />
-                <span className="text-[10px] leading-4 text-muted">Optional personal contact address.</span>
+                {emailError ? <span className="text-[10px] leading-4 text-danger">{emailError}</span> : <span className="text-[10px] leading-4 text-muted">Optional personal contact address.</span>}
               </label>
 
               <label className="block space-y-1.5">
@@ -331,8 +353,10 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
             value={bio}
             onChange={(event) => setBio(event.target.value)}
             placeholder="Add a short professional bio."
+            maxLength={500}
             className="w-full resize-y"
           />
+          <div className="mt-1 text-right text-[10px] text-muted">{bio.length}/500</div>
         </section>
 
         <div className="flex items-start gap-2.5 rounded-control border border-line bg-bg p-3 text-[11px] text-muted">
