@@ -1,6 +1,6 @@
 export interface ProjectItem {
   id: string;
-  slug: string;
+  slug?: string;
   title: string;
   client: string;
   industry: string;
@@ -32,7 +32,7 @@ export interface ProjectItem {
   year: string;
 }
 
-export const allProjects: ProjectItem[] = [
+export const allProjects = [
   // ==========================================
   // 1. UI/UX Design (Visual Experience) - 5 projects
   // ==========================================
@@ -1376,4 +1376,4 @@ export const allProjects: ProjectItem[] = [
     ],
     year: '2024'
   }
-].map((project) => ({ ...project, slug: project.id }));
+].map((project) => ({ ...project, slug: project.id })) as ProjectItem[];
