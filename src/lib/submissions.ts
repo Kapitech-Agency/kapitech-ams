@@ -82,9 +82,8 @@ export const DEFAULT_INBOX_SUBMISSIONS: ContactSubmission[] = [
     type: 'inquiry',
     starred: false,
     createdAt: '2026-09-16T14:45:00.000Z'
-  }
-,
-{
+  },
+  {
     id: 'job_inb_001',
     fullName: 'Nadia Prameswari',
     email: 'nadia.prameswari@example.com',
