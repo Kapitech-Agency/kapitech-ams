@@ -33,7 +33,7 @@ import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 
 const normalizeCmsService = (service: ServiceItemData | null | undefined): ServiceItemData => {
@@ -272,15 +272,6 @@ export const AdminCmsServices: React.FC = () => {
         }
       />
 
-      <AdminSectionTabs
-        ariaLabel="CMS sections"
-        activeKey="services"
-        items={[
-          { key: 'projects', label: 'Projects', to: '/admin/cms/projects' },
-          { key: 'services', label: 'Services', to: '/admin/cms/services' },
-          { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials' }
-        ]}
-      />
 
       {statusMessage && (() => {
         const failed = /failed|could not|unable|error|gagal|wajib|required/i.test(statusMessage);
@@ -578,8 +569,8 @@ export const AdminCmsServices: React.FC = () => {
       <Drawer slug="cms-service-editor-drawer"
         open={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        size="lg"
-        dialogClassName="border-l border-line bg-panel"
+        size="md"
+        dialogClassName="border-l border-line bg-panel max-w-[520px]"
         title="Add agency service"
         description="Create a service entry for the public agency catalog."
         footer={(
