@@ -78,8 +78,11 @@ test('Operating profit excludes CapEx while cash profit includes it', () => {
   const metrics = computeFinancialMetrics([
     invoice({
       status: 'paid',
+      subtotal: 10_000_000,
+      total: 10_000_000,
       amountPaid: 10_000_000,
       balanceDue: 0,
+      items: [{ id: 'line-1', description: 'Service', quantity: 1, unitPrice: 10_000_000, amount: 10_000_000 }],
       payments: [{
         id: 'pay-capex',
         amount: 10_000_000,
