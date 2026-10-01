@@ -396,7 +396,7 @@ export const TasksWorkspace: React.FC = () => {
       slug: 'task-' + slugify(taskForm.title) + '-' + slugify(id),
       createdAt: new Date().toISOString(),
       subtasks: taskForm.subtasks
-        .split('\\n')
+        .split('\n')
         .map(value => value.trim())
         .filter(Boolean)
         .map((title, index) => ({ id: id + '-subtask-' + index, title, completed: false })),
@@ -610,8 +610,7 @@ export const TasksWorkspace: React.FC = () => {
       .filter(Boolean)
       .slice(0, 6);
     const subtasks = taskEditForm.subtasks
-      .split('
-')
+      .split('\n')
       .map(value => value.trim())
       .filter(Boolean)
       .map((title, index) => ({
