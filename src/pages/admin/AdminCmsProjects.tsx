@@ -27,7 +27,7 @@ import type { ProjectItem } from '../../data/projectsData';
 import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 
 const normalizeCmsProject = (project: ProjectItem): ProjectItem => ({
@@ -319,15 +319,6 @@ export const AdminCmsProjects: React.FC = () => {
         }
       />
 
-      <AdminSectionTabs
-        ariaLabel="CMS sections"
-        activeKey="projects"
-        items={[
-          { key: 'projects', label: 'Projects', to: '/admin/cms/projects' },
-          { key: 'services', label: 'Services', to: '/admin/cms/services' },
-          { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials' }
-        ]}
-      />
       
       <AdminMetricStrip
         slug="cms-projects-kpis"
@@ -464,7 +455,7 @@ export const AdminCmsProjects: React.FC = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="px-3 py-2"><span className="inline-flex max-w-[180px] truncate rounded-badge border border-info/20 bg-info/10 px-2 py-1 text-[10px] font-medium text-info">{project.pillar || 'Unspecified'}</span></td>
+                  <td className="px-3 py-2"><span className="inline-flex max-w-[180px] truncate rounded-badge border border-accent/25 bg-accent/10 px-2 py-1 text-[10px] font-medium text-accent-text">{project.pillar || 'Unspecified'}</span></td>
                   <td className="max-w-[220px] px-4 py-2.5"><span className="block truncate text-[11px] text-muted">{project.service || 'Not set'}</span></td>
                   <td className="px-4 py-2.5 font-mono text-[11px] tabular-nums text-fg">{project.year || '—'}</td>
                   <td className="px-3 py-2">
@@ -495,7 +486,7 @@ export const AdminCmsProjects: React.FC = () => {
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         size="lg"
-        dialogClassName="border-l border-line bg-panel"
+        dialogClassName="border-l border-line bg-panel max-w-[560px]"
         title={editingProject?.title ? 'Edit: ' + editingProject.title : 'Add new case study'}
         description="Maintain the public case study content, media, and presentation."
         footer={modalTab === 'details'

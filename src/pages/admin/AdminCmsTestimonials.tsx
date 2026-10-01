@@ -6,7 +6,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
-import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 const normalizeCmsTestimonial = (item: TestimonialItem): TestimonialItem => ({
@@ -160,15 +160,6 @@ export const AdminCmsTestimonials: React.FC = () => {
         }
       />
 
-      <AdminSectionTabs
-        ariaLabel="CMS sections"
-        activeKey="testimonials"
-        items={[
-          { key: 'projects', label: 'Projects', to: '/admin/cms/projects' },
-          { key: 'services', label: 'Services', to: '/admin/cms/services' },
-          { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials' }
-        ]}
-      />
       
       <AdminMetricStrip
         slug="cms-testimonials-kpis"
@@ -325,8 +316,8 @@ export const AdminCmsTestimonials: React.FC = () => {
         <Drawer slug="cms-testimonial-editor-drawer"
           open={isModalOpen}
           onClose={() => !isSaving && setIsModalOpen(false)}
-          size="lg"
-          dialogClassName="border-l border-line bg-panel"
+          size="md"
+          dialogClassName="border-l border-line bg-panel max-w-[520px]"
           title={editingItem.author ? `Edit: ${editingItem.author}` : (language === 'id' ? 'Tambah Testimoni Klien' : 'Add client testimonial')}
           footer={(
             <>

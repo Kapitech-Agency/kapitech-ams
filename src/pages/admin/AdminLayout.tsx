@@ -210,7 +210,9 @@ export const AdminLayout: React.FC = () => {
   const isItemActive = (itemTo: string) => {
     const [path, queryString] = itemTo.split('?');
     const isClientsSection = path === '/admin/clients' && location.pathname.startsWith('/admin/clients/');
-    if (location.pathname !== path && !isClientsSection) return false;
+    const isCmsSection = path === '/admin/cms/projects' && location.pathname.startsWith('/admin/cms/');
+    const isTeamSection = path === '/admin/team' && (location.pathname === '/admin/team' || location.pathname === '/admin/time-logs' || location.pathname === '/admin/vendors');
+    if (location.pathname !== path && !isClientsSection && !isCmsSection && !isTeamSection) return false;
 
     if (queryString) {
       const expected = new URLSearchParams(queryString);
