@@ -223,10 +223,21 @@ export function logoutAdmin(): void {
   }
 }
 
+export function isMasterAdministrator(user?: Pick<AdminUser, 'id' | 'username' | 'role' | 'stakeholderType'> | null): boolean {
+  if (!user) return false;
+  return (
+    user.stakeholderType === 'Master' ||
+    user.id === 'usr_root_admin' ||
+    user.username === 'admin' ||
+    user.role === 'Tier 1: Top Management / Sponsor' ||
+    /\bmaster\b|super admin|root admin/i.test(String(user.role || ''))
+  );
+}
+
 export function hasPermission(permission: keyof StakeholderPermissions): boolean {
   const session = getAdminSession();
   if (!session) return false;
-  if (session.user.stakeholderType === 'Master') return true;
+  if (isMasterAdministrator(session.user)) return true;
   return Boolean(session.user.permissions?.[permission]);
 }
 
