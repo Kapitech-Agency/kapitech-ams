@@ -38,7 +38,8 @@ import {
   Table as TableIcon,
   ChevronRight,
   ShieldCheck,
-  AlertCircle
+  AlertCircle,
+  X
 } from 'lucide-react';
 import { ContactSubmission, getSubmissionSlug, normalizeContactSubmission } from '../../lib/submissions';
 import { CrmLead } from '../../lib/crmStore';
@@ -1364,46 +1365,6 @@ export const AdminInbox: React.FC = () => {
             ))}
           </div>
         </div>
-      ) : filteredItems.length === 0 ? (
-        /* SINGLE UNIFIED EMPTY STATE - PREVENTS DUPLICATE BOXES */
-        <div className="ams-empty-state bg-panel border border-line rounded-card p-12 sm:p-16 text-center text-muted space-y-4 flex flex-col items-center">
-          <div className="w-16 h-16 rounded-card bg-panel border border-line flex items-center justify-center text-line mx-auto">
-            <Inbox size={32} />
-          </div>
-          <div className="space-y-1.5">
-            <h3 className="text-fg font-semibold font-sans text-base sm:text-lg text-center">
-              {submissions.length === 0
-                ? (language === 'id' ? 'Kotak Masuk Masih Kosong' : 'No Inbound Records Found')
-                : (language === 'id' ? 'Tidak Ada Pesan yang Sesuai Kriteria' : 'No Inbound Records Match Your Filters')}
-            </h3>
-            <p className="text-xs sm:text-sm text-muted max-w-md mx-auto font-sans leading-relaxed text-center">
-              {submissions.length === 0
-                ? (language === 'id'
-                    ? 'Belum ada brief proyek klien, lamaran karir, atau pesan masuk dari formulir website.'
-                    : 'All client project briefs, career applications, and inquiries from the public website will appear here in real time.')
-                : (language === 'id'
-                    ? 'Sesuaikan kata kunci pencarian, status filter, atau ganti kategori kanal di atas.'
-                    : 'Try adjusting your search query, status filters, or switching channel tabs.')}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-            {(searchQuery || filterStatus !== 'all' || filterPriority !== 'all') && (
-              <button
-                onClick={() => {
-                  setSearchQuery('');
-                  setFilterStatus('all');
-                  setFilterPriority('all');
-
-                }}
-                className="min-h-10 px-4 rounded-control bg-panel hover:bg-panel-hover text-fg border border-line text-xs font-sans font-medium transition-colors"
-              >
-                {language === 'id' ? 'Reset Semua Filter' : 'Reset All Filters'}
-              </button>
-            )}
-
-          </div>
-        </div>
       ) : (
         /* SPLIT MASTER-DETAIL VIEW (when items exist) */
         <div className="ams-inbox-workspace grid grid-cols-1 items-start gap-3 lg:grid-cols-[minmax(300px,0.82fr)_minmax(0,1.18fr)]">
@@ -1414,7 +1375,7 @@ export const AdminInbox: React.FC = () => {
               ? 'hidden lg:block' 
               : 'block'
           }`}>
-            {filteredItems.map((item) => {
+            {filteredItems.length > 0 ? filteredItems.map((item) => {
               const isSelected = selectedSubmission?.id === item.id;
               const isConverted = crmDeals.some(d => (d as any).inquiryId === item.id);
 
@@ -1506,7 +1467,37 @@ export const AdminInbox: React.FC = () => {
                     )}
                   </div>
                 );
-              })}
+              }) : (
+                <div className="flex min-h-[440px] flex-col items-center justify-center rounded-card border border-line bg-panel px-5 py-10 text-center">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-control border border-line bg-bg text-muted">
+                    <Inbox size={17} />
+                  </div>
+                  <p className="mt-3 text-sm font-medium text-fg">
+                    {submissions.length === 0
+                      ? (language === 'id' ? 'Inbox belum memiliki record' : 'No inbound records yet')
+                      : (language === 'id' ? 'Tidak ada record yang cocok' : 'No records match these filters')}
+                  </p>
+                  <p className="mt-1 max-w-xs text-[11px] leading-5 text-muted">
+                    {submissions.length === 0
+                      ? (language === 'id' ? 'Record baru akan muncul di panel ini saat ada inbound.' : 'New inbound records will appear here as they arrive.')
+                      : (language === 'id' ? 'Ubah pencarian atau filter untuk melihat record lain.' : 'Adjust the search or filters to see other records.')}
+                  </p>
+                  {(searchQuery || filterStatus !== 'all' || filterPriority !== 'all') && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery('');
+                        setFilterStatus('all');
+                        setFilterPriority('all');
+                      }}
+                      className="mt-4 inline-flex min-h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-[10px] font-medium text-fg hover:bg-panel"
+                    >
+                      <Filter size={11} />
+                      Reset filters
+                    </button>
+                  )}
+                </div>
+              )}
           </div>
 
           {/* Right: Message Reader & Command Hub Pane */}
@@ -1567,10 +1558,13 @@ export const AdminInbox: React.FC = () => {
 
                     {/* Close button on desktop */}
                     <button
+                      type="button"
                       onClick={() => setSelectedSubmission(null)}
-                      className="hidden lg:inline-flex text-xs text-muted hover:text-fg px-3 py-2 rounded-control bg-panel border border-line min-h-10 items-center" aria-label="Close brief"
+                      className="hidden lg:inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg p-0 text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                      aria-label={language === 'id' ? 'Tutup detail' : 'Close detail'}
+                      title={language === 'id' ? 'Tutup detail' : 'Close detail'}
                     >
-                      ✕
+                      <X size={15} />
                     </button>
                   </div>
                 </div>
@@ -1950,7 +1944,7 @@ export const AdminInbox: React.FC = () => {
             </div>
           ) : (
             /* Empty State on Desktop when no submission is selected */
-            <div className="hidden lg:flex lg:col-span-7 bg-panel border border-line rounded-card p-12 flex-col items-center justify-center text-center text-muted min-h-[460px]">
+            <div className="hidden lg:flex min-w-0 min-h-[460px] flex-col items-center justify-center rounded-card border border-line bg-panel px-6 py-10 text-center text-muted">
               <div className="w-16 h-16 rounded-card bg-panel border border-line flex items-center justify-center text-line mb-4">
                 <Inbox size={32} />
               </div>
