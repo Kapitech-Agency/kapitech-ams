@@ -495,8 +495,9 @@ export const AdminCmsProjects: React.FC = () => {
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         size="xl"
-        title={editingProject?.title ? 'Edit: ' + editingProject.title : 'Add New Case Study'}
-        description="Manage the case study content and live card preview."
+        dialogClassName="border-l border-line bg-panel"
+        title={editingProject?.title ? 'Edit: ' + editingProject.title : 'Add new case study'}
+        description="Maintain the public case study content, media, and presentation."
         footer={modalTab === 'details'
           ? (
             <>
@@ -508,14 +509,14 @@ export const AdminCmsProjects: React.FC = () => {
             <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)}>Close preview</Button>
           )}
       >
-            <div className="flex items-center justify-end border-b border-line pb-3 mb-4">
+            <div className="flex items-center justify-end border-b border-line pb-4">
               <div className="flex items-center rounded-control bg-panel border border-line p-0.5" role="tablist" aria-label="Case study editor">
                 <button
                   type="button"
                   role="tab"
                   aria-selected={modalTab === 'details'}
                   onClick={() => setModalTab('details')}
-                  className={`px-3 py-1 rounded-chip text-[11px] font-semibold transition-all ${modalTab === 'details' ? 'bg-panel text-fg' : 'text-muted hover:text-fg'}`}
+                  className={`inline-flex h-8 items-center rounded-chip px-3 text-[11px] font-medium transition-colors ${modalTab === 'details' ? 'border border-line bg-panel text-fg' : 'border border-transparent text-muted hover:bg-bg hover:text-fg'}`}
                 >
                   Details
                 </button>
@@ -524,7 +525,7 @@ export const AdminCmsProjects: React.FC = () => {
                   role="tab"
                   aria-selected={modalTab === 'preview'}
                   onClick={() => setModalTab('preview')}
-                  className={`flex items-center gap-1.5 px-3 py-1 rounded-chip text-[11px] font-semibold transition-all ${modalTab === 'preview' ? 'bg-panel text-fg' : 'text-muted hover:text-fg'}`}
+                  className={`inline-flex h-8 items-center gap-1.5 rounded-chip px-3 text-[11px] font-medium transition-colors ${modalTab === 'preview' ? 'border border-line bg-panel text-fg' : 'border border-transparent text-muted hover:bg-bg hover:text-fg'}`}
                 >
                   <Eye size={12} />
                   <span>Card Preview</span>
@@ -576,9 +577,9 @@ export const AdminCmsProjects: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <form id="case-study-form" data-ams-feature-slug="cms-project-form" data-ams-slug="cms-project-form" onSubmit={handleSaveModal} className="space-y-4">
+              <form id="case-study-form" data-ams-feature-slug="cms-project-form" data-ams-slug="cms-project-form" onSubmit={handleSaveModal} className="space-y-5">
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
                     <label className="block text-muted mb-1 font-semibold">Project Title *</label>
                     <input
@@ -587,7 +588,7 @@ export const AdminCmsProjects: React.FC = () => {
                       value={editingProject.title}
                       onChange={(e) => setEditingProject({ ...editingProject, title: e.target.value })}
                       placeholder="e.g. Bank Digital Nusantara Mobile"
-                      className="w-full px-3.5 py-2.5 bg-panel border border-line rounded-control text-fg focus:outline-none focus:border-accent font-sans"
+                      className="ams-control w-full text-xs"
                     />
                   </div>
 
@@ -598,12 +599,12 @@ export const AdminCmsProjects: React.FC = () => {
                       value={editingProject.client}
                       onChange={(e) => setEditingProject({ ...editingProject, client: e.target.value })}
                       placeholder="PT Bank Digital Nusantara"
-                      className="w-full px-3.5 py-2.5 bg-panel border border-line rounded-control text-fg focus:outline-none focus:border-accent font-sans"
+                      className="ams-control w-full text-xs"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                   <div>
                     <label className="block text-muted mb-1 font-semibold">Studio Pillar</label>
                     <CustomSelect value={editingProject.pillar} onChange={(value) => setEditingProject({ ...editingProject, pillar: value as any })} options={[{value:'Visual Experience',label:'Visual Experience'},{value:'Innovation Development',label:'Innovation Development'}]} className="w-full" />
@@ -616,7 +617,7 @@ export const AdminCmsProjects: React.FC = () => {
                       value={editingProject.service}
                       onChange={(e) => setEditingProject({ ...editingProject, service: e.target.value as any })}
                       placeholder="UI/UX Design, Web Application..."
-                      className="w-full px-3.5 py-2.5 bg-panel border border-line rounded-control text-fg focus:outline-none focus:border-accent font-sans"
+                      className="ams-control w-full text-xs"
                     />
                   </div>
 
@@ -627,7 +628,7 @@ export const AdminCmsProjects: React.FC = () => {
                       value={editingProject.year}
                       onChange={(e) => setEditingProject({ ...editingProject, year: e.target.value })}
                       placeholder="2025"
-                      className="w-full px-3.5 py-2.5 bg-panel border border-line rounded-control text-fg focus:outline-none focus:border-accent font-sans"
+                      className="ams-control w-full text-xs"
                     />
                   </div>
                 </div>
@@ -695,7 +696,7 @@ export const AdminCmsProjects: React.FC = () => {
                     value={editingProject.descId || editingProject.desc}
                     onChange={(e) => setEditingProject({ ...editingProject, descId: e.target.value, desc: e.target.value })}
                     placeholder="Brief description of the solution delivered for client..."
-                    className="w-full px-3.5 py-2 bg-panel border border-line rounded-control text-fg focus:outline-none focus:border-accent font-sans text-xs"
+                    className="ams-control w-full text-xs"
                   />
                 </div>
 
@@ -709,7 +710,7 @@ export const AdminCmsProjects: React.FC = () => {
                       onChange={(e) => setTechInput(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTech(); } }}
                       placeholder="Type tech name and press Enter (e.g. Next.js 14, Tailwind, Go)..."
-                      className="flex-1 px-3.5 py-2 bg-panel border border-line rounded-control text-fg focus:outline-none focus:border-accent"
+                      className="ams-control flex-1 text-xs"
                     />
                     <button
                       type="button"
@@ -747,14 +748,14 @@ export const AdminCmsProjects: React.FC = () => {
                       value={metricLabel}
                       onChange={(e) => setMetricLabel(e.target.value)}
                       placeholder="Metric label (e.g. Conversion Lift)"
-                      className="flex-1 px-3.5 py-2 bg-panel border border-line rounded-control text-fg focus:outline-none focus:border-accent"
+                      className="ams-control flex-1 text-xs"
                     />
                     <input
                       type="text"
                       value={metricValue}
                       onChange={(e) => setMetricValue(e.target.value)}
                       placeholder="Value (e.g. +40%)"
-                      className="w-32 px-3.5 py-2 bg-panel border border-line rounded-control text-fg focus:outline-none focus:border-accent"
+                      className="ams-control w-32 text-xs"
                     />
                     <button
                       type="button"
