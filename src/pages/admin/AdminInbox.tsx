@@ -57,7 +57,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
 
-import { AdminMetricStrip, AdminModuleHeader, AdminTablePagination , AdminPageShell } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminTablePagination, AdminPageShell } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 export const AdminInbox: React.FC = () => {
   const { language } = useLanguage();
@@ -817,26 +817,54 @@ export const AdminInbox: React.FC = () => {
           </div>
         </section>
       ) : activeInboxTab === 'jobs' ? (
-        <section data-ams-feature-slug="inbox-jobs-controls" data-ams-slug="inbox-jobs-controls" className="rounded-card border border-line bg-panel">
-          <div className="flex flex-col gap-2.5 p-3 sm:p-4 lg:flex-row lg:items-center">
-            <label className="relative min-w-0 flex-1"><span className="sr-only">Search applications</span><Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={15} /><input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search candidate, role, skill, or tools..." className="h-9 min-h-9 w-full rounded-control border border-line bg-bg pl-9 pr-8 text-xs text-fg outline-none placeholder:text-muted focus:border-accent" />{searchQuery&&<button type="button" onClick={()=>setSearchQuery('')} aria-label="Clear search" className="absolute right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-badge text-muted hover:bg-panel hover:text-fg">×</button>}</label>
-            <div className="flex min-w-0 items-center gap-2 overflow-x-auto custom-scrollbar"><div className="w-[150px] shrink-0"><CustomSelect value={filterStatus} onChange={setFilterStatus} options={inboxStatusOptions} /></div><div className="w-[150px] shrink-0"><CustomSelect value={filterPriority} onChange={setFilterPriority} options={[{value:'all',label:'All Priorities'},{value:'urgent',label:'Urgent'},{value:'high',label:'High'},{value:'normal',label:'Normal'},{value:'low',label:'Low'}]} /></div><button type="button" onClick={()=>setViewMode('board')} className="inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted hover:bg-bg hover:text-fg"><LayoutGrid size={13}/>Board</button><button type="button" onClick={()=>setViewMode('split')} className="inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control bg-accent px-3 text-xs font-medium text-white hover:bg-accent/90"><User size={13}/>Review</button></div>
-          </div>
-        </section>
+        <AdminFilterBar
+          slug="inbox-jobs-controls"
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Search candidate, role, skill, or tools..."
+          searchLabel="Search applications"
+          actions={(
+            <div className="flex min-w-0 items-center gap-2 overflow-x-auto custom-scrollbar">
+              <div className="w-[150px] shrink-0"><CustomSelect value={filterStatus} onChange={setFilterStatus} options={inboxStatusOptions} /></div>
+              <div className="w-[150px] shrink-0"><CustomSelect value={filterPriority} onChange={setFilterPriority} options={[{value:'all',label:'All Priorities'},{value:'urgent',label:'Urgent'},{value:'high',label:'High'},{value:'normal',label:'Normal'},{value:'low',label:'Low'}]} /></div>
+              <button type="button" onClick={()=>setViewMode('board')} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg"><LayoutGrid size={13}/>Board</button>
+              <button type="button" onClick={()=>setViewMode('split')} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control bg-accent px-3 text-xs font-medium text-white hover:bg-accent/90"><User size={13}/>Review</button>
+            </div>
+          )}
+        />
       ) : activeInboxTab === 'starred' ? (
-        <section data-ams-feature-slug="inbox-starred-controls" data-ams-slug="inbox-starred-controls" className="rounded-card border border-line bg-panel">
-          <div className="flex flex-col gap-2.5 p-3 sm:p-4 lg:flex-row lg:items-center">
-            <label className="relative min-w-0 flex-1"><span className="sr-only">Search starred records</span><Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={15} /><input type="text" value={searchQuery} onChange={(e)=>setSearchQuery(e.target.value)} placeholder="Search saved records, company, candidate, or slug..." className="h-9 min-h-9 w-full rounded-control border border-line bg-bg pl-9 pr-8 text-xs text-fg outline-none placeholder:text-muted focus:border-accent" />{searchQuery&&<button type="button" onClick={()=>setSearchQuery('')} aria-label="Clear search" className="absolute right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-badge text-muted hover:bg-panel hover:text-fg">×</button>}</label>
-            <div className="flex min-w-0 items-center gap-2 overflow-x-auto custom-scrollbar"><div className="w-[150px] shrink-0"><CustomSelect value={filterPriority} onChange={setFilterPriority} options={[{value:'all',label:'All Priorities'},{value:'urgent',label:'Urgent'},{value:'high',label:'High'},{value:'normal',label:'Normal'},{value:'low',label:'Low'}]} /></div><button type="button" onClick={()=>setViewMode('queue')} className="inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted hover:bg-bg hover:text-fg"><Star size={13}/>Queue</button><button type="button" onClick={()=>setViewMode('split')} className="inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control bg-accent px-3 text-xs font-medium text-white hover:bg-accent/90"><User size={13}/>Review</button></div>
-          </div>
-        </section>
+        <AdminFilterBar
+          slug="inbox-starred-controls"
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Search saved records, company, candidate, or slug..."
+          searchLabel="Search starred records"
+          actions={(
+            <div className="flex min-w-0 items-center gap-2 overflow-x-auto custom-scrollbar">
+              <div className="w-[150px] shrink-0"><CustomSelect value={filterPriority} onChange={setFilterPriority} options={[{value:'all',label:'All Priorities'},{value:'urgent',label:'Urgent'},{value:'high',label:'High'},{value:'normal',label:'Normal'},{value:'low',label:'Low'}]} /></div>
+              <button type="button" onClick={()=>setViewMode('queue')} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg"><Star size={13}/>Queue</button>
+              <button type="button" onClick={()=>setViewMode('split')} className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control bg-accent px-3 text-xs font-medium text-white hover:bg-accent/90"><User size={13}/>Review</button>
+            </div>
+          )}
+        />
       ) : (
-        <section data-ams-feature-slug="inbox-client-controls" data-ams-slug="inbox-client-controls" className="rounded-card border border-line bg-panel">
-          <div className="flex flex-col gap-2.5 p-3 sm:p-4 lg:flex-row lg:items-center">
-            <label className="relative min-w-0 flex-1"><span className="sr-only">Search client inquiries</span><Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" size={15} /><input type="text" value={searchQuery} onChange={(e)=>setSearchQuery(e.target.value)} placeholder="Search company, contact, service, budget, or brief..." className="h-9 min-h-9 w-full rounded-control border border-line bg-bg pl-9 pr-8 text-xs text-fg outline-none placeholder:text-muted focus:border-accent" />{searchQuery&&<button type="button" onClick={()=>setSearchQuery('')} aria-label="Clear search" className="absolute right-2.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-badge text-muted hover:bg-panel hover:text-fg">×</button>}</label>
-            <div className="flex min-w-0 items-center gap-2 overflow-x-auto custom-scrollbar"><div className="w-[150px] shrink-0"><CustomSelect value={filterStatus} onChange={setFilterStatus} options={inboxStatusOptions} /></div><div className="w-[150px] shrink-0"><CustomSelect value={filterPriority} onChange={setFilterPriority} options={[{value:'all',label:'All Priorities'},{value:'urgent',label:'Urgent'},{value:'high',label:'High'},{value:'normal',label:'Normal'},{value:'low',label:'Low'}]} /></div><div className="flex shrink-0 items-center rounded-control border border-line bg-bg p-0.5"><button type="button" onClick={()=>setViewMode('split')} className="inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip bg-panel border border-line px-2.5 text-[11px] font-medium text-fg"><LayoutGrid size={13}/>Review</button><button type="button" onClick={()=>setViewMode('table')} className="inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip px-2.5 text-[11px] font-medium text-muted hover:text-fg"><TableIcon size={13}/>Table</button></div></div>
-          </div>
-        </section>
+        <AdminFilterBar
+          slug="inbox-client-controls"
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Search company, contact, service, budget, or brief..."
+          searchLabel="Search client inquiries"
+          actions={(
+            <div className="flex min-w-0 items-center gap-2 overflow-x-auto custom-scrollbar">
+              <div className="w-[150px] shrink-0"><CustomSelect value={filterStatus} onChange={setFilterStatus} options={inboxStatusOptions} /></div>
+              <div className="w-[150px] shrink-0"><CustomSelect value={filterPriority} onChange={setFilterPriority} options={[{value:'all',label:'All Priorities'},{value:'urgent',label:'Urgent'},{value:'high',label:'High'},{value:'normal',label:'Normal'},{value:'low',label:'Low'}]} /></div>
+              <div className="flex shrink-0 items-center rounded-control border border-line bg-bg p-0.5">
+                <button type="button" onClick={()=>setViewMode('split')} className="inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip bg-panel border border-line px-2.5 text-[11px] font-medium text-fg"><LayoutGrid size={13}/>Review</button>
+                <button type="button" onClick={()=>setViewMode('table')} className="inline-flex h-8 min-h-8 items-center gap-1.5 rounded-chip px-2.5 text-[11px] font-medium text-muted hover:text-fg"><TableIcon size={13}/>Table</button>
+              </div>
+            </div>
+          )}
+        />
       )}
 
       {/* ------------------------------------------------------------- */}
