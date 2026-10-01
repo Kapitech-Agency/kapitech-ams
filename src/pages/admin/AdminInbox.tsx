@@ -594,7 +594,7 @@ export const AdminInbox: React.FC = () => {
         </div>
       )}
 
-      <AdminModuleHeader
+      <AdminModuleHeader slug="inbox-header"
         className="mb-0"
         title="Leads & Inbox"
         description={language === 'id' ? 'Kelola inquiry masuk, lakukan triage, balas dengan cepat, dan teruskan peluang yang siap ke CRM.' : 'Triage inbound inquiries, respond quickly, and move qualified opportunities into CRM.'}
@@ -611,9 +611,9 @@ export const AdminInbox: React.FC = () => {
       {/* ------------------------------------------------------------- */}
       {/* 2. EXECUTIVE KPI SUMMARY RIBBON */}
       {/* ------------------------------------------------------------- */}
-      <section aria-label="Leads and inbox snapshot" className="rounded-card border border-line bg-panel p-4">
+      <section data-ams-feature-slug="inbox-performance-snapshot" data-ams-slug="inbox-performance-snapshot" aria-label="Leads and inbox snapshot" className="rounded-card border border-line bg-panel p-4">
         <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3"><div><h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan leads & inbox' : 'Leads & inbox snapshot'}</h2><p className="mt-1 text-xs text-muted">{language === 'id' ? 'Sinyal intake, triage, konversi, dan estimasi pipeline.' : 'Intake, triage, conversion, and estimated pipeline signals.'}</p></div><span className="text-[11px] font-medium tabular-nums text-muted">{metrics.total} inbound</span></div>
-        <AdminMetricStrip
+        <AdminMetricStrip slug="inbox-kpis"
           className="lg:grid-cols-4"
           metrics={[
             { id: 'total', label: language === 'id' ? 'Total Masuk' : 'Total Inbound', value: metrics.total, context: language === 'id' ? 'Seluruh kanal formulir' : 'All intake touchpoints', sparkline: [metrics.total, metrics.newCount, metrics.convertedCount, metrics.conversionRate], icon: <Inbox size={16} strokeWidth={1.8} /> },
@@ -750,7 +750,7 @@ export const AdminInbox: React.FC = () => {
         /* DENSE SPREADSHEET TABLE VIEW */
         <div className="bg-panel border border-line rounded-card overflow-hidden">
           <div className="ams-table-scroll overflow-x-auto custom-scrollbar">
-            <table className="ams-table w-full text-left border-collapse text-xs font-sans">
+            <div data-ams-feature-slug="inbox-leads-directory" data-ams-slug="inbox-leads-directory" className="overflow-x-auto"><table className="ams-table w-full text-left border-collapse text-xs font-sans">
               <thead>
                 <tr className="bg-panel border-b border-line text-muted">
                   <th className="p-3 w-10 text-center">★</th>
@@ -879,7 +879,7 @@ export const AdminInbox: React.FC = () => {
                   })
                 )}
               </tbody>
-            </table>
+            </table></div>
           </div>
           <AdminTablePagination total={filteredItems.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="inbound records" slug="inbox-table-pagination" />
         </div>
@@ -1414,7 +1414,7 @@ export const AdminInbox: React.FC = () => {
       {/* ------------------------------------------------------------- */}
       
       {/* Shared confirmation dialog */}
-      <Modal
+      <Modal slug="inbox-modal"
         open={Boolean(confirmAction)}
         onClose={() => setConfirmAction(null)}
         title={confirmAction?.type === 'delete' ? (language === 'id' ? 'Hapus pesan?' : 'Delete message?') : (language === 'id' ? 'Tandai pesan sebagai ditinjau?' : 'Mark messages as reviewed?')}
