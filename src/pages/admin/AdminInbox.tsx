@@ -68,7 +68,7 @@ export const AdminInbox: React.FC = () => {
   const requestedTab = searchParams.get('view') as InboxTab | null;
   const activeInboxTab: InboxTab = requestedTab && ['overview', 'client', 'jobs', 'starred'].includes(requestedTab)
     ? requestedTab
-    : 'client';
+    : 'overview';
 
   // Core Data & Currency
   const [submissions, setSubmissions] = useState<ContactSubmission[]>([]);
