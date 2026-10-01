@@ -7,6 +7,7 @@
 import { ContactSubmission, getLocalSubmissions } from './submissions';
 import { api } from './apiClient';
 import { toSlug } from './slug';
+import { isSlugFixtureMode } from './runtimeMode';
 
 export type CrmStage = 'new' | 'contacted' | 'proposal' | 'negotiation' | 'won' | 'lost';
 export type CrmPriority = 'low' | 'medium' | 'high' | 'urgent';
@@ -338,11 +339,9 @@ export const INITIAL_DEFAULT_LEADS: CrmLead[] = [
 export const getCmsLeads = (): CrmLead[] => {
   hydrateCrmFromServer();
   if (crmCache) return crmCache;
-  if (import.meta.env.PROD) {
-    crmCache = [];
-  } else {
-    crmCache = INITIAL_DEFAULT_LEADS.map((lead) => ({ ...lead, slug: toSlug(lead.slug || lead.company || lead.clientName || lead.id, 'lead-record') }));
-  }
+  crmCache = isSlugFixtureMode()
+    ? INITIAL_DEFAULT_LEADS.map((lead) => ({ ...lead, slug: toSlug(lead.slug || lead.company || lead.clientName || lead.id, 'lead-record') }))
+    : [];
   return crmCache;
 };
 
