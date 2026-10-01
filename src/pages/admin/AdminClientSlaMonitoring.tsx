@@ -139,7 +139,7 @@ export const AdminClientSlaMonitoring: React.FC = () => {
 
   return (
     <AdminPageShell featureSlug="client-sla-monitoring-module" className="ams-clients-module">
-      <AdminModuleHeader
+      <AdminModuleHeader slug="client-sla-monitoring-header"
         className="mb-0"
         title="SLA Monitoring"
         description="Operational SLA health across active client contracts, response performance, and recent incidents."
@@ -162,14 +162,14 @@ export const AdminClientSlaMonitoring: React.FC = () => {
 
       {message && <div className="flex items-center justify-between rounded-card border border-line bg-panel px-3 py-2.5 text-xs text-fg" role="status" aria-live="polite"><span>{message}</span><button type="button" onClick={() => setMessage(null)} className="inline-flex h-9 w-9 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Dismiss"><X size={14} /></button></div>}
 
-      <section className="grid grid-cols-1 gap-3 md:grid-cols-4" aria-label="SLA metrics">
+      <section data-ams-feature-slug="sla-monitoring-kpis" data-ams-slug="sla-monitoring-kpis" className="grid grid-cols-1 gap-3 md:grid-cols-4" aria-label="SLA metrics">
         <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">AVERAGE UPTIME</span><Activity size={18} /></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatPercent(avgUptime)}</div><p className="mt-1 text-[11px] text-muted">Across the monitored account set</p></div>
         <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">AVERAGE MTTR</span><TimerReset size={18} /></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{Math.round(avgMttr)} min</div><p className="mt-1 text-[11px] text-muted">Time to service recovery</p></div>
         <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">WARNING ACCOUNTS</span><AlertTriangle size={18} className="text-warning" /></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{warnings}</div><p className="mt-1 text-[11px] text-muted">Requires active review</p></div>
         <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">DEGRADED ACCOUNTS</span><AlertTriangle size={18} className="text-danger" /></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{degraded}</div><p className="mt-1 text-[11px] text-muted">Needs corrective action</p></div>
       </section>
 
-      <AdminFilterBar
+      <AdminFilterBar slug="client-sla-filters"
         slug="client-sla-filters"
         searchValue={query}
         onSearchChange={setQuery}
@@ -185,7 +185,7 @@ export const AdminClientSlaMonitoring: React.FC = () => {
         )}
       />
 
-      <section className="ams-client-table-shell overflow-hidden rounded-card border border-line bg-panel" aria-label="SLA monitoring table">
+      <section data-ams-feature-slug="sla-monitoring-directory" data-ams-slug="sla-monitoring-directory" className="ams-client-table-shell overflow-hidden rounded-card border border-line bg-panel" aria-label="SLA monitoring table">
         <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full min-w-[1160px] border-collapse text-left">
             <thead className="bg-bg"><tr className="border-b border-line text-[10px] uppercase tracking-wider text-muted">
@@ -220,18 +220,18 @@ export const AdminClientSlaMonitoring: React.FC = () => {
         {!isLoading && <AdminTablePagination total={filtered.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="monitored accounts" slug="sla-monitoring-pagination" />}
       </section>
 
-      <section className="grid grid-cols-1 gap-3 text-[11px] text-muted md:grid-cols-4" aria-label="SLA summary">
+      <section data-ams-feature-slug="sla-monitoring-summary" data-ams-slug="sla-monitoring-summary" className="grid grid-cols-1 gap-3 text-[11px] text-muted md:grid-cols-4" aria-label="SLA summary">
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><CheckCircle2 size={14} className="text-success" /><span>Compliant accounts: <strong className="text-fg">{complianceCount}</strong></span></div>
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><AlertTriangle size={14} className="text-warning" /><span>Warning accounts: <strong className="text-fg">{warnings}</strong></span></div>
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><FileText size={14} className="text-info" /><span>Degraded accounts: <strong className="text-fg">{degraded}</strong></span></div>
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><TimerReset size={14} className="text-accent-text" /><span>Monitored rows: <strong className="text-fg">{filtered.length}</strong></span></div>
       </section>
 
-      <Modal open={!!selectedIncident} onClose={() => setSelectedIncident(null)} size="md" title="Incident log" description={selectedIncident ? `${selectedIncident.client} · ${formatDate(selectedIncident.lastIncidentAt)}` : undefined} footer={<div className="flex justify-end"><Button type="button" variant="secondary" onClick={() => setSelectedIncident(null)}>Close</Button></div>}>
+      <Modal slug="sla-incident-modal" open={!!selectedIncident} onClose={() => setSelectedIncident(null)} size="md" title="Incident log" description={selectedIncident ? `${selectedIncident.client} · ${formatDate(selectedIncident.lastIncidentAt)}` : undefined} footer={<div className="flex justify-end"><Button type="button" variant="secondary" onClick={() => setSelectedIncident(null)}>Close</Button></div>}>
         {selectedIncident && <div className="space-y-4"><div className="rounded-card border border-line bg-bg p-4"><div className="flex items-center gap-2 text-xs font-medium text-fg"><AlertTriangle size={14} className={selectedIncident.compliance === 'degraded' ? 'text-danger' : selectedIncident.compliance === 'warning' ? 'text-warning' : 'text-success'} />{selectedIncident.incidentTitle}</div><p className="mt-2 text-xs text-muted">Status: {complianceMeta[selectedIncident.compliance].label} · MTTR {selectedIncident.mttrMinutes} min</p></div><div className="grid gap-3 sm:grid-cols-3"><div className="rounded-card border border-line bg-panel p-4"><span className="text-[10px] uppercase tracking-wider text-muted">Target SLA</span><div className="mt-1 text-sm font-semibold tabular-nums text-fg">{formatPercent(selectedIncident.targetSla)}</div></div><div className="rounded-card border border-line bg-panel p-4"><span className="text-[10px] uppercase tracking-wider text-muted">Current uptime</span><div className="mt-1 text-sm font-semibold tabular-nums text-fg">{formatPercent(selectedIncident.currentUptime)}</div></div><div className="rounded-card border border-line bg-panel p-4"><span className="text-[10px] uppercase tracking-wider text-muted">Assigned pod</span><div className="mt-1 text-sm font-semibold text-fg">{selectedIncident.pod}</div></div></div></div>}
       </Modal>
 
-      <Modal open={!!selectedTelemetry} onClose={() => setSelectedTelemetry(null)} size="lg" title="Service telemetry" description={selectedTelemetry ? `${selectedTelemetry.client} · account monitoring snapshot` : undefined} footer={<div className="flex justify-end gap-2"><Button type="button" variant="secondary" onClick={() => setSelectedTelemetry(null)}>Close</Button><Button type="button" variant="primary" onClick={() => setMessage('Telemetry export is not connected yet.')} icon={<Download size={14} />}>Export snapshot</Button></div>}>
+      <Modal slug="sla-telemetry-modal" open={!!selectedTelemetry} onClose={() => setSelectedTelemetry(null)} size="lg" title="Service telemetry" description={selectedTelemetry ? `${selectedTelemetry.client} · account monitoring snapshot` : undefined} footer={<div className="flex justify-end gap-2"><Button type="button" variant="secondary" onClick={() => setSelectedTelemetry(null)}>Close</Button><Button type="button" variant="primary" onClick={() => setMessage('Telemetry export is not connected yet.')} icon={<Download size={14} />}>Export snapshot</Button></div>}>
         {selectedTelemetry && <div className="space-y-4"><div className="rounded-card border border-line bg-bg p-4"><div className="flex items-center justify-between gap-3"><div><p className="text-sm font-semibold text-fg">{selectedTelemetry.client}</p><p className="mt-0.5 text-xs text-muted">{selectedTelemetry.pod} · {tierLabel[selectedTelemetry.tier]}</p></div><span className={`inline-flex min-h-6 items-center gap-1.5 rounded-badge border px-2 py-0.5 text-[10px] font-medium ${complianceMeta[selectedTelemetry.compliance].className}`}><span className={`h-1.5 w-1.5 rounded-full ${complianceMeta[selectedTelemetry.compliance].dot}`} />{complianceMeta[selectedTelemetry.compliance].label}</span></div></div><div className="grid gap-3 sm:grid-cols-3"><div className="rounded-card border border-line bg-panel p-4"><span className="text-[10px] uppercase tracking-wider text-muted">30D uptime</span><div className="mt-1 text-lg font-medium tabular-nums text-fg">{formatPercent(selectedTelemetry.currentUptime)}</div></div><div className="rounded-card border border-line bg-panel p-4"><span className="text-[10px] uppercase tracking-wider text-muted">Target</span><div className="mt-1 text-lg font-medium tabular-nums text-fg">{formatPercent(selectedTelemetry.targetSla)}</div></div><div className="rounded-card border border-line bg-panel p-4"><span className="text-[10px] uppercase tracking-wider text-muted">MTTR</span><div className="mt-1 text-lg font-medium tabular-nums text-fg">{selectedTelemetry.mttrMinutes} min</div></div></div><div className="rounded-card border border-line bg-panel p-4"><div className="mb-2 flex items-center justify-between text-xs"><span className="font-medium text-fg">Availability</span><span className="tabular-nums text-muted">{formatPercent(selectedTelemetry.currentUptime)}</span></div><div className="h-2 overflow-hidden rounded-full bg-line/70"><div className="h-2 rounded-full bg-success" style={{ width: Math.min(100, Math.max(0, selectedTelemetry.currentUptime)) + '%' }} /></div><p className="mt-2 text-xs text-muted">Monitoring values are shown from the current client-module data set.</p></div></div>}
       </Modal>
     </AdminPageShell>
