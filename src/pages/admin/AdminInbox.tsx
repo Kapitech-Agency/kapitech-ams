@@ -809,85 +809,64 @@ export const AdminInbox: React.FC = () => {
       
       {/* 3. TAB-SPECIFIC CONTROLS */}
       {activeInboxTab === 'overview' ? (
-        <section data-ams-feature-slug="inbox-overview-controls" data-ams-slug="inbox-overview-controls" aria-label="Live intake monitor" className="rounded-card border border-line bg-panel">
-          <div className="flex flex-col gap-3 px-4 py-3.5 sm:px-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-success/20 bg-success/10 text-success">
-                <Activity size={14} />
-              </div>
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <h2 className="text-[13px] font-semibold leading-5 text-fg">Live intake monitor</h2>
-                  <span className="inline-flex items-center gap-1 rounded-badge border border-success/20 bg-success/10 px-1.5 py-0.5 text-[9px] font-semibold text-success">
-                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                    Live
-                  </span>
+        <section data-ams-feature-slug="inbox-overview-controls" data-ams-slug="inbox-overview-controls" aria-label="Live intake monitor" className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,0.6fr)]">
+          <div className="rounded-card border border-line bg-panel p-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex min-w-0 items-start gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-success/20 bg-success/10 text-success"><Activity size={14} /></div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-[13px] font-semibold leading-5 text-fg">Live intake monitor</h2>
+                    <span className="inline-flex items-center gap-1 rounded-badge border border-success/20 bg-success/10 px-1.5 py-0.5 text-[9px] font-semibold text-success"><span className="h-1.5 w-1.5 rounded-full bg-current" />Live</span>
+                  </div>
+                  <p className="mt-0.5 text-[10px] leading-4 text-muted">Auto-refresh every 30s{lastRefreshedAt ? ' · Last sync ' + lastRefreshedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : ''}</p>
                 </div>
-                <p className="mt-0.5 text-[10px] leading-4 text-muted">
-                  Auto-refresh every 30s
-                  {lastRefreshedAt ? ' · Last sync ' + lastRefreshedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : ''}
-                </p>
               </div>
+              <span className="shrink-0 rounded-badge border border-line bg-bg px-2 py-1 text-[9px] font-medium tabular-nums text-muted">{submissions.length} inbound</span>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center">
+            <div className="mt-4 grid grid-cols-3 gap-2">
               {[
-                {
-                  label: 'New',
-                  value: activeTabItems.filter((item) => item.status === 'new').length,
-                  tone: 'text-info',
-                  bg: 'bg-info/10',
-                  border: 'border-info/20'
-                },
-                {
-                  label: 'Priority',
-                  value: activeTabItems.filter((item) => item.priority === 'urgent' || item.priority === 'high').length,
-                  tone: 'text-warning',
-                  bg: 'bg-warning/10',
-                  border: 'border-warning/20'
-                },
-                {
-                  label: 'Starred',
-                  value: activeTabItems.filter((item) => !!item.starred).length,
-                  tone: 'text-warning',
-                  bg: 'bg-warning/10',
-                  border: 'border-warning/20'
-                }
+                { label: 'New', value: activeTabItems.filter((item) => item.status === 'new').length, scope: 'action' as TriageScope, tone: 'text-info' },
+                { label: 'Priority', value: activeTabItems.filter((item) => item.priority === 'urgent' || item.priority === 'high').length, scope: 'priority' as TriageScope, tone: 'text-warning' },
+                { label: 'Starred', value: activeTabItems.filter((item) => !!item.starred).length, scope: 'saved' as TriageScope, tone: 'text-warning' }
               ].map((metric) => (
-                <button
-                  type="button"
-                  key={metric.label}
-                  onClick={() => {
-                    setViewMode('overview');
-                    setTriageScope(metric.label === 'New' ? 'action' : metric.label === 'Priority' ? 'priority' : 'saved');
-                  }}
-                  className={`min-w-[84px] rounded-control border px-2.5 py-2 text-left transition-colors hover:bg-bg sm:min-w-[92px] ${metric.bg} ${metric.border}`}
-                >
+                <button key={metric.label} type="button" onClick={() => { setTriageScope(metric.scope); setViewMode('overview'); }} className="rounded-control border border-line bg-bg px-3 py-2.5 text-left transition-colors hover:bg-panel">
                   <span className="block text-[9px] font-medium text-muted">{metric.label}</span>
-                  <span className={`mt-0.5 block text-[15px] font-semibold leading-5 tabular-nums ${metric.tone}`}>{metric.value}</span>
+                  <span className={'mt-0.5 block text-[15px] font-semibold leading-5 tabular-nums ' + metric.tone}>{metric.value}</span>
                 </button>
               ))}
-
-              <div className="col-span-3 flex items-center justify-end gap-2 pt-1 sm:pt-0">
-                <button
-                  type="button"
-                  onClick={() => void refreshInbox()}
-                  disabled={loading}
-                  className="inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-muted transition-colors hover:bg-panel hover:text-fg disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
-                  {loading ? 'Syncing' : 'Refresh'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode('split')}
-                  className="inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control bg-accent px-3 text-[11px] font-medium text-white transition-colors hover:bg-accent/90"
-                >
-                  <Inbox size={13} />
-                  Open inbox
-                </button>
-              </div>
             </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-line pt-3">
+              <button type="button" onClick={() => void refreshInbox()} disabled={loading} className="inline-flex h-8 min-h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted hover:bg-panel hover:text-fg disabled:opacity-60"><RefreshCw size={12} className={loading ? 'animate-spin' : ''} />{loading ? 'Syncing' : 'Refresh'}</button>
+              <button type="button" onClick={handleExportCSV} disabled={activeTabItems.length === 0} className="inline-flex h-8 min-h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted hover:bg-panel hover:text-fg disabled:opacity-50"><Download size={12} />Export</button>
+              <button type="button" onClick={() => setViewMode('split')} className="inline-flex h-8 min-h-8 items-center gap-1.5 rounded-control bg-accent px-2.5 text-[10px] font-medium text-white hover:bg-accent/90"><Inbox size={12} />Open inbox</button>
+            </div>
+          </div>
+
+          <div className="rounded-card border border-line bg-panel p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div><h3 className="text-[13px] font-semibold leading-5 text-fg">Latest intake</h3><p className="mt-0.5 text-[10px] leading-4 text-muted">Newest records entering the queue.</p></div>
+              <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] font-medium tabular-nums text-muted">{Math.min(3, submissions.length)}</span>
+            </div>
+            {submissions.length === 0 ? (
+              <div className="mt-4 flex min-h-[132px] flex-col items-center justify-center rounded-control border border-line bg-bg px-5 text-center">
+                <Inbox size={18} className="text-line" />
+                <p className="mt-2 text-[11px] font-medium text-fg">No intake yet</p>
+                <p className="mt-1 max-w-[220px] text-[10px] leading-4 text-muted">New client inquiries and applications will appear here automatically.</p>
+              </div>
+            ) : (
+              <div className="mt-4 overflow-hidden rounded-control border border-line bg-bg">
+                {[...submissions].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0,3).map((item) => (
+                  <button key={item.id} type="button" onClick={() => { handleSelectSubmission(item); setViewMode('split'); }} className="flex w-full items-center gap-2.5 border-b border-line px-3 py-2.5 text-left last:border-b-0 hover:bg-panel">
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-success" aria-hidden="true" />
+                    <span className="min-w-0 flex-1"><span className="block truncate text-[11px] font-medium text-fg">{item.fullName || 'Anonymous'}</span><span className="mt-0.5 block truncate text-[10px] text-muted">{item.type === 'career' ? (item.positionTitle || item.specialty || item.email) : (item.company || item.email)}</span></span>
+                    <span className="shrink-0 text-[9px] tabular-nums text-muted">{formatRelativeTime(item.createdAt)}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </section>
       ) : activeInboxTab === 'jobs' ? (
