@@ -35,6 +35,30 @@ import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
+
+const normalizeCmsService = (service: ServiceItemData): ServiceItemData => ({
+  ...service,
+  slug: service.slug || service.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
+  title: service.title || 'Untitled service',
+  navSubtitle: service.navSubtitle || '',
+  navSubtitleId: service.navSubtitleId || '',
+  heroHeadline: service.heroHeadline || '',
+  heroHeadlineId: service.heroHeadlineId || '',
+  heroSubtitle: service.heroSubtitle || '',
+  heroSubtitleId: service.heroSubtitleId || '',
+  badge: service.badge || 'Active',
+  badgeId: service.badgeId || service.badge || 'Active',
+  metrics: Array.isArray(service.metrics) ? service.metrics : [],
+  testimonial: service.testimonial || { quote: '', quoteId: '', highlight: '', highlightId: '', author: '', role: '', company: '', avatar: '' },
+  caseStudySlugs: Array.isArray(service.caseStudySlugs) ? service.caseStudySlugs : [],
+  problemsSolutions: Array.isArray(service.problemsSolutions) ? service.problemsSolutions : [],
+  capabilities: Array.isArray(service.capabilities) ? service.capabilities : [],
+  processStages: Array.isArray(service.processStages) ? service.processStages : [],
+  businessOutcomes: service.businessOutcomes || { heading: '', headingId: '', benefits: [], benefitsId: [] },
+  tools: Array.isArray(service.tools) ? service.tools : [],
+  faqs: Array.isArray(service.faqs) ? service.faqs : []
+});
+
 export const AdminCmsServices: React.FC = () => {
   const { language } = useLanguage();
   const [servicesList, setServicesList] = useState<ServiceItemData[]>([]);
@@ -55,7 +79,7 @@ export const AdminCmsServices: React.FC = () => {
       .then((res) => {
         if (!mounted) return;
         if (res.success && Array.isArray(res.data?.services)) {
-          setServicesList(res.data.services as ServiceItemData[]);
+          setServicesList((res.data.services as ServiceItemData[]).map(normalizeCmsService));
         } else {
           setLoadError(res.error || (language === 'id' ? 'Daftar layanan gagal dimuat.' : 'Services could not be loaded.'));
         }
@@ -368,7 +392,7 @@ export const AdminCmsServices: React.FC = () => {
      try {
        const res = await api.cms.getServices();
        if (res.success && Array.isArray(res.data?.services)) {
-         setServicesList(res.data.services as ServiceItemData[]);
+         setServicesList((res.data.services as ServiceItemData[]).map(normalizeCmsService));
          setLoadError(null);
        } else {
          setLoadError(res.error || 'Services could not be loaded. Try again.');
