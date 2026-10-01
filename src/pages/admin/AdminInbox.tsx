@@ -1085,16 +1085,224 @@ export const AdminInbox: React.FC = () => {
           </aside>
         </section>
 ) : viewMode === 'board' ? (
-        <section data-ams-feature-slug="inbox-jobs-board" data-ams-slug="inbox-jobs-board" className="rounded-card border border-line bg-panel overflow-hidden">
-          <div className="border-b border-line px-4 py-3.5 flex items-center justify-between gap-3"><div><h3 className="text-sm font-semibold text-fg">Candidate pipeline</h3><p className="mt-0.5 text-[11px] text-muted">Move candidates forward directly from the Inbox board.</p></div><span className="text-[11px] text-muted tabular-nums">{filteredItems.length} visible applications</span></div>
-          <div className="overflow-x-auto custom-scrollbar"><div className="grid min-w-[1050px] grid-cols-5 divide-x divide-line">
-            {[
-              {key:'new',label:'New',next:'screening' as ContactSubmission['status']},{key:'screening',label:'Screening',next:'shortlisted' as ContactSubmission['status']},{key:'shortlisted',label:'Shortlisted',next:'interview' as ContactSubmission['status']},{key:'interview',label:'Interview',next:'hired' as ContactSubmission['status']},{key:'hired',label:'Hired',next:null}
-            ].map((stage)=>{const stageItems=filteredItems.filter((item)=>item.status===stage.key);return <div key={stage.key} className="min-h-[470px] bg-bg/30"><div className="border-b border-line bg-panel px-3 py-3"><div className="flex items-center justify-between gap-2"><span className="text-xs font-semibold text-fg">{stage.label}</span><span className="min-w-6 rounded-badge border border-line bg-bg px-1.5 py-0.5 text-center text-[10px] font-medium tabular-nums text-muted">{stageItems.length}</span></div></div><div className="space-y-2 p-2.5">{stageItems.map((item)=><div key={item.id} className="rounded-card border border-line bg-panel p-3 hover:border-muted transition-colors"><div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="truncate text-xs font-semibold text-fg">{item.fullName}</p><p className="mt-0.5 truncate text-[10px] text-muted">{item.positionTitle||item.specialty||'Role not specified'}</p></div><button type="button" onClick={(e)=>handleToggleStar(e,item.id,item.starred)} disabled={!canManageCrm} className="shrink-0 p-1 text-muted hover:text-warning" aria-label={item.starred?'Unstar application':'Star application'}><Star size={13} className={item.starred?'fill-warning text-warning':''}/></button></div><div className="mt-2 flex flex-wrap items-center gap-1">{renderPriorityBadge(item.priority)}{item.specialty&&<span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] text-muted">{item.specialty}</span>}{item.experienceYears&&<span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] text-muted">{item.experienceYears} yrs</span>}</div><div className="mt-3 flex items-center justify-between gap-2"><span className="text-[10px] text-muted">{formatRelativeTime(item.createdAt)}</span><button type="button" onClick={()=>{handleSelectSubmission(item);setViewMode('split');}} className="inline-flex min-h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-fg hover:bg-panel">Review<ChevronRight size={11}/></button></div>{stage.next&&<button type="button" disabled={!canManageCrm||isUpdating} onClick={()=>{if(stage.next) void handleStatusChange(item.id,stage.next);}} className="mt-2 w-full min-h-8 rounded-control border border-line bg-panel px-2 text-[10px] font-medium text-muted hover:bg-bg hover:text-fg disabled:opacity-50">{stage.next==='screening'?'Start screening':stage.next==='shortlisted'?'Shortlist':stage.next==='interview'?'Move to interview':'Mark hired'}</button>}</div>)}{stageItems.length===0&&<div className="p-8 text-center text-[10px] text-muted">No candidates</div>}</div></div>})}
-          </div></div>
-          <div className="border-t border-line px-4 py-3 flex flex-wrap items-center justify-between gap-2 text-[10px] text-muted"><span>{filteredItems.filter((item)=>item.status==='rejected'||item.status==='withdrawn').length} archived or closed applications outside the active board</span><button type="button" onClick={()=>setViewMode('split')} className="inline-flex min-h-8 items-center gap-1.5 rounded-control border border-line bg-panel px-3 font-medium text-fg hover:bg-bg"><LayoutGrid size={12}/>Open candidate review</button></div>
+        <section
+          data-ams-feature-slug="inbox-jobs-board"
+          data-ams-slug="inbox-jobs-board"
+          className="overflow-hidden rounded-card border border-line bg-panel"
+        >
+          <div className="border-b border-line px-4 py-4 sm:px-5">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <Briefcase size={15} className="shrink-0 text-accent-text" />
+                  <h3 className="text-sm font-semibold text-fg">Candidate pipeline</h3>
+                  <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-muted">
+                    {filteredItems.length}
+                  </span>
+                </div>
+                <p className="mt-1 max-w-2xl text-[11px] leading-5 text-muted">
+                  Review candidates by hiring stage and move the next decision forward without leaving the Inbox.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[10px] text-muted">
+                  {filteredItems.filter((item) => item.status === 'rejected' || item.status === 'withdrawn').length} archived
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('split')}
+                  className="inline-flex min-h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-fg hover:bg-panel"
+                >
+                  <User size={12} />
+                  Candidate review
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
+              {[
+                { key: 'new', label: 'New' },
+                { key: 'screening', label: 'Screening' },
+                { key: 'shortlisted', label: 'Shortlisted' },
+                { key: 'interview', label: 'Interview' },
+                { key: 'hired', label: 'Hired' }
+              ].map((stage) => {
+                const count = filteredItems.filter((item) => item.status === stage.key).length;
+                return (
+                  <button
+                    key={stage.key}
+                    type="button"
+                    onClick={() => {
+                      setFilterStatus(filterStatus === stage.key ? 'all' : stage.key);
+                    }}
+                    className={
+                      'rounded-control border px-3 py-2.5 text-left transition-colors ' +
+                      (filterStatus === stage.key
+                        ? 'border-accent/30 bg-accent/10'
+                        : 'border-line bg-bg hover:bg-panel')
+                    }
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] text-muted">{stage.label}</span>
+                      <span className="text-sm font-medium tabular-nums text-fg">{count}</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <div className="grid min-w-[1080px] grid-cols-5 divide-x divide-line">
+              {[
+                { key: 'new', label: 'New', next: 'screening' as ContactSubmission['status'], action: 'Start screening' },
+                { key: 'screening', label: 'Screening', next: 'shortlisted' as ContactSubmission['status'], action: 'Shortlist' },
+                { key: 'shortlisted', label: 'Shortlisted', next: 'interview' as ContactSubmission['status'], action: 'Move to interview' },
+                { key: 'interview', label: 'Interview', next: 'hired' as ContactSubmission['status'], action: 'Mark hired' },
+                { key: 'hired', label: 'Hired', next: null, action: '' }
+              ].map((stage) => {
+                const stageItems = filteredItems.filter((item) => item.status === stage.key);
+                return (
+                  <div key={stage.key} className="flex min-h-[480px] min-w-0 flex-col bg-bg/30">
+                    <div className="sticky top-0 z-10 border-b border-line bg-panel/95 px-3 py-3 backdrop-blur-sm">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={
+                              'h-1.5 w-1.5 rounded-full ' +
+                              (stage.key === 'new' ? 'bg-accent' : 'bg-line')
+                            }
+                          />
+                          <span className="text-xs font-semibold text-fg">{stage.label}</span>
+                        </div>
+                        <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] font-medium tabular-nums text-muted">
+                          {stageItems.length}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-1 flex-col gap-2 p-2.5">
+                      {stageItems.map((item) => (
+                        <article
+                          key={item.id}
+                          className="rounded-card border border-line bg-panel p-3 transition-colors hover:border-muted"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleSelectSubmission(item);
+                                setViewMode('split');
+                              }}
+                              className="min-w-0 text-left"
+                            >
+                              <p className="truncate text-xs font-semibold text-fg">{item.fullName || 'Anonymous candidate'}</p>
+                              <p className="mt-0.5 truncate text-[10px] text-muted">
+                                {item.positionTitle || item.specialty || 'Role not specified'}
+                              </p>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(event) => handleToggleStar(event, item.id, item.starred)}
+                              disabled={!canManageCrm}
+                              className="inline-flex min-h-8 min-w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted hover:border-warning/30 hover:bg-warning/10 hover:text-warning disabled:opacity-50"
+                              aria-label={item.starred ? 'Remove from starred' : 'Add to starred'}
+                              title={item.starred ? 'Remove from starred' : 'Add to starred'}
+                            >
+                              <Star size={12} className={item.starred ? 'fill-warning text-warning' : ''} />
+                            </button>
+                          </div>
+
+                          <div className="mt-3 flex flex-wrap gap-1">
+                            {renderPriorityBadge(item.priority)}
+                            {item.specialty && (
+                              <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] text-muted">
+                                {item.specialty}
+                              </span>
+                            )}
+                            {item.experienceYears && (
+                              <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] tabular-nums text-muted">
+                                {item.experienceYears} yrs
+                              </span>
+                            )}
+                            {item.location && (
+                              <span className="max-w-full truncate rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] text-muted">
+                                {item.location}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-2.5">
+                            <span className="text-[9px] tabular-nums text-muted">
+                              {formatRelativeTime(item.createdAt)}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleSelectSubmission(item);
+                                setViewMode('split');
+                              }}
+                              className="inline-flex min-h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-fg hover:bg-panel"
+                            >
+                              Review
+                              <ChevronRight size={11} />
+                            </button>
+                          </div>
+
+                          {stage.next && (
+                            <button
+                              type="button"
+                              disabled={!canManageCrm || isUpdating}
+                              onClick={() => void handleStatusChange(item.id, stage.next as ContactSubmission['status'])}
+                              className="mt-2 inline-flex min-h-8 w-full items-center justify-center gap-1.5 rounded-control bg-accent px-2.5 text-[10px] font-medium text-white hover:bg-accent/90 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              <Check size={11} />
+                              {stage.action}
+                            </button>
+                          )}
+                        </article>
+                      ))}
+
+                      {stageItems.length === 0 && (
+                        <div className="flex flex-1 items-center justify-center rounded-control border border-dashed border-line bg-bg/40 px-4 py-8 text-center">
+                          <div>
+                            <Briefcase size={18} className="mx-auto text-line" />
+                            <p className="mt-2 text-[10px] font-medium text-muted">No candidates</p>
+                            <p className="mt-1 text-[9px] leading-4 text-muted/75">
+                              Candidates entering this stage will appear here.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="border-t border-line bg-bg/50 px-4 py-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-[10px] font-medium text-fg">Hiring flow</p>
+                <p className="mt-0.5 text-[9px] leading-4 text-muted">Move candidates forward one stage at a time. Rejected and withdrawn applications stay outside the active board.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setViewMode('split');
+                  setFilterStatus('all');
+                }}
+                className="inline-flex min-h-8 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-[10px] font-medium text-fg hover:bg-bg"
+              >
+                <User size={12} />
+                Open candidate list
+              </button>
+            </div>
+          </div>
         </section>
-      ) : viewMode === 'queue' ? (
+) : viewMode === 'queue' ? (
         <section data-ams-feature-slug="inbox-starred-queue" data-ams-slug="inbox-starred-queue" className="space-y-3">
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             {[
