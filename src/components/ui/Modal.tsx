@@ -18,6 +18,7 @@ export interface ModalProps {
   /** Keep the dialog body fully visible without an internal scroll region. */
   fitContent?: boolean;
   dialogClassName?: string;
+  slug?: string;
 }
 
 const sizes = {
@@ -50,7 +51,8 @@ export const Modal: React.FC<ModalProps> = ({
   labelledBy,
   initialFocusRef,
   fitContent = false,
-  dialogClassName
+  dialogClassName,
+  slug
 }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
@@ -164,7 +166,7 @@ export const Modal: React.FC<ModalProps> = ({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 pb-[max(12px,env(safe-area-inset-bottom))] pt-[max(12px,env(safe-area-inset-top))] sm:p-4" role="presentation">
+    <div data-ams-feature-slug={slug} data-ams-slug={slug} className="fixed inset-0 z-50 flex items-center justify-center p-3 pb-[max(12px,env(safe-area-inset-bottom))] pt-[max(12px,env(safe-area-inset-top))] sm:p-4" role="presentation">
       <div
         aria-hidden="true"
         className="absolute inset-0 bg-bg/80"
