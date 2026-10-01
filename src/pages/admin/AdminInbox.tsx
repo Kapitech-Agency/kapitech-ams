@@ -626,75 +626,123 @@ export const AdminInbox: React.FC = () => {
 
       <AdminModuleHeader slug="inbox-header"
         className="mb-0"
-        title="Leads & Inbox"
-        description={language === 'id' ? 'Kelola inquiry masuk, lakukan triage, balas dengan cepat, dan teruskan peluang yang siap ke CRM.' : 'Triage inbound inquiries, respond quickly, and move qualified opportunities into CRM.'}
+        title="Inbox"
+        description={language === 'id' ? 'Kelola seluruh inbound dari website: inquiry klien dan lamaran kerja dalam satu alur operasional AMS.' : 'Manage all website inbound in one operational flow: client inquiries and job applications.'}
         actions={(
           <>
-            <span className="text-[11px] tabular-nums text-muted">{submissions.length} inbound</span>
+            <span className="text-[11px] tabular-nums text-muted">{activeTabItems.length} inbound</span>
             <button type="button" onClick={() => setIsEmailModalOpen(true)} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent" title={language === 'id' ? 'Buka pengaturan notifikasi email' : 'Open email alert settings'}><Mail size={14} /><span>{language === 'id' ? 'Notifikasi Email' : 'Email Alerts'}</span></button>
             {metrics.newCount > 0 && <button type="button" onClick={handleMarkAllRead} disabled={!canManageCrm} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"><Check size={14} /><span>{language === 'id' ? 'Tandai Dibaca' : 'Mark Read'}</span></button>}
-            {submissions.length > 0 && <button type="button" onClick={handleExportCSV} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"><Download size={14} /><span>Export CSV</span></button>}
+            {activeTabItems.length > 0 && <button type="button" onClick={handleExportCSV} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"><Download size={14} /><span>Export CSV</span></button>}
           </>
         )}
       />
 
       {/* ------------------------------------------------------------- */}
       {/* 2. EXECUTIVE KPI SUMMARY RIBBON */}
-      {/* ------------------------------------------------------------- */}
-      <section data-ams-feature-slug="inbox-performance-snapshot" data-ams-slug="inbox-performance-snapshot" aria-label="Leads and inbox snapshot" className="rounded-card border border-line bg-panel p-4">
-        <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3"><div><h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan leads & inbox' : 'Leads & inbox snapshot'}</h2><p className="mt-1 text-xs text-muted">{language === 'id' ? 'Sinyal intake, triage, konversi, dan estimasi pipeline.' : 'Intake, triage, conversion, and estimated pipeline signals.'}</p></div><span className="text-[11px] font-medium tabular-nums text-muted">{metrics.total} inbound</span></div>
+      <section data-ams-feature-slug="inbox-performance-snapshot" data-ams-slug="inbox-performance-snapshot" aria-label="Inbox performance snapshot" className="rounded-card border border-line bg-panel p-4">
+        <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
+          <div>
+            <h2 className="text-sm font-semibold text-fg">
+              {activeInboxTab === 'jobs'
+                ? (language === 'id' ? 'Ringkasan rekrutmen' : 'Recruitment snapshot')
+                : (language === 'id' ? 'Ringkasan client inbox' : 'Client inbox snapshot')}
+            </h2>
+            <p className="mt-1 text-xs text-muted">
+              {activeInboxTab === 'jobs'
+                ? (language === 'id' ? 'Intake, screening, interview, dan hiring pipeline.' : 'Intake, screening, interview, and hiring pipeline.')
+                : (language === 'id' ? 'Intake, triage, konversi, dan estimasi peluang.' : 'Intake, triage, conversion, and estimated opportunity volume.')}
+            </p>
+          </div>
+          <span className="text-[11px] font-medium tabular-nums text-muted">{metrics.total} inbound</span>
+        </div>
         <AdminMetricStrip slug="inbox-kpis"
           className="lg:grid-cols-4"
           metrics={[
-            { id: 'total', label: language === 'id' ? 'Total Masuk' : 'Total Inbound', value: metrics.total, context: language === 'id' ? 'Seluruh kanal formulir' : 'All intake touchpoints', sparkline: [metrics.total, metrics.newCount, metrics.convertedCount, metrics.conversionRate], icon: <Inbox size={16} strokeWidth={1.8} /> },
-            { id: 'action', label: language === 'id' ? 'Perlu Ditinjau' : 'Action Needed', value: <span className="inline-flex items-center gap-2 text-danger">{metrics.newCount}{metrics.newCount > 0 && <span className="h-2 w-2 rounded-full bg-danger" />}</span>, context: language === 'id' ? 'Belum dikualifikasi' : 'Pending initial triage', sparkline: [metrics.total, metrics.newCount, metrics.convertedCount], icon: <AlertCircle size={16} strokeWidth={1.8} />, toneClassName: 'text-danger' },
-            { id: 'converted', label: language === 'id' ? 'Dikonversi ke CRM' : 'Converted to CRM', value: metrics.convertedCount, context: String(metrics.conversionRate) + '% conversion', sparkline: [0, metrics.newCount, metrics.convertedCount, metrics.conversionRate], icon: <Briefcase size={16} strokeWidth={1.8} />, toneClassName: 'text-success' },
-            { id: 'pipeline', label: language === 'id' ? 'Volume Peluang' : 'Intake Valuation', value: formatAmount(metrics.totalPipelineValue, currency), context: language === 'id' ? 'Estimasi nilai brief masuk' : 'Cumulative brief budget estimate', sparkline: submissions.slice(0, 8).map(estimateDealValue), icon: <TrendingUp size={16} strokeWidth={1.8} />, toneClassName: 'text-success' }
+            {
+              id: 'total',
+              label: activeInboxTab === 'jobs' ? (language === 'id' ? 'Total Lamaran' : 'Total Applications') : (language === 'id' ? 'Total Inquiry' : 'Total Inquiries'),
+              value: metrics.total,
+              context: activeInboxTab === 'jobs' ? (language === 'id' ? 'Semua lamaran masuk' : 'All applications received') : (language === 'id' ? 'Semua inbound klien' : 'All client inbound'),
+              sparkline: [metrics.total, metrics.newCount, metrics.convertedCount, metrics.conversionRate],
+              icon: <Inbox size={16} strokeWidth={1.8} />
+            },
+            {
+              id: 'action',
+              label: language === 'id' ? 'Perlu Ditinjau' : 'Action Needed',
+              value: <span className="inline-flex items-center gap-2 text-danger">{metrics.newCount}{metrics.newCount > 0 && <span className="h-2 w-2 rounded-full bg-danger" />}</span>,
+              context: activeInboxTab === 'jobs' ? (language === 'id' ? 'Belum masuk screening' : 'Awaiting screening') : (language === 'id' ? 'Belum dikualifikasi' : 'Pending initial triage'),
+              sparkline: [metrics.total, metrics.newCount, metrics.convertedCount],
+              icon: <AlertCircle size={16} strokeWidth={1.8} />,
+              toneClassName: 'text-danger'
+            },
+            {
+              id: 'progress',
+              label: activeInboxTab === 'jobs' ? 'Hired' : (language === 'id' ? 'Dikonversi ke CRM' : 'Converted to CRM'),
+              value: metrics.convertedCount,
+              context: activeInboxTab === 'jobs' ? (language === 'id' ? metrics.conversionRate + '% dari total lamaran' : metrics.conversionRate + '% of total applications') : metrics.conversionRate + '% conversion',
+              sparkline: [0, metrics.newCount, metrics.convertedCount, metrics.conversionRate],
+              icon: activeInboxTab === 'jobs' ? <User size={16} strokeWidth={1.8} /> : <Briefcase size={16} strokeWidth={1.8} />,
+              toneClassName: 'text-success'
+            },
+            {
+              id: 'pipeline',
+              label: activeInboxTab === 'jobs' ? 'Interview' : (language === 'id' ? 'Volume Peluang' : 'Opportunity Volume'),
+              value: activeInboxTab === 'jobs' ? metrics.interviewCount : formatAmount(metrics.totalPipelineValue, currency),
+              context: activeInboxTab === 'jobs' ? (language === 'id' ? 'Tahap interview aktif' : 'Active interview stage') : (language === 'id' ? 'Estimasi nilai brief masuk' : 'Estimated inbound opportunity value'),
+              sparkline: activeInboxTab === 'jobs' ? [metrics.newCount, metrics.interviewCount, metrics.convertedCount] : activeTabItems.slice(0, 8).map(estimateDealValue),
+              icon: activeInboxTab === 'jobs' ? <Calendar size={16} strokeWidth={1.8} /> : <TrendingUp size={16} strokeWidth={1.8} />,
+              toneClassName: 'text-success'
+            }
           ]}
         />
       </section>
 
-      {/* ------------------------------------------------------------- */}
       {/* 3. UNIFIED FILTER TABS & TOOLBAR */}
       {/* ------------------------------------------------------------- */}
       <div className="ams-inbox-toolbar bg-panel border border-line p-4 rounded-card space-y-3">
         
-        {/* Top Channel Category Tabs */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0 custom-scrollbar">
-            {[
-              { key: 'all', label: language === 'id' ? 'Semua Form' : 'All Briefs' },
-              { key: 'inquiry', label: language === 'id' ? 'Konsultasi Klien' : 'Client Briefs' },
-              { key: 'career', label: language === 'id' ? 'Lamaran Karir' : 'Career Roles' },
-              { key: 'vendor', label: language === 'id' ? 'Freelance Vendor' : 'Vendor Partners' },
-              { key: 'newsletter', label: language === 'id' ? 'Newsletter' : 'Subscriptions' }
-            ].map((tab) => {
-              const count = tab.key === 'all' 
-                ? submissions.length 
-                : submissions.filter(s => (s.type || 'inquiry') === tab.key).length;
+        {/* Inbox Type Tabs */}
+        <div className="flex min-w-0 items-center overflow-x-auto pb-1 custom-scrollbar" role="tablist" aria-label="Inbox type">
+          {[
+            {
+              key: 'client' as const,
+              label: language === 'id' ? 'Client Inbox' : 'Client Inbox',
+              icon: <MessageSquare size={14} />,
+              count: submissions.filter((item) => item.type !== 'career').length
+            },
+            {
+              key: 'jobs' as const,
+              label: language === 'id' ? 'Job Applications' : 'Job Applications',
+              icon: <Briefcase size={14} />,
+              count: submissions.filter((item) => item.type === 'career').length
+            }
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              role="tab"
+              aria-selected={activeInboxTab === tab.key}
+              onClick={() => setActiveInboxTab(tab.key)}
+              data-ams-slug={'inbox-tab-' + tab.key}
+              className={'inline-flex h-9 min-h-9 shrink-0 items-center gap-2 rounded-control border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (
+                activeInboxTab === tab.key
+                  ? 'border-accent/30 bg-accent/10 text-fg font-semibold'
+                  : 'border-line bg-panel text-muted hover:bg-bg hover:text-fg'
+              )}
+            >
+              {tab.icon}
+              <span>{tab.label}</span>
+              <span className={'rounded-chip px-1.5 py-0.5 text-[10px] tabular-nums ' + (
+                activeInboxTab === tab.key ? 'bg-accent/15 text-accent-text' : 'bg-bg text-muted'
+              )}>
+                {tab.count}
+              </span>
+            </button>
+          ))}
+        </div>
 
-              return (
-                <button
-                  key={tab.key}
-                  onClick={() => setFilterType(tab.key)}
-                  className={`h-9 min-h-9 px-3 rounded-control text-xs font-sans transition-all flex items-center gap-2 border ${
-                    filterType === tab.key
-                      ? 'bg-line text-fg font-semibold'
-                      : 'bg-panel text-muted border-line hover:text-fg'
-                  }`}
-                >
-                  <span>{tab.label}</span>
-                  <span className={`px-1.5 py-0.5 rounded-chip text-[10px] ${
-                    filterType === tab.key ? 'bg-panel-hover text-fg' : 'bg-panel text-muted'
-                  }`}>
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* View Switcher: Split View vs Data Table View */}
+        {/* View Switcher: Split View vs Data Table View */}
           <div className="flex items-center bg-panel border border-line rounded-control p-0.5">
             <button
               onClick={() => setViewMode('split')}
@@ -732,7 +780,9 @@ export const AdminInbox: React.FC = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={language === 'id' ? 'Cari nama, email, perusahaan, jasa, atau isi brief...' : 'Search name, email, company, requested stack, or message...'}
+              placeholder={activeInboxTab === 'jobs'
+                ? (language === 'id' ? 'Cari kandidat, posisi, email, skill, atau tools...' : 'Search candidate, role, email, skills, or tools...')
+                : (language === 'id' ? 'Cari nama, email, perusahaan, jasa, atau isi brief...' : 'Search name, email, company, requested stack, or message...')}
               className="w-full h-9 min-h-9 pl-9 pr-8 rounded-control bg-bg border border-line text-xs text-fg focus:outline-none focus:border-accent placeholder:text-muted font-sans"
             />
             {searchQuery && (
@@ -748,7 +798,27 @@ export const AdminInbox: React.FC = () => {
           <div className="ams-inbox-filter-controls flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1 custom-scrollbar touch-pan-x md:overflow-visible md:pb-0 md:mx-0 md:px-0">
             {/* Status Dropdown */}
             <div className="w-[148px] shrink-0">
-              <CustomSelect value={filterStatus} onChange={setFilterStatus} options={[{value:'all',label:language === 'id' ? 'Semua Status' : 'All Status'},{value:'new',label:'Status: New'},{value:'in-review',label:'Status: In Review'},{value:'contacted',label:'Status: Contacted'},{value:'closed',label:'Status: Closed Deal'}]} />
+              <CustomSelect
+                value={filterStatus}
+                onChange={setFilterStatus}
+                options={activeInboxTab === 'jobs'
+                  ? [
+                      { value: 'all', label: language === 'id' ? 'Semua Status' : 'All Status' },
+                      { value: 'new', label: 'Status: New' },
+                      { value: 'screening', label: 'Status: Screening' },
+                      { value: 'shortlisted', label: 'Status: Shortlisted' },
+                      { value: 'interview', label: 'Status: Interview' },
+                      { value: 'hired', label: 'Status: Hired' },
+                      { value: 'rejected', label: 'Status: Rejected' }
+                    ]
+                  : [
+                      { value: 'all', label: language === 'id' ? 'Semua Status' : 'All Status' },
+                      { value: 'new', label: 'Status: New' },
+                      { value: 'in-review', label: 'Status: In Review' },
+                      { value: 'contacted', label: 'Status: Contacted' },
+                      { value: 'closed', label: 'Status: Closed Deal' }
+                    ]}
+              />
             </div>
 
             {/* Priority Dropdown */}
