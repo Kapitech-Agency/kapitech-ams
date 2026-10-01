@@ -429,6 +429,7 @@ export const AdminLayout: React.FC = () => {
             }}
             compact
             size="sm"
+            directOpen
             onEdit={() => setProfileView('edit')}
           />
         </div>
@@ -819,6 +820,7 @@ export const AdminLayout: React.FC = () => {
                   status: 'active'
                 }}
                 size="sm"
+                directOpen
                 onEdit={() => setProfileView('edit')}
               />
             </div>
