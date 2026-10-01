@@ -521,7 +521,6 @@ export const AdminClients: React.FC = () => {
       </section>
 
       <AdminFilterBar slug="client-directory-filters"
-        slug="client-directory-filters"
         searchValue={searchQuery}
         onSearchChange={setSearchQuery}
         searchPlaceholder="Search by company, contact, industry, or client ID..."
