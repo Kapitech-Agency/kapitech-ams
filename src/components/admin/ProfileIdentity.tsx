@@ -38,7 +38,14 @@ interface ProfileIdentityProps {
   showRole?: boolean;
   onEdit?: () => void;
   directOpen?: boolean;
+  slug?: string;
 }
+
+const statusClass: Record<NonNullable<PublicProfileData['status']>, string> = {
+  active: 'border-success/20 bg-success/10 text-success',
+  away: 'border-warning/20 bg-warning/10 text-warning',
+  offline: 'border-line bg-bg text-muted',
+};
 
 const statusLabel: Record<NonNullable<PublicProfileData['status']>, string> = {
   active: 'Active',
@@ -67,6 +74,7 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
   showRole = true,
   onEdit,
   directOpen = false,
+  slug = 'profile',
 }) => {
   const [quickOpen, setQuickOpen] = useState(false);
   const [fullOpen, setFullOpen] = useState(false);
@@ -91,6 +99,8 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
     <>
       <button
         type="button"
+        data-ams-feature-slug={slug}
+        data-ams-slug={slug}
         onClick={() => directOpen ? setFullOpen(true) : setQuickOpen(true)}
         className={[
           'group/profile inline-flex min-w-0 items-center text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
@@ -124,6 +134,7 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
         open={quickOpen}
         onClose={() => setQuickOpen(false)}
         size="sm"
+        slug={slug + '-quick-view'}
         title="Profile"
         description="Quick profile overview."
         footer={(
@@ -155,7 +166,7 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="min-w-0 truncate text-sm font-semibold text-fg">{profile.name}</h3>
                   {status && (
-                    <span className="rounded-badge border border-success/20 bg-success/10 px-1.5 py-0.5 text-[9px] font-semibold text-success">
+                    <span className={"rounded-badge border px-1.5 py-0.5 text-[9px] font-semibold " + (status ? statusClass[status] : "")}>
                       {statusLabel[status]}
                     </span>
                   )}
@@ -216,17 +227,19 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
         open={fullOpen}
         onClose={closeAll}
         size="xl"
+        slug={slug + '-public'}
         title="Public profile"
         description="Complete profile information available within your current AMS visibility scope."
         footer={(
           <>
-            <Button type="button" variant="secondary" onClick={closeAll}>
+            <Button type="button" variant="secondary" slug={slug + '-public-close'} onClick={closeAll}>
               Close
             </Button>
             {onEdit && (
               <Button
                 type="button"
                 variant="primary"
+                slug={slug + '-public-edit'}
                 onClick={() => {
                   closeAll();
                   onEdit();
@@ -251,7 +264,7 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="text-lg font-semibold text-fg">{profile.name}</h2>
                   {status && (
-                    <span className="rounded-badge border border-success/20 bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success">
+                    <span className={"rounded-badge border px-2 py-0.5 text-[10px] font-semibold " + (status ? statusClass[status] : "")}>
                       {statusLabel[status]}
                     </span>
                   )}
