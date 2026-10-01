@@ -828,7 +828,7 @@ export const AdminInbox: React.FC = () => {
       {activeInboxTab === 'overview' ? (
         <section data-ams-feature-slug="inbox-overview-controls" data-ams-slug="inbox-overview-controls" className="rounded-card border border-line bg-panel">
           <div className="flex flex-col gap-3 p-3 sm:p-4 lg:flex-row lg:items-center lg:justify-between">
-            <div><p className="text-xs font-semibold text-fg">Live intake monitor</p><p className="mt-0.5 text-[11px] text-muted">Triage exceptions here, then open the dedicated workspace when you need deeper review.</p></div>
+            <div><p className="text-xs font-semibold text-fg">Intake controls</p><p className="mt-0.5 text-[11px] text-muted">The inbox refreshes automatically every 30 seconds. Use these controls for manual refresh, export, or full review.</p></div>
             <div className="flex flex-wrap items-center gap-2">
               <button type="button" onClick={() => void refreshInbox()} className="inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted hover:bg-bg hover:text-fg"><RefreshCw size={14} />Refresh</button>
               <button type="button" onClick={handleExportCSV} disabled={activeTabItems.length === 0} className="inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted hover:bg-bg hover:text-fg disabled:opacity-50"><Download size={14} />Export overview</button>
