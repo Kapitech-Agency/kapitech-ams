@@ -208,7 +208,7 @@ export const AdminCmsServices: React.FC = () => {
           onConfirm={() => void confirmDeleteService()}
         />
       
-      <AdminModuleHeader
+      <AdminModuleHeader slug="cms-services-header"
         icon={<Layers size={20} />}
         eyebrow={
           <>
@@ -252,7 +252,7 @@ export const AdminCmsServices: React.FC = () => {
       })()}
 
       {/* Catalog metrics */}
-      <AdminMetricStrip
+      <AdminMetricStrip slug="cms-services-kpis"
         className="grid-cols-2 sm:grid-cols-4"
         metrics={[
           {
@@ -287,7 +287,7 @@ export const AdminCmsServices: React.FC = () => {
       />
 
       {/* Category Pills & Search */}
-      <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-3 bg-panel p-4 rounded-card border border-line">
+      <div data-ams-feature-slug="cms-services-filters" data-ams-slug="cms-services-filters" className="w-full flex flex-col sm:flex-row items-center justify-between gap-3 bg-panel p-4 rounded-card border border-line">
         <div className="flex flex-nowrap items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:overflow-visible sm:pb-0">
           {categories.map((cat) => (
             <button
@@ -359,7 +359,7 @@ export const AdminCmsServices: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full">
+        <div data-ams-feature-slug="cms-services-directory" data-ams-slug="cms-services-directory" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full">
         {filtered.map((item) => (
           <div
             key={item.slug}
@@ -442,7 +442,7 @@ export const AdminCmsServices: React.FC = () => {
         </div>
       )}
       {/* Service Detail / Inspection Modal */}
-      <Modal open={!!selectedServiceForDetail} onClose={() => setSelectedServiceForDetail(null)} size="lg" title={selectedServiceForDetail?.title || 'Service detail'} description={selectedServiceForDetail?.heroSubtitle || selectedServiceForDetail?.heroSubtitleId}>
+      <Modal slug="cms-service-detail-modal" open={!!selectedServiceForDetail} onClose={() => setSelectedServiceForDetail(null)} size="lg" title={selectedServiceForDetail?.title || 'Service detail'} description={selectedServiceForDetail?.heroSubtitle || selectedServiceForDetail?.heroSubtitleId}>
             <div className="flex items-center gap-2 font-sans text-xs text-accent font-semibold mb-2">
               <span>{selectedServiceForDetail.category}</span>
               <span>•</span>
@@ -539,7 +539,7 @@ export const AdminCmsServices: React.FC = () => {
       </Modal>
 
       {/* Add New Service Modal */}
-      <Drawer
+      <Drawer slug="cms-service-editor-drawer"
         open={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         size="lg"
@@ -552,7 +552,7 @@ export const AdminCmsServices: React.FC = () => {
           </>
         )}
       >
-            <form id="service-form" onSubmit={handleCreateService} className="space-y-4 text-xs font-sans">
+            <form id="service-form" data-ams-feature-slug="cms-service-form" data-ams-slug="cms-service-form" onSubmit={handleCreateService} className="space-y-4 text-xs font-sans">
               <div>
                 <label className="block text-muted mb-1 font-medium">Service Title *</label>
                 <input
