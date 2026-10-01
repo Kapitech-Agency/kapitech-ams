@@ -537,6 +537,13 @@ export const AdminInbox: React.FC = () => {
       .slice(0, 8);
   }, [filteredItems, triageScope]);
 
+  useEffect(() => {
+    if (selectedSubmission && !filteredItems.some((item) => item.id === selectedSubmission.id)) {
+      setSelectedSubmission(null);
+    }
+  }, [filteredItems, selectedSubmission]);
+
+  // Keep the selected record aligned with the active filter and status context.
   const pageCount = Math.max(1, Math.ceil(filteredItems.length / pageSize));
   const pagedItems = filteredItems.slice((page - 1) * pageSize, page * pageSize);
   useEffect(() => { setPage((current) => Math.min(current, pageCount)); }, [pageCount]);
@@ -1271,7 +1278,7 @@ export const AdminInbox: React.FC = () => {
             ))}
           </div>
         </div>
-      ) : filteredItems.length === 0 ? (
+      ) : filteredItems.length === 0 && !(activeInboxTab === 'client' && viewMode === 'split') ? (
         /* SINGLE UNIFIED EMPTY STATE - PREVENTS DUPLICATE BOXES */
         <div className="ams-empty-state bg-panel border border-line rounded-card p-12 sm:p-16 text-center text-muted space-y-4 flex flex-col items-center">
           <div className="w-16 h-16 rounded-card bg-panel border border-line flex items-center justify-center text-line mx-auto">
@@ -1312,7 +1319,7 @@ export const AdminInbox: React.FC = () => {
           </div>
         </div>
       ) : (
-        /* SPLIT MASTER-DETAIL VIEW (when items exist) */
+        /* SPLIT MASTER-DETAIL VIEW */
         <div className="ams-inbox-workspace grid grid-cols-1 items-start gap-3 lg:grid-cols-[minmax(300px,0.82fr)_minmax(0,1.18fr)]">
           
           {/* Left: Master Briefs List Pane */}
