@@ -229,7 +229,7 @@ export const AdminClientLeadAccounts: React.FC = () => {
 
   return (
     <AdminPageShell featureSlug="client-lead-accounts-module" className="ams-clients-module">
-      <AdminModuleHeader
+      <AdminModuleHeader slug="client-lead-accounts-header"
         className="mb-0"
         title="Lead Accounts & Pipeline"
         description="Enterprise opportunities, qualification stages, projected retainer value, and next actions."
@@ -262,13 +262,13 @@ export const AdminClientLeadAccounts: React.FC = () => {
         </div>
       )}
 
-      <section className="grid grid-cols-1 gap-3 md:grid-cols-3" aria-label="Pipeline metrics">
+      <section data-ams-feature-slug="lead-accounts-kpis" data-ams-slug="lead-accounts-kpis" className="grid grid-cols-1 gap-3 md:grid-cols-3" aria-label="Pipeline metrics">
         <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">OPEN PIPELINE VALUE</span><CircleDollarSign size={18} /></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{compactMoney(pipelineValue)}</div><p className="mt-1 text-[11px] text-muted">Combined projected annual value</p></div>
         <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">WEIGHTED WIN PROBABILITY</span><Target size={18} /></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{weightedProbability.toFixed(1)}%</div><p className="mt-1 text-[11px] text-muted">Value-weighted across {records.length} opportunities</p></div>
         <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">PROPOSALS OUT FOR REVIEW</span><MailCheck size={18} /><span className="sr-only">{proposalCount} proposal stage records</span></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{proposalCount}</div><p className="mt-1 text-[11px] text-muted">Opportunities currently in proposal stage</p></div>
       </section>
 
-      <AdminFilterBar
+      <AdminFilterBar slug="lead-accounts-filters"
         slug="lead-accounts-filters"
         searchValue={query}
         onSearchChange={setQuery}
@@ -291,7 +291,7 @@ export const AdminClientLeadAccounts: React.FC = () => {
         )}
       />
 
-      <section className="ams-client-table-shell overflow-hidden rounded-card border border-line bg-panel" aria-label="Lead pipeline table">
+      <section data-ams-feature-slug="lead-accounts-directory" data-ams-slug="lead-accounts-directory" className="ams-client-table-shell overflow-hidden rounded-card border border-line bg-panel" aria-label="Lead pipeline table">
         <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full min-w-[1220px] border-collapse text-left">
             <thead className="bg-bg">
@@ -339,18 +339,18 @@ export const AdminClientLeadAccounts: React.FC = () => {
         )}
       </section>
 
-      <section className="grid grid-cols-1 gap-3 text-[11px] text-muted md:grid-cols-4" aria-label="Pipeline summary">
+      <section data-ams-feature-slug="lead-accounts-summary" data-ams-slug="lead-accounts-summary" className="grid grid-cols-1 gap-3 text-[11px] text-muted md:grid-cols-4" aria-label="Pipeline summary">
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><CircleDollarSign size={14} className="text-accent-text" /><span>Open annual value: <strong className="text-fg">{compactMoney(pipelineValue)}</strong></span></div>
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><Target size={14} className="text-info" /><span>Weighted probability: <strong className="text-fg">{weightedProbability.toFixed(1)}%</strong></span></div>
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><Clock3 size={14} className="text-warning" /><span>Contract review: <strong className="text-fg">{stageCounts.contract}</strong></span></div>
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><CheckCircle2 size={14} className="text-success" /><span>Ready to sign: <strong className="text-fg">{stageCounts['ready-to-sign']}</strong></span></div>
       </section>
 
-      <Modal open={!!selectedLead} onClose={() => setSelectedLead(null)} size="md" title="Lead account" description={selectedLead ? `${selectedLead.company} · ${selectedLead.id}` : undefined} footer={<div className="flex justify-end gap-2"><Button type="button" variant="secondary" onClick={() => setSelectedLead(null)}>Close</Button><Button type="button" variant="primary" onClick={() => { if (selectedLead) setMessage(`Proposal creation is not connected for ${selectedLead.company} yet.`); setSelectedLead(null); }} icon={<FileText size={14} />}>Create proposal</Button></div>}>
+      <Modal slug="lead-account-detail-modal" open={!!selectedLead} onClose={() => setSelectedLead(null)} size="md" title="Lead account" description={selectedLead ? `${selectedLead.company} · ${selectedLead.id}` : undefined} footer={<div className="flex justify-end gap-2"><Button type="button" variant="secondary" onClick={() => setSelectedLead(null)}>Close</Button><Button type="button" variant="primary" onClick={() => { if (selectedLead) setMessage(`Proposal creation is not connected for ${selectedLead.company} yet.`); setSelectedLead(null); }} icon={<FileText size={14} />}>Create proposal</Button></div>}>
         {selectedLead && <div className="space-y-4"><div className="flex items-center gap-3 rounded-card border border-line bg-bg p-3"><div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-panel text-xs font-semibold text-fg">{selectedLead.initials}</div><div className="min-w-0"><p className="truncate text-sm font-semibold text-fg">{selectedLead.company}</p><div className="mt-0.5 flex items-center gap-2"><ProfileIdentity profile={{ name: selectedLead.contact, role: undefined, contextLabel: selectedLead.company }} size="sm" showRole={false} /><span className="text-xs text-muted">· {selectedLead.location}</span></div></div></div><div className="grid gap-3 sm:grid-cols-3"><div className="rounded-card border border-line bg-panel p-4"><span className="text-[10px] uppercase tracking-wider text-muted">Annual value</span><div className="mt-1 text-sm font-semibold tabular-nums text-fg">{money(selectedLead.annualValue)}</div></div><div className="rounded-card border border-line bg-panel p-4"><span className="text-[10px] uppercase tracking-wider text-muted">Win probability</span><div className="mt-1 text-sm font-semibold tabular-nums text-fg">{selectedLead.probability}%</div></div><div className="rounded-card border border-line bg-panel p-4"><span className="text-[10px] uppercase tracking-wider text-muted">Stage</span><div className="mt-1 text-sm font-semibold text-fg">{stageMeta[selectedLead.stage].label}</div></div></div><div className="rounded-card border border-line bg-panel p-4"><span className="text-[10px] uppercase tracking-wider text-muted">Next action</span><p className="mt-1 text-sm font-medium text-fg">{selectedLead.nextAction}</p><p className="mt-1 text-xs text-muted">{dueLabel(selectedLead.dueAt, selectedLead.urgent)}</p></div><div className="text-xs text-muted flex items-center gap-2"><span>Owner:</span><ProfileIdentity profile={{ name: selectedLead.owner, role: selectedLead.ownerRole || undefined, contextLabel: 'Lead owner' }} size="sm" showRole={false} /></div></div>}
       </Modal>
 
-      <Drawer open={isAdding} onClose={() => setIsAdding(false)} size="sm" title="Add lead account" description="Start a new opportunity in Discovery & Audit." footer={<div className="flex justify-end gap-2"><Button type="button" variant="secondary" onClick={() => setIsAdding(false)}>Cancel</Button><Button type="button" variant="primary" onClick={addLead} icon={<Plus size={14} />}>Add lead</Button></div>}>
+      <Drawer slug="lead-account-create-drawer" open={isAdding} onClose={() => setIsAdding(false)} size="sm" title="Add lead account" description="Start a new opportunity in Discovery & Audit." footer={<div className="flex justify-end gap-2"><Button type="button" variant="secondary" onClick={() => setIsAdding(false)}>Cancel</Button><Button type="button" variant="primary" onClick={addLead} icon={<Plus size={14} />}>Add lead</Button></div>}>
         <div className="space-y-4"><div><label htmlFor="lead-company" className="mb-1.5 block text-xs font-medium text-fg">Company</label><input id="lead-company" value={newCompany} onChange={(event) => setNewCompany(event.target.value)} placeholder="Company name" className="h-9 w-full rounded-control border border-line bg-bg px-3 text-sm text-fg placeholder:text-muted focus:border-accent focus:outline-none" /></div><div><label htmlFor="lead-contact" className="mb-1.5 block text-xs font-medium text-fg">Contact person</label><input id="lead-contact" value={newContact} onChange={(event) => setNewContact(event.target.value)} placeholder="Contact person" className="h-9 w-full rounded-control border border-line bg-bg px-3 text-sm text-fg placeholder:text-muted focus:border-accent focus:outline-none" /></div><div className="rounded-card border border-line bg-bg p-4 text-xs text-muted">New opportunities start in <span className="font-medium text-fg">Discovery &amp; Audit</span> with a 25% initial probability.</div></div>
       </Drawer>
     </AdminPageShell>
