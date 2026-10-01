@@ -2120,14 +2120,14 @@ export const AdminInvoicing: React.FC = () => {
 
   const previousQuarterTotal = useMemo(
     () => currencyInvoices
-      .filter((invoice) => isInQuarter(invoice.issueDate, previousQuarter))
+      .filter((invoice) => isInQuarter(invoice.issueDate, previousQuarter) && invoice.status !== 'draft' && invoice.status !== 'cancelled')
       .reduce((sum, invoice) => sum + Number(invoice.total || 0), 0),
     [currencyInvoices, previousQuarter]
   );
 
   const currentQuarterTotal = useMemo(
     () => quarterInvoices
-      .filter((invoice) => invoice.status !== 'cancelled')
+      .filter((invoice) => invoice.status !== 'draft' && invoice.status !== 'cancelled')
       .reduce((sum, invoice) => sum + Number(invoice.total || 0), 0),
     [quarterInvoices]
   );
