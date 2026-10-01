@@ -5,6 +5,8 @@
  */
 
 import { api } from './apiClient';
+import { toSlug } from './slug';
+import { isSlugFixtureMode } from './runtimeMode';
 
 export type InvoiceStatus = 'draft' | 'sent' | 'partially_paid' | 'paid' | 'overdue' | 'cancelled';
 
@@ -97,35 +99,53 @@ let invoiceCache: AgencyInvoice[] | null = null;
 let expenseCache: AgencyExpense[] | null = null;
 export const FINANCE_EVENT_NAME = 'kapitech_finance_updated';
 
-export const slugifyFinance = (value: unknown): string => {
-  const normalized = String(value ?? '')
-    .trim()
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-  return normalized || 'finance-record';
-};
+export const slugifyFinance = (value: unknown): string => toSlug(value, 'finance-record');
 
 export const normalizeFinanceInvoice = (invoice: AgencyInvoice): AgencyInvoice => {
   const slug = slugifyFinance(invoice.slug || invoice.invoiceNumber || invoice.id);
+  const payments = Array.isArray(invoice.payments)
+    ? invoice.payments.map((payment) => ({
+        ...payment,
+        amount: Math.max(0, Number(payment.amount) || 0),
+        slug: payment.slug || slugifyFinance(slug + '-payment-' + (payment.id || payment.date))
+      }))
+    : [];
+  const paymentTotal = payments.reduce((sum, payment) => sum + payment.amount, 0);
+  const amountPaid = payments.length > 0
+    ? Math.min(Math.max(0, Number(invoice.total) || 0), paymentTotal)
+    : Math.min(Math.max(0, Number(invoice.total) || 0), Math.max(0, Number(invoice.amountPaid) || 0));
+  const balanceDue = Math.max(0, (Number(invoice.total) || 0) - amountPaid);
+
   return {
     ...invoice,
     slug,
+    amountPaid,
+    balanceDue,
     items: Array.isArray(invoice.items)
       ? invoice.items.map((item) => ({
           ...item,
+          quantity: Math.max(0, Number(item.quantity) || 0),
+          unitPrice: Math.max(0, Number(item.unitPrice) || 0),
+          amount: Math.round(Math.max(0, Number(item.amount) || ((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0))) * 100) / 100,
           slug: item.slug || slugifyFinance(slug + '-' + (item.description || item.id))
         }))
       : [],
-    payments: Array.isArray(invoice.payments)
-      ? invoice.payments.map((payment) => ({
-          ...payment,
-          slug: payment.slug || slugifyFinance(slug + '-payment-' + (payment.id || payment.date))
-        }))
-      : []
+    payments
   };
+};
+
+export const getEffectiveInvoiceStatus = (invoice: AgencyInvoice, referenceDate: Date = new Date()): InvoiceStatus => {
+  if (invoice.status === 'cancelled' || invoice.status === 'draft') return invoice.status;
+  const balance = Math.max(0, Number(invoice.balanceDue ?? (Number(invoice.total) || 0) - (Number(invoice.amountPaid) || 0)));
+  if (balance <= 0 && Number(invoice.total) > 0) return 'paid';
+  if (balance > 0 && invoice.dueDate) {
+    const due = new Date(String(invoice.dueDate) + 'T00:00:00');
+    const day = new Date(referenceDate);
+    day.setHours(0, 0, 0, 0);
+    if (!Number.isNaN(due.getTime()) && due.getTime() < day.getTime()) return 'overdue';
+  }
+  if (balance > 0 && (Number(invoice.amountPaid || 0) > 0 || invoice.status === 'paid' || invoice.status === 'partially_paid')) return 'partially_paid';
+  return invoice.status;
 };
 
 export const normalizeFinanceExpense = (expense: AgencyExpense): AgencyExpense => ({
@@ -458,7 +478,7 @@ export const INITIAL_DEFAULT_EXPENSES: AgencyExpense[] = [
 export const getAgencyInvoices = (): AgencyInvoice[] => {
   hydrateFinanceFromServer();
   if (invoiceCache) return invoiceCache;
-  invoiceCache = import.meta.env.PROD ? [] : INITIAL_DEFAULT_INVOICES.map(normalizeFinanceInvoice);
+  invoiceCache = isSlugFixtureMode() ? INITIAL_DEFAULT_INVOICES.map(normalizeFinanceInvoice) : [];
   return invoiceCache;
 };
 
@@ -568,7 +588,7 @@ export const recordInvoicePayment = async (
 export const getAgencyExpenses = (): AgencyExpense[] => {
   hydrateFinanceFromServer();
   if (expenseCache) return expenseCache;
-  expenseCache = import.meta.env.PROD ? [] : INITIAL_DEFAULT_EXPENSES.map(normalizeFinanceExpense);
+  expenseCache = isSlugFixtureMode() ? INITIAL_DEFAULT_EXPENSES.map(normalizeFinanceExpense) : [];
   return expenseCache;
 };
 
@@ -580,9 +600,9 @@ export const saveAgencyExpense = async (expense: AgencyExpense): Promise<void> =
   let updated: AgencyExpense[];
   if (idx >= 0) {
     updated = [...current];
-    updated[idx] = expense;
+    updated[idx] = normalizeFinanceExpense(expense);
   } else {
-    updated = [expense, ...current];
+    updated = [normalizeFinanceExpense(expense), ...current];
   }
 
   expenseCache = updated;
@@ -618,11 +638,12 @@ export const computeInvoiceTotals = (
   taxPercent: number = 11,
   discountPercent: number = 0
 ) => {
-  const subtotal = items.reduce((sum, item) => sum + (Number(item.amount) || (Number(item.quantity || 1) * Number(item.unitPrice || 0))), 0);
-  const discountAmount = Math.round((subtotal * Math.max(0, Math.min(100, Number(discountPercent) || 0))) / 100);
-  const discountedSubtotal = Math.max(0, subtotal - discountAmount);
-  const taxAmount = Math.round((discountedSubtotal * Math.max(0, Number(taxPercent) || 0)) / 100);
-  const total = discountedSubtotal + taxAmount;
+  const roundMoney = (value: number) => Math.round(value * 100) / 100;
+  const subtotal = roundMoney(items.reduce((sum, item) => sum + (Number(item.amount) || (Number(item.quantity || 1) * Number(item.unitPrice || 0))), 0));
+  const discountAmount = roundMoney(subtotal * Math.max(0, Math.min(100, Number(discountPercent) || 0)) / 100);
+  const discountedSubtotal = roundMoney(Math.max(0, subtotal - discountAmount));
+  const taxAmount = roundMoney(discountedSubtotal * Math.max(0, Number(taxPercent) || 0) / 100);
+  const total = roundMoney(discountedSubtotal + taxAmount);
 
   return {
     subtotal,
@@ -713,7 +734,10 @@ export interface ArAgingSummary {
 }
 
 export const getAccountsReceivableAging = (invoices: AgencyInvoice[]): ArAgingSummary => {
-  const pending = invoices.filter(i => i.status === 'sent' || i.status === 'overdue' || i.status === 'partially_paid');
+  const pending = invoices
+    .map(normalizeFinanceInvoice)
+    .filter((invoice) => !['draft', 'cancelled'].includes(invoice.status))
+    .filter((invoice) => getEffectiveInvoiceStatus(invoice) !== 'paid');
   const now = new Date().getTime();
 
   let current = 0;
@@ -721,22 +745,19 @@ export const getAccountsReceivableAging = (invoices: AgencyInvoice[]): ArAgingSu
   let days60 = 0;
   let days90Plus = 0;
 
-  pending.forEach(inv => {
-    const amountDue = inv.balanceDue !== undefined ? inv.balanceDue : (inv.total - (inv.amountPaid || 0));
+  pending.forEach((inv) => {
+    const amountDue = Math.max(0, Number(inv.balanceDue ?? ((Number(inv.total) || 0) - (Number(inv.amountPaid) || 0))));
     if (amountDue <= 0) return;
 
-    const dueTime = new Date(inv.dueDate).getTime();
-    const diffDays = Math.floor((now - dueTime) / (1000 * 60 * 60 * 24));
+    const dueTime = new Date(String(inv.dueDate || '') + 'T00:00:00').getTime();
+    const diffDays = Number.isNaN(dueTime)
+      ? 0
+      : Math.floor((now - dueTime) / (1000 * 60 * 60 * 24));
 
-    if (diffDays <= 0) {
-      current += amountDue;
-    } else if (diffDays <= 30) {
-      days30 += amountDue;
-    } else if (diffDays <= 60) {
-      days60 += amountDue;
-    } else {
-      days90Plus += amountDue;
-    }
+    if (diffDays <= 0) current += amountDue;
+    else if (diffDays <= 30) days30 += amountDue;
+    else if (diffDays <= 60) days60 += amountDue;
+    else days90Plus += amountDue;
   });
 
   return {
@@ -749,55 +770,66 @@ export const getAccountsReceivableAging = (invoices: AgencyInvoice[]): ArAgingSu
 };
 
 export const computeFinancialMetrics = (invoices: AgencyInvoice[], expenses: AgencyExpense[]) => {
-  const paidInvoices = invoices.filter(i => i.status === 'paid');
-  const partiallyPaidInvoices = invoices.filter(i => i.status === 'partially_paid');
-  const sentInvoices = invoices.filter(i => i.status === 'sent');
-  const overdueInvoices = invoices.filter(i => i.status === 'overdue');
+  const normalizedInvoices = invoices.map(normalizeFinanceInvoice);
+  const normalizedExpenses = expenses.map(normalizeFinanceExpense);
+  const paidInvoices = normalizedInvoices.filter((invoice) => getEffectiveInvoiceStatus(invoice) === 'paid');
+  const partiallyPaidInvoices = normalizedInvoices.filter((invoice) => getEffectiveInvoiceStatus(invoice) === 'partially_paid');
+  const sentInvoices = normalizedInvoices.filter((invoice) => getEffectiveInvoiceStatus(invoice) === 'sent');
+  const overdueInvoices = normalizedInvoices.filter((invoice) => getEffectiveInvoiceStatus(invoice) === 'overdue');
+  const issuedInvoices = normalizedInvoices.filter((invoice) => !['draft', 'cancelled'].includes(invoice.status));
 
-  const totalPaidRevenue = invoices.reduce((sum, invoice) =>
-    sum + (Array.isArray(invoice.payments)
-      ? invoice.payments.reduce((paymentSum, payment) => paymentSum + (Number(payment.amount) || 0), 0)
-      : (Number(invoice.amountPaid) || 0)), 0
-  );
+  const totalPaidRevenue = issuedInvoices.reduce((sum, invoice) => {
+    const paid = invoice.balanceDue !== undefined
+      ? Math.max(0, Math.min(Number(invoice.total) || 0, (Number(invoice.total) || 0) - Number(invoice.balanceDue)))
+      : Math.max(0, Number(invoice.amountPaid) || 0);
+    return sum + paid;
+  }, 0);
 
-  const totalSent = sentInvoices.reduce((sum, i) => sum + (i.balanceDue !== undefined ? i.balanceDue : i.total), 0);
-  const partialBalance = partiallyPaidInvoices.reduce((sum, i) => sum + (i.balanceDue !== undefined ? i.balanceDue : (i.total - (i.amountPaid || 0))), 0);
-  const totalOverdue = overdueInvoices.reduce((sum, i) => sum + (i.balanceDue !== undefined ? i.balanceDue : i.total), 0);
+  const totalBilled = issuedInvoices.reduce((sum, invoice) => sum + Math.max(0, Number(invoice.total) || 0), 0);
+  const totalOutstanding = issuedInvoices.reduce((sum, invoice) => sum + Math.max(0, Number(invoice.balanceDue ?? ((Number(invoice.total) || 0) - (Number(invoice.amountPaid) || 0)))), 0);
+  const totalOverdue = overdueInvoices.reduce((sum, invoice) => sum + Math.max(0, Number(invoice.balanceDue ?? ((Number(invoice.total) || 0) - (Number(invoice.amountPaid) || 0)))), 0);
 
-  const totalOutstanding = totalSent + totalOverdue + partialBalance;
-
-  const opExExpenses = expenses.filter(e => e.type !== 'CapEx').reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
-  const capExExpenses = expenses.filter(e => e.type === 'CapEx').reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+  const opExExpenses = normalizedExpenses
+    .filter((expense) => expense.type !== 'CapEx')
+    .reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
+  const capExExpenses = normalizedExpenses
+    .filter((expense) => expense.type === 'CapEx')
+    .reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
   const totalExpenses = opExExpenses + capExExpenses;
 
-  const netOperatingProfit = totalPaidRevenue - totalExpenses;
-  const grossRevenue = totalPaidRevenue + totalOutstanding;
-  const netMarginPercent = grossRevenue > 0
-    ? Math.round((netOperatingProfit / grossRevenue) * 100)
+  const netOperatingProfit = totalPaidRevenue - opExExpenses;
+  const cashNetProfit = totalPaidRevenue - totalExpenses;
+  const netMarginPercent = totalPaidRevenue > 0
+    ? Math.round((netOperatingProfit / totalPaidRevenue) * 1000) / 10
     : 0;
 
-  const months = getMonthlyCashFlowSeries(invoices, expenses);
+  const months = getMonthlyCashFlowSeries(normalizedInvoices, normalizedExpenses);
   const recentMonths = months.slice(-3);
   const monthlyBurnRate = recentMonths.length > 0
     ? Math.round(recentMonths.reduce((sum, point) => sum + point.outflow, 0) / recentMonths.length)
     : 0;
 
   return {
-    totalInvoicesCount: invoices.length,
+    totalInvoicesCount: normalizedInvoices.length,
+    issuedInvoiceCount: issuedInvoices.length,
     paidCount: paidInvoices.length,
     partiallyPaidCount: partiallyPaidInvoices.length,
     sentCount: sentInvoices.length,
     overdueCount: overdueInvoices.length,
     totalPaidRevenue,
+    totalBilled,
     totalOutstanding,
     totalOverdue,
     totalExpenses,
     opExExpenses,
     capExExpenses,
     netOperatingProfit,
+    operatingExpense: opExExpenses,
+    operatingProfit: netOperatingProfit,
+    cashNetProfit,
     netMarginPercent,
     monthlyBurnRate,
     cashRunwayMonths: null,
-    collectionRate: invoices.length > 0 ? Math.round((paidInvoices.length / invoices.length) * 100) : 0
+    collectionRate: totalBilled > 0 ? Math.round((totalPaidRevenue / totalBilled) * 1000) / 10 : 0
   };
 };

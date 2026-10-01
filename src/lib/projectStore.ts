@@ -10,12 +10,14 @@ export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
 
 export interface TaskSubtask {
   id: string;
+  slug?: string;
   title: string;
   completed: boolean;
 }
 
 export interface ProjectTask {
   id: string;
+  slug?: string;
   title: string;
   description?: string;
   status: TaskStatus;
@@ -29,6 +31,7 @@ export interface ProjectTask {
 
 export interface ProjectMilestone {
   id: string;
+  slug?: string;
   title: string;
   dueDate: string;
   completed: boolean;
@@ -37,6 +40,7 @@ export interface ProjectMilestone {
 
 export interface AgencyProject {
   id: string;
+  slug?: string;
   name: string;
   clientName: string;
   clientCompany: string;
@@ -65,7 +69,31 @@ export interface AgencyProject {
 let projectsCache: AgencyProject[] | null = null;
 export const PROJECT_EVENT_NAME = 'kapitech_projects_updated';
 
+export const normalizeAgencyProject = (project: AgencyProject): AgencyProject => ({
+  ...project,
+  slug: toSlug(project.slug || project.name || project.id, 'project-record'),
+  teamMembers: Array.isArray(project.teamMembers) ? project.teamMembers : [],
+  techStack: Array.isArray(project.techStack) ? project.techStack : [],
+  milestones: (Array.isArray(project.milestones) ? project.milestones : []).map((milestone) => ({
+    ...milestone,
+    slug: toSlug(milestone.slug || milestone.title || milestone.id, 'milestone-record')
+  })),
+  tasks: (Array.isArray(project.tasks) ? project.tasks : []).map((task) => ({
+    ...task,
+    slug: toSlug(task.slug || task.title || task.id, 'task-record'),
+    subtasks: Array.isArray(task.subtasks)
+      ? task.subtasks.map((subtask) => ({
+          ...subtask,
+          slug: toSlug(subtask.slug || subtask.title || subtask.id, 'subtask-record')
+        }))
+      : []
+  }))
+});
+
+
 import { api } from './apiClient';
+import { toSlug } from './slug';
+import { isSlugFixtureMode } from './runtimeMode';
 
 let projectServerHydrationStarted = false;
 
@@ -92,7 +120,7 @@ function hydrateProjectsFromServer(): void {
       return;
     }
     projectServerHydrationRetryCount = 0;
-    projectsCache = res.data.projects;
+    projectsCache = res.data.projects.map(normalizeAgencyProject);
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent(PROJECT_EVENT_NAME, { detail: res.data.projects }));
     }
@@ -284,7 +312,7 @@ export const INITIAL_DEFAULT_PROJECTS: AgencyProject[] = [
 export const getAgencyProjects = (): AgencyProject[] => {
   hydrateProjectsFromServer();
   if (projectsCache) return projectsCache;
-  projectsCache = import.meta.env.PROD ? [] : INITIAL_DEFAULT_PROJECTS;
+  projectsCache = isSlugFixtureMode() ? INITIAL_DEFAULT_PROJECTS.map(normalizeAgencyProject) : [];
   return projectsCache;
 };
 
@@ -299,9 +327,9 @@ export const saveAgencyProject = async (project: AgencyProject): Promise<void> =
   let updated: AgencyProject[];
   if (idx >= 0) {
     updated = [...current];
-    updated[idx] = { ...project, updatedAt: now };
+    updated[idx] = normalizeAgencyProject({ ...project, updatedAt: now });
   } else {
-    updated = [{ ...project, createdAt: project.createdAt || now, updatedAt: now }, ...current];
+    updated = [normalizeAgencyProject({ ...project, createdAt: project.createdAt || now, updatedAt: now }), ...current];
   }
 
   projectsCache = updated;

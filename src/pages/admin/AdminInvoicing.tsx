@@ -39,6 +39,7 @@ import { hasAdminPermission } from '../../lib/adminAuth';
 import { api } from '../../lib/apiClient';
 import { AdminMetricCard, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination, AdminStatusBadge } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
+import { isSlugFixtureMode } from '../../lib/runtimeMode';
 
 
 type SortKey = 'updated' | 'due' | 'oldest' | 'amount_high' | 'amount_low' | 'invoice';
@@ -140,6 +141,7 @@ type ServerMetrics = {
   totalExpense: number;
   netProfit: number;
   profitMargin: string;
+  operatingMargin?: string;
   totalInvoicesCount: number;
   paidCount: number;
   partiallyPaidCount: number;
@@ -189,7 +191,7 @@ const getDaysUntilDue = (value: string) => {
 };
 
 const isPastDueInvoice = (invoice: AgencyInvoice) => {
-  if (invoice.status === 'paid' || invoice.status === 'cancelled') return false;
+  if (invoice.status === 'paid' || invoice.status === 'cancelled' || invoice.status === 'draft') return false;
   const days = getDaysUntilDue(invoice.dueDate);
   return days < 0;
 };
@@ -870,6 +872,8 @@ export const AdminInvoicing: React.FC = () => {
     }
   }, []);
 
+  const slugDataMode = isSlugFixtureMode();
+
   const loadData = async (silent = false) => {
     const requestId = ++loadRequestId.current;
     if (silent) setRefreshing(true);
@@ -892,14 +896,17 @@ export const AdminInvoicing: React.FC = () => {
         ? expenseRes.data.expenses as FinanceExpense[]
         : [];
 
-      const demoInvoices = INITIAL_DEFAULT_INVOICES
-        .filter((invoice) => invoice.currency === currency)
-        .map((invoice) => ({ ...invoice, items: Array.isArray(invoice.items) ? invoice.items.map((item) => ({ ...item })) : [] }));
-      const demoExpenses = INITIAL_DEFAULT_EXPENSES
-        .map((expense) => ({ ...expense, currency }));
+      const demoInvoices = slugDataMode
+        ? INITIAL_DEFAULT_INVOICES
+            .filter((invoice) => invoice.currency === currency)
+            .map((invoice) => ({ ...invoice, items: Array.isArray(invoice.items) ? invoice.items.map((item) => ({ ...item })) : [] }))
+        : [];
+      const demoExpenses = slugDataMode
+        ? INITIAL_DEFAULT_EXPENSES.map((expense) => ({ ...expense, currency }))
+        : [];
 
-      const shouldUseDemoInvoices = apiInvoices.length === 0;
-      const shouldUseDemoExpenses = apiExpenses.length === 0;
+      const shouldUseDemoInvoices = slugDataMode && apiInvoices.length === 0;
+      const shouldUseDemoExpenses = slugDataMode && apiExpenses.length === 0;
       const nextInvoices = shouldUseDemoInvoices ? demoInvoices : apiInvoices;
       const nextExpenses = shouldUseDemoExpenses ? demoExpenses : apiExpenses;
 
@@ -921,11 +928,12 @@ export const AdminInvoicing: React.FC = () => {
         setServerMetrics({
           currency,
           totalRevenueCollected: derived.totalPaidRevenue,
-          totalBilled: derived.totalPaidRevenue + derived.totalOutstanding + derived.totalOverdue,
+          totalBilled: derived.totalBilled,
           totalOutstanding: derived.totalOutstanding,
           totalExpense: derived.totalExpenses,
           netProfit: derived.netOperatingProfit,
           profitMargin: String(derived.netMarginPercent),
+          operatingMargin: String(derived.netMarginPercent),
           totalInvoicesCount: derived.totalInvoicesCount,
           paidCount: derived.paidCount,
           partiallyPaidCount: derived.partiallyPaidCount,
@@ -970,15 +978,22 @@ export const AdminInvoicing: React.FC = () => {
       if (rows.length) {
         setQuotations(rows);
         setUsingDemoQuotations(false);
-      } else {
+      } else if (slugDataMode) {
         setQuotations(
           STITCH_FINANCE_QUOTATIONS.filter((quotation) => quotation.currency === currency)
         );
         setUsingDemoQuotations(true);
+      } else {
+        setQuotations([]);
+        setUsingDemoQuotations(false);
       }
     } catch {
-      setQuotations(STITCH_FINANCE_QUOTATIONS.filter((quotation) => quotation.currency === currency));
-      setUsingDemoQuotations(true);
+      setQuotations(
+        slugDataMode
+          ? STITCH_FINANCE_QUOTATIONS.filter((quotation) => quotation.currency === currency)
+          : []
+      );
+      setUsingDemoQuotations(slugDataMode);
     } finally {
       setQuotationLoading(false);
     }
@@ -1097,7 +1112,7 @@ export const AdminInvoicing: React.FC = () => {
 
   const ytdInvoiced = useMemo(
     () => currencyInvoices
-      .filter((invoice) => invoice.status !== 'cancelled')
+      .filter((invoice) => !['draft', 'cancelled'].includes(invoice.status))
       .filter((invoice) => {
         const date = new Date(invoice.issueDate + 'T00:00:00');
         return !Number.isNaN(date.getTime()) && date >= yearStart && date <= yearEnd;
@@ -1108,7 +1123,7 @@ export const AdminInvoicing: React.FC = () => {
 
   const ytdCollected = useMemo(
     () => currencyInvoices
-      .filter((invoice) => invoice.status !== 'cancelled')
+      .filter((invoice) => !['draft', 'cancelled'].includes(invoice.status))
       .reduce((sum, invoice) => sum + getInvoiceCollectedInRange(invoice, yearStart, yearEnd), 0),
     [currencyInvoices, currentYear]
   );
@@ -1127,14 +1142,15 @@ export const AdminInvoicing: React.FC = () => {
   const ytdCollectionRate = ytdInvoiced > 0 ? (ytdCollected / ytdInvoiced) * 100 : 0;
 
   const retainerInvoices = useMemo(
-    () => currencyInvoices.filter((invoice) => invoice.status !== 'cancelled' && isRetainerInvoice(invoice)),
+    () => currencyInvoices.filter((invoice) => !['draft', 'cancelled'].includes(invoice.status) && isRetainerInvoice(invoice)),
     [currencyInvoices]
   );
 
   const retainerLedgerInvoices = useMemo(() => {
     if (retainerInvoices.length) return retainerInvoices;
+    if (!slugDataMode) return [];
     return STITCH_FINANCE_RETAINER_INVOICES.filter((invoice) => invoice.currency === currency).map(normalizeFinanceInvoice);
-  }, [currency, retainerInvoices]);
+  }, [currency, retainerInvoices, slugDataMode]);
 
   const usingDemoRetainerLedger = retainerInvoices.length === 0 && retainerLedgerInvoices.length > 0;
   const retainerPageCount = Math.max(1, Math.ceil(retainerLedgerInvoices.length / retainerPageSize));
@@ -1171,7 +1187,7 @@ export const AdminInvoicing: React.FC = () => {
       const end = new Date(reportingQuarter.end);
       end.setHours(23, 59, 59, 999);
       return quarterInvoices
-        .filter((invoice) => invoice.status !== 'cancelled')
+        .filter((invoice) => !['draft', 'cancelled'].includes(invoice.status))
         .reduce((sum, invoice) => sum + getInvoiceCollectedInRange(invoice, reportingQuarter.start, end), 0);
     },
     [quarterInvoices, reportingQuarter]
@@ -1191,14 +1207,14 @@ export const AdminInvoicing: React.FC = () => {
 
   const taxProvision = useMemo(
     () => currencyInvoices
-      .filter((invoice) => invoice.status !== 'cancelled')
+      .filter((invoice) => !['draft', 'cancelled'].includes(invoice.status))
       .reduce((sum, invoice) => sum + Number(invoice.taxAmount || 0), 0),
     [currencyInvoices]
   );
 
   const taxCollected = useMemo(
     () => currencyInvoices
-      .filter((invoice) => invoice.status !== 'cancelled')
+      .filter((invoice) => !['draft', 'cancelled'].includes(invoice.status))
       .reduce((sum, invoice) => {
         const collected = getInvoiceCollectedTotal(invoice);
         const paidRatio = invoice.total > 0 ? Math.min(1, collected / Number(invoice.total)) : 0;
@@ -1292,7 +1308,7 @@ export const AdminInvoicing: React.FC = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     return currencyInvoices
-      .filter((invoice) => invoice.status !== 'paid' && invoice.status !== 'cancelled')
+      .filter((invoice) => !['paid', 'cancelled', 'draft'].includes(invoice.status))
       .map((invoice) => {
         const due = new Date(invoice.dueDate + 'T00:00:00');
         const daysUntilDue = Math.ceil((due.getTime() - today.getTime()) / 86400000);
@@ -1312,7 +1328,7 @@ export const AdminInvoicing: React.FC = () => {
   const incomeRows = useMemo<FinanceIncomeRow[]>(() => {
     const rows: FinanceIncomeRow[] = [];
     currencyInvoices
-      .filter((invoice) => invoice.status !== 'cancelled')
+      .filter((invoice) => !['draft', 'cancelled'].includes(invoice.status))
       .forEach((invoice) => {
         const payments = Array.isArray(invoice.payments) ? invoice.payments : [];
         if (payments.length) {
@@ -1455,11 +1471,12 @@ export const AdminInvoicing: React.FC = () => {
     setServerMetrics({
       currency,
       totalRevenueCollected: metrics.totalPaidRevenue,
-      totalBilled: metrics.totalPaidRevenue + metrics.totalOutstanding + metrics.totalOverdue,
+      totalBilled: metrics.totalBilled,
       totalOutstanding: metrics.totalOutstanding,
       totalExpense: metrics.totalExpenses,
       netProfit: metrics.netOperatingProfit,
       profitMargin: String(metrics.netMarginPercent),
+      operatingMargin: String(metrics.netMarginPercent),
       totalInvoicesCount: metrics.totalInvoicesCount,
       paidCount: metrics.paidCount,
       partiallyPaidCount: metrics.partiallyPaidCount,
@@ -1613,7 +1630,7 @@ export const AdminInvoicing: React.FC = () => {
       const next = { ...item, ...patch };
       const quantity = Math.max(0, Number(next.quantity) || 0);
       const unitPrice = Math.max(0, Number(next.unitPrice) || 0);
-      return { ...next, quantity, unitPrice, amount: Math.round(quantity * unitPrice) };
+      return { ...next, quantity, unitPrice, amount: Math.round(quantity * unitPrice * 100) / 100 };
     }));
   };
 
@@ -1642,7 +1659,7 @@ export const AdminInvoicing: React.FC = () => {
       description: item.description.trim(),
       quantity: Number(item.quantity),
       unitPrice: Number(item.unitPrice),
-      amount: Math.round(Number(item.quantity) * Number(item.unitPrice))
+      amount: Math.round(Number(item.quantity) * Number(item.unitPrice) * 100) / 100
     }));
 
     const numericTax = Number(taxPercent);
@@ -2117,14 +2134,14 @@ export const AdminInvoicing: React.FC = () => {
 
   const previousQuarterTotal = useMemo(
     () => currencyInvoices
-      .filter((invoice) => isInQuarter(invoice.issueDate, previousQuarter))
+      .filter((invoice) => isInQuarter(invoice.issueDate, previousQuarter) && invoice.status !== 'draft' && invoice.status !== 'cancelled')
       .reduce((sum, invoice) => sum + Number(invoice.total || 0), 0),
     [currencyInvoices, previousQuarter]
   );
 
   const currentQuarterTotal = useMemo(
     () => quarterInvoices
-      .filter((invoice) => invoice.status !== 'cancelled')
+      .filter((invoice) => invoice.status !== 'draft' && invoice.status !== 'cancelled')
       .reduce((sum, invoice) => sum + Number(invoice.total || 0), 0),
     [quarterInvoices]
   );
@@ -2151,7 +2168,7 @@ export const AdminInvoicing: React.FC = () => {
     [currencyInvoices]
   );
 
-  const operatingMarginValue = serverMetrics ? Number.parseFloat(serverMetrics.profitMargin) : NaN;
+  const operatingMarginValue = serverMetrics ? Number.parseFloat(serverMetrics.operatingMargin ?? serverMetrics.profitMargin) : NaN;
   const operatingMarginHealthy = Number.isFinite(operatingMarginValue) && operatingMarginValue >= 35;
 
   const openVendorPaymentModal = (record?: VendorPaymentRecord) => {
@@ -2557,7 +2574,7 @@ export const AdminInvoicing: React.FC = () => {
   const exportTaxCsv = () => {
     const headers = ['Invoice #', 'Client', 'Issue Date', 'Currency', 'Taxable Base', 'Tax Rate', 'Tax Provision', 'Tax Collected'];
     const rows = currencyInvoices
-      .filter((invoice) => invoice.status !== 'cancelled')
+       .filter((invoice) => !['draft', 'cancelled'].includes(invoice.status))
       .map((invoice) => {
         const paidRatio = invoice.total > 0 ? Math.min(1, getInvoiceCollectedTotal(invoice) / Number(invoice.total)) : 0;
         return [

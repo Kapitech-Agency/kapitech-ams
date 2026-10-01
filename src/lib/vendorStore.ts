@@ -1,4 +1,6 @@
 import { api } from './apiClient';
+import { toSlug } from './slug';
+import { isSlugFixtureMode } from './runtimeMode';
 
 /**
  * Kapitech Agency Vendor & Contractor Directory Store
@@ -10,6 +12,7 @@ export type VendorStatus = 'active' | 'under_review' | 'inactive' | 'blacklisted
 
 export interface VendorContract {
   id: string;
+  slug?: string;
   title: string;
   startDate: string;
   endDate?: string;
@@ -19,8 +22,15 @@ export interface VendorContract {
   status: 'active' | 'expired' | 'terminated';
 }
 
+const normalizeVendorContracts = (contracts: VendorContract[] | undefined): VendorContract[] =>
+  (Array.isArray(contracts) ? contracts : []).map((contract) => ({
+    ...contract,
+    slug: toSlug(contract.slug || contract.title || contract.id, 'vendor-contract-record')
+  }));
+
 export interface AgencyVendor {
   id: string;
+  slug?: string;
   name: string;
   companyName?: string;
   email: string;
@@ -71,7 +81,7 @@ function hydrateVendorsFromServer(): void {
       return;
     }
     vendorServerHydrationRetryCount = 0;
-    vendorsCache = res.data.vendors;
+    vendorsCache = res.data.vendors.map((vendor) => ({ ...vendor, slug: toSlug(vendor.slug || vendor.companyName || vendor.name || vendor.id, 'vendor-record'), contracts: normalizeVendorContracts(vendor.contracts) }));
     if (typeof window !== 'undefined') window.dispatchEvent(new Event(VENDOR_EVENT_NAME));
   }).catch(() => {
     vendorServerHydrationStarted = false;
@@ -203,7 +213,9 @@ const defaultVendors: AgencyVendor[] = [
 export function getAgencyVendors(): AgencyVendor[] {
   hydrateVendorsFromServer();
   if (vendorsCache) return vendorsCache;
-  vendorsCache = import.meta.env.PROD ? [] : defaultVendors;
+  vendorsCache = isSlugFixtureMode()
+    ? defaultVendors.map((vendor) => ({ ...vendor, slug: toSlug(vendor.slug || vendor.companyName || vendor.name || vendor.id, 'vendor-record'), contracts: normalizeVendorContracts(vendor.contracts) }))
+    : [];
   return vendorsCache;
 }
 

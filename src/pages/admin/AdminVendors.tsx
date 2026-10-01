@@ -42,8 +42,9 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
+import { toSlug } from '../../lib/slug';
 
-import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 export const AdminVendors: React.FC = () => {
   const { t, language } = useLanguage();
@@ -60,6 +61,8 @@ export const AdminVendors: React.FC = () => {
   const [selectedType, setSelectedType] = useState<string>('All');
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [vettedFilter, setVettedFilter] = useState<string>('All');
+  const [vendorPage, setVendorPage] = useState(1);
+  const [vendorPageSize, setVendorPageSize] = useState(10);
 
   // Modals & Drawers
   const [selectedVendor, setSelectedVendor] = useState<AgencyVendor | null>(null);
@@ -97,7 +100,13 @@ export const AdminVendors: React.FC = () => {
     try {
       const res = await api.vendors.getAll();
       if (res.success && Array.isArray(res.data?.vendors)) {
-        setVendors(res.data.vendors as AgencyVendor[]);
+        setVendors((res.data.vendors as AgencyVendor[]).map((vendor) => ({
+          ...vendor,
+          slug: vendor.slug || toSlug(vendor.companyName || vendor.name || vendor.id, 'vendor-record'),
+          contracts: Array.isArray(vendor.contracts)
+            ? vendor.contracts.map((contract) => ({ ...contract, slug: contract.slug || toSlug(contract.title || contract.id, 'vendor-contract-record') }))
+            : []
+        })));
       } else {
         setStatusMessage(res.error || (language === 'id' ? 'Vendor gagal dimuat.' : 'Failed to load vendors.'));
       }
@@ -140,6 +149,17 @@ export const AdminVendors: React.FC = () => {
       return matchSearch && matchCat && matchType && matchStatus && matchVetted;
     });
   }, [vendors, searchQuery, selectedCategory, selectedType, statusFilter, vettedFilter]);
+
+  const vendorPageCount = Math.max(1, Math.ceil(filteredVendors.length / vendorPageSize));
+  const paginatedVendors = filteredVendors.slice((vendorPage - 1) * vendorPageSize, vendorPage * vendorPageSize);
+
+  useEffect(() => {
+    setVendorPage(1);
+  }, [searchQuery, selectedCategory, selectedType, statusFilter, vettedFilter]);
+
+  useEffect(() => {
+    setVendorPage((current) => Math.min(current, vendorPageCount));
+  }, [vendorPageCount]);
 
   const handleOpenAdd = () => {
     setEditingVendor(null);
@@ -456,7 +476,7 @@ export const AdminVendors: React.FC = () => {
 
       {/* Vendors Grid */}
       <section data-ams-feature-slug="vendor-directory-list" data-ams-slug="vendor-directory-list" aria-label="Vendor directory list"><div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {filteredVendors.map(vendor => (
+        {paginatedVendors.map(vendor => (
           <div
             key={vendor.id}
             className="w-full h-full rounded-card border border-line bg-panel p-4 transition-[border-color,background-color] hover:border-accent/30 flex flex-col justify-between group"
@@ -579,6 +599,16 @@ export const AdminVendors: React.FC = () => {
           </div>
         ))}
       </div></section>
+
+      <AdminTablePagination
+        total={filteredVendors.length}
+        page={vendorPage}
+        pageSize={vendorPageSize}
+        onPageChange={setVendorPage}
+        onPageSizeChange={setVendorPageSize}
+        itemLabel="vendors"
+        slug="vendor-directory-pagination"
+      />
 
       {filteredVendors.length === 0 && (
         <div className="w-full p-12 rounded-card bg-panel border border-line text-center">

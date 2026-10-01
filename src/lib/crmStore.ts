@@ -6,6 +6,8 @@
 
 import { ContactSubmission, getLocalSubmissions } from './submissions';
 import { api } from './apiClient';
+import { toSlug } from './slug';
+import { isSlugFixtureMode } from './runtimeMode';
 
 export type CrmStage = 'new' | 'contacted' | 'proposal' | 'negotiation' | 'won' | 'lost';
 export type CrmPriority = 'low' | 'medium' | 'high' | 'urgent';
@@ -27,6 +29,7 @@ export type CrmSource =
 
 export interface CrmNote {
   id: string;
+  slug?: string;
   author: string;
   text: string;
   createdAt: string;
@@ -35,6 +38,7 @@ export interface CrmNote {
 
 export interface CrmDocumentItem {
   id: string;
+  slug?: string;
   title: string;
   status: 'draft' | 'sent' | 'signed' | 'approved';
   updatedAt: string;
@@ -42,6 +46,7 @@ export interface CrmDocumentItem {
 
 export interface CrmLead {
   id: string;
+  slug?: string;
   clientName: string;
   company: string;
   email: string;
@@ -69,6 +74,7 @@ let crmServerHydrationStarted = false;
 function normalizeServerDeal(deal: any): CrmLead {
   return {
     id: String(deal.id),
+    slug: toSlug(deal.slug || deal.company || deal.clientName || deal.id, 'lead-record'),
     clientName: String(deal.clientName || deal.name || 'Prospective Client'),
     company: String(deal.company || deal.clientCompany || ''),
     email: String(deal.email || ''),
@@ -86,8 +92,12 @@ function normalizeServerDeal(deal: any): CrmLead {
     inquiryId: deal.inquiryId,
     expectedCloseDate: deal.expectedCloseDate,
     assignedTo: String(deal.assignedTo || deal.owner || 'Unassigned'),
-    notes: Array.isArray(deal.notes) ? deal.notes : [],
-    documents: Array.isArray(deal.documents) ? deal.documents : [],
+    notes: Array.isArray(deal.notes)
+      ? deal.notes.map((note: CrmNote) => ({ ...note, slug: toSlug(note.slug || note.text || note.id, 'crm-note-record') }))
+      : [],
+    documents: Array.isArray(deal.documents)
+      ? deal.documents.map((document: CrmDocumentItem) => ({ ...document, slug: toSlug(document.slug || document.title || document.id, 'crm-document-record') }))
+      : [],
     createdAt: String(deal.createdAt || new Date().toISOString()),
     updatedAt: String(deal.updatedAt || deal.createdAt || new Date().toISOString())
   };
@@ -329,11 +339,9 @@ export const INITIAL_DEFAULT_LEADS: CrmLead[] = [
 export const getCmsLeads = (): CrmLead[] => {
   hydrateCrmFromServer();
   if (crmCache) return crmCache;
-  if (import.meta.env.PROD) {
-    crmCache = [];
-  } else {
-    crmCache = INITIAL_DEFAULT_LEADS;
-  }
+  crmCache = isSlugFixtureMode()
+    ? INITIAL_DEFAULT_LEADS.map((lead) => ({ ...lead, slug: toSlug(lead.slug || lead.company || lead.clientName || lead.id, 'lead-record') }))
+    : [];
   return crmCache;
 };
 

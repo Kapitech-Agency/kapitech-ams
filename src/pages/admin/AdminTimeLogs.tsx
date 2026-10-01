@@ -5,6 +5,7 @@ import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
+import { toSlug } from '../../lib/slug';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
@@ -24,6 +25,7 @@ type TimeLog = {
   date: string;
   notes?: string;
   createdAt: string;
+  slug?: string;
 };
 
 export const AdminTimeLogs: React.FC = () => {
@@ -55,13 +57,19 @@ export const AdminTimeLogs: React.FC = () => {
       ]);
 
       if (logsRes.success && Array.isArray(logsRes.data?.timeLogs)) {
-        setLogs(logsRes.data.timeLogs);
+        setLogs(logsRes.data.timeLogs.map((log: TimeLog) => ({
+          ...log,
+          slug: log.slug || toSlug((log.taskTitle || log.projectName || 'time-log') + '-' + log.id, 'time-log-record')
+        })));
       } else {
         setStatus(logsRes.error || 'Unable to load time logs.');
       }
 
       if (projectsRes?.success && Array.isArray(projectsRes.data?.projects)) {
-        setProjects(projectsRes.data.projects);
+        setProjects(projectsRes.data.projects.map((project: any) => ({
+          ...project,
+          slug: project.slug || toSlug(project.name || project.id, 'project-record')
+        })));
       } else if (!projectsRes?.success) {
         setStatus(current => current || projectsRes?.error || 'Unable to load projects.');
       }

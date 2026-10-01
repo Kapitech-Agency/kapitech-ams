@@ -7,9 +7,11 @@
 import { allProjects, ProjectItem } from '../data/projectsData';
 import { allSolutionsAndServices, ServiceItemData } from '../data/servicesData';
 import { api } from './apiClient';
+import { toSlug } from './slug';
 
 export interface TestimonialItem {
   id: string;
+  slug?: string;
   quote: string;
   quoteId: string;
   author: string;
@@ -151,8 +153,8 @@ function notifyCmsUpdate(type: 'services' | 'projects' | 'testimonials' | 'setti
 // -------------------------------------------------------------
 
 export function getCmsServices(): ServiceItemData[] {
-  if (cmsServicesCache) return cmsServicesCache;
-  cmsServicesCache = allSolutionsAndServices;
+  if (cmsServicesCache) return cmsServicesCache.map((service) => ({ ...service, slug: toSlug(service.slug || service.title, 'service-record') }));
+  cmsServicesCache = allSolutionsAndServices.map((service) => ({ ...service, slug: toSlug(service.slug || service.title, 'service-record') }));
   return cmsServicesCache;
 }
 
@@ -162,7 +164,7 @@ export async function fetchServerCmsServices(): Promise<ServiceItemData[]> {
     if (res.success && Array.isArray(res.data?.services)) {
       markCmsHydrationSuccess('services');
       const serverServices = res.data.services;
-      cmsServicesCache = serverServices;
+      cmsServicesCache = serverServices.map((service) => ({ ...service, slug: toSlug(service.slug || service.title, 'service-record') }));
       notifyCmsUpdate('services');
       return serverServices;
     }
@@ -215,7 +217,7 @@ export async function deleteCmsService(slug: string): Promise<boolean> {
 // -------------------------------------------------------------
 
 export function getCmsProjects(): ProjectItem[] {
-  return cmsProjectsCache || (cmsProjectsCache = allProjects);
+  return cmsProjectsCache || (cmsProjectsCache = allProjects.map((project) => ({ ...project, slug: toSlug(project.slug || project.id || project.title, 'project-record') })));
 }
 
 export async function fetchServerCmsProjects(): Promise<ProjectItem[]> {
@@ -224,7 +226,7 @@ export async function fetchServerCmsProjects(): Promise<ProjectItem[]> {
     if (res.success && Array.isArray(res.data?.projects)) {
       markCmsHydrationSuccess('projects');
       const serverProjects = res.data.projects;
-      cmsProjectsCache = serverProjects;
+      cmsProjectsCache = serverProjects.map((project) => ({ ...project, slug: toSlug(project.slug || project.id || project.title, 'project-record') }));
       notifyCmsUpdate('projects');
       return serverProjects;
     }
@@ -265,7 +267,7 @@ export async function deleteCmsProject(id: string): Promise<boolean> {
 }
 
 export function resetCmsProjectsToDefault() {
-  cmsProjectsCache = allProjects;
+  cmsProjectsCache = allProjects.map((project) => ({ ...project, slug: toSlug(project.slug || project.id || project.title, 'project-record') }));
   notifyCmsUpdate('projects');
 }
 
@@ -274,7 +276,7 @@ export function resetCmsProjectsToDefault() {
 // -------------------------------------------------------------
 
 export function getCmsTestimonials(): TestimonialItem[] {
-  return cmsTestimonialsCache || (cmsTestimonialsCache = defaultTestimonials);
+  return cmsTestimonialsCache || (cmsTestimonialsCache = defaultTestimonials.map((testimonial) => ({ ...testimonial, slug: toSlug(testimonial.slug || testimonial.id || testimonial.author || testimonial.company, 'testimonial-record') })));
 }
 
 export async function fetchServerCmsTestimonials(): Promise<TestimonialItem[]> {
@@ -284,7 +286,7 @@ export async function fetchServerCmsTestimonials(): Promise<TestimonialItem[]> {
       markCmsHydrationSuccess('testimonials');
       const serverT = res.data.testimonials;
       if (serverT.length > 0) {
-        cmsTestimonialsCache = serverT;
+        cmsTestimonialsCache = serverT.map((testimonial) => ({ ...testimonial, slug: toSlug(testimonial.slug || testimonial.id || testimonial.author || testimonial.company, 'testimonial-record') }));
         notifyCmsUpdate('testimonials');
         return serverT;
       }

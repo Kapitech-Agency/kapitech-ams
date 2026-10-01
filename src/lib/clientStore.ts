@@ -64,6 +64,7 @@ export const normalizeAgencyClient = (client: AgencyClient): AgencyClient => ({
 });
 
 import { api } from './apiClient';
+import { isSlugFixtureMode } from './runtimeMode';
 
 let clientServerHydrationStarted = false;
 
@@ -206,7 +207,7 @@ export const INITIAL_DEFAULT_CLIENTS: AgencyClient[] = [
 export const getAgencyClients = (): AgencyClient[] => {
   hydrateClientsFromServer();
   if (clientsCache) return clientsCache.map(normalizeAgencyClient);
-  clientsCache = import.meta.env.PROD ? [] : INITIAL_DEFAULT_CLIENTS;
+  clientsCache = isSlugFixtureMode() ? INITIAL_DEFAULT_CLIENTS.map(normalizeAgencyClient) : [];
   return clientsCache;
 };
 
