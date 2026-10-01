@@ -359,88 +359,51 @@ export const AdminCmsServices: React.FC = () => {
           )}
         </div>
       ) : (
-        <div data-ams-feature-slug="cms-services-directory" data-ams-slug="cms-services-directory" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full">
-        {filtered.map((item) => (
-          <div
-            key={item.slug}
-            className="w-full h-full bg-panel border border-line rounded-card p-4 flex flex-col justify-between hover:border-line transition-all group"
-          >
-            <div>
-              <div className="flex items-center justify-between gap-2 mb-3">
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                  {getCategoryIcon(item.category)}
-                  <span className="text-[10px] font-sans text-muted normal-case tracking-normal font-semibold">
-                    {item.category}
-                  </span>
-                </div>
-                <span className="text-[10px] font-sans px-2 py-0.5 rounded-badge bg-success/10 border border-success/30 text-success font-semibold">
-                  {item.badgeId || item.badge || 'Active'}
-                </span>
-              </div>
-
-              <h3 className="text-base font-semibold font-sans text-fg mb-1.5 group-hover:text-accent transition-colors">
-                {item.title}
-              </h3>
-              
-              <p className="text-xs text-muted leading-relaxed mb-4 line-clamp-2">
-                {item.heroSubtitle || item.heroSubtitleId}
-              </p>
-
-              {/* Core Capabilities Preview */}
-              <div className="space-y-1.5 mb-4">
-                <div className="text-[10px] font-sans text-muted normal-case tracking-normal font-semibold">
-                  Core Capabilities:
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {item.capabilities.slice(0, 3).map((c, idx) => (
-                    <span key={idx} className="text-[10px] font-sans px-2 py-0.5 rounded-control bg-panel text-fg border border-line">
-                      {c.title || c.titleId}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Tech Stack / Tools */}
-              {item.tools && item.tools.length > 0 && (
-                <div className="pt-2 border-t border-line mb-3 flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1">
-                  <span className="text-[10px] font-sans text-muted shrink-0">Tech:</span>
-                  {item.tools.slice(0, 4).map((tool, tIdx) => (
-                    <span key={tIdx} className="text-[9px] font-sans text-muted bg-panel px-1.5 py-0.5 rounded-badge border border-line shrink-0">
-                      {tool}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="pt-4 border-t border-line flex items-center justify-between text-xs font-sans text-muted">
-              <span className="truncate max-w-[120px]">/{item.slug}</span>
-              
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                <button
-                  onClick={() => setSelectedServiceForDetail(item)}
-                  className="px-2.5 py-1 rounded-control bg-panel hover:bg-panel-hover border border-line text-fg text-[11px] font-sans flex items-center gap-1 transition-colors"
-                >
-                  <Eye size={12} className="text-muted" />
-                  <span>Inspect</span>
-                </button>
-                <a
-                  href={`https://kapitech.id/services/${item.slug}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-2.5 py-1 rounded-control bg-accent/10 hover:bg-accent/20 text-accent border border-accent/30 text-[11px] font-sans flex items-center gap-1 transition-colors"
-                >
-                  <span>Live</span>
-                  <ExternalLink size={11} />
-                </a>
-              </div>
-            </div>
-
-          </div>
-        ))}
-
+                <div data-ams-feature-slug="cms-services-directory" data-ams-slug="cms-services-directory" className="overflow-x-auto rounded-card border border-line bg-panel">
+          <table className="ams-table w-full min-w-[980px] border-collapse text-left text-xs">
+            <thead>
+              <tr className="border-b border-line bg-bg text-[10px] font-medium text-muted">
+                <th className="px-4 py-3">Service</th>
+                <th className="px-4 py-3">Category</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Capabilities</th>
+                <th className="px-4 py-3">Slug</th>
+                <th className="px-4 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-line">
+              {pagedServices.map((item) => (
+                <tr key={item.slug} className="h-12 transition-colors hover:bg-bg/60">
+                  <td className="px-4 py-2.5">
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg">{getCategoryIcon(item.category)}</span>
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-semibold text-fg">{item.title}</p>
+                        <p className="mt-0.5 max-w-[340px] truncate text-[10px] text-muted">{item.heroSubtitle || item.heroSubtitleId || 'No description provided.'}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-2.5"><span className="inline-flex rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{item.category}</span></td>
+                  <td className="px-4 py-2.5"><span className="inline-flex rounded-badge border border-success/20 bg-success/10 px-2 py-1 text-[10px] font-semibold text-success">{item.badgeId || item.badge || 'Active'}</span></td>
+                  <td className="max-w-[250px] px-4 py-2.5">
+                    <div className="flex flex-wrap gap-1">
+                      {item.capabilities.slice(0, 2).map((cap, index) => <span key={index} className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] text-muted">{cap.title || cap.titleId}</span>)}
+                      {item.capabilities.length > 2 && <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] text-muted">+{item.capabilities.length - 2}</span>}
+                    </div>
+                  </td>
+                  <td className="px-4 py-2.5"><span className="font-mono text-[10px] text-muted">/{item.slug}</span></td>
+                  <td className="px-4 py-2.5">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <button type="button" onClick={() => setSelectedServiceForDetail(item)} className="inline-flex h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-fg hover:bg-panel focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"><Eye size={12} />Inspect</button>
+                      <a href={`https://kapitech.id/services/${item.slug}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center gap-1.5 rounded-control border border-accent/25 bg-accent/10 px-2.5 text-[10px] font-medium text-accent-text hover:bg-accent/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"><ExternalLink size={11} />Live</a>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      )}
+        <AdminTablePagination total={filtered.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="services" slug="cms-services-pagination" />
       {/* Service Detail / Inspection Modal */}
       <Modal slug="cms-service-detail-modal" open={!!selectedServiceForDetail} onClose={() => setSelectedServiceForDetail(null)} size="lg" title={selectedServiceForDetail?.title || 'Service detail'} description={selectedServiceForDetail?.heroSubtitle || selectedServiceForDetail?.heroSubtitleId}>
             <div className="flex items-center gap-2 font-sans text-xs text-accent font-semibold mb-2">
