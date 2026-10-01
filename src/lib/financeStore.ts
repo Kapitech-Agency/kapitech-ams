@@ -125,7 +125,7 @@ export const normalizeFinanceInvoice = (invoice: AgencyInvoice): AgencyInvoice =
           ...item,
           quantity: Math.max(0, Number(item.quantity) || 0),
           unitPrice: Math.max(0, Number(item.unitPrice) || 0),
-          amount: Math.max(0, Number(item.amount) || ((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0))),
+          amount: Math.round(Math.max(0, Number(item.amount) || ((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0))) * 100) / 100,
           slug: item.slug || slugifyFinance(slug + '-' + (item.description || item.id))
         }))
       : [],
@@ -599,9 +599,9 @@ export const saveAgencyExpense = async (expense: AgencyExpense): Promise<void> =
   let updated: AgencyExpense[];
   if (idx >= 0) {
     updated = [...current];
-    updated[idx] = expense;
+    updated[idx] = normalizeFinanceExpense(expense);
   } else {
-    updated = [expense, ...current];
+    updated = [normalizeFinanceExpense(expense), ...current];
   }
 
   expenseCache = updated;
@@ -637,11 +637,12 @@ export const computeInvoiceTotals = (
   taxPercent: number = 11,
   discountPercent: number = 0
 ) => {
-  const subtotal = items.reduce((sum, item) => sum + (Number(item.amount) || (Number(item.quantity || 1) * Number(item.unitPrice || 0))), 0);
-  const discountAmount = Math.round((subtotal * Math.max(0, Math.min(100, Number(discountPercent) || 0))) / 100);
-  const discountedSubtotal = Math.max(0, subtotal - discountAmount);
-  const taxAmount = Math.round((discountedSubtotal * Math.max(0, Number(taxPercent) || 0)) / 100);
-  const total = discountedSubtotal + taxAmount;
+  const roundMoney = (value: number) => Math.round(value * 100) / 100;
+  const subtotal = roundMoney(items.reduce((sum, item) => sum + (Number(item.amount) || (Number(item.quantity || 1) * Number(item.unitPrice || 0))), 0));
+  const discountAmount = roundMoney(subtotal * Math.max(0, Math.min(100, Number(discountPercent) || 0)) / 100);
+  const discountedSubtotal = roundMoney(Math.max(0, subtotal - discountAmount));
+  const taxAmount = roundMoney(discountedSubtotal * Math.max(0, Number(taxPercent) || 0) / 100);
+  const total = roundMoney(discountedSubtotal + taxAmount);
 
   return {
     subtotal,
@@ -732,7 +733,10 @@ export interface ArAgingSummary {
 }
 
 export const getAccountsReceivableAging = (invoices: AgencyInvoice[]): ArAgingSummary => {
-  const pending = invoices.filter(i => i.status === 'sent' || i.status === 'overdue' || i.status === 'partially_paid');
+  const pending = invoices
+    .map(normalizeFinanceInvoice)
+    .filter((invoice) => !['draft', 'cancelled'].includes(invoice.status))
+    .filter((invoice) => getEffectiveInvoiceStatus(invoice) !== 'paid');
   const now = new Date().getTime();
 
   let current = 0;
@@ -740,22 +744,19 @@ export const getAccountsReceivableAging = (invoices: AgencyInvoice[]): ArAgingSu
   let days60 = 0;
   let days90Plus = 0;
 
-  pending.forEach(inv => {
-    const amountDue = inv.balanceDue !== undefined ? inv.balanceDue : (inv.total - (inv.amountPaid || 0));
+  pending.forEach((inv) => {
+    const amountDue = Math.max(0, Number(inv.balanceDue ?? ((Number(inv.total) || 0) - (Number(inv.amountPaid) || 0))));
     if (amountDue <= 0) return;
 
-    const dueTime = new Date(inv.dueDate).getTime();
-    const diffDays = Math.floor((now - dueTime) / (1000 * 60 * 60 * 24));
+    const dueTime = new Date(String(inv.dueDate || '') + 'T00:00:00').getTime();
+    const diffDays = Number.isNaN(dueTime)
+      ? 0
+      : Math.floor((now - dueTime) / (1000 * 60 * 60 * 24));
 
-    if (diffDays <= 0) {
-      current += amountDue;
-    } else if (diffDays <= 30) {
-      days30 += amountDue;
-    } else if (diffDays <= 60) {
-      days60 += amountDue;
-    } else {
-      days90Plus += amountDue;
-    }
+    if (diffDays <= 0) current += amountDue;
+    else if (diffDays <= 30) days30 += amountDue;
+    else if (diffDays <= 60) days60 += amountDue;
+    else days90Plus += amountDue;
   });
 
   return {
