@@ -38,7 +38,8 @@ import {
   Table as TableIcon,
   ChevronRight,
   ShieldCheck,
-  AlertCircle
+  AlertCircle,
+  X
 } from 'lucide-react';
 import { ContactSubmission, getSubmissionSlug, normalizeContactSubmission } from '../../lib/submissions';
 import { CrmLead } from '../../lib/crmStore';
@@ -859,7 +860,7 @@ export const AdminInbox: React.FC = () => {
       {/* 4. MAIN CONTENT VIEW: SPLIT VIEW vs TABLE VIEW */}
       {/* ------------------------------------------------------------- */}
       {viewMode === 'overview' ? (
-        <section data-ams-feature-slug="inbox-overview-workspace" data-ams-slug="inbox-overview-workspace" className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.55fr)]">
+        <section data-ams-feature-slug="inbox-overview-workspace" data-ams-slug="inbox-overview-workspace" className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.55fr)]">
           <div className="overflow-hidden rounded-card border border-line bg-panel">
             <div className="border-b border-line px-4 py-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -1950,7 +1951,7 @@ export const AdminInbox: React.FC = () => {
             </div>
           ) : (
             /* Empty State on Desktop when no submission is selected */
-            <div className="hidden lg:flex lg:col-span-7 bg-panel border border-line rounded-card p-12 flex-col items-center justify-center text-center text-muted min-h-[460px]">
+            <div className="hidden lg:flex min-w-0 min-h-[460px] flex-col items-center justify-center rounded-card border border-line bg-panel p-8 text-center text-muted">
               <div className="w-16 h-16 rounded-card bg-panel border border-line flex items-center justify-center text-line mb-4">
                 <Inbox size={32} />
               </div>
