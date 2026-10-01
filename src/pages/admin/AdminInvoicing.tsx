@@ -1622,7 +1622,7 @@ export const AdminInvoicing: React.FC = () => {
       const next = { ...item, ...patch };
       const quantity = Math.max(0, Number(next.quantity) || 0);
       const unitPrice = Math.max(0, Number(next.unitPrice) || 0);
-      return { ...next, quantity, unitPrice, amount: Math.round(quantity * unitPrice) };
+      return { ...next, quantity, unitPrice, amount: Math.round(quantity * unitPrice * 100) / 100 };
     }));
   };
 
@@ -1651,7 +1651,7 @@ export const AdminInvoicing: React.FC = () => {
       description: item.description.trim(),
       quantity: Number(item.quantity),
       unitPrice: Number(item.unitPrice),
-      amount: Math.round(Number(item.quantity) * Number(item.unitPrice))
+      amount: Math.round(Number(item.quantity) * Number(item.unitPrice) * 100) / 100
     }));
 
     const numericTax = Number(taxPercent);
@@ -2566,7 +2566,7 @@ export const AdminInvoicing: React.FC = () => {
   const exportTaxCsv = () => {
     const headers = ['Invoice #', 'Client', 'Issue Date', 'Currency', 'Taxable Base', 'Tax Rate', 'Tax Provision', 'Tax Collected'];
     const rows = currencyInvoices
-      .filter((invoice) => invoice.status !== 'cancelled')
+       .filter((invoice) => !['draft', 'cancelled'].includes(invoice.status))
       .map((invoice) => {
         const paidRatio = invoice.total > 0 ? Math.min(1, getInvoiceCollectedTotal(invoice) / Number(invoice.total)) : 0;
         return [
