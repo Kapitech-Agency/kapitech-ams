@@ -90,6 +90,14 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
     setFullOpen(true);
   };
 
+  const handleProfileClick = () => {
+    if (directOpen) {
+      setFullOpen(true);
+      return;
+    }
+    setQuickOpen(true);
+  };
+
   const closeAll = () => {
     setQuickOpen(false);
     setFullOpen(false);
@@ -101,7 +109,7 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
         type="button"
         data-ams-feature-slug={slug}
         data-ams-slug={slug}
-        onClick={() => directOpen ? setFullOpen(true) : setQuickOpen(true)}
+        onClick={handleProfileClick}
         className={[
           'group/profile inline-flex min-w-0 items-center text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
           compact
