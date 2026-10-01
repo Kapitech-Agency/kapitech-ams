@@ -222,7 +222,7 @@ export const AdminCmsTestimonials: React.FC = () => {
             </>
           )}
         >
-          <div className="space-y-4">
+          <div className="space-y-3.5">
             <div className="rounded-control border border-danger/30 bg-danger/5 p-3">
               <p className="text-sm font-semibold text-fg">{deleteTarget.author}</p>
               <p className="mt-1 text-xs text-muted">The testimonial will no longer appear on the public site.</p>
@@ -249,8 +249,8 @@ export const AdminCmsTestimonials: React.FC = () => {
             </>
           )}
         >
-          <div className="space-y-4">
-            <form id="testimonial-form" data-ams-feature-slug="cms-testimonial-form" data-ams-slug="cms-testimonial-form" onSubmit={handleSaveModal} className="space-y-4">
+          <div className="space-y-3.5">
+            <form id="testimonial-form" data-ams-feature-slug="cms-testimonial-form" data-ams-slug="cms-testimonial-form" onSubmit={handleSaveModal} className="space-y-3.5">
               <div>
                 <label className="block text-xs font-sans text-muted mb-1 font-semibold">
                   {language === 'id' ? 'Nama Klien / Eksekutif *' : 'Client / Executive Name *'}
