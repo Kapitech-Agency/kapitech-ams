@@ -161,6 +161,7 @@ export const AdminCmsTestimonials: React.FC = () => {
           <Button className="mt-4" icon={<Plus size={14} />} onClick={handleOpenAdd}>Add Testimonial</Button>
         </div>
       ) : (
+      <>
       <div data-ams-feature-slug="cms-testimonials-directory" data-ams-slug="cms-testimonials-directory" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {pagedTestimonials.map((item) => (
           <div
@@ -213,6 +214,7 @@ export const AdminCmsTestimonials: React.FC = () => {
         ))}
       </div>
         <AdminTablePagination total={testimonials.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="testimonials" slug="cms-testimonials-pagination" />
+      </>
       )}
 
       {deleteTarget && (
