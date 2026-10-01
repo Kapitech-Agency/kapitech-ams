@@ -1665,31 +1665,39 @@ export const AdminInbox: React.FC = () => {
                 </div>
 
                 {/* Reader Sub-Tabs */}
-                <div className="mb-5 flex items-center gap-1 border-b border-line pb-2">
+                <div className="mb-4 inline-flex max-w-full items-center gap-0.5 overflow-x-auto rounded-control border border-line bg-bg p-0.5 custom-scrollbar" role="tablist" aria-label="Submission details">
                   <button
+                    type="button"
+                    role="tab"
+                    aria-selected={detailTab === 'brief'}
                     onClick={() => setDetailTab('brief')}
-                    className={`pb-1 text-xs font-sans font-semibold transition-colors border-b-2 ${
-                      detailTab === 'brief'
-                        ? 'text-fg border-accent'
-                        : 'text-muted border-transparent hover:text-fg'
-                    }`}
+                    className={
+                      'inline-flex min-h-8 shrink-0 items-center rounded-chip px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' +
+                      (detailTab === 'brief'
+                        ? 'border border-line bg-panel text-fg'
+                        : 'border border-transparent text-muted hover:text-fg')
+                    }
                   >
                     {selectedSubmission.type === 'career'
-                      ? (language === 'id' ? 'Detail Lamaran' : 'Application Details')
-                      : (language === 'id' ? 'Detail Brief & Kontak' : 'Brief & Contact Specs')}
+                      ? (language === 'id' ? 'Detail lamaran' : 'Application details')
+                      : (language === 'id' ? 'Brief & kontak' : 'Brief & contact')}
                   </button>
 
                   <button
+                    type="button"
+                    role="tab"
+                    aria-selected={detailTab === 'notes'}
                     onClick={() => setDetailTab('notes')}
-                    className={`pb-1 text-xs font-sans font-semibold transition-colors border-b-2 flex items-center gap-1.5 ${
-                      detailTab === 'notes'
-                        ? 'text-fg border-accent'
-                        : 'text-muted border-transparent hover:text-fg'
-                    }`}
+                    className={
+                      'inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-chip px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' +
+                      (detailTab === 'notes'
+                        ? 'border border-line bg-panel text-fg'
+                        : 'border border-transparent text-muted hover:text-fg')
+                    }
                   >
-                    <span>{language === 'id' ? 'Catatan Tim Agensi' : 'Internal Team Notes'}</span>
+                    <span>{language === 'id' ? 'Catatan internal' : 'Internal notes'}</span>
                     {selectedSubmission.internalNotes && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-warning" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-warning" aria-label="Has internal notes" />
                     )}
                   </button>
                 </div>
