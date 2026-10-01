@@ -2793,8 +2793,8 @@ apiRouter.get('/finance/metrics', requireAuth, requirePermission('canViewFinanci
       if (effectiveStatus !== 'draft' && effectiveStatus !== 'cancelled') {
         bucket.totalBilled += total;
         bucket.totalOutstanding += balance;
+        bucket.totalRevenueCollected += paid;
       }
-      bucket.totalRevenueCollected += paid;
 
       if (effectiveStatus === 'paid') bucket.paidCount++;
       else if (effectiveStatus === 'partially_paid') bucket.partiallyPaidCount++;
