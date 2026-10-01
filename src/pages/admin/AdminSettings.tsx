@@ -5,6 +5,7 @@ import {
   AlertCircle,
   Check,
   CheckCircle2,
+  Copy,
   Clock3,
   Database,
   Download,
@@ -39,7 +40,8 @@ import {
   getAdminSession,
   getStoredAdminCredentials,
   isMasterAdministrator,
-  updateAdminCredentials
+  updateAdminCredentials,
+  cacheAdminSession
 } from '../../lib/adminAuth';
 import { SiteMetaSettings } from '../../lib/cmsStore';
 import { api } from '../../lib/apiClient';
@@ -261,6 +263,140 @@ export const AdminSettings: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [securityStatusMessage, setSecurityStatusMessage] = useState<{ success: boolean; text: string } | null>(null);
   const [securitySaving, setSecuritySaving] = useState(false);
+
+  const [mfaEnabled, setMfaEnabled] = useState(Boolean(storedCreds.mfaEnabled));
+  const [mfaMode, setMfaMode] = useState<'idle' | 'setup' | 'disable'>('idle');
+  const [mfaSetupData, setMfaSetupData] = useState<{ secret: string; otpAuthUri: string } | null>(null);
+  const [mfaSetupCode, setMfaSetupCode] = useState('');
+  const [mfaDisablePassword, setMfaDisablePassword] = useState('');
+  const [mfaDisableCode, setMfaDisableCode] = useState('');
+  const [mfaRecoveryCodes, setMfaRecoveryCodes] = useState<string[] | null>(null);
+  const [mfaRecoverySaved, setMfaRecoverySaved] = useState(false);
+  const [mfaLoading, setMfaLoading] = useState(false);
+  const [mfaMessage, setMfaMessage] = useState<{ success: boolean; text: string } | null>(null);
+
+  const syncSecuritySession = useCallback(async () => {
+    try {
+      const me = await api.auth.me();
+      if (me.success && me.data?.user) {
+        cacheAdminSession(me.data.user, session?.rememberMe ?? true);
+        setMfaEnabled(Boolean(me.data.user.mfaEnabled));
+      }
+    } catch {
+      // Keep the current UI state when the profile refresh is temporarily unavailable.
+    }
+  }, [session?.rememberMe]);
+
+  const handleStartMfaSetup = async () => {
+    setMfaLoading(true);
+    setMfaMessage(null);
+    try {
+      const res = await api.auth.mfaSetupStart();
+      if (!res.success || !res.data?.success || !res.data.secret || !res.data.otpAuthUri) {
+        throw new Error(res.error || 'MFA setup could not be started.');
+      }
+      setMfaSetupData({
+        secret: res.data.secret,
+        otpAuthUri: res.data.otpAuthUri
+      });
+      setMfaSetupCode('');
+      setMfaRecoveryCodes(null);
+      setMfaRecoverySaved(false);
+      setMfaMode('setup');
+    } catch (error) {
+      setMfaMessage({
+        success: false,
+        text: error instanceof Error ? error.message : 'MFA setup could not be started. Try again.'
+      });
+    } finally {
+      setMfaLoading(false);
+    }
+  };
+
+  const handleVerifyMfaSetup = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const code = mfaSetupCode.replace(/\D/g, '').slice(0, 6);
+    if (!/^\d{6}$/.test(code)) {
+      setMfaMessage({ success: false, text: 'Enter the 6-digit TOTP code from your authenticator app.' });
+      return;
+    }
+
+    setMfaLoading(true);
+    setMfaMessage(null);
+    try {
+      const res = await api.auth.mfaSetupVerify(code);
+      if (!res.success || !res.data?.success || !res.data.mfaEnabled) {
+        throw new Error(res.error || 'MFA verification failed. Check the authenticator code and try again.');
+      }
+      setMfaEnabled(true);
+      setMfaRecoveryCodes(Array.isArray(res.data.mfaRecoveryCodes) ? res.data.mfaRecoveryCodes : []);
+      setMfaRecoverySaved(false);
+      setMfaMode('idle');
+      setMfaSetupCode('');
+      setMfaMessage({ success: true, text: 'MFA is enabled. Save the recovery codes before leaving this page.' });
+      await syncSecuritySession();
+    } catch (error) {
+      setMfaMessage({
+        success: false,
+        text: error instanceof Error ? error.message : 'MFA verification failed. Check the code and try again.'
+      });
+    } finally {
+      setMfaLoading(false);
+    }
+  };
+
+  const handleDisableMfa = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!mfaDisablePassword || !/^\d{6}$/.test(mfaDisableCode)) {
+      setMfaMessage({ success: false, text: 'Enter the current password and 6-digit MFA code to disable MFA.' });
+      return;
+    }
+
+    setMfaLoading(true);
+    setMfaMessage(null);
+    try {
+      const res = await api.auth.mfaDisable(mfaDisablePassword, mfaDisableCode);
+      if (!res.success || !res.data?.success || res.data.mfaEnabled) {
+        throw new Error(res.error || 'MFA could not be disabled. Check the password and current MFA code.');
+      }
+      setMfaEnabled(false);
+      setMfaMode('idle');
+      setMfaDisablePassword('');
+      setMfaDisableCode('');
+      setMfaRecoveryCodes(null);
+      setMfaMessage({ success: true, text: 'MFA has been disabled for this account.' });
+      await syncSecuritySession();
+    } catch (error) {
+      setMfaMessage({
+        success: false,
+        text: error instanceof Error ? error.message : 'MFA could not be disabled. Try again.'
+      });
+    } finally {
+      setMfaLoading(false);
+    }
+  };
+
+  const copyMfaValue = async (value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setMfaMessage({ success: true, text: 'Copied to clipboard.' });
+    } catch {
+      setMfaMessage({ success: false, text: 'Could not copy to clipboard. Copy the value manually.' });
+    }
+  };
+
+  const downloadRecoveryCodes = () => {
+    if (!mfaRecoveryCodes?.length) return;
+    const blob = new Blob([mfaRecoveryCodes.join('\n') + '\n'], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'kapitech-ams-mfa-recovery-codes.txt';
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  };
 
   const [metaSettings, setMetaSettings] = useState<SiteMetaSettings>({
     siteTitle: '',
@@ -952,34 +1088,210 @@ export const AdminSettings: React.FC = () => {
             </section>
 
             <section className="rounded-card border border-line bg-panel p-5">
-              <div className="flex items-center gap-2 border-b border-line pb-4">
-                <Lock size={18} className="text-warning" />
-                <div>
-                  <h2 className="text-sm font-semibold text-fg">Security & MFA policy</h2>
-                  <p className="mt-1 text-[10px] leading-4 text-muted">Authentication policy is enforced by the server.</p>
-                </div>
-              </div>
-
-              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div className="rounded-control border border-line bg-bg p-4">
-                  <div className="flex items-start gap-3">
-                    <Smartphone size={16} className={storedCreds.mfaEnabled ? 'text-success' : 'text-warning'} />
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-xs font-semibold text-fg">Multi-factor authentication</p>
-                        <StatusBadge tone={storedCreds.mfaEnabled ? 'success' : 'warning'} label={storedCreds.mfaEnabled ? 'Enabled' : 'Not configured'} />
-                      </div>
-                      <p className="mt-1 text-[10px] leading-5 text-muted">MFA enrollment follows the authentication flow and remains server-backed.</p>
-                    </div>
+              <div className="flex items-center justify-between gap-3 border-b border-line pb-4">
+                <div className="flex items-center gap-2">
+                  <Lock size={18} className="text-warning" />
+                  <div>
+                    <h2 className="text-sm font-semibold text-fg">Security & MFA policy</h2>
+                    <p className="mt-1 text-[10px] leading-4 text-muted">Manage your own authenticator enrollment without exposing secrets to the browser storage layer.</p>
                   </div>
                 </div>
-                <div className="rounded-control border border-line bg-bg p-4">
+                <StatusBadge
+                  tone={mfaEnabled ? 'success' : 'warning'}
+                  label={mfaEnabled ? 'Enabled' : 'Not configured'}
+                  icon={mfaEnabled ? <ShieldCheck size={12} /> : <AlertCircle size={12} />}
+                />
+              </div>
+
+              <div className="mt-4 rounded-control border border-line bg-bg p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-start gap-3">
-                    <Clock3 size={16} className="text-info" />
+                    <Smartphone size={18} className={mfaEnabled ? 'text-success' : 'text-warning'} />
                     <div>
-                      <p className="text-xs font-semibold text-fg">Session expiry</p>
-                      <p className="mt-1 text-[10px] leading-5 text-muted">Session timing is enforced by the authentication layer. Browser settings cannot override it.</p>
+                      <p className="text-xs font-semibold text-fg">Multi-factor authentication</p>
+                      <p className="mt-1 text-[10px] leading-5 text-muted">
+                        {mfaEnabled
+                          ? 'Your account requires an authenticator code during sign-in. Keep your recovery codes somewhere secure.'
+                          : 'Protect this account with a TOTP authenticator app. The setup secret is shown once during enrollment.'}
+                      </p>
                     </div>
+                  </div>
+                  <div className="flex shrink-0 flex-wrap gap-2">
+                    {!mfaEnabled && (
+                      <Button
+                        type="button"
+                        variant="primary"
+                        onClick={() => void handleStartMfaSetup()}
+                        loading={mfaLoading}
+                        icon={<ShieldCheck size={14} />}
+                      >
+                        Enable MFA
+                      </Button>
+                    )}
+                    {mfaEnabled && (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => {
+                          setMfaMessage(null);
+                          setMfaMode(mfaMode === 'disable' ? 'idle' : 'disable');
+                        }}
+                        disabled={mfaLoading}
+                      >
+                        {mfaMode === 'disable' ? 'Cancel' : 'Disable MFA'}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                {mfaMode === 'setup' && mfaSetupData && (
+                  <div className="mt-4 space-y-4 border-t border-line pt-4">
+                    <div className="rounded-control border border-info/20 bg-info/10 px-3 py-3">
+                      <p className="text-[11px] font-semibold text-fg">1. Add the account to your authenticator</p>
+                      <p className="mt-1 text-[10px] leading-5 text-muted">Use the manual setup key below in Google Authenticator, Microsoft Authenticator, 1Password, or another compatible TOTP app.</p>
+                    </div>
+
+                    <div className="grid gap-3 lg:grid-cols-2">
+                      <div className="rounded-control border border-line bg-panel p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[10px] font-medium text-muted">Setup key</span>
+                          <button type="button" onClick={() => void copyMfaValue(mfaSetupData.secret)} className="inline-flex min-h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[10px] text-muted hover:text-fg">
+                            <Copy size={11} />Copy
+                          </button>
+                        </div>
+                        <p className="mt-2 break-all rounded-control border border-line bg-bg px-3 py-2 font-mono text-[11px] font-semibold tracking-[0.08em] text-fg">{mfaSetupData.secret}</p>
+                      </div>
+
+                      <div className="rounded-control border border-line bg-panel p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[10px] font-medium text-muted">Authenticator URI</span>
+                          <button type="button" onClick={() => void copyMfaValue(mfaSetupData.otpAuthUri)} className="inline-flex min-h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[10px] text-muted hover:text-fg">
+                            <Copy size={11} />Copy
+                          </button>
+                        </div>
+                        <p className="mt-2 max-h-24 overflow-y-auto break-all rounded-control border border-line bg-bg px-3 py-2 font-mono text-[9px] leading-4 text-muted">{mfaSetupData.otpAuthUri}</p>
+                      </div>
+                    </div>
+
+                    <form onSubmit={handleVerifyMfaSetup} className="rounded-control border border-line bg-panel p-3">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                        <label className="min-w-0 flex-1">
+                          <span className="mb-1 block text-[10px] font-medium text-muted">2. Verify the 6-digit TOTP code</span>
+                          <input
+                            value={mfaSetupCode}
+                            onChange={(event) => setMfaSetupCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                            inputMode="numeric"
+                            autoComplete="one-time-code"
+                            maxLength={6}
+                            className="w-full bg-bg text-center font-mono text-base tracking-[0.35em]"
+                            placeholder="000000"
+                          />
+                        </label>
+                        <Button type="submit" variant="primary" loading={mfaLoading} icon={<Check size={14} />}>
+                          Verify & enable
+                        </Button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                {mfaMode === 'disable' && mfaEnabled && (
+                  <form onSubmit={handleDisableMfa} className="mt-4 space-y-3 border-t border-line pt-4">
+                    <div className="rounded-control border border-danger/20 bg-danger/10 px-3 py-3">
+                      <p className="text-[11px] font-semibold text-fg">Disable MFA</p>
+                      <p className="mt-1 text-[10px] leading-5 text-muted">This removes the extra sign-in factor for this account. Confirm with the current password and a valid authenticator code.</p>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label>
+                        <span className="mb-1 block text-[10px] font-medium text-muted">Current password</span>
+                        <input
+                          type="password"
+                          value={mfaDisablePassword}
+                          onChange={(event) => setMfaDisablePassword(event.target.value)}
+                          className="w-full bg-bg"
+                          autoComplete="current-password"
+                        />
+                      </label>
+                      <label>
+                        <span className="mb-1 block text-[10px] font-medium text-muted">Current MFA code</span>
+                        <input
+                          value={mfaDisableCode}
+                          onChange={(event) => setMfaDisableCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                          inputMode="numeric"
+                          autoComplete="one-time-code"
+                          maxLength={6}
+                          className="w-full bg-bg font-mono tracking-[0.2em]"
+                          placeholder="000000"
+                        />
+                      </label>
+                    </div>
+                    <div className="flex justify-end">
+                      <Button type="submit" variant="secondary" loading={mfaLoading} icon={<ShieldCheck size={14} />}>
+                        Confirm disable
+                      </Button>
+                    </div>
+                  </form>
+                )}
+
+                {mfaMessage && (
+                  <div className={'mt-4 rounded-control border px-3 py-2.5 text-[10px] ' + (mfaMessage.success ? 'border-success/20 bg-success/10 text-success' : 'border-danger/20 bg-danger/10 text-danger')} role="status">
+                    {mfaMessage.text}
+                  </div>
+                )}
+
+                {mfaRecoveryCodes && mfaRecoveryCodes.length > 0 && (
+                  <div className="mt-4 rounded-control border border-warning/30 bg-warning/10 p-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-xs font-semibold text-fg">Recovery codes</p>
+                        <p className="mt-1 text-[10px] leading-5 text-muted">These codes are shown after enrollment. Save them now. Each code can be used once.</p>
+                      </div>
+                      <div className="flex shrink-0 gap-2">
+                        <button type="button" onClick={() => void copyMfaValue(mfaRecoveryCodes.join('\n'))} className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-[10px] font-medium text-fg hover:bg-bg">
+                          <Copy size={12} />Copy codes
+                        </button>
+                        <button type="button" onClick={downloadRecoveryCodes} className="inline-flex min-h-9 items-center gap-1.5 rounded-control bg-accent px-3 text-[10px] font-medium text-white hover:bg-accent/90">
+                          <Download size={12} />Download
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      {mfaRecoveryCodes.map((code) => (
+                        <code key={code} className="rounded-control border border-line bg-bg px-3 py-2 text-center font-mono text-[11px] text-fg">{code}</code>
+                      ))}
+                    </div>
+                    <div className="mt-3 flex flex-col gap-3 border-t border-warning/20 pt-3 sm:flex-row sm:items-center sm:justify-between">
+                      <label className="flex items-start gap-2 text-[10px] text-muted">
+                        <input
+                          type="checkbox"
+                          checked={mfaRecoverySaved}
+                          onChange={(event) => setMfaRecoverySaved(event.target.checked)}
+                          className="mt-0.5 accent-accent"
+                        />
+                        <span>I saved these recovery codes somewhere secure.</span>
+                      </label>
+                      <button
+                        type="button"
+                        disabled={!mfaRecoverySaved}
+                        onClick={() => setMfaRecoveryCodes(null)}
+                        className="inline-flex min-h-9 items-center justify-center rounded-control border border-line bg-panel px-3 text-[10px] font-medium text-muted hover:bg-bg hover:text-fg disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Done
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-control border border-line bg-bg p-3">
+                    <p className="text-[10px] text-muted">Session expiry</p>
+                    <p className="mt-1 text-xs font-semibold text-fg">Server enforced</p>
+                  </div>
+                  <div className="rounded-control border border-line bg-bg p-3">
+                    <p className="text-[10px] text-muted">Active users with MFA</p>
+                    <p className="mt-1 text-xs font-semibold tabular-nums text-fg">
+                      {securityStatus ? securityStatus.mfaEnabledCount + ' / ' + securityStatus.activeUserCount : 'Checking…'}
+                    </p>
                   </div>
                 </div>
               </div>

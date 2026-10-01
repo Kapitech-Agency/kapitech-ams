@@ -686,11 +686,11 @@ export const AdminLayout: React.FC = () => {
                 <nav aria-label="Inbox sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
                   {[
                     { key: 'overview', label: 'Overview', to: '/admin/inbox?view=overview' },
-                    { key: 'client', label: 'Client Inbox', to: '/admin/inbox' },
+                    { key: 'client', label: 'Client Inbox', to: '/admin/inbox?view=client' },
                     { key: 'jobs', label: 'Job Applications', to: '/admin/inbox?view=jobs' },
                     { key: 'starred', label: 'Starred', to: '/admin/inbox?view=starred' }
                   ].map((tab) => {
-                    const activeView = new URLSearchParams(location.search).get('view') || 'client';
+                    const activeView = new URLSearchParams(location.search).get('view') || 'overview';
                     const active = activeView === tab.key;
                     return (
                       <NavLink
