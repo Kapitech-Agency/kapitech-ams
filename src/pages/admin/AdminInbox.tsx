@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 // Shared module chrome renders the canonical ams-dashboard-header primitive.
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { 
   Inbox, 
@@ -40,7 +40,7 @@ import {
   ShieldCheck,
   AlertCircle
 } from 'lucide-react';
-import { ContactSubmission } from '../../lib/submissions';
+import { ContactSubmission, getSubmissionSlug, normalizeContactSubmission } from '../../lib/submissions';
 import { CrmLead } from '../../lib/crmStore';
 import { 
   formatAmount, 
@@ -63,7 +63,12 @@ export const AdminInbox: React.FC = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
   const canManageCrm = hasAdminPermission('canManageCrm');
-  const [activeInboxTab, setActiveInboxTab] = useState<'client' | 'jobs'>('client');
+  type InboxTab = 'overview' | 'client' | 'jobs' | 'starred';
+  const [searchParams] = useSearchParams();
+  const requestedTab = searchParams.get('view') as InboxTab | null;
+  const activeInboxTab: InboxTab = requestedTab && ['overview', 'client', 'jobs', 'starred'].includes(requestedTab)
+    ? requestedTab
+    : 'client';
 
   // Core Data & Currency
   const [submissions, setSubmissions] = useState<ContactSubmission[]>([]);
@@ -127,7 +132,7 @@ export const AdminInbox: React.FC = () => {
         return;
       }
 
-      const items = res.data.leads as ContactSubmission[];
+      const items = (res.data.leads as ContactSubmission[]).map(normalizeContactSubmission);
       setSubmissions(items);
       setPrevCount(items.length);
     } catch {
@@ -148,9 +153,56 @@ export const AdminInbox: React.FC = () => {
 
 
   const activeTabItems = useMemo(() => {
-    if (activeInboxTab === 'jobs') return submissions.filter((item) => item.type === 'career');
-    return submissions.filter((item) => item.type !== 'career');
+    switch (activeInboxTab) {
+      case 'overview': return submissions;
+      case 'jobs': return submissions.filter((item) => item.type === 'career');
+      case 'starred': return submissions.filter((item) => !!item.starred);
+      case 'client':
+      default: return submissions.filter((item) => item.type !== 'career');
+    }
   }, [activeInboxTab, submissions]);
+
+  const isMixedInboxTab = activeInboxTab === 'overview' || activeInboxTab === 'starred';
+  const inboxStatusOptions = activeInboxTab === 'jobs'
+    ? [
+        { value: 'all', label: language === 'id' ? 'Semua Status' : 'All Status' },
+        { value: 'new', label: 'Status: New' },
+        { value: 'screening', label: 'Status: Screening' },
+        { value: 'shortlisted', label: 'Status: Shortlisted' },
+        { value: 'interview', label: 'Status: Interview' },
+        { value: 'hired', label: 'Status: Hired' },
+        { value: 'rejected', label: 'Status: Rejected' },
+        { value: 'withdrawn', label: 'Status: Withdrawn' }
+      ]
+    : activeInboxTab === 'client'
+      ? [
+          { value: 'all', label: language === 'id' ? 'Semua Status' : 'All Status' },
+          { value: 'new', label: 'Status: New' },
+          { value: 'in-review', label: 'Status: In Review' },
+          { value: 'contacted', label: 'Status: Contacted' },
+          { value: 'closed', label: 'Status: Closed Deal' }
+        ]
+      : [
+          { value: 'all', label: language === 'id' ? 'Semua Status' : 'All Status' },
+          { value: 'new', label: 'Status: New' },
+          { value: 'in-review', label: 'Status: In Review' },
+          { value: 'contacted', label: 'Status: Contacted' },
+          { value: 'closed', label: 'Status: Closed Deal' },
+          { value: 'screening', label: 'Status: Screening' },
+          { value: 'shortlisted', label: 'Status: Shortlisted' },
+          { value: 'interview', label: 'Status: Interview' },
+          { value: 'hired', label: 'Status: Hired' },
+          { value: 'rejected', label: 'Status: Rejected' },
+          { value: 'withdrawn', label: 'Status: Withdrawn' }
+        ];
+
+  const inboxTabs: Array<{ key: InboxTab; label: string; count: number }> = [
+    { key: 'overview', label: 'Overview', count: submissions.length },
+    { key: 'client', label: 'Client Inbox', count: submissions.filter((item) => item.type !== 'career').length },
+    { key: 'jobs', label: 'Job Applications', count: submissions.filter((item) => item.type === 'career').length },
+    { key: 'starred', label: 'Starred', count: submissions.filter((item) => !!item.starred).length }
+  ];
+  const inboxTabHref = (tab: InboxTab) => tab === 'client' ? '/admin/inbox' : '/admin/inbox?view=' + tab;
 
   useEffect(() => {
     setSelectedSubmission(null);
