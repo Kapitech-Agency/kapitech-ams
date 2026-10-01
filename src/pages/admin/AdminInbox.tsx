@@ -98,6 +98,8 @@ export const AdminInbox: React.FC = () => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [testSending, setTestSending] = useState(false);
   const [prevCount, setPrevCount] = useState<number | null>(null);
+  const [lastRefreshAt, setLastRefreshAt] = useState<Date | null>(null);
+  const [detailContext, setDetailContext] = useState<'overview' | 'workspace'>('workspace');
   const [toastMessage, setToastMessage] = useState<{ text: string; link?: string; linkText?: string; tone?: 'success' | 'danger' } | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ type: 'delete' | 'mark-read'; id?: string; count?: number; targetStatus?: ContactSubmission['status'] } | null>(null);
 
@@ -134,6 +136,7 @@ export const AdminInbox: React.FC = () => {
       const items = (res.data.leads as ContactSubmission[]).map(normalizeContactSubmission);
       setSubmissions(items);
       setPrevCount(items.length);
+      setLastRefreshAt(new Date());
     } catch {
       setToastMessage({
         text: language === 'id' ? 'Inbox gagal dimuat. Coba lagi.' : 'Inbox could not be loaded. Please retry.',
@@ -207,6 +210,7 @@ export const AdminInbox: React.FC = () => {
 
   useEffect(() => {
     setSelectedSubmission(null);
+    setDetailContext('workspace');
     setPage(1);
     setFilterStatus('all');
     setFilterPriority('all');
@@ -234,7 +238,8 @@ export const AdminInbox: React.FC = () => {
   }, [submissions]);
 
   // When clicking a submission
-  const handleSelectSubmission = (sub: ContactSubmission) => {
+  const handleSelectSubmission = (sub: ContactSubmission, context: 'overview' | 'workspace' = 'workspace') => {
+    setDetailContext(context);
     setSelectedSubmission(sub);
     setInternalNoteDraft(sub.internalNotes || '');
     setDetailTab('brief');
@@ -807,12 +812,49 @@ export const AdminInbox: React.FC = () => {
       {/* 3. TAB-SPECIFIC CONTROLS */}
       {activeInboxTab === 'overview' ? (
         <section data-ams-feature-slug="inbox-overview-controls" data-ams-slug="inbox-overview-controls" className="rounded-card border border-line bg-panel">
-          <div className="flex flex-col gap-3 p-3 sm:p-4 lg:flex-row lg:items-center lg:justify-between">
-            <div><p className="text-xs font-semibold text-fg">Live intake monitor</p><p className="mt-0.5 text-[11px] text-muted">Triage exceptions here, then open the dedicated workspace when you need deeper review.</p></div>
-            <div className="flex flex-wrap items-center gap-2">
-              <button type="button" onClick={() => void refreshInbox()} className="inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted hover:bg-bg hover:text-fg"><RefreshCw size={14} />Refresh</button>
-              <button type="button" onClick={handleExportCSV} disabled={activeTabItems.length === 0} className="inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted hover:bg-bg hover:text-fg disabled:opacity-50"><Download size={14} />Export overview</button>
-              <button type="button" onClick={() => setViewMode('split')} className="inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control bg-accent px-3 text-xs font-medium text-white hover:bg-accent/90"><Inbox size={14} />Open inbox</button>
+          <div className="px-4 py-3.5 sm:px-5">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-success" aria-hidden="true" />
+                    <p className="text-xs font-semibold text-fg">Live intake monitor</p>
+                  </div>
+                  <span className="rounded-badge border border-success/20 bg-success/10 px-1.5 py-0.5 text-[9px] font-medium text-success">Auto refresh 30s</span>
+                  <span className="text-[10px] text-muted">
+                    {lastRefreshAt ? 'Updated ' + formatRelativeTime(lastRefreshAt.toISOString()) : 'Waiting for first sync'}
+                  </span>
+                </div>
+                <p className="mt-1 text-[11px] leading-5 text-muted">Monitor new inbound work here, then open the full inbox only when you need record-level review.</p>
+              </div>
+
+              <div className="grid grid-cols-3 overflow-hidden rounded-control border border-line bg-bg lg:w-[300px]">
+                {[
+                  { label: 'New', value: activeTabItems.filter((item) => item.status === 'new').length, tone: 'text-danger' },
+                  { label: 'Priority', value: activeTabItems.filter((item) => item.priority === 'urgent' || item.priority === 'high').length, tone: 'text-warning' },
+                  { label: 'Saved', value: activeTabItems.filter((item) => !!item.starred).length, tone: 'text-warning' }
+                ].map((metric, index) => (
+                  <div key={metric.label} className={'px-3 py-2.5 text-center ' + (index < 2 ? 'border-r border-line' : '')}>
+                    <p className="text-[9px] text-muted">{metric.label}</p>
+                    <p className={'mt-0.5 text-sm font-medium tabular-nums ' + metric.tone}>{metric.value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-3">
+              <p className="text-[10px] text-muted">Overview updates automatically. Manual refresh is available when you need an immediate sync.</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <button type="button" onClick={() => void refreshInbox()} disabled={loading} className="inline-flex h-8 min-h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted hover:bg-panel hover:text-fg disabled:opacity-50">
+                  <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />Refresh
+                </button>
+                <button type="button" onClick={handleExportCSV} disabled={activeTabItems.length === 0} className="inline-flex h-8 min-h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted hover:bg-panel hover:text-fg disabled:opacity-50">
+                  <Download size={12} />Export
+                </button>
+                <button type="button" onClick={() => setViewMode('split')} className="inline-flex h-8 min-h-8 items-center gap-1.5 rounded-control bg-accent px-2.5 text-[10px] font-medium text-white hover:bg-accent/90">
+                  <Inbox size={12} />Open inbox
+                </button>
+              </div>
             </div>
           </div>
         </section>
@@ -972,7 +1014,7 @@ export const AdminInbox: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => {
-                                handleSelectSubmission(item);
+                                handleSelectSubmission(item, 'overview');
                                 setViewMode('split');
                               }}
                               className="min-w-0 text-left"
@@ -998,8 +1040,8 @@ export const AdminInbox: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => {
-                              handleSelectSubmission(item);
-                              setViewMode('split');
+                              handleSelectSubmission(item, 'overview');
+                                setViewMode('split');
                             }}
                             className="mt-1.5 block max-w-3xl text-left"
                           >
@@ -1039,8 +1081,8 @@ export const AdminInbox: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => {
-                                  handleSelectSubmission(item);
-                                  setViewMode('split');
+                                  handleSelectSubmission(item, 'overview');
+                                setViewMode('split');
                                 }}
                                 className="inline-flex min-h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-fg hover:border-muted"
                               >
@@ -1406,14 +1448,14 @@ export const AdminInbox: React.FC = () => {
         </div>
       ) : (
         /* SPLIT MASTER-DETAIL VIEW (when items exist) */
-        <div className="ams-inbox-workspace grid grid-cols-1 items-start gap-3 lg:grid-cols-[minmax(300px,0.82fr)_minmax(0,1.18fr)]">
+        <div className={'ams-inbox-workspace grid grid-cols-1 items-start gap-3 ' + (detailContext === 'overview' ? '' : 'lg:grid-cols-[minmax(300px,0.82fr)_minmax(0,1.18fr)]')}>
           
           {/* Left: Master Briefs List Pane */}
           <div className={`ams-inbox-list-pane space-y-3 ${
-            selectedSubmission 
-              ? 'hidden lg:block' 
+            selectedSubmission || detailContext === 'overview'
+              ? 'hidden lg:block'
               : 'block'
-          }`}>
+          } ${detailContext === 'overview' ? 'lg:hidden' : ''}`}>
             {filteredItems.map((item) => {
               const isSelected = selectedSubmission?.id === item.id;
               const isConverted = crmDeals.some(d => (d as any).inquiryId === item.id);
@@ -1511,13 +1553,16 @@ export const AdminInbox: React.FC = () => {
 
           {/* Right: Message Reader & Command Hub Pane */}
           {selectedSubmission ? (
-            <div className="ams-inbox-reader-pane min-w-0 rounded-card border border-line bg-panel p-4 sm:p-5 lg:sticky lg:top-4 lg:min-h-[calc(100vh-250px)]">
+            <div className={`ams-inbox-reader-pane min-w-0 rounded-card border border-line bg-panel p-4 sm:p-5 ${detailContext === 'overview' ? '' : 'lg:sticky lg:top-4 lg:min-h-[calc(100vh-250px)]'}`}>
               <div>
                 
                 {/* Mobile Back Button */}
                 <div className="lg:hidden mb-4 pb-3 border-b border-line">
                   <button
-                    onClick={() => setSelectedSubmission(null)}
+                    onClick={() => {
+                      setSelectedSubmission(null);
+                      if (detailContext === 'overview') setViewMode('overview');
+                    }}
                     className="flex items-center gap-2 text-xs font-sans text-muted hover:text-fg transition-colors min-h-[44px]"
                   >
                     <ArrowLeft size={16} />
@@ -1567,7 +1612,10 @@ export const AdminInbox: React.FC = () => {
 
                     {/* Close button on desktop */}
                     <button
-                      onClick={() => setSelectedSubmission(null)}
+                      onClick={() => {
+                        setSelectedSubmission(null);
+                        if (detailContext === 'overview') setViewMode('overview');
+                      }}
                       className="hidden lg:inline-flex text-xs text-muted hover:text-fg px-3 py-2 rounded-control bg-panel border border-line min-h-10 items-center" aria-label="Close brief"
                     >
                       ✕
