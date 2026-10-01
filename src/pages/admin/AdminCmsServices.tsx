@@ -24,7 +24,8 @@ import {
   DollarSign,
   TrendingUp
 } from 'lucide-react';
-import { allSolutionsAndServices, ServiceItemData } from '../../data/servicesData';
+import { allSolutionsAndServices } from '../../data/servicesData';
+import type { ServiceItemData } from '../../data/servicesData';
 import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { api } from '../../lib/apiClient';
@@ -33,13 +34,15 @@ import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { AdminMetricStrip, AdminModuleHeader , AdminPageShell } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 export const AdminCmsServices: React.FC = () => {
   const { language } = useLanguage();
   const [servicesList, setServicesList] = useState<ServiceItemData[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -95,6 +98,17 @@ export const AdminCmsServices: React.FC = () => {
       s.slug.toLowerCase().includes(q);
     return matchesCat && matchesSearch;
   });
+
+  const totalServicePages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const pagedServices = filtered.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, selectedCategory, pageSize]);
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, totalServicePages));
+  }, [totalServicePages]);
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
