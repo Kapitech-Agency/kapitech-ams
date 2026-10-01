@@ -405,7 +405,7 @@ export const AdminCrm: React.FC = () => {
   if (isLoading && leads.length === 0) {
     return (
       <AdminPageShell featureSlug="crm-module">
-        <AdminModuleHeader
+        <AdminModuleHeader slug="crm-header"
           className="mb-0"
           title={t('admin.crm.title')}
           description={language === 'id' ? 'Kelola pipeline prospek, tahapan deal, nilai peluang, dan follow-up tim dalam satu workspace.' : 'Manage lead pipeline, deal stages, opportunity value, and team follow-up from one workspace.'}
@@ -467,7 +467,7 @@ export const AdminCrm: React.FC = () => {
       )}
 
       {/* 2. CRM performance snapshot */}
-      <section aria-label="CRM performance snapshot" className="rounded-card border border-line bg-panel p-4">
+      <section data-ams-feature-slug="crm-performance-snapshot" data-ams-slug="crm-performance-snapshot" aria-label="CRM performance snapshot" className="rounded-card border border-line bg-panel p-4">
         <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
           <div className="min-w-0">
             <h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan pipeline' : 'Pipeline snapshot'}</h2>
@@ -475,7 +475,7 @@ export const AdminCrm: React.FC = () => {
           </div>
           <span className="shrink-0 text-[11px] font-medium tabular-nums text-muted">{metrics.totalDeals} {language === 'id' ? 'deal' : 'deals'}</span>
         </div>
-        <AdminMetricStrip
+        <AdminMetricStrip slug="crm-kpis"
           metrics={[
             {
               id: 'active-pipeline',
@@ -517,7 +517,7 @@ export const AdminCrm: React.FC = () => {
         />
       </section>
 
-      <section aria-label="Stage conversion funnel" className="rounded-card border border-line bg-panel p-4">
+      <section data-ams-feature-slug="crm-stage-funnel" data-ams-slug="crm-stage-funnel" aria-label="Stage conversion funnel" className="rounded-card border border-line bg-panel p-4">
         <div className="flex items-center justify-between gap-3 border-b border-line pb-3">
           <div className="flex min-w-0 items-center gap-2 text-xs font-semibold text-fg">
             <Activity size={14} className="text-accent-text" />
@@ -923,7 +923,7 @@ export const AdminCrm: React.FC = () => {
           {/* Desktop Table View */}
           <div className="hidden md:block bg-panel border border-line rounded-card overflow-hidden">
             <div className="ams-table-scroll custom-scrollbar overflow-x-auto">
-              <table className="ams-table w-full text-left text-xs font-sans">
+              <div data-ams-feature-slug="crm-leads-directory" data-ams-slug="crm-leads-directory" className="overflow-x-auto"><table className="ams-table w-full text-left text-xs font-sans">
                 <thead className="bg-panel text-muted border-b border-line normal-case text-[10px] tracking-normal">
                   <tr>
                     <th className="py-3 px-4">{language === 'id' ? 'Klien & Perusahaan' : 'Client & Company'}</th>
@@ -1030,7 +1030,7 @@ export const AdminCrm: React.FC = () => {
                     ))
                   )}
                 </tbody>
-              </table>
+              </table></div>
             </div>
             <AdminTablePagination total={filteredLeads.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="leads" slug="crm-table-pagination" />
           </div>
@@ -1039,7 +1039,7 @@ export const AdminCrm: React.FC = () => {
 
       {/* 5. CLIENT & DEAL PROFILE DRAWER */}
       {isDrawerOpen && selectedLead && (
-        <Modal
+        <Modal slug="crm-lead-modal"
           open={isDrawerOpen}
           onClose={() => setIsDrawerOpen(false)}
           size="xl"
@@ -1201,7 +1201,7 @@ export const AdminCrm: React.FC = () => {
       )}
 
       {/* 6. CREATE / EDIT DEAL MODAL */}
-      <Drawer
+      <Drawer slug="crm-deal-drawer"
         open={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         size="lg"
