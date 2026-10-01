@@ -63,6 +63,7 @@ export const AdminInbox: React.FC = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
   const canManageCrm = hasAdminPermission('canManageCrm');
+  const [activeInboxTab, setActiveInboxTab] = useState<'client' | 'jobs'>('client');
 
   // Core Data & Currency
   const [submissions, setSubmissions] = useState<ContactSubmission[]>([]);
@@ -71,7 +72,6 @@ export const AdminInbox: React.FC = () => {
   const [crmDeals, setCrmDeals] = useState<CrmLead[]>([]);
 
   // Filters & Views
-  const [filterType, setFilterType] = useState<string>('all');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -95,7 +95,7 @@ export const AdminInbox: React.FC = () => {
   const [testSending, setTestSending] = useState(false);
   const [prevCount, setPrevCount] = useState<number | null>(null);
   const [toastMessage, setToastMessage] = useState<{ text: string; link?: string; linkText?: string; tone?: 'success' | 'danger' } | null>(null);
-  const [confirmAction, setConfirmAction] = useState<{ type: 'delete' | 'mark-read'; id?: string; count?: number } | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ type: 'delete' | 'mark-read'; id?: string; count?: number; targetStatus?: ContactSubmission['status'] } | null>(null);
 
   // Sync Currency
   useEffect(() => {
@@ -146,6 +146,19 @@ export const AdminInbox: React.FC = () => {
     return () => window.clearInterval(timer);
   }, []);
 
+
+  const activeTabItems = useMemo(() => {
+    if (activeInboxTab === 'jobs') return submissions.filter((item) => item.type === 'career');
+    return submissions.filter((item) => item.type !== 'career');
+  }, [activeInboxTab, submissions]);
+
+  useEffect(() => {
+    setSelectedSubmission(null);
+    setPage(1);
+    setFilterStatus('all');
+    setFilterPriority('all');
+    setSearchQuery('');
+  }, [activeInboxTab]);
 
   // Keep selected submission in sync with store
   useEffect(() => {
@@ -311,30 +324,36 @@ export const AdminInbox: React.FC = () => {
     }
   };
 
-  // Mark all new as In-Review
+  // Mark all new as the next triage stage for the active inbox.
   const handleMarkAllRead = async () => {
     if (!canManageCrm) return;
-    const count = submissions.filter(s => s.status === 'new').length;
-    if (count > 0) setConfirmAction({ type: 'mark-read', count });
+    const count = activeTabItems.filter((item) => item.status === 'new').length;
+    if (count > 0) {
+      setConfirmAction({
+        type: 'mark-read',
+        count,
+        targetStatus: activeInboxTab === 'jobs' ? 'screening' : 'in-review'
+      });
+    }
   };
 
-  const confirmMarkAllRead = async (count: number) => {
+  const confirmMarkAllRead = async (count: number, targetStatus: ContactSubmission['status']) => {
     try {
-      const unread = submissions.filter(s => s.status === 'new');
+      const unread = activeTabItems.filter((item) => item.status === 'new');
       for (const item of unread) {
-        const res = await api.leads.update(item.id, { status: 'in-review' });
+        const res = await api.leads.update(item.id, { status: targetStatus });
         if (!res.success) throw new Error(res.error || 'Bulk status update failed');
       }
       await refreshInbox();
       setToastMessage({
-        text: language === 'id' ? `${count} pesan ditandai telah ditinjau.` : `${count} messages marked as In Review.`
+        text: language === 'id'
+          ? String(count) + (activeInboxTab === 'jobs' ? ' lamaran dipindahkan ke screening.' : ' pesan ditandai telah ditinjau.')
+          : String(count) + (activeInboxTab === 'jobs' ? ' applications moved to Screening.' : ' messages marked as In Review.')
       });
       setTimeout(() => setToastMessage(null), 3000);
-    } catch (err) {
+    } catch {
       setToastMessage({
-        text: language === 'id'
-          ? 'Pesan gagal ditandai sebagai ditinjau. Coba lagi.'
-          : 'Messages could not be marked as reviewed. Please try again.',
+        text: language === 'id' ? 'Pesan gagal diperbarui. Coba lagi.' : 'Records could not be updated. Please try again.',
         tone: 'danger'
       });
       window.setTimeout(() => setToastMessage(null), 3000);
@@ -391,22 +410,17 @@ export const AdminInbox: React.FC = () => {
 
   // Metrics calculation
   const metrics = useMemo(() => {
-    const total = submissions.length;
-    const newCount = submissions.filter(s => s.status === 'new').length;
-    const convertedCount = submissions.filter(s => crmDeals.some(d => (d as any).inquiryId === s.id)).length;
+    const total = activeTabItems.length;
+    const newCount = activeTabItems.filter((item) => item.status === 'new').length;
+    const convertedCount = activeInboxTab === 'jobs'
+      ? activeTabItems.filter((item) => item.status === 'hired').length
+      : activeTabItems.filter((item) => crmDeals.some((deal) => (deal as any).inquiryId === item.id)).length;
     const conversionRate = total > 0 ? Math.round((convertedCount / total) * 100) : 0;
-    
-    // Sum estimated deal volume
-    const totalPipelineValue = submissions.reduce((acc, sub) => acc + estimateDealValue(sub), 0);
+    const totalPipelineValue = activeTabItems.reduce((acc, item) => acc + estimateDealValue(item), 0);
+    const interviewCount = activeTabItems.filter((item) => item.status === 'interview').length;
 
-    return {
-      total,
-      newCount,
-      convertedCount,
-      conversionRate,
-      totalPipelineValue
-    };
-  }, [submissions]);
+    return { total, newCount, convertedCount, conversionRate, totalPipelineValue, interviewCount };
+  }, [activeInboxTab, activeTabItems, crmDeals]);
 
   // Filtering
   const filteredItems = useMemo(() => {
