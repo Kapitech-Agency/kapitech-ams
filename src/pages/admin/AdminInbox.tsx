@@ -806,16 +806,62 @@ export const AdminInbox: React.FC = () => {
       
       {/* 3. TAB-SPECIFIC CONTROLS */}
       {activeInboxTab === 'overview' ? (
-        <section data-ams-feature-slug="inbox-overview-controls" data-ams-slug="inbox-overview-controls" className="rounded-card border border-line bg-panel">
-          <div className="flex flex-col gap-3 p-3 sm:p-4 lg:flex-row lg:items-center lg:justify-between">
-            <div><p className="text-xs font-semibold text-fg">Live intake monitor</p><p className="mt-0.5 text-[11px] text-muted">Triage exceptions here, then open the dedicated workspace when you need deeper review.</p></div>
-            <div className="flex flex-wrap items-center gap-2">
-              <button type="button" onClick={() => void refreshInbox()} className="inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted hover:bg-bg hover:text-fg"><RefreshCw size={14} />Refresh</button>
-              <button type="button" onClick={handleExportCSV} disabled={activeTabItems.length === 0} className="inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted hover:bg-bg hover:text-fg disabled:opacity-50"><Download size={14} />Export overview</button>
-              <button type="button" onClick={() => setViewMode('split')} className="inline-flex h-9 min-h-9 items-center gap-1.5 rounded-control bg-accent px-3 text-xs font-medium text-white hover:bg-accent/90"><Inbox size={14} />Open inbox</button>
+        <AdminFilterBar
+          slug="inbox-overview-controls"
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Search inbound, company, candidate, or slug..."
+          searchLabel="Search inbound"
+          actions={(
+            <div className="flex min-w-0 items-center gap-2 overflow-x-auto custom-scrollbar">
+              <button
+                type="button"
+                onClick={() => void refreshInbox()}
+                className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg"
+              >
+                <RefreshCw size={13} />Refresh
+              </button>
+              <button
+                type="button"
+                onClick={handleExportCSV}
+                disabled={activeTabItems.length === 0}
+                className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg disabled:pointer-events-none disabled:opacity-40"
+              >
+                <Download size={13} />Export
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('overview')}
+                className="inline-flex h-8 min-h-8 shrink-0 items-center gap-1.5 rounded-chip border border-line bg-panel px-2.5 text-[11px] font-medium text-fg"
+              >
+                <LayoutGrid size={12} />Control center
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('split')}
+                className="inline-flex h-8 min-h-8 shrink-0 items-center gap-1.5 rounded-chip border border-transparent px-2.5 text-[11px] font-medium text-muted hover:text-fg"
+              >
+                <User size={12} />Review
+              </button>
+              <button
+                type="button"
+                onClick={() => { setSearchQuery(''); setFilterStatus('all'); setFilterPriority('all'); }}
+                disabled={!searchQuery && filterStatus === 'all' && filterPriority === 'all'}
+                className="inline-flex h-9 min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-muted hover:bg-panel hover:text-fg disabled:pointer-events-none disabled:opacity-40"
+              >
+                Reset
+              </button>
             </div>
-          </div>
-        </section>
+          )}
+          footer={(
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-[10px] text-muted">{filteredItems.length} matching inbound records · updates automatically every 30 seconds.</p>
+              <span className="inline-flex min-h-7 items-center gap-1.5 rounded-badge border border-success/20 bg-success/10 px-2 text-[9px] font-medium text-success">
+                <span className="h-1.5 w-1.5 rounded-full bg-success" />Live
+              </span>
+            </div>
+          )}
+        />
       ) : activeInboxTab === 'jobs' ? (
         <section data-ams-feature-slug="inbox-jobs-controls" data-ams-slug="inbox-jobs-controls" className="rounded-card border border-line bg-panel">
           <div className="flex flex-col gap-2.5 p-3 sm:p-4 lg:flex-row lg:items-center">
@@ -1703,10 +1749,13 @@ export const AdminInbox: React.FC = () => {
 
                     {/* Close button on desktop */}
                     <button
+                      type="button"
                       onClick={() => setSelectedSubmission(null)}
-                      className="hidden lg:inline-flex text-xs text-muted hover:text-fg px-3 py-2 rounded-control bg-panel border border-line min-h-10 items-center" aria-label="Close brief"
+                      className="hidden lg:inline-flex h-9 min-h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg p-0 text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                      aria-label="Close brief"
+                      title="Close brief"
                     >
-                      ✕
+                      <X size={14} />
                     </button>
                   </div>
                 </div>
