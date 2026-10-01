@@ -190,12 +190,12 @@ export const AdminLayout: React.FC = () => {
   );
   const hasAgencyTier = (requiredTier: AgencyTier) => agencyTier <= requiredTier;
 
-  const filteredNavItems = useMemo(
-    () => STITCH_NAV_ITEMS.filter(
+  const filteredNavItems = useMemo(() => {
+    const visible = STITCH_NAV_ITEMS.filter(
       (item) => hasAgencyTier(item.requiredTier) && isAllowed(item.accessKey || item.key)
-    ),
-    [agencyTier, isAllowed]
-  );
+    );
+    return Array.from(new Map(visible.map((item) => [item.to, item])).values());
+  }, [agencyTier, isAllowed]);
 
   const canOpenMasterSettings = hasAgencyTier(1) && isAllowed('settings');
   const profileTitle = session?.user?.role || DEFAULT_PROFILE_TITLE;
