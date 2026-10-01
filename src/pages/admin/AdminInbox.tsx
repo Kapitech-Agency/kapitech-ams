@@ -854,10 +854,10 @@ export const AdminInbox: React.FC = () => {
               <thead>
                 <tr className="bg-panel border-b border-line text-muted">
                   <th className="p-3 w-10 text-center">★</th>
-                  <th className="p-3">{language === 'id' ? 'Klien & Perusahaan' : 'Client & Company'}</th>
+                  <th className="p-3">{activeInboxTab === 'jobs' ? (language === 'id' ? 'Kandidat & Posisi' : 'Candidate & Role') : (language === 'id' ? 'Klien & Perusahaan' : 'Client & Company')}</th>
                   <th className="p-3">{language === 'id' ? 'Kanal' : 'Channel'}</th>
-                  <th className="p-3">{language === 'id' ? 'Layanan Diminta' : 'Requested Stack'}</th>
-                  <th className="p-3">{language === 'id' ? 'Estimasi Nilai' : 'Valuation'}</th>
+                  <th className="p-3">{activeInboxTab === 'jobs' ? (language === 'id' ? 'Skill / Spesialisasi' : 'Skills / Specialty') : (language === 'id' ? 'Layanan Diminta' : 'Requested Services')}</th>
+                  <th className="p-3">{activeInboxTab === 'jobs' ? (language === 'id' ? 'Pengalaman' : 'Experience') : (language === 'id' ? 'Estimasi Nilai' : 'Valuation')}</th>
                   <th className="p-3">{language === 'id' ? 'Status' : 'Status'}</th>
                   <th className="p-3">{language === 'id' ? 'Waktu' : 'Date'}</th>
                   <th className="p-3 text-right">{language === 'id' ? 'Aksi' : 'Actions'}</th>
@@ -897,14 +897,19 @@ export const AdminInbox: React.FC = () => {
                         <td className="p-3">
                           <div className="font-semibold text-fg font-sans text-sm flex items-center gap-1.5">
                             <span>{item.fullName}</span>
-                            {isConverted && (
+                            {isConverted && activeInboxTab === 'client' && (
                               <span className="text-[9px] font-sans px-1.5 py-0.2 rounded-badge bg-success/10 text-success border border-success/30">
                                 CRM ✓
                               </span>
                             )}
+                            {activeInboxTab === 'jobs' && item.status === 'hired' && (
+                              <span className="text-[9px] font-sans px-1.5 py-0.2 rounded-badge bg-success/10 text-success border border-success/30">
+                                Hired ✓
+                              </span>
+                            )}
                           </div>
                           <div className="text-[11px] text-muted truncate max-w-[200px]">
-                            {item.company || item.email}
+                            {activeInboxTab === 'jobs' ? (item.positionTitle || item.specialty || item.email) : (item.company || item.email)}
                           </div>
                         </td>
 
@@ -916,24 +921,33 @@ export const AdminInbox: React.FC = () => {
                         {/* Services */}
                         <td className="p-3 max-w-[200px]">
                           <div className="flex flex-wrap gap-1">
-                            {item.services && item.services.length > 0 ? (
-                              item.services.slice(0, 2).map((svc, i) => (
-                                <span key={i} className="px-1.5 py-0.5 rounded-badge bg-panel border border-line text-[10px] text-fg">
-                                  {svc}
-                                </span>
-                              ))
+                            {activeInboxTab === 'jobs' ? (
+                              <>
+                                <span className="px-1.5 py-0.5 rounded-badge bg-panel border border-line text-[10px] text-fg">{item.positionTitle || 'Role not specified'}</span>
+                                {item.specialty && <span className="px-1.5 py-0.5 rounded-badge bg-panel border border-line text-[10px] text-muted">{item.specialty}</span>}
+                              </>
                             ) : (
-                              <span className="text-muted text-[10px]">{item.specialty || '-'}</span>
-                            )}
-                            {item.services && item.services.length > 2 && (
-                              <span className="text-[10px] text-muted">+{item.services.length - 2}</span>
+                              <>
+                                {item.services && item.services.length > 0 ? (
+                                  item.services.slice(0, 2).map((svc, i) => (
+                                    <span key={i} className="px-1.5 py-0.5 rounded-badge bg-panel border border-line text-[10px] text-fg">{svc}</span>
+                                  ))
+                                ) : (
+                                  <span className="text-muted text-[10px]">{item.specialty || '-'}</span>
+                                )}
+                                {item.services && item.services.length > 2 && (
+                                  <span className="text-[10px] text-muted">+{item.services.length - 2}</span>
+                                )}
+                              </>
                             )}
                           </div>
                         </td>
 
-                        {/* Valuation */}
+                        {/* Value / Experience */}
                         <td className="p-3 font-semibold text-fg">
-                          {formatAmount(estimateDealValue(item), currency)}
+                          {activeInboxTab === 'jobs'
+                            ? (item.experienceYears ? item.experienceYears + ' yrs' : '-')
+                            : formatAmount(estimateDealValue(item), currency)}
                         </td>
 
                         {/* Status & Priority */}
@@ -981,7 +995,7 @@ export const AdminInbox: React.FC = () => {
               </tbody>
             </table></div>
           </div>
-          <AdminTablePagination total={filteredItems.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="inbound records" slug="inbox-table-pagination" />
+          <AdminTablePagination total={filteredItems.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel={activeInboxTab === 'jobs' ? 'applications' : 'inbound records'} slug={'inbox-' + activeInboxTab + '-pagination'} />
         </div>
       ) : loading ? (
         <div className="rounded-card border border-line bg-panel p-4" role="status" aria-label="Loading inbox records">
