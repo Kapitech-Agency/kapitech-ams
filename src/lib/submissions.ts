@@ -58,7 +58,7 @@ export const normalizeContactSubmission = (submission: ContactSubmission): Conta
   slug: getSubmissionSlug(submission)
 });
 
-export const DEFAULT_INBOX_SUBMISSIONS: ContactSubmission[] = [
+const DEFAULT_INBOX_SUBMISSION_SEED: ContactSubmission[] = [
   {
     id: 'lead_inb_001',
     fullName: 'Bambang Soediro',
@@ -220,6 +220,8 @@ export const DEFAULT_INBOX_SUBMISSIONS: ContactSubmission[] = [
     starred: false,
     createdAt: '2026-09-15T09:30:00.000Z'
   }];
+
+export const DEFAULT_INBOX_SUBMISSIONS: ContactSubmission[] = DEFAULT_INBOX_SUBMISSION_SEED.map(normalizeContactSubmission);
 
 // Helper to get local stored submissions
 export const getLocalSubmissions = (): ContactSubmission[] => {
