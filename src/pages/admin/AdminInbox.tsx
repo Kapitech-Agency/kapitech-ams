@@ -692,7 +692,9 @@ export const AdminInbox: React.FC = () => {
             <button type="button" onClick={() => setIsEmailModalOpen(true)} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent" title={language === 'id' ? 'Buka pengaturan notifikasi email' : 'Open email alert settings'}><Mail size={14} /><span>{language === 'id' ? 'Notifikasi Email' : 'Email Alerts'}</span></button>
             {metrics.newCount > 0 && <button type="button" onClick={handleMarkAllRead} disabled={!canManageCrm} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"><Check size={14} /><span>{activeInboxTab === 'jobs'
     ? (language === 'id' ? 'Mulai Screening' : 'Start Screening')
-    : (language === 'id' ? 'Tandai Dibaca' : 'Mark Read')}</span></button>}
+    : isMixedInboxTab
+      ? (language === 'id' ? 'Proses Baru' : 'Process New')
+      : (language === 'id' ? 'Tandai Dibaca' : 'Mark Read')}</span></button>}
             {activeTabItems.length > 0 && <button type="button" onClick={handleExportCSV} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"><Download size={14} /><span>Export CSV</span></button>}
           </>
         )}
@@ -731,12 +733,18 @@ export const AdminInbox: React.FC = () => {
             <h2 className="text-sm font-semibold text-fg">
               {activeInboxTab === 'jobs'
                 ? (language === 'id' ? 'Ringkasan rekrutmen' : 'Recruitment snapshot')
-                : (language === 'id' ? 'Ringkasan client inbox' : 'Client inbox snapshot')}
+                : activeInboxTab === 'client'
+                  ? (language === 'id' ? 'Ringkasan client inbox' : 'Client inbox snapshot')
+                  : activeInboxTab === 'starred'
+                    ? (language === 'id' ? 'Ringkasan record ditandai' : 'Starred records snapshot')
+                    : (language === 'id' ? 'Ringkasan seluruh inbound' : 'All inbound snapshot')}
             </h2>
             <p className="mt-1 text-xs text-muted">
               {activeInboxTab === 'jobs'
                 ? (language === 'id' ? 'Intake, screening, interview, dan hiring pipeline.' : 'Intake, screening, interview, and hiring pipeline.')
-                : (language === 'id' ? 'Intake, triage, konversi, dan estimasi peluang.' : 'Intake, triage, conversion, and estimated opportunity volume.')}
+                : activeInboxTab === 'client'
+                  ? (language === 'id' ? 'Intake, triage, konversi, dan estimasi peluang.' : 'Intake, triage, conversion, and estimated opportunity volume.')
+                  : (language === 'id' ? 'Pantau inbound lintas kanal dan tindak lanjut yang perlu diproses.' : 'Monitor inbound across channels and track follow-up work.')}
             </p>
           </div>
           <span className="text-[11px] font-medium tabular-nums text-muted">{metrics.total} inbound</span>
@@ -888,7 +896,7 @@ export const AdminInbox: React.FC = () => {
                   </tr>
                 ) : (
                   pagedItems.map((item) => {
-                    const isConverted = crmDeals.some(d => (d as any).inquiryId === item.id);
+                    const isConverted = item.type !== 'career' && crmDeals.some(d => (d as any).inquiryId === item.id);
                     return (
                       <tr 
                         key={item.id}
@@ -912,12 +920,12 @@ export const AdminInbox: React.FC = () => {
                         <td className="p-3">
                           <div className="font-semibold text-fg font-sans text-sm flex items-center gap-1.5">
                             <span>{item.fullName}</span>
-                            {isConverted && activeInboxTab === 'client' && (
+                            {isConverted && item.type !== 'career' && (
                               <span className="text-[9px] font-sans px-1.5 py-0.2 rounded-badge bg-success/10 text-success border border-success/30">
                                 CRM ✓
                               </span>
                             )}
-                            {activeInboxTab === 'jobs' && item.status === 'hired' && (
+                            {item.type === 'career' && item.status === 'hired' && (
                               <span className="text-[9px] font-sans px-1.5 py-0.2 rounded-badge bg-success/10 text-success border border-success/30">
                                 Hired ✓
                               </span>
@@ -936,7 +944,7 @@ export const AdminInbox: React.FC = () => {
                         {/* Services */}
                         <td className="p-3 max-w-[200px]">
                           <div className="flex flex-wrap gap-1">
-                            {activeInboxTab === 'jobs' ? (
+                            {item.type === 'career' ? (
                               <>
                                 <span className="px-1.5 py-0.5 rounded-badge bg-panel border border-line text-[10px] text-fg">{item.positionTitle || 'Role not specified'}</span>
                                 {item.specialty && <span className="px-1.5 py-0.5 rounded-badge bg-panel border border-line text-[10px] text-muted">{item.specialty}</span>}
@@ -1051,7 +1059,7 @@ export const AdminInbox: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-            {(searchQuery || filterStatus !== 'all' || filterPriority !== 'all' || onlyStarred) && (
+            {(searchQuery || filterStatus !== 'all' || filterPriority !== 'all') && (
               <button
                 onClick={() => {
                   setSearchQuery('');
