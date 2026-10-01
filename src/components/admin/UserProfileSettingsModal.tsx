@@ -221,7 +221,7 @@ export const UserProfileSettingsModal: React.FC<UserProfileSettingsModalProps> =
         </>
       )}
     >
-      <div className="space-y-4" data-ams-feature-slug={slug}
+      <div className="space-y-4" data-ams-feature-slug={slug}>
         <section className="rounded-card border border-line bg-bg p-4 sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             <UserAvatar name={name} imageUrl={initialsPreview} size="lg" online />
