@@ -394,7 +394,8 @@ export const AdminCmsProjects: React.FC = () => {
       </div>
 
       {/* Projects Grid with Drag-to-scroll support */}
-      <div data-ams-feature-slug="cms-projects-directory" data-ams-slug="cms-projects-directory">\n      {isLoading ? (
+      <div data-ams-feature-slug="cms-projects-directory" data-ams-slug="cms-projects-directory">
+      {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4" role="status" aria-label="Loading case studies">
           {[1, 2, 3, 4, 5, 6].map((item) => (
             <div key={item} className="overflow-hidden rounded-card border border-line bg-panel">
@@ -534,6 +535,8 @@ export const AdminCmsProjects: React.FC = () => {
         </div>
       )}
       {/* MODAL: ADD / EDIT PROJECT WITH LIVE PREVIEW & DRAG & DROP */}
+      </div>
+
       <Drawer slug="cms-project-editor-drawer"
         open={isModalOpen && !!editingProject}
         onClose={() => setIsModalOpen(false)}
