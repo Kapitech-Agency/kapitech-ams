@@ -255,7 +255,6 @@ export const AdminClientRetainers: React.FC = () => {
       </section>
 
       <AdminFilterBar slug="client-retainers-filters"
-        slug="client-retainers-filters"
         searchValue={query}
         onSearchChange={setQuery}
         searchPlaceholder="Search client, retainer ID, tier, or cycle..."
