@@ -148,7 +148,7 @@ export const AdminTimeLogs: React.FC = () => {
 
   return (
     <AdminPageShell featureSlug="time-tracking-module">
-      <AdminModuleHeader
+      <AdminModuleHeader slug="time-tracking-header"
         className="mb-0"
         title="Time tracking"
         description="Record project time, billable hours, and activity notes in one consistent delivery workspace."
@@ -193,7 +193,7 @@ export const AdminTimeLogs: React.FC = () => {
       </div>
 
 
-      <AdminMetricStrip
+      <AdminMetricStrip slug="time-tracking-kpis"
         metrics={[
           {
             id: 'tracked-time',
@@ -220,7 +220,7 @@ export const AdminTimeLogs: React.FC = () => {
       />
 
         {canManage && (
-          <form id="time-entry-form" onSubmit={submit} className="rounded-card border border-line bg-panel p-4 space-y-4">
+          <form id="time-entry-form" data-ams-feature-slug="time-tracking-create-form" data-ams-slug="time-tracking-create-form" onSubmit={submit} className="rounded-card border border-line bg-panel p-4 space-y-4">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-sm font-semibold">New time entry</h2>
@@ -270,7 +270,7 @@ export const AdminTimeLogs: React.FC = () => {
 
         {status && <div className="rounded-card border border-line bg-panel px-4 py-3 text-xs text-fg">{status}</div>}
 
-        <section className="rounded-card border border-line bg-panel overflow-hidden">
+        <section data-ams-feature-slug="time-tracking-ledger" data-ams-slug="time-tracking-ledger" className="rounded-card border border-line bg-panel overflow-hidden">
           <div className="px-4 sm:px-5 py-4 border-b border-line flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
             <div>
               <h2 className="text-sm font-semibold">Recent entries</h2>
