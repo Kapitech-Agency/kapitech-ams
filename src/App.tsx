@@ -240,6 +240,7 @@ const App = () => {
                 <Route path="projects" element={<ModuleRoute moduleKey="projects" moduleLabel="projects"><AdminProjects /></ModuleRoute>} />
                 <Route path="approvals" element={<ModuleRoute moduleKey="approvals" moduleLabel="approvals"><AdminApprovals /></ModuleRoute>} />
                 <Route path="documents" element={<ModuleRoute moduleKey="documents" moduleLabel="documents"><AdminDocuments /></ModuleRoute>} />
+                <Route path="cms" element={<Navigate to="/admin/cms/projects" replace />} />
                 <Route path="team" element={<ModuleRoute moduleKey="timelogs" moduleLabel="team operations"><AdminTeams /></ModuleRoute>} />
                 <Route path="time-logs" element={<Navigate to="/admin/team?view=time-logs" replace />} />
                 <Route path="vendors" element={<Navigate to="/admin/team?view=vendor-directory" replace />} />
