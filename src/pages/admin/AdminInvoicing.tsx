@@ -921,7 +921,7 @@ export const AdminInvoicing: React.FC = () => {
         setServerMetrics({
           currency,
           totalRevenueCollected: derived.totalPaidRevenue,
-          totalBilled: derived.totalPaidRevenue + derived.totalOutstanding + derived.totalOverdue,
+          totalBilled: derived.totalBilled,
           totalOutstanding: derived.totalOutstanding,
           totalExpense: derived.totalExpenses,
           netProfit: derived.netOperatingProfit,
@@ -1455,7 +1455,7 @@ export const AdminInvoicing: React.FC = () => {
     setServerMetrics({
       currency,
       totalRevenueCollected: metrics.totalPaidRevenue,
-      totalBilled: metrics.totalPaidRevenue + metrics.totalOutstanding + metrics.totalOverdue,
+      totalBilled: metrics.totalBilled,
       totalOutstanding: metrics.totalOutstanding,
       totalExpense: metrics.totalExpenses,
       netProfit: metrics.netOperatingProfit,
