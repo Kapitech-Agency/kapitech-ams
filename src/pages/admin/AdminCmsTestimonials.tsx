@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Plus, Star, Edit3, Trash2, Check, MessageSquare, MapPin, X } from 'lucide-react';
-import { TestimonialItem } from '../../lib/cmsStore';
+import type { TestimonialItem } from '../../lib/cmsStore';
 import { api } from '../../lib/apiClient';
 import { useLanguage } from '../../lib/LanguageContext';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
-import { AdminModuleHeader , AdminPageShell } from '../../components/admin/AdminModulePrimitives';
+import { AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 export const AdminCmsTestimonials: React.FC = () => {
@@ -20,6 +20,9 @@ export const AdminCmsTestimonials: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; author: string } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const loadData = async () => {
     setIsLoading(true); setLoadError(null);
@@ -34,6 +37,23 @@ export const AdminCmsTestimonials: React.FC = () => {
   useEffect(() => {
     void loadData();
   }, []);
+
+  const filteredTestimonials = testimonials.filter((item) => {
+    const query = searchQuery.trim().toLowerCase();
+    return !query || [item.author, item.role, item.company, item.location, item.quote, item.quoteId]
+      .map((value) => String(value || '').toLowerCase())
+      .some((value) => value.includes(query));
+  });
+  const totalTestimonialPages = Math.max(1, Math.ceil(filteredTestimonials.length / pageSize));
+  const pagedTestimonials = filteredTestimonials.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, pageSize]);
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, totalTestimonialPages));
+  }, [totalTestimonialPages]);
 
   const handleOpenAdd = () => {
     const template: TestimonialItem = {
