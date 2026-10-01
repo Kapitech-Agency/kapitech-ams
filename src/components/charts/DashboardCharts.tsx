@@ -156,8 +156,8 @@ export const TrendChart: React.FC<{
 
     setHover({
       index: nearestIndex,
-      x: points[nearestIndex].x,
-      percent: (points[nearestIndex].x / width) * 100,
+      x: viewBoxX,
+      percent: (viewBoxX / width) * 100,
     });
   };
 
