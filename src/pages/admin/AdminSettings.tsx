@@ -419,7 +419,8 @@ export const AdminSettings: React.FC = () => {
     ];
     const csv = rows
       .map((row) => row.map((cell) => '"' + String(cell ?? '').replace(/"/g, '""') + '"').join(','))
-      .join('\\n');
+      .join('\
+');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
