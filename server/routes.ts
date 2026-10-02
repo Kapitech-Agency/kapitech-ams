@@ -1449,7 +1449,7 @@ apiRouter.post('/leads/resume-upload', rateLimitPublic(5, 15 * 60 * 1000), expre
     return;
   }
 
-  const downloadUrl = `${req.protocol}://${req.get('host')}/api/documents/${encodeURIComponent(documentId)}/content`;
+  const downloadUrl = `/api/documents/${encodeURIComponent(documentId)}/content`;
   res.status(201).json({
     success: true,
     documentId,
