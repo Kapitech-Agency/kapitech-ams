@@ -52,6 +52,7 @@ import {
   setMfaTrustCookie
 } from './auth';
 import { getDataSourceMode } from './data-source.ts';
+import { isProductionRuntime } from './runtime.ts';
 import { createClientSlug } from '../src/lib/clientStore.ts';
 import { loadApplicationDatabase } from './application-data-repository.ts';
 import { postgresAuthRepository } from './postgres-repository.ts';
@@ -531,7 +532,7 @@ apiRouter.post('/auth/login', rateLimitPublic(10, 15 * 60 * 1000), async (req: R
     });
 
     const cookieMaxAge = rememberMe ? 24 * 3600 : 12 * 3600;
-    const secureCookie = process.env.NODE_ENV === 'production' ? ' Secure;' : '';
+    const secureCookie = isProductionRuntime() ? ' Secure;' : '';
     res.append('Set-Cookie', `kapi_session=${session.token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${cookieMaxAge};${secureCookie}`);
     setCsrfCookie(res);
 
@@ -690,7 +691,7 @@ apiRouter.post('/auth/firebase-login', rateLimitPublic(10, 15 * 60 * 1000), asyn
     });
 
     const cookieMaxAge = rememberMe ? 24 * 3600 : 12 * 3600;
-    const secureCookie = process.env.NODE_ENV === 'production' ? ' Secure;' : '';
+    const secureCookie = isProductionRuntime() ? ' Secure;' : '';
     res.append('Set-Cookie', `kapi_session=${session.token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${cookieMaxAge};${secureCookie}`);
     setCsrfCookie(res);
 
@@ -778,7 +779,7 @@ apiRouter.post('/auth/mfa/verify', rateLimitPublic(10, 5 * 60 * 1000), async (re
 
   const session = await createSession(user, req.ip || 'unknown', req.headers['user-agent'] || 'unknown', challenge.rememberMe);
   const cookieMaxAge = challenge.rememberMe ? 24 * 3600 : 12 * 3600;
-  const secureCookie = process.env.NODE_ENV === 'production' ? ' Secure;' : '';
+  const secureCookie = isProductionRuntime() ? ' Secure;' : '';
   res.append('Set-Cookie', `kapi_session=${session.token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${cookieMaxAge};${secureCookie}`);
   clearMfaChallengeCookie(res);
   if (trustDevice) {
@@ -938,7 +939,7 @@ apiRouter.post('/auth/mfa/disable', requireAuth, rateLimitAuthenticated(5, 15 * 
     severity: 'warning'
   });
 
-  const secureCookie = process.env.NODE_ENV === 'production' ? ' Secure;' : '';
+  const secureCookie = isProductionRuntime() ? ' Secure;' : '';
   res.append('Set-Cookie', `kapi_session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0;${secureCookie}`);
   clearCsrfCookie(res);
   res.json({ success: true, mfaEnabled: false });
@@ -959,7 +960,7 @@ apiRouter.post('/auth/logout', requireAuth, async (req: AuthenticatedRequest, re
       severity: 'info'
     });
   }
-  const secureCookie = process.env.NODE_ENV === 'production' ? ' Secure;' : '';
+  const secureCookie = isProductionRuntime() ? ' Secure;' : '';
   res.append('Set-Cookie', `kapi_session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0;${secureCookie}`);
   clearCsrfCookie(res);
   res.json({ success: true, message: 'Logged out successfully.' });
@@ -1313,6 +1314,15 @@ apiRouter.delete('/auth/users/:id', requireAuth, requireMaster, async (req: Auth
 // 2. LEADS & CONTACT SUBMISSIONS
 // ----------------------------------------------------
 
+function detectResumeMimeType(buffer: Buffer, extension: string): string | null {
+  const prefix = (bytes: number[]): boolean =>
+    buffer.length >= bytes.length && buffer.subarray(0, bytes.length).equals(Buffer.from(bytes));
+  if (extension === 'pdf' && buffer.subarray(0, 5).toString('ascii') === '%PDF-') return 'application/pdf';
+  if (extension === 'doc' && prefix([0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1])) return 'application/msword';
+  if (extension === 'docx' && prefix([0x50, 0x4B, 0x03, 0x04])) return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+  return null;
+}
+
 apiRouter.post('/leads/resume-upload', rateLimitPublic(5, 15 * 60 * 1000), express.raw({ type: () => true, limit: '5mb' }), async (req: Request, res: Response): Promise<void> => {
   const origin = req.get('origin');
   if (origin && !/^https:\/\/(?:www\.)?kapitech\.id$/i.test(origin) && !/^https:\/\/ams\.kapitech\.id$/i.test(origin)) {
@@ -1335,10 +1345,18 @@ apiRouter.post('/leads/resume-upload', rateLimitPublic(5, 15 * 60 * 1000), expre
     doc: 'application/msword',
     docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
   };
-  const mimeType = DOCUMENT_MIME_TYPES.has(contentType) ? contentType : mimeByExtension[extension] || '';
+  const extensionMimeType = mimeByExtension[extension] || '';
+  const detectedMimeType = detectResumeMimeType(req.body, extension);
+  const mimeType = detectedMimeType || extensionMimeType;
 
-  if (!mimeType || !['pdf', 'doc', 'docx'].includes(extension)) {
-    res.status(415).json({ success: false, error: 'Only PDF, DOC, and DOCX resume files are allowed.' });
+  if (
+    !mimeType ||
+    !['pdf', 'doc', 'docx'].includes(extension) ||
+    !detectedMimeType ||
+    detectedMimeType !== extensionMimeType ||
+    (contentType && contentType !== 'application/octet-stream' && contentType !== extensionMimeType)
+  ) {
+    res.status(415).json({ success: false, error: 'Resume file type or content signature is invalid.' });
     return;
   }
 
@@ -1348,7 +1366,7 @@ apiRouter.post('/leads/resume-upload', rateLimitPublic(5, 15 * 60 * 1000), expre
   }
 
   const configuredProvider = process.env.KAPITECH_DOCUMENT_STORAGE_PROVIDER?.trim().toLowerCase() || '';
-  if (process.env.NODE_ENV === 'production' && getDataSourceMode() === 'postgres' && configuredProvider !== 's3' && configuredProvider !== 's3-compatible') {
+  if (isProductionRuntime() && getDataSourceMode() === 'postgres' && configuredProvider !== 's3' && configuredProvider !== 's3-compatible') {
     res.status(503).json({ success: false, error: 'Durable document storage is required for resume uploads.' });
     return;
   }
@@ -4727,7 +4745,7 @@ apiRouter.put('/documents/:id/content', requireAuth, documentMutationMiddleware,
   }
 
   const configuredProvider = process.env.KAPITECH_DOCUMENT_STORAGE_PROVIDER?.trim().toLowerCase() || '';
-  if (process.env.NODE_ENV === 'production' && getDataSourceMode() === 'postgres' && configuredProvider !== 's3' && configuredProvider !== 's3-compatible') {
+  if (isProductionRuntime() && getDataSourceMode() === 'postgres' && configuredProvider !== 's3' && configuredProvider !== 's3-compatible') {
     res.status(503).json({ success: false, error: 'Durable document storage is required for PostgreSQL production mode.' });
     return;
   }
@@ -5310,7 +5328,7 @@ apiRouter.get('/system/production-readiness', requireAuth, requireAnyPermission(
     const documentStorageReady = storageHealth.configured && storageHealth.ok && documentIntegrityComplete && documentObjectsVerified;
 
     const runtimeReady =
-      process.env.NODE_ENV === 'production' &&
+      isProductionRuntime() &&
       /^https:\/\//i.test(String(process.env.APP_URL || '').trim()) &&
       Boolean(process.env.KAPITECH_DATA_SOURCE === 'postgres');
 
@@ -5426,7 +5444,7 @@ apiRouter.get('/system/production-readiness', requireAuth, requireAnyPermission(
       status: {
         datasource: 'postgres',
         runtime: {
-          nodeEnvProduction: process.env.NODE_ENV === 'production',
+          nodeEnvProduction: isProductionRuntime(),
           appUrlHttps: /^https:\/\//i.test(String(process.env.APP_URL || '').trim()),
           dataSourcePostgres: true
         },
