@@ -134,9 +134,9 @@ export const AdminLogin: React.FC = () => {
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-bg to-transparent" />
       </div>
 
-      <div className="relative z-10 grid min-h-screen lg:grid-cols-[minmax(420px,520px)_minmax(0,1fr)]">
-        <section className="flex min-h-screen items-center justify-center px-5 py-8 sm:px-8 lg:px-12">
-          <div className="w-full max-w-[420px]">
+      <div className="relative z-10 mx-auto grid min-h-screen w-full max-w-[1360px] px-5 sm:px-8 lg:grid-cols-[minmax(0,0.96fr)_minmax(0,1.04fr)] lg:px-12 xl:px-16">
+        <section className="flex min-h-screen items-center justify-center py-8 sm:py-10 lg:pr-10 xl:pr-16">
+          <div className="w-full max-w-[400px]">
             <a
               href="https://kapitech.id/"
               className="mb-4 inline-flex min-h-10 items-center gap-2 text-xs font-sans text-muted transition-colors hover:text-fg sm:mb-5"
@@ -369,18 +369,18 @@ export const AdminLogin: React.FC = () => {
           </div>
         </section>
 
-        <aside className="relative hidden min-h-screen items-center justify-center overflow-hidden border-l border-white/[0.08] bg-[#09090c]/24 px-8 lg:flex">
+        <aside className="relative hidden min-h-screen items-center justify-center overflow-hidden border-l border-white/[0.07] bg-[#09090c]/18 px-8 lg:flex xl:px-12">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_35%_50%,rgba(220,20,60,0.18),transparent_30%),radial-gradient(circle_at_72%_32%,rgba(255,255,255,0.035),transparent_24%)]" />
           <div className="relative z-10 flex max-w-lg flex-col items-center text-center">
             <img
               src="https://raw.githubusercontent.com/Kapitech-Agency/Kapitech-Agency.github.io/main/public/white.png"
               alt="Kapitech Agency"
-              className="mb-8 h-auto w-[220px] max-w-[62%] object-contain opacity-95 drop-shadow-[0_18px_48px_rgba(0,0,0,0.45)] xl:w-[280px]"
+              className="mb-7 h-auto w-[170px] max-w-[48%] object-contain opacity-95 drop-shadow-[0_18px_48px_rgba(0,0,0,0.45)] xl:w-[210px]"
               loading="eager"
               decoding="async"
             />
             <div className="h-px w-16 bg-accent/70" aria-hidden="true" />
-            <p className="mt-6 max-w-md text-sm leading-7 text-white/58">
+            <p className="mt-5 max-w-sm text-center text-xs leading-6 text-white/54 sm:text-sm sm:leading-7">
               {language === 'id'
                 ? 'Digital product design, development, dan visual experience untuk bisnis yang ingin bergerak lebih jauh.'
                 : 'Digital product design, development, and visual experiences for businesses ready to move further.'}
