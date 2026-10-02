@@ -22,7 +22,7 @@
     "@vitejs/plugin-react": "^5.0.4",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
-    "express": "^4.21.2",
+    "express": "4.22.3",
     "fuse.js": "^7.1.0",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
@@ -52,7 +52,9 @@
     "react-router": "^7.18.2",
     "browserslist": "^4.29.1",
     "postcss": "^8.5.28",
-    "nanoid": "^3.3.19"
+    "nanoid": "^3.3.19",
+    "body-parser": "1.20.6",
+    "proxy-addr": "2.0.8"
   },
   "packageManager": "npm@10.9.2",
   "description": "Kapitech Agency Management System — React/Vite frontend with Express production runtime.",
