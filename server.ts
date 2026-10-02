@@ -93,6 +93,52 @@ async function startServer() {
   app.disable('x-powered-by');
   const PORT = Number(process.env.PORT) || 3000;
 
+const PUBLIC_API_PATHS = new Set([
+  '/cms/public-settings',
+  '/cms/services',
+  '/cms/projects',
+  '/cms/testimonials',
+  '/leads/submit'
+]);
+
+function getPublicSiteOrigins(): Set<string> {
+  const configured = String(process.env.PUBLIC_SITE_ORIGINS || '').split(',').map((origin) => origin.trim()).filter(Boolean);
+  return new Set(configured.length > 0
+    ? configured
+    : ['https://kapitech.id', 'https://www.kapitech.id']);
+}
+
+function applyPublicApiCors(req: express.Request, res: express.Response, next: express.NextFunction): void {
+  if (!PUBLIC_API_PATHS.has(req.path)) {
+    next();
+    return;
+  }
+
+  const origin = req.get('Origin');
+  const allowedOrigins = getPublicSiteOrigins();
+
+  if (origin && allowedOrigins.has(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-CSRF-Token');
+    res.setHeader('Access-Control-Max-Age', '600');
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  }
+
+  if (req.method === 'OPTIONS') {
+    if (!origin || allowedOrigins.has(origin)) {
+      res.status(204).end();
+      return;
+    }
+    res.status(403).json({ success: false, error: 'CORS origin is not allowed.' });
+    return;
+  }
+
+  next();
+}
+
+
   // Hostinger/reverse-proxy aware client IP handling for rate limiting and audit logs.
   app.set('trust proxy', 1);
 
@@ -149,11 +195,16 @@ async function startServer() {
   app.use(express.json({ limit: '512kb' }));
   app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-  // Prevent browsers and intermediary caches from storing authenticated API responses.
+  // Prevent browsers and intermediary caches from storing API responses.
   app.use('/api', (_req, res, next) => {
     res.setHeader('Cache-Control', 'no-store');
     next();
   });
+
+  // Public website may consume only the explicitly public CMS/lead endpoints.
+  // This runs before the database readiness gate so browser preflights can succeed
+  // without exposing any authenticated AMS surface.
+  app.use('/api', applyPublicApiCors);
 
   // Keep the private AMS surface out of search indexes and intermediary caches.
   app.use((req, res, next) => {
