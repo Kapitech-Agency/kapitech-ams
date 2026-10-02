@@ -11,15 +11,9 @@ import { ensurePostgresInitialAdmin } from './server/postgres-bootstrap.ts';
 import { ensurePostgresCmsDefaults } from './server/postgres-cms-bootstrap.ts';
 import { runPostgresMigrations } from './server/postgres-migrations.ts';
 import { flushAuditLogWrites, isDataEncryptionEnabled } from './server/db.ts';
+import { isProductionRuntime } from './server/runtime.ts';
 
 dotenv.config();
-
-// A bundled `dist/server.cjs` is always the production runtime. This keeps the
-// Hostinger start command portable while preventing the bundled server from
-// entering Vite development middleware when NODE_ENV is omitted.
-const isProductionRuntime =
-  process.env.NODE_ENV === 'production' ||
-  path.basename(process.argv[1] || '') === 'server.cjs';
 
 function validateProductionDataSource(): string | null {
   if (!isProductionRuntime) return null;
@@ -388,6 +382,12 @@ function applyPublicApiCors(req: express.Request, res: express.Response, next: e
       retryTimer.unref();
     }
   });
+
+  // Bound connection lifetime and header wait time to reduce slow-client resource exhaustion.
+  server.requestTimeout = 120_000;
+  server.headersTimeout = 20_000;
+  server.keepAliveTimeout = 5_000;
+  server.maxRequestsPerSocket = 1_000;
 
   const SHUTDOWN_TIMEOUT_MS = 10_000;
   let shutdownStarted = false;
