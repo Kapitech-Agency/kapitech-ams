@@ -5,6 +5,7 @@ import { api } from '../../lib/apiClient';
 import { authenticateAdmin, cacheAdminSession } from '../../lib/adminAuth';
 import { useLanguage } from '../../lib/LanguageContext';
 import { Button } from '../../components/ui/Button';
+import PatternWaves from '../../components/ui/PatternWaves';
 
 export const AdminLogin: React.FC = () => {
   const { language } = useLanguage();
@@ -107,8 +108,30 @@ export const AdminLogin: React.FC = () => {
   const mfaEnabledNotice = searchParams.get('mfaEnabled') === '1';
 
   return (
-    <div data-kapi-admin="true" className="ams-shell min-h-screen bg-bg text-fg flex items-center justify-center px-4 py-6 sm:px-6 sm:py-10 font-sans">
-      <div className="w-full max-w-[420px]">
+    <div data-kapi-admin="true" className="ams-shell relative isolate min-h-screen overflow-hidden bg-bg text-fg flex items-center justify-center px-4 py-6 sm:px-6 sm:py-10 font-sans">
+      <div className="pointer-events-none absolute inset-0 z-0" aria-hidden="true">
+        <PatternWaves
+          preset="silk"
+          color="#dc143c"
+          backgroundColor="#170f0f"
+          opacity={0.58}
+          fade="edges"
+          fadeSize={0.7}
+          interactive
+          cursorSize={50}
+          cursorStrength={0.6}
+          speed={0.28}
+          scale={1.05}
+          depth={0.72}
+          shine={0.7}
+          contrast={1.08}
+          intro
+        />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(9,9,12,0.16),rgba(9,9,12,0.82))]" />
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-bg to-transparent" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-[420px]">
         <a
           href="https://kapitech.id/"
           className="inline-flex items-center gap-2 min-h-10 text-xs font-sans text-muted hover:text-fg mb-4 sm:mb-5"
