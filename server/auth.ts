@@ -306,6 +306,34 @@ export function clearMfaChallengeCookie(res: Response): void {
   res.append('Set-Cookie', `kapi_mfa_challenge=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0;${secure}`);
 }
 
+
+export function isAllowedLoginOrigin(
+  origin: string,
+  configuredAppUrl: string,
+  requestOrigin: string
+): boolean {
+  if (!origin) return true;
+
+  try {
+    const suppliedOrigin = new URL(origin).origin;
+    const allowedOrigins = new Set<string>();
+
+    for (const candidate of [configuredAppUrl, requestOrigin]) {
+      const value = String(candidate || '').trim();
+      if (!value) continue;
+      try {
+        allowedOrigins.add(new URL(value).origin);
+      } catch {
+        // Ignore malformed optional configuration and continue using the request origin.
+      }
+    }
+
+    return allowedOrigins.has(suppliedOrigin);
+  } catch {
+    return false;
+  }
+}
+
 const MFA_TRUST_COOKIE = 'kapi_mfa_trust';
 const MFA_TRUST_LIFETIME_MS = 30 * 24 * 60 * 60 * 1000;
 
