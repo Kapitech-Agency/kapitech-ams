@@ -14,6 +14,7 @@ import { getDataSourceMode } from './data-source.ts';
 import { postgresAuthRepository } from './postgres-repository.ts';
 import { postgresSecurityControlsRepository } from './postgres-security-controls-repository.ts';
 import { postgresAuditLogRepository } from './postgres-audit-log-repository.ts';
+import { isProductionRuntime } from './runtime.ts';
 
 interface RateLimitEntry {
   count: number;
@@ -68,13 +69,8 @@ export interface AuthenticatedRequest extends Request {
 
 export function isMasterAdministrator(user?: Pick<StoredUser, 'id' | 'username' | 'role' | 'stakeholderType'> | null): boolean {
   if (!user) return false;
-  return (
-    user.stakeholderType === 'Master' ||
-    user.id === 'usr_root_admin' ||
-    user.username === 'admin' ||
-    user.role === 'Tier 1: Top Management / Sponsor' ||
-    /\bmaster\b|super admin|root admin/i.test(String(user.role || ''))
-  );
+  // Only immutable server-owned identity attributes can confer Master privileges.
+  return user.stakeholderType === 'Master' || user.id === 'usr_root_admin';
 }
 
 function cleanupMaps(): void {
@@ -298,7 +294,7 @@ export async function consumeMfaChallenge(token: string): Promise<MfaChallenge |
 }
 
 export function setMfaChallengeCookie(res: Response, token: string): void {
-  const secure = process.env.NODE_ENV === 'production' ? ' Secure;' : '';
+  const secure = isProductionRuntime() ? ' Secure;' : '';
   res.append(
     'Set-Cookie',
     `kapi_mfa_challenge=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=300;${secure}`
@@ -306,7 +302,7 @@ export function setMfaChallengeCookie(res: Response, token: string): void {
 }
 
 export function clearMfaChallengeCookie(res: Response): void {
-  const secure = process.env.NODE_ENV === 'production' ? ' Secure;' : '';
+  const secure = isProductionRuntime() ? ' Secure;' : '';
   res.append('Set-Cookie', `kapi_mfa_challenge=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0;${secure}`);
 }
 
@@ -342,6 +338,10 @@ function fingerprintUserAgent(userAgent: string): string {
   return crypto.createHash('sha256').update(userAgent).digest('hex');
 }
 
+function fingerprintPasswordHash(passwordHash: string): string {
+  return crypto.createHash('sha256').update(passwordHash).digest('hex');
+}
+
 export function createMfaTrustToken(user: StoredUser, userAgent: string, now = Date.now()): string | null {
   if (!user.mfaEnabled || !user.mfaSecret) return null;
   const key = getMfaTrustKey();
@@ -352,7 +352,8 @@ export function createMfaTrustToken(user: StoredUser, userAgent: string, now = D
     userId: user.id,
     expiresAt: now + MFA_TRUST_LIFETIME_MS,
     userAgent: fingerprintUserAgent(userAgent),
-    mfaSecret: fingerprintMfaSecret(user.mfaSecret)
+    mfaSecret: fingerprintMfaSecret(user.mfaSecret),
+    passwordHash: fingerprintPasswordHash(user.passwordHash)
   }));
   const signature = encodeBase64Url(crypto.createHmac('sha256', key).update(payload).digest());
   return payload + '.' + signature;
@@ -377,20 +378,22 @@ export function verifyMfaTrustToken(token: string, user: StoredUser, userAgent: 
       expiresAt?: number;
       userAgent?: string;
       mfaSecret?: string;
+      passwordHash?: string;
     };
     return payload.v === 1 &&
       payload.userId === user.id &&
       Number.isFinite(payload.expiresAt) &&
       Number(payload.expiresAt) > now &&
       payload.userAgent === fingerprintUserAgent(userAgent) &&
-      payload.mfaSecret === fingerprintMfaSecret(user.mfaSecret);
+      payload.mfaSecret === fingerprintMfaSecret(user.mfaSecret) &&
+      payload.passwordHash === fingerprintPasswordHash(user.passwordHash);
   } catch {
     return false;
   }
 }
 
 export function setMfaTrustCookie(res: Response, token: string): void {
-  const secure = process.env.NODE_ENV === 'production' ? ' Secure;' : '';
+  const secure = isProductionRuntime() ? ' Secure;' : '';
   res.append(
     'Set-Cookie',
     MFA_TRUST_COOKIE + '=' + encodeURIComponent(token) + '; Path=/; HttpOnly; SameSite=Strict; Max-Age=' + String(MFA_TRUST_LIFETIME_MS / 1000) + ';' + secure
@@ -398,7 +401,7 @@ export function setMfaTrustCookie(res: Response, token: string): void {
 }
 
 export function clearMfaTrustCookie(res: Response): void {
-  const secure = process.env.NODE_ENV === 'production' ? ' Secure;' : '';
+  const secure = isProductionRuntime() ? ' Secure;' : '';
   res.append(
     'Set-Cookie',
     MFA_TRUST_COOKIE + '=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0;' + secure
@@ -412,7 +415,7 @@ export function createCsrfToken(): string {
 }
 
 export function setCsrfCookie(res: Response, token: string = createCsrfToken()): string {
-  const secure = process.env.NODE_ENV === 'production' ? ' Secure;' : '';
+  const secure = isProductionRuntime() ? ' Secure;' : '';
   res.append(
     'Set-Cookie',
     `kapi_csrf=${token}; Path=/; SameSite=Strict; Max-Age=86400;${secure}`
@@ -421,7 +424,7 @@ export function setCsrfCookie(res: Response, token: string = createCsrfToken()):
 }
 
 export function clearCsrfCookie(res: Response): void {
-  const secure = process.env.NODE_ENV === 'production' ? ' Secure;' : '';
+  const secure = isProductionRuntime() ? ' Secure;' : '';
   res.append('Set-Cookie', `kapi_csrf=; Path=/; SameSite=Strict; Max-Age=0;${secure}`);
 }
 
