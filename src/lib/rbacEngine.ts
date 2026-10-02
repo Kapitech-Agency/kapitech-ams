@@ -336,10 +336,9 @@ export function useRbacRole(
     roleMeta: meta,
     isAllowed: (key: string) => {
       const normalizedRole = String(userRole || '').trim();
-      const isMasterIdentity =
-        actualStakeholderType === 'Master' ||
-        userRole === 'Tier 1: Top Management / Sponsor' ||
-        /\bmaster\b|super admin|root admin/i.test(normalizedRole);
+      // Frontend role gating mirrors the server-owned stakeholder classification.
+      // The backend remains authoritative for every protected operation.
+      const isMasterIdentity = actualStakeholderType === 'Master';
       if (isMasterIdentity) return true;
       if (serverPermissions) {
         const anyPermissions = MODULE_ANY_PERMISSION_MAP[key];
