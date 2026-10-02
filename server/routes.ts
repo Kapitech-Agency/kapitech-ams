@@ -344,6 +344,23 @@ apiRouter.use((req: AuthenticatedRequest, res: Response, next) => {
 // ----------------------------------------------------
 
 apiRouter.post('/auth/login', rateLimitPublic(10, 15 * 60 * 1000), async (req: Request, res: Response): Promise<void> => {
+  const origin = req.get('origin');
+  if (origin) {
+    const configuredAppUrl = String(process.env.APP_URL || '').trim();
+    let allowedOrigin = '';
+    try {
+      allowedOrigin = configuredAppUrl
+        ? new URL(configuredAppUrl).origin
+        : `${req.protocol}://${req.get('host')}`;
+    } catch {
+      allowedOrigin = `${req.protocol}://${req.get('host')}`;
+    }
+    if (origin !== allowedOrigin) {
+      res.status(403).json({ success: false, error: 'Security validation failed.' });
+      return;
+    }
+  }
+
   const { identifier, password, rememberMe } = req.body;
   const ip = req.ip || req.socket.remoteAddress || '127.0.0.1';
   const userAgent = req.headers['user-agent'] || 'unknown';
