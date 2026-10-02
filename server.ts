@@ -16,7 +16,7 @@ import { isProductionRuntime } from './server/runtime.ts';
 dotenv.config();
 
 function validateProductionDataSource(): string | null {
-  if (!isProductionRuntime) return null;
+  if (!isProductionRuntime()) return null;
 
   const mode = (process.env.KAPITECH_DATA_SOURCE || '').trim().toLowerCase();
   if (mode !== 'postgres') {
@@ -158,7 +158,7 @@ function applyPublicApiCors(req: express.Request, res: express.Response, next: e
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
     res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
 
-    if (isProductionRuntime) {
+    if (isProductionRuntime()) {
       res.setHeader(
         'Content-Security-Policy',
         [
@@ -329,7 +329,7 @@ function applyPublicApiCors(req: express.Request, res: express.Response, next: e
   });
 
   // Vite middleware in dev, static files in prod
-  if (!isProductionRuntime) {
+  if (!isProductionRuntime()) {
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
