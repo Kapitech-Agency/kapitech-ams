@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
+import fsPromises from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -99,9 +100,9 @@ test('Production environment rejects disabled PostgreSQL certificate verificatio
 
 test('Runtime hardening stays in place', async () => {
   const [server, auth, routes] = await Promise.all([
-    fs.readFile(path.resolve(process.cwd(), 'server.ts'), 'utf8'),
-    fs.readFile(path.resolve(process.cwd(), 'server/auth.ts'), 'utf8'),
-    fs.readFile(path.resolve(process.cwd(), 'server/routes.ts'), 'utf8')
+    fsPromises.readFile(path.resolve(process.cwd(), 'server.ts'), 'utf8'),
+    fsPromises.readFile(path.resolve(process.cwd(), 'server/auth.ts'), 'utf8'),
+    fsPromises.readFile(path.resolve(process.cwd(), 'server/routes.ts'), 'utf8')
   ]);
   assert.match(server, /server\.requestTimeout = 120_000/);
   assert.match(server, /server\.headersTimeout = 20_000/);
