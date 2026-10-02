@@ -3639,6 +3639,11 @@ apiRouter.post('/ai/generate', requireAuth, requirePermission('canAccessServerAn
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 30_000);
+    const safePrompt = redactSensitiveAiInput(prompt, 4000);
+    const safeContext = redactSensitiveAiInput(
+      typeof context === 'string' ? context : 'General Agency Operations',
+      4000
+    );
 
     try {
       const response = await fetch(
@@ -3655,7 +3660,7 @@ apiRouter.post('/ai/generate', requireAuth, requirePermission('canAccessServerAn
                 role: 'user',
                 parts: [
                   {
-                    text: `You are the executive AI copilot for Kapitech Agency Management System. Context: ${typeof context === 'string' ? context.slice(0, 4000) : 'General Agency Operations'}. Request: ${prompt}`
+                    text: `You are the executive AI copilot for Kapitech Agency Management System. Context: ${safeContext}. Request: ${safePrompt}`
                   }
                 ]
               }
@@ -4544,6 +4549,13 @@ function publicDocument(document: any): any {
 function canAccessDocument(req: AuthenticatedRequest, document: any): boolean {
   if (!req.user || isMasterAdministrator(req.user)) return true;
 
+  // Public recruitment resumes contain candidate PII and must not inherit the
+  // broad legacy document fallback. Keep access to CRM/recruitment operators
+  // and technical administrators unless an explicit ACL also grants access.
+  if (document?.metadata?.publicUpload === true && String(document?.category || '') === 'Recruitment') {
+    if (!req.user.permissions?.canManageCrm && !req.user.permissions?.canAccessServerAndApi) return false;
+  }
+
   const ownerUserId = String(document?.ownerUserId || '');
   const accessUserIds = Array.isArray(document?.accessUserIds)
     ? document.accessUserIds.map((id: unknown) => String(id))
@@ -4553,6 +4565,22 @@ function canAccessDocument(req: AuthenticatedRequest, document: any): boolean {
   if (!ownerUserId && accessUserIds.length === 0) return true;
 
   return ownerUserId === req.user.id || accessUserIds.includes(req.user.id);
+}
+
+export function redactSensitiveAiInput(value: unknown, maxLength = 4000): string {
+  let text = String(value ?? '').slice(0, maxLength);
+
+  text = text.replace(
+    /-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z0-9 ]*PRIVATE KEY-----/gi,
+    '[REDACTED PRIVATE KEY]'
+  );
+  text = text.replace(/\b(?:sk|pk|rk)-[A-Za-z0-9_-]{16,}\b/g, '[REDACTED API TOKEN]');
+  text = text.replace(/\bAIza[0-9A-Za-z_-]{20,}\b/g, '[REDACTED GOOGLE KEY]');
+  text = text.replace(/\b(?:ghp|github_pat)_[A-Za-z0-9_]{20,}\b/g, '[REDACTED GITHUB TOKEN]');
+  text = text.replace(/\bBearer\s+[A-Za-z0-9._~+/=-]{12,}/gi, 'Bearer [REDACTED TOKEN]');
+  text = text.replace(/\b(?:postgres(?:ql)?|mysql):\/\/[^\s]+/gi, '[REDACTED DATABASE URL]');
+  text = text.replace(/\b(password|passwd|pwd|secret|token|api[_ -]?key)\s*[:=]\s*[^\s,;]{8,}/gi, '$1=[REDACTED]');
+  return text;
 }
 
 function requireDocumentObjectAccess(req: AuthenticatedRequest, res: Response, document?: any): boolean {
