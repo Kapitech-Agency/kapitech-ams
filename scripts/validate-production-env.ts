@@ -76,6 +76,9 @@ export function validateProductionEnvironment(
   if (['disable', 'off', 'false', '0'].includes((env.KAPITECH_POSTGRES_SSL || '').trim().toLowerCase())) {
     errors.push('KAPITECH_POSTGRES_SSL must not disable TLS in production.');
   }
+  if (['false', '0', 'no'].includes((env.KAPITECH_POSTGRES_SSL_REJECT_UNAUTHORIZED || 'true').trim().toLowerCase())) {
+    errors.push('KAPITECH_POSTGRES_SSL_REJECT_UNAUTHORIZED must remain enabled in production.');
+  }
 
   const encryptionKey = required(env, 'KAPITECH_DATA_ENCRYPTION_KEY', errors);
   if (encryptionKey && !HEX64.test(encryptionKey)) {
