@@ -98,7 +98,8 @@ const PUBLIC_API_PATHS = new Set([
   '/cms/services',
   '/cms/projects',
   '/cms/testimonials',
-  '/leads/submit'
+  '/leads/submit',
+  '/leads/resume-upload'
 ]);
 
 function getPublicSiteOrigins(): Set<string> {
