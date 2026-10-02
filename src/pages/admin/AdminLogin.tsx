@@ -134,7 +134,7 @@ export const AdminLogin: React.FC = () => {
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-bg to-transparent" />
       </div>
 
-      <div className="relative z-10 mx-auto grid min-h-screen w-full max-w-[1360px] px-5 sm:px-8 lg:grid-cols-[minmax(0,0.96fr)_minmax(0,1.04fr)] lg:px-12 xl:px-16">
+      <div className="relative z-10 mx-auto grid min-h-screen w-full max-w-[1360px] px-5 sm:px-8 lg:grid-cols-2 lg:px-12 xl:px-16">
         <section className="flex min-h-screen items-center justify-center py-8 sm:py-10 lg:pr-10 xl:pr-16">
           <div className="w-full max-w-[400px]">
             <a
