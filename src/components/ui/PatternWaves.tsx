@@ -417,6 +417,34 @@ void main() {
 }
 `;
 
+type PatternWavesProps = {
+  preset?: string;
+  pattern?: string;
+  wave?: string;
+  spacing?: number;
+  markSize?: number;
+  depth?: number;
+  light?: number;
+  shine?: number;
+  contrast?: number;
+  speed?: number;
+  scale?: number;
+  direction?: number;
+  color?: string;
+  backgroundColor?: string;
+  opacity?: number;
+  fade?: string;
+  fadeSize?: number;
+  characters?: string;
+  interactive?: boolean;
+  cursorSize?: number;
+  cursorStrength?: number;
+  intro?: boolean;
+  paused?: boolean;
+  className?: string;
+  style?: Record<string, string | number>;
+};
+
 const PatternWaves = ({
   preset = 'silk',
   pattern,
@@ -443,7 +471,7 @@ const PatternWaves = ({
   paused = false,
   className = '',
   style
-}) => {
+}: PatternWavesProps) => {
   const containerRef = useRef(null);
   const settingsRef = useRef(null);
   const wakeRef = useRef(null);
