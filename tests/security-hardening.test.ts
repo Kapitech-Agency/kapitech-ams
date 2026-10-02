@@ -12,7 +12,7 @@ process.env.KAPITECH_DATA_DIR = testDataDir;
 process.env.KAPITECH_DB_BACKUP_DIR = path.join(testDataDir, 'backups');
 process.env.KAPITECH_DATA_ENCRYPTION_KEY = crypto.randomBytes(32).toString('hex');
 
-const { createMfaTrustToken, verifyMfaTrustToken, isMasterAdministrator } = await import('../server/auth.ts');
+const { createMfaTrustToken, verifyMfaTrustToken, isMasterAdministrator, isAllowedLoginOrigin } = await import('../server/auth.ts');
 const { isProductionRuntime } = await import('../server/runtime.ts');
 const { validateProductionEnvironment } = await import('../scripts/validate-production-env.ts');
 
@@ -40,6 +40,41 @@ test('Master access is not granted by a mutable role or username field', () => {
   assert.equal(isMasterAdministrator({ ...user, username: 'admin' }), false);
   assert.equal(isMasterAdministrator({ ...user, id: 'usr_root_admin' }), true);
   assert.equal(isMasterAdministrator({ ...user, stakeholderType: 'Master' }), true);
+});
+
+test('Login origin accepts the configured AMS URL and the canonical proxy host', () => {
+  assert.equal(
+    isAllowedLoginOrigin(
+      'https://ams.kapitech.id',
+      'https://ams.kapitech.id',
+      'https://ams.kapitech.id'
+    ),
+    true
+  );
+  assert.equal(
+    isAllowedLoginOrigin(
+      'https://ams.kapitech.id',
+      'https://old-ams.kapitech.id',
+      'https://ams.kapitech.id'
+    ),
+    true
+  );
+  assert.equal(
+    isAllowedLoginOrigin(
+      'https://attacker.example',
+      'https://ams.kapitech.id',
+      'https://ams.kapitech.id'
+    ),
+    false
+  );
+  assert.equal(
+    isAllowedLoginOrigin(
+      'not-a-valid-origin',
+      'https://ams.kapitech.id',
+      'https://ams.kapitech.id'
+    ),
+    false
+  );
 });
 
 test('Trusted MFA device token is invalidated when password hash changes', () => {
