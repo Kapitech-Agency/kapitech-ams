@@ -33,6 +33,7 @@ import {
   rateLimitPublic,
   rateLimitAuthenticated,
   requireAnyPermission,
+  isAllowedLoginOrigin,
   requireMaster,
   isMasterAdministrator,
   generateMfaSecret,
@@ -347,15 +348,9 @@ apiRouter.post('/auth/login', rateLimitPublic(10, 15 * 60 * 1000), async (req: R
   const origin = req.get('origin');
   if (origin) {
     const configuredAppUrl = String(process.env.APP_URL || '').trim();
-    let allowedOrigin = '';
-    try {
-      allowedOrigin = configuredAppUrl
-        ? new URL(configuredAppUrl).origin
-        : `${req.protocol}://${req.get('host')}`;
-    } catch {
-      allowedOrigin = `${req.protocol}://${req.get('host')}`;
-    }
-    if (origin !== allowedOrigin) {
+    const requestOrigin = req.protocol + '://' + req.get('host');
+
+    if (!isAllowedLoginOrigin(origin, configuredAppUrl, requestOrigin)) {
       res.status(403).json({ success: false, error: 'Security validation failed.' });
       return;
     }
