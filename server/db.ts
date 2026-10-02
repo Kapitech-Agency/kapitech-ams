@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { getDataSourceMode } from './data-source.ts';
+import { isProductionRuntime } from './runtime.ts';
 import { postgresAuditLogRepository } from './postgres-audit-log-repository.ts';
 
 // Path to persistent JSON database file
@@ -405,7 +406,7 @@ export function verifyPassword(password: string, user: StoredUser): boolean {
 
 // Initial seed accounts
 function getInitialSeedData(): DatabaseSchema {
-  const isProduction = process.env.NODE_ENV === 'production';
+  const isProduction = isProductionRuntime();
   const adminSalt = generateSalt();
   
 
@@ -1237,7 +1238,7 @@ export function getDatabase(): DatabaseSchema {
     return inMemoryDb;
   }
 
-  if (process.env.NODE_ENV === 'production' && !isDataEncryptionEnabled()) {
+  if (isProductionRuntime() && !isDataEncryptionEnabled()) {
     throw new Error(
       'Production persistent storage requires KAPITECH_DATA_ENCRYPTION_KEY. Configure a 32-byte key before starting AMS.'
     );
@@ -1338,7 +1339,7 @@ export function getDatabase(): DatabaseSchema {
     }
   }
 
-  if (process.env.NODE_ENV === 'production' && !isDataEncryptionEnabled()) {
+  if (isProductionRuntime() && !isDataEncryptionEnabled()) {
     throw new Error(
       'Production persistent storage requires KAPITECH_DATA_ENCRYPTION_KEY. Configure a 32-byte key before starting AMS.'
     );
