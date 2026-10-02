@@ -1313,6 +1313,135 @@ apiRouter.delete('/auth/users/:id', requireAuth, requireMaster, async (req: Auth
 // 2. LEADS & CONTACT SUBMISSIONS
 // ----------------------------------------------------
 
+apiRouter.post('/leads/resume-upload', rateLimitPublic(5, 15 * 60 * 1000), express.raw({ type: () => true, limit: '5mb' }), async (req: Request, res: Response): Promise<void> => {
+  const origin = req.get('origin');
+  if (origin && !/^https:\/\/(?:www\.)?kapitech\.id$/i.test(origin) && !/^https:\/\/ams\.kapitech\.id$/i.test(origin)) {
+    res.status(403).json({ success: false, error: 'Upload origin is not allowed.' });
+    return;
+  }
+
+  const body = req.body;
+  if (!Buffer.isBuffer(body) || body.length === 0) {
+    res.status(400).json({ success: false, error: 'A non-empty resume file is required.' });
+    return;
+  }
+
+  const contentType = String(req.get('content-type') || '').split(';')[0].trim().toLowerCase();
+  const rawFilename = String(req.query.filename || 'resume');
+  const filename = path.basename(rawFilename).replace(/[\\/\0]/g, '').slice(0, 180) || 'resume';
+  const extension = filename.toLowerCase().split('.').pop() || '';
+  const mimeByExtension: Record<string, string> = {
+    pdf: 'application/pdf',
+    doc: 'application/msword',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  };
+  const mimeType = DOCUMENT_MIME_TYPES.has(contentType) ? contentType : mimeByExtension[extension] || '';
+
+  if (!mimeType || !['pdf', 'doc', 'docx'].includes(extension)) {
+    res.status(415).json({ success: false, error: 'Only PDF, DOC, and DOCX resume files are allowed.' });
+    return;
+  }
+
+  if (body.length > 5 * 1024 * 1024) {
+    res.status(413).json({ success: false, error: 'Resume exceeds the 5 MB upload limit.' });
+    return;
+  }
+
+  const configuredProvider = process.env.KAPITECH_DOCUMENT_STORAGE_PROVIDER?.trim().toLowerCase() || '';
+  if (process.env.NODE_ENV === 'production' && getDataSourceMode() === 'postgres' && configuredProvider !== 's3' && configuredProvider !== 's3-compatible') {
+    res.status(503).json({ success: false, error: 'Durable document storage is required for resume uploads.' });
+    return;
+  }
+
+  const now = new Date().toISOString();
+  const documentId = `doc_public_resume_${Date.now()}_${crypto.randomBytes(8).toString('hex')}`;
+  const storageKey = crypto.randomBytes(32).toString('hex');
+  const storage = getDocumentStorage();
+
+  let encryptedPayload: Buffer;
+  let storageSha256: string;
+
+  try {
+    encryptedPayload = encryptPrivateDocument(body);
+    storageSha256 = crypto.createHash('sha256').update(encryptedPayload).digest('hex');
+    await storage.put(storageKey, encryptedPayload);
+  } catch (error) {
+    console.error('[Public Resume] Storage failed:', error);
+    res.status(500).json({ success: false, error: 'Resume storage failed.' });
+    return;
+  }
+
+  const contentSha256 = crypto.createHash('sha256').update(body).digest('hex');
+  const document = {
+    id: documentId,
+    name: filename,
+    title: filename,
+    type: 'Resume',
+    mimeType,
+    size: humanFileSize(body.length),
+    sizeBytes: body.length,
+    category: 'Recruitment',
+    relatedEntity: 'Public Lead Upload',
+    relatedId: '',
+    owner: '',
+    ownerUserId: undefined,
+    accessUserIds: [],
+    sourceType: 'private_file',
+    status: 'ready',
+    uploadedDate: now.split('T')[0],
+    uploadedAt: now,
+    storageKey,
+    contentSha256,
+    storageSha256,
+    storageVersion: 1,
+    storageProvider: storage.provider,
+    integrityCheckedAt: now,
+    createdAt: now,
+    updatedAt: now,
+    metadata: {
+      publicUpload: true,
+      originalFilename: filename
+    }
+  };
+
+  try {
+    if (getDataSourceMode() === 'postgres') {
+      await postgresDocumentRepository.create(document, {
+        action: 'PUBLIC_RESUME_UPLOADED',
+        actor: 'public_recruitment',
+        actorRole: 'public_lead',
+        ip: req.ip,
+        userAgent: req.headers['user-agent'] as string,
+        details: `Stored public recruitment resume "${filename}" (${body.length} bytes).`,
+        severity: 'info'
+      });
+    } else {
+      const db = getDatabase();
+      if (!db.documents) db.documents = [];
+      db.documents.unshift(document);
+      db.documents = db.documents.slice(0, 500);
+      saveDatabase(db);
+    }
+  } catch (error) {
+    try { await storage.delete(storageKey); } catch (cleanupError) {
+      console.error('[Public Resume] Failed to clean up orphaned upload:', cleanupError);
+    }
+    console.error('[Public Resume] Metadata persistence failed:', error);
+    res.status(500).json({ success: false, error: 'Resume metadata could not be saved.' });
+    return;
+  }
+
+  const downloadUrl = `${req.protocol}://${req.get('host')}/api/documents/${encodeURIComponent(documentId)}/content`;
+  res.status(201).json({
+    success: true,
+    documentId,
+    resumeUrl: downloadUrl,
+    filename,
+    mimeType,
+    sizeBytes: body.length
+  });
+});
+
 apiRouter.post('/leads/submit', rateLimitPublic(10, 60 * 1000), async (req: Request, res: Response): Promise<void> => {
   const {
     fullName,
