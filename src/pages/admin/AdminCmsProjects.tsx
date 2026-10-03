@@ -181,6 +181,22 @@ export const AdminCmsProjects: React.FC = () => {
     }
   };
 
+  const handleTogglePublished = async (project: ProjectItem) => {
+    const nextPublished = project.isPublished === false;
+    const nextProject = { ...project, isPublished: nextPublished };
+    try {
+      const res = await api.cms.updateProject(nextProject.id, nextProject);
+      if (res.success) {
+        await loadProjects();
+        setStatusMessage(nextPublished ? 'Case study published successfully.' : 'Case study unpublished from the public site.');
+      } else {
+        setStatusMessage(res.error || 'Update failed.');
+      }
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : 'Update failed.');
+    }
+  };
+
   const handleFileUpload = (file: File) => {
     if (!file.type.startsWith('image/')) {
       setStatusMessage(language === 'id' ? 'Hanya file gambar yang didukung (PNG, JPG, WebP, SVG).' : 'Only image files are supported (PNG, JPG, WebP, SVG).');
@@ -305,8 +321,20 @@ export const AdminCmsProjects: React.FC = () => {
   const filteredProjects = projects.filter((project) => {
     const matchesPillar = filterPillar === 'All' || project.pillar === filterPillar;
     const query = searchQuery.trim().toLowerCase();
-    const searchable = [project.title, project.client, project.industry, project.service]
-      .map((value) => String(value || '').toLowerCase());
+    const searchable = [
+      project.title,
+      project.client,
+      project.industry,
+      project.service,
+      project.desc,
+      project.descId,
+      project.challenge,
+      project.challengeId,
+      project.solution,
+      project.solutionId,
+      ...project.deliverables,
+      ...project.technologies
+    ].map((value) => String(value || '').toLowerCase());
     return matchesPillar && (!query || searchable.some((value) => value.includes(query)));
   });
   const totalProjectPages = Math.max(1, Math.ceil(filteredProjects.length / pageSize));
@@ -455,13 +483,14 @@ export const AdminCmsProjects: React.FC = () => {
       ) : (
         <>
                 <div className="overflow-x-auto rounded-card border border-line bg-panel">
-          <table className="ams-table w-full min-w-[980px] border-collapse text-left text-xs">
+          <table className="ams-table w-full min-w-[1080px] border-collapse text-left text-xs">
             <thead>
               <tr className="border-b border-line bg-bg text-[10px] font-medium text-muted">
                 <th className="px-4 py-3">Project</th>
                 <th className="px-4 py-3">Pillar</th>
                 <th className="px-4 py-3">Service</th>
                 <th className="px-4 py-3">Year</th>
+                <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Featured</th>
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
@@ -483,6 +512,19 @@ export const AdminCmsProjects: React.FC = () => {
                   <td className="px-3 py-2"><span className="inline-flex max-w-[180px] truncate rounded-badge border border-accent/25 bg-accent/10 px-2 py-1 text-[10px] font-medium text-accent-text">{project.pillar || 'Unspecified'}</span></td>
                   <td className="max-w-[220px] px-4 py-2.5"><span className="block truncate text-[11px] text-muted">{project.service || 'Not set'}</span></td>
                   <td className="px-4 py-2.5 font-mono text-[11px] tabular-nums text-fg">{project.year || '—'}</td>
+                  <td className="px-3 py-2">
+                    <button
+                      type="button"
+                      onClick={() => handleTogglePublished(project)}
+                      className={project.isPublished === false
+                        ? 'inline-flex h-8 items-center gap-1 rounded-control border border-line bg-bg px-2.5 text-[10px] font-semibold text-muted hover:text-fg'
+                        : 'inline-flex h-8 items-center gap-1 rounded-control border border-success/20 bg-success/10 px-2.5 text-[10px] font-semibold text-success hover:bg-success/15'}
+                      aria-pressed={project.isPublished !== false}
+                    >
+                      <Eye size={11} />
+                      {project.isPublished === false ? 'Draft' : 'Published'}
+                    </button>
+                  </td>
                   <td className="px-3 py-2">
                     <button type="button" onClick={() => handleToggleFeatured(project)} className={`inline-flex h-8 items-center gap-1 rounded-control border px-2.5 text-[10px] font-semibold ${project.featured ? 'border-warning/20 bg-warning/10 text-warning' : 'border-line bg-bg text-muted hover:text-fg'}`} aria-pressed={project.featured}>
                       <Star size={11} fill={project.featured ? 'currentColor' : 'none'} />
