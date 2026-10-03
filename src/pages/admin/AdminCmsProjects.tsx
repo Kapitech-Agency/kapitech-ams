@@ -52,6 +52,10 @@ const normalizeCmsProject = (project: ProjectItem): ProjectItem => ({
   challengeId: project.challengeId || '',
   solution: project.solution || '',
   solutionId: project.solutionId || '',
+  execution: project.execution || '',
+  executionId: project.executionId || '',
+  outcome: project.outcome || '',
+  outcomeId: project.outcomeId || '',
   deliverables: Array.isArray(project.deliverables) ? project.deliverables : [],
   technologies: Array.isArray(project.technologies) ? project.technologies : [],
   impact: Array.isArray(project.impact) ? project.impact : [],
@@ -118,6 +122,10 @@ export const AdminCmsProjects: React.FC = () => {
       challengeId: '',
       solution: '',
       solutionId: '',
+      execution: '',
+      executionId: '',
+      outcome: '',
+      outcomeId: '',
       deliverables: [],
       technologies: [],
       impact: [],
@@ -635,6 +643,10 @@ export const AdminCmsProjects: React.FC = () => {
                         <div className="text-[9px] font-semibold uppercase tracking-[0.12em] text-accent-text">02 · Kapitech Solution</div>
                         <p className="mt-2 text-xs leading-6 text-muted">{editingProject.solutionId || editingProject.solution || 'No Kapitech solution entered.'}</p>
                       </section>
+                      <section className="rounded-control border border-line bg-panel p-3">
+                        <div className="text-[9px] font-semibold uppercase tracking-[0.12em] text-muted">03 · Execution Narrative</div>
+                        <p className="mt-2 text-xs leading-6 text-muted">{editingProject.executionId || editingProject.execution || 'No execution narrative entered.'}</p>
+                      </section>
                     </div>
 
                     <section>
@@ -656,7 +668,8 @@ export const AdminCmsProjects: React.FC = () => {
 
                     <section>
                       <div className="text-[9px] font-semibold uppercase tracking-[0.12em] text-muted">04 · Outcome & Client Impact</div>
-                      <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                      <p className="mt-2 text-xs leading-6 text-muted">{editingProject.outcomeId || editingProject.outcome || 'No client outcome narrative entered.'}</p>
+                      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
                         {editingProject.impact.length > 0 ? editingProject.impact.map((item, idx) => (
                           <div key={idx} className="rounded-control border border-line bg-panel p-3">
                             <div className="text-lg font-semibold text-fg">{item.value}</div>
@@ -833,6 +846,14 @@ export const AdminCmsProjects: React.FC = () => {
                         <label className="mb-1 block text-muted font-medium">02 · Kapitech Solution</label>
                         <textarea rows={5} value={editingProject.solution} onChange={(e) => setEditingProject({ ...editingProject, solution: e.target.value })} placeholder="What strategy, design, engineering, or production approach did Kapitech use?" className="ams-control w-full resize-y text-xs leading-5" />
                       </div>
+                      <div>
+                        <label className="mb-1 block text-muted font-medium">03 · Execution Narrative</label>
+                        <textarea rows={5} value={editingProject.execution} onChange={(e) => setEditingProject({ ...editingProject, execution: e.target.value })} placeholder="Explain how the work was executed: process, phases, collaboration, implementation, production, or deployment." className="ams-control w-full resize-y text-xs leading-5" />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-muted font-medium">04 · Client Outcome / Impact Narrative</label>
+                        <textarea rows={5} value={editingProject.outcome} onChange={(e) => setEditingProject({ ...editingProject, outcome: e.target.value })} placeholder="Explain what changed for the client after delivery and why the result mattered." className="ams-control w-full resize-y text-xs leading-5" />
+                      </div>
                     </div>
 
                     <div className="space-y-3">
@@ -848,6 +869,14 @@ export const AdminCmsProjects: React.FC = () => {
                       <div>
                         <label className="mb-1 block text-muted font-medium">02 · Solusi Kapitech</label>
                         <textarea rows={5} value={editingProject.solutionId} onChange={(e) => setEditingProject({ ...editingProject, solutionId: e.target.value })} placeholder="Strategi, desain, engineering, atau pendekatan produksi apa yang digunakan Kapitech?" className="ams-control w-full resize-y text-xs leading-5" />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-muted font-medium">03 · Narasi Eksekusi</label>
+                        <textarea rows={5} value={editingProject.executionId} onChange={(e) => setEditingProject({ ...editingProject, executionId: e.target.value })} placeholder="Jelaskan bagaimana pekerjaan dieksekusi: proses, tahapan, kolaborasi, implementasi, produksi, atau deployment." className="ams-control w-full resize-y text-xs leading-5" />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-muted font-medium">04 · Narasi Hasil / Dampak</label>
+                        <textarea rows={5} value={editingProject.outcomeId} onChange={(e) => setEditingProject({ ...editingProject, outcomeId: e.target.value })} placeholder="Jelaskan perubahan yang dirasakan klien setelah delivery dan mengapa hasil tersebut penting." className="ams-control w-full resize-y text-xs leading-5" />
                       </div>
                     </div>
                   </div>
