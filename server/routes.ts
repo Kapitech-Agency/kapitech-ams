@@ -257,7 +257,7 @@ function normalizeCmsProjectPatch(source: Record<string, unknown>): Record<strin
   }
 
   if (patch.featured !== undefined) patch.featured = Boolean(patch.featured);
-  if (patch.gallery !== undefined) patch.gallery = normalizeStringArray(patch.gallery, 20, 2000).filter((url) => /^https?:\\/\\//i.test(url));
+  if (patch.gallery !== undefined) patch.gallery = normalizeStringArray(patch.gallery, 20, 2000).filter((url) => /^https?:\/\//i.test(url));
 
   if (patch.isPublished !== undefined) patch.isPublished = Boolean(patch.isPublished);
   if (patch.deliverables !== undefined) patch.deliverables = normalizeStringArray(patch.deliverables, 24, 240);
