@@ -223,6 +223,80 @@ function normalizeStringArray(value: unknown, maxItems = 50, maxLength = 160): s
   return value.slice(0, maxItems).map(item => cleanText(item, maxLength)).filter(Boolean);
 }
 
+function slugifyCmsProject(value: unknown): string {
+  return cleanText(value, 160)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 120);
+}
+
+function normalizeCmsProjectPatch(source: Record<string, unknown>): Record<string, unknown> {
+  const patch = pickFields(source, [
+    'slug', 'title', 'client', 'industry', 'pillar', 'service', 'featured', 'image',
+    'desc', 'descId', 'challenge', 'challengeId', 'solution', 'solutionId',
+    'deliverables', 'technologies', 'impact', 'year', 'isPublished'
+  ]);
+
+  for (const key of ['title', 'client', 'industry', 'service', 'desc', 'descId', 'challenge', 'challengeId', 'solution', 'solutionId'] as const) {
+    if (patch[key] !== undefined) patch[key] = cleanText(patch[key], key === 'title' ? 240 : 5000);
+  }
+
+  if (patch.slug !== undefined) patch.slug = slugifyCmsProject(patch.slug);
+  if (patch.image !== undefined) patch.image = cleanText(patch.image, 500_000);
+  if (patch.year !== undefined) {
+    const year = cleanText(patch.year, 4);
+    patch.year = /^\d{4}$/.test(year) ? year : '';
+  }
+
+  if (patch.pillar !== undefined) {
+    const pillar = cleanText(patch.pillar, 80);
+    if (!['Visual Experience', 'Innovation Development'].includes(pillar)) throw new Error('Invalid CMS project pillar.');
+    patch.pillar = pillar;
+  }
+
+  if (patch.featured !== undefined) patch.featured = Boolean(patch.featured);
+  if (patch.isPublished !== undefined) patch.isPublished = Boolean(patch.isPublished);
+  if (patch.deliverables !== undefined) patch.deliverables = normalizeStringArray(patch.deliverables, 24, 240);
+  if (patch.technologies !== undefined) patch.technologies = normalizeStringArray(patch.technologies, 32, 120);
+  if (patch.impact !== undefined) {
+    patch.impact = Array.isArray(patch.impact)
+      ? patch.impact.slice(0, 8).map((metric: any) => ({
+          label: cleanText(metric?.label, 120),
+          value: cleanText(metric?.value, 120)
+        })).filter((metric: any) => metric.label && metric.value)
+      : [];
+  }
+
+  return patch;
+}
+
+async function resolveCmsProjectSlug(candidateInput: unknown, fallbackTitle: unknown, currentId?: string): Promise<string> {
+  const base = slugifyCmsProject(candidateInput) || slugifyCmsProject(fallbackTitle);
+  if (!base) return '';
+
+  const projects = getDataSourceMode() === 'postgres'
+    ? await postgresCmsRepository.list('project')
+    : getDatabase().cmsProjects;
+
+  const used = new Set(
+    projects
+      .filter((item: any) => String(item?.id || '') !== String(currentId || ''))
+      .map((item: any) => slugifyCmsProject(item?.slug))
+      .filter(Boolean)
+  );
+
+  let slug = base;
+  let suffix = 2;
+  while (used.has(slug)) {
+    const suffixText = '-' + suffix;
+    slug = (base.slice(0, Math.max(1, 120 - suffixText.length)) + suffixText).replace(/-+/g, '-');
+    suffix += 1;
+  }
+
+  return slug;
+}
+
 function getInvoicePaidAmount(invoice: any): number {
   const payments = Array.isArray(invoice?.payments) ? invoice.payments : [];
   if (payments.length > 0) {
@@ -3358,16 +3432,33 @@ apiRouter.get('/cms/projects', rateLimitPublic(), async (req: Request, res: Resp
 
 apiRouter.post('/cms/projects', requireAuth, requirePermission('canManageCmsContent'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const item = req.body || {};
-  const now = new Date().toISOString();
-  const newProj = {
-    id: `proj_cms_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
-    ...pickFields(item, ['slug','title','client','industry','pillar','service','featured','image','desc','descId','challenge','challengeId','solution','solutionId','deliverables','technologies','impact','year','isPublished']),
-    slug: cleanText(item.slug, 160).toLowerCase().replace(/[^a-z0-9-]/g, '-'),
-    title: cleanText(item.title, 240),
-    isPublished: item.isPublished !== undefined ? Boolean(item.isPublished) : true,
-    createdAt: now,
-    updatedAt: now
-  };
+  try {
+    const normalized = normalizeCmsProjectPatch(item);
+    const title = cleanText(item.title, 240);
+    if (!title) {
+      res.status(400).json({ success: false, error: 'Case study title is required.' });
+      return;
+    }
+    const slug = await resolveCmsProjectSlug(normalized.slug, title);
+    if (!slug) {
+      res.status(400).json({ success: false, error: 'A valid case study slug could not be generated.' });
+      return;
+    }
+    const now = new Date().toISOString();
+    const newProj = {
+      id: `proj_cms_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
+      ...normalized,
+      slug,
+      title,
+      isPublished: item.isPublished !== undefined ? Boolean(item.isPublished) : true,
+      createdAt: now,
+      updatedAt: now
+    };
+  } catch (error) {
+    res.status(400).json({ success: false, error: error instanceof Error ? error.message : 'Invalid case study data.' });
+    return;
+  }
+
   if (getDataSourceMode() === 'postgres') {
     const project = await postgresCmsRepository.create('project', newProj, makeAuditEntry(req, 'CMS_PROJECT_CREATED', `Created CMS project "${newProj.title}".`, 'info'));
     if (getDataSourceMode() === 'json') recordAuditLog({ action: 'CMS_PROJECT_CREATED', actor: req.user!.username, actorRole: req.user!.role, ip: req.ip, userAgent: req.headers['user-agent'] as string, details: `Created CMS project "${project.title || newProj.title}".`, severity: 'info' });
@@ -3383,7 +3474,22 @@ apiRouter.post('/cms/projects', requireAuth, requirePermission('canManageCmsCont
 
 apiRouter.put('/cms/projects/:id', requireAuth, requirePermission('canManageCmsContent'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const { id } = req.params;
-  const patch = pickFields(req.body || {}, ['slug','title','client','industry','pillar','service','featured','image','desc','descId','challenge','challengeId','solution','solutionId','deliverables','technologies','impact','year','isPublished']);
+  let patch: Record<string, unknown>;
+  try {
+    patch = normalizeCmsProjectPatch(req.body || {});
+  } catch (error) {
+    res.status(400).json({ success: false, error: error instanceof Error ? error.message : 'Invalid case study data.' });
+    return;
+  }
+
+  if (patch.title !== undefined && !String(patch.title).trim()) {
+    res.status(400).json({ success: false, error: 'Case study title cannot be empty.' });
+    return;
+  }
+
+  if (patch.slug !== undefined || patch.title !== undefined) {
+    patch.slug = await resolveCmsProjectSlug(patch.slug, patch.title, id);
+  }
   if (getDataSourceMode() === 'postgres') {
     const project = await postgresCmsRepository.update('project', id, patch, makeAuditEntry(req, 'CMS_PROJECT_UPDATED', `Updated CMS project "${patch.title || id}".`, 'info'));
     if (!project) { res.status(404).json({ success: false, error: 'Project not found.' }); return; }
