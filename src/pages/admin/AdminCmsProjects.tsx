@@ -209,8 +209,8 @@ export const AdminCmsProjects: React.FC = () => {
       setStatusMessage(language === 'id' ? 'Hanya file gambar yang didukung (PNG, JPG, WebP, SVG).' : 'Only image files are supported (PNG, JPG, WebP, SVG).');
       return;
     }
-    if (file.size > 10 * 1024 * 1024) {
-      setStatusMessage(language === 'id' ? 'Ukuran gambar maksimal 10MB.' : 'Image size must not exceed 10MB.');
+    if (file.size > 350 * 1024) {
+      setStatusMessage(language === 'id' ? 'Upload gambar lokal maksimal 350KB. Untuk file lebih besar, gunakan URL gambar yang sudah di-host.' : 'Local image uploads are limited to 350KB. For larger files, use a hosted image URL.');
       return;
     }
 
@@ -708,7 +708,6 @@ export const AdminCmsProjects: React.FC = () => {
                       <label className="mb-1 block text-muted font-semibold">Slug *</label>
                       <input
                         type="text"
-                        required
                         value={editingProject.slug || ''}
                         onChange={(e) => setEditingProject({ ...editingProject, slug: slugifyCaseStudy(e.target.value) })}
                         placeholder="bank-digital-nusantara-mobile"
