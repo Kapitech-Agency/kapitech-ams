@@ -1,6 +1,7 @@
 export interface ProjectItem {
   id: string;
   slug?: string;
+  isPublished?: boolean;
   title: string;
   client: string;
   industry: string;
