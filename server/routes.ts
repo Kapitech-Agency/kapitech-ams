@@ -3432,6 +3432,7 @@ apiRouter.get('/cms/projects', rateLimitPublic(), async (req: Request, res: Resp
 
 apiRouter.post('/cms/projects', requireAuth, requirePermission('canManageCmsContent'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const item = req.body || {};
+  let newProj: Record<string, any>;
   try {
     const normalized = normalizeCmsProjectPatch(item);
     const title = cleanText(item.title, 240);
@@ -3445,7 +3446,7 @@ apiRouter.post('/cms/projects', requireAuth, requirePermission('canManageCmsCont
       return;
     }
     const now = new Date().toISOString();
-    const newProj = {
+    newProj = {
       id: `proj_cms_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
       ...normalized,
       slug,
