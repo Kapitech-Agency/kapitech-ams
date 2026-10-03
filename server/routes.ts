@@ -233,7 +233,7 @@ function slugifyCmsProject(value: unknown): string {
 
 function normalizeCmsProjectPatch(source: Record<string, unknown>): Record<string, unknown> {
   const patch = pickFields(source, [
-    'slug', 'title', 'client', 'industry', 'pillar', 'service', 'featured', 'image',
+    'slug', 'title', 'client', 'industry', 'pillar', 'service', 'featured', 'image', 'gallery',
     'desc', 'descId', 'challenge', 'challengeId', 'solution', 'solutionId',
     'execution', 'executionId', 'outcome', 'outcomeId',
     'deliverables', 'technologies', 'impact', 'year', 'isPublished'
@@ -257,6 +257,8 @@ function normalizeCmsProjectPatch(source: Record<string, unknown>): Record<strin
   }
 
   if (patch.featured !== undefined) patch.featured = Boolean(patch.featured);
+  if (patch.gallery !== undefined) patch.gallery = normalizeStringArray(patch.gallery, 20, 2000).filter((url) => /^https?:\\/\\//i.test(url));
+
   if (patch.isPublished !== undefined) patch.isPublished = Boolean(patch.isPublished);
   if (patch.deliverables !== undefined) patch.deliverables = normalizeStringArray(patch.deliverables, 24, 240);
   if (patch.technologies !== undefined) patch.technologies = normalizeStringArray(patch.technologies, 32, 120);
