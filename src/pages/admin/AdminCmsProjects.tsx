@@ -30,6 +30,14 @@ import { Skeleton } from '../../components/ui/Skeleton';
 import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 
+const slugifyCaseStudy = (value: string): string =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 120);
+
 const normalizeCmsProject = (project: ProjectItem): ProjectItem => ({
   ...project,
   slug: project.slug || project.id || '',
@@ -47,7 +55,8 @@ const normalizeCmsProject = (project: ProjectItem): ProjectItem => ({
   deliverables: Array.isArray(project.deliverables) ? project.deliverables : [],
   technologies: Array.isArray(project.technologies) ? project.technologies : [],
   impact: Array.isArray(project.impact) ? project.impact : [],
-  year: project.year || ''
+  year: project.year || '',
+  isPublished: project.isPublished !== false
 });
 
 export const AdminCmsProjects: React.FC = () => {
@@ -112,14 +121,24 @@ export const AdminCmsProjects: React.FC = () => {
       deliverables: [],
       technologies: [],
       impact: [],
-      year: new Date().getFullYear().toString()
+      year: new Date().getFullYear().toString(),
+      isPublished: true,
+      slug: ''
     };
+    setTechInput('');
+    setDeliverableInput('');
+    setMetricLabel('');
+    setMetricValue('');
     setEditingProject(newTemplate);
     setModalTab('details');
     setIsModalOpen(true);
   };
 
   const handleOpenEdit = (project: ProjectItem) => {
+    setTechInput('');
+    setDeliverableInput('');
+    setMetricLabel('');
+    setMetricValue('');
     setEditingProject(normalizeCmsProject(project));
     setModalTab('details');
     setIsModalOpen(true);
@@ -259,10 +278,16 @@ export const AdminCmsProjects: React.FC = () => {
       return;
     }
 
+    const payload: ProjectItem = {
+      ...editingProject,
+      slug: slugifyCaseStudy(editingProject.slug || editingProject.title) || editingProject.id,
+      isPublished: editingProject.isPublished !== false
+    };
+
     try {
-      const res = editingProject.id && projects.some(p => p.id === editingProject.id)
-        ? await api.cms.updateProject(editingProject.id, editingProject)
-        : await api.cms.createProject(editingProject);
+      const res = payload.id && projects.some(p => p.id === payload.id)
+        ? await api.cms.updateProject(payload.id, payload)
+        : await api.cms.createProject(payload);
       if (!res.success) {
         setStatusMessage(res.error || 'Failed to save case study.');
         return;
@@ -525,269 +550,406 @@ export const AdminCmsProjects: React.FC = () => {
             </div>
 
             {modalTab === 'preview' ? (
-              <div className="py-4 flex flex-col items-center">
-                <div className="text-[11px] text-muted mb-4">
-                  Live Showcase Preview (as rendered on <code className="text-fg">kapitech.id/work</code>):
+              <div className="space-y-5 py-4">
+                <div className="rounded-card border border-line bg-bg p-3 text-[11px] text-muted">
+                  Live case study preview. This is the content structure that will feed the public <code className="text-fg">/work</code> detail modal.
                 </div>
-                <div className="w-full max-w-sm max-h-[calc(100dvh-24px)] bg-panel border border-line rounded-card overflow-y-auto">
-                  <div className="relative h-48 w-full bg-bg">
-                    <img src={editingProject.image} alt={editingProject.title} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-bg/40" />
-                    <div className="absolute top-3 left-3 px-2 py-0.5 rounded-badge text-[10px] font-sans font-semibold bg-accent/10 text-accent-text border border-accent/30">
-                      {editingProject.pillar}
-                    </div>
-                    <div className="absolute bottom-3 left-3 right-3">
-                      <div className="text-[10px] text-fg/80">{editingProject.client || 'Client Name'}</div>
-                      <div className="text-base font-semibold font-sans text-fg truncate">
-                        {editingProject.title || 'Untitled Case Study'}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-3 space-y-2.5 font-sans text-xs">
-                    <p className="text-muted text-xs font-sans">
-                      {editingProject.descId || editingProject.desc || 'No description entered.'}
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                      {editingProject.technologies.map((t, idx) => (
-                        <span key={idx} className="text-[10px] px-2 py-0.5 rounded-badge bg-panel border border-line text-muted">
-                          {t}
-                        </span>
-                      ))}
-                    </div>
-                    {editingProject.impact && editingProject.impact.length > 0 && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-line">
-                        {editingProject.impact.map((imp, idx) => (
-                          <div key={idx} className="bg-panel p-2 rounded-control border border-line">
-                            <div className="text-[9px] text-muted normal-case">{imp.label}</div>
-                            <div className="text-xs font-semibold text-success">{imp.value}</div>
-                          </div>
-                        ))}
+
+                <div className="overflow-hidden rounded-card border border-line bg-bg">
+                  <div className="relative h-48 bg-panel">
+                    {editingProject.image ? (
+                      <img src={editingProject.image} alt={editingProject.title || 'Case study'} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-muted">
+                        <ImageIcon size={28} />
                       </div>
                     )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/35 to-transparent" />
+                    <div className="absolute inset-x-4 bottom-4">
+                      <div className="mb-2 flex flex-wrap items-center gap-1.5 text-[9px] font-medium uppercase tracking-[0.08em]">
+                        <span className="rounded-badge border border-accent/30 bg-accent/10 px-2 py-1 text-accent-text">{editingProject.pillar}</span>
+                        <span className="rounded-badge border border-line bg-bg/80 px-2 py-1 text-muted">{editingProject.service}</span>
+                        <span className="rounded-badge border border-line bg-bg/80 px-2 py-1 font-mono tabular-nums text-muted">{editingProject.year}</span>
+                      </div>
+                      <p className="text-[10px] text-muted">{editingProject.client || 'Client'} · {editingProject.industry || 'Industry'}</p>
+                      <h3 className="mt-1 text-lg font-semibold leading-tight text-fg">{editingProject.title || 'Untitled case study'}</h3>
+                    </div>
+                  </div>
+
+                  <div className="space-y-5 p-4">
+                    <section>
+                      <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-muted">Project Context</p>
+                      <p className="mt-2 text-xs leading-6 text-fg">
+                        {editingProject.descId || editingProject.desc || 'No project summary entered.'}
+                      </p>
+                    </section>
+
+                    <div className="grid gap-3">
+                      <section className="rounded-control border border-line bg-panel p-3">
+                        <div className="text-[9px] font-semibold uppercase tracking-[0.12em] text-accent-text">01 · Client Challenge</div>
+                        <p className="mt-2 text-xs leading-6 text-muted">{editingProject.challengeId || editingProject.challenge || 'No client challenge entered.'}</p>
+                      </section>
+                      <section className="rounded-control border border-accent/20 bg-accent/5 p-3">
+                        <div className="text-[9px] font-semibold uppercase tracking-[0.12em] text-accent-text">02 · Kapitech Solution</div>
+                        <p className="mt-2 text-xs leading-6 text-muted">{editingProject.solutionId || editingProject.solution || 'No Kapitech solution entered.'}</p>
+                      </section>
+                    </div>
+
+                    <section>
+                      <div className="text-[9px] font-semibold uppercase tracking-[0.12em] text-muted">03 · Execution & Delivery</div>
+                      <div className="mt-2 space-y-2">
+                        {editingProject.deliverables.length > 0 ? editingProject.deliverables.map((item, idx) => (
+                          <div key={idx} className="flex items-start gap-2 rounded-control border border-line bg-panel px-3 py-2 text-xs text-fg">
+                            <span className="font-mono text-accent-text">{String(idx + 1).padStart(2, '0')}</span>
+                            <span>{item}</span>
+                          </div>
+                        )) : <p className="mt-2 text-xs text-muted">No deliverables entered.</p>}
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {editingProject.technologies.map((item, idx) => (
+                          <span key={idx} className="rounded-badge border border-line bg-panel px-2 py-1 text-[10px] font-mono text-muted">{item}</span>
+                        ))}
+                      </div>
+                    </section>
+
+                    <section>
+                      <div className="text-[9px] font-semibold uppercase tracking-[0.12em] text-muted">04 · Outcome & Client Impact</div>
+                      <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                        {editingProject.impact.length > 0 ? editingProject.impact.map((item, idx) => (
+                          <div key={idx} className="rounded-control border border-line bg-panel p-3">
+                            <div className="text-lg font-semibold text-fg">{item.value}</div>
+                            <div className="mt-1 text-[9px] uppercase tracking-[0.08em] text-muted">{item.label}</div>
+                          </div>
+                        )) : <p className="text-xs text-muted">No impact metrics entered.</p>}
+                      </div>
+                    </section>
                   </div>
                 </div>
               </div>
             ) : (
-              <form id="case-study-form" data-ams-feature-slug="cms-project-form" data-ams-slug="cms-project-form" onSubmit={handleSaveModal} className="space-y-4">
-                
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <form id="case-study-form" data-ams-feature-slug="cms-project-form" data-ams-slug="cms-project-form" onSubmit={handleSaveModal} className="space-y-5">
+                <section className="space-y-3">
                   <div>
-                    <label className="block text-muted mb-1 font-semibold">Project Title *</label>
-                    <input
-                      type="text"
-                      required
-                      value={editingProject.title}
-                      onChange={(e) => setEditingProject({ ...editingProject, title: e.target.value })}
-                      placeholder="e.g. Bank Digital Nusantara Mobile"
-                      className="ams-control w-full text-xs"
-                    />
+                    <h4 className="text-sm font-semibold text-fg">Identity & publishing</h4>
+                    <p className="mt-1 text-[11px] leading-5 text-muted">Core fields used by the directory, filters, featured spotlight, and public case study detail.</p>
                   </div>
 
-                  <div>
-                    <label className="block text-muted mb-1 font-semibold">Client Name / Company</label>
-                    <input
-                      type="text"
-                      value={editingProject.client}
-                      onChange={(e) => setEditingProject({ ...editingProject, client: e.target.value })}
-                      placeholder="PT Bank Digital Nusantara"
-                      className="ams-control w-full text-xs"
-                    />
-                  </div>
-                </div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-1 block text-muted font-semibold">Project Title *</label>
+                      <input
+                        type="text"
+                        required
+                        value={editingProject.title}
+                        onChange={(e) => setEditingProject({ ...editingProject, title: e.target.value })}
+                        onBlur={() => {
+                          if (!editingProject.slug.trim()) setEditingProject((current) => current ? { ...current, slug: slugifyCaseStudy(current.title) } : current);
+                        }}
+                        placeholder="e.g. Bank Digital Nusantara Mobile"
+                        className="ams-control w-full text-xs"
+                      />
+                    </div>
 
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                  <div>
-                    <label className="block text-muted mb-1 font-semibold">Studio Pillar</label>
-                    <CustomSelect value={editingProject.pillar} onChange={(value) => setEditingProject({ ...editingProject, pillar: value as any })} options={[{value:'Visual Experience',label:'Visual Experience'},{value:'Innovation Development',label:'Innovation Development'}]} className="w-full" />
+                    <div>
+                      <label className="mb-1 block text-muted font-semibold">Slug *</label>
+                      <input
+                        type="text"
+                        required
+                        value={editingProject.slug || ''}
+                        onChange={(e) => setEditingProject({ ...editingProject, slug: slugifyCaseStudy(e.target.value) })}
+                        placeholder="bank-digital-nusantara-mobile"
+                        className="ams-control w-full text-xs font-mono"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-1 block text-muted font-semibold">Client Name / Company</label>
+                      <input
+                        type="text"
+                        value={editingProject.client}
+                        onChange={(e) => setEditingProject({ ...editingProject, client: e.target.value })}
+                        placeholder="PT Bank Digital Nusantara"
+                        className="ams-control w-full text-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-1 block text-muted font-semibold">Industry</label>
+                      <input
+                        type="text"
+                        value={editingProject.industry}
+                        onChange={(e) => setEditingProject({ ...editingProject, industry: e.target.value })}
+                        placeholder="FinTech & Banking"
+                        className="ams-control w-full text-xs"
+                      />
+                    </div>
                   </div>
 
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <div>
+                      <label className="mb-1 block text-muted font-semibold">Studio Pillar</label>
+                      <CustomSelect
+                        value={editingProject.pillar}
+                        onChange={(value) => setEditingProject({ ...editingProject, pillar: value as ProjectItem['pillar'] })}
+                        options={[
+                          { value: 'Visual Experience', label: 'Visual Experience' },
+                          { value: 'Innovation Development', label: 'Innovation Development' }
+                        ]}
+                        className="w-full"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-1 block text-muted font-semibold">Service Category</label>
+                      <input
+                        type="text"
+                        value={editingProject.service}
+                        onChange={(e) => setEditingProject({ ...editingProject, service: e.target.value as ProjectItem['service'] })}
+                        placeholder="UI/UX Design, Web Application..."
+                        className="ams-control w-full text-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-1 block text-muted font-semibold">Release Year</label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={editingProject.year}
+                        onChange={(e) => setEditingProject({ ...editingProject, year: e.target.value.replace(/\D/g, '').slice(0, 4) })}
+                        placeholder="2026"
+                        className="ams-control w-full text-xs font-mono"
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                <section className="space-y-3 border-t border-line pt-5">
                   <div>
-                    <label className="block text-muted mb-1 font-semibold">Service Category</label>
-                    <input
-                      type="text"
-                      value={editingProject.service}
-                      onChange={(e) => setEditingProject({ ...editingProject, service: e.target.value as any })}
-                      placeholder="UI/UX Design, Web Application..."
-                      className="ams-control w-full text-xs"
-                    />
+                    <h4 className="text-sm font-semibold text-fg">Cover media</h4>
+                    <p className="mt-1 text-[11px] leading-5 text-muted">Use a hosted image URL for production-sized media. Local file upload remains available for smaller assets.</p>
                   </div>
 
-                  <div>
-                    <label className="block text-muted mb-1 font-semibold">Release Year</label>
-                    <input
-                      type="text"
-                      value={editingProject.year}
-                      onChange={(e) => setEditingProject({ ...editingProject, year: e.target.value })}
-                      placeholder="2025"
-                      className="ams-control w-full text-xs"
-                    />
-                  </div>
-                </div>
-
-                {/* Drag & Drop File Upload or URL */}
-                <div>
-                  <label className="block text-muted mb-1 font-semibold">
-                    Cover Image (Drag & Drop File or URL)
-                  </label>
-                  
-                  <div 
+                  <div
                     onDragOver={(e) => { e.preventDefault(); setIsDraggingFile(true); }}
                     onDragLeave={() => setIsDraggingFile(false)}
                     onDrop={handleDrop}
-                    className={`border-2 border-dashed rounded-control p-4 text-center transition-all ${
-                      isDraggingFile 
-                        ? 'border-accent bg-accent/10' 
-                        : 'border-line bg-panel hover:border-line'
-                    }`}
+                    className={['rounded-control border-2 border-dashed p-4 text-center transition-colors', isDraggingFile ? 'border-accent bg-accent/10' : 'border-line bg-panel'].join(' ')}
                   >
                     <div className="flex flex-col items-center justify-center gap-2">
                       {editingProject.image ? (
-                        <div className="relative w-36 h-20 rounded-control overflow-hidden border border-line mb-1">
-                          <img src={editingProject.image} alt="Preview" className="w-full h-full object-cover" />
+                        <div className="relative mb-1 h-20 w-36 overflow-hidden rounded-control border border-line">
+                          <img src={editingProject.image} alt="Preview" className="h-full w-full object-cover" />
                         </div>
                       ) : (
                         <UploadCloud className="text-muted" size={28} />
                       )}
-                      
                       <div className="text-fg">
                         <span>Drag & drop image here, or </span>
-                        <label className="text-danger cursor-pointer hover:underline font-semibold">
+                        <label className="cursor-pointer font-semibold text-danger hover:underline">
                           browse file
                           <input
                             type="file"
                             accept="image/*"
                             className="hidden"
                             onChange={(e) => {
-                              if (e.target.files && e.target.files[0]) {
-                                handleFileUpload(e.target.files[0]);
-                              }
+                              if (e.target.files?.[0]) handleFileUpload(e.target.files[0]);
                             }}
                           />
                         </label>
                       </div>
-                      <p className="text-[10px] text-muted">PNG, JPG, WebP up to 10MB</p>
                     </div>
                   </div>
 
-                  <div className="mt-2">
-                    <input
-                      type="url"
-                      value={editingProject.image}
-                      onChange={(e) => setEditingProject({ ...editingProject, image: e.target.value })}
-                      placeholder="Or paste direct image URL (https://...)"
-                      className="w-full px-3.5 py-2 bg-panel border border-line rounded-control text-fg focus:outline-none focus:border-accent font-sans"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-muted mb-1 font-semibold">Short Executive Summary</label>
-                  <textarea
-                    rows={2}
-                    value={editingProject.descId || editingProject.desc}
-                    onChange={(e) => setEditingProject({ ...editingProject, descId: e.target.value, desc: e.target.value })}
-                    placeholder="Brief description of the solution delivered for client..."
+                  <input
+                    type="url"
+                    value={editingProject.image}
+                    onChange={(e) => setEditingProject({ ...editingProject, image: e.target.value })}
+                    placeholder="Paste direct image URL (https://...)"
                     className="ams-control w-full text-xs"
                   />
-                </div>
+                </section>
 
-                {/* Tech Stack Chip Manager */}
-                <div>
-                  <label className="block text-muted mb-1 font-semibold">Tech Stack & Frameworks</label>
-                  <div className="flex gap-2 mb-2">
+                <section className="space-y-4 border-t border-line pt-5">
+                  <div>
+                    <h4 className="text-sm font-semibold text-fg">Narrative</h4>
+                    <p className="mt-1 text-[11px] leading-5 text-muted">Keep the English and Indonesian variants aligned. These fields feed the public case study modal directly.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                    <div className="space-y-3">
+                      <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">English</div>
+                      <div>
+                        <label className="mb-1 block text-muted font-medium">Project Context / Summary</label>
+                        <textarea rows={4} value={editingProject.desc} onChange={(e) => setEditingProject({ ...editingProject, desc: e.target.value })} placeholder="What was the project and what did Kapitech deliver?" className="ams-control w-full resize-y text-xs leading-5" />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-muted font-medium">01 · Client Challenge</label>
+                        <textarea rows={5} value={editingProject.challenge} onChange={(e) => setEditingProject({ ...editingProject, challenge: e.target.value })} placeholder="What business, product, operational, or communication problem was the client facing?" className="ams-control w-full resize-y text-xs leading-5" />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-muted font-medium">02 · Kapitech Solution</label>
+                        <textarea rows={5} value={editingProject.solution} onChange={(e) => setEditingProject({ ...editingProject, solution: e.target.value })} placeholder="What strategy, design, engineering, or production approach did Kapitech use?" className="ams-control w-full resize-y text-xs leading-5" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">Bahasa Indonesia</div>
+                      <div>
+                        <label className="mb-1 block text-muted font-medium">Konteks / Ringkasan Proyek</label>
+                        <textarea rows={4} value={editingProject.descId} onChange={(e) => setEditingProject({ ...editingProject, descId: e.target.value })} placeholder="Apa proyeknya dan apa yang Kapitech kerjakan?" className="ams-control w-full resize-y text-xs leading-5" />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-muted font-medium">01 · Masalah Klien</label>
+                        <textarea rows={5} value={editingProject.challengeId} onChange={(e) => setEditingProject({ ...editingProject, challengeId: e.target.value })} placeholder="Masalah bisnis, produk, operasional, atau komunikasi apa yang dihadapi klien?" className="ams-control w-full resize-y text-xs leading-5" />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-muted font-medium">02 · Solusi Kapitech</label>
+                        <textarea rows={5} value={editingProject.solutionId} onChange={(e) => setEditingProject({ ...editingProject, solutionId: e.target.value })} placeholder="Strategi, desain, engineering, atau pendekatan produksi apa yang digunakan Kapitech?" className="ams-control w-full resize-y text-xs leading-5" />
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="space-y-3 border-t border-line pt-5">
+                  <div>
+                    <h4 className="text-sm font-semibold text-fg">03 · Execution & delivery</h4>
+                    <p className="mt-1 text-[11px] leading-5 text-muted">List the concrete outputs that were executed, produced, designed, engineered, or handed over to the client.</p>
+                  </div>
+
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <input
+                      type="text"
+                      value={deliverableInput}
+                      onChange={(e) => setDeliverableInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddDeliverable(); } }}
+                      placeholder="e.g. Product design system, corporate website, launch film..."
+                      className="ams-control min-w-0 flex-1 text-xs"
+                    />
+                    <Button type="button" variant="secondary" onClick={handleAddDeliverable}>Add output</Button>
+                  </div>
+
+                  {editingProject.deliverables.length > 0 ? (
+                    <div className="space-y-2">
+                      {editingProject.deliverables.map((item, idx) => (
+                        <div key={idx} className="flex items-center gap-2 rounded-control border border-line bg-panel px-3 py-2.5">
+                          <span className="w-7 shrink-0 text-[10px] font-mono font-semibold text-accent-text">{String(idx + 1).padStart(2, '0')}</span>
+                          <span className="min-w-0 flex-1 text-xs text-fg">{item}</span>
+                          <button type="button" onClick={() => handleRemoveDeliverable(item)} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-danger" aria-label={'Remove ' + item}>
+                            <X size={13} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-control border border-dashed border-line bg-bg p-3 text-xs text-muted">No delivery outputs added yet.</div>
+                  )}
+                </section>
+
+                <section className="space-y-3 border-t border-line pt-5">
+                  <div>
+                    <h4 className="text-sm font-semibold text-fg">Technology & tooling</h4>
+                    <p className="mt-1 text-[11px] leading-5 text-muted">Add the tools, frameworks, production stack, or platforms that materially supported delivery.</p>
+                  </div>
+
+                  <div className="flex flex-col gap-2 sm:flex-row">
                     <input
                       type="text"
                       value={techInput}
                       onChange={(e) => setTechInput(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTech(); } }}
-                      placeholder="Type tech name and press Enter (e.g. Next.js 14, Tailwind, Go)..."
-                      className="ams-control flex-1 text-xs"
+                      placeholder="e.g. Figma, Next.js, Blender, DaVinci Resolve..."
+                      className="ams-control min-w-0 flex-1 text-xs"
                     />
-                    <button
-                      type="button"
-                      onClick={handleAddTech}
-                      className="min-h-10 px-3.5 py-2 rounded-control bg-panel hover:bg-panel text-fg border border-line"
-                    >
-                      Add Tag
-                    </button>
+                    <Button type="button" variant="secondary" onClick={handleAddTech}>Add technology</Button>
                   </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {editingProject.technologies.map((tech, idx) => (
-                      <span
-                        key={idx}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-control bg-panel border border-line text-fg text-[11px]"
-                      >
-                        <span>{tech}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveTech(tech)}
-                          className="text-muted hover:text-danger"
-                        >
-                          ✕
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                </div>
 
-                {/* Impact Metrics Editor */}
-                <div>
-                  <label className="block text-muted mb-1 font-semibold">Impact Metrics & Key Results</label>
-                  <div className="flex gap-2 mb-2">
+                  {editingProject.technologies.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {editingProject.technologies.map((tech, idx) => (
+                        <span key={idx} className="inline-flex items-center gap-1.5 rounded-badge border border-line bg-panel px-2.5 py-1.5 text-[11px] text-fg">
+                          <span>{tech}</span>
+                          <button type="button" onClick={() => handleRemoveTech(tech)} className="text-muted hover:text-danger" aria-label={'Remove ' + tech}>
+                            <X size={11} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-control border border-dashed border-line bg-bg p-3 text-xs text-muted">No technologies added yet.</div>
+                  )}
+                </section>
+
+                <section className="space-y-3 border-t border-line pt-5">
+                  <div>
+                    <h4 className="text-sm font-semibold text-fg">04 · Outcome & client impact</h4>
+                    <p className="mt-1 text-[11px] leading-5 text-muted">Use measurable business, product, operational, audience, or experience results where available.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_140px_auto]">
                     <input
                       type="text"
                       value={metricLabel}
                       onChange={(e) => setMetricLabel(e.target.value)}
-                      placeholder="Metric label (e.g. Conversion Lift)"
-                      className="ams-control flex-1 text-xs"
+                      placeholder="Metric label"
+                      className="ams-control w-full text-xs"
                     />
                     <input
                       type="text"
                       value={metricValue}
                       onChange={(e) => setMetricValue(e.target.value)}
-                      placeholder="Value (e.g. +40%)"
-                      className="ams-control w-32 text-xs"
+                      placeholder="Value, e.g. +40%"
+                      className="ams-control w-full text-xs"
                     />
-                    <button
-                      type="button"
-                      onClick={handleAddImpactMetric}
-                      className="min-h-10 px-3.5 py-2 rounded-control bg-panel hover:bg-panel text-fg border border-line"
-                    >
-                      Add Metric
-                    </button>
+                    <Button type="button" variant="secondary" onClick={handleAddImpactMetric}>Add metric</Button>
                   </div>
-                  {editingProject.impact && editingProject.impact.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {editingProject.impact.map((imp, idx) => (
-                        <div key={idx} className="flex items-center gap-2 px-3 py-1.5 rounded-control bg-panel border border-line">
-                          <span className="text-muted">{imp.label}:</span>
-                          <span className="text-success font-semibold">{imp.value}</span>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveImpactMetric(idx)}
-                            className="text-muted hover:text-danger ml-1"
-                          >
-                            ✕
+
+                  {editingProject.impact.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      {editingProject.impact.map((item, idx) => (
+                        <div key={idx} className="flex items-center gap-3 rounded-control border border-line bg-panel px-3 py-2.5">
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-xs font-medium text-fg">{item.label}</p>
+                            <p className="mt-0.5 text-xs font-semibold text-success">{item.value}</p>
+                          </div>
+                          <button type="button" onClick={() => handleRemoveImpactMetric(idx)} className="inline-flex h-8 w-8 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-danger" aria-label={'Remove ' + item.label}>
+                            <X size={13} />
                           </button>
                         </div>
                       ))}
                     </div>
+                  ) : (
+                    <div className="rounded-control border border-dashed border-line bg-bg p-3 text-xs text-muted">No impact metrics added yet.</div>
                   )}
-                </div>
+                </section>
 
-                <div className="pt-3 border-t border-line flex items-center justify-between">
-                  <label className="flex items-center gap-2 cursor-pointer">
+                <section className="flex flex-col gap-3 border-t border-line pt-5">
+                  <label className="flex items-start gap-3 rounded-control border border-line bg-bg p-3.5">
                     <input
                       type="checkbox"
                       checked={editingProject.featured}
                       onChange={(e) => setEditingProject({ ...editingProject, featured: e.target.checked })}
-                      className="w-4 h-4 rounded-badge bg-panel border-line text-danger accent-accent"
+                      className="mt-0.5 h-4 w-4 rounded-badge border-line bg-panel accent-accent"
                     />
-                    <span className="text-fg">Feature in Homepage Highlights</span>
+                    <span>
+                      <span className="block text-xs font-semibold text-fg">Feature in public spotlight</span>
+                      <span className="mt-0.5 block text-[11px] leading-5 text-muted">Allow this case study to appear in the Featured Case Study Spotlight carousel.</span>
+                    </span>
                   </label>
 
-                </div>
-
+                  <label className="flex items-start gap-3 rounded-control border border-line bg-bg p-3.5">
+                    <input
+                      type="checkbox"
+                      checked={editingProject.isPublished !== false}
+                      onChange={(e) => setEditingProject({ ...editingProject, isPublished: e.target.checked })}
+                      className="mt-0.5 h-4 w-4 rounded-badge border-line bg-panel accent-accent"
+                    />
+                    <span>
+                      <span className="block text-xs font-semibold text-fg">Publish on public site</span>
+                      <span className="mt-0.5 block text-[11px] leading-5 text-muted">Unpublished case studies remain in the CMS but are hidden from public /work responses.</span>
+                    </span>
+                  </label>
+                </section>
               </form>
             )}
       </Drawer>
