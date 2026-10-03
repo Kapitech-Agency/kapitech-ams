@@ -228,10 +228,7 @@ export const AdminCmsProjects: React.FC = () => {
         const nextImage = e.target.result as string;
         setEditingProject({
           ...editingProject,
-          image: nextImage,
-          gallery: editingProject.gallery?.includes(nextImage)
-            ? editingProject.gallery
-            : [...(editingProject.gallery || []), nextImage]
+          image: nextImage
         });
       }
     };
