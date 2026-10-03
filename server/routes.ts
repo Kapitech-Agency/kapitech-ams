@@ -235,10 +235,11 @@ function normalizeCmsProjectPatch(source: Record<string, unknown>): Record<strin
   const patch = pickFields(source, [
     'slug', 'title', 'client', 'industry', 'pillar', 'service', 'featured', 'image',
     'desc', 'descId', 'challenge', 'challengeId', 'solution', 'solutionId',
+    'execution', 'executionId', 'outcome', 'outcomeId',
     'deliverables', 'technologies', 'impact', 'year', 'isPublished'
   ]);
 
-  for (const key of ['title', 'client', 'industry', 'service', 'desc', 'descId', 'challenge', 'challengeId', 'solution', 'solutionId'] as const) {
+  for (const key of ['title', 'client', 'industry', 'service', 'desc', 'descId', 'challenge', 'challengeId', 'solution', 'solutionId', 'execution', 'executionId', 'outcome', 'outcomeId'] as const) {
     if (patch[key] !== undefined) patch[key] = cleanText(patch[key], key === 'title' ? 240 : 5000);
   }
 
