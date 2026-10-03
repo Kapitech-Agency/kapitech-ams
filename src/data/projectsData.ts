@@ -21,6 +21,7 @@ export interface ProjectItem {
     | 'IT Support & Infrastructure';
   featured: boolean;
   image: string;
+  gallery?: string[];
   desc: string;
   descId: string;
   challenge: string;
