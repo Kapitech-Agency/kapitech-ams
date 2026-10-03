@@ -175,12 +175,12 @@ export const AdminCmsProjects: React.FC = () => {
   };
 
   const handleToggleFeatured = async (project: ProjectItem) => {
-    const nextProject = { ...project, featured: !project.featured };
+    const nextFeatured = !project.featured;
     try {
-      const res = await api.cms.updateProject(nextProject.id, nextProject);
+      const res = await api.cms.updateProject(project.id, { featured: nextFeatured });
       if (res.success) {
         await loadProjects();
-        setStatusMessage(nextProject.featured ? 'Project featured successfully.' : 'Project removed from featured.');
+        setStatusMessage(nextFeatured ? 'Project featured successfully.' : 'Project removed from featured.');
       } else {
         setStatusMessage(res.error || 'Update failed.');
       }
@@ -191,9 +191,8 @@ export const AdminCmsProjects: React.FC = () => {
 
   const handleTogglePublished = async (project: ProjectItem) => {
     const nextPublished = project.isPublished === false;
-    const nextProject = { ...project, isPublished: nextPublished };
     try {
-      const res = await api.cms.updateProject(nextProject.id, nextProject);
+      const res = await api.cms.updateProject(project.id, { isPublished: nextPublished });
       if (res.success) {
         await loadProjects();
         setStatusMessage(nextPublished ? 'Case study published successfully.' : 'Case study unpublished from the public site.');
