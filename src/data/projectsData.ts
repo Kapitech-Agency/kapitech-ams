@@ -27,6 +27,10 @@ export interface ProjectItem {
   challengeId: string;
   solution: string;
   solutionId: string;
+  execution: string;
+  executionId: string;
+  outcome: string;
+  outcomeId: string;
   deliverables: string[];
   technologies: string[];
   impact: { label: string; value: string }[];
