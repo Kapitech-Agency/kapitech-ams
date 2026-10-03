@@ -46,6 +46,7 @@ const normalizeCmsProject = (project: ProjectItem): ProjectItem => ({
   industry: project.industry || 'Unspecified',
   service: project.service || 'Web Application',
   image: project.image || '',
+  gallery: Array.isArray(project.gallery) ? project.gallery.filter(Boolean) : [],
   desc: project.desc || '',
   descId: project.descId || '',
   challenge: project.challenge || '',
@@ -78,6 +79,7 @@ export const AdminCmsProjects: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
   const [isDraggingFile, setIsDraggingFile] = useState(false);
+  const [galleryInput, setGalleryInput] = useState('');
 
   // Tag inputs state
   const [techInput, setTechInput] = useState('');
@@ -116,6 +118,7 @@ export const AdminCmsProjects: React.FC = () => {
       service: 'Web Application',
       featured: false,
       image: '',
+      gallery: [],
       desc: '',
       descId: '',
       challenge: '',
@@ -137,6 +140,7 @@ export const AdminCmsProjects: React.FC = () => {
     setDeliverableInput('');
     setMetricLabel('');
     setMetricValue('');
+    setGalleryInput('');
     setEditingProject(newTemplate);
     setModalTab('details');
     setIsModalOpen(true);
@@ -147,6 +151,7 @@ export const AdminCmsProjects: React.FC = () => {
     setDeliverableInput('');
     setMetricLabel('');
     setMetricValue('');
+    setGalleryInput('');
     setEditingProject(normalizeCmsProject(project));
     setModalTab('details');
     setIsModalOpen(true);
@@ -220,9 +225,13 @@ export const AdminCmsProjects: React.FC = () => {
     };
     reader.onload = (e) => {
       if (e.target?.result && editingProject) {
+        const nextImage = e.target.result as string;
         setEditingProject({
           ...editingProject,
-          image: e.target.result as string
+          image: nextImage,
+          gallery: editingProject.gallery?.includes(nextImage)
+            ? editingProject.gallery
+            : [...(editingProject.gallery || []), nextImage]
         });
       }
     };
@@ -235,6 +244,32 @@ export const AdminCmsProjects: React.FC = () => {
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFileUpload(e.dataTransfer.files[0]);
     }
+  };
+
+  const handleAddGalleryImage = () => {
+    const url = galleryInput.trim();
+    if (!url || !editingProject) return;
+    if (!/^https?:\/\//i.test(url)) {
+      setStatusMessage(language === 'id' ? 'URL gallery harus menggunakan HTTP/HTTPS.' : 'Gallery URLs must use HTTP/HTTPS.');
+      return;
+    }
+    if ((editingProject.gallery || []).includes(url)) {
+      setGalleryInput('');
+      return;
+    }
+    setEditingProject({
+      ...editingProject,
+      gallery: [...(editingProject.gallery || []), url]
+    });
+    setGalleryInput('');
+  };
+
+  const handleRemoveGalleryImage = (url: string) => {
+    if (!editingProject) return;
+    setEditingProject({
+      ...editingProject,
+      gallery: (editingProject.gallery || []).filter((item) => item !== url)
+    });
   };
 
   const handleAddTech = () => {
@@ -821,6 +856,43 @@ export const AdminCmsProjects: React.FC = () => {
                     placeholder="Paste direct image URL (https://...)"
                     className="ams-control w-full text-xs"
                   />
+                </section>
+
+                <section className="space-y-3 border-t border-line pt-5">
+                  <div>
+                    <h4 className="text-sm font-semibold text-fg">Proof gallery</h4>
+                    <p className="mt-1 text-[11px] leading-5 text-muted">Add the screenshots, campaign frames, product views, site captures, or other visual proof that supports the case study.</p>
+                  </div>
+
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <input
+                      type="url"
+                      value={galleryInput}
+                      onChange={(e) => setGalleryInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddGalleryImage(); } }}
+                      placeholder="https://.../proof-image.jpg"
+                      className="ams-control min-w-0 flex-1 text-xs"
+                    />
+                    <Button type="button" variant="secondary" onClick={handleAddGalleryImage}>Add image</Button>
+                  </div>
+
+                  {(editingProject.gallery || []).length > 0 ? (
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      {(editingProject.gallery || []).map((image, idx) => (
+                        <div key={image + '-' + idx} className="group relative overflow-hidden rounded-control border border-line bg-panel">
+                          <img src={image} alt="" className="aspect-[4/3] h-full w-full object-cover" loading="lazy" />
+                          <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-bg/90 px-2 py-1.5">
+                            <span className="truncate text-[9px] text-muted">Image {idx + 1}</span>
+                            <button type="button" onClick={() => handleRemoveGalleryImage(image)} className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label={'Remove gallery image ' + (idx + 1)}>
+                              <X size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-control border border-dashed border-line bg-bg p-3 text-xs text-muted">No proof images added yet. The cover image will still be shown on the public case study.</div>
+                  )}
                 </section>
 
                 <section className="space-y-4 border-t border-line pt-5">
