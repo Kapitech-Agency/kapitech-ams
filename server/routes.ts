@@ -313,6 +313,54 @@ function getInvoiceBalanceDue(invoice: any): number {
   return Math.max(0, total - getInvoicePaidAmount(invoice));
 }
 
+const LEAD_ATTRIBUTION_KEYS = [
+  'anonymousId',
+  'landing_path',
+  'referrer_host',
+  'utm_source',
+  'utm_medium',
+  'utm_campaign',
+  'utm_content',
+  'utm_term',
+  'gclid',
+  'fbclid',
+  'li_fat_id',
+  'language',
+] as const;
+
+function sanitizeLeadAttribution(input: unknown): Record<string, unknown> {
+  if (!input || typeof input !== 'object') return {};
+
+  const source = input as Record<string, unknown>;
+  const sanitizeRecord = (value: unknown): Record<string, string> => {
+    if (!value || typeof value !== 'object') return {};
+
+    const record = value as Record<string, unknown>;
+    const result: Record<string, string> = {};
+
+    for (const key of LEAD_ATTRIBUTION_KEYS) {
+      const raw = record[key];
+      if (typeof raw !== 'string') continue;
+      const clean = cleanText(raw, 500);
+      if (clean) result[key] = clean;
+    }
+
+    return result;
+  };
+
+  const single = sanitizeRecord(source);
+  const firstTouch = sanitizeRecord(source.firstTouch);
+  const lastTouch = sanitizeRecord(source.lastTouch);
+  const anonymousId = typeof source.anonymousId === 'string' ? cleanText(source.anonymousId, 100) : '';
+
+  return {
+    ...(anonymousId ? { anonymousId } : {}),
+    ...(Object.keys(firstTouch).length > 0 ? { firstTouch } : {}),
+    ...(Object.keys(lastTouch).length > 0 ? { lastTouch } : {}),
+    ...(Object.keys(single).length > 0 ? { current: single } : {}),
+  };
+}
+
 async function dispatchLeadTelegramNotification(
   lead: {
     fullName: string;
@@ -1570,6 +1618,7 @@ apiRouter.post('/leads/submit', rateLimitPublic(10, 60 * 1000), async (req: Requ
     linkedinUrl,
     availability,
     location,
+    attribution,
     website
   } = req.body;
 
@@ -1623,6 +1672,7 @@ apiRouter.post('/leads/submit', rateLimitPublic(10, 60 * 1000), async (req: Requ
     linkedinUrl: cleanOptionalUrl(linkedinUrl),
     availability: cleanText(availability, 160),
     location: cleanText(location, 160),
+    attribution: sanitizeLeadAttribution(attribution),
     createdAt: now,
     updatedAt: now
   };
