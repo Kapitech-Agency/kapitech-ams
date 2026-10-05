@@ -143,7 +143,7 @@
       },
       {
         "type": "paragraph",
-        "text": "Prototype testing is most useful when the uncertainty sits in information hierarchy, navigation, interaction, workflow, wording, or task completion. Nielsen Norman Group describes prototype testing as usability testing performed on a representation of a product before the live product exists, which makes it useful for identifying problems before implementation cost rises. Nielsen Norman Group describes prototype testing as usability testing on a representation of a product before the live product exists. See [NN/g's prototype testing guidance](https://media.nngroup.com/media/articles/attachments/glossary-ux-research.pdf)."
+        "text": "Prototype testing is most useful when the uncertainty sits in information hierarchy, navigation, interaction, workflow, wording, or task completion. Nielsen Norman Group describes prototype testing as usability testing on a representation of a product before the live product exists. See [NN/g's prototype testing guidance](https://media.nngroup.com/media/articles/attachments/glossary-ux-research.pdf)."
       },
       {
         "type": "paragraph",
@@ -191,7 +191,7 @@
       },
       {
         "type": "paragraph",
-        "text": "Eric Ries frames an MVP around validated learning: the team builds the minimum version needed to learn whether a product hypothesis is working. That means the scope should follow the learning goal, not a fixed feature count."
+        "text": "Eric Ries frames an MVP around validated learning: the team builds the minimum version needed to learn whether a product hypothesis is working. That means the scope should follow the learning goal, not a fixed feature count. See [The Lean Startup explanation of an MVP](https://leanstartup.co/resources/articles/what-is-an-mvp/)."
       },
       {
         "type": "image",
@@ -269,7 +269,7 @@
       },
       {
         "type": "paragraph",
-        "text": "Guidance from digital.gov.au treats a PoC as a small experiment used to validate feasibility before greater investment. That distinction matters: a successful PoC proves the tested technical assumption, not that the whole product is ready to launch. IBM similarly recommends focused experimentation when evaluating new technologies and their fit with existing systems. Guidance from [digital.gov.au](https://www.digital.gov.au/policy/ai/AI-POC-to-scale/context-and-principles) treats a PoC as a focused experiment for validating feasibility before larger investment. [IBM](https://www.ibm.com/think/insights/guide-to-experimenting-new-ai-technologies) similarly recommends focused experimentation when evaluating new technologies and their fit with existing systems."
+        "text": "Guidance from [digital.gov.au](https://www.digital.gov.au/policy/ai/AI-POC-to-scale/context-and-principles) treats a PoC as a focused experiment for validating feasibility before greater investment. [IBM](https://www.ibm.com/think/insights/guide-to-experimenting-new-ai-technologies) similarly recommends focused experimentation when evaluating new technologies and their fit with existing systems."
       },
       {
         "type": "heading",
@@ -521,6 +521,10 @@
         "text": "Teams often add settings, roles, analytics, edge cases, dashboards, and secondary features before defining what must be learned. The result is a larger deliverable with the same uncertainty."
       },
       {
+        "type": "paragraph",
+        "text": "Why it happens: the team wants visible momentum and a large deliverable. Why it is risky: scope grows before the key assumption is tested. Better approach: write one decision-critical question first and remove work that does not help answer it."
+      },
+      {
         "type": "heading",
         "level": 3,
         "text": "2. Calling a high-fidelity Prototype an MVP"
@@ -528,6 +532,10 @@
       {
         "type": "paragraph",
         "text": "A prototype can look almost identical to a finished product and still test only the experience. Visual fidelity does not make an artifact an MVP."
+      },
+      {
+        "type": "paragraph",
+        "text": "Why it happens: visual fidelity feels like progress and stakeholders can react to something tangible. Why it is risky: a polished screen can create false confidence about adoption or technical feasibility. Better approach: define the user behavior you need to observe and treat fidelity as a means, not the evidence itself."
       },
       {
         "type": "heading",
@@ -539,6 +547,10 @@
         "text": "When a critical integration is unproven, discovering the problem after building the rest of the product can make the most expensive part of the project harder to change. Isolate the technical question with a focused PoC first."
       },
       {
+        "type": "paragraph",
+        "text": "Why it happens: the team wants one project to prove both customer value and difficult technology. Why it is risky: a technical failure discovered late can force expensive rework. Better approach: isolate the technical unknown in a focused PoC before committing the full product scope."
+      },
+      {
         "type": "heading",
         "level": 3,
         "text": "4. Making a PoC without success criteria"
@@ -546,6 +558,10 @@
       {
         "type": "paragraph",
         "text": "“Try the technology” is not a measurable experiment. Define the condition, threshold, test environment, and decision before you start."
+      },
+      {
+        "type": "paragraph",
+        "text": "Why it happens: technical experiments often start with curiosity about a tool. Why it is risky: without a threshold, the experiment can run without producing a decision. Better approach: define the question, test condition, success threshold, and next decision before the first test."
       },
       {
         "type": "heading",
@@ -557,6 +573,10 @@
         "text": "A single experiment becomes difficult to interpret when it contains too many questions. Separate evidence by risk so each result can change a specific decision."
       },
       {
+        "type": "paragraph",
+        "text": "Why it happens: combining risks feels efficient. Why it is risky: conflicting signals make the result hard to interpret. Better approach: separate experiments when different risks need different evidence."
+      },
+      {
         "type": "heading",
         "level": 3,
         "text": "6. Measuring after the experiment instead of before it"
@@ -566,6 +586,10 @@
         "text": "If the team decides what success means only after seeing the result, confirmation bias becomes easier. Predefine the signal that would support or challenge the hypothesis."
       },
       {
+        "type": "paragraph",
+        "text": "Why it happens: teams want to avoid changing their success definition after investing effort. Why it is risky: vague criteria make confirmation bias easier. Better approach: define the signal and threshold before the experiment starts."
+      },
+      {
         "type": "heading",
         "level": 3,
         "text": "7. Optimizing for deliverables instead of learning"
@@ -573,6 +597,10 @@
       {
         "type": "paragraph",
         "text": "A full design system, a long feature list, or a technically impressive demo can feel like progress while leaving the main business question unresolved."
+      },
+      {
+        "type": "paragraph",
+        "text": "Why it happens: deliverables are easier to count than learning. Why it is risky: activity can be mistaken for validation. Better approach: review each artifact by the decision it enables and remove work that does not reduce a material uncertainty."
       },
       {
         "type": "heading",
