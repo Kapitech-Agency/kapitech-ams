@@ -100,7 +100,7 @@
       },
       {
         "type": "paragraph",
-        "text": "Prototype testing memang dapat dilakukan sebelum interface benar-benar diimplementasikan. Nielsen Norman Group menjelaskan prototype testing sebagai bentuk usability testing ketika interface yang diuji masih berupa prototype, bukan produk live. citeturn900954search48"
+        "text": "Prototype testing memang dapat dilakukan sebelum interface benar-benar diimplementasikan. Nielsen Norman Group menjelaskan prototype testing sebagai bentuk usability testing ketika interface yang diuji masih berupa prototype, bukan produk live. [Baca referensinya](https://media.nngroup.com/media/articles/attachments/glossary-ux-research.pdf)."
       },
       {
         "type": "paragraph",
@@ -139,7 +139,7 @@
       },
       {
         "type": "paragraph",
-        "text": "MVP atau Minimum Viable Product adalah versi produk yang cukup untuk menghasilkan <strong>validated learning</strong> dari pengguna. Eric Ries menjelaskan MVP sebagai versi produk yang memungkinkan tim mengumpulkan sebanyak mungkin pembelajaran tervalidasi tentang pelanggan dengan usaha yang paling kecil. citeturn275176search1"
+        "text": "MVP atau Minimum Viable Product adalah versi produk yang cukup untuk menghasilkan <strong>validated learning</strong> dari pengguna. Eric Ries menjelaskan MVP sebagai versi produk yang memungkinkan tim mengumpulkan sebanyak mungkin pembelajaran tervalidasi tentang pelanggan dengan usaha yang paling kecil. [Baca definisinya](https://leanstartup.co/resources/articles/what-is-an-mvp/)."
       },
       {
         "type": "paragraph",
@@ -179,7 +179,7 @@
       },
       {
         "type": "paragraph",
-        "text": "Panduan pemerintah digital Australia untuk AI, misalnya, mendefinisikan PoC sebagai eksperimen kecil yang dirancang untuk menunjukkan kelayakan teknis dan potensi nilai suatu use case sebelum komitmen integrasi skala penuh. Prinsip ini juga berlaku secara luas untuk software ketika technical uncertainty menjadi risiko utama. citeturn275176search11"
+        "text": "Panduan pemerintah digital Australia untuk AI, misalnya, mendefinisikan PoC sebagai eksperimen kecil yang dirancang untuk menunjukkan kelayakan teknis dan potensi nilai suatu use case sebelum komitmen integrasi skala penuh. [Lihat guidance](https://www.digital.gov.au/policy/ai/AI-POC-to-scale/context-and-principles). Prinsip ini juga berlaku secara luas untuk software ketika technical uncertainty menjadi risiko utama."
       },
       {
         "type": "paragraph",
@@ -376,7 +376,7 @@
       },
       {
         "type": "paragraph",
-        "text": "PoC sebaiknya memiliki scope yang sengaja sempit. Tentukan technical question, success criteria, durasi eksperimen, dan keputusan yang akan diambil setelah hasilnya keluar. IBM juga menyarankan PoC dan pengujian awal untuk menunjukkan feasibility ketika mengevaluasi teknologi baru dan integrasi dengan sistem yang sudah ada. citeturn275176search5"
+        "text": "PoC sebaiknya memiliki scope yang sengaja sempit. Tentukan technical question, success criteria, durasi eksperimen, dan keputusan yang akan diambil setelah hasilnya keluar. IBM juga menyarankan PoC dan pengujian awal untuk menunjukkan feasibility ketika mengevaluasi teknologi baru dan integrasi dengan sistem yang sudah ada. [Lihat panduan IBM](https://www.ibm.com/think/insights/guide-to-experimenting-new-ai-technologies)."
       },
       {
         "type": "heading",
