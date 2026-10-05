@@ -246,7 +246,7 @@
           [
             "Pertanyaan utama",
             "Apakah pengguna dapat menggunakannya?",
-            "Will users nilai it?",
+            "Apakah pengguna akan menilai solusi ini bernilai?",
             "Apakah kita dapat membangunnya secara teknis?"
           ],
           [
@@ -362,10 +362,10 @@
         "type": "list",
         "ordered": false,
         "items": [
-          "Target user dan masalah utamanya sudah cukup terdefinisi.",
+          "Target pengguna dan masalah utamanya sudah cukup terdefinisi.",
           "Anda memiliki hipotesis nilai yang dapat dinyatakan dengan jelas.",
           "Ada tindakan pengguna yang bisa diamati dan diukur.",
-          "Feedback dari pengguna nyata akan mengubah keputusan peta jalan.",
+          "Masukan dari pengguna nyata akan mengubah keputusan peta jalan.",
           "Core alur dapat diselesaikan tanpa menunggu seluruh fitur sekunder."
         ]
       },
@@ -537,7 +537,7 @@
       },
       {
         "type": "paragraph",
-        "text": "Framework, pustaka, atau tumpukan teknologi tidak seharusnya menentukan apa yang dibangun sebelum masalah, user, dan kebutuhan bukti jelas. Teknologi penting, tetapi ia adalah alat untuk menjawab kebutuhan yang lebih dulu didefinisikan."
+        "text": "Kerangka, pustaka, atau tumpukan teknologi tidak seharusnya menentukan apa yang dibangun sebelum masalah, pengguna, dan kebutuhan bukti jelas. Teknologi penting, tetapi ia adalah alat untuk menjawab kebutuhan yang lebih dulu didefinisikan."
       },
       {
         "type": "heading",
