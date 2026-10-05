@@ -6,6 +6,7 @@ import {
   HelpCircle,
   FileText,
   Globe,
+  UploadCloud,
   Link,
   Pencil,
   Plus,
@@ -292,6 +293,30 @@ const InsightEditor: React.FC<{
   const update = (patch: Partial<InsightItem>) => onChange({ ...value, ...patch });
   const tagsInput = (value.tags || []).map(tag => tag.name).join(', ');
   const faqs: InsightFaqItem[] = value.faq || [];
+  const [mediaError, setMediaError] = useState('');
+
+  const handleImageUpload = (file: File, field: 'coverImage' | 'ogImage') => {
+    const allowed = new Set(['image/png', 'image/jpeg', 'image/webp']);
+    if (!allowed.has(file.type)) {
+      setMediaError('Only PNG, JPG, and WebP images are supported.');
+      return;
+    }
+    if (file.size > 350 * 1024) {
+      setMediaError('Local image uploads are limited to 350KB. Use a hosted image URL for larger assets.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onerror = () => setMediaError('The image could not be processed.');
+    reader.onload = (event) => {
+      const result = event.target?.result;
+      if (typeof result === 'string') {
+        setMediaError('');
+        update({ [field]: result } as Partial<InsightItem>);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   return (
     <div className="space-y-5 pb-4">
@@ -433,13 +458,50 @@ const InsightEditor: React.FC<{
 
       <section className="rounded-card border border-line bg-bg p-4">
         <SectionTitle icon={<Search size={14} />} title="SEO & Media" />
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <Field label="Cover image URL">
-            <input type="url" value={value.coverImage || ''} onChange={(e) => update({ coverImage: e.target.value })} className="ams-control w-full text-xs" placeholder="https://..." />
-          </Field>
-          <Field label="Open Graph image URL">
-            <input type="url" value={value.ogImage || ''} onChange={(e) => update({ ogImage: e.target.value })} className="ams-control w-full text-xs" placeholder="https://..." />
-          </Field>
+        {mediaError && <p className="mt-3 rounded-control border border-danger/20 bg-danger/10 p-3 text-xs leading-5 text-danger">{mediaError}</p>}
+
+        <div className="mt-3 space-y-4">
+          {(['coverImage', 'ogImage'] as const).map((field) => {
+            const isCover = field === 'coverImage';
+            const label = isCover ? 'Cover image' : 'Open Graph image';
+            const currentValue = value[field] || '';
+            return (
+              <div key={field} className="rounded-control border border-line bg-panel p-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-xs font-semibold text-fg">{label}</p>
+                    <p className="mt-1 text-[10px] leading-5 text-muted">Local PNG/JPG/WebP up to 350KB or use a hosted URL.</p>
+                  </div>
+                  <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-control border border-line bg-bg px-3 py-2 text-[11px] font-semibold text-fg transition-colors hover:border-accent/30 hover:text-accent-text">
+                    <UploadCloud size={13} />
+                    Upload image
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="sr-only"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        if (file) handleImageUpload(file, field);
+                        event.currentTarget.value = '';
+                      }}
+                    />
+                  </label>
+                </div>
+                {currentValue && (
+                  <div className="mt-3 overflow-hidden rounded-control border border-line bg-bg">
+                    <img src={currentValue} alt="" className="max-h-56 w-full object-cover" />
+                  </div>
+                )}
+                <input
+                  type="url"
+                  value={currentValue.startsWith('data:image/') ? '' : currentValue}
+                  onChange={(e) => update({ [field]: e.target.value })}
+                  className="ams-control mt-3 w-full text-xs"
+                  placeholder="https://..."
+                />
+              </div>
+            );
+          })}
         </div>
         <div className="mt-3">
           <Field label="SEO title">
