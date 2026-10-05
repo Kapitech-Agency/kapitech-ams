@@ -213,8 +213,7 @@ export async function ensurePostgresCmsDefaults(): Promise<void> {
             String(seo.description || '').trim(),
             String(seo.ogImage || '').trim(),
             String(seo.canonicalUrl || '').trim(),
-            JSON.stringify({ source: INSIGHT_EDITORIAL_SEED_KEY, format: pack.format, editorial, seo }),
-            now
+            JSON.stringify({ source: INSIGHT_EDITORIAL_SEED_KEY, format: pack.format, editorial, seo })
           ]
         );
       }
