@@ -30,7 +30,9 @@ function clean(value: unknown, max: number): string {
 }
 
 function optionalUrl(value: unknown): string {
-  const candidate = clean(value, 2000);
+  const candidate = clean(value, 500000);
+  if (candidate.startsWith('/') && !candidate.startsWith('//')) return candidate;
+  if ((candidate.startsWith('data:image/png;base64,') || candidate.startsWith('data:image/jpeg;base64,') || candidate.startsWith('data:image/webp;base64,')) && candidate.length <= 500000) return candidate;
   if (!candidate) return '';
   try {
     const parsed = new URL(candidate);
