@@ -143,7 +143,7 @@
       },
       {
         "type": "paragraph",
-        "text": "Prototype paling berguna ketika ketidakpastian berada pada hierarki informasi, navigasi, interaksi, alur kerja, kata-kata yang digunakan, atau cara pengguna menyelesaikan tugas. Nielsen Norman Group menjelaskan pengujian prototype sebagai pengujian kemudahan penggunaan pada representasi produk sebelum produk nyata tersedia, sehingga masalah dapat ditemukan sebelum biaya implementasi meningkat."
+        "text": "Prototype paling berguna ketika ketidakpastian berada pada hierarki informasi, navigasi, interaksi, alur kerja, kata-kata yang digunakan, atau cara pengguna menyelesaikan tugas. Nielsen Norman Group menjelaskan pengujian prototype sebagai pengujian kemudahan penggunaan pada representasi produk sebelum produk nyata tersedia, sehingga masalah dapat ditemukan sebelum biaya implementasi meningkat. Nielsen Norman Group menjelaskan pengujian prototype sebagai pengujian kemudahan penggunaan pada representasi produk sebelum produk nyata tersedia. Lihat [panduan pengujian prototype dari NN/g](https://media.nngroup.com/media/articles/attachments/glossary-ux-research.pdf)."
       },
       {
         "type": "paragraph",
@@ -191,7 +191,7 @@
       },
       {
         "type": "paragraph",
-        "text": "Eric Ries menjelaskan MVP dalam konteks pembelajaran tervalidasi: tim membuat versi minimum yang diperlukan untuk belajar apakah hipotesis produk bekerja. Artinya, cakupan MVP seharusnya mengikuti kebutuhan pembelajaran, bukan jumlah fitur yang sudah disepakati sejak awal."
+        "text": "Eric Ries menjelaskan MVP dalam konteks pembelajaran tervalidasi: tim membuat versi minimum yang diperlukan untuk belajar apakah hipotesis produk bekerja. Artinya, cakupan MVP seharusnya mengikuti kebutuhan pembelajaran, bukan jumlah fitur yang sudah disepakati sejak awal. Eric Ries menjelaskan MVP dalam konteks pembelajaran tervalidasi melalui [The Lean Startup](https://leanstartup.co/resources/articles/what-is-an-mvp/)."
       },
       {
         "type": "image",
@@ -269,7 +269,7 @@
       },
       {
         "type": "paragraph",
-        "text": "Panduan digital.gov.au memperlakukan PoC sebagai eksperimen kecil untuk menguji kelayakan sebelum investasi yang lebih besar. Artinya, PoC yang berhasil membuktikan asumsi teknis yang diuji, bukan otomatis membuktikan bahwa seluruh produk siap diluncurkan. IBM juga mendorong eksperimen terfokus ketika mengevaluasi teknologi baru dan kecocokannya dengan sistem yang sudah ada."
+        "text": "Panduan digital.gov.au memperlakukan PoC sebagai eksperimen kecil untuk menguji kelayakan sebelum investasi yang lebih besar. Artinya, PoC yang berhasil membuktikan asumsi teknis yang diuji, bukan otomatis membuktikan bahwa seluruh produk siap diluncurkan. IBM juga mendorong eksperimen terfokus ketika mengevaluasi teknologi baru dan kecocokannya dengan sistem yang sudah ada. Panduan [digital.gov.au](https://www.digital.gov.au/policy/ai/AI-POC-to-scale/context-and-principles) menempatkan PoC sebagai eksperimen terfokus untuk menguji kelayakan sebelum investasi yang lebih besar. [IBM](https://www.ibm.com/think/insights/guide-to-experimenting-new-ai-technologies) juga mendorong eksperimen terfokus ketika mengevaluasi teknologi baru dan kecocokannya dengan sistem yang sudah ada."
       },
       {
         "type": "heading",
