@@ -359,6 +359,43 @@ export const api = {
     deleteProject: (id: string) => apiRequest(`/api/cms/projects/${id}`, { method: 'DELETE' }),
 
     getTestimonials: () => apiRequest<{ success: boolean; testimonials: any[] }>('/api/cms/testimonials'),
+    getInsights: (params: Record<string, string | number | boolean | undefined> = {}) => {
+      const query = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== '') query.set(key, String(value));
+      });
+      return apiRequest<{ success: boolean; insights: any[]; meta?: { total: number; page: number; pageSize: number; totalPages: number } }>(
+        '/api/cms/insights' + (query.toString() ? '?' + query.toString() : '')
+      );
+    },
+    getInsightBySlug: (slug: string, language?: 'id' | 'en') =>
+      apiRequest<{ success: boolean; insight: any }>(
+        '/api/cms/insights/' + encodeURIComponent(slug) + (language ? '?language=' + language : '')
+      ),
+    createInsight: (insight: any) =>
+      apiRequest('/api/cms/insights', { method: 'POST', body: JSON.stringify(insight) }),
+    updateInsight: (id: string, updates: any) =>
+      apiRequest('/api/cms/insights/' + encodeURIComponent(id), { method: 'PUT', body: JSON.stringify(updates) }),
+    deleteInsight: (id: string) =>
+      apiRequest('/api/cms/insights/' + encodeURIComponent(id), { method: 'DELETE' }),
+    getInsightCategories: (language?: 'id' | 'en') =>
+      apiRequest<{ success: boolean; categories: any[] }>(
+        '/api/cms/insight-categories' + (language ? '?language=' + language : '')
+      ),
+    createInsightCategory: (category: any) =>
+      apiRequest('/api/cms/insight-categories', { method: 'POST', body: JSON.stringify(category) }),
+    deleteInsightCategory: (id: string) =>
+      apiRequest('/api/cms/insight-categories/' + encodeURIComponent(id), { method: 'DELETE' }),
+    getInsightAuthors: () =>
+      apiRequest<{ success: boolean; authors: any[] }>('/api/cms/insight-authors'),
+    createInsightAuthor: (author: any) =>
+      apiRequest('/api/cms/insight-authors', { method: 'POST', body: JSON.stringify(author) }),
+    deleteInsightAuthor: (id: string) =>
+      apiRequest('/api/cms/insight-authors/' + encodeURIComponent(id), { method: 'DELETE' }),
+    getInsightTags: (language?: 'id' | 'en') =>
+      apiRequest<{ success: boolean; tags: any[] }>(
+        '/api/cms/insight-tags' + (language ? '?language=' + language : '')
+      ),
     createTestimonial: (t: any) =>
       apiRequest('/api/cms/testimonials', {
         method: 'POST',
