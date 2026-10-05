@@ -120,7 +120,29 @@ export async function ensurePostgresCmsDefaults(): Promise<void> {
           'SELECT id FROM cms_insight_categories WHERE slug = $1 LIMIT 1',
           [String(editorial.categorySlug || '').trim()]
         );
-        const categoryId = categoryResult.rows[0]?.id || null;
+        let categoryId = categoryResult.rows[0]?.id || null;
+
+        if (!categoryId && String(editorial.categorySlug || '').trim() === 'product-technology') {
+          const categorySeedId = 'seed_category_product_technology';
+          await client.query(
+            'INSERT INTO cms_insight_categories (id,slug,name,description,seo_title,seo_description,created_at,updated_at) ' +
+            'VALUES ($1,$2,$3::jsonb,$4::jsonb,$5::jsonb,$6::jsonb,$7,$7) ON CONFLICT (slug) DO NOTHING',
+            [
+              categorySeedId,
+              'product-technology',
+              JSON.stringify({ id: 'Product & Technology', en: 'Product & Technology' }),
+              JSON.stringify({ id: 'Product, technology, and digital product perspectives from Kapitech Agency.', en: 'Product, technology, and digital product perspectives from Kapitech Agency.' }),
+              JSON.stringify({ id: 'Product & Technology Insights | Kapitech', en: 'Product & Technology Insights | Kapitech' }),
+              JSON.stringify({ id: 'Practical perspectives on digital products, technology, validation, and delivery.', en: 'Practical perspectives on digital products, technology, validation, and delivery.' }),
+              now
+            ]
+          );
+          const seededCategory = await client.query<{ id: string }>(
+            'SELECT id FROM cms_insight_categories WHERE slug = $1 LIMIT 1',
+            ['product-technology']
+          );
+          categoryId = seededCategory.rows[0]?.id || categorySeedId;
+        }
 
         const publisherSlug = 'kapitech-editorial-team';
         const publisherResult = await client.query<{ id: string }>(
