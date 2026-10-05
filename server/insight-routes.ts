@@ -357,9 +357,21 @@ export function registerInsightRoutes(apiRouter: Router): void {
           page,
           pageSize
         });
+        const insights = await Promise.all(result.items.map(async (item) => {
+          const alternateLanguage = item.language === 'id' ? 'en' : 'id';
+          const variant = await postgresInsightRepository.findVariant(item.contentGroupId, alternateLanguage);
+          const allowedVariant = variant && (canManage || variant.status === 'published') ? variant : null;
+          return {
+            ...summary(item),
+            alternateLanguages: [
+              { language: item.language, slug: item.slug },
+              ...(allowedVariant ? [{ language: alternateLanguage, slug: allowedVariant.slug }] : [])
+            ]
+          };
+        }));
         res.json({
           success: true,
-          insights: result.items.map(summary),
+          insights,
           meta: {
             total: result.total,
             page: result.page,
@@ -392,7 +404,21 @@ export function registerInsightRoutes(apiRouter: Router): void {
       );
       const total = items.length;
       const start = (page - 1) * pageSize;
-      const pageItems = items.slice(start, start + pageSize).map(item => summary(withJsonRelations(item, db)));
+      const pageItems = items.slice(start, start + pageSize).map(item => {
+        const otherLanguage = item.language === 'id' ? 'en' : 'id';
+        const variant = db.cmsInsights.find((entry: any) =>
+          entry.contentGroupId === item.contentGroupId &&
+          entry.language === otherLanguage &&
+          (canManage || entry.status === 'published')
+        );
+        return {
+          ...summary(withJsonRelations(item, db)),
+          alternateLanguages: [
+            { language: item.language, slug: item.slug },
+            ...(variant ? [{ language: otherLanguage, slug: variant.slug }] : [])
+          ]
+        };
+      });
       res.json({
         success: true,
         insights: pageItems,
