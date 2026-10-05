@@ -191,7 +191,7 @@
       },
       {
         "type": "paragraph",
-        "text": "Eric Ries menjelaskan MVP dalam konteks pembelajaran tervalidasi: tim membuat versi minimum yang diperlukan untuk belajar apakah hipotesis produk bekerja. Artinya, cakupan MVP seharusnya mengikuti kebutuhan pembelajaran, bukan jumlah fitur yang sudah disepakati sejak awal. Eric Ries menjelaskan MVP dalam konteks pembelajaran tervalidasi melalui [The Lean Startup](https://leanstartup.co/resources/articles/what-is-an-mvp/)."
+        "text": "Eric Ries menjelaskan MVP dalam konteks pembelajaran tervalidasi: tim membuat versi minimum yang diperlukan untuk belajar apakah hipotesis produk bekerja. Artinya, cakupan MVP seharusnya mengikuti kebutuhan pembelajaran, bukan jumlah fitur yang sudah disepakati sejak awal. Lihat [penjelasan The Lean Startup tentang MVP](https://leanstartup.co/resources/articles/what-is-an-mvp/)."
       },
       {
         "type": "image",
@@ -521,6 +521,10 @@
         "text": "Tim sering menambahkan pengaturan, peran, analitik, berbagai kasus khusus, dashboard, dan fitur sekunder sebelum menentukan apa yang harus dipelajari. Hasilnya lebih besar, tetapi ketidakpastian utamanya tetap sama."
       },
       {
+        "type": "paragraph",
+        "text": "Mengapa ini terjadi: tim ingin menunjukkan kemajuan yang terlihat dan menghasilkan keluaran besar. Mengapa berbahaya: cakupan membesar sebelum asumsi utama diuji. Pendekatan yang lebih baik: tulis satu pertanyaan yang menentukan keputusan, lalu hapus pekerjaan yang tidak membantu menjawabnya."
+      },
+      {
         "type": "heading",
         "level": 3,
         "text": "2. Menganggap Prototype yang sangat detail sebagai MVP"
@@ -528,6 +532,10 @@
       {
         "type": "paragraph",
         "text": "Prototype bisa terlihat hampir sama seperti produk jadi tetapi tetap hanya menguji pengalaman. Tingkat kemiripan visual tidak otomatis menjadikannya MVP."
+      },
+      {
+        "type": "paragraph",
+        "text": "Mengapa ini terjadi: fidelitas visual terasa seperti kemajuan dan stakeholder dapat memberi respons terhadap sesuatu yang konkret. Mengapa berbahaya: layar yang sangat rapi dapat menciptakan rasa yakin palsu tentang adopsi atau kelayakan teknis. Pendekatan yang lebih baik: tentukan perilaku pengguna yang perlu diamati dan gunakan fidelitas sebagai alat, bukan sebagai bukti itu sendiri."
       },
       {
         "type": "heading",
@@ -539,6 +547,10 @@
         "text": "Ketika integrasi inti belum terbukti, menemukan masalah setelah sebagian besar produk dibangun dapat membuat bagian paling mahal menjadi sulit diubah. Pisahkan pertanyaan teknis itu dengan PoC yang fokus."
       },
       {
+        "type": "paragraph",
+        "text": "Mengapa ini terjadi: tim ingin satu proyek membuktikan nilai pelanggan sekaligus teknologi yang sulit. Mengapa berbahaya: kegagalan teknis yang ditemukan terlambat dapat memaksa pengerjaan ulang yang mahal. Pendekatan yang lebih baik: isolasi ketidakpastian teknis dalam PoC yang fokus sebelum menetapkan cakupan produk penuh."
+      },
+      {
         "type": "heading",
         "level": 3,
         "text": "4. Membuat PoC tanpa kriteria keberhasilan"
@@ -546,6 +558,10 @@
       {
         "type": "paragraph",
         "text": "“Coba teknologi ini” bukan eksperimen yang cukup jelas. Tentukan kondisi uji, ambang batas, lingkungan, dan keputusan sebelum memulai."
+      },
+      {
+        "type": "paragraph",
+        "text": "Mengapa ini terjadi: eksperimen teknis sering dimulai dari rasa ingin tahu terhadap sebuah teknologi. Mengapa berbahaya: tanpa ambang keberhasilan, eksperimen bisa berjalan tanpa menghasilkan keputusan. Pendekatan yang lebih baik: tentukan pertanyaan, kondisi uji, ambang keberhasilan, dan keputusan berikutnya sebelum pengujian dimulai."
       },
       {
         "type": "heading",
@@ -557,6 +573,10 @@
         "text": "Satu eksperimen menjadi sulit ditafsirkan ketika terlalu banyak pertanyaan dicampur. Pisahkan bukti berdasarkan risiko agar setiap hasil dapat mengubah keputusan tertentu."
       },
       {
+        "type": "paragraph",
+        "text": "Mengapa ini terjadi: menggabungkan semua risiko terlihat lebih efisien. Mengapa berbahaya: sinyal yang saling bercampur membuat hasil sulit ditafsirkan. Pendekatan yang lebih baik: pisahkan eksperimen ketika risiko berbeda membutuhkan bukti yang berbeda."
+      },
+      {
         "type": "heading",
         "level": 3,
         "text": "6. Menentukan ukuran keberhasilan setelah eksperimen selesai"
@@ -566,6 +586,10 @@
         "text": "Jika tim baru menetapkan arti “berhasil” setelah melihat hasilnya, bias konfirmasi menjadi lebih mudah terjadi. Tentukan sinyal yang akan mendukung maupun menantang hipotesis sejak awal."
       },
       {
+        "type": "paragraph",
+        "text": "Mengapa ini terjadi: tim ingin menghindari perubahan definisi sukses setelah pekerjaan terlanjur dikeluarkan. Mengapa berbahaya: kriteria yang samar memudahkan bias konfirmasi. Pendekatan yang lebih baik: tentukan sinyal dan ambang keputusan sebelum eksperimen dimulai."
+      },
+      {
         "type": "heading",
         "level": 3,
         "text": "7. Mengoptimalkan keluaran, bukan pembelajaran"
@@ -573,6 +597,10 @@
       {
         "type": "paragraph",
         "text": "Design system lengkap, daftar fitur panjang, atau demo teknis yang mengesankan bisa terasa seperti kemajuan meskipun pertanyaan bisnis utama belum terjawab."
+      },
+      {
+        "type": "paragraph",
+        "text": "Mengapa ini terjadi: keluaran lebih mudah dihitung daripada pembelajaran. Mengapa berbahaya: aktivitas dapat disalahartikan sebagai validasi. Pendekatan yang lebih baik: nilai setiap artefak berdasarkan keputusan yang dimungkinkannya dan hapus pekerjaan yang tidak mengurangi ketidakpastian penting."
       },
       {
         "type": "heading",
