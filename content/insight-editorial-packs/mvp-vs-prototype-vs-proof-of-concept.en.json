@@ -143,7 +143,7 @@
       },
       {
         "type": "paragraph",
-        "text": "Prototype testing is most useful when the uncertainty sits in information hierarchy, navigation, interaction, workflow, wording, or task completion. Nielsen Norman Group describes prototype testing as usability testing performed on a representation of a product before the live product exists, which makes it useful for identifying problems before implementation cost rises."
+        "text": "Prototype testing is most useful when the uncertainty sits in information hierarchy, navigation, interaction, workflow, wording, or task completion. Nielsen Norman Group describes prototype testing as usability testing performed on a representation of a product before the live product exists, which makes it useful for identifying problems before implementation cost rises. Nielsen Norman Group describes prototype testing as usability testing on a representation of a product before the live product exists. See [NN/g's prototype testing guidance](https://media.nngroup.com/media/articles/attachments/glossary-ux-research.pdf)."
       },
       {
         "type": "paragraph",
@@ -269,7 +269,7 @@
       },
       {
         "type": "paragraph",
-        "text": "Guidance from digital.gov.au treats a PoC as a small experiment used to validate feasibility before greater investment. That distinction matters: a successful PoC proves the tested technical assumption, not that the whole product is ready to launch. IBM similarly recommends focused experimentation when evaluating new technologies and their fit with existing systems."
+        "text": "Guidance from digital.gov.au treats a PoC as a small experiment used to validate feasibility before greater investment. That distinction matters: a successful PoC proves the tested technical assumption, not that the whole product is ready to launch. IBM similarly recommends focused experimentation when evaluating new technologies and their fit with existing systems. Guidance from [digital.gov.au](https://www.digital.gov.au/policy/ai/AI-POC-to-scale/context-and-principles) treats a PoC as a focused experiment for validating feasibility before larger investment. [IBM](https://www.ibm.com/think/insights/guide-to-experimenting-new-ai-technologies) similarly recommends focused experimentation when evaluating new technologies and their fit with existing systems."
       },
       {
         "type": "heading",
