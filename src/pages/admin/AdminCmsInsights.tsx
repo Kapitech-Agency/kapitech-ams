@@ -3,12 +3,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   ArrowUpRight,
   Check,
-  CircleHelp,
+  HelpCircle,
   FileText,
-  Globe2,
-  Languages,
-  Link2,
-  PenLine,
+  Globe,
+  Globe,
+  Link,
+  Pencil,
   Plus,
   Search,
   Trash2
@@ -401,7 +401,7 @@ const InsightEditor: React.FC<{
       </section>
 
       <section className="rounded-card border border-line bg-bg p-4">
-        <SectionTitle icon={<PenLine size={14} />} title="Key Takeaways" />
+        <SectionTitle icon={<Pencil size={14} />} title="Key Takeaways" />
         <textarea
           value={(value.keyTakeaways || []).join('\n')}
           onChange={(e) => update({ keyTakeaways: e.target.value.split('\n').map(item => item.trim()).filter(Boolean) })}
@@ -419,7 +419,7 @@ const InsightEditor: React.FC<{
       </section>
 
       <section className="rounded-card border border-line bg-bg p-4">
-        <SectionTitle icon={<CircleHelp size={14} />} title="FAQ" />
+        <SectionTitle icon={<HelpCircle size={14} />} title="FAQ" />
         <div className="mt-3 space-y-3">
           {faqs.map((item, index) => (
             <div key={index} className="rounded-control border border-line bg-panel p-3">
@@ -460,7 +460,7 @@ const InsightEditor: React.FC<{
       </section>
 
       <section className="rounded-card border border-line bg-bg p-4">
-        <SectionTitle icon={<Link2 size={14} />} title="Related Insights" />
+        <SectionTitle icon={<Link size={14} />} title="Related Insights" />
         <textarea
           value={(value.relatedInsightIds || []).join(', ')}
           onChange={(e) => update({ relatedInsightIds: e.target.value.split(',').map(item => item.trim()).filter(Boolean) })}
@@ -641,7 +641,7 @@ export const AdminCmsInsights: React.FC = () => {
     <AdminPageShell featureSlug="cms-insights-module" className="ams-cms-module">
       <AdminModuleHeader
         slug="cms-insights-header"
-        icon={<PenLine size={20} />}
+        icon={<Pencil size={20} />}
         title="Insights"
         description={language === 'id'
           ? 'Kelola artikel editorial, SEO, bahasa, taxonomy, dan publishing workflow Kapitech Insight.'
@@ -655,8 +655,8 @@ export const AdminCmsInsights: React.FC = () => {
         metrics={[
           { id: 'insights-total', label: 'Current results', value: total, icon: <FileText size={15} />, toneClassName: 'text-accent-text' },
           { id: 'insights-published', label: 'Published', value: publishedCount, icon: <Check size={15} />, toneClassName: 'text-success' },
-          { id: 'insights-drafts', label: 'Drafts', value: draftCount, icon: <PenLine size={15} />, toneClassName: 'text-warning' },
-          { id: 'insights-featured', label: 'Featured', value: featuredCount, icon: <Globe2 size={15} />, toneClassName: 'text-info' }
+          { id: 'insights-drafts', label: 'Drafts', value: draftCount, icon: <Pencil size={15} />, toneClassName: 'text-warning' },
+          { id: 'insights-featured', label: 'Featured', value: featuredCount, icon: <Globe size={15} />, toneClassName: 'text-info' }
         ]}
       />
 
@@ -754,7 +754,7 @@ export const AdminCmsInsights: React.FC = () => {
                     <td className="px-3 py-2.5">
                       <div className="inline-flex items-center gap-1.5">
                         <AdminStatusBadge tone="info">{item.language.toUpperCase()}</AdminStatusBadge>
-                        {item.alternateLanguages && item.alternateLanguages.length > 1 && <Languages size={12} className="text-muted" aria-label="Language variant linked" />}
+                        {item.alternateLanguages && item.alternateLanguages.length > 1 && <Globe size={12} className="text-muted" aria-label="Language variant linked" />}
                       </div>
                     </td>
                     <td className="px-3 py-2.5 text-muted">{item.category?.displayName || item.category?.slug || '—'}</td>
@@ -764,8 +764,8 @@ export const AdminCmsInsights: React.FC = () => {
                     <td className="px-3 py-2.5 text-muted">{formatDate(item.updatedAt)}</td>
                     <td className="px-3 py-2.5">
                       <div className="flex justify-end gap-1">
-                        <button type="button" className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-bg text-muted hover:text-fg" onClick={() => void handleOpenEdit(item)} aria-label="Edit Insight"><PenLine size={13} /></button>
-                        <button type="button" className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-bg text-muted hover:text-fg" onClick={() => handleOpenVariant(item)} aria-label="Create language variant"><Languages size={13} /></button>
+                        <button type="button" className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-bg text-muted hover:text-fg" onClick={() => void handleOpenEdit(item)} aria-label="Edit Insight"><Pencil size={13} /></button>
+                        <button type="button" className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-bg text-muted hover:text-fg" onClick={() => handleOpenVariant(item)} aria-label="Create language variant"><Globe size={13} /></button>
                         {item.status === 'published' && <a href={'https://kapitech.id/insights/' + item.slug} target="_blank" rel="noreferrer" className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-bg text-muted hover:text-fg" aria-label="Open public Insight"><ArrowUpRight size={13} /></a>}
                         <button type="button" className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-bg text-muted hover:border-danger/30 hover:text-danger" onClick={() => setDeleteTarget(item)} aria-label="Delete Insight"><Trash2 size={13} /></button>
                       </div>
