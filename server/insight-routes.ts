@@ -160,6 +160,13 @@ function block(value: unknown): InsightBlock | null {
     return url && label ? { type, url, label } : null;
   }
 
+  if (type === 'checklist') {
+    const items = stringArray(item.items, 30, 800);
+    if (!items.length) return null;
+    const title = clean(item.title, 240);
+    return { type, items, ...(title ? { title } : {}) };
+  }
+
   if (type === 'divider') return { type };
 
   return null;
@@ -242,13 +249,15 @@ function summary(item: any): any {
     seoTitle: item.seoTitle || '',
     seoDescription: item.seoDescription || '',
     ogImage: item.ogImage || '',
-    canonicalUrl: item.canonicalUrl || ''
+    canonicalUrl: item.canonicalUrl || '',
+    editorialMeta: item.editorialMeta || {}
   };
 }
 
 function detail(item: any, alternates: Array<{ language: InsightLanguage; slug: string }>, related: any[]): any {
   return {
     ...summary(item),
+    editorialMeta: item.editorialMeta || {},
     content: blocks(item.content),
     keyTakeaways: stringArray(item.keyTakeaways, 12, 1200),
     faq: faq(item.faq),
@@ -298,6 +307,15 @@ function payload(body: any, lang: InsightLanguage, existing?: any): any {
     seoDescription: clean(body.seoDescription ?? existing?.seoDescription, 320),
     ogImage: optionalUrl(body.ogImage ?? existing?.ogImage),
     canonicalUrl: optionalUrl(body.canonicalUrl ?? existing?.canonicalUrl),
+    editorialMeta: (() => {
+      const source = body.editorialMeta ?? existing?.editorialMeta ?? {};
+      const value = source && typeof source === 'object' && !Array.isArray(source) ? source as Record<string, unknown> : {};
+      return {
+        ...(clean(value.reviewedBy, 200) ? { reviewedBy: clean(value.reviewedBy, 200) } : {}),
+        ...(clean(value.factCheckedBy, 200) ? { factCheckedBy: clean(value.factCheckedBy, 200) } : {}),
+        ...(clean(value.editorialType, 100) ? { editorialType: clean(value.editorialType, 100) } : {})
+      };
+    })(),
     updatedAt: new Date().toISOString()
   };
 }
