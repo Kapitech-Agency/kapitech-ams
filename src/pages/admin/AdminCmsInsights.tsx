@@ -6,7 +6,6 @@ import {
   HelpCircle,
   FileText,
   Globe,
-  Globe,
   Link,
   Pencil,
   Plus,
