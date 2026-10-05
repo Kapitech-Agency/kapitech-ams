@@ -92,9 +92,16 @@ const PUBLIC_API_PATHS = new Set([
   '/cms/services',
   '/cms/projects',
   '/cms/testimonials',
+  '/cms/insights',
+  '/cms/insights/sitemap.xml',
+  '/cms/insight-categories',
   '/leads/submit',
   '/leads/resume-upload'
 ]);
+
+function isPublicApiPath(pathname: string): boolean {
+  return PUBLIC_API_PATHS.has(pathname) || pathname.startsWith('/cms/insights/');
+}
 
 function getPublicSiteOrigins(): Set<string> {
   const configured = String(process.env.PUBLIC_SITE_ORIGINS || '').split(',').map((origin) => origin.trim()).filter(Boolean);
@@ -104,7 +111,7 @@ function getPublicSiteOrigins(): Set<string> {
 }
 
 function applyPublicApiCors(req: express.Request, res: express.Response, next: express.NextFunction): void {
-  if (!PUBLIC_API_PATHS.has(req.path)) {
+  if (!isPublicApiPath(req.path)) {
     next();
     return;
   }
