@@ -488,6 +488,8 @@ export const AdminCmsInsights: React.FC = () => {
   const [languageFilter, setLanguageFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [authorFilter, setAuthorFilter] = useState('');
+  const [featuredFilter, setFeaturedFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(true);
@@ -510,6 +512,8 @@ export const AdminCmsInsights: React.FC = () => {
         language: languageFilter || undefined,
         status: statusFilter || undefined,
         categoryId: categoryFilter || undefined,
+        authorId: authorFilter || undefined,
+        featured: featuredFilter === '' ? undefined : featuredFilter === 'true',
         search: search || undefined
       });
       if (!res.success) throw new Error(res.error || 'Unable to load Insights.');
@@ -532,7 +536,7 @@ export const AdminCmsInsights: React.FC = () => {
   };
 
   useEffect(() => { void loadTaxonomy(); }, []);
-  useEffect(() => { void load(); }, [page, pageSize, languageFilter, statusFilter, categoryFilter, search]);
+  useEffect(() => { void load(); }, [page, pageSize, languageFilter, statusFilter, categoryFilter, authorFilter, featuredFilter, search]);
 
   const featuredCount = items.filter(item => item.isFeatured).length;
   const publishedCount = items.filter(item => item.status === 'published').length;
@@ -681,6 +685,22 @@ export const AdminCmsInsights: React.FC = () => {
                 value: category.id,
                 label: category.displayName || category.name.en || category.name.id || category.slug
               }))]}
+            />
+            <CustomSelect
+              size="xs"
+              value={authorFilter}
+              onChange={(value) => { setAuthorFilter(value); setPage(1); }}
+              options={[{ value: '', label: 'All authors' }, ...authors.map(author => ({ value: author.id, label: author.name }))]}
+            />
+            <CustomSelect
+              size="xs"
+              value={featuredFilter}
+              onChange={(value) => { setFeaturedFilter(value); setPage(1); }}
+              options={[
+                { value: '', label: 'All content' },
+                { value: 'true', label: 'Featured' },
+                { value: 'false', label: 'Not featured' }
+              ]}
             />
           </div>
         )}
