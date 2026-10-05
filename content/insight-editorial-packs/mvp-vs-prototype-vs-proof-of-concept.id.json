@@ -11,7 +11,7 @@
   },
   "editorial": {
     "language": "id",
-    "categorySlug": "product-technology",
+    "categorySlug": "Teknologi & Produk",
     "authorSlug": "kapitech-editorial-team",
     "status": "published",
     "isFeatured": true,
@@ -31,32 +31,40 @@
       },
       {
         "slug": "product-validation",
-        "name": "Product Validation"
+        "name": "Validasi Produk"
       },
       {
         "slug": "digital-product",
-        "name": "Digital Product"
+        "name": "Produk Digital"
+      },
+      {
+        "slug": "product-discovery",
+        "name": "Penemuan Produk"
+      },
+      {
+        "slug": "ux-design",
+        "name": "Desain UX"
       }
     ],
     "coverImage": "/insights/mvp-vs-prototype-vs-proof-of-concept/hero.svg",
     "title": "MVP vs Prototype vs Proof of Concept: Apa Bedanya dan Kapan Bisnis Harus Memilih yang Mana?",
-    "excerpt": "Prototype, MVP, dan Proof of Concept sama-sama dipakai untuk mengurangi risiko, tetapi mereka menjawab pertanyaan yang berbeda. Artikel ini membantu Anda menentukan ketidakpastian terbesar, memilih metode validasi yang paling hemat, dan menentukan langkah berikutnya berdasarkan evidence.",
+    "excerpt": "Prototype, MVP, dan Proof of Concept sama-sama dipakai untuk mengurangi risiko, tetapi mereka menjawab pertanyaan yang berbeda. Artikel ini membantu Anda menentukan ketidakpastian terbesar, memilih metode validasi yang paling hemat, dan menentukan langkah berikutnya berdasarkan bukti.",
     "keyTakeaways": [
-      "Prototype terutama digunakan untuk menguji pengalaman, alur, usability, dan cara pengguna memahami sebuah solusi.",
-      "MVP digunakan untuk mendapatkan validated learning dari perilaku pengguna terhadap nilai inti produk, bukan sekadar membuat versi produk yang lebih kecil.",
+      "Prototype terutama digunakan untuk menguji pengalaman, alur, kemudahan penggunaan, dan cara pengguna memahami sebuah solusi.",
+      "MVP digunakan untuk mendapatkan pembelajaran tervalidasi dari perilaku pengguna terhadap nilai inti produk, bukan sekadar membuat versi produk yang lebih kecil.",
       "Proof of Concept berfokus pada kelayakan teknis: apakah pendekatan, integrasi, data, atau arsitektur tertentu benar-benar bisa bekerja.",
       "Prototype, MVP, dan PoC bukan tahapan wajib yang harus selalu dijalankan secara berurutan. Metode dipilih berdasarkan ketidakpastian terbesar.",
-      "Semakin jelas pertanyaan yang ingin dijawab, semakin kecil scope validasi yang dibutuhkan untuk mengambil keputusan dengan percaya diri.",
-      "Evidence yang baik bukan hanya membuktikan bahwa sesuatu bisa dibuat, tetapi membantu tim menentukan apakah harus melanjutkan, mengubah arah, atau berhenti."
+      "Semakin jelas pertanyaan yang ingin dijawab, semakin kecil cakupan validasi yang dibutuhkan untuk mengambil keputusan dengan percaya diri.",
+      "Bukti yang baik bukan hanya membuktikan bahwa sesuatu bisa dibuat, tetapi membantu tim menentukan apakah harus melanjutkan, mengubah arah, atau berhenti."
     ],
     "content": [
       {
         "type": "paragraph",
-        "text": "Banyak tim yang ingin membangun aplikasi langsung masuk ke pertanyaan seperti: fitur apa yang harus dibuat, teknologi apa yang dipakai, atau berapa lama development-nya. Padahal pada tahap awal, pertanyaan yang lebih penting biasanya jauh lebih sederhana: apa yang sebenarnya belum kita ketahui?"
+        "text": "Banyak tim yang ingin membangun aplikasi langsung masuk ke pertanyaan seperti: fitur apa yang harus dibuat, teknologi apa yang dipakai, atau berapa lama pengembangan-nya. Padahal pada tahap awal, pertanyaan yang lebih penting biasanya jauh lebih sederhana: apa yang sebenarnya belum kita ketahui?"
       },
       {
         "type": "paragraph",
-        "text": "Kadang yang belum jelas adalah pengalaman pengguna. Tim tahu masalahnya, tetapi belum yakin apakah orang bisa memahami flow dan menggunakan solusi tersebut tanpa kebingungan. Kadang masalahnya berbeda: pengalaman sudah cukup jelas, tetapi belum ada bukti bahwa pengguna benar-benar membutuhkan atau menghargai produk itu. Di situ MVP lebih relevan. Dalam kasus lain, risiko terbesar justru ada di belakang layar: API lama, kebutuhan real-time, integrasi pihak ketiga, volume data, atau requirement teknis yang belum pernah dibuktikan."
+        "text": "Kadang yang belum jelas adalah pengalaman pengguna. Tim tahu masalahnya, tetapi belum yakin apakah orang bisa memahami alur dan menggunakan solusi tersebut tanpa kebingungan. Kadang masalahnya berbeda: pengalaman sudah cukup jelas, tetapi belum ada bukti bahwa pengguna benar-benar membutuhkan atau menghargai produk itu. Di situ MVP lebih relevan. Dalam kasus lain, risiko terbesar justru ada di belakang layar: API lama, kebutuhan waktu nyata, integrasi pihak ketiga, volume data, atau persyaratan teknis yang belum pernah dibuktikan."
       },
       {
         "type": "paragraph",
@@ -64,7 +72,7 @@
       },
       {
         "type": "paragraph",
-        "text": "Mental model yang kami gunakan sederhana: <strong>pilih hal terkecil yang bisa menjawab ketidakpastian terbesar Anda.</strong> Dengan begitu, keputusan berikutnya didasarkan pada evidence, bukan asumsi."
+        "text": "Mental model yang kami gunakan sederhana: <strong>pilih hal terkecil yang bisa menjawab ketidakpastian terbesar Anda.</strong> Dengan begitu, keputusan berikutnya didasarkan pada bukti, bukan asumsi."
       },
       {
         "type": "heading",
@@ -73,7 +81,7 @@
       },
       {
         "type": "paragraph",
-        "text": "Salah memilih metode validasi biasanya membuat tim membayar terlalu mahal untuk jawaban yang sebenarnya bisa diperoleh dengan eksperimen yang lebih kecil. Membangun MVP ketika masalah utama adalah usability bisa membuat tim menulis banyak kode sebelum tahu apakah flow-nya masuk akal. Sebaliknya, membuat prototype yang sangat detail tidak banyak membantu jika pertanyaan utamanya adalah apakah integrasi dengan sistem legacy benar-benar feasible."
+        "text": "Salah memilih metode validasi biasanya membuat tim membayar terlalu mahal untuk jawaban yang sebenarnya bisa diperoleh dengan eksperimen yang lebih kecil. Membangun MVP ketika masalah utama adalah kemudahan penggunaan bisa membuat tim menulis banyak kode sebelum tahu apakah alur-nya masuk akal. Sebaliknya, membuat prototype yang sangat detail tidak banyak membantu jika pertanyaan utamanya adalah apakah integrasi dengan sistem legacy benar-benar layak secara teknis."
       },
       {
         "type": "paragraph",
@@ -92,19 +100,19 @@
       },
       {
         "type": "paragraph",
-        "text": "Prototype adalah representasi dari sebuah solusi yang dibuat untuk mengeksplorasi atau menguji bagaimana solusi tersebut bekerja dari perspektif pengguna. Bentuknya bisa sangat sederhana seperti wireframe, flow yang dapat diklik, sampai prototype high-fidelity yang mendekati tampilan produk."
+        "text": "Prototype adalah representasi dari sebuah solusi yang dibuat untuk mengeksplorasi atau menguji bagaimana solusi tersebut bekerja dari perspektif pengguna. Bentuknya bisa sangat sederhana seperti wireframe, alur yang dapat diklik, sampai prototype fidelitas tinggi yang mendekati tampilan produk."
       },
       {
         "type": "paragraph",
-        "text": "Dalam praktik product design, prototype sangat berguna ketika risiko terbesar ada pada <strong>cara pengguna berinteraksi dengan solusi</strong>. Anda dapat menguji apakah navigasi dipahami, apakah urutan langkah masuk akal, apakah informasi penting mudah ditemukan, atau apakah sebuah konsep terasa terlalu rumit."
+        "text": "Dalam praktik desain produk, prototype sangat berguna ketika risiko terbesar ada pada <strong>cara pengguna berinteraksi dengan solusi</strong>. Anda dapat menguji apakah navigasi dipahami, apakah urutan langkah masuk akal, apakah informasi penting mudah ditemukan, atau apakah sebuah konsep terasa terlalu rumit."
       },
       {
         "type": "paragraph",
-        "text": "Prototype testing memang dapat dilakukan sebelum interface benar-benar diimplementasikan. Nielsen Norman Group menjelaskan prototype testing sebagai bentuk usability testing ketika interface yang diuji masih berupa prototype, bukan produk live. [Baca referensinya](https://media.nngroup.com/media/articles/attachments/glossary-ux-research.pdf)."
+        "text": "Prototype testing memang dapat dilakukan sebelum antarmuka benar-benar diimplementasikan. Nielsen Norman Group menjelaskan prototype testing sebagai bentuk pengujian kemudahan penggunaan ketika antarmuka yang diuji masih berupa prototype, bukan produk langsung. [Baca referensinya](https://media.nngroup.com/media/articles/attachments/glossary-ux-research.pdf)."
       },
       {
         "type": "paragraph",
-        "text": "Yang penting, prototype tidak otomatis membuktikan bahwa backend akan scalable, pengguna akan membayar, atau infrastruktur siap menangani beban produksi. Ia menjawab pertanyaan lain: <strong>apakah experience ini masuk akal untuk digunakan?</strong>"
+        "text": "Yang penting, prototype tidak otomatis membuktikan bahwa backend akan dapat diskalakan, pengguna akan membayar, atau infrastruktur siap menangani beban produksi. Ia menjawab pertanyaan lain: <strong>apakah pengalaman ini masuk akal untuk digunakan?</strong>"
       },
       {
         "type": "heading",
@@ -115,16 +123,16 @@
         "type": "list",
         "ordered": false,
         "items": [
-          "User flow belum jelas atau stakeholder memiliki asumsi yang berbeda.",
+          "User alur belum jelas atau pemangku kepentingan memiliki asumsi yang berbeda.",
           "Usability adalah risiko terbesar.",
-          "Tim ingin menguji beberapa alternatif layout, flow, atau interaction sebelum coding.",
+          "Tim ingin menguji beberapa alternatif tata letak, alur, atau interaksi sebelum pengodean.",
           "Produk masih terlalu awal untuk membutuhkan sistem backend yang lengkap.",
           "Anda membutuhkan sesuatu yang dapat didemokan dan diuji untuk menyamakan keputusan lintas tim."
         ]
       },
       {
         "type": "paragraph",
-        "text": "Untuk contoh aplikasi booking, prototype dapat menguji pemilihan jadwal, navigasi, checkout flow, hierarki informasi, dan respons terhadap error. Tetapi prototype belum membuktikan bahwa payment gateway, inventory, atau sinkronisasi data akan bekerja pada skala produksi."
+        "text": "Untuk contoh aplikasi pemesanan, prototype dapat menguji pemilihan jadwal, navigasi, checkout alur, hierarki informasi, dan respons terhadap error. Tetapi prototype belum membuktikan bahwa gerbang pembayaran, persediaan, atau sinkronisasi data akan bekerja pada skala produksi."
       },
       {
         "type": "image",
@@ -139,21 +147,21 @@
       },
       {
         "type": "paragraph",
-        "text": "MVP atau Minimum Viable Product adalah versi produk yang cukup untuk menghasilkan <strong>validated learning</strong> dari pengguna. Eric Ries menjelaskan MVP sebagai versi produk yang memungkinkan tim mengumpulkan sebanyak mungkin pembelajaran tervalidasi tentang pelanggan dengan usaha yang paling kecil. [Baca definisinya](https://leanstartup.co/resources/articles/what-is-an-mvp/)."
+        "text": "MVP atau Minimum Viable Product adalah versi produk yang cukup untuk menghasilkan <strong>pembelajaran tervalidasi</strong> dari pengguna. Eric Ries menjelaskan MVP sebagai versi produk yang memungkinkan tim mengumpulkan sebanyak mungkin pembelajaran tervalidasi tentang pelanggan dengan usaha yang paling kecil. [Baca definisinya](https://leanstartup.co/resources/articles/what-is-an-mvp/)."
       },
       {
         "type": "paragraph",
-        "text": "Karena itu, kata minimum tidak berarti murah, setengah jadi, atau penuh kompromi yang merusak pengalaman. Minimum berarti <strong>scope-nya dibatasi pada sesuatu yang diperlukan untuk menjawab hipotesis utama</strong>."
+        "text": "Karena itu, kata minimum tidak berarti murah, setengah jadi, atau penuh kompromi yang merusak pengalaman. Minimum berarti <strong>cakupan-nya dibatasi pada sesuatu yang diperlukan untuk menjawab hipotesis utama</strong>."
       },
       {
         "type": "paragraph",
-        "text": "MVP menjadi relevan ketika tim sudah cukup memahami masalah dan ingin mengetahui bagaimana orang benar-benar berperilaku terhadap nilai inti produk. Fokusnya bukan lagi sekadar: “Apakah flow ini mudah dipahami?” tetapi: “Apakah solusi ini memberikan nilai yang cukup sehingga orang mau menggunakannya, kembali menggunakannya, atau melakukan tindakan yang kita hipotesiskan?”"
+        "text": "MVP menjadi relevan ketika tim sudah cukup memahami masalah dan ingin mengetahui bagaimana orang benar-benar berperilaku terhadap nilai inti produk. Fokusnya bukan lagi sekadar: “Apakah alur ini mudah dipahami?” tetapi: “Apakah solusi ini memberikan nilai yang cukup sehingga orang mau menggunakannya, kembali menggunakannya, atau melakukan tindakan yang kita hipotesiskan?”"
       },
       {
         "type": "image",
-        "url": "/insights/mvp-vs-prototype-vs-proof-of-concept/learning-loop.svg",
-        "alt": "Siklus MVP dari problem, core solution, real users, feedback, learning, dan iteration",
-        "caption": "MVP dirancang sebagai loop pembelajaran. Produk hanya menjadi alat untuk memperoleh evidence yang dibutuhkan agar keputusan berikutnya lebih baik."
+        "url": "/insights/mvp-vs-prototype-vs-proof-of-concept/pembelajaran-loop.svg",
+        "alt": "Siklus MVP dari masalah, solusi inti, pengguna nyata, masukan, pembelajaran, dan iterasi",
+        "caption": "MVP dirancang sebagai loop pembelajaran. Produk hanya menjadi alat untuk memperoleh bukti yang dibutuhkan agar keputusan berikutnya lebih baik."
       },
       {
         "type": "heading",
@@ -162,11 +170,11 @@
       },
       {
         "type": "paragraph",
-        "text": "Bayangkan sebuah platform operasional B2B memiliki 40 fitur yang direncanakan. MVP yang baik tidak berarti mengambil 20 fitur secara acak lalu menyebutnya minimum. Tim seharusnya menentukan satu core job-to-be-done dan memangkas semua pekerjaan yang tidak membantu menguji nilai tersebut."
+        "text": "Bayangkan sebuah platform operasional B2B memiliki 40 fitur yang direncanakan. MVP yang baik tidak berarti mengambil 20 fitur secara acak lalu menyebutnya minimum. Tim seharusnya menentukan satu tugas utama yang ingin diselesaikan pengguna dan memangkas semua pekerjaan yang tidak membantu menguji nilai tersebut."
       },
       {
         "type": "paragraph",
-        "text": "MVP bisa memiliki scope kecil tetapi tetap memiliki kualitas yang cukup untuk konteks pengguna yang dituju. “Viable” berarti produk itu cukup layak untuk menghasilkan signal yang dapat dipercaya, bukan sekadar dapat dibuka."
+        "text": "MVP bisa memiliki cakupan kecil tetapi tetap memiliki kualitas yang cukup untuk konteks pengguna yang dituju. “Viable” berarti produk itu cukup layak untuk menghasilkan sinyal yang dapat dipercaya, bukan sekadar dapat dibuka."
       },
       {
         "type": "heading",
@@ -175,29 +183,29 @@
       },
       {
         "type": "paragraph",
-        "text": "Proof of Concept (PoC) adalah eksperimen terarah untuk membuktikan bahwa pendekatan teknis tertentu feasible dalam kondisi yang relevan. Fokusnya biasanya pada hal yang belum pasti secara engineering: integrasi, arsitektur, akses data, kemampuan teknologi, performance, atau constraint tertentu."
+        "text": "Proof of Concept (PoC) adalah eksperimen terarah untuk membuktikan bahwa pendekatan teknis tertentu layak secara teknis dalam kondisi yang relevan. Fokusnya biasanya pada hal yang belum pasti secara rekayasa: integrasi, arsitektur, akses data, kemampuan teknologi, kinerja, atau batasan tertentu."
       },
       {
         "type": "paragraph",
-        "text": "Panduan pemerintah digital Australia untuk AI, misalnya, mendefinisikan PoC sebagai eksperimen kecil yang dirancang untuk menunjukkan kelayakan teknis dan potensi nilai suatu use case sebelum komitmen integrasi skala penuh. [Lihat guidance](https://www.digital.gov.au/policy/ai/AI-POC-to-scale/context-and-principles). Prinsip ini juga berlaku secara luas untuk software ketika technical uncertainty menjadi risiko utama."
+        "text": "Panduan pemerintah digital Australia untuk AI, misalnya, mendefinisikan PoC sebagai eksperimen kecil yang dirancang untuk menunjukkan kelayakan teknis dan potensi nilai suatu kasus penggunaan sebelum komitmen integrasi skala penuh. [Lihat panduan](https://www.digital.gov.au/policy/ai/AI-POC-to-scale/context-and-principles). Prinsip ini juga berlaku secara luas untuk perangkat lunak ketika ketidakpastian teknis menjadi risiko utama."
       },
       {
         "type": "paragraph",
-        "text": "PoC biasanya tidak membutuhkan polish visual. Tujuannya bukan menghasilkan produk yang siap dipakai pelanggan, melainkan menghilangkan satu technical unknown yang terlalu berisiko untuk dibiarkan sampai tahap development penuh."
+        "text": "PoC biasanya tidak membutuhkan polesan visual. Tujuannya bukan menghasilkan produk yang siap dipakai pelanggan, melainkan menghilangkan satu hal teknis yang belum terbukti yang terlalu berisiko untuk dibiarkan sampai tahap pengembangan penuh."
       },
       {
         "type": "heading",
         "level": 3,
-        "text": "Contoh technical uncertainty yang layak diuji dengan PoC"
+        "text": "Contoh ketidakpastian teknis yang layak diuji dengan PoC"
       },
       {
         "type": "list",
         "ordered": false,
         "items": [
-          "Apakah legacy API dapat memberikan data yang dibutuhkan dengan latency yang dapat diterima?",
+          "Apakah API lama dapat memberikan data yang dibutuhkan dengan latency yang dapat diterima?",
           "Apakah third-party service dapat menangani pola integrasi yang dibutuhkan?",
           "Apakah model AI memberikan tingkat akurasi minimum pada dataset nyata?",
-          "Apakah pendekatan real-time mampu memenuhi requirement concurrency tertentu?",
+          "Apakah pendekatan waktu nyata mampu memenuhi persyaratan konkurensi tertentu?",
           "Apakah arsitektur data tertentu tetap masuk akal ketika volume transaksi meningkat?"
         ]
       },
@@ -209,7 +217,7 @@
         "type": "image",
         "url": "/insights/mvp-vs-prototype-vs-proof-of-concept/questions.svg",
         "alt": "Pertanyaan inti yang membedakan Prototype, MVP, dan Proof of Concept",
-        "caption": "PoC paling berguna ketika pertanyaan teknisnya spesifik dan success criteria-nya bisa diamati."
+        "caption": "PoC paling berguna ketika pertanyaan teknisnya spesifik dan kriteria keberhasilan-nya bisa diamati."
       },
       {
         "type": "heading",
@@ -218,7 +226,7 @@
       },
       {
         "type": "paragraph",
-        "text": "Cara termudah membedakannya adalah melihat jenis keputusan yang ingin Anda buat setelah eksperimen selesai. Prototype terutama mengurangi user-experience uncertainty. MVP mengurangi product-value uncertainty. PoC mengurangi technical-feasibility uncertainty."
+        "text": "Cara termudah membedakannya adalah melihat jenis keputusan yang ingin Anda buat setelah eksperimen selesai. Prototype terutama mengurangi ketidakpastian pengalaman pengguna. MVP mengurangi ketidakpastian nilai produk. PoC mengurangi ketidakpastian kelayakan teknis."
       },
       {
         "type": "table",
@@ -239,12 +247,12 @@
             "Pertanyaan utama",
             "Can users use it?",
             "Will users value it?",
-            "Can we technically build it?"
+            "Can we teknisly build it?"
           ],
           [
             "Pengguna nyata",
-            "Opsional tetapi berguna untuk usability",
-            "Penting untuk memperoleh behavioral signal",
+            "Opsional tetapi berguna untuk kemudahan penggunaan",
+            "Penting untuk memperoleh behavioral sinyal",
             "Biasanya bukan fokus utama"
           ],
           [
@@ -272,7 +280,7 @@
             "Tinggi"
           ],
           [
-            "Production-ready",
+            "Siap untuk produksi",
             "Tidak",
             "Terbatas / terkontrol",
             "Tidak"
@@ -282,7 +290,7 @@
       {
         "type": "image",
         "url": "/insights/mvp-vs-prototype-vs-proof-of-concept/comparison.svg",
-        "alt": "Perbandingan Prototype MVP dan Proof of Concept berdasarkan tujuan, pengguna nyata, fidelity UX, kedalaman teknis, dan readiness",
+        "alt": "Perbandingan Prototype MVP dan Proof of Concept berdasarkan tujuan, pengguna nyata, fidelitas UX, kedalaman teknis, dan kesiapan",
         "caption": "Tidak ada satu pendekatan yang selalu “lebih baik”. Nilainya tergantung jenis risiko yang ingin Anda kurangi."
       },
       {
@@ -292,14 +300,14 @@
       },
       {
         "type": "paragraph",
-        "text": "Perbedaannya bukan terutama pada apakah hasilnya berbentuk Figma, code, atau sebuah aplikasi. Perbedaannya ada pada <strong>evidence yang ingin dikumpulkan</strong>."
+        "text": "Perbedaannya bukan terutama pada apakah hasilnya berbentuk Figma, code, atau sebuah aplikasi. Perbedaannya ada pada <strong>bukti yang ingin dikumpulkan</strong>."
       },
       {
         "type": "list",
         "ordered": false,
         "items": [
-          "Prototype menguji respons manusia terhadap sebuah experience.",
-          "MVP menguji respons pasar atau pengguna terhadap value proposition melalui produk yang cukup viable.",
+          "Prototype menguji respons manusia terhadap sebuah pengalaman.",
+          "MVP menguji respons pasar atau pengguna terhadap proposisi nilai melalui produk yang cukup layak digunakan.",
           "PoC menguji apakah sistem, teknologi, data, atau integrasi mampu mewujudkan pendekatan yang dipilih."
         ]
       },
@@ -307,7 +315,7 @@
         "type": "callout",
         "tone": "info",
         "title": "Mental model yang lebih berguna",
-        "text": "Jangan bertanya “Mana yang paling lengkap?” Tanyakan “Apa ketidakpastian terbesar yang akan paling mahal jika kita salah?” Pilih eksperimen terkecil yang dapat memberi evidence terhadap ketidakpastian itu."
+        "text": "Jangan bertanya “Mana yang paling lengkap?” Tanyakan “Apa ketidakpastian terbesar yang akan paling mahal jika kita salah?” Pilih eksperimen terkecil yang dapat memberi bukti terhadap ketidakpastian itu."
       },
       {
         "type": "heading",
@@ -316,29 +324,29 @@
       },
       {
         "type": "paragraph",
-        "text": "Prototype paling tepat ketika Anda masih memperdebatkan bagaimana solusi seharusnya bekerja di depan pengguna. Ini sering terjadi pada produk dengan workflow kompleks, dashboard, aplikasi B2B, booking, e-commerce, dan sistem internal yang memiliki banyak state."
+        "text": "Prototype paling tepat ketika Anda masih memperdebatkan bagaimana solusi seharusnya bekerja di depan pengguna. Ini sering terjadi pada produk dengan workalur kompleks, dashboard, aplikasi B2B, pemesanan, e-commerce, dan sistem internal yang memiliki banyak state."
       },
       {
         "type": "paragraph",
-        "text": "Prototype juga membantu ketika stakeholder memiliki gambaran yang berbeda. Satu flow yang dapat diklik sering kali lebih efektif untuk menguji keputusan daripada rapat panjang tentang apakah sebuah tombol harus berada di satu tempat atau tempat lain."
+        "text": "Prototype juga membantu ketika pemangku kepentingan memiliki gambaran yang berbeda. Satu alur yang dapat diklik sering kali lebih efektif untuk menguji keputusan daripada rapat panjang tentang apakah sebuah tombol harus berada di satu tempat atau tempat lain."
       },
       {
         "type": "paragraph",
-        "text": "Tanda sederhana bahwa prototype adalah langkah yang tepat: <strong>kalau experience salah, Anda ingin mengetahuinya sebelum tim mulai membangun sistem yang sulit diubah.</strong>"
+        "text": "Tanda sederhana bahwa prototype adalah langkah yang tepat: <strong>kalau pengalaman salah, Anda ingin mengetahuinya sebelum tim mulai membangun sistem yang sulit diubah.</strong>"
       },
       {
         "type": "callout",
         "tone": "neutral",
-        "title": "Jangan bangun full product dulu",
-        "text": "Jika pertanyaan terbesar Anda masih seputar flow, usability, information hierarchy, atau interaksi, cukupkan scope pada prototype yang dapat diuji. Validasi yang lebih kecil biasanya menghasilkan feedback yang lebih cepat dan lebih murah untuk diubah."
+        "title": "Jangan bangun produk lengkap dulu",
+        "text": "Jika pertanyaan terbesar Anda masih seputar alur, kemudahan penggunaan, hierarki informasi, atau interaksi, cukupkan cakupan pada prototype yang dapat diuji. Validasi yang lebih kecil biasanya menghasilkan masukan yang lebih cepat dan lebih murah untuk diubah."
       },
       {
         "type": "paragraph",
-        "text": "Punya ide produk tetapi belum yakin harus mulai dari prototype atau MVP? Kapitech dapat membantu memetakan product scope, merancang experience yang bisa diuji, dan menyiapkan handoff yang siap masuk ke engineering."
+        "text": "Punya ide produk tetapi belum yakin harus mulai dari prototype atau MVP? Kapitech dapat membantu memetakan product cakupan, merancang pengalaman yang bisa diuji, dan menyiapkan handoff yang siap masuk ke rekayasa."
       },
       {
         "type": "link",
-        "label": "Discuss Your Product",
+        "label": "Diskusikan Produk Anda",
         "url": "https://kapitech.id/contact"
       },
       {
@@ -348,7 +356,7 @@
       },
       {
         "type": "paragraph",
-        "text": "MVP lebih tepat ketika core problem dan target user sudah cukup jelas sehingga Anda siap mengamati perilaku nyata, bukan hanya reaksi terhadap rancangan. Anda ingin menguji adopsi, penggunaan berulang, willingness to pay, atau signal bisnis lain yang membutuhkan interaksi dengan produk yang benar-benar bekerja."
+        "text": "MVP lebih tepat ketika core masalah dan target user sudah cukup jelas sehingga Anda siap mengamati perilaku nyata, bukan hanya reaksi terhadap rancangan. Anda ingin menguji adopsi, penggunaan berulang, kesediaan membayar, atau sinyal bisnis lain yang membutuhkan interaksi dengan produk yang benar-benar bekerja."
       },
       {
         "type": "list",
@@ -357,13 +365,13 @@
           "Target user dan masalah utamanya sudah cukup terdefinisi.",
           "Anda memiliki hipotesis value yang dapat dinyatakan dengan jelas.",
           "Ada tindakan pengguna yang bisa diamati dan diukur.",
-          "Feedback dari pengguna nyata akan mengubah keputusan roadmap.",
-          "Core flow dapat diselesaikan tanpa menunggu seluruh fitur sekunder."
+          "Feedback dari pengguna nyata akan mengubah keputusan peta jalan.",
+          "Core alur dapat diselesaikan tanpa menunggu seluruh fitur sekunder."
         ]
       },
       {
         "type": "paragraph",
-        "text": "Sebelum build, tulis hipotesisnya. Contoh: “Pengguna operasi akan menggunakan dashboard ini setiap hari untuk memantau status approval karena pekerjaan manual mereka saat ini terlalu lambat.” Lalu tentukan evidence apa yang dapat menguatkan atau melemahkan hipotesis tersebut."
+        "text": "Sebelum build, tulis hipotesisnya. Contoh: “Pengguna operasi akan menggunakan dashboard ini setiap hari untuk memantau status approval karena pekerjaan manual mereka saat ini terlalu lambat.” Lalu tentukan bukti apa yang dapat menguatkan atau melemahkan hipotesis tersebut."
       },
       {
         "type": "heading",
@@ -372,11 +380,11 @@
       },
       {
         "type": "paragraph",
-        "text": "Gunakan PoC ketika ada satu pertanyaan teknis yang dapat menggagalkan seluruh rencana jika jawabannya negatif. Ini sering muncul pada produk yang bergantung pada sistem lama, data sulit, API eksternal, AI, real-time processing, atau requirement performa yang belum pernah dibuktikan."
+        "text": "Gunakan PoC ketika ada satu pertanyaan teknis yang dapat menggagalkan seluruh rencana jika jawabannya negatif. Ini sering muncul pada produk yang bergantung pada sistem lama, data sulit, API eksternal, AI, waktu nyata processing, atau persyaratan performa yang belum pernah dibuktikan."
       },
       {
         "type": "paragraph",
-        "text": "PoC sebaiknya memiliki scope yang sengaja sempit. Tentukan technical question, success criteria, durasi eksperimen, dan keputusan yang akan diambil setelah hasilnya keluar. IBM juga menyarankan PoC dan pengujian awal untuk menunjukkan feasibility ketika mengevaluasi teknologi baru dan integrasi dengan sistem yang sudah ada. [Lihat panduan IBM](https://www.ibm.com/think/insights/guide-to-experimenting-new-ai-technologies)."
+        "text": "PoC sebaiknya memiliki cakupan yang sengaja sempit. Tentukan teknis question, kriteria keberhasilan, durasi eksperimen, dan keputusan yang akan diambil setelah hasilnya keluar. IBM juga menyarankan PoC dan pengujian awal untuk menunjukkan feasibility ketika mengevaluasi teknologi baru dan integrasi dengan sistem yang sudah ada. [Lihat panduan IBM](https://www.ibm.com/think/insights/guide-to-experimenting-new-ai-technologies)."
       },
       {
         "type": "heading",
@@ -385,21 +393,21 @@
       },
       {
         "type": "paragraph",
-        "text": "Prototype, MVP, dan PoC bukan tiga kotak yang saling menutup. Sebuah project dapat menggunakan lebih dari satu jika memiliki beberapa ketidakpastian kritis."
+        "text": "Prototype, MVP, dan PoC bukan tiga kotak yang saling menutup. Sebuah proyek dapat menggunakan lebih dari satu jika memiliki beberapa ketidakpastian kritis."
       },
       {
         "type": "paragraph",
-        "text": "Contoh: sebuah perusahaan ingin membangun platform operasional B2B. Tim belum yakin apakah workflow baru mudah dipahami, tetapi mereka juga belum yakin apakah legacy API mampu menyediakan data secara real-time. Prototype dapat digunakan untuk menguji flow pengguna, sementara PoC menguji integrasi. Setelah keduanya memberikan bukti yang cukup, MVP dapat digunakan untuk menguji apakah product value tersebut benar-benar dipakai oleh tim operasi."
+        "text": "Contoh: sebuah perusahaan ingin membangun platform operasional B2B. Tim belum yakin apakah workalur baru mudah dipahami, tetapi mereka juga belum yakin apakah API lama mampu menyediakan data secara waktu nyata. Prototype dapat digunakan untuk menguji alur pengguna, sementara PoC menguji integrasi. Setelah keduanya memberikan bukti yang cukup, MVP dapat digunakan untuk menguji apakah nilai produk tersebut benar-benar dipakai oleh tim operasi."
       },
       {
         "type": "heading",
         "level": 2,
-        "text": "Decision framework: pilih berdasarkan ketidakpastian terbesar"
+        "text": "Decision kerangka: pilih berdasarkan ketidakpastian terbesar"
       },
       {
         "type": "image",
         "url": "/insights/mvp-vs-prototype-vs-proof-of-concept/decision-tree.svg",
-        "alt": "Decision tree untuk memilih Prototype MVP atau Proof of Concept berdasarkan ketidakpastian terbesar",
+        "alt": "Bagan keputusan untuk memilih Prototype MVP atau Proof of Concept berdasarkan ketidakpastian terbesar",
         "caption": "Mulai dari pertanyaan yang paling berisiko. Jika ada lebih dari satu critical uncertainty, kombinasikan metode secara sengaja."
       },
       {
@@ -409,7 +417,7 @@
       },
       {
         "type": "paragraph",
-        "text": "Tulis apa yang paling belum Anda ketahui. Hindari jawaban yang terlalu umum seperti “produk ini sulit”. Pecah menjadi pertanyaan spesifik: apakah pengguna memahami workflow? apakah mereka mau memakai fitur utama? apakah integrasi dapat berjalan dengan latency yang dibutuhkan?"
+        "text": "Tulis apa yang paling belum Anda ketahui. Hindari jawaban yang terlalu umum seperti “produk ini sulit”. Pecah menjadi pertanyaan spesifik: apakah pengguna memahami workalur? apakah mereka mau memakai fitur utama? apakah integrasi dapat berjalan dengan latency yang dibutuhkan?"
       },
       {
         "type": "heading",
@@ -418,31 +426,31 @@
       },
       {
         "type": "paragraph",
-        "text": "Pilih Prototype, MVP, PoC, atau kombinasi kecil yang bisa memberikan evidence dengan effort paling rendah. Ini bukan kompetisi untuk membuat deliverable paling besar."
+        "text": "Pilih Prototype, MVP, PoC, atau kombinasi kecil yang bisa memberikan bukti dengan upaya paling rendah. Ini bukan kompetisi untuk membuat delangsungrable paling besar."
       },
       {
         "type": "heading",
         "level": 3,
-        "text": "3. Tentukan evidence sebelum eksperimen"
+        "text": "3. Tentukan bukti sebelum eksperimen"
       },
       {
         "type": "paragraph",
-        "text": "Sebelum membuat sesuatu, tentukan sinyal apa yang akan dianggap cukup. Tanpa success criteria, eksperimen mudah berubah menjadi proyek kecil yang tidak pernah benar-benar menjawab pertanyaan."
+        "text": "Sebelum membuat sesuatu, tentukan sinyal apa yang akan dianggap cukup. Tanpa kriteria keberhasilan, eksperimen mudah berubah menjadi proyek kecil yang tidak pernah benar-benar menjawab pertanyaan."
       },
       {
         "type": "heading",
         "level": 3,
-        "text": "4. Ambil keputusan setelah evidence terkumpul"
+        "text": "4. Ambil keputusan setelah bukti terkumpul"
       },
       {
         "type": "paragraph",
-        "text": "Evidence seharusnya menghasilkan keputusan: lanjutkan, ubah, uji lagi, atau hentikan. Tujuan validasi bukan memperoleh sertifikat bahwa ide Anda benar. Tujuannya adalah mengurangi ketidakpastian."
+        "text": "Bukti seharusnya menghasilkan keputusan: lanjutkan, ubah, uji lagi, atau hentikan. Tujuan validasi bukan memperoleh sertifikat bahwa ide Anda benar. Tujuannya adalah mengurangi ketidakpastian."
       },
       {
         "type": "image",
-        "url": "/insights/mvp-vs-prototype-vs-proof-of-concept/framework.svg",
-        "alt": "Framework Kapitech untuk memetakan business risk user risk technical risk metode validasi evidence dan keputusan berikutnya",
-        "caption": "Framework ini membantu menghubungkan risk → validation method → evidence → next decision."
+        "url": "/insights/mvp-vs-prototype-vs-proof-of-concept/kerangka.svg",
+        "alt": "Kerangka Kapitech untuk memetakan risiko bisnis risiko pengguna teknis risk metode validasi bukti dan keputusan berikutnya",
+        "caption": "Framework ini membantu menghubungkan risk → metode validasi → bukti → keputusan berikutnya."
       },
       {
         "type": "heading",
@@ -451,7 +459,7 @@
       },
       {
         "type": "paragraph",
-        "text": "Bayangkan sebuah perusahaan ingin membuat platform untuk approval, workflow management, dashboard operasional, reporting, dan notifications."
+        "text": "Bayangkan sebuah perusahaan ingin membuat platform untuk approval, workalur management, dashboard operasional, reporting, dan notifications."
       },
       {
         "type": "list",
@@ -459,23 +467,23 @@
         "items": [
           "Jika pertanyaan utamanya “Apakah user memahami urutan approval dan menemukan status pekerjaan dengan cepat?” → mulai dari Prototype.",
           "Jika pertanyaan utamanya “Apakah tim operasi benar-benar akan memakai produk ini dan merasa masalah hariannya terselesaikan?” → lanjutkan ke MVP.",
-          "Jika pertanyaan utamanya “Apakah legacy API kami dapat menyuplai data dalam pola real-time yang dibutuhkan?” → jalankan PoC.",
+          "Jika pertanyaan utamanya “Apakah API lama kami dapat menyuplai data dalam pola waktu nyata yang dibutuhkan?” → jalankan PoC.",
           "Jika dua atau tiga pertanyaan tersebut sama-sama kritis, jangan memaksa satu metode. Jalankan eksperimen yang berbeda untuk risiko yang berbeda."
         ]
       },
       {
         "type": "heading",
         "level": 2,
-        "text": "Kesalahan umum saat memvalidasi digital product"
+        "text": "Kesalahan umum saat memvalidasi produk digital"
       },
       {
         "type": "heading",
         "level": 3,
-        "text": "1. Building too much too early"
+        "text": "1. Membangun terlalu banyak terlalu cepat"
       },
       {
         "type": "paragraph",
-        "text": "Tim sering menambahkan dashboard, settings, role management, analytics, dan berbagai edge case sebelum tahu apakah core value sudah bekerja. Scope membesar sementara ketidakpastian utama belum tersentuh."
+        "text": "Tim sering menambahkan dashboard, settings, manajemen peran, analitik, dan berbagai kasus khusus sebelum tahu apakah nilai inti sudah bekerja. Cakupan membesar sementara ketidakpastian utama belum tersentuh."
       },
       {
         "type": "heading",
@@ -484,16 +492,16 @@
       },
       {
         "type": "paragraph",
-        "text": "Prototype dapat terlihat sangat realistis tetapi tetap hanya menguji experience. MVP harus menghasilkan pembelajaran dari penggunaan produk yang relevan dengan hipotesis bisnis."
+        "text": "Prototype dapat terlihat sangat realistis tetapi tetap hanya menguji pengalaman. MVP harus menghasilkan pembelajaran dari penggunaan produk yang relevan dengan hipotesis bisnis."
       },
       {
         "type": "heading",
         "level": 3,
-        "text": "3. Menggunakan MVP untuk technical uncertainty"
+        "text": "3. Menggunakan MVP untuk ketidakpastian teknis"
       },
       {
         "type": "paragraph",
-        "text": "Jika integrasi inti belum terbukti, membangun seluruh MVP dapat membuat technical risk baru ditemukan ketika biaya perubahan sudah tinggi. Pertanyaan teknis kritis sering lebih tepat dijawab dengan PoC yang fokus."
+        "text": "Jika integrasi inti belum terbukti, membangun seluruh MVP dapat membuat teknis risk baru ditemukan ketika biaya perubahan sudah tinggi. Pertanyaan teknis kritis sering lebih tepat dijawab dengan PoC yang fokus."
       },
       {
         "type": "heading",
@@ -502,7 +510,7 @@
       },
       {
         "type": "paragraph",
-        "text": "PoC yang hanya berbunyi “coba teknologi ini” sulit dinilai. Sebuah PoC harus memiliki pertanyaan, kondisi uji, success criteria, dan keputusan go/no-go atau next step."
+        "text": "PoC yang hanya berbunyi “coba teknologi ini” sulit dinilai. Sebuah PoC harus memiliki pertanyaan, kondisi uji, kriteria keberhasilan, dan keputusan lanjut/tidak lanjut atau langkah berikutnya."
       },
       {
         "type": "heading",
@@ -511,16 +519,16 @@
       },
       {
         "type": "paragraph",
-        "text": "Semakin banyak pertanyaan dimasukkan ke satu eksperimen, semakin sulit membaca hasilnya. Pisahkan evidence berdasarkan uncertainty agar keputusan lebih bersih."
+        "text": "Semakin banyak pertanyaan dimasukkan ke satu eksperimen, semakin sulit membaca hasilnya. Pisahkan bukti berdasarkan uncertainty agar keputusan lebih bersih."
       },
       {
         "type": "heading",
         "level": 3,
-        "text": "6. Mengabaikan feedback setelah eksperimen"
+        "text": "6. Mengabaikan masukan setelah eksperimen"
       },
       {
         "type": "paragraph",
-        "text": "Validasi yang tidak mengubah keputusan hanya menjadi ritual. Jika evidence menunjukkan bahwa asumsi awal lemah, roadmap harus bisa berubah."
+        "text": "Validasi yang tidak mengubah keputusan hanya menjadi ritual. Jika bukti menunjukkan bahwa asumsi awal lemah, peta jalan harus bisa berubah."
       },
       {
         "type": "heading",
@@ -529,28 +537,28 @@
       },
       {
         "type": "paragraph",
-        "text": "Framework, library, atau stack tidak seharusnya menentukan apa yang dibangun sebelum problem, user, dan evidence requirement jelas. Teknologi penting, tetapi ia adalah alat untuk menjawab kebutuhan yang lebih dulu didefinisikan."
+        "text": "Framework, pustaka, atau tumpukan teknologi tidak seharusnya menentukan apa yang dibangun sebelum masalah, user, dan bukti persyaratan jelas. Teknologi penting, tetapi ia adalah alat untuk menjawab kebutuhan yang lebih dulu didefinisikan."
       },
       {
         "type": "heading",
         "level": 2,
-        "text": "How We Think About Product Validation at Kapitech"
+        "text": "How We Think About Validasi Produk at Kapitech"
       },
       {
         "type": "paragraph",
-        "text": "Di Kapitech, kami melihat validasi sebagai cara menghubungkan risiko dengan evidence. Perspektif ini membuat desain dan engineering tidak berjalan sebagai dua pekerjaan terpisah, tetapi sebagai satu rangkaian keputusan."
+        "text": "Di Kapitech, kami melihat validasi sebagai cara menghubungkan risiko dengan bukti. Perspektif ini membuat desain dan rekayasa tidak berjalan sebagai dua pekerjaan terpisah, tetapi sebagai satu rangkaian keputusan."
       },
       {
         "type": "paragraph",
-        "text": "Framework sederhananya: business risk → user risk → technical risk → validation method → evidence → next decision. Tidak semua project membutuhkan keenamnya dengan bobot yang sama. Yang penting adalah setiap tahap memiliki alasan yang jelas."
+        "text": "Framework sederhananya: risiko bisnis → risiko pengguna → teknis risk → metode validasi → bukti → keputusan berikutnya. Tidak semua proyek membutuhkan keenamnya dengan bobot yang sama. Yang penting adalah setiap tahap memiliki alasan yang jelas."
       },
       {
         "type": "paragraph",
-        "text": "Untuk satu project, evidence pertama mungkin datang dari prototype. Untuk project lain, mungkin justru PoC API yang harus dibuktikan lebih dulu. Setelah risk utama turun, MVP digunakan untuk menguji value dengan pengguna nyata. Dengan urutan seperti ini, tim tidak perlu membangun lebih banyak hanya karena belum yakin apa yang sebenarnya ingin dibuktikan."
+        "text": "Untuk satu proyek, bukti pertama mungkin datang dari prototype. Untuk proyek lain, mungkin justru PoC API yang harus dibuktikan lebih dulu. Setelah risk utama turun, MVP digunakan untuk menguji value dengan pengguna nyata. Dengan urutan seperti ini, tim tidak perlu membangun lebih banyak hanya karena belum yakin apa yang sebenarnya ingin dibuktikan."
       },
       {
         "type": "paragraph",
-        "text": "Perspektif ini bukan formula baku. Ia adalah cara berpikir untuk menjaga agar scope selalu mengikuti learning objective."
+        "text": "Perspektif ini bukan formula baku. Ia adalah cara berpikir untuk menjaga agar cakupan selalu mengikuti pembelajaran tujuan."
       },
       {
         "type": "callout",
@@ -570,11 +578,11 @@
           "Siapa user utama produk ini?",
           "Masalah apa yang benar-benar ingin diselesaikan?",
           "Hipotesis bisnis apa yang ingin divalidasi?",
-          "Apakah risiko terbesar ada pada flow dan usability?",
-          "Apakah risiko terbesar ada pada product value dan adoption?",
-          "Apakah ada technical uncertainty yang bisa menggagalkan delivery?",
-          "Evidence seperti apa yang akan mengubah keputusan roadmap?",
-          "Apa minimum scope yang dibutuhkan untuk memperoleh evidence tersebut?",
+          "Apakah risiko terbesar ada pada alur dan kemudahan penggunaan?",
+          "Apakah risiko terbesar ada pada nilai produk dan adopsi?",
+          "Apakah ada ketidakpastian teknis yang bisa menggagalkan delangsungry?",
+          "Bukti seperti apa yang akan mengubah keputusan peta jalan?",
+          "Apa minimum cakupan yang dibutuhkan untuk memperoleh bukti tersebut?",
           "Kapan eksperimen dianggap cukup?",
           "Apa keputusan setelah hasilnya didapat: lanjut, ubah, uji lagi, atau berhenti?"
         ]
@@ -590,7 +598,7 @@
       },
       {
         "type": "paragraph",
-        "text": "Prototype membantu Anda memahami apakah orang bisa menggunakan solusi. MVP membantu Anda belajar apakah solusi itu memiliki nilai yang cukup untuk perilaku nyata pengguna. PoC membantu Anda mengetahui apakah pendekatan teknisnya feasible. Ketiganya adalah alat validasi, bukan tujuan akhir."
+        "text": "Prototype membantu Anda memahami apakah orang bisa menggunakan solusi. MVP membantu Anda belajar apakah solusi itu memiliki nilai yang cukup untuk perilaku nyata pengguna. PoC membantu Anda mengetahui apakah pendekatan teknisnya layak secara teknis. Ketiganya adalah alat validasi, bukan tujuan akhir."
       },
       {
         "type": "paragraph",
@@ -598,98 +606,17 @@
       },
       {
         "type": "paragraph",
-        "text": "Kalau arah produk sudah cukup jelas tetapi Anda membutuhkan partner untuk menerjemahkannya menjadi prototype, MVP, atau implementasi full-stack, Kapitech dapat membantu dari product design sampai engineering delivery."
+        "text": "Kalau arah produk sudah cukup jelas tetapi Anda membutuhkan partner untuk menerjemahkannya menjadi prototype, MVP, atau implementasi full-tumpukan teknologi, Kapitech dapat membantu dari desain produk sampai rekayasa delangsungry."
       },
       {
         "type": "link",
-        "label": "Explore MVP Design",
+        "label": "Lihat Layanan Desain MVP",
         "url": "https://kapitech.id/solutions/mvp-design"
       },
       {
         "type": "link",
-        "label": "Start a Project",
+        "label": "Start a Proyek",
         "url": "https://kapitech.id/contact"
-      },
-      {
-        "type": "heading",
-        "level": 2,
-        "text": "FAQ"
-      },
-      {
-        "type": "paragraph",
-        "text": "Pertanyaan berikut merangkum keputusan yang paling sering muncul ketika tim membandingkan Prototype, MVP, dan PoC."
-      },
-      {
-        "type": "heading",
-        "level": 3,
-        "text": "Apakah MVP sama dengan prototype?"
-      },
-      {
-        "type": "paragraph",
-        "text": "Tidak. Prototype terutama digunakan untuk mengeksplorasi atau menguji experience dan usability, sedangkan MVP digunakan untuk memperoleh validated learning dari penggunaan produk yang relevan dengan hipotesis value. Sebuah prototype bisa menjadi bagian dari proses menuju MVP, tetapi keduanya punya tujuan validasi yang berbeda."
-      },
-      {
-        "type": "heading",
-        "level": 3,
-        "text": "Apa perbedaan MVP dan Proof of Concept?"
-      },
-      {
-        "type": "paragraph",
-        "text": "MVP berfokus pada apakah produk memberikan nilai kepada target user dan menghasilkan learning dari penggunaan nyata. PoC berfokus pada pertanyaan teknis: apakah pendekatan tertentu feasible dengan teknologi, data, integrasi, dan constraint yang tersedia."
-      },
-      {
-        "type": "heading",
-        "level": 3,
-        "text": "Kapan bisnis harus membuat MVP?"
-      },
-      {
-        "type": "paragraph",
-        "text": "Saat core problem, target user, dan hipotesis value sudah cukup jelas sehingga Anda membutuhkan evidence dari perilaku pengguna nyata. MVP cocok ketika keputusan berikutnya bergantung pada adoption, usage, willingness to pay, atau signal product value lainnya."
-      },
-      {
-        "type": "heading",
-        "level": 3,
-        "text": "Apakah prototype harus memiliki backend?"
-      },
-      {
-        "type": "paragraph",
-        "text": "Tidak. Jika pertanyaan Anda adalah usability, flow, atau interaction, prototype dapat berjalan sepenuhnya di layer visual dan interaksi. Backend baru diperlukan ketika technical behavior tertentu menjadi bagian dari pertanyaan yang ingin diuji."
-      },
-      {
-        "type": "heading",
-        "level": 3,
-        "text": "Apakah PoC bisa dibuat sebelum MVP?"
-      },
-      {
-        "type": "paragraph",
-        "text": "Bisa, dan sering kali masuk akal ketika technical uncertainty berpotensi menggagalkan MVP. PoC membantu mengurangi risiko teknis sebelum tim menginvestasikan effort ke product build yang lebih besar."
-      },
-      {
-        "type": "heading",
-        "level": 3,
-        "text": "Berapa lama membuat MVP?"
-      },
-      {
-        "type": "paragraph",
-        "text": "Tidak ada durasi universal. Waktu dipengaruhi oleh scope, complexity, platform, integrations, design depth, data requirements, dan technical constraints. Cara yang lebih sehat adalah menetapkan learning objective dan membatasi scope berdasarkan objective tersebut, bukan menetapkan durasi lalu menyesuaikan fitur secara acak."
-      },
-      {
-        "type": "heading",
-        "level": 3,
-        "text": "Apakah MVP harus production-ready?"
-      },
-      {
-        "type": "paragraph",
-        "text": "MVP harus cukup viable untuk konteks pengguna dan evidence yang ingin dikumpulkan, tetapi tidak selalu berarti seluruh sistem sudah memiliki hardening dan feature completeness seperti produk enterprise matang. Tingkat kesiapan harus disesuaikan dengan risiko dan konteks eksperimen."
-      },
-      {
-        "type": "heading",
-        "level": 3,
-        "text": "Mana yang lebih murah: Prototype, MVP, atau PoC?"
-      },
-      {
-        "type": "paragraph",
-        "text": "Tidak ada urutan biaya yang selalu berlaku. Prototype sering lebih ringan jika pertanyaannya sebatas UX, tetapi PoC bisa menjadi investasi yang paling hemat jika technical risk sangat tinggi. MVP bisa membutuhkan effort terbesar jika Anda harus menguji value dengan produk yang benar-benar digunakan."
       },
       {
         "type": "heading",
@@ -698,7 +625,7 @@
       },
       {
         "type": "paragraph",
-        "text": "Untuk definisi dan prinsip MVP, artikel ini merujuk pada penjelasan Eric Ries di Lean Startup Co.; untuk prototype testing, pada Nielsen Norman Group; dan untuk PoC, pada guidance digital.gov.au dan IBM terkait evaluasi feasibility teknologi. citeturn275176search1turn900954search48turn275176search11turn275176search5"
+        "text": "Untuk definisi dan prinsip MVP, artikel ini merujuk pada penjelasan Eric Ries di Lean Startup Co.; untuk prototype testing, pada Nielsen Norman Group; dan untuk PoC, pada panduan digital.gov.au dan IBM terkait evaluasi feasibility teknologi. "
       },
       {
         "type": "link",
@@ -712,7 +639,7 @@
       },
       {
         "type": "link",
-        "label": "Digital.gov.au — AI proof of concept guidance",
+        "label": "Digital.gov.au — AI proof of concept panduan",
         "url": "https://www.digital.gov.au/policy/ai/AI-POC-to-scale/context-and-principles"
       },
       {
@@ -724,7 +651,7 @@
     "faq": [
       {
         "question": "Apakah MVP sama dengan prototype?",
-        "answer": "Tidak. Prototype terutama menguji experience dan usability, sedangkan MVP digunakan untuk memperoleh validated learning dari penggunaan produk yang relevan dengan hipotesis value."
+        "answer": "Tidak. Prototype terutama menguji pengalaman dan kemudahan penggunaan, sedangkan MVP digunakan untuk memperoleh pembelajaran tervalidasi dari penggunaan produk yang relevan dengan hipotesis value."
       },
       {
         "question": "Apa perbedaan MVP dan Proof of Concept?",
@@ -732,27 +659,27 @@
       },
       {
         "question": "Kapan bisnis harus membuat MVP?",
-        "answer": "Ketika problem, target user, dan hipotesis value sudah cukup jelas untuk diuji melalui penggunaan produk yang nyata."
+        "answer": "Ketika masalah, target user, dan hipotesis value sudah cukup jelas untuk diuji melalui penggunaan produk yang nyata."
       },
       {
         "question": "Apakah prototype harus memiliki backend?",
-        "answer": "Tidak. Backend hanya diperlukan jika technical behavior tertentu memang menjadi bagian dari pertanyaan yang ingin diuji."
+        "answer": "Tidak. Backend hanya diperlukan jika teknis behavior tertentu memang menjadi bagian dari pertanyaan yang ingin diuji."
       },
       {
         "question": "Apakah PoC bisa dibuat sebelum MVP?",
-        "answer": "Bisa. PoC sering tepat digunakan lebih dulu ketika technical uncertainty berpotensi menggagalkan MVP."
+        "answer": "Bisa. PoC sering tepat digunakan lebih dulu ketika ketidakpastian teknis berpotensi menggagalkan MVP."
       },
       {
         "question": "Berapa lama membuat MVP?",
-        "answer": "Tidak ada durasi universal. Scope, complexity, platform, integrations, design depth, data, dan technical constraints menentukan effort."
+        "answer": "Tidak ada durasi universal. Cakupan, kompleksitas, platform, integrasi, kedalaman desain, data, dan teknis batasans menentukan upaya."
       },
       {
-        "question": "Apakah MVP harus production-ready?",
-        "answer": "MVP harus cukup viable untuk konteks eksperimennya, tetapi tidak selalu harus memiliki feature completeness dan hardening seperti produk enterprise matang."
+        "question": "Apakah MVP harus siap produksi?",
+        "answer": "MVP harus cukup layak digunakan untuk konteks eksperimennya, tetapi tidak selalu harus memiliki kelengkapan fitur dan penguatan keamanan dan keandalan seperti produk enterprise matang."
       },
       {
         "question": "Mana yang lebih murah: Prototype, MVP, atau PoC?",
-        "answer": "Tidak ada urutan biaya yang selalu berlaku. Biaya bergantung pada pertanyaan yang divalidasi, scope, complexity, dan technical requirements."
+        "answer": "Tidak ada urutan biaya yang selalu berlaku. Biaya bergantung pada pertanyaan yang divalidasi, cakupan, kompleksitas, dan teknis persyaratans."
       }
     ]
   }
