@@ -183,7 +183,9 @@ function tags(value: unknown): Array<{ slug: string; name: string; id?: string }
   const raw = Array.isArray(value) ? value : [];
   const unique = new Map<string, { slug: string; name: string; id?: string }>();
   for (const entry of raw.slice(0, 30)) {
-    const source = entry && typeof entry === 'object' ? entry as Record<string, unknown> : { name: entry };
+    const source: Record<string, unknown> = entry && typeof entry === 'object' && !Array.isArray(entry)
+      ? entry as Record<string, unknown>
+      : { name: entry };
     const name = clean(source.name, 120);
     const slug = slugify(source.slug || name);
     if (!name || !slug || unique.has(slug)) continue;
