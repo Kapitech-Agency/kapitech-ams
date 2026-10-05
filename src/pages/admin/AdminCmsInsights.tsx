@@ -48,7 +48,8 @@ const BLOCK_TYPES: Array<{ value: InsightBlockType; label: string }> = [
   { value: 'callout', label: 'Callout' },
   { value: 'code', label: 'Code' },
   { value: 'link', label: 'Link' },
-  { value: 'divider', label: 'Divider' }
+  { value: 'divider', label: 'Divider' },
+  { value: 'checklist', label: 'Checklist' }
 ];
 
 const makeEmptyBlock = (type: InsightBlockType): InsightBlock => {
@@ -69,6 +70,8 @@ const makeEmptyBlock = (type: InsightBlockType): InsightBlock => {
       return { type, language: '', code: '' };
     case 'link':
       return { type, label: '', url: '' };
+    case 'checklist':
+      return { type, title: '', items: [''] };
     case 'divider':
       return { type };
     default:
@@ -260,6 +263,13 @@ const BlockEditor: React.FC<{
             </div>
           )}
 
+          {item.type === 'checklist' && (
+            <div className="space-y-2">
+              <input value={item.title || ''} onChange={(e) => update(index, { title: e.target.value })} className="ams-control w-full text-xs" placeholder="Checklist title (optional)" />
+              <textarea value={(item.items || []).join('\n')} onChange={(e) => update(index, { items: e.target.value.split('\n').filter(Boolean) })} rows={6} className="ams-control w-full text-xs leading-5" placeholder="One checklist item per line" />
+            </div>
+          )}
+
           {item.type === 'divider' && <p className="text-[11px] text-muted">A semantic divider will separate the surrounding content.</p>}
         </section>
       ))}
@@ -391,6 +401,18 @@ const InsightEditor: React.FC<{
                 ...authors.map(author => ({ value: author.id, label: author.name }))
               ]}
             />
+          </Field>
+        </div>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <Field label="Reviewed by">
+            <input value={value.editorialMeta?.reviewedBy || ''} onChange={(e) => update({ editorialMeta: { ...(value.editorialMeta || {}), reviewedBy: e.target.value } })} className="ams-control w-full text-xs" placeholder="Only use a real reviewer" />
+          </Field>
+          <Field label="Fact checked by">
+            <input value={value.editorialMeta?.factCheckedBy || ''} onChange={(e) => update({ editorialMeta: { ...(value.editorialMeta || {}), factCheckedBy: e.target.value } })} className="ams-control w-full text-xs" placeholder="Only use a real fact checker" />
+          </Field>
+          <Field label="Editorial type">
+            <input value={value.editorialMeta?.editorialType || ''} onChange={(e) => update({ editorialMeta: { ...(value.editorialMeta || {}), editorialType: e.target.value } })} className="ams-control w-full text-xs" placeholder="Guide, analysis, perspective..." />
           </Field>
         </div>
 
