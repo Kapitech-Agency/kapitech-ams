@@ -9,7 +9,23 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 test('API route contract protects state-changing and private routes', async () => {
   const source = await fs.readFile(path.join(root, 'server/routes.ts'), 'utf8');
   const routePattern = /apiRouter\.(get|post|put|patch|delete)\(\s*(['\"])([^'\"]+)\2,([^\n]*)/g;
-  const publicRoutes = new Set(['POST /auth/login','POST /auth/firebase-login','POST /auth/mfa/verify','POST /leads/submit','POST /leads/resume-upload','GET /cms/services','GET /cms/projects','GET /cms/testimonials','GET /cms/public-settings']);
+  const publicRoutes = new Set([
+    'POST /auth/login',
+    'POST /auth/firebase-login',
+    'POST /auth/mfa/verify',
+    'POST /leads/submit',
+    'POST /leads/resume-upload',
+    'GET /cms/services',
+    'GET /cms/projects',
+    'GET /cms/testimonials',
+    'GET /cms/public-settings',
+    'GET /cms/insights',
+    'GET /cms/insights/sitemap.xml',
+    'GET /cms/insights/:slug',
+    'GET /cms/insight-categories',
+    'GET /cms/insight-authors',
+    'GET /cms/insight-tags'
+  ]);
   const routes: Array<{ method: string; path: string; tail: string }> = [];
   let match: RegExpExecArray | null;
   while ((match = routePattern.exec(source))) routes.push({ method: match[1].toUpperCase(), path: match[3], tail: match[4] });
@@ -29,7 +45,11 @@ test('API route contract protects state-changing and private routes', async () =
 });
 
 test('Dashboard API endpoints match the frontend API client contract', async () => {
-  const server = await fs.readFile(path.join(root, 'server/routes.ts'), 'utf8');
+  const serverParts = await Promise.all([
+    fs.readFile(path.join(root, 'server/routes.ts'), 'utf8'),
+    fs.readFile(path.join(root, 'server/insight-routes.ts'), 'utf8')
+  ]);
+  const server = serverParts.join('\n');
   const client = await fs.readFile(path.join(root, 'src/lib/apiClient.ts'), 'utf8');
   assert.ok(server.includes("apiRouter.get('/dashboard/overview', requireAuth, handleOverview);"));
   assert.ok(server.includes("apiRouter.get('/executive/overview', requireAuth, handleOverview);"));
@@ -37,7 +57,11 @@ test('Dashboard API endpoints match the frontend API client contract', async () 
 });
 
 test('Frontend API client literal endpoints exist on the server route surface', async () => {
-  const server = await fs.readFile(path.join(root, 'server/routes.ts'), 'utf8');
+  const serverParts = await Promise.all([
+    fs.readFile(path.join(root, 'server/routes.ts'), 'utf8'),
+    fs.readFile(path.join(root, 'server/insight-routes.ts'), 'utf8')
+  ]);
+  const server = serverParts.join('\n');
   const client = await fs.readFile(path.join(root, 'src/lib/apiClient.ts'), 'utf8');
 
   const routePattern = /apiRouter\.(?:get|post|put|patch|delete)\(\s*(['`])([^'`]+)\1/g;

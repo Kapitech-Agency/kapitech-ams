@@ -15,7 +15,7 @@ export class PostgresDatabaseRepository {
   readonly auth=new PostgresAuthRepository();
  async loadDatabase():Promise<DatabaseSchema>{
   const p=getPostgresPool();
-  const names=['users','sessions','leads','crm_deals','clients','projects','proposals','proposal_items','tasks','time_logs','invoices','invoice_items','invoice_payments','expenses','approvals','vendors','documents','document_access','notifications','cms_services','cms_projects','cms_testimonials','cms_settings','audit_logs','notification_settings'];
+  const names=['users','sessions','leads','crm_deals','clients','projects','proposals','proposal_items','tasks','time_logs','invoices','invoice_items','invoice_payments','expenses','approvals','vendors','documents','document_access','notifications','cms_services','cms_projects','cms_testimonials','cms_insight_categories','cms_insight_tags','cms_insight_authors','cms_insights','cms_settings','audit_logs','notification_settings'];
   const rs=await Promise.all(names.map(n=>p.query('SELECT * FROM '+n))); const m=new Map(names.map((n,i)=>[n,rs[i].rows as Row[]]));
   const users=(m.get('users')??[]).map(mapUser),sessions=(m.get('sessions')??[]).map(mapSession);
   const leads=(m.get('leads')??[]).map(r=>base(r,{fullName:r.full_name,honeypotTriggered:r.honeypot_triggered,createdAt:iso(r.created_at),updatedAt:iso(r.updated_at)}));
@@ -37,9 +37,13 @@ export class PostgresDatabaseRepository {
   const cmsServices=(m.get('cms_services')??[]).map(r=>({...obj(r.data),id:r.id,name:r.name,slug:r.slug??undefined,description:r.description??undefined,createdAt:iso(r.created_at),updatedAt:iso(r.updated_at)}));
   const cmsProjects=(m.get('cms_projects')??[]).map(r=>({...obj(r.data),id:r.id,name:r.name,slug:r.slug??undefined,description:r.description??undefined,createdAt:iso(r.created_at),updatedAt:iso(r.updated_at)}));
   const cmsTestimonials=(m.get('cms_testimonials')??[]).map(r=>({...obj(r.data),id:r.id,name:r.name,company:r.company??undefined,quote:r.quote??undefined,createdAt:iso(r.created_at),updatedAt:iso(r.updated_at)}));
+  const cmsInsightCategories=(m.get('cms_insight_categories')??[]).map(r=>({...obj(r.data),id:r.id,slug:r.slug,name:obj(r.name),description:obj(r.description),seoTitle:obj(r.seo_title),seoDescription:obj(r.seo_description),createdAt:iso(r.created_at),updatedAt:iso(r.updated_at)}));
+  const cmsInsightTags=(m.get('cms_insight_tags')??[]).map(r=>({...obj(r.data),id:r.id,slug:r.slug,name:obj(r.name),createdAt:iso(r.created_at),updatedAt:iso(r.updated_at)}));
+  const cmsInsightAuthors=(m.get('cms_insight_authors')??[]).map(r=>({...obj(r.data),id:r.id,slug:r.slug,name:r.name,role:r.role??'',bio:r.bio??'',avatar:r.avatar??'',createdAt:iso(r.created_at),updatedAt:iso(r.updated_at)}));
+  const cmsInsights=(m.get('cms_insights')??[]).map(r=>({...obj(r.data),id:r.id,contentGroupId:r.content_group_id,language:r.language,title:r.title,slug:r.slug,excerpt:r.excerpt??'',content:obj(r.content),coverImage:r.cover_image??'',categoryId:r.category_id??null,authorId:r.author_id??null,tags:obj(r.tags),status:r.status,isFeatured:Boolean(r.is_featured),readingTime:Number(r.reading_time??1),publishedAt:r.published_at?iso(r.published_at):null,keyTakeaways:obj(r.key_takeaways),faq:obj(r.faq),relatedInsightIds:obj(r.related_insight_ids),seoTitle:r.seo_title??'',seoDescription:r.seo_description??'',ogImage:r.og_image??'',canonicalUrl:r.canonical_url??'',createdAt:iso(r.created_at),updatedAt:iso(r.updated_at)}));
   const sr=m.get('cms_settings')??[],cmsSettings:any=Object.fromEntries(sr.map(r=>[r.key,r.value]));if(sr.length)cmsSettings.updatedAt=iso(sr[0].updated_at);
   const auditLogs=(m.get('audit_logs')??[]).map(r=>base(r,{actorRole:r.actor_role,actorUserId:r.actor_user_id??undefined,userAgent:r.user_agent??'',timestamp:iso(r.timestamp)}));
   const n=m.get('notification_settings')?.[0];const notificationSettings={targetEmail:n?.target_email??'',formspreeEndpoint:n?.formspree_endpoint??'',telegramBotToken:'',telegramChatId:n?.telegram_chat_id??'',isEmailActive:Boolean(n?.is_email_active),isTelegramActive:Boolean(n?.is_telegram_active),updatedAt:n?.updated_at?iso(n.updated_at):''};
-  return{users,sessions,leads,crmDeals,clients,projects,proposals,tasks,timeLogs,invoices,expenses,approvals,vendors,documents,notifications,cmsServices,cmsProjects,cmsTestimonials,cmsSettings,auditLogs,notificationSettings};
+  return{users,sessions,leads,crmDeals,clients,projects,proposals,tasks,timeLogs,invoices,expenses,approvals,vendors,documents,notifications,cmsServices,cmsProjects,cmsTestimonials,cmsInsights,cmsInsightCategories,cmsInsightTags,cmsInsightAuthors,cmsSettings,auditLogs,notificationSettings};
  }}
 export const postgresDatabaseRepository=new PostgresDatabaseRepository();

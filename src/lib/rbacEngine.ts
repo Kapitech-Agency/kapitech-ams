@@ -278,6 +278,7 @@ const MODULE_PERMISSION_MAP: Record<string, keyof ServerPermissions | 'authentic
   vendors: 'canManageVendors',
   services: 'canManageCmsContent',
   cms_projects: 'canManageCmsContent',
+  cms_insights: 'canManageCmsContent',
   testimonials: 'canManageCmsContent',
   settings: 'authenticated',
   timelogs: 'authenticated',

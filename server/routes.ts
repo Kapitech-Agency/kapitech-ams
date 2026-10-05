@@ -79,6 +79,7 @@ import { getPostgresBackupHealth } from './postgres-backup-health.ts';
 import { checkPostgresConnection, getPostgresPool } from './postgres.ts';
 import { loadPostgresMigrations } from './postgres-migrations.ts';
 import { isFirebaseAuthEnabled, verifyFirebaseIdToken } from './firebase-token.ts';
+import { registerInsightRoutes } from './insight-routes.ts';
 
 
 const ROLE_POLICIES: Record<string, {
@@ -3448,6 +3449,7 @@ apiRouter.delete('/vendors/:id', requireAuth, requirePermission('canManageVendor
 // ----------------------------------------------------
 // 8. CMS (Services, Projects, Testimonials, Settings)
 // ----------------------------------------------------
+registerInsightRoutes(apiRouter);
 
 // CMS Services (Public GET for published services, protected for drafts)
 apiRouter.get('/cms/services', rateLimitPublic(), async (req: Request, res: Response): Promise<void> => {

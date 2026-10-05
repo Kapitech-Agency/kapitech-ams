@@ -283,6 +283,10 @@ export interface DatabaseSchema {
   cmsServices: any[];
   cmsProjects: any[];
   cmsTestimonials: any[];
+  cmsInsights: any[];
+  cmsInsightCategories: any[];
+  cmsInsightTags: any[];
+  cmsInsightAuthors: any[];
   cmsSettings: Record<string, any>;
   auditLogs: StoredAuditLog[];
   notificationSettings: {
@@ -1157,6 +1161,10 @@ function getInitialSeedData(): DatabaseSchema {
     cmsServices: [],
     cmsProjects: [],
     cmsTestimonials: [],
+    cmsInsights: [],
+    cmsInsightCategories: [],
+    cmsInsightTags: [],
+    cmsInsightAuthors: [],
     cmsSettings: {
       siteTitle: 'Kapitech Agency | High-Performance Digital Solutions',
       siteDescription: 'Premier digital product engineering agency in Indonesia.',
@@ -1212,6 +1220,10 @@ function getInitialSeedData(): DatabaseSchema {
       'cmsServices',
       'cmsProjects',
       'cmsTestimonials',
+      'cmsInsights',
+      'cmsInsightCategories',
+      'cmsInsightTags',
+      'cmsInsightAuthors',
       'auditLogs'
     ] as Array<keyof DatabaseSchema>) {
       (seed as any)[key] = [];
