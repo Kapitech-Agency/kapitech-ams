@@ -1,4 +1,5 @@
 name: AMS CI
+# CI verification marker for the current main state.
 
 on:
   push:
