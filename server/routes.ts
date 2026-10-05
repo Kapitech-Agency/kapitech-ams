@@ -1605,6 +1605,46 @@ apiRouter.post('/leads/resume-upload', rateLimitPublic(5, 15 * 60 * 1000), expre
   });
 });
 
+const cleanupPublicResumeForLeadFailure = async (resumeUrl: unknown): Promise<void> => {
+  const match = typeof resumeUrl === 'string'
+    ? resumeUrl.match(/^\/api\/documents\/([^/]+)\/content$/)
+    : null;
+  if (!match) return;
+
+  const documentId = decodeURIComponent(match[1]);
+  try {
+    if (getDataSourceMode() === 'postgres') {
+      const document = await postgresDocumentRepository.findById(documentId);
+      if (document?.metadata?.publicUpload && document.storageKey) {
+        try { await getDocumentStorage().delete(document.storageKey); } catch (storageError) {
+          console.error('[Public Lead] Failed to clean up orphaned resume storage:', storageError);
+        }
+      }
+      await postgresDocumentRepository.delete(documentId, {
+        action: 'PUBLIC_RESUME_ORPHAN_CLEANUP',
+        actor: 'public_recruitment',
+        actorRole: 'system',
+        details: `Removed orphaned public resume document ${documentId} after lead submission failure.`,
+        severity: 'warning'
+      });
+      return;
+    }
+
+    const db = getDatabase();
+    const document = (db.documents || []).find((item: any) => item.id === documentId);
+    if (!document?.metadata?.publicUpload) return;
+    if (document.storageKey) {
+      try { await getDocumentStorage().delete(document.storageKey); } catch (storageError) {
+        console.error('[Public Lead] Failed to clean up orphaned resume storage:', storageError);
+      }
+    }
+    db.documents = (db.documents || []).filter((item: any) => item.id !== documentId);
+    saveDatabase(db);
+  } catch (cleanupError) {
+    console.error('[Public Lead] Orphaned resume cleanup failed:', cleanupError);
+  }
+};
+
 apiRouter.post('/leads/submit', rateLimitPublic(10, 60 * 1000), async (req: Request, res: Response): Promise<void> => {
   const {
     fullName,
@@ -1692,26 +1732,33 @@ apiRouter.post('/leads/submit', rateLimitPublic(10, 60 * 1000), async (req: Requ
     telegramBotToken?: string;
   };
 
-  if (getDataSourceMode() === 'postgres') {
-    await postgresLeadRepository.create(
-      newLead,
-      {
-        action: 'LEAD_SUBMISSION',
-        actor: cleanEmail,
-        actorRole: 'public_lead',
-        ip: req.ip,
-        userAgent: req.headers['user-agent'] as string,
-        details: `New inbound lead received from ${newLead.fullName} (${cleanEmail}).`,
-        severity: 'info'
-      }
-    );
-    const postgresNotificationSettings = await postgresNotificationSettingsRepository.get();
-    notificationSettings = postgresNotificationSettings;
-  } else {
-    jsonDb = getDatabase();
-    jsonDb.leads.unshift(newLead);
-    saveDatabase(jsonDb);
-    notificationSettings = jsonDb.notificationSettings;
+  try {
+    if (getDataSourceMode() === 'postgres') {
+      await postgresLeadRepository.create(
+        newLead,
+        {
+          action: 'LEAD_SUBMISSION',
+          actor: cleanEmail,
+          actorRole: 'public_lead',
+          ip: req.ip,
+          userAgent: req.headers['user-agent'] as string,
+          details: `New inbound lead received from ${newLead.fullName} (${cleanEmail}).`,
+          severity: 'info'
+        }
+      );
+      const postgresNotificationSettings = await postgresNotificationSettingsRepository.get();
+      notificationSettings = postgresNotificationSettings;
+    } else {
+      jsonDb = getDatabase();
+      jsonDb.leads.unshift(newLead);
+      saveDatabase(jsonDb);
+      notificationSettings = jsonDb.notificationSettings;
+    }
+  } catch (error) {
+    await cleanupPublicResumeForLeadFailure(resumeUrl);
+    console.error('[Public Lead] Lead persistence failed:', error);
+    res.status(500).json({ success: false, error: 'Submission could not be saved. Please try again.' });
+    return;
   }
 
   void dispatchLeadTelegramNotification(newLead, notificationSettings);
