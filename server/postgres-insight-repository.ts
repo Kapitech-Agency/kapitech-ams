@@ -398,7 +398,7 @@ export class PostgresInsightRepository {
 
   async listAuthors(): Promise<any[]> {
     const { rows } = await getPostgresPool().query('SELECT * FROM cms_insight_authors ORDER BY LOWER(name)');
-    return rows.map(mapAuthor);
+    return rows.map(row => mapAuthor(row));
   }
 
   async createAuthor(input: any, audit?: AuditEntry): Promise<any> {
