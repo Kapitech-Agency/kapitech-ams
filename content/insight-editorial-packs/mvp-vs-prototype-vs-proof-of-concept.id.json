@@ -1,7 +1,7 @@
 {
   "format": "kapitech-insight-editorial-pack/v1",
-  "runtime": "manual-AMS-import-only",
-  "note": "This file is an editorial import pack, not runtime seed data. Select an existing AMS category and existing Kapitech author before publishing.",
+  "runtime": "migration-seed-source",
+  "note": "Indonesian editorial source for the public Insight platform. The runtime record is created by PostgreSQL migration 039 and remains editable through AMS.",
   "seo": {
     "title": "MVP vs Prototype vs PoC: Apa Bedanya dan Kapan Memilihnya? | Kapitech",
     "description": "Pahami perbedaan Prototype, MVP, dan Proof of Concept (PoC), pertanyaan yang divalidasi masing-masing, serta cara memilih pendekatan yang tepat untuk produk digital.",
@@ -12,8 +12,8 @@
   "editorial": {
     "language": "id",
     "categorySlug": "product-technology",
-    "authorSlug": "",
-    "status": "draft",
+    "authorSlug": "kapitech-editorial-team",
+    "status": "published",
     "isFeatured": true,
     "readingTime": 13,
     "tags": [
