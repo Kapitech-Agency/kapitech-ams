@@ -163,7 +163,9 @@ function applyPublicApiCors(req: express.Request, res: express.Response, next: e
     res.setHeader('X-DNS-Prefetch-Control', 'off');
     res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-    res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
+    const publicApiResource = req.path.startsWith('/api/')
+      && isPublicApiPath(req.path.slice('/api'.length));
+    res.setHeader('Cross-Origin-Resource-Policy', publicApiResource ? 'cross-origin' : 'same-origin');
 
     if (isProductionRuntime()) {
       res.setHeader(
