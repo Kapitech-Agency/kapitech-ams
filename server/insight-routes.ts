@@ -337,7 +337,10 @@ export function registerInsightRoutes(apiRouter: Router): void {
     try {
       const user = (req as AuthenticatedRequest).user;
       const canManage = Boolean(user && (isMasterAdministrator(user) || user.permissions?.canManageCmsContent));
-      const lang = language(req.query.language);
+      const requestedLanguage = typeof req.query.language === 'string' && LANGUAGES.has(req.query.language as InsightLanguage)
+        ? req.query.language as InsightLanguage
+        : undefined;
+      const lang = canManage ? requestedLanguage : (requestedLanguage || 'en');
       const requestedStatus = STATUSES.has(String(req.query.status || '') as InsightStatus)
         ? String(req.query.status) as InsightStatus
         : undefined;
