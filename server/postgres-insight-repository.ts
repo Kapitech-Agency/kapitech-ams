@@ -56,16 +56,17 @@ function mapTag(row: any, language: InsightLanguage = 'en'): any {
   };
 }
 
-function mapAuthor(row: any): any {
+function mapAuthor(row: any, language: InsightLanguage = 'en'): any {
   if (!row) return null;
   const data = toJson(row.data, {});
+  const localized = toJson(data.localized, {});
   return {
     ...data,
     id: row.id,
     slug: row.slug,
-    name: row.name,
-    role: row.role || data.role || '',
-    bio: row.bio || data.bio || '',
+    name: localizeJsonName(localized.name, language) || row.name,
+    role: localizeJsonName(localized.role, language) || row.role || data.role || '',
+    bio: localizeJsonName(localized.bio, language) || row.bio || data.bio || '',
     avatar: row.avatar || data.avatar || '',
     createdAt: asIso(row.created_at),
     updatedAt: asIso(row.updated_at)
@@ -195,7 +196,7 @@ export class PostgresInsightRepository {
           data: row.author_data,
           created_at: row.author_created_at,
           updated_at: row.author_updated_at
-        }) : null
+        }, language || row.language) : null
       )),
       total,
       page,
@@ -205,7 +206,7 @@ export class PostgresInsightRepository {
 
   async findById(id: string): Promise<any | null> {
     const { rows } = await getPostgresPool().query('SELECT * FROM cms_insights WHERE id=$1', [id]);
-    return rows[0] ? mapInsight(rows[0]) : null;
+    return rows[0] ? mapInsight(rows[0], rows[0].language || 'en') : null;
   }
 
   async findBySlug(slug: string, language?: InsightLanguage): Promise<any | null> {
@@ -253,7 +254,7 @@ export class PostgresInsightRepository {
         data: row.author_data,
         created_at: row.author_created_at,
         updated_at: row.author_updated_at
-      }) : null
+      }, language || row.language) : null
     );
   }
 
