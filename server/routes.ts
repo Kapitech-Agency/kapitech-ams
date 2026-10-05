@@ -1474,7 +1474,15 @@ apiRouter.post('/leads/resume-upload', rateLimitPublic(5, 15 * 60 * 1000), expre
   }
 
   const contentType = String(req.get('content-type') || '').split(';')[0].trim().toLowerCase();
-  const rawFilename = String(req.query.filename || 'resume');
+  const rawEncodedFilename = String(req.get('X-Resume-Filename') || '');
+  let rawFilename = 'resume';
+  if (rawEncodedFilename) {
+    try {
+      rawFilename = decodeURIComponent(rawEncodedFilename);
+    } catch {
+      rawFilename = 'resume';
+    }
+  }
   const filename = path.basename(rawFilename).replace(/[\\/\0]/g, '').slice(0, 180) || 'resume';
   const extension = filename.toLowerCase().split('.').pop() || '';
   const mimeByExtension: Record<string, string> = {
