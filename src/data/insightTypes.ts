@@ -11,7 +11,8 @@ export type InsightBlockType =
   | 'callout'
   | 'code'
   | 'link'
-  | 'divider';
+  | 'divider'
+  | 'checklist';
 
 export interface InsightBlock {
   type: InsightBlockType;
@@ -31,6 +32,7 @@ export interface InsightBlock {
   language?: string;
   label?: string;
 }
+
 
 export interface InsightFaqItem {
   question: string;
@@ -84,4 +86,9 @@ export interface InsightItem {
   canonicalUrl?: string;
   alternateLanguages?: Array<{ language: InsightLanguage; slug: string }>;
   relatedInsights?: InsightItem[];
+  editorialMeta?: {
+    reviewedBy?: string;
+    factCheckedBy?: string;
+    editorialType?: string;
+  };
 }
