@@ -3,8 +3,8 @@
   "runtime": "migration-seed-source",
   "note": "Indonesian editorial source for the public Insight platform. Structured blocks are delivered through AMS PostgreSQL and prerendered for public search discovery.",
   "seo": {
-    "title": "MVP vs Prototype vs Proof of Concept: Mana yang Tepat untuk Bisnis Anda? | Kapitech",
-    "description": "Pahami perbedaan MVP, Prototype, dan Proof of Concept (PoC), risiko yang diuji, contoh penggunaannya, dan cara memilih pendekatan yang tepat untuk produk digital.",
+    "title": "MVP vs Prototype vs PoC: Mana yang Tepat untuk Bisnis Anda? | Kapitech",
+    "description": "Pahami perbedaan MVP, Prototype, dan Proof of Concept, risiko yang diuji, dan cara memilih pendekatan validasi yang tepat untuk produk digital.",
     "slug": "mvp-vs-prototype-vs-proof-of-concept",
     "canonicalUrl": "https://kapitech.id/insights/mvp-vs-prototype-vs-proof-of-concept",
     "ogImage": "/insights/mvp-vs-prototype-vs-proof-of-concept/hero.svg"
@@ -121,7 +121,9 @@
         "type": "image",
         "url": "/insights/mvp-vs-prototype-vs-proof-of-concept/validate-id.svg",
         "alt": "Perbandingan fokus validasi Prototype, MVP, dan Proof of Concept berdasarkan pengalaman pengguna, nilai produk, dan kelayakan teknis",
-        "caption": "Tiga pendekatan ini berbeda karena pertanyaan validasinya berbeda: pengalaman pengguna, nilai produk, dan kelayakan teknis."
+        "caption": "Tiga pendekatan ini berbeda karena pertanyaan validasinya berbeda: pengalaman pengguna, nilai produk, dan kelayakan teknis.",
+        "width": 1400,
+        "height": 760
       },
       {
         "type": "paragraph",
@@ -181,6 +183,15 @@
         "tone": "neutral"
       },
       {
+        "type": "promo",
+        "eyebrow": "DESAIN MVP & PRODUK",
+        "title": "Validasi pengalaman sebelum masuk ke engineering",
+        "description": "Kapitech membantu mengubah alur produk yang belum pasti menjadi prototype UX yang bisa diuji dan scope MVP yang siap diteruskan ke engineering.",
+        "ctaLabel": "Lihat Layanan Desain MVP",
+        "ctaUrl": "https://kapitech.id/solutions/mvp-design",
+        "serviceReference": "Product discovery • UX prototyping • MVP scope"
+      },
+      {
         "type": "heading",
         "level": 2,
         "text": "Apa itu MVP?"
@@ -197,7 +208,9 @@
         "type": "image",
         "url": "/insights/mvp-vs-prototype-vs-proof-of-concept/learning-loop-id.svg",
         "alt": "Siklus MVP dari masalah dan solusi inti menuju pengguna nyata, masukan, pembelajaran, dan iterasi",
-        "caption": "MVP adalah loop pembelajaran. Produk menjadi alat untuk memperoleh bukti dan menentukan apa yang perlu dibangun berikutnya."
+        "caption": "MVP adalah loop pembelajaran. Produk menjadi alat untuk memperoleh bukti dan menentukan apa yang perlu dibangun berikutnya.",
+        "width": 1400,
+        "height": 820
       },
       {
         "type": "heading",
@@ -380,7 +393,9 @@
         "type": "image",
         "url": "/insights/mvp-vs-prototype-vs-proof-of-concept/comparison-id.svg",
         "alt": "Perbandingan Prototype, MVP, dan Proof of Concept berdasarkan tujuan, bukti, fidelitas UX, kedalaman teknis, dan kesiapan",
-        "caption": "Prototype, MVP, dan PoC mengoptimalkan jenis bukti yang berbeda. Tidak ada satu pun yang otomatis menjadi jalan pintas menuju produk siap produksi."
+        "caption": "Prototype, MVP, dan PoC mengoptimalkan jenis bukti yang berbeda. Tidak ada satu pun yang otomatis menjadi jalan pintas menuju produk siap produksi.",
+        "width": 1500,
+        "height": 930
       },
       {
         "type": "heading",
@@ -396,15 +411,13 @@
         "text": "Dengan memisahkan ketiga pertanyaan ini, tim tidak menganggap bukti dari satu eksperimen sebagai bukti untuk semua hal."
       },
       {
-        "type": "callout",
-        "title": "Butuh bantuan menentukan titik awal?",
-        "text": "Kapitech dapat membantu memetakan risiko produk, kebutuhan pengguna, dan batasan teknis sebelum Anda berkomitmen pada pengembangan yang lebih besar.",
-        "tone": "neutral"
-      },
-      {
-        "type": "link",
-        "label": "Diskusikan Produk Anda dengan Kapitech",
-        "url": "https://kapitech.id/contact"
+        "type": "promo",
+        "eyebrow": "KAPITECH",
+        "title": "Tentukan jalur validasi sebelum berkomitmen pada anggaran",
+        "description": "Kami dapat membantu memetakan risiko produk, kebutuhan pengguna, dan batasan teknis, lalu menentukan eksperimen terkecil yang kredibel.",
+        "ctaLabel": "Diskusikan Produk Anda",
+        "ctaUrl": "https://kapitech.id/contact",
+        "serviceReference": "Strategi produk • UX • Technical discovery"
       },
       {
         "type": "heading",
@@ -419,7 +432,9 @@
         "type": "image",
         "url": "/insights/mvp-vs-prototype-vs-proof-of-concept/decision-tree-id.svg",
         "alt": "Bagan keputusan untuk memilih Prototype, MVP, atau PoC berdasarkan ketidakpastian terbesar",
-        "caption": "Mulai dari risiko yang dapat mengubah keputusan proyek. Lalu pilih eksperimen terkecil yang masih menghasilkan bukti yang dapat dipercaya."
+        "caption": "Mulai dari risiko yang dapat mengubah keputusan proyek. Lalu pilih eksperimen terkecil yang masih menghasilkan bukti yang dapat dipercaya.",
+        "width": 1400,
+        "height": 1000
       },
       {
         "type": "heading",
@@ -615,7 +630,9 @@
         "type": "image",
         "url": "/insights/mvp-vs-prototype-vs-proof-of-concept/framework-id.svg",
         "alt": "Kerangka validasi Kapitech yang menghubungkan risiko bisnis, risiko pengguna, risiko teknis, metode validasi, bukti, dan keputusan berikutnya",
-        "caption": "Rangkaian praktis: risiko → metode validasi → bukti → keputusan."
+        "caption": "Rangkaian praktis: risiko → metode validasi → bukti → keputusan.",
+        "width": 1400,
+        "height": 820
       },
       {
         "type": "list",
@@ -673,11 +690,6 @@
       {
         "type": "paragraph",
         "text": "Titik awal yang paling kuat bukanlah keluaran terbesar. Pilih eksperimen terkecil yang masih kredibel untuk menjawab pertanyaan yang paling mahal jika dibiarkan tanpa jawaban."
-      },
-      {
-        "type": "link",
-        "label": "Lihat Layanan Desain MVP Kapitech",
-        "url": "https://kapitech.id/solutions/mvp-design"
       }
     ],
     "faq": [
@@ -709,6 +721,8 @@
         "Bisakah Prototype, MVP, dan PoC digunakan bersama?",
         "Bisa. Satu proyek dapat menggabungkan beberapa metode ketika memiliki beberapa ketidakpastian kritis. Urutannya harus mengikuti risiko yang sedang dikurangi."
       ]
-    ]
+    ],
+    "seoTitle": "MVP vs Prototype vs PoC: Mana yang Tepat untuk Bisnis Anda? | Kapitech",
+    "seoDescription": "Pahami perbedaan MVP, Prototype, dan Proof of Concept, risiko yang diuji, dan cara memilih pendekatan validasi yang tepat untuk produk digital."
   }
 }
