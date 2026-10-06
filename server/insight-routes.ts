@@ -126,7 +126,16 @@ function block(value: unknown): InsightBlock | null {
     const alt = clean(item.alt, 300);
     if (!url || !alt) return null;
     const caption = clean(item.caption, 500);
-    return { type, url, alt, ...(caption ? { caption } : {}) };
+    const width = Number(item.width);
+    const height = Number(item.height);
+    return {
+      type,
+      url,
+      alt,
+      ...(caption ? { caption } : {}),
+      ...(Number.isFinite(width) && width > 0 && width <= 6000 ? { width: Math.round(width) } : {}),
+      ...(Number.isFinite(height) && height > 0 && height <= 6000 ? { height: Math.round(height) } : {})
+    };
   }
 
   if (type === 'table') {
@@ -165,6 +174,25 @@ function block(value: unknown): InsightBlock | null {
     if (!items.length) return null;
     const title = clean(item.title, 240);
     return { type, items, ...(title ? { title } : {}) };
+  }
+
+  if (type === 'promo') {
+    const eyebrow = clean(item.eyebrow, 160);
+    const title = clean(item.title, 240);
+    const description = clean(item.description, 2500);
+    const ctaLabel = clean(item.ctaLabel, 240);
+    const ctaUrl = optionalUrl(item.ctaUrl);
+    const serviceReference = clean(item.serviceReference, 240);
+    if (!eyebrow || !title || !description || !ctaLabel || !ctaUrl) return null;
+    return {
+      type,
+      eyebrow,
+      title,
+      description,
+      ctaLabel,
+      ctaUrl,
+      ...(serviceReference ? { serviceReference } : {})
+    };
   }
 
   if (type === 'divider') return { type };
