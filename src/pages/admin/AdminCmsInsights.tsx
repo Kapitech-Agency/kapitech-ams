@@ -49,7 +49,8 @@ const BLOCK_TYPES: Array<{ value: InsightBlockType; label: string }> = [
   { value: 'code', label: 'Code' },
   { value: 'link', label: 'Link' },
   { value: 'divider', label: 'Divider' },
-  { value: 'checklist', label: 'Checklist' }
+  { value: 'checklist', label: 'Checklist' },
+  { value: 'promo', label: 'Contextual Promo' }
 ];
 
 const makeEmptyBlock = (type: InsightBlockType): InsightBlock => {
@@ -61,7 +62,7 @@ const makeEmptyBlock = (type: InsightBlockType): InsightBlock => {
     case 'quote':
       return { type, text: '', attribution: '' };
     case 'image':
-      return { type, url: '', alt: '', caption: '' };
+      return { type, url: '', alt: '', caption: '', width: undefined, height: undefined };
     case 'table':
       return { type, headers: ['Column 1', 'Column 2'], rows: [['', '']] };
     case 'callout':
@@ -72,6 +73,8 @@ const makeEmptyBlock = (type: InsightBlockType): InsightBlock => {
       return { type, label: '', url: '' };
     case 'checklist':
       return { type, title: '', items: [''] };
+    case 'promo':
+      return { type, eyebrow: '', title: '', description: '', ctaLabel: '', ctaUrl: '', serviceReference: '' };
     case 'divider':
       return { type };
     default:
@@ -210,6 +213,10 @@ const BlockEditor: React.FC<{
               <input type="url" value={item.url || ''} onChange={(e) => update(index, { url: e.target.value })} className="ams-control w-full text-xs" placeholder="https://..." />
               <input value={item.alt || ''} onChange={(e) => update(index, { alt: e.target.value })} className="ams-control w-full text-xs" placeholder="Descriptive alt text" />
               <input value={item.caption || ''} onChange={(e) => update(index, { caption: e.target.value })} className="ams-control w-full text-xs" placeholder="Caption (optional)" />
+              <div className="grid gap-2 sm:grid-cols-2">
+                <input type="number" min="1" max="6000" value={item.width || ''} onChange={(e) => update(index, { width: e.target.value ? Number(e.target.value) : undefined })} className="ams-control w-full text-xs" placeholder="Width (optional)" />
+                <input type="number" min="1" max="6000" value={item.height || ''} onChange={(e) => update(index, { height: e.target.value ? Number(e.target.value) : undefined })} className="ams-control w-full text-xs" placeholder="Height (optional)" />
+              </div>
             </div>
           )}
 
@@ -267,6 +274,19 @@ const BlockEditor: React.FC<{
             <div className="space-y-2">
               <input value={item.title || ''} onChange={(e) => update(index, { title: e.target.value })} className="ams-control w-full text-xs" placeholder="Checklist title (optional)" />
               <textarea value={(item.items || []).join('\n')} onChange={(e) => update(index, { items: e.target.value.split('\n').filter(Boolean) })} rows={6} className="ams-control w-full text-xs leading-5" placeholder="One checklist item per line" />
+            </div>
+          )}
+
+          {item.type === 'promo' && (
+            <div className="space-y-2">
+              <input value={item.eyebrow || ''} onChange={(e) => update(index, { eyebrow: e.target.value })} className="ams-control w-full text-xs" placeholder="Eyebrow, e.g. MVP & Product Design" />
+              <input value={item.title || ''} onChange={(e) => update(index, { title: e.target.value })} className="ams-control w-full text-xs" placeholder="Promotion title" />
+              <textarea value={item.description || ''} onChange={(e) => update(index, { description: e.target.value })} rows={4} className="ams-control w-full text-xs leading-5" placeholder="Short contextual description" />
+              <div className="grid gap-2 sm:grid-cols-2">
+                <input value={item.ctaLabel || ''} onChange={(e) => update(index, { ctaLabel: e.target.value })} className="ams-control w-full text-xs" placeholder="CTA label" />
+                <input type="url" value={item.ctaUrl || ''} onChange={(e) => update(index, { ctaUrl: e.target.value })} className="ams-control w-full text-xs" placeholder="https://..." />
+              </div>
+              <input value={item.serviceReference || ''} onChange={(e) => update(index, { serviceReference: e.target.value })} className="ams-control w-full text-xs" placeholder="Service reference (optional)" />
             </div>
           )}
 
