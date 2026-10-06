@@ -12,7 +12,8 @@ export type InsightBlockType =
   | 'code'
   | 'link'
   | 'divider'
-  | 'checklist';
+  | 'checklist'
+  | 'promo';
 
 export interface InsightBlock {
   type: InsightBlockType;
@@ -22,10 +23,17 @@ export interface InsightBlock {
   items?: string[];
   attribution?: string;
   url?: string;
+  eyebrow?: string;
+  description?: string;
+  ctaLabel?: string;
+  ctaUrl?: string;
+  serviceReference?: string;
   alt?: string;
   caption?: string;
   headers?: string[];
   rows?: string[][];
+  width?: number;
+  height?: number;
   title?: string;
   tone?: 'info' | 'warning' | 'success' | 'neutral';
   code?: string;
