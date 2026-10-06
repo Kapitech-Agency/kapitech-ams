@@ -15,7 +15,7 @@
     "authorSlug": "kapitech-editorial-team",
     "status": "published",
     "isFeatured": true,
-    "readingTime": 14,
+    "readingTime": 15,
     "editorialMeta": {
       "editorialType": "Panduan"
     },
@@ -409,15 +409,6 @@
       {
         "type": "paragraph",
         "text": "Dengan memisahkan ketiga pertanyaan ini, tim tidak menganggap bukti dari satu eksperimen sebagai bukti untuk semua hal."
-      },
-      {
-        "type": "promo",
-        "eyebrow": "KAPITECH",
-        "title": "Tentukan jalur validasi sebelum berkomitmen pada anggaran",
-        "description": "Kami dapat membantu memetakan risiko produk, kebutuhan pengguna, dan batasan teknis, lalu menentukan eksperimen terkecil yang kredibel.",
-        "ctaLabel": "Diskusikan Produk Anda",
-        "ctaUrl": "https://kapitech.id/contact",
-        "serviceReference": "Strategi produk • UX • Technical discovery"
       },
       {
         "type": "heading",
