@@ -411,15 +411,6 @@
         "text": "Keeping these questions separate prevents a common failure mode: treating evidence from one experiment as proof of everything else."
       },
       {
-        "type": "promo",
-        "eyebrow": "KAPITECH",
-        "title": "Choose the right validation path before you commit the budget",
-        "description": "We can help map the product risk, user needs, and technical constraints, then define the smallest credible experiment.",
-        "ctaLabel": "Discuss Your Product",
-        "ctaUrl": "https://kapitech.id/contact",
-        "serviceReference": "Product strategy • UX • Technical discovery"
-      },
-      {
         "type": "heading",
         "level": 2,
         "text": "How to Choose the Right Approach"
