@@ -3,8 +3,8 @@
   "runtime": "migration-seed-source",
   "note": "English editorial source for the public Insight platform. Structured blocks are delivered through AMS PostgreSQL and prerendered for public search discovery.",
   "seo": {
-    "title": "MVP vs Prototype vs Proof of Concept: Which One Should Your Business Choose? | Kapitech",
-    "description": "Understand the difference between MVP, Prototype, and Proof of Concept, what each validates, and how to choose the right approach for your biggest product risk.",
+    "title": "MVP vs Prototype vs PoC: Which Should Your Business Choose? | Kapitech",
+    "description": "Compare MVP, Prototype, and Proof of Concept, what each validates, and how to choose the smallest test for your biggest product risk.",
     "slug": "mvp-vs-prototype-vs-proof-of-concept-guide",
     "canonicalUrl": "https://kapitech.id/insights/mvp-vs-prototype-vs-proof-of-concept-guide",
     "ogImage": "/insights/mvp-vs-prototype-vs-proof-of-concept/hero-en.svg"
@@ -121,7 +121,9 @@
         "type": "image",
         "url": "/insights/mvp-vs-prototype-vs-proof-of-concept/validate.svg",
         "alt": "Prototype validates user experience, MVP validates product value, and Proof of Concept validates technical feasibility",
-        "caption": "The three approaches are different because the questions are different: experience, product value, and technical feasibility."
+        "caption": "The three approaches are different because the questions are different: experience, product value, and technical feasibility.",
+        "width": 1400,
+        "height": 760
       },
       {
         "type": "paragraph",
@@ -181,6 +183,15 @@
         "tone": "neutral"
       },
       {
+        "type": "promo",
+        "eyebrow": "MVP & PRODUCT DESIGN",
+        "title": "Validate the experience before you engineer it",
+        "description": "Kapitech helps turn uncertain product flows into testable UX prototypes and a focused MVP scope your engineering team can act on.",
+        "ctaLabel": "Explore MVP & Product Design",
+        "ctaUrl": "https://kapitech.id/solutions/mvp-design",
+        "serviceReference": "Product discovery • UX prototyping • MVP scope"
+      },
+      {
         "type": "heading",
         "level": 2,
         "text": "What Is an MVP?"
@@ -197,7 +208,9 @@
         "type": "image",
         "url": "/insights/mvp-vs-prototype-vs-proof-of-concept/learning-loop.svg",
         "alt": "MVP learning loop from problem and core solution to real users, feedback, learning, and iteration",
-        "caption": "An MVP is a learning loop. The product is the instrument used to collect evidence and decide what to build next."
+        "caption": "An MVP is a learning loop. The product is the instrument used to collect evidence and decide what to build next.",
+        "width": 1400,
+        "height": 820
       },
       {
         "type": "heading",
@@ -380,7 +393,9 @@
         "type": "image",
         "url": "/insights/mvp-vs-prototype-vs-proof-of-concept/comparison.svg",
         "alt": "Comparison of Prototype, MVP, and Proof of Concept across purpose, evidence, UX fidelity, technical depth, and readiness",
-        "caption": "Prototype, MVP, and PoC optimize for different evidence. None of them is a universal shortcut to a production-ready product."
+        "caption": "Prototype, MVP, and PoC optimize for different evidence. None of them is a universal shortcut to a production-ready product.",
+        "width": 1500,
+        "height": 930
       },
       {
         "type": "heading",
@@ -396,15 +411,13 @@
         "text": "Keeping these questions separate prevents a common failure mode: treating evidence from one experiment as proof of everything else."
       },
       {
-        "type": "callout",
-        "title": "Need help choosing the right starting point?",
-        "text": "Kapitech can help map the product risk, user needs, and technical constraints before you commit to a larger build.",
-        "tone": "neutral"
-      },
-      {
-        "type": "link",
-        "label": "Discuss Your Product With Kapitech",
-        "url": "https://kapitech.id/contact"
+        "type": "promo",
+        "eyebrow": "KAPITECH",
+        "title": "Choose the right validation path before you commit the budget",
+        "description": "We can help map the product risk, user needs, and technical constraints, then define the smallest credible experiment.",
+        "ctaLabel": "Discuss Your Product",
+        "ctaUrl": "https://kapitech.id/contact",
+        "serviceReference": "Product strategy • UX • Technical discovery"
       },
       {
         "type": "heading",
@@ -419,7 +432,9 @@
         "type": "image",
         "url": "/insights/mvp-vs-prototype-vs-proof-of-concept/decision-tree.svg",
         "alt": "Decision tree for choosing Prototype, MVP, or Proof of Concept based on the biggest uncertainty",
-        "caption": "Start with the risk that could change the project decision. Then select the smallest credible experiment."
+        "caption": "Start with the risk that could change the project decision. Then select the smallest credible experiment.",
+        "width": 1400,
+        "height": 1000
       },
       {
         "type": "heading",
@@ -615,7 +630,9 @@
         "type": "image",
         "url": "/insights/mvp-vs-prototype-vs-proof-of-concept/framework.svg",
         "alt": "Kapitech validation framework connecting business risk, user risk, technical risk, validation method, evidence, and the next decision",
-        "caption": "A practical chain: risk → validation method → evidence → decision."
+        "caption": "A practical chain: risk → validation method → evidence → decision.",
+        "width": 1400,
+        "height": 820
       },
       {
         "type": "list",
@@ -673,11 +690,6 @@
       {
         "type": "paragraph",
         "text": "The strongest starting point is not the largest deliverable. It is the smallest credible experiment that can answer the question with the highest cost of being wrong."
-      },
-      {
-        "type": "link",
-        "label": "Explore Kapitech MVP & Product Design",
-        "url": "https://kapitech.id/solutions/mvp-design"
       }
     ],
     "faq": [
@@ -709,6 +721,8 @@
         "Can Prototype, MVP, and PoC be used together?",
         "Yes. A project can combine methods when it has multiple critical uncertainties. The sequence should follow the risks being reduced."
       ]
-    ]
+    ],
+    "seoTitle": "MVP vs Prototype vs PoC: Which Should Your Business Choose? | Kapitech",
+    "seoDescription": "Compare MVP, Prototype, and Proof of Concept, what each validates, and how to choose the smallest test for your biggest product risk."
   }
 }
