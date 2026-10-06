@@ -207,8 +207,19 @@ function blocks(value: unknown): InsightBlock[] {
 
 function faq(value: unknown): Array<{ question: string; answer: string }> {
   if (!Array.isArray(value)) return [];
+
   return value.slice(0, 30).map(item => {
-    const source = item && typeof item === 'object' ? item as Record<string, unknown> : {};
+    if (Array.isArray(item)) {
+      return {
+        question: clean(item[0], 500),
+        answer: clean(item[1], 5000)
+      };
+    }
+
+    const source = item && typeof item === 'object'
+      ? item as Record<string, unknown>
+      : {};
+
     return {
       question: clean(source.question, 500),
       answer: clean(source.answer, 5000)
