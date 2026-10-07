@@ -5,7 +5,7 @@
 BEGIN;
 
 INSERT INTO cms_insight_categories (id, slug, name, description, seo_title, seo_description)
-VALUES ('seed_category_product_technology','product-technology','{"id":"Product & Technology","en":"Product & Technology"}'::jsonb,'{"id":"Perspektif praktis tentang product, technology, SEO, dan digital delivery.","en":"Practical perspectives on product, technology, SEO, and digital delivery."}'::jsonb,'{"id":"Product & Technology Insights | Kapitech","en":"Product & Technology Insights | Kapitech"}'::jsonb,'{"id":"Wawasan praktis tentang produk digital, teknologi, SEO, dan delivery.","en":"Practical insights on digital products, technology, SEO, and delivery."}'::jsonb)
+VALUES ('seed_category_product_technology','product-technology','{"id":"Product & Technology","en":"Product & Technology"}'::jsonb,'{"id":"Perspektif praktis tentang product, technology, SEO, dan digital delivery.","en":"Practical perspectives on digital products, websites, technology, and delivery."}'::jsonb,'{"id":"Product & Technology Insights | Kapitech","en":"Product & Technology Insights | Kapitech"}'::jsonb,'{"id":"Wawasan praktis tentang produk digital, website, teknologi, dan delivery.","en":"Practical insights on digital products, technology, SEO, and delivery."}'::jsonb)
 ON CONFLICT (slug) DO NOTHING;
 
 INSERT INTO cms_insight_authors (id, slug, name, role, bio, avatar, data)
@@ -40,7 +40,7 @@ INSERT INTO cms_insights (
  'A practical technical SEO audit covering crawlability, indexing, canonical URLs, robots.txt, sitemaps, page experience, and the checks to run before scaling content.',
  'https://kapitech.id/insights/technical-seo-audit/hero.svg',
  'https://kapitech.id/insights/technical-seo-audit-guide',
- '{"source":"seo-educational-editorial-pack","research_backed":true,"template":"mvp-vs-prototype-vs-proof-of-concept","structure_version":"103-blocks"}'::jsonb,
+ '{"source":"business-led-educational-editorial-pack","research_backed":true,"template":"insight-master-template","structure_version":"103-blocks"}'::jsonb,
  NOW(),
  NOW()
 )
@@ -90,7 +90,7 @@ INSERT INTO cms_insights (
  'Learn what LCP, INP, and CLS measure, their current good thresholds, common causes of poor scores, and how to prioritize performance work for SEO and UX.',
  'https://kapitech.id/insights/core-web-vitals/hero.svg',
  'https://kapitech.id/insights/core-web-vitals-explained',
- '{"source":"seo-educational-editorial-pack","research_backed":true,"template":"mvp-vs-prototype-vs-proof-of-concept","structure_version":"103-blocks"}'::jsonb,
+ '{"source":"business-led-educational-editorial-pack","research_backed":true,"template":"insight-master-template","structure_version":"103-blocks"}'::jsonb,
  NOW(),
  NOW()
 )
@@ -140,7 +140,7 @@ INSERT INTO cms_insights (
  'A practical guide to structured data for SEO: what JSON-LD does, which schema types fit common pages, how validation works, and what structured data can and cannot do.',
  'https://kapitech.id/insights/structured-data-seo/hero.svg',
  'https://kapitech.id/insights/structured-data-for-seo-guide',
- '{"source":"seo-educational-editorial-pack","research_backed":true,"template":"mvp-vs-prototype-vs-proof-of-concept","structure_version":"103-blocks"}'::jsonb,
+ '{"source":"business-led-educational-editorial-pack","research_backed":true,"template":"insight-master-template","structure_version":"103-blocks"}'::jsonb,
  NOW(),
  NOW()
 )
@@ -190,7 +190,7 @@ INSERT INTO cms_insights (
  'Learn how to build educational SEO content around user needs, search intent, original value, clear authorship, and evidence instead of keyword stuffing or content volume.',
  'https://kapitech.id/insights/helpful-seo-content/hero.svg',
  'https://kapitech.id/insights/helpful-seo-content-framework',
- '{"source":"seo-educational-editorial-pack","research_backed":true,"template":"mvp-vs-prototype-vs-proof-of-concept","structure_version":"103-blocks"}'::jsonb,
+ '{"source":"business-led-educational-editorial-pack","research_backed":true,"template":"insight-master-template","structure_version":"103-blocks"}'::jsonb,
  NOW(),
  NOW()
 )
