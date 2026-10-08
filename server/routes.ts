@@ -172,6 +172,26 @@ function cleanText(value: unknown, max = MAX_INTERNAL_TEXT): string {
   return String(value ?? '').trim().slice(0, max);
 }
 
+function isAllowedPublicOrigin(origin: string): boolean {
+  const configured = String(process.env.PUBLIC_SITE_ORIGINS || '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  const allowedOrigins = new Set([
+    'https://kapitech.id',
+    'https://www.kapitech.id',
+    'https://ams.kapitech.id',
+    ...configured
+  ]);
+
+  try {
+    return allowedOrigins.has(new URL(origin).origin);
+  } catch {
+    return false;
+  }
+}
+
 function cleanOptionalUrl(value: unknown): string {
   const candidate = cleanText(value, 2000);
   if (!candidate) return '';
@@ -1468,7 +1488,7 @@ function detectResumeMimeType(buffer: Buffer, extension: string): string | null 
 
 apiRouter.post('/leads/resume-upload', rateLimitPublic(5, 15 * 60 * 1000), express.raw({ type: () => true, limit: '5mb' }), async (req: Request, res: Response): Promise<void> => {
   const origin = req.get('origin');
-  if (origin && !/^https:\/\/(?:www\.)?kapitech\.id$/i.test(origin) && !/^https:\/\/ams\.kapitech\.id$/i.test(origin)) {
+  if (origin && !isAllowedPublicOrigin(origin)) {
     res.status(403).json({ success: false, error: 'Upload origin is not allowed.' });
     return;
   }
@@ -1613,7 +1633,7 @@ apiRouter.post('/leads/resume-upload', rateLimitPublic(5, 15 * 60 * 1000), expre
 
 apiRouter.post('/leads/brief-upload', rateLimitPublic(5, 15 * 60 * 1000), express.raw({ type: () => true, limit: '10mb' }), async (req: Request, res: Response): Promise<void> => {
   const origin = req.get('origin');
-  if (origin && !/^https:\/\/(?:www\.)?kapitech\.id$/i.test(origin) && !/^https:\/\/ams\.kapitech\.id$/i.test(origin)) {
+  if (origin && !isAllowedPublicOrigin(origin)) {
     res.status(403).json({ success: false, error: 'Upload origin is not allowed.' });
     return;
   }
@@ -1838,6 +1858,7 @@ apiRouter.post('/leads/submit', rateLimitPublic(10, 60 * 1000), async (req: Requ
     industry,
     ndaRequested,
     briefUrl,
+    submissionId,
     website
   } = req.body;
 
@@ -1846,8 +1867,14 @@ apiRouter.post('/leads/submit', rateLimitPublic(10, 60 * 1000), async (req: Requ
     return;
   }
 
+  const cleanSubmissionId = cleanText(submissionId, 128);
+  if (cleanSubmissionId && !/^web_[A-Za-z0-9_-]{20,128}$/.test(cleanSubmissionId)) {
+    res.status(400).json({ success: false, error: 'Invalid submission identifier.' });
+    return;
+  }
+
   const origin = req.get('origin');
-  if (origin && !/^https:\/\/(?:www\.)?kapitech\.id$/i.test(origin) && !/^https:\/\/ams\.kapitech\.id$/i.test(origin)) {
+  if (origin && !isAllowedPublicOrigin(origin)) {
     res.status(403).json({ success: false, error: 'Submission origin is not allowed.' });
     return;
   }
@@ -1867,6 +1894,22 @@ apiRouter.post('/leads/submit', rateLimitPublic(10, 60 * 1000), async (req: Requ
     return;
   }
 
+  if (cleanSubmissionId) {
+    const existingLead = getDataSourceMode() === 'postgres'
+      ? await postgresLeadRepository.findById(cleanSubmissionId)
+      : getDatabase().leads.find((lead: any) => lead.id === cleanSubmissionId);
+
+    if (existingLead) {
+      res.json({
+        success: true,
+        message: existingLead.type === 'career' ? 'Job application submitted successfully.' : 'Inquiry submitted successfully.',
+        id: existingLead.id,
+        replayed: true
+      });
+      return;
+    }
+  }
+
   const now = new Date().toISOString();
   const normalizedServices = normalizeStringArray(services, 20, 120);
   const leadType = cleanText(type || 'inquiry', 40).toLowerCase();
@@ -1875,7 +1918,7 @@ apiRouter.post('/leads/submit', rateLimitPublic(10, 60 * 1000), async (req: Requ
     return;
   }
   const newLead = {
-    id: `lead_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
+    id: cleanSubmissionId || `lead_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
     fullName: cleanText(fullName, 160),
     email: cleanEmail,
     company: cleanText(company, 200),
@@ -1934,6 +1977,28 @@ apiRouter.post('/leads/submit', rateLimitPublic(10, 60 * 1000), async (req: Requ
       notificationSettings = jsonDb.notificationSettings;
     }
   } catch (error) {
+    // A retried public submission can race with the first request after the
+    // database has already committed the same client-generated identifier.
+    if (cleanSubmissionId) {
+      try {
+        const existingLead = getDataSourceMode() === 'postgres'
+          ? await postgresLeadRepository.findById(cleanSubmissionId)
+          : getDatabase().leads.find((lead: any) => lead.id === cleanSubmissionId);
+
+        if (existingLead) {
+          res.json({
+            success: true,
+            message: existingLead.type === 'career' ? 'Job application submitted successfully.' : 'Inquiry submitted successfully.',
+            id: existingLead.id,
+            replayed: true
+          });
+          return;
+        }
+      } catch (lookupError) {
+        console.error('[Public Lead] Idempotency lookup failed after persistence error:', lookupError);
+      }
+    }
+
     await cleanupPublicResumeForLeadFailure(resumeUrl);
     await cleanupPublicBriefForLeadFailure(briefUrl);
     console.error('[Public Lead] Lead persistence failed:', error);
