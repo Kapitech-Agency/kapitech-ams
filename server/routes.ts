@@ -418,7 +418,7 @@ async function dispatchLeadTelegramNotification(
     await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text: telegramText, parse_mode: 'Markdown' })
+      body: JSON.stringify({ chat_id: chatId, text: telegramText })
     });
   } catch (error) {
     console.debug('[Notifications] Telegram lead notification failed:', error);
