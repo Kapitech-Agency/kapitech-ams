@@ -177,13 +177,16 @@ function isAllowedPublicOrigin(origin: string): boolean {
     .split(',')
     .map((value) => value.trim())
     .filter(Boolean);
+  const candidates = ['https://kapitech.id', 'https://www.kapitech.id', 'https://ams.kapitech.id', ...configured];
+  const allowedOrigins = new Set<string>();
 
-  const allowedOrigins = new Set([
-    'https://kapitech.id',
-    'https://www.kapitech.id',
-    'https://ams.kapitech.id',
-    ...configured
-  ]);
+  for (const candidate of candidates) {
+    try {
+      allowedOrigins.add(new URL(candidate).origin);
+    } catch {
+      // Ignore malformed origin configuration.
+    }
+  }
 
   try {
     return allowedOrigins.has(new URL(origin).origin);
