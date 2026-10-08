@@ -105,10 +105,22 @@ function isPublicApiPath(pathname: string): boolean {
 }
 
 function getPublicSiteOrigins(): Set<string> {
-  const configured = String(process.env.PUBLIC_SITE_ORIGINS || '').split(',').map((origin) => origin.trim()).filter(Boolean);
-  return new Set(configured.length > 0
-    ? configured
-    : ['https://kapitech.id', 'https://www.kapitech.id']);
+  const configured = String(process.env.PUBLIC_SITE_ORIGINS || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  const candidates = ['https://kapitech.id', 'https://www.kapitech.id', ...configured];
+  const origins = new Set<string>();
+
+  for (const candidate of candidates) {
+    try {
+      origins.add(new URL(candidate).origin);
+    } catch {
+      // Ignore malformed origin configuration instead of breaking the API process.
+    }
+  }
+
+  return origins;
 }
 
 function applyPublicApiCors(req: express.Request, res: express.Response, next: express.NextFunction): void {
