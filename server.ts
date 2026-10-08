@@ -96,7 +96,8 @@ const PUBLIC_API_PATHS = new Set([
   '/cms/insights/sitemap.xml',
   '/cms/insight-categories',
   '/leads/submit',
-  '/leads/resume-upload'
+  '/leads/resume-upload',
+  '/leads/brief-upload'
 ]);
 
 function isPublicApiPath(pathname: string): boolean {
