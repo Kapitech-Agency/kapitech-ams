@@ -1606,6 +1606,135 @@ apiRouter.post('/leads/resume-upload', rateLimitPublic(5, 15 * 60 * 1000), expre
   });
 });
 
+apiRouter.post('/leads/brief-upload', rateLimitPublic(5, 15 * 60 * 1000), express.raw({ type: () => true, limit: '10mb' }), async (req: Request, res: Response): Promise<void> => {
+  const origin = req.get('origin');
+  if (origin && !/^https:\/\/(?:www\.)?kapitech\.id$/i.test(origin) && !/^https:\/\/ams\.kapitech\.id$/i.test(origin)) {
+    res.status(403).json({ success: false, error: 'Upload origin is not allowed.' });
+    return;
+  }
+
+  const body = req.body;
+  if (!Buffer.isBuffer(body) || body.length === 0) {
+    res.status(400).json({ success: false, error: 'A non-empty project brief is required.' });
+    return;
+  }
+
+  const contentType = String(req.get('content-type') || '').split(';')[0].trim().toLowerCase();
+  const rawEncodedFilename = String(req.get('X-Project-Brief-Filename') || '');
+  let rawFilename = 'project-brief';
+  if (rawEncodedFilename) {
+    try { rawFilename = decodeURIComponent(rawEncodedFilename); } catch { rawFilename = 'project-brief'; }
+  }
+  const filename = path.basename(rawFilename).replace(/[\\/\0]/g, '').slice(0, 180) || 'project-brief';
+  const extension = filename.toLowerCase().split('.').pop() || '';
+  const mimeByExtension: Record<string, string> = {
+    pdf: 'application/pdf',
+    doc: 'application/msword',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  };
+  const extensionMimeType = mimeByExtension[extension] || '';
+  const detectedMimeType = detectResumeMimeType(body, extension);
+  const mimeType = detectedMimeType || extensionMimeType;
+
+  if (!mimeType || !['pdf', 'doc', 'docx'].includes(extension) || !detectedMimeType || detectedMimeType !== extensionMimeType || (contentType && contentType !== 'application/octet-stream' && contentType !== extensionMimeType)) {
+    res.status(415).json({ success: false, error: 'Project brief file type or content signature is invalid.' });
+    return;
+  }
+
+  if (body.length > 10 * 1024 * 1024) {
+    res.status(413).json({ success: false, error: 'Project brief exceeds the 10 MB upload limit.' });
+    return;
+  }
+
+  const configuredProvider = process.env.KAPITECH_DOCUMENT_STORAGE_PROVIDER?.trim().toLowerCase() || '';
+  if (isProductionRuntime() && getDataSourceMode() === 'postgres' && configuredProvider !== 's3' && configuredProvider !== 's3-compatible') {
+    res.status(503).json({ success: false, error: 'Durable document storage is required for project brief uploads.' });
+    return;
+  }
+
+  const now = new Date().toISOString();
+  const documentId = `doc_public_brief_${Date.now()}_${crypto.randomBytes(8).toString('hex')}`;
+  const storageKey = crypto.randomBytes(32).toString('hex');
+  const storage = getDocumentStorage();
+
+  let encryptedPayload: Buffer;
+  let storageSha256: string;
+  try {
+    encryptedPayload = encryptPrivateDocument(body);
+    storageSha256 = crypto.createHash('sha256').update(encryptedPayload).digest('hex');
+    await storage.put(storageKey, encryptedPayload);
+  } catch (error) {
+    console.error('[Public Project Brief] Storage failed:', error);
+    res.status(500).json({ success: false, error: 'Project brief storage failed.' });
+    return;
+  }
+
+  const contentSha256 = crypto.createHash('sha256').update(body).digest('hex');
+  const document = {
+    id: documentId,
+    name: filename,
+    title: filename,
+    type: 'Project Brief',
+    mimeType,
+    size: humanFileSize(body.length),
+    sizeBytes: body.length,
+    category: 'Sales',
+    relatedEntity: 'Public Lead Upload',
+    relatedId: '',
+    owner: '',
+    ownerUserId: undefined,
+    accessUserIds: [],
+    sourceType: 'private_file',
+    status: 'ready',
+    uploadedDate: now.split('T')[0],
+    uploadedAt: now,
+    storageKey,
+    contentSha256,
+    storageSha256,
+    storageVersion: 1,
+    storageProvider: storage.provider,
+    integrityCheckedAt: now,
+    createdAt: now,
+    updatedAt: now,
+    metadata: { publicUpload: true, publicUploadType: 'project_brief', originalFilename: filename }
+  };
+
+  try {
+    if (getDataSourceMode() === 'postgres') {
+      await postgresDocumentRepository.create(document, {
+        action: 'PUBLIC_PROJECT_BRIEF_UPLOADED',
+        actor: 'public_contact',
+        actorRole: 'public_lead',
+        ip: req.ip,
+        userAgent: req.headers['user-agent'] as string,
+        details: `Stored public project brief "${filename}" (${body.length} bytes).`,
+        severity: 'info'
+      });
+    } else {
+      const db = getDatabase();
+      if (!db.documents) db.documents = [];
+      db.documents.unshift(document);
+      db.documents = db.documents.slice(0, 500);
+      saveDatabase(db);
+    }
+  } catch (error) {
+    try { await storage.delete(storageKey); } catch {}
+    console.error('[Public Project Brief] Metadata persistence failed:', error);
+    res.status(500).json({ success: false, error: 'Project brief metadata could not be saved.' });
+    return;
+  }
+
+  const downloadUrl = `/api/documents/${encodeURIComponent(documentId)}/content`;
+  res.status(201).json({
+    success: true,
+    documentId,
+    briefUrl: downloadUrl,
+    filename,
+    mimeType,
+    sizeBytes: body.length
+  });
+});
+
 const cleanupPublicResumeForLeadFailure = async (resumeUrl: unknown): Promise<void> => {
   const match = typeof resumeUrl === 'string'
     ? resumeUrl.match(/^\/api\/documents\/([^/]+)\/content$/)
@@ -1646,6 +1775,39 @@ const cleanupPublicResumeForLeadFailure = async (resumeUrl: unknown): Promise<vo
   }
 };
 
+
+const cleanupPublicBriefForLeadFailure = async (briefUrl: unknown): Promise<void> => {
+  const match = typeof briefUrl === 'string' ? briefUrl.match(/^\\/api\\/documents\\/([^/]+)\\/content$/) : null;
+  if (!match) return;
+  const documentId = decodeURIComponent(match[1]);
+  try {
+    if (getDataSourceMode() === 'postgres') {
+      const document = await postgresDocumentRepository.findById(documentId);
+      if (document?.metadata?.publicUploadType === 'project_brief' && document.storageKey) {
+        try { await getDocumentStorage().delete(document.storageKey); } catch {}
+      }
+      await postgresDocumentRepository.delete(documentId, {
+        action: 'PUBLIC_PROJECT_BRIEF_ORPHAN_CLEANUP',
+        actor: 'public_contact',
+        actorRole: 'system',
+        details: `Removed orphaned public project brief document ${documentId} after lead submission failure.`,
+        severity: 'warning'
+      });
+      return;
+    }
+    const db = getDatabase();
+    const document = (db.documents || []).find((item: any) => item.id === documentId);
+    if (!document?.metadata?.publicUploadType || document.metadata.publicUploadType !== 'project_brief') return;
+    if (document.storageKey) {
+      try { await getDocumentStorage().delete(document.storageKey); } catch {}
+    }
+    db.documents = (db.documents || []).filter((item: any) => item.id !== documentId);
+    saveDatabase(db);
+  } catch (cleanupError) {
+    console.error('[Public Lead] Project brief orphan cleanup failed:', cleanupError);
+  }
+};
+
 apiRouter.post('/leads/submit', rateLimitPublic(10, 60 * 1000), async (req: Request, res: Response): Promise<void> => {
   const {
     fullName,
@@ -1668,6 +1830,9 @@ apiRouter.post('/leads/submit', rateLimitPublic(10, 60 * 1000), async (req: Requ
     availability,
     location,
     attribution,
+    industry,
+    ndaRequested,
+    briefUrl,
     website
   } = req.body;
 
@@ -1721,6 +1886,9 @@ apiRouter.post('/leads/submit', rateLimitPublic(10, 60 * 1000), async (req: Requ
     linkedinUrl: cleanOptionalUrl(linkedinUrl),
     availability: cleanText(availability, 160),
     location: cleanText(location, 160),
+    industry: cleanText(industry, 160),
+    ndaRequested: Boolean(ndaRequested),
+    briefUrl: cleanOptionalUrl(briefUrl),
     attribution: sanitizeLeadAttribution(attribution),
     createdAt: now,
     updatedAt: now
@@ -1757,6 +1925,7 @@ apiRouter.post('/leads/submit', rateLimitPublic(10, 60 * 1000), async (req: Requ
     }
   } catch (error) {
     await cleanupPublicResumeForLeadFailure(resumeUrl);
+    await cleanupPublicBriefForLeadFailure(briefUrl);
     console.error('[Public Lead] Lead persistence failed:', error);
     res.status(500).json({ success: false, error: 'Submission could not be saved. Please try again.' });
     return;
