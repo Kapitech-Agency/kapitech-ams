@@ -1777,7 +1777,7 @@ const cleanupPublicResumeForLeadFailure = async (resumeUrl: unknown): Promise<vo
 
 
 const cleanupPublicBriefForLeadFailure = async (briefUrl: unknown): Promise<void> => {
-  const match = typeof briefUrl === 'string' ? briefUrl.match(/^\\/api\\/documents\\/([^/]+)\\/content$/) : null;
+  const match = typeof briefUrl === 'string' ? briefUrl.match(/^\/api\/documents\/([^/]+)\/content$/) : null;
   if (!match) return;
   const documentId = decodeURIComponent(match[1]);
   try {
