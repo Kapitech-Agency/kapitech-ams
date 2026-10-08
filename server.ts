@@ -123,7 +123,7 @@ function applyPublicApiCors(req: express.Request, res: express.Response, next: e
   if (origin && allowedOrigins.has(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-CSRF-Token, X-Resume-Filename');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-CSRF-Token, X-Resume-Filename, X-Project-Brief-Filename');
     res.setHeader('Access-Control-Max-Age', '600');
     res.setHeader('Vary', 'Origin');
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
