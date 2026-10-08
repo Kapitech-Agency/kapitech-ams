@@ -184,6 +184,11 @@ function cleanOptionalUrl(value: unknown): string {
   }
 }
 
+function cleanInternalDocumentUrl(value: unknown): string {
+  const candidate = cleanText(value, 500);
+  return /^\/api\/documents\/[^/]+\/content$/i.test(candidate) ? candidate : '';
+}
+
 function pickFields<T extends Record<string, unknown>>(source: Record<string, unknown>, fields: readonly string[]): Partial<T> {
   const result: Record<string, unknown> = {};
   for (const field of fields) {
@@ -1864,6 +1869,11 @@ apiRouter.post('/leads/submit', rateLimitPublic(10, 60 * 1000), async (req: Requ
 
   const now = new Date().toISOString();
   const normalizedServices = normalizeStringArray(services, 20, 120);
+  const leadType = cleanText(type || 'inquiry', 40).toLowerCase();
+  if (!['inquiry', 'career', 'vendor', 'newsletter'].includes(leadType)) {
+    res.status(400).json({ success: false, error: 'Invalid submission type.' });
+    return;
+  }
   const newLead = {
     id: `lead_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
     fullName: cleanText(fullName, 160),
@@ -1875,20 +1885,20 @@ apiRouter.post('/leads/submit', rateLimitPublic(10, 60 * 1000), async (req: Requ
     message: cleanText(message, MAX_PUBLIC_TEXT),
     status: 'new',
     source: cleanText(source || 'Website Form', 120),
-    type: cleanText(type || 'inquiry', 80),
+    type: leadType,
     portfolioUrl: cleanOptionalUrl(portfolioUrl),
     rateCard: cleanText(rateCard, 120),
     specialty: cleanText(specialty, 160),
     positionTitle: cleanText(positionTitle, 160),
     experienceYears: cleanText(experienceYears, 80),
     tools: cleanText(tools, 500),
-    resumeUrl: cleanOptionalUrl(resumeUrl),
+    resumeUrl: cleanInternalDocumentUrl(resumeUrl),
     linkedinUrl: cleanOptionalUrl(linkedinUrl),
     availability: cleanText(availability, 160),
     location: cleanText(location, 160),
     industry: cleanText(industry, 160),
     ndaRequested: Boolean(ndaRequested),
-    briefUrl: cleanOptionalUrl(briefUrl),
+    briefUrl: cleanInternalDocumentUrl(briefUrl),
     attribution: sanitizeLeadAttribution(attribution),
     createdAt: now,
     updatedAt: now
@@ -4947,10 +4957,10 @@ function publicDocument(document: any): any {
 function canAccessDocument(req: AuthenticatedRequest, document: any): boolean {
   if (!req.user || isMasterAdministrator(req.user)) return true;
 
-  // Public recruitment resumes contain candidate PII and must not inherit the
-  // broad legacy document fallback. Keep access to CRM/recruitment operators
-  // and technical administrators unless an explicit ACL also grants access.
-  if (document?.metadata?.publicUpload === true && String(document?.category || '') === 'Recruitment') {
+  // Publicly uploaded documents contain client/candidate-submitted data and must
+  // never inherit the broad legacy document fallback. Restrict them to CRM or
+  // technical administrators unless an explicit ACL grants access.
+  if (document?.metadata?.publicUpload === true) {
     if (!req.user.permissions?.canManageCrm && !req.user.permissions?.canAccessServerAndApi) return false;
   }
 
