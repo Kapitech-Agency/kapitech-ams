@@ -156,16 +156,19 @@ export const AdminLogin: React.FC = () => {
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-line to-transparent" />
       </div>
 
-      <div className="relative z-10 grid min-h-screen w-full lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)]">
-        <section className="flex min-h-screen flex-col px-7 py-7 sm:px-10 sm:py-8 lg:px-12 xl:px-16 2xl:px-20">
-          <div className="w-full">
+      <div className="relative z-10 grid min-h-screen w-full lg:grid-cols-[minmax(360px,0.82fr)_minmax(0,1.18fr)]">
+        <section className="flex min-h-screen flex-col px-6 py-6 sm:px-8 sm:py-8 lg:px-10 xl:px-12 2xl:px-14">
+          <div className="flex w-full items-center gap-3.5">
             <img
               src="https://raw.githubusercontent.com/Kapitech-Agency/Kapitech-Agency.github.io/main/public/white.png"
-              alt="Kapitech Agency"
-              className="h-8 w-auto max-w-[150px] object-contain"
+              alt="Kapitech logo"
+              className="h-9 w-auto max-w-[76px] shrink-0 object-contain"
               loading="eager"
               decoding="async"
             />
+            <span className="text-[15px] font-semibold leading-5 tracking-[-0.025em] text-fg">
+              Kapitech Agency
+            </span>
           </div>
 
           <div className="mx-auto flex w-full max-w-[390px] flex-1 flex-col justify-center py-12">
@@ -401,17 +404,12 @@ export const AdminLogin: React.FC = () => {
           </div>
         </section>
 
-        <aside className="relative hidden min-h-screen items-center justify-center overflow-hidden border-l border-line bg-bg lg:flex">
+        <aside className="relative hidden min-h-screen items-stretch justify-center overflow-hidden border-l border-line bg-bg lg:flex">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_60%_24%,rgba(220,20,60,0.055),transparent_52%)]" aria-hidden="true" />
-          <div className="relative z-10 flex min-h-screen w-full flex-col justify-between px-7 py-7 sm:px-10 sm:py-8 xl:px-14 xl:py-9 2xl:px-16">
-            <div className="h-1" aria-hidden="true" />
-
-            <div className="my-auto flex w-full flex-col items-center py-5 xl:py-7">
-              <div
-                className="mx-auto w-full max-w-[700px]"
-                style={{ width: 'min(100%, 700px, calc(100dvh - 350px))' }}
-              >
-                <div className="relative aspect-square w-full overflow-hidden rounded-[20px] border border-line bg-panel">
+          <div className="relative z-10 flex min-h-screen w-full flex-col px-6 py-6 sm:px-8 sm:py-8 xl:px-10 2xl:px-12">
+            <div className="mx-auto flex w-full max-w-[900px] flex-1 flex-col justify-center py-5 xl:py-7">
+              <div className="w-full">
+                <div className="relative aspect-[1.55/1] w-full overflow-hidden rounded-[20px] border border-line bg-panel">
                   <img
                     key={loginSlides[artFrame].src}
                     src={loginSlides[artFrame].src}
@@ -423,7 +421,7 @@ export const AdminLogin: React.FC = () => {
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-black/5" aria-hidden="true" />
                 </div>
 
-                <div className="mt-6 flex w-full items-end justify-between gap-6">
+                <div className="mt-5 flex w-full items-end justify-between gap-4 sm:mt-6 sm:gap-6">
                 <div className="min-w-0 flex-1">
                   <p className="text-[11px] font-medium leading-4 tracking-[0.08em] text-accent-text">
                     AGENCY MANAGEMENT SYSTEM
@@ -453,11 +451,10 @@ export const AdminLogin: React.FC = () => {
                     <ArrowRight size={16} />
                   </button>
                 </div>
-                </div>
               </div>
             </div>
 
-            <p className="border-t border-line pt-4 text-[11px] leading-5 text-muted">
+            <p className="mt-5 border-t border-line pt-4 text-[11px] leading-5 text-muted sm:mt-6">
               © 2026 Kapitech Agency. For internal use.
             </p>
           </div>
