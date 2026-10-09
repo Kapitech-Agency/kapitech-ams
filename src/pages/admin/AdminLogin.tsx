@@ -395,7 +395,6 @@ export const AdminLogin: React.FC = () => {
                 </form>
               )}
 
-            </div>
             <p className="mt-8 text-[11px] leading-5 text-muted">
               {language === 'id' ? 'Akses khusus anggota tim Kapitech.' : 'Authorized for Kapitech team members.'}
             </p>
