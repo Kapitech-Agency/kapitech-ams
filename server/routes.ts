@@ -80,6 +80,7 @@ import { checkPostgresConnection, getPostgresPool } from './postgres.ts';
 import { loadPostgresMigrations } from './postgres-migrations.ts';
 import { isFirebaseAuthEnabled, verifyFirebaseIdToken } from './firebase-token.ts';
 import { registerInsightRoutes } from './insight-routes.ts';
+import { installRouterErrorForwarding } from './async-route-errors.ts';
 
 
 const ROLE_POLICIES: Record<string, {
@@ -485,6 +486,8 @@ function pushNotification(
 }
 
 export const apiRouter = Router();
+// Express 4 does not automatically forward rejected handler Promises to next(error).
+installRouterErrorForwarding(apiRouter);
 
 // Apply auth header checking on all API requests
 apiRouter.use(authenticate);
