@@ -2557,7 +2557,7 @@ apiRouter.put('/clients/:id', requireAuth, requirePermission('canManageClients')
       if (patch[key] === undefined) continue;
       const max = key === 'retainerMonthlyValue' || key === 'retainerOverageRate' ? MAX_MONEY : 1_000_000;
       const numeric = normalizeNumber(patch[key], 0, max);
-      if (numeric === null) { res.status(400).json({ success: false, error: `Invalid numeric value for ${key}.` }); return; }
+      if (numeric === null || (key === 'retainerCommittedHours' && numeric < 1)) { res.status(400).json({ success: false, error: `Invalid numeric value for ${key}.` }); return; }
       patch[key] = numeric;
     }
     if (patch.activeRetainer !== undefined) patch.activeRetainer = Boolean(patch.activeRetainer);
@@ -2597,7 +2597,7 @@ apiRouter.put('/clients/:id', requireAuth, requirePermission('canManageClients')
   for (const key of ['totalProjects','totalInvoiced','slaDailyAdSpendBudget','currentDailyAdSpend','retainerMonthlyValue','retainerCommittedHours','retainerUsedHours','retainerOverageRate'] as const) {
     if (patch[key] !== undefined) {
       const numeric = normalizeNumber(patch[key], 0, ['totalProjects'].includes(key) ? 100000 : ['retainerCommittedHours','retainerUsedHours'].includes(key) ? 1_000_000 : MAX_MONEY);
-      if (numeric === null) {
+      if (numeric === null || (key === 'retainerCommittedHours' && numeric < 1)) {
         res.status(400).json({ success: false, error: `Invalid numeric value for ${key}.` });
         return;
       }
