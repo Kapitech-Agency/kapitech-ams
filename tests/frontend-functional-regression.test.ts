@@ -96,7 +96,7 @@ test('Client Retainers are server-persisted and sample agreements are fixture-on
   assert.match(page, /const \[records, setRecords\] = useState<Retainer\[]>\(\(\) => fixtureMode \? seed : \[\]\)/);
   assert.match(page, /api\.clients\.getAll\(\)/);
   assert.match(page, /api\.clients\.update\(targetClient\.id/);
-  assert.match(page, /api\.clients\.update\(clientId, \{ retainerUsedHours/);
+  assert.match(page, /api\.clients\.addRetainerHours\(clientId, amount\)/);
   assert.match(routes, /retainerMonthlyValue/);
   assert.match(routes, /Invalid retainer cycle/);
   assert.match(routes, /key === 'retainerCommittedHours' && numeric < 1/);
@@ -122,4 +122,24 @@ test('unexpected async API failures are forwarded and returned as safe JSON', as
   assert.match(helper, /Promise\.resolve\(result\)\.catch/);
   assert.match(server, /const apiErrorHandler: ErrorRequestHandler/);
   assert.match(server, /app\.use\('\/api', apiErrorHandler\)/);
+});
+
+
+test('retainer usage increments atomically and keeps its audit event in the same database transaction', async () => {
+  const repository = await read('server/postgres-client-repository.ts');
+  const routes = await read('server/routes.ts');
+  const client = await read('src/lib/apiClient.ts');
+  const page = await read('src/pages/admin/AdminClientRetainers.tsx');
+
+  const start = repository.indexOf('async addRetainerHours(');
+  const end = repository.indexOf('async delete(', start);
+  const method = repository.slice(start, end);
+
+  assert.ok(start >= 0 && end > start);
+  assert.match(method, /SELECT \* FROM clients WHERE id = \$1 FOR UPDATE/);
+  assert.match(method, /const nextHours = currentHours \+ hours/);
+  assert.match(method, /appendWithinTransaction\(client, audit\)/);
+  assert.match(routes, /apiRouter\.post\('\/clients\/:id\/retainer-hours', requireAuth, requirePermission\('canManageClients'\)/);
+  assert.match(client, /addRetainerHours: \(id: string, hours: number\)/);
+  assert.match(page, /api\.clients\.addRetainerHours\(clientId, amount\)/);
 });
