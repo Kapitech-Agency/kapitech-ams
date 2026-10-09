@@ -36,5 +36,5 @@ test('follow-up Insight migration uses valid PostgreSQL dollar-quote delimiters'
 
   assert.doesNotMatch(sql, /\$q\{|\}q\$/);
   assert.equal((sql.match(/\$q\$\{/g) || []).length, 5);
-  assert.equal((sql.match(/\$q\$\{/g) || []).length, 5);
+  assert.equal((sql.match(/\}\$q\$/g) || []).length, 5);
 });
