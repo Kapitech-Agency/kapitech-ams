@@ -190,3 +190,18 @@ test('team directory assignee lookup allows project managers without task-mutati
   assert.match(handler, /division: user\.division/);
   assert.match(app, /const moduleKey = isVendorWorkspace \? 'vendors' : 'timelogs'/);
 });
+
+
+test('JSON client updates accept the same core profile fields as PostgreSQL updates', async () => {
+  const routes = await read('server/routes.ts');
+  const start = routes.indexOf("apiRouter.put('/clients/:id'");
+  const jsonStart = routes.indexOf("const db = getDataSourceMode() === 'json'", start);
+  const jsonEnd = routes.indexOf("const updatedAt = new Date().toISOString()", jsonStart);
+  const jsonUpdate = routes.slice(jsonStart, jsonEnd);
+
+  assert.ok(start >= 0 && jsonStart > start && jsonEnd > jsonStart);
+  for (const field of ['company', 'contactPersonRole', 'avatarUrl']) {
+    assert.match(jsonUpdate, new RegExp("'" + field + "'"));
+  }
+  assert.match(jsonUpdate, /if \(patch\.avatarUrl !== undefined\) patch\.avatarUrl = cleanOptionalUrl\(patch\.avatarUrl\)/);
+});
