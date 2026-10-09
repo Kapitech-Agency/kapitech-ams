@@ -128,6 +128,7 @@ export const AdminClientRetainers: React.FC = () => {
   const [retainerFormOpen, setRetainerFormOpen] = useState(false);
   const [editingRetainer, setEditingRetainer] = useState<Retainer | null>(null);
   const [retainerSaving, setRetainerSaving] = useState(false);
+  const [hoursSaving, setHoursSaving] = useState(false);
   const [retainerClient, setRetainerClient] = useState('');
   const [retainerTier, setRetainerTier] = useState<Tier>('tier-2');
   const [retainerMonthlyValue, setRetainerMonthlyValue] = useState('100000000');
@@ -328,23 +329,49 @@ export const AdminClientRetainers: React.FC = () => {
     anchor.href = url; anchor.download = 'kapitech-retainer-report.csv'; document.body.appendChild(anchor); anchor.click(); anchor.remove(); URL.revokeObjectURL(url);
   };
 
-  const logHours = () => {
-    if (!hoursTarget) return;
+  const logHours = async () => {
+    if (!hoursTarget || hoursSaving) return;
     const amount = Number(hours);
-    if (!Number.isFinite(amount) || amount <= 0) {
-      setMessage(language === 'id' ? 'Jumlah jam harus lebih dari 0.' : 'Hours must be greater than 0.');
+    if (!Number.isFinite(amount) || amount <= 0 || amount > 100000) {
+      setMessage(language === 'id' ? 'Jumlah jam harus lebih dari 0 dan tidak boleh melebihi 100.000 jam.' : 'Hours must be greater than 0 and no more than 100,000.');
       return;
     }
 
-    setRecords((current) => current.map((item) => {
-      if (item.id !== hoursTarget.id) return item;
-      const usedHours = item.usedHours + amount;
-      const burnRatio = usedHours / Math.max(1, item.committedHours);
-      const health: Health = burnRatio > 1 ? 'overage-risk' : burnRatio >= 0.85 ? 'near-cap' : 'healthy';
-      return { ...item, usedHours, health };
-    }));
-    setMessage(amount + ' hours logged for ' + hoursTarget.client + '.');
-    setHoursTarget(null);
+    const nextUsedHours = hoursTarget.usedHours + amount;
+    if (fixtureMode) {
+      setRecords((current) => current.map((item) => {
+        if (item.id !== hoursTarget.id) return item;
+        const burnRatio = nextUsedHours / Math.max(1, item.committedHours);
+        const health: Health = burnRatio > 1 ? 'overage-risk' : burnRatio >= 0.85 ? 'near-cap' : 'healthy';
+        return { ...item, usedHours: nextUsedHours, health };
+      }));
+      setMessage(amount + ' hours logged for ' + hoursTarget.client + ' in the A/B workspace.');
+      setHoursTarget(null);
+      return;
+    }
+
+    const clientId = hoursTarget.clientId;
+    if (!clientId) {
+      setMessage('This retainer is missing its client link and cannot be updated.');
+      return;
+    }
+    setHoursSaving(true);
+    try {
+      const response = await api.clients.update(clientId, { retainerUsedHours: nextUsedHours, activeRetainer: true });
+      if (!response.success || !response.data?.client) {
+        throw new Error(response.error || 'Retainer usage could not be saved.');
+      }
+      const savedClient = response.data.client as AgencyClient;
+      const updatedRetainer = mapClientRetainer(savedClient);
+      setClients((current) => current.map((item) => item.id === savedClient.id ? savedClient : item));
+      setRecords((current) => current.map((item) => item.clientId === savedClient.id ? updatedRetainer : item));
+      setMessage(amount + ' hours saved for ' + updatedRetainer.client + '.');
+      setHoursTarget(null);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Retainer usage could not be saved.');
+    } finally {
+      setHoursSaving(false);
+    }
   };
 
   return (
@@ -422,11 +449,11 @@ export const AdminClientRetainers: React.FC = () => {
                    <td className="px-4 py-3 text-[11px] text-muted"><div>{cycleLabel[item.cycle]}</div><div className={(renewalDays(item.renewal) <= 30 ? 'text-warning ' : 'text-fg ') + 'mt-0.5 font-medium'}>Renews {formatDate(item.renewal)}</div></td>
                    <td className="px-4 py-3 text-center"><span className={`inline-flex min-h-6 items-center gap-1.5 rounded-badge border px-2 py-0.5 text-[10px] font-medium ${meta.className}`}><span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />{meta.label}{usage >= 80 ? ` · ${usage}%` : ''}</span></td>
                    <td className="px-4 py-3 text-right"><div className="ams-table-actions flex items-center justify-end gap-1">
-                     <button type="button" onClick={() => setMessage(`Terms editing is not connected for ${item.client} yet.`)} aria-label={`Edit terms for ${item.client}`} title="Edit terms" className="inline-flex h-10 w-10 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><Pencil size={15} aria-hidden="true" /></button>
+                     <button type="button" onClick={() => openRetainerForm(item)} aria-label={`Edit terms for ${item.client}`} title="Edit terms" className="inline-flex h-10 w-10 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><Pencil size={15} aria-hidden="true" /></button>
                      <button type="button" onClick={() => { setHoursTarget(item); setHours('8'); }} aria-label={`Log hours for ${item.client}`} title="Log hours" className="inline-flex h-10 w-10 items-center justify-center rounded-control text-accent-text hover:bg-accent/10 hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><Clock3 size={16} aria-hidden="true" /></button>
                    </div></td>
                  </tr>;
-               }) : <tr><td colSpan={8} className="px-4 py-14 text-center"><Search size={18} className="mx-auto text-muted" /><p className="mt-3 text-sm font-medium text-fg">No matching retainers.</p><p className="mt-1 text-xs text-muted">Adjust the search or clear the active filters.</p><button type="button" onClick={reset} className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg">Reset filters</button></td></tr>}
+               }) : <tr><td colSpan={8} className="px-4 py-14 text-center"><Search size={18} className="mx-auto text-muted" /><p className="mt-3 text-sm font-medium text-fg">{records.length === 0 ? 'No active retainer agreements.' : 'No matching retainers.'}</p><p className="mt-1 text-xs text-muted">{records.length === 0 ? 'Create a retainer for a client already listed in Client Directory.' : 'Adjust the search or clear the active filters.'}</p><button type="button" onClick={reset} className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg">Reset filters</button></td></tr>}
             </tbody>
           </table>
         </div>
@@ -437,19 +464,19 @@ export const AdminClientRetainers: React.FC = () => {
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><CheckCircle2 size={14} className="text-success" /><span>Agency burn: <strong className="text-fg">{burn.toFixed(1)}%</strong></span></div>
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><TriangleAlert size={14} className="text-warning" /><span>Near cap: <strong className="text-fg">{nearCap}</strong></span></div>
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><ReceiptText size={14} className="text-info" /><span>Average overage: <strong className="text-fg">{money(avgRate)}/hr</strong></span></div>
-        <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><TimerReset size={14} className="text-accent-text" /><span>Data source: <strong className="text-fg">Retainer workspace</strong></span></div>
+        <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><TimerReset size={14} className="text-accent-text" /><span>Data source: <strong className="text-fg">{fixtureMode ? 'A/B fixtures' : 'Client Directory'}</strong></span></div>
       </section>
 
       <Drawer slug="retainer-create-drawer"
         open={retainerFormOpen}
-        onClose={() => setRetainerFormOpen(false)}
+        onClose={() => { setRetainerFormOpen(false); setEditingRetainer(null); }}
         size="lg"
-        title="New retainer"
-        description="Create a retainer record for the current A/B workspace."
+        title={editingRetainer ? 'Edit retainer' : 'New retainer'}
+        description={fixtureMode ? 'Manage a retainer record in the A/B workspace.' : 'Save retainer terms against an existing client record.'}
         footer={(
           <>
-            <Button type="button" variant="secondary" onClick={() => setRetainerFormOpen(false)}>Cancel</Button>
-            <Button type="submit" form="retainer-create-form" variant="primary">Create retainer</Button>
+            <Button type="button" variant="secondary" onClick={() => { setRetainerFormOpen(false); setEditingRetainer(null); }}>Cancel</Button>
+            <Button type="submit" form="retainer-create-form" variant="primary" loading={retainerSaving}>{editingRetainer ? 'Save changes' : 'Create retainer'}</Button>
           </>
         )}
       >
@@ -457,7 +484,7 @@ export const AdminClientRetainers: React.FC = () => {
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="space-y-1.5 sm:col-span-2">
               <span className="text-[11px] font-medium text-muted">Client</span>
-              <input required value={retainerClient} onChange={(event) => setRetainerClient(event.target.value)} placeholder="Client company" className="h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent" />
+              <input required value={retainerClient} onChange={(event) => setRetainerClient(event.target.value)} disabled={Boolean(editingRetainer && !fixtureMode)} placeholder={fixtureMode ? 'Client company' : 'Existing client company name'} className="h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent disabled:opacity-60" />
             </label>
             <label className="space-y-1.5">
               <span className="text-[11px] font-medium text-muted">Tier</span>
@@ -487,7 +514,7 @@ export const AdminClientRetainers: React.FC = () => {
         </form>
       </Drawer>
 
-      <Drawer slug="retainer-hours-drawer" open={!!hoursTarget} onClose={() => setHoursTarget(null)} size="sm" title="Log retainer hours" description={hoursTarget ? `${hoursTarget.client} · ${hoursTarget.id}` : undefined} footer={<div className="flex justify-end gap-2"><Button type="button" variant="secondary" onClick={() => setHoursTarget(null)}>Cancel</Button><Button type="button" variant="primary" onClick={logHours}>Log hours</Button></div>}>
+      <Drawer slug="retainer-hours-drawer" open={!!hoursTarget} onClose={() => setHoursTarget(null)} size="sm" title="Log retainer hours" description={hoursTarget ? `${hoursTarget.client} · ${hoursTarget.id}` : undefined} footer={<div className="flex justify-end gap-2"><Button type="button" variant="secondary" onClick={() => setHoursTarget(null)}>Cancel</Button><Button type="button" variant="primary" loading={hoursSaving} onClick={logHours}>Log hours</Button></div>}>
         {hoursTarget && <div className="space-y-4"><div><label htmlFor="retainer-hours" className="mb-1.5 block text-xs font-medium text-fg">Hours to log</label><input id="retainer-hours" type="number" min="0" step="0.5" value={hours} onChange={(event) => setHours(event.target.value)} className="h-9 w-full rounded-control border border-line bg-bg px-3 text-sm text-fg focus:border-accent focus:outline-none" /></div><div className="rounded-card border border-line bg-bg p-4 text-xs text-muted">Current usage: <span className="font-medium tabular-nums text-fg">{hoursTarget.usedHours}</span> / {hoursTarget.committedHours} hrs.</div></div>}
       </Drawer>
     </AdminPageShell>
