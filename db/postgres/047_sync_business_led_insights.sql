@@ -2,11 +2,11 @@
 BEGIN;
 
 INSERT INTO cms_insight_categories (id, slug, name, description, seo_title, seo_description)
-VALUES ('seed_category_product_technology','product-technology',$q{"id":"Product & Technology","en":"Product & Technology"}q$::jsonb,$q{"id":"Perspektif praktis tentang product, technology, dan digital delivery.","en":"Practical perspectives on digital products, websites, technology, and delivery."}q$::jsonb,$q{"id":"Product & Technology Insights | Kapitech","en":"Product & Technology Insights | Kapitech"}q$::jsonb,$q{"id":"Wawasan praktis tentang produk digital, website, teknologi, dan delivery.","en":"Practical insights on digital products, websites, technology, and delivery."}q$::jsonb)
+VALUES ('seed_category_product_technology','product-technology',$q${"id":"Product & Technology","en":"Product & Technology"}$q$::jsonb,$q${"id":"Perspektif praktis tentang product, technology, dan digital delivery.","en":"Practical perspectives on digital products, websites, technology, and delivery."}$q$::jsonb,$q${"id":"Product & Technology Insights | Kapitech","en":"Product & Technology Insights | Kapitech"}$q$::jsonb,$q${"id":"Wawasan praktis tentang produk digital, website, teknologi, dan delivery.","en":"Practical insights on digital products, websites, technology, and delivery."}$q$::jsonb)
 ON CONFLICT (slug) DO NOTHING;
 
 INSERT INTO cms_insight_authors (id, slug, name, role, bio, avatar, data)
-VALUES ('seed_author_kapitech_editorial_team','kapitech-editorial-team','Kapitech Editorial Team','Editorial',$q$Editorial perspectives from Kapitech Agency on design, technology, digital products, and delivery.$q$,'',$q{"source":"insight-editorial-platform","organization":"Kapitech Agency"}q$::jsonb)
+VALUES ('seed_author_kapitech_editorial_team','kapitech-editorial-team','Kapitech Editorial Team','Editorial',$q$Editorial perspectives from Kapitech Agency on design, technology, digital products, and delivery.$q$,'',$q${"source":"insight-editorial-platform","organization":"Kapitech Agency"}$q$::jsonb)
 ON CONFLICT (slug) DO NOTHING;
 
 INSERT INTO cms_insights (
