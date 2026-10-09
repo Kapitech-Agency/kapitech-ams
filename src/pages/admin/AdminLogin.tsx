@@ -404,8 +404,12 @@ export const AdminLogin: React.FC = () => {
         </section>
 
         <aside className="relative hidden min-h-screen items-stretch justify-center overflow-hidden border-l border-line bg-bg lg:flex">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_92%_8%,rgba(220,20,60,0.055),transparent_38%)]" aria-hidden="true" />
-          <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[560px] flex-col items-start px-8 py-10 xl:px-12 xl:py-12">
+          <div
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_72%_28%,rgba(220,20,60,0.075),transparent_42%)]"
+            aria-hidden="true"
+          />
+          <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[600px] flex-col items-center px-8 py-8 xl:px-12 xl:py-10">
+            <div className="flex w-full justify-start">
             <img
               src="https://raw.githubusercontent.com/Kapitech-Agency/Kapitech-Agency.github.io/main/public/white.png"
               alt="Kapitech Agency"
@@ -413,20 +417,76 @@ export const AdminLogin: React.FC = () => {
               loading="eager"
               decoding="async"
             />
-            <div className="my-auto w-full max-w-[430px] py-12">
-              <div className="mb-5 h-[2px] w-7 rounded-full bg-accent" aria-hidden="true" />
-              <p className="text-[11px] font-medium leading-4 tracking-[0.08em] text-accent-text">
-                AGENCY MANAGEMENT SYSTEM
-              </p>
-              <h2 className="mt-4 max-w-[420px] text-[34px] font-semibold leading-[1.14] tracking-[-0.035em] text-fg xl:text-[40px]">
-                One platform for
-                <span className="block">Kapitech operations</span>
-              </h2>
-              <p className="mt-4 max-w-[380px] text-[14px] leading-6 text-muted">
-                Manage clients, projects, team coordination, and operational records in one workspace.
-              </p>
             </div>
-            <p className="mt-8 w-full border-t border-line pt-4 text-[11px] leading-5 text-muted">
+
+            <div className="my-auto flex w-full flex-col items-center py-8">
+              <div className="relative w-full max-w-[350px]">
+                <div className="pointer-events-none absolute -inset-5 rounded-[36px] bg-[radial-gradient(ellipse_at_center,rgba(220,20,60,0.10),transparent_68%)]" aria-hidden="true" />
+                <div className="relative aspect-square overflow-hidden rounded-[28px] border border-line bg-panel p-3 sm:p-4">
+                  <svg
+                    viewBox="0 0 420 420"
+                    role="img"
+                    aria-label="Abstract Kapitech AMS grid illustration"
+                    className="h-full w-full"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <defs>
+                      <linearGradient id="ams-login-art-background" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stopColor="#17171f" />
+                        <stop offset="58%" stopColor="#111116" />
+                        <stop offset="100%" stopColor="#190d12" />
+                      </linearGradient>
+                      <radialGradient id="ams-login-art-glow" cx="50%" cy="48%" r="60%">
+                        <stop offset="0%" stopColor="#dc143c" stopOpacity="0.25" />
+                        <stop offset="100%" stopColor="#dc143c" stopOpacity="0" />
+                      </radialGradient>
+                    </defs>
+                    <rect x="1" y="1" width="418" height="418" rx="22" fill="url(#ams-login-art-background)" />
+                    <rect x="1" y="1" width="418" height="418" rx="22" fill="url(#ams-login-art-glow)" />
+                    <path d="M28 105H392M28 210H392M28 315H392M105 28V392M210 28V392M315 28V392" stroke="#f3f3f6" strokeOpacity="0.035" />
+                    {Array.from({ length: 81 }, (_, index) => {
+                      const col = index % 9;
+                      const row = Math.floor(index / 9);
+                      const wave = (Math.sin(col * 0.82 + row * 0.48) + Math.cos(row * 0.72 - col * 0.26) + 2) / 4;
+                      const distance = Math.sqrt((col - 4) ** 2 + (row - 4) ** 2);
+                      const emphasis = Math.max(0, 1 - distance / 6) * wave;
+                      const fill = emphasis > 0.65 ? '#dc143c' : emphasis > 0.43 ? '#5c0819' : emphasis > 0.28 ? '#30202a' : '#24242d';
+                      const opacity = Math.min(0.94, 0.38 + wave * 0.5 + emphasis * 0.12);
+                      return (
+                        <rect
+                          key={index}
+                          x={37 + col * 39}
+                          y={37 + row * 39}
+                          width={29 + wave * 3}
+                          height={29 + wave * 3}
+                          rx={7 + wave * 2}
+                          fill={fill}
+                          fillOpacity={opacity}
+                          stroke="#f3f3f6"
+                          strokeOpacity="0.04"
+                        />
+                      );
+                    })}
+                    <rect x="146" y="146" width="128" height="128" rx="24" fill="#0f0f14" fillOpacity="0.76" stroke="#ff4d6d" strokeOpacity="0.5" />
+                    <path d="M175 213h17l13-24 22 49 17-34h13" fill="none" stroke="#ff4d6d" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+              </div>
+
+              <div className="mt-8 w-full max-w-[420px]">
+                <p className="text-[11px] font-medium leading-4 tracking-[0.08em] text-accent-text">
+                  AGENCY MANAGEMENT SYSTEM
+                </p>
+                <h2 className="mt-3 max-w-[410px] text-[30px] font-semibold leading-[1.14] tracking-[-0.035em] text-fg xl:text-[36px]">
+                  One platform for Kapitech operations
+                </h2>
+                <p className="mt-3 max-w-[390px] text-[13px] leading-6 text-muted xl:text-sm">
+                  Manage clients, projects, team coordination, and operational records in one workspace.
+                </p>
+              </div>
+            </div>
+
+            <p className="w-full border-t border-line pt-4 text-[11px] leading-5 text-muted">
               © 2026 Kapitech Agency. For internal use.
             </p>
           </div>
