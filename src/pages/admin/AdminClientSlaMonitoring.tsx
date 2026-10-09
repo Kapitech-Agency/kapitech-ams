@@ -18,6 +18,7 @@ import { AdminFilterBar, AdminModuleHeader, AdminPageShell, AdminSectionTabs, Ad
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Modal } from '../../components/ui/Modal';
 import { isSlugFixtureMode } from '../../lib/runtimeMode';
+import { hasAdminPermission } from '../../lib/adminAuth';
 
 type Compliance = 'healthy' | 'warning' | 'degraded';
 type Tier = 'tier-1' | 'tier-2' | 'tier-3';
@@ -162,7 +163,7 @@ export const AdminClientSlaMonitoring: React.FC = () => {
             { key: 'retainers', label: 'Retainers', to: '/admin/clients/retainers' },
             { key: 'sla-monitoring', label: 'SLA Monitoring', to: '/admin/clients/sla-monitoring' },
             { key: 'lead-accounts', label: 'Lead Accounts', to: '/admin/clients/lead-accounts' },
-          ]}
+          ].filter((item) => item.key !== 'lead-accounts' || hasAdminPermission('canManageCrm'))}
         />
       </div>
 
