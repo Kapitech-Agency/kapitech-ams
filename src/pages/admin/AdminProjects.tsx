@@ -198,6 +198,13 @@ function writeStatusOverrides<T extends string>(key: string, overrides: Record<s
 }
 
 const applyKanbanStatusOverrides = (source: ProjectRecord[]) => {
+  // Session-only A/B overrides must never overwrite authoritative production state.
+  if (!isSlugFixtureMode()) {
+    writeStatusOverrides(PROJECT_STATUS_OVERRIDES_KEY, {});
+    writeStatusOverrides(TASK_STATUS_OVERRIDES_KEY, {});
+    return source;
+  }
+
   const projectOverrides = readStatusOverrides<ProjectStatus>(PROJECT_STATUS_OVERRIDES_KEY);
   const taskOverrides = readStatusOverrides<TaskStatus>(TASK_STATUS_OVERRIDES_KEY);
   const nextProjectOverrides = { ...projectOverrides };
