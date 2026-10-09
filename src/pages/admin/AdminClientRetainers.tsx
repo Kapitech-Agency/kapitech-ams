@@ -18,6 +18,9 @@ import {
   X
 } from 'lucide-react';
 import { useLanguage } from '../../lib/LanguageContext';
+import { api } from '../../lib/apiClient';
+import { isSlugFixtureMode } from '../../lib/runtimeMode';
+import type { AgencyClient } from '../../lib/clientStore';
 import { Button } from '../../components/ui/Button';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
@@ -30,6 +33,7 @@ type SortKey = 'client' | 'monthlyValue' | 'committedHours' | 'usedHours' | 'ren
 
 type Retainer = {
   id: string;
+  clientId?: string;
   initials: string;
   client: string;
   tier: Tier;
@@ -59,14 +63,42 @@ const healthMeta: Record<Health, { label: string; dot: string; className: string
   'overage-risk': { label: 'Overage Risk', dot: 'bg-danger', className: 'border-danger/20 bg-danger/10 text-danger' }
 };
 const money = (value: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value);
-const formatDate = (value: string) => new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(value));
+const formatDate = (value: string) => {
+  const date = new Date(value);
+  return value && !Number.isNaN(date.getTime())
+    ? new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(date)
+    : 'Not set';
+};
 const renewalDays = (value: string) => Math.ceil((new Date(value).getTime() - Date.now()) / 86400000);
+const mapClientRetainer = (client: AgencyClient): Retainer => {
+  const committedHours = Math.max(0, Number(client.retainerCommittedHours) || 0);
+  const usedHours = Math.max(0, Number(client.retainerUsedHours) || 0);
+  const burnRatio = usedHours / Math.max(1, committedHours);
+  const tier: Tier = client.retainerTier === 'tier-1' || client.retainerTier === 'tier-3' ? client.retainerTier : 'tier-2';
+  const cycle: Cycle = client.retainerCycle === 'quarterly' || client.retainerCycle === 'annual' ? client.retainerCycle : 'monthly';
+  const clientName = String(client.company || client.name || 'Unnamed client');
+  return {
+    id: String(client.retainerId || ('RET-' + client.id)),
+    clientId: client.id,
+    initials: clientName.split(/\s+/).filter(Boolean).map(part => part[0]).join('').slice(0, 2).toUpperCase() || 'CL',
+    client: clientName,
+    tier,
+    monthlyValue: Math.max(0, Number(client.retainerMonthlyValue) || 0),
+    committedHours,
+    usedHours,
+    overageRate: Math.max(0, Number(client.retainerOverageRate) || 0),
+    cycle,
+    renewal: String(client.retainerRenewal || ''),
+    health: burnRatio > 1 ? 'overage-risk' : burnRatio >= 0.85 ? 'near-cap' : 'healthy'
+  };
+};
+
 const sortValue = (item: Retainer, key: SortKey): string | number => {
   if (key === 'client') return item.client;
   if (key === 'monthlyValue') return item.monthlyValue;
   if (key === 'committedHours') return item.committedHours;
   if (key === 'usedHours') return item.usedHours / Math.max(1, item.committedHours);
-  if (key === 'renewal') return new Date(item.renewal).getTime();
+  if (key === 'renewal') { const timestamp = new Date(item.renewal).getTime(); return Number.isFinite(timestamp) ? timestamp : Number.MAX_SAFE_INTEGER; }
   return item.health;
 };
 
@@ -80,7 +112,9 @@ const SortButton: React.FC<{ label: string; sortKey: SortKey; activeKey: SortKey
 
 export const AdminClientRetainers: React.FC = () => {
   const { language } = useLanguage();
-  const [records, setRecords] = useState(seed);
+  const fixtureMode = isSlugFixtureMode();
+  const [clients, setClients] = useState<AgencyClient[]>([]);
+  const [records, setRecords] = useState<Retainer[]>(() => fixtureMode ? seed : []);
   const [query, setQuery] = useState('');
   const [cycle, setCycle] = useState<'all' | Cycle>('all');
   const [tier, setTier] = useState<'all' | Tier>('all');
@@ -92,6 +126,8 @@ export const AdminClientRetainers: React.FC = () => {
   const [hoursTarget, setHoursTarget] = useState<Retainer | null>(null);
   const [hours, setHours] = useState('8');
   const [retainerFormOpen, setRetainerFormOpen] = useState(false);
+  const [editingRetainer, setEditingRetainer] = useState<Retainer | null>(null);
+  const [retainerSaving, setRetainerSaving] = useState(false);
   const [retainerClient, setRetainerClient] = useState('');
   const [retainerTier, setRetainerTier] = useState<Tier>('tier-2');
   const [retainerMonthlyValue, setRetainerMonthlyValue] = useState('100000000');
@@ -103,9 +139,40 @@ export const AdminClientRetainers: React.FC = () => {
   const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
-    const frame = window.requestAnimationFrame(() => setIsLoading(false));
-    return () => window.cancelAnimationFrame(frame);
-  }, []);
+    if (fixtureMode) {
+      setRecords(seed);
+      setIsLoading(false);
+      return;
+    }
+
+    let mounted = true;
+    const loadRetainers = async () => {
+      setIsLoading(true);
+      try {
+        const response = await api.clients.getAll();
+        if (!response.success || !Array.isArray(response.data?.clients)) {
+          throw new Error(response.error || 'Client records could not be loaded.');
+        }
+        const rows = response.data.clients as AgencyClient[];
+        if (mounted) {
+          setClients(rows);
+          setRecords(rows.filter((client) => client.activeRetainer === true).map(mapClientRetainer));
+          setMessage(null);
+        }
+      } catch (error) {
+        if (mounted) {
+          setClients([]);
+          setRecords([]);
+          setMessage(error instanceof Error ? error.message : 'Client records could not be loaded.');
+        }
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    };
+
+    void loadRetainers();
+    return () => { mounted = false; };
+  }, [fixtureMode]);
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
