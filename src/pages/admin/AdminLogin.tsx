@@ -149,15 +149,15 @@ export const AdminLogin: React.FC = () => {
         '--accent-hover': '#c40f34',
         '--accent-pressed': '#a10c2b',
       } as React.CSSProperties}
-      className="ams-shell relative isolate min-h-screen overflow-hidden bg-bg text-fg font-sans"
+      className="ams-shell relative isolate h-dvh min-h-0 overflow-hidden bg-bg text-fg font-sans"
     >
       <div className="pointer-events-none absolute inset-0 z-0" aria-hidden="true">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_12%_10%,rgba(220,20,60,0.055),transparent_34%),radial-gradient(ellipse_at_85%_100%,rgba(243,243,246,0.025),transparent_32%)]" />
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-line to-transparent" />
       </div>
 
-      <div className="relative z-10 grid min-h-screen w-full lg:grid-cols-[minmax(360px,0.82fr)_minmax(0,1.18fr)]">
-        <section className="flex min-h-screen flex-col px-6 py-6 sm:px-8 sm:py-8 lg:px-10 xl:px-12 2xl:px-14">
+      <div className="relative z-10 grid h-dvh min-h-0 w-full lg:grid-cols-[minmax(360px,0.82fr)_minmax(0,1.18fr)]">
+        <section className="flex h-full min-h-0 flex-col px-6 py-4 sm:px-8 sm:py-5 lg:px-10 xl:px-12 2xl:px-14">
           <div className="flex w-full items-center gap-3.5">
             <img
               src="https://raw.githubusercontent.com/Kapitech-Agency/Kapitech-Agency.github.io/main/public/white.png"
@@ -171,7 +171,7 @@ export const AdminLogin: React.FC = () => {
             </span>
           </div>
 
-          <div className="mx-auto flex w-full max-w-[390px] flex-1 flex-col justify-center py-12">
+          <div className="mx-auto flex w-full max-w-[390px] min-h-0 flex-1 flex-col justify-center py-[clamp(8px,2vh,24px)]">
             <div className="mb-8">
               <h1 className="text-[26px] font-semibold leading-8 tracking-[-0.035em] text-fg sm:text-[28px]">
                 {mfaRequired
@@ -404,7 +404,7 @@ export const AdminLogin: React.FC = () => {
           </div>
         </section>
 
-        <aside className="relative hidden min-h-screen items-stretch justify-center overflow-hidden border-l border-line bg-bg lg:flex">
+        <aside className="relative hidden h-dvh min-h-0 items-stretch justify-center overflow-hidden border-l border-line bg-bg lg:flex">
           <div
             className="pointer-events-none absolute inset-0"
             aria-hidden="true"
@@ -413,11 +413,11 @@ export const AdminLogin: React.FC = () => {
             <div className="absolute bottom-0 right-0 h-[420px] w-[420px] translate-x-1/3 translate-y-1/3 rounded-full bg-white/[0.015] blur-3xl" />
           </div>
 
-          <div className="relative z-10 flex min-h-screen w-full flex-col px-5 py-6 sm:px-7 sm:py-7 xl:px-8 2xl:px-10">
-            <div className="mx-auto flex w-full max-w-[1040px] flex-1 flex-col justify-center py-4">
+          <div className="relative z-10 flex h-full min-h-0 w-full flex-col px-5 py-4 sm:px-7 sm:py-5 xl:px-8 2xl:px-10">
+            <div className="mx-auto flex w-full max-w-[1040px] min-h-0 flex-1 flex-col justify-center py-2">
               <div
                 className="mx-auto w-full"
-                style={{ width: 'min(100%, 1040px, calc((100dvh - 270px) * 1.62))' }}
+                style={{ width: 'min(100%, 1040px, calc((100dvh - 320px) * 1.62))' }}
               >
                 <div className="group relative aspect-[1.62/1] w-full overflow-hidden rounded-[18px] border border-white/[0.09] bg-panel shadow-[0_24px_80px_rgba(0,0,0,0.22)]">
                   <img
@@ -498,7 +498,7 @@ export const AdminLogin: React.FC = () => {
               </div>
             </div>
 
-            <div className="mx-auto flex w-full max-w-[1040px] items-center justify-between gap-4 border-t border-line/80 pt-4 text-[10px] leading-5 text-muted">
+            <div className="mx-auto flex w-full max-w-[1040px] items-center justify-between gap-4 border-t border-line/80 pt-3 text-[10px] leading-5 text-muted">
               <p>© 2026 Kapitech Agency. For internal use.</p>
               <p className="shrink-0 tracking-[0.08em] text-muted/70">KAPITECH AMS</p>
             </div>
