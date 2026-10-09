@@ -114,6 +114,7 @@ const SortButton: React.FC<{ label: string; sortKey: SortKey; activeKey: SortKey
 export const AdminClientRetainers: React.FC = () => {
   const { language } = useLanguage();
   const fixtureMode = isSlugFixtureMode();
+  const canManageRetainers = fixtureMode || hasAdminPermission('canManageClients');
   const [clients, setClients] = useState<AgencyClient[]>([]);
   const [records, setRecords] = useState<Retainer[]>(() => fixtureMode ? seed : []);
   const [query, setQuery] = useState('');
@@ -385,7 +386,7 @@ export const AdminClientRetainers: React.FC = () => {
         actions={(
           <>
             <Button type="button" variant="secondary" onClick={exportReport} icon={<Download size={14} />}>Export Report</Button>
-            <Button type="button" variant="primary" onClick={openRetainerForm} icon={<Plus size={14} />}>New Retainer</Button>
+            {canManageRetainers && <Button type="button" variant="primary" onClick={openRetainerForm} icon={<Plus size={14} />}>New Retainer</Button>}
           </>
         )}
       />
@@ -450,8 +451,10 @@ export const AdminClientRetainers: React.FC = () => {
                    <td className="px-4 py-3 text-[11px] text-muted"><div>{cycleLabel[item.cycle]}</div><div className={(renewalDays(item.renewal) <= 30 ? 'text-warning ' : 'text-fg ') + 'mt-0.5 font-medium'}>Renews {formatDate(item.renewal)}</div></td>
                    <td className="px-4 py-3 text-center"><span className={`inline-flex min-h-6 items-center gap-1.5 rounded-badge border px-2 py-0.5 text-[10px] font-medium ${meta.className}`}><span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />{meta.label}{usage >= 80 ? ` · ${usage}%` : ''}</span></td>
                    <td className="px-4 py-3 text-right"><div className="ams-table-actions flex items-center justify-end gap-1">
-                     <button type="button" onClick={() => openRetainerForm(item)} aria-label={`Edit terms for ${item.client}`} title="Edit terms" className="inline-flex h-10 w-10 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><Pencil size={15} aria-hidden="true" /></button>
-                     <button type="button" onClick={() => { setHoursTarget(item); setHours('8'); }} aria-label={`Log hours for ${item.client}`} title="Log hours" className="inline-flex h-10 w-10 items-center justify-center rounded-control text-accent-text hover:bg-accent/10 hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><Clock3 size={16} aria-hidden="true" /></button>
+                     {canManageRetainers && <>
+                       <button type="button" onClick={() => openRetainerForm(item)} aria-label={`Edit terms for ${item.client}`} title="Edit terms" className="inline-flex h-10 w-10 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><Pencil size={15} aria-hidden="true" /></button>
+                       <button type="button" onClick={() => { setHoursTarget(item); setHours('8'); }} aria-label={`Log hours for ${item.client}`} title="Log hours" className="inline-flex h-10 w-10 items-center justify-center rounded-control text-accent-text hover:bg-accent/10 hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><Clock3 size={16} aria-hidden="true" /></button>
+                     </>}
                    </div></td>
                  </tr>;
                }) : <tr><td colSpan={8} className="px-4 py-14 text-center"><Search size={18} className="mx-auto text-muted" /><p className="mt-3 text-sm font-medium text-fg">{records.length === 0 ? 'No active retainer agreements.' : 'No matching retainers.'}</p><p className="mt-1 text-xs text-muted">{records.length === 0 ? 'Create a retainer for a client already listed in Client Directory.' : 'Adjust the search or clear the active filters.'}</p><button type="button" onClick={reset} className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg">Reset filters</button></td></tr>}

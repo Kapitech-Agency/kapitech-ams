@@ -145,3 +145,15 @@ test('retainer usage increments atomically and keeps its audit event in the same
   assert.match(client, /addRetainerHours: \(id: string, hours: number\)/);
   assert.match(page, /api\.clients\.addRetainerHours\(clientId, amount\)/);
 });
+
+
+test('retainer mutations are only offered to accounts with client-management permission', async () => {
+  const page = await read('src/pages/admin/AdminClientRetainers.tsx');
+  const routes = await read('server/routes.ts');
+
+  assert.match(page, /const canManageRetainers = fixtureMode \|\| hasAdminPermission\('canManageClients'\)/);
+  assert.match(page, /\{canManageRetainers && <Button[^>]*onClick=\{openRetainerForm\}/);
+  assert.match(page, /\{canManageRetainers && <>[\s\S]{0,600}onClick=\{\(\) => openRetainerForm\(item\)\}[\s\S]{0,500}onClick=\{\(\) => \{ setHoursTarget\(item\)/);
+  assert.match(routes, /apiRouter\.put\('\/clients\/:id', requireAuth, requirePermission\('canManageClients'\)/);
+  assert.match(routes, /apiRouter\.post\('\/clients\/:id\/retainer-hours', requireAuth, requirePermission\('canManageClients'\)/);
+});
