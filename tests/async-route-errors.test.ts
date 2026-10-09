@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { installRouterErrorForwarding } from '../server/async-route-errors.ts';
+import { installRouterErrorForwarding, withAsyncErrorForwarding } from '../server/async-route-errors.ts';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -78,4 +78,11 @@ test('AMS installs async error forwarding before registering private API routes'
   assert.ok(declaration >= 0);
   assert.ok(forwarding > declaration);
   assert.ok(firstMiddleware > forwarding);
+});
+
+
+test('wrapped Express error middleware retains its four-argument signature', () => {
+  const errorHandler = async (_error: unknown, _req: unknown, _res: unknown, _next: unknown) => undefined;
+  const wrapped = withAsyncErrorForwarding(errorHandler);
+  assert.equal(wrapped.length, 4);
 });
