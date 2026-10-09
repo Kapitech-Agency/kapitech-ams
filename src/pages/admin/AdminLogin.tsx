@@ -405,59 +405,103 @@ export const AdminLogin: React.FC = () => {
         </section>
 
         <aside className="relative hidden min-h-screen items-stretch justify-center overflow-hidden border-l border-line bg-bg lg:flex">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_60%_24%,rgba(220,20,60,0.055),transparent_52%)]" aria-hidden="true" />
-          <div className="relative z-10 flex min-h-screen w-full flex-col px-6 py-6 sm:px-8 sm:py-8 xl:px-10 2xl:px-12">
-            <div className="mx-auto flex w-full max-w-[900px] flex-1 flex-col justify-center py-5 xl:py-7">
-              <div className="w-full">
-                <div className="relative aspect-[1.55/1] w-full overflow-hidden rounded-[20px] border border-line bg-panel">
+          <div
+            className="pointer-events-none absolute inset-0"
+            aria-hidden="true"
+          >
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_56%_16%,rgba(220,20,60,0.07),transparent_48%)]" />
+            <div className="absolute bottom-0 right-0 h-[420px] w-[420px] translate-x-1/3 translate-y-1/3 rounded-full bg-white/[0.015] blur-3xl" />
+          </div>
+
+          <div className="relative z-10 flex min-h-screen w-full flex-col px-5 py-6 sm:px-7 sm:py-7 xl:px-8 2xl:px-10">
+            <div className="mx-auto flex w-full max-w-[1040px] flex-1 flex-col justify-center py-4">
+              <div
+                className="mx-auto w-full"
+                style={{ width: 'min(100%, 1040px, calc((100dvh - 270px) * 1.62))' }}
+              >
+                <div className="group relative aspect-[1.62/1] w-full overflow-hidden rounded-[18px] border border-white/[0.09] bg-panel shadow-[0_24px_80px_rgba(0,0,0,0.22)]">
                   <img
                     key={loginSlides[artFrame].src}
                     src={loginSlides[artFrame].src}
                     alt={loginSlides[artFrame].alt}
-                    className="absolute inset-0 h-full w-full object-cover"
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.015]"
                     loading={artFrame === 0 ? 'eager' : 'lazy'}
                     decoding="async"
                   />
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-black/5" aria-hidden="true" />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/30" aria-hidden="true" />
+                  <div className="absolute left-4 top-4 flex items-center gap-2.5 rounded-md border border-white/10 bg-[#09090c]/75 px-3 py-2 sm:left-5 sm:top-5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true" />
+                    <span className="text-[10px] font-medium tracking-[0.1em] text-white/90">
+                      KAPITECH
+                    </span>
+                    <span className="h-3 w-px bg-white/20" aria-hidden="true" />
+                    <span className="text-[10px] tracking-[0.08em] text-white/65">
+                      INTERNAL WORKSPACE
+                    </span>
+                  </div>
                 </div>
 
-                <div className="mt-5 flex w-full items-end justify-between gap-4 sm:mt-6 sm:gap-6">
+                <div className="mt-6 flex w-full items-end justify-between gap-5 sm:mt-7 sm:gap-8">
                   <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-medium leading-4 tracking-[0.08em] text-accent-text">
-                      AGENCY MANAGEMENT SYSTEM
-                    </p>
-                    <h2 className="mt-3 max-w-[390px] text-[27px] font-semibold leading-[1.16] tracking-[-0.035em] text-fg xl:text-[32px]">
+                    <div className="mb-3 flex items-center gap-2.5">
+                      <span className="h-px w-5 bg-accent" aria-hidden="true" />
+                      <p className="text-[10px] font-semibold leading-4 tracking-[0.14em] text-accent-text">
+                        AGENCY MANAGEMENT SYSTEM
+                      </p>
+                    </div>
+                    <h2 className="max-w-[520px] text-[27px] font-semibold leading-[1.13] tracking-[-0.04em] text-fg xl:text-[34px]">
                       One platform for Kapitech operations
                     </h2>
-                    <p className="mt-3 max-w-[380px] text-[13px] leading-5 text-muted">
+                    <p className="mt-3 max-w-[520px] text-[13px] leading-[1.75] text-muted xl:text-sm">
                       Manage clients, projects, team coordination, and operational records in one workspace.
                     </p>
                   </div>
-                  <div className="mb-1 flex shrink-0 items-center gap-2">
-                  <button
-                    type="button"
-                    aria-label="Previous image"
-                    onClick={() => setArtFrame((current) => (current + loginSlides.length - 1) % loginSlides.length)}
-                    className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-panel text-muted transition-colors hover:border-muted hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                  >
-                    <ArrowLeft size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Next image"
-                    onClick={() => setArtFrame((current) => (current + 1) % loginSlides.length)}
-                    className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-panel text-muted transition-colors hover:border-muted hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                  >
-                    <ArrowRight size={16} />
-                  </button>
+
+                  <div className="mb-1 flex shrink-0 flex-col items-end gap-3.5">
+                    <p className="font-mono text-[11px] tabular-nums tracking-[0.08em]">
+                      <span className="text-fg">0{artFrame + 1}</span>
+                      <span className="mx-1.5 text-muted/55">/</span>
+                      <span className="text-muted">0{loginSlides.length}</span>
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        aria-label="Previous image"
+                        onClick={() => setArtFrame((current) => (current + loginSlides.length - 1) % loginSlides.length)}
+                        className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-panel/80 text-muted transition-colors duration-200 hover:border-white/25 hover:bg-white/[0.04] hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                      >
+                        <ArrowLeft size={15} />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Next image"
+                        onClick={() => setArtFrame((current) => (current + 1) % loginSlides.length)}
+                        className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-panel/80 text-muted transition-colors duration-200 hover:border-white/25 hover:bg-white/[0.04] hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                      >
+                        <ArrowRight size={15} />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-1.5" aria-label="Choose featured image">
+                      {loginSlides.map((slide, index) => (
+                        <button
+                          key={slide.src}
+                          type="button"
+                          aria-label={`Show image ${index + 1}`}
+                          aria-current={artFrame === index ? 'true' : undefined}
+                          onClick={() => setArtFrame(index)}
+                          className={`h-1 rounded-full transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${artFrame === index ? 'w-6 bg-accent' : 'w-2.5 bg-line hover:bg-muted'}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
               </div>
             </div>
 
-            <p className="mt-5 border-t border-line pt-4 text-[11px] leading-5 text-muted sm:mt-6">
-              © 2026 Kapitech Agency. For internal use.
-            </p>
+            <div className="mx-auto flex w-full max-w-[1040px] items-center justify-between gap-4 border-t border-line/80 pt-4 text-[10px] leading-5 text-muted">
+              <p>© 2026 Kapitech Agency. For internal use.</p>
+              <p className="shrink-0 tracking-[0.08em] text-muted/70">KAPITECH AMS</p>
+            </div>
           </div>
         </aside>
       </div>
