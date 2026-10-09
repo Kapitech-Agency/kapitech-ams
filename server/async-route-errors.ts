@@ -26,23 +26,23 @@ export function withAsyncErrorForwarding<T extends AnyHandler>(handler: T): T {
   // Express identifies error middleware by Function.length === 4.
   switch (handler.length) {
     case 4:
-      return function errorForwardingHandler(error: unknown, req: unknown, res: unknown, next: unknown) {
+      return function errorForwardingHandler(this: unknown, error: unknown, req: unknown, res: unknown, next: unknown) {
         return invokeWithForwarding(handler, this, [error, req, res, next]);
       } as T;
     case 3:
-      return function errorForwardingHandler(req: unknown, res: unknown, next: unknown) {
+      return function errorForwardingHandler(this: unknown, req: unknown, res: unknown, next: unknown) {
         return invokeWithForwarding(handler, this, [req, res, next]);
       } as T;
     case 2:
-      return function errorForwardingHandler(req: unknown, res: unknown) {
+      return function errorForwardingHandler(this: unknown, req: unknown, res: unknown) {
         return invokeWithForwarding(handler, this, Array.from(arguments));
       } as T;
     case 1:
-      return function errorForwardingHandler(req: unknown) {
+      return function errorForwardingHandler(this: unknown, req: unknown) {
         return invokeWithForwarding(handler, this, Array.from(arguments));
       } as T;
     default:
-      return function errorForwardingHandler(...args: any[]) {
+      return function errorForwardingHandler(this: unknown, ...args: any[]) {
         return invokeWithForwarding(handler, this, args);
       } as T;
   }
