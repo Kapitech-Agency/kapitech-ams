@@ -127,7 +127,12 @@ async function apiBinaryRequest<T = any>(
 
     const json = await res.json().catch(() => ({}));
     if (!res.ok) {
-      if (res.status === 401 && typeof window !== 'undefined') clearSessionToken();
+      if (res.status === 401 && typeof window !== 'undefined') {
+        clearSessionToken();
+        sessionStorage.removeItem('kapitech_admin_profile_v2');
+        localStorage.removeItem('kapitech_admin_profile_v2');
+        window.dispatchEvent(new Event('kapitech_auth_state_changed'));
+      }
       const safeError =
         res.status === 401
           ? 'Your session expired. Refresh and try again.'

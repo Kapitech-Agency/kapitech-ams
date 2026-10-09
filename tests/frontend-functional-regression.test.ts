@@ -207,3 +207,17 @@ test('JSON client updates accept the same core profile fields as PostgreSQL upda
   const postgresUpdate = routes.slice(start, jsonStart);
   assert.match(postgresUpdate, /if \(patch\.avatarUrl !== undefined\) patch\.avatarUrl = cleanOptionalUrl\(patch\.avatarUrl\)/);
 });
+
+
+test('binary uploads clear cached admin identity and notify auth guards on 401', async () => {
+  const client = await read('src/lib/apiClient.ts');
+  const start = client.indexOf('async function apiBinaryRequest');
+  const end = client.indexOf('export const api =', start);
+  const binaryClient = client.slice(start, end);
+
+  assert.ok(start >= 0 && end > start);
+  assert.match(binaryClient, /res\.status === 401[\s\S]{0,350}clearSessionToken\(\)/);
+  assert.match(binaryClient, /sessionStorage\.removeItem\('kapitech_admin_profile_v2'\)/);
+  assert.match(binaryClient, /localStorage\.removeItem\('kapitech_admin_profile_v2'\)/);
+  assert.match(binaryClient, /dispatchEvent\(new Event\('kapitech_auth_state_changed'\)\)/);
+});
