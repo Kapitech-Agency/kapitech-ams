@@ -110,6 +110,29 @@ export const AdminLogin: React.FC = () => {
   return (
     <div
       data-kapi-admin="true"
+      data-theme="dark"
+      style={{
+        '--bg': '#09090c',
+        '--panel': '#0f0f14',
+        '--line': '#20202a',
+        '--text': '#f3f3f6',
+        '--muted': '#8b8b99',
+        '--accent': '#dc143c',
+        '--accent-text': '#ff4d6d',
+        '--series-1': '#dc143c',
+        '--series-2': '#34d399',
+        '--series-3': '#5b8cff',
+        '--series-4': '#b9b9c6',
+        '--success': '#34d399',
+        '--warning': '#f5a524',
+        '--danger': '#f97066',
+        '--info': '#5b8cff',
+        '--crimson-500': '#dc143c',
+        '--crimson-600': '#c40f34',
+        '--crimson-700': '#a10c2b',
+        '--accent-hover': '#c40f34',
+        '--accent-pressed': '#a10c2b',
+      } as React.CSSProperties}
       className="ams-shell relative isolate min-h-screen overflow-hidden bg-bg text-fg font-sans"
     >
       <div className="pointer-events-none absolute inset-0 z-0" aria-hidden="true">
@@ -397,10 +420,13 @@ export const AdminLogin: React.FC = () => {
           </div>
         </section>
 
-        <aside className="relative hidden min-h-screen items-center justify-center overflow-hidden border-l border-line px-8 lg:flex xl:px-12">
-          <div className="absolute inset-0 bg-gradient-to-br from-panel/45 via-bg/30 to-bg" aria-hidden="true" />
-          <div className="absolute left-0 top-0 h-full w-px bg-accent/20" aria-hidden="true" />
-          <div className="relative z-10 flex w-full max-w-[470px] flex-col items-start">
+        <aside className="relative hidden min-h-screen items-stretch justify-center overflow-hidden border-l border-line/80 bg-bg lg:flex xl:px-12">
+          <div
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_76%_24%,rgba(220,20,60,0.12),transparent_38%),linear-gradient(145deg,rgba(15,15,20,0.98),rgba(9,9,12,1))]"
+            aria-hidden="true"
+          />
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-px bg-gradient-to-b from-transparent via-accent/35 to-transparent" aria-hidden="true" />
+          <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[470px] flex-col items-start px-8 py-10 xl:py-12">
             <img
               src="https://raw.githubusercontent.com/Kapitech-Agency/Kapitech-Agency.github.io/main/public/white.png"
               alt="Kapitech Agency"
@@ -408,49 +434,19 @@ export const AdminLogin: React.FC = () => {
               loading="eager"
               decoding="async"
             />
-            <p className="mt-1 text-[11px] font-medium tracking-[0.12em] text-accent-text">
-              {language === 'id' ? 'SISTEM MANAJEMEN AGENSI' : 'AGENCY MANAGEMENT SYSTEM'}
-            </p>
-            <h2 className="mt-4 max-w-[430px] text-[32px] font-semibold leading-tight tracking-[-0.035em] text-fg xl:text-[36px]">
-              {language === 'id' ? 'Satu platform untuk operasional Kapitech' : 'One platform for Kapitech operations'}
-            </h2>
-            <p className="mt-4 max-w-[390px] text-sm leading-6 text-muted">
-              {language === 'id'
-                ? 'Kelola klien, proyek, koordinasi tim, dan administrasi operasional dalam satu workspace.'
-                : 'Manage clients, projects, team coordination, and operational records in one workspace.'}
-            </p>
-
-            <div className="mt-8 w-full max-w-[390px] border-y border-line/80">
-              <div className="flex items-start gap-3 border-b border-line/80 py-4">
-                <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true" />
-                <div>
-                  <p className="text-sm font-medium text-fg">{language === 'id' ? 'Klien dan proyek' : 'Clients and projects'}</p>
-                  <p className="mt-1 text-xs leading-5 text-muted">
-                    {language === 'id' ? 'Data klien, status proyek, dan pemantauan pekerjaan.' : 'Client records, project status, and delivery tracking.'}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 border-b border-line/80 py-4">
-                <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true" />
-                <div>
-                  <p className="text-sm font-medium text-fg">{language === 'id' ? 'Alur kerja tim' : 'Team workflows'}</p>
-                  <p className="mt-1 text-xs leading-5 text-muted">
-                    {language === 'id' ? 'Tugas, persetujuan, dan dokumen bersama.' : 'Tasks, approvals, and shared documents.'}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 py-4">
-                <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true" />
-                <div>
-                  <p className="text-sm font-medium text-fg">{language === 'id' ? 'Administrasi operasional' : 'Operational administration'}</p>
-                  <p className="mt-1 text-xs leading-5 text-muted">
-                    {language === 'id' ? 'Pencatatan keuangan, waktu kerja, dan data operasional.' : 'Finance records, time logs, and operational data.'}
-                  </p>
-                </div>
-              </div>
+            <div className="my-auto max-w-[440px] pb-8">
+              <p className="text-[11px] font-semibold tracking-[0.16em] text-accent-text">
+                AGENCY MANAGEMENT SYSTEM
+              </p>
+              <h2 className="mt-5 max-w-[430px] text-[38px] font-semibold leading-[1.08] tracking-[-0.045em] text-fg xl:text-[44px]">
+                One platform for Kapitech operations
+              </h2>
+              <p className="mt-5 max-w-[390px] text-[14px] leading-7 text-muted xl:text-[15px]">
+                Manage clients, projects, team coordination, and operational records in one workspace.
+              </p>
             </div>
             <p className="mt-8 text-[11px] leading-5 text-muted">
-              © {new Date().getFullYear()} Kapitech Agency. {language === 'id' ? 'Untuk penggunaan internal.' : 'For internal use.'}
+              © 2026 Kapitech Agency. For internal use.
             </p>
           </div>
         </aside>
