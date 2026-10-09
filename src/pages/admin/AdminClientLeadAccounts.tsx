@@ -163,12 +163,12 @@ export const AdminClientLeadAccounts: React.FC = () => {
                 ? 'contract'
                 : 'discovery';
             const ownerName = String(deal.owner || deal.assignedTo || 'Unassigned');
-            const ownerInitials = ownerName.split(/\\s+/).filter(Boolean).map((part: string) => part[0]).join('').slice(0, 2).toUpperCase() || 'UN';
+            const ownerInitials = ownerName.split(/\s+/).filter(Boolean).map((part: string) => part[0]).join('').slice(0, 2).toUpperCase() || 'UN';
             const companyName = String(deal.company || deal.clientName || 'Unnamed opportunity');
             const probability = Number(deal.probability ?? 0);
             return {
               id: String(deal.id),
-              initials: companyName.split(/\\s+/).filter(Boolean).map((part: string) => part[0]).join('').slice(0, 2).toUpperCase() || 'CL',
+              initials: companyName.split(/\s+/).filter(Boolean).map((part: string) => part[0]).join('').slice(0, 2).toUpperCase() || 'CL',
               company: companyName,
               contact: String(deal.clientName || ''),
               owner: ownerName,
@@ -297,12 +297,12 @@ export const AdminClientLeadAccounts: React.FC = () => {
         const ownerName = String(deal.owner || deal.assignedTo || 'Unassigned');
         const newRecord: Lead = {
           id: String(deal.id),
-          initials: company.split(/\\s+/).filter(Boolean).map((part: string) => part[0]).join('').slice(0, 2).toUpperCase() || 'CL',
+          initials: company.split(/\s+/).filter(Boolean).map((part: string) => part[0]).join('').slice(0, 2).toUpperCase() || 'CL',
           company: String(deal.company || company),
           contact: String(deal.clientName || newContact.trim() || company),
           owner: ownerName,
           ownerRole: 'CRM owner',
-          ownerInitials: ownerName.split(/\\s+/).filter(Boolean).map((part: string) => part[0]).join('').slice(0, 2).toUpperCase() || 'UN',
+          ownerInitials: ownerName.split(/\s+/).filter(Boolean).map((part: string) => part[0]).join('').slice(0, 2).toUpperCase() || 'UN',
           brief: String(deal.title || `New opportunity: ${company}`),
           location: String(deal.location || 'Not recorded'),
           monthlyValue: 0,
