@@ -422,18 +422,18 @@ export const AdminLogin: React.FC = () => {
                 </div>
 
                 <div className="mt-5 flex w-full items-end justify-between gap-4 sm:mt-6 sm:gap-6">
-                <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-medium leading-4 tracking-[0.08em] text-accent-text">
-                    AGENCY MANAGEMENT SYSTEM
-                  </p>
-                  <h2 className="mt-3 max-w-[390px] text-[27px] font-semibold leading-[1.16] tracking-[-0.035em] text-fg xl:text-[32px]">
-                    One platform for Kapitech operations
-                  </h2>
-                  <p className="mt-3 max-w-[380px] text-[13px] leading-5 text-muted">
-                    Manage clients, projects, team coordination, and operational records in one workspace.
-                  </p>
-                </div>
-                <div className="mb-1 flex shrink-0 items-center gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-medium leading-4 tracking-[0.08em] text-accent-text">
+                      AGENCY MANAGEMENT SYSTEM
+                    </p>
+                    <h2 className="mt-3 max-w-[390px] text-[27px] font-semibold leading-[1.16] tracking-[-0.035em] text-fg xl:text-[32px]">
+                      One platform for Kapitech operations
+                    </h2>
+                    <p className="mt-3 max-w-[380px] text-[13px] leading-5 text-muted">
+                      Manage clients, projects, team coordination, and operational records in one workspace.
+                    </p>
+                  </div>
+                  <div className="mb-1 flex shrink-0 items-center gap-2">
                   <button
                     type="button"
                     aria-label="Previous image"
@@ -451,6 +451,7 @@ export const AdminLogin: React.FC = () => {
                     <ArrowRight size={16} />
                   </button>
                 </div>
+              </div>
               </div>
             </div>
 
