@@ -11,7 +11,7 @@ interface RequireAdminAuthProps {
 export const RequireAdminAuth: React.FC<RequireAdminAuthProps> = ({ children }) => {
   const location = useLocation();
   const lastPathname = useRef(location.pathname);
-  const [status] = useState<'checking' | 'authenticated' | 'unauthenticated'>('checking');
+  const [status, setStatus] = useState<'checking' | 'authenticated' | 'unauthenticated'>('checking');
 
   useEffect(() => {
     const pathnameChanged = lastPathname.current !== location.pathname;
