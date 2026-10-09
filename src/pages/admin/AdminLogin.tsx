@@ -156,8 +156,8 @@ export const AdminLogin: React.FC = () => {
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-line to-transparent" />
       </div>
 
-      <div className="relative z-10 mx-auto grid min-h-screen w-full max-w-[1440px] px-5 sm:px-8 lg:grid-cols-[minmax(0,0.96fr)_minmax(0,1.04fr)] lg:px-12 xl:px-16">
-        <section className="flex min-h-screen flex-col px-6 py-7 sm:px-10 sm:py-8 lg:px-12 xl:px-16">
+      <div className="relative z-10 grid min-h-screen w-full lg:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)]">
+        <section className="flex min-h-screen flex-col px-7 py-7 sm:px-10 sm:py-8 lg:px-12 xl:px-16 2xl:px-20">
           <div className="w-full">
             <img
               src="https://raw.githubusercontent.com/Kapitech-Agency/Kapitech-Agency.github.io/main/public/white.png"
@@ -402,12 +402,12 @@ export const AdminLogin: React.FC = () => {
         </section>
 
         <aside className="relative hidden min-h-screen items-center justify-center overflow-hidden border-l border-line bg-bg lg:flex">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_60%_24%,rgba(220,20,60,0.07),transparent_48%)]" aria-hidden="true" />
-          <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[680px] flex-col justify-between px-8 py-7 xl:px-12 xl:py-9">
-            <div className="h-8" aria-hidden="true" />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_60%_24%,rgba(220,20,60,0.055),transparent_52%)]" aria-hidden="true" />
+          <div className="relative z-10 flex min-h-screen w-full flex-col justify-between px-7 py-7 sm:px-10 sm:py-8 xl:px-14 xl:py-9 2xl:px-16">
+            <div className="h-1" aria-hidden="true" />
 
-            <div className="my-auto w-full py-8">
-              <div className="relative mx-auto aspect-square w-full max-w-[470px] overflow-hidden rounded-[20px] border border-line bg-panel">
+            <div className="my-auto w-full py-5 xl:py-7">
+              <div className="relative mx-auto aspect-square w-full max-w-[700px] overflow-hidden rounded-[20px] border border-line bg-panel">
                 <img
                   key={loginSlides[artFrame].src}
                   src={loginSlides[artFrame].src}
@@ -419,7 +419,7 @@ export const AdminLogin: React.FC = () => {
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/5" aria-hidden="true" />
               </div>
 
-              <div className="mx-auto mt-6 flex w-full max-w-[470px] items-end justify-between gap-6">
+              <div className="mx-auto mt-6 flex w-full max-w-[700px] items-end justify-between gap-6">
                 <div className="min-w-0 flex-1">
                   <p className="text-[11px] font-medium leading-4 tracking-[0.08em] text-accent-text">
                     AGENCY MANAGEMENT SYSTEM
