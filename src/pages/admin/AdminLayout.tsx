@@ -617,7 +617,7 @@ export const AdminLayout: React.FC = () => {
                     { key: 'retainers', label: 'Retainers', slug: '/admin/clients/retainers' },
                     { key: 'sla-monitoring', label: 'SLA Monitoring', slug: '/admin/clients/sla-monitoring' },
                     { key: 'lead-accounts', label: 'Lead Accounts', slug: '/admin/clients/lead-accounts' }
-                  ].map((tab) => {
+                  ].filter((tab) => tab.key !== 'lead-accounts' || isAllowed('crm')).map((tab) => {
                     const active = location.pathname === tab.slug || (tab.key === 'all-clients' && location.pathname === '/admin/clients');
                     return (
                       <NavLink
