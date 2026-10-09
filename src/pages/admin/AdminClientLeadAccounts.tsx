@@ -25,6 +25,7 @@ import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { AdminFilterBar, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { api } from '../../lib/apiClient';
 import { isSlugFixtureMode } from '../../lib/runtimeMode';
+import { hasAdminPermission } from '../../lib/adminAuth';
 
 type Stage = 'discovery' | 'proposal' | 'contract' | 'ready-to-sign';
 type SortKey = 'company' | 'annualValue' | 'stage' | 'owner' | 'probability' | 'dueAt';
@@ -372,7 +373,7 @@ export const AdminClientLeadAccounts: React.FC = () => {
             { key: 'retainers', label: 'Retainers', to: '/admin/clients/retainers' },
             { key: 'sla-monitoring', label: 'SLA Monitoring', to: '/admin/clients/sla-monitoring' },
             { key: 'lead-accounts', label: 'Lead Accounts', to: '/admin/clients/lead-accounts' },
-          ]}
+          ].filter((item) => item.key !== 'lead-accounts' || hasAdminPermission('canManageCrm'))}
         />
       </div>
 
