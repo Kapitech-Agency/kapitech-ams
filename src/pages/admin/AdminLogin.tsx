@@ -245,16 +245,6 @@ export const AdminLogin: React.FC = () => {
                     </div>
                   </div>
 
-                  <label className="flex cursor-pointer items-center gap-2.5 text-xs leading-5 text-muted">
-                    <input
-                      type="checkbox"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
-                      className="h-4 w-4 shrink-0 rounded border-line accent-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                    />
-                    {language === 'id' ? 'Pertahankan sesi di perangkat ini' : 'Keep me signed in on this device'}
-                  </label>
-
                   <button
                     type="submit"
                     disabled={loading}
