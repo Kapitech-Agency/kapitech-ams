@@ -18,12 +18,8 @@
       (() => {
         try {
           const saved = localStorage.getItem('kapitech_ams_theme');
-          const theme =
-            saved === 'light' || saved === 'dark'
-              ? saved
-              : window.matchMedia('(prefers-color-scheme: light)').matches
-                ? 'light'
-                : 'dark';
+          // AMS is dark-first. Only an explicit saved choice may enable light mode.
+          const theme = saved === 'light' || saved === 'dark' ? saved : 'dark';
 
           document.documentElement.dataset.theme = theme;
         } catch {

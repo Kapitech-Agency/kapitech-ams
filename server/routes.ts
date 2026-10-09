@@ -498,16 +498,19 @@ apiRouter.use((req: AuthenticatedRequest, res: Response, next) => {
 // 1. AUTHENTICATION & SESSION MANAGEMENT
 // ----------------------------------------------------
 
-apiRouter.post('/auth/login', rateLimitPublic(10, 15 * 60 * 1000), async (req: Request, res: Response): Promise<void> => {
+function isAllowedAuthOrigin(req: Request): boolean {
   const origin = req.get('origin');
-  if (origin) {
-    const configuredAppUrl = String(process.env.APP_URL || '').trim();
-    const requestOrigin = req.protocol + '://' + req.get('host');
+  if (!origin) return true;
 
-    if (!isAllowedLoginOrigin(origin, configuredAppUrl, requestOrigin)) {
-      res.status(403).json({ success: false, error: 'Security validation failed.' });
-      return;
-    }
+  const configuredAppUrl = String(process.env.APP_URL || '').trim();
+  const requestOrigin = req.protocol + '://' + (req.get('host') || '');
+  return isAllowedLoginOrigin(origin, configuredAppUrl, requestOrigin);
+}
+
+apiRouter.post('/auth/login', rateLimitPublic(10, 15 * 60 * 1000), async (req: Request, res: Response): Promise<void> => {
+  if (!isAllowedAuthOrigin(req)) {
+    res.status(403).json({ success: false, error: 'Security validation failed.' });
+    return;
   }
 
   const { identifier, password, rememberMe } = req.body;
@@ -727,8 +730,7 @@ apiRouter.post('/auth/login', rateLimitPublic(10, 15 * 60 * 1000), async (req: R
 });
 
 apiRouter.post('/auth/firebase-login', rateLimitPublic(10, 15 * 60 * 1000), async (req: Request, res: Response): Promise<void> => {
-  const origin = req.get('origin');
-  if (origin && origin !== `${req.protocol}://${req.get('host')}`) {
+  if (!isAllowedAuthOrigin(req)) {
     res.status(403).json({ success: false, error: 'Security validation failed.' });
     return;
   }
@@ -893,8 +895,7 @@ apiRouter.post('/auth/firebase-login', rateLimitPublic(10, 15 * 60 * 1000), asyn
 });
 
 apiRouter.post('/auth/mfa/verify', rateLimitPublic(10, 5 * 60 * 1000), async (req: Request, res: Response): Promise<void> => {
-  const origin = req.get('origin');
-  if (origin && origin !== `${req.protocol}://${req.get('host')}`) {
+  if (!isAllowedAuthOrigin(req)) {
     res.status(403).json({ success: false, error: 'Security validation failed.' });
     return;
   }

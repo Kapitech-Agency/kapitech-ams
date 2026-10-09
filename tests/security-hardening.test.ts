@@ -59,6 +59,32 @@ test('Login origin accepts the configured AMS URL and the canonical proxy host',
     ),
     true
   );
+  // AMS may run under /admin on the canonical public-site domain.
+  // These exact official origins remain valid behind a reverse proxy.
+  assert.equal(
+    isAllowedLoginOrigin(
+      'https://kapitech.id',
+      'https://ams.kapitech.id',
+      'http://127.0.0.1:3000'
+    ),
+    true
+  );
+  assert.equal(
+    isAllowedLoginOrigin(
+      'https://www.kapitech.id',
+      'https://legacy-ams.kapitech.id',
+      'http://127.0.0.1:3000'
+    ),
+    true
+  );
+  assert.equal(
+    isAllowedLoginOrigin(
+      'https://attacker.example',
+      'https://ams.kapitech.id',
+      'http://127.0.0.1:3000'
+    ),
+    false
+  );
   assert.equal(
     isAllowedLoginOrigin(
       'https://attacker.example',

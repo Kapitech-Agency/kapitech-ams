@@ -71,7 +71,9 @@ export async function apiRequest<T = any>(
         res.status === 401
           ? 'Your session expired. Refresh and try again.'
           : res.status === 403
-            ? "You don't have access to this action."
+            ? (typeof json.error === 'string' && json.error.trim()
+                ? json.error
+                : "You don't have access to this action.")
             : res.status >= 500
               ? 'The request could not be completed right now. Try again.'
               : json.error || 'The request could not be completed. Check your input and try again.';
@@ -128,7 +130,9 @@ async function apiBinaryRequest<T = any>(
         res.status === 401
           ? 'Your session expired. Refresh and try again.'
           : res.status === 403
-            ? "You don't have access to this action."
+            ? (typeof json.error === 'string' && json.error.trim()
+                ? json.error
+                : "You don't have access to this action.")
             : res.status >= 500
               ? 'The upload could not be completed right now. Try again.'
               : json.error || 'The upload could not be completed. Check the file and try again.';

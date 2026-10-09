@@ -316,7 +316,13 @@ export function isAllowedLoginOrigin(
 
   try {
     const suppliedOrigin = new URL(origin).origin;
-    const allowedOrigins = new Set<string>();
+    // Canonical HTTPS hosts used by the Kapitech public site and AMS.
+    // Keep exact-origin matching; do not allow arbitrary sibling subdomains.
+    const allowedOrigins = new Set<string>([
+      'https://kapitech.id',
+      'https://www.kapitech.id',
+      'https://ams.kapitech.id'
+    ]);
 
     for (const candidate of [configuredAppUrl, requestOrigin]) {
       const value = String(candidate || '').trim();
