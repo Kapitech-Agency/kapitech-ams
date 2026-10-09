@@ -175,3 +175,18 @@ test('retainer usage can only be changed through the atomic hours endpoint', asy
   assert.match(routes, /apiRouter\.post\('\/clients\/:id\/retainer-hours', requireAuth, requirePermission\('canManageClients'\)/);
   assert.match(routes, /postgresClientRepository\.addRetainerHours\(id, hours,/);
 });
+
+
+test('team directory assignee lookup allows project managers without task-mutation permission', async () => {
+  const routes = await read('server/routes.ts');
+  const app = await read('src/App.tsx');
+  const start = routes.indexOf("apiRouter.get('/auth/task-assignees'");
+  const end = routes.indexOf('\n});', start);
+  const handler = routes.slice(start, end);
+
+  assert.ok(start >= 0 && end > start);
+  assert.match(handler, /requireAnyPermission\('canManageProjects', 'canManageKanbanTasks'\)/);
+  assert.match(handler, /username: user\.username/);
+  assert.match(handler, /division: user\.division/);
+  assert.match(app, /const moduleKey = isVendorWorkspace \? 'vendors' : 'timelogs'/);
+});

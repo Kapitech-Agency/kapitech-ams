@@ -1243,7 +1243,7 @@ apiRouter.get('/auth/users', requireAuth, requireMaster, async (req: Authenticat
   res.json({ success: true, users: sanitizedUsers });
 });
 
-apiRouter.get('/auth/task-assignees', requireAuth, requirePermission('canManageKanbanTasks'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+apiRouter.get('/auth/task-assignees', requireAuth, requireAnyPermission('canManageProjects', 'canManageKanbanTasks'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const users = getDataSourceMode() === 'postgres' ? await postgresAuthRepository.listUsers() : getDatabase().users;
   const assignees = users
     .filter(user => user.status === 'active')
