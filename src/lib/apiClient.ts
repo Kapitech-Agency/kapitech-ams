@@ -261,6 +261,11 @@ export const api = {
         method: 'PUT',
         body: JSON.stringify(updates)
       }),
+    addRetainerHours: (id: string, hours: number) =>
+      apiRequest<{ success: boolean; client: any }>(`/api/clients/${id}/retainer-hours`, {
+        method: 'POST',
+        body: JSON.stringify({ hours })
+      }),
     delete: (id: string) => apiRequest(`/api/clients/${id}`, { method: 'DELETE' })
   },
 
