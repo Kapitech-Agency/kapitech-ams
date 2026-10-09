@@ -115,6 +115,28 @@ export class PostgresClientRepository {
     }
   }
 
+  async addRetainerHours(id: string, hours: number, audit?: AuditEntry): Promise<AgencyClient | null> {
+    return withPostgresTransaction(async client => {
+      const current = await client.query<ClientRow>('SELECT * FROM clients WHERE id = $1 FOR UPDATE', [id]);
+      if (!current.rows[0]) return null;
+
+      const existing = mapClient(current.rows[0]);
+      if (!existing.activeRetainer) throw new Error('CLIENT_RETAINER_NOT_ACTIVE');
+      const currentHours = Number(existing.retainerUsedHours || 0);
+      const nextHours = currentHours + hours;
+      if (!Number.isFinite(nextHours) || nextHours < 0 || nextHours > 1_000_000) {
+        throw new Error('CLIENT_RETAINER_HOURS_LIMIT');
+      }
+
+      const next = { ...existing, retainerUsedHours: nextHours, updatedAt: new Date().toISOString() };
+      const result = await client.query<ClientRow>(
+        'UPDATE clients SET metadata=$2, updated_at=$3 WHERE id=$1 RETURNING *',
+        [id, JSON.stringify(toMetadata(next)), next.updatedAt]
+      );
+      if (audit) await postgresAuditLogRepository.appendWithinTransaction(client, audit);
+      return result.rows[0] ? mapClient(result.rows[0]) : null;
+    });
+  }
   async delete(id: string, audit?: AuditEntry): Promise<boolean> {
     const client = await getPostgresPool().connect();
     try {
