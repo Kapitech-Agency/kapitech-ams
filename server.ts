@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { type ErrorRequestHandler } from 'express';
 import fs from 'node:fs';
 import path from 'path';
 import dotenv from 'dotenv';
@@ -349,6 +349,41 @@ function applyPublicApiCors(req: express.Request, res: express.Response, next: e
   app.use('/api', (_req, res) => {
     res.status(404).json({ success: false, error: 'API route not found.' });
   });
+
+  // Keep unexpected async-handler and body-parser failures in the JSON API contract.
+  const apiErrorHandler: ErrorRequestHandler = (error, req, res, next) => {
+    if (res.headersSent) {
+      next(error);
+      return;
+    }
+
+    const candidate = Number(error?.status ?? error?.statusCode);
+    const statusMessages: Record<number, string> = {
+      400: 'Invalid request.',
+      401: 'Authentication required.',
+      403: 'Access denied.',
+      404: 'Resource not found.',
+      409: 'The request conflicts with the current state.',
+      413: 'Request payload is too large.',
+      415: 'Unsupported request content type.',
+      422: 'Request validation failed.',
+      429: 'Too many requests. Please retry shortly.',
+      503: 'The service is temporarily unavailable.'
+    };
+    const status = Object.prototype.hasOwnProperty.call(statusMessages, candidate) ? candidate : 500;
+    console.error('[AMS API] Unhandled request error', {
+      method: req.method,
+      path: req.path,
+      status,
+      message: error instanceof Error ? error.message : String(error)
+    });
+
+    res.status(status).json({
+      success: false,
+      error: statusMessages[status] || 'The request could not be completed by the server.'
+    });
+  };
+  app.use('/api', apiErrorHandler);
 
   // Vite middleware in dev, static files in prod
   if (!isProductionRuntime()) {
