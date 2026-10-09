@@ -22,6 +22,15 @@ export interface AgencyClient {
   avatarUrl?: string;
   slaDailyAdSpendBudget?: number; // agreed daily ad spend SLA cap in IDR
   currentDailyAdSpend?: number; // current actual daily ad spend in IDR
+  activeRetainer?: boolean;
+  retainerId?: string;
+  retainerTier?: 'tier-1' | 'tier-2' | 'tier-3';
+  retainerMonthlyValue?: number;
+  retainerCommittedHours?: number;
+  retainerUsedHours?: number;
+  retainerOverageRate?: number;
+  retainerCycle?: 'monthly' | 'quarterly' | 'annual';
+  retainerRenewal?: string;
   createdAt: string;
   updatedAt: string;
 }
