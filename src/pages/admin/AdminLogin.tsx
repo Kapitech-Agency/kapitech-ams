@@ -245,6 +245,16 @@ export const AdminLogin: React.FC = () => {
                     </div>
                   </div>
 
+                  <label className="flex cursor-pointer items-center gap-2.5 text-xs leading-5 text-muted">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="h-4 w-4 shrink-0 rounded border-line accent-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    />
+                    {language === 'id' ? 'Pertahankan sesi di perangkat ini' : 'Keep me signed in on this device'}
+                  </label>
+
                   <button
                     type="submit"
                     disabled={loading}
@@ -387,9 +397,9 @@ export const AdminLogin: React.FC = () => {
           </div>
         </section>
 
-        <aside className="relative hidden min-h-screen items-center justify-center overflow-hidden border-l border-line/70 px-8 lg:flex xl:px-12">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_48%_32%,rgba(220,20,60,0.13),transparent_28%),linear-gradient(145deg,rgba(15,15,20,0.34),rgba(9,9,12,0.08))]" />
-          <div className="absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-accent/25 to-transparent" aria-hidden="true" />
+        <aside className="relative hidden min-h-screen items-center justify-center overflow-hidden border-l border-line px-8 lg:flex xl:px-12">
+          <div className="absolute inset-0 bg-gradient-to-br from-panel/45 via-bg/30 to-bg" aria-hidden="true" />
+          <div className="absolute left-0 top-0 h-full w-px bg-accent/20" aria-hidden="true" />
           <div className="relative z-10 flex w-full max-w-[470px] flex-col items-start">
             <img
               src="https://raw.githubusercontent.com/Kapitech-Agency/Kapitech-Agency.github.io/main/public/white.png"
@@ -398,36 +408,44 @@ export const AdminLogin: React.FC = () => {
               loading="eager"
               decoding="async"
             />
-            <div className="mb-5 flex items-center gap-2 text-xs font-medium text-accent-text">
-              <span className="h-px w-7 bg-accent/80" aria-hidden="true" />
-              {language === 'id' ? 'Ruang kerja internal' : 'Internal workspace'}
-            </div>
-            <h2 className="max-w-[430px] text-[34px] font-semibold leading-[1.12] tracking-[-0.045em] text-fg xl:text-[40px]">
-              {language === 'id' ? 'Seluruh operasi agensi, terhubung.' : 'Your agency operations, connected.'}
+            <p className="mt-1 text-[11px] font-medium tracking-[0.12em] text-accent-text">
+              {language === 'id' ? 'SISTEM MANAJEMEN AGENSI' : 'AGENCY MANAGEMENT SYSTEM'}
+            </p>
+            <h2 className="mt-4 max-w-[430px] text-[32px] font-semibold leading-tight tracking-[-0.035em] text-fg xl:text-[36px]">
+              {language === 'id' ? 'Satu platform untuk operasional Kapitech' : 'One platform for Kapitech operations'}
             </h2>
-            <p className="mt-5 max-w-[390px] text-sm leading-6 text-muted">
+            <p className="mt-4 max-w-[390px] text-sm leading-6 text-muted">
               {language === 'id'
-                ? 'Satu workspace untuk memantau pekerjaan klien, koordinasi tim, dan operasional bisnis Kapitech.'
-                : 'One workspace to manage client delivery, coordinate your team, and keep agency operations moving.'}
+                ? 'Kelola klien, proyek, koordinasi tim, dan administrasi operasional dalam satu workspace.'
+                : 'Manage clients, projects, team coordination, and operational records in one workspace.'}
             </p>
 
-            <div className="mt-9 w-full max-w-[390px] border-y border-line/80">
+            <div className="mt-8 w-full max-w-[390px] border-y border-line/80">
               <div className="flex items-start gap-3 border-b border-line/80 py-4">
-                <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-panel text-accent-text">
-                  <Lock size={15} />
-                </div>
+                <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true" />
                 <div>
-                  <p className="text-sm font-medium text-fg">{language === 'id' ? 'Akses terkontrol' : 'Controlled access'}</p>
-                  <p className="mt-1 text-xs leading-5 text-muted">{language === 'id' ? 'Sesi diverifikasi oleh server dengan kontrol akses berbasis peran.' : 'Server-verified sessions with role-based access controls.'}</p>
+                  <p className="text-sm font-medium text-fg">{language === 'id' ? 'Klien dan proyek' : 'Clients and projects'}</p>
+                  <p className="mt-1 text-xs leading-5 text-muted">
+                    {language === 'id' ? 'Data klien, status proyek, dan pemantauan pekerjaan.' : 'Client records, project status, and delivery tracking.'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 border-b border-line/80 py-4">
+                <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true" />
+                <div>
+                  <p className="text-sm font-medium text-fg">{language === 'id' ? 'Alur kerja tim' : 'Team workflows'}</p>
+                  <p className="mt-1 text-xs leading-5 text-muted">
+                    {language === 'id' ? 'Tugas, persetujuan, dan dokumen bersama.' : 'Tasks, approvals, and shared documents.'}
+                  </p>
                 </div>
               </div>
               <div className="flex items-start gap-3 py-4">
-                <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-panel text-accent-text">
-                  <ShieldCheck size={15} />
-                </div>
+                <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true" />
                 <div>
-                  <p className="text-sm font-medium text-fg">{language === 'id' ? 'Lapisan keamanan tambahan' : 'Additional security'}</p>
-                  <p className="mt-1 text-xs leading-5 text-muted">{language === 'id' ? 'Verifikasi MFA tersedia saat diperlukan oleh akun Anda.' : 'MFA verification is available when required by your account.'}</p>
+                  <p className="text-sm font-medium text-fg">{language === 'id' ? 'Administrasi operasional' : 'Operational administration'}</p>
+                  <p className="mt-1 text-xs leading-5 text-muted">
+                    {language === 'id' ? 'Pencatatan keuangan, waktu kerja, dan data operasional.' : 'Finance records, time logs, and operational data.'}
+                  </p>
                 </div>
               </div>
             </div>
