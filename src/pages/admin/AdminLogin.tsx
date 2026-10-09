@@ -453,6 +453,7 @@ export const AdminLogin: React.FC = () => {
                     <ArrowRight size={16} />
                   </button>
                 </div>
+                </div>
               </div>
             </div>
 
