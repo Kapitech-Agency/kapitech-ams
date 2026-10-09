@@ -461,7 +461,7 @@ export const AdminClientLeadAccounts: React.FC = () => {
       </section>
 
       <section data-ams-feature-slug="lead-accounts-summary" data-ams-slug="lead-accounts-summary" className="grid grid-cols-1 gap-3 text-[11px] text-muted md:grid-cols-4" aria-label="Pipeline summary">
-        <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><CircleDollarSign size={14} className="text-accent-text" /><span>Open annual value: <strong className="text-fg">{compactMoney(pipelineValue)}</strong></span></div>
+        <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><CircleDollarSign size={14} className="text-accent-text" /><span>Open deal value: <strong className="text-fg">{compactMoney(pipelineValue)}</strong></span></div>
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><Target size={14} className="text-info" /><span>Weighted probability: <strong className="text-fg">{weightedProbability.toFixed(1)}%</strong></span></div>
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><Clock3 size={14} className="text-warning" /><span>Contract review: <strong className="text-fg">{stageCounts.contract}</strong></span></div>
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><CheckCircle2 size={14} className="text-success" /><span>Ready to sign: <strong className="text-fg">{stageCounts['ready-to-sign']}</strong></span></div>
