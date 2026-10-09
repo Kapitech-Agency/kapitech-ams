@@ -1,27 +1,51 @@
 type AnyHandler = (...args: any[]) => any;
 
-/** Forward handler failures to Express 4's next(error). */
-export function withAsyncErrorForwarding<T extends AnyHandler>(handler: T): T {
-  return function errorForwardingHandler(this: unknown, ...args: any[]) {
-    const next = args[args.length - 1];
-    let result: unknown;
+function invokeWithForwarding(handler: AnyHandler, context: unknown, args: any[]): unknown {
+  const next = args[args.length - 1];
+  let result: unknown;
 
-    try {
-      result = handler.apply(this, args);
-    } catch (error) {
+  try {
+    result = handler.apply(context, args);
+  } catch (error) {
+    if (typeof next === 'function') return next(error);
+    throw error;
+  }
+
+  if (result && typeof (result as { then?: unknown }).then === 'function') {
+    return Promise.resolve(result).catch((error) => {
       if (typeof next === 'function') return next(error);
       throw error;
-    }
+    });
+  }
 
-    if (result && typeof (result as { then?: unknown }).then === 'function') {
-      return Promise.resolve(result).catch((error) => {
-        if (typeof next === 'function') return next(error);
-        throw error;
-      });
-    }
+  return result;
+}
 
-    return result;
-  } as T;
+/** Forward handler failures to Express 4's next(error) without changing middleware arity. */
+export function withAsyncErrorForwarding<T extends AnyHandler>(handler: T): T {
+  // Express identifies error middleware by Function.length === 4.
+  switch (handler.length) {
+    case 4:
+      return function errorForwardingHandler(error: unknown, req: unknown, res: unknown, next: unknown) {
+        return invokeWithForwarding(handler, this, [error, req, res, next]);
+      } as T;
+    case 3:
+      return function errorForwardingHandler(req: unknown, res: unknown, next: unknown) {
+        return invokeWithForwarding(handler, this, [req, res, next]);
+      } as T;
+    case 2:
+      return function errorForwardingHandler(req: unknown, res: unknown) {
+        return invokeWithForwarding(handler, this, Array.from(arguments));
+      } as T;
+    case 1:
+      return function errorForwardingHandler(req: unknown) {
+        return invokeWithForwarding(handler, this, Array.from(arguments));
+      } as T;
+    default:
+      return function errorForwardingHandler(...args: any[]) {
+        return invokeWithForwarding(handler, this, args);
+      } as T;
+  }
 }
 
 function wrapRegistrationArgument(value: unknown): unknown {
