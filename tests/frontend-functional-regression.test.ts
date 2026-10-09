@@ -52,6 +52,7 @@ test('Projects accepts valid empty server lists and never falls back to demo rec
   assert.match(projects, /if \(savedToData\) setTaskDrawerOpen\(false\)/);
   assert.match(projects, /delete taskOverrides\[task\.id\]/);
   assert.match(projects, /delete projectOverrides\[project\.id\]/);
+  assert.match(projects, /if \(!isSlugFixtureMode\(\)\) \{[\s\S]{0,200}writeStatusOverrides\(PROJECT_STATUS_OVERRIDES_KEY, \{\}\)[\s\S]{0,160}return source/);
 });
 
 test('Team workspace preview records are only injected in development or explicit fixture mode', async () => {
