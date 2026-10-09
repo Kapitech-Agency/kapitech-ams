@@ -110,6 +110,8 @@ test('SLA Monitoring never presents mock uptime or incident metrics as productio
   assert.match(page, /avgUptime === null \? 'Not available'/);
   assert.match(page, /avgMttr === null \? 'Not available'/);
   assert.match(page, /No production snapshot was exported/);
+  assert.match(page, /exportSnapshot\(selectedTelemetry \? \[selectedTelemetry\] : \[\]\)/);
+  assert.match(page, /not a live telemetry feed/);
 });
 
 test('unexpected async API failures are forwarded and returned as safe JSON', async () => {
