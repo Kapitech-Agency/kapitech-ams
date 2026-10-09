@@ -358,7 +358,7 @@ export const AdminClientRetainers: React.FC = () => {
     }
     setHoursSaving(true);
     try {
-      const response = await api.clients.update(clientId, { retainerUsedHours: nextUsedHours, activeRetainer: true });
+      const response = await api.clients.addRetainerHours(clientId, amount);
       if (!response.success || !response.data?.client) {
         throw new Error(response.error || 'Retainer usage could not be saved.');
       }
@@ -366,7 +366,7 @@ export const AdminClientRetainers: React.FC = () => {
       const updatedRetainer = mapClientRetainer(savedClient);
       setClients((current) => current.map((item) => item.id === savedClient.id ? savedClient : item));
       setRecords((current) => current.map((item) => item.clientId === savedClient.id ? updatedRetainer : item));
-      setMessage(amount + ' hours saved for ' + updatedRetainer.client + '.');
+      setMessage(amount + ' hours added to the retainer usage total for ' + updatedRetainer.client + '.');
       setHoursTarget(null);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Retainer usage could not be saved.');
