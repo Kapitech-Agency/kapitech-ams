@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ArrowDown,
   ArrowUp,
@@ -22,6 +23,8 @@ import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { AdminFilterBar, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { api } from '../../lib/apiClient';
+import { isSlugFixtureMode } from '../../lib/runtimeMode';
 
 type Stage = 'discovery' | 'proposal' | 'contract' | 'ready-to-sign';
 type SortKey = 'company' | 'annualValue' | 'stage' | 'owner' | 'probability' | 'dueAt';
@@ -74,7 +77,9 @@ const money = (value: number) => new Intl.NumberFormat('id-ID', { style: 'curren
 const compactMoney = (value: number) => value >= 1000000000 ? 'Rp ' + (value / 1000000000).toFixed(2) + 'B' : 'Rp ' + Math.round(value / 1000000) + 'M';
 
 const dueLabel = (iso: string, urgent?: boolean) => {
+  if (!iso) return 'Not scheduled';
   const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return 'Not scheduled';
   const today = new Date();
   const start = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
   const target = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
@@ -93,7 +98,8 @@ const sortValue = (item: Lead, key: SortKey): string | number => {
   if (key === 'stage') return stageMeta[item.stage].label;
   if (key === 'owner') return item.owner;
   if (key === 'probability') return item.probability;
-  return new Date(item.dueAt).getTime();
+  const date = new Date(item.dueAt).getTime();
+  return Number.isFinite(date) ? date : Number.MAX_SAFE_INTEGER;
 };
 
 const SortButton: React.FC<{
@@ -110,7 +116,9 @@ const SortButton: React.FC<{
 );
 
 export const AdminClientLeadAccounts: React.FC = () => {
-  const [records, setRecords] = useState(seed);
+  const navigate = useNavigate();
+  const fixtureMode = isSlugFixtureMode();
+  const [records, setRecords] = useState<Lead[]>(() => fixtureMode ? seed : []);
   const [query, setQuery] = useState('');
   const [stage, setStage] = useState<'all' | Stage>('all');
   const [owner, setOwner] = useState('all');
@@ -126,9 +134,74 @@ export const AdminClientLeadAccounts: React.FC = () => {
   const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
-    const frame = window.requestAnimationFrame(() => setIsLoading(false));
-    return () => window.cancelAnimationFrame(frame);
-  }, []);
+    if (fixtureMode) {
+      setIsLoading(false);
+      return;
+    }
+
+    let mounted = true;
+    const loadDeals = async () => {
+      setIsLoading(true);
+      try {
+        const response = await api.crm.getDeals();
+        if (!response.success || !Array.isArray(response.data?.deals)) {
+          if (mounted) {
+            setRecords([]);
+            setMessage(response.error || 'CRM opportunities could not be loaded.');
+          }
+          return;
+        }
+
+        // This workspace shows open CRM opportunities only; closed deals remain in CRM history.
+        const openDeals = response.data.deals
+          .filter((deal: any) => !['won', 'lost', 'closed_won', 'closed_lost'].includes(String(deal.stage || '').toLowerCase()))
+          .map((deal: any): Lead => {
+            const stageValue = String(deal.stage || 'new').toLowerCase();
+            const stage: Stage = stageValue === 'proposal'
+              ? 'proposal'
+              : stageValue === 'negotiation'
+                ? 'contract'
+                : 'discovery';
+            const ownerName = String(deal.owner || deal.assignedTo || 'Unassigned');
+            const ownerInitials = ownerName.split(/\\s+/).filter(Boolean).map((part: string) => part[0]).join('').slice(0, 2).toUpperCase() || 'UN';
+            const companyName = String(deal.company || deal.clientName || 'Unnamed opportunity');
+            const probability = Number(deal.probability ?? 0);
+            return {
+              id: String(deal.id),
+              initials: companyName.split(/\\s+/).filter(Boolean).map((part: string) => part[0]).join('').slice(0, 2).toUpperCase() || 'CL',
+              company: companyName,
+              contact: String(deal.clientName || ''),
+              owner: ownerName,
+              ownerRole: 'CRM owner',
+              ownerInitials,
+              brief: String(deal.title || deal.servicePillar || deal.notes || 'CRM opportunity'),
+              location: String(deal.location || 'Not recorded'),
+              monthlyValue: Number(deal.monthlyValue) || 0,
+              annualValue: Number(deal.value ?? deal.dealValue) || 0,
+              stage,
+              probability: Math.round(Math.max(0, Math.min(1, probability > 1 ? probability / 100 : probability)) * 100),
+              nextAction: String(deal.nextAction || 'Follow up on opportunity'),
+              dueAt: String(deal.expectedCloseDate || '')
+            };
+          });
+
+        if (mounted) {
+          setRecords(openDeals);
+          setMessage(null);
+        }
+      } catch (error) {
+        if (mounted) {
+          setRecords([]);
+          setMessage(error instanceof Error ? error.message : 'CRM opportunities could not be loaded.');
+        }
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    };
+
+    void loadDeals();
+    return () => { mounted = false; };
+  }, [fixtureMode]);
 
   const ownerOptions = useMemo(() => Array.from(new Set(records.map((item) => item.owner))).sort(), [records]);
 
@@ -182,8 +255,8 @@ export const AdminClientLeadAccounts: React.FC = () => {
 
   const exportPipeline = () => {
     const rows = [
-      ['Lead ID', 'Company', 'Contact', 'Brief', 'Location', 'Monthly Value', 'Annual Value', 'Stage', 'Probability', 'Owner', 'Next Action', 'Due'],
-      ...filtered.map((item) => [item.id, item.company, item.contact, item.brief, item.location, item.monthlyValue, item.annualValue, stageMeta[item.stage].label, item.probability + '%', item.owner, item.nextAction, item.dueAt])
+      ['CRM Deal ID', 'Company', 'Contact', 'Opportunity', 'Location', 'Deal Value', 'Stage', 'Probability', 'Owner', 'Next Action', 'Expected Close'],
+      ...filtered.map((item) => [item.id, item.company, item.contact, item.brief, item.location, item.annualValue, stageMeta[item.stage].label, item.probability + '%', item.owner, item.nextAction, item.dueAt])
     ];
     const csv = rows.map((row) => row.map((value) => `"${String(value ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
     const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -197,12 +270,60 @@ export const AdminClientLeadAccounts: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
-  const addLead = () => {
+  const addLead = async () => {
     const company = newCompany.trim();
     if (!company) {
       setMessage('Company name is required.');
       return;
     }
+    if (!fixtureMode) {
+      try {
+        const response = await api.crm.createDeal({
+          title: `New opportunity: ${company}`,
+          clientName: newContact.trim() || company,
+          company,
+          value: 0,
+          stage: 'new',
+          probability: 25,
+          priority: 'medium',
+          source: 'Internal',
+          notes: 'Created from the Client Lead Accounts workspace.'
+        });
+        if (!response.success || !response.data?.deal) {
+          setMessage(response.error || 'The opportunity could not be saved to CRM.');
+          return;
+        }
+        const deal = response.data.deal;
+        const ownerName = String(deal.owner || deal.assignedTo || 'Unassigned');
+        const newRecord: Lead = {
+          id: String(deal.id),
+          initials: company.split(/\\s+/).filter(Boolean).map((part: string) => part[0]).join('').slice(0, 2).toUpperCase() || 'CL',
+          company: String(deal.company || company),
+          contact: String(deal.clientName || newContact.trim() || company),
+          owner: ownerName,
+          ownerRole: 'CRM owner',
+          ownerInitials: ownerName.split(/\\s+/).filter(Boolean).map((part: string) => part[0]).join('').slice(0, 2).toUpperCase() || 'UN',
+          brief: String(deal.title || `New opportunity: ${company}`),
+          location: String(deal.location || 'Not recorded'),
+          monthlyValue: 0,
+          annualValue: Number(deal.value) || 0,
+          stage: 'discovery',
+          probability: 25,
+          nextAction: 'Follow up on opportunity',
+          dueAt: String(deal.expectedCloseDate || '')
+        };
+        setRecords((current) => [newRecord, ...current]);
+        setNewCompany('');
+        setNewContact('');
+        setIsAdding(false);
+        setPage(1);
+        setMessage('Opportunity saved to CRM. Add a deal value and expected close date in CRM when ready.');
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : 'The opportunity could not be saved to CRM.');
+      }
+      return;
+    }
+
     const lead: Lead = {
       id: 'LEAD-' + String(records.length + 1).padStart(3, '0'),
       initials: company.slice(0, 2).toUpperCase(),
@@ -232,8 +353,8 @@ export const AdminClientLeadAccounts: React.FC = () => {
       <AdminModuleHeader slug="client-lead-accounts-header"
         className="mb-0"
         title="Lead Accounts & Pipeline"
-        description="Enterprise opportunities, qualification stages, projected retainer value, and next actions."
-        eyebrow={<AdminStatusBadge tone="info">{records.length} prospective accounts</AdminStatusBadge>}
+        description="Open CRM opportunities, qualification stages, deal values, and expected close dates."
+        eyebrow={<AdminStatusBadge tone="info">{records.length} open opportunities</AdminStatusBadge>}
         actions={(
           <>
             <Button type="button" variant="secondary" onClick={exportPipeline} icon={<ArrowDown size={14} />}>Export Pipeline</Button>
@@ -262,10 +383,12 @@ export const AdminClientLeadAccounts: React.FC = () => {
         </div>
       )}
 
+      {!fixtureMode && message && <div className="rounded-card border border-warning/20 bg-warning/5 px-3 py-2 text-xs text-warning" role="status">CRM-backed data: {message}</div>}
+
       <section data-ams-feature-slug="lead-accounts-kpis" data-ams-slug="lead-accounts-kpis" className="grid grid-cols-1 gap-3 md:grid-cols-3" aria-label="Pipeline metrics">
-        <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">OPEN PIPELINE VALUE</span><CircleDollarSign size={18} /></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{compactMoney(pipelineValue)}</div><p className="mt-1 text-[11px] text-muted">Combined projected annual value</p></div>
+        <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">OPEN DEAL VALUE</span><CircleDollarSign size={18} /></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{compactMoney(pipelineValue)}</div><p className="mt-1 text-[11px] text-muted">Combined value of open CRM opportunities</p></div>
         <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">WEIGHTED WIN PROBABILITY</span><Target size={18} /></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{weightedProbability.toFixed(1)}%</div><p className="mt-1 text-[11px] text-muted">Value-weighted across {records.length} opportunities</p></div>
-        <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">PROPOSALS OUT FOR REVIEW</span><MailCheck size={18} /><span className="sr-only">{proposalCount} proposal stage records</span></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{proposalCount}</div><p className="mt-1 text-[11px] text-muted">Opportunities currently in proposal stage</p></div>
+        <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">DEALS IN PROPOSAL</span><MailCheck size={18} /><span className="sr-only">{proposalCount} proposal stage records</span></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{proposalCount}</div><p className="mt-1 text-[11px] text-muted">Opportunities currently in proposal stage</p></div>
       </section>
 
       <AdminFilterBar slug="lead-accounts-filters"
@@ -296,7 +419,7 @@ export const AdminClientLeadAccounts: React.FC = () => {
             <thead className="bg-bg">
               <tr className="border-b border-line text-[10px] uppercase tracking-wider text-muted">
                 <th className="px-5 py-2.5"><SortButton label="Prospect / company" sortKey="company" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} /></th>
-                <th className="px-4 py-2.5 text-right"><SortButton label="Annual value" sortKey="annualValue" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} /></th>
+                <th className="px-4 py-2.5 text-right"><SortButton label="Deal value" sortKey="annualValue" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} /></th>
                 <th className="px-4 py-2.5"><SortButton label="Stage" sortKey="stage" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} /></th>
                 <th className="px-4 py-2.5"><SortButton label="Lead owner" sortKey="owner" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} /></th>
                 <th className="px-4 py-2.5"><SortButton label="Win probability" sortKey="probability" activeKey={sortKey} direction={sortDirection} onSort={toggleSort} /></th>
@@ -315,14 +438,14 @@ export const AdminClientLeadAccounts: React.FC = () => {
                   ? visible.map((item) => (
                       <tr key={item.id} data-ams-slug={'client-lead-' + item.id.toLowerCase()} className="border-b border-line last:border-0 transition-colors hover:bg-bg/70">
                         <td className="px-5 py-3"><div className="flex items-center gap-2.5"><div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-[11px] font-semibold text-fg">{item.initials}</div><div className="min-w-0"><div className="truncate text-xs font-semibold leading-snug text-fg">{item.company}</div><div className="mt-0.5 text-[10px] text-muted">{item.brief} · {item.location}</div></div></div></td>
-                        <td className="px-4 py-3 text-right tabular-nums"><div className="text-xs font-medium text-fg">{compactMoney(item.annualValue)}</div><div className="mt-0.5 text-[10px] text-muted">{money(item.monthlyValue)}/mo</div></td>
+                        <td className="px-4 py-3 text-right tabular-nums"><div className="text-xs font-medium text-fg">{compactMoney(item.annualValue)}</div><div className="mt-0.5 text-[10px] text-muted">{item.monthlyValue > 0 ? money(item.monthlyValue) + '/mo' : 'CRM deal value'}</div></td>
                         <td className="px-4 py-3"><span className="inline-flex min-h-6 items-center gap-1.5 rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] font-medium text-muted"><span className={`h-1.5 w-1.5 rounded-full ${stageMeta[item.stage].dot}`} />{stageMeta[item.stage].label}</span></td>
                         <td className="px-4 py-3"><ProfileIdentity profile={{ name: item.owner, role: item.ownerRole || undefined, contextLabel: 'Lead owner' }} size="sm" /></td>
                         <td className="px-4 py-3 tabular-nums"><div className="flex items-center gap-2"><span className="h-1.5 w-16 overflow-hidden rounded-full bg-line/70"><span className="block h-1.5 rounded-full bg-accent" style={{ width: Math.min(100, item.probability) + '%' }} /></span><span className="text-xs font-medium text-fg">{item.probability}%</span></div></td>
                         <td className="px-4 py-3"><div className="text-xs font-medium text-fg">{item.nextAction}</div><div className={`mt-0.5 text-[10px] ${item.urgent ? 'font-medium text-accent-text' : new Date(item.dueAt).getTime() < Date.now() ? 'text-danger' : 'text-muted'}`}>{dueLabel(item.dueAt, item.urgent)}</div></td>
                         <td className="px-5 py-3 text-right"><div className="ams-table-actions flex items-center justify-end gap-1">
                           <button type="button" onClick={() => setSelectedLead(item)} aria-label={`View deal for ${item.company}`} title="View deal" className="inline-flex h-10 w-10 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><Eye size={16} aria-hidden="true" /></button>
-                          <button type="button" onClick={() => setMessage(`Proposal creation is not connected for ${item.company} yet.`)} aria-label={`Create proposal for ${item.company}`} title="Create proposal" className={`inline-flex h-10 w-10 items-center justify-center rounded-control transition-colors ${item.stage === 'ready-to-sign' ? 'bg-accent/10 text-accent-text hover:bg-accent/20' : 'text-muted hover:bg-bg hover:text-fg'} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent`}><Plus size={16} aria-hidden="true" /></button>
+                          <button type="button" onClick={() => navigate('/admin/proposals')} aria-label={`Open proposals for ${item.company}`} title="Open Proposals" className={`inline-flex h-10 w-10 items-center justify-center rounded-control transition-colors ${item.stage === 'ready-to-sign' ? 'bg-accent/10 text-accent-text hover:bg-accent/20' : 'text-muted hover:bg-bg hover:text-fg'} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent`}><Plus size={16} aria-hidden="true" /></button>
                         </div></td>
                       </tr>
                     ))
@@ -345,8 +468,8 @@ export const AdminClientLeadAccounts: React.FC = () => {
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><CheckCircle2 size={14} className="text-success" /><span>Ready to sign: <strong className="text-fg">{stageCounts['ready-to-sign']}</strong></span></div>
       </section>
 
-      <Modal slug="lead-account-detail-modal" open={!!selectedLead} onClose={() => setSelectedLead(null)} size="md" title="Lead account" description={selectedLead ? `${selectedLead.company} · ${selectedLead.id}` : undefined} footer={<div className="flex justify-end gap-2"><Button type="button" variant="secondary" onClick={() => setSelectedLead(null)}>Close</Button><Button type="button" variant="primary" onClick={() => { if (selectedLead) setMessage(`Proposal creation is not connected for ${selectedLead.company} yet.`); setSelectedLead(null); }} icon={<FileText size={14} />}>Create proposal</Button></div>}>
-        {selectedLead && <div className="space-y-4"><div className="flex items-center gap-3 rounded-card border border-line bg-bg p-3"><div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-panel text-xs font-semibold text-fg">{selectedLead.initials}</div><div className="min-w-0"><p className="truncate text-sm font-semibold text-fg">{selectedLead.company}</p><div className="mt-0.5 flex items-center gap-2"><ProfileIdentity profile={{ name: selectedLead.contact, role: undefined, contextLabel: selectedLead.company }} size="sm" showRole={false} /><span className="text-xs text-muted">· {selectedLead.location}</span></div></div></div><div className="grid gap-3 sm:grid-cols-3"><div className="rounded-card border border-line bg-panel p-4"><span className="text-[10px] uppercase tracking-wider text-muted">Annual value</span><div className="mt-1 text-sm font-semibold tabular-nums text-fg">{money(selectedLead.annualValue)}</div></div><div className="rounded-card border border-line bg-panel p-4"><span className="text-[10px] uppercase tracking-wider text-muted">Win probability</span><div className="mt-1 text-sm font-semibold tabular-nums text-fg">{selectedLead.probability}%</div></div><div className="rounded-card border border-line bg-panel p-4"><span className="text-[10px] uppercase tracking-wider text-muted">Stage</span><div className="mt-1 text-sm font-semibold text-fg">{stageMeta[selectedLead.stage].label}</div></div></div><div className="rounded-card border border-line bg-panel p-4"><span className="text-[10px] uppercase tracking-wider text-muted">Next action</span><p className="mt-1 text-sm font-medium text-fg">{selectedLead.nextAction}</p><p className="mt-1 text-xs text-muted">{dueLabel(selectedLead.dueAt, selectedLead.urgent)}</p></div><div className="text-xs text-muted flex items-center gap-2"><span>Owner:</span><ProfileIdentity profile={{ name: selectedLead.owner, role: selectedLead.ownerRole || undefined, contextLabel: 'Lead owner' }} size="sm" showRole={false} /></div></div>}
+      <Modal slug="lead-account-detail-modal" open={!!selectedLead} onClose={() => setSelectedLead(null)} size="md" title="Lead account" description={selectedLead ? `${selectedLead.company} · ${selectedLead.id}` : undefined} footer={<div className="flex justify-end gap-2"><Button type="button" variant="secondary" onClick={() => setSelectedLead(null)}>Close</Button><Button type="button" variant="primary" onClick={() => { setSelectedLead(null); navigate('/admin/proposals'); }} icon={<FileText size={14} />}>Open Proposals</Button></div>}>
+        {selectedLead && <div className="space-y-4"><div className="flex items-center gap-3 rounded-card border border-line bg-bg p-3"><div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-panel text-xs font-semibold text-fg">{selectedLead.initials}</div><div className="min-w-0"><p className="truncate text-sm font-semibold text-fg">{selectedLead.company}</p><div className="mt-0.5 flex items-center gap-2"><ProfileIdentity profile={{ name: selectedLead.contact, role: undefined, contextLabel: selectedLead.company }} size="sm" showRole={false} /><span className="text-xs text-muted">· {selectedLead.location}</span></div></div></div><div className="grid gap-3 sm:grid-cols-3"><div className="rounded-card border border-line bg-panel p-4"><span className="text-[10px] uppercase tracking-wider text-muted">Deal value</span><div className="mt-1 text-sm font-semibold tabular-nums text-fg">{money(selectedLead.annualValue)}</div></div><div className="rounded-card border border-line bg-panel p-4"><span className="text-[10px] uppercase tracking-wider text-muted">Win probability</span><div className="mt-1 text-sm font-semibold tabular-nums text-fg">{selectedLead.probability}%</div></div><div className="rounded-card border border-line bg-panel p-4"><span className="text-[10px] uppercase tracking-wider text-muted">Stage</span><div className="mt-1 text-sm font-semibold text-fg">{stageMeta[selectedLead.stage].label}</div></div></div><div className="rounded-card border border-line bg-panel p-4"><span className="text-[10px] uppercase tracking-wider text-muted">Next action</span><p className="mt-1 text-sm font-medium text-fg">{selectedLead.nextAction}</p><p className="mt-1 text-xs text-muted">{dueLabel(selectedLead.dueAt, selectedLead.urgent)}</p></div><div className="text-xs text-muted flex items-center gap-2"><span>Owner:</span><ProfileIdentity profile={{ name: selectedLead.owner, role: selectedLead.ownerRole || undefined, contextLabel: 'Lead owner' }} size="sm" showRole={false} /></div></div>}
       </Modal>
 
       <Drawer slug="lead-account-create-drawer" open={isAdding} onClose={() => setIsAdding(false)} size="sm" title="Add lead account" description="Start a new opportunity in Discovery & Audit." footer={<div className="flex justify-end gap-2"><Button type="button" variant="secondary" onClick={() => setIsAdding(false)}>Cancel</Button><Button type="button" variant="primary" onClick={addLead} icon={<Plus size={14} />}>Add lead</Button></div>}>
