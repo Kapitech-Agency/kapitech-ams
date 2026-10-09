@@ -204,4 +204,6 @@ test('JSON client updates accept the same core profile fields as PostgreSQL upda
     assert.match(jsonUpdate, new RegExp("'" + field + "'"));
   }
   assert.match(jsonUpdate, /if \(patch\.avatarUrl !== undefined\) patch\.avatarUrl = cleanOptionalUrl\(patch\.avatarUrl\)/);
+  const postgresUpdate = routes.slice(start, jsonStart);
+  assert.match(postgresUpdate, /if \(patch\.avatarUrl !== undefined\) patch\.avatarUrl = cleanOptionalUrl\(patch\.avatarUrl\)/);
 });
