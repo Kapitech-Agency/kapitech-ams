@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowLeft, ShieldAlert } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { getAdminSession, isMasterAdministrator } from '../../lib/adminAuth';
 import { useRbacRole } from '../../lib/rbacEngine';
 
@@ -15,6 +15,7 @@ export const RequireModuleAccess: React.FC<RequireModuleAccessProps> = ({
   moduleLabel = 'this page',
   children
 }) => {
+  const location = useLocation();
   const session = getAdminSession();
   const { isAllowed } = useRbacRole(
     session?.user?.stakeholderType,
@@ -23,6 +24,15 @@ export const RequireModuleAccess: React.FC<RequireModuleAccessProps> = ({
     session?.user?.permissions
   );
 
+  // Users who must enrol MFA need access to the self-service security screen, even when their role cannot access general Settings.
+  const isRequiredMfaEnrollmentRoute =
+    moduleKey === 'settings' &&
+    Boolean(session?.user) &&
+    session?.user?.mfaEnabled !== true &&
+    location.pathname === '/admin/settings' &&
+    new URLSearchParams(location.search).get('tab') === 'security';
+
+  if (isRequiredMfaEnrollmentRoute) return <>{children}</>;
   if (session?.user && isMasterAdministrator(session.user)) return <>{children}</>;
   if (isAllowed(moduleKey)) return <>{children}</>;
 

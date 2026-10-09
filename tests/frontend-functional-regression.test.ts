@@ -59,3 +59,14 @@ test('Team workspace preview records are only injected in development or explici
   assert.match(teams, /if \(isSlugFixtureMode\(\)\) \{[\s\S]{0,120}if \(nextMembers\.length === 0\)/);
   assert.match(teams, /currentViewResults[\s\S]{0,600}filter\(\(item\) => !item\.result\.success\)/);
 });
+
+
+test('MFA enrolment route is accessible before module permissions are evaluated', async () => {
+  const gate = await read('src/components/admin/RequireModuleAccess.tsx');
+  const settings = await read('src/pages/admin/AdminSettings.tsx');
+
+  assert.match(gate, /const isRequiredMfaEnrollmentRoute =[\s\S]*moduleKey === 'settings'[\s\S]*session\?\.user\?\.mfaEnabled !== true[\s\S]*location\.pathname === '/admin/settings'[\s\S]*get\('tab'\) === 'security'/);
+  assert.match(gate, /if \(isRequiredMfaEnrollmentRoute\) return <>{children}<\/>;/);
+  assert.match(settings, /\{canManageAdminAccounts && \(/);
+  assert.match(settings, /requestedTab === 'security' && !mfaSetupRequired && !canManageAdminAccounts && !canAccessServer/);
+});
