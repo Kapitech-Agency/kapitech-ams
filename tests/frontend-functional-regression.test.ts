@@ -221,3 +221,22 @@ test('binary uploads clear cached admin identity and notify auth guards on 401',
   assert.match(binaryClient, /localStorage\.removeItem\('kapitech_admin_profile_v2'\)/);
   assert.match(binaryClient, /dispatchEvent\(new Event\('kapitech_auth_state_changed'\)\)/);
 });
+
+
+test('PostgreSQL client updates accept all canonical client statuses exposed by the UI', async () => {
+  const routes = await read('server/routes.ts');
+  const clients = await read('src/pages/admin/AdminClients.tsx');
+  const start = routes.indexOf("apiRouter.put('/clients/:id'");
+  const jsonStart = routes.indexOf("const db = getDataSourceMode() === 'json'", start);
+  const postgresUpdate = routes.slice(start, jsonStart);
+  const jsonEnd = routes.indexOf("const updatedAt = new Date().toISOString()", jsonStart);
+  const jsonUpdate = routes.slice(jsonStart, jsonEnd);
+
+  assert.match(clients, /const STATUS_OPTIONS:[\s\S]{0,250}value: 'lead'[\s\S]{0,150}value: 'completed'/);
+  for (const status of ['active', 'inactive', 'prospect', 'on_hold', 'completed', 'lead']) {
+    assert.ok(postgresUpdate.includes("'" + status + "'"), 'PostgreSQL update must accept ' + status);
+  }
+  for (const status of ['completed', 'lead']) {
+    assert.ok(jsonUpdate.includes("'" + status + "'"), 'JSON update must accept ' + status);
+  }
+});

@@ -2595,7 +2595,7 @@ apiRouter.put('/clients/:id', requireAuth, requirePermission('canManageClients')
     if (patch.email && !isValidEmail(patch.email)) { res.status(400).json({ success: false, error: 'Invalid client email address.' }); return; }
     if (patch.website !== undefined) patch.website = cleanOptionalUrl(patch.website);
     if (patch.avatarUrl !== undefined) patch.avatarUrl = cleanOptionalUrl(patch.avatarUrl);
-    if (patch.status !== undefined && !['active','inactive','prospect','on_hold'].includes(String(patch.status))) { res.status(400).json({ success: false, error: 'Invalid client status.' }); return; }
+    if (patch.status !== undefined && !['active','inactive','prospect','on_hold','completed','lead'].includes(String(patch.status))) { res.status(400).json({ success: false, error: 'Invalid client status.' }); return; }
     for (const key of ['retainerMonthlyValue','retainerCommittedHours','retainerOverageRate'] as const) {
       if (patch[key] === undefined) continue;
       const max = key === 'retainerMonthlyValue' || key === 'retainerOverageRate' ? MAX_MONEY : 1_000_000;
