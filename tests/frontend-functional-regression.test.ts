@@ -157,3 +157,21 @@ test('retainer mutations are only offered to accounts with client-management per
   assert.match(routes, /apiRouter\.put\('\/clients\/:id', requireAuth, requirePermission\('canManageClients'\)/);
   assert.match(routes, /apiRouter\.post\('\/clients\/:id\/retainer-hours', requireAuth, requirePermission\('canManageClients'\)/);
 });
+
+
+test('retainer usage can only be changed through the atomic hours endpoint', async () => {
+  const routes = await read('server/routes.ts');
+  const page = await read('src/pages/admin/AdminClientRetainers.tsx');
+  const updateStart = routes.indexOf("apiRouter.put('/clients/:id'");
+  const deleteStart = routes.indexOf("apiRouter.delete('/clients/:id'", updateStart);
+  const updateRoute = routes.slice(updateStart, deleteStart);
+  const termsStart = page.indexOf('const response = await api.clients.update(targetClient.id');
+  const termsEnd = page.indexOf('});', termsStart);
+  const termsPayload = page.slice(termsStart, termsEnd);
+
+  assert.ok(updateStart >= 0 && deleteStart > updateStart);
+  assert.doesNotMatch(updateRoute, /retainerUsedHours/);
+  assert.doesNotMatch(termsPayload, /retainerUsedHours/);
+  assert.match(routes, /apiRouter\.post\('\/clients\/:id\/retainer-hours', requireAuth, requirePermission\('canManageClients'\)/);
+  assert.match(routes, /postgresClientRepository\.addRetainerHours\(id, hours,/);
+});

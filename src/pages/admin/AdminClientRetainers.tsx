@@ -294,7 +294,6 @@ export const AdminClientRetainers: React.FC = () => {
         retainerTier,
         retainerMonthlyValue: monthlyValue,
         retainerCommittedHours: committedHours,
-        retainerUsedHours: usedHours,
         retainerOverageRate: overageRate,
         retainerCycle,
         retainerRenewal

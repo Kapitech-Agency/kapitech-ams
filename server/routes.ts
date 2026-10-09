@@ -2590,12 +2590,12 @@ apiRouter.put('/clients/:id', requireAuth, requirePermission('canManageClients')
   const { id } = req.params;
   const updates = req.body || {};
   if (getDataSourceMode() === 'postgres') {
-    const patch = pickFields(updates || {}, ['name','company','companyName','clientName','email','phone','website','location','industry','status','contactPersonRole','notes','avatarUrl','slaDailyAdSpendBudget','currentDailyAdSpend','tier','activeRetainer','retainerId','retainerTier','retainerMonthlyValue','retainerCommittedHours','retainerUsedHours','retainerOverageRate','retainerCycle','retainerRenewal']);
+    const patch = pickFields(updates || {}, ['name','company','companyName','clientName','email','phone','website','location','industry','status','contactPersonRole','notes','avatarUrl','slaDailyAdSpendBudget','currentDailyAdSpend','tier','activeRetainer','retainerId','retainerTier','retainerMonthlyValue','retainerCommittedHours','retainerOverageRate','retainerCycle','retainerRenewal']);
     if (patch.email !== undefined) patch.email = cleanText(patch.email, 254).toLowerCase();
     if (patch.email && !isValidEmail(patch.email)) { res.status(400).json({ success: false, error: 'Invalid client email address.' }); return; }
     if (patch.website !== undefined) patch.website = cleanOptionalUrl(patch.website);
     if (patch.status !== undefined && !['active','inactive','prospect','on_hold'].includes(String(patch.status))) { res.status(400).json({ success: false, error: 'Invalid client status.' }); return; }
-    for (const key of ['retainerMonthlyValue','retainerCommittedHours','retainerUsedHours','retainerOverageRate'] as const) {
+    for (const key of ['retainerMonthlyValue','retainerCommittedHours','retainerOverageRate'] as const) {
       if (patch[key] === undefined) continue;
       const max = key === 'retainerMonthlyValue' || key === 'retainerOverageRate' ? MAX_MONEY : 1_000_000;
       const numeric = normalizeNumber(patch[key], 0, max);
@@ -2618,7 +2618,7 @@ apiRouter.put('/clients/:id', requireAuth, requirePermission('canManageClients')
     res.status(404).json({ success: false, error: 'Client not found.' });
     return;
   }
-  const patch = pickFields(updates || {}, ['name', 'companyName', 'clientName', 'email', 'phone', 'address', 'website', 'location', 'industry', 'status', 'tier', 'totalProjects', 'totalInvoiced', 'activeRetainer', 'notes', 'slaDailyAdSpendBudget', 'currentDailyAdSpend','retainerId','retainerTier','retainerMonthlyValue','retainerCommittedHours','retainerUsedHours','retainerOverageRate','retainerCycle','retainerRenewal']);
+  const patch = pickFields(updates || {}, ['name', 'companyName', 'clientName', 'email', 'phone', 'address', 'website', 'location', 'industry', 'status', 'tier', 'totalProjects', 'totalInvoiced', 'activeRetainer', 'notes', 'slaDailyAdSpendBudget', 'currentDailyAdSpend','retainerId','retainerTier','retainerMonthlyValue','retainerCommittedHours','retainerOverageRate','retainerCycle','retainerRenewal']);
   if (patch.email !== undefined) {
     patch.email = cleanText(patch.email, 254).toLowerCase();
     if (patch.email && !isValidEmail(patch.email)) {
@@ -2636,9 +2636,9 @@ apiRouter.put('/clients/:id', requireAuth, requirePermission('canManageClients')
   for (const key of ['name','companyName','clientName','phone','address','location','industry','tier','notes'] as const) {
     if (patch[key] !== undefined) patch[key] = cleanText(patch[key], key === 'notes' ? 3000 : 200);
   }
-  for (const key of ['totalProjects','totalInvoiced','slaDailyAdSpendBudget','currentDailyAdSpend','retainerMonthlyValue','retainerCommittedHours','retainerUsedHours','retainerOverageRate'] as const) {
+  for (const key of ['totalProjects','totalInvoiced','slaDailyAdSpendBudget','currentDailyAdSpend','retainerMonthlyValue','retainerCommittedHours','retainerOverageRate'] as const) {
     if (patch[key] !== undefined) {
-      const numeric = normalizeNumber(patch[key], 0, ['totalProjects'].includes(key) ? 100000 : ['retainerCommittedHours','retainerUsedHours'].includes(key) ? 1_000_000 : MAX_MONEY);
+      const numeric = normalizeNumber(patch[key], 0, ['totalProjects'].includes(key) ? 100000 : key === 'retainerCommittedHours' ? 1_000_000 : MAX_MONEY);
       if (numeric === null || (key === 'retainerCommittedHours' && numeric < 1)) {
         res.status(400).json({ success: false, error: `Invalid numeric value for ${key}.` });
         return;
