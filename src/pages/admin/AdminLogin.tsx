@@ -112,6 +112,7 @@ export const AdminLogin: React.FC = () => {
       data-kapi-admin="true"
       data-theme="dark"
       style={{
+        colorScheme: 'dark',
         '--bg': '#09090c',
         '--panel': '#0f0f14',
         '--line': '#20202a',
@@ -420,12 +421,11 @@ export const AdminLogin: React.FC = () => {
           </div>
         </section>
 
-        <aside className="relative hidden min-h-screen items-stretch justify-center overflow-hidden border-l border-line/80 bg-bg lg:flex xl:px-12">
+        <aside className="relative hidden min-h-screen items-stretch justify-center overflow-hidden border-l border-line bg-bg lg:flex xl:px-12">
           <div
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_76%_24%,rgba(220,20,60,0.12),transparent_38%),linear-gradient(145deg,rgba(15,15,20,0.98),rgba(9,9,12,1))]"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_100%_0%,rgba(220,20,60,0.055),transparent_42%)]"
             aria-hidden="true"
           />
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-px bg-gradient-to-b from-transparent via-accent/35 to-transparent" aria-hidden="true" />
           <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[470px] flex-col items-start px-8 py-10 xl:py-12">
             <img
               src="https://raw.githubusercontent.com/Kapitech-Agency/Kapitech-Agency.github.io/main/public/white.png"
@@ -434,18 +434,19 @@ export const AdminLogin: React.FC = () => {
               loading="eager"
               decoding="async"
             />
-            <div className="my-auto max-w-[440px] pb-8">
-              <p className="text-[11px] font-semibold tracking-[0.16em] text-accent-text">
+            <div className="my-auto max-w-[420px] pb-8">
+              <div className="mb-4 h-px w-8 bg-accent" aria-hidden="true" />
+              <p className="text-[11px] font-medium leading-4 tracking-[0.08em] text-accent-text">
                 AGENCY MANAGEMENT SYSTEM
               </p>
-              <h2 className="mt-5 max-w-[430px] text-[38px] font-semibold leading-[1.08] tracking-[-0.045em] text-fg xl:text-[44px]">
+              <h2 className="mt-4 max-w-[410px] text-[34px] font-semibold leading-[1.15] tracking-[-0.035em] text-fg xl:text-[40px]">
                 One platform for Kapitech operations
               </h2>
-              <p className="mt-5 max-w-[390px] text-[14px] leading-7 text-muted xl:text-[15px]">
+              <p className="mt-4 max-w-[380px] text-[14px] leading-6 text-muted">
                 Manage clients, projects, team coordination, and operational records in one workspace.
               </p>
             </div>
-            <p className="mt-8 text-[11px] leading-5 text-muted">
+            <p className="mt-8 w-full border-t border-line pt-4 text-[11px] leading-5 text-muted">
               © 2026 Kapitech Agency. For internal use.
             </p>
           </div>
