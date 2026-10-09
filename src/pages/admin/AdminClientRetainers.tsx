@@ -210,48 +210,110 @@ export const AdminClientRetainers: React.FC = () => {
     setQuery(''); setCycle('all'); setTier('all'); setHealth('all'); setSortKey('renewal'); setSortDirection('asc'); setPage(1);
   };
 
-  const openRetainerForm = () => {
-    setRetainerClient('');
-    setRetainerTier('tier-2');
-    setRetainerMonthlyValue('100000000');
-    setRetainerCommittedHours('160');
-    setRetainerOverageRate('650000');
-    setRetainerCycle('monthly');
-    setRetainerRenewal(new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().slice(0, 10));
+  const openRetainerForm = (record?: Retainer) => {
+    setEditingRetainer(record || null);
+    setRetainerClient(record?.client || '');
+    setRetainerTier(record?.tier || 'tier-2');
+    setRetainerMonthlyValue(String(record?.monthlyValue ?? 100000000));
+    setRetainerCommittedHours(String(record?.committedHours ?? 160));
+    setRetainerOverageRate(String(record?.overageRate ?? 650000));
+    setRetainerCycle(record?.cycle || 'monthly');
+    setRetainerRenewal(record?.renewal || new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().slice(0, 10));
+    setMessage(null);
     setRetainerFormOpen(true);
   };
 
-  const createRetainer = (event: React.FormEvent) => {
+  const createRetainer = async (event: React.FormEvent) => {
     event.preventDefault();
-    const client = retainerClient.trim();
-    const monthlyValue = Math.max(0, Number(retainerMonthlyValue));
-    const committedHours = Math.max(1, Number(retainerCommittedHours));
-    const overageRate = Math.max(0, Number(retainerOverageRate));
+    const clientName = retainerClient.trim();
+    const monthlyValue = Number(retainerMonthlyValue);
+    const committedHours = Number(retainerCommittedHours);
+    const overageRate = Number(retainerOverageRate);
 
-    if (!client || !Number.isFinite(monthlyValue) || !Number.isFinite(committedHours) || !Number.isFinite(overageRate) || !retainerRenewal) {
-      setMessage(language === 'id' ? 'Lengkapi data retainer yang diperlukan.' : 'Complete the required retainer fields.');
+    if (!clientName || !Number.isFinite(monthlyValue) || monthlyValue < 0 || !Number.isFinite(committedHours) || committedHours <= 0 || !Number.isFinite(overageRate) || overageRate < 0 || !retainerRenewal) {
+      setMessage(language === 'id' ? 'Lengkapi data retainer dengan nilai yang valid.' : 'Complete the retainer fields with valid values.');
+      return;
+    }
+
+    const targetClient = fixtureMode
+      ? undefined
+      : editingRetainer?.clientId
+        ? clients.find((item) => item.id === editingRetainer.clientId)
+        : clients.find((item) => String(item.company || item.name || '').trim().toLowerCase() === clientName.toLowerCase());
+
+    if (!fixtureMode && !targetClient) {
+      setMessage(language === 'id'
+        ? 'Klien harus sudah ada di Client Directory. Gunakan nama perusahaan yang sama persis.'
+        : 'The client must already exist in Client Directory. Enter the exact company name.');
+      return;
+    }
+    if (!fixtureMode && !editingRetainer && targetClient?.activeRetainer) {
+      setMessage(language === 'id' ? 'Klien ini sudah memiliki retainer aktif. Gunakan Edit Terms.' : 'This client already has an active retainer. Use Edit Terms.');
       return;
     }
 
     const suffix = Date.now().toString(36).toUpperCase();
+    const retainerId = editingRetainer?.id || ('RET-' + new Date().getFullYear() + '-' + suffix);
+    const usedHours = editingRetainer?.usedHours ?? 0;
+    const burnRatio = usedHours / Math.max(1, committedHours);
     const newRetainer: Retainer = {
-      id: 'RET-' + new Date().getFullYear() + '-' + suffix,
-      initials: client.split(/\s+/).filter(Boolean).map(part => part[0]).join('').slice(0, 2).toUpperCase() || 'CL',
-      client,
+      id: retainerId,
+      clientId: targetClient?.id || editingRetainer?.clientId,
+      initials: clientName.split(/\s+/).filter(Boolean).map(part => part[0]).join('').slice(0, 2).toUpperCase() || 'CL',
+      client: targetClient ? String(targetClient.company || targetClient.name || clientName) : clientName,
       tier: retainerTier,
       monthlyValue,
       committedHours,
-      usedHours: 0,
+      usedHours,
       overageRate,
       cycle: retainerCycle,
       renewal: retainerRenewal,
-      health: 'healthy'
+      health: burnRatio > 1 ? 'overage-risk' : burnRatio >= 0.85 ? 'near-cap' : 'healthy'
     };
 
-    setRecords(current => [newRetainer, ...current]);
-    setPage(1);
-    setRetainerFormOpen(false);
-    setMessage(language === 'id' ? 'Retainer baru ditambahkan ke workspace A/B.' : 'New retainer added to the A/B workspace.');
+    if (fixtureMode) {
+      setRecords((current) => editingRetainer
+        ? current.map((item) => item.id === editingRetainer.id ? newRetainer : item)
+        : [newRetainer, ...current]);
+      setPage(1);
+      setRetainerFormOpen(false);
+      setEditingRetainer(null);
+      setMessage(language === 'id' ? 'Retainer diperbarui di workspace A/B.' : 'Retainer updated in the A/B workspace.');
+      return;
+    }
+
+    if (!targetClient) return;
+    setRetainerSaving(true);
+    try {
+      const response = await api.clients.update(targetClient.id, {
+        activeRetainer: true,
+        retainerId,
+        retainerTier,
+        retainerMonthlyValue: monthlyValue,
+        retainerCommittedHours: committedHours,
+        retainerUsedHours: usedHours,
+        retainerOverageRate: overageRate,
+        retainerCycle,
+        retainerRenewal
+      });
+      if (!response.success || !response.data?.client) {
+        throw new Error(response.error || 'Retainer could not be saved to the client record.');
+      }
+      const savedClient = response.data.client as AgencyClient;
+      const savedRetainer = mapClientRetainer(savedClient);
+      setClients((current) => current.map((item) => item.id === savedClient.id ? savedClient : item));
+      setRecords((current) => editingRetainer
+        ? current.map((item) => item.clientId === savedClient.id ? savedRetainer : item)
+        : [savedRetainer, ...current.filter((item) => item.clientId !== savedClient.id)]);
+      setPage(1);
+      setRetainerFormOpen(false);
+      setEditingRetainer(null);
+      setMessage(language === 'id' ? 'Retainer tersimpan di Client Directory.' : 'Retainer saved to Client Directory.');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Retainer could not be saved.');
+    } finally {
+      setRetainerSaving(false);
+    }
   };
 
   const exportReport = () => {
