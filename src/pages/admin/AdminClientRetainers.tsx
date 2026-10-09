@@ -18,6 +18,7 @@ import {
   X
 } from 'lucide-react';
 import { useLanguage } from '../../lib/LanguageContext';
+import { hasAdminPermission } from '../../lib/adminAuth';
 import { api } from '../../lib/apiClient';
 import { isSlugFixtureMode } from '../../lib/runtimeMode';
 import type { AgencyClient } from '../../lib/clientStore';
@@ -398,7 +399,7 @@ export const AdminClientRetainers: React.FC = () => {
             { key: 'retainers', label: 'Retainers', to: '/admin/clients/retainers' },
             { key: 'sla-monitoring', label: 'SLA Monitoring', to: '/admin/clients/sla-monitoring' },
             { key: 'lead-accounts', label: 'Lead Accounts', to: '/admin/clients/lead-accounts' },
-          ]}
+          ].filter((item) => item.key !== 'lead-accounts' || hasAdminPermission('canManageCrm'))}
         />
       </div>
 
