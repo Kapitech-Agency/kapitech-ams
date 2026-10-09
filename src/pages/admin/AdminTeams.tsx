@@ -42,6 +42,7 @@ import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { AgencyVendor, VendorStatus, VendorType } from '../../lib/vendorStore';
 import { formatAmount } from '../../lib/currency';
+import { isSlugFixtureMode } from '../../lib/runtimeMode';
 
 type TeamView = 'team-directory' | 'vendor-directory' | 'capacity-allocation' | 'skill-matrix' | 'time-logs';
 
@@ -402,21 +403,23 @@ export const AdminTeams: React.FC = () => {
     }
 
     const previewTabs: string[] = [];
-    if (nextMembers.length === 0) {
-      nextMembers = previewMembers;
-      previewTabs.push('Team Directory');
-    }
-    if (nextVendors.length === 0) {
-      nextVendors = previewVendors;
-      previewTabs.push('Vendor Directory');
-    }
-    if (nextProjects.length === 0) {
-      nextProjects = previewProjects;
-      previewTabs.push('Capacity & Allocation');
-    }
-    if (nextLogs.length === 0) {
-      nextLogs = previewLogs;
-      previewTabs.push('Time Logs');
+    if (isSlugFixtureMode()) {
+      if (nextMembers.length === 0) {
+        nextMembers = previewMembers;
+        previewTabs.push('Team Directory');
+      }
+      if (nextVendors.length === 0) {
+        nextVendors = previewVendors;
+        previewTabs.push('Vendor Directory');
+      }
+      if (nextProjects.length === 0) {
+        nextProjects = previewProjects;
+        previewTabs.push('Capacity & Allocation');
+      }
+      if (nextLogs.length === 0) {
+        nextLogs = previewLogs;
+        previewTabs.push('Time Logs');
+      }
     }
 
     if (previewTabs.length > 0) {
@@ -424,8 +427,20 @@ export const AdminTeams: React.FC = () => {
         tone: 'warning',
         message: 'Frontend preview data is active for ' + previewTabs.join(', ') + ' so the slug structure can be inspected before server data is available.'
       });
-    } else if (!memberRes.success && nextMembers.length === 0) {
-      setNotice({ tone: 'danger', message: memberRes.error || 'Team directory could not be loaded.' });
+    } else {
+      const currentViewResults = currentView === 'vendor-directory' || currentView === 'skill-matrix'
+        ? [{ label: 'Vendor directory', result: vendorRes }]
+        : currentView === 'time-logs'
+          ? [{ label: 'Time logs', result: timeRes }]
+          : currentView === 'capacity-allocation'
+            ? [{ label: 'Capacity allocation', result: projectRes }, { label: 'Time logs', result: timeRes }]
+            : [{ label: 'Team directory', result: memberRes }, { label: 'Tracked hours', result: timeRes }];
+      const failures = currentViewResults
+        .filter((item) => !item.result.success)
+        .map((item) => item.result.error || item.label + ' could not be loaded.');
+      if (failures.length > 0) {
+        setNotice({ tone: 'danger', message: failures.join(' ') });
+      }
     }
 
       setMembers(nextMembers);

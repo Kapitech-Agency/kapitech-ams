@@ -225,13 +225,8 @@ export function logoutAdmin(): void {
 
 export function isMasterAdministrator(user?: Pick<AdminUser, 'id' | 'username' | 'role' | 'stakeholderType'> | null): boolean {
   if (!user) return false;
-  return (
-    user.stakeholderType === 'Master' ||
-    user.id === 'usr_root_admin' ||
-    user.username === 'admin' ||
-    user.role === 'Tier 1: Top Management / Sponsor' ||
-    /\bmaster\b|super admin|root admin/i.test(String(user.role || ''))
-  );
+  // Match the server's immutable identity rule; display names and role labels never grant Master access.
+  return user.stakeholderType === 'Master' || user.id === 'usr_root_admin';
 }
 
 export function hasPermission(permission: keyof StakeholderPermissions): boolean {

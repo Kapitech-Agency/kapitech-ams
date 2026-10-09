@@ -219,6 +219,20 @@ const ModuleRoute: React.FC<{
   </RequireModuleAccess>
 );
 
+const TeamWorkspaceRoute: React.FC = () => {
+  const location = useLocation();
+  const view = new URLSearchParams(location.search).get('view') || 'team-directory';
+  const isVendorWorkspace = view === 'vendor-directory' || view === 'skill-matrix';
+  const moduleKey = isVendorWorkspace ? 'vendors' : 'timelogs';
+  const moduleLabel = isVendorWorkspace ? 'vendors' : view === 'time-logs' ? 'time logs' : 'team operations';
+
+  return (
+    <ModuleRoute moduleKey={moduleKey} moduleLabel={moduleLabel}>
+      <AdminTeams />
+    </ModuleRoute>
+  );
+};
+
 const App = () => {
   return (
     <BrowserRouter>
@@ -245,7 +259,7 @@ const App = () => {
                 <Route path="projects" element={<ModuleRoute moduleKey="projects" moduleLabel="projects"><AdminProjects /></ModuleRoute>} />
                 <Route path="approvals" element={<ModuleRoute moduleKey="approvals" moduleLabel="approvals"><AdminApprovals /></ModuleRoute>} />
                 <Route path="documents" element={<ModuleRoute moduleKey="documents" moduleLabel="documents"><AdminDocuments /></ModuleRoute>} />
-                <Route path="team" element={<ModuleRoute moduleKey="timelogs" moduleLabel="team operations"><AdminTeams /></ModuleRoute>} />
+                <Route path="team" element={<TeamWorkspaceRoute />} />
                 <Route path="time-logs" element={<Navigate to="/admin/team?view=time-logs" replace />} />
                 <Route path="vendors" element={<Navigate to="/admin/team?view=vendor-directory" replace />} />
                 <Route path="clients" element={<Navigate to="/admin/clients/all-clients" replace />} />

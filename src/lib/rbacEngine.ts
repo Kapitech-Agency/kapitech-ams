@@ -273,7 +273,7 @@ const MODULE_PERMISSION_MAP: Record<string, keyof ServerPermissions | 'authentic
   proposals: 'canManageCrm',
   projects: 'canManageProjects',
   approvals: 'canApproveBudgets',
-  invoicing: 'canManageInvoices',
+  invoicing: 'canViewFinancials',
   clients: 'canManageClients',
   vendors: 'canManageVendors',
   services: 'canManageCmsContent',
