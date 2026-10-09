@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Lock, KeyRound, Mail, Eye, EyeOff, AlertCircle, ArrowRight, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { KeyRound, Mail, Eye, EyeOff, AlertCircle, ArrowRight, ArrowLeft, ShieldCheck } from 'lucide-react';
 import { api } from '../../lib/apiClient';
 import { authenticateAdmin, cacheAdminSession } from '../../lib/adminAuth';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -418,9 +418,6 @@ export const AdminLogin: React.FC = () => {
                   decoding="async"
                 />
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/5" aria-hidden="true" />
-                <div className="absolute bottom-4 left-4 rounded-control border border-white/15 bg-black/30 px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em] text-white/90 backdrop-blur-sm">
-                  Kapitech AMS
-                </div>
               </div>
 
               <div className="mx-auto mt-6 flex w-full max-w-[470px] items-end justify-between gap-6">
