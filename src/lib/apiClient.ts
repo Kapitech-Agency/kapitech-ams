@@ -75,7 +75,9 @@ export async function apiRequest<T = any>(
                 ? json.error
                 : "You don't have access to this action.")
             : res.status >= 500
-              ? 'The request could not be completed right now. Try again.'
+              ? (typeof json.error === 'string' && json.error.trim()
+                  ? json.error
+                  : `The AMS server returned an error (HTTP ${res.status}). Check service and database health.`)
               : json.error || 'The request could not be completed. Check your input and try again.';
 
       return {
@@ -134,7 +136,9 @@ async function apiBinaryRequest<T = any>(
                 ? json.error
                 : "You don't have access to this action.")
             : res.status >= 500
-              ? 'The upload could not be completed right now. Try again.'
+              ? (typeof json.error === 'string' && json.error.trim()
+                  ? json.error
+                  : `The AMS server returned an error (HTTP ${res.status}). Check service and database health.`)
               : json.error || 'The upload could not be completed. Check the file and try again.';
       return { success: false, error: safeError, status: res.status };
     }
