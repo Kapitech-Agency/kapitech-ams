@@ -21,6 +21,7 @@ export const AdminLogin: React.FC = () => {
   const [mfaRecoveryMode, setMfaRecoveryMode] = useState(false);
   const [trustDevice, setTrustDevice] = useState(true);
   const [mfaCode, setMfaCode] = useState('');
+  const [artFrame, setArtFrame] = useState(0);
   const mfaInputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   const searchParams = new URLSearchParams(location.search);
@@ -405,11 +406,11 @@ export const AdminLogin: React.FC = () => {
 
         <aside className="relative hidden min-h-screen items-stretch justify-center overflow-hidden border-l border-line bg-bg lg:flex">
           <div
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_72%_28%,rgba(220,20,60,0.075),transparent_42%)]"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_70%_36%,rgba(220,20,60,0.11),transparent_44%),linear-gradient(145deg,#111116_0%,#09090c_72%)]"
             aria-hidden="true"
           />
-          <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[600px] flex-col items-center px-8 py-8 xl:px-12 xl:py-10">
-            <div className="flex w-full justify-start">
+          <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[640px] flex-col items-start px-8 py-7 xl:px-12 xl:py-9">
+            <div className="flex w-full items-center justify-between">
             <img
               src="https://raw.githubusercontent.com/Kapitech-Agency/Kapitech-Agency.github.io/main/public/white.png"
               alt="Kapitech Agency"
@@ -419,70 +420,105 @@ export const AdminLogin: React.FC = () => {
             />
             </div>
 
-            <div className="my-auto flex w-full flex-col items-center py-8">
-              <div className="relative w-full max-w-[350px]">
-                <div className="pointer-events-none absolute -inset-5 rounded-[36px] bg-[radial-gradient(ellipse_at_center,rgba(220,20,60,0.10),transparent_68%)]" aria-hidden="true" />
-                <div className="relative aspect-square overflow-hidden rounded-[28px] border border-line bg-panel p-3 sm:p-4">
+            <div className="my-auto w-full py-7">
+              <div className="mx-auto w-full max-w-[430px]">
+                <div className="relative aspect-square w-full overflow-hidden rounded-[24px] border border-white/[0.08] bg-[#111116] p-2.5">
+                  <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_45%,rgba(220,20,60,0.20),transparent_58%)]" aria-hidden="true" />
                   <svg
-                    viewBox="0 0 420 420"
+                    viewBox="0 0 440 440"
                     role="img"
                     aria-label="Abstract Kapitech AMS grid illustration"
-                    className="h-full w-full"
+                    className="relative h-full w-full rounded-[18px]"
                     xmlns="http://www.w3.org/2000/svg"
                   >
                     <defs>
-                      <linearGradient id="ams-login-art-background" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0%" stopColor="#17171f" />
-                        <stop offset="58%" stopColor="#111116" />
-                        <stop offset="100%" stopColor="#190d12" />
+                      <linearGradient id="ams-art-bg" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stopColor={artFrame === 1 ? '#17201d' : artFrame === 2 ? '#1d151d' : '#1b1117'} />
+                        <stop offset="52%" stopColor="#121218" />
+                        <stop offset="100%" stopColor={artFrame === 1 ? '#101916' : '#09090c'} />
                       </linearGradient>
-                      <radialGradient id="ams-login-art-glow" cx="50%" cy="48%" r="60%">
-                        <stop offset="0%" stopColor="#dc143c" stopOpacity="0.25" />
+                      <linearGradient id="ams-art-tile" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stopColor={artFrame === 2 ? '#ff8196' : '#ff4d6d'} stopOpacity="0.95" />
+                        <stop offset="100%" stopColor="#8e0d2c" stopOpacity="0.42" />
+                      </linearGradient>
+                      <radialGradient id="ams-art-light" cx="50%" cy="50%" r="55%">
+                        <stop offset="0%" stopColor={artFrame === 1 ? '#5d9f84' : '#dc143c'} stopOpacity="0.34" />
                         <stop offset="100%" stopColor="#dc143c" stopOpacity="0" />
                       </radialGradient>
                     </defs>
-                    <rect x="1" y="1" width="418" height="418" rx="22" fill="url(#ams-login-art-background)" />
-                    <rect x="1" y="1" width="418" height="418" rx="22" fill="url(#ams-login-art-glow)" />
-                    <path d="M28 105H392M28 210H392M28 315H392M105 28V392M210 28V392M315 28V392" stroke="#f3f3f6" strokeOpacity="0.035" />
-                    {Array.from({ length: 81 }, (_, index) => {
-                      const col = index % 9;
-                      const row = Math.floor(index / 9);
-                      const wave = (Math.sin(col * 0.82 + row * 0.48) + Math.cos(row * 0.72 - col * 0.26) + 2) / 4;
-                      const distance = Math.sqrt((col - 4) ** 2 + (row - 4) ** 2);
-                      const emphasis = Math.max(0, 1 - distance / 6) * wave;
-                      const fill = emphasis > 0.65 ? '#dc143c' : emphasis > 0.43 ? '#5c0819' : emphasis > 0.28 ? '#30202a' : '#24242d';
-                      const opacity = Math.min(0.94, 0.38 + wave * 0.5 + emphasis * 0.12);
-                      return (
-                        <rect
-                          key={index}
-                          x={37 + col * 39}
-                          y={37 + row * 39}
-                          width={29 + wave * 3}
-                          height={29 + wave * 3}
-                          rx={7 + wave * 2}
-                          fill={fill}
-                          fillOpacity={opacity}
-                          stroke="#f3f3f6"
-                          strokeOpacity="0.04"
-                        />
-                      );
-                    })}
-                    <rect x="146" y="146" width="128" height="128" rx="24" fill="#0f0f14" fillOpacity="0.76" stroke="#ff4d6d" strokeOpacity="0.5" />
-                    <path d="M175 213h17l13-24 22 49 17-34h13" fill="none" stroke="#ff4d6d" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+                    <rect width="440" height="440" fill="url(#ams-art-bg)" />
+                    <rect width="440" height="440" fill="url(#ams-art-light)" />
+                    <g stroke="#f3f3f6" strokeOpacity="0.055" strokeWidth="1">
+                      {Array.from({ length: 10 }, (_, i) => <path key={`v${i}`} d={`M${28 + i * 42} 20V420`} />)}
+                      {Array.from({ length: 10 }, (_, i) => <path key={`h${i}`} d={`M20 ${28 + i * 42}H420`} />)}
+                    </g>
+                    <g transform={artFrame === 1 ? 'rotate(-8 220 220)' : artFrame === 2 ? 'rotate(7 220 220)' : 'rotate(0 220 220)'}>
+                      {Array.from({ length: 100 }, (_, index) => {
+                        const col = index % 10;
+                        const row = Math.floor(index / 10);
+                        const dx = col - 4.5;
+                        const dy = row - 4.5;
+                        const radius = Math.sqrt(dx * dx + dy * dy);
+                        const wave = (Math.sin(col * 0.82 + row * 0.53 + artFrame * 0.9) + Math.cos(row * 0.63 - col * 0.31) + 2) / 4;
+                        const ridge = Math.max(0, 1 - Math.abs(radius - (2.1 + artFrame * 0.35)) / 2.4);
+                        const strength = Math.min(1, wave * 0.45 + ridge * 0.7);
+                        const fill = strength > 0.74 ? 'url(#ams-art-tile)' : strength > 0.51 ? '#722036' : strength > 0.31 ? '#3a202b' : '#25252e';
+                        return (
+                          <rect
+                            key={index}
+                            x={29 + col * 38}
+                            y={29 + row * 38}
+                            width={29 + strength * 5}
+                            height={29 + strength * 5}
+                            rx={6 + strength * 5}
+                            fill={fill}
+                            fillOpacity={0.58 + strength * 0.4}
+                            stroke="#ff9dac"
+                            strokeOpacity={strength > 0.65 ? 0.3 : 0.045}
+                          />
+                        );
+                      })}
+                    </g>
+                    <g transform={artFrame === 1 ? 'rotate(9 220 220)' : artFrame === 2 ? 'rotate(-8 220 220)' : 'rotate(0 220 220)'}>
+                      <rect x="142" y="142" width="156" height="156" rx="30" fill="#0f0f14" fillOpacity="0.92" stroke="#ff4d6d" strokeOpacity="0.65" />
+                      <rect x="155" y="155" width="130" height="130" rx="22" fill="url(#ams-art-tile)" fillOpacity="0.11" />
+                      <path d={artFrame === 1 ? 'M171 229h24l22-39 26 62 20-38h7' : artFrame === 2 ? 'M171 210h22l18 24 22-47 18 42h19' : 'M170 220h18l18-33 26 65 19-36h21'} fill="none" stroke="#ff6b85" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <circle cx="220" cy="220" r="64" fill="none" stroke="#ff4d6d" strokeOpacity="0.15" />
+                    </g>
                   </svg>
                 </div>
               </div>
 
-              <div className="mt-8 w-full max-w-[420px]">
-                <p className="text-[11px] font-medium leading-4 tracking-[0.08em] text-accent-text">
-                  AGENCY MANAGEMENT SYSTEM
-                </p>
-                <h2 className="mt-3 max-w-[410px] text-[30px] font-semibold leading-[1.14] tracking-[-0.035em] text-fg xl:text-[36px]">
-                  One platform for Kapitech operations
-                </h2>
-                <p className="mt-3 max-w-[390px] text-[13px] leading-6 text-muted xl:text-sm">
-                  Manage clients, projects, team coordination, and operational records in one workspace.
-                </p>
+              <div className="mx-auto mt-7 flex w-full max-w-[500px] items-end justify-between gap-6">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] font-medium leading-4 tracking-[0.08em] text-accent-text">
+                    AGENCY MANAGEMENT SYSTEM
+                  </p>
+                  <h2 className="mt-3 max-w-[390px] text-[27px] font-semibold leading-[1.16] tracking-[-0.035em] text-fg xl:text-[32px]">
+                    One platform for Kapitech operations
+                  </h2>
+                  <p className="mt-3 max-w-[380px] text-[13px] leading-5 text-muted">
+                    Manage clients, projects, team coordination, and operational records in one workspace.
+                  </p>
+                </div>
+                <div className="mb-1 flex shrink-0 items-center gap-2">
+                  <button
+                    type="button"
+                    aria-label="Previous visual"
+                    onClick={() => setArtFrame((current) => (current + 2) % 3)}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-panel/80 text-muted transition-colors hover:border-muted hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                  >
+                    <ArrowLeft size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Next visual"
+                    onClick={() => setArtFrame((current) => (current + 1) % 3)}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-panel/80 text-muted transition-colors hover:border-muted hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                  >
+                    <ArrowRight size={16} />
+                  </button>
+                </div>
               </div>
             </div>
 
