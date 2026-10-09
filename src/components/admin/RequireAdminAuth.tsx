@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { api } from '../../lib/apiClient';
 import { cacheAdminSession } from '../../lib/adminAuth';
@@ -10,10 +10,13 @@ interface RequireAdminAuthProps {
 
 export const RequireAdminAuth: React.FC<RequireAdminAuthProps> = ({ children }) => {
   const location = useLocation();
-  const [status, setStatus] = useState<'checking' | 'authenticated' | 'unauthenticated'>('checking');
+  const lastPathname = useRef(location.pathname);
+  const [status] = useState<'checking' | 'authenticated' | 'unauthenticated'>('checking');
 
   useEffect(() => {
-    setStatus('checking');
+    const pathnameChanged = lastPathname.current !== location.pathname;
+    lastPathname.current = location.pathname;
+    if (pathnameChanged) setStatus('checking');
     let mounted = true;
     let rememberMe = false;
 

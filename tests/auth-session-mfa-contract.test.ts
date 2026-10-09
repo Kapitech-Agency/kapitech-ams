@@ -39,7 +39,8 @@ test('users required to enrol MFA can reach personal security setup without admi
   const guard = await read('src/components/admin/RequireAdminAuth.tsx');
   const settings = await read('src/pages/admin/AdminSettings.tsx');
 
-  assert.match(guard, /setStatus\('checking'\)/);
+  assert.match(guard, /const pathnameChanged = lastPathname\.current !== location\.pathname/);
+  assert.match(guard, /if \(pathnameChanged\) setStatus\('checking'\)/);
   assert.match(guard, /\}, \[location\.pathname, location\.search\]\);/);
   assert.match(settings, /const mfaSetupRequired =[\s\S]{0,180}searchParams\.get\('mfaRequired'\) === '1'[\s\S]{0,180}session\?\.user\?\.mfaEnabled !== true/);
   assert.match(settings, /requestedTab === 'security' && !mfaSetupRequired && !canManageAdminAccounts && !canAccessServer/);
