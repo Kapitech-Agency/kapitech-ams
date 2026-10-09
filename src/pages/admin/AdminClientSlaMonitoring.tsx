@@ -17,6 +17,7 @@ import { Button } from '../../components/ui/Button';
 import { AdminFilterBar, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Modal } from '../../components/ui/Modal';
+import { isSlugFixtureMode } from '../../lib/runtimeMode';
 
 type Compliance = 'healthy' | 'warning' | 'degraded';
 type Tier = 'tier-1' | 'tier-2' | 'tier-3';
@@ -77,7 +78,8 @@ const SortButton: React.FC<{ label: string; sortKey: SortKey; activeKey: SortKey
   );
 
 export const AdminClientSlaMonitoring: React.FC = () => {
-  const [records] = useState(seed);
+  const fixtureMode = isSlugFixtureMode();
+  const [records] = useState<SlaAccount[]>(() => fixtureMode ? seed : []);
   const [query, setQuery] = useState('');
   const [tier, setTier] = useState<'all' | Tier>('all');
   const [status, setStatus] = useState<'all' | Compliance>('all');
@@ -117,8 +119,8 @@ export const AdminClientSlaMonitoring: React.FC = () => {
   const complianceCount = records.filter((item) => item.compliance === 'healthy').length;
   const warnings = records.filter((item) => item.compliance === 'warning').length;
   const degraded = records.filter((item) => item.compliance === 'degraded').length;
-  const avgUptime = records.reduce((sum, item) => sum + item.currentUptime, 0) / Math.max(1, records.length);
-  const avgMttr = records.reduce((sum, item) => sum + item.mttrMinutes, 0) / Math.max(1, records.length);
+  const avgUptime = records.length ? records.reduce((sum, item) => sum + item.currentUptime, 0) / records.length : null;
+  const avgMttr = records.length ? records.reduce((sum, item) => sum + item.mttrMinutes, 0) / records.length : null;
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) setSortDirection((current) => current === 'asc' ? 'desc' : 'asc');
@@ -127,6 +129,10 @@ export const AdminClientSlaMonitoring: React.FC = () => {
   const reset = () => { setQuery(''); setTier('all'); setStatus('all'); setPod('all'); setSortKey('currentUptime'); setSortDirection('desc'); setPage(1); };
 
   const exportSnapshot = () => {
+    if (!records.length) {
+      setMessage('Live SLA telemetry is not connected. No production snapshot was exported.');
+      return;
+    }
     const rows = [
       ['Account', 'Pod', 'Tier', 'Target SLA', 'Current Uptime', 'MTTR Minutes', 'Last Incident', 'Status'],
       ...filtered.map((item) => [item.client, item.pod, tierLabel[item.tier], formatPercent(item.targetSla), formatPercent(item.currentUptime), item.mttrMinutes, item.lastIncidentAt, complianceMeta[item.compliance].label])
@@ -143,7 +149,7 @@ export const AdminClientSlaMonitoring: React.FC = () => {
         className="mb-0"
         title="SLA Monitoring"
         description="Operational SLA health across active client contracts, response performance, and recent incidents."
-        eyebrow={<AdminStatusBadge tone="success" icon={<CheckCircle2 size={12} />}>{complianceCount}/{records.length} compliant</AdminStatusBadge>}
+        eyebrow={<AdminStatusBadge tone={records.length ? 'success' : 'warning'} icon={records.length ? <CheckCircle2 size={12} /> : <AlertTriangle size={12} />}>{records.length ? `${complianceCount}/${records.length} compliant` : 'Telemetry unavailable'}</AdminStatusBadge>}
         actions={<Button type="button" variant="secondary" onClick={exportSnapshot} icon={<Download size={14} />}>Export Snapshot</Button>}
       />
 
@@ -160,11 +166,12 @@ export const AdminClientSlaMonitoring: React.FC = () => {
         />
       </div>
 
+      {!fixtureMode && <div className="rounded-card border border-warning/20 bg-warning/5 px-3 py-2.5 text-xs text-warning" role="status">Live SLA uptime, incident, and MTTR telemetry is not connected to AMS. Sample values are hidden in production.</div>}
       {message && <div className="flex items-center justify-between rounded-card border border-line bg-panel px-3 py-2.5 text-xs text-fg" role="status" aria-live="polite"><span>{message}</span><button type="button" onClick={() => setMessage(null)} className="inline-flex h-9 w-9 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Dismiss"><X size={14} /></button></div>}
 
       <section data-ams-feature-slug="sla-monitoring-kpis" data-ams-slug="sla-monitoring-kpis" className="grid grid-cols-1 gap-3 md:grid-cols-4" aria-label="SLA metrics">
-        <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">AVERAGE UPTIME</span><Activity size={18} /></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{formatPercent(avgUptime)}</div><p className="mt-1 text-[11px] text-muted">Across the monitored account set</p></div>
-        <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">AVERAGE MTTR</span><TimerReset size={18} /></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{Math.round(avgMttr)} min</div><p className="mt-1 text-[11px] text-muted">Time to service recovery</p></div>
+        <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">AVERAGE UPTIME</span><Activity size={18} /></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{avgUptime === null ? 'Not available' : formatPercent(avgUptime)}</div><p className="mt-1 text-[11px] text-muted">Across the monitored account set</p></div>
+        <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">AVERAGE MTTR</span><TimerReset size={18} /></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{avgMttr === null ? 'Not available' : `${Math.round(avgMttr)} min`}</div><p className="mt-1 text-[11px] text-muted">Time to service recovery</p></div>
         <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">WARNING ACCOUNTS</span><AlertTriangle size={18} className="text-warning" /></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{warnings}</div><p className="mt-1 text-[11px] text-muted">Requires active review</p></div>
         <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">DEGRADED ACCOUNTS</span><AlertTriangle size={18} className="text-danger" /></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{degraded}</div><p className="mt-1 text-[11px] text-muted">Needs corrective action</p></div>
       </section>
@@ -211,7 +218,7 @@ export const AdminClientSlaMonitoring: React.FC = () => {
                      <button type="button" onClick={() => setSelectedTelemetry(item)} aria-label={`View telemetry for ${item.client}`} title="Telemetry" className="inline-flex h-10 w-10 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><Activity size={16} aria-hidden="true" /></button>
                    </div></td>
                  </tr>;
-               }) : <tr><td colSpan={7} className="px-4 py-14 text-center"><Search size={18} className="mx-auto text-muted" /><p className="mt-3 text-sm font-medium text-fg">No matching SLA accounts.</p><p className="mt-1 text-xs text-muted">Adjust the search or clear the active filters.</p><button type="button" onClick={reset} className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg">Reset filters</button></td></tr>}
+               }) : <tr><td colSpan={7} className="px-4 py-14 text-center"><Search size={18} className="mx-auto text-muted" /><p className="mt-3 text-sm font-medium text-fg">{records.length === 0 ? 'No live SLA data available.' : 'No matching SLA accounts.'}</p><p className="mt-1 text-xs text-muted">{records.length === 0 ? 'Connect a telemetry source to display uptime, incidents, and MTTR.' : 'Adjust the search or clear the active filters.'}</p><button type="button" onClick={reset} className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg">Reset filters</button></td></tr>}
             </tbody>
           </table>
         </div>
