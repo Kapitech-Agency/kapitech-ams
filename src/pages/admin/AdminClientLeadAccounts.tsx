@@ -74,7 +74,7 @@ const stageMeta: Record<Stage, { label: string; dot: string }> = {
 
 const stageOrder: Array<'all' | Stage> = ['all', 'discovery', 'proposal', 'contract', 'ready-to-sign'];
 const money = (value: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value);
-const compactMoney = (value: number) => value >= 1000000000 ? 'Rp ' + (value / 1000000000).toFixed(2) + 'B' : 'Rp ' + Math.round(value / 1000000) + 'M';
+const compactMoney = (value: number) => value >= 1000000000 ? 'Rp ' + (value / 1000000000).toFixed(2) + 'B' : value >= 1000000 ? 'Rp ' + (value / 1000000).toFixed(value >= 10000000 ? 0 : 1) + 'M' : money(value);
 
 const dueLabel = (iso: string, urgent?: boolean) => {
   if (!iso) return 'Not scheduled';
@@ -382,8 +382,6 @@ export const AdminClientLeadAccounts: React.FC = () => {
           <button type="button" onClick={() => setMessage(null)} className="inline-flex h-9 w-9 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Dismiss"><X size={14} /></button>
         </div>
       )}
-
-      {!fixtureMode && message && <div className="rounded-card border border-warning/20 bg-warning/5 px-3 py-2 text-xs text-warning" role="status">CRM-backed data: {message}</div>}
 
       <section data-ams-feature-slug="lead-accounts-kpis" data-ams-slug="lead-accounts-kpis" className="grid grid-cols-1 gap-3 md:grid-cols-3" aria-label="Pipeline metrics">
         <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-[11px] font-medium">OPEN DEAL VALUE</span><CircleDollarSign size={18} /></div><div className="mt-3 text-2xl font-medium tabular-nums text-fg">{compactMoney(pipelineValue)}</div><p className="mt-1 text-[11px] text-muted">Combined value of open CRM opportunities</p></div>
