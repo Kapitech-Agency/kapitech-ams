@@ -71,3 +71,55 @@ test('MFA enrolment route is accessible before module permissions are evaluated'
   assert.match(settings, /\{canManageAdminAccounts && \(/);
   assert.match(settings, /requestedTab === 'security' && !mfaSetupRequired && !canManageAdminAccounts && !canAccessServer/);
 });
+
+
+test('Client Lead Accounts use live CRM data in production and require CRM permission', async () => {
+  const page = await read('src/pages/admin/AdminClientLeadAccounts.tsx');
+  const app = await read('src/App.tsx');
+  const layout = await read('src/pages/admin/AdminLayout.tsx');
+
+  assert.match(page, /const \[records, setRecords\] = useState<Lead\[]>\(\(\) => fixtureMode \? seed : \[\]\)/);
+  assert.match(page, /api\.crm\.getDeals\(\)/);
+  assert.match(page, /api\.crm\.createDeal\(/);
+  assert.match(page, /return 'Not scheduled'/);
+  assert.match(app, /path="clients\/lead-accounts" element=\{<ModuleRoute moduleKey="crm"/);
+  assert.match(layout, /isAllowed\('crm'\)/);
+});
+
+test('Client Retainers are server-persisted and sample agreements are fixture-only', async () => {
+  const model = await read('src/lib/clientStore.ts');
+  const page = await read('src/pages/admin/AdminClientRetainers.tsx');
+  const routes = await read('server/routes.ts');
+
+  assert.match(model, /activeRetainer\?: boolean/);
+  assert.match(model, /retainerMonthlyValue\?: number/);
+  assert.match(page, /const \[records, setRecords\] = useState<Retainer\[]>\(\(\) => fixtureMode \? seed : \[\]\)/);
+  assert.match(page, /api\.clients\.getAll\(\)/);
+  assert.match(page, /api\.clients\.update\(targetClient\.id/);
+  assert.match(page, /api\.clients\.update\(clientId, \{ retainerUsedHours/);
+  assert.match(routes, /retainerMonthlyValue/);
+  assert.match(routes, /Invalid retainer cycle/);
+  assert.match(routes, /key === 'retainerCommittedHours' && numeric < 1/);
+});
+
+test('SLA Monitoring never presents mock uptime or incident metrics as production data', async () => {
+  const page = await read('src/pages/admin/AdminClientSlaMonitoring.tsx');
+
+  assert.match(page, /const \[records\] = useState<SlaAccount\[]>\(\(\) => fixtureMode \? seed : \[\]\)/);
+  assert.match(page, /Sample values are hidden in production/);
+  assert.match(page, /avgUptime === null \? 'Not available'/);
+  assert.match(page, /avgMttr === null \? 'Not available'/);
+  assert.match(page, /No production snapshot was exported/);
+});
+
+test('unexpected async API failures are forwarded and returned as safe JSON', async () => {
+  const routes = await read('server/routes.ts');
+  const server = await read('server.ts');
+  const helper = await read('server/async-route-errors.ts');
+
+  assert.match(routes, /installRouterErrorForwarding\(apiRouter\)/);
+  assert.ok(routes.indexOf('installRouterErrorForwarding(apiRouter)') < routes.indexOf('apiRouter.use(authenticate)'));
+  assert.match(helper, /Promise\.resolve\(result\)\.catch/);
+  assert.match(server, /const apiErrorHandler: ErrorRequestHandler/);
+  assert.match(server, /app\.use\('\/api', apiErrorHandler\)/);
+});
