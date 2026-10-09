@@ -199,6 +199,7 @@ export const AdminLogin: React.FC = () => {
                       <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-accent-text" />
                       <input
                         id="admin-identifier"
+                        name="username"
                         type="text"
                         autoComplete="username"
                         autoCapitalize="none"
@@ -222,6 +223,7 @@ export const AdminLogin: React.FC = () => {
                       <KeyRound size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-accent-text" />
                       <input
                         id="admin-password"
+                        name="password"
                         type={showPassword ? 'text' : 'password'}
                         autoComplete="current-password"
                         required
@@ -279,12 +281,12 @@ export const AdminLogin: React.FC = () => {
                     </p>
                   </div>
 
-                  <label className="flex cursor-pointer items-center gap-2 text-xs text-muted">
+                  <label className="flex cursor-pointer items-center gap-2.5 text-xs leading-5 text-muted">
                     <input
                       type="checkbox"
                       checked={trustDevice}
                       onChange={(e) => setTrustDevice(e.target.checked)}
-                      className="accent-accent"
+                      className="h-4 w-4 shrink-0 rounded border-line accent-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                     />
                     {language === 'id' ? 'Percayai perangkat ini selama 30 hari' : 'Trust this device for 30 days'}
                   </label>
@@ -305,7 +307,7 @@ export const AdminLogin: React.FC = () => {
                         disabled={loading}
                         value={mfaCode}
                         onChange={(e) => setMfaCode(e.target.value.toUpperCase().slice(0, 128))}
-                        className="h-9 w-full rounded-control border border-line bg-panel px-3 text-center text-sm text-fg font-sans focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                        className="h-11 w-full rounded-control border border-line bg-bg px-3 text-center font-mono text-sm tracking-wide text-fg placeholder:text-muted/60 transition-colors focus:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                         placeholder="XXXX-XXXX-XXXX"
                       />
                     ) : (
@@ -351,12 +353,12 @@ export const AdminLogin: React.FC = () => {
                   <button
                     type="submit"
                     disabled={loading || (mfaRecoveryMode ? mfaCode.trim().length < 12 : !/^\d{6}$/.test(mfaCode))}
-                    className="flex h-11 w-full items-center justify-center gap-2 rounded-control bg-accent text-xs font-medium normal-case tracking-normal text-white transition-colors hover:bg-accent disabled:bg-panel disabled:text-muted font-sans"
+                    className="group flex h-11 w-full items-center justify-center gap-2 rounded-control bg-accent text-sm font-medium normal-case tracking-normal text-white transition-colors duration-150 hover:bg-accent-hover active:bg-accent-pressed disabled:cursor-not-allowed disabled:bg-panel disabled:text-muted font-sans"
                   >
                     {loading
                       ? (language === 'id' ? 'Memverifikasi…' : 'Verifying…')
                       : (language === 'id' ? 'Verifikasi & Masuk' : 'Verify & Sign In')}
-                    {!loading && <ArrowRight size={14} />}
+                    {!loading && <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />}
                   </button>
 
                   <Button
