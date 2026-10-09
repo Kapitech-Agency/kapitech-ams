@@ -5,7 +5,6 @@ import { api } from '../../lib/apiClient';
 import { authenticateAdmin, cacheAdminSession } from '../../lib/adminAuth';
 import { useLanguage } from '../../lib/LanguageContext';
 import { Button } from '../../components/ui/Button';
-import PatternWaves from '../../components/ui/PatternWaves';
 
 export const AdminLogin: React.FC = () => {
   const { language } = useLanguage();
@@ -137,28 +136,11 @@ export const AdminLogin: React.FC = () => {
       className="ams-shell relative isolate min-h-screen overflow-hidden bg-bg text-fg font-sans"
     >
       <div className="pointer-events-none absolute inset-0 z-0" aria-hidden="true">
-        <PatternWaves
-          preset="silk"
-          color="#dc143c"
-          backgroundColor="#170f0f"
-          opacity={0.26}
-          fade="edges"
-          fadeSize={0.7}
-          interactive
-          cursorSize={50}
-          cursorStrength={0.28}
-          speed={0.18}
-          scale={1.05}
-          depth={0.72}
-          shine={0.38}
-          contrast={1.02}
-          intro
-        />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(9,9,12,0.16),rgba(9,9,12,0.84))]" />
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-bg to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_12%_10%,rgba(220,20,60,0.055),transparent_34%),radial-gradient(ellipse_at_85%_100%,rgba(243,243,246,0.025),transparent_32%)]" />
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-line to-transparent" />
       </div>
 
-      <div className="relative z-10 mx-auto grid min-h-screen w-full max-w-[1360px] px-5 sm:px-8 lg:grid-cols-2 lg:px-12 xl:px-16">
+      <div className="relative z-10 mx-auto grid min-h-screen w-full max-w-[1440px] px-5 sm:px-8 lg:grid-cols-[minmax(0,0.96fr)_minmax(0,1.04fr)] lg:px-12 xl:px-16">
         <section className="flex min-h-screen items-center justify-center py-8 sm:py-10 lg:pr-10 xl:pr-16">
           <div className="w-full max-w-[420px]">
             <div className="mb-7 flex items-center gap-3 lg:hidden">
@@ -421,12 +403,11 @@ export const AdminLogin: React.FC = () => {
           </div>
         </section>
 
-        <aside className="relative hidden min-h-screen items-stretch justify-center overflow-hidden border-l border-line bg-bg lg:flex xl:px-12">
-          <div
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_100%_0%,rgba(220,20,60,0.055),transparent_42%)]"
-            aria-hidden="true"
-          />
-          <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[470px] flex-col items-start px-8 py-10 xl:py-12">
+        <aside className="relative hidden min-h-screen items-stretch justify-center overflow-hidden border-l border-line bg-bg lg:flex">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_92%_8%,rgba(220,20,60,0.055),transparent_38%)]" aria-hidden="true" />
+          <div className="pointer-events-none absolute right-0 top-0 h-28 w-28 border-r border-t border-line/60" aria-hidden="true" />
+          <div className="pointer-events-none absolute bottom-0 left-0 h-28 w-28 border-b border-l border-line/60" aria-hidden="true" />
+          <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[560px] flex-col items-start px-8 py-10 xl:px-12 xl:py-12">
             <img
               src="https://raw.githubusercontent.com/Kapitech-Agency/Kapitech-Agency.github.io/main/public/white.png"
               alt="Kapitech Agency"
@@ -434,15 +415,15 @@ export const AdminLogin: React.FC = () => {
               loading="eager"
               decoding="async"
             />
-            <div className="my-auto max-w-[420px] pb-8">
-              <div className="mb-4 h-px w-8 bg-accent" aria-hidden="true" />
+            <div className="my-auto w-full max-w-[430px] py-12">
               <p className="text-[11px] font-medium leading-4 tracking-[0.08em] text-accent-text">
                 AGENCY MANAGEMENT SYSTEM
               </p>
-              <h2 className="mt-4 max-w-[410px] text-[34px] font-semibold leading-[1.15] tracking-[-0.035em] text-fg xl:text-[40px]">
-                One platform for Kapitech operations
+              <h2 className="mt-5 max-w-[420px] text-[34px] font-semibold leading-[1.12] tracking-[-0.035em] text-fg xl:text-[42px]">
+                One platform for
+                <span className="block">Kapitech operations</span>
               </h2>
-              <p className="mt-4 max-w-[380px] text-[14px] leading-6 text-muted">
+              <p className="mt-5 max-w-[380px] text-[14px] leading-6 text-muted">
                 Manage clients, projects, team coordination, and operational records in one workspace.
               </p>
             </div>
