@@ -5,6 +5,21 @@ import { getPostgresPool } from './postgres.ts';
 
 const LOCK_KEY = 'kapitech:ams:postgres:migrations';
 
+// Migration 046 was published in several revisions before it reached production.
+// Only these exact, previously committed checksums may be treated as legacy applied versions.
+// Any unknown checksum mismatch still fails closed.
+const LEGACY_MIGRATION_CHECKSUMS: Record<string, readonly string[]> = {
+  '046_seed_seo_educational_insights': [
+    '50608edcb6e6bf3f93e713f79234ef7627877bfc8d53c47a9c4195c473a1fa2f',
+    'a355292211030f74ed90190c99b41e2d34dd08c9f7f85a6ce80ceea0893460e8',
+    '7edf0a3f0c23d72d8ae44ba23240ca39a9e1c6c73f734892f016653218a8009e'
+  ]
+};
+
+export function isAcceptedLegacyMigrationChecksum(version: string, appliedChecksum: string): boolean {
+  return LEGACY_MIGRATION_CHECKSUMS[version]?.includes(appliedChecksum) ?? false;
+}
+
 function checksum(content: string): string {
   return crypto.createHash('sha256').update(content, 'utf8').digest('hex');
 }
@@ -70,7 +85,13 @@ export async function runPostgresMigrations(): Promise<string[]> {
       const existingChecksum = appliedByVersion.get(migration.version);
       if (existingChecksum) {
         if (existingChecksum !== migration.checksum) {
-          throw new Error('Migration ' + migration.version + ' checksum mismatch. Refusing to start against a modified migration.');
+          if (!isAcceptedLegacyMigrationChecksum(migration.version, existingChecksum)) {
+            throw new Error('Migration ' + migration.version + ' checksum mismatch. Refusing to start against a modified migration.');
+          }
+          console.warn(
+            '[PostgreSQL] Migration ' + migration.version
+            + ' matches a known historical checksum. Keeping it marked as applied; newer seed content is handled by a follow-up migration.'
+          );
         }
         appliedVersions.push(migration.version);
         continue;
