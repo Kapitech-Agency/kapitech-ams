@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { isAcceptedLegacyMigrationChecksum } from '../server/postgres-migrations.ts';
 
 const historicalChecksums = [
@@ -25,4 +28,13 @@ test('only published historical migration 046 checksums are accepted as legacy',
     isAcceptedLegacyMigrationChecksum('045_unrelated_migration', historicalChecksums[0]),
     false
   );
+});
+
+test('follow-up Insight migration uses valid PostgreSQL dollar-quote delimiters', async () => {
+  const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+  const sql = await fs.readFile(path.join(root, 'db/postgres/047_sync_business_led_insights.sql'), 'utf8');
+
+  assert.doesNotMatch(sql, /\\$q\\{|\\}q\\$/);
+  assert.equal((sql.match(/\\$q\\$\\{/g) || []).length, 5);
+  assert.equal((sql.match(/\\}\\$q\\$/g) || []).length, 5);
 });
