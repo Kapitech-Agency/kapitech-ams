@@ -176,6 +176,10 @@ export const AdminSettings: React.FC = () => {
     isSuperAdmin ||
     Boolean(session?.user?.permissions?.canViewSecurityAuditLogs);
   const isCurrentMaster = isSuperAdmin;
+  // Authenticated users must be able to configure their own MFA even without admin-management rights.
+  const mfaSetupRequired =
+    searchParams.get('mfaRequired') === '1' ||
+    session?.user?.mfaEnabled !== true;
 
   const normalizeTab = (value: string | null): SettingsTab => {
     if (value === 'audit') return 'audit';
@@ -190,7 +194,7 @@ export const AdminSettings: React.FC = () => {
   useEffect(() => {
     const allowed = requestedTab === 'audit' && !canViewAuditLogs
       ? 'overview'
-      : requestedTab === 'security' && !canManageAdminAccounts && !canAccessServer
+      : requestedTab === 'security' && !mfaSetupRequired && !canManageAdminAccounts && !canAccessServer
         ? 'overview'
         : requestedTab === 'integrations' && !canAccessServer
           ? 'overview'
@@ -205,6 +209,7 @@ export const AdminSettings: React.FC = () => {
     canAccessServer,
     canManageAdminAccounts,
     canViewAuditLogs,
+    mfaSetupRequired,
     requestedTab,
     searchParams,
     setSearchParams
@@ -213,7 +218,7 @@ export const AdminSettings: React.FC = () => {
   const selectTab = (tab: SettingsTab) => {
     if (tab === 'audit' && !canViewAuditLogs) return;
     if (tab === 'integrations' && !canAccessServer) return;
-    if (tab === 'security' && !canManageAdminAccounts && !canAccessServer) return;
+    if (tab === 'security' && !mfaSetupRequired && !canManageAdminAccounts && !canAccessServer) return;
     setActiveTab(tab);
     setSearchParams({ tab });
   };

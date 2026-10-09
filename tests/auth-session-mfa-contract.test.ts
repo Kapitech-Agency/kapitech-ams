@@ -33,3 +33,19 @@ test('MFA challenge is short-lived, rate-limited and single-use', async () => {
   assert.match(auth, /consumeMfaChallenge/);
   assert.match(auth, /deleteSession\(tokenHash\)/);
 });
+
+
+test('users required to enrol MFA can reach personal security setup without admin-management permissions', async () => {
+  const guard = await read('src/components/admin/RequireAdminAuth.tsx');
+  const settings = await read('src/pages/admin/AdminSettings.tsx');
+
+  assert.match(guard, /setStatus\('checking'\)/);
+  assert.match(guard, /\}, \[location\.pathname, location\.search\]\);/);
+  assert.match(settings, /const mfaSetupRequired =[\s\S]{0,180}searchParams\.get\('mfaRequired'\) === '1'[\s\S]{0,180}session\?\.user\?\.mfaEnabled !== true/);
+  assert.match(settings, /requestedTab === 'security' && !mfaSetupRequired && !canManageAdminAccounts && !canAccessServer/);
+  assert.match(settings, /if \(tab === 'security' && !mfaSetupRequired && !canManageAdminAccounts && !canAccessServer\) return;/);
+
+  // MFA enrollment is self-service; privileged settings remain separately gated.
+  assert.match(settings, /if \(canManageAdminAccounts\) void loadAccounts\(\)/);
+  assert.match(settings, /\{canManageAdminAccounts && \(/);
+});

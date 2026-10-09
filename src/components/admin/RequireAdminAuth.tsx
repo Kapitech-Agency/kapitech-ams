@@ -13,6 +13,7 @@ export const RequireAdminAuth: React.FC<RequireAdminAuthProps> = ({ children }) 
   const [status, setStatus] = useState<'checking' | 'authenticated' | 'unauthenticated'>('checking');
 
   useEffect(() => {
+    setStatus('checking');
     let mounted = true;
     let rememberMe = false;
 
@@ -58,7 +59,7 @@ export const RequireAdminAuth: React.FC<RequireAdminAuthProps> = ({ children }) 
       mounted = false;
       window.removeEventListener('kapitech_auth_state_changed', handleAuthStateChanged);
     };
-  }, []);
+  }, [location.pathname, location.search]);
 
   if (status === 'checking') {
     return (
