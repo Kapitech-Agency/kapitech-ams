@@ -406,20 +406,24 @@ export const AdminLogin: React.FC = () => {
           <div className="relative z-10 flex min-h-screen w-full flex-col justify-between px-7 py-7 sm:px-10 sm:py-8 xl:px-14 xl:py-9 2xl:px-16">
             <div className="h-1" aria-hidden="true" />
 
-            <div className="my-auto w-full py-5 xl:py-7">
-              <div className="relative mx-auto aspect-square w-full max-w-[700px] overflow-hidden rounded-[20px] border border-line bg-panel">
-                <img
-                  key={loginSlides[artFrame].src}
-                  src={loginSlides[artFrame].src}
-                  alt={loginSlides[artFrame].alt}
-                  className="absolute inset-0 h-full w-full object-cover"
-                  loading={artFrame === 0 ? 'eager' : 'lazy'}
-                  decoding="async"
-                />
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/5" aria-hidden="true" />
-              </div>
+            <div className="my-auto flex w-full flex-col items-center py-5 xl:py-7">
+              <div
+                className="mx-auto w-full max-w-[700px]"
+                style={{ width: 'min(100%, 700px, calc(100dvh - 350px))' }}
+              >
+                <div className="relative aspect-square w-full overflow-hidden rounded-[20px] border border-line bg-panel">
+                  <img
+                    key={loginSlides[artFrame].src}
+                    src={loginSlides[artFrame].src}
+                    alt={loginSlides[artFrame].alt}
+                    className="absolute inset-0 h-full w-full object-cover"
+                    loading={artFrame === 0 ? 'eager' : 'lazy'}
+                    decoding="async"
+                  />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-black/5" aria-hidden="true" />
+                </div>
 
-              <div className="mx-auto mt-6 flex w-full max-w-[700px] items-end justify-between gap-6">
+                <div className="mt-6 flex w-full items-end justify-between gap-6">
                 <div className="min-w-0 flex-1">
                   <p className="text-[11px] font-medium leading-4 tracking-[0.08em] text-accent-text">
                     AGENCY MANAGEMENT SYSTEM
