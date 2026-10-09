@@ -6,6 +6,21 @@ import { authenticateAdmin, cacheAdminSession } from '../../lib/adminAuth';
 import { useLanguage } from '../../lib/LanguageContext';
 import { Button } from '../../components/ui/Button';
 
+const loginSlides = [
+  {
+    src: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1600&q=85',
+    alt: 'Modern collaborative office workspace',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1600&q=85',
+    alt: 'Minimal creative studio workspace',
+  },
+  {
+    src: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1600&q=85',
+    alt: 'Contemporary agency office interior',
+  },
+];
+
 export const AdminLogin: React.FC = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
@@ -142,45 +157,30 @@ export const AdminLogin: React.FC = () => {
       </div>
 
       <div className="relative z-10 mx-auto grid min-h-screen w-full max-w-[1440px] px-5 sm:px-8 lg:grid-cols-[minmax(0,0.96fr)_minmax(0,1.04fr)] lg:px-12 xl:px-16">
-        <section className="flex min-h-screen items-center justify-center py-8 sm:py-10 lg:pr-10 xl:pr-16">
-          <div className="w-full max-w-[420px]">
-            <div className="mb-7 flex items-center gap-3 lg:hidden">
-              <img
-                src="https://raw.githubusercontent.com/Kapitech-Agency/Kapitech-Agency.github.io/main/public/white.png"
-                alt="Kapitech Agency"
-                className="h-7 w-auto max-w-[120px] object-contain"
-                loading="eager"
-                decoding="async"
-              />
-              <span className="border-l border-line pl-3 text-xs text-muted">AMS workspace</span>
-            </div>
-            <a
-              href="https://kapitech.id/"
-              className="mb-4 inline-flex min-h-9 items-center gap-2 text-xs font-sans text-muted transition-colors hover:text-fg sm:mb-5"
-            >
-              <ArrowLeft size={14} />
-              {language === 'id' ? 'Kembali ke Website' : 'Back to Website'}
-            </a>
+        <section className="flex min-h-screen flex-col px-6 py-7 sm:px-10 sm:py-8 lg:px-12 xl:px-16">
+          <div className="w-full">
+            <img
+              src="https://raw.githubusercontent.com/Kapitech-Agency/Kapitech-Agency.github.io/main/public/white.png"
+              alt="Kapitech Agency"
+              className="h-8 w-auto max-w-[150px] object-contain"
+              loading="eager"
+              decoding="async"
+            />
+          </div>
 
-            <div className="rounded-card border border-line bg-panel p-5 sm:p-7">
-              <div className="mb-6 border-b border-line pb-6 text-left">
-                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-control border border-accent/25 bg-accent/10 text-accent-text">
-                  {mfaRequired ? <ShieldCheck size={21} /> : <Lock size={21} />}
-                </div>
-                <p className="mb-2 text-[11px] font-medium tracking-[0.08em] text-accent-text">
-                  {language === 'id' ? 'KAPITECH · RUANG KERJA INTERNAL' : 'KAPITECH · INTERNAL WORKSPACE'}
-                </p>
-                <h1 className="text-[24px] leading-8 font-semibold tracking-[-0.035em] sm:text-[26px]">
-                  {mfaRequired
-                    ? (language === 'id' ? 'Verifikasi identitas Anda' : 'Verify your identity')
-                    : (language === 'id' ? 'Selamat datang kembali' : 'Welcome back')}
-                </h1>
-                <p className="mt-2 max-w-[34rem] text-[13px] leading-5 text-muted">
-                  {mfaRequired
-                    ? (language === 'id' ? 'Selesaikan langkah keamanan untuk masuk ke workspace Anda.' : 'Complete this security step to access your workspace.')
-                    : (language === 'id' ? 'Masuk untuk melanjutkan pekerjaan dan mengakses workspace Kapitech.' : 'Sign in to continue your work and access the Kapitech workspace.')}
-                </p>
-              </div>
+          <div className="mx-auto flex w-full max-w-[390px] flex-1 flex-col justify-center py-12">
+            <div className="mb-8">
+              <h1 className="text-[26px] font-semibold leading-8 tracking-[-0.035em] text-fg sm:text-[28px]">
+                {mfaRequired
+                  ? (language === 'id' ? 'Verifikasi identitas Anda' : 'Verify your identity')
+                  : (language === 'id' ? 'Masuk ke akun Anda' : 'Log in to your account')}
+              </h1>
+              <p className="mt-2 text-[13px] leading-5 text-muted">
+                {mfaRequired
+                  ? (language === 'id' ? 'Masukkan kode autentikasi untuk melanjutkan.' : 'Enter your authentication code to continue.')
+                  : (language === 'id' ? 'Masuk dengan akun Kapitech untuk mengakses AMS.' : 'Sign in with your Kapitech account to access AMS.')}
+              </p>
+            </div>
 
               {mfaEnabledNotice && (
                 <div className="mb-5 flex items-start gap-2 rounded-control border border-success/30 bg-success/10 p-3.5 text-xs text-success">
@@ -197,7 +197,7 @@ export const AdminLogin: React.FC = () => {
               )}
 
               {!mfaRequired ? (
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-5">
                   <div>
                     <label htmlFor="admin-identifier" className="mb-1.5 block text-xs font-medium font-sans text-fg/85">
                       {language === 'id' ? 'Username atau email' : 'Username or email'}
@@ -395,101 +395,35 @@ export const AdminLogin: React.FC = () => {
                 </form>
               )}
 
-              <p className="mt-5 border-t border-line pt-4 text-center text-xs text-muted font-sans">
-                {language === 'id'
-                  ? 'Sesi diverifikasi oleh server.'
-                  : 'Session is verified by the server.'}
-              </p>
             </div>
+            <p className="mt-8 text-[11px] leading-5 text-muted">
+              {language === 'id' ? 'Akses khusus anggota tim Kapitech.' : 'Authorized for Kapitech team members.'}
+            </p>
           </div>
         </section>
 
-        <aside className="relative hidden min-h-screen items-stretch justify-center overflow-hidden border-l border-line bg-bg lg:flex">
-          <div
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_70%_36%,rgba(220,20,60,0.11),transparent_44%),linear-gradient(145deg,#111116_0%,#09090c_72%)]"
-            aria-hidden="true"
-          />
-          <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[640px] flex-col items-start px-8 py-7 xl:px-12 xl:py-9">
-            <div className="flex w-full items-center justify-between">
-            <img
-              src="https://raw.githubusercontent.com/Kapitech-Agency/Kapitech-Agency.github.io/main/public/white.png"
-              alt="Kapitech Agency"
-              className="mb-10 h-auto w-[174px] object-contain opacity-95 xl:w-[190px]"
-              loading="eager"
-              decoding="async"
-            />
-            </div>
+        <aside className="relative hidden min-h-screen items-center justify-center overflow-hidden border-l border-line bg-bg lg:flex">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_60%_24%,rgba(220,20,60,0.07),transparent_48%)]" aria-hidden="true" />
+          <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[680px] flex-col justify-between px-8 py-7 xl:px-12 xl:py-9">
+            <div className="h-8" aria-hidden="true" />
 
-            <div className="my-auto w-full py-7">
-              <div className="mx-auto w-full max-w-[430px]">
-                <div className="relative aspect-square w-full overflow-hidden rounded-[24px] border border-white/[0.08] bg-[#111116] p-2.5">
-                  <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_45%,rgba(220,20,60,0.20),transparent_58%)]" aria-hidden="true" />
-                  <svg
-                    viewBox="0 0 440 440"
-                    role="img"
-                    aria-label="Abstract Kapitech AMS grid illustration"
-                    className="relative h-full w-full rounded-[18px]"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <defs>
-                      <linearGradient id="ams-art-bg" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0%" stopColor={artFrame === 1 ? '#17201d' : artFrame === 2 ? '#1d151d' : '#1b1117'} />
-                        <stop offset="52%" stopColor="#121218" />
-                        <stop offset="100%" stopColor={artFrame === 1 ? '#101916' : '#09090c'} />
-                      </linearGradient>
-                      <linearGradient id="ams-art-tile" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0%" stopColor={artFrame === 2 ? '#ff8196' : '#ff4d6d'} stopOpacity="0.95" />
-                        <stop offset="100%" stopColor="#8e0d2c" stopOpacity="0.42" />
-                      </linearGradient>
-                      <radialGradient id="ams-art-light" cx="50%" cy="50%" r="55%">
-                        <stop offset="0%" stopColor={artFrame === 1 ? '#5d9f84' : '#dc143c'} stopOpacity="0.34" />
-                        <stop offset="100%" stopColor="#dc143c" stopOpacity="0" />
-                      </radialGradient>
-                    </defs>
-                    <rect width="440" height="440" fill="url(#ams-art-bg)" />
-                    <rect width="440" height="440" fill="url(#ams-art-light)" />
-                    <g stroke="#f3f3f6" strokeOpacity="0.055" strokeWidth="1">
-                      {Array.from({ length: 10 }, (_, i) => <path key={`v${i}`} d={`M${28 + i * 42} 20V420`} />)}
-                      {Array.from({ length: 10 }, (_, i) => <path key={`h${i}`} d={`M20 ${28 + i * 42}H420`} />)}
-                    </g>
-                    <g transform={artFrame === 1 ? 'rotate(-8 220 220)' : artFrame === 2 ? 'rotate(7 220 220)' : 'rotate(0 220 220)'}>
-                      {Array.from({ length: 100 }, (_, index) => {
-                        const col = index % 10;
-                        const row = Math.floor(index / 10);
-                        const dx = col - 4.5;
-                        const dy = row - 4.5;
-                        const radius = Math.sqrt(dx * dx + dy * dy);
-                        const wave = (Math.sin(col * 0.82 + row * 0.53 + artFrame * 0.9) + Math.cos(row * 0.63 - col * 0.31) + 2) / 4;
-                        const ridge = Math.max(0, 1 - Math.abs(radius - (2.1 + artFrame * 0.35)) / 2.4);
-                        const strength = Math.min(1, wave * 0.45 + ridge * 0.7);
-                        const fill = strength > 0.74 ? 'url(#ams-art-tile)' : strength > 0.51 ? '#722036' : strength > 0.31 ? '#3a202b' : '#25252e';
-                        return (
-                          <rect
-                            key={index}
-                            x={29 + col * 38}
-                            y={29 + row * 38}
-                            width={29 + strength * 5}
-                            height={29 + strength * 5}
-                            rx={6 + strength * 5}
-                            fill={fill}
-                            fillOpacity={0.58 + strength * 0.4}
-                            stroke="#ff9dac"
-                            strokeOpacity={strength > 0.65 ? 0.3 : 0.045}
-                          />
-                        );
-                      })}
-                    </g>
-                    <g transform={artFrame === 1 ? 'rotate(9 220 220)' : artFrame === 2 ? 'rotate(-8 220 220)' : 'rotate(0 220 220)'}>
-                      <rect x="142" y="142" width="156" height="156" rx="30" fill="#0f0f14" fillOpacity="0.92" stroke="#ff4d6d" strokeOpacity="0.65" />
-                      <rect x="155" y="155" width="130" height="130" rx="22" fill="url(#ams-art-tile)" fillOpacity="0.11" />
-                      <path d={artFrame === 1 ? 'M171 229h24l22-39 26 62 20-38h7' : artFrame === 2 ? 'M171 210h22l18 24 22-47 18 42h19' : 'M170 220h18l18-33 26 65 19-36h21'} fill="none" stroke="#ff6b85" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
-                      <circle cx="220" cy="220" r="64" fill="none" stroke="#ff4d6d" strokeOpacity="0.15" />
-                    </g>
-                  </svg>
+            <div className="my-auto w-full py-8">
+              <div className="relative mx-auto aspect-square w-full max-w-[470px] overflow-hidden rounded-[20px] border border-line bg-panel">
+                <img
+                  key={loginSlides[artFrame].src}
+                  src={loginSlides[artFrame].src}
+                  alt={loginSlides[artFrame].alt}
+                  className="absolute inset-0 h-full w-full object-cover"
+                  loading={artFrame === 0 ? 'eager' : 'lazy'}
+                  decoding="async"
+                />
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/5" aria-hidden="true" />
+                <div className="absolute bottom-4 left-4 rounded-control border border-white/15 bg-black/30 px-3 py-2 text-[10px] font-medium uppercase tracking-[0.12em] text-white/90 backdrop-blur-sm">
+                  Kapitech AMS
                 </div>
               </div>
 
-              <div className="mx-auto mt-7 flex w-full max-w-[500px] items-end justify-between gap-6">
+              <div className="mx-auto mt-6 flex w-full max-w-[470px] items-end justify-between gap-6">
                 <div className="min-w-0 flex-1">
                   <p className="text-[11px] font-medium leading-4 tracking-[0.08em] text-accent-text">
                     AGENCY MANAGEMENT SYSTEM
@@ -504,17 +438,17 @@ export const AdminLogin: React.FC = () => {
                 <div className="mb-1 flex shrink-0 items-center gap-2">
                   <button
                     type="button"
-                    aria-label="Previous visual"
-                    onClick={() => setArtFrame((current) => (current + 2) % 3)}
-                    className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-panel/80 text-muted transition-colors hover:border-muted hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    aria-label="Previous image"
+                    onClick={() => setArtFrame((current) => (current + loginSlides.length - 1) % loginSlides.length)}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-panel text-muted transition-colors hover:border-muted hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                   >
                     <ArrowLeft size={16} />
                   </button>
                   <button
                     type="button"
-                    aria-label="Next visual"
-                    onClick={() => setArtFrame((current) => (current + 1) % 3)}
-                    className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-panel/80 text-muted transition-colors hover:border-muted hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    aria-label="Next image"
+                    onClick={() => setArtFrame((current) => (current + 1) % loginSlides.length)}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-panel text-muted transition-colors hover:border-muted hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                   >
                     <ArrowRight size={16} />
                   </button>
@@ -522,7 +456,7 @@ export const AdminLogin: React.FC = () => {
               </div>
             </div>
 
-            <p className="w-full border-t border-line pt-4 text-[11px] leading-5 text-muted">
+            <p className="border-t border-line pt-4 text-[11px] leading-5 text-muted">
               © 2026 Kapitech Agency. For internal use.
             </p>
           </div>
