@@ -480,23 +480,28 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const [projectDetails, setProjectDetails] = useState<DashboardProject | null>(null);
   const [dashboardProjectPage, setDashboardProjectPage] = useState(1);
   const [dashboardProjectPageSize, setDashboardProjectPageSize] = useState(6);
-  const [dashboardOverview, setDashboardOverview] = useState<{ metrics?: any; financials?: any; projects?: any[]; source: 'server' | 'ab' }>({ source: 'ab' });
+  const [dashboardOverview, setDashboardOverview] = useState<{ metrics?: any; financials?: any; projects?: any[]; source: 'server' | 'ab'; loading: boolean }>({ source: 'ab', loading: true });
 
   useEffect(() => {
     let active = true;
     api.dashboard.getOverview()
       .then((response) => {
-        if (!active || !response.success) return;
+        if (!active) return;
+        if (!response.success) {
+          setDashboardOverview({ source: 'ab', loading: false });
+          return;
+        }
         const projects = Array.isArray(response.data?.projects) ? response.data.projects : [];
         setDashboardOverview({
           metrics: response.data?.metrics,
           financials: response.data?.financials,
           projects,
-          source: projects.length > 0 || Boolean(response.data?.metrics) ? 'server' : 'ab'
+          source: projects.length > 0 || Boolean(response.data?.metrics) ? 'server' : 'ab',
+          loading: false
         });
       })
       .catch(() => {
-        if (active) setDashboardOverview({ source: 'ab' });
+        if (active) setDashboardOverview({ source: 'ab', loading: false });
       });
     return () => { active = false; };
   }, []);
@@ -658,14 +663,14 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               {
                 id: 'active-projects', label: 'Active projects',
                 value: dashboardOverview.metrics?.activeProjects != null ? String(dashboardOverview.metrics.activeProjects) : fixtureMode ? '12' : '—',
-                context: dashboardOverview.metrics?.activeProjects != null ? 'Live data' : fixtureMode ? 'Preview data' : 'Live data unavailable',
+                context: dashboardOverview.metrics?.activeProjects != null ? 'Live data' : fixtureMode ? 'Preview data' : dashboardOverview.loading ? 'Loading live data' : 'Live data unavailable',
                 sparkline: fixtureMode ? [8, 9, 10, Number(dashboardOverview.metrics?.activeProjects ?? 12)] : undefined,
                 icon: <FolderKanban size={15} />, toneClassName: 'text-success', slug: 'dashboard-active-projects'
               },
               {
                 id: 'tasks-due', label: 'Overdue tasks',
                 value: dashboardOverview.metrics?.overdueTasks != null ? String(dashboardOverview.metrics.overdueTasks) : fixtureMode ? '3' : '—',
-                context: dashboardOverview.metrics?.overdueTasks != null ? 'Live data' : fixtureMode ? 'Preview data' : 'Live data unavailable',
+                context: dashboardOverview.metrics?.overdueTasks != null ? 'Live data' : fixtureMode ? 'Preview data' : dashboardOverview.loading ? 'Loading live data' : 'Live data unavailable',
                 sparkline: fixtureMode ? [6, 5, 4, Number(dashboardOverview.metrics?.overdueTasks ?? 3)] : undefined,
                 icon: <CalendarDays size={15} />, toneClassName: 'text-info', slug: 'dashboard-tasks-overdue'
               },
@@ -682,7 +687,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 value: dashboardOverview.financials?.revenueThisMonth != null
                   ? formatLiveMoney(Number(dashboardOverview.financials.revenueThisMonth), String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase())
                   : fixtureMode ? formatLiveMoney(84500, String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase()) : '—',
-                context: dashboardOverview.financials?.revenueThisMonth != null ? 'Current month · live data' : fixtureMode ? 'Preview data' : 'Live data unavailable',
+                context: dashboardOverview.financials?.revenueThisMonth != null ? 'Current month · live data' : fixtureMode ? 'Preview data' : dashboardOverview.loading ? 'Loading live data' : 'Live data unavailable',
                 sparkline: fixtureMode ? sampleRevenueByRange[range].map((point) => point.primary) : undefined,
                 icon: <CircleDollarSign size={15} />, toneClassName: 'text-success', slug: 'dashboard-revenue'
               },
@@ -691,21 +696,21 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 value: dashboardOverview.financials?.outstandingReceivables != null
                   ? formatLiveMoney(Number(dashboardOverview.financials.outstandingReceivables), String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase())
                   : fixtureMode ? formatLiveMoney(32400, String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase()) : '—',
-                context: dashboardOverview.financials?.outstandingReceivables != null ? 'Live receivables' : fixtureMode ? 'Preview data' : 'Live data unavailable',
+                context: dashboardOverview.financials?.outstandingReceivables != null ? 'Live receivables' : fixtureMode ? 'Preview data' : dashboardOverview.loading ? 'Loading live data' : 'Live data unavailable',
                 sparkline: fixtureMode ? [22, 25, 28, 32.4] : undefined,
                 icon: <ReceiptText size={15} />, toneClassName: 'text-warning', slug: 'dashboard-outstanding'
               },
               {
                 id: 'utilization', label: 'Team utilization',
                 value: dashboardOverview.metrics?.teamUtilization != null ? String(dashboardOverview.metrics.teamUtilization) + '%' : fixtureMode ? '78%' : '—',
-                context: dashboardOverview.metrics?.teamUtilization != null ? 'Live data' : fixtureMode ? 'Preview data' : 'Live data unavailable',
+                context: dashboardOverview.metrics?.teamUtilization != null ? 'Live data' : fixtureMode ? 'Preview data' : dashboardOverview.loading ? 'Loading live data' : 'Live data unavailable',
                 sparkline: fixtureMode ? [66, 70, 73, 78] : undefined,
                 icon: <Users size={15} />, toneClassName: 'text-warning', slug: 'dashboard-utilization'
               },
               {
                 id: 'active-clients', label: 'Open leads',
                 value: dashboardOverview.metrics?.openLeads != null ? String(dashboardOverview.metrics.openLeads) : fixtureMode ? '28' : '—',
-                context: dashboardOverview.metrics?.openLeads != null ? 'Live pipeline' : fixtureMode ? 'Preview data' : 'Live data unavailable',
+                context: dashboardOverview.metrics?.openLeads != null ? 'Live pipeline' : fixtureMode ? 'Preview data' : dashboardOverview.loading ? 'Loading live data' : 'Live data unavailable',
                 sparkline: fixtureMode ? [22, 24, 25, Number(dashboardOverview.metrics?.openLeads ?? 28)] : undefined,
                 icon: <Users size={15} />, toneClassName: 'text-info', slug: 'dashboard-open-leads'
               },
@@ -714,7 +719,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 value: dashboardOverview.metrics?.totalBilled != null && dashboardOverview.metrics?.activeProjects != null
                   ? formatLiveMoney(Number(dashboardOverview.metrics.totalBilled) / Math.max(1, Number(dashboardOverview.metrics.activeProjects)), String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase())
                   : fixtureMode ? '$29.8k' : '—',
-                context: dashboardOverview.metrics?.totalBilled != null && dashboardOverview.metrics?.activeProjects != null ? 'Live project base' : fixtureMode ? 'Preview data' : 'Live data unavailable',
+                context: dashboardOverview.metrics?.totalBilled != null && dashboardOverview.metrics?.activeProjects != null ? 'Live project base' : fixtureMode ? 'Preview data' : dashboardOverview.loading ? 'Loading live data' : 'Live data unavailable',
                 sparkline: fixtureMode ? [24, 25.5, 28, 29.8] : undefined,
                 icon: <FolderKanban size={15} />, toneClassName: 'text-fg', slug: 'dashboard-avg-project-value'
               }
@@ -847,8 +852,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           {filteredProjects.length === 0 ? (
             <div className="flex min-h-[200px] flex-col items-center justify-center px-5 py-10 text-center" role="status">
               <FolderKanban size={22} className="text-muted" aria-hidden="true" />
-              <p className="mt-3 text-sm font-semibold text-fg">No live project data</p>
-              <p className="mt-1 max-w-md text-xs leading-5 text-muted">The dashboard service has not returned project records yet. Open Projects to review the live workspace.</p>
+              <p className="mt-3 text-sm font-semibold text-fg">{dashboardOverview.loading ? 'Loading live projects…' : 'No live project data'}</p>
+              <p className="mt-1 max-w-md text-xs leading-5 text-muted">{dashboardOverview.loading ? 'Waiting for the dashboard service to return project records.' : 'The dashboard service has not returned project records yet. Open Projects to review the live workspace.'}</p>
               <Link to="/admin/projects" className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">Open Projects</Link>
             </div>
           ) : (
