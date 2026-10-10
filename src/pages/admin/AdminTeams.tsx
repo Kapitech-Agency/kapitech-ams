@@ -35,6 +35,7 @@ import {
 import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPanel, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { CustomSelect } from '../../components/ui/CustomSelect';
+import { Skeleton } from '../../components/ui/Skeleton';
 import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
@@ -1090,21 +1091,21 @@ export const AdminTeams: React.FC = () => {
       )}
 
       {loading ? (
-        <div className="space-y-5" aria-label="Loading Team module">
+        <div className="space-y-5" role="status" aria-live="polite" aria-label="Loading team data">
           <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-            {[1, 2, 3, 4].map((item) => <div key={item} className="h-[104px] animate-pulse rounded-card border border-line bg-panel" />)}
+            {[1, 2, 3, 4].map((item) => <Skeleton key={item} className="h-[104px] rounded-card border border-line bg-panel" />)}
           </div>
-          <div className="h-80 animate-pulse rounded-card border border-line bg-panel" />
+          <Skeleton className="h-80 rounded-card border border-line bg-panel" />
         </div>
       ) : currentView === 'team-directory' ? (
         <div className="space-y-4" data-ams-feature-slug="team-directory" data-ams-slug="team-directory">
-          <div className="flex justify-end -mb-1"><span className="inline-flex items-center rounded-badge border border-line bg-bg px-2 py-1 font-mono text-[9px] leading-3 text-muted/60">slug: team-directory</span></div>
+          
           <AdminMetricStrip
             metrics={[
               {
                 id: 'headcount',
                 slug: 'team-directory-kpi-headcount',
-                label: 'Total Headcount',
+                label: 'Total headcount',
                 value: teamMetrics.headcount,
                 context: (teamRows.filter((member) => memberAllocation(member).label === 'Allocated').length) + ' Allocated · ' + (teamMetrics.headcount - teamRows.filter((member) => memberAllocation(member).label === 'Allocated').length) + ' Bench',
                 sparkline: [teamMetrics.headcount, members.length, teamRows.length],
@@ -1113,7 +1114,7 @@ export const AdminTeams: React.FC = () => {
               {
                 id: 'engineering',
                 slug: 'team-directory-kpi-engineering',
-                label: 'Engineering & Tech',
+                label: 'Engineering & tech',
                 value: members.filter((member) => /engineer|developer|devops|qa|tech|architect|frontend|backend/i.test(member.role + ' ' + member.division)).length,
                 context: 'Backend, Frontend, DevOps & QA',
                 sparkline: [members.length, members.filter((member) => /engineer|developer|devops|qa|tech|architect|frontend|backend/i.test(member.role + ' ' + member.division)).length],
@@ -1123,7 +1124,7 @@ export const AdminTeams: React.FC = () => {
               {
                 id: 'design',
                 slug: 'team-directory-kpi-product-design',
-                label: 'Product & Design',
+                label: 'Product & design',
                 value: members.filter((member) => /design|product|ux|creative|ui/i.test(member.role + ' ' + member.division)).length,
                 context: 'UI/UX, Product Strategy & Systems',
                 sparkline: [members.length, members.filter((member) => /design|product|ux|creative|ui/i.test(member.role + ' ' + member.division)).length],
@@ -1133,7 +1134,7 @@ export const AdminTeams: React.FC = () => {
               {
                 id: 'operations',
                 slug: 'team-directory-kpi-operations',
-                label: 'Operations & Delivery',
+                label: 'Operations & delivery',
                 value: members.filter((member) => /manager|operations|delivery|pm|project|marketing|account/i.test(member.role + ' ' + member.division)).length,
                 context: 'Delivery, PMs, Operations & Client Work',
                 sparkline: [members.length, members.filter((member) => /manager|operations|delivery|pm|project|marketing|account/i.test(member.role + ' ' + member.division)).length],
@@ -1143,7 +1144,7 @@ export const AdminTeams: React.FC = () => {
           />
 
           <section className="rounded-card border border-line bg-panel p-4" data-ams-feature-slug="team-directory-filters" data-ams-slug="team-directory-filters">
-            <p className="mb-3 font-mono text-[9px] leading-3 text-muted/60">slug: team-directory-filters</p>
+            
             <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
               <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
                 <label className="relative min-w-0 flex-1 sm:max-w-sm">
@@ -1196,9 +1197,9 @@ export const AdminTeams: React.FC = () => {
                     <thead><tr>
                       <th className="w-[25%]">Team Member</th>
                       <th className="w-[18%]">Pod / Focus</th>
-                      <th className="w-[11%]">Active Projects</th>
-                      <th className="w-[14%]">Allocation Status</th>
-                      <th className="w-[17%]">Core Skills</th>
+                      <th className="w-[11%]">Active projects</th>
+                      <th className="w-[14%]">Allocation status</th>
+                      <th className="w-[17%]">Core skills</th>
                       <th className="w-[15%] text-right">Actions</th>
                     </tr></thead>
                     <tbody>
@@ -1211,7 +1212,7 @@ export const AdminTeams: React.FC = () => {
                             <td>
                               <button type="button" className="text-left" onClick={() => setMemberDetail(member)}>
                                 <ProfileIdentity profile={{ id: member.id, name: member.name, username: member.username }} showRole={false} />
-                                <span className="mt-1 block font-mono text-[9px] text-muted/70">slug: {member.slug}</span>
+                                
                               </button>
                             </td>
                             <td>
