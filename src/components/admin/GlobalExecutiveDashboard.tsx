@@ -611,8 +611,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               key={tab.key}
               to={`/admin/dashboard${tab.search}`}
               className={[
-                'min-w-0 rounded-chip px-2 py-2 text-center text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
-                view === tab.key ? 'bg-line text-fg' : 'text-muted hover:bg-bg hover:text-fg',
+                'min-w-0 rounded-chip border px-2 py-2 text-center text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+                view === tab.key
+                  ? 'border-accent/25 bg-accent/10 font-semibold text-fg'
+                  : 'border-transparent text-muted hover:bg-bg hover:text-fg',
               ].join(' ')}
               aria-current={view === tab.key ? 'page' : undefined}
             >
