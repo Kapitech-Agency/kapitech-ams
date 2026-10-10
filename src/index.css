@@ -166,7 +166,7 @@
 .ams-shell .ams-page-shell>.fixed{margin-top:0!important}
 /* Canonical page rhythm: use a real layout gap rather than overriding each child's margin. */
 .ams-shell .ams-page-shell{display:flex;flex-direction:column;gap:24px}
-.ams-shell .ams-page-shell>:not([hidden]):not(.fixed){margin:0}
+.ams-shell .ams-page-shell>:not([hidden]):not(.fixed){margin-block:0}
 .ams-shell .ams-dashboard-card,.ams-shell .ams-panel-card{padding:16px}
 .ams-shell .ams-full-card{padding:16px}
 .ams-shell .ams-dense-card{padding:12px}
