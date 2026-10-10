@@ -749,10 +749,19 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-success" /> Net</span>
           </div>
         )}>
-          <TrendChart data={revenueData} primaryLabel="Revenue" secondaryLabel="Expenses" tertiaryLabel="Net" primaryFormat={formatMoney} ariaLabel={'Revenue, expenses, and net trend for ' + range + '.'} />
+          {revenueData.length >= 2 ? (
+            <TrendChart data={revenueData} primaryLabel="Revenue" secondaryLabel="Expenses" tertiaryLabel="Net" primaryFormat={formatMoney} ariaLabel={'Revenue, expenses, and net trend for ' + range + '.'} />
+          ) : (
+            <div className="flex min-h-[220px] flex-col items-center justify-center rounded-control border border-line bg-bg px-5 py-8 text-center" role="status">
+              <CircleDollarSign size={20} className="text-muted" aria-hidden="true" />
+              <p className="mt-3 text-xs font-semibold text-fg">Revenue history is unavailable</p>
+              <p className="mt-1 max-w-sm text-[11px] leading-5 text-muted">The dashboard service has not provided a live historical revenue series for this period.</p>
+            </div>
+          )}
         </AdminPanel>
 
         <AdminPanel className="min-[1100px]:col-span-4" bodyClassName="p-4 sm:p-5" title="Delivery & pacing" description="Project delivery distribution across the current portfolio.">
+          {fixtureMode ? (
           <div className="space-y-4">
             <div className="rounded-control border border-line bg-bg/45 p-4">
               <div className="flex items-end justify-between gap-3">
@@ -813,6 +822,14 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               })}
             </div>
           </div>
+
+          ) : (
+            <div className="flex min-h-[180px] flex-col items-center justify-center px-4 py-8 text-center" role="status">
+              <AlertTriangle size={20} className="text-muted" aria-hidden="true" />
+              <p className="mt-3 text-xs font-semibold text-fg">Delivery distribution is unavailable</p>
+              <p className="mt-1 max-w-sm text-[11px] leading-5 text-muted">Live project pacing metrics are not connected to the dashboard service yet.</p>
+            </div>
+          )}
         </AdminPanel>
       </div>
 
@@ -827,6 +844,15 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               ))}
             </div>
           </div>
+          {filteredProjects.length === 0 ? (
+            <div className="flex min-h-[200px] flex-col items-center justify-center px-5 py-10 text-center" role="status">
+              <FolderKanban size={22} className="text-muted" aria-hidden="true" />
+              <p className="mt-3 text-sm font-semibold text-fg">No live project data</p>
+              <p className="mt-1 max-w-md text-xs leading-5 text-muted">The dashboard service has not returned project records yet. Open Projects to review the live workspace.</p>
+              <Link to="/admin/projects" className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">Open Projects</Link>
+            </div>
+          ) : (
+            <>
           <div className="min-[900px]:hidden divide-y divide-line">
             {filteredProjects.map((project) => (
               <article key={project.id} className="p-4">
@@ -948,7 +974,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               </tbody>
             </table>
           </div>
-          <AdminTablePagination
+
+            </>
+          )}
+          {filteredProjects.length > 0 && <AdminTablePagination
             total={filteredProjects.length}
             page={dashboardProjectPage}
             pageSize={dashboardProjectPageSize}
@@ -956,10 +985,11 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             onPageSizeChange={setDashboardProjectPageSize}
             itemLabel="projects"
             slug="dashboard-projects-pagination"
-          />
+          />}
         </AdminPanel>
 
-        <AdminPanel className="min-[1100px]:col-span-4" bodyClassName="p-4 sm:p-5" title="Team capacity" description="Current task load based on the sample agency plan." actions={<span className="rounded-badge border border-line bg-bg px-2 py-1 text-[11px] text-muted">4 members</span>}>
+        <AdminPanel className="min-[1100px]:col-span-4" bodyClassName="p-4 sm:p-5" title="Team capacity" description="Current workload distribution across the team." actions={fixtureMode ? <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[11px] text-muted">
+          {fixtureMode ? (4 members</span> : undefined}>
           <div className="space-y-4">
             {sampleTeam.map((member) => (
               <div key={member.name}>
@@ -972,9 +1002,18 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             ))}
             <div className="border-t border-line pt-4"><Link to="/admin/time-logs" className="inline-flex items-center gap-1 text-xs font-medium text-muted hover:text-accent-text">View team schedule <ArrowUpRight size={13} /></Link></div>
           </div>
+
+          ) : (
+            <div className="flex min-h-[180px] flex-col items-center justify-center px-3 py-8 text-center" role="status">
+              <Users size={20} className="text-muted" aria-hidden="true" />
+              <p className="mt-3 text-xs font-semibold text-fg">Team workload data is unavailable</p>
+              <p className="mt-1 max-w-sm text-[11px] leading-5 text-muted">Live assignments and utilization are not available from the dashboard service yet.</p>
+            </div>
+          )}
         </AdminPanel>
       </div>
 
+      {fixtureMode && (
       <section className="mt-3 grid gap-3 sm:grid-cols-3" aria-label="Dashboard supporting signals">
         <article className="rounded-card border border-line bg-panel p-4">
           <div className="flex items-start justify-between gap-3"><div className="flex items-center gap-2 text-xs font-medium text-fg"><CheckCircle2 size={15} className="text-success" /> Delivery health</div><span className="rounded-badge border border-success/25 bg-success/10 px-2 py-1 text-[10px] font-medium text-success">67% on track</span></div>
@@ -992,6 +1031,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           <div className="mt-3 flex items-center justify-between text-[10px] text-muted"><span>27% of outstanding is overdue</span><span className="font-medium text-warning">Follow up</span></div>
         </article>
       </section>
+      )}
 
         </>
       ) : view === 'performance' ? (
