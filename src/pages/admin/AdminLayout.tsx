@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Link, NavLink, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import {
@@ -16,6 +16,8 @@ import {
   UsersRound,
   LockKeyhole,
   LayoutGrid,
+  FileText,
+  ShieldCheck,
 } from 'lucide-react';
 import { getAdminSession, logoutAdmin } from '../../lib/adminAuth';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -46,11 +48,14 @@ const STITCH_NAV_ITEMS: AdminNavItem[] = [
   { key: 'dashboard', to: '/admin/dashboard', label: 'Dashboard', icon: Home, requiredTier: 2, group: 'Agency Core' },
   { key: 'inbox', to: '/admin/inbox', label: 'Inbox', icon: Inbox, accessKey: 'inbox', requiredTier: 2, group: 'Agency Core' },
   { key: 'finance', to: '/admin/invoicing', label: 'Finance', icon: Landmark, accessKey: 'invoicing', requiredTier: 2, group: 'Agency Core' },
+  { key: 'proposals', to: '/admin/proposals', label: 'Proposals', icon: FileText, accessKey: 'proposals', requiredTier: 3, group: 'Agency Core' },
   { key: 'clients', to: '/admin/clients', label: 'Clients', icon: UsersRound, requiredTier: 3, group: 'Agency Management' },
-  { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, badge: 14, requiredTier: 3, group: 'Agency Management' },
+  { key: 'crm', to: '/admin/crm', label: 'CRM', icon: UsersRound, accessKey: 'crm', requiredTier: 3, group: 'Agency Management' },
+  { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, requiredTier: 3, group: 'Agency Management' },
   { key: 'team', to: '/admin/team', label: 'Team', icon: UsersRound, accessKey: 'timelogs', requiredTier: 3, group: 'Project Operations' },
-  { key: 'tasks', to: '/admin/tasks', label: 'Tasks', icon: ClipboardCheck, badge: 3, accessKey: 'projects', requiredTier: 3, group: 'Project Operations' },
-  { key: 'documents', to: '/admin/documents', label: 'Documents', icon: LockKeyhole, badge: 'Encrypted', requiredTier: 3, group: 'Project Operations' },
+  { key: 'tasks', to: '/admin/tasks', label: 'Tasks', icon: ClipboardCheck, accessKey: 'projects', requiredTier: 3, group: 'Project Operations' },
+  { key: 'approvals', to: '/admin/approvals', label: 'Approvals', icon: ShieldCheck, accessKey: 'approvals', requiredTier: 3, group: 'Project Operations' },
+  { key: 'documents', to: '/admin/documents', label: 'Documents', icon: LockKeyhole, requiredTier: 3, group: 'Project Operations' },
   { key: 'cms', to: '/admin/cms/projects', label: 'CMS', icon: LayoutGrid, accessKey: 'cms_projects', requiredTier: 3, group: 'Project Operations' },
 ];
 
@@ -70,59 +75,6 @@ export const AdminLayout: React.FC = () => {
   );
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const mobileMenuPanelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!mobileMenuOpen) return;
-
-    const panel = mobileMenuPanelRef.current;
-    if (!panel) return;
-
-    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const getFocusableElements = () => Array.from(
-      panel.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      )
-    ).filter((element) => element.getClientRects().length > 0);
-
-    const focusFirstItem = () => {
-      const firstNavItem = panel.querySelector<HTMLElement>('nav a[href]');
-      (firstNavItem ?? getFocusableElements()[0])?.focus();
-    };
-
-    const focusFrame = window.requestAnimationFrame(focusFirstItem);
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        setMobileMenuOpen(false);
-        return;
-      }
-      if (event.key !== 'Tab') return;
-
-      const items = getFocusableElements();
-      if (items.length === 0) {
-        event.preventDefault();
-        return;
-      }
-
-      const first = items[0];
-      const last = items[items.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.cancelAnimationFrame(focusFrame);
-      document.removeEventListener('keydown', handleKeyDown);
-      previousFocus?.focus();
-    };
-  }, [mobileMenuOpen]);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [profileView, setProfileView] = useState<'edit' | null>(null);
@@ -193,7 +145,7 @@ export const AdminLayout: React.FC = () => {
     };
 
     const focusFirstControl = () => {
-      const closeButton = document.querySelector<HTMLElement>('.ams-mobile-drawer button[aria-label="Close navigation menu"]');
+      const closeButton = document.querySelector<HTMLElement>('.ams-mobile-drawer > .relative button[aria-label="Close navigation menu"]');
       (closeButton || getFocusable()[0])?.focus();
     };
 
