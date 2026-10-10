@@ -75,7 +75,7 @@ export const AdminVendors: React.FC = () => {
   const [statusTone, setStatusTone] = useState<'success' | 'error' | 'info'>('info');
 
   const showStatus = (message: string | null, tone: 'success' | 'error' | 'info' = 'error') => {
-    showStatus(message);
+    setStatusMessage(message);
     if (message) setStatusTone(tone);
   };
   const [isLoading, setIsLoading] = useState(true);
