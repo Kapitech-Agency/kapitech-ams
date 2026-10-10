@@ -725,6 +725,35 @@ export const AdminLayout: React.FC = () => {
                     );
                   })}
                 </nav>
+              ) : location.pathname === '/admin/tasks' ? (
+                <nav aria-label="Tasks sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
+                  {[
+                    { key: 'all', label: 'All Tasks', search: '' },
+                    { key: 'my', label: 'My Tasks', search: '?taskscope=my' },
+                    { key: 'due', label: 'Due & Overdue', search: '?taskscope=due' },
+                    { key: 'review', label: 'Review Queue', search: '?taskscope=review' },
+                    { key: 'blocked', label: 'Blocked', search: '?taskscope=blocked' },
+                    { key: 'completed', label: 'Completed', search: '?taskscope=completed' },
+                  ].map((tab) => {
+                    const activeScope = new URLSearchParams(location.search).get('taskscope') || 'all';
+                    const active = activeScope === tab.key;
+                    return (
+                      <NavLink
+                        key={tab.key}
+                        to={'/admin/tasks' + tab.search}
+                        end
+                        data-ams-slug={'task-tab-' + tab.key}
+                        className={'group relative inline-flex h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (
+                          active
+                            ? 'border-accent/25 bg-accent/10 font-semibold text-fg'
+                            : 'border-transparent text-muted hover:bg-bg hover:text-fg'
+                        )}
+                      >
+                        {tab.label}
+                      </NavLink>
+                    );
+                  })}
+                </nav>
               ) : location.pathname === '/admin/inbox' ? (
                 <nav aria-label="Inbox sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
                   {[
