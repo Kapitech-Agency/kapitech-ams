@@ -854,7 +854,7 @@ export const TasksWorkspace: React.FC = () => {
           </div>
         ) : filteredRecords.length === 0 ? (
           <div className="px-5 py-16 text-center" data-ams-slug="tasks-empty-state">
-            <CheckCircle2 size={22} className="mx-auto text-success" />
+            <FolderKanban size={22} className="mx-auto text-muted" aria-hidden="true" />
             <p className="mt-3 text-sm font-semibold text-fg">{activeFilterCount ? 'No tasks match these filters' : 'No tasks in this queue'}</p>
             <p className="mt-1 text-xs text-muted">{activeFilterCount ? 'Reset filters or change the search to widen the queue.' : taskScope === 'all' ? 'No tasks are available from the live project data yet.' : 'Nothing needs attention in this task view right now.'}</p>
             {activeFilterCount && (
