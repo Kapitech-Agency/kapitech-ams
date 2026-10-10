@@ -81,6 +81,7 @@ import { loadPostgresMigrations } from './postgres-migrations.ts';
 import { isFirebaseAuthEnabled, verifyFirebaseIdToken } from './firebase-token.ts';
 import { registerInsightRoutes } from './insight-routes.ts';
 import { installRouterErrorForwarding } from './async-route-errors.ts';
+import { DEFAULT_CAREER_POSITIONS, normalizeCareerPosition, slugifyCareerPosition, type CareerPosition } from './career-content.ts';
 
 
 const ROLE_POLICIES: Record<string, {
@@ -4026,6 +4027,132 @@ apiRouter.delete('/cms/testimonials/:id', requireAuth, requirePermission('canMan
   saveDatabase(db);
   recordAuditLog({ action: 'CMS_TESTIMONIAL_DELETED', actor: req.user!.username, actorRole: req.user!.role, ip: req.ip, userAgent: req.headers['user-agent'] as string, details: `Deleted CMS testimonial "${testimonial.author || id}".`, severity: 'warning' });
   res.json({ success: true, message: 'Testimonial deleted.' });
+});
+
+// CMS Careers: persisted in the existing CMS settings store, with the current live roles as first-run defaults.
+async function readCmsCareerPositions(): Promise<CareerPosition[]> {
+  const settings = getDataSourceMode() === 'postgres'
+    ? await postgresCmsRepository.getSettings()
+    : getDatabase().cmsSettings;
+  const stored = settings?.careerPositions;
+  const source = Array.isArray(stored) ? stored : DEFAULT_CAREER_POSITIONS;
+  return source.map((item: unknown) => normalizeCareerPosition(item));
+}
+
+async function writeCmsCareerPositions(
+  req: AuthenticatedRequest,
+  positions: CareerPosition[],
+  action: string,
+  details: string,
+  severity: 'info' | 'warning' = 'info'
+): Promise<void> {
+  const patch = { careerPositions: positions };
+  if (getDataSourceMode() === 'postgres') {
+    await postgresCmsRepository.updateSettings(patch, makeAuditEntry(req, action, details, severity));
+    return;
+  }
+
+  const db = getDatabase();
+  db.cmsSettings = { ...db.cmsSettings, ...patch, updatedAt: new Date().toISOString() };
+  saveDatabase(db);
+  recordAuditLog({
+    action,
+    actor: req.user!.username,
+    actorRole: req.user!.role,
+    ip: req.ip,
+    userAgent: req.headers['user-agent'] as string,
+    details,
+    severity
+  });
+}
+
+function uniqueCareerSlug(candidate: string, positions: CareerPosition[], excludeId?: string): string {
+  const base = slugifyCareerPosition(candidate);
+  if (!base) return '';
+  const used = new Set(positions.filter(item => item.id !== excludeId).map(item => item.slug));
+  let slug = base;
+  let suffix = 2;
+  while (used.has(slug)) {
+    const tail = '-' + suffix;
+    slug = base.slice(0, Math.max(1, 120 - tail.length)) + tail;
+    suffix += 1;
+  }
+  return slug;
+}
+
+apiRouter.get('/cms/careers', rateLimitPublic(), async (req: Request, res: Response): Promise<void> => {
+  const user = (req as AuthenticatedRequest).user;
+  const canManage = Boolean(user && (isMasterAdministrator(user) || user.permissions?.canManageCmsContent));
+  const positions = await readCmsCareerPositions();
+  res.json({
+    success: true,
+    positions: canManage ? positions : positions.filter(position => position.isPublished)
+  });
+});
+
+apiRouter.post('/cms/careers', requireAuth, requirePermission('canManageCmsContent'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const current = await readCmsCareerPositions();
+  const now = new Date().toISOString();
+  let position = normalizeCareerPosition({
+    ...(req.body || {}),
+    id: `job_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
+    createdAt: now,
+    updatedAt: now
+  });
+  if (!position.title || !position.titleId || !position.department || !position.departmentId) {
+    res.status(400).json({ success: false, error: 'Job title and department are required in English and Indonesian.' });
+    return;
+  }
+  position = { ...position, slug: uniqueCareerSlug(position.slug || position.title, current) };
+  if (!position.slug) {
+    res.status(400).json({ success: false, error: 'A valid job slug could not be generated.' });
+    return;
+  }
+  const next = [position, ...current];
+  await writeCmsCareerPositions(req, next, 'CMS_CAREER_CREATED', `Created career position "${position.title}".`);
+  res.status(201).json({ success: true, position });
+});
+
+apiRouter.put('/cms/careers/:id', requireAuth, requirePermission('canManageCmsContent'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const current = await readCmsCareerPositions();
+  const existing = current.find(position => position.id === req.params.id);
+  if (!existing) {
+    res.status(404).json({ success: false, error: 'Career position not found.' });
+    return;
+  }
+
+  let position = normalizeCareerPosition(req.body || {}, existing);
+  if (!position.title || !position.titleId || !position.department || !position.departmentId) {
+    res.status(400).json({ success: false, error: 'Job title and department are required in English and Indonesian.' });
+    return;
+  }
+  position = {
+    ...position,
+    id: existing.id,
+    createdAt: existing.createdAt,
+    updatedAt: new Date().toISOString(),
+    slug: uniqueCareerSlug(position.slug || position.title, current, existing.id)
+  };
+  if (!position.slug) {
+    res.status(400).json({ success: false, error: 'A valid job slug could not be generated.' });
+    return;
+  }
+
+  const next = current.map(item => item.id === existing.id ? position : item);
+  await writeCmsCareerPositions(req, next, 'CMS_CAREER_UPDATED', `Updated career position "${position.title}".`);
+  res.json({ success: true, position });
+});
+
+apiRouter.delete('/cms/careers/:id', requireAuth, requirePermission('canManageCmsContent'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const current = await readCmsCareerPositions();
+  const position = current.find(item => item.id === req.params.id);
+  if (!position) {
+    res.status(404).json({ success: false, error: 'Career position not found.' });
+    return;
+  }
+  const next = current.filter(item => item.id !== position.id);
+  await writeCmsCareerPositions(req, next, 'CMS_CAREER_DELETED', `Deleted career position "${position.title}".`, 'warning');
+  res.json({ success: true, message: 'Career position deleted.' });
 });
 
 // Public CMS metadata. Only non-sensitive presentation fields are exposed.
