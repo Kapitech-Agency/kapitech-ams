@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowUpRight, Briefcase, CheckCircle2, ExternalLink, FileText,
-  Globe2, Plus, Search, Send, ShieldAlert, Trash2, Users, X, PencilLine,
+  Globe, Plus, Search, Send, ShieldAlert, Trash2, Users, X, Pencil,
   RefreshCw, Eye, EyeOff
 } from 'lucide-react';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -452,7 +452,7 @@ export const AdminCmsCareers: React.FC = () => {
         className="grid-cols-2 sm:grid-cols-4"
         metrics={[
           { id: 'total-openings', label: isId ? 'Total lowongan' : 'Total openings', value: positions.length, icon: <Briefcase size={15} />, toneClassName: 'text-accent-text' },
-          { id: 'published-openings', label: isId ? 'Dipublikasikan' : 'Published', value: publishedCount, icon: <Globe2 size={15} />, toneClassName: 'text-success' },
+          { id: 'published-openings', label: isId ? 'Dipublikasikan' : 'Published', value: publishedCount, icon: <Globe size={15} />, toneClassName: 'text-success' },
           { id: 'draft-openings', label: 'Draft', value: draftCount, icon: <EyeOff size={15} />, toneClassName: 'text-muted' },
           { id: 'job-applicants', label: isId ? 'Pelamar baru' : 'New applicants', value: applicantsLoaded ? newApplicantsCount : '—', icon: <Users size={15} />, toneClassName: 'text-info' }
         ]}
@@ -555,7 +555,7 @@ export const AdminCmsCareers: React.FC = () => {
                               <button type="button" onClick={() => void togglePublished(position)} className="inline-flex h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted hover:text-fg" title={position.isPublished ? 'Unpublish' : 'Publish'}>
                                 {position.isPublished ? <EyeOff size={12} /> : <Eye size={12} />}{position.isPublished ? (isId ? 'Sembunyikan' : 'Unpublish') : (isId ? 'Publish' : 'Publish')}
                               </button>
-                              <button type="button" onClick={() => openEditEditor(position)} className="inline-flex h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-fg hover:bg-panel"><PencilLine size={12} />{isId ? 'Edit' : 'Edit'}</button>
+                              <button type="button" onClick={() => openEditEditor(position)} className="inline-flex h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-fg hover:bg-panel"><Pencil size={12} />{isId ? 'Edit' : 'Edit'}</button>
                               <button type="button" onClick={() => setDeleteJobTarget(position)} className="inline-flex h-8 items-center justify-center rounded-control border border-danger/20 bg-danger/5 px-2 text-danger hover:bg-danger/10" aria-label={(isId ? 'Hapus ' : 'Delete ') + position.title}><Trash2 size={13} /></button>
                             </div>
                           </td>
