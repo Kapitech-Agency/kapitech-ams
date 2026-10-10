@@ -5,21 +5,7 @@ import { api } from '../../lib/apiClient';
 import { authenticateAdmin, cacheAdminSession } from '../../lib/adminAuth';
 import { useLanguage } from '../../lib/LanguageContext';
 import { Button } from '../../components/ui/Button';
-
-const loginSlides = [
-  {
-    src: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1600&q=85',
-    alt: 'Modern collaborative office workspace',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1600&q=85',
-    alt: 'Minimal creative studio workspace',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1600&q=85',
-    alt: 'Contemporary agency office interior',
-  },
-];
+import { AmsBrandLogo } from '../../components/admin/AmsBrandLogo';
 
 export const AdminLogin: React.FC = () => {
   const { language } = useLanguage();
@@ -36,7 +22,6 @@ export const AdminLogin: React.FC = () => {
   const [mfaRecoveryMode, setMfaRecoveryMode] = useState(false);
   const [trustDevice, setTrustDevice] = useState(true);
   const [mfaCode, setMfaCode] = useState('');
-  const [artFrame, setArtFrame] = useState(0);
   const mfaInputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   const searchParams = new URLSearchParams(location.search);
@@ -79,14 +64,6 @@ export const AdminLogin: React.FC = () => {
       body.style.scrollbarWidth = previousStyles.bodyScrollbarWidth;
       body.style.overscrollBehavior = previousStyles.bodyOverscrollBehavior;
     };
-  }, []);
-
-  useEffect(() => {
-    const slideInterval = window.setInterval(() => {
-      setArtFrame((current) => (current + 1) % loginSlides.length);
-    }, 6000);
-
-    return () => window.clearInterval(slideInterval);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -190,140 +167,42 @@ export const AdminLogin: React.FC = () => {
       className="ams-shell relative isolate h-dvh min-h-0 overflow-hidden bg-bg text-fg font-sans"
     >
       <style>{`
-        [data-login-motion] .login-reveal {
-          opacity: 0;
-          animation: kapi-login-reveal 850ms cubic-bezier(0.2, 0.72, 0.24, 1) forwards;
-        }
-        [data-login-motion] .login-reveal--one { animation-delay: 90ms; }
-        [data-login-motion] .login-reveal--two { animation-delay: 190ms; }
+        [data-login-motion] .login-reveal,
+        [data-login-motion] .login-caption-enter,
         [data-login-motion] [data-login-form="true"] > * {
           opacity: 0;
-          animation: kapi-login-reveal 680ms cubic-bezier(0.2, 0.72, 0.24, 1) forwards;
+          animation: kapi-login-reveal 360ms cubic-bezier(0.2, 0.72, 0.24, 1) forwards;
         }
-        [data-login-motion] [data-login-form="true"] > *:nth-child(1) { animation-delay: 280ms; }
-        [data-login-motion] [data-login-form="true"] > *:nth-child(2) { animation-delay: 350ms; }
-        [data-login-motion] [data-login-form="true"] > *:nth-child(3) { animation-delay: 420ms; }
-        [data-login-motion] [data-login-form="true"] > *:nth-child(4) { animation-delay: 490ms; }
-        [data-login-motion] [data-login-form="true"] > *:nth-child(5) { animation-delay: 560ms; }
-        [data-login-motion] .login-bg-gradient {
-          background-size: 140% 140%;
-          animation: kapi-gradient-drift 24s ease-in-out infinite alternate;
-        }
-        [data-login-motion] .login-grid-drift {
-          animation: kapi-grid-drift 42s linear infinite;
-          will-change: background-position;
-        }
-        [data-login-motion] .login-glow {
-          will-change: transform, opacity;
-          animation: kapi-glow-float 17s ease-in-out infinite alternate;
-        }
-        [data-login-motion] .login-glow--secondary {
-          animation-delay: -8s;
-          animation-duration: 22s;
-        }
-        [data-login-motion] .login-photo-frame {
-          transition: border-color 400ms ease, box-shadow 500ms ease;
-        }
-        [data-login-motion] .login-photo-frame:hover {
-          border-color: rgba(255,255,255,0.18);
-          box-shadow: 0 28px 90px rgba(0,0,0,0.3), 0 0 42px rgba(220,20,60,0.08);
-        }
-        [data-login-motion] .login-photo-enter {
-          animation: kapi-photo-enter 900ms cubic-bezier(0.2, 0.72, 0.24, 1) both;
-        }
-        [data-login-motion] .login-photo-sheen {
-          position: relative;
-          overflow: hidden;
-        }
-        [data-login-motion] .login-photo-sheen::after {
-          content: "";
-          position: absolute;
-          inset: -20% auto -20% -55%;
-          width: 34%;
-          background: linear-gradient(105deg, transparent, rgba(255,255,255,0.065), transparent);
-          opacity: 0;
-          transform: skewX(-14deg);
-          pointer-events: none;
-          animation: kapi-sheen-pass 8s ease-in-out 1.2s infinite;
-        }
-        [data-login-motion] .login-caption-enter {
-          animation: kapi-login-reveal 900ms 180ms cubic-bezier(0.2, 0.72, 0.24, 1) both;
-        }
-        [data-login-motion] .login-controls-enter {
-          animation: kapi-login-reveal 800ms 360ms cubic-bezier(0.2, 0.72, 0.24, 1) both;
-        }
-        [data-login-motion] .login-brand-chip {
-          animation: kapi-login-reveal 750ms 450ms cubic-bezier(0.2, 0.72, 0.24, 1) both;
-        }
-        [data-login-motion] .login-ambient-line {
-          transform-origin: left center;
-          animation: kapi-line-breathe 7s ease-in-out infinite;
-        }
+        [data-login-motion] .login-reveal--one { animation-delay: 40ms; }
+        [data-login-motion] .login-reveal--two { animation-delay: 90ms; }
+        [data-login-motion] [data-login-form="true"] > *:nth-child(1) { animation-delay: 90ms; }
+        [data-login-motion] [data-login-form="true"] > *:nth-child(2) { animation-delay: 130ms; }
+        [data-login-motion] [data-login-form="true"] > *:nth-child(3) { animation-delay: 170ms; }
+        [data-login-motion] [data-login-form="true"] > *:nth-child(4) { animation-delay: 210ms; }
+        [data-login-motion] [data-login-form="true"] > *:nth-child(5) { animation-delay: 250ms; }
         @keyframes kapi-login-reveal {
-          from { opacity: 0; transform: translate3d(0, 14px, 0); filter: blur(5px); }
-          to { opacity: 1; transform: translate3d(0, 0, 0); filter: blur(0); }
-        }
-        @keyframes kapi-photo-enter {
-          from { opacity: 0.25; filter: saturate(0.82); }
-          to { opacity: 1; filter: saturate(1); }
-        }
-        @keyframes kapi-gradient-drift {
-          0% { background-position: 0% 12%; }
-          100% { background-position: 100% 88%; }
-        }
-        @keyframes kapi-grid-drift {
-          from { background-position: 0 0, 0 0; }
-          to { background-position: 64px 64px, 64px 64px; }
-        }
-        @keyframes kapi-glow-float {
-          0% { transform: translate3d(-8px, 0, 0) scale(0.96); opacity: 0.55; }
-          100% { transform: translate3d(20px, 14px, 0) scale(1.06); opacity: 1; }
-        }
-        @keyframes kapi-sheen-pass {
-          0%, 66%, 100% { left: -55%; opacity: 0; }
-          12% { opacity: 1; }
-          35% { left: 125%; opacity: 0; }
-        }
-        @keyframes kapi-line-breathe {
-          0%, 100% { transform: scaleX(0.65); opacity: 0.45; }
-          50% { transform: scaleX(1); opacity: 1; }
+          from { opacity: 0; transform: translate3d(0, 6px, 0); }
+          to { opacity: 1; transform: translate3d(0, 0, 0); }
         }
         @media (prefers-reduced-motion: reduce) {
           [data-login-motion] .login-reveal,
-          [data-login-motion] [data-login-form="true"] > *,
-          [data-login-motion] .login-bg-gradient,
-          [data-login-motion] .login-grid-drift,
-          [data-login-motion] .login-glow,
-          [data-login-motion] .login-photo-enter,
-          [data-login-motion] .login-photo-sheen::after,
           [data-login-motion] .login-caption-enter,
-          [data-login-motion] .login-controls-enter,
-          [data-login-motion] .login-brand-chip,
-          [data-login-motion] .login-ambient-line {
+          [data-login-motion] [data-login-form="true"] > * {
             animation: none;
             transition: none;
-            scroll-behavior: auto;
             opacity: 1;
             transform: none;
-            filter: none;
           }
         }
       `}</style>
-      <div className="pointer-events-none absolute inset-0 z-0" aria-hidden="true">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_12%_10%,rgba(220,20,60,0.055),transparent_34%),radial-gradient(ellipse_at_85%_100%,rgba(243,243,246,0.025),transparent_32%)]" />
-        <div className="login-ambient-line absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-line to-transparent" />
+      <div className="pointer-events-none absolute inset-0 z-0 bg-bg" aria-hidden="true">
+        <div className="absolute inset-x-0 top-0 h-px bg-line" />
       </div>
 
       <div className="relative z-10 grid h-dvh min-h-0 w-full lg:grid-cols-[minmax(360px,0.82fr)_minmax(0,1.18fr)]">
         <section className="flex h-full min-h-0 flex-col px-6 py-4 sm:px-8 sm:py-5 lg:px-10 xl:px-12 2xl:px-14">
           <div className="login-reveal login-reveal--one flex w-full items-center gap-3.5">
-            <img
-              src="https://raw.githubusercontent.com/Kapitech-Agency/Kapitech-Agency.github.io/main/public/white.png"
-              alt="Kapitech logo"
-              className="h-9 w-auto max-w-[76px] shrink-0 object-contain"
-              loading="eager"
-              decoding="async"
-            />
+            <AmsBrandLogo className="h-9 w-9 shrink-0" />
             <span className="text-[15px] font-semibold leading-5 tracking-[-0.025em] text-fg">
               Kapitech Agency
             </span>
@@ -563,19 +442,8 @@ export const AdminLogin: React.FC = () => {
         </section>
 
         <aside className="relative hidden h-dvh min-h-0 items-stretch justify-center overflow-hidden border-l border-line bg-bg lg:flex">
-          <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-            <div className="login-bg-gradient absolute inset-0 bg-[radial-gradient(ellipse_at_58%_12%,rgba(220,20,60,0.105),transparent_43%),radial-gradient(ellipse_at_92%_88%,rgba(106,76,94,0.075),transparent_35%),linear-gradient(135deg,#0d0c11_0%,#09090c_58%,#0d0b10_100%)]" />
-            <div
-              className="login-grid-drift absolute inset-0 opacity-35"
-              style={{
-                backgroundImage: 'linear-gradient(rgba(255,255,255,0.024) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.024) 1px, transparent 1px)',
-                backgroundSize: '64px 64px',
-                maskImage: 'linear-gradient(to bottom, black 0%, transparent 88%)',
-              }}
-            />
-            <div className="login-glow absolute -left-36 -top-28 h-[390px] w-[390px] rounded-full bg-accent/[0.075] blur-[100px]" />
-            <div className="login-glow login-glow--secondary absolute -bottom-44 -right-24 h-[480px] w-[480px] rounded-full bg-white/[0.025] blur-[110px]" />
-            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-bg/35 to-transparent" />
+          <div className="pointer-events-none absolute inset-0 bg-panel" aria-hidden="true">
+            <div className="absolute inset-x-0 top-0 h-px bg-line" />
           </div>
 
           <div className="relative z-10 flex h-full min-h-0 w-full flex-col px-5 py-4 sm:px-7 sm:py-5 xl:px-8 2xl:px-10">
@@ -584,29 +452,55 @@ export const AdminLogin: React.FC = () => {
                 className="mx-auto w-full"
                 style={{ width: 'min(100%, 1040px, calc((100dvh - 320px) * 1.62))' }}
               >
-                <div className="login-photo-frame login-photo-sheen group relative aspect-[1.62/1] w-full overflow-hidden rounded-[18px] border border-white/[0.09] bg-panel shadow-[0_24px_80px_rgba(0,0,0,0.22)]">
-                  <img
-                    key={loginSlides[artFrame].src}
-                    src={loginSlides[artFrame].src}
-                    alt={loginSlides[artFrame].alt}
-                    className="login-photo-enter absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.015]"
-                    loading={artFrame === 0 ? 'eager' : 'lazy'}
-                    decoding="async"
-                  />
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/30" aria-hidden="true" />
-                  <div className="login-brand-chip absolute left-4 top-4 flex items-center gap-2.5 rounded-md border border-white/10 bg-[#09090c]/75 px-3 py-2 sm:left-5 sm:top-5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true" />
-                    <span className="text-[10px] font-medium tracking-[0.1em] text-white/90">
-                      KAPITECH
-                    </span>
-                    <span className="h-3 w-px bg-white/20" aria-hidden="true" />
-                    <span className="text-[10px] tracking-[0.08em] text-white/65">
-                      INTERNAL WORKSPACE
-                    </span>
+                <div className="relative flex aspect-[1.62/1] w-full flex-col overflow-hidden rounded-card border border-line bg-panel p-5 sm:p-7">
+                  <div className="flex items-center justify-between gap-3 border-b border-line pb-4">
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-accent" aria-hidden="true" />
+                      <span className="text-xs font-semibold tracking-[0.06em] text-fg">KAPITECH AMS</span>
+                    </div>
+                    <span className="shrink-0 rounded-badge border border-line bg-bg px-2 py-1 text-[9px] font-medium text-muted">INTERNAL WORKSPACE</span>
+                  </div>
+                  <div className="mt-5 grid min-h-0 flex-1 gap-3 sm:grid-cols-[minmax(0,1.2fr)_minmax(160px,0.8fr)]">
+                    <div className="min-w-0 rounded-control border border-line bg-bg p-3 sm:p-4">
+                      <p className="text-[10px] font-medium text-muted">Workspace modules</p>
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        {['Projects', 'Tasks', 'Clients', 'Finance'].map((module) => (
+                          <div key={module} className="flex min-h-12 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg">
+                            {module}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-3 rounded-control border border-line bg-panel p-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-[10px] text-muted">Shared design system</span>
+                          <span className="rounded-badge border border-success/20 bg-success/10 px-1.5 py-0.5 text-[9px] font-medium text-success">Consistent</span>
+                        </div>
+                        <div className="mt-2 h-1 overflow-hidden rounded-full bg-line"><div className="h-full w-3/4 rounded-full bg-accent" /></div>
+                      </div>
+                    </div>
+                    <div className="min-w-0 rounded-control border border-line bg-bg p-3 sm:p-4">
+                      <p className="text-[10px] font-medium text-muted">Access principles</p>
+                      <div className="mt-3 space-y-3">
+                        {[
+                          ['Role-based access', 'Permissions by role'],
+                          ['Secure sessions', 'Protected sign-in'],
+                          ['One workflow', 'Connected operations'],
+                        ].map(([title, detail]) => (
+                          <div key={title} className="border-b border-line pb-2.5 last:border-b-0 last:pb-0">
+                            <p className="text-[11px] font-medium text-fg">{title}</p>
+                            <p className="mt-1 text-[10px] leading-4 text-muted">{detail}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center justify-between gap-3 border-t border-line pt-3 text-[10px] text-muted">
+                    <span>Authorized team workspace</span>
+                    <span className="font-medium text-accent-text">AMS</span>
                   </div>
                 </div>
 
-                <div className="login-caption-enter mt-6 flex w-full items-end justify-between gap-5 sm:mt-7 sm:gap-8">
+                <div className="login-caption-enter mt-6 w-full sm:mt-7">
                   <div className="min-w-0 flex-1">
                     <div className="mb-3 flex items-center gap-2.5">
                       <span className="h-px w-5 bg-accent" aria-hidden="true" />
@@ -622,43 +516,7 @@ export const AdminLogin: React.FC = () => {
                     </p>
                   </div>
 
-                  <div className="login-controls-enter mb-1 flex shrink-0 flex-col items-end gap-3.5">
-                    <p className="font-mono text-[11px] tabular-nums tracking-[0.08em]">
-                      <span className="text-fg">0{artFrame + 1}</span>
-                      <span className="mx-1.5 text-muted/55">/</span>
-                      <span className="text-muted">0{loginSlides.length}</span>
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        aria-label="Previous image"
-                        onClick={() => setArtFrame((current) => (current + loginSlides.length - 1) % loginSlides.length)}
-                        className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-panel/80 text-muted transition-colors duration-200 hover:border-white/25 hover:bg-white/[0.04] hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                      >
-                        <ArrowLeft size={15} />
-                      </button>
-                      <button
-                        type="button"
-                        aria-label="Next image"
-                        onClick={() => setArtFrame((current) => (current + 1) % loginSlides.length)}
-                        className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-panel/80 text-muted transition-colors duration-200 hover:border-white/25 hover:bg-white/[0.04] hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                      >
-                        <ArrowRight size={15} />
-                      </button>
-                    </div>
-                    <div className="flex items-center gap-1.5" aria-label="Choose featured image">
-                      {loginSlides.map((slide, index) => (
-                        <button
-                          key={slide.src}
-                          type="button"
-                          aria-label={`Show image ${index + 1}`}
-                          aria-current={artFrame === index ? 'true' : undefined}
-                          onClick={() => setArtFrame(index)}
-                          className={`h-1 rounded-full transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${artFrame === index ? 'w-6 bg-accent' : 'w-2.5 bg-line hover:bg-muted'}`}
-                        />
-                      ))}
-                    </div>
-                  </div>
+
                 </div>
               </div>
             </div>
