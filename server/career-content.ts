@@ -44,35 +44,35 @@ export const DEFAULT_CAREER_POSITIONS: CareerPosition[] = [
     workplaceId: 'Hybrid',
     badge: 'High Commission + Bonus',
     badgeId: 'Komisi Tinggi + Bonus',
-    summary: 'Drive high-value enterprise and mid-market client partnerships. Identify business opportunities for Visual Experience and Innovation Development services, conduct discovery pitches, and earn competitive uncapped commissions.',
-    summaryId: 'Pimpin ekspansi kemitraan klien korporat dan pasar menengah. Identifikasi peluang bisnis untuk layanan Visual Experience dan Innovation Development, presentasikan solusi, dan peroleh komisi berbasis performa tanpa batas.',
+    summary: 'Drive high-value enterprise and mid-market client partnerships. You will identify business opportunities for our Visual Experience and Innovation Development services, conduct discovery pitches, and earn competitive uncapped commissions.',
+    summaryId: 'Pimpin ekspansi kemitraan klien korporat dan pasar menengah. Anda akan mengidentifikasi peluang bisnis untuk layanan Visual Experience dan Innovation Development kami, mempresentasikan solusi, dan memperoleh komisi berbasis performa tanpa batas.',
     responsibilities: [
-      'Identify and prospect corporate clients, startups, and brand leaders requiring digital transformation or visual design.',
-      'Initiate outbound outreach via LinkedIn, email sequences, and discovery calls.',
-      'Present Kapitech capabilities, pitch decks, and tailored proposals to key decision-makers.',
-      'Negotiate scope agreements and coordinate with the CEO and Project Managers for client onboarding.',
-      'Maintain CRM pipeline tracking and revenue forecasting.'
+      'Identify and prospect prospective corporate clients, startups, and brand leaders requiring digital transformation or visual design',
+      'Initiate outbound sales outreach via LinkedIn, email sequences, and high-impact discovery calls',
+      'Present Kapitech Agency capabilities, pitch decks, and tailored solution proposals to key decision-makers (C-Level, VP, Directors)',
+      'Negotiate scope agreements and collaborate closely with our CEO and Project Managers for seamless client onboarding',
+      'Maintain accurate deal telemetry, CRM pipeline tracking, and revenue forecasting'
     ],
     responsibilitiesId: [
-      'Mengidentifikasi calon klien perusahaan, startup, dan brand yang membutuhkan transformasi digital atau desain visual.',
-      'Melakukan outreach melalui LinkedIn, email bisnis, dan discovery call.',
-      'Mempresentasikan kapabilitas Kapitech, pitch deck, dan proposal kepada pengambil keputusan.',
-      'Membantu negosiasi ruang lingkup kerja dan berkoordinasi dengan CEO serta Project Manager.',
-      'Memelihara pipeline CRM dan pencatatan proyeksi pendapatan.'
+      'Mengidentifikasi dan memprospek calon klien perusahaan, startup, dan brand yang membutuhkan transformasi digital atau desain visual',
+      'Melakukan outbound sales outreach melalui LinkedIn, email bisnis, dan discovery call terarah',
+      'Mempresentasikan portofolio Kapitech Agency, proposal kustom, dan lingkup kerja kepada pengambil keputusan utama (C-Level, VP, Direktur)',
+      'Membantu negosiasi kontrak kerja sama dan berkoordinasi langsung dengan CEO serta Project Manager kami',
+      'Memelihara catatan pipeline prospek di CRM dan pelacakan target pendapatan secara terstruktur'
     ],
     requirements: [
-      'Experience in B2B sales, agency business development, or software solutions partnerships.',
-      'A strong network in technology, corporate, creative, or e-commerce sectors.',
-      'Strong written and verbal communication with persuasive pitching skills.',
-      'Self-motivated and comfortable with a performance-driven commission structure.',
-      'Fluent Bahasa Indonesia and professional English.'
+      'Proven track record in B2B sales, agency business development, or software solutions partnership',
+      'Strong network in technology, corporate, creative, or e-commerce sectors',
+      'Outstanding verbal and written communication skills with persuasive pitching ability',
+      'Self-motivated, goal-oriented mindset thriving in a performance-driven commission structure',
+      'Fluency in Bahasa Indonesia and professional English proficiency'
     ],
     requirementsId: [
-      'Pengalaman di B2B sales, business development agensi, atau kemitraan solusi software.',
-      'Memiliki jaringan di sektor teknologi, korporasi, kreatif, atau e-commerce.',
-      'Komunikasi lisan dan tulisan yang baik serta kemampuan presentasi persuasif.',
-      'Mandiri dan nyaman bekerja dengan skema komisi berbasis performa.',
-      'Fasih Bahasa Indonesia dan memiliki kemampuan Bahasa Inggris profesional.'
+      'Pengalaman terbukti dalam B2B sales, kemitraan agensi digital, atau penjualan solusi perangkat lunak',
+      'Memiliki jaringan luas di sektor teknologi, korporasi, retail kreatif, atau e-commerce',
+      'Kemampuan komunikasi lisan dan tulisan yang persuasif serta percaya diri saat presentasi',
+      'Mandiri, berorientasi pada target, dan termotivasi oleh skema komisi berbasis kinerja',
+      'Fasih berbahasa Indonesia dan memiliki kemampuan bahasa Inggris bisnis yang baik'
     ],
     compensation: 'Uncapped Deal Commissions + Milestone Performance Bonuses',
     compensationId: 'Komisi Proyek Tanpa Batas + Bonus Pencapaian Milestone',
@@ -95,35 +95,35 @@ export const DEFAULT_CAREER_POSITIONS: CareerPosition[] = [
     workplaceId: 'WFO (Work From Office)',
     badge: 'Full Time • On-site Studio',
     badgeId: 'Full Time • Studio On-site',
-    summary: 'Join our in-studio creative team to design polished digital interfaces, responsive Figma design systems, and interactive user experiences for client projects.',
-    summaryId: 'Bergabung dengan tim kreatif di studio kami untuk merancang antarmuka digital, sistem desain responsif di Figma, dan pengalaman pengguna interaktif untuk proyek klien.',
+    summary: 'Join our in-studio creative squad to author world-class digital interfaces, responsive design systems in Figma, and interactive user experiences for global and domestic client projects.',
+    summaryId: 'Bergabunglah bersama tim kreatif di studio kami untuk merancang antarmuka digital kelas dunia, sistem desain responsif di Figma, dan pengalaman pengguna interaktif untuk klien global dan nasional.',
     responsibilities: [
-      'Design responsive web products and SaaS interfaces across desktop, tablet, and mobile.',
-      'Build and maintain scalable design systems, tokens, and component libraries in Figma.',
-      'Conduct user journey mapping, wireframing, prototyping, and usability validation.',
-      'Collaborate with creative directors and frontend engineers to ensure accurate implementation.',
-      'Prepare presentation decks and explain design rationale during client reviews.'
+      'Design pixel-perfect responsive web products and SaaS interfaces across desktop, tablet, and mobile breakpoints',
+      'Architect and maintain scalable design systems, design tokens, and comprehensive component libraries in Figma',
+      'Conduct user journey mapping, wireframing, interactive prototyping, and usability validation sprints',
+      'Collaborate side-by-side with our Executive Creative Director and frontend engineers for flawless implementation',
+      'Prepare presentation decks and articulate UX/UI rationale directly during client review sessions'
     ],
     responsibilitiesId: [
-      'Merancang produk web responsif dan antarmuka SaaS untuk desktop, tablet, dan mobile.',
-      'Membangun dan memelihara design system, token, serta pustaka komponen di Figma.',
-      'Melakukan pemetaan perjalanan pengguna, wireframe, prototipe, dan validasi usabilitas.',
-      'Berkolaborasi dengan creative director dan frontend engineer untuk memastikan implementasi akurat.',
-      'Mempersiapkan deck presentasi dan menjelaskan pertimbangan desain saat review klien.'
+      'Merancang antarmuka web responsif dan sistem software SaaS berpresisi tinggi di seluruh breakpoint',
+      'Membangun serta memelihara sistem desain modular, token desain, dan pustaka komponen di Figma',
+      'Melakukan pemetaan alur pengguna, wireframing, pembuatan prototipe interaktif, dan uji usabilitas',
+      'Berkolaborasi langsung di studio bersama Executive Creative Director dan frontend engineer untuk memastikan hasil koding sesuai desain',
+      'Mempersiapkan deck presentasi dan menjelaskan pertimbangan desain secara objektif dalam sesi review klien'
     ],
     requirements: [
-      'At least 2 years of UI/UX design experience for web products or digital agencies.',
-      'A strong portfolio demonstrating visual hierarchy, typography, and responsive UX.',
-      'Confident with Figma, FigJam, auto-layout, component variants, and prototyping.',
-      'Able to work full-time on-site at the South Tangerang studio.',
-      'Strong attention to detail, micro-interactions, and design-to-code feasibility.'
+      '2+ years of professional experience in UI/UX design for web products or digital agencies',
+      'Stunning design portfolio showcasing modern visual hierarchy, clean typography, and responsive UX systems',
+      'Mastery of Figma, FigJam, auto-layout, component variants, and interactive prototyping',
+      'Ability to work full-time on-site at our South Tangerang studio with strong collaborative energy',
+      'High attention to visual craft, micro-interactions, and design-to-code feasibility'
     ],
     requirementsId: [
-      'Minimal 2 tahun pengalaman UI/UX untuk produk web atau agensi digital.',
-      'Portofolio yang menunjukkan hierarki visual, tipografi, dan UX responsif.',
-      'Menguasai Figma, FigJam, auto-layout, varian komponen, dan prototipe.',
-      'Bersedia bekerja full-time on-site di studio Tangerang Selatan.',
-      'Teliti terhadap detail visual, micro-interaction, dan kelayakan implementasi desain.'
+      '2+ tahun pengalaman profesional di bidang desain UI/UX untuk produk web atau agensi digital',
+      'Portofolio desain yang kuat menunjukkan penguasaan tipografi, tata letak visual modern, dan sistem UX responsif',
+      'Keahlian mendalam dalam Figma, FigJam, auto-layout, varian komponen, dan prototipe interaktif',
+      'Bersedia bekerja full-time on-site (WFO) di studio Tangerang Selatan dengan semangat kolaborasi tinggi',
+      'Ketelitian tinggi terhadap detail visual mikro, konsistensi brand, dan kelayakan teknis implementasi kode'
     ],
     compensation: 'Competitive Monthly Salary + Health Coverage + Project Performance Bonuses',
     compensationId: 'Gaji Pokok Kompetitif + Asuransi Kesehatan + Bonus Kinerja Proyek',
