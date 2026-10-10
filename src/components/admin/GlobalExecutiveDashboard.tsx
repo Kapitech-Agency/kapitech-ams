@@ -988,21 +988,39 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           />}
         </AdminPanel>
 
-        <AdminPanel className="min-[1100px]:col-span-4" bodyClassName="p-4 sm:p-5" title="Team capacity" description="Current workload distribution across the team." actions={fixtureMode ? <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[11px] text-muted">
-          {fixtureMode ? (4 members</span> : undefined}>
-          <div className="space-y-4">
-            {sampleTeam.map((member) => (
-              <div key={member.name}>
-                <div className="mb-1.5 flex items-center justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-2"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-line bg-bg text-xs font-semibold text-fg">{member.name.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()}</span><div className="min-w-0"><div className="truncate text-xs font-medium text-fg">{member.name}</div><div className="mt-0.5 truncate text-[10px] text-muted">{member.role}</div></div></div>
-                  <div className="shrink-0 text-right"><span className="text-xs font-medium tabular-nums text-fg">{member.workload}%</span><span className="mt-0.5 block text-[10px] text-muted">{member.tasks} tasks · {member.state}</span></div>
+        <AdminPanel
+          className="min-[1100px]:col-span-4"
+          bodyClassName="p-4 sm:p-5"
+          title="Team capacity"
+          description="Current workload distribution across the team."
+          actions={fixtureMode ? <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[11px] text-muted">4 members</span> : undefined}
+        >
+          {fixtureMode ? (
+            <div className="space-y-4">
+              {sampleTeam.map((member) => (
+                <div key={member.name}>
+                  <div className="mb-1.5 flex items-center justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-line bg-bg text-xs font-semibold text-fg">{member.name.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()}</span>
+                      <div className="min-w-0">
+                        <div className="truncate text-xs font-medium text-fg">{member.name}</div>
+                        <div className="mt-0.5 truncate text-[10px] text-muted">{member.role}</div>
+                      </div>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <span className="text-xs font-medium tabular-nums text-fg">{member.workload}%</span>
+                      <span className="mt-0.5 block text-[10px] text-muted">{member.tasks} tasks · {member.state}</span>
+                    </div>
+                  </div>
+                  <div className="h-1.5 overflow-hidden rounded-sm bg-line">
+                    <div className={['h-full rounded-sm', progressClasses[member.tone]].join(' ')} style={{ width: member.workload + '%' }} />
+                  </div>
                 </div>
-                <div className="h-1.5 overflow-hidden rounded-sm bg-line"><div className={['h-full rounded-sm', progressClasses[member.tone]].join(' ')} style={{ width: member.workload + '%' }} /></div>
+              ))}
+              <div className="border-t border-line pt-4">
+                <Link to="/admin/time-logs" className="inline-flex items-center gap-1 text-xs font-medium text-muted hover:text-accent-text">View team schedule <ArrowUpRight size={13} /></Link>
               </div>
-            ))}
-            <div className="border-t border-line pt-4"><Link to="/admin/time-logs" className="inline-flex items-center gap-1 text-xs font-medium text-muted hover:text-accent-text">View team schedule <ArrowUpRight size={13} /></Link></div>
-          </div>
-
+            </div>
           ) : (
             <div className="flex min-h-[180px] flex-col items-center justify-center px-3 py-8 text-center" role="status">
               <Users size={20} className="text-muted" aria-hidden="true" />
