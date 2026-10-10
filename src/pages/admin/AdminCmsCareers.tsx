@@ -462,7 +462,7 @@ export const AdminCmsCareers: React.FC = () => {
         />
       </div>
 
-<AdminMetricStrip
+      <AdminMetricStrip
         slug="cms-careers-metrics"
         className="grid-cols-2 sm:grid-cols-4"
         metrics={[
