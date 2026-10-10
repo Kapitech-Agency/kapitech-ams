@@ -511,7 +511,7 @@ export const AdminCrm: React.FC = () => {
               id: 'active-pipeline',
               label: language === 'id' ? 'Pipeline aktif' : 'Active pipeline',
               value: isLoading || loadError ? '—' : formatAmount(metrics.totalPipelineValue, currency),
-              context: `${metrics.activeDealsCount} ${language === 'id' ? 'prospek aktif' : 'active deals'}`,
+              context: isLoading ? (language === 'id' ? 'Memuat data' : 'Loading live data') : loadError ? (language === 'id' ? 'Data tidak tersedia' : 'Live data unavailable') : `${metrics.activeDealsCount} ${language === 'id' ? 'prospek aktif' : 'active deals'}`,
               sparkline: isLoading || loadError ? undefined : [metrics.totalPipelineValue, metrics.weightedPipelineValue, metrics.totalWonValue, metrics.avgDealSize * Math.max(metrics.wonDealsCount, 1)],
               icon: <Layers size={16} strokeWidth={1.8} />,
               toneClassName: 'text-success'
@@ -520,7 +520,7 @@ export const AdminCrm: React.FC = () => {
               id: 'weighted-pipeline',
               label: language === 'id' ? 'Pipeline tertimbang' : 'Weighted pipeline',
               value: isLoading || loadError ? '—' : formatAmount(metrics.weightedPipelineValue, currency, true),
-              context: language === 'id' ? 'Berdasarkan probabilitas tahap' : 'Weighted by stage probability',
+              context: isLoading ? (language === 'id' ? 'Memuat data' : 'Loading live data') : loadError ? (language === 'id' ? 'Data tidak tersedia' : 'Live data unavailable') : language === 'id' ? 'Berdasarkan probabilitas tahap' : 'Weighted by stage probability',
               sparkline: isLoading || loadError ? undefined : [metrics.totalPipelineValue, metrics.weightedPipelineValue, metrics.totalWonValue, metrics.avgDealSize * Math.max(metrics.activeDealsCount, 1)],
               icon: <TrendingUp size={16} strokeWidth={1.8} />,
               toneClassName: 'text-info'
@@ -529,7 +529,7 @@ export const AdminCrm: React.FC = () => {
               id: 'closed-won',
               label: language === 'id' ? 'Closed won' : 'Closed won',
               value: isLoading || loadError ? '—' : formatAmount(metrics.totalWonValue, currency),
-              context: `${metrics.wonDealsCount} ${language === 'id' ? 'deal menang' : 'won deals'}`,
+              context: isLoading ? (language === 'id' ? 'Memuat data' : 'Loading live data') : loadError ? (language === 'id' ? 'Data tidak tersedia' : 'Live data unavailable') : `${metrics.wonDealsCount} ${language === 'id' ? 'deal menang' : 'won deals'}`,
               sparkline: isLoading || loadError ? undefined : [metrics.activeDealsCount, metrics.wonDealsCount, metrics.totalDeals, metrics.winRate],
               icon: <CheckCircle2 size={16} strokeWidth={1.8} />,
               toneClassName: 'text-success'
@@ -538,7 +538,7 @@ export const AdminCrm: React.FC = () => {
               id: 'win-rate',
               label: language === 'id' ? 'Win rate' : 'Win rate',
               value: isLoading || loadError ? '—' : `${metrics.winRate}%`,
-              context: `${language === 'id' ? 'Rata-rata deal' : 'Avg deal'}: ${formatAmount(metrics.avgDealSize, currency, true)}`,
+              context: isLoading ? (language === 'id' ? 'Memuat data' : 'Loading live data') : loadError ? (language === 'id' ? 'Data tidak tersedia' : 'Live data unavailable') : `${language === 'id' ? 'Rata-rata deal' : 'Avg deal'}: ${formatAmount(metrics.avgDealSize, currency, true)}`,
               sparkline: isLoading || loadError ? undefined : [funnelStats.leadToScope, funnelStats.scopeToPitch, funnelStats.pitchToSow, funnelStats.sowToWon],
               icon: <Activity size={16} strokeWidth={1.8} />,
               toneClassName: 'text-accent-text'
@@ -560,24 +560,24 @@ export const AdminCrm: React.FC = () => {
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <div className="rounded-control border border-line bg-bg p-2.5 text-center">
             <div className="text-[10px] text-muted">Lead→Scope</div>
-            <div className="mt-0.5 text-sm font-semibold tabular-nums text-fg">{funnelStats.leadToScope}%</div>
+            <div className="mt-0.5 text-sm font-semibold tabular-nums text-fg">{loadError ? '—' : funnelStats.leadToScope + '%'}</div>
           </div>
           <div className="rounded-control border border-line bg-bg p-2.5 text-center">
             <div className="text-[10px] text-muted">Scope→Pitch</div>
-            <div className="mt-0.5 text-sm font-semibold tabular-nums text-fg">{funnelStats.scopeToPitch}%</div>
+            <div className="mt-0.5 text-sm font-semibold tabular-nums text-fg">{loadError ? '—' : funnelStats.scopeToPitch + '%'}</div>
           </div>
           <div className="rounded-control border border-line bg-bg p-2.5 text-center">
             <div className="text-[10px] text-muted">Pitch→SOW</div>
-            <div className="mt-0.5 text-sm font-semibold tabular-nums text-fg">{funnelStats.pitchToSow}%</div>
+            <div className="mt-0.5 text-sm font-semibold tabular-nums text-fg">{loadError ? '—' : funnelStats.pitchToSow + '%'}</div>
           </div>
           <div className="rounded-control border border-success/20 bg-success/10 p-2.5 text-center">
             <div className="text-[10px] text-success">SOW→Won</div>
-            <div className="mt-0.5 text-sm font-semibold tabular-nums text-success">{funnelStats.sowToWon}%</div>
+            <div className="mt-0.5 text-sm font-semibold tabular-nums text-success">{loadError ? '—' : funnelStats.sowToWon + '%'}</div>
           </div>
         </div>
         <div className="mt-3 flex flex-col gap-2 border-t border-line pt-3 text-[11px] sm:flex-row sm:items-center sm:justify-between">
-          <span className="text-muted">{language === 'id' ? 'Rata-rata deal' : 'Avg deal'}: <span className="font-semibold text-fg">{formatAmount(metrics.avgDealSize, currency, true)}</span></span>
-          <span className="text-muted">{language === 'id' ? 'Proposal & negosiasi' : 'Proposal & SOW'}: <span className="font-semibold text-info">{formatAmount(metrics.negotiationValue, currency, true)}</span></span>
+          <span className="text-muted">{language === 'id' ? 'Rata-rata deal' : 'Avg deal'}: <span className="font-semibold text-fg">{loadError ? '—' : formatAmount(metrics.avgDealSize, currency, true)}</span></span>
+          <span className="text-muted">{language === 'id' ? 'Proposal & negosiasi' : 'Proposal & SOW'}: <span className="font-semibold text-info">{loadError ? '—' : formatAmount(metrics.negotiationValue, currency, true)}</span></span>
         </div>
       </section>
 
