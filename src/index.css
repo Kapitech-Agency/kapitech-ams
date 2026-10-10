@@ -164,10 +164,9 @@
 .ams-shell .ams-page-header,.ams-shell .ams-dashboard-header{min-width:0;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--line)}
 .ams-shell .ams-page-header>*,.ams-shell .ams-dashboard-header>*{min-width:0}
 .ams-shell .ams-page-shell>.fixed{margin-top:0!important}
-.ams-shell .ams-page-shell>:not([hidden]):not(.fixed){margin-bottom:0!important}
-.ams-shell .ams-page-shell>:not([hidden]):not(.fixed)~:not([hidden]):not(.fixed){margin-top:24px!important}
-/* Canonical AMS page rhythm: one shell inset, one section gap, one full-card inset. */
-.ams-shell>main>.ams-content> [class*="space-y-"] > :not([hidden]) ~ :not([hidden]){margin-top:24px!important}
+/* Canonical page rhythm: use a real layout gap rather than overriding each child's margin. */
+.ams-shell .ams-page-shell{display:flex;flex-direction:column;gap:24px}
+.ams-shell .ams-page-shell>:not([hidden]):not(.fixed){margin:0}
 .ams-shell .ams-dashboard-card,.ams-shell .ams-panel-card{padding:16px}
 .ams-shell .ams-full-card{padding:16px}
 .ams-shell .ams-dense-card{padding:12px}
