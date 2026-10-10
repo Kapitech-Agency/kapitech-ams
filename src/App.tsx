@@ -173,6 +173,11 @@ const AdminCmsTestimonials = lazyWithRetry(
   'admin-cms-testimonials'
 );
 
+const AdminCmsCareers = lazyWithRetry(
+  () => import('./pages/admin/AdminCmsCareers').then((m) => ({ default: m.AdminCmsCareers })),
+  'admin-cms-careers'
+);
+
 const AdminSettings = lazyWithRetry(
   () => import('./pages/admin/AdminSettings').then((m) => ({ default: m.AdminSettings })),
   'admin-settings'
@@ -272,6 +277,7 @@ const App = () => {
                 <Route path="cms/services" element={<ModuleRoute moduleKey="services" moduleLabel="the services catalog"><AdminCmsServices /></ModuleRoute>} />
                 <Route path="cms/testimonials" element={<ModuleRoute moduleKey="testimonials" moduleLabel="testimonials"><AdminCmsTestimonials /></ModuleRoute>} />
                 <Route path="cms/insights" element={<ModuleRoute moduleKey="cms_insights" moduleLabel="Insights"><AdminCmsInsights /></ModuleRoute>} />
+                <Route path="cms/careers" element={<ModuleRoute moduleKey="cms_projects" moduleLabel="Careers"><AdminCmsCareers /></ModuleRoute>} />
                 <Route path="settings" element={<ModuleRoute moduleKey="settings" moduleLabel="settings"><AdminSettings /></ModuleRoute>} />
               </Route>
 
