@@ -25,7 +25,8 @@ import {
   Building2,
   Calendar,
   Layers,
-  ArrowUpRight
+  ArrowUpRight,
+  RefreshCw
 } from 'lucide-react';
 import {
   AgencyVendor,
@@ -72,6 +73,7 @@ export const AdminVendors: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [editingVendor, setEditingVendor] = useState<AgencyVendor | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState(false);
   const [statusTone, setStatusTone] = useState<'success' | 'error' | 'info'>('info');
 
   const showStatus = (message: string | null, tone: 'success' | 'error' | 'info' = 'error') => {
@@ -103,6 +105,8 @@ export const AdminVendors: React.FC = () => {
 
   const loadVendors = async () => {
     setIsLoading(true);
+    setLoadError(false);
+    showStatus(null);
     if (!canViewVendors) {
       setVendors([]);
       setIsLoading(false);
@@ -119,9 +123,11 @@ export const AdminVendors: React.FC = () => {
             : []
         })));
       } else {
+        setLoadError(true);
         showStatus(res.error || (language === 'id' ? 'Vendor gagal dimuat.' : 'Failed to load vendors.'));
       }
     } catch {
+      setLoadError(true);
       showStatus(language === 'id' ? 'Vendor gagal dimuat.' : 'Failed to load vendors.');
     } finally {
       setIsLoading(false);
@@ -623,16 +629,30 @@ export const AdminVendors: React.FC = () => {
       />
 
       {filteredVendors.length === 0 && (
-        <div className="w-full p-12 rounded-card bg-panel border border-line text-center">
-          <Users size={32} className="mx-auto text-muted mb-3" />
+        <div className="flex w-full flex-col items-center justify-center rounded-card border border-line bg-panel px-5 py-12 text-center">
+          {loadError ? <AlertCircle size={28} className="mb-3 text-danger" aria-hidden="true" /> : <Users size={28} className="mb-3 text-muted" aria-hidden="true" />}
           <h3 className="text-sm font-semibold text-fg">
-            {language === 'id' ? 'Tidak ada vendor yang cocok' : 'No matching vendors found'}
+            {loadError
+              ? (language === 'id' ? 'Vendor tidak dapat dimuat' : 'Unable to load vendors')
+              : (language === 'id' ? (vendors.length ? 'Tidak ada vendor yang cocok' : 'Belum ada vendor') : (vendors.length ? 'No matching vendors found' : 'No vendors yet'))}
           </h3>
-          <p className="text-xs font-sans text-muted mt-1 max-w-sm mx-auto">
-            {language === 'id'
-              ? 'Ubah kata kunci pencarian atau tambah profil vendor baru untuk studio Kapitech.'
-              : 'Try adjusting your search criteria or register a new verified vendor into the system.'}
+          <p className="mt-1 max-w-sm text-xs leading-5 text-muted">
+            {loadError
+              ? (language === 'id' ? 'Data vendor belum tersedia karena layanan gagal dimuat. Coba muat ulang.' : 'Vendor data is unavailable because the service could not be reached. Try loading again.')
+              : (language === 'id'
+                ? 'Ubah filter pencarian atau tambahkan profil vendor saat siap.'
+                : 'Adjust the search filters or add a vendor profile when you are ready.')}
           </p>
+          {loadError && (
+            <Button type="button" variant="secondary" icon={<RefreshCw size={14} />} loading={isLoading} onClick={() => void loadVendors()} className="mt-4">
+              {language === 'id' ? 'Coba lagi' : 'Retry loading'}
+            </Button>
+          )}
+          {!loadError && vendors.length === 0 && canManageVendors && (
+            <Button type="button" variant="primary" icon={<Plus size={14} />} onClick={handleOpenAdd} className="mt-4">
+              {language === 'id' ? 'Tambah vendor' : 'Add vendor'}
+            </Button>
+          )}
         </div>
       )}
 
