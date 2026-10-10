@@ -4,6 +4,17 @@ import { NavLink } from 'react-router-dom';
 import { CustomSelect } from '../ui/CustomSelect';
 import { cn } from '../../lib/cn';
 
+export interface SkeletonProps {
+  className?: string;
+}
+
+export const Skeleton: React.FC<SkeletonProps> = ({ className }) => (
+  <div
+    aria-hidden="true"
+    className={cn('animate-pulse rounded-control bg-line/70', className)}
+  />
+);
+
 
 export interface AdminPageShellProps {
   children: React.ReactNode;
