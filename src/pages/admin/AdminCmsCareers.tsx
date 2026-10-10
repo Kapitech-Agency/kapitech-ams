@@ -437,17 +437,6 @@ export const AdminCmsCareers: React.FC = () => {
         }
       />
 
-      {statusMessage && (
-        <div className={['flex items-start justify-between gap-3 rounded-card border p-3 text-xs', statusMessage.tone === 'danger' ? 'border-danger/30 bg-danger/10 text-danger' : 'border-success/30 bg-success/10 text-success'].join(' ')}>
-          <div className="flex min-w-0 items-start gap-2">
-            {statusMessage.tone === 'danger' ? <ShieldAlert size={15} className="mt-0.5 shrink-0" /> : <CheckCircle2 size={15} className="mt-0.5 shrink-0" />}
-            <span>{statusMessage.text}</span>
-          </div>
-          <button type="button" onClick={() => setStatusMessage(null)} aria-label="Dismiss notification" className="shrink-0 text-current/70 hover:text-current"><X size={14} /></button>
-        </div>
-      )}
-
-      
       <div className="min-[900px]:hidden min-w-0" data-ams-slug="cms-mobile-tabs">
         <AdminSectionTabs
           ariaLabel="CMS sections"
@@ -461,6 +450,19 @@ export const AdminCmsCareers: React.FC = () => {
           ]}
         />
       </div>
+
+      {statusMessage && (
+        <div className={['flex items-start justify-between gap-3 rounded-card border p-3 text-xs', statusMessage.tone === 'danger' ? 'border-danger/30 bg-danger/10 text-danger' : 'border-success/30 bg-success/10 text-success'].join(' ')}>
+          <div className="flex min-w-0 items-start gap-2">
+            {statusMessage.tone === 'danger' ? <ShieldAlert size={15} className="mt-0.5 shrink-0" /> : <CheckCircle2 size={15} className="mt-0.5 shrink-0" />}
+            <span>{statusMessage.text}</span>
+          </div>
+          <button type="button" onClick={() => setStatusMessage(null)} aria-label="Dismiss notification" className="shrink-0 text-current/70 hover:text-current"><X size={14} /></button>
+        </div>
+      )}
+
+      
+
 
       <AdminMetricStrip
         slug="cms-careers-metrics"
