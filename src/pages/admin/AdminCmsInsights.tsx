@@ -767,7 +767,7 @@ export const AdminCmsInsights: React.FC = () => {
         />
       </div>
 
-<AdminMetricStrip
+      <AdminMetricStrip
         slug="cms-insights-kpis"
         className="grid-cols-2 sm:grid-cols-4"
         metrics={[
