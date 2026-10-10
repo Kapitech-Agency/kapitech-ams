@@ -475,7 +475,7 @@ export const AdminClients: React.FC = () => {
           className="mb-0"
           title="Clients & Key Accounts"
         description="Directory of enterprise clients, relationship health, spend-cap status, and account operations."
-        eyebrow={<AdminStatusBadge tone="neutral">{clientMetrics.active} active accounts</AdminStatusBadge>}
+        eyebrow={<AdminStatusBadge tone="neutral">{isLoading || errorMessage ? '— active accounts' : clientMetrics.active + ' active accounts'}</AdminStatusBadge>}
         actions={(
           <>
             <Button type="button" variant="secondary" onClick={() => {
@@ -509,13 +509,28 @@ export const AdminClients: React.FC = () => {
         />
       </div>
 
+      {errorMessage && (
+        <div role="alert" aria-live="assertive" className="flex flex-col gap-3 rounded-card border border-danger/25 bg-danger/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-start gap-2.5">
+            <CircleAlert size={16} className="mt-0.5 shrink-0 text-danger" aria-hidden="true" />
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-fg">{language === 'id' ? 'Direktori klien tidak tersedia' : 'Client directory unavailable'}</p>
+              <p className="mt-1 text-xs leading-5 text-muted">{errorMessage}</p>
+            </div>
+          </div>
+          <Button type="button" variant="secondary" loading={isLoading} onClick={() => void loadData()} className="shrink-0 self-start sm:self-auto">
+            {language === 'id' ? 'Coba lagi' : 'Retry loading'}
+          </Button>
+        </div>
+      )}
+
       <section data-ams-feature-slug="clients-metrics" data-ams-slug="clients-metrics" aria-label="Client metrics">
         <AdminMetricStrip slug="clients-kpis"
           className="lg:grid-cols-3"
           metrics={[
-            { id: 'active-clients', label: 'Active clients', value: isLoading ? '—' : clientMetrics.active, change: isLoading ? '—' : '+' + clientMetrics.leads, changeToneClassName: 'text-warning', context: 'onboarding / lead accounts', sparkline: [clientMetrics.leads, clientMetrics.active, clientMetrics.total, clientMetrics.atRisk], icon: <Users size={15} aria-hidden="true" /> },
-            { id: 'billed-value', label: 'Cumulative billed value', value: isLoading ? '—' : new Intl.NumberFormat(language === 'id' ? 'id-ID' : 'en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(clientMetrics.totalBilled), context: 'across client records', sparkline: clients.slice(0, 8).map((client) => Number(client.totalSpend || 0)), icon: <TrendingUp size={15} aria-hidden="true" />, toneClassName: 'text-success' },
-            { id: 'sla-compliance', label: 'Spend cap compliance', value: isLoading ? '—' : clientMetrics.slaCompliance === null ? '—' : `${clientMetrics.slaCompliance.toFixed(1)}%`, context: clientMetrics.configuredSla + ' configured spend-cap records', sparkline: [clientMetrics.atRisk, clientMetrics.overBudget, clientMetrics.configuredSla, clientMetrics.slaCompliance === null ? 0 : clientMetrics.slaCompliance], icon: <ShieldCheck size={15} aria-hidden="true" />, toneClassName: clientMetrics.slaCompliance !== null && clientMetrics.slaCompliance >= 90 ? 'text-success' : 'text-fg' }
+            { id: 'active-clients', label: 'Active clients', value: isLoading || errorMessage ? '—' : clientMetrics.active, change: isLoading || errorMessage ? '—' : '+' + clientMetrics.leads, changeToneClassName: 'text-warning', context: isLoading ? 'Loading live data' : errorMessage ? 'Live data unavailable' : 'onboarding / lead accounts', sparkline: isLoading || errorMessage ? undefined : [clientMetrics.leads, clientMetrics.active, clientMetrics.total, clientMetrics.atRisk], icon: <Users size={15} aria-hidden="true" /> },
+            { id: 'billed-value', label: 'Cumulative billed value', value: isLoading || errorMessage ? '—' : new Intl.NumberFormat(language === 'id' ? 'id-ID' : 'en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(clientMetrics.totalBilled), context: isLoading ? 'Loading live data' : errorMessage ? 'Live data unavailable' : 'across client records', sparkline: isLoading || errorMessage ? undefined : clients.slice(0, 8).map((client) => Number(client.totalSpend || 0)), icon: <TrendingUp size={15} aria-hidden="true" />, toneClassName: 'text-success' },
+            { id: 'sla-compliance', label: 'Spend cap compliance', value: isLoading || errorMessage ? '—' : clientMetrics.slaCompliance === null ? '—' : `${clientMetrics.slaCompliance.toFixed(1)}%`, context: isLoading ? 'Loading live data' : errorMessage ? 'Live data unavailable' : clientMetrics.configuredSla + ' configured spend-cap records', sparkline: isLoading || errorMessage ? undefined : [clientMetrics.atRisk, clientMetrics.overBudget, clientMetrics.configuredSla, clientMetrics.slaCompliance === null ? 0 : clientMetrics.slaCompliance], icon: <ShieldCheck size={15} aria-hidden="true" />, toneClassName: clientMetrics.slaCompliance !== null && clientMetrics.slaCompliance >= 90 ? 'text-success' : 'text-fg' }
           ]}
         />
       </section>
@@ -561,7 +576,7 @@ export const AdminClients: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-line text-[13px] leading-[18px]">
               {isLoading ? Array.from({ length: 6 }).map((_, index) => <tr key={index}>{Array.from({ length: 8 }).map((__, cell) => <td key={cell} className="px-4 py-3"><div className="h-3 w-24 animate-pulse rounded-badge bg-line" /></td>)}</tr>) : paginatedClients.length === 0 ? (
-                <tr><td colSpan={8} className="p-0"><div className="flex min-h-[280px] w-full flex-col items-center justify-center px-5 py-12 text-center" data-ams-slug="clients-empty-state"><div className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-bg text-muted"><Users size={20} aria-hidden="true" /></div><p className="mt-3 text-sm font-medium text-fg">{clients.length ? 'No matching clients.' : 'No clients yet.'}</p><p className="mt-1 max-w-sm text-xs leading-5 text-muted">Adjust the search or active filters.</p>{clients.length > 0 && <button type="button" onClick={resetFilters} className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg">Reset filters</button>}</div></td></tr>
+                <tr><td colSpan={8} className="p-0"><div className="flex min-h-[280px] w-full flex-col items-center justify-center px-5 py-12 text-center" data-ams-slug="clients-empty-state"><div className="flex h-10 w-10 items-center justify-center rounded-control border border-line bg-bg text-muted"><Users size={20} aria-hidden="true" /></div><p className="mt-3 text-sm font-medium text-fg">{errorMessage ? 'Client directory unavailable.' : clients.length ? 'No matching clients.' : 'No clients yet.'}</p><p className="mt-1 max-w-sm text-xs leading-5 text-muted">{errorMessage ? 'The client data could not be loaded. Use the retry action above.' : 'Adjust the search or active filters.'}</p>{clients.length > 0 && <button type="button" onClick={resetFilters} className="mt-4 inline-flex min-h-9 items-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg">Reset filters</button>}</div></td></tr>
               ) : paginatedClients.map((client) => {
                 const budget = Number(client.slaDailyAdSpendBudget) || 0;
                 const spend = Number(client.currentDailyAdSpend) || 0;
