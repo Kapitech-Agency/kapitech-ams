@@ -1,7 +1,7 @@
 # AMS Design System
 
 **Product:** Kapitech Agency Management System (AMS), a production-grade internal tool for running the agency: clients, projects, tasks, team, finance, and a private document vault.
-**Repo:** `Kapitech-Agency/Kapitech-Agency.github.io` (React 19 + Vite + TypeScript + Tailwind CSS v4, Express API).
+**Repo:** `Kapitech-Agency/kapitech-ams` (React 19 + Vite + TypeScript + Tailwind CSS v4, Express API).
 **Users:** agency staff and managers day to day; privileged **Master** and **IT** users for system, backup, and security tasks.
 **Direction:** dark-first, data-dense, calm, trustworthy. Crimson is the single accent and is used sparingly.
 
@@ -29,7 +29,7 @@ Verified from `README.md` and `package.json`:
 | Quality gates | CI runs `npm ci`, `npm run lint` (`tsc --noEmit`), `npm run build`; tests use `node --test` | Every change must pass lint and build |
 | Optional integrations | Gemini (AI), Telegram notifications | See the AI and notification patterns in section 8 |
 
-Not verified (the `src` folder could not be inspected): existing colors, fonts, component names, folder layout. Follow the reconcile rule above.
+**Reconciled against the current repository:** token values live in `src/index.css`; shared admin primitives live in `src/components/admin/AdminModulePrimitives.tsx`; reusable UI controls live in `src/components/ui`. Extend these implementations instead of duplicating them. If a token or component conflicts with this document, update the document and implementation together.
 
 ---
 
@@ -169,6 +169,7 @@ Theme switching: set `document.documentElement.dataset.theme` to `"dark"` or `"l
 ## 3. Layout
 
 - **App shell:** left sidebar (220px, collapsible to 64px) + main column. Main column has a 52px top bar, then a 24px padded content area.
+- **Responsive section navigation:** below 900px, every topbar section/submodule navigation must remain available inside the page using `AdminSectionTabs` or an equivalent shared pattern. Do not make submodules reachable only through a desktop topbar.
 - **Grid:** content uses a 12-column CSS grid with 12px gaps. Common patterns: KPI strip of 6 equal columns; hero chart full width; secondary cards 4 across.
 - **Breakpoints:** ≥1100 full layout; 900-1099 KPI strip 3 columns and secondary cards 2 across; <900 sidebar becomes a drawer; <600 single column (KPIs 2 across).
 - **Alignment:** left-align text; right-align numeric table columns.
@@ -200,8 +201,10 @@ For every component define default, hover, focus-visible, active, and disabled s
 - **Settings button** pinned to the bottom: ghost style, gear icon + "Settings" label, same size and states as a nav item. When collapsed it shows the icon only, with a tooltip.
 - Items the current role cannot access are **not rendered**.
 
-### Top bar
-- 52px high, bottom border `--line`. Tabs on the left (active tab: `--text` plus 2px accent underline). Right side: help, theme toggle, notifications, avatar menu (profile, security, sign out).
+### Top bar and section tabs
+- 52px high, bottom border `--line`. Keep section tabs on the left and utilities on the right.
+- **Section/submodule navigation uses the shared pill treatment:** 32px control height, 6px radius, a thin `--line` border when inactive, and a subtle 10–14% accent tint with an `--accent` border when active. Do not use an underline for CMS and other section tabs.
+- Segmented controls inside a view can use their own neutral selected state; do not style every active control red.
 
 ### KPI card
 - No panel background (sits on `--bg`). Label (`small`, muted) above value (`display`). Unit is `small`, muted, directly after the value.
@@ -376,6 +379,7 @@ Sidebar order proposal: Dashboard, Clients, Projects, Tasks, Team, Finance, Docu
 - [ ] Only tokens from this file are used; no stray hex values.
 - [ ] Dark and light themes both render correctly.
 - [ ] Layout holds at 1440, 1024, 768, and 390 widths.
+- [ ] CMS and Settings submodule navigation is accessible on mobile without relying on the desktop top bar.
 - [ ] Focus states visible; keyboard navigation works; dialogs trap and restore focus.
 - [ ] Text contrast passes; status never relies on color alone.
 - [ ] Charts have legends, tooltips, `aria-label`, and consistent series colors.
