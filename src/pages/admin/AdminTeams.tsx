@@ -1265,7 +1265,6 @@ export const AdminTeams: React.FC = () => {
                   <article key={member.id} data-ams-slug={member.slug} className="rounded-card border border-line bg-panel p-4 transition-colors hover:bg-panel-hover">
                     <div className="flex items-start justify-between gap-3">
                       <ProfileIdentity profile={{ id: member.id, name: member.name, username: member.username }} showRole={true} />
-                      <span className="rounded-badge border border-line bg-bg px-2 py-0.5 font-mono text-[9px] text-muted">slug: {member.slug}</span>
                     </div>
                     <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
                       <div><p className="text-muted">Pod / Focus</p><p className="mt-1 font-medium text-fg">{projectsForMember[0]?.name || member.division || 'Unassigned'}</p></div>
@@ -1293,7 +1292,6 @@ export const AdminTeams: React.FC = () => {
         </div>
       ) : currentView === 'vendor-directory' ? (
         <div className="space-y-4" data-ams-feature-slug="vendor-directory" data-ams-slug="vendor-directory">
-          <div className="flex justify-end -mb-1"><span className="inline-flex items-center rounded-badge border border-line bg-bg px-2 py-1 font-mono text-[9px] leading-3 text-muted/60">slug: vendor-directory</span></div>
           <AdminMetricStrip
             metrics={[
               {
@@ -1340,7 +1338,6 @@ export const AdminTeams: React.FC = () => {
           />
 
           <section className="rounded-card border border-line bg-panel p-4" data-ams-feature-slug="vendor-directory-filters" data-ams-slug="vendor-directory-filters">
-            <p className="mb-3 font-mono text-[9px] leading-3 text-muted/60">slug: vendor-directory-filters</p>
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex min-w-0 flex-1 flex-col gap-2 xl:flex-row xl:items-center">
                 <label className="relative min-w-0 flex-1 xl:max-w-sm">
@@ -1425,7 +1422,6 @@ export const AdminTeams: React.FC = () => {
                                   <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 font-mono text-[8px] font-semibold text-muted">{tier.toUpperCase()}</span>
                                 </span>
                                 <span className="mt-1 block text-[10px] text-muted">{vendor.primaryCategory}</span>
-                                <span className="mt-1 block font-mono text-[9px] text-muted/70">slug: {vendor.slug}</span>
                               </span>
                             </button>
                           </td>
@@ -1480,7 +1476,6 @@ export const AdminTeams: React.FC = () => {
         </div>
       ) : currentView === 'capacity-allocation' ? (
         <div className="space-y-4" data-ams-feature-slug="capacity-allocation" data-ams-slug="capacity-allocation">
-          <div className="flex justify-end -mb-1"><span className="inline-flex items-center rounded-badge border border-line bg-bg px-2 py-1 font-mono text-[9px] leading-3 text-muted/60">slug: capacity-allocation</span></div>
           <AdminMetricStrip
             metrics={[
               { id: 'utilization',
@@ -1513,7 +1508,6 @@ export const AdminTeams: React.FC = () => {
                       <td>
                         <p className="font-medium text-fg">{row.member.name}</p>
                         <p className="mt-1 text-[10px] text-muted">{row.member.role} · {row.member.division}</p>
-                        <p className="mt-1 font-mono text-[9px] text-muted/70">slug: {row.member.slug}</p>
                       </td>
                       {row.weeks.map((week, index) => (
                         <td key={index} className="text-center">
@@ -1538,7 +1532,6 @@ export const AdminTeams: React.FC = () => {
         </div>
       ) : currentView === 'skill-matrix' ? (
         <div className="space-y-4" data-ams-feature-slug="skill-matrix" data-ams-slug="skill-matrix">
-          <div className="flex justify-end -mb-1"><span className="inline-flex items-center rounded-badge border border-line bg-bg px-2 py-1 font-mono text-[9px] leading-3 text-muted/60">slug: skill-matrix</span></div>
           <AdminMetricStrip
             metrics={[
               { id: 'internal',
@@ -1566,7 +1559,6 @@ export const AdminTeams: React.FC = () => {
                     <tr key={member.id} data-ams-slug={member.slug} className="transition-colors hover:bg-bg/40">
                       <td>
                         <ProfileIdentity profile={{ id: member.id, name: member.name, username: member.username }} showRole={false} />
-                        <span className="mt-1 block font-mono text-[9px] text-muted/70">slug: {member.slug}</span>
                       </td>
                       <td className="text-fg">{member.role || 'Not assigned'}</td>
                       <td className="text-muted">{member.division || 'Operations'}</td>
@@ -1595,7 +1587,6 @@ export const AdminTeams: React.FC = () => {
                     <tr key={row.slug} data-ams-slug={row.slug} className="transition-colors hover:bg-bg/40">
                       <td>
                         <p className="font-medium text-fg">{row.skill}</p>
-                        <p className="mt-1 font-mono text-[9px] text-muted/70">slug: {row.slug}</p>
                       </td>
                       <td className="text-right font-semibold tabular-nums">{row.vendors}</td>
                       <td className="text-right font-semibold tabular-nums text-success">{row.vetted}</td>
@@ -1610,7 +1601,6 @@ export const AdminTeams: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-4" data-ams-feature-slug="time-logs" data-ams-slug="time-logs">
-          <div className="flex justify-end -mb-1"><span className="inline-flex items-center rounded-badge border border-line bg-bg px-2 py-1 font-mono text-[9px] leading-3 text-muted/60">slug: time-logs</span></div>
           <AdminMetricStrip
             metrics={[
               { id: 'tracked',
@@ -1705,7 +1695,6 @@ export const AdminTeams: React.FC = () => {
                         <td>
                           <p className="font-medium text-fg">{log.projectName || 'General'}</p>
                           <p className="mt-1 truncate text-[10px] text-muted">{log.taskTitle || 'General activity'}</p>
-                          <p className="mt-1 font-mono text-[9px] text-muted/70">slug: {log.slug}</p>
                         </td>
                         <td>{log.user ? <ProfileIdentity profile={{ id: log.userId, name: log.user, contextLabel: 'Time entry' }} showRole={false} /> : <span className="text-xs text-muted">—</span>}</td>
                         <td className="text-right font-semibold tabular-nums">{formatHours(log.durationMinutes)}</td>
