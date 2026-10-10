@@ -177,6 +177,9 @@ export const AdminCmsCareers: React.FC = () => {
   const [applicantStatusFilter, setApplicantStatusFilter] = useState('all');
   const [updatingApplicantId, setUpdatingApplicantId] = useState<string | null>(null);
   const [deleteApplicantTarget, setDeleteApplicantTarget] = useState<Applicant | null>(null);
+  const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
+  const [internalNotesDraft, setInternalNotesDraft] = useState('');
+  const [savingApplicantNotes, setSavingApplicantNotes] = useState(false);
 
   const loadJobs = async () => {
     setJobsLoading(true);
@@ -337,6 +340,29 @@ export const AdminCmsCareers: React.FC = () => {
       setStatusMessage({ text: error instanceof Error ? error.message : 'Applicant status could not be updated.', tone: 'danger' });
     } finally {
       setUpdatingApplicantId(null);
+    }
+  };
+
+  const openApplicantDetails = (applicant: Applicant) => {
+    setSelectedApplicant(applicant);
+    setInternalNotesDraft(applicant.internalNotes || '');
+  };
+
+  const saveApplicantNotes = async () => {
+    if (!selectedApplicant) return;
+    setSavingApplicantNotes(true);
+    setStatusMessage(null);
+    try {
+      const result = await api.leads.update(selectedApplicant.id, { internalNotes: internalNotesDraft });
+      if (!result.success) throw new Error(result.error || 'Applicant notes could not be saved.');
+      const updated = { ...selectedApplicant, internalNotes: internalNotesDraft };
+      setSelectedApplicant(updated);
+      setApplicants(current => current.map(item => item.id === updated.id ? updated : item));
+      setStatusMessage({ text: isId ? 'Catatan internal disimpan.' : 'Internal notes saved.', tone: 'success' });
+    } catch (error) {
+      setStatusMessage({ text: error instanceof Error ? error.message : 'Applicant notes could not be saved.', tone: 'danger' });
+    } finally {
+      setSavingApplicantNotes(false);
     }
   };
 
@@ -619,7 +645,8 @@ export const AdminCmsCareers: React.FC = () => {
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex items-center justify-end gap-1.5">
-                              <a href={'mailto:' + applicant.email} className="inline-flex h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[10px] text-fg hover:bg-panel"><Send size={11} />{isId ? 'Email' : 'Email'}</a>
+                              <button type="button" onClick={() => openApplicantDetails(applicant)} className="inline-flex h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[10px] text-fg hover:border-accent/30 hover:bg-panel"><Eye size={11} />{isId ? 'Detail' : 'Details'}</button>
+                              <a href={'mailto:' + applicant.email} className="inline-flex h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[10px] text-fg hover:bg-panel"><Send size={11} />Email</a>
                               <button type="button" onClick={() => setDeleteApplicantTarget(applicant)} className="inline-flex h-8 items-center justify-center rounded-control border border-danger/20 bg-danger/5 px-2 text-danger hover:bg-danger/10" aria-label={(isId ? 'Hapus pelamar ' : 'Delete applicant ') + applicant.fullName}><Trash2 size={13} /></button>
                             </div>
                           </td>
@@ -637,6 +664,71 @@ export const AdminCmsCareers: React.FC = () => {
           )}
         </section>
       )}
+
+      <Modal
+        open={!!selectedApplicant}
+        onClose={() => setSelectedApplicant(null)}
+        title={selectedApplicant?.fullName || (isId ? 'Detail pelamar' : 'Applicant details')}
+        description={selectedApplicant ? [selectedApplicant.positionTitle, selectedApplicant.email].filter(Boolean).join(' · ') : undefined}
+        size="xl"
+        slug="cms-career-applicant-details"
+        footer={
+          <>
+            <Button type="button" variant="secondary" onClick={() => setSelectedApplicant(null)} disabled={savingApplicantNotes}>{isId ? 'Tutup' : 'Close'}</Button>
+            <Button type="button" variant="primary" onClick={() => void saveApplicantNotes()} disabled={savingApplicantNotes} icon={savingApplicantNotes ? <RefreshCw size={13} className="animate-spin" /> : <CheckCircle2 size={13} />}>
+              {savingApplicantNotes ? (isId ? 'Menyimpan...' : 'Saving...') : (isId ? 'Simpan catatan' : 'Save notes')}
+            </Button>
+          </>
+        }
+      >
+        {selectedApplicant && (() => {
+          const resume = safeExternalUrl(selectedApplicant.resumeUrl);
+          const portfolio = safeExternalUrl(selectedApplicant.portfolioUrl);
+          return (
+            <div className="space-y-4">
+              <div className="grid gap-2 sm:grid-cols-2">
+                <div className="rounded-control border border-line bg-bg p-3">
+                  <span className="text-[10px] text-muted">{isId ? 'Email' : 'Email'}</span>
+                  <a href={'mailto:' + selectedApplicant.email} className="mt-1 block break-all text-xs font-medium text-fg hover:text-accent-text">{selectedApplicant.email || '—'}</a>
+                </div>
+                <div className="rounded-control border border-line bg-bg p-3">
+                  <span className="text-[10px] text-muted">{isId ? 'Nomor telepon' : 'Phone'}</span>
+                  <p className="mt-1 text-xs font-medium text-fg">{selectedApplicant.phone || '—'}</p>
+                </div>
+                <div className="rounded-control border border-line bg-bg p-3">
+                  <span className="text-[10px] text-muted">{isId ? 'Tanggal masuk' : 'Date received'}</span>
+                  <p className="mt-1 text-xs font-medium text-fg">{selectedApplicant.createdAt ? new Date(selectedApplicant.createdAt).toLocaleString(isId ? 'id-ID' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}</p>
+                </div>
+                <div className="rounded-control border border-line bg-bg p-3">
+                  <span className="text-[10px] text-muted">{isId ? 'Sumber' : 'Source'}</span>
+                  <p className="mt-1 text-xs font-medium text-fg">{selectedApplicant.source || 'Careers'}</p>
+                </div>
+              </div>
+
+              <section className="rounded-card border border-line bg-bg p-3.5">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <h3 className="text-xs font-semibold text-fg">{isId ? 'Cover letter / pesan kandidat' : 'Cover letter / applicant message'}</h3>
+                  <span className="text-[10px] text-muted">{selectedApplicant.message?.length || 0} {isId ? 'karakter' : 'characters'}</span>
+                </div>
+                <p className="whitespace-pre-wrap break-words text-xs leading-6 text-muted">
+                  {selectedApplicant.message?.trim() || (isId ? 'Kandidat tidak menyertakan pesan.' : 'No message was provided.')}
+                </p>
+              </section>
+
+              <div className="flex flex-wrap gap-2">
+                {resume && <a href={resume} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center gap-2 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:border-accent/30"><FileText size={13} />{isId ? 'Buka CV / Resume' : 'Open CV / Resume'}<ExternalLink size={11} /></a>}
+                {portfolio && <a href={portfolio} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center gap-2 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:border-accent/30">{isId ? 'Buka portfolio' : 'Open portfolio'}<ExternalLink size={11} /></a>}
+                {!resume && !portfolio && <p className="text-[11px] text-muted">{isId ? 'Tidak ada tautan dokumen.' : 'No document links available.'}</p>}
+              </div>
+
+              <Field label={isId ? 'Catatan internal untuk tim rekrutmen' : 'Internal notes for the hiring team'}>
+                <textarea className={textareaClass + ' min-h-[120px]'} value={internalNotesDraft} onChange={event => setInternalNotesDraft(event.target.value.slice(0, 5000))} maxLength={5000} placeholder={isId ? 'Catat hasil screening, jadwal interview, atau tindak lanjut...' : 'Record screening notes, interview plans, or follow-ups...'} />
+              </Field>
+              <p className="text-[10px] leading-4 text-muted">{isId ? 'Catatan hanya untuk internal AMS dan tidak tampil di public site.' : 'Notes are internal to AMS and are not shown on the public site.'}</p>
+            </div>
+          );
+        })()}
+      </Modal>
 
       <Modal
         open={editorOpen}
