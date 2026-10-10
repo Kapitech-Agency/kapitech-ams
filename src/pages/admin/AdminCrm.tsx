@@ -473,10 +473,25 @@ export const AdminCrm: React.FC = () => {
         )}
       />
 
+      {loadError && (
+        <div role="alert" aria-live="assertive" className="flex flex-col gap-3 rounded-card border border-danger/25 bg-danger/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-start gap-2.5">
+            <AlertCircle size={16} className="mt-0.5 shrink-0 text-danger" aria-hidden="true" />
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-fg">{language === 'id' ? 'Pipeline CRM tidak tersedia' : 'CRM pipeline unavailable'}</p>
+              <p className="mt-1 text-xs leading-5 text-muted">{loadError}</p>
+            </div>
+          </div>
+          <Button type="button" variant="secondary" loading={isLoading} onClick={() => void loadLeads()} className="shrink-0 self-start sm:self-auto">
+            {language === 'id' ? 'Coba lagi' : 'Retry loading'}
+          </Button>
+        </div>
+      )}
+
       {/* Toast Alert */}
       {statusMessage && (
-        <div className="p-3 rounded-card bg-success/10 border border-success/30 text-success text-xs font-sans flex items-center gap-2 animate-in fade-in duration-300">
-          <Check size={15} />
+        <div role={statusTone === 'error' ? 'alert' : 'status'} aria-live={statusTone === 'error' ? 'assertive' : 'polite'} className={'p-3 rounded-card border text-xs font-sans flex items-center gap-2 animate-in fade-in duration-300 ' + (statusTone === 'error' ? 'bg-danger/10 border-danger/30 text-danger' : 'bg-success/10 border-success/30 text-success')}>
+          {statusTone === 'error' ? <AlertCircle size={15} aria-hidden="true" /> : <Check size={15} aria-hidden="true" />}
           <span>{statusMessage}</span>
         </div>
       )}
@@ -488,43 +503,43 @@ export const AdminCrm: React.FC = () => {
             <h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan pipeline' : 'Pipeline snapshot'}</h2>
             <p className="mt-1 text-xs text-muted">{language === 'id' ? 'Nilai peluang, hasil closed-won, dan efisiensi konversi.' : 'Opportunity value, closed-won performance, and conversion efficiency.'}</p>
           </div>
-          <span className="shrink-0 text-[11px] font-medium tabular-nums text-muted">{metrics.totalDeals} {language === 'id' ? 'deal' : 'deals'}</span>
+          <span className="shrink-0 text-[11px] font-medium tabular-nums text-muted">{isLoading || loadError ? '—' : metrics.totalDeals} {language === 'id' ? 'deal' : 'deals'}</span>
         </div>
         <AdminMetricStrip slug="crm-kpis"
           metrics={[
             {
               id: 'active-pipeline',
               label: language === 'id' ? 'Pipeline aktif' : 'Active pipeline',
-              value: formatAmount(metrics.totalPipelineValue, currency),
+              value: isLoading || loadError ? '—' : formatAmount(metrics.totalPipelineValue, currency),
               context: `${metrics.activeDealsCount} ${language === 'id' ? 'prospek aktif' : 'active deals'}`,
-              sparkline: [metrics.totalPipelineValue, metrics.weightedPipelineValue, metrics.totalWonValue, metrics.avgDealSize * Math.max(metrics.wonDealsCount, 1)],
+              sparkline: isLoading || loadError ? undefined : [metrics.totalPipelineValue, metrics.weightedPipelineValue, metrics.totalWonValue, metrics.avgDealSize * Math.max(metrics.wonDealsCount, 1)],
               icon: <Layers size={16} strokeWidth={1.8} />,
               toneClassName: 'text-success'
             },
             {
               id: 'weighted-pipeline',
               label: language === 'id' ? 'Pipeline tertimbang' : 'Weighted pipeline',
-              value: formatAmount(metrics.weightedPipelineValue, currency, true),
+              value: isLoading || loadError ? '—' : formatAmount(metrics.weightedPipelineValue, currency, true),
               context: language === 'id' ? 'Berdasarkan probabilitas tahap' : 'Weighted by stage probability',
-              sparkline: [metrics.totalPipelineValue, metrics.weightedPipelineValue, metrics.totalWonValue, metrics.avgDealSize * Math.max(metrics.activeDealsCount, 1)],
+              sparkline: isLoading || loadError ? undefined : [metrics.totalPipelineValue, metrics.weightedPipelineValue, metrics.totalWonValue, metrics.avgDealSize * Math.max(metrics.activeDealsCount, 1)],
               icon: <TrendingUp size={16} strokeWidth={1.8} />,
               toneClassName: 'text-info'
             },
             {
               id: 'closed-won',
               label: language === 'id' ? 'Closed won' : 'Closed won',
-              value: formatAmount(metrics.totalWonValue, currency),
+              value: isLoading || loadError ? '—' : formatAmount(metrics.totalWonValue, currency),
               context: `${metrics.wonDealsCount} ${language === 'id' ? 'deal menang' : 'won deals'}`,
-              sparkline: [metrics.activeDealsCount, metrics.wonDealsCount, metrics.totalDeals, metrics.winRate],
+              sparkline: isLoading || loadError ? undefined : [metrics.activeDealsCount, metrics.wonDealsCount, metrics.totalDeals, metrics.winRate],
               icon: <CheckCircle2 size={16} strokeWidth={1.8} />,
               toneClassName: 'text-success'
             },
             {
               id: 'win-rate',
               label: language === 'id' ? 'Win rate' : 'Win rate',
-              value: `${metrics.winRate}%`,
+              value: isLoading || loadError ? '—' : `${metrics.winRate}%`,
               context: `${language === 'id' ? 'Rata-rata deal' : 'Avg deal'}: ${formatAmount(metrics.avgDealSize, currency, true)}`,
-              sparkline: [funnelStats.leadToScope, funnelStats.scopeToPitch, funnelStats.pitchToSow, funnelStats.sowToWon],
+              sparkline: isLoading || loadError ? undefined : [funnelStats.leadToScope, funnelStats.scopeToPitch, funnelStats.pitchToSow, funnelStats.sowToWon],
               icon: <Activity size={16} strokeWidth={1.8} />,
               toneClassName: 'text-accent-text'
             }
