@@ -655,14 +655,69 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           <AdminMetricStrip
             className="grid-cols-1 sm:grid-cols-2 min-[760px]:grid-cols-3 min-[1100px]:grid-cols-4"
             metrics={[
-              { id: 'active-projects', label: 'Active projects', value: String(Number(dashboardOverview.metrics?.activeProjects ?? 12)), context: dashboardOverview.source === 'server' ? 'live data' : 'A/B dataset', sparkline: [8, 9, 10, Number(dashboardOverview.metrics?.activeProjects ?? 12)], icon: <FolderKanban size={15} />, toneClassName: 'text-success', slug: 'dashboard-active-projects' },
-              { id: 'tasks-due', label: 'Overdue tasks', value: String(Number(dashboardOverview.metrics?.overdueTasks ?? 3)), context: dashboardOverview.source === 'server' ? 'current operations' : 'A/B dataset', sparkline: [6, 5, 4, Number(dashboardOverview.metrics?.overdueTasks ?? 3)], icon: <CalendarDays size={15} />, toneClassName: 'text-info', slug: 'dashboard-tasks-overdue' },
-              { id: 'overdue', label: 'Projects at risk', value: String(Number(dashboardOverview.metrics?.projectsAtRisk ?? 3)), change: 'Requires attention', changeToneClassName: 'text-danger', sparkline: [6, 5, 4, Number(dashboardOverview.metrics?.projectsAtRisk ?? 3)], icon: <AlertTriangle size={15} />, toneClassName: 'text-danger', slug: 'dashboard-projects-risk' },
-              { id: 'revenue', label: 'Monthly revenue', value: formatLiveMoney(Number(dashboardOverview.financials?.revenueThisMonth ?? 84500), String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase()), context: dashboardOverview.source === 'server' ? 'current month' : 'A/B dataset', sparkline: sampleRevenueByRange[range].map((point) => point.primary), icon: <CircleDollarSign size={15} />, toneClassName: 'text-success', slug: 'dashboard-revenue' },
-              { id: 'outstanding', label: 'Outstanding invoices', value: formatLiveMoney(Number(dashboardOverview.financials?.outstandingReceivables ?? 32400), String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase()), context: dashboardOverview.source === 'server' ? 'receivables' : 'A/B dataset', sparkline: [22, 25, 28, 32.4], icon: <ReceiptText size={15} />, toneClassName: 'text-warning', slug: 'dashboard-outstanding' },
-              { id: 'utilization', label: 'Team utilization', value: '78%', context: dashboardOverview.source === 'server' ? 'tracked operations' : 'A/B dataset', sparkline: [66, 70, 73, 78], icon: <Users size={15} />, toneClassName: 'text-warning', slug: 'dashboard-utilization' },
-              { id: 'active-clients', label: 'Open leads', value: String(Number(dashboardOverview.metrics?.openLeads ?? 28)), context: dashboardOverview.source === 'server' ? 'current pipeline' : 'A/B dataset', sparkline: [22, 24, 25, Number(dashboardOverview.metrics?.openLeads ?? 28)], icon: <Users size={15} />, toneClassName: 'text-info', slug: 'dashboard-open-leads' },
-              { id: 'avg-project-value', label: 'Avg. project value', value: dashboardOverview.source === 'server' ? formatLiveMoney(Number(dashboardOverview.metrics?.totalBilled || 0) / Math.max(1, Number(dashboardOverview.metrics?.activeProjects || 1)), String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase()) : '$29.8k', context: dashboardOverview.source === 'server' ? 'current project base' : 'A/B dataset', sparkline: [24, 25.5, 28, 29.8], icon: <FolderKanban size={15} />, toneClassName: 'text-fg', slug: 'dashboard-avg-project-value' }
+              {
+                id: 'active-projects', label: 'Active projects',
+                value: dashboardOverview.metrics?.activeProjects != null ? String(dashboardOverview.metrics.activeProjects) : fixtureMode ? '12' : '—',
+                context: dashboardOverview.metrics?.activeProjects != null ? 'Live data' : fixtureMode ? 'Preview data' : 'Live data unavailable',
+                sparkline: fixtureMode ? [8, 9, 10, Number(dashboardOverview.metrics?.activeProjects ?? 12)] : undefined,
+                icon: <FolderKanban size={15} />, toneClassName: 'text-success', slug: 'dashboard-active-projects'
+              },
+              {
+                id: 'tasks-due', label: 'Overdue tasks',
+                value: dashboardOverview.metrics?.overdueTasks != null ? String(dashboardOverview.metrics.overdueTasks) : fixtureMode ? '3' : '—',
+                context: dashboardOverview.metrics?.overdueTasks != null ? 'Live data' : fixtureMode ? 'Preview data' : 'Live data unavailable',
+                sparkline: fixtureMode ? [6, 5, 4, Number(dashboardOverview.metrics?.overdueTasks ?? 3)] : undefined,
+                icon: <CalendarDays size={15} />, toneClassName: 'text-info', slug: 'dashboard-tasks-overdue'
+              },
+              {
+                id: 'overdue', label: 'Projects at risk',
+                value: dashboardOverview.metrics?.projectsAtRisk != null ? String(dashboardOverview.metrics.projectsAtRisk) : fixtureMode ? '3' : '—',
+                change: dashboardOverview.metrics?.projectsAtRisk != null || fixtureMode ? 'Requires attention' : undefined,
+                changeToneClassName: 'text-danger',
+                sparkline: fixtureMode ? [6, 5, 4, Number(dashboardOverview.metrics?.projectsAtRisk ?? 3)] : undefined,
+                icon: <AlertTriangle size={15} />, toneClassName: 'text-danger', slug: 'dashboard-projects-risk'
+              },
+              {
+                id: 'revenue', label: 'Monthly revenue',
+                value: dashboardOverview.financials?.revenueThisMonth != null
+                  ? formatLiveMoney(Number(dashboardOverview.financials.revenueThisMonth), String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase())
+                  : fixtureMode ? formatLiveMoney(84500, String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase()) : '—',
+                context: dashboardOverview.financials?.revenueThisMonth != null ? 'Current month · live data' : fixtureMode ? 'Preview data' : 'Live data unavailable',
+                sparkline: fixtureMode ? sampleRevenueByRange[range].map((point) => point.primary) : undefined,
+                icon: <CircleDollarSign size={15} />, toneClassName: 'text-success', slug: 'dashboard-revenue'
+              },
+              {
+                id: 'outstanding', label: 'Outstanding invoices',
+                value: dashboardOverview.financials?.outstandingReceivables != null
+                  ? formatLiveMoney(Number(dashboardOverview.financials.outstandingReceivables), String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase())
+                  : fixtureMode ? formatLiveMoney(32400, String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase()) : '—',
+                context: dashboardOverview.financials?.outstandingReceivables != null ? 'Live receivables' : fixtureMode ? 'Preview data' : 'Live data unavailable',
+                sparkline: fixtureMode ? [22, 25, 28, 32.4] : undefined,
+                icon: <ReceiptText size={15} />, toneClassName: 'text-warning', slug: 'dashboard-outstanding'
+              },
+              {
+                id: 'utilization', label: 'Team utilization',
+                value: dashboardOverview.metrics?.teamUtilization != null ? String(dashboardOverview.metrics.teamUtilization) + '%' : fixtureMode ? '78%' : '—',
+                context: dashboardOverview.metrics?.teamUtilization != null ? 'Live data' : fixtureMode ? 'Preview data' : 'Live data unavailable',
+                sparkline: fixtureMode ? [66, 70, 73, 78] : undefined,
+                icon: <Users size={15} />, toneClassName: 'text-warning', slug: 'dashboard-utilization'
+              },
+              {
+                id: 'active-clients', label: 'Open leads',
+                value: dashboardOverview.metrics?.openLeads != null ? String(dashboardOverview.metrics.openLeads) : fixtureMode ? '28' : '—',
+                context: dashboardOverview.metrics?.openLeads != null ? 'Live pipeline' : fixtureMode ? 'Preview data' : 'Live data unavailable',
+                sparkline: fixtureMode ? [22, 24, 25, Number(dashboardOverview.metrics?.openLeads ?? 28)] : undefined,
+                icon: <Users size={15} />, toneClassName: 'text-info', slug: 'dashboard-open-leads'
+              },
+              {
+                id: 'avg-project-value', label: 'Avg. project value',
+                value: dashboardOverview.metrics?.totalBilled != null && dashboardOverview.metrics?.activeProjects != null
+                  ? formatLiveMoney(Number(dashboardOverview.metrics.totalBilled) / Math.max(1, Number(dashboardOverview.metrics.activeProjects)), String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase())
+                  : fixtureMode ? '$29.8k' : '—',
+                context: dashboardOverview.metrics?.totalBilled != null && dashboardOverview.metrics?.activeProjects != null ? 'Live project base' : fixtureMode ? 'Preview data' : 'Live data unavailable',
+                sparkline: fixtureMode ? [24, 25.5, 28, 29.8] : undefined,
+                icon: <FolderKanban size={15} />, toneClassName: 'text-fg', slug: 'dashboard-avg-project-value'
+              }
             ]}
           />
         </div>
