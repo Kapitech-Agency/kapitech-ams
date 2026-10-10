@@ -151,6 +151,13 @@ const safeExternalUrl = (value?: string): string | null => {
   }
 };
 
+const applicantCoverLetter = (message?: string): string => {
+  if (!message?.trim()) return '';
+  const marker = 'Cover Letter:\\n';
+  const markerIndex = message.lastIndexOf(marker);
+  return markerIndex >= 0 ? message.slice(markerIndex + marker.length).trim() : message.trim();
+};
+
 export const AdminCmsCareers: React.FC = () => {
   const { language } = useLanguage();
   const navigate = useNavigate();
@@ -243,13 +250,16 @@ export const AdminCmsCareers: React.FC = () => {
   const draftCount = positions.length - publishedCount;
   const newApplicantsCount = applicants.filter(applicant => applicant.status === 'new').length;
   const statusOptions = [
-    { value: 'new', label: 'New' },
-    { value: 'screening', label: 'Screening' },
-    { value: 'shortlisted', label: 'Shortlisted' },
-    { value: 'interview', label: 'Interview' },
-    { value: 'hired', label: 'Hired' },
-    { value: 'rejected', label: 'Rejected' },
-    { value: 'withdrawn', label: 'Withdrawn' }
+    { value: 'new', label: isId ? 'Baru' : 'New' },
+    { value: 'in-review', label: isId ? 'Dalam review' : 'In Review' },
+    { value: 'contacted', label: isId ? 'Sudah dihubungi' : 'Contacted' },
+    { value: 'screening', label: isId ? 'Screening' : 'Screening' },
+    { value: 'shortlisted', label: isId ? 'Masuk shortlist' : 'Shortlisted' },
+    { value: 'interview', label: isId ? 'Interview' : 'Interview' },
+    { value: 'hired', label: isId ? 'Diterima' : 'Hired' },
+    { value: 'rejected', label: isId ? 'Ditolak' : 'Rejected' },
+    { value: 'withdrawn', label: isId ? 'Mengundurkan diri' : 'Withdrawn' },
+    { value: 'closed', label: isId ? 'Ditutup' : 'Closed' }
   ];
 
   const openCreateEditor = () => {
@@ -708,10 +718,10 @@ export const AdminCmsCareers: React.FC = () => {
               <section className="rounded-card border border-line bg-bg p-3.5">
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <h3 className="text-xs font-semibold text-fg">{isId ? 'Cover letter / pesan kandidat' : 'Cover letter / applicant message'}</h3>
-                  <span className="text-[10px] text-muted">{selectedApplicant.message?.length || 0} {isId ? 'karakter' : 'characters'}</span>
+                  <span className="text-[10px] text-muted">{applicantCoverLetter(selectedApplicant.message).length} {isId ? 'karakter' : 'characters'}</span>
                 </div>
                 <p className="whitespace-pre-wrap break-words text-xs leading-6 text-muted">
-                  {selectedApplicant.message?.trim() || (isId ? 'Kandidat tidak menyertakan pesan.' : 'No message was provided.')}
+                  {applicantCoverLetter(selectedApplicant.message) || (isId ? 'Kandidat tidak menyertakan pesan.' : 'No message was provided.')}
                 </p>
               </section>
 
