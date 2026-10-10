@@ -38,18 +38,23 @@ export const AdminTimeLogs: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
+  const [statusTone, setStatusTone] = useState<'success' | 'error' | 'info'>('info');
+  const showStatus = (message: string | null, tone: 'success' | 'error' | 'info' = 'error') => {
+    showStatus(message);
+    if (message) setStatusTone(tone);
+  };
   const [projectId, setProjectId] = useState('');
   const [projectName, setProjectName] = useState('General');
   const [taskTitle, setTaskTitle] = useState('');
   const [durationMinutes, setDurationMinutes] = useState(60);
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(() => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10));
   const [billable, setBillable] = useState(true);
   const [notes, setNotes] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<TimeLog | null>(null);
 
   const load = async () => {
     setLoading(true);
-    setStatus(null);
+    showStatus(null);
     try {
       const [logsRes, projectsRes] = await Promise.all([
         api.timeLogs.getAll(),
@@ -62,7 +67,7 @@ export const AdminTimeLogs: React.FC = () => {
           slug: log.slug || toSlug((log.taskTitle || log.projectName || 'time-log') + '-' + log.id, 'time-log-record')
         })));
       } else {
-        setStatus(logsRes.error || 'Unable to load time logs.');
+        showStatus(logsRes.error || 'Unable to load time logs.');
       }
 
       if (projectsRes?.success && Array.isArray(projectsRes.data?.projects)) {
@@ -71,10 +76,10 @@ export const AdminTimeLogs: React.FC = () => {
           slug: project.slug || toSlug(project.name || project.id, 'project-record')
         })));
       } else if (!projectsRes?.success) {
-        setStatus(current => current || projectsRes?.error || 'Unable to load projects.');
+        showStatus(current => current || projectsRes?.error || 'Unable to load projects.');
       }
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : 'Unable to load time logs.');
+      showStatus(error instanceof Error ? error.message : 'Unable to load time logs.');
     } finally {
       setLoading(false);
     }
@@ -106,7 +111,7 @@ export const AdminTimeLogs: React.FC = () => {
     event.preventDefault();
     if (!canManage) return;
     setSaving(true);
-    setStatus(null);
+    showStatus(null);
     try {
       const res = await api.timeLogs.create({
         projectId,
@@ -122,12 +127,12 @@ export const AdminTimeLogs: React.FC = () => {
         setPage(1);
         setTaskTitle('');
         setNotes('');
-        setStatus('Time entry saved.');
+        showStatus('Time entry saved.', 'success');
       } else {
-        setStatus(res.error || 'Time entry could not be saved.');
+        showStatus(res.error || 'Time entry could not be saved.');
       }
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : 'Time entry could not be saved.');
+      showStatus(error instanceof Error ? error.message : 'Time entry could not be saved.');
     } finally {
       setSaving(false);
     }
@@ -143,12 +148,12 @@ export const AdminTimeLogs: React.FC = () => {
       const res = await api.timeLogs.delete(log.id);
       if (res.success) {
         setLogs(current => current.filter(item => item.id !== log.id));
-        setStatus('Time entry deleted.');
+        showStatus('Time entry deleted.', 'success');
       } else {
-        setStatus(res.error || 'Time entry could not be deleted.');
+        showStatus(res.error || 'Time entry could not be deleted.');
       }
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : 'Time entry could not be deleted.');
+      showStatus(error instanceof Error ? error.message : 'Time entry could not be deleted.');
     } finally {
       setDeleteTarget(null);
     }
@@ -276,7 +281,12 @@ export const AdminTimeLogs: React.FC = () => {
           </form>
         )}
 
-        {status && <div className="rounded-card border border-line bg-panel px-4 py-3 text-xs text-fg">{status}</div>}
+        {status && (
+          <div role={statusTone === 'error' ? 'alert' : 'status'} aria-live={statusTone === 'error' ? 'assertive' : 'polite'} className={'flex flex-col gap-2 rounded-card border px-4 py-3 text-xs sm:flex-row sm:items-center sm:justify-between ' + (statusTone === 'error' ? 'border-danger/30 bg-danger/10 text-danger' : statusTone === 'success' ? 'border-success/25 bg-success/10 text-success' : 'border-line bg-panel text-fg')}>
+            <span className="min-w-0">{status}</span>
+            {statusTone === 'error' && <Button type="button" variant="secondary" icon={<RefreshCw size={13} />} loading={loading} onClick={() => void load()} className="shrink-0 self-start sm:self-auto">Retry</Button>}
+          </div>
+        )}
 
         <section data-ams-feature-slug="time-tracking-ledger" data-ams-slug="time-tracking-ledger" className="rounded-card border border-line bg-panel overflow-hidden">
           <div className="px-4 sm:px-5 py-4 border-b border-line flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
