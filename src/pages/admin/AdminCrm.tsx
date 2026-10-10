@@ -560,24 +560,24 @@ export const AdminCrm: React.FC = () => {
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
           <div className="rounded-control border border-line bg-bg p-2.5 text-center">
             <div className="text-[10px] text-muted">Lead→Scope</div>
-            <div className="mt-0.5 text-sm font-semibold tabular-nums text-fg">{loadError ? '—' : funnelStats.leadToScope + '%'}</div>
+            <div className="mt-0.5 text-sm font-semibold tabular-nums text-fg">{isLoading || loadError ? '—' : funnelStats.leadToScope + '%'}</div>
           </div>
           <div className="rounded-control border border-line bg-bg p-2.5 text-center">
             <div className="text-[10px] text-muted">Scope→Pitch</div>
-            <div className="mt-0.5 text-sm font-semibold tabular-nums text-fg">{loadError ? '—' : funnelStats.scopeToPitch + '%'}</div>
+            <div className="mt-0.5 text-sm font-semibold tabular-nums text-fg">{isLoading || loadError ? '—' : funnelStats.scopeToPitch + '%'}</div>
           </div>
           <div className="rounded-control border border-line bg-bg p-2.5 text-center">
             <div className="text-[10px] text-muted">Pitch→SOW</div>
-            <div className="mt-0.5 text-sm font-semibold tabular-nums text-fg">{loadError ? '—' : funnelStats.pitchToSow + '%'}</div>
+            <div className="mt-0.5 text-sm font-semibold tabular-nums text-fg">{isLoading || loadError ? '—' : funnelStats.pitchToSow + '%'}</div>
           </div>
           <div className="rounded-control border border-success/20 bg-success/10 p-2.5 text-center">
             <div className="text-[10px] text-success">SOW→Won</div>
-            <div className="mt-0.5 text-sm font-semibold tabular-nums text-success">{loadError ? '—' : funnelStats.sowToWon + '%'}</div>
+            <div className="mt-0.5 text-sm font-semibold tabular-nums text-success">{isLoading || loadError ? '—' : funnelStats.sowToWon + '%'}</div>
           </div>
         </div>
         <div className="mt-3 flex flex-col gap-2 border-t border-line pt-3 text-[11px] sm:flex-row sm:items-center sm:justify-between">
-          <span className="text-muted">{language === 'id' ? 'Rata-rata deal' : 'Avg deal'}: <span className="font-semibold text-fg">{loadError ? '—' : formatAmount(metrics.avgDealSize, currency, true)}</span></span>
-          <span className="text-muted">{language === 'id' ? 'Proposal & negosiasi' : 'Proposal & SOW'}: <span className="font-semibold text-info">{loadError ? '—' : formatAmount(metrics.negotiationValue, currency, true)}</span></span>
+          <span className="text-muted">{language === 'id' ? 'Rata-rata deal' : 'Avg deal'}: <span className="font-semibold text-fg">{isLoading || loadError ? '—' : formatAmount(metrics.avgDealSize, currency, true)}</span></span>
+          <span className="text-muted">{language === 'id' ? 'Proposal & negosiasi' : 'Proposal & SOW'}: <span className="font-semibold text-info">{isLoading || loadError ? '—' : formatAmount(metrics.negotiationValue, currency, true)}</span></span>
         </div>
       </section>
 
