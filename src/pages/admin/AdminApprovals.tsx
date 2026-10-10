@@ -52,6 +52,7 @@ export const AdminApprovals: React.FC = () => {
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
   const [approvals, setApprovals] = useState<ApprovalItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('Pending');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -83,17 +84,22 @@ export const AdminApprovals: React.FC = () => {
 
   const loadApprovals = async () => {
     setIsLoading(true);
+    setLoadError(null);
     try {
       const res = await api.approvals.getAll();
       if (res.success && Array.isArray(res.data?.approvals)) {
         setApprovals(res.data.approvals);
       } else {
+        const message = res.error || (language === 'id' ? 'Approval gagal dimuat.' : 'Approvals could not be loaded.');
         setApprovals([]);
-        showToast(res.error || (language === 'id' ? 'Approval gagal dimuat.' : 'Approvals could not be loaded.'));
+        setLoadError(message);
+        showToast(message);
       }
     } catch {
+      const message = language === 'id' ? 'Approval gagal dimuat.' : 'Approvals could not be loaded.';
       setApprovals([]);
-      showToast(language === 'id' ? 'Approval gagal dimuat.' : 'Approvals could not be loaded.');
+      setLoadError(message);
+      showToast(message);
     } finally {
       setIsLoading(false);
     }
@@ -217,14 +223,14 @@ export const AdminApprovals: React.FC = () => {
       <section data-ams-feature-slug="approvals-snapshot" data-ams-slug="approvals-snapshot" aria-label="Approval snapshot" className="rounded-card border border-line bg-panel p-4">
         <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
           <div><h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan persetujuan' : 'Approval snapshot'}</h2><p className="mt-1 text-xs text-muted">{language === 'id' ? 'Permintaan dan exposure finansial yang menunggu keputusan.' : 'Decision queue and financial exposure across the approval workspace.'}</p></div>
-          <span className="text-[11px] font-medium tabular-nums text-muted">{metrics.pendingCount} pending</span>
+          <span className="text-[11px] font-medium tabular-nums text-muted">{isLoading || loadError ? '— pending' : metrics.pendingCount + ' pending'}</span>
         </div>
         <AdminMetricStrip slug="approvals-kpis"
           metrics={[
-            { id: 'pending', label: language === 'id' ? 'Menunggu Otorisasi' : 'Pending Authorization', value: metrics.pendingCount, context: language === 'id' ? 'Perlu tindakan eksekutif' : 'Action required', sparkline: [metrics.pendingCount, metrics.highRiskPending, metrics.approvedCount, metrics.pendingCount], icon: <Clock size={16} strokeWidth={1.8} />, toneClassName: 'text-warning' },
-            { id: 'pending-value', label: language === 'id' ? 'Nilai Tertunda' : 'Pending Value', value: formatAmount(metrics.totalPendingValue, currency), context: language === 'id' ? 'Total nilai menunggu review' : 'Total financial exposure', sparkline: approvals.slice(0, 8).map((item) => Number(item.value) || 0), icon: <DollarSign size={16} strokeWidth={1.8} />, toneClassName: 'text-accent-text' },
-            { id: 'risk', label: language === 'id' ? 'Tinggi Risiko' : 'High Risk Items', value: metrics.highRiskPending, context: language === 'id' ? 'Perlu hak persetujuan' : 'Requires approval permission', sparkline: [metrics.highRiskPending, metrics.pendingCount, metrics.approvedCount], icon: <AlertTriangle size={16} strokeWidth={1.8} />, toneClassName: 'text-danger' },
-            { id: 'approved', label: language === 'id' ? 'Telah Disetujui' : 'Total Approved', value: metrics.approvedCount, context: language === 'id' ? 'Tercatat dalam audit trail' : 'Logged in audit trail', sparkline: [metrics.pendingCount, metrics.approvedCount, metrics.highRiskPending], icon: <CheckCircle2 size={16} strokeWidth={1.8} />, toneClassName: 'text-success' }
+            { id: 'pending', label: language === 'id' ? 'Menunggu Otorisasi' : 'Pending Authorization', value: isLoading || loadError ? '—' : metrics.pendingCount, context: isLoading ? (language === 'id' ? 'Memuat data' : 'Loading live data') : loadError ? (language === 'id' ? 'Data tidak tersedia' : 'Live data unavailable') : (language === 'id' ? 'Perlu tindakan eksekutif' : 'Action required'), sparkline: [metrics.pendingCount, metrics.highRiskPending, metrics.approvedCount, metrics.pendingCount], icon: <Clock size={16} strokeWidth={1.8} />, toneClassName: 'text-warning' },
+            { id: 'pending-value', label: language === 'id' ? 'Nilai Tertunda' : 'Pending Value', value: isLoading || loadError ? '—' : formatAmount(metrics.totalPendingValue, currency), context: isLoading ? (language === 'id' ? 'Memuat data' : 'Loading live data') : loadError ? (language === 'id' ? 'Data tidak tersedia' : 'Live data unavailable') : (language === 'id' ? 'Total nilai menunggu review' : 'Total financial exposure'), sparkline: approvals.slice(0, 8).map((item) => Number(item.value) || 0), icon: <DollarSign size={16} strokeWidth={1.8} />, toneClassName: 'text-accent-text' },
+            { id: 'risk', label: language === 'id' ? 'Tinggi Risiko' : 'High Risk Items', value: isLoading || loadError ? '—' : metrics.highRiskPending, context: isLoading ? (language === 'id' ? 'Memuat data' : 'Loading live data') : loadError ? (language === 'id' ? 'Data tidak tersedia' : 'Live data unavailable') : (language === 'id' ? 'Data tidak tersedia' : 'Live data unavailable') : (language === 'id' ? 'Perlu hak persetujuan' : 'Requires approval permission'), sparkline: [metrics.highRiskPending, metrics.pendingCount, metrics.approvedCount], icon: <AlertTriangle size={16} strokeWidth={1.8} />, toneClassName: 'text-danger' },
+            { id: 'approved', label: language === 'id' ? 'Telah Disetujui' : 'Total Approved', value: isLoading || loadError ? '—' : metrics.approvedCount, context: isLoading ? (language === 'id' ? 'Memuat data' : 'Loading live data') : loadError ? (language === 'id' ? 'Data tidak tersedia' : 'Live data unavailable') : (language === 'id' ? 'Tercatat dalam audit trail' : 'Logged in audit trail'), sparkline: [metrics.pendingCount, metrics.approvedCount, metrics.highRiskPending], icon: <CheckCircle2 size={16} strokeWidth={1.8} />, toneClassName: 'text-success' }
           ]}
         />
       </section>
@@ -289,6 +295,19 @@ export const AdminApprovals: React.FC = () => {
                 </div>
               </div>
             ))}
+          </div>
+        ) : loadError ? (
+          <div role="alert" aria-live="assertive" className="flex flex-col items-start gap-3 rounded-card border border-danger/25 bg-danger/5 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-start gap-3">
+              <AlertTriangle size={18} className="mt-0.5 shrink-0 text-danger" aria-hidden="true" />
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold text-fg">{language === 'id' ? 'Data approval tidak tersedia' : 'Approval data is unavailable'}</h3>
+                <p className="mt-1 text-xs leading-5 text-muted">{loadError}</p>
+              </div>
+            </div>
+            <Button type="button" variant="secondary" loading={isLoading} onClick={() => void loadApprovals()} className="shrink-0">
+              {language === 'id' ? 'Coba lagi' : 'Retry loading'}
+            </Button>
           </div>
         ) : filteredApprovals.length === 0 ? (
           <div className="p-12 rounded-card bg-bg border border-line text-center text-xs font-sans text-muted">
