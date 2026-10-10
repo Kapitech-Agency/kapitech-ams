@@ -22,6 +22,7 @@ import { ProfileIdentity } from './ProfileIdentity';
 import Button from '../ui/Button';
 import { api } from '../../lib/apiClient';
 import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
+import { isSlugFixtureMode } from '../../lib/runtimeMode';
 
 type TaskStatus = 'todo' | 'in_progress' | 'review' | 'done';
 type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
@@ -309,17 +310,25 @@ export const TasksWorkspace: React.FC = () => {
           });
 
           if (mounted) {
-            setRecords(normalized.length ? normalized : fallbackTasks);
-            setNotice(normalized.length ? null : 'No server tasks were returned. Frontend preview tasks are active for the workspace.');
+            setRecords(normalized.length ? normalized : (isSlugFixtureMode() ? fallbackTasks : []));
+            setNotice(normalized.length
+              ? null
+              : isSlugFixtureMode()
+                ? 'No server tasks were returned. Frontend preview tasks are active for the workspace.'
+                : null);
           }
         } else if (mounted) {
-          setRecords(fallbackTasks);
-          setNotice('Task service is unavailable. Frontend preview tasks are active for the workspace.');
+          setRecords(isSlugFixtureMode() ? fallbackTasks : []);
+          setNotice(isSlugFixtureMode()
+            ? 'Task service is unavailable. Frontend preview tasks are active for the workspace.'
+            : 'Task service is unavailable. Live task data could not be loaded.');
         }
       } catch {
         if (mounted) {
-          setRecords(fallbackTasks);
-          setNotice('Task service is unavailable. Frontend preview tasks are active for the workspace.');
+          setRecords(isSlugFixtureMode() ? fallbackTasks : []);
+          setNotice(isSlugFixtureMode()
+            ? 'Task service is unavailable. Frontend preview tasks are active for the workspace.'
+            : 'Task service is unavailable. Live task data could not be loaded.');
         }
       } finally {
         if (mounted) setLoading(false);
@@ -847,7 +856,7 @@ export const TasksWorkspace: React.FC = () => {
           <div className="px-5 py-16 text-center" data-ams-slug="tasks-empty-state">
             <CheckCircle2 size={22} className="mx-auto text-success" />
             <p className="mt-3 text-sm font-semibold text-fg">{activeFilterCount ? 'No tasks match these filters' : 'No tasks in this queue'}</p>
-            <p className="mt-1 text-xs text-muted">{activeFilterCount ? 'Reset filters or change the search to widen the queue.' : 'Nothing needs attention in this task view right now.'}</p>
+            <p className="mt-1 text-xs text-muted">{activeFilterCount ? 'Reset filters or change the search to widen the queue.' : taskScope === 'all' ? 'No tasks are available from the live project data yet.' : 'Nothing needs attention in this task view right now.'}</p>
             {activeFilterCount && (
               <button type="button" onClick={clearFilters} data-ams-slug="tasks-empty-reset" className="mt-4 inline-flex min-h-9 items-center justify-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">
                 Reset filters
