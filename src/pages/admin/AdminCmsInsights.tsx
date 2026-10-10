@@ -16,7 +16,7 @@ import {
 import { api } from '../../lib/apiClient';
 import { useLanguage } from '../../lib/LanguageContext';
 import {
-  AdminFilterBar,
+  AdminFilterBar, AdminSectionTabs,
   AdminMetricStrip,
   AdminModuleHeader,
   AdminPageShell,
@@ -752,7 +752,22 @@ export const AdminCmsInsights: React.FC = () => {
         actions={<Button type="button" variant="primary" icon={<Plus size={14} />} onClick={handleOpenAdd}>Create Insight</Button>}
       />
 
-      <AdminMetricStrip
+      
+      <div className="min-[900px]:hidden min-w-0" data-ams-slug="cms-mobile-tabs">
+        <AdminSectionTabs
+          ariaLabel="CMS sections"
+          activeKey="insights"
+          items={[
+            { key: 'projects', label: 'Projects', to: '/admin/cms/projects' },
+            { key: 'services', label: 'Services', to: '/admin/cms/services' },
+            { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials' },
+            { key: 'insights', label: 'Insights', to: '/admin/cms/insights' },
+            { key: 'careers', label: 'Careers', to: '/admin/cms/careers' },
+          ]}
+        />
+      </div>
+
+<AdminMetricStrip
         slug="cms-insights-kpis"
         className="grid-cols-2 sm:grid-cols-4"
         metrics={[
