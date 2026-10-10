@@ -377,6 +377,13 @@ export const api = {
     deleteProject: (id: string) => apiRequest(`/api/cms/projects/${id}`, { method: 'DELETE' }),
 
     getTestimonials: () => apiRequest<{ success: boolean; testimonials: any[] }>('/api/cms/testimonials'),
+    getCareers: () => apiRequest<{ success: boolean; positions: any[] }>('/api/cms/careers'),
+    createCareer: (position: any) =>
+      apiRequest('/api/cms/careers', { method: 'POST', body: JSON.stringify(position) }),
+    updateCareer: (id: string, updates: any) =>
+      apiRequest(`/api/cms/careers/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify(updates) }),
+    deleteCareer: (id: string) =>
+      apiRequest(`/api/cms/careers/${encodeURIComponent(id)}`, { method: 'DELETE' }),
     getInsights: (params: Record<string, string | number | boolean | undefined> = {}) => {
       const query = new URLSearchParams();
       Object.entries(params).forEach(([key, value]) => {
