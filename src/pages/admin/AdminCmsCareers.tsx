@@ -1,0 +1,715 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  ArrowUpRight, Briefcase, CheckCircle2, Clock3, ExternalLink, FileText,
+  Globe2, Plus, Search, Send, ShieldAlert, Trash2, Users, X, PencilLine,
+  RefreshCw, Eye, EyeOff
+} from 'lucide-react';
+import { useLanguage } from '../../lib/LanguageContext';
+import { api } from '../../lib/apiClient';
+import Button from '../../components/ui/Button';
+import { Modal } from '../../components/ui/Modal';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, Skeleton } from '../../components/admin/AdminModulePrimitives';
+
+type CareerPosition = {
+  id: string;
+  slug: string;
+  title: string;
+  titleId: string;
+  department: string;
+  departmentId: string;
+  location: string;
+  locationId: string;
+  type: string;
+  typeId: string;
+  workplace: string;
+  workplaceId: string;
+  badge: string;
+  badgeId: string;
+  summary: string;
+  summaryId: string;
+  responsibilities: string[];
+  responsibilitiesId: string[];
+  requirements: string[];
+  requirementsId: string[];
+  compensation: string;
+  compensationId: string;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type Applicant = {
+  id: string;
+  fullName: string;
+  email: string;
+  phone?: string;
+  positionTitle?: string;
+  portfolioUrl?: string;
+  resumeUrl?: string;
+  status: string;
+  createdAt?: string;
+  source?: string;
+  message?: string;
+  internalNotes?: string;
+};
+
+type WorkspaceTab = 'jobs' | 'applicants';
+type JobStatusFilter = 'all' | 'published' | 'draft';
+
+const inputClass = 'h-10 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg placeholder:text-muted/60 outline-none transition-colors focus:border-accent focus:ring-1 focus:ring-accent/20';
+const textareaClass = 'min-h-[92px] w-full resize-y rounded-control border border-line bg-bg px-3 py-2.5 text-xs leading-5 text-fg placeholder:text-muted/60 outline-none transition-colors focus:border-accent focus:ring-1 focus:ring-accent/20';
+
+const emptyCareer = (): CareerPosition => ({
+  id: '',
+  slug: '',
+  title: '',
+  titleId: '',
+  department: '',
+  departmentId: '',
+  location: '',
+  locationId: '',
+  type: 'Full Time',
+  typeId: 'Full Time',
+  workplace: 'Hybrid',
+  workplaceId: 'Hybrid',
+  badge: '',
+  badgeId: '',
+  summary: '',
+  summaryId: '',
+  responsibilities: [],
+  responsibilitiesId: [],
+  requirements: [],
+  requirementsId: [],
+  compensation: '',
+  compensationId: '',
+  isPublished: true,
+  createdAt: '',
+  updatedAt: ''
+});
+
+const normalizeCareer = (source: Partial<CareerPosition>): CareerPosition => ({
+  ...emptyCareer(),
+  ...source,
+  id: String(source.id || ''),
+  slug: String(source.slug || ''),
+  responsibilities: Array.isArray(source.responsibilities) ? source.responsibilities : [],
+  responsibilitiesId: Array.isArray(source.responsibilitiesId) ? source.responsibilitiesId : [],
+  requirements: Array.isArray(source.requirements) ? source.requirements : [],
+  requirementsId: Array.isArray(source.requirementsId) ? source.requirementsId : [],
+  isPublished: source.isPublished !== false
+});
+
+const slugify = (value: string) => value
+  .normalize('NFKD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, '-')
+  .replace(/^-+|-+$/g, '')
+  .slice(0, 120);
+
+const listToText = (items: string[]) => items.join('\n');
+const textToList = (value: string) => value.split('\n').map(item => item.trim()).filter(Boolean).slice(0, 12);
+
+const Field: React.FC<{ label: string; children: React.ReactNode; required?: boolean }> = ({ label, children, required }) => (
+  <label className="block min-w-0">
+    <span className="mb-1.5 block text-[11px] font-medium text-muted">
+      {label}{required && <span className="ml-1 text-danger">*</span>}
+    </span>
+    {children}
+  </label>
+);
+
+const statusLabel = (status: string) => ({
+  new: 'New',
+  screening: 'Screening',
+  shortlisted: 'Shortlisted',
+  interview: 'Interview',
+  hired: 'Hired',
+  rejected: 'Rejected',
+  withdrawn: 'Withdrawn',
+  'in-review': 'In Review',
+  contacted: 'Contacted',
+  closed: 'Closed'
+}[status] || status);
+
+const statusClass = (status: string) => {
+  if (status === 'hired' || status === 'closed') return 'border-success/25 bg-success/10 text-success';
+  if (status === 'rejected' || status === 'withdrawn') return 'border-danger/25 bg-danger/10 text-danger';
+  if (status === 'new') return 'border-warning/25 bg-warning/10 text-warning';
+  return 'border-info/25 bg-info/10 text-info';
+};
+
+const safeExternalUrl = (value?: string): string | null => {
+  if (!value?.trim()) return null;
+  try {
+    const url = new URL(value, window.location.origin);
+    return ['http:', 'https:'].includes(url.protocol) ? url.toString() : null;
+  } catch {
+    return null;
+  }
+};
+
+export const AdminCmsCareers: React.FC = () => {
+  const { language } = useLanguage();
+  const navigate = useNavigate();
+  const isId = language === 'id';
+
+  const [activeTab, setActiveTab] = useState<WorkspaceTab>('jobs');
+  const [positions, setPositions] = useState<CareerPosition[]>([]);
+  const [jobsLoading, setJobsLoading] = useState(true);
+  const [jobsError, setJobsError] = useState<string | null>(null);
+  const [jobSearch, setJobSearch] = useState('');
+  const [jobStatusFilter, setJobStatusFilter] = useState<JobStatusFilter>('all');
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editorMode, setEditorMode] = useState<'create' | 'edit'>('create');
+  const [draft, setDraft] = useState<CareerPosition>(emptyCareer());
+  const [saving, setSaving] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<{ text: string; tone: 'success' | 'danger' } | null>(null);
+  const [deleteJobTarget, setDeleteJobTarget] = useState<CareerPosition | null>(null);
+
+  const [applicants, setApplicants] = useState<Applicant[]>([]);
+  const [applicantsLoading, setApplicantsLoading] = useState(false);
+  const [applicantsLoaded, setApplicantsLoaded] = useState(false);
+  const [applicantsError, setApplicantsError] = useState<string | null>(null);
+  const [applicantSearch, setApplicantSearch] = useState('');
+  const [applicantStatusFilter, setApplicantStatusFilter] = useState('all');
+  const [updatingApplicantId, setUpdatingApplicantId] = useState<string | null>(null);
+  const [deleteApplicantTarget, setDeleteApplicantTarget] = useState<Applicant | null>(null);
+
+  const loadJobs = async () => {
+    setJobsLoading(true);
+    setJobsError(null);
+    try {
+      const result = await api.cms.getCareers();
+      if (!result.success || !Array.isArray(result.data?.positions)) {
+        throw new Error(result.error || 'Career positions could not be loaded.');
+      }
+      setPositions((result.data.positions as CareerPosition[]).map(normalizeCareer));
+    } catch (error) {
+      setJobsError(error instanceof Error ? error.message : 'Career positions could not be loaded.');
+    } finally {
+      setJobsLoading(false);
+    }
+  };
+
+  const loadApplicants = async (force = false) => {
+    if (applicantsLoaded && !force) return;
+    setApplicantsLoading(true);
+    setApplicantsError(null);
+    try {
+      const result = await api.leads.getAll();
+      if (!result.success || !Array.isArray(result.data?.leads)) {
+        throw new Error(result.error || 'Job applications could not be loaded. Check CRM / Inbox access.');
+      }
+      setApplicants((result.data.leads as Applicant[]).filter(item => (item as any).type === 'career'));
+      setApplicantsLoaded(true);
+    } catch (error) {
+      setApplicantsError(error instanceof Error ? error.message : 'Job applications could not be loaded.');
+    } finally {
+      setApplicantsLoading(false);
+    }
+  };
+
+  useEffect(() => { void loadJobs(); }, []);
+  useEffect(() => {
+    if (activeTab === 'applicants') void loadApplicants();
+  }, [activeTab]);
+
+  const filteredPositions = useMemo(() => {
+    const q = jobSearch.trim().toLowerCase();
+    return positions.filter(position => {
+      const matchesStatus = jobStatusFilter === 'all'
+        || (jobStatusFilter === 'published' ? position.isPublished : !position.isPublished);
+      const fields = [position.title, position.titleId, position.department, position.departmentId, position.slug, position.location];
+      return matchesStatus && (!q || fields.some(value => String(value || '').toLowerCase().includes(q)));
+    });
+  }, [positions, jobSearch, jobStatusFilter]);
+
+  const filteredApplicants = useMemo(() => {
+    const q = applicantSearch.trim().toLowerCase();
+    return applicants.filter(applicant => {
+      const matchesStatus = applicantStatusFilter === 'all' || applicant.status === applicantStatusFilter;
+      const fields = [applicant.fullName, applicant.email, applicant.positionTitle, applicant.phone];
+      return matchesStatus && (!q || fields.some(value => String(value || '').toLowerCase().includes(q)));
+    });
+  }, [applicants, applicantSearch, applicantStatusFilter]);
+
+  const publishedCount = positions.filter(position => position.isPublished).length;
+  const draftCount = positions.length - publishedCount;
+  const newApplicantsCount = applicants.filter(applicant => applicant.status === 'new').length;
+  const statusOptions = [
+    { value: 'new', label: 'New' },
+    { value: 'screening', label: 'Screening' },
+    { value: 'shortlisted', label: 'Shortlisted' },
+    { value: 'interview', label: 'Interview' },
+    { value: 'hired', label: 'Hired' },
+    { value: 'rejected', label: 'Rejected' },
+    { value: 'withdrawn', label: 'Withdrawn' }
+  ];
+
+  const openCreateEditor = () => {
+    setEditorMode('create');
+    setDraft(emptyCareer());
+    setEditorOpen(true);
+  };
+
+  const openEditEditor = (position: CareerPosition) => {
+    setEditorMode('edit');
+    setDraft(normalizeCareer(position));
+    setEditorOpen(true);
+  };
+
+  const updateDraft = <K extends keyof CareerPosition>(key: K, value: CareerPosition[K]) => {
+    setDraft(current => ({ ...current, [key]: value }));
+  };
+
+  const savePosition = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!draft.title.trim() || !draft.titleId.trim() || !draft.department.trim() || !draft.departmentId.trim()) {
+      setStatusMessage({ text: isId ? 'Judul dan departemen wajib diisi dalam Bahasa Inggris dan Indonesia.' : 'Job title and department are required in English and Indonesian.', tone: 'danger' });
+      return;
+    }
+    setSaving(true);
+    setStatusMessage(null);
+    try {
+      const payload = {
+        ...draft,
+        slug: slugify(draft.slug || draft.title),
+        updatedAt: new Date().toISOString()
+      };
+      const result = editorMode === 'create'
+        ? await api.cms.createCareer(payload)
+        : await api.cms.updateCareer(draft.id, payload);
+      if (!result.success || !result.data?.position) {
+        throw new Error(result.error || 'Career position could not be saved.');
+      }
+      const saved = normalizeCareer(result.data.position as CareerPosition);
+      setPositions(current => editorMode === 'create'
+        ? [saved, ...current]
+        : current.map(item => item.id === saved.id ? saved : item));
+      setEditorOpen(false);
+      setStatusMessage({ text: editorMode === 'create' ? (isId ? 'Lowongan berhasil ditambahkan.' : 'Job opening created.') : (isId ? 'Lowongan berhasil diperbarui.' : 'Job opening updated.'), tone: 'success' });
+    } catch (error) {
+      setStatusMessage({ text: error instanceof Error ? error.message : 'Career position could not be saved.', tone: 'danger' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const togglePublished = async (position: CareerPosition) => {
+    setStatusMessage(null);
+    try {
+      const result = await api.cms.updateCareer(position.id, { isPublished: !position.isPublished });
+      if (!result.success || !result.data?.position) throw new Error(result.error || 'Publication status could not be updated.');
+      const updated = normalizeCareer(result.data.position as CareerPosition);
+      setPositions(current => current.map(item => item.id === updated.id ? updated : item));
+      setStatusMessage({ text: updated.isPublished ? (isId ? 'Lowongan sekarang tampil di public site.' : 'Job is now live on the public site.') : (isId ? 'Lowongan disimpan sebagai draft.' : 'Job saved as draft.'), tone: 'success' });
+    } catch (error) {
+      setStatusMessage({ text: error instanceof Error ? error.message : 'Publication status could not be updated.', tone: 'danger' });
+    }
+  };
+
+  const confirmDeleteJob = async () => {
+    if (!deleteJobTarget) return;
+    const target = deleteJobTarget;
+    setDeleteJobTarget(null);
+    try {
+      const result = await api.cms.deleteCareer(target.id);
+      if (!result.success) throw new Error(result.error || 'Career position could not be deleted.');
+      setPositions(current => current.filter(item => item.id !== target.id));
+      setStatusMessage({ text: isId ? 'Lowongan dihapus. Data lamaran yang sudah masuk tetap tersimpan.' : 'Job deleted. Existing applicant records are retained.', tone: 'success' });
+    } catch (error) {
+      setStatusMessage({ text: error instanceof Error ? error.message : 'Career position could not be deleted.', tone: 'danger' });
+    }
+  };
+
+  const updateApplicantStatus = async (applicant: Applicant, status: string) => {
+    setUpdatingApplicantId(applicant.id);
+    setStatusMessage(null);
+    try {
+      const result = await api.leads.update(applicant.id, { status });
+      if (!result.success) throw new Error(result.error || 'Applicant status could not be updated. Check CRM / Inbox access.');
+      setApplicants(current => current.map(item => item.id === applicant.id ? { ...item, status } : item));
+      setStatusMessage({ text: isId ? 'Status pelamar diperbarui.' : 'Applicant status updated.', tone: 'success' });
+    } catch (error) {
+      setStatusMessage({ text: error instanceof Error ? error.message : 'Applicant status could not be updated.', tone: 'danger' });
+    } finally {
+      setUpdatingApplicantId(null);
+    }
+  };
+
+  const confirmDeleteApplicant = async () => {
+    if (!deleteApplicantTarget) return;
+    const target = deleteApplicantTarget;
+    setDeleteApplicantTarget(null);
+    try {
+      const result = await api.leads.delete(target.id);
+      if (!result.success) throw new Error(result.error || 'Applicant record could not be deleted.');
+      setApplicants(current => current.filter(item => item.id !== target.id));
+      setStatusMessage({ text: isId ? 'Data pelamar dihapus.' : 'Applicant record deleted.', tone: 'success' });
+    } catch (error) {
+      setStatusMessage({ text: error instanceof Error ? error.message : 'Applicant record could not be deleted.', tone: 'danger' });
+    }
+  };
+
+  return (
+    <AdminPageShell featureSlug="cms-careers-module" className="ams-cms-module">
+      <ConfirmDialog
+        open={!!deleteJobTarget}
+        onClose={() => setDeleteJobTarget(null)}
+        title={isId ? 'Hapus lowongan?' : 'Delete job opening?'}
+        description={isId
+          ? 'Lowongan akan dihapus dari public site. Data lamaran yang sudah masuk tidak ikut dihapus.'
+          : 'This opening will be removed from the public site. Existing applications will be retained.'}
+        confirmLabel={isId ? 'Hapus lowongan' : 'Delete opening'}
+        onConfirm={() => void confirmDeleteJob()}
+      />
+      <ConfirmDialog
+        open={!!deleteApplicantTarget}
+        onClose={() => setDeleteApplicantTarget(null)}
+        title={isId ? 'Hapus data pelamar?' : 'Delete applicant record?'}
+        description={isId
+          ? 'Data pelamar akan dihapus dari Inbox. Tindakan ini tidak dapat dibatalkan.'
+          : 'This applicant record will be deleted from the Inbox. This action cannot be undone.'}
+        confirmLabel={isId ? 'Hapus pelamar' : 'Delete applicant'}
+        onConfirm={() => void confirmDeleteApplicant()}
+      />
+
+      <AdminModuleHeader
+        slug="cms-careers-header"
+        icon={<Briefcase size={19} />}
+        className="mb-0"
+        title={isId ? 'Careers' : 'Careers'}
+        description={isId
+          ? 'Kelola lowongan public site dan tindak lanjuti kandidat dari formulir Career.'
+          : 'Manage public job openings and follow up candidates submitted through the Careers page.'}
+        actions={
+          <>
+            <span className="hidden text-xs tabular-nums text-muted sm:inline">{positions.length} {isId ? 'lowongan' : 'openings'}</span>
+            {activeTab === 'jobs' ? (
+              <Button type="button" variant="primary" icon={<Plus size={14} />} onClick={openCreateEditor}>
+                {isId ? 'Tambah lowongan' : 'Add opening'}
+              </Button>
+            ) : (
+              <Button type="button" variant="secondary" icon={<ArrowUpRight size={14} />} onClick={() => navigate('/admin/inbox?view=jobs')}>
+                {isId ? 'Buka pipeline lengkap' : 'Open full pipeline'}
+              </Button>
+            )}
+          </>
+        }
+      />
+
+      {statusMessage && (
+        <div className={['flex items-start justify-between gap-3 rounded-card border p-3 text-xs', statusMessage.tone === 'danger' ? 'border-danger/30 bg-danger/10 text-danger' : 'border-success/30 bg-success/10 text-success'].join(' ')}>
+          <div className="flex min-w-0 items-start gap-2">
+            {statusMessage.tone === 'danger' ? <ShieldAlert size={15} className="mt-0.5 shrink-0" /> : <CheckCircle2 size={15} className="mt-0.5 shrink-0" />}
+            <span>{statusMessage.text}</span>
+          </div>
+          <button type="button" onClick={() => setStatusMessage(null)} aria-label="Dismiss notification" className="shrink-0 text-current/70 hover:text-current"><X size={14} /></button>
+        </div>
+      )}
+
+      <AdminMetricStrip
+        slug="cms-careers-metrics"
+        className="grid-cols-2 sm:grid-cols-4"
+        metrics={[
+          { id: 'total-openings', label: isId ? 'Total lowongan' : 'Total openings', value: positions.length, icon: <Briefcase size={15} />, toneClassName: 'text-accent-text' },
+          { id: 'published-openings', label: isId ? 'Dipublikasikan' : 'Published', value: publishedCount, icon: <Globe2 size={15} />, toneClassName: 'text-success' },
+          { id: 'draft-openings', label: 'Draft', value: draftCount, icon: <EyeOff size={15} />, toneClassName: 'text-muted' },
+          { id: 'job-applicants', label: isId ? 'Pelamar baru' : 'New applicants', value: applicantsLoaded ? newApplicantsCount : '—', icon: <Users size={15} />, toneClassName: 'text-info' }
+        ]}
+      />
+
+      <div className="inline-flex w-full flex-wrap items-center gap-1 border-b border-line">
+        {([
+          { key: 'jobs', label: isId ? 'Lowongan' : 'Job openings', count: positions.length },
+          { key: 'applicants', label: isId ? 'Pelamar' : 'Applicants', count: applicantsLoaded ? applicants.length : null }
+        ] as Array<{ key: WorkspaceTab; label: string; count: number | null }>).map(tab => (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => setActiveTab(tab.key)}
+            aria-pressed={activeTab === tab.key}
+            className={'inline-flex h-10 items-center gap-2 border-b-2 px-3 text-xs font-medium transition-colors ' + (activeTab === tab.key ? 'border-accent text-fg' : 'border-transparent text-muted hover:text-fg')}
+          >
+            {tab.label}
+            {tab.count !== null && <span className={'rounded-badge border px-1.5 py-0.5 text-[10px] tabular-nums ' + (activeTab === tab.key ? 'border-accent/25 bg-accent/10 text-accent-text' : 'border-line bg-bg text-muted')}>{tab.count}</span>}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'jobs' ? (
+        <section className="space-y-3" data-ams-feature-slug="cms-careers-list">
+          <div className="flex flex-col gap-3 rounded-card border border-line bg-panel p-3 sm:flex-row sm:items-center">
+            <label className="relative min-w-0 flex-1">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+              <input value={jobSearch} onChange={event => setJobSearch(event.target.value)} className={inputClass + ' pl-9'} placeholder={isId ? 'Cari judul, departemen, atau slug...' : 'Search title, department, or slug...'} aria-label="Search job openings" />
+            </label>
+            <select value={jobStatusFilter} onChange={event => setJobStatusFilter(event.target.value as JobStatusFilter)} className={inputClass + ' sm:w-44'} aria-label="Filter job status">
+              <option value="all">{isId ? 'Semua status' : 'All statuses'}</option>
+              <option value="published">{isId ? 'Dipublikasikan' : 'Published'}</option>
+              <option value="draft">Draft</option>
+            </select>
+            <button type="button" onClick={() => { setJobSearch(''); setJobStatusFilter('all'); }} className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs text-muted hover:text-fg">
+              <RefreshCw size={13} /> {isId ? 'Reset' : 'Reset'}
+            </button>
+          </div>
+
+          {jobsLoading ? (
+            <div className="grid gap-3 lg:grid-cols-2" role="status" aria-label="Loading job openings">
+              {[1, 2].map(item => <div key={item} className="rounded-card border border-line bg-panel p-4"><Skeleton className="h-4 w-28" /><Skeleton className="mt-4 h-5 w-3/4" /><Skeleton className="mt-3 h-3 w-full" /><Skeleton className="mt-2 h-3 w-4/5" /></div>)}
+            </div>
+          ) : jobsError ? (
+            <div className="rounded-card border border-danger/30 bg-danger/10 p-4">
+              <p className="text-sm font-semibold text-fg">{isId ? 'Lowongan gagal dimuat' : 'Unable to load job openings'}</p>
+              <p className="mt-1 text-xs leading-5 text-muted">{jobsError}</p>
+              <button type="button" onClick={() => void loadJobs()} className="mt-3 inline-flex h-9 items-center gap-2 rounded-control border border-line bg-panel px-3 text-xs text-fg"><RefreshCw size={13} />Retry</button>
+            </div>
+          ) : filteredPositions.length === 0 ? (
+            <div className="rounded-card border border-line bg-panel px-6 py-12 text-center">
+              <Briefcase size={23} className="mx-auto text-muted" />
+              <h3 className="mt-3 text-sm font-semibold text-fg">{positions.length === 0 ? (isId ? 'Belum ada lowongan' : 'No job openings yet') : (isId ? 'Tidak ada lowongan yang cocok' : 'No matching openings')}</h3>
+              <p className="mt-1 text-xs leading-5 text-muted">{positions.length === 0 ? (isId ? 'Tambahkan lowongan untuk menampilkannya di halaman Career public site.' : 'Add a job opening to publish it on the public Careers page.') : (isId ? 'Ubah kata kunci atau filter status.' : 'Adjust your search or status filter.')}</p>
+              {positions.length === 0 && <button type="button" onClick={openCreateEditor} className="mt-4 inline-flex h-9 items-center gap-1.5 rounded-control bg-accent px-3 text-xs font-medium text-white hover:bg-accent-hover"><Plus size={13} />{isId ? 'Tambah lowongan' : 'Add opening'}</button>}
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-card border border-line bg-panel">
+              <div className="overflow-x-auto">
+                <table className="ams-table w-full min-w-[900px] border-collapse text-left text-xs">
+                  <thead><tr className="border-b border-line bg-bg text-[10px] font-medium text-muted">
+                    <th className="px-4 py-3">{isId ? 'Lowongan' : 'Position'}</th>
+                    <th className="px-4 py-3">{isId ? 'Detail' : 'Details'}</th>
+                    <th className="px-4 py-3">{isId ? 'Pelamar' : 'Applicants'}</th>
+                    <th className="px-4 py-3">{isId ? 'Status' : 'Status'}</th>
+                    <th className="px-4 py-3 text-right">{isId ? 'Aksi' : 'Actions'}</th>
+                  </tr></thead>
+                  <tbody className="divide-y divide-line">
+                    {filteredPositions.map(position => {
+                      const applicantCount = applicants.filter(item => String(item.positionTitle || '').toLowerCase() === position.title.toLowerCase() || String(item.positionTitle || '').toLowerCase() === position.titleId.toLowerCase()).length;
+                      return (
+                        <tr key={position.id} className="h-14 transition-colors hover:bg-bg/60">
+                          <td className="px-4 py-3">
+                            <div className="flex min-w-0 items-start gap-2.5">
+                              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted"><Briefcase size={14} /></span>
+                              <div className="min-w-0">
+                                <p className="font-semibold text-fg">{position.title}</p>
+                                <p className="mt-1 text-[10px] text-muted">{position.titleId}</p>
+                                <p className="mt-1 font-mono text-[10px] text-muted/70">/{position.slug}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <p className="text-fg">{position.department}</p>
+                            <p className="mt-1 text-[10px] text-muted">{position.type} · {position.workplace}</p>
+                            <p className="mt-1 text-[10px] text-muted">{position.location}</p>
+                          </td>
+                          <td className="px-4 py-3"><span className="font-mono tabular-nums text-fg">{applicantCount}</span><span className="ml-1 text-[10px] text-muted">{isId ? 'lamaran' : 'applications'}</span></td>
+                          <td className="px-4 py-3">
+                            <span className={'inline-flex items-center gap-1.5 rounded-badge border px-2 py-1 text-[10px] font-medium ' + (position.isPublished ? 'border-success/25 bg-success/10 text-success' : 'border-line bg-bg text-muted')}>
+                              <span className={'h-1.5 w-1.5 rounded-full ' + (position.isPublished ? 'bg-success' : 'bg-muted')} />
+                              {position.isPublished ? (isId ? 'Live' : 'Published') : 'Draft'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button type="button" onClick={() => void togglePublished(position)} className="inline-flex h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-muted hover:text-fg" title={position.isPublished ? 'Unpublish' : 'Publish'}>
+                                {position.isPublished ? <EyeOff size={12} /> : <Eye size={12} />}{position.isPublished ? (isId ? 'Sembunyikan' : 'Unpublish') : (isId ? 'Publish' : 'Publish')}
+                              </button>
+                              <button type="button" onClick={() => openEditEditor(position)} className="inline-flex h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-fg hover:bg-panel"><PencilLine size={12} />{isId ? 'Edit' : 'Edit'}</button>
+                              <button type="button" onClick={() => setDeleteJobTarget(position)} className="inline-flex h-8 items-center justify-center rounded-control border border-danger/20 bg-danger/5 px-2 text-danger hover:bg-danger/10" aria-label={(isId ? 'Hapus ' : 'Delete ') + position.title}><Trash2 size={13} /></button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-4 py-3 text-[10px] text-muted">
+                <span>{filteredPositions.length} {isId ? 'dari' : 'of'} {positions.length} {isId ? 'lowongan' : 'openings'}</span>
+                <a href="https://kapitech.id/careers" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-accent-text hover:text-fg">{isId ? 'Lihat public Career' : 'View public Careers page'}<ExternalLink size={11} /></a>
+              </div>
+            </div>
+          )}
+        </section>
+      ) : (
+        <section className="space-y-3" data-ams-feature-slug="cms-careers-applicants">
+          <div className="flex flex-col gap-3 rounded-card border border-line bg-panel p-3 sm:flex-row sm:items-center">
+            <label className="relative min-w-0 flex-1">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+              <input value={applicantSearch} onChange={event => setApplicantSearch(event.target.value)} className={inputClass + ' pl-9'} placeholder={isId ? 'Cari nama, email, atau posisi...' : 'Search applicant, email, or position...'} aria-label="Search applicants" />
+            </label>
+            <select value={applicantStatusFilter} onChange={event => setApplicantStatusFilter(event.target.value)} className={inputClass + ' sm:w-44'} aria-label="Filter applicant status">
+              <option value="all">{isId ? 'Semua status' : 'All statuses'}</option>
+              {statusOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+            <button type="button" onClick={() => void loadApplicants(true)} disabled={applicantsLoading} className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs text-muted hover:text-fg disabled:opacity-50"><RefreshCw size={13} className={applicantsLoading ? 'animate-spin' : ''} />{isId ? 'Refresh' : 'Refresh'}</button>
+          </div>
+
+          {applicantsLoading ? (
+            <div className="space-y-2" role="status" aria-label="Loading job applicants">
+              {[1, 2, 3].map(item => <div key={item} className="flex items-center gap-3 rounded-card border border-line bg-panel p-4"><Skeleton className="h-9 w-9 rounded-full" /><div className="flex-1"><Skeleton className="h-4 w-40" /><Skeleton className="mt-2 h-3 w-60" /></div></div>)}
+            </div>
+          ) : applicantsError ? (
+            <div className="rounded-card border border-warning/30 bg-warning/5 p-5">
+              <div className="flex items-start gap-3">
+                <ShieldAlert size={17} className="mt-0.5 shrink-0 text-warning" />
+                <div className="min-w-0">
+                  <h3 className="text-sm font-semibold text-fg">{isId ? 'Inbox pelamar tidak dapat dimuat' : 'Applicant inbox is not available'}</h3>
+                  <p className="mt-1 text-xs leading-5 text-muted">{applicantsError}</p>
+                  <p className="mt-2 text-xs leading-5 text-muted">{isId ? 'Pengelolaan pelamar memakai permission CRM / Inbox yang sama dengan pipeline saat ini.' : 'Applicant management uses the same CRM / Inbox permission as the existing pipeline.'}</p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Button type="button" variant="secondary" icon={<RefreshCw size={13} />} onClick={() => void loadApplicants(true)}>{isId ? 'Coba lagi' : 'Try again'}</Button>
+                    <Button type="button" variant="primary" icon={<ArrowUpRight size={13} />} onClick={() => navigate('/admin/inbox?view=jobs')}>{isId ? 'Buka Job Applications Inbox' : 'Open Job Applications Inbox'}</Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : filteredApplicants.length === 0 ? (
+            <div className="rounded-card border border-line bg-panel px-6 py-12 text-center">
+              <Users size={23} className="mx-auto text-muted" />
+              <h3 className="mt-3 text-sm font-semibold text-fg">{applicants.length === 0 ? (isId ? 'Belum ada pelamar' : 'No applicants yet') : (isId ? 'Tidak ada pelamar yang cocok' : 'No matching applicants')}</h3>
+              <p className="mt-1 text-xs leading-5 text-muted">{isId ? 'Lamaran dari halaman Career public site akan muncul di sini secara otomatis.' : 'Applications submitted through the public Careers page will appear here automatically.'}</p>
+              <Button type="button" variant="secondary" className="mt-4" icon={<ArrowUpRight size={13} />} onClick={() => navigate('/admin/inbox?view=jobs')}>{isId ? 'Buka pipeline lengkap' : 'Open full applicant pipeline'}</Button>
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-card border border-line bg-panel">
+              <div className="overflow-x-auto">
+                <table className="ams-table w-full min-w-[980px] border-collapse text-left text-xs">
+                  <thead><tr className="border-b border-line bg-bg text-[10px] font-medium text-muted">
+                    <th className="px-4 py-3">{isId ? 'Pelamar' : 'Applicant'}</th>
+                    <th className="px-4 py-3">{isId ? 'Posisi' : 'Position'}</th>
+                    <th className="px-4 py-3">{isId ? 'Tanggal' : 'Received'}</th>
+                    <th className="px-4 py-3">{isId ? 'Status' : 'Status'}</th>
+                    <th className="px-4 py-3">{isId ? 'Dokumen' : 'Documents'}</th>
+                    <th className="px-4 py-3 text-right">{isId ? 'Aksi' : 'Actions'}</th>
+                  </tr></thead>
+                  <tbody className="divide-y divide-line">
+                    {filteredApplicants.map(applicant => {
+                      const resume = safeExternalUrl(applicant.resumeUrl);
+                      const portfolio = safeExternalUrl(applicant.portfolioUrl);
+                      return (
+                        <tr key={applicant.id} className="h-14 transition-colors hover:bg-bg/60">
+                          <td className="px-4 py-3">
+                            <p className="font-semibold text-fg">{applicant.fullName || 'Unnamed applicant'}</p>
+                            <a href={'mailto:' + applicant.email} className="mt-1 inline-flex text-[10px] text-muted hover:text-accent-text">{applicant.email}</a>
+                            {applicant.phone && <p className="mt-1 text-[10px] text-muted">{applicant.phone}</p>}
+                          </td>
+                          <td className="px-4 py-3">
+                            <p className="max-w-[260px] text-fg">{applicant.positionTitle || (isId ? 'Posisi tidak ditentukan' : 'Position not specified')}</p>
+                            <p className="mt-1 max-w-[260px] truncate text-[10px] text-muted">{applicant.source || 'Careers'}</p>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-[10px] text-muted">{applicant.createdAt ? new Date(applicant.createdAt).toLocaleDateString(isId ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</td>
+                          <td className="px-4 py-3">
+                            <select value={applicant.status || 'new'} disabled={updatingApplicantId === applicant.id} onChange={event => void updateApplicantStatus(applicant, event.target.value)} className={'h-8 max-w-[142px] rounded-control border bg-bg px-2 text-[10px] outline-none focus:border-accent disabled:opacity-50 ' + statusClass(applicant.status || 'new')} aria-label={'Status for ' + applicant.fullName}>
+                              {statusOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+                              {applicant.status && !statusOptions.some(option => option.value === applicant.status) && <option value={applicant.status}>{statusLabel(applicant.status)}</option>}
+                            </select>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex flex-wrap gap-1.5">
+                              {resume && <a href={resume} target="_blank" rel="noreferrer" className="inline-flex h-7 items-center gap-1 rounded-control border border-line bg-bg px-2 text-[10px] text-fg hover:border-accent/30"><FileText size={11} />CV</a>}
+                              {portfolio && <a href={portfolio} target="_blank" rel="noreferrer" className="inline-flex h-7 items-center gap-1 rounded-control border border-line bg-bg px-2 text-[10px] text-fg hover:border-accent/30"><ExternalLink size={11} />Portfolio</a>}
+                              {!resume && !portfolio && <span className="text-[10px] text-muted">—</span>}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <a href={'mailto:' + applicant.email} className="inline-flex h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[10px] text-fg hover:bg-panel"><Send size={11} />{isId ? 'Email' : 'Email'}</a>
+                              <button type="button" onClick={() => setDeleteApplicantTarget(applicant)} className="inline-flex h-8 items-center justify-center rounded-control border border-danger/20 bg-danger/5 px-2 text-danger hover:bg-danger/10" aria-label={(isId ? 'Hapus pelamar ' : 'Delete applicant ') + applicant.fullName}><Trash2 size={13} /></button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-4 py-3 text-[10px] text-muted">
+                <span>{filteredApplicants.length} {isId ? 'dari' : 'of'} {applicants.length} {isId ? 'pelamar' : 'applicants'}</span>
+                <button type="button" onClick={() => navigate('/admin/inbox?view=jobs')} className="inline-flex items-center gap-1.5 text-accent-text hover:text-fg">{isId ? 'Lanjutkan di pipeline lengkap' : 'Continue in full applicant pipeline'}<ArrowUpRight size={11} /></button>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
+      <Modal
+        open={editorOpen}
+        onClose={() => setEditorOpen(false)}
+        title={editorMode === 'create' ? (isId ? 'Tambah lowongan baru' : 'Add a job opening') : (isId ? 'Edit lowongan' : 'Edit job opening')}
+        description={isId ? 'Konten bilingual ini ditampilkan pada halaman Career public site.' : 'Edit bilingual content shown on the public Careers page.'}
+        size="2xl"
+        slug="cms-careers-editor"
+        footer={
+          <>
+            <Button type="button" variant="secondary" onClick={() => setEditorOpen(false)} disabled={saving}>{isId ? 'Batal' : 'Cancel'}</Button>
+            <Button type="submit" form="cms-career-position-form" variant="primary" disabled={saving} icon={saving ? <RefreshCw size={13} className="animate-spin" /> : <CheckCircle2 size={13} />}>{saving ? (isId ? 'Menyimpan...' : 'Saving...') : (isId ? 'Simpan lowongan' : 'Save opening')}</Button>
+          </>
+        }
+      >
+        <form id="cms-career-position-form" onSubmit={savePosition} className="space-y-4">
+          <section className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_220px]">
+            <Field label="URL slug" required>
+              <input className={inputClass + ' font-mono'} value={draft.slug} onChange={event => updateDraft('slug', slugify(event.target.value))} placeholder="ui-ux-product-designer" required />
+            </Field>
+            <label className="flex min-h-10 items-center gap-3 rounded-control border border-line bg-bg px-3 py-2">
+              <input type="checkbox" checked={draft.isPublished} onChange={event => updateDraft('isPublished', event.target.checked)} className="h-4 w-4 accent-accent" />
+              <span>
+                <span className="block text-xs font-medium text-fg">{isId ? 'Publikasikan lowongan' : 'Publish opening'}</span>
+                <span className="block mt-0.5 text-[10px] text-muted">{draft.isPublished ? 'Visible on public site' : 'Saved as draft'}</span>
+              </span>
+            </label>
+          </section>
+
+          <div className="grid gap-4 xl:grid-cols-2">
+            <section className="space-y-3 rounded-card border border-line bg-bg p-3.5">
+              <div className="flex items-center gap-2 border-b border-line pb-2.5">
+                <span className="flex h-6 w-6 items-center justify-center rounded-badge border border-line bg-panel text-[10px] font-semibold text-fg">EN</span>
+                <h3 className="text-xs font-semibold text-fg">English content</h3>
+              </div>
+              <Field label="Job title" required><input className={inputClass} value={draft.title} onChange={event => {
+                const title = event.target.value;
+                setDraft(current => ({ ...current, title, slug: editorMode === 'create' && (!current.slug || current.slug === slugify(current.title)) ? slugify(title) : current.slug }));
+              }} required placeholder="Frontend Engineer" /></Field>
+              <Field label="Department" required><input className={inputClass} value={draft.department} onChange={event => updateDraft('department', event.target.value)} required placeholder="Innovation Development" /></Field>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Location"><input className={inputClass} value={draft.location} onChange={event => updateDraft('location', event.target.value)} placeholder="South Tangerang / Remote" /></Field>
+                <Field label="Workplace"><input className={inputClass} value={draft.workplace} onChange={event => updateDraft('workplace', event.target.value)} placeholder="Hybrid / Remote / WFO" /></Field>
+                <Field label="Employment type"><input className={inputClass} value={draft.type} onChange={event => updateDraft('type', event.target.value)} placeholder="Full Time / Contract" /></Field>
+                <Field label="Badge"><input className={inputClass} value={draft.badge} onChange={event => updateDraft('badge', event.target.value)} placeholder="Full Time • On-site" /></Field>
+              </div>
+              <Field label="Short description"><textarea className={textareaClass} value={draft.summary} onChange={event => updateDraft('summary', event.target.value)} placeholder="Describe the role and its impact..." /></Field>
+              <Field label="Compensation"><input className={inputClass} value={draft.compensation} onChange={event => updateDraft('compensation', event.target.value)} placeholder="Salary, benefits, or commission" /></Field>
+              <Field label="Responsibilities (one per line)"><textarea className={textareaClass + ' min-h-[130px]'} value={listToText(draft.responsibilities)} onChange={event => updateDraft('responsibilities', textToList(event.target.value))} placeholder={'Own the feature lifecycle\nCollaborate with design and engineering'} /></Field>
+              <Field label="Requirements (one per line)"><textarea className={textareaClass + ' min-h-[130px]'} value={listToText(draft.requirements)} onChange={event => updateDraft('requirements', textToList(event.target.value))} placeholder={'Strong portfolio\nClear written communication'} /></Field>
+            </section>
+
+            <section className="space-y-3 rounded-card border border-line bg-bg p-3.5">
+              <div className="flex items-center gap-2 border-b border-line pb-2.5">
+                <span className="flex h-6 w-6 items-center justify-center rounded-badge border border-line bg-panel text-[10px] font-semibold text-fg">ID</span>
+                <h3 className="text-xs font-semibold text-fg">Konten Bahasa Indonesia</h3>
+              </div>
+              <Field label="Judul lowongan" required><input className={inputClass} value={draft.titleId} onChange={event => updateDraft('titleId', event.target.value)} required placeholder="Frontend Engineer" /></Field>
+              <Field label="Departemen" required><input className={inputClass} value={draft.departmentId} onChange={event => updateDraft('departmentId', event.target.value)} required placeholder="Innovation Development" /></Field>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Lokasi"><input className={inputClass} value={draft.locationId} onChange={event => updateDraft('locationId', event.target.value)} placeholder="Tangerang Selatan / Remote" /></Field>
+                <Field label="Pengaturan kerja"><input className={inputClass} value={draft.workplaceId} onChange={event => updateDraft('workplaceId', event.target.value)} placeholder="Hybrid / Remote / WFO" /></Field>
+                <Field label="Jenis pekerjaan"><input className={inputClass} value={draft.typeId} onChange={event => updateDraft('typeId', event.target.value)} placeholder="Full Time / Kontrak" /></Field>
+                <Field label="Badge"><input className={inputClass} value={draft.badgeId} onChange={event => updateDraft('badgeId', event.target.value)} placeholder="Full Time • On-site" /></Field>
+              </div>
+              <Field label="Deskripsi singkat"><textarea className={textareaClass} value={draft.summaryId} onChange={event => updateDraft('summaryId', event.target.value)} placeholder="Jelaskan peran, tanggung jawab, dan dampaknya..." /></Field>
+              <Field label="Kompensasi"><input className={inputClass} value={draft.compensationId} onChange={event => updateDraft('compensationId', event.target.value)} placeholder="Gaji, benefit, atau komisi" /></Field>
+              <Field label="Tanggung jawab (satu per baris)"><textarea className={textareaClass + ' min-h-[130px]'} value={listToText(draft.responsibilitiesId)} onChange={event => updateDraft('responsibilitiesId', textToList(event.target.value))} placeholder={'Mengelola proses delivery fitur\nBerkolaborasi dengan tim desain dan engineering'} /></Field>
+              <Field label="Persyaratan (satu per baris)"><textarea className={textareaClass + ' min-h-[130px]'} value={listToText(draft.requirementsId)} onChange={event => updateDraft('requirementsId', textToList(event.target.value))} placeholder={'Portofolio yang relevan\nKomunikasi tertulis yang baik'} /></Field>
+            </section>
+          </div>
+        </form>
+      </Modal>
+    </AdminPageShell>
+  );
+};
+
+export default AdminCmsCareers;
