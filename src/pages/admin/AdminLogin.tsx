@@ -52,6 +52,43 @@ export const AdminLogin: React.FC = () => {
     return () => { mounted = false; };
   }, [navigate, redirectUrl]);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    const body = document.body;
+    const previousStyles = {
+      rootOverflow: root.style.overflow,
+      rootScrollbarWidth: root.style.scrollbarWidth,
+      rootOverscrollBehavior: root.style.overscrollBehavior,
+      bodyOverflow: body.style.overflow,
+      bodyScrollbarWidth: body.style.scrollbarWidth,
+      bodyOverscrollBehavior: body.style.overscrollBehavior,
+    };
+
+    root.style.overflow = 'hidden';
+    root.style.scrollbarWidth = 'none';
+    root.style.overscrollBehavior = 'none';
+    body.style.overflow = 'hidden';
+    body.style.scrollbarWidth = 'none';
+    body.style.overscrollBehavior = 'none';
+
+    return () => {
+      root.style.overflow = previousStyles.rootOverflow;
+      root.style.scrollbarWidth = previousStyles.rootScrollbarWidth;
+      root.style.overscrollBehavior = previousStyles.rootOverscrollBehavior;
+      body.style.overflow = previousStyles.bodyOverflow;
+      body.style.scrollbarWidth = previousStyles.bodyScrollbarWidth;
+      body.style.overscrollBehavior = previousStyles.bodyOverscrollBehavior;
+    };
+  }, []);
+
+  useEffect(() => {
+    const slideInterval = window.setInterval(() => {
+      setArtFrame((current) => (current + 1) % loginSlides.length);
+    }, 6000);
+
+    return () => window.clearInterval(slideInterval);
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -405,12 +442,19 @@ export const AdminLogin: React.FC = () => {
         </section>
 
         <aside className="relative hidden h-dvh min-h-0 items-stretch justify-center overflow-hidden border-l border-line bg-bg lg:flex">
-          <div
-            className="pointer-events-none absolute inset-0"
-            aria-hidden="true"
-          >
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_56%_16%,rgba(220,20,60,0.07),transparent_48%)]" />
-            <div className="absolute bottom-0 right-0 h-[420px] w-[420px] translate-x-1/3 translate-y-1/3 rounded-full bg-white/[0.015] blur-3xl" />
+          <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_58%_12%,rgba(220,20,60,0.105),transparent_43%),radial-gradient(ellipse_at_92%_88%,rgba(106,76,94,0.075),transparent_35%),linear-gradient(135deg,#0d0c11_0%,#09090c_58%,#0d0b10_100%)]" />
+            <div
+              className="absolute inset-0 opacity-35"
+              style={{
+                backgroundImage: 'linear-gradient(rgba(255,255,255,0.024) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.024) 1px, transparent 1px)',
+                backgroundSize: '64px 64px',
+                maskImage: 'linear-gradient(to bottom, black 0%, transparent 88%)',
+              }}
+            />
+            <div className="absolute -left-36 -top-28 h-[390px] w-[390px] rounded-full bg-accent/[0.075] blur-[100px]" />
+            <div className="absolute -bottom-44 -right-24 h-[480px] w-[480px] rounded-full bg-white/[0.025] blur-[110px]" />
+            <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-bg/35 to-transparent" />
           </div>
 
           <div className="relative z-10 flex h-full min-h-0 w-full flex-col px-5 py-4 sm:px-7 sm:py-5 xl:px-8 2xl:px-10">
