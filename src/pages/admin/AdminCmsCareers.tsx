@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowUpRight, Briefcase, CheckCircle2, Clock3, ExternalLink, FileText,
+  ArrowUpRight, Briefcase, CheckCircle2, ExternalLink, FileText,
   Globe2, Plus, Search, Send, ShieldAlert, Trash2, Users, X, PencilLine,
   RefreshCw, Eye, EyeOff
 } from 'lucide-react';
@@ -261,7 +261,7 @@ export const AdminCmsCareers: React.FC = () => {
     setEditorOpen(true);
   };
 
-  const updateDraft = <K extends keyof CareerPosition>(key: K, value: CareerPosition[K]) => {
+  const updateDraft = <K extends keyof CareerPosition,>(key: K, value: CareerPosition[K]) => {
     setDraft(current => ({ ...current, [key]: value }));
   };
 
