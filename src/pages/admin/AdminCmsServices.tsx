@@ -304,7 +304,7 @@ export const AdminCmsServices: React.FC = () => {
         />
       </div>
 
-<AdminMetricStrip slug="cms-services-kpis"
+      <AdminMetricStrip slug="cms-services-kpis"
         className="grid-cols-2 sm:grid-cols-4"
         metrics={[
           {
