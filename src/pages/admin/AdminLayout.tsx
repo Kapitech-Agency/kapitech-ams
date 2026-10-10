@@ -637,7 +637,8 @@ export const AdminLayout: React.FC = () => {
                     { key: 'projects', label: 'Projects', to: '/admin/cms/projects' },
                     { key: 'services', label: 'Services', to: '/admin/cms/services' },
                     { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials' },
-                    { key: 'insights', label: 'Insights', to: '/admin/cms/insights' }
+                    { key: 'insights', label: 'Insights', to: '/admin/cms/insights' },
+                    { key: 'careers', label: 'Careers', to: '/admin/cms/careers' }
                   ].map((tab) => {
                     const active = location.pathname === tab.to;
                     return (
