@@ -203,7 +203,7 @@ For every component define default, hover, focus-visible, active, and disabled s
 
 ### Top bar and section tabs
 - 52px high, bottom border `--line`. Keep section tabs on the left and utilities on the right.
-- **Section/submodule navigation uses the shared pill treatment:** 32px control height, 6px radius, a thin `--line` border when inactive, and a subtle 10–14% accent tint with an `--accent` border when active. Do not use an underline for CMS and other section tabs.
+- **Section/submodule navigation uses the shared pill treatment:** 32px control height, 6px radius, transparent border and muted text when inactive, a subtle panel/background hover, and a 10–14% accent tint with a light accent border and stronger text when active. Do not use an underline for CMS and other section tabs.
 - Segmented controls inside a view can use their own neutral selected state; do not style every active control red.
 
 ### KPI card
