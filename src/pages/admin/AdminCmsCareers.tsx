@@ -473,7 +473,7 @@ export const AdminCmsCareers: React.FC = () => {
         ]}
       />
 
-      <div className="inline-flex w-full flex-wrap items-center gap-1 border-b border-line">
+      <div className="inline-flex max-w-full flex-wrap items-center gap-1 rounded-control border border-line bg-panel p-1">
         {([
           { key: 'jobs', label: isId ? 'Lowongan' : 'Job openings', count: positions.length },
           { key: 'applicants', label: isId ? 'Pelamar' : 'Applicants', count: applicantsLoaded ? applicants.length : null }
@@ -483,7 +483,7 @@ export const AdminCmsCareers: React.FC = () => {
             type="button"
             onClick={() => setActiveTab(tab.key)}
             aria-pressed={activeTab === tab.key}
-            className={'inline-flex h-10 items-center gap-2 border-b-2 px-3 text-xs font-medium transition-colors ' + (activeTab === tab.key ? 'border-accent text-fg' : 'border-transparent text-muted hover:text-fg')}
+            className={'inline-flex min-h-8 items-center gap-2 rounded-chip border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (activeTab === tab.key ? 'border-accent/25 bg-accent/10 font-semibold text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg')}
           >
             {tab.label}
             {tab.count !== null && <span className={'rounded-badge border px-1.5 py-0.5 text-[10px] tabular-nums ' + (activeTab === tab.key ? 'border-accent/25 bg-accent/10 text-accent-text' : 'border-line bg-bg text-muted')}>{tab.count}</span>}
