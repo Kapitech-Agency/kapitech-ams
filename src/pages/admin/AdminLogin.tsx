@@ -163,6 +163,7 @@ export const AdminLogin: React.FC = () => {
     <div
       data-kapi-admin="true"
       data-theme="dark"
+      data-login-motion="true"
       style={{
         colorScheme: 'dark',
         '--bg': '#09090c',
@@ -188,14 +189,121 @@ export const AdminLogin: React.FC = () => {
       } as React.CSSProperties}
       className="ams-shell relative isolate h-dvh min-h-0 overflow-hidden bg-bg text-fg font-sans"
     >
+      <style>{`
+        [data-login-motion] .login-reveal {
+          opacity: 0;
+          animation: kapi-login-reveal 850ms cubic-bezier(0.2, 0.72, 0.24, 1) forwards;
+        }
+        [data-login-motion] .login-reveal--one { animation-delay: 90ms; }
+        [data-login-motion] .login-reveal--two { animation-delay: 190ms; }
+        [data-login-motion] [data-login-form="true"] > * {
+          opacity: 0;
+          animation: kapi-login-reveal 680ms cubic-bezier(0.2, 0.72, 0.24, 1) forwards;
+        }
+        [data-login-motion] [data-login-form="true"] > *:nth-child(1) { animation-delay: 280ms; }
+        [data-login-motion] [data-login-form="true"] > *:nth-child(2) { animation-delay: 350ms; }
+        [data-login-motion] [data-login-form="true"] > *:nth-child(3) { animation-delay: 420ms; }
+        [data-login-motion] [data-login-form="true"] > *:nth-child(4) { animation-delay: 490ms; }
+        [data-login-motion] [data-login-form="true"] > *:nth-child(5) { animation-delay: 560ms; }
+        [data-login-motion] .login-bg-gradient {
+          background-size: 140% 140%;
+          animation: kapi-gradient-drift 24s ease-in-out infinite alternate;
+        }
+        [data-login-motion] .login-grid-drift {
+          animation: kapi-grid-drift 42s linear infinite;
+          will-change: background-position;
+        }
+        [data-login-motion] .login-glow {
+          will-change: transform, opacity;
+          animation: kapi-glow-float 17s ease-in-out infinite alternate;
+        }
+        [data-login-motion] .login-glow--secondary {
+          animation-delay: -8s;
+          animation-duration: 22s;
+        }
+        [data-login-motion] .login-photo-frame {
+          transition: border-color 400ms ease, box-shadow 500ms ease;
+        }
+        [data-login-motion] .login-photo-frame:hover {
+          border-color: rgba(255,255,255,0.18);
+          box-shadow: 0 28px 90px rgba(0,0,0,0.3), 0 0 42px rgba(220,20,60,0.08);
+        }
+        [data-login-motion] .login-photo-enter {
+          animation: kapi-photo-enter 900ms cubic-bezier(0.2, 0.72, 0.24, 1) both;
+        }
+        [data-login-motion] .login-photo-sheen {
+          position: relative;
+          overflow: hidden;
+        }
+        [data-login-motion] .login-photo-sheen::after {
+          content: "";
+          position: absolute;
+          inset: -20% auto -20% -55%;
+          width: 34%;
+          background: linear-gradient(105deg, transparent, rgba(255,255,255,0.065), transparent);
+          transform: skewX(-14deg);
+          pointer-events: none;
+          animation: kapi-sheen-pass 8s ease-in-out 1.2s infinite;
+        }
+        [data-login-motion] .login-caption-enter {
+          animation: kapi-login-reveal 900ms 180ms cubic-bezier(0.2, 0.72, 0.24, 1) both;
+        }
+        [data-login-motion] .login-controls-enter {
+          animation: kapi-login-reveal 800ms 360ms cubic-bezier(0.2, 0.72, 0.24, 1) both;
+        }
+        [data-login-motion] .login-brand-chip {
+          animation: kapi-login-reveal 750ms 450ms cubic-bezier(0.2, 0.72, 0.24, 1) both;
+        }
+        [data-login-motion] .login-ambient-line {
+          transform-origin: left center;
+          animation: kapi-line-breathe 7s ease-in-out infinite;
+        }
+        @keyframes kapi-login-reveal {
+          from { opacity: 0; transform: translate3d(0, 14px, 0); filter: blur(5px); }
+          to { opacity: 1; transform: translate3d(0, 0, 0); filter: blur(0); }
+        }
+        @keyframes kapi-photo-enter {
+          from { opacity: 0.25; transform: scale(1.035); filter: saturate(0.82); }
+          to { opacity: 1; transform: scale(1); filter: saturate(1); }
+        }
+        @keyframes kapi-gradient-drift {
+          0% { background-position: 0% 12%; }
+          100% { background-position: 100% 88%; }
+        }
+        @keyframes kapi-grid-drift {
+          from { background-position: 0 0, 0 0; }
+          to { background-position: 64px 64px, 64px 64px; }
+        }
+        @keyframes kapi-glow-float {
+          0% { transform: translate3d(-8px, 0, 0) scale(0.96); opacity: 0.55; }
+          100% { transform: translate3d(20px, 14px, 0) scale(1.06); opacity: 1; }
+        }
+        @keyframes kapi-sheen-pass {
+          0%, 66%, 100% { left: -55%; opacity: 0; }
+          12% { opacity: 1; }
+          35% { left: 125%; opacity: 0; }
+        }
+        @keyframes kapi-line-breathe {
+          0%, 100% { transform: scaleX(0.65); opacity: 0.45; }
+          50% { transform: scaleX(1); opacity: 1; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          [data-login-motion] *, [data-login-motion] *::before, [data-login-motion] *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            scroll-behavior: auto !important;
+            transition-duration: 0.01ms !important;
+          }
+        }
+      `}</style>
       <div className="pointer-events-none absolute inset-0 z-0" aria-hidden="true">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_12%_10%,rgba(220,20,60,0.055),transparent_34%),radial-gradient(ellipse_at_85%_100%,rgba(243,243,246,0.025),transparent_32%)]" />
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-line to-transparent" />
+        <div className="login-ambient-line absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-line to-transparent" />
       </div>
 
       <div className="relative z-10 grid h-dvh min-h-0 w-full lg:grid-cols-[minmax(360px,0.82fr)_minmax(0,1.18fr)]">
         <section className="flex h-full min-h-0 flex-col px-6 py-4 sm:px-8 sm:py-5 lg:px-10 xl:px-12 2xl:px-14">
-          <div className="flex w-full items-center gap-3.5">
+          <div className="login-reveal login-reveal--one flex w-full items-center gap-3.5">
             <img
               src="https://raw.githubusercontent.com/Kapitech-Agency/Kapitech-Agency.github.io/main/public/white.png"
               alt="Kapitech logo"
@@ -208,7 +316,7 @@ export const AdminLogin: React.FC = () => {
             </span>
           </div>
 
-          <div className="mx-auto flex w-full max-w-[390px] min-h-0 flex-1 flex-col justify-center py-[clamp(8px,2vh,24px)]">
+          <div className="login-reveal login-reveal--two mx-auto flex w-full max-w-[390px] min-h-0 flex-1 flex-col justify-center py-[clamp(8px,2vh,24px)]">
             <div className="mb-8">
               <h1 className="text-[26px] font-semibold leading-8 tracking-[-0.035em] text-fg sm:text-[28px]">
                 {mfaRequired
@@ -237,7 +345,7 @@ export const AdminLogin: React.FC = () => {
               )}
 
               {!mfaRequired ? (
-                <form onSubmit={handleSubmit} className="space-y-5">
+                <form onSubmit={handleSubmit} data-login-form="true" className="space-y-5">
                   <div>
                     <label htmlFor="admin-identifier" className="mb-1.5 block text-xs font-medium font-sans text-fg/85">
                       {language === 'id' ? 'Username atau email' : 'Username or email'}
@@ -315,7 +423,7 @@ export const AdminLogin: React.FC = () => {
                   </button>
                 </form>
               ) : (
-                <form onSubmit={handleMfaSubmit} className="space-y-5">
+                <form onSubmit={handleMfaSubmit} data-login-form="true" className="space-y-5">
                   <div className="rounded-control border border-accent/20 bg-accent/5 p-4">
                     <div className="flex items-center gap-2 text-sm font-semibold text-fg">
                       <ShieldCheck size={18} className="text-accent-text" />
@@ -443,37 +551,37 @@ export const AdminLogin: React.FC = () => {
 
         <aside className="relative hidden h-dvh min-h-0 items-stretch justify-center overflow-hidden border-l border-line bg-bg lg:flex">
           <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_58%_12%,rgba(220,20,60,0.105),transparent_43%),radial-gradient(ellipse_at_92%_88%,rgba(106,76,94,0.075),transparent_35%),linear-gradient(135deg,#0d0c11_0%,#09090c_58%,#0d0b10_100%)]" />
+            <div className="login-bg-gradient absolute inset-0 bg-[radial-gradient(ellipse_at_58%_12%,rgba(220,20,60,0.105),transparent_43%),radial-gradient(ellipse_at_92%_88%,rgba(106,76,94,0.075),transparent_35%),linear-gradient(135deg,#0d0c11_0%,#09090c_58%,#0d0b10_100%)]" />
             <div
-              className="absolute inset-0 opacity-35"
+              className="login-grid-drift absolute inset-0 opacity-35"
               style={{
                 backgroundImage: 'linear-gradient(rgba(255,255,255,0.024) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.024) 1px, transparent 1px)',
                 backgroundSize: '64px 64px',
                 maskImage: 'linear-gradient(to bottom, black 0%, transparent 88%)',
               }}
             />
-            <div className="absolute -left-36 -top-28 h-[390px] w-[390px] rounded-full bg-accent/[0.075] blur-[100px]" />
-            <div className="absolute -bottom-44 -right-24 h-[480px] w-[480px] rounded-full bg-white/[0.025] blur-[110px]" />
+            <div className="login-glow absolute -left-36 -top-28 h-[390px] w-[390px] rounded-full bg-accent/[0.075] blur-[100px]" />
+            <div className="login-glow login-glow--secondary absolute -bottom-44 -right-24 h-[480px] w-[480px] rounded-full bg-white/[0.025] blur-[110px]" />
             <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-bg/35 to-transparent" />
           </div>
 
           <div className="relative z-10 flex h-full min-h-0 w-full flex-col px-5 py-4 sm:px-7 sm:py-5 xl:px-8 2xl:px-10">
-            <div className="mx-auto flex w-full max-w-[1040px] min-h-0 flex-1 flex-col justify-center py-2">
+            <div className="login-reveal login-reveal--one mx-auto flex w-full max-w-[1040px] min-h-0 flex-1 flex-col justify-center py-2">
               <div
                 className="mx-auto w-full"
                 style={{ width: 'min(100%, 1040px, calc((100dvh - 320px) * 1.62))' }}
               >
-                <div className="group relative aspect-[1.62/1] w-full overflow-hidden rounded-[18px] border border-white/[0.09] bg-panel shadow-[0_24px_80px_rgba(0,0,0,0.22)]">
+                <div className="login-photo-frame login-photo-sheen group relative aspect-[1.62/1] w-full overflow-hidden rounded-[18px] border border-white/[0.09] bg-panel shadow-[0_24px_80px_rgba(0,0,0,0.22)]">
                   <img
                     key={loginSlides[artFrame].src}
                     src={loginSlides[artFrame].src}
                     alt={loginSlides[artFrame].alt}
-                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.015]"
+                    className="login-photo-enter absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.015]"
                     loading={artFrame === 0 ? 'eager' : 'lazy'}
                     decoding="async"
                   />
                   <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/30" aria-hidden="true" />
-                  <div className="absolute left-4 top-4 flex items-center gap-2.5 rounded-md border border-white/10 bg-[#09090c]/75 px-3 py-2 sm:left-5 sm:top-5">
+                  <div className="login-brand-chip absolute left-4 top-4 flex items-center gap-2.5 rounded-md border border-white/10 bg-[#09090c]/75 px-3 py-2 sm:left-5 sm:top-5">
                     <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true" />
                     <span className="text-[10px] font-medium tracking-[0.1em] text-white/90">
                       KAPITECH
@@ -485,7 +593,7 @@ export const AdminLogin: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="mt-6 flex w-full items-end justify-between gap-5 sm:mt-7 sm:gap-8">
+                <div className="login-caption-enter mt-6 flex w-full items-end justify-between gap-5 sm:mt-7 sm:gap-8">
                   <div className="min-w-0 flex-1">
                     <div className="mb-3 flex items-center gap-2.5">
                       <span className="h-px w-5 bg-accent" aria-hidden="true" />
@@ -501,7 +609,7 @@ export const AdminLogin: React.FC = () => {
                     </p>
                   </div>
 
-                  <div className="mb-1 flex shrink-0 flex-col items-end gap-3.5">
+                  <div className="login-controls-enter mb-1 flex shrink-0 flex-col items-end gap-3.5">
                     <p className="font-mono text-[11px] tabular-nums tracking-[0.08em]">
                       <span className="text-fg">0{artFrame + 1}</span>
                       <span className="mx-1.5 text-muted/55">/</span>
