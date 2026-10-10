@@ -271,7 +271,7 @@ export const AdminMetricCard: React.FC<AdminMetric & { className?: string }> = (
     </div>
     <div className="mt-3 flex min-w-0 items-end justify-between gap-4">
       <div className={cn('min-w-0 truncate text-2xl font-semibold leading-8 tracking-[-0.02em] tabular-nums', toneClassName)}>{value}</div>
-      <MetricSparkline values={sparkline} label={label} toneClassName={toneClassName} />
+      {Array.isArray(sparkline) && sparkline.length >= 2 && <MetricSparkline values={sparkline} label={label} toneClassName={toneClassName} />}
     </div>
     {(change !== undefined || context !== undefined) && (
       <div className="mt-2 flex min-h-5 min-w-0 items-center gap-2">
