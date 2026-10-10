@@ -72,7 +72,17 @@ export const AdminVendors: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [editingVendor, setEditingVendor] = useState<AgencyVendor | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [statusTone, setStatusTone] = useState<'success' | 'error' | 'info'>('info');
+
+  const showStatus = (message: string | null, tone: 'success' | 'error' | 'info' = 'error') => {
+    showStatus(message);
+    if (message) setStatusTone(tone);
+  };
   const [isLoading, setIsLoading] = useState(true);
+  const ratedVendors = vendors.filter((vendor) => Number.isFinite(Number(vendor.rating)) && Number(vendor.rating) > 0);
+  const averageVendorRating = ratedVendors.length
+    ? ratedVendors.reduce((sum, vendor) => sum + Number(vendor.rating), 0) / ratedVendors.length
+    : null;
 
   // Form states
   const [formName, setFormName] = useState('');
@@ -109,10 +119,10 @@ export const AdminVendors: React.FC = () => {
             : []
         })));
       } else {
-        setStatusMessage(res.error || (language === 'id' ? 'Vendor gagal dimuat.' : 'Failed to load vendors.'));
+        showStatus(res.error || (language === 'id' ? 'Vendor gagal dimuat.' : 'Failed to load vendors.'));
       }
     } catch {
-      setStatusMessage(language === 'id' ? 'Vendor gagal dimuat.' : 'Failed to load vendors.');
+      showStatus(language === 'id' ? 'Vendor gagal dimuat.' : 'Failed to load vendors.');
     } finally {
       setIsLoading(false);
     }
@@ -220,30 +230,31 @@ export const AdminVendors: React.FC = () => {
       if (!res.success || !res.data?.vendor) {
         setVendors(prev => prev.map(item => item.id === v.id ? v : item));
         if (selectedVendor?.id === v.id) setSelectedVendor(v);
-        setStatusMessage(res.error || (language === 'id' ? 'Gagal memperbarui vendor.' : 'Failed to update vendor.'));
+        showStatus(res.error || (language === 'id' ? 'Gagal memperbarui vendor.' : 'Failed to update vendor.'));
         return;
       }
 
       const savedVendor = res.data.vendor as AgencyVendor;
       setVendors(prev => prev.map(item => item.id === v.id ? savedVendor : item));
       if (selectedVendor?.id === v.id) setSelectedVendor(savedVendor);
-      setStatusMessage(
+      showStatus(
         language === 'id'
           ? `Status verifikasi ${v.name} diubah menjadi ${savedVendor.isVetted ? 'Terverifikasi (Vetted)' : 'Standar'}`
-          : `Verification status for ${v.name} set to ${savedVendor.isVetted ? 'Vetted' : 'Standard'}`
+          : `Verification status for ${v.name} set to ${savedVendor.isVetted ? 'Vetted' : 'Standard'}`,
+        'success'
       );
-      setTimeout(() => setStatusMessage(null), 3000);
+      setTimeout(() => showStatus(null), 3000);
     } catch {
       setVendors(prev => prev.map(item => item.id === v.id ? v : item));
       if (selectedVendor?.id === v.id) setSelectedVendor(v);
-      setStatusMessage(language === 'id' ? 'Gagal memperbarui vendor.' : 'Failed to update vendor.');
+      showStatus(language === 'id' ? 'Gagal memperbarui vendor.' : 'Failed to update vendor.');
     }
   };
 
   const handleSaveVendor = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formName.trim() || !formEmail.trim()) {
-      setStatusMessage(language === 'id' ? 'Nama vendor dan email wajib diisi.' : 'Vendor name and email are required.');
+      showStatus(language === 'id' ? 'Nama vendor dan email wajib diisi.' : 'Vendor name and email are required.');
       return;
     }
 
@@ -277,14 +288,14 @@ export const AdminVendors: React.FC = () => {
     };
 
     if (!canManageVendors) {
-      setStatusMessage(language === 'id' ? 'Anda tidak memiliki izin mengelola vendor.' : 'You do not have permission to manage vendors.');
+      showStatus(language === 'id' ? 'Anda tidak memiliki izin mengelola vendor.' : 'You do not have permission to manage vendors.');
       return;
     }
     const response = editingVendor
       ? await api.vendors.update(vendorToSave.id, vendorToSave)
       : await api.vendors.create(vendorToSave);
     if (!response.success || !response.data?.vendor) {
-      setStatusMessage(response.error || (language === 'id' ? 'Vendor gagal disimpan.' : 'Failed to save vendor.'));
+      showStatus(response.error || (language === 'id' ? 'Vendor gagal disimpan.' : 'Failed to save vendor.'));
       return;
     }
     const savedVendor = response.data.vendor as AgencyVendor;
@@ -292,8 +303,8 @@ export const AdminVendors: React.FC = () => {
       ? prev.map(item => item.id === savedVendor.id ? savedVendor : item)
       : [savedVendor, ...prev]);
     setIsModalOpen(false);
-    setStatusMessage(language === 'id' ? 'Data vendor berhasil disimpan!' : 'Vendor profile saved successfully!');
-    setTimeout(() => setStatusMessage(null), 3500);
+    showStatus(language === 'id' ? 'Data vendor berhasil disimpan!' : 'Vendor profile saved successfully!', 'success');
+    setTimeout(() => showStatus(null), 3500);
 
     if (selectedVendor && selectedVendor.id === vendorToSave.id) {
       setSelectedVendor(vendorToSave);
@@ -309,7 +320,7 @@ export const AdminVendors: React.FC = () => {
     try {
       const response = await api.vendors.delete(id);
       if (!response.success) {
-        setStatusMessage(response.error || (language === 'id' ? 'Vendor gagal dihapus.' : 'Failed to delete vendor.'));
+        showStatus(response.error || (language === 'id' ? 'Vendor gagal dihapus.' : 'Failed to delete vendor.'));
         return;
       }
       setVendors(prev => prev.filter(item => item.id !== id));
@@ -318,10 +329,10 @@ export const AdminVendors: React.FC = () => {
         setSelectedVendor(null);
       }
       setDeleteTarget(null);
-      setStatusMessage(language === 'id' ? 'Vendor telah dihapus.' : 'Vendor deleted successfully.');
-      setTimeout(() => setStatusMessage(null), 3000);
+      showStatus(language === 'id' ? 'Vendor telah dihapus.' : 'Vendor deleted successfully.', 'success');
+      setTimeout(() => showStatus(null), 3000);
     } catch {
-      setStatusMessage(language === 'id' ? 'Vendor gagal dihapus.' : 'Failed to delete vendor.');
+      showStatus(language === 'id' ? 'Vendor gagal dihapus.' : 'Failed to delete vendor.');
     }
   };
 
@@ -378,14 +389,14 @@ export const AdminVendors: React.FC = () => {
       </div>
 
 
-      {/* Success Notification */}
+      {/* Operation feedback */}
       {statusMessage && (
-        <div className="p-3 rounded-card bg-success/10 border border-success/30 text-success text-xs font-sans flex items-center justify-between animate-in fade-in duration-200">
+        <div role={statusTone === 'error' ? 'alert' : 'status'} aria-live={statusTone === 'error' ? 'assertive' : 'polite'} className={'p-3 rounded-card border text-xs font-sans flex items-center justify-between animate-in fade-in duration-200 ' + (statusTone === 'error' ? 'bg-danger/10 border-danger/30 text-danger' : statusTone === 'success' ? 'bg-success/10 border-success/30 text-success' : 'bg-panel border-line text-fg')}>
           <div className="flex items-center gap-2">
-            <CheckCircle2 size={16} />
+            {statusTone === 'error' ? <AlertCircle size={16} aria-hidden="true" /> : <CheckCircle2 size={16} aria-hidden="true" />}
             <span>{statusMessage}</span>
           </div>
-          <button onClick={() => setStatusMessage(null)} className="text-success hover:text-fg">
+          <button type="button" aria-label={language === 'id' ? 'Tutup notifikasi' : 'Dismiss notification'} onClick={() => showStatus(null)} className="rounded-control p-1 opacity-80 hover:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
             <X size={14} />
           </button>
         </div>
@@ -400,7 +411,7 @@ export const AdminVendors: React.FC = () => {
             { id: 'total', label: language === 'id' ? 'Total Mitra Terdaftar' : 'Total Vetted Vendors', value: vendors.length, context: vendors.filter(v => v.status === 'active').length + ' Active', sparkline: [vendors.filter(v => v.type === 'freelancer' || v.type === 'contractor').length, vendors.filter(v => v.type === 'agency_partner').length, vendors.length], icon: <Users size={16} strokeWidth={1.8} /> },
             { id: 'freelance', label: language === 'id' ? 'Spesialis Freelance' : 'Freelance Talent', value: vendors.filter(v => v.type === 'freelancer' || v.type === 'contractor').length, context: 'Design, Dev & 3D', sparkline: [vendors.filter(v => v.type === 'freelancer').length, vendors.filter(v => v.type === 'contractor').length, vendors.filter(v => v.type === 'freelancer' || v.type === 'contractor').length], icon: <Briefcase size={16} strokeWidth={1.8} /> },
             { id: 'agency', label: language === 'id' ? 'Partner Agensi' : 'Agency Partners', value: vendors.filter(v => v.type === 'agency_partner').length, context: 'DevOps, Cloud & Legal', sparkline: [vendors.filter(v => v.type === 'saas_vendor').length, vendors.filter(v => v.type === 'agency_partner').length, vendors.filter(v => v.type === 'freelancer').length], icon: <Building2 size={16} strokeWidth={1.8} />, toneClassName: 'text-info' },
-            { id: 'sla', label: language === 'id' ? 'Rata-rata Rating SLA' : 'Avg Performance SLA', value: <span className="inline-flex items-center gap-1.5">4.9 <Star size={16} className="text-warning fill-warning" /></span>, context: 'From 42 verified deliverables', sparkline: vendors.slice(0, 8).map(v => v.rating), icon: <CheckCircle2 size={16} strokeWidth={1.8} />, toneClassName: 'text-success' }
+            { id: 'rating', label: language === 'id' ? 'Rata-rata rating vendor' : 'Average vendor rating', value: averageVendorRating === null ? '—' : <span className="inline-flex items-center gap-1.5">{averageVendorRating.toFixed(1)} <Star size={16} className="text-warning fill-warning" /></span>, context: ratedVendors.length ? (language === 'id' ? 'Dari ' + ratedVendors.length + ' profil vendor dengan rating' : 'Across ' + ratedVendors.length + ' rated vendor profiles') : (language === 'id' ? 'Belum ada data rating' : 'No rating data yet'), sparkline: ratedVendors.slice(0, 8).map(v => Number(v.rating)), icon: <Star size={16} strokeWidth={1.8} />, toneClassName: 'text-fg' }
           ]}
         />
       </section>
