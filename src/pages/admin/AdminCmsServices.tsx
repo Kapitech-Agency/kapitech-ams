@@ -273,6 +273,20 @@ export const AdminCmsServices: React.FC = () => {
       />
 
 
+      <div className="min-[900px]:hidden min-w-0" data-ams-slug="cms-mobile-tabs">
+        <AdminSectionTabs
+          ariaLabel="CMS sections"
+          activeKey="services"
+          items={[
+            { key: 'projects', label: 'Projects', to: '/admin/cms/projects' },
+            { key: 'services', label: 'Services', to: '/admin/cms/services' },
+            { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials' },
+            { key: 'insights', label: 'Insights', to: '/admin/cms/insights' },
+            { key: 'careers', label: 'Careers', to: '/admin/cms/careers' },
+          ]}
+        />
+      </div>
+
       {statusMessage && (() => {
         const failed = /failed|could not|unable|error|gagal|wajib|required/i.test(statusMessage);
         return (
@@ -290,19 +304,7 @@ export const AdminCmsServices: React.FC = () => {
 
       {/* Catalog metrics */}
       
-      <div className="min-[900px]:hidden min-w-0" data-ams-slug="cms-mobile-tabs">
-        <AdminSectionTabs
-          ariaLabel="CMS sections"
-          activeKey="services"
-          items={[
-            { key: 'projects', label: 'Projects', to: '/admin/cms/projects' },
-            { key: 'services', label: 'Services', to: '/admin/cms/services' },
-            { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials' },
-            { key: 'insights', label: 'Insights', to: '/admin/cms/insights' },
-            { key: 'careers', label: 'Careers', to: '/admin/cms/careers' },
-          ]}
-        />
-      </div>
+
 
       <AdminMetricStrip slug="cms-services-kpis"
         className="grid-cols-2 sm:grid-cols-4"
