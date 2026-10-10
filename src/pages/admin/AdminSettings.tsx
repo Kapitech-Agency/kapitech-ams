@@ -28,7 +28,7 @@ import {
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
-import { AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import {
   AdminAccount,
   AdminTier,
@@ -787,6 +787,23 @@ export const AdminSettings: React.FC = () => {
           </>
         }
       />
+
+      <div className="min-[900px]:hidden min-w-0" data-ams-slug="settings-mobile-tabs">
+        <AdminSectionTabs
+          ariaLabel="Settings sections"
+          activeKey={activeTab}
+          items={[
+            { key: 'overview', label: 'Overview & Backups', to: '/admin/settings?tab=overview' },
+            { key: 'audit', label: 'Audit Logs', to: '/admin/settings?tab=audit' },
+            { key: 'security', label: 'Security & MFA', to: '/admin/settings?tab=security' },
+            { key: 'integrations', label: 'Integrations', to: '/admin/settings?tab=integrations' },
+          ].filter((tab) =>
+            (tab.key !== 'audit' || canViewAuditLogs) &&
+            (tab.key !== 'security' || mfaSetupRequired || canManageAdminAccounts || canAccessServer) &&
+            (tab.key !== 'integrations' || canAccessServer)
+          )}
+        />
+      </div>
 
       {overviewMessage && (
         <div className={
