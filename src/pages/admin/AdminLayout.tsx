@@ -272,7 +272,7 @@ export const AdminLayout: React.FC = () => {
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 leading-none">
                 <span className="truncate text-[13px] font-semibold text-fg">KAPITECH</span>
-                <span className="rounded-badge border border-accent/25 bg-accent/8 px-1.5 py-0.5 text-[9px] font-semibold text-accent-text">AMS</span>
+                <span className="rounded-badge border border-accent/25 bg-accent/8 px-1.5 py-0.5 text-[10px] font-semibold text-accent-text">AMS</span>
               </div>
             </div>
           </Link>
@@ -293,14 +293,14 @@ export const AdminLayout: React.FC = () => {
           </Button>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-hidden px-3.5 py-4">
+        <div className="flex-1 min-h-0 overflow-x-hidden overflow-y-auto overscroll-contain px-3.5 py-4 custom-scrollbar">
           <nav aria-label="Primary navigation" className="space-y-5">
             {navGroups.map((group) => {
               const items = getGroupItems(group);
               if (!items.length) return null;
               return (
                 <section key={group} aria-label={group}>
-                  <div className="px-2 pb-1.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-muted/70">{group}</div>
+                  <div className="px-2 pb-1.5 text-[11px] font-medium tracking-normal text-muted">{group}</div>
                   <div className="space-y-1">
                     {items.map((item) => {
                       const Icon = item.icon;
@@ -318,7 +318,7 @@ export const AdminLayout: React.FC = () => {
                           </span>
                           <span className="min-w-0 flex-1 truncate">{item.label}</span>
                           {item.badge !== null && item.badge !== undefined && (
-                            <span className={["shrink-0 rounded-badge border px-1.5 py-0.5 text-[9px] font-semibold", active ? "border-accent/15 bg-bg text-muted" : "border-line bg-bg text-muted"].join(" ")}>
+                            <span className={["shrink-0 rounded-badge border px-1.5 py-0.5 text-[10px] font-semibold", active ? "border-accent/15 bg-bg text-muted" : "border-line bg-bg text-muted"].join(" ")}>
                               {item.badge}
                             </span>
                           )}
@@ -420,7 +420,7 @@ export const AdminLayout: React.FC = () => {
             <AmsBrandLogo compact className="h-6 w-6 shrink-0" />
             <div className="min-w-0">
               <span className="font-sans font-semibold text-fg text-xs block truncate">KAPITECH AMS</span>
-              <span className="text-[9px] font-sans text-muted block truncate -mt-0.5">{activeItemLabel}</span>
+              <span className="text-[11px] font-sans text-muted block truncate -mt-0.5">{activeItemLabel}</span>
             </div>
           </Link>
         </div>
@@ -528,7 +528,7 @@ export const AdminLayout: React.FC = () => {
                   if (!items.length) return null;
                   return (
                     <section key={group} aria-label={group}>
-                      <div className="px-2 pb-1.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-muted/70">{group}</div>
+                      <div className="px-2 pb-1.5 text-[11px] font-medium tracking-normal text-muted">{group}</div>
                       <div className="space-y-1">
                         {items.map((item) => {
                           const Icon = item.icon;
