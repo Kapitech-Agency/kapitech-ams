@@ -39,8 +39,10 @@ export const AdminTimeLogs: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState<'success' | 'error' | 'info'>('info');
-  const showStatus = (message: string | null, tone: 'success' | 'error' | 'info' = 'error') => {
+  const [canRetryLoad, setCanRetryLoad] = useState(false);
+  const showStatus = (message: string | null, tone: 'success' | 'error' | 'info' = 'error', retryLoad = false) => {
     setStatus(message);
+    setCanRetryLoad(Boolean(message && retryLoad));
     if (message) setStatusTone(tone);
   };
   const [projectId, setProjectId] = useState('');
@@ -67,7 +69,7 @@ export const AdminTimeLogs: React.FC = () => {
           slug: log.slug || toSlug((log.taskTitle || log.projectName || 'time-log') + '-' + log.id, 'time-log-record')
         })));
       } else {
-        showStatus(logsRes.error || 'Unable to load time logs.');
+        showStatus(logsRes.error || 'Unable to load time logs.', 'error', true);
       }
 
       if (projectsRes?.success && Array.isArray(projectsRes.data?.projects)) {
@@ -76,10 +78,10 @@ export const AdminTimeLogs: React.FC = () => {
           slug: project.slug || toSlug(project.name || project.id, 'project-record')
         })));
       } else if (!projectsRes?.success && logsRes.success) {
-        showStatus(projectsRes?.error || 'Unable to load projects.');
+        showStatus(projectsRes?.error || 'Unable to load projects.', 'error', true);
       }
     } catch (error) {
-      showStatus(error instanceof Error ? error.message : 'Unable to load time logs.');
+      showStatus(error instanceof Error ? error.message : 'Unable to load time logs.', 'error', true);
     } finally {
       setLoading(false);
     }
@@ -284,7 +286,7 @@ export const AdminTimeLogs: React.FC = () => {
         {status && (
           <div role={statusTone === 'error' ? 'alert' : 'status'} aria-live={statusTone === 'error' ? 'assertive' : 'polite'} className={'flex flex-col gap-2 rounded-card border px-4 py-3 text-xs sm:flex-row sm:items-center sm:justify-between ' + (statusTone === 'error' ? 'border-danger/30 bg-danger/10 text-danger' : statusTone === 'success' ? 'border-success/25 bg-success/10 text-success' : 'border-line bg-panel text-fg')}>
             <span className="min-w-0">{status}</span>
-            {statusTone === 'error' && <Button type="button" variant="secondary" icon={<RefreshCw size={13} />} loading={loading} onClick={() => void load()} className="shrink-0 self-start sm:self-auto">Retry</Button>}
+            {statusTone === 'error' && canRetryLoad && <Button type="button" variant="secondary" icon={<RefreshCw size={13} />} loading={loading} onClick={() => void load()} className="shrink-0 self-start sm:self-auto">Retry loading</Button>}
           </div>
         )}
 
