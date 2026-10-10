@@ -17,6 +17,7 @@ import { AdminMetricStrip, AdminModuleHeader, AdminPanel, AdminTablePagination }
 import { CustomSelect } from '../ui/CustomSelect';
 import { Modal } from '../ui/Modal';
 import { DonutChart, TrendChart } from '../charts/DashboardCharts';
+import { isSlugFixtureMode } from '../../lib/runtimeMode';
 import { ProfileIdentity } from './ProfileIdentity';
 import { TasksWorkspace } from './TasksWorkspace';
 import { api } from '../../lib/apiClient';
@@ -140,6 +141,17 @@ const sampleTasks: DashboardTask[] = [
 ];
 
 const PerformanceView: React.FC = () => {
+  const fixtureMode = isSlugFixtureMode();
+  if (!fixtureMode) {
+    return (
+      <section className="flex min-h-[220px] flex-col items-center justify-center rounded-card border border-line bg-panel px-5 py-10 text-center" role="status">
+        <AlertTriangle size={22} className="text-muted" aria-hidden="true" />
+        <h2 className="mt-3 text-sm font-semibold text-fg">Performance data is unavailable</h2>
+        <p className="mt-1 max-w-md text-xs leading-5 text-muted">Live delivery performance metrics are not connected to this dashboard yet. Sample performance values are only shown in preview mode.</p>
+      </section>
+    );
+  }
+
   const completionSeries = [58, 63, 69, 76, 81, 84];
   const blockedSeries = [12, 11, 9, 7, 5, 4];
   const cycleTimeSeries = [4.8, 4.6, 4.4, 4.2, 4.0, 3.8];
@@ -281,6 +293,7 @@ const PerformanceView: React.FC = () => {
 };
 
 const AnalyticsView: React.FC<{ range: RangeKey }> = ({ range }) => {
+  const fixtureMode = isSlugFixtureMode();
   const [analyticsTeamPage, setAnalyticsTeamPage] = useState(1);
   const [analyticsTeamPageSize, setAnalyticsTeamPageSize] = useState(6);
   const analyticsTeamPageCount = Math.max(1, Math.ceil(sampleTeam.length / analyticsTeamPageSize));
@@ -291,6 +304,16 @@ const AnalyticsView: React.FC<{ range: RangeKey }> = ({ range }) => {
   useEffect(() => {
     setAnalyticsTeamPage((current) => Math.min(current, analyticsTeamPageCount));
   }, [analyticsTeamPageCount]);
+
+  if (!fixtureMode) {
+    return (
+      <section className="flex min-h-[220px] flex-col items-center justify-center rounded-card border border-line bg-panel px-5 py-10 text-center" role="status">
+        <AlertTriangle size={22} className="text-muted" aria-hidden="true" />
+        <h2 className="mt-3 text-sm font-semibold text-fg">Analytics data is unavailable</h2>
+        <p className="mt-1 max-w-md text-xs leading-5 text-muted">Live financial and team analytics are not connected to this dashboard yet. Sample analytics are only shown in preview mode.</p>
+      </section>
+    );
+  }
 
   const revenue = [61000, 68500, 74200, 71800, 80200, 84500];
   const expenses = [42000, 44700, 46300, 49200, 51400, 52200];
@@ -449,6 +472,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const view = (searchParams.get('view') || 'overview') as 'overview' | 'performance' | 'analytics' | 'tasks';
+  const fixtureMode = isSlugFixtureMode();
   const [range, setRange] = useState<RangeKey>('Q2');
   const [projectFilter, setProjectFilter] = useState<ProjectFilter>('All');
   const [projectActionId, setProjectActionId] = useState<string | null>(null);
@@ -541,8 +565,8 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           };
         })
       : [];
-    return serverProjects.length ? serverProjects : sampleProjects;
-  }, [dashboardOverview.projects]);
+    return serverProjects.length ? serverProjects : (fixtureMode ? sampleProjects : []);
+  }, [dashboardOverview.projects, fixtureMode]);
 
   const filteredProjects = useMemo(
     () => projectFilter === 'All' ? dashboardProjects : dashboardProjects.filter((project) => project.type === projectFilter),
@@ -562,7 +586,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const totalDelivery = deliveryBreakdown.reduce((total, item) => total + Math.max(0, item.value), 0);
   const onScheduleValue = deliveryBreakdown.find((item) => item.label === 'On schedule')?.value ?? 0;
   const onSchedulePercent = totalDelivery > 0 ? Math.round((Math.max(0, onScheduleValue) / totalDelivery) * 100) : 0;
-  const revenueData = sampleRevenueByRange[range];
+  const revenueData = fixtureMode ? sampleRevenueByRange[range] : [];
 
   if (view === 'tasks') {
     return <TasksWorkspace />;
