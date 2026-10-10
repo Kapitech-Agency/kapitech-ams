@@ -487,7 +487,9 @@ export const AdminCmsCareers: React.FC = () => {
                   </tr></thead>
                   <tbody className="divide-y divide-line">
                     {filteredPositions.map(position => {
-                      const applicantCount = applicants.filter(item => String(item.positionTitle || '').toLowerCase() === position.title.toLowerCase() || String(item.positionTitle || '').toLowerCase() === position.titleId.toLowerCase()).length;
+                      const applicantCount = applicantsLoaded
+                        ? applicants.filter(item => String(item.positionTitle || '').toLowerCase() === position.title.toLowerCase() || String(item.positionTitle || '').toLowerCase() === position.titleId.toLowerCase()).length
+                        : null;
                       return (
                         <tr key={position.id} className="h-14 transition-colors hover:bg-bg/60">
                           <td className="px-4 py-3">
@@ -505,7 +507,7 @@ export const AdminCmsCareers: React.FC = () => {
                             <p className="mt-1 text-[10px] text-muted">{position.type} · {position.workplace}</p>
                             <p className="mt-1 text-[10px] text-muted">{position.location}</p>
                           </td>
-                          <td className="px-4 py-3"><span className="font-mono tabular-nums text-fg">{applicantCount}</span><span className="ml-1 text-[10px] text-muted">{isId ? 'lamaran' : 'applications'}</span></td>
+                          <td className="px-4 py-3"><span className="font-mono tabular-nums text-fg">{applicantCount === null ? '—' : applicantCount}</span><span className="ml-1 text-[10px] text-muted">{isId ? 'lamaran' : 'applications'}</span></td>
                           <td className="px-4 py-3">
                             <span className={'inline-flex items-center gap-1.5 rounded-badge border px-2 py-1 text-[10px] font-medium ' + (position.isPublished ? 'border-success/25 bg-success/10 text-success' : 'border-line bg-bg text-muted')}>
                               <span className={'h-1.5 w-1.5 rounded-full ' + (position.isPublished ? 'bg-success' : 'bg-muted')} />
