@@ -40,7 +40,7 @@ export const AdminTimeLogs: React.FC = () => {
   const [status, setStatus] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState<'success' | 'error' | 'info'>('info');
   const showStatus = (message: string | null, tone: 'success' | 'error' | 'info' = 'error') => {
-    showStatus(message);
+    setStatus(message);
     if (message) setStatusTone(tone);
   };
   const [projectId, setProjectId] = useState('');
@@ -75,8 +75,8 @@ export const AdminTimeLogs: React.FC = () => {
           ...project,
           slug: project.slug || toSlug(project.name || project.id, 'project-record')
         })));
-      } else if (!projectsRes?.success) {
-        showStatus(current => current || projectsRes?.error || 'Unable to load projects.');
+      } else if (!projectsRes?.success && logsRes.success) {
+        showStatus(projectsRes?.error || 'Unable to load projects.');
       }
     } catch (error) {
       showStatus(error instanceof Error ? error.message : 'Unable to load time logs.');
