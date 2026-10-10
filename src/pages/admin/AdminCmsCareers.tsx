@@ -10,7 +10,7 @@ import { api } from '../../lib/apiClient';
 import Button from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
-import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, Skeleton } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, Skeleton } from '../../components/admin/AdminModulePrimitives';
 
 type CareerPosition = {
   id: string;
@@ -447,7 +447,22 @@ export const AdminCmsCareers: React.FC = () => {
         </div>
       )}
 
-      <AdminMetricStrip
+      
+      <div className="min-[900px]:hidden min-w-0" data-ams-slug="cms-mobile-tabs">
+        <AdminSectionTabs
+          ariaLabel="CMS sections"
+          activeKey="careers"
+          items={[
+            { key: 'projects', label: 'Projects', to: '/admin/cms/projects' },
+            { key: 'services', label: 'Services', to: '/admin/cms/services' },
+            { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials' },
+            { key: 'insights', label: 'Insights', to: '/admin/cms/insights' },
+            { key: 'careers', label: 'Careers', to: '/admin/cms/careers' },
+          ]}
+        />
+      </div>
+
+<AdminMetricStrip
         slug="cms-careers-metrics"
         className="grid-cols-2 sm:grid-cols-4"
         metrics={[
