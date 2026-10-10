@@ -121,25 +121,6 @@ const formatMoney = (value: number) => new Intl.NumberFormat('en-US', { style: '
 const formatLiveMoney = (value: number, currency: string) => new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'IDR', maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 
 
-type DashboardTask = {
-  id: string;
-  task: string;
-  project: string;
-  assignee: string;
-  due: string;
-  priority: 'Low' | 'Medium' | 'High' | 'Urgent';
-  status: 'Open' | 'In Progress' | 'Review' | 'Blocked' | 'Completed';
-};
-
-const sampleTasks: DashboardTask[] = [
-  { id: 'task-001', task: 'Approve homepage copy', project: 'Atlas Brand System', assignee: 'Fikri', due: 'Today', priority: 'High', status: 'Open' },
-  { id: 'task-002', task: 'Finalize checkout UI', project: 'Meridian Commerce', assignee: 'Sarah', due: 'Tomorrow', priority: 'High', status: 'Open' },
-  { id: 'task-003', task: 'QA campaign landing page', project: 'Nova Growth Retainer', assignee: 'Dimas', due: 'Wed', priority: 'Medium', status: 'Review' },
-  { id: 'task-004', task: 'Resolve API handoff', project: 'Orbit Product Launch', assignee: 'Raka', due: 'Overdue', priority: 'Urgent', status: 'Blocked' },
-  { id: 'task-005', task: 'Prepare client presentation', project: 'Northstar Campaign', assignee: 'Nadia', due: 'Thu', priority: 'Medium', status: 'In Progress' },
-  { id: 'task-006', task: 'Review analytics dashboard', project: 'Atlas Brand System', assignee: 'Fikri', due: 'Fri', priority: 'Low', status: 'Completed' },
-];
-
 const PerformanceView: React.FC = () => {
   const fixtureMode = isSlugFixtureMode();
   if (!fixtureMode) {
