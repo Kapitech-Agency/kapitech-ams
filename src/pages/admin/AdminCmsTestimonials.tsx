@@ -6,7 +6,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
-import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 const normalizeCmsTestimonial = (item: TestimonialItem): TestimonialItem => ({
@@ -161,7 +161,22 @@ export const AdminCmsTestimonials: React.FC = () => {
       />
 
       
-      <AdminMetricStrip
+      
+      <div className="min-[900px]:hidden min-w-0" data-ams-slug="cms-mobile-tabs">
+        <AdminSectionTabs
+          ariaLabel="CMS sections"
+          activeKey="testimonials"
+          items={[
+            { key: 'projects', label: 'Projects', to: '/admin/cms/projects' },
+            { key: 'services', label: 'Services', to: '/admin/cms/services' },
+            { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials' },
+            { key: 'insights', label: 'Insights', to: '/admin/cms/insights' },
+            { key: 'careers', label: 'Careers', to: '/admin/cms/careers' },
+          ]}
+        />
+      </div>
+
+<AdminMetricStrip
         slug="cms-testimonials-kpis"
         className="grid-cols-2 sm:grid-cols-4"
         metrics={[
