@@ -71,6 +71,8 @@ export const AdminCrm: React.FC = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [statusTone, setStatusTone] = useState<'success' | 'error'>('success');
   
   // Drag and drop state
   const [draggedLeadId, setDraggedLeadId] = useState<string | null>(null);
@@ -101,15 +103,16 @@ export const AdminCrm: React.FC = () => {
 
   const loadLeads = async () => {
     setIsLoading(true);
+    setLoadError(null);
     try {
       const res = await api.crm.getDeals();
       if (res.success && Array.isArray(res.data?.deals)) {
         setLeads(res.data.deals as CrmLead[]);
       } else {
-        showToast(res.error || (language === 'id' ? 'Gagal memuat CRM.' : 'Failed to load CRM.'));
+        setLoadError(res.error || (language === 'id' ? 'Gagal memuat CRM.' : 'Failed to load CRM.'));
       }
     } catch {
-      showToast(language === 'id' ? 'Gagal memuat CRM.' : 'Failed to load CRM.');
+      setLoadError(language === 'id' ? 'Gagal memuat CRM.' : 'Failed to load CRM.');
     } finally {
       setIsLoading(false);
     }
@@ -131,9 +134,10 @@ export const AdminCrm: React.FC = () => {
     };
   }, []);
 
-  const showToast = (msg: string) => {
+  const showToast = (msg: string, tone: 'success' | 'error' = 'success') => {
+    setStatusTone(tone);
     setStatusMessage(msg);
-    setTimeout(() => setStatusMessage(null), 3500);
+    window.setTimeout(() => setStatusMessage(null), 3500);
   };
 
   const handleCurrencyToggle = (code: CurrencyCode) => {
@@ -239,11 +243,11 @@ export const AdminCrm: React.FC = () => {
 
   const handleStageChange = async (leadId: string, newStage: CrmStage) => {
     if (!canManageCrm) {
-      showToast(language === 'id' ? 'Anda tidak memiliki izin mengelola CRM.' : 'You do not have CRM permission.');
+      showToast(language === 'id' ? 'Anda tidak memiliki izin mengelola CRM.' : 'You do not have CRM permission.', 'error');
       return;
     }
     const res = await api.crm.updateDeal(leadId, { stage: newStage });
-    if (!res.success) { showToast(res.error || (language === 'id' ? 'Tahap deal gagal diperbarui.' : 'Failed to update deal stage.')); return; }
+    if (!res.success) { showToast(res.error || (language === 'id' ? 'Tahap deal gagal diperbarui.' : 'Failed to update deal stage.'), 'error'); return; }
     await loadLeads();
     const stageDef = CRM_STAGE_DEFINITIONS.find(s => s.key === newStage);
     const stageName = language === 'id' ? (stageDef?.labelId || newStage) : (stageDef?.label || newStage);
@@ -255,13 +259,13 @@ export const AdminCrm: React.FC = () => {
 
   const handleConvertToProject = async (lead: CrmLead) => {
     if (!canManageCrm) {
-      showToast(language === 'id' ? 'Anda tidak memiliki izin mengelola CRM.' : 'You do not have CRM permission.');
+      showToast(language === 'id' ? 'Anda tidak memiliki izin mengelola CRM.' : 'You do not have CRM permission.', 'error');
       return;
     }
     try {
       const res = await api.crm.convertWonDeal(lead.id);
       if (!res.success) {
-        showToast(res.error || (language === 'id' ? 'Konversi deal gagal.' : 'Deal conversion failed.'));
+        showToast(res.error || (language === 'id' ? 'Konversi deal gagal.' : 'Deal conversion failed.'), 'error');
         return;
       }
       await loadLeads();
@@ -277,7 +281,7 @@ export const AdminCrm: React.FC = () => {
             : 'Deal converted through the server workflow and CRM has been refreshed.')
       );
     } catch {
-      showToast(language === 'id' ? 'Konversi deal gagal.' : 'Deal conversion failed.');
+      showToast(language === 'id' ? 'Konversi deal gagal.' : 'Deal conversion failed.', 'error');
     }
   };
   const handleOpenLeadDrawer = (lead: CrmLead) => {
@@ -321,7 +325,7 @@ export const AdminCrm: React.FC = () => {
     e.preventDefault();
     if (!canManageCrm) return;
     if (!formClientName.trim() || !formCompany.trim()) {
-      showToast(language === 'id' ? 'Nama klien dan perusahaan wajib diisi.' : 'Client name and company are required.');
+      showToast(language === 'id' ? 'Nama klien dan perusahaan wajib diisi.' : 'Client name and company are required.', 'error');
       return;
     }
 
@@ -345,7 +349,7 @@ export const AdminCrm: React.FC = () => {
     };
 
     const res = editingLead ? await api.crm.updateDeal(leadData.id, leadData) : await api.crm.createDeal(leadData);
-    if (!res.success) { showToast(res.error || (language === 'id' ? 'Deal gagal disimpan.' : 'Deal could not be saved.')); return; }
+    if (!res.success) { showToast(res.error || (language === 'id' ? 'Deal gagal disimpan.' : 'Deal could not be saved.'), 'error'); return; }
     await loadLeads();
     setIsAddModalOpen(false);
     showToast(editingLead ? (language === 'id' ? 'Data prospek berhasil diperbarui.' : 'Deal updated successfully.') : (language === 'id' ? 'Deal prospek baru berhasil dibuat.' : 'New deal created successfully.'));
@@ -359,7 +363,7 @@ export const AdminCrm: React.FC = () => {
   const confirmDeleteLead = async (id: string) => {
     if (!canManageCrm) return;
     const res = await api.crm.deleteDeal(id);
-    if (!res.success) { showToast(res.error || 'Delete failed.'); setDeleteTarget(null); return; }
+    if (!res.success) { showToast(res.error || 'Delete failed.', 'error'); setDeleteTarget(null); return; }
     await loadLeads();
     if (selectedLead && selectedLead.id === id) { setIsDrawerOpen(false); setSelectedLead(null); }
     setDeleteTarget(null);
@@ -372,7 +376,7 @@ export const AdminCrm: React.FC = () => {
 
     const nextNotes = [...(selectedLead.notes || []), { id: `note_${Date.now().toString(36)}`, text: newNoteText.trim(), type: 'note', createdAt: new Date().toISOString() }];
     const res = await api.crm.updateDeal(selectedLead.id, { notes: nextNotes });
-    if (!res.success) { showToast(res.error || (language === 'id' ? 'Catatan gagal disimpan.' : 'Note could not be saved.')); return; }
+    if (!res.success) { showToast(res.error || (language === 'id' ? 'Catatan gagal disimpan.' : 'Note could not be saved.'), 'error'); return; }
     await loadLeads();
     setNewNoteText('');
     const updated = leads.find(l => l.id === selectedLead.id);
