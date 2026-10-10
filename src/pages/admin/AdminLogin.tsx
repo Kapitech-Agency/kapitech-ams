@@ -241,6 +241,7 @@ export const AdminLogin: React.FC = () => {
           inset: -20% auto -20% -55%;
           width: 34%;
           background: linear-gradient(105deg, transparent, rgba(255,255,255,0.065), transparent);
+          opacity: 0;
           transform: skewX(-14deg);
           pointer-events: none;
           animation: kapi-sheen-pass 8s ease-in-out 1.2s infinite;
@@ -263,8 +264,8 @@ export const AdminLogin: React.FC = () => {
           to { opacity: 1; transform: translate3d(0, 0, 0); filter: blur(0); }
         }
         @keyframes kapi-photo-enter {
-          from { opacity: 0.25; transform: scale(1.035); filter: saturate(0.82); }
-          to { opacity: 1; transform: scale(1); filter: saturate(1); }
+          from { opacity: 0.25; filter: saturate(0.82); }
+          to { opacity: 1; filter: saturate(1); }
         }
         @keyframes kapi-gradient-drift {
           0% { background-position: 0% 12%; }
@@ -288,11 +289,23 @@ export const AdminLogin: React.FC = () => {
           50% { transform: scaleX(1); opacity: 1; }
         }
         @media (prefers-reduced-motion: reduce) {
-          [data-login-motion] *, [data-login-motion] *::before, [data-login-motion] *::after {
-            animation-duration: 0.01ms !important;
-            animation-iteration-count: 1 !important;
-            scroll-behavior: auto !important;
-            transition-duration: 0.01ms !important;
+          [data-login-motion] .login-reveal,
+          [data-login-motion] [data-login-form="true"] > *,
+          [data-login-motion] .login-bg-gradient,
+          [data-login-motion] .login-grid-drift,
+          [data-login-motion] .login-glow,
+          [data-login-motion] .login-photo-enter,
+          [data-login-motion] .login-photo-sheen::after,
+          [data-login-motion] .login-caption-enter,
+          [data-login-motion] .login-controls-enter,
+          [data-login-motion] .login-brand-chip,
+          [data-login-motion] .login-ambient-line {
+            animation: none;
+            transition: none;
+            scroll-behavior: auto;
+            opacity: 1;
+            transform: none;
+            filter: none;
           }
         }
       `}</style>
