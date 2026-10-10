@@ -40,6 +40,7 @@ import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
+import { Skeleton } from '../../components/ui/Skeleton';
 import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { toSlug } from '../../lib/slug';
@@ -335,10 +336,10 @@ export const AdminVendors: React.FC = () => {
         <div className="space-y-3" role="status" aria-label="Loading vendors">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {Array.from({ length: 3 }).map((_, index) => (
-              <div key={index} className="h-[116px] animate-pulse rounded-card border border-line bg-panel" />
+              <Skeleton key={index} className="h-[116px] rounded-card border border-line bg-panel" />
             ))}
           </div>
-          <div className="h-[420px] animate-pulse rounded-card border border-line bg-panel" />
+          <Skeleton className="h-[420px] rounded-card border border-line bg-panel" />
         </div>
       </AdminPageShell>
     );
