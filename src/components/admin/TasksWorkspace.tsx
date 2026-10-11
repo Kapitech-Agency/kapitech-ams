@@ -45,6 +45,7 @@ type TaskRecord = {
   blocked: boolean;
   slug: string;
   createdAt: string;
+  updatedAt?: string;
   subtasks: Array<{ id: string; title: string; completed: boolean }>;
 };
 
