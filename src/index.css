@@ -409,6 +409,29 @@
 
 
 
+/* CMS modules reuse the same control, navigation, and feedback rhythm. */
+.ams-shell .ams-cms-module .ams-cms-section-tabs .ams-topnav-scroll{
+  width:100%;
+  max-width:100%;
+}
+.ams-shell .ams-cms-module .ams-cms-section-tabs .ams-topnav-scroll a{
+  justify-content:center;
+}
+.ams-shell .ams-cms-module .ams-module-notice{
+  overflow-wrap:anywhere;
+}
+.ams-shell .ams-cms-module .ams-filter-bar{
+  min-width:0;
+}
+@media(max-width:599px){
+  .ams-shell .ams-cms-module .ams-cms-section-tabs .ams-topnav-scroll{
+    justify-content:flex-start;
+  }
+  .ams-shell .ams-cms-module .ams-cms-section-tabs .ams-topnav-scroll a{
+    flex:0 0 auto;
+  }
+}
+
 /* CMS module density: keep content management surfaces aligned with the canonical AMS scale. */
 .ams-shell .ams-cms-module{
   min-width:0;
