@@ -3770,7 +3770,8 @@ apiRouter.get('/cms/services', rateLimitPublic(), async (req: Request, res: Resp
   const source = getDataSourceMode() === 'postgres'
     ? await postgresCmsRepository.list('service')
     : getDatabase().cmsServices;
-  const services = canManage ? source : source.filter((item: any) => item.isPublished !== false);
+  // Public requests only receive explicitly published records. Missing status is not consent to publish.
+  const services = canManage ? source : source.filter((item: any) => item.isPublished === true);
   res.json({ success: true, services });
 });
 
@@ -3848,7 +3849,8 @@ apiRouter.get('/cms/projects', rateLimitPublic(), async (req: Request, res: Resp
   const source = getDataSourceMode() === 'postgres'
     ? await postgresCmsRepository.list('project')
     : getDatabase().cmsProjects;
-  const projects = canManage ? source : source.filter((item: any) => item.isPublished !== false);
+  // Public requests only receive explicitly published case studies.
+  const projects = canManage ? source : source.filter((item: any) => item.isPublished === true);
   res.json({ success: true, projects });
 });
 
@@ -3955,7 +3957,8 @@ apiRouter.get('/cms/testimonials', rateLimitPublic(), async (req: Request, res: 
   const source = getDataSourceMode() === 'postgres'
     ? await postgresCmsRepository.list('testimonial')
     : getDatabase().cmsTestimonials;
-  const testimonials = canManage ? source : source.filter((item: any) => item.isPublished !== false);
+  // Testimonials must be explicitly reviewed and published before public access.
+  const testimonials = canManage ? source : source.filter((item: any) => item.isPublished === true);
   res.json({ success: true, testimonials });
 });
 
