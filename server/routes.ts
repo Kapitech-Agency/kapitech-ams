@@ -6368,10 +6368,14 @@ apiRouter.get('/notifications', requireAuth, async (req: AuthenticatedRequest, r
     try {
       source = await postgresNotificationRepository.list();
     } catch (error) {
-      // Keep the notification center usable during PostgreSQL initialization
-      // or a transient notification-table failure. JSON remains the compatibility store.
+      // PostgreSQL is authoritative in production. Never mix JSON compatibility data
+      // into a PostgreSQL response because that can hide a failed read and show stale records.
       console.error('Notification repository unavailable:', error);
-      source = getDatabase().notifications || [];
+      res.status(503).json({
+        success: false,
+        error: 'Notification service is temporarily unavailable. Please retry.'
+      });
+      return;
     }
   } else {
     source = getDatabase().notifications || [];
