@@ -11,7 +11,7 @@ test('Retired module routes redirect and are not imported by the active AMS shel
   for (const modulePath of ['crm', 'proposals', 'approvals']) {
     assert.ok(app.includes('<Route path="' + modulePath + '" element={<Navigate to="/admin/dashboard" replace />} />'));
   }
-  assert.doesNotMatch(app, /pages\\/admin\\/Admin(Crm|Proposals|Approvals)/);
+  assert.doesNotMatch(app, /pages\/admin\/Admin(Crm|Proposals|Approvals)/);
 });
 test('PostgreSQL proposal mutations and approval creation retain audit logging', async () => {
   const source = await fs.readFile(path.join(root, 'server/routes.ts'), 'utf8');
@@ -69,7 +69,7 @@ test('Read-only admin states keep mutation UI controls behind the same permissio
 
   const app = await fs.readFile(path.join(root, 'src/App.tsx'), 'utf8');
   assert.ok(app.includes('<Route path="crm" element={<Navigate to="/admin/dashboard" replace />} />'));
-  assert.doesNotMatch(app, /pages\\/admin\\/AdminCrm/);
+  assert.doesNotMatch(app, /pages\/admin\/AdminCrm/);
 });
 
 
