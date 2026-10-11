@@ -53,7 +53,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   useEffect(() => setActiveIndex(selectedIndex), [selectedIndex]);
 
   const sizeClasses = {
-    xs: 'h-10 sm:h-9 px-2.5 text-xs gap-2 rounded-control',
+    xs: 'h-8 min-h-8 px-2.5 text-[11px] gap-2 rounded-control',
     sm: 'h-10 sm:h-9 px-3 text-[13px] gap-2.5 rounded-control',
     md: 'h-10 px-3.5 text-[13px] gap-3 rounded-control'
   };
