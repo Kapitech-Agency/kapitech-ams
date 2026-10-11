@@ -215,7 +215,7 @@ export const AdminInbox: React.FC = () => {
   };
 
   const handleConvertToClient = async (submission: ContactSubmission) => {
-    if (!canManageClients || submission.type === 'career' || convertingSubmissionId) return;
+    if (!canManageClients || (submission.type && submission.type !== 'inquiry') || convertingSubmissionId) return;
     setConvertingSubmissionId(submission.id);
     try {
       const result = await api.leads.convertToClient(submission.id);
@@ -1128,7 +1128,7 @@ export const AdminInbox: React.FC = () => {
 
                 <div className="border-t border-line bg-bg/50 px-4 py-3">
                   <div className="flex flex-wrap gap-2">
-                    {selectedSubmission.type !== 'career' && canManageClients && (
+                    {(!selectedSubmission.type || selectedSubmission.type === 'inquiry') && canManageClients && (
                       selectedSubmission.convertedClientId ? (
                         <Link to="/admin/clients/all-clients" className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-control border border-success/25 bg-success/10 px-3 text-[10px] font-medium text-success">
                           <Check size={12} />{language === 'id' ? 'Sudah menjadi client' : 'Client linked'}
