@@ -207,7 +207,10 @@ export const AdminModuleHeader: React.FC<AdminModuleHeaderProps> = ({
   )}>
     <div className="min-w-0">
       {eyebrow && <div className="mb-1 flex items-center gap-2 text-xs font-medium text-muted">{eyebrow}</div>}
-      <h1 className="flex min-w-0 items-center gap-2.5 text-xl font-semibold leading-7 tracking-[-0.01em] text-fg">
+      <h1 className={cn(
+        'min-w-0 text-xl font-semibold leading-7 tracking-[-0.01em] text-fg',
+        icon ? 'flex items-center gap-2.5' : 'block'
+      )}>
         {icon && <span className="shrink-0 text-accent-text">{icon}</span>}
         <span className="min-w-0 truncate">{title}</span>
       </h1>
