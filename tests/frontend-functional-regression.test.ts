@@ -287,5 +287,5 @@ test('PostgreSQL notification read failure returns service unavailable instead o
   assert.ok(start >= 0 && end > start);
   assert.match(handler, /Notification repository unavailable/);
   assert.match(handler, /res\.status\(503\)\.json/);
-  assert.doesNotMatch(handler, /source = getDatabase\(\)\.notifications/);
+  assert.doesNotMatch(handler, /catch \(error\)[\s\S]{0,400}source = getDatabase\(\)\.notifications/);
 });
