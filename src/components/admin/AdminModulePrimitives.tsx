@@ -543,7 +543,8 @@ export const AdminTablePagination: React.FC<AdminTablePaginationProps> = ({
               value={String(normalizedPageSize)}
               onChange={handlePageSizeChange}
               options={pageSizeOptions.map((value) => ({ value: String(value), label: String(value) }))}
-              triggerClassName="h-8 min-h-8 w-[76px] shrink-0"
+              size="xs"
+              triggerClassName="w-[76px] shrink-0"
               aria-label="Rows per page"
             />
           </div>
