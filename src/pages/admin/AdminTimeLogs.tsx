@@ -15,6 +15,7 @@ import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 type TimeLog = {
   id: string;
   projectId?: string;
+  taskId?: string;
   projectName?: string;
   taskId?: string;
   taskTitle?: string;
@@ -46,8 +47,13 @@ export const AdminTimeLogs: React.FC = () => {
     if (message) setStatusTone(tone);
   };
   const [projectId, setProjectId] = useState('');
-  const [projectName, setProjectName] = useState('General');
+  const [projectName, setProjectName] = useState('');
+  const [taskId, setTaskId] = useState('');
   const [taskTitle, setTaskTitle] = useState('');
+  const selectedProject = projects.find((project) => project.id === projectId);
+  const selectedProjectTasks: Array<{ id: string; title: string }> = Array.isArray(selectedProject?.tasks)
+    ? selectedProject.tasks.filter((task: any) => task && typeof task.id === 'string' && typeof task.title === 'string')
+    : [];
   const [durationMinutes, setDurationMinutes] = useState(60);
   const [date, setDate] = useState(() => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10));
   const [billable, setBillable] = useState(true);
@@ -106,18 +112,35 @@ export const AdminTimeLogs: React.FC = () => {
   const handleProjectChange = (id: string) => {
     setProjectId(id);
     const project = projects.find(item => item.id === id);
-    setProjectName(project?.name || 'General');
+    setProjectName(project?.name || '');
+    setTaskId('');
+    setTaskTitle('');
+  };
+
+  const handleTaskChange = (id: string) => {
+    setTaskId(id);
+    const task = selectedProjectTasks.find((item) => item.id === id);
+    if (task) setTaskTitle(task.title);
   };
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!canManage) return;
+    if (!canManage || saving) return;
+    if (!projectId) {
+      showStatus('Select a project before logging time.');
+      return;
+    }
+    if (!Number.isFinite(durationMinutes) || durationMinutes < 1 || durationMinutes > 1440) {
+      showStatus('Duration must be between 1 and 1,440 minutes.');
+      return;
+    }
     setSaving(true);
     showStatus(null);
     try {
       const res = await api.timeLogs.create({
         projectId,
-        projectName: projectName || 'General',
+        projectName,
+        taskId: taskId || undefined,
         taskTitle,
         durationMinutes,
         billable,
@@ -127,6 +150,7 @@ export const AdminTimeLogs: React.FC = () => {
       if (res.success && res.data?.timeLog) {
         setLogs(current => [res.data!.timeLog, ...current]);
         setPage(1);
+        setTaskId('');
         setTaskTitle('');
         setNotes('');
         showStatus('Time entry saved.', 'success');
@@ -243,18 +267,25 @@ export const AdminTimeLogs: React.FC = () => {
               </div>
               <span className="hidden sm:inline-flex h-7 w-7 items-center justify-center rounded-control border border-line bg-bg text-accent-text" aria-hidden="true"><Plus size={15} /></span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
               <label className="space-y-1.5">
                 <span className="text-[11px] text-muted">Project</span>
                 <CustomSelect
                   value={projectId}
                   onChange={handleProjectChange}
-                  options={[{ value: "", label: "General" }, ...projects.map(project => ({ value: project.id, label: project.name }))]}
+                  options={[{ value: "", label: "Select project" }, ...projects.map(project => ({ value: project.id, label: project.name }))]}
                 />
               </label>
               <label className="space-y-1.5">
-                <span className="text-[11px] text-muted">Task</span>
-                <input value={taskTitle} onChange={e => setTaskTitle(e.target.value)} placeholder="Task or activity" className="ams-control w-full" />
+                <span className="text-[11px] text-muted">Linked task</span>
+                <select value={taskId} onChange={e => handleTaskChange(e.target.value)} disabled={!projectId || selectedProjectTasks.length === 0} className="ams-control w-full disabled:cursor-not-allowed disabled:opacity-50">
+                  <option value="">No linked task</option>
+                  {selectedProjectTasks.map(task => <option key={task.id} value={task.id}>{task.title}</option>)}
+                </select>
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-[11px] text-muted">Task / activity</span>
+                <input value={taskTitle} onChange={e => { setTaskTitle(e.target.value); if (selectedProjectTasks.find(task => task.id === taskId)?.title !== e.target.value) setTaskId(''); }} placeholder="Describe the work" className="ams-control w-full" />
               </label>
               <label className="space-y-1.5">
                 <span className="text-[11px] text-muted">Duration (minutes)</span>
