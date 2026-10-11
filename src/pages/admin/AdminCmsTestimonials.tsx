@@ -6,7 +6,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
-import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminCmsSectionTabs, AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 const normalizeCmsTestimonial = (item: TestimonialItem): TestimonialItem => ({
@@ -185,19 +185,7 @@ export const AdminCmsTestimonials: React.FC = () => {
 
       
       
-      <div className="min-[900px]:hidden min-w-0" data-ams-slug="cms-mobile-tabs">
-        <AdminSectionTabs
-          ariaLabel="CMS sections"
-          activeKey="testimonials"
-          items={[
-            { key: 'projects', label: 'Projects', to: '/admin/cms/projects' },
-            { key: 'services', label: 'Services', to: '/admin/cms/services' },
-            { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials' },
-            { key: 'insights', label: 'Insights', to: '/admin/cms/insights' },
-            { key: 'careers', label: 'Careers', to: '/admin/cms/careers' },
-          ]}
-        />
-      </div>
+      <AdminCmsSectionTabs activeKey="testimonials" />
 
       <AdminMetricStrip
         slug="cms-testimonials-kpis"
@@ -210,15 +198,14 @@ export const AdminCmsTestimonials: React.FC = () => {
         ]}
       />
 
-      {statusMessage && (() => {
-        const failed = /failed|could not|unable|error|gagal|wajib|required/i.test(statusMessage);
-        return (
-          <div className={['p-3 rounded-control border text-xs font-sans flex items-center gap-2', failed ? 'bg-danger/10 border-danger/25 text-danger' : 'bg-success/10 border-success/25 text-success'].join(' ')}>
-            {failed ? <X size={14} /> : <Check size={14} />}
-            <span>{statusMessage}</span>
-          </div>
-        );
-      })()}
+      {statusMessage && (
+        <AdminModuleNotice
+          tone={/failed|could not|unable|error|gagal|wajib|required/i.test(statusMessage) ? 'danger' : 'success'}
+          onDismiss={() => setStatusMessage(null)}
+        >
+          {statusMessage}
+        </AdminModuleNotice>
+      )}
 
       <AdminFilterBar
         slug="cms-testimonials-filters"
