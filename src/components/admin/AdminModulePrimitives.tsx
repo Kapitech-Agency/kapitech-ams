@@ -444,6 +444,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 );
 
 
+export interface AdminDataTableShellProps {
+  children: React.ReactNode;
+  className?: string;
+  slug?: string;
+}
+
+/** Shared outer surface for a data table and its pagination footer. */
+export const AdminDataTableShell: React.FC<AdminDataTableShellProps> = ({
+  children,
+  className,
+  slug
+}) => (
+  <section
+    data-ams-feature-slug={slug}
+    data-ams-slug={slug}
+    className={cn('ams-data-table-shell overflow-hidden rounded-card border border-line bg-panel', className)}
+  >
+    {children}
+  </section>
+);
+
 export interface AdminTablePaginationProps {
   total: number;
   page: number;
@@ -467,10 +488,11 @@ export const AdminTablePagination: React.FC<AdminTablePaginationProps> = ({
   slug,
   secondaryLabel
 }) => {
-  const totalPages = Math.max(1, Math.ceil(total / Math.max(1, pageSize)));
+  const normalizedPageSize = Math.max(1, pageSize);
+  const totalPages = Math.max(1, Math.ceil(Math.max(0, total) / normalizedPageSize));
   const safePage = Math.min(Math.max(1, page), totalPages);
-  const first = total > 0 ? (safePage - 1) * pageSize + 1 : 0;
-  const last = Math.min(safePage * pageSize, total);
+  const first = total > 0 ? (safePage - 1) * normalizedPageSize + 1 : 0;
+  const last = Math.min(safePage * normalizedPageSize, total);
 
   const pageItems: Array<number | 'ellipsis'> = (() => {
     if (totalPages <= 5) return Array.from({ length: totalPages }, (_, index) => index + 1);
@@ -490,11 +512,11 @@ export const AdminTablePagination: React.FC<AdminTablePaginationProps> = ({
     <nav
       aria-label="Table pagination"
       data-ams-slug={slug}
-      className="border-t border-line bg-panel px-4 py-3 sm:px-5"
+      className="ams-table-pagination border-t border-line bg-panel px-4 py-3 sm:px-5"
     >
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <p className="truncate text-[11px] leading-4 text-muted">
+          <p className="text-[11px] leading-4 text-muted">
             {total > 0 ? (
               <>
                 Showing <span className="font-semibold tabular-nums text-fg">{first}</span>
@@ -508,22 +530,22 @@ export const AdminTablePagination: React.FC<AdminTablePaginationProps> = ({
               <>No {itemLabel}</>
             )}
           </p>
-          {secondaryLabel && <p className="mt-0.5 truncate text-[10px] leading-4 text-muted">{secondaryLabel}</p>}
+          {secondaryLabel && <div className="mt-1 text-[10px] leading-4 text-muted">{secondaryLabel}</div>}
         </div>
 
-        <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 lg:justify-end">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] text-muted">Rows</span>
+        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-end sm:gap-4">
+          <div className="flex items-center justify-between gap-2 sm:justify-start">
+            <span className="shrink-0 text-[11px] text-muted">Rows per page</span>
             <CustomSelect
-              value={String(pageSize)}
+              value={String(normalizedPageSize)}
               onChange={handlePageSizeChange}
               options={pageSizeOptions.map((value) => ({ value: String(value), label: String(value) }))}
-              triggerClassName="h-8 min-h-8 w-[68px] shrink-0"
+              triggerClassName="h-8 min-h-8 w-[76px] shrink-0"
               aria-label="Rows per page"
             />
           </div>
 
-          <div className="flex items-center gap-1" aria-label="Page navigation">
+          <div className="flex min-w-0 flex-wrap items-center justify-between gap-1 sm:justify-end" role="group" aria-label="Page navigation">
             <button
               type="button"
               disabled={safePage <= 1}
@@ -533,14 +555,14 @@ export const AdminTablePagination: React.FC<AdminTablePaginationProps> = ({
               data-ams-slug={slug ? slug + '-prev' : undefined}
             >
               <ChevronLeft size={14} />
-              <span className="hidden md:inline">Previous</span>
+              <span className="hidden sm:inline">Previous</span>
             </button>
 
             {pageItems.map((item, index) =>
               item === 'ellipsis' ? (
                 <span
                   key={'ellipsis-' + index}
-                  className="inline-flex h-8 w-6 items-center justify-center text-[11px] text-muted"
+                  className="inline-flex h-8 w-5 items-center justify-center text-[11px] text-muted"
                   aria-hidden="true"
                 >
                   …
@@ -551,7 +573,7 @@ export const AdminTablePagination: React.FC<AdminTablePaginationProps> = ({
                   type="button"
                   aria-current={safePage === item ? 'page' : undefined}
                   onClick={() => onPageChange(item)}
-                  className={'inline-flex h-8 w-8 items-center justify-center rounded-control border text-[11px] font-semibold tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (
+                  className={'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-control border text-[11px] font-semibold tabular-nums transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (
                     safePage === item
                       ? 'border-accent bg-accent text-white'
                       : 'border-line bg-bg text-muted hover:bg-panel hover:text-fg'
@@ -571,7 +593,7 @@ export const AdminTablePagination: React.FC<AdminTablePaginationProps> = ({
               aria-label="Next page"
               data-ams-slug={slug ? slug + '-next' : undefined}
             >
-              <span className="hidden md:inline">Next</span>
+              <span className="hidden sm:inline">Next</span>
               <ChevronRight size={14} />
             </button>
           </div>
