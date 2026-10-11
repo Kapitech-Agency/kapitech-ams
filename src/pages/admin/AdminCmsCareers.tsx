@@ -10,7 +10,7 @@ import { api } from '../../lib/apiClient';
 import Button from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
-import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, Skeleton } from '../../components/admin/AdminModulePrimitives';
+import { AdminCmsSectionTabs, AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, Skeleton } from '../../components/admin/AdminModulePrimitives';
 
 type CareerPosition = {
   id: string;
@@ -437,32 +437,16 @@ export const AdminCmsCareers: React.FC = () => {
         }
       />
 
-      <div className="min-[900px]:hidden min-w-0" data-ams-slug="cms-mobile-tabs">
-        <AdminSectionTabs
-          ariaLabel="CMS sections"
-          activeKey="careers"
-          items={[
-            { key: 'projects', label: 'Projects', to: '/admin/cms/projects' },
-            { key: 'services', label: 'Services', to: '/admin/cms/services' },
-            { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials' },
-            { key: 'insights', label: 'Insights', to: '/admin/cms/insights' },
-            { key: 'careers', label: 'Careers', to: '/admin/cms/careers' },
-          ]}
-        />
-      </div>
+      <AdminCmsSectionTabs activeKey="careers" />
 
       {statusMessage && (
-        <div className={['flex items-start justify-between gap-3 rounded-card border p-3 text-xs', statusMessage.tone === 'danger' ? 'border-danger/30 bg-danger/10 text-danger' : 'border-success/30 bg-success/10 text-success'].join(' ')}>
-          <div className="flex min-w-0 items-start gap-2">
-            {statusMessage.tone === 'danger' ? <ShieldAlert size={15} className="mt-0.5 shrink-0" /> : <CheckCircle2 size={15} className="mt-0.5 shrink-0" />}
-            <span>{statusMessage.text}</span>
-          </div>
-          <button type="button" onClick={() => setStatusMessage(null)} aria-label="Dismiss notification" className="shrink-0 text-current/70 hover:text-current"><X size={14} /></button>
-        </div>
+        <AdminModuleNotice
+          tone={statusMessage.tone}
+          onDismiss={() => setStatusMessage(null)}
+        >
+          {statusMessage.text}
+        </AdminModuleNotice>
       )}
-
-      
-
 
       <AdminMetricStrip
         slug="cms-careers-metrics"
@@ -495,7 +479,7 @@ export const AdminCmsCareers: React.FC = () => {
 
       {activeTab === 'jobs' ? (
         <section className="space-y-3" data-ams-feature-slug="cms-careers-list">
-          <div className="flex flex-col gap-3 rounded-card border border-line bg-panel p-3 sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-3 rounded-card border border-line bg-panel p-4 sm:flex-row sm:items-center">
             <label className="relative min-w-0 flex-1">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
               <input value={jobSearch} onChange={event => setJobSearch(event.target.value)} className={inputClass + ' pl-9'} placeholder={isId ? 'Cari judul, departemen, atau slug...' : 'Search title, department, or slug...'} aria-label="Search job openings" />
@@ -591,7 +575,7 @@ export const AdminCmsCareers: React.FC = () => {
         </section>
       ) : (
         <section className="space-y-3" data-ams-feature-slug="cms-careers-applicants">
-          <div className="flex flex-col gap-3 rounded-card border border-line bg-panel p-3 sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-3 rounded-card border border-line bg-panel p-4 sm:flex-row sm:items-center">
             <label className="relative min-w-0 flex-1">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
               <input value={applicantSearch} onChange={event => setApplicantSearch(event.target.value)} className={inputClass + ' pl-9'} placeholder={isId ? 'Cari nama, email, atau posisi...' : 'Search applicant, email, or position...'} aria-label="Search applicants" />
