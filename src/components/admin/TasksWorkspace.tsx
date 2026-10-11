@@ -45,6 +45,7 @@ type TaskRecord = {
   blocked: boolean;
   slug: string;
   createdAt: string;
+  updatedAt?: string;
   subtasks: Array<{ id: string; title: string; completed: boolean }>;
 };
 
@@ -346,6 +347,7 @@ export const TasksWorkspace: React.FC = () => {
 
   const updateTaskStatus = async (task: TaskRecord, nextStatus: TaskStatus) => {
     if (!canManageTasks || task.status === nextStatus || updatingTaskId === task.id) return;
+    const previousTask = records.find(item => item.id === task.id) || task;
     setUpdatingTaskId(task.id);
     setRecords(current => current.map(item => item.id === task.id ? {
       ...item,
@@ -353,16 +355,39 @@ export const TasksWorkspace: React.FC = () => {
       blocked: nextStatus === 'done' ? false : item.blocked,
     } : item));
 
+    const rollback = () => {
+      setRecords(current => current.map(item => item.id === previousTask.id ? previousTask : item));
+      setSelectedTask(current => current?.id === previousTask.id ? previousTask : current);
+    };
+
     try {
       const response = await api.tasks.update(task.id, { status: nextStatus });
-      setNotice(response.success ? 'Task status updated.' : 'Task status updated locally for this session.');
-    } catch {
-      setNotice('Task status updated locally for this session.');
+      if (!response.success) {
+        rollback();
+        setNotice(response.error || 'Task status could not be saved. The previous server state has been restored.');
+        return;
+      }
+
+      const savedStatus = response.data?.task?.status;
+      const committedStatus: TaskStatus = ['todo', 'in_progress', 'review', 'done'].includes(String(savedStatus))
+        ? savedStatus as TaskStatus
+        : nextStatus;
+      const committedTask: TaskRecord = {
+        ...previousTask,
+        status: committedStatus,
+        blocked: committedStatus === 'done' ? false : previousTask.blocked,
+        updatedAt: String(response.data?.task?.updatedAt || previousTask.updatedAt),
+      };
+      setRecords(current => current.map(item => item.id === committedTask.id ? committedTask : item));
+      setSelectedTask(current => current?.id === committedTask.id ? committedTask : current);
+      setNotice('Task status saved to the server.');
+    } catch (error) {
+      rollback();
+      setNotice(error instanceof Error
+        ? error.message
+        : 'Task status could not be saved. The previous server state has been restored.');
     } finally {
       setUpdatingTaskId(null);
-      setSelectedTask(current => current?.id === task.id
-        ? { ...current, status: nextStatus, blocked: nextStatus === 'done' ? false : current.blocked }
-        : current);
     }
   };
 
@@ -425,15 +450,56 @@ export const TasksWorkspace: React.FC = () => {
         subtasks: localTask.subtasks,
       });
 
-      setRecords(current => [localTask, ...current]);
-      setNotice(response.success ? 'Task created.' : 'Task created locally for this session.');
+      const persistedTask = response.data?.task;
+      if (!response.success || !persistedTask || !String(persistedTask.id || '').trim()) {
+        setNotice(response.error || 'Task could not be saved. No local task was added.');
+        return;
+      }
+
+      const persistedId = String(persistedTask.id);
+      const persistedAssigneeId = String(persistedTask.assigneeUserId || taskForm.assignee || '');
+      const persistedAssignee = assignees.find(item =>
+        item.id === persistedAssigneeId || item.username === String(persistedTask.assignee || '')
+      );
+      const savedTask: TaskRecord = {
+        ...localTask,
+        id: persistedId,
+        title: String(persistedTask.title || localTask.title),
+        description: String(persistedTask.description || ''),
+        projectId: String(persistedTask.projectId || localTask.projectId),
+        projectName: String(persistedTask.projectName || localTask.projectName),
+        projectSlug: slugify(String(persistedTask.projectName || localTask.projectName)),
+        assigneeId: persistedAssigneeId,
+        assignee: persistedAssignee?.name || String(persistedTask.assignee || localTask.assignee),
+        priority: ['low', 'medium', 'high', 'urgent'].includes(String(persistedTask.priority))
+          ? persistedTask.priority as TaskPriority
+          : localTask.priority,
+        status: ['todo', 'in_progress', 'review', 'done'].includes(String(persistedTask.status))
+          ? persistedTask.status as TaskStatus
+          : localTask.status,
+        dueDate: String(persistedTask.dueDate || localTask.dueDate),
+        tags: Array.isArray(persistedTask.tags) ? persistedTask.tags.map(String) : tags,
+        blocked: isTaskBlocked(persistedTask),
+        slug: 'task-' + slugify(String(persistedTask.title || localTask.title)) + '-' + slugify(persistedId),
+        createdAt: String(persistedTask.createdAt || localTask.createdAt),
+        subtasks: Array.isArray(persistedTask.subtasks)
+          ? persistedTask.subtasks.map((item: any, index: number) => ({
+              id: String(item?.id || persistedId + '-subtask-' + index),
+              title: String(item?.title || ''),
+              completed: Boolean(item?.completed),
+            })).filter((item: { title: string }) => item.title)
+          : localTask.subtasks.map((item, index) => ({
+              ...item,
+              id: persistedId + '-subtask-' + index,
+            })),
+      };
+
+      setRecords(current => [savedTask, ...current.filter(item => item.id !== persistedId)]);
+      setNotice('Task created and saved to the server.');
       setTaskFormOpen(false);
       setPage(1);
-    } catch {
-      setRecords(current => [localTask, ...current]);
-      setNotice('Task created locally for this session.');
-      setTaskFormOpen(false);
-      setPage(1);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : 'Task could not be saved. No local task was added.');
     } finally {
       setSavingTask(false);
     }
@@ -641,8 +707,14 @@ export const TasksWorkspace: React.FC = () => {
     };
 
     const previousTask = editingTask;
+    let saved = false;
     setRecords(current => current.map(item => item.id === editingTask.id ? nextTask : item));
     setSelectedTask(current => current?.id === editingTask.id ? nextTask : current);
+
+    const rollback = () => {
+      setRecords(current => current.map(item => item.id === previousTask.id ? previousTask : item));
+      setSelectedTask(current => current?.id === previousTask.id ? previousTask : current);
+    };
 
     try {
       const response = await api.tasks.update(editingTask.id, {
@@ -658,19 +730,29 @@ export const TasksWorkspace: React.FC = () => {
         subtasks: nextTask.subtasks,
       });
       if (!response.success) {
-        setRecords(current => current.map(item => item.id === previousTask.id ? previousTask : item));
-        setSelectedTask(current => current?.id === previousTask.id ? previousTask : current);
+        rollback();
         setNotice(response.error || 'Task could not be saved. The previous server state has been restored.');
-      } else {
-        setNotice('Task updated.');
+        return;
       }
+
+      const savedTask = response.data?.task;
+      const committedTask: TaskRecord = {
+        ...nextTask,
+        id: previousTask.id,
+        updatedAt: String(savedTask?.updatedAt || nextTask.updatedAt),
+      };
+      setRecords(current => current.map(item => item.id === committedTask.id ? committedTask : item));
+      setSelectedTask(current => current?.id === committedTask.id ? committedTask : current);
+      setNotice('Task updated and saved to the server.');
+      saved = true;
     } catch (error) {
-      setRecords(current => current.map(item => item.id === previousTask.id ? previousTask : item));
-      setSelectedTask(current => current?.id === previousTask.id ? previousTask : current);
-      setNotice(error instanceof Error ? error.message : 'Task could not be saved. The previous server state has been restored.');
+      rollback();
+      setNotice(error instanceof Error
+        ? error.message
+        : 'Task could not be saved. The previous server state has been restored.');
     } finally {
       setSavingEditTask(false);
-      setEditingTask(null);
+      if (saved) setEditingTask(null);
     }
   };
 

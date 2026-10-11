@@ -249,3 +249,50 @@ test('Finance never initializes production state with demo vendors or retired qu
   assert.match(page, /const \[quotations, setQuotations\] = useState<FinanceQuotation\[]>\(\(\) => \(isSlugFixtureMode\(\) \? STITCH_FINANCE_QUOTATIONS : \[\]\)\)/);
   assert.match(page, /const \[usingDemoQuotations, setUsingDemoQuotations\] = useState\(isSlugFixtureMode\(\)\)/);
 });
+
+
+test('Task creation uses the persisted server task ID and never reports a failed create as saved', async () => {
+  const page = await read('src/components/admin/TasksWorkspace.tsx');
+  const createStart = page.indexOf('const saveNewTask = async');
+  const createEnd = page.indexOf('const scopedRecords =', createStart);
+  const createHandler = page.slice(createStart, createEnd);
+  const statusStart = page.indexOf('const updateTaskStatus = async');
+  const statusEnd = page.indexOf('const saveNewTask = async', statusStart);
+  const statusHandler = page.slice(statusStart, statusEnd);
+  assert.ok(createStart >= 0 && createEnd > createStart);
+  assert.match(createHandler, /const persistedTask = response\.data\?\.task/);
+  assert.match(createHandler, /id: persistedId/);
+  assert.match(createHandler, /if \(!response\.success \|\| !persistedTask/);
+  assert.match(createHandler, /No local task was added/);
+  assert.doesNotMatch(createHandler, /setRecords\(current => \[localTask, \.\.\.current\]\)/);
+  assert.match(statusHandler, /if \(!response\.success\)/);
+  assert.match(statusHandler, /const rollback = \(\) =>/);
+  assert.match(statusHandler, /Task status could not be saved/);
+});
+
+test('CMS Insights ignores stale requests and clamps page after the result count changes', async () => {
+  const page = await read('src/pages/admin/AdminCmsInsights.tsx');
+  assert.match(page, /const loadRequestId = useRef\(0\)/);
+  assert.match(page, /if \(requestId !== loadRequestId\.current\) return/);
+  assert.match(page, /const lastPage = Math\.max\(1, Math\.ceil\(nextTotal \/ pageSize\)\)/);
+  assert.match(page, /if \(page > lastPage\) \{\s*setPage\(lastPage\)/);
+  assert.match(page, /loadRequestId\.current \+= 1/);
+});
+
+test('PostgreSQL notification read failure returns service unavailable instead of mixing JSON data', async () => {
+  const routes = await read('server/routes.ts');
+  const start = routes.indexOf("apiRouter.get('/notifications'");
+  const end = routes.indexOf("apiRouter.post('/notifications/:id/read'", start);
+  const handler = routes.slice(start, end);
+  assert.ok(start >= 0 && end > start);
+  assert.match(handler, /Notification repository unavailable/);
+  assert.match(handler, /res\.status\(503\)\.json/);
+  assert.doesNotMatch(handler, /catch \(error\)[\s\S]{0,400}source = getDatabase\(\)\.notifications/);
+});
+
+test('Finance tables recompute visible rows when page size changes', async () => {
+  const page = await read('src/pages/admin/AdminInvoicing.tsx');
+  assert.match(page, /useMemo\(\(\) => \{[\s\S]{0,180}filteredInvoices\.slice\(start, start \+ invoicePageSize\)[\s\S]{0,80}\[filteredInvoices, invoicePage, invoicePageSize\]\)/);
+  assert.match(page, /incomeRows\.slice\(start, start \+ incomePageSize\)[\s\S]{0,90}\[incomeRows, incomePage, incomePageSize\]/);
+  assert.match(page, /filteredExpenses\.slice\(start, start \+ expensePageSize\)[\s\S]{0,90}\[filteredExpenses, expensePage, expensePageSize\]/);
+});

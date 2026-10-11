@@ -1,5 +1,5 @@
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowUpRight,
   Check,
@@ -604,8 +604,10 @@ export const AdminCmsInsights: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<InsightItem | null>(null);
   const [total, setTotal] = useState(0);
+  const loadRequestId = useRef(0);
 
   const load = async () => {
+    const requestId = ++loadRequestId.current;
     setLoading(true);
     setLoadError(null);
     try {
@@ -619,13 +621,24 @@ export const AdminCmsInsights: React.FC = () => {
         featured: featuredFilter === '' ? undefined : featuredFilter === 'true',
         search: search || undefined
       });
+      if (requestId !== loadRequestId.current) return;
       if (!res.success) throw new Error(res.error || 'Unable to load Insights.');
+
+      const nextTotal = Math.max(0, Number(res.data?.meta?.total) || 0);
+      const lastPage = Math.max(1, Math.ceil(nextTotal / pageSize));
+      setTotal(nextTotal);
+      if (page > lastPage) {
+        setPage(lastPage);
+        return;
+      }
+
       setItems((res.data?.insights || []) as InsightItem[]);
-      setTotal(res.data?.meta?.total || 0);
     } catch (error) {
-      setLoadError(error instanceof Error ? error.message : 'Unable to load Insights.');
+      if (requestId === loadRequestId.current) {
+        setLoadError(error instanceof Error ? error.message : 'Unable to load Insights.');
+      }
     } finally {
-      setLoading(false);
+      if (requestId === loadRequestId.current) setLoading(false);
     }
   };
 
@@ -639,7 +652,13 @@ export const AdminCmsInsights: React.FC = () => {
   };
 
   useEffect(() => { void loadTaxonomy(); }, []);
-  useEffect(() => { void load(); }, [page, pageSize, languageFilter, statusFilter, categoryFilter, authorFilter, featuredFilter, search]);
+  useEffect(() => {
+    void load();
+    return () => {
+      // A response from an obsolete page/filter request must never replace newer results.
+      loadRequestId.current += 1;
+    };
+  }, [page, pageSize, languageFilter, statusFilter, categoryFilter, authorFilter, featuredFilter, search]);
 
   const featuredCount = items.filter(item => item.isFeatured).length;
   const publishedCount = items.filter(item => item.status === 'published').length;

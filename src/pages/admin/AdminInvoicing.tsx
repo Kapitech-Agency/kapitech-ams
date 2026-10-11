@@ -1312,7 +1312,7 @@ export const AdminInvoicing: React.FC = () => {
   const paginatedInvoices = useMemo(() => {
     const start = (invoicePage - 1) * invoicePageSize;
     return filteredInvoices.slice(start, start + invoicePageSize);
-  }, [filteredInvoices, invoicePage]);
+  }, [filteredInvoices, invoicePage, invoicePageSize]);
 
   const invoicePageCount = Math.max(1, Math.ceil(filteredInvoices.length / invoicePageSize));
 
@@ -1390,7 +1390,7 @@ export const AdminInvoicing: React.FC = () => {
   const paginatedIncomeRows = useMemo(() => {
     const start = (incomePage - 1) * incomePageSize;
     return incomeRows.slice(start, start + incomePageSize);
-  }, [incomeRows, incomePage]);
+  }, [incomeRows, incomePage, incomePageSize]);
   const incomePageCount = Math.max(1, Math.ceil(incomeRows.length / incomePageSize));
 
   useEffect(() => {
@@ -1439,7 +1439,7 @@ export const AdminInvoicing: React.FC = () => {
   const paginatedExpenses = useMemo(() => {
     const start = (expensePage - 1) * expensePageSize;
     return filteredExpenses.slice(start, start + expensePageSize);
-  }, [filteredExpenses, expensePage]);
+  }, [filteredExpenses, expensePage, expensePageSize]);
   const expensePageCount = Math.max(1, Math.ceil(filteredExpenses.length / expensePageSize));
 
   useEffect(() => {
