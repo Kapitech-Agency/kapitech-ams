@@ -432,55 +432,11 @@
   }
 }
 
-/* CMS module density: keep content management surfaces aligned with the canonical AMS scale. */
+/* CMS deliberately inherits canonical AMS typography, controls, and table geometry.
+   Avoid page-scoped table/input overrides here: they used to outrank Tailwind
+   utilities and made the CMS inconsistent with the other modules. */
 .ams-shell .ams-cms-module{
   min-width:0;
-}
-.ams-shell .ams-cms-module label{
-  color:var(--muted);
-  font-size:11px;
-  line-height:16px;
-  font-weight:500;
-}
-.ams-shell .ams-cms-module input,
-.ams-shell .ams-cms-module select,
-.ams-shell .ams-cms-module textarea{
-  min-height:36px;
-  font-size:12px;
-  line-height:18px;
-}
-.ams-shell .ams-cms-module textarea{
-  resize:vertical;
-}
-.ams-shell .ams-cms-module table{
-  width:100%;
-  border-collapse:separate;
-  border-spacing:0;
-  font-variant-numeric:tabular-nums;
-}
-.ams-shell .ams-cms-module table thead th{
-  height:40px;
-  padding:0 12px;
-  background:var(--panel);
-  color:var(--muted);
-  border-bottom:1px solid var(--line);
-  font-size:10px;
-  line-height:14px;
-  font-weight:600;
-  text-align:left;
-  white-space:nowrap;
-}
-.ams-shell .ams-cms-module table tbody td{
-  height:40px;
-  padding:8px 12px;
-  border-bottom:1px solid var(--line);
-  vertical-align:middle;
-}
-.ams-shell .ams-cms-module table tbody tr:last-child td{
-  border-bottom:0;
-}
-.ams-shell .ams-cms-module table tbody tr:hover{
-  background:var(--panel-hover);
 }
 .ams-shell .ams-cms-module .cms-editor-section{
   border-top:1px solid var(--line);
@@ -488,11 +444,6 @@
 }
 .ams-shell .ams-cms-module .cms-editor-section + .cms-editor-section{
   margin-top:16px;
-}
-@media(max-width:599px){
-  .ams-shell .ams-cms-module table{
-    min-width:720px;
-  }
 }
 
 /* Temporary mobile dashboard shell — intentionally independent from desktop composition. */
