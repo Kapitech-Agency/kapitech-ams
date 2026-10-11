@@ -29,3 +29,9 @@ test('CMS bootstrap uses PostgreSQL tables and one-time seed markers', () => {
   assert.match(source, /Project records bundled with the frontend are fixtures/);
   assert.match(source, /mobile-app-design/);
 });
+test('Insight seed migration uses valid PostgreSQL dollar-quoted JSON', () => {
+  const migration = fs.readFileSync(path.resolve(process.cwd(), 'db/postgres/046_seed_seo_educational_insights.sql'), 'utf8');
+  assert.doesNotMatch(migration, /\\$q\\{|\\}q\\$/);
+  assert.match(migration, /\\$q\\$\\{/);
+  assert.match(migration, /\\}\\$q\\$::jsonb/);
+});
