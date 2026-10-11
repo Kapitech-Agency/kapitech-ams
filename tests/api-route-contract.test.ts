@@ -19,6 +19,7 @@ test('API route contract protects state-changing and private routes', async () =
     'GET /cms/services',
     'GET /cms/projects',
     'GET /cms/testimonials',
+    'GET /cms/careers',
     'GET /cms/public-settings',
     'GET /cms/insights',
     'GET /cms/insights/sitemap.xml',
