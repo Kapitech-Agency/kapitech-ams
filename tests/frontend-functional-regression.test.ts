@@ -332,7 +332,7 @@ test('Production CMS migration restores verified portfolio items without republi
     assert.ok(migration.includes("'" + id + "'"), 'Missing production portfolio record: ' + id);
   }
   assert.equal((migration.match(/'isPublished', true/g) || []).length, verifiedProjectIds.length);
-  assert.match(migration, /ON CONFLICT \\(id\\) DO NOTHING/);
+  assert.match(migration, /ON CONFLICT \(id\) DO NOTHING/);
   assert.doesNotMatch(migration, /t_0[1-6]|bank-digital-nusantara-mobile|siloam-care-telehealth-ui/);
 });
 
