@@ -468,6 +468,34 @@
   }
 }
 
+/* Workspace tabs use the same compact, keyboard-visible pill rhythm as AMS section tabs. */
+.ams-shell .ams-workspace-tabs{
+  width:max-content;
+  max-width:100%;
+}
+.ams-shell .ams-workspace-tabs [role="tab"]{
+  white-space:nowrap;
+}
+.ams-shell .cms-career-language-panel{
+  align-self:stretch;
+}
+.ams-shell .cms-career-language-panel > div:first-child{
+  min-height:28px;
+}
+.ams-shell .cms-career-editor-form{
+  min-width:0;
+}
+@media(max-width:599px){
+  .ams-shell .ams-workspace-tabs{
+    width:100%;
+  }
+  .ams-shell .ams-workspace-tabs [role="tab"]{
+    flex:1 1 auto;
+    justify-content:center;
+    padding-inline:10px;
+  }
+}
+
 /* CMS deliberately inherits canonical AMS typography, controls, and table geometry.
    Avoid page-scoped table/input overrides here: they used to outrank Tailwind
    utilities and made the CMS inconsistent with the other modules. */
