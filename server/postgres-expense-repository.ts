@@ -44,6 +44,11 @@ export class PostgresExpenseRepository{
       if (vendorId || vendorContractId) {
         fingerprintData.vendorId = vendorId || '';
         fingerprintData.vendorContractId = vendorContractId || '';
+        const vendorPayment = input.metadata?.vendorPayment;
+        if (vendorPayment && typeof vendorPayment === 'object') {
+          fingerprintData.vendorPaymentReference = String(vendorPayment.reference || '');
+          fingerprintData.vendorPaymentNotes = String(vendorPayment.notes || '');
+        }
       }
       const requestFingerprint=JSON.stringify(fingerprintData);
       if(idempotencyKey){
