@@ -15,7 +15,6 @@ import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 type TimeLog = {
   id: string;
   projectId?: string;
-  taskId?: string;
   projectName?: string;
   taskId?: string;
   taskTitle?: string;
