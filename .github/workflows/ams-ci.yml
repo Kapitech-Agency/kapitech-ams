@@ -109,6 +109,15 @@ jobs:
           test -s /tmp/health-ready.json
           node -e "const fs=require('fs'); const x=JSON.parse(fs.readFileSync('/tmp/health-ready.json','utf8')); if(x.status!=='ok'||x.services?.dataSource!=='postgres') process.exit(1)"
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:4173/api/health)" = "200"
+
+          # Verify that the production runtime migrated the verified case studies and exposes them publicly.
+          curl -fsS http://127.0.0.1:4173/api/cms/projects >/tmp/cms-projects.json
+          node -e "const fs=require('fs'); const x=JSON.parse(fs.readFileSync('/tmp/cms-projects.json','utf8')); const ids=['verified_case_pertamina_sales_management_system','verified_case_navees_gold_video_social','verified_case_ina_solusi_company_website','verified_case_mobilku_social_design','verified_case_reve_space_custom_web_cms','verified_case_sombong_padel_event_design','verified_case_sababay_winery_event_video']; if(!x.success||!Array.isArray(x.projects)||ids.some(id=>!x.projects.some(p=>p.id===id&&p.isPublished===true))) { console.error('Public CMS project smoke test failed', x); process.exit(1); }"
+
+          # Confirm the unverified seeded testimonial fixtures remain private.
+          curl -fsS http://127.0.0.1:4173/api/cms/testimonials >/tmp/cms-testimonials.json
+          node -e "const fs=require('fs'); const x=JSON.parse(fs.readFileSync('/tmp/cms-testimonials.json','utf8')); const sampleIds=new Set(['t_01','t_02','t_03','t_04','t_05','t_06']); if(!x.success||!Array.isArray(x.testimonials)||x.testimonials.some(t=>sampleIds.has(t.id))) { console.error('Public CMS testimonial smoke test failed', x); process.exit(1); }"
+
           test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:4173/api/auth/me)" = "401"
           curl -sS -D /tmp/login.headers -H 'Content-Type: application/json' --data '{"identifier":"admin","password":"smoke-test-password-123456","rememberMe":false}' http://127.0.0.1:4173/api/auth/login >/tmp/login.json
           node -e "const fs=require('fs'); const x=JSON.parse(fs.readFileSync('/tmp/login.json','utf8')); if(!x.success||x.user?.stakeholderType!=='Master') process.exit(1)"
