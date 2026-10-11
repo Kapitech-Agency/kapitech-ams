@@ -848,7 +848,9 @@ export const AdminCmsCareers: React.FC = () => {
                 <span className="flex h-6 w-6 items-center justify-center rounded-badge border border-line bg-panel text-[10px] font-semibold text-fg">EN</span>
                 <h3 className="text-xs font-semibold text-fg">English content</h3>
               </div>
-              <Field label="Job title" required><input className={inputClass} value={draft.title} onChange={event => {
+              <div className="cms-career-editor-group space-y-3">
+                <h4 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Role details</h4>
+                <Field label="Job title" required><input className={inputClass} value={draft.title} onChange={event => {
                 const title = event.target.value;
                 setDraft(current => ({ ...current, title, slug: editorMode === 'create' && (!current.slug || current.slug === slugify(current.title)) ? slugify(title) : current.slug }));
               }} required placeholder="Frontend Engineer" /></Field>
@@ -859,10 +861,17 @@ export const AdminCmsCareers: React.FC = () => {
                 <Field label="Employment type"><input className={inputClass} value={draft.type} onChange={event => updateDraft('type', event.target.value)} placeholder="Full Time / Contract" /></Field>
                 <Field label="Badge"><input className={inputClass} value={draft.badge} onChange={event => updateDraft('badge', event.target.value)} placeholder="Full Time • On-site" /></Field>
               </div>
-              <Field label="Short description"><textarea className={textareaClass} value={draft.summary} onChange={event => updateDraft('summary', event.target.value)} placeholder="Describe the role and its impact..." /></Field>
+              </div>
+              <div className="cms-career-editor-group space-y-3">
+                <h4 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Description & compensation</h4>
+                <Field label="Short description"><textarea className={textareaClass} value={draft.summary} onChange={event => updateDraft('summary', event.target.value)} placeholder="Describe the role and its impact..." /></Field>
               <Field label="Compensation"><input className={inputClass} value={draft.compensation} onChange={event => updateDraft('compensation', event.target.value)} placeholder="Salary, benefits, or commission" /></Field>
+              </div>
+              <div className="cms-career-editor-group space-y-3">
+                <h4 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Responsibilities & requirements</h4>
               <Field label="Responsibilities (one per line)"><textarea className={textareaClass + ' min-h-[130px]'} value={listToText(draft.responsibilities)} onChange={event => updateDraft('responsibilities', textToList(event.target.value))} placeholder={'Own the feature lifecycle\nCollaborate with design and engineering'} /></Field>
               <Field label="Requirements (one per line)"><textarea className={textareaClass + ' min-h-[130px]'} value={listToText(draft.requirements)} onChange={event => updateDraft('requirements', textToList(event.target.value))} placeholder={'Strong portfolio\nClear written communication'} /></Field>
+              </div>
             </section>
 
             <section className="cms-career-language-panel min-w-0 space-y-4 rounded-card border border-line bg-bg p-4">
@@ -870,7 +879,9 @@ export const AdminCmsCareers: React.FC = () => {
                 <span className="flex h-6 w-6 items-center justify-center rounded-badge border border-line bg-panel text-[10px] font-semibold text-fg">ID</span>
                 <h3 className="text-xs font-semibold text-fg">Konten Bahasa Indonesia</h3>
               </div>
-              <Field label="Judul lowongan" required><input className={inputClass} value={draft.titleId} onChange={event => updateDraft('titleId', event.target.value)} required placeholder="Frontend Engineer" /></Field>
+              <div className="cms-career-editor-group space-y-3">
+                <h4 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Informasi peran</h4>
+                <Field label="Judul lowongan" required><input className={inputClass} value={draft.titleId} onChange={event => updateDraft('titleId', event.target.value)} required placeholder="Frontend Engineer" /></Field>
               <Field label="Departemen" required><input className={inputClass} value={draft.departmentId} onChange={event => updateDraft('departmentId', event.target.value)} required placeholder="Innovation Development" /></Field>
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="Lokasi"><input className={inputClass} value={draft.locationId} onChange={event => updateDraft('locationId', event.target.value)} placeholder="Tangerang Selatan / Remote" /></Field>
@@ -878,10 +889,17 @@ export const AdminCmsCareers: React.FC = () => {
                 <Field label="Jenis pekerjaan"><input className={inputClass} value={draft.typeId} onChange={event => updateDraft('typeId', event.target.value)} placeholder="Full Time / Kontrak" /></Field>
                 <Field label="Badge"><input className={inputClass} value={draft.badgeId} onChange={event => updateDraft('badgeId', event.target.value)} placeholder="Full Time • On-site" /></Field>
               </div>
-              <Field label="Deskripsi singkat"><textarea className={textareaClass} value={draft.summaryId} onChange={event => updateDraft('summaryId', event.target.value)} placeholder="Jelaskan peran, tanggung jawab, dan dampaknya..." /></Field>
+              </div>
+              <div className="cms-career-editor-group space-y-3">
+                <h4 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Deskripsi & kompensasi</h4>
+                <Field label="Deskripsi singkat"><textarea className={textareaClass} value={draft.summaryId} onChange={event => updateDraft('summaryId', event.target.value)} placeholder="Jelaskan peran, tanggung jawab, dan dampaknya..." /></Field>
               <Field label="Kompensasi"><input className={inputClass} value={draft.compensationId} onChange={event => updateDraft('compensationId', event.target.value)} placeholder="Gaji, benefit, atau komisi" /></Field>
+              </div>
+              <div className="cms-career-editor-group space-y-3">
+                <h4 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Tanggung jawab & persyaratan</h4>
               <Field label="Tanggung jawab (satu per baris)"><textarea className={textareaClass + ' min-h-[130px]'} value={listToText(draft.responsibilitiesId)} onChange={event => updateDraft('responsibilitiesId', textToList(event.target.value))} placeholder={'Mengelola proses delivery fitur\nBerkolaborasi dengan tim desain dan engineering'} /></Field>
               <Field label="Persyaratan (satu per baris)"><textarea className={textareaClass + ' min-h-[130px]'} value={listToText(draft.requirementsId)} onChange={event => updateDraft('requirementsId', textToList(event.target.value))} placeholder={'Portofolio yang relevan\nKomunikasi tertulis yang baik'} /></Field>
+              </div>
             </section>
           </div>
         </form>
