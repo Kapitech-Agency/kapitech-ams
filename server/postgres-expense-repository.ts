@@ -10,7 +10,9 @@ function mapExpense(row:Row):Record<string,any>{
   return {...metadata,slug,id:row.id,type:row.type,category:row.category,description:row.description,
     amount:Number(row.amount||0),currency:row.currency||'IDR',date:dateValue(row.expense_date),
     expenseDate:dateValue(row.expense_date),recurringInterval:row.recurring_interval??metadata.recurringInterval??'none',
-    projectId:row.project_id??undefined,recordedByUserId:row.recorded_by_user_id??undefined,
+    projectId:row.project_id??undefined,vendorId:row.vendor_id??metadata.vendorPayment?.vendorId??undefined,
+    vendorContractId:row.vendor_contract_id??metadata.vendorPayment?.contractId??undefined,
+    recordedByUserId:row.recorded_by_user_id??undefined,
     recordedBy:row.recorded_by||metadata.recordedBy||'',status:row.status||'posted',version:Number(row.version||1),
     archivedAt:row.archived_at?iso(row.archived_at):undefined,createdAt:iso(row.created_at)};
 }
@@ -24,10 +26,12 @@ export class PostgresExpenseRepository{
   async create(input:Record<string,any>, audit?: AuditEntry){
     const userId=String(input.recordedByUserId||''), amount=Number(input.amount), currency=String(input.currency||'IDR').toUpperCase();
     const expenseDate=String(input.date||input.expenseDate||'').slice(0,10), projectId=input.projectId?String(input.projectId):null;
+    const vendorId=input.vendorId?String(input.vendorId):null, vendorContractId=input.vendorContractId?String(input.vendorContractId):null;
     const idempotencyKey=input.idempotencyKey?String(input.idempotencyKey).slice(0,100):null;
+    if (vendorContractId && !vendorId) throw new Error('A vendor is required when a vendor contract is linked.');
     if(!userId||!expenseDate||!/^[A-Z]{3}$/.test(currency)||!Number.isFinite(amount)||amount<=0) throw new Error('Valid user, date, currency, and positive expense amount are required.');
     return withPostgresTransaction(async client=>{
-      const requestFingerprint=JSON.stringify({
+      const fingerprintData: Record<string, unknown> = {
         type:String(input.type||'OpEx'),
         category:String(input.category||'General'),
         description:String(input.description||''),
@@ -36,7 +40,12 @@ export class PostgresExpenseRepository{
         date:expenseDate,
         projectId:projectId||'',
         recurringInterval:String(input.recurringInterval||'none')
-      });
+      };
+      if (vendorId || vendorContractId) {
+        fingerprintData.vendorId = vendorId || '';
+        fingerprintData.vendorContractId = vendorContractId || '';
+      }
+      const requestFingerprint=JSON.stringify(fingerprintData);
       if(idempotencyKey){
         await client.query("SELECT pg_advisory_xact_lock(hashtextextended('kapitech:expense-idempotency:' || $1 || ':' || $2, 0))",[userId,idempotencyKey]);
         const existing=await client.query<Row>('SELECT * FROM expenses WHERE recorded_by_user_id=$1 AND idempotency_key=$2 LIMIT 1',[userId,idempotencyKey]);
@@ -57,9 +66,13 @@ export class PostgresExpenseRepository{
         }
       }
       if(projectId){const project=await client.query<Row>('SELECT id FROM projects WHERE id=$1 FOR SHARE',[projectId]);if(!project.rows[0])throw new ExpenseProjectNotFoundError('Project not found.');}
+      if (vendorId) {
+        const vendor = await client.query<Row>('SELECT id FROM vendors WHERE id = $1 FOR SHARE', [vendorId]);
+        if (!vendor.rows[0]) throw new Error('VENDOR_NOT_FOUND');
+      }
       const metadata={...(input.metadata&&typeof input.metadata==='object'?input.metadata:{}),slug:String(input.slug || ((input.description || input.category || input.id) + '-' + expenseDate + '-' + input.id).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')),recurringInterval:input.recurringInterval??'none',requestFingerprint};
-      const result=await client.query<Row>('INSERT INTO expenses (id,type,category,description,amount,currency,expense_date,recurring_interval,project_id,recorded_by_user_id,recorded_by,status,version,idempotency_key,metadata,created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,1,$13,$14,NOW()) RETURNING *',
-        [String(input.id),String(input.type||'OpEx'),String(input.category||'General'),String(input.description||''),Math.round(amount*100)/100,currency,expenseDate,String(input.recurringInterval||'none'),projectId,userId,String(input.recordedBy||''),'posted',idempotencyKey,JSON.stringify(metadata)]);
+      const result=await client.query<Row>('INSERT INTO expenses (id,type,category,description,amount,currency,expense_date,recurring_interval,project_id,vendor_id,vendor_contract_id,recorded_by_user_id,recorded_by,status,version,idempotency_key,metadata,created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,1,$15,$16,NOW()) RETURNING *',
+        [String(input.id),String(input.type||'OpEx'),String(input.category||'General'),String(input.description||''),Math.round(amount*100)/100,currency,expenseDate,String(input.recurringInterval||'none'),projectId,vendorId,vendorContractId,userId,String(input.recordedBy||''),'posted',idempotencyKey,JSON.stringify(metadata)]);
       if (audit) await postgresAuditLogRepository.appendWithinTransaction(client, audit);
       return mapExpense(result.rows[0]);
     });
