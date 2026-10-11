@@ -6,14 +6,13 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-test('Approval UI never exposes decision actions without approval permission', async () => {
-  const source = await fs.readFile(path.join(root, 'src/pages/admin/AdminApprovals.tsx'), 'utf8');
-  assert.ok(source.includes("hasAdminPermission('canApproveBudgets')"));
-  assert.ok(source.includes("item.status.toLowerCase() === 'pending' && canApproveBudgets"));
-  assert.ok(source.includes('activeItem && canApproveBudgets'));
-  assert.ok(source.includes('You do not have approval permission.'));
+test('Retired module routes redirect and are not imported by the active AMS shell', async () => {
+  const app = await fs.readFile(path.join(root, 'src/App.tsx'), 'utf8');
+  for (const modulePath of ['crm', 'proposals', 'approvals']) {
+    assert.ok(app.includes('<Route path="' + modulePath + '" element={<Navigate to="/admin/dashboard" replace />} />'));
+  }
+  assert.doesNotMatch(app, /pages\/admin\/Admin(Crm|Proposals|Approvals)/);
 });
-
 test('PostgreSQL proposal mutations and approval creation retain audit logging', async () => {
   const source = await fs.readFile(path.join(root, 'server/routes.ts'), 'utf8');
   for (const action of [
@@ -68,13 +67,9 @@ test('Read-only admin states keep mutation UI controls behind the same permissio
   assert.ok(clients.includes('{canManageClients && ('));
   assert.ok(clients.includes('if (!canManageClients) return;'));
 
-  const crm = await fs.readFile(path.join(root, 'src/pages/admin/AdminCrm.tsx'), 'utf8');
-  assert.ok(crm.includes('const canManageCrm = hasAdminPermission(\'canManageCrm\');'));
-  assert.ok(crm.includes('if (!canManageCrm) return;'));
-  assert.ok(crm.includes('disabled={!canManageCrm}'));
-  assert.ok(crm.includes('draggable={canManageCrm}'));
-  assert.ok(crm.includes('disabled={!canManageCrm} className="px-3.5 py-2'));
-  assert.ok(crm.includes('options={CRM_STAGE_DEFINITIONS.map(s => ({ value: s.key, label: language === \'id\' ? s.labelId : s.label }))} disabled={!canManageCrm}'));
+  const app = await fs.readFile(path.join(root, 'src/App.tsx'), 'utf8');
+  assert.ok(app.includes('<Route path="crm" element={<Navigate to="/admin/dashboard" replace />} />'));
+  assert.doesNotMatch(app, /pages\/admin\/AdminCrm/);
 });
 
 
