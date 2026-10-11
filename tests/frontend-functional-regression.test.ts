@@ -237,3 +237,8 @@ test('PostgreSQL client updates accept all canonical client statuses exposed by 
     assert.ok(jsonUpdate.includes("'" + status + "'"), 'JSON update must accept ' + status);
   }
 });
+test('sample fixture data cannot be enabled in production by environment flags', async () => {
+  const runtimeMode = await read('src/lib/runtimeMode.ts');
+  assert.match(runtimeMode, /isSlugFixtureMode = \(\): boolean => !import\.meta\.env\.PROD/);
+  assert.doesNotMatch(runtimeMode, /VITE_AB_TEST_DATA/);
+});
