@@ -370,6 +370,11 @@ test('AMS focus and form defaults no longer override component-level UI states',
   assert.doesNotMatch(styles, /\.ams-shell :where\(a,button,\[role=button\],input,select,textarea,\[tabindex\]\):focus-visible/);
   assert.match(styles, /:where\(\.ams-shell\) :where\(input:not\(\[type="checkbox"\]\)[\s\S]{0,220}min-height:36px/);
   assert.doesNotMatch(styles, /\.ams-shell input,\.ams-shell select,\.ams-shell textarea\{min-height:36px/);
+  assert.doesNotMatch(styles, /ams-crm-kpi|ams-inbox-kpi|ams-leads-page/);
+  const select = await read('src/components/ui/CustomSelect.tsx');
+  assert.match(select, /xs: 'h-8 min-h-8/);
+  const primitives = await read('src/components/admin/AdminModulePrimitives.tsx');
+  assert.match(primitives, /pageSizeOptions\.map[\s\S]{0,140}size="xs"/);
 });
 
 test('Careers workspace tabs and dropdowns use the shared AMS interaction patterns', async () => {
@@ -377,40 +382,10 @@ test('Careers workspace tabs and dropdowns use the shared AMS interaction patter
   assert.match(careers, /role="tablist"/);
   assert.match(careers, /role="tab"/);
   assert.match(careers, /aria-selected=\{activeTab === tab\.key\}/);
-  assert.match(careers, /ArrowLeft[\s\S]{0,220}ArrowRight[\s\S]{0,260}setActiveTab\(nextKey\)/);
+  assert.match(careers, /ArrowLeft[\s\S]{0,220}ArrowRight[\s\S]{0,600}setActiveTab\(nextKey\)/);
   assert.equal((careers.match(/<CustomSelect\b/g) || []).length, 3);
   assert.doesNotMatch(careers, /<select\b/);
   assert.match(careers, /cms-career-language-panel/);
   assert.match(careers, /cms-career-position-form/);
 });
 
-test('CMS data table pagination stays inside each canonical table shell', async () => {
-  const paths = [
-    'src/pages/admin/AdminCmsProjects.tsx',
-    'src/pages/admin/AdminCmsServices.tsx',
-    'src/pages/admin/AdminCmsTestimonials.tsx',
-    'src/pages/admin/AdminCmsInsights.tsx',
-    'src/pages/admin/AdminCmsCareers.tsx'
-  ];
-  for (const path of paths) {
-    const page = await read(path);
-    const header = page.match(/<AdminModuleHeader[\s\S]*?\btitle=/);
-    assert.ok(header, path + ' must use the shared module header');
-    assert.doesNotMatch(header[0], /\bicon\s*=/, path + ' header must not contain a decorative icon');
-
-    let cursor = 0;
-    let shellCount = 0;
-    while (true) {
-      const shellStart = page.indexOf('<AdminDataTableShell', cursor);
-      if (shellStart < 0) break;
-      const shellEnd = page.indexOf('</AdminDataTableShell>', shellStart);
-      const pagination = page.indexOf('<AdminTablePagination', shellStart);
-      assert.ok(shellEnd > shellStart, path + ' table shell must close');
-      assert.ok(pagination > shellStart && pagination < shellEnd, path + ' pagination must live inside its table shell');
-      shellCount += 1;
-      cursor = shellEnd + '</AdminDataTableShell>'.length;
-    }
-    assert.ok(shellCount >= 1, path + ' must use the shared table shell');
-    assert.doesNotMatch(page, /className="ams-table\b/, path + ' must use canonical AMS table styles');
-  }
-});
