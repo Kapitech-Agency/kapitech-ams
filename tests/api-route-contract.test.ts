@@ -87,3 +87,17 @@ test('Public CMS endpoints require explicit publication state', async () => {
   assert.match(source, /projects = canManage \? source : source\.filter\(\(item: any\) => item\.isPublished === true\)/);
   assert.match(source, /testimonials = canManage \? source : source\.filter\(\(item: any\) => item\.isPublished === true\)/);
 });
+test('Lead-to-client conversion is permission-checked, transactional, and idempotent', async () => {
+  const routes = await fs.readFile(path.join(root, 'server/routes.ts'), 'utf8');
+  const repository = await fs.readFile(path.join(root, 'server/postgres-lead-repository.ts'), 'utf8');
+  const apiClient = await fs.readFile(path.join(root, 'src/lib/apiClient.ts'), 'utf8');
+  const inbox = await fs.readFile(path.join(root, 'src/pages/admin/AdminInbox.tsx'), 'utf8');
+  assert.match(routes, /apiRouter\.post\('\/leads\/:id\/convert-to-client', requireAuth, requirePermission\('canManageClients'\)/);
+  assert.match(routes, /Only client inquiries can be converted to clients/);
+  assert.match(repository, /SELECT \* FROM leads WHERE id = \$1 FOR UPDATE/);
+  assert.match(repository, /pg_advisory_xact_lock/);
+  assert.match(repository, /convertedClientId/);
+  assert.match(repository, /appendWithinTransaction/);
+  assert.match(apiClient, /\/leads\/\$\{id\}\/convert-to-client/);
+  assert.match(inbox, /handleConvertToClient/);
+});
