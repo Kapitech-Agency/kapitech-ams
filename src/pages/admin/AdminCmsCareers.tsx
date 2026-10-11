@@ -629,10 +629,16 @@ export const AdminCmsCareers: React.FC = () => {
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
               <input value={applicantSearch} onChange={event => setApplicantSearch(event.target.value)} className={inputClass + ' pl-9'} placeholder={isId ? 'Cari nama, email, atau posisi...' : 'Search applicant, email, or position...'} aria-label="Search applicants" />
             </label>
-            <select value={applicantStatusFilter} onChange={event => setApplicantStatusFilter(event.target.value)} className={inputClass + ' sm:w-44'} aria-label="Filter applicant status">
-              <option value="all">{isId ? 'Semua status' : 'All statuses'}</option>
-              {statusOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
-            </select>
+            <CustomSelect
+              value={applicantStatusFilter}
+              onChange={setApplicantStatusFilter}
+              options={[{ value: 'all', label: isId ? 'Semua status' : 'All statuses' }, ...statusOptions]}
+              size="sm"
+              className="w-full sm:w-44"
+              triggerClassName="w-full"
+              aria-label={isId ? 'Filter status pelamar' : 'Filter applicant status'}
+              slug="careers-applicant-status-filter"
+            />
             <button type="button" onClick={() => void loadApplicants(true)} disabled={applicantsLoading} className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs text-muted hover:text-fg disabled:opacity-50"><RefreshCw size={13} className={applicantsLoading ? 'animate-spin' : ''} />{isId ? 'Refresh' : 'Refresh'}</button>
           </div>
 
