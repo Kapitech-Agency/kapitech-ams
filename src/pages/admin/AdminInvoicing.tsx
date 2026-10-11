@@ -700,10 +700,11 @@ export const AdminInvoicing: React.FC = () => {
 
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
 
-  const financeView = useMemo(
-    () => new URLSearchParams(location.search).get('finance') || 'invoices',
-    [location.search]
-  );
+  const financeView = useMemo(() => {
+    const requestedView = new URLSearchParams(location.search).get('finance') || 'invoices';
+    // Proposals are retired as a standalone business module. Keep legacy links safe by routing them to invoices.
+    return requestedView === 'quotations' ? 'invoices' : requestedView;
+  }, [location.search]);
   const [invoices, setInvoices] = useState<AgencyInvoice[]>([]);
   const [expenses, setExpenses] = useState<FinanceExpense[]>([]);
   const [clients, setClients] = useState<FinanceClient[]>([]);
@@ -950,10 +951,14 @@ export const AdminInvoicing: React.FC = () => {
       if (projectRes.success && Array.isArray(projectRes.data?.projects)) {
         setProjects(projectRes.data.projects as FinanceProject[]);
       }
-      if (vendorRes.success && Array.isArray(vendorRes.data?.vendors) && vendorRes.data.vendors.length) {
-        setVendors(vendorRes.data.vendors as AgencyVendor[]);
-      } else {
+      if (vendorRes.success && Array.isArray(vendorRes.data?.vendors)) {
+        const serverVendors = vendorRes.data.vendors as AgencyVendor[];
+        // An empty production response is authoritative. Never show local sample vendors as live suppliers.
+        setVendors(serverVendors.length > 0 ? serverVendors : (slugDataMode ? getAgencyVendors() : []));
+      } else if (slugDataMode) {
         setVendors(getAgencyVendors());
+      } else {
+        setVendors([]);
       }
     } catch (err) {
       if (requestId === loadRequestId.current) {
