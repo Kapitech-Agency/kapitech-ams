@@ -16,7 +16,7 @@ import {
 import { api } from '../../lib/apiClient';
 import { useLanguage } from '../../lib/LanguageContext';
 import {
-  AdminFilterBar, AdminSectionTabs,
+  AdminCmsSectionTabs, AdminFilterBar, AdminModuleNotice,
   AdminMetricStrip,
   AdminModuleHeader,
   AdminPageShell,
@@ -772,19 +772,7 @@ export const AdminCmsInsights: React.FC = () => {
       />
 
       
-      <div className="min-[900px]:hidden min-w-0" data-ams-slug="cms-mobile-tabs">
-        <AdminSectionTabs
-          ariaLabel="CMS sections"
-          activeKey="insights"
-          items={[
-            { key: 'projects', label: 'Projects', to: '/admin/cms/projects' },
-            { key: 'services', label: 'Services', to: '/admin/cms/services' },
-            { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials' },
-            { key: 'insights', label: 'Insights', to: '/admin/cms/insights' },
-            { key: 'careers', label: 'Careers', to: '/admin/cms/careers' },
-          ]}
-        />
-      </div>
+      <AdminCmsSectionTabs activeKey="insights" />
 
       <AdminMetricStrip
         slug="cms-insights-kpis"
@@ -798,10 +786,12 @@ export const AdminCmsInsights: React.FC = () => {
       />
 
       {statusMessage && (
-        <div className="flex items-center gap-2 rounded-control border border-success/20 bg-success/10 p-3 text-xs text-success">
-          <Check size={14} />
-          <span>{statusMessage}</span>
-        </div>
+        <AdminModuleNotice
+          tone={/failed|could not|unable|error|gagal|wajib|required/i.test(statusMessage) ? 'danger' : 'success'}
+          onDismiss={() => setStatusMessage(null)}
+        >
+          {statusMessage}
+        </AdminModuleNotice>
       )}
 
       <AdminFilterBar
