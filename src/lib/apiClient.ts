@@ -231,6 +231,7 @@ export const api = {
         body: JSON.stringify(updates)
       }),
     delete: (id: string) => apiRequest(`/api/leads/${id}`, { method: 'DELETE' }),
+    convertToClient: (id: string) => apiRequest<{ success: boolean; client: any; lead: any; replayed: boolean; created: boolean }>(`/api/leads/${id}/convert-to-client`, { method: 'POST' }),
     convert: (id: string) => apiRequest(`/api/leads/${id}/convert`, { method: 'POST' })
   },
 
