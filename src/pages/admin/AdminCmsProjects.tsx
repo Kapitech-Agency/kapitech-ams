@@ -61,8 +61,9 @@ const normalizeCmsProject = (project: ProjectItem): ProjectItem => ({
   technologies: Array.isArray(project.technologies) ? project.technologies : [],
   impact: Array.isArray(project.impact) ? project.impact : [],
   year: project.year || '',
-  // Public delivery requires an explicit boolean true; missing legacy status is a draft.
-  isPublished: project.isPublished === true
+  // Preserve visibility for legacy CMS rows; only an explicit false value means draft.
+  // New case-study templates still set isPublished: false.
+  isPublished: project.isPublished !== false
 });
 
 export const AdminCmsProjects: React.FC = () => {
