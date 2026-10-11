@@ -1,5 +1,5 @@
 import React, { useId } from 'react';
-import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, AlertTriangle, Info, X } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { CustomSelect } from '../ui/CustomSelect';
 import { cn } from '../../lib/cn';
@@ -75,6 +75,74 @@ export const AdminSectionTabs: React.FC<AdminSectionTabsProps> = ({
     })}
   </nav>
 );
+
+export type AdminCmsSectionKey = 'projects' | 'services' | 'testimonials' | 'insights' | 'careers';
+
+const CMS_SECTION_ITEMS: AdminSectionTabItem[] = [
+  { key: 'projects', label: 'Projects', to: '/admin/cms/projects' },
+  { key: 'services', label: 'Services', to: '/admin/cms/services' },
+  { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials' },
+  { key: 'insights', label: 'Insights', to: '/admin/cms/insights' },
+  { key: 'careers', label: 'Careers', to: '/admin/cms/careers' },
+];
+
+export const AdminCmsSectionTabs: React.FC<{ activeKey: AdminCmsSectionKey }> = ({ activeKey }) => (
+  <div className="min-[900px]:hidden min-w-0 ams-cms-section-tabs" data-ams-slug="cms-mobile-tabs" data-ams-feature-slug="cms-sections">
+    <AdminSectionTabs
+      ariaLabel="CMS sections"
+      activeKey={activeKey}
+      items={CMS_SECTION_ITEMS}
+    />
+  </div>
+);
+
+export type AdminModuleNoticeTone = 'success' | 'danger' | 'warning' | 'info';
+
+export interface AdminModuleNoticeProps {
+  tone: AdminModuleNoticeTone;
+  children: React.ReactNode;
+  onDismiss?: () => void;
+  className?: string;
+  slug?: string;
+}
+
+export const AdminModuleNotice: React.FC<AdminModuleNoticeProps> = ({
+  tone,
+  children,
+  onDismiss,
+  className,
+  slug
+}) => {
+  const toneStyles = {
+    success: { Icon: CheckCircle2, classes: 'border-success/25 bg-success/10 text-success' },
+    danger: { Icon: AlertCircle, classes: 'border-danger/25 bg-danger/10 text-danger' },
+    warning: { Icon: AlertTriangle, classes: 'border-warning/25 bg-warning/10 text-warning' },
+    info: { Icon: Info, classes: 'border-info/25 bg-info/10 text-info' },
+  } as const;
+  const { Icon, classes } = toneStyles[tone];
+
+  return (
+    <div
+      data-ams-slug={slug}
+      className={cn('ams-module-notice flex min-w-0 items-start gap-2.5 rounded-control border px-3 py-2.5 text-xs leading-5', classes, className)}
+      role={tone === 'danger' ? 'alert' : 'status'}
+      aria-live={tone === 'danger' ? 'assertive' : 'polite'}
+    >
+      <Icon size={15} className="mt-0.5 shrink-0" aria-hidden="true" />
+      <div className="min-w-0 flex-1 text-fg">{children}</div>
+      {onDismiss && (
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-control text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          aria-label="Dismiss notification"
+        >
+          <X size={13} />
+        </button>
+      )}
+    </div>
+  );
+};
 
 export interface AdminStatusBadgeProps {
   slug?: string;
