@@ -4125,7 +4125,8 @@ apiRouter.post('/cms/testimonials', requireAuth, requirePermission('canManageCms
     location: cleanText(item.location, 160),
     rating: Number.isFinite(rating) ? Math.min(5, Math.max(0, rating)) : 5,
     avatar: cleanOptionalUrl(item.avatar),
-    isPublished: item.isPublished !== undefined ? Boolean(item.isPublished) : true,
+    // Newly submitted testimonials stay private until an editor explicitly publishes them.
+    isPublished: item.isPublished === true,
     createdAt: now,
     updatedAt: now
   };

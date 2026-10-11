@@ -305,3 +305,12 @@ test('CMS case studies are drafts unless publication is explicitly enabled', asy
   assert.match(cmsProjects, /Case study saved as a draft/);
   assert.match(cmsProjects, /Case study published successfully to live site!/);
 });
+test('CMS testimonials require explicit publication and can be published from the directory', async () => {
+  const testimonials = await read('src/pages/admin/AdminCmsTestimonials.tsx');
+  const routes = await read('server/routes.ts');
+  assert.match(testimonials, /isPublished: item\?\.isPublished === true/);
+  assert.match(testimonials, /isPublished: false/);
+  assert.match(testimonials, /handleTogglePublished/);
+  assert.match(testimonials, /isPublished === true/);
+  assert.match(routes, /isPublished: item\.isPublished === true,[\s\S]{0,100}createdAt: now/);
+});
