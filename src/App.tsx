@@ -91,16 +91,6 @@ const AdminInbox = lazyWithRetry(
   'admin-inbox'
 );
 
-const AdminCrm = lazyWithRetry(
-  () => import('./pages/admin/AdminCrm').then((m) => ({ default: m.AdminCrm })),
-  'admin-crm'
-);
-
-const AdminProposals = lazyWithRetry(
-  () => import('./pages/admin/AdminProposals').then((m) => ({ default: m.AdminProposals })),
-  'admin-proposals'
-);
-
 const AdminInvoicing = lazyWithRetry(
   () => import('./pages/admin/AdminInvoicing').then((m) => ({ default: m.AdminInvoicing })),
   'admin-invoicing'
@@ -109,11 +99,6 @@ const AdminInvoicing = lazyWithRetry(
 const AdminProjects = lazyWithRetry(
   () => import('./pages/admin/AdminProjects').then((m) => ({ default: m.AdminProjects })),
   'admin-projects'
-);
-
-const AdminApprovals = lazyWithRetry(
-  () => import('./pages/admin/AdminApprovals').then((m) => ({ default: m.AdminApprovals })),
-  'admin-approvals'
 );
 
 const AdminDocuments = lazyWithRetry(
@@ -144,11 +129,6 @@ const AdminClientRetainers = lazyWithRetry(
 const AdminClientSlaMonitoring = lazyWithRetry(
   () => import('./pages/admin/AdminClientSlaMonitoring').then((m) => ({ default: m.AdminClientSlaMonitoring })),
   'admin-client-sla-monitoring'
-);
-
-const AdminClientLeadAccounts = lazyWithRetry(
-  () => import('./pages/admin/AdminClientLeadAccounts').then((m) => ({ default: m.AdminClientLeadAccounts })),
-  'admin-client-lead-accounts'
 );
 
 const AdminCmsProjects = lazyWithRetry(
@@ -258,11 +238,11 @@ const App = () => {
                 <Route path="tasks" element={<ModuleRoute moduleKey="projects" moduleLabel="tasks"><TasksWorkspace /></ModuleRoute>} />
                 <Route path="executive" element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="inbox" element={<ModuleRoute moduleKey="inbox" moduleLabel="the inbox"><AdminInbox /></ModuleRoute>} />
-                <Route path="crm" element={<ModuleRoute moduleKey="crm" moduleLabel="CRM"><AdminCrm /></ModuleRoute>} />
-                <Route path="proposals" element={<ModuleRoute moduleKey="proposals" moduleLabel="proposals"><AdminProposals /></ModuleRoute>} />
+                <Route path="crm" element={<Navigate to="/admin/dashboard" replace />} />
+                <Route path="proposals" element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="invoicing" element={<ModuleRoute moduleKey="invoicing" moduleLabel="invoicing"><AdminInvoicing /></ModuleRoute>} />
                 <Route path="projects" element={<ModuleRoute moduleKey="projects" moduleLabel="projects"><AdminProjects /></ModuleRoute>} />
-                <Route path="approvals" element={<ModuleRoute moduleKey="approvals" moduleLabel="approvals"><AdminApprovals /></ModuleRoute>} />
+                <Route path="approvals" element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="documents" element={<ModuleRoute moduleKey="documents" moduleLabel="documents"><AdminDocuments /></ModuleRoute>} />
                 <Route path="team" element={<TeamWorkspaceRoute />} />
                 <Route path="time-logs" element={<Navigate to="/admin/team?view=time-logs" replace />} />
@@ -271,7 +251,7 @@ const App = () => {
                 <Route path="clients/all-clients" element={<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClients /></ModuleRoute>} />
                 <Route path="clients/retainers" element={<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClientRetainers /></ModuleRoute>} />
                 <Route path="clients/sla-monitoring" element={<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClientSlaMonitoring /></ModuleRoute>} />
-                <Route path="clients/lead-accounts" element={<ModuleRoute moduleKey="crm" moduleLabel="CRM lead accounts"><AdminClientLeadAccounts /></ModuleRoute>} />
+                <Route path="clients/lead-accounts" element={<Navigate to="/admin/clients/all-clients" replace />} />
                 <Route path="cms" element={<Navigate to="/admin/cms/projects" replace />} />
                 <Route path="cms/projects" element={<ModuleRoute moduleKey="cms_projects" moduleLabel="case studies"><AdminCmsProjects /></ModuleRoute>} />
                 <Route path="cms/services" element={<ModuleRoute moduleKey="services" moduleLabel="the services catalog"><AdminCmsServices /></ModuleRoute>} />
