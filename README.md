@@ -34,7 +34,7 @@ Optional:
 - PostgreSQL runtime: `KAPITECH_DATA_SOURCE=postgres`, `KAPITECH_POSTGRES_URL` and optional SSL/pool settings.
 - PostgreSQL mode: `KAPITECH_POSTGRES_BACKUP_PROVIDER`, `KAPITECH_POSTGRES_BACKUP_LATEST_AT`, `KAPITECH_POSTGRES_BACKUP_RESTORE_VERIFIED_AT`, `KAPITECH_POSTGRES_BACKUP_RPO_MINUTES`, `KAPITECH_POSTGRES_BACKUP_RTO_MINUTES`, `KAPITECH_POSTGRES_BACKUP_RETENTION_DAYS`
 - PostgreSQL production Document Vault: `KAPITECH_DOCUMENT_STORAGE_PROVIDER`, `KAPITECH_DOCUMENT_STORAGE_BUCKET`, `KAPITECH_DOCUMENT_STORAGE_ENDPOINT`, `KAPITECH_DOCUMENT_STORAGE_REGION`, `KAPITECH_DOCUMENT_STORAGE_ACCESS_KEY_ID`, `KAPITECH_DOCUMENT_STORAGE_SECRET_ACCESS_KEY` (optional `KAPITECH_DOCUMENT_STORAGE_SESSION_TOKEN`)
-- PostgreSQL migration chain currently runs through migration 048. Migration status must still be checked against the live database before declaring a release ready. Telegram bot credentials remain runtime-managed via `KAPITECH_TELEGRAM_BOT_TOKEN` and are not persisted in PostgreSQL.
+- PostgreSQL migration chain currently runs through migration 049. Migration status must still be checked against the live database before declaring a release ready. Telegram bot credentials remain runtime-managed via `KAPITECH_TELEGRAM_BOT_TOKEN` and are not persisted in PostgreSQL.
 - S3-compatible provider stores only application-encrypted objects; the AMS never exposes the underlying object URL.
 
 Generate a 32-byte encryption key with:
@@ -59,7 +59,7 @@ An unauthenticated `/api/auth/me` response of HTTP 401 is expected.
 
 ## Public CMS data integrity
 
-Bundled portfolio fixtures are not seeded into the production CMS. Existing bundled project records and default testimonials are quarantined by migration 048 until an editor verifies ownership, permissions, outcome metrics, and publication approval. Only reviewed CMS entries explicitly published by an authorized editor should appear as client work or testimonials.
+Bundled portfolio fixtures are not seeded into the production CMS. Existing bundled project records and default testimonials are quarantined by migration 048 until an editor verifies ownership, permissions, outcome metrics, and publication approval. Migration 049 adds indexed vendor/contract links to expense records and backfills matching legacy vendor-payment marker records without changing their ledger amounts. Only reviewed CMS entries explicitly published by an authorized editor should appear as client work or testimonials.
 
 ## Persistence and recovery
 
