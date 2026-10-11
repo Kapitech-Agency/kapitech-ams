@@ -3997,8 +3997,8 @@ apiRouter.get('/cms/projects', rateLimitPublic(), async (req: Request, res: Resp
   const source = getDataSourceMode() === 'postgres'
     ? await postgresCmsRepository.list('project')
     : getDatabase().cmsProjects;
-  // Public requests only receive explicitly published case studies.
-  const projects = canManage ? source : source.filter((item: any) => item.isPublished === true);
+  // Treat records without the newer flag as legacy content. Explicit drafts stay private.
+  const projects = canManage ? source : source.filter((item: any) => item.isPublished !== false);
   res.json({ success: true, projects });
 });
 
@@ -4023,7 +4023,8 @@ apiRouter.post('/cms/projects', requireAuth, requirePermission('canManageCmsCont
       ...normalized,
       slug,
       title,
-      isPublished: item.isPublished !== undefined ? Boolean(item.isPublished) : true,
+      // New projects start as drafts; legacy records without a flag remain compatible above.
+      isPublished: item.isPublished === true,
       createdAt: now,
       updatedAt: now
     };
@@ -4105,8 +4106,8 @@ apiRouter.get('/cms/testimonials', rateLimitPublic(), async (req: Request, res: 
   const source = getDataSourceMode() === 'postgres'
     ? await postgresCmsRepository.list('testimonial')
     : getDatabase().cmsTestimonials;
-  // Testimonials must be explicitly reviewed and published before public access.
-  const testimonials = canManage ? source : source.filter((item: any) => item.isPublished === true);
+  // Older testimonials may predate the publication flag; only explicit drafts stay private.
+  const testimonials = canManage ? source : source.filter((item: any) => item.isPublished !== false);
   res.json({ success: true, testimonials });
 });
 
