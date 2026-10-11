@@ -466,6 +466,10 @@
 .ams-shell .cms-career-editor-form{
   min-width:0;
 }
+.ams-shell .cms-career-editor-group + .cms-career-editor-group{
+  border-top:1px solid var(--line);
+  padding-top:16px;
+}
 @media(max-width:599px){
   .ams-shell .ams-workspace-tabs{
     width:100%;
