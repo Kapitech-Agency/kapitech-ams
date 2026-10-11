@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Star, Edit3, Trash2, Check, MessageSquare, MapPin, X } from 'lucide-react';
+import { Users, Plus, Star, Edit3, Trash2, Check, MessageSquare, MapPin, X, Eye, EyeOff } from 'lucide-react';
 import type { TestimonialItem } from '../../lib/cmsStore';
 import { api } from '../../lib/apiClient';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -19,6 +19,8 @@ const normalizeCmsTestimonial = (item: TestimonialItem): TestimonialItem => ({
   company: String(item?.company || ''),
   location: String(item?.location || ''),
   rating: Number.isFinite(Number(item?.rating)) ? Math.min(5, Math.max(1, Number(item.rating))) : 5,
+  // The public CMS endpoint requires explicit approval; legacy/missing values are drafts.
+  isPublished: item?.isPublished === true,
 });
 
 export const AdminCmsTestimonials: React.FC = () => {
@@ -68,6 +70,24 @@ export const AdminCmsTestimonials: React.FC = () => {
     setPage((current) => Math.min(current, totalTestimonialPages));
   }, [totalTestimonialPages]);
 
+  const handleTogglePublished = async (item: TestimonialItem) => {
+    const nextPublished = item.isPublished !== true;
+    try {
+      const res = await api.cms.updateTestimonial(item.id, { isPublished: nextPublished });
+      if (!res.success) {
+        setStatusMessage(res.error || (language === 'id' ? 'Status publikasi gagal diperbarui.' : 'Publication status could not be updated.'));
+      } else {
+        await loadData();
+        setStatusMessage(nextPublished
+          ? (language === 'id' ? 'Testimoni berhasil dipublikasikan.' : 'Testimonial published successfully.')
+          : (language === 'id' ? 'Testimoni dipindahkan ke draft.' : 'Testimonial moved to draft.'));
+      }
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : (language === 'id' ? 'Status publikasi gagal diperbarui.' : 'Publication status could not be updated.'));
+    }
+    window.setTimeout(() => setStatusMessage(null), 3000);
+  };
+
   const handleOpenAdd = () => {
     const template: TestimonialItem = {
       id: 'testi_' + Date.now().toString(36),
@@ -77,7 +97,8 @@ export const AdminCmsTestimonials: React.FC = () => {
       role: '',
       company: '',
       location: '',
-      rating: 5
+      rating: 5,
+      isPublished: false
     };
     setEditingItem(template);
     setIsModalOpen(true);
@@ -129,7 +150,9 @@ export const AdminCmsTestimonials: React.FC = () => {
       setIsModalOpen(false);
       setEditingItem(null);
       await loadData();
-      setStatusMessage('Testimoni berhasil disimpan ke database CMS!');
+      setStatusMessage(editingItem.isPublished === true
+        ? (language === 'id' ? 'Testimoni berhasil dipublikasikan ke website.' : 'Testimonial published successfully to the website.')
+        : (language === 'id' ? 'Testimoni disimpan sebagai draft. Publikasikan dari daftar saat siap.' : 'Testimonial saved as a draft. Publish it from the directory when ready.'));
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : 'Failed to save testimonial.');
     } finally {
@@ -181,7 +204,7 @@ export const AdminCmsTestimonials: React.FC = () => {
         className="grid-cols-2 sm:grid-cols-4"
         metrics={[
           { id: 'testimonials-total', label: 'Testimonials', value: testimonials.length, icon: <MessageSquare size={15} />, toneClassName: 'text-accent-text' },
-          { id: 'testimonials-published', label: 'Published', value: testimonials.filter((item) => item.isPublished !== false).length, icon: <Check size={15} />, toneClassName: 'text-success' },
+          { id: 'testimonials-published', label: 'Published', value: testimonials.filter((item) => item.isPublished === true).length, icon: <Check size={15} />, toneClassName: 'text-success' },
           { id: 'testimonials-five-star', label: 'Five star', value: testimonials.filter((item) => (item.rating || 5) === 5).length, icon: <Star size={15} />, toneClassName: 'text-warning' },
           { id: 'testimonials-companies', label: 'Companies', value: new Set(testimonials.map((item) => item.company).filter(Boolean)).size, icon: <Users size={15} />, toneClassName: 'text-info' }
         ]}
@@ -290,6 +313,7 @@ export const AdminCmsTestimonials: React.FC = () => {
                     </td>
                     <td className="px-3 py-2">
                       <div className="flex items-center justify-end gap-1.5">
+                        <button type="button" onClick={() => void handleTogglePublished(item)} className={["inline-flex h-8 items-center justify-center gap-1.5 rounded-control border px-2.5 text-[10px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent", item.isPublished === true ? "border-success/20 bg-success/10 text-success" : "border-line bg-bg text-muted hover:text-fg"].join(" ")} aria-pressed={item.isPublished === true} aria-label={(item.isPublished === true ? "Unpublish " : "Publish ") + item.author} title={item.isPublished === true ? "Move to draft" : "Publish testimonial"}>{item.isPublished === true ? <Eye size={12} /> : <EyeOff size={12} />}{item.isPublished === true ? "Published" : "Draft"}</button>
                         <button type="button" onClick={() => handleOpenEdit(item)} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label={'Edit ' + item.author} title="Edit testimonial"><Edit3 size={13} /></button>
                         <button type="button" onClick={() => setDeleteTarget({ id: item.id, author: item.author })} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-bg text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" aria-label={'Delete ' + item.author} title="Delete testimonial"><Trash2 size={13} /></button>
                       </div>
