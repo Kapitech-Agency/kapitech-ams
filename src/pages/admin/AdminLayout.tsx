@@ -16,8 +16,6 @@ import {
   UsersRound,
   LockKeyhole,
   LayoutGrid,
-  FileText,
-  ShieldCheck,
 } from 'lucide-react';
 import { getAdminSession, logoutAdmin } from '../../lib/adminAuth';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -48,13 +46,10 @@ const STITCH_NAV_ITEMS: AdminNavItem[] = [
   { key: 'dashboard', to: '/admin/dashboard', label: 'Dashboard', icon: Home, requiredTier: 2, group: 'Agency Core' },
   { key: 'inbox', to: '/admin/inbox', label: 'Inbox', icon: Inbox, accessKey: 'inbox', requiredTier: 2, group: 'Agency Core' },
   { key: 'finance', to: '/admin/invoicing', label: 'Finance', icon: Landmark, accessKey: 'invoicing', requiredTier: 2, group: 'Agency Core' },
-  { key: 'proposals', to: '/admin/proposals', label: 'Proposals', icon: FileText, accessKey: 'proposals', requiredTier: 3, group: 'Agency Core' },
   { key: 'clients', to: '/admin/clients', label: 'Clients', icon: UsersRound, requiredTier: 3, group: 'Agency Management' },
-  { key: 'crm', to: '/admin/crm', label: 'CRM', icon: UsersRound, accessKey: 'crm', requiredTier: 3, group: 'Agency Management' },
   { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, requiredTier: 3, group: 'Agency Management' },
   { key: 'team', to: '/admin/team', label: 'Team', icon: UsersRound, accessKey: 'timelogs', requiredTier: 3, group: 'Project Operations' },
   { key: 'tasks', to: '/admin/tasks', label: 'Tasks', icon: ClipboardCheck, accessKey: 'projects', requiredTier: 3, group: 'Project Operations' },
-  { key: 'approvals', to: '/admin/approvals', label: 'Approvals', icon: ShieldCheck, accessKey: 'approvals', requiredTier: 3, group: 'Project Operations' },
   { key: 'documents', to: '/admin/documents', label: 'Documents', icon: LockKeyhole, requiredTier: 3, group: 'Project Operations' },
   { key: 'cms', to: '/admin/cms/projects', label: 'CMS', icon: LayoutGrid, accessKey: 'cms_projects', requiredTier: 3, group: 'Project Operations' },
 ];
@@ -620,9 +615,8 @@ export const AdminLayout: React.FC = () => {
                   {[
                     { key: 'all-clients', label: 'All Clients', slug: '/admin/clients/all-clients' },
                     { key: 'retainers', label: 'Retainers', slug: '/admin/clients/retainers' },
-                    { key: 'sla-monitoring', label: 'SLA Monitoring', slug: '/admin/clients/sla-monitoring' },
-                    { key: 'lead-accounts', label: 'Lead Accounts', slug: '/admin/clients/lead-accounts' }
-                  ].filter((tab) => tab.key !== 'lead-accounts' || isAllowed('crm')).map((tab) => {
+                    { key: 'sla-monitoring', label: 'SLA Monitoring', slug: '/admin/clients/sla-monitoring' }
+                  ].map((tab) => {
                     const active = location.pathname === tab.slug || (tab.key === 'all-clients' && location.pathname === '/admin/clients');
                     return (
                       <NavLink

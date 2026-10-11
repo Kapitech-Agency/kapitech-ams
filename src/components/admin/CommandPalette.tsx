@@ -14,7 +14,6 @@ import {
   Command,
   ArrowRight,
   FileText,
-  ShieldCheck,
   FolderOpen,
   Loader2
 } from 'lucide-react';
@@ -92,7 +91,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
         const res = await api.search.query(query);
         if (requestId !== searchRequestId.current) return;
         if (res.success && res.data?.results) {
-          setSearchResults(res.data.results as SearchResult[]);
+          setSearchResults((res.data.results as SearchResult[]).filter((result) => {
+            const resultPath = result.url.startsWith('http')
+              ? new URL(result.url, window.location.origin).pathname
+              : result.url.split(/[?#]/)[0];
+            const removedPaths = ['/admin/crm', '/admin/proposals', '/admin/approvals', '/admin/clients/lead-accounts'];
+            return !removedPaths.some((path) => resultPath === path || resultPath.startsWith(path + '/'));
+          }));
         } else {
           setSearchResults([]);
         }
@@ -121,15 +126,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       action: () => { navigate('/admin/dashboard'); onClose(); }
     },
     {
-      id: 'nav_proposals',
-      title: language === 'id' ? 'Buka Proposals & Quotations' : 'Open Proposals & Quotations',
-      category: language === 'id' ? 'Navigasi' : 'Navigation',
-      icon: FileText,
-      shortcut: 'G Q',
-      moduleKey: 'proposals',
-      action: () => { navigate('/admin/proposals'); onClose(); }
-    },
-    {
       id: 'nav_projects',
       title: language === 'id' ? 'Lihat Client Projects & Task Execution' : 'View Client Projects & Tasks',
       category: language === 'id' ? 'Navigasi' : 'Navigation',
@@ -137,15 +133,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       shortcut: 'G P',
       moduleKey: 'projects',
       action: () => { navigate('/admin/projects'); onClose(); }
-    },
-    {
-      id: 'nav_crm',
-      title: language === 'id' ? 'Buka Agency CRM Pipeline' : 'Open Agency CRM Pipeline',
-      category: language === 'id' ? 'Navigasi' : 'Navigation',
-      icon: Briefcase,
-      shortcut: 'G C',
-      moduleKey: 'crm',
-      action: () => { navigate('/admin/crm'); onClose(); }
     },
     {
       id: 'nav_invoicing',
@@ -173,15 +160,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
       shortcut: 'G V',
       moduleKey: 'vendors',
       action: () => { navigate('/admin/vendors'); onClose(); }
-    },
-    {
-      id: 'nav_approvals',
-      title: language === 'id' ? 'Pusat Persetujuan Eksekutif' : 'Executive Approvals Center',
-      category: language === 'id' ? 'Navigasi' : 'Navigation',
-      icon: ShieldCheck,
-      shortcut: 'G A',
-      moduleKey: 'approvals',
-      action: () => { navigate('/admin/approvals'); onClose(); }
     },
     {
       id: 'nav_documents',
@@ -370,8 +348,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose 
               onChange={(event) => setQuery(event.target.value)}
               placeholder={
                 language === 'id'
-                  ? 'Cari deal, invoice, proyek, proposal, atau modul...'
-                  : 'Search deals, invoices, projects, proposals, or modules...'
+                  ? 'Cari invoice, proyek, klien, atau modul...'
+                  : 'Search invoices, projects, clients, or modules...'
               }
               className="min-h-10 min-w-0 flex-1 border-0 bg-transparent p-0 text-sm text-fg outline-none shadow-none focus:border-0 focus:shadow-none"
               aria-label={language === 'id' ? 'Pencarian AMS' : 'AMS search'}

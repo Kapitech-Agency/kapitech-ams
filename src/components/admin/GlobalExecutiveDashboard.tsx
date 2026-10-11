@@ -8,6 +8,7 @@ import {
   CircleDollarSign,
   Clock3,
   FolderKanban,
+  FileText,
   MoreHorizontal,
   Plus,
   ReceiptText,
@@ -233,7 +234,6 @@ const PerformanceView: React.FC = () => {
           {[
             ['Creative production', 88, 'Ahead of plan'],
             ['Development', 71, 'On plan'],
-            ['Client approvals', 63, 'Needs follow-up'],
             ['QA & launch', 79, 'On plan'],
           ].map(([label, value, state]) => (
             <div key={String(label)} className="mb-4 last:mb-0">
@@ -259,7 +259,7 @@ const PerformanceView: React.FC = () => {
               ['Tasks tracked', String(totalTasks)],
               ['Completed', String(completedTasks)],
               ['Overdue', '3'],
-              ['Client approvals pending', '5'],
+              ['Tasks remaining', String(Math.max(0, totalTasks - completedTasks))],
             ].map(([label, value]) => (
               <div key={label} className="rounded-control border border-line bg-bg p-3">
                 <div className="text-lg font-medium tabular-nums text-fg">{value}</div>
@@ -689,13 +689,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 icon: <Users size={15} />, toneClassName: 'text-warning', slug: 'dashboard-utilization'
               },
               {
-                id: 'active-clients', label: 'Open leads',
-                value: dashboardOverview.metrics?.openLeads != null ? String(dashboardOverview.metrics.openLeads) : fixtureMode ? '28' : '—',
-                context: dashboardOverview.metrics?.openLeads != null ? 'Live pipeline' : fixtureMode ? 'Preview data' : dashboardOverview.loading ? 'Loading live data' : 'Live data unavailable',
-                sparkline: fixtureMode ? [22, 24, 25, Number(dashboardOverview.metrics?.openLeads ?? 28)] : undefined,
-                icon: <Users size={15} />, toneClassName: 'text-info', slug: 'dashboard-open-leads'
-              },
-              {
                 id: 'avg-project-value', label: 'Avg. project value',
                 value: dashboardOverview.metrics?.totalBilled != null && dashboardOverview.metrics?.activeProjects != null
                   ? formatLiveMoney(Number(dashboardOverview.metrics.totalBilled) / Math.max(1, Number(dashboardOverview.metrics.activeProjects)), String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase())
@@ -715,7 +708,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
               { label: 'Log time', icon: <Clock3 size={14} />, href: '/admin/time-logs' },
               { label: 'View invoices', icon: <ReceiptText size={14} />, href: '/admin/invoicing' },
               { label: 'View clients', icon: <Users size={14} />, href: '/admin/clients' },
-              { label: 'Open CRM', icon: <FolderKanban size={14} />, href: '/admin/crm' }
+              { label: 'View documents', icon: <FileText size={14} />, href: '/admin/documents' }
             ].map((action) => (
               <Link key={action.label} to={action.href} className="flex min-h-10 items-center gap-2 rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-fg transition-colors hover:border-accent/30 hover:bg-panel-hover hover:text-accent-text">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-control border border-line bg-panel text-muted">{action.icon}</span>
