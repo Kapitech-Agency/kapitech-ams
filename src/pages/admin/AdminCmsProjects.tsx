@@ -27,7 +27,7 @@ import type { ProjectItem } from '../../data/projectsData';
 import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminCmsSectionTabs, AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 
 const slugifyCaseStudy = (value: string): string =>
@@ -417,19 +417,7 @@ export const AdminCmsProjects: React.FC = () => {
 
       
       
-      <div className="min-[900px]:hidden min-w-0" data-ams-slug="cms-mobile-tabs">
-        <AdminSectionTabs
-          ariaLabel="CMS sections"
-          activeKey="projects"
-          items={[
-            { key: 'projects', label: 'Projects', to: '/admin/cms/projects' },
-            { key: 'services', label: 'Services', to: '/admin/cms/services' },
-            { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials' },
-            { key: 'insights', label: 'Insights', to: '/admin/cms/insights' },
-            { key: 'careers', label: 'Careers', to: '/admin/cms/careers' },
-          ]}
-        />
-      </div>
+      <AdminCmsSectionTabs activeKey="projects" />
 
       <AdminMetricStrip
         slug="cms-projects-kpis"
@@ -442,16 +430,14 @@ export const AdminCmsProjects: React.FC = () => {
         ]}
       />
 
-      {/* Success alert */}
-      {statusMessage && (() => {
-        const failed = /failed|could not|unable|error|gagal|wajib|required/i.test(statusMessage);
-        return (
-          <div className={['p-3.5 rounded-card border text-xs font-sans flex items-center gap-2 animate-in fade-in duration-300', failed ? 'bg-danger/10 border-danger/30 text-danger' : 'bg-success/10 border-success/30 text-success'].join(' ')}>
-            {failed ? <X size={15} /> : <Check size={15} />}
-            <span>{statusMessage}</span>
-          </div>
-        );
-      })()}
+            {statusMessage && (
+        <AdminModuleNotice
+          tone={/failed|could not|unable|error|gagal|wajib|required/i.test(statusMessage) ? 'danger' : 'success'}
+          onDismiss={() => setStatusMessage(null)}
+        >
+          {statusMessage}
+        </AdminModuleNotice>
+      )}
 
       <AdminFilterBar
         slug="cms-projects-filters"
