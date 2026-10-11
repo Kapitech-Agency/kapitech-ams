@@ -722,7 +722,7 @@ export const AdminInvoicing: React.FC = () => {
   const [expenses, setExpenses] = useState<FinanceExpense[]>([]);
   const [clients, setClients] = useState<FinanceClient[]>([]);
   const [projects, setProjects] = useState<FinanceProject[]>([]);
-  const [vendors, setVendors] = useState<AgencyVendor[]>(() => getAgencyVendors());
+  const [vendors, setVendors] = useState<AgencyVendor[]>(() => (isSlugFixtureMode() ? getAgencyVendors() : []));
   const [serverMetrics, setServerMetrics] = useState<ServerMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -823,8 +823,8 @@ export const AdminInvoicing: React.FC = () => {
   const [vendorPaymentPageSize, setVendorPaymentPageSize] = useState(10);
   const [retainerPage, setRetainerPage] = useState(1);
   const [retainerPageSize, setRetainerPageSize] = useState(10);
-  const [quotations, setQuotations] = useState<FinanceQuotation[]>(STITCH_FINANCE_QUOTATIONS);
-  const [usingDemoQuotations, setUsingDemoQuotations] = useState(true);
+  const [quotations, setQuotations] = useState<FinanceQuotation[]>(() => (isSlugFixtureMode() ? STITCH_FINANCE_QUOTATIONS : []));
+  const [usingDemoQuotations, setUsingDemoQuotations] = useState(isSlugFixtureMode());
   const [quotationLoading, setQuotationLoading] = useState(true);
   const [quotationSearch, setQuotationSearch] = useState('');
   const [quotationStatusFilter, setQuotationStatusFilter] = useState<'all' | FinanceQuotationStatus>('all');
