@@ -2140,6 +2140,85 @@ apiRouter.delete('/leads/:id', requireAuth, requirePermission('canManageCrm'), a
   res.json({ success: true, message: 'Lead removed.' });
 });
 
+
+apiRouter.post('/leads/:id/convert-to-client', requireAuth, requirePermission('canManageClients'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const audit = makeAuditEntry(req, 'LEAD_CONVERTED_TO_CLIENT', `Converted inbound lead ${id} to a client record.`, 'info');
+
+  if (getDataSourceMode() === 'postgres') {
+    const converted = await postgresLeadRepository.convertToClient(id, audit);
+    if (!converted) {
+      res.status(404).json({ success: false, error: 'Lead not found.' });
+      return;
+    }
+    res.json({
+      success: true,
+      client: converted.client,
+      lead: converted.lead,
+      replayed: converted.replayed,
+      created: converted.created
+    });
+    return;
+  }
+
+  const db = getDatabase();
+  const lead = (db.leads || []).find((item: any) => String(item.id) === String(id));
+  if (!lead) {
+    res.status(404).json({ success: false, error: 'Lead not found.' });
+    return;
+  }
+  const linkedClientId = String(lead.convertedClientId || '');
+  if (linkedClientId) {
+    const linked = (db.clients || []).find((item: any) => String(item.id) === linkedClientId);
+    if (!linked) {
+      res.status(409).json({ success: false, error: 'Lead conversion link is inconsistent. Resolve the client record before retrying.' });
+      return;
+    }
+    res.json({ success: true, client: linked, lead, replayed: true, created: false });
+    return;
+  }
+
+  const normalizedEmail = String(lead.email || '').trim().toLowerCase();
+  let clientRecord = normalizedEmail
+    ? (db.clients || []).find((item: any) => String(item.email || '').trim().toLowerCase() === normalizedEmail)
+    : undefined;
+  const created = !clientRecord;
+  const now = new Date().toISOString();
+  if (!clientRecord) {
+    const company = String(lead.company || lead.fullName || '').trim();
+    const slug = company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'client-' + String(lead.id);
+    clientRecord = {
+      id: 'cli_' + Date.now().toString(36) + '_' + crypto.randomBytes(4).toString('hex'),
+      slug,
+      name: String(lead.fullName || 'Unknown contact'),
+      company,
+      email: normalizedEmail,
+      phone: String(lead.phone || ''),
+      location: '',
+      industry: '',
+      status: 'active',
+      totalSpend: 0,
+      projectsCount: 0,
+      contactPersonRole: '',
+      notes: 'Converted from inbound lead ' + String(lead.id) + (lead.source ? ' (' + String(lead.source) + ')' : '') + '.',
+      createdAt: now,
+      updatedAt: now,
+      convertedFromLeadId: String(lead.id),
+      leadSource: String(lead.source || '')
+    };
+    if (!db.clients) db.clients = [];
+    db.clients.push(clientRecord);
+  }
+  lead.convertedClientId = clientRecord.id;
+  lead.convertedAt = now;
+  lead.conversionType = created ? 'created-client' : 'linked-existing-client';
+  lead.status = 'closed';
+  lead.updatedAt = now;
+  saveDatabase(db);
+  recordAuditLog({ action: 'LEAD_CONVERTED_TO_CLIENT', actor: req.user!.username, actorRole: req.user!.role, ip: req.ip, userAgent: req.headers['user-agent'] as string, details: `Converted inbound lead "${lead.fullName}" to client "${clientRecord.name || clientRecord.clientName || clientRecord.id}".`, severity: 'info' });
+  res.json({ success: true, client: clientRecord, lead, replayed: false, created });
+});
+
 apiRouter.post('/leads/:id/convert', requireAuth, requirePermission('canManageCrm'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const { id } = req.params;
   if (getDataSourceMode() === 'postgres') {
