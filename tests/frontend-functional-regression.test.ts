@@ -242,3 +242,10 @@ test('sample fixture data cannot be enabled in production by environment flags',
   assert.match(runtimeMode, /isSlugFixtureMode = \(\): boolean => !import\.meta\.env\.PROD/);
   assert.doesNotMatch(runtimeMode, /VITE_AB_TEST_DATA/);
 });
+
+test('Finance never initializes production state with demo vendors or retired quotation fixtures', async () => {
+  const page = await read('src/pages/admin/AdminInvoicing.tsx');
+  assert.match(page, /const \[vendors, setVendors\] = useState<AgencyVendor\[]>\(\(\) => \(isSlugFixtureMode\(\) \? getAgencyVendors\(\) : \[\]\)\)/);
+  assert.match(page, /const \[quotations, setQuotations\] = useState<FinanceQuotation\[]>\(\(\) => \(isSlugFixtureMode\(\) \? STITCH_FINANCE_QUOTATIONS : \[\]\)\)/);
+  assert.match(page, /const \[usingDemoQuotations, setUsingDemoQuotations\] = useState\(isSlugFixtureMode\(\)\)/);
+});
