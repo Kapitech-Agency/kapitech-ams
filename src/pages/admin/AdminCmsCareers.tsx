@@ -10,7 +10,7 @@ import { api } from '../../lib/apiClient';
 import Button from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
-import { AdminCmsSectionTabs, AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, Skeleton } from '../../components/admin/AdminModulePrimitives';
+import { AdminCmsSectionTabs, AdminDataTableShell, AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination, Skeleton } from '../../components/admin/AdminModulePrimitives';
 
 type CareerPosition = {
   id: string;
@@ -169,6 +169,8 @@ export const AdminCmsCareers: React.FC = () => {
   const [jobsError, setJobsError] = useState<string | null>(null);
   const [jobSearch, setJobSearch] = useState('');
   const [jobStatusFilter, setJobStatusFilter] = useState<JobStatusFilter>('all');
+  const [jobsPage, setJobsPage] = useState(1);
+  const [jobsPageSize, setJobsPageSize] = useState(10);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorMode, setEditorMode] = useState<'create' | 'edit'>('create');
   const [draft, setDraft] = useState<CareerPosition>(emptyCareer());
@@ -182,6 +184,8 @@ export const AdminCmsCareers: React.FC = () => {
   const [applicantsError, setApplicantsError] = useState<string | null>(null);
   const [applicantSearch, setApplicantSearch] = useState('');
   const [applicantStatusFilter, setApplicantStatusFilter] = useState('all');
+  const [applicantsPage, setApplicantsPage] = useState(1);
+  const [applicantsPageSize, setApplicantsPageSize] = useState(10);
   const [updatingApplicantId, setUpdatingApplicantId] = useState<string | null>(null);
   const [deleteApplicantTarget, setDeleteApplicantTarget] = useState<Applicant | null>(null);
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
@@ -245,6 +249,18 @@ export const AdminCmsCareers: React.FC = () => {
       return matchesStatus && (!q || fields.some(value => String(value || '').toLowerCase().includes(q)));
     });
   }, [applicants, applicantSearch, applicantStatusFilter]);
+
+  const totalJobsPages = Math.max(1, Math.ceil(filteredPositions.length / jobsPageSize));
+  const safeJobsPage = Math.min(jobsPage, totalJobsPages);
+  const pagedPositions = filteredPositions.slice((safeJobsPage - 1) * jobsPageSize, safeJobsPage * jobsPageSize);
+  const totalApplicantPages = Math.max(1, Math.ceil(filteredApplicants.length / applicantsPageSize));
+  const safeApplicantsPage = Math.min(applicantsPage, totalApplicantPages);
+  const pagedApplicants = filteredApplicants.slice((safeApplicantsPage - 1) * applicantsPageSize, safeApplicantsPage * applicantsPageSize);
+
+  useEffect(() => { setJobsPage(1); }, [jobSearch, jobStatusFilter, jobsPageSize]);
+  useEffect(() => { setJobsPage(current => Math.min(current, totalJobsPages)); }, [totalJobsPages]);
+  useEffect(() => { setApplicantsPage(1); }, [applicantSearch, applicantStatusFilter, applicantsPageSize]);
+  useEffect(() => { setApplicantsPage(current => Math.min(current, totalApplicantPages)); }, [totalApplicantPages]);
 
   const publishedCount = positions.filter(position => position.isPublished).length;
   const draftCount = positions.length - publishedCount;
@@ -415,7 +431,6 @@ export const AdminCmsCareers: React.FC = () => {
 
       <AdminModuleHeader
         slug="cms-careers-header"
-        icon={<Briefcase size={19} />}
         className="mb-0"
         title={isId ? 'Careers' : 'Careers'}
         description={isId
@@ -512,9 +527,9 @@ export const AdminCmsCareers: React.FC = () => {
               {positions.length === 0 && <button type="button" onClick={openCreateEditor} className="mt-4 inline-flex h-9 items-center gap-1.5 rounded-control bg-accent px-3 text-xs font-medium text-white hover:bg-accent-hover"><Plus size={13} />{isId ? 'Tambah lowongan' : 'Add opening'}</button>}
             </div>
           ) : (
-            <div className="overflow-hidden rounded-card border border-line bg-panel">
-              <div className="overflow-x-auto">
-                <table className="ams-table w-full min-w-[900px] border-collapse text-left text-xs">
+            <AdminDataTableShell slug="cms-careers-jobs-table">
+              <div className="overflow-x-auto custom-scrollbar">
+                <table className="ams-data-table w-full min-w-[900px] text-left">
                   <thead><tr className="border-b border-line bg-bg text-[10px] font-medium text-muted">
                     <th className="px-4 py-3">{isId ? 'Lowongan' : 'Position'}</th>
                     <th className="px-4 py-3">{isId ? 'Detail' : 'Details'}</th>
@@ -523,7 +538,7 @@ export const AdminCmsCareers: React.FC = () => {
                     <th className="px-4 py-3 text-right">{isId ? 'Aksi' : 'Actions'}</th>
                   </tr></thead>
                   <tbody className="divide-y divide-line">
-                    {filteredPositions.map(position => {
+                    {pagedPositions.map(position => {
                       const applicantCount = applicantsLoaded
                         ? applicants.filter(item => String(item.positionTitle || '').toLowerCase() === position.title.toLowerCase() || String(item.positionTitle || '').toLowerCase() === position.titleId.toLowerCase()).length
                         : null;
@@ -566,11 +581,17 @@ export const AdminCmsCareers: React.FC = () => {
                   </tbody>
                 </table>
               </div>
-              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-4 py-3 text-[10px] text-muted">
-                <span>{filteredPositions.length} {isId ? 'dari' : 'of'} {positions.length} {isId ? 'lowongan' : 'openings'}</span>
-                <a href="https://kapitech.id/careers" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-accent-text hover:text-fg">{isId ? 'Lihat public Career' : 'View public Careers page'}<ExternalLink size={11} /></a>
-              </div>
-            </div>
+              <AdminTablePagination
+                total={filteredPositions.length}
+                page={safeJobsPage}
+                pageSize={jobsPageSize}
+                onPageChange={setJobsPage}
+                onPageSizeChange={setJobsPageSize}
+                itemLabel={isId ? 'lowongan' : 'openings'}
+                slug="cms-careers-jobs-pagination"
+                secondaryLabel={<a href="https://kapitech.id/careers" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-accent-text hover:text-fg">{isId ? 'Lihat public Career' : 'View public Careers page'}<ExternalLink size={11} /></a>}
+              />
+            </AdminDataTableShell>
           )}
         </section>
       ) : (
@@ -614,9 +635,9 @@ export const AdminCmsCareers: React.FC = () => {
               <Button type="button" variant="secondary" className="mt-4" icon={<ArrowUpRight size={13} />} onClick={() => navigate('/admin/inbox?view=jobs')}>{isId ? 'Buka pipeline lengkap' : 'Open full applicant pipeline'}</Button>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-card border border-line bg-panel">
-              <div className="overflow-x-auto">
-                <table className="ams-table w-full min-w-[980px] border-collapse text-left text-xs">
+            <AdminDataTableShell slug="cms-careers-applicants-table">
+              <div className="overflow-x-auto custom-scrollbar">
+                <table className="ams-data-table w-full min-w-[980px] text-left">
                   <thead><tr className="border-b border-line bg-bg text-[10px] font-medium text-muted">
                     <th className="px-4 py-3">{isId ? 'Pelamar' : 'Applicant'}</th>
                     <th className="px-4 py-3">{isId ? 'Posisi' : 'Position'}</th>
@@ -626,7 +647,7 @@ export const AdminCmsCareers: React.FC = () => {
                     <th className="px-4 py-3 text-right">{isId ? 'Aksi' : 'Actions'}</th>
                   </tr></thead>
                   <tbody className="divide-y divide-line">
-                    {filteredApplicants.map(applicant => {
+                    {pagedApplicants.map(applicant => {
                       const resume = safeExternalUrl(applicant.resumeUrl);
                       const portfolio = safeExternalUrl(applicant.portfolioUrl);
                       return (
@@ -667,11 +688,17 @@ export const AdminCmsCareers: React.FC = () => {
                   </tbody>
                 </table>
               </div>
-              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-4 py-3 text-[10px] text-muted">
-                <span>{filteredApplicants.length} {isId ? 'dari' : 'of'} {applicants.length} {isId ? 'pelamar' : 'applicants'}</span>
-                <button type="button" onClick={() => navigate('/admin/inbox?view=jobs')} className="inline-flex items-center gap-1.5 text-accent-text hover:text-fg">{isId ? 'Lanjutkan di pipeline lengkap' : 'Continue in full applicant pipeline'}<ArrowUpRight size={11} /></button>
-              </div>
-            </div>
+              <AdminTablePagination
+                total={filteredApplicants.length}
+                page={safeApplicantsPage}
+                pageSize={applicantsPageSize}
+                onPageChange={setApplicantsPage}
+                onPageSizeChange={setApplicantsPageSize}
+                itemLabel={isId ? 'pelamar' : 'applicants'}
+                slug="cms-careers-applicants-pagination"
+                secondaryLabel={<button type="button" onClick={() => navigate('/admin/inbox?view=jobs')} className="inline-flex items-center gap-1.5 text-accent-text hover:text-fg">{isId ? 'Lanjutkan di pipeline lengkap' : 'Continue in full applicant pipeline'}<ArrowUpRight size={11} /></button>}
+              />
+            </AdminDataTableShell>
           )}
         </section>
       )}

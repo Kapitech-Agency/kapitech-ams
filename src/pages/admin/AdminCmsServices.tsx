@@ -33,7 +33,7 @@ import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { AdminCmsSectionTabs, AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminCmsSectionTabs, AdminDataTableShell, AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 
 const normalizeCmsService = (service: ServiceItemData | null | undefined): ServiceItemData => {
@@ -251,7 +251,6 @@ export const AdminCmsServices: React.FC = () => {
         />
       
       <AdminModuleHeader slug="cms-services-header"
-        icon={<Layers size={20} />}
         className="mb-0"
         title="Services"
         description={
@@ -411,9 +410,9 @@ export const AdminCmsServices: React.FC = () => {
           )}
         </div>
       ) : (
-        <>
-                <div data-ams-feature-slug="cms-services-directory" data-ams-slug="cms-services-directory" className="overflow-x-auto rounded-card border border-line bg-panel">
-          <table className="ams-table w-full min-w-[980px] border-collapse text-left text-xs">
+        <AdminDataTableShell slug="cms-services-directory">
+          <div data-ams-feature-slug="cms-services-table-scroll" data-ams-slug="cms-services-table-scroll" className="overflow-x-auto custom-scrollbar">
+          <table className="ams-data-table w-full min-w-[980px] text-left">
             <thead>
               <tr className="border-b border-line bg-bg text-[10px] font-medium text-muted">
                 <th className="px-4 py-3">Service</th>
@@ -457,7 +456,7 @@ export const AdminCmsServices: React.FC = () => {
           </table>
         </div>
         <AdminTablePagination total={filtered.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="services" slug="cms-services-pagination" />
-        </>
+        </AdminDataTableShell>
       )}
       {/* Service Detail / Inspection Modal */}
       <Modal slug="cms-service-detail-modal" open={!!selectedServiceForDetail} onClose={() => setSelectedServiceForDetail(null)} size="lg" title={selectedServiceForDetail?.title || 'Service detail'} description={selectedServiceForDetail?.heroSubtitle || selectedServiceForDetail?.heroSubtitleId}>

@@ -327,3 +327,37 @@ test('CMS uses canonical AMS table geometry without legacy scoped overrides', as
   assert.doesNotMatch(styles, /\.ams-shell \.ams-cms-module table tbody td\s*\{/);
   assert.doesNotMatch(styles, /@media\s*\(max-width:\s*599px\)\s*\{\s*\.ams-shell \.ams-cms-module table\s*\{\s*min-width:\s*720px/s);
 });
+
+
+test('CMS headers are text-only and directory tables share a unified pagination shell', async () => {
+  const cmsPages = [
+    'src/pages/admin/AdminCmsProjects.tsx',
+    'src/pages/admin/AdminCmsServices.tsx',
+    'src/pages/admin/AdminCmsTestimonials.tsx',
+    'src/pages/admin/AdminCmsInsights.tsx',
+    'src/pages/admin/AdminCmsCareers.tsx',
+  ];
+
+  for (const file of cmsPages) {
+    const page = await read(file);
+    const headerStart = page.indexOf('<AdminModuleHeader');
+    const actionsStart = page.indexOf('actions=', headerStart);
+    assert.ok(headerStart >= 0 && actionsStart > headerStart, file + ' has a module header');
+    assert.doesNotMatch(page.slice(headerStart, actionsStart), /\bicon\s*=/, file + ' header must not include a decorative icon');
+    assert.match(page, /<AdminDataTableShell\b/, file + ' uses the shared table surface');
+    assert.match(page, /className="ams-data-table\b/, file + ' uses canonical table styling');
+    assert.match(page, /<AdminDataTableShell\b[\s\S]*?<AdminTablePagination\b[\s\S]*?<\/AdminDataTableShell>/, file + ' keeps pagination inside the table surface');
+    assert.doesNotMatch(page, /className="ams-table\s/, file + ' does not use the legacy table class');
+  }
+
+  const primitives = await read('src/components/admin/AdminModulePrimitives.tsx');
+  assert.match(primitives, /className="ams-table-pagination border-t border-line bg-panel/);
+  assert.match(primitives, /Rows per page/);
+  assert.match(primitives, /role="group" aria-label="Page navigation"/);
+
+  const careers = await read('src/pages/admin/AdminCmsCareers.tsx');
+  assert.match(careers, /pagedPositions\.map\(position/);
+  assert.match(careers, /pagedApplicants\.map\(applicant/);
+  assert.match(careers, /cms-careers-jobs-pagination/);
+  assert.match(careers, /cms-careers-applicants-pagination/);
+});

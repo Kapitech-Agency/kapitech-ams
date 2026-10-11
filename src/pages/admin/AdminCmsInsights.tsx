@@ -16,7 +16,7 @@ import {
 import { api } from '../../lib/apiClient';
 import { useLanguage } from '../../lib/LanguageContext';
 import {
-  AdminCmsSectionTabs, AdminFilterBar, AdminModuleNotice,
+  AdminCmsSectionTabs, AdminDataTableShell, AdminFilterBar, AdminModuleNotice,
   AdminMetricStrip,
   AdminModuleHeader,
   AdminPageShell,
@@ -763,7 +763,6 @@ export const AdminCmsInsights: React.FC = () => {
     <AdminPageShell featureSlug="cms-insights-module" className="ams-cms-module">
       <AdminModuleHeader
         slug="cms-insights-header"
-        icon={<Pencil size={20} />}
         title="Insights"
         description={language === 'id'
           ? 'Kelola artikel editorial, SEO, bahasa, taxonomy, dan publishing workflow Kapitech Insight.'
@@ -854,9 +853,9 @@ export const AdminCmsInsights: React.FC = () => {
           <Button className="mt-4" variant="secondary" icon={<Plus size={13} />} onClick={handleOpenAdd}>Create Insight</Button>
         </div>
       ) : (
-        <>
-          <div className="overflow-x-auto rounded-card border border-line bg-panel">
-            <table className="ams-table w-full min-w-[1080px] border-collapse text-left text-xs">
+        <AdminDataTableShell slug="cms-insights-directory">
+          <div className="overflow-x-auto custom-scrollbar">
+            <table className="ams-data-table w-full min-w-[1080px] text-left">
               <thead>
                 <tr className="border-b border-line bg-bg text-[10px] font-medium text-muted">
                   <th className="px-4 py-3">Title</th>
@@ -903,7 +902,7 @@ export const AdminCmsInsights: React.FC = () => {
             </table>
           </div>
           <AdminTablePagination total={total} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="insights" slug="cms-insights-pagination" />
-        </>
+        </AdminDataTableShell>
       )}
 
       <ConfirmDialog

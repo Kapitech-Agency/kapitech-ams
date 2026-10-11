@@ -6,7 +6,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
-import { AdminCmsSectionTabs, AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminCmsSectionTabs, AdminDataTableShell, AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 const normalizeCmsTestimonial = (item: TestimonialItem): TestimonialItem => ({
@@ -166,7 +166,6 @@ export const AdminCmsTestimonials: React.FC = () => {
     <AdminPageShell featureSlug="cms-testimonials-module" className="ams-cms-module">
       
       <AdminModuleHeader slug="cms-testimonials-header"
-        icon={<Users size={20} />}
         className="mb-0"
         title="Testimonials"
         description={language === 'id'
@@ -263,9 +262,9 @@ export const AdminCmsTestimonials: React.FC = () => {
           )}
         </div>
       ) : (
-        <>
-                    <div data-ams-feature-slug="cms-testimonials-directory" data-ams-slug="cms-testimonials-directory" className="overflow-x-auto rounded-card border border-line bg-panel">
-            <table className="ams-table w-full min-w-[980px] border-collapse text-left text-xs">
+        <AdminDataTableShell slug="cms-testimonials-directory">
+          <div data-ams-feature-slug="cms-testimonials-table-scroll" data-ams-slug="cms-testimonials-table-scroll" className="overflow-x-auto custom-scrollbar">
+            <table className="ams-data-table w-full min-w-[980px] text-left">
               <thead>
                 <tr className="border-b border-line bg-bg text-[10px] font-medium text-muted">
                   <th className="px-4 py-3">Client</th>
@@ -312,7 +311,7 @@ export const AdminCmsTestimonials: React.FC = () => {
             </table>
           </div>
           <AdminTablePagination total={filteredTestimonials.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="testimonials" slug="cms-testimonials-pagination" />
-        </>
+        </AdminDataTableShell>
       )}
 
       {deleteTarget && (
