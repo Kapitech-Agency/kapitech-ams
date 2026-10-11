@@ -347,13 +347,13 @@
  .ams-shell>aside{width:min(280px,86vw);min-width:min(280px,86vw)}.ams-shell>main>.ams-content{padding:16px 16px 24px}
  .ams-shell .ams-mobile-topbar{padding-left:14px;padding-right:14px}.ams-shell .ams-page-header,.ams-shell .ams-dashboard-header{gap:12px}
  .ams-shell .ams-page-header>div:last-child,.ams-shell .ams-dashboard-header>div:last-child{flex-wrap:wrap}
- .ams-shell .ams-crm-kpi>div+div,.ams-shell .ams-inbox-kpi>div+div{border-left:0;border-top:1px solid var(--line)}
+ 
 }
 @media(max-width:599px){
  .ams-shell>main>.ams-content{padding:16px 14px max(24px,env(safe-area-inset-bottom))}
  .ams-shell .ams-page-title{font-size:18px;line-height:24px}.ams-shell .ams-kpi-value{font-size:22px;line-height:28px}
  .ams-shell .ams-dashboard-card .text-2xl{font-size:22px;line-height:28px}.ams-shell .ams-panel{padding:16px}
- .ams-shell .ams-table-scroll table{min-width:680px}.ams-shell .ams-leads-page .ams-kanban-scroll> *{flex-basis:min(84vw,320px);min-width:min(84vw,280px);max-width:min(84vw,320px)}
+ .ams-shell .ams-table-scroll table{min-width:680px}
  .ams-shell .ams-mobile-drawer>.relative{width:min(320px,88vw);max-width:88vw}
  .ams-shell table th,.ams-shell table td{white-space:nowrap}
 
