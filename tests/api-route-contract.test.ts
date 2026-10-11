@@ -105,3 +105,15 @@ test('Lead-to-client conversion is permission-checked, transactional, and idempo
   assert.match(apiClient, /\/leads\/\$\{id\}\/convert-to-client/);
   assert.match(inbox, /handleConvertToClient/);
 });
+test('Vendor expense links are validated and preserved as structured data', async () => {
+  const routes = await fs.readFile(path.join(root, 'server/routes.ts'), 'utf8');
+  const expenses = await fs.readFile(path.join(root, 'server/postgres-expense-repository.ts'), 'utf8');
+  const migration = await fs.readFile(path.join(root, 'db/postgres/049_structured_vendor_expense_links.sql'), 'utf8');
+  const finance = await fs.readFile(path.join(root, 'src/pages/admin/AdminInvoicing.tsx'), 'utf8');
+  assert.match(routes, /rawVendorPayment = exp\?\.metadata\?\.vendorPayment/);
+  assert.match(routes, /selected vendor contract is unavailable for this currency/);
+  assert.match(expenses, /vendor_id,vendor_contract_id/);
+  assert.match(migration, /idx_expenses_vendor_contract/);
+  assert.match(finance, /metadata:\s*\{\s*vendorPayment:/);
+  assert.doesNotMatch(finance, /const description = VENDOR_PAYMENT_MARKER/);
+});
