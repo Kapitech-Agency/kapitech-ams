@@ -361,3 +361,33 @@ test('CMS headers are text-only and directory tables share a unified pagination 
   assert.match(careers, /cms-careers-jobs-pagination/);
   assert.match(careers, /cms-careers-applicants-pagination/);
 });
+
+
+
+test('AMS UI defaults no longer override component focus, form sizing, or compact pagination', async () => {
+  const styles = await read('src/index.css');
+  assert.match(styles, /:where\(\.ams-shell,\.ams-portal-root\) :where\(a,button,\[role="button"\],input,select,textarea,\[tabindex\]\):focus-visible/);
+  assert.doesNotMatch(styles, /\.ams-shell :where\(a,button,\[role=button\],input,select,textarea,\[tabindex\]\):focus-visible/);
+  assert.match(styles, /:where\(\.ams-shell\) :where\(input:not\(\[type="checkbox"\]\)[\s\S]{0,220}min-height:36px/);
+  assert.doesNotMatch(styles, /\.ams-shell input,\.ams-shell select,\.ams-shell textarea\{min-height:36px/);
+  assert.doesNotMatch(styles, /ams-crm-kpi|ams-inbox-kpi|ams-leads-page/);
+
+  const select = await read('src/components/ui/CustomSelect.tsx');
+  assert.match(select, /xs: 'h-8 min-h-8/);
+  const primitives = await read('src/components/admin/AdminModulePrimitives.tsx');
+  assert.match(primitives, /pageSizeOptions\.map[\s\S]{0,160}size="xs"[\s\S]{0,100}aria-label="Rows per page"/);
+});
+
+test('Careers tabs, filters, and modal fields use consistent AMS interactions', async () => {
+  const careers = await read('src/pages/admin/AdminCmsCareers.tsx');
+  assert.match(careers, /role="tablist"/);
+  assert.match(careers, /role="tab"/);
+  assert.match(careers, /aria-selected=\{activeTab === tab\.key\}/);
+  assert.match(careers, /ArrowLeft[\s\S]{0,600}setActiveTab\(nextKey\)/);
+  assert.match(careers, /id="careers-jobs-panel"[\s\S]{0,180}aria-labelledby="careers-jobs-tab"/);
+  assert.match(careers, /id="careers-applicants-panel"[\s\S]{0,180}aria-labelledby="careers-applicants-tab"/);
+  assert.equal((careers.match(/<CustomSelect\b/g) || []).length, 3);
+  assert.doesNotMatch(careers, /<select\b/);
+  assert.match(careers, /cms-career-language-panel/);
+  assert.match(careers, /cms-career-position-form/);
+});
