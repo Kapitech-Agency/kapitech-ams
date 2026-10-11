@@ -66,7 +66,7 @@ test('MFA enrolment route is accessible before module permissions are evaluated'
   const gate = await read('src/components/admin/RequireModuleAccess.tsx');
   const settings = await read('src/pages/admin/AdminSettings.tsx');
 
-  assert.match(gate, /const isRequiredMfaEnrollmentRoute =[\s\S]*moduleKey === 'settings'[\s\S]*session\?\.user\?\.mfaEnabled !== true[\s\S]*location\.pathname === '/admin/settings'[\s\S]*get\('tab'\) === 'security'/);
+  assert.match(gate, /const isRequiredMfaEnrollmentRoute =[\s\S]*moduleKey === 'settings'[\s\S]*session\?\.user\?\.mfaEnabled !== true[\s\S]*location\.pathname === '\/admin\/settings'[\s\S]*get\('tab'\) === 'security'/);
   assert.match(gate, /if \(isRequiredMfaEnrollmentRoute\) return <>{children}<\/>;/);
   assert.match(settings, /\{canManageAdminAccounts && \(/);
   assert.match(settings, /requestedTab === 'security' && !mfaSetupRequired && !canManageAdminAccounts && !canAccessServer/);
