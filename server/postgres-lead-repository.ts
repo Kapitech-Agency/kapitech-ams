@@ -130,7 +130,7 @@ export class PostgresLeadRepository {
         const company = String(lead.company || lead.fullName || '').trim();
         const slug = (company || clientId).normalize('NFKD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase()
           .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || clientId;
-        const notes = 'Converted from inbound lead ' + String(lead.id) + (lead.source ? ' (' + String(lead.source) + ')' : '') + '.';
+        const notes = 'Website inquiry reference: ' + String(lead.id) + (lead.source ? ' (' + String(lead.source) + ')' : '') + '.';
         const metadata = {
           slug,
           location: '',
