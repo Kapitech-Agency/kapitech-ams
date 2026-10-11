@@ -61,7 +61,8 @@ const normalizeCmsProject = (project: ProjectItem): ProjectItem => ({
   technologies: Array.isArray(project.technologies) ? project.technologies : [],
   impact: Array.isArray(project.impact) ? project.impact : [],
   year: project.year || '',
-  isPublished: project.isPublished !== false
+  // Public delivery requires an explicit boolean true; missing legacy status is a draft.
+  isPublished: project.isPublished === true
 });
 
 export const AdminCmsProjects: React.FC = () => {
@@ -133,7 +134,8 @@ export const AdminCmsProjects: React.FC = () => {
       technologies: [],
       impact: [],
       year: new Date().getFullYear().toString(),
-      isPublished: true,
+      // New case studies start as drafts until an editor is ready to publish them.
+      isPublished: false,
       slug: ''
     };
     setTechInput('');
@@ -350,7 +352,9 @@ export const AdminCmsProjects: React.FC = () => {
       setIsModalOpen(false);
       setEditingProject(null);
       await loadProjects();
-      setStatusMessage('Case study published successfully to live site!');
+      setStatusMessage(payload.isPublished
+        ? (language === 'id' ? 'Case study berhasil dipublikasikan ke website.' : 'Case study published successfully to live site!')
+        : (language === 'id' ? 'Case study disimpan sebagai draft. Publikasikan dari daftar saat siap ditampilkan.' : 'Case study saved as a draft. Publish it from the directory when it is ready for the public site.'));
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : 'Failed to save case study.');
     }
