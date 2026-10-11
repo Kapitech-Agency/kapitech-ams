@@ -30,6 +30,9 @@ export interface ContactSubmission {
   internalNotes?: string;
   tags?: string[];
   starred?: boolean;
+  convertedClientId?: string;
+  convertedAt?: string;
+  conversionType?: 'created-client' | 'linked-existing-client';
 }
 
 let submissionsCache: ContactSubmission[] | null = null;
