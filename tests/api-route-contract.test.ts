@@ -15,9 +15,11 @@ test('API route contract protects state-changing and private routes', async () =
     'POST /auth/mfa/verify',
     'POST /leads/submit',
     'POST /leads/resume-upload',
+    'POST /leads/brief-upload',
     'GET /cms/services',
     'GET /cms/projects',
     'GET /cms/testimonials',
+    'GET /cms/careers',
     'GET /cms/public-settings',
     'GET /cms/insights',
     'GET /cms/insights/sitemap.xml',
@@ -80,4 +82,43 @@ test('Frontend API client literal endpoints exist on the server route surface', 
     const exists = [...serverPaths].some(serverPath => serverPath.replace(/:\w+/g, ':id') === normalized);
     assert.ok(exists, 'Frontend API endpoint is not implemented by server routes: ' + clientPath);
   }
+});
+test('Public CMS endpoints require explicit publication state', async () => {
+  const source = await fs.readFile(path.join(root, 'server/routes.ts'), 'utf8');
+  assert.match(source, /const services = canManage[\s\S]{0,220}item\.isPublished === true/);
+  assert.match(source, /const projects = canManage \? source : source\.filter\(\(item: any\) => item\.isPublished === true\)/);
+  assert.match(source, /const testimonials = canManage \? source : source\.filter\(\(item: any\) => item\.isPublished === true\)/);
+  assert.match(source, /replace\(\/\^seed_srv_\//);
+  assert.match(source, /mobile-app-design/);
+});
+test('Lead-to-client conversion is permission-checked, transactional, and idempotent', async () => {
+  const routes = await fs.readFile(path.join(root, 'server/routes.ts'), 'utf8');
+  const repository = await fs.readFile(path.join(root, 'server/postgres-lead-repository.ts'), 'utf8');
+  const apiClient = await fs.readFile(path.join(root, 'src/lib/apiClient.ts'), 'utf8');
+  const inbox = await fs.readFile(path.join(root, 'src/pages/admin/AdminInbox.tsx'), 'utf8');
+  assert.match(routes, /apiRouter\.post\('\/leads\/:id\/convert-to-client', requireAuth, requirePermission\('canManageClients'\)/);
+  assert.match(routes, /Only client inquiries can be converted to clients/);
+  assert.match(repository, /SELECT \* FROM leads WHERE id = \$1 FOR UPDATE/);
+  assert.match(repository, /pg_advisory_xact_lock/);
+  assert.match(repository, /convertedClientId/);
+  assert.match(repository, /appendWithinTransaction/);
+  assert.match(apiClient, /\/leads\/\$\{id\}\/convert-to-client/);
+  assert.match(inbox, /handleConvertToClient/);
+});
+test('Vendor expense links are validated and preserved as structured data', async () => {
+  const routes = await fs.readFile(path.join(root, 'server/routes.ts'), 'utf8');
+  const expenses = await fs.readFile(path.join(root, 'server/postgres-expense-repository.ts'), 'utf8');
+  const migration = await fs.readFile(path.join(root, 'db/postgres/049_structured_vendor_expense_links.sql'), 'utf8');
+  const finance = await fs.readFile(path.join(root, 'src/pages/admin/AdminInvoicing.tsx'), 'utf8');
+  assert.match(routes, /rawVendorPayment = exp\?\.metadata\?\.vendorPayment/);
+  assert.match(routes, /selected vendor contract is unavailable for this currency/);
+  assert.match(expenses, /vendor_id,vendor_contract_id/);
+  assert.match(migration, /idx_expenses_vendor_contract/);
+  assert.match(finance, /metadata:\s*\{\s*vendorPayment:/);
+  assert.doesNotMatch(finance, /const description = VENDOR_PAYMENT_MARKER/);
+});
+test('Vendor deletion preserves linked financial records', async () => {
+  const source = await fs.readFile(path.join(root, 'server/routes.ts'), 'utf8');
+  assert.match(source, /vendor has linked financial records/i);
+  assert.match(source, /error\.code === '23503'/);
 });

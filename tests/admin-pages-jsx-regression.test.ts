@@ -72,13 +72,13 @@ test('Admin projects mutation actions stay behind their permissions', () => {
   assert.ok(!source.includes('Legacy regression guard:'));
 });
 
-test('Admin topbar keeps Finance sections in the canonical order', () => {
+test('Admin topbar keeps active Finance sections in canonical order without retired quotations', () => {
   const source = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminLayout.tsx'), 'utf8');
   const markers = [
     "label: 'Invoice'",
-    "label: 'Quotation'",
     "label: 'Income & Expenses'",
     "label: 'Tax & Retainers'",
+    "label: 'Vendor Payments'",
     "label: 'Financial Reports'"
   ];
   let lastIndex = -1;
@@ -87,4 +87,5 @@ test('Admin topbar keeps Finance sections in the canonical order', () => {
     assert.ok(index > lastIndex);
     lastIndex = index;
   }
+  assert.equal(source.includes("label: 'Quotation'"), false);
 });

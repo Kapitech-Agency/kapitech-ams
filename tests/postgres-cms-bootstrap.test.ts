@@ -19,10 +19,19 @@ test('PostgreSQL startup bootstraps public CMS defaults after migrations', () =>
 test('CMS bootstrap uses PostgreSQL tables and one-time seed markers', () => {
   const source = fs.readFileSync(path.resolve(process.cwd(), 'server/postgres-cms-bootstrap.ts'), 'utf8');
   assert.match(source, /cms_services/);
-  assert.match(source, /cms_projects/);
+  assert.match(source, /seedId\('projects'\)/);
+  assert.doesNotMatch(source, /INSERT INTO cms_projects/);
   assert.match(source, /cms_seed_state/);
   assert.match(source, /ON CONFLICT DO NOTHING/);
   assert.match(source, /pg_advisory_xact_lock/);
   assert.match(source, /allSolutionsAndServices/);
-  assert.match(source, /allProjects/);
+  assert.doesNotMatch(source, /allProjects/);
+  assert.match(source, /Project records bundled with the frontend are fixtures/);
+  assert.match(source, /mobile-app-design/);
+});
+test('Insight seed migration uses valid PostgreSQL dollar-quoted JSON', () => {
+  const migration = fs.readFileSync(path.resolve(process.cwd(), 'db/postgres/046_seed_seo_educational_insights.sql'), 'utf8');
+  assert.doesNotMatch(migration, /\$q\{|\}q\$/);
+  assert.match(migration, /\$q\$\{/);
+  assert.match(migration, /\}\$q\$::jsonb/);
 });

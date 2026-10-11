@@ -2140,6 +2140,98 @@ apiRouter.delete('/leads/:id', requireAuth, requirePermission('canManageCrm'), a
   res.json({ success: true, message: 'Lead removed.' });
 });
 
+
+apiRouter.post('/leads/:id/convert-to-client', requireAuth, requirePermission('canManageClients'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const audit = makeAuditEntry(req, 'LEAD_CONVERTED_TO_CLIENT', `Converted inbound lead ${id} to a client record.`, 'info');
+
+  if (getDataSourceMode() === 'postgres') {
+    const lead = await postgresLeadRepository.findById(id);
+    if (!lead) {
+      res.status(404).json({ success: false, error: 'Lead not found.' });
+      return;
+    }
+    if (lead.type && lead.type !== 'inquiry') {
+      res.status(409).json({ success: false, error: 'Only client inquiries can be converted to clients.' });
+      return;
+    }
+    const converted = await postgresLeadRepository.convertToClient(id, audit);
+    if (!converted) {
+      res.status(404).json({ success: false, error: 'Lead not found.' });
+      return;
+    }
+    res.json({
+      success: true,
+      client: converted.client,
+      lead: converted.lead,
+      replayed: converted.replayed,
+      created: converted.created
+    });
+    return;
+  }
+
+  const db = getDatabase();
+  const lead = (db.leads || []).find((item: any) => String(item.id) === String(id));
+  if (!lead) {
+    res.status(404).json({ success: false, error: 'Lead not found.' });
+    return;
+  }
+  if (lead.type && lead.type !== 'inquiry') {
+    res.status(409).json({ success: false, error: 'Only client inquiries can be converted to clients.' });
+    return;
+  }
+  const linkedClientId = String(lead.convertedClientId || '');
+  if (linkedClientId) {
+    const linked = (db.clients || []).find((item: any) => String(item.id) === linkedClientId);
+    if (!linked) {
+      res.status(409).json({ success: false, error: 'Lead conversion link is inconsistent. Resolve the client record before retrying.' });
+      return;
+    }
+    res.json({ success: true, client: linked, lead, replayed: true, created: false });
+    return;
+  }
+
+  const normalizedEmail = String(lead.email || '').trim().toLowerCase();
+  let clientRecord = normalizedEmail
+    ? (db.clients || []).find((item: any) => String(item.email || '').trim().toLowerCase() === normalizedEmail)
+    : undefined;
+  const created = !clientRecord;
+  const now = new Date().toISOString();
+  if (!clientRecord) {
+    const company = String(lead.company || lead.fullName || '').trim();
+    const slug = company.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'client-' + String(lead.id);
+    clientRecord = {
+      id: 'cli_' + Date.now().toString(36) + '_' + crypto.randomBytes(4).toString('hex'),
+      slug,
+      name: String(lead.fullName || 'Unknown contact'),
+      company,
+      email: normalizedEmail,
+      phone: String(lead.phone || ''),
+      location: '',
+      industry: '',
+      status: 'active',
+      totalSpend: 0,
+      projectsCount: 0,
+      contactPersonRole: '',
+      notes: 'Converted from inbound lead ' + String(lead.id) + (lead.source ? ' (' + String(lead.source) + ')' : '') + '.',
+      createdAt: now,
+      updatedAt: now,
+      convertedFromLeadId: String(lead.id),
+      leadSource: String(lead.source || '')
+    };
+    if (!db.clients) db.clients = [];
+    db.clients.push(clientRecord);
+  }
+  lead.convertedClientId = clientRecord.id;
+  lead.convertedAt = now;
+  lead.conversionType = created ? 'created-client' : 'linked-existing-client';
+  lead.status = 'closed';
+  lead.updatedAt = now;
+  saveDatabase(db);
+  recordAuditLog({ action: 'LEAD_CONVERTED_TO_CLIENT', actor: req.user!.username, actorRole: req.user!.role, ip: req.ip, userAgent: req.headers['user-agent'] as string, details: `Converted inbound lead "${lead.fullName}" to client "${clientRecord.name || clientRecord.clientName || clientRecord.id}".`, severity: 'info' });
+  res.json({ success: true, client: clientRecord, lead, replayed: false, created });
+});
+
 apiRouter.post('/leads/:id/convert', requireAuth, requirePermission('canManageCrm'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const { id } = req.params;
   if (getDataSourceMode() === 'postgres') {
@@ -3439,6 +3531,45 @@ apiRouter.post('/finance/expenses', requireAuth, requirePermission('canManageInv
     res.status(400).json({ success: false, error: 'Expense currency must be a valid ISO 4217 code.' });
     return;
   }
+
+  let vendorPaymentMetadata: {
+    vendorId: string; contractId: string; contractTitle: string; reference: string; notes: string;
+  } | undefined;
+  const rawVendorPayment = exp?.metadata?.vendorPayment ?? exp?.vendorPayment;
+  if (rawVendorPayment !== undefined && rawVendorPayment !== null) {
+    if (!rawVendorPayment || typeof rawVendorPayment !== 'object' || Array.isArray(rawVendorPayment)) {
+      res.status(400).json({ success: false, error: 'Vendor payment metadata is invalid.' });
+      return;
+    }
+    const vendorId = cleanText(rawVendorPayment.vendorId, 120);
+    const contractId = cleanText(rawVendorPayment.contractId, 120);
+    if (!vendorId || !contractId || cleanText(exp.category, 120) !== 'Salaries & Contractors') {
+      res.status(400).json({ success: false, error: 'Vendor and contract are required for a vendor payment expense.' });
+      return;
+    }
+    const vendor = getDataSourceMode() === 'postgres'
+      ? await postgresVendorRepository.findById(vendorId)
+      : (getDatabase().vendors || []).find((item: any) => String(item.id) === vendorId);
+    if (!vendor) {
+      res.status(404).json({ success: false, error: 'Vendor not found.' });
+      return;
+    }
+    const contract = Array.isArray(vendor.contracts)
+      ? vendor.contracts.find((item: any) => String(item.id) === contractId)
+      : undefined;
+    if (!contract || String(contract.currency || 'IDR').toUpperCase() !== currency) {
+      res.status(409).json({ success: false, error: 'The selected vendor contract is unavailable for this currency.' });
+      return;
+    }
+    vendorPaymentMetadata = {
+      vendorId,
+      contractId,
+      contractTitle: cleanText(contract.title || 'Vendor contract', 240),
+      reference: cleanText(rawVendorPayment.reference, 160),
+      notes: cleanText(rawVendorPayment.notes, 500)
+    };
+  }
+
   const newExpense = {
     id: `exp_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
     slug: slugifyFinanceRecord(exp.slug || ((exp.description || exp.category || 'expense') + '-' + (exp.date || ''))),
@@ -3449,6 +3580,9 @@ apiRouter.post('/finance/expenses', requireAuth, requirePermission('canManageInv
     currency,
     date,
     projectId: cleanText(exp.projectId, 100) || undefined,
+    vendorId: vendorPaymentMetadata?.vendorId,
+    vendorContractId: vendorPaymentMetadata?.contractId,
+    metadata: vendorPaymentMetadata ? { vendorPayment: vendorPaymentMetadata } : undefined,
     recurringInterval: cleanText(exp.recurringInterval || 'none', 40),
     recordedBy: req.user!.name || req.user!.username,
     recordedByUserId: req.user!.id,
@@ -3462,7 +3596,7 @@ apiRouter.post('/finance/expenses', requireAuth, requirePermission('canManageInv
       if (replayed) delete expense.__idempotentReplay;
       res.json({ success:true, expense, replayed });
     } catch (error) {
-      if (error instanceof ExpenseProjectNotFoundError || (error instanceof Error && error.message === 'EXPENSE_IDEMPOTENCY_KEY_REUSE_CONFLICT')) { res.status(409).json({ success:false,error:error.message }); return; }
+      if (error instanceof ExpenseProjectNotFoundError || (error instanceof Error && ['EXPENSE_IDEMPOTENCY_KEY_REUSE_CONFLICT', 'VENDOR_NOT_FOUND'].includes(error.message))) { res.status(409).json({ success:false,error:error.message }); return; }
       res.status(400).json({ success:false,error:error instanceof Error?error.message:'Expense could not be created.' });
     }
     return;
@@ -3744,9 +3878,18 @@ apiRouter.delete('/vendors/:id', requireAuth, requirePermission('canManageVendor
   if (getDataSourceMode() === 'postgres') {
     const vendor = await postgresVendorRepository.findById(id);
     if (!vendor) { res.status(404).json({ success: false, error: 'Vendor not found.' }); return; }
-    const deleted = await postgresVendorRepository.delete(id, makeAuditEntry(req, 'VENDOR_DELETED', `Deleted vendor "${vendor.name}".`, 'warning'));
-    if (!deleted) { res.status(404).json({ success: false, error: 'Vendor not found.' }); return; }
-    res.json({ success: true, message: 'Vendor deleted.' });
+    try {
+      const deleted = await postgresVendorRepository.delete(id, makeAuditEntry(req, 'VENDOR_DELETED', `Deleted vendor "${vendor.name}".`, 'warning'));
+      if (!deleted) { res.status(404).json({ success: false, error: 'Vendor not found.' }); return; }
+      res.json({ success: true, message: 'Vendor deleted.' });
+    } catch (error) {
+      if (error && typeof error === 'object' && 'code' in error && error.code === '23503') {
+        res.status(409).json({ success: false, error: 'Vendor has linked financial records and cannot be deleted.' });
+        return;
+      }
+      console.error('[Vendors] Failed to delete vendor:', error);
+      res.status(503).json({ success: false, error: 'Vendor could not be deleted right now.' });
+    }
     return;
   }
   const db = getDatabase();
@@ -3770,7 +3913,13 @@ apiRouter.get('/cms/services', rateLimitPublic(), async (req: Request, res: Resp
   const source = getDataSourceMode() === 'postgres'
     ? await postgresCmsRepository.list('service')
     : getDatabase().cmsServices;
-  const services = canManage ? source : source.filter((item: any) => item.isPublished !== false);
+  // Public requests only receive explicitly published records. Missing status is not consent to publish.
+  const services = canManage
+    ? source
+    : source.filter((item: any) =>
+        item.isPublished === true
+        && String(item.slug || item.id || '').replace(/^seed_srv_/, '') !== 'mobile-app-design'
+      );
   res.json({ success: true, services });
 });
 
@@ -3848,7 +3997,8 @@ apiRouter.get('/cms/projects', rateLimitPublic(), async (req: Request, res: Resp
   const source = getDataSourceMode() === 'postgres'
     ? await postgresCmsRepository.list('project')
     : getDatabase().cmsProjects;
-  const projects = canManage ? source : source.filter((item: any) => item.isPublished !== false);
+  // Public requests only receive explicitly published case studies.
+  const projects = canManage ? source : source.filter((item: any) => item.isPublished === true);
   res.json({ success: true, projects });
 });
 
@@ -3955,7 +4105,8 @@ apiRouter.get('/cms/testimonials', rateLimitPublic(), async (req: Request, res: 
   const source = getDataSourceMode() === 'postgres'
     ? await postgresCmsRepository.list('testimonial')
     : getDatabase().cmsTestimonials;
-  const testimonials = canManage ? source : source.filter((item: any) => item.isPublished !== false);
+  // Testimonials must be explicitly reviewed and published before public access.
+  const testimonials = canManage ? source : source.filter((item: any) => item.isPublished === true);
   res.json({ success: true, testimonials });
 });
 

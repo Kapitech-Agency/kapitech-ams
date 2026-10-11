@@ -66,24 +66,21 @@ test('MFA enrolment route is accessible before module permissions are evaluated'
   const gate = await read('src/components/admin/RequireModuleAccess.tsx');
   const settings = await read('src/pages/admin/AdminSettings.tsx');
 
-  assert.match(gate, /const isRequiredMfaEnrollmentRoute =[\s\S]*moduleKey === 'settings'[\s\S]*session\?\.user\?\.mfaEnabled !== true[\s\S]*location\.pathname === '/admin/settings'[\s\S]*get\('tab'\) === 'security'/);
+  assert.match(gate, /const isRequiredMfaEnrollmentRoute =[\s\S]*moduleKey === 'settings'[\s\S]*session\?\.user\?\.mfaEnabled !== true[\s\S]*location\.pathname === '\/admin\/settings'[\s\S]*get\('tab'\) === 'security'/);
   assert.match(gate, /if \(isRequiredMfaEnrollmentRoute\) return <>{children}<\/>;/);
   assert.match(settings, /\{canManageAdminAccounts && \(/);
   assert.match(settings, /requestedTab === 'security' && !mfaSetupRequired && !canManageAdminAccounts && !canAccessServer/);
 });
 
 
-test('Client Lead Accounts use live CRM data in production and require CRM permission', async () => {
-  const page = await read('src/pages/admin/AdminClientLeadAccounts.tsx');
+test('Retired CRM routes redirect to supported workspaces', async () => {
   const app = await read('src/App.tsx');
   const layout = await read('src/pages/admin/AdminLayout.tsx');
-
-  assert.match(page, /const \[records, setRecords\] = useState<Lead\[]>\(\(\) => fixtureMode \? seed : \[\]\)/);
-  assert.match(page, /api\.crm\.getDeals\(\)/);
-  assert.match(page, /api\.crm\.createDeal\(/);
-  assert.match(page, /return 'Not scheduled'/);
-  assert.match(app, /path="clients\/lead-accounts" element=\{<ModuleRoute moduleKey="crm"/);
-  assert.match(layout, /isAllowed\('crm'\)/);
+  assert.ok(app.includes('<Route path="crm" element={<Navigate to="/admin/dashboard" replace />} />'));
+  assert.ok(app.includes('<Route path="proposals" element={<Navigate to="/admin/dashboard" replace />} />'));
+  assert.ok(app.includes('<Route path="approvals" element={<Navigate to="/admin/dashboard" replace />} />'));
+  assert.ok(app.includes('<Route path="clients/lead-accounts" element={<Navigate to="/admin/clients/all-clients" replace />} />'));
+  assert.equal(layout.includes("label: 'CRM'"), false);
 });
 
 test('Client Retainers are server-persisted and sample agreements are fixture-only', async () => {
@@ -239,4 +236,9 @@ test('PostgreSQL client updates accept all canonical client statuses exposed by 
   for (const status of ['completed', 'lead']) {
     assert.ok(jsonUpdate.includes("'" + status + "'"), 'JSON update must accept ' + status);
   }
+});
+test('sample fixture data cannot be enabled in production by environment flags', async () => {
+  const runtimeMode = await read('src/lib/runtimeMode.ts');
+  assert.match(runtimeMode, /isSlugFixtureMode = \(\): boolean => !import\.meta\.env\.PROD/);
+  assert.doesNotMatch(runtimeMode, /VITE_AB_TEST_DATA/);
 });

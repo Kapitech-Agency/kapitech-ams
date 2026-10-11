@@ -80,8 +80,6 @@ type VendorPaymentRecord = {
   status: VendorPaymentStatus;
 };
 
-const VENDOR_PAYMENT_MARKER = '[VENDOR_PAYMENT]';
-
 const vendorPaymentStatusLabel: Record<VendorPaymentStatus, string> = {
   scheduled: 'Scheduled',
   partial: 'Partially paid',
@@ -128,9 +126,24 @@ const vendorPaymentDueDate = (contract: AgencyVendor['contracts'][number]) => {
 };
 
 const vendorPaymentExpenseMeta = (expense: FinanceExpense) => {
-  const match = expense.description.match(/^\[VENDOR_PAYMENT\]\|([^|]+)\|([^|]+)\|(.*?)(?:\|REF:([^|]*))?(?:\|NOTE:(.*))?$/);
-  if (!match) return null;
-  return { vendorId: match[1], contractId: match[2], title: match[3], reference: match[4] || '', notes: match[5] || '' };
+  const record = expense as FinanceExpense & {
+    vendorId?: string;
+    vendorContractId?: string;
+    vendorPayment?: { vendorId?: string; contractId?: string; contractTitle?: string; reference?: string; notes?: string };
+    metadata?: { vendorPayment?: { vendorId?: string; contractId?: string; contractTitle?: string; reference?: string; notes?: string } };
+  };
+  const structured = record.vendorPayment || record.metadata?.vendorPayment;
+  const legacy = expense.description.match(/^\[VENDOR_PAYMENT\]\|([^|]+)\|([^|]+)\|(.*?)(?:\|REF:([^|]*))?(?:\|NOTE:(.*))?$/);
+  const vendorId = record.vendorId || structured?.vendorId || legacy?.[1];
+  const contractId = record.vendorContractId || structured?.contractId || legacy?.[2];
+  if (!vendorId || !contractId) return null;
+  return {
+    vendorId,
+    contractId,
+    title: structured?.contractTitle || legacy?.[3] || expense.description,
+    reference: structured?.reference || legacy?.[4] || '',
+    notes: structured?.notes || legacy?.[5] || ''
+  };
 };
 
 type ServerMetrics = {
@@ -700,10 +713,11 @@ export const AdminInvoicing: React.FC = () => {
 
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
 
-  const financeView = useMemo(
-    () => new URLSearchParams(location.search).get('finance') || 'invoices',
-    [location.search]
-  );
+  const financeView = useMemo(() => {
+    const requestedView = new URLSearchParams(location.search).get('finance') || 'invoices';
+    // Proposals are retired as a standalone business module. Keep legacy links safe by routing them to invoices.
+    return requestedView === 'quotations' ? 'invoices' : requestedView;
+  }, [location.search]);
   const [invoices, setInvoices] = useState<AgencyInvoice[]>([]);
   const [expenses, setExpenses] = useState<FinanceExpense[]>([]);
   const [clients, setClients] = useState<FinanceClient[]>([]);
@@ -950,10 +964,14 @@ export const AdminInvoicing: React.FC = () => {
       if (projectRes.success && Array.isArray(projectRes.data?.projects)) {
         setProjects(projectRes.data.projects as FinanceProject[]);
       }
-      if (vendorRes.success && Array.isArray(vendorRes.data?.vendors) && vendorRes.data.vendors.length) {
-        setVendors(vendorRes.data.vendors as AgencyVendor[]);
-      } else {
+      if (vendorRes.success && Array.isArray(vendorRes.data?.vendors)) {
+        const serverVendors = vendorRes.data.vendors as AgencyVendor[];
+        // An empty production response is authoritative. Never show local sample vendors as live suppliers.
+        setVendors(serverVendors.length > 0 ? serverVendors : (slugDataMode ? getAgencyVendors() : []));
+      } else if (slugDataMode) {
         setVendors(getAgencyVendors());
+      } else {
+        setVendors([]);
       }
     } catch (err) {
       if (requestId === loadRequestId.current) {
@@ -2211,10 +2229,9 @@ export const AdminInvoicing: React.FC = () => {
 
     setSavingVendorPayment(true);
     try {
-      const cleanReference = vendorPaymentReference.trim().replace(/[|]/g, '/');
-      const cleanNotes = vendorPaymentNotes.trim().replace(/[|]/g, '/');
-      const cleanTitle = contract.title.replace(/[|]/g, '/');
-      const description = VENDOR_PAYMENT_MARKER + '|' + vendor.id + '|' + contract.id + '|' + cleanTitle + '|REF:' + cleanReference + '|NOTE:' + cleanNotes;
+      const cleanReference = vendorPaymentReference.trim();
+      const cleanNotes = vendorPaymentNotes.trim();
+      const description = 'Vendor payment: ' + (vendor.companyName || vendor.name) + ' · ' + contract.title;
       const result = await api.finance.createExpense({
         type: 'OpEx',
         category: 'Salaries & Contractors',
@@ -2222,7 +2239,15 @@ export const AdminInvoicing: React.FC = () => {
         amount,
         date: vendorPaymentDate,
         currency,
-        idempotencyKey: vendorPaymentIdempotencyKey
+        idempotencyKey: vendorPaymentIdempotencyKey,
+        metadata: {
+          vendorPayment: {
+            vendorId: vendor.id,
+            contractId: contract.id,
+            reference: cleanReference,
+            notes: cleanNotes
+          }
+        }
       });
       if (!result.success) throw new Error(result.error || 'Vendor payment could not be recorded.');
       setVendorPaymentModalOpen(false);

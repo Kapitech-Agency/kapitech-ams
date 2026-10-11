@@ -783,7 +783,6 @@ export const AdminLayout: React.FC = () => {
                 <nav aria-label="Finance sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
                   {[
                     { key: 'invoices', label: 'Invoice', to: '/admin/invoicing' },
-                    { key: 'quotations', label: 'Quotation', to: '/admin/invoicing?finance=quotations' },
                     { key: 'income-expenses', label: 'Income & Expenses', to: '/admin/invoicing?finance=income-expenses' },
                     { key: 'tax-retainers', label: 'Tax & Retainers', to: '/admin/invoicing?finance=tax-retainers' },
                     { key: 'vendor-payments', label: 'Vendor Payments', to: '/admin/invoicing?finance=vendor-payments' },

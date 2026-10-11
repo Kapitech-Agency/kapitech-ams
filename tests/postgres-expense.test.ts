@@ -20,3 +20,72 @@ test('PostgreSQL expense writes preserve idempotency and void lifecycle',async t
     await assert.rejects(()=>expenses.void(expense.id,voided.version),error=>error instanceof ExpenseImmutableError);
   }finally{await pool.query('DELETE FROM expenses WHERE id=$1',[expenseId]);await pool.query('DELETE FROM users WHERE id=$1',[userId]);await closePostgresPool();}
 });
+test('PostgreSQL expenses persist structured vendor contract references', async t => {
+  if (!configured) { t.skip('KAPITECH_POSTGRES_URL is not configured'); return; }
+  const pool = getPostgresPool();
+  const expenses = new PostgresExpenseRepository();
+  const userId = token('vendor_payment_user');
+  const vendorId = token('vendor_payment_vendor');
+  const expenseId = token('vendor_payment_expense');
+  const contractId = token('vendor_contract');
+  const idempotencyKey = token('vendor_payment_idem');
+
+  await pool.query(
+    'INSERT INTO users (id,name,username,email,password_hash,salt,role,stakeholder_type,permissions,division,status) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)',
+    [userId, 'Vendor Payment User', userId, userId + '@example.test', 'test-password-hash', 'test-salt', 'Integration', 'Operations', '{}', 'Operations', 'active']
+  );
+  await pool.query(
+    'INSERT INTO vendors (id,name,category,status,monthly_spend,metadata,created_at) VALUES ($1,$2,$3,$4,$5,$6::jsonb,NOW())',
+    [vendorId, 'Integration Vendor', 'Testing', 'active', 0, JSON.stringify({ contracts: [{ id: contractId, title: 'Integration Contract', currency: 'IDR' }] })]
+  );
+
+  try {
+    const expense = await expenses.create({
+      id: expenseId,
+      recordedByUserId: userId,
+      recordedBy: 'Vendor Payment User',
+      type: 'OpEx',
+      category: 'Salaries & Contractors',
+      description: 'Vendor payment: Integration Vendor · Integration Contract',
+      amount: 25000,
+      currency: 'IDR',
+      date: today(),
+      idempotencyKey,
+      vendorId,
+      vendorContractId: contractId,
+      metadata: { vendorPayment: { vendorId, contractId, contractTitle: 'Integration Contract', reference: 'TEST-REF', notes: 'Integration test' } }
+    });
+
+    assert.equal(expense.vendorId, vendorId);
+    assert.equal(expense.vendorContractId, contractId);
+    assert.equal(expense.vendorPayment.contractId, contractId);
+    const reloaded = await expenses.findById(expenseId);
+    assert.equal(reloaded.vendorId, vendorId);
+    assert.equal(reloaded.vendorContractId, contractId);
+    assert.equal(reloaded.vendorPayment.reference, 'TEST-REF');
+
+    await assert.rejects(
+      () => expenses.create({
+        id: token('vendor_payment_retry'),
+        recordedByUserId: userId,
+        recordedBy: 'Vendor Payment User',
+        type: 'OpEx',
+        category: 'Salaries & Contractors',
+        description: 'Vendor payment: another vendor contract',
+        amount: 25000,
+        currency: 'IDR',
+        date: today(),
+        idempotencyKey,
+        vendorId: token('different_vendor'),
+        vendorContractId: token('different_contract'),
+        metadata: { vendorPayment: { vendorId: 'different', contractId: 'different' } }
+      }),
+      (error) => error instanceof Error && error.message === 'EXPENSE_IDEMPOTENCY_KEY_REUSE_CONFLICT'
+    );
+  } finally {
+    await pool.query('DELETE FROM expenses WHERE id = $1', [expenseId]);
+    await pool.query('DELETE FROM vendors WHERE id = $1', [vendorId]);
+    await pool.query('DELETE FROM users WHERE id = $1', [userId]);
+    await closePostgresPool();
+  }
+});

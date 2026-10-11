@@ -1,5 +1,4 @@
 import { getPostgresPool } from './postgres.ts';
-import { allProjects } from '../src/data/projectsData.ts';
 import { allSolutionsAndServices } from '../src/data/servicesData.ts';
 
 type SeedKind = 'services' | 'projects';
@@ -32,7 +31,7 @@ export async function ensurePostgresCmsDefaults(): Promise<void> {
         'SELECT COUNT(*)::bigint AS count FROM cms_services'
       );
       if (Number(countResult.rows[0]?.count || 0) === 0) {
-        for (const item of allSolutionsAndServices) {
+        for (const item of allSolutionsAndServices.filter((service) => service.slug !== 'mobile-app-design')) {
           const now = new Date().toISOString();
           await client.query(
             `INSERT INTO cms_services
@@ -63,33 +62,8 @@ export async function ensurePostgresCmsDefaults(): Promise<void> {
     }
 
     if (!seeded.has(seedId('projects'))) {
-      const countResult = await client.query<{ count: string }>(
-        'SELECT COUNT(*)::bigint AS count FROM cms_projects'
-      );
-      if (Number(countResult.rows[0]?.count || 0) === 0) {
-        for (const item of allProjects) {
-          const now = new Date().toISOString();
-          await client.query(
-            `INSERT INTO cms_projects
-              (id,name,slug,description,data,created_at,updated_at)
-             VALUES ($1,$2,$3,$4,$5::jsonb,$6,$6)
-             ON CONFLICT DO NOTHING`,
-            [
-              item.id,
-              item.title,
-              item.id,
-              item.desc,
-              JSON.stringify({
-                ...item,
-                slug: item.id,
-                createdAt: now,
-                updatedAt: now
-              }),
-              now
-            ]
-          );
-        }
-      }
+      // Project records bundled with the frontend are fixtures, not verified client work.
+      // Keep the production CMS empty until an authorized editor publishes a reviewed case study.
       await client.query(
         'INSERT INTO cms_seed_state (key) VALUES ($1) ON CONFLICT DO NOTHING',
         [seedId('projects')]

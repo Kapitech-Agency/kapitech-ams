@@ -29,6 +29,7 @@ import {
   Calendar,
   Send,
   User,
+  Users,
   Clock,
   Building2,
   FileText,
@@ -54,6 +55,7 @@ import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 export const AdminInbox: React.FC = () => {
   const { language } = useLanguage();
   const canManageCrm = hasAdminPermission('canManageCrm');
+  const canManageClients = hasAdminPermission('canManageClients');
   type InboxTab = 'overview' | 'client' | 'jobs' | 'starred';
   const [searchParams] = useSearchParams();
   const requestedTab = searchParams.get('view') as InboxTab | null;
@@ -79,6 +81,7 @@ export const AdminInbox: React.FC = () => {
   const [internalNoteDraft, setInternalNoteDraft] = useState<string>('');
   const [isSavingNote, setIsSavingNote] = useState<boolean>(false);
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
+  const [convertingSubmissionId, setConvertingSubmissionId] = useState<string | null>(null);
 
   // Modals & Feedback
   const [isCannedModalOpen, setIsCannedModalOpen] = useState(false);
@@ -210,6 +213,43 @@ export const AdminInbox: React.FC = () => {
     setSelectedSubmission(sub);
     setInternalNoteDraft(sub.internalNotes || '');
     setDetailTab('brief');
+  };
+
+  const handleConvertToClient = async (submission: ContactSubmission) => {
+    if (!canManageClients || (submission.type && submission.type !== 'inquiry') || convertingSubmissionId) return;
+    setConvertingSubmissionId(submission.id);
+    try {
+      const result = await api.leads.convertToClient(submission.id);
+      if (!result.success || !result.data?.client) {
+        throw new Error(result.error || 'Lead could not be converted to a client.');
+      }
+      await refreshInbox();
+      setSelectedSubmission((current) => current?.id === submission.id
+        ? {
+            ...current,
+            status: 'closed',
+            convertedClientId: result.data!.client.id,
+            convertedAt: result.data!.lead?.convertedAt || new Date().toISOString(),
+            conversionType: result.data!.created ? 'created-client' : 'linked-existing-client'
+          }
+        : current);
+      setToastMessage({
+        text: result.data.replayed
+          ? (language === 'id' ? 'Lead ini sudah terhubung ke client.' : 'This lead is already linked to a client.')
+          : result.data.created
+            ? (language === 'id' ? 'Lead berhasil dikonversi menjadi client.' : 'Lead converted to a client.')
+            : (language === 'id' ? 'Lead terhubung ke client yang sudah ada.' : 'Lead linked to an existing client.')
+      });
+      window.setTimeout(() => setToastMessage(null), 3500);
+    } catch (error) {
+      setToastMessage({
+        text: error instanceof Error ? error.message : (language === 'id' ? 'Lead gagal dikonversi. Coba lagi.' : 'Lead could not be converted. Please retry.'),
+        tone: 'danger'
+      });
+      window.setTimeout(() => setToastMessage(null), 3500);
+    } finally {
+      setConvertingSubmissionId(null);
+    }
   };
 
   // Status update
@@ -1089,6 +1129,24 @@ export const AdminInbox: React.FC = () => {
 
                 <div className="border-t border-line bg-bg/50 px-4 py-3">
                   <div className="flex flex-wrap gap-2">
+                    {(!selectedSubmission.type || selectedSubmission.type === 'inquiry') && canManageClients && (
+                      selectedSubmission.convertedClientId ? (
+                        <Link to="/admin/clients/all-clients" className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-control border border-success/25 bg-success/10 px-3 text-[10px] font-medium text-success">
+                          <Check size={12} />{language === 'id' ? 'Sudah menjadi client' : 'Client linked'}
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => void handleConvertToClient(selectedSubmission)}
+                          disabled={convertingSubmissionId === selectedSubmission.id || isUpdating}
+                          className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-control border border-accent/30 bg-accent/10 px-3 text-[10px] font-medium text-fg hover:bg-accent/15 disabled:opacity-50"
+                        >
+                          <Building2 size={12} />{convertingSubmissionId === selectedSubmission.id
+                            ? (language === 'id' ? 'Mengonversi…' : 'Converting…')
+                            : (language === 'id' ? 'Jadikan client' : 'Convert to client')}
+                        </button>
+                      )
+                    )}
                     {selectedSubmission.status === 'new' && (
                       <button type="button" onClick={() => void handleStatusChange(selectedSubmission.id, selectedSubmission.type === 'career' ? 'screening' : 'in-review')} disabled={!canManageCrm || isUpdating} className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-control bg-accent px-3 text-[10px] font-medium text-white hover:bg-accent/90 disabled:opacity-50">
                         <Check size={12} />{selectedSubmission.type === 'career' ? 'Start screening' : 'Start review'}
