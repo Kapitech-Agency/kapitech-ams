@@ -2146,6 +2146,15 @@ apiRouter.post('/leads/:id/convert-to-client', requireAuth, requirePermission('c
   const audit = makeAuditEntry(req, 'LEAD_CONVERTED_TO_CLIENT', `Converted inbound lead ${id} to a client record.`, 'info');
 
   if (getDataSourceMode() === 'postgres') {
+    const lead = await postgresLeadRepository.findById(id);
+    if (!lead) {
+      res.status(404).json({ success: false, error: 'Lead not found.' });
+      return;
+    }
+    if (lead.type && lead.type !== 'inquiry') {
+      res.status(409).json({ success: false, error: 'Only client inquiries can be converted to clients.' });
+      return;
+    }
     const converted = await postgresLeadRepository.convertToClient(id, audit);
     if (!converted) {
       res.status(404).json({ success: false, error: 'Lead not found.' });
@@ -2165,6 +2174,10 @@ apiRouter.post('/leads/:id/convert-to-client', requireAuth, requirePermission('c
   const lead = (db.leads || []).find((item: any) => String(item.id) === String(id));
   if (!lead) {
     res.status(404).json({ success: false, error: 'Lead not found.' });
+    return;
+  }
+  if (lead.type && lead.type !== 'inquiry') {
+    res.status(409).json({ success: false, error: 'Only client inquiries can be converted to clients.' });
     return;
   }
   const linkedClientId = String(lead.convertedClientId || '');
@@ -3850,7 +3863,12 @@ apiRouter.get('/cms/services', rateLimitPublic(), async (req: Request, res: Resp
     ? await postgresCmsRepository.list('service')
     : getDatabase().cmsServices;
   // Public requests only receive explicitly published records. Missing status is not consent to publish.
-  const services = canManage ? source : source.filter((item: any) => item.isPublished === true);
+  const services = canManage
+    ? source
+    : source.filter((item: any) =>
+        item.isPublished === true
+        && String(item.slug || item.id || '').replace(/^seed_srv_/, '') !== 'mobile-app-design'
+      );
   res.json({ success: true, services });
 });
 
