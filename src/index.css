@@ -237,11 +237,8 @@
 .ams-shell .ams-popover-surface .ams-dropdown-item[data-selected=true]{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--text);font-weight:600}
 .ams-shell .ams-popover-surface .ams-dropdown-item[data-danger=true]{color:var(--danger)}
 .ams-shell .ams-popover-surface .ams-dropdown-item[data-danger=true]:hover,.ams-shell .ams-popover-surface .ams-dropdown-item[data-danger=true][data-active=true]{background:color-mix(in srgb,var(--danger) 10%,transparent);color:var(--danger)}
-.ams-shell .ams-crm-kpi,.ams-shell .ams-inbox-kpi{gap:0;border:0}
-.ams-shell .ams-crm-kpi>div,.ams-shell .ams-inbox-kpi>div{border:0;border-radius:0;background:transparent;box-shadow:none}.ams-shell .ams-crm-kpi>div+div,.ams-shell .ams-inbox-kpi>div+div{border-left:0}
-.ams-shell .ams-crm-kpi>.ams-crm-funnel-card{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:16px}
-.ams-shell .ams-leads-page,.ams-shell .ams-inbox-page{min-width:0;width:100%;color:var(--text)}.ams-shell .ams-leads-page>*,.ams-shell .ams-inbox-page>*{min-width:0}
-.ams-shell .ams-leads-page .ams-table-scroll,.ams-shell .ams-inbox-page .ams-table-scroll{max-width:100%;overflow-x:auto}.ams-shell .ams-table-scroll table{min-width:max-content}
+.ams-shell .ams-inbox-page{min-width:0;width:100%;color:var(--text)}.ams-shell .ams-inbox-page>*{min-width:0}
+.ams-shell .ams-inbox-page .ams-table-scroll{max-width:100%;overflow-x:auto}.ams-shell .ams-table-scroll table{min-width:max-content}
 .ams-shell .ams-project-kanban-board,
 .ams-shell .ams-project-kanban-task-board{
   scrollbar-width:none;
@@ -332,7 +329,6 @@
 .ams-shell .ams-project-kanban-card [data-drag-handle="true"]:active{
   cursor:grabbing;
 }
-.ams-shell .ams-leads-page .ams-kanban-scroll> *{flex:0 0 300px;min-width:280px;max-width:340px}
 .ams-shell .ams-inbox-list-pane,.ams-shell .ams-inbox-reader-pane{min-width:0;min-height:0}.ams-shell .ams-inbox-reader-pane{overflow:hidden}
 .ams-shell .custom-scrollbar::-webkit-scrollbar{width:4px;height:4px}.ams-shell .custom-scrollbar::-webkit-scrollbar-track{background:transparent}.ams-shell .custom-scrollbar::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}.ams-shell .custom-scrollbar::-webkit-scrollbar-thumb:hover{background:var(--muted)}
 .ams-portal-root{font-family:var(--font-sans);color:var(--text)}
