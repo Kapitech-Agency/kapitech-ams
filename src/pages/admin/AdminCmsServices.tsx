@@ -33,7 +33,7 @@ import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminCmsSectionTabs, AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 
 const normalizeCmsService = (service: ServiceItemData | null | undefined): ServiceItemData => {
@@ -273,38 +273,16 @@ export const AdminCmsServices: React.FC = () => {
       />
 
 
-      <div className="min-[900px]:hidden min-w-0" data-ams-slug="cms-mobile-tabs">
-        <AdminSectionTabs
-          ariaLabel="CMS sections"
-          activeKey="services"
-          items={[
-            { key: 'projects', label: 'Projects', to: '/admin/cms/projects' },
-            { key: 'services', label: 'Services', to: '/admin/cms/services' },
-            { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials' },
-            { key: 'insights', label: 'Insights', to: '/admin/cms/insights' },
-            { key: 'careers', label: 'Careers', to: '/admin/cms/careers' },
-          ]}
-        />
-      </div>
+      <AdminCmsSectionTabs activeKey="services" />
 
-      {statusMessage && (() => {
-        const failed = /failed|could not|unable|error|gagal|wajib|required/i.test(statusMessage);
-        return (
-          <div className={['p-3.5 rounded-card border text-xs font-sans flex items-center justify-between animate-in fade-in duration-200', failed ? 'bg-danger/10 border-danger/30 text-danger' : 'bg-success/10 border-success/30 text-success'].join(' ')}>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              {failed ? <X size={16} /> : <CheckCircle2 size={16} />}
-              <span>{statusMessage}</span>
-            </div>
-            <button onClick={() => setStatusMessage(null)} className="text-muted hover:text-fg" aria-label="Dismiss status">
-              <X size={14} />
-            </button>
-          </div>
-        );
-      })()}
-
-      {/* Catalog metrics */}
-      
-
+      {statusMessage && (
+        <AdminModuleNotice
+          tone={/failed|could not|unable|error|gagal|wajib|required/i.test(statusMessage) ? 'danger' : 'success'}
+          onDismiss={() => setStatusMessage(null)}
+        >
+          {statusMessage}
+        </AdminModuleNotice>
+      )}
 
       <AdminMetricStrip slug="cms-services-kpis"
         className="grid-cols-2 sm:grid-cols-4"
