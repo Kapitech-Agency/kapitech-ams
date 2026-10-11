@@ -65,7 +65,7 @@ test('Temporary demo CMS migration republishes only existing AMS demo work and t
     'apex-global-low-latency-server-fleet',
   ];
   for (const id of projectIds) assert.ok(migration.includes("'" + id + "'"), 'Missing demo project: ' + id);
-  assert.match(migration, /UPDATE cms_projects[\s\S]*?'\{isPublished\}', 'true'::jsonb/);
+  assert.match(migration, /INSERT INTO cms_projects[\s\S]*?ON CONFLICT \(id\) DO UPDATE[\s\S]*?'\{isPublished\}', 'true'::jsonb/);
   assert.match(migration, /UPDATE cms_testimonials[\s\S]*?'\{isPublished\}', 'true'::jsonb/);
   for (const id of ['t_01', 't_02', 't_03', 't_04', 't_05', 't_06']) {
     assert.ok(migration.includes("'" + id + "'"), 'Missing demo testimonial: ' + id);
