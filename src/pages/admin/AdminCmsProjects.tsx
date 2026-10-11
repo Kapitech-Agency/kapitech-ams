@@ -27,7 +27,7 @@ import type { ProjectItem } from '../../data/projectsData';
 import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { AdminCmsSectionTabs, AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminCmsSectionTabs, AdminDataTableShell, AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 
 const slugifyCaseStudy = (value: string): string =>
@@ -398,7 +398,6 @@ export const AdminCmsProjects: React.FC = () => {
         />
       
       <AdminModuleHeader slug="cms-projects-header"
-        icon={<Layers size={20} />}
         className="mb-0"
         title="Projects"
         description={language === 'id'
@@ -526,9 +525,9 @@ export const AdminCmsProjects: React.FC = () => {
           )}
         </div>
       ) : (
-        <>
-                <div className="overflow-x-auto rounded-card border border-line bg-panel">
-          <table className="ams-table w-full min-w-[1080px] border-collapse text-left text-xs">
+        <AdminDataTableShell slug="cms-projects-directory-table">
+          <div className="overflow-x-auto custom-scrollbar">
+          <table className="ams-data-table w-full min-w-[1080px] text-left">
             <thead>
               <tr className="border-b border-line bg-bg text-[10px] font-medium text-muted">
                 <th className="px-4 py-3">Project</th>
@@ -588,7 +587,7 @@ export const AdminCmsProjects: React.FC = () => {
           </table>
         </div>
         <AdminTablePagination total={filteredProjects.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="case studies" slug="cms-projects-pagination" />
-        </>
+        </AdminDataTableShell>
       )}
       {/* MODAL: ADD / EDIT PROJECT WITH LIVE PREVIEW & DRAG & DROP */}
       </div>
