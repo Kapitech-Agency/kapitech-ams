@@ -159,11 +159,47 @@
 .ams-shell [data-status=success]{color:var(--success)}.ams-shell [data-status=warning]{color:var(--warning)}.ams-shell [data-status=danger]{color:var(--danger)}.ams-shell [data-status=info]{color:var(--info)}
 .ams-shell .overflow-x-auto{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent;-webkit-overflow-scrolling:touch}
 .ams-shell .overflow-x-auto::-webkit-scrollbar{width:4px;height:6px}.ams-shell .overflow-x-auto::-webkit-scrollbar-track{background:transparent}.ams-shell .overflow-x-auto::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
-.ams-shell input,.ams-shell select,.ams-shell textarea{min-height:36px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);font-size:13px;line-height:18px;outline:none;transition:border-color .15s ease,box-shadow .15s ease}.ams-shell input::placeholder,.ams-shell textarea::placeholder{color:var(--muted)}.ams-shell input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not([class*="px-"]):not([class*="pl-"]){padding-left:12px}.ams-shell input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not([class*="px-"]):not([class*="pr-"]){padding-right:12px}.ams-shell input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not([class*="py-"]):not([class*="p-"]){padding-block:8px}.ams-shell select:not([class*="px-"]):not([class*="pl-"]){padding-left:12px}.ams-shell select:not([class*="px-"]):not([class*="pr-"]){padding-right:12px}.ams-shell textarea:not([class*="px-"]):not([class*="pl-"]){padding-left:12px}.ams-shell textarea:not([class*="px-"]):not([class*="pr-"]){padding-right:12px}.ams-shell textarea:not([class*="py-"]):not([class*="p-"]){padding-block:8px}.ams-shell input:focus,.ams-shell select:focus,.ams-shell textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 22%,transparent)}
-.ams-shell input:disabled,.ams-shell select:disabled,.ams-shell textarea:disabled{opacity:.55;cursor:not-allowed}
+/* Base controls are low-specificity defaults. Component classes and Tailwind
+   state utilities own their sizing, borders, and focus treatment. */
+:where(.ams-shell) :where(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]), select, textarea) {
+  min-height:36px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:var(--panel);
+  color:var(--text);
+  font-size:13px;
+  line-height:18px;
+  outline:none;
+  transition:border-color .15s ease,box-shadow .15s ease;
+}
+:where(.ams-shell) :where(input,textarea)::placeholder { color:var(--muted); }
+.ams-shell input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not([class*="px-"]):not([class*="pl-"]){padding-left:12px}
+.ams-shell input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not([class*="px-"]):not([class*="pr-"]){padding-right:12px}
+.ams-shell input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not([class*="py-"]):not([class*="p-"]){padding-block:8px}
+.ams-shell select:not([class*="px-"]):not([class*="pl-"]){padding-left:12px}
+.ams-shell select:not([class*="px-"]):not([class*="pr-"]){padding-right:12px}
+.ams-shell textarea:not([class*="px-"]):not([class*="pl-"]){padding-left:12px}
+.ams-shell textarea:not([class*="px-"]):not([class*="pr-"]){padding-right:12px}
+.ams-shell textarea:not([class*="py-"]):not([class*="p-"]){padding-block:8px}
+:where(.ams-shell) :where(input,select,textarea):focus { border-color:var(--accent); box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 22%,transparent); }
+:where(.ams-shell) :where(input,select,textarea):disabled { opacity:.55; cursor:not-allowed; }
 
-/* One visible keyboard-focus language across module controls and portalled UI. */
-.ams-shell :where(a,button,[role="button"],input,select,textarea,[tabindex]):focus-visible,.ams-portal-root :where(a,button,[role="button"],input,select,textarea,[tabindex]):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+:where(.ams-shell) input[type="checkbox"],
+:where(.ams-shell) input[type="radio"] {
+  width:16px;
+  height:16px;
+  min-width:16px;
+  min-height:16px;
+  padding:0;
+  accent-color:var(--accent);
+}
+
+/* Low-specificity keyboard-focus fallback. Component-level states must win so a
+   global outline does not stack over a custom focus ring. */
+:where(.ams-shell,.ams-portal-root) :where(a,button,[role="button"],input,select,textarea,[tabindex]):focus-visible {
+  outline:2px solid var(--accent);
+  outline-offset:2px;
+}
 .ams-shell .ams-page-header,.ams-shell .ams-dashboard-header{min-width:0;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--line)}
 .ams-shell .ams-page-header>*,.ams-shell .ams-dashboard-header>*{min-width:0}
 .ams-shell .ams-page-shell>.fixed{margin-top:0}
@@ -201,11 +237,8 @@
 .ams-shell .ams-popover-surface .ams-dropdown-item[data-selected=true]{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--text);font-weight:600}
 .ams-shell .ams-popover-surface .ams-dropdown-item[data-danger=true]{color:var(--danger)}
 .ams-shell .ams-popover-surface .ams-dropdown-item[data-danger=true]:hover,.ams-shell .ams-popover-surface .ams-dropdown-item[data-danger=true][data-active=true]{background:color-mix(in srgb,var(--danger) 10%,transparent);color:var(--danger)}
-.ams-shell .ams-crm-kpi,.ams-shell .ams-inbox-kpi{gap:0;border:0}
-.ams-shell .ams-crm-kpi>div,.ams-shell .ams-inbox-kpi>div{border:0;border-radius:0;background:transparent;box-shadow:none}.ams-shell .ams-crm-kpi>div+div,.ams-shell .ams-inbox-kpi>div+div{border-left:0}
-.ams-shell .ams-crm-kpi>.ams-crm-funnel-card{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:16px}
-.ams-shell .ams-leads-page,.ams-shell .ams-inbox-page{min-width:0;width:100%;color:var(--text)}.ams-shell .ams-leads-page>*,.ams-shell .ams-inbox-page>*{min-width:0}
-.ams-shell .ams-leads-page .ams-table-scroll,.ams-shell .ams-inbox-page .ams-table-scroll{max-width:100%;overflow-x:auto}.ams-shell .ams-table-scroll table{min-width:max-content}
+.ams-shell .ams-inbox-page{min-width:0;width:100%;color:var(--text)}.ams-shell .ams-inbox-page>*{min-width:0}
+.ams-shell .ams-inbox-page .ams-table-scroll{max-width:100%;overflow-x:auto}.ams-shell .ams-table-scroll table{min-width:max-content}
 .ams-shell .ams-project-kanban-board,
 .ams-shell .ams-project-kanban-task-board{
   scrollbar-width:none;
@@ -296,7 +329,6 @@
 .ams-shell .ams-project-kanban-card [data-drag-handle="true"]:active{
   cursor:grabbing;
 }
-.ams-shell .ams-leads-page .ams-kanban-scroll> *{flex:0 0 300px;min-width:280px;max-width:340px}
 .ams-shell .ams-inbox-list-pane,.ams-shell .ams-inbox-reader-pane{min-width:0;min-height:0}.ams-shell .ams-inbox-reader-pane{overflow:hidden}
 .ams-shell .custom-scrollbar::-webkit-scrollbar{width:4px;height:4px}.ams-shell .custom-scrollbar::-webkit-scrollbar-track{background:transparent}.ams-shell .custom-scrollbar::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}.ams-shell .custom-scrollbar::-webkit-scrollbar-thumb:hover{background:var(--muted)}
 .ams-portal-root{font-family:var(--font-sans);color:var(--text)}
@@ -315,8 +347,7 @@
  .ams-shell>aside{width:min(280px,86vw);min-width:min(280px,86vw)}.ams-shell>main>.ams-content{padding:16px 16px 24px}
  .ams-shell .ams-mobile-topbar{padding-left:14px;padding-right:14px}.ams-shell .ams-page-header,.ams-shell .ams-dashboard-header{gap:12px}
  .ams-shell .ams-page-header>div:last-child,.ams-shell .ams-dashboard-header>div:last-child{flex-wrap:wrap}
- .ams-shell .ams-crm-kpi>div+div,.ams-shell .ams-inbox-kpi>div+div{border-left:0;border-top:1px solid var(--line)}
-}
+ }
 @media(max-width:599px){
  .ams-shell>main>.ams-content{padding:16px 14px max(24px,env(safe-area-inset-bottom))}
  .ams-shell .ams-page-title{font-size:18px;line-height:24px}.ams-shell .ams-kpi-value{font-size:22px;line-height:28px}
@@ -408,6 +439,34 @@
 }
 
 
+
+/* Careers workspace tabs share the compact AMS section-tab scale. */
+.ams-shell .ams-workspace-tabs{
+  width:max-content;
+  max-width:100%;
+}
+.ams-shell .ams-workspace-tabs [role="tab"]{
+  white-space:nowrap;
+}
+.ams-shell .cms-career-language-panel{
+  align-self:stretch;
+}
+.ams-shell .cms-career-language-panel > div:first-child{
+  min-height:28px;
+}
+.ams-shell .cms-career-editor-form{
+  min-width:0;
+}
+@media(max-width:599px){
+  .ams-shell .ams-workspace-tabs{
+    width:100%;
+  }
+  .ams-shell .ams-workspace-tabs [role="tab"]{
+    flex:1 1 auto;
+    justify-content:center;
+    padding-inline:10px;
+  }
+}
 
 /* CMS modules reuse the same control, navigation, and feedback rhythm. */
 .ams-shell .ams-cms-module .ams-cms-section-tabs .ams-topnav-scroll{
