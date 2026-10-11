@@ -3531,6 +3531,45 @@ apiRouter.post('/finance/expenses', requireAuth, requirePermission('canManageInv
     res.status(400).json({ success: false, error: 'Expense currency must be a valid ISO 4217 code.' });
     return;
   }
+
+  let vendorPaymentMetadata: {
+    vendorId: string; contractId: string; contractTitle: string; reference: string; notes: string;
+  } | undefined;
+  const rawVendorPayment = exp?.metadata?.vendorPayment ?? exp?.vendorPayment;
+  if (rawVendorPayment !== undefined && rawVendorPayment !== null) {
+    if (!rawVendorPayment || typeof rawVendorPayment !== 'object' || Array.isArray(rawVendorPayment)) {
+      res.status(400).json({ success: false, error: 'Vendor payment metadata is invalid.' });
+      return;
+    }
+    const vendorId = cleanText(rawVendorPayment.vendorId, 120);
+    const contractId = cleanText(rawVendorPayment.contractId, 120);
+    if (!vendorId || !contractId || cleanText(exp.category, 120) !== 'Salaries & Contractors') {
+      res.status(400).json({ success: false, error: 'Vendor and contract are required for a vendor payment expense.' });
+      return;
+    }
+    const vendor = getDataSourceMode() === 'postgres'
+      ? await postgresVendorRepository.findById(vendorId)
+      : (getDatabase().vendors || []).find((item: any) => String(item.id) === vendorId);
+    if (!vendor) {
+      res.status(404).json({ success: false, error: 'Vendor not found.' });
+      return;
+    }
+    const contract = Array.isArray(vendor.contracts)
+      ? vendor.contracts.find((item: any) => String(item.id) === contractId)
+      : undefined;
+    if (!contract || String(contract.currency || 'IDR').toUpperCase() !== currency) {
+      res.status(409).json({ success: false, error: 'The selected vendor contract is unavailable for this currency.' });
+      return;
+    }
+    vendorPaymentMetadata = {
+      vendorId,
+      contractId,
+      contractTitle: cleanText(contract.title || 'Vendor contract', 240),
+      reference: cleanText(rawVendorPayment.reference, 160),
+      notes: cleanText(rawVendorPayment.notes, 500)
+    };
+  }
+
   const newExpense = {
     id: `exp_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
     slug: slugifyFinanceRecord(exp.slug || ((exp.description || exp.category || 'expense') + '-' + (exp.date || ''))),
@@ -3541,6 +3580,9 @@ apiRouter.post('/finance/expenses', requireAuth, requirePermission('canManageInv
     currency,
     date,
     projectId: cleanText(exp.projectId, 100) || undefined,
+    vendorId: vendorPaymentMetadata?.vendorId,
+    vendorContractId: vendorPaymentMetadata?.contractId,
+    metadata: vendorPaymentMetadata ? { vendorPayment: vendorPaymentMetadata } : undefined,
     recurringInterval: cleanText(exp.recurringInterval || 'none', 40),
     recordedBy: req.user!.name || req.user!.username,
     recordedByUserId: req.user!.id,
@@ -3554,7 +3596,7 @@ apiRouter.post('/finance/expenses', requireAuth, requirePermission('canManageInv
       if (replayed) delete expense.__idempotentReplay;
       res.json({ success:true, expense, replayed });
     } catch (error) {
-      if (error instanceof ExpenseProjectNotFoundError || (error instanceof Error && error.message === 'EXPENSE_IDEMPOTENCY_KEY_REUSE_CONFLICT')) { res.status(409).json({ success:false,error:error.message }); return; }
+      if (error instanceof ExpenseProjectNotFoundError || (error instanceof Error && ['EXPENSE_IDEMPOTENCY_KEY_REUSE_CONFLICT', 'VENDOR_NOT_FOUND'].includes(error.message))) { res.status(409).json({ success:false,error:error.message }); return; }
       res.status(400).json({ success:false,error:error instanceof Error?error.message:'Expense could not be created.' });
     }
     return;
