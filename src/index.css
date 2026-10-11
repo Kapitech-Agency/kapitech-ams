@@ -159,56 +159,56 @@
 .ams-shell [data-status=success]{color:var(--success)}.ams-shell [data-status=warning]{color:var(--warning)}.ams-shell [data-status=danger]{color:var(--danger)}.ams-shell [data-status=info]{color:var(--info)}
 .ams-shell .overflow-x-auto{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent;-webkit-overflow-scrolling:touch}
 .ams-shell .overflow-x-auto::-webkit-scrollbar{width:4px;height:6px}.ams-shell .overflow-x-auto::-webkit-scrollbar-track{background:transparent}.ams-shell .overflow-x-auto::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
-/* Base controls are low-specificity defaults. Component classes and Tailwind
-   state utilities own their sizing, borders, and focus treatment. */
-:where(.ams-shell) :where(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]), select, textarea) {
-  min-height:36px;
-  border:1px solid var(--line);
-  border-radius:8px;
-  background:var(--panel);
-  color:var(--text);
-  font-size:13px;
-  line-height:18px;
-  outline:none;
-  transition:border-color .15s ease,box-shadow .15s ease;
-}
-:where(.ams-shell) :where(input,textarea)::placeholder { color:var(--muted); }
-.ams-shell input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not([class*="px-"]):not([class*="pl-"]){padding-left:12px}
-.ams-shell input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not([class*="px-"]):not([class*="pr-"]){padding-right:12px}
-.ams-shell input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not([class*="py-"]):not([class*="p-"]){padding-block:8px}
-.ams-shell select:not([class*="px-"]):not([class*="pl-"]){padding-left:12px}
-.ams-shell select:not([class*="px-"]):not([class*="pr-"]){padding-right:12px}
-.ams-shell textarea:not([class*="px-"]):not([class*="pl-"]){padding-left:12px}
-.ams-shell textarea:not([class*="px-"]):not([class*="pr-"]){padding-right:12px}
-.ams-shell textarea:not([class*="py-"]):not([class*="p-"]){padding-block:8px}
-:where(.ams-shell) :where(input,select,textarea):focus { border-color:var(--accent); box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 22%,transparent); }
-:where(.ams-shell) :where(input,select,textarea):disabled { opacity:.55; cursor:not-allowed; }
+/* Base control and keyboard defaults belong to Tailwind's base layer.
+   Unlayered selectors here used to beat utility classes and component focus rings. */
+@layer base {
+  :where(.ams-shell) :where(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]), select, textarea) {
+    min-height:36px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:var(--panel);
+    color:var(--text);
+    font-size:13px;
+    line-height:18px;
+    outline:none;
+    transition:border-color .15s ease,box-shadow .15s ease;
+  }
+  :where(.ams-shell) :where(input,textarea)::placeholder { color:var(--muted); }
+  .ams-shell input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not([class*="px-"]):not([class*="pl-"]){padding-left:12px}
+  .ams-shell input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not([class*="px-"]):not([class*="pr-"]){padding-right:12px}
+  .ams-shell input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not([class*="py-"]):not([class*="p-"]){padding-block:8px}
+  .ams-shell select:not([class*="px-"]):not([class*="pl-"]){padding-left:12px}
+  .ams-shell select:not([class*="px-"]):not([class*="pr-"]){padding-right:12px}
+  .ams-shell textarea:not([class*="px-"]):not([class*="pl-"]){padding-left:12px}
+  .ams-shell textarea:not([class*="px-"]):not([class*="pr-"]){padding-right:12px}
+  .ams-shell textarea:not([class*="py-"]):not([class*="p-"]){padding-block:8px}
+  :where(.ams-shell) :where(input,select,textarea):focus { border-color:var(--accent); box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 22%,transparent); }
+  :where(.ams-shell) :where(input,select,textarea):disabled { opacity:.55; cursor:not-allowed; }
 
-:where(.ams-shell) input[type="checkbox"],
-:where(.ams-shell) input[type="radio"] {
-  width:16px;
-  height:16px;
-  min-width:16px;
-  min-height:16px;
-  padding:0;
-  accent-color:var(--accent);
+  :where(.ams-shell) input[type="checkbox"],
+  :where(.ams-shell) input[type="radio"] {
+    width:16px;
+    height:16px;
+    min-width:16px;
+    min-height:16px;
+    padding:0;
+    accent-color:var(--accent);
+  }
+
+  /* A fallback only: skip controls that already provide a custom focus ring/outline. */
+  :where(.ams-shell,.ams-portal-root) :where(a,button,[role="button"],input,select,textarea,[tabindex]):focus-visible:not(:where(
+    [class~="outline-none"],
+    [class~="focus:outline-none"],
+    [class~="focus-visible:outline-none"],
+    [class*="focus:ring-"],
+    [class*="focus-visible:ring-"],
+    [class*="focus-visible:outline-"]
+  )) {
+    outline:2px solid var(--accent);
+    outline-offset:2px;
+  }
 }
 
-/* Low-specificity fallback only for controls without their own outline or ring.
-   This avoids stacking the global outline over component focus states. */
-:where(.ams-shell,.ams-portal-root)
-:where(a,button,[role="button"],input,select,textarea,[tabindex]):focus-visible
-:where(
-  :not([class~="outline-none"])
-  :not([class~="focus:outline-none"])
-  :not([class~="focus-visible:outline-none"])
-  :not([class*="focus:ring-"])
-  :not([class*="focus-visible:ring-"])
-  :not([class*="focus-visible:outline-"])
-) {
-  outline:2px solid var(--accent);
-  outline-offset:2px;
-}
 .ams-shell .ams-page-header,.ams-shell .ams-dashboard-header{min-width:0;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--line)}
 .ams-shell .ams-page-header>*,.ams-shell .ams-dashboard-header>*{min-width:0}
 .ams-shell .ams-page-shell>.fixed{margin-top:0}
