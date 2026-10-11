@@ -296,3 +296,12 @@ test('Finance tables recompute visible rows when page size changes', async () =>
   assert.match(page, /incomeRows\.slice\(start, start \+ incomePageSize\)[\s\S]{0,90}\[incomeRows, incomePage, incomePageSize\]/);
   assert.match(page, /filteredExpenses\.slice\(start, start \+ expensePageSize\)[\s\S]{0,90}\[filteredExpenses, expensePage, expensePageSize\]/);
 });
+
+test('CMS case studies are drafts unless publication is explicitly enabled', async () => {
+  const cmsProjects = await read('src/pages/admin/AdminCmsProjects.tsx');
+  assert.match(cmsProjects, /isPublished: project\.isPublished === true/);
+  assert.doesNotMatch(cmsProjects, /isPublished: project\.isPublished !== false/);
+  assert.match(cmsProjects, /isPublished: false/);
+  assert.match(cmsProjects, /Case study saved as a draft/);
+  assert.match(cmsProjects, /Case study published successfully to live site!/);
+});
