@@ -327,3 +327,23 @@ test('CMS uses canonical AMS table geometry without legacy scoped overrides', as
   assert.doesNotMatch(styles, /\.ams-shell \.ams-cms-module table tbody td\s*\{/);
   assert.doesNotMatch(styles, /@media\s*\(max-width:\s*599px\)\s*\{\s*\.ams-shell \.ams-cms-module table\s*\{\s*min-width:\s*720px/s);
 });
+
+test('Production CMS migration restores verified portfolio items without republishing synthetic testimonials', async () => {
+  const migration = await read('db/postgres/050_restore_verified_public_portfolio.sql');
+  const verifiedProjectIds = [
+    'verified_case_pertamina_sales_management_system',
+    'verified_case_navees_gold_video_social',
+    'verified_case_ina_solusi_company_website',
+    'verified_case_mobilku_social_design',
+    'verified_case_reve_space_custom_web_cms',
+    'verified_case_sombong_padel_event_design',
+    'verified_case_sababay_winery_event_video',
+  ];
+  for (const id of verifiedProjectIds) {
+    assert.ok(migration.includes("'" + id + "'"), 'Missing production portfolio record: ' + id);
+  }
+  assert.equal((migration.match(/'isPublished', true/g) || []).length, verifiedProjectIds.length);
+  assert.match(migration, /ON CONFLICT \(id\) DO NOTHING/);
+  assert.doesNotMatch(migration, /t_0[1-6]|bank-digital-nusantara-mobile|siloam-care-telehealth-ui/);
+});
+
