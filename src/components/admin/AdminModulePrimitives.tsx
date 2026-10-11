@@ -1,5 +1,5 @@
 import React, { useId } from 'react';
-import { Search, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, AlertTriangle, Info, X } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, AlertTriangle, HelpCircle, X } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { CustomSelect } from '../ui/CustomSelect';
 import { cn } from '../../lib/cn';
@@ -117,7 +117,7 @@ export const AdminModuleNotice: React.FC<AdminModuleNoticeProps> = ({
     success: { Icon: CheckCircle2, classes: 'border-success/25 bg-success/10 text-success' },
     danger: { Icon: AlertCircle, classes: 'border-danger/25 bg-danger/10 text-danger' },
     warning: { Icon: AlertTriangle, classes: 'border-warning/25 bg-warning/10 text-warning' },
-    info: { Icon: Info, classes: 'border-info/25 bg-info/10 text-info' },
+    info: { Icon: HelpCircle, classes: 'border-info/25 bg-info/10 text-info' },
   } as const;
   const { Icon, classes } = toneStyles[tone];
 
