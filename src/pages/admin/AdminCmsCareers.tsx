@@ -10,6 +10,7 @@ import { api } from '../../lib/apiClient';
 import Button from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import { CustomSelect } from '../../components/ui/CustomSelect';
 import { AdminCmsSectionTabs, AdminDataTableShell, AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination, Skeleton } from '../../components/admin/AdminModulePrimitives';
 
 type CareerPosition = {
@@ -474,7 +475,7 @@ export const AdminCmsCareers: React.FC = () => {
         ]}
       />
 
-      <div className="inline-flex max-w-full flex-wrap items-center gap-1 rounded-control border border-line bg-panel p-1">
+      <div role="tablist" aria-label={isId ? "Workspace Careers" : "Careers workspace"} className="ams-workspace-tabs inline-flex max-w-full flex-wrap items-center gap-1 rounded-control border border-line bg-panel p-1">
         {([
           { key: 'jobs', label: isId ? 'Lowongan' : 'Job openings', count: positions.length },
           { key: 'applicants', label: isId ? 'Pelamar' : 'Applicants', count: applicantsLoaded ? applicants.length : null }
@@ -483,7 +484,25 @@ export const AdminCmsCareers: React.FC = () => {
             key={tab.key}
             type="button"
             onClick={() => setActiveTab(tab.key)}
-            aria-pressed={activeTab === tab.key}
+            id={`careers-${tab.key}-tab`}
+            role="tab"
+            aria-selected={activeTab === tab.key}
+            aria-controls={`careers-${tab.key}-panel`}
+            tabIndex={activeTab === tab.key ? 0 : -1}
+            onKeyDown={(event) => {
+              if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+              event.preventDefault();
+              const tabKeys: WorkspaceTab[] = ['jobs', 'applicants'];
+              const currentIndex = tabKeys.indexOf(tab.key);
+              const nextIndex = event.key === 'Home'
+                ? 0
+                : event.key === 'End'
+                  ? tabKeys.length - 1
+                  : (currentIndex + (event.key === 'ArrowRight' ? 1 : -1) + tabKeys.length) % tabKeys.length;
+              const nextKey = tabKeys[nextIndex];
+              setActiveTab(nextKey);
+              document.getElementById(`careers-${nextKey}-tab`)?.focus();
+            }}
             className={'inline-flex min-h-8 items-center gap-2 rounded-chip border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (activeTab === tab.key ? 'border-accent/25 bg-accent/10 font-semibold text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg')}
           >
             {tab.label}
@@ -493,17 +512,26 @@ export const AdminCmsCareers: React.FC = () => {
       </div>
 
       {activeTab === 'jobs' ? (
-        <section className="space-y-3" data-ams-feature-slug="cms-careers-list">
+        <section className="space-y-3" data-ams-feature-slug="cms-careers-list" role="tabpanel" id="careers-jobs-panel" aria-labelledby="careers-jobs-tab" tabIndex={0}>
           <div className="flex flex-col gap-3 rounded-card border border-line bg-panel p-4 sm:flex-row sm:items-center">
             <label className="relative min-w-0 flex-1">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
               <input value={jobSearch} onChange={event => setJobSearch(event.target.value)} className={inputClass + ' pl-9'} placeholder={isId ? 'Cari judul, departemen, atau slug...' : 'Search title, department, or slug...'} aria-label="Search job openings" />
             </label>
-            <select value={jobStatusFilter} onChange={event => setJobStatusFilter(event.target.value as JobStatusFilter)} className={inputClass + ' sm:w-44'} aria-label="Filter job status">
-              <option value="all">{isId ? 'Semua status' : 'All statuses'}</option>
-              <option value="published">{isId ? 'Dipublikasikan' : 'Published'}</option>
-              <option value="draft">Draft</option>
-            </select>
+            <CustomSelect
+              value={jobStatusFilter}
+              onChange={(value) => setJobStatusFilter(value as JobStatusFilter)}
+              options={[
+                { value: 'all', label: isId ? 'Semua status' : 'All statuses' },
+                { value: 'published', label: isId ? 'Dipublikasikan' : 'Published' },
+                { value: 'draft', label: 'Draft' }
+              ]}
+              size="sm"
+              className="w-full sm:w-44"
+              triggerClassName="w-full"
+              aria-label={isId ? 'Filter status lowongan' : 'Filter job status'}
+              slug="careers-job-status-filter"
+            />
             <button type="button" onClick={() => { setJobSearch(''); setJobStatusFilter('all'); }} className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs text-muted hover:text-fg">
               <RefreshCw size={13} /> {isId ? 'Reset' : 'Reset'}
             </button>
@@ -595,16 +623,22 @@ export const AdminCmsCareers: React.FC = () => {
           )}
         </section>
       ) : (
-        <section className="space-y-3" data-ams-feature-slug="cms-careers-applicants">
+        <section className="space-y-3" data-ams-feature-slug="cms-careers-applicants" role="tabpanel" id="careers-applicants-panel" aria-labelledby="careers-applicants-tab" tabIndex={0}>
           <div className="flex flex-col gap-3 rounded-card border border-line bg-panel p-4 sm:flex-row sm:items-center">
             <label className="relative min-w-0 flex-1">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
               <input value={applicantSearch} onChange={event => setApplicantSearch(event.target.value)} className={inputClass + ' pl-9'} placeholder={isId ? 'Cari nama, email, atau posisi...' : 'Search applicant, email, or position...'} aria-label="Search applicants" />
             </label>
-            <select value={applicantStatusFilter} onChange={event => setApplicantStatusFilter(event.target.value)} className={inputClass + ' sm:w-44'} aria-label="Filter applicant status">
-              <option value="all">{isId ? 'Semua status' : 'All statuses'}</option>
-              {statusOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
-            </select>
+            <CustomSelect
+              value={applicantStatusFilter}
+              onChange={setApplicantStatusFilter}
+              options={[{ value: 'all', label: isId ? 'Semua status' : 'All statuses' }, ...statusOptions]}
+              size="sm"
+              className="w-full sm:w-44"
+              triggerClassName="w-full"
+              aria-label={isId ? 'Filter status pelamar' : 'Filter applicant status'}
+              slug="careers-applicant-status-filter"
+            />
             <button type="button" onClick={() => void loadApplicants(true)} disabled={applicantsLoading} className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs text-muted hover:text-fg disabled:opacity-50"><RefreshCw size={13} className={applicantsLoading ? 'animate-spin' : ''} />{isId ? 'Refresh' : 'Refresh'}</button>
           </div>
 
@@ -663,10 +697,22 @@ export const AdminCmsCareers: React.FC = () => {
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-[10px] text-muted">{applicant.createdAt ? new Date(applicant.createdAt).toLocaleDateString(isId ? 'id-ID' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</td>
                           <td className="px-4 py-3">
-                            <select value={applicant.status || 'new'} disabled={updatingApplicantId === applicant.id} onChange={event => void updateApplicantStatus(applicant, event.target.value)} className={'h-8 max-w-[142px] rounded-control border bg-bg px-2 text-[10px] outline-none focus:border-accent disabled:opacity-50 ' + statusClass(applicant.status || 'new')} aria-label={'Status for ' + applicant.fullName}>
-                              {statusOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
-                              {applicant.status && !statusOptions.some(option => option.value === applicant.status) && <option value={applicant.status}>{statusLabel(applicant.status)}</option>}
-                            </select>
+                            <CustomSelect
+                              value={applicant.status || 'new'}
+                              disabled={updatingApplicantId === applicant.id}
+                              onChange={(value) => void updateApplicantStatus(applicant, value)}
+                              options={[
+                                ...statusOptions,
+                                ...(applicant.status && !statusOptions.some(option => option.value === applicant.status)
+                                  ? [{ value: applicant.status, label: statusLabel(applicant.status) }]
+                                  : [])
+                              ]}
+                              size="xs"
+                              className="w-[146px] max-w-full"
+                              triggerClassName="w-full px-2 text-[10px]"
+                              aria-label={'Status for ' + applicant.fullName}
+                              slug={'careers-applicant-status-' + applicant.id}
+                            />
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex flex-wrap gap-1.5">
@@ -782,8 +828,8 @@ export const AdminCmsCareers: React.FC = () => {
           </>
         }
       >
-        <form id="cms-career-position-form" onSubmit={savePosition} className="space-y-4">
-          <section className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_220px]">
+        <form id="cms-career-position-form" data-ams-feature-slug="cms-career-position-form" onSubmit={savePosition} className="cms-career-editor-form space-y-5">
+          <section className="grid gap-3 rounded-card border border-line bg-bg p-4 sm:grid-cols-[minmax(0,1fr)_240px]">
             <Field label="URL slug" required>
               <input className={inputClass + ' font-mono'} value={draft.slug} onChange={event => updateDraft('slug', slugify(event.target.value))} placeholder="ui-ux-product-designer" required />
             </Field>
@@ -796,13 +842,15 @@ export const AdminCmsCareers: React.FC = () => {
             </label>
           </section>
 
-          <div className="grid gap-4 xl:grid-cols-2">
-            <section className="space-y-3 rounded-card border border-line bg-bg p-3.5">
+          <div className="grid min-w-0 gap-4 xl:grid-cols-2">
+            <section className="cms-career-language-panel min-w-0 space-y-4 rounded-card border border-line bg-bg p-4">
               <div className="flex items-center gap-2 border-b border-line pb-2.5">
                 <span className="flex h-6 w-6 items-center justify-center rounded-badge border border-line bg-panel text-[10px] font-semibold text-fg">EN</span>
                 <h3 className="text-xs font-semibold text-fg">English content</h3>
               </div>
-              <Field label="Job title" required><input className={inputClass} value={draft.title} onChange={event => {
+              <div className="cms-career-editor-group space-y-3">
+                <h4 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Role details</h4>
+                <Field label="Job title" required><input className={inputClass} value={draft.title} onChange={event => {
                 const title = event.target.value;
                 setDraft(current => ({ ...current, title, slug: editorMode === 'create' && (!current.slug || current.slug === slugify(current.title)) ? slugify(title) : current.slug }));
               }} required placeholder="Frontend Engineer" /></Field>
@@ -813,18 +861,27 @@ export const AdminCmsCareers: React.FC = () => {
                 <Field label="Employment type"><input className={inputClass} value={draft.type} onChange={event => updateDraft('type', event.target.value)} placeholder="Full Time / Contract" /></Field>
                 <Field label="Badge"><input className={inputClass} value={draft.badge} onChange={event => updateDraft('badge', event.target.value)} placeholder="Full Time • On-site" /></Field>
               </div>
-              <Field label="Short description"><textarea className={textareaClass} value={draft.summary} onChange={event => updateDraft('summary', event.target.value)} placeholder="Describe the role and its impact..." /></Field>
+              </div>
+              <div className="cms-career-editor-group space-y-3">
+                <h4 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Description & compensation</h4>
+                <Field label="Short description"><textarea className={textareaClass} value={draft.summary} onChange={event => updateDraft('summary', event.target.value)} placeholder="Describe the role and its impact..." /></Field>
               <Field label="Compensation"><input className={inputClass} value={draft.compensation} onChange={event => updateDraft('compensation', event.target.value)} placeholder="Salary, benefits, or commission" /></Field>
+              </div>
+              <div className="cms-career-editor-group space-y-3">
+                <h4 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Responsibilities & requirements</h4>
               <Field label="Responsibilities (one per line)"><textarea className={textareaClass + ' min-h-[130px]'} value={listToText(draft.responsibilities)} onChange={event => updateDraft('responsibilities', textToList(event.target.value))} placeholder={'Own the feature lifecycle\nCollaborate with design and engineering'} /></Field>
               <Field label="Requirements (one per line)"><textarea className={textareaClass + ' min-h-[130px]'} value={listToText(draft.requirements)} onChange={event => updateDraft('requirements', textToList(event.target.value))} placeholder={'Strong portfolio\nClear written communication'} /></Field>
+              </div>
             </section>
 
-            <section className="space-y-3 rounded-card border border-line bg-bg p-3.5">
+            <section className="cms-career-language-panel min-w-0 space-y-4 rounded-card border border-line bg-bg p-4">
               <div className="flex items-center gap-2 border-b border-line pb-2.5">
                 <span className="flex h-6 w-6 items-center justify-center rounded-badge border border-line bg-panel text-[10px] font-semibold text-fg">ID</span>
                 <h3 className="text-xs font-semibold text-fg">Konten Bahasa Indonesia</h3>
               </div>
-              <Field label="Judul lowongan" required><input className={inputClass} value={draft.titleId} onChange={event => updateDraft('titleId', event.target.value)} required placeholder="Frontend Engineer" /></Field>
+              <div className="cms-career-editor-group space-y-3">
+                <h4 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Informasi peran</h4>
+                <Field label="Judul lowongan" required><input className={inputClass} value={draft.titleId} onChange={event => updateDraft('titleId', event.target.value)} required placeholder="Frontend Engineer" /></Field>
               <Field label="Departemen" required><input className={inputClass} value={draft.departmentId} onChange={event => updateDraft('departmentId', event.target.value)} required placeholder="Innovation Development" /></Field>
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="Lokasi"><input className={inputClass} value={draft.locationId} onChange={event => updateDraft('locationId', event.target.value)} placeholder="Tangerang Selatan / Remote" /></Field>
@@ -832,10 +889,17 @@ export const AdminCmsCareers: React.FC = () => {
                 <Field label="Jenis pekerjaan"><input className={inputClass} value={draft.typeId} onChange={event => updateDraft('typeId', event.target.value)} placeholder="Full Time / Kontrak" /></Field>
                 <Field label="Badge"><input className={inputClass} value={draft.badgeId} onChange={event => updateDraft('badgeId', event.target.value)} placeholder="Full Time • On-site" /></Field>
               </div>
-              <Field label="Deskripsi singkat"><textarea className={textareaClass} value={draft.summaryId} onChange={event => updateDraft('summaryId', event.target.value)} placeholder="Jelaskan peran, tanggung jawab, dan dampaknya..." /></Field>
+              </div>
+              <div className="cms-career-editor-group space-y-3">
+                <h4 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Deskripsi & kompensasi</h4>
+                <Field label="Deskripsi singkat"><textarea className={textareaClass} value={draft.summaryId} onChange={event => updateDraft('summaryId', event.target.value)} placeholder="Jelaskan peran, tanggung jawab, dan dampaknya..." /></Field>
               <Field label="Kompensasi"><input className={inputClass} value={draft.compensationId} onChange={event => updateDraft('compensationId', event.target.value)} placeholder="Gaji, benefit, atau komisi" /></Field>
+              </div>
+              <div className="cms-career-editor-group space-y-3">
+                <h4 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Tanggung jawab & persyaratan</h4>
               <Field label="Tanggung jawab (satu per baris)"><textarea className={textareaClass + ' min-h-[130px]'} value={listToText(draft.responsibilitiesId)} onChange={event => updateDraft('responsibilitiesId', textToList(event.target.value))} placeholder={'Mengelola proses delivery fitur\nBerkolaborasi dengan tim desain dan engineering'} /></Field>
               <Field label="Persyaratan (satu per baris)"><textarea className={textareaClass + ' min-h-[130px]'} value={listToText(draft.requirementsId)} onChange={event => updateDraft('requirementsId', textToList(event.target.value))} placeholder={'Portofolio yang relevan\nKomunikasi tertulis yang baik'} /></Field>
+              </div>
             </section>
           </div>
         </form>
