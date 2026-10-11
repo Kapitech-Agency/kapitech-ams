@@ -394,9 +394,9 @@ test('CMS data table pagination stays inside each canonical table shell', async 
   ];
   for (const path of paths) {
     const page = await read(path);
-    const header = page.match(/<AdminModuleHeader[\\s\\S]*?\\btitle=/);
+    const header = page.match(/<AdminModuleHeader[\s\S]*?\btitle=/);
     assert.ok(header, path + ' must use the shared module header');
-    assert.doesNotMatch(header[0], /\\bicon\\s*=/, path + ' header must not contain a decorative icon');
+    assert.doesNotMatch(header[0], /\bicon\s*=/, path + ' header must not contain a decorative icon');
 
     let cursor = 0;
     let shellCount = 0;
@@ -411,6 +411,6 @@ test('CMS data table pagination stays inside each canonical table shell', async 
       cursor = shellEnd + '</AdminDataTableShell>'.length;
     }
     assert.ok(shellCount >= 1, path + ' must use the shared table shell');
-    assert.doesNotMatch(page, /className="ams-table\\b/, path + ' must use canonical AMS table styles');
+    assert.doesNotMatch(page, /className="ams-table\b/, path + ' must use canonical AMS table styles');
   }
 });
