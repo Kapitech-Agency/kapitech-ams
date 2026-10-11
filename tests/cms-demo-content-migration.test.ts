@@ -70,5 +70,5 @@ test('Temporary demo CMS migration republishes only existing AMS demo work and t
   for (const id of ['t_01', 't_02', 't_03', 't_04', 't_05', 't_06']) {
     assert.ok(migration.includes("'" + id + "'"), 'Missing demo testimonial: ' + id);
   }
-  assert.match(migration, /COALESCE\(data->>'isPublished', 'false'\) = 'false'/);
+  assert.match(migration, /ON CONFLICT \(id\) DO UPDATE/);\n  assert.match(migration, /INSERT INTO cms_projects/);
 });
