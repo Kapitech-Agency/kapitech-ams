@@ -81,3 +81,9 @@ test('Frontend API client literal endpoints exist on the server route surface', 
     assert.ok(exists, 'Frontend API endpoint is not implemented by server routes: ' + clientPath);
   }
 });
+test('Public CMS endpoints require explicit publication state', async () => {
+  const source = await fs.readFile(path.join(root, 'server/routes.ts'), 'utf8');
+  assert.match(source, /services = canManage \? source : source\.filter\(\(item: any\) => item\.isPublished === true\)/);
+  assert.match(source, /projects = canManage \? source : source\.filter\(\(item: any\) => item\.isPublished === true\)/);
+  assert.match(source, /testimonials = canManage \? source : source\.filter\(\(item: any\) => item\.isPublished === true\)/);
+});
