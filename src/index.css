@@ -159,11 +159,47 @@
 .ams-shell [data-status=success]{color:var(--success)}.ams-shell [data-status=warning]{color:var(--warning)}.ams-shell [data-status=danger]{color:var(--danger)}.ams-shell [data-status=info]{color:var(--info)}
 .ams-shell .overflow-x-auto{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent;-webkit-overflow-scrolling:touch}
 .ams-shell .overflow-x-auto::-webkit-scrollbar{width:4px;height:6px}.ams-shell .overflow-x-auto::-webkit-scrollbar-track{background:transparent}.ams-shell .overflow-x-auto::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
-.ams-shell input,.ams-shell select,.ams-shell textarea{min-height:36px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);font-size:13px;line-height:18px;outline:none;transition:border-color .15s ease,box-shadow .15s ease}.ams-shell input::placeholder,.ams-shell textarea::placeholder{color:var(--muted)}.ams-shell input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not([class*="px-"]):not([class*="pl-"]){padding-left:12px}.ams-shell input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not([class*="px-"]):not([class*="pr-"]){padding-right:12px}.ams-shell input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not([class*="py-"]):not([class*="p-"]){padding-block:8px}.ams-shell select:not([class*="px-"]):not([class*="pl-"]){padding-left:12px}.ams-shell select:not([class*="px-"]):not([class*="pr-"]){padding-right:12px}.ams-shell textarea:not([class*="px-"]):not([class*="pl-"]){padding-left:12px}.ams-shell textarea:not([class*="px-"]):not([class*="pr-"]){padding-right:12px}.ams-shell textarea:not([class*="py-"]):not([class*="p-"]){padding-block:8px}.ams-shell input:focus,.ams-shell select:focus,.ams-shell textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 22%,transparent)}
-.ams-shell input:disabled,.ams-shell select:disabled,.ams-shell textarea:disabled{opacity:.55;cursor:not-allowed}
+/* Base controls are intentionally low-specificity defaults. Component classes and
+   Tailwind state utilities must be able to define their own dimensions and focus. */
+:where(.ams-shell) :where(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]), select, textarea) {
+  min-height:36px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:var(--panel);
+  color:var(--text);
+  font-size:13px;
+  line-height:18px;
+  outline:none;
+  transition:border-color .15s ease,box-shadow .15s ease;
+}
+:where(.ams-shell) :where(input,textarea)::placeholder { color:var(--muted); }
+.ams-shell input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not([class*="px-"]):not([class*="pl-"]){padding-left:12px}
+.ams-shell input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not([class*="px-"]):not([class*="pr-"]){padding-right:12px}
+.ams-shell input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]):not([type=color]):not([class*="py-"]):not([class*="p-"]){padding-block:8px}
+.ams-shell select:not([class*="px-"]):not([class*="pl-"]){padding-left:12px}
+.ams-shell select:not([class*="px-"]):not([class*="pr-"]){padding-right:12px}
+.ams-shell textarea:not([class*="px-"]):not([class*="pl-"]){padding-left:12px}
+.ams-shell textarea:not([class*="px-"]):not([class*="pr-"]){padding-right:12px}
+.ams-shell textarea:not([class*="py-"]):not([class*="p-"]){padding-block:8px}
+:where(.ams-shell) :where(input,select,textarea):focus { border-color:var(--accent); box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 22%,transparent); }
+:where(.ams-shell) :where(input,select,textarea):disabled { opacity:.55; cursor:not-allowed; }
 
-/* One visible keyboard-focus language across module controls and portalled UI. */
-.ams-shell :where(a,button,[role="button"],input,select,textarea,[tabindex]):focus-visible,.ams-portal-root :where(a,button,[role="button"],input,select,textarea,[tabindex]):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+:where(.ams-shell) input[type="checkbox"],
+:where(.ams-shell) input[type="radio"] {
+  width:16px;
+  height:16px;
+  min-width:16px;
+  min-height:16px;
+  padding:0;
+  accent-color:var(--accent);
+}
+
+/* A low-specificity keyboard-focus fallback. Component-level focus-visible utilities
+   intentionally win, preventing a global outline from stacking on top of custom rings. */
+:where(.ams-shell,.ams-portal-root) :where(a,button,[role="button"],input,select,textarea,[tabindex]):focus-visible {
+  outline:2px solid var(--accent);
+  outline-offset:2px;
+}
 .ams-shell .ams-page-header,.ams-shell .ams-dashboard-header{min-width:0;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--line)}
 .ams-shell .ams-page-header>*,.ams-shell .ams-dashboard-header>*{min-width:0}
 .ams-shell .ams-page-shell>.fixed{margin-top:0}
