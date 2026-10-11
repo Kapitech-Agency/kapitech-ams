@@ -83,12 +83,12 @@ test('Frontend API client literal endpoints exist on the server route surface', 
     assert.ok(exists, 'Frontend API endpoint is not implemented by server routes: ' + clientPath);
   }
 });
-test('Public CMS endpoints require explicit publication state', async () => {
+test('Public CMS endpoints preserve legacy content and hide explicit drafts', async () => {
   const source = await fs.readFile(path.join(root, 'server/routes.ts'), 'utf8');
-  assert.match(source, /const services = canManage[\s\S]{0,220}item\.isPublished === true/);
-  assert.match(source, /const projects = canManage \? source : source\.filter\(\(item: any\) => item\.isPublished === true\)/);
-  assert.match(source, /const testimonials = canManage \? source : source\.filter\(\(item: any\) => item\.isPublished === true\)/);
-  assert.match(source, /replace\(\/\^seed_srv_\//);
+  assert.match(source, /const services = canManage[\\s\\S]{0,220}item\\.isPublished === true/);
+  assert.match(source, /const projects = canManage \\? source : source\\.filter\\(\\(item: any\\) => item\\.isPublished !== false\\)/);
+  assert.match(source, /const testimonials = canManage \\? source : source\\.filter\\(\\(item: any\\) => item\\.isPublished !== false\\)/);
+  assert.match(source, /replace\\(\\/\\^seed_srv_\\//);
   assert.match(source, /mobile-app-design/);
 });
 test('Lead-to-client conversion is permission-checked, transactional, and idempotent', async () => {
