@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 // Shared module chrome renders the canonical ams-dashboard-header primitive.
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { 
   Inbox, 
@@ -37,22 +37,13 @@ import {
   LayoutGrid,
   Table as TableIcon,
   ChevronRight,
-  ShieldCheck,
   AlertCircle,
   X
 } from 'lucide-react';
 import { ContactSubmission, getSubmissionSlug, normalizeContactSubmission } from '../../lib/submissions';
-import { CrmLead } from '../../lib/crmStore';
-import { 
-  formatAmount, 
-  getActiveCurrency, 
-  CurrencyCode, 
-  CURRENCY_EVENT 
-} from '../../lib/currency';
 import { EmailForwardingGuideModal } from '../../components/EmailForwardingGuideModal';
 import { CannedResponsesModal } from '../../components/admin/inbox/CannedResponsesModal';
 import { CustomSelect } from '../../components/ui/CustomSelect';
-import { ConvertToCrmModal } from '../../components/admin/inbox/ConvertToCrmModal';
 import { Modal } from '../../components/ui/Modal';
 import { useLanguage } from '../../lib/LanguageContext';
 import { api } from '../../lib/apiClient';
@@ -62,7 +53,6 @@ import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminTablePaginati
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 export const AdminInbox: React.FC = () => {
   const { language } = useLanguage();
-  const navigate = useNavigate();
   const canManageCrm = hasAdminPermission('canManageCrm');
   type InboxTab = 'overview' | 'client' | 'jobs' | 'starred';
   const [searchParams] = useSearchParams();
@@ -74,8 +64,6 @@ export const AdminInbox: React.FC = () => {
   // Core Data & Currency
   const [submissions, setSubmissions] = useState<ContactSubmission[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
-  const [crmDeals, setCrmDeals] = useState<CrmLead[]>([]);
 
   // Filters & Views
   const [page, setPage] = useState(1);
@@ -94,7 +82,6 @@ export const AdminInbox: React.FC = () => {
 
   // Modals & Feedback
   const [isCannedModalOpen, setIsCannedModalOpen] = useState(false);
-  const [isCrmModalOpen, setIsCrmModalOpen] = useState(false);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [testSending, setTestSending] = useState(false);
@@ -102,27 +89,11 @@ export const AdminInbox: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<{ text: string; link?: string; linkText?: string; tone?: 'success' | 'danger' } | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ type: 'delete' | 'mark-read'; id?: string; count?: number; targetStatus?: ContactSubmission['status'] } | null>(null);
 
-  // Sync Currency
-  useEffect(() => {
-    const handleCurrencyChange = (e: any) => {
-      setCurrency(e.detail?.currency || getActiveCurrency());
-    };
-    window.addEventListener(CURRENCY_EVENT, handleCurrencyChange);
-    return () => window.removeEventListener(CURRENCY_EVENT, handleCurrencyChange);
-  }, []);
-
   // Server-backed inbox refresh. The API is the only source of truth.
   const refreshInbox = async () => {
     setLoading(true);
     try {
-      const [res, dealsRes] = await Promise.all([
-        api.leads.getAll(),
-        api.crm.getDeals()
-      ]);
-
-      if (dealsRes.success && Array.isArray(dealsRes.data?.deals)) {
-        setCrmDeals(dealsRes.data.deals as CrmLead[]);
-      }
+      const res = await api.leads.getAll();
 
       if (!res.success || !Array.isArray(res.data?.leads)) {
         setToastMessage({
@@ -244,7 +215,7 @@ export const AdminInbox: React.FC = () => {
   // Status update
   const handleStatusChange = async (id: string, newStatus: ContactSubmission['status']) => {
     if (!canManageCrm) {
-      setToastMessage({ text: language === 'id' ? 'Anda tidak memiliki izin mengelola Leads & Inbox.' : 'You do not have CRM permission.', tone: 'danger' });
+      setToastMessage({ text: language === 'id' ? 'Anda tidak memiliki izin mengelola inbox.' : 'You do not have permission to manage the inbox.', tone: 'danger' });
       window.setTimeout(() => setToastMessage(null), 3000);
       return;
     }
@@ -269,7 +240,7 @@ export const AdminInbox: React.FC = () => {
   // Priority update
   const handlePriorityChange = async (id: string, newPriority: ContactSubmission['priority']) => {
     if (!canManageCrm) {
-      setToastMessage({ text: language === 'id' ? 'Anda tidak memiliki izin mengelola Leads & Inbox.' : 'You do not have CRM permission.', tone: 'danger' });
+      setToastMessage({ text: language === 'id' ? 'Anda tidak memiliki izin mengelola inbox.' : 'You do not have permission to manage the inbox.', tone: 'danger' });
       window.setTimeout(() => setToastMessage(null), 3000);
       return;
     }
@@ -291,7 +262,7 @@ export const AdminInbox: React.FC = () => {
   // Assignee update
   const handleAssigneeChange = async (id: string, assignee: string) => {
     if (!canManageCrm) {
-      setToastMessage({ text: language === 'id' ? 'Anda tidak memiliki izin mengelola Leads & Inbox.' : 'You do not have CRM permission.', tone: 'danger' });
+      setToastMessage({ text: language === 'id' ? 'Anda tidak memiliki izin mengelola inbox.' : 'You do not have permission to manage the inbox.', tone: 'danger' });
       window.setTimeout(() => setToastMessage(null), 3000);
       return;
     }
@@ -313,7 +284,7 @@ export const AdminInbox: React.FC = () => {
   // Star toggle
   const handleToggleStar = async (e: React.MouseEvent, id: string, currentStarred?: boolean) => {
     if (!canManageCrm) {
-      setToastMessage({ text: language === 'id' ? 'Anda tidak memiliki izin mengelola Leads & Inbox.' : 'You do not have CRM permission.', tone: 'danger' });
+      setToastMessage({ text: language === 'id' ? 'Anda tidak memiliki izin mengelola inbox.' : 'You do not have permission to manage the inbox.', tone: 'danger' });
       window.setTimeout(() => setToastMessage(null), 3000);
       return;
     }
@@ -461,34 +432,16 @@ export const AdminInbox: React.FC = () => {
     }
   };
 
-  // Estimated deal value parser from string
-  const estimateDealValue = (sub: ContactSubmission): number => {
-    if (sub.budget) {
-      const b = sub.budget.toLowerCase();
-      if (b.includes('25,000') || b.includes('50,000') || b.includes('100jt') || b.includes('100m')) return 120000000;
-      if (b.includes('10,000') || b.includes('50jt')) return 75000000;
-      if (b.includes('5,000') || b.includes('15,000') || b.includes('25jt')) return 45000000;
-    }
-    return 35000000;
-  };
-
   // Metrics calculation
   const metrics = useMemo(() => {
     const total = activeTabItems.length;
     const newCount = activeTabItems.filter((item) => item.status === 'new').length;
-    const convertedCount = activeTabItems.filter((item) =>
-      item.type === 'career'
-        ? item.status === 'hired'
-        : crmDeals.some((deal) => (deal as any).inquiryId === item.id)
-    ).length;
-    const conversionRate = total > 0 ? Math.round((convertedCount / total) * 100) : 0;
-    const totalPipelineValue = activeTabItems
-      .filter((item) => item.type !== 'career')
-      .reduce((acc, item) => acc + estimateDealValue(item), 0);
-    const interviewCount = activeTabItems.filter((item) => item.status === 'interview').length;
+    const hiredCount = activeTabItems.filter((item) => item.type === 'career' && item.status === 'hired').length;
+    const jobCount = activeTabItems.filter((item) => item.type === 'career').length;
+    const hiringRate = jobCount > 0 ? Math.round((hiredCount / jobCount) * 100) : 0;
 
-    return { total, newCount, convertedCount, conversionRate, totalPipelineValue, interviewCount };
-  }, [activeTabItems, crmDeals]);
+    return { total, newCount, hiredCount, hiringRate };
+  }, [activeTabItems]);
 
   // Filtering
   const filteredItems = useMemo(() => {
@@ -546,7 +499,7 @@ export const AdminInbox: React.FC = () => {
   // Export CSV
   const handleExportCSV = () => {
     if (submissions.length === 0) return;
-    const headers = ['ID', 'Slug', 'Date', 'Type', 'Status', 'Priority', 'Full Name', 'Email', 'Company', 'Phone', 'Services', 'Budget', 'Converted To CRM', 'Message', 'Source'];
+    const headers = ['ID', 'Slug', 'Date', 'Type', 'Status', 'Priority', 'Full Name', 'Email', 'Company', 'Phone', 'Services', 'Budget', 'Message', 'Source'];
     const rows = activeTabItems.map(s => [
       `"${s.id}"`,
       `"${getSubmissionSlug(s)}"`,
@@ -560,7 +513,6 @@ export const AdminInbox: React.FC = () => {
       `"${s.phone || ''}"`,
       `"${(s.services || []).join(', ')}"`,
       `"${s.budget || ''}"`,
-      `"${crmDeals.some(d => (d as any).inquiryId === s.id) ? 'YES' : 'NO'}`,
       `"${(s.message || '').replace(/"/g, '""')}"`,
       `"${s.source || ''}"`
     ]);
@@ -686,12 +638,6 @@ export const AdminInbox: React.FC = () => {
     }
   };
 
-  // Find linked lead if converted
-  const linkedLead = useMemo(() => {
-    if (!selectedSubmission) return null;
-    return crmDeals.find(l => (l as any).inquiryId === selectedSubmission.id) || null;
-  }, [selectedSubmission, crmDeals]);
-
   return (
     <AdminPageShell featureSlug="inbox-module" className="ams-inbox-page">
       
@@ -732,8 +678,8 @@ export const AdminInbox: React.FC = () => {
               : 'Operational control center for inbound triage, monitoring, and follow-up.')
             : activeInboxTab === 'client'
               ? (language === 'id'
-                ? 'Kelola inquiry klien, kualifikasi peluang, dan konversi lead ke CRM.'
-                : 'Qualify client inquiries, manage opportunities, and move qualified leads into CRM.')
+                ? 'Kelola inquiry klien, prioritas tindak lanjut, dan status respons.'
+                : 'Review client inquiries, prioritize follow-ups, and track response status.')
               : activeInboxTab === 'jobs'
                 ? (language === 'id'
                   ? 'Kelola lamaran kerja dari screening sampai keputusan hiring.'
@@ -780,7 +726,7 @@ export const AdminInbox: React.FC = () => {
           <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
             <div>
               <h2 className="text-sm font-semibold text-fg">Client sales intake</h2>
-              <p className="mt-1 text-xs text-muted">Qualify website inquiries, protect response time, and move real opportunities into CRM.</p>
+              <p className="mt-1 text-xs text-muted">Review website inquiries, track response status, and keep follow-ups visible.</p>
             </div>
             <span className="text-[11px] font-medium tabular-nums text-muted">{activeTabItems.length} client inquiries</span>
           </div>
@@ -788,7 +734,7 @@ export const AdminInbox: React.FC = () => {
             { id: 'client-total', label: 'Total inquiries', value: activeTabItems.length, context: 'Inbound client requests', sparkline: [Math.max(0, activeTabItems.length - 2), activeTabItems.length] },
             { id: 'client-new', label: 'New', value: activeTabItems.filter((item) => item.status === 'new').length, context: 'Needs first review', sparkline: [0, activeTabItems.filter((item) => item.status === 'new').length], toneClassName: 'text-danger' },
             { id: 'client-review', label: 'In review', value: activeTabItems.filter((item) => item.status === 'in-review').length, context: 'Being qualified', sparkline: [0, activeTabItems.filter((item) => item.status === 'in-review').length], toneClassName: 'text-warning' },
-            { id: 'client-value', label: 'Opportunity value', value: formatAmount(metrics.totalPipelineValue, currency), context: 'Estimated active inbound', sparkline: activeTabItems.slice(0, 8).map(estimateDealValue), icon: <DollarSign size={16} strokeWidth={1.8} />, toneClassName: 'text-success' }
+            { id: 'client-contact-details', label: 'Contact details', value: activeTabItems.filter((item) => Boolean(item.email || item.phone)).length, context: 'Email or phone provided', sparkline: [0, activeTabItems.filter((item) => Boolean(item.email || item.phone)).length], icon: <Users size={16} strokeWidth={1.8} />, toneClassName: 'text-info' }
           ]} />
         </section>
       ) : activeInboxTab === 'jobs' ? (
@@ -804,7 +750,7 @@ export const AdminInbox: React.FC = () => {
             { id: 'jobs-total', label: 'Applications', value: activeTabItems.length, context: 'All candidate intake', sparkline: [Math.max(0, activeTabItems.length - 2), activeTabItems.length], icon: <Briefcase size={16} strokeWidth={1.8} /> },
             { id: 'jobs-new', label: 'Needs screening', value: activeTabItems.filter((item) => item.status === 'new').length, context: 'New applications', sparkline: [0, activeTabItems.filter((item) => item.status === 'new').length], toneClassName: 'text-danger' },
             { id: 'jobs-active', label: 'In process', value: activeTabItems.filter((item) => ['screening', 'shortlisted', 'interview'].includes(item.status)).length, context: 'Screening to interview', sparkline: [0, activeTabItems.filter((item) => ['screening', 'shortlisted', 'interview'].includes(item.status)).length], toneClassName: 'text-info' },
-            { id: 'jobs-hired', label: 'Hired', value: activeTabItems.filter((item) => item.status === 'hired').length, context: metrics.conversionRate + '% of applications', sparkline: [0, activeTabItems.filter((item) => item.status === 'hired').length], toneClassName: 'text-success' }
+            { id: 'jobs-hired', label: 'Hired', value: metrics.hiredCount, context: metrics.hiringRate + '% of applications', sparkline: [0, metrics.hiredCount], toneClassName: 'text-success' }
           ]} />
         </section>
       ) : (
@@ -819,7 +765,7 @@ export const AdminInbox: React.FC = () => {
           <AdminMetricStrip slug="inbox-starred-kpis" className="lg:grid-cols-4" metrics={[
             { id: 'starred-total', label: 'Starred', value: activeTabItems.length, context: 'Saved records', sparkline: [Math.max(0, activeTabItems.length - 2), activeTabItems.length], icon: <Star size={16} strokeWidth={1.8} /> },
             { id: 'starred-critical', label: 'Urgent / high', value: activeTabItems.filter((item) => item.priority === 'urgent' || item.priority === 'high').length, context: 'Priority follow-up', sparkline: [0, activeTabItems.filter((item) => item.priority === 'urgent' || item.priority === 'high').length], toneClassName: 'text-danger' },
-            { id: 'starred-clients', label: 'Client records', value: activeTabItems.filter((item) => item.type !== 'career').length, context: 'Sales opportunities', sparkline: [0, activeTabItems.filter((item) => item.type !== 'career').length] },
+            { id: 'starred-clients', label: 'Client inquiries', value: activeTabItems.filter((item) => item.type !== 'career').length, context: 'Client follow-up', sparkline: [0, activeTabItems.filter((item) => item.type !== 'career').length] },
             { id: 'starred-candidates', label: 'Candidates', value: activeTabItems.filter((item) => item.type === 'career').length, context: 'Recruitment follow-up', sparkline: [0, activeTabItems.filter((item) => item.type === 'career').length] }
           ]} />
         </section>
@@ -922,13 +868,12 @@ export const AdminInbox: React.FC = () => {
       {/* Client pipeline context card */}
       {activeInboxTab === 'client' && viewMode === 'split' && (
         <section data-ams-feature-slug="inbox-client-pipeline" data-ams-slug="inbox-client-pipeline" className="rounded-card border border-line bg-panel p-3.5">
-          <div className="mb-3 flex items-center justify-between gap-3"><div><h3 className="text-sm font-semibold text-fg">Lead pipeline</h3><p className="mt-0.5 text-[11px] text-muted">Qualify inquiries before moving real opportunities into CRM.</p></div><span className="text-[11px] tabular-nums text-muted">{activeTabItems.length} inquiries</span></div>
+          <div className="mb-3 flex items-center justify-between gap-3"><div><h3 className="text-sm font-semibold text-fg">Inquiry status</h3><p className="mt-0.5 text-[11px] text-muted">Track client inquiries by status and follow-up stage.</p></div><span className="text-[11px] tabular-nums text-muted">{activeTabItems.length} inquiries</span></div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {[
               {key:'new',label:'New'},{key:'in-review',label:'In review'},{key:'contacted',label:'Contacted'},{key:'closed',label:'Closed'}
             ].map((stage)=>{
               const count=activeTabItems.filter((item)=>item.status===stage.key).length;
-              const value=activeTabItems.filter((item)=>item.status===stage.key).reduce((sum,item)=>sum+estimateDealValue(item),0);
               const active = filterStatus === stage.key;
               return <button
                 type="button"
@@ -945,7 +890,7 @@ export const AdminInbox: React.FC = () => {
                   <span className={'text-[10px] font-medium ' + (active ? 'text-fg' : 'text-muted')}>{stage.label}</span>
                   <span className={'rounded-badge border px-1.5 py-0.5 text-[10px] font-medium tabular-nums ' + (active ? 'border-accent/20 bg-bg text-fg' : 'border-line bg-panel text-muted')}>{count}</span>
                 </div>
-                <p className={'mt-2 truncate text-[11px] font-medium tabular-nums ' + (active ? 'text-fg' : 'text-muted')}>{formatAmount(value, currency)}</p>
+                <p className={'mt-2 text-[11px] font-medium ' + (active ? 'text-fg' : 'text-muted')}>{count} {count === 1 ? 'inquiry' : 'inquiries'}</p>
               </button>;
             })}
           </div>
@@ -1406,7 +1351,7 @@ export const AdminInbox: React.FC = () => {
                   <th className="p-3">{activeInboxTab === 'jobs' ? (language === 'id' ? 'Kandidat & Posisi' : 'Candidate & Role') : activeInboxTab === 'client' ? (language === 'id' ? 'Klien & Perusahaan' : 'Client & Company') : (language === 'id' ? 'Inbound & Konteks' : 'Inbound & Context')}</th>
                   <th className="p-3">{language === 'id' ? 'Kanal' : 'Channel'}</th>
                   <th className="p-3">{activeInboxTab === 'jobs' ? (language === 'id' ? 'Skill / Spesialisasi' : 'Skills / Specialty') : activeInboxTab === 'client' ? (language === 'id' ? 'Layanan Diminta' : 'Requested Services') : (language === 'id' ? 'Layanan / Spesialisasi' : 'Services / Specialty')}</th>
-                  <th className="p-3">{activeInboxTab === 'jobs' ? (language === 'id' ? 'Pengalaman' : 'Experience') : activeInboxTab === 'client' ? (language === 'id' ? 'Estimasi Nilai' : 'Valuation') : (language === 'id' ? 'Nilai / Pengalaman' : 'Value / Experience')}</th>
+                  <th className="p-3">{activeInboxTab === 'jobs' ? (language === 'id' ? 'Pengalaman' : 'Experience') : activeInboxTab === 'client' ? (language === 'id' ? 'Anggaran' : 'Budget') : (language === 'id' ? 'Anggaran / Pengalaman' : 'Budget / Experience')}</th>
                   <th className="p-3">{language === 'id' ? 'Status' : 'Status'}</th>
                   <th className="p-3">{language === 'id' ? 'Waktu' : 'Date'}</th>
                   <th className="p-3 text-right">{language === 'id' ? 'Aksi' : 'Actions'}</th>
@@ -1422,7 +1367,6 @@ export const AdminInbox: React.FC = () => {
                   </tr>
                 ) : (
                   pagedItems.map((item) => {
-                    const isConverted = item.type !== 'career' && crmDeals.some(d => (d as any).inquiryId === item.id);
                     return (
                       <tr 
                         key={item.id}
@@ -1446,11 +1390,6 @@ export const AdminInbox: React.FC = () => {
                         <td className="p-3">
                           <div className="font-semibold text-fg font-sans text-sm flex items-center gap-1.5">
                             <span>{item.fullName}</span>
-                            {isConverted && item.type !== 'career' && (
-                              <span className="text-[9px] font-sans px-1.5 py-0.2 rounded-badge bg-success/10 text-success border border-success/30">
-                                CRM ✓
-                              </span>
-                            )}
                             {item.type === 'career' && item.status === 'hired' && (
                               <span className="text-[9px] font-sans px-1.5 py-0.2 rounded-badge bg-success/10 text-success border border-success/30">
                                 Hired ✓
@@ -1496,7 +1435,7 @@ export const AdminInbox: React.FC = () => {
                         <td className="p-3 font-semibold text-fg">
                           {activeInboxTab === 'jobs'
                             ? (item.experienceYears ? item.experienceYears + ' yrs' : '-')
-                            : formatAmount(estimateDealValue(item), currency)}
+                            : (item.budget || (language === 'id' ? 'Tidak ditentukan' : 'Not provided'))}
                         </td>
 
                         {/* Status & Priority */}
@@ -1570,7 +1509,6 @@ export const AdminInbox: React.FC = () => {
             {filteredItems.length > 0 ? (
               filteredItems.map((item) => {
                 const isSelected = selectedSubmission?.id === item.id;
-                const isConverted = crmDeals.some(d => (d as any).inquiryId === item.id);
                 return (
                   <div key={item.id} onClick={() => handleSelectSubmission(item)} className={`group relative cursor-pointer rounded-card border p-3.5 font-sans transition-colors ${
                     isSelected ? 'border-accent/30 bg-accent/8' : item.status === 'new' ? 'border-danger/30 bg-panel hover:border-danger/50' : 'border-line bg-panel hover:bg-panel-hover'
@@ -1580,7 +1518,6 @@ export const AdminInbox: React.FC = () => {
                         {renderChannelBadge(item.type)}
                         {renderStatusBadge(item.status)}
                         {renderPriorityBadge(item.priority)}
-                        {isConverted && <span className="rounded-badge border border-success/30 bg-success/10 px-1.5 py-0.5 text-[9px] font-semibold text-success">CRM ✓</span>}
                       </div>
                       <div className="flex shrink-0 items-center gap-1.5">
                         <button type="button" onClick={(event) => handleToggleStar(event, item.id, item.starred)} disabled={!canManageCrm} className="inline-flex h-9 w-9 items-center justify-center rounded-control text-muted hover:bg-warning/10 hover:text-warning focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-50" aria-label={item.starred ? 'Unstar record' : 'Star record'}>
@@ -1594,7 +1531,7 @@ export const AdminInbox: React.FC = () => {
                         <ProfileIdentity profile={{ name: item.fullName || 'Anonymous', role: item.positionTitle || (item.type === 'career' ? 'Candidate' : 'Contact'), contextLabel: item.type === 'career' ? item.positionTitle : item.company, companyEmail: item.email, phone: item.phone }} size="sm" showRole={false} />
                         <p className="mt-1 truncate text-[11px] text-muted">{item.type === 'career' ? [item.positionTitle, item.specialty, item.location].filter(Boolean).join(' · ') : (item.company || item.email)}</p>
                       </div>
-                      <span className="shrink-0 text-xs font-semibold tabular-nums text-fg">{item.type === 'career' ? (item.experienceYears ? item.experienceYears + ' yrs' : '-') : formatAmount(estimateDealValue(item), currency)}</span>
+                      <span className="shrink-0 text-xs font-semibold tabular-nums text-fg">{item.type === 'career' ? (item.experienceYears ? item.experienceYears + ' yrs' : '-') : (item.budget || (language === 'id' ? 'Tidak ditentukan' : 'Not provided'))}</span>
                     </div>
                     <div className="mt-2 flex flex-wrap gap-1">
                       {(item.type === 'career' ? [item.positionTitle, item.specialty, item.experienceYears ? item.experienceYears + ' yrs' : undefined] : (item.services || [])).filter(Boolean).slice(0, 3).map((value, index) => (
@@ -1688,32 +1625,10 @@ export const AdminInbox: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Primary Action Ribbon (Quick Canned Replies, WA, Email, Convert to CRM) */}
+                {/* Primary Action Ribbon (Quick Responses and Direct Contact) */}
                 <div className="mb-5 flex flex-wrap items-center justify-between gap-2.5 rounded-card border border-line bg-bg p-3.5">
                   <div className="flex items-center gap-2 flex-wrap">
-                    {selectedSubmission.type !== 'career' ? (
-                      <>
-                        {crmDeals.some(d => (d as any).inquiryId === selectedSubmission.id) ? (
-                          <Link
-                            to="/admin/crm"
-                            className="h-9 px-3.5 rounded-control bg-success/10 text-success border border-success/30 hover:bg-success/20 text-xs font-sans font-semibold transition-all flex items-center gap-1.5"
-                          >
-                            <ShieldCheck size={14} />
-                            <span>{language === 'id' ? 'Buka Deal di CRM' : 'View CRM Deal'}</span>
-                            <ExternalLink size={11} />
-                          </Link>
-                        ) : (
-                          <button
-                            onClick={() => setIsCrmModalOpen(true)}
-                            disabled={!canManageCrm}
-                            className="h-9 px-3.5 rounded-control bg-success hover:bg-accent-hover text-fg text-xs font-sans font-semibold transition-colors flex items-center gap-1.5"
-                          >
-                            <Briefcase size={14} />
-                            <span>{language === 'id' ? 'Konversi ke CRM' : 'Convert to CRM'}</span>
-                          </button>
-                        )}
-                      </>
-                    ) : (
+                    {selectedSubmission.type === 'career' && (
                       <div className="flex items-center gap-1.5">
                         {selectedSubmission.resumeUrl && (
                           <a href={selectedSubmission.resumeUrl} target="_blank" rel="noopener noreferrer" className="h-9 px-3.5 rounded-control bg-info/10 text-info border border-info/30 hover:bg-info/15 text-xs font-sans font-semibold transition-colors flex items-center gap-1.5">
@@ -1905,13 +1820,15 @@ export const AdminInbox: React.FC = () => {
                           <span className="text-success font-semibold">
                             {selectedSubmission.type === 'career'
                               ? (selectedSubmission.experienceYears ? selectedSubmission.experienceYears + ' yrs' : '-')
-                              : formatAmount(estimateDealValue(selectedSubmission), currency)}
+                              : (selectedSubmission.budget || (language === 'id' ? 'Tidak ditentukan' : 'Not provided'))}
                           </span>
                         </div>
                         <p className="text-xs font-sans font-semibold text-fg">
                           {selectedSubmission.type === 'career'
                             ? (selectedSubmission.availability || selectedSubmission.location || (language === 'id' ? 'Ketersediaan belum ditentukan' : 'Availability not provided'))
-                            : (selectedSubmission.budget || selectedSubmission.rateCard || (language === 'id' ? 'Tidak ditentukan' : 'Unspecified'))}
+                            : (selectedSubmission.rateCard || (selectedSubmission.budget
+                               ? (language === 'id' ? 'Anggaran disampaikan oleh klien' : 'Client-provided budget')
+                               : (language === 'id' ? 'Tidak ditentukan' : 'Unspecified')))}
                         </p>
                       </div>
                     </div>
@@ -2087,11 +2004,11 @@ export const AdminInbox: React.FC = () => {
                   ? (activeInboxTab === 'jobs'
                     ? 'Klik salah satu lamaran untuk melihat detail kandidat, tautan resume/portfolio, catatan internal, dan status rekrutmen.'
                     : activeInboxTab === 'client'
-                      ? 'Klik salah satu inquiry untuk melihat detail brief, respon cepat, kontak WhatsApp/Email, dan konversi ke pipeline CRM.'
+                      ? 'Klik salah satu inquiry untuk melihat brief, respon cepat, kontak WhatsApp/Email, dan status tindak lanjut.'
                       : 'Klik salah satu record untuk melihat detail inbound, status, catatan internal, dan tindak lanjut.')
                   : (activeInboxTab === 'jobs'
                     ? 'Select an application to review candidate details, resume or portfolio links, internal notes, and hiring stage.'
-                    : 'Select an inquiry to review the brief, quick responses, WhatsApp/Email contact, and CRM conversion.')}
+                    : 'Select an inquiry to review the brief, quick responses, WhatsApp/Email contact, and follow-up status.')}
               </p>
             </div>
           )}
@@ -2157,25 +2074,6 @@ export const AdminInbox: React.FC = () => {
           isOpen={isCannedModalOpen}
           onClose={() => setIsCannedModalOpen(false)}
           submission={selectedSubmission}
-        />
-      )}
-
-      {/* Convert to CRM Lead Modal */}
-      {selectedSubmission && (
-        <ConvertToCrmModal
-          isOpen={isCrmModalOpen}
-          onClose={() => setIsCrmModalOpen(false)}
-          submission={selectedSubmission}
-          onConverted={(leadId, dealVal) => {
-            setToastMessage({
-              text: language === 'id'
-                ? `Lead "${selectedSubmission.fullName}" berhasil dikonversi ke CRM Pipeline (${formatAmount(dealVal, currency)})!`
-                : `Lead "${selectedSubmission.fullName}" converted to CRM Pipeline (${formatAmount(dealVal, currency)})!`,
-              link: '/admin/crm',
-              linkText: language === 'id' ? 'Buka CRM' : 'Open CRM'
-            });
-            setTimeout(() => setToastMessage(null), 5000);
-          }}
         />
       )}
 
