@@ -69,4 +69,6 @@ Restore utility:
 
 `node scripts/restore-ams-db.mjs /absolute/path/to/backup.bak --force`
 
-The relational migration target is documented in `docs/relational-schema.sql`. Keep the current encrypted store until relational migration reconciliation and rollback tests are complete.
+PostgreSQL is the authoritative data source in production. Encrypted JSON persistence remains available for controlled development/test or an explicitly approved rollback only. Never switch production back to JSON without an approved rollback plan, a verified backup, and reconciliation evidence.
+
+Release readiness: an authorized security/IT operator must verify `GET /api/system/production-readiness` returns HTTP 200 with `productionReady=true`. The gate checks all migrations and checksums shipped with the release, MFA coverage, reconciliation evidence, backup/restore status, durable document storage, and enabled notification channels. See `docs/production-readiness-gate.md` and `docs/production-cutover-checklist.md`.
