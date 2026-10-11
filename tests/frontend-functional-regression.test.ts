@@ -297,18 +297,20 @@ test('Finance tables recompute visible rows when page size changes', async () =>
   assert.match(page, /filteredExpenses\.slice\(start, start \+ expensePageSize\)[\s\S]{0,90}\[filteredExpenses, expensePage, expensePageSize\]/);
 });
 
-test('CMS case studies are drafts unless publication is explicitly enabled', async () => {
+test('CMS case studies preserve legacy publication and new records default to drafts', async () => {
   const cmsProjects = await read('src/pages/admin/AdminCmsProjects.tsx');
-  assert.match(cmsProjects, /isPublished: project\.isPublished === true/);
-  assert.doesNotMatch(cmsProjects, /isPublished: project\.isPublished !== false/);
+  const routes = await read('server/routes.ts');
+  assert.match(cmsProjects, /isPublished: project\.isPublished !== false/);
   assert.match(cmsProjects, /isPublished: false/);
   assert.match(cmsProjects, /Case study saved as a draft/);
   assert.match(cmsProjects, /Case study published successfully to live site!/);
+  assert.match(routes, /isPublished: item\.isPublished === true,[\s\S]{0,100}createdAt: now/);
+  assert.equal((routes.match(/source\.filter\(\(item: any\) => item\.isPublished !== false\)/g) || []).length, 2);
 });
 test('CMS testimonials require explicit publication and can be published from the directory', async () => {
   const testimonials = await read('src/pages/admin/AdminCmsTestimonials.tsx');
   const routes = await read('server/routes.ts');
-  assert.match(testimonials, /isPublished: item\?\.isPublished === true/);
+  assert.match(testimonials, /isPublished: item\?\.isPublished !== false/);
   assert.match(testimonials, /isPublished: false/);
   assert.match(testimonials, /handleTogglePublished/);
   assert.match(testimonials, /isPublished === true/);
