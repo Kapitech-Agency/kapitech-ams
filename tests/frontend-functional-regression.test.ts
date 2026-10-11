@@ -73,17 +73,14 @@ test('MFA enrolment route is accessible before module permissions are evaluated'
 });
 
 
-test('Client Lead Accounts use live CRM data in production and require CRM permission', async () => {
-  const page = await read('src/pages/admin/AdminClientLeadAccounts.tsx');
+test('Retired CRM routes redirect to supported workspaces', async () => {
   const app = await read('src/App.tsx');
   const layout = await read('src/pages/admin/AdminLayout.tsx');
-
-  assert.match(page, /const \[records, setRecords\] = useState<Lead\[]>\(\(\) => fixtureMode \? seed : \[\]\)/);
-  assert.match(page, /api\.crm\.getDeals\(\)/);
-  assert.match(page, /api\.crm\.createDeal\(/);
-  assert.match(page, /return 'Not scheduled'/);
-  assert.match(app, /path="clients\/lead-accounts" element=\{<ModuleRoute moduleKey="crm"/);
-  assert.match(layout, /isAllowed\('crm'\)/);
+  assert.ok(app.includes('<Route path="crm" element={<Navigate to="/admin/dashboard" replace />} />'));
+  assert.ok(app.includes('<Route path="proposals" element={<Navigate to="/admin/dashboard" replace />} />'));
+  assert.ok(app.includes('<Route path="approvals" element={<Navigate to="/admin/dashboard" replace />} />'));
+  assert.ok(app.includes('<Route path="clients/lead-accounts" element={<Navigate to="/admin/clients/all-clients" replace />} />'));
+  assert.equal(layout.includes("label: 'CRM'"), false);
 });
 
 test('Client Retainers are server-persisted and sample agreements are fixture-only', async () => {
