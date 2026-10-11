@@ -15,6 +15,7 @@ test('API route contract protects state-changing and private routes', async () =
     'POST /auth/mfa/verify',
     'POST /leads/submit',
     'POST /leads/resume-upload',
+    'POST /leads/brief-upload',
     'GET /cms/services',
     'GET /cms/projects',
     'GET /cms/testimonials',
@@ -83,9 +84,11 @@ test('Frontend API client literal endpoints exist on the server route surface', 
 });
 test('Public CMS endpoints require explicit publication state', async () => {
   const source = await fs.readFile(path.join(root, 'server/routes.ts'), 'utf8');
-  assert.match(source, /services = canManage \? source : source\.filter\(\(item: any\) => item\.isPublished === true\)/);
-  assert.match(source, /projects = canManage \? source : source\.filter\(\(item: any\) => item\.isPublished === true\)/);
-  assert.match(source, /testimonials = canManage \? source : source\.filter\(\(item: any\) => item\.isPublished === true\)/);
+  assert.match(source, /const services = canManage[\s\S]{0,220}item\.isPublished === true/);
+  assert.match(source, /const projects = canManage \? source : source\.filter\(\(item: any\) => item\.isPublished === true\)/);
+  assert.match(source, /const testimonials = canManage \? source : source\.filter\(\(item: any\) => item\.isPublished === true\)/);
+  assert.match(source, /replace\(\/\^seed_srv_\//);
+  assert.match(source, /mobile-app-design/);
 });
 test('Lead-to-client conversion is permission-checked, transactional, and idempotent', async () => {
   const routes = await fs.readFile(path.join(root, 'server/routes.ts'), 'utf8');
