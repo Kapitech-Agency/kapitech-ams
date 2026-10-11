@@ -64,7 +64,7 @@ Verified from `README.md` and `package.json`:
 | `--crimson-50` | `#fff1f3` | Light-mode tint backgrounds |
 | `--crimson-100` | `#ffe0e5` | Light-mode hover tint |
 | `--crimson-300` | `#ff9dac` | Secondary chart tint |
-| `--crimson-400` | `#ff4d6d` | **Accent text/icons on dark backgrounds** (`--accent-text`) |
+| `--crimson-400` | `#e83252` | **Accent text/icons on dark backgrounds** (`--accent-text`) |
 | `--crimson-500` | `#dc143c` | **Brand accent**: buttons, primary series, active indicator (`--accent`) |
 | `--crimson-600` | `#c40f34` | Button hover; accent text on light backgrounds |
 | `--crimson-700` | `#a10c2b` | Button pressed |
@@ -131,7 +131,7 @@ Put this in the app's main CSS file (usually `src/index.css`). Merge with what e
 }
 :root[data-theme="dark"] {
   --bg:#09090c; --panel:#0f0f14; --line:#20202a; --text:#f3f3f6; --muted:#8b8b99;
-  --accent-text:#ff4d6d;
+  --accent-text:#e83252;
   --series-2:#34d399; --series-3:#5b8cff; --series-4:#b9b9c6;
   --success:#34d399; --warning:#f5a524; --danger:#f97066; --info:#5b8cff;
 }
