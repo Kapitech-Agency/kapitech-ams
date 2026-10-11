@@ -373,10 +373,9 @@ export const TasksWorkspace: React.FC = () => {
         : nextStatus;
       const committedTask: TaskRecord = {
         ...previousTask,
-        ...(response.data?.task || {}),
-        id: previousTask.id,
         status: committedStatus,
         blocked: committedStatus === 'done' ? false : previousTask.blocked,
+        updatedAt: String(response.data?.task?.updatedAt || previousTask.updatedAt),
       };
       setRecords(current => current.map(item => item.id === committedTask.id ? committedTask : item));
       setSelectedTask(current => current?.id === committedTask.id ? committedTask : current);
@@ -738,8 +737,8 @@ export const TasksWorkspace: React.FC = () => {
       const savedTask = response.data?.task;
       const committedTask: TaskRecord = {
         ...nextTask,
-        ...(savedTask || {}),
         id: previousTask.id,
+        updatedAt: String(savedTask?.updatedAt || nextTask.updatedAt),
       };
       setRecords(current => current.map(item => item.id === committedTask.id ? committedTask : item));
       setSelectedTask(current => current?.id === committedTask.id ? committedTask : current);
