@@ -289,3 +289,10 @@ test('PostgreSQL notification read failure returns service unavailable instead o
   assert.match(handler, /res\.status\(503\)\.json/);
   assert.doesNotMatch(handler, /catch \(error\)[\s\S]{0,400}source = getDatabase\(\)\.notifications/);
 });
+
+test('Finance tables recompute visible rows when page size changes', async () => {
+  const page = await read('src/pages/admin/AdminInvoicing.tsx');
+  assert.match(page, /useMemo\(\(\) => \{[\s\S]{0,180}filteredInvoices\.slice\(start, start \+ invoicePageSize\)[\s\S]{0,80}\[filteredInvoices, invoicePage, invoicePageSize\]\)/);
+  assert.match(page, /incomeRows\.slice\(start, start \+ incomePageSize\)[\s\S]{0,90}\[incomeRows, incomePage, incomePageSize\]/);
+  assert.match(page, /filteredExpenses\.slice\(start, start \+ expensePageSize\)[\s\S]{0,90}\[filteredExpenses, expensePage, expensePageSize\]/);
+});
