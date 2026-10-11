@@ -6,7 +6,7 @@ import test from 'node:test';
 test('Retired CRM route redirects without loading a legacy page', () => {
   const source = fs.readFileSync(path.resolve(process.cwd(), 'src/App.tsx'), 'utf8');
   assert.ok(source.includes('<Route path="crm" element={<Navigate to="/admin/dashboard" replace />} />'));
-  assert.doesNotMatch(source, /pages\\/admin\\/AdminCrm/);
+  assert.doesNotMatch(source, /pages\/admin\/AdminCrm/);
 });
 test('Admin invoicing keeps financial mutations permission-gated and uses the shared AMS visual language', () => {
   const source = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInvoicing.tsx'), 'utf8');
