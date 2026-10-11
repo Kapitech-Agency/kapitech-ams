@@ -19,8 +19,9 @@ const normalizeCmsTestimonial = (item: TestimonialItem): TestimonialItem => ({
   company: String(item?.company || ''),
   location: String(item?.location || ''),
   rating: Number.isFinite(Number(item?.rating)) ? Math.min(5, Math.max(1, Number(item.rating))) : 5,
-  // The public CMS endpoint requires explicit approval; legacy/missing values are drafts.
-  isPublished: item?.isPublished === true,
+  // Preserve legacy testimonials without the newer flag; explicit false remains a draft.
+  // New testimonial forms still start with isPublished: false.
+  isPublished: item?.isPublished !== false,
 });
 
 export const AdminCmsTestimonials: React.FC = () => {
