@@ -316,3 +316,14 @@ test('CMS testimonials require explicit publication and can be published from th
   assert.match(testimonials, /isPublished === true/);
   assert.match(routes, /isPublished: item\.isPublished === true,[\s\S]{0,100}createdAt: now/);
 });
+
+
+test('CMS uses canonical AMS table geometry without legacy scoped overrides', async () => {
+  const styles = await read('src/index.css');
+  assert.match(styles, /AMS CANONICAL DATA TABLE/);
+  assert.match(styles, /\.ams-shell table thead th\{[^}]*height:40px/);
+  assert.match(styles, /\.ams-shell table tbody td\{[^}]*height:40px/);
+  assert.doesNotMatch(styles, /\.ams-shell \.ams-cms-module table thead th\s*\{/);
+  assert.doesNotMatch(styles, /\.ams-shell \.ams-cms-module table tbody td\s*\{/);
+  assert.doesNotMatch(styles, /@media\s*\(max-width:\s*599px\)\s*\{\s*\.ams-shell \.ams-cms-module table\s*\{\s*min-width:\s*720px/s);
+});
