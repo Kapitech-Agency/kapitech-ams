@@ -390,4 +390,7 @@ test('Careers tabs, filters, and modal fields use consistent AMS interactions', 
   assert.doesNotMatch(careers, /<select\b/);
   assert.match(careers, /cms-career-language-panel/);
   assert.match(careers, /cms-career-position-form/);
+  assert.equal((careers.match(/className="cms-career-editor-group space-y-3"/g) || []).length, 6);
+  const styles = await read('src/index.css');
+  assert.match(styles, /\.ams-shell \.cms-career-editor-group \+ \.cms-career-editor-group/);
 });
