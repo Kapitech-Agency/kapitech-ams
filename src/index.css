@@ -194,9 +194,18 @@
   accent-color:var(--accent);
 }
 
-/* Low-specificity keyboard-focus fallback. Component-level states must win so a
-   global outline does not stack over a custom focus ring. */
-:where(.ams-shell,.ams-portal-root) :where(a,button,[role="button"],input,select,textarea,[tabindex]):focus-visible {
+/* Low-specificity fallback only for controls without their own outline or ring.
+   This avoids stacking the global outline over component focus states. */
+:where(.ams-shell,.ams-portal-root)
+:where(a,button,[role="button"],input,select,textarea,[tabindex]):focus-visible
+:where(
+  :not([class~="outline-none"])
+  :not([class~="focus:outline-none"])
+  :not([class~="focus-visible:outline-none"])
+  :not([class*="focus:ring-"])
+  :not([class*="focus-visible:ring-"])
+  :not([class*="focus-visible:outline-"])
+) {
   outline:2px solid var(--accent);
   outline-offset:2px;
 }
