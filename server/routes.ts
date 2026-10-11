@@ -3878,9 +3878,18 @@ apiRouter.delete('/vendors/:id', requireAuth, requirePermission('canManageVendor
   if (getDataSourceMode() === 'postgres') {
     const vendor = await postgresVendorRepository.findById(id);
     if (!vendor) { res.status(404).json({ success: false, error: 'Vendor not found.' }); return; }
-    const deleted = await postgresVendorRepository.delete(id, makeAuditEntry(req, 'VENDOR_DELETED', `Deleted vendor "${vendor.name}".`, 'warning'));
-    if (!deleted) { res.status(404).json({ success: false, error: 'Vendor not found.' }); return; }
-    res.json({ success: true, message: 'Vendor deleted.' });
+    try {
+      const deleted = await postgresVendorRepository.delete(id, makeAuditEntry(req, 'VENDOR_DELETED', `Deleted vendor "${vendor.name}".`, 'warning'));
+      if (!deleted) { res.status(404).json({ success: false, error: 'Vendor not found.' }); return; }
+      res.json({ success: true, message: 'Vendor deleted.' });
+    } catch (error) {
+      if (error && typeof error === 'object' && 'code' in error && error.code === '23503') {
+        res.status(409).json({ success: false, error: 'Vendor has linked financial records and cannot be deleted.' });
+        return;
+      }
+      console.error('[Vendors] Failed to delete vendor:', error);
+      res.status(503).json({ success: false, error: 'Vendor could not be deleted right now.' });
+    }
     return;
   }
   const db = getDatabase();
