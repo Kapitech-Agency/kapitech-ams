@@ -91,6 +91,10 @@ export interface AgencyExpense {
   date: string;
   recurringInterval?: 'monthly' | 'quarterly' | 'yearly' | 'none';
   receiptUrl?: string;
+  vendorId?: string;
+  vendorContractId?: string;
+  vendorPayment?: { vendorId: string; contractId: string; contractTitle?: string; reference?: string; notes?: string; legacyFormat?: boolean };
+  metadata?: Record<string, unknown>;
   recordedBy: string;
   createdAt?: string;
 }
