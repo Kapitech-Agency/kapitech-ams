@@ -366,7 +366,7 @@ test('CMS headers are text-only and directory tables share a unified pagination 
 
 test('AMS UI defaults no longer override component focus, form sizing, or compact pagination', async () => {
   const styles = await read('src/index.css');
-  assert.match(styles, /:where\(\.ams-shell,\.ams-portal-root\) :where\(a,button,\[role="button"\],input,select,textarea,\[tabindex\]\):focus-visible/);
+  assert.match(styles, /:where\(\.ams-shell,\.ams-portal-root\)\s*:where\(a,button,\[role="button"\],input,select,textarea,\[tabindex\]\):focus-visible/);
   assert.doesNotMatch(styles, /\.ams-shell :where\(a,button,\[role=button\],input,select,textarea,\[tabindex\]\):focus-visible/);
   assert.match(styles, /:where\(\.ams-shell\) :where\(input:not\(\[type="checkbox"\]\)[\s\S]{0,220}min-height:36px/);
   assert.doesNotMatch(styles, /\.ams-shell input,\.ams-shell select,\.ams-shell textarea\{min-height:36px/);
