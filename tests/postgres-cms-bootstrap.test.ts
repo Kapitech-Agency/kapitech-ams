@@ -24,5 +24,7 @@ test('CMS bootstrap uses PostgreSQL tables and one-time seed markers', () => {
   assert.match(source, /ON CONFLICT DO NOTHING/);
   assert.match(source, /pg_advisory_xact_lock/);
   assert.match(source, /allSolutionsAndServices/);
-  assert.match(source, /allProjects/);
+  assert.doesNotMatch(source, /allProjects/);
+  assert.match(source, /Project records bundled with the frontend are fixtures/);
+  assert.match(source, /mobile-app-design/);
 });
