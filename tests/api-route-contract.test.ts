@@ -117,3 +117,8 @@ test('Vendor expense links are validated and preserved as structured data', asyn
   assert.match(finance, /metadata:\s*\{\s*vendorPayment:/);
   assert.doesNotMatch(finance, /const description = VENDOR_PAYMENT_MARKER/);
 });
+test('Vendor deletion preserves linked financial records', async () => {
+  const source = await fs.readFile(path.join(root, 'server/routes.ts'), 'utf8');
+  assert.match(source, /vendor has linked financial records/i);
+  assert.match(source, /error\.code === '23503'/);
+});
