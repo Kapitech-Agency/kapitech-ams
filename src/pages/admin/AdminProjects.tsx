@@ -1915,7 +1915,12 @@ export const AdminProjects: React.FC = () => {
                           onDrop={event => {
                             event.preventDefault();
                             event.stopPropagation();
-                            if (!canManageProjects) return;
+                            if (!canManageProjects) {
+                              setDraggingProjectId(null);
+                              setDragOverProjectStatus(null);
+                              setDragOverProjectId(null);
+                              return;
+                            }
                             const projectId =
                               event.dataTransfer.getData('text/project-id') ||
                               event.dataTransfer.getData('text/plain') ||
@@ -1965,7 +1970,7 @@ export const AdminProjects: React.FC = () => {
                                 >
                                   <div className="flex items-start justify-between gap-2">
                                     <div className="flex min-w-0 items-start gap-2">
-                                      <span
+                                      <button type="button"
                                         data-drag-handle="true"
                                         draggable={canManageProjects && !movingProjectId}
                                         onDragStart={event => beginProjectDrag(event, project)}
@@ -1989,19 +1994,19 @@ export const AdminProjects: React.FC = () => {
                                           event.preventDefault();
                                           void updateProjectStatus(project, nextColumn.id);
                                         }}
-                                        role="button"
                                         tabIndex={canManageProjects && !movingProjectId ? 0 : -1}
-                                        aria-label={canManageProjects ? 'Move ' + project.name + ' between stages. Use left and right arrow keys.' : 'Project status'}
+                                        aria-label={canManageProjects ? 'Move ' + project.name + ' between stages. Use left and right arrow keys.' : 'Open details for ' + project.name}
+                                  aria-keyshortcuts="ArrowLeft ArrowRight Enter Space"
                                         className={[
-                                          'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted transition-[background-color,border-color,color] select-none',
+                                          'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted transition-[background-color,border-color,color] select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
                                           canManageProjects && !movingProjectId
                                             ? 'cursor-grab hover:border-accent/35 hover:bg-panel-hover hover:text-fg active:cursor-grabbing'
                                             : 'cursor-default opacity-70',
                                         ].join(' ')}
-                                        title={canManageProjects ? 'Drag to move; use left/right arrows or press Enter for details' : 'Project status'}
+                                        title={canManageProjects ? 'Drag to move; use left/right arrows or press Enter for details' : 'Open project details'}
                                       >
                                         <GripVertical size={16} strokeWidth={2.2} />
-                                      </span>
+                                      </button>
                                       <button type="button" onClick={() => openProjectDetail(project)} className="min-w-0 text-left">
                                         <div className="break-words whitespace-normal text-[10px] font-medium leading-4 text-muted">{project.clientCompany}</div>
                                         <h3 className="mt-0.5 break-words whitespace-normal text-sm font-semibold leading-5 text-fg">{project.name}</h3>
@@ -2337,7 +2342,12 @@ export const AdminProjects: React.FC = () => {
                           onDrop={event => {
                             event.preventDefault();
                             event.stopPropagation();
-                            if (!canManageKanbanTasks) return;
+                            if (!canManageKanbanTasks) {
+                              setDraggingTaskId(null);
+                              setDragOverTaskStatus(null);
+                              setDragOverTaskId(null);
+                              return;
+                            }
                             const id =
                               event.dataTransfer.getData('text/project-task-id') ||
                               event.dataTransfer.getData('text/plain') ||
@@ -2420,6 +2430,7 @@ export const AdminProjects: React.FC = () => {
                                   <article
                                     key={task.id}
                                     aria-grabbed={isDragging}
+                                    aria-busy={movingTaskId === task.id}
                                     onDragOver={canManageKanbanTasks ? (event => {
                                       event.preventDefault();
                                       event.stopPropagation();
@@ -2431,14 +2442,17 @@ export const AdminProjects: React.FC = () => {
                                       'group rounded-card border bg-panel p-3.5 transition-[transform,opacity,border-color,background-color,box-shadow] duration-150',
                                       canManageKanbanTasks ? '' : 'cursor-default',
                                       'border-line hover:border-accent/30 hover:bg-panel-hover',
-                                      isDragging ? 'rotate-[0.6deg] scale-[0.98] opacity-50' : '',
+                                      isDragging ? 'rotate-[0.6deg] scale-[0.98] opacity-50' : movingTaskId === task.id ? 'border-accent/35 opacity-80' : '',
                                     ].join(' ')}
                                   >
+                                    {movingTaskId === task.id && (
+                                      <div role="status" className="mb-2 text-[10px] font-medium text-accent-text">Saving status…</div>
+                                    )}
                                     <div className="flex items-start gap-2.5">
-                                      <span
-                                        role="button"
+                                      <button type="button"
                                         tabIndex={canManageKanbanTasks && !movingTaskId ? 0 : -1}
-                                        aria-label={canManageKanbanTasks ? 'Move ' + task.title + ' between stages. Use left and right arrow keys.' : 'Task movement is read-only'}
+                                        aria-label={canManageKanbanTasks ? 'Move ' + task.title + ' between stages. Use left and right arrow keys.' : 'Open details for ' + task.title}
+                                  aria-keyshortcuts="ArrowLeft ArrowRight Enter Space"
                                         draggable={canManageKanbanTasks && !movingTaskId}
                                         onDragStart={canManageKanbanTasks ? event => beginTaskDrag(event, task) : undefined}
                                         onDragEnd={() => {
@@ -2463,15 +2477,15 @@ export const AdminProjects: React.FC = () => {
                                         }}
                                         data-drag-handle="true"
                                         className={[
-                                          'mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted transition-[background-color,border-color,color,transform] select-none',
+                                          'mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted transition-[background-color,border-color,color,transform] select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
                                           canManageKanbanTasks && !movingTaskId
                                             ? 'cursor-grab hover:border-accent/35 hover:bg-panel-hover hover:text-fg active:cursor-grabbing'
                                             : 'cursor-default opacity-70',
                                         ].join(' ')}
-                                        title={canManageKanbanTasks ? 'Drag to move; use left/right arrows or press Enter for details' : 'Task movement is read-only'}
+                                        title={canManageKanbanTasks ? 'Drag to move; use left/right arrows or press Enter for details' : 'Open task details'}
                                       >
                                         <GripVertical size={16} strokeWidth={2} />
-                                      </span>
+                                      </button>
                                       <button type="button" onClick={() => setSelectedTask(task)} className="min-w-0 flex-1 text-left">
                                         <div className="flex flex-wrap items-center gap-1.5">
                                           <span className={'rounded-badge border px-2 py-1 text-[9px] font-semibold ' + priorityClass(task.priority)}>{priorityLabel(task.priority)}</span>
