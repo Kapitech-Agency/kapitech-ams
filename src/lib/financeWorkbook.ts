@@ -325,7 +325,8 @@ export function buildFinanceSourceJournalDrafts(
       continue;
     }
 
-    payments.forEach((payment, paymentIndex) => {
+    for (let paymentIndex = 0; paymentIndex < payments.length; paymentIndex++) {
+      const payment = payments[paymentIndex];
       const amount = safeFinanceMoney(payment.amount);
       const sourceId = sourceIdentifier(invoice.id, 'payment', payment.id, String(paymentIndex));
       const reference = String(payment.reference || invoice.invoiceNumber || invoice.id || '').slice(0, 160);
@@ -348,7 +349,7 @@ export function buildFinanceSourceJournalDrafts(
         debitCode: '1000', creditCode: '1300', amount, projectId: invoice.projectId,
         notes: notes + ' Only post after confirming the matching invoice receivable has already been recognized.'
       }));
-    });
+    }
   }
 
   for (const expense of expenses) {
