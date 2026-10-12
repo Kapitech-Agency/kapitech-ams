@@ -106,6 +106,7 @@ export const Drawer: React.FC<DrawerProps> = ({
 
     const handleFocusIn = (event: FocusEvent) => {
       if (drawerStack[drawerStack.length - 1] !== instanceId) return;
+      if (document.querySelector('[data-ams-modal-root="true"]')) return;
       const target = event.target as Node | null;
       if (target && dialogRef.current?.contains(target)) return;
       getInitialFocus()?.focus();
@@ -113,6 +114,7 @@ export const Drawer: React.FC<DrawerProps> = ({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (drawerStack[drawerStack.length - 1] !== instanceId) return;
+      if (document.querySelector('[data-ams-modal-root="true"]')) return;
 
       if (event.key === 'Escape') {
         if (!closeOnEscape) return;
