@@ -605,10 +605,14 @@ export const AdminSettings: React.FC = () => {
         log.severity === 'critical' ? 'Critical' : log.severity === 'warning' ? 'Warning' : 'Success'
       ])
     ];
+    const safeAuditCsvCell = (cell: unknown) => {
+      const raw = String(cell ?? '');
+      const safeValue = /^[\s\u0000-\u001f]*[=+\-@]/.test(raw) ? "'" + raw : raw;
+      return '"' + safeValue.replace(/"/g, '""') + '"';
+    };
     const csv = rows
-      .map((row) => row.map((cell) => '"' + String(cell ?? '').replace(/"/g, '""') + '"').join(','))
-      .join('\
-');
+      .map((row) => row.map(safeAuditCsvCell).join(','))
+      .join('\r\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
