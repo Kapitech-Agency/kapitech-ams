@@ -12,7 +12,7 @@ test('project task controls use task-specific permission in the admin UI',()=>{
 
   const board=s.slice(s.indexOf('Task Execution Board'), s.indexOf('CONTEXTUAL TASK DETAIL DRAWER'));
   assert.match(board,/draggable=\{canManageKanbanTasks && !movingTaskId && updatingSubtaskId === null\}/);
-  assert.match(board,/\{canManageKanbanTasks && \(/);
+  assert.match(board,/\{canManageKanbanTasks && .*selectedSprintProject\.status !== 'completed' && \(/);
 });
 
 test('project CRUD backend blocks unauthorized task mutation',()=>{
