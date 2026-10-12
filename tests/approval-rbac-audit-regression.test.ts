@@ -60,7 +60,7 @@ test('Read-only admin states keep mutation UI controls behind the same permissio
 
   const projects = await fs.readFile(path.join(root, 'src/pages/admin/AdminProjects.tsx'), 'utf8');
   assert.ok(projects.includes('canManageKanbanTasks'));
-  assert.ok(projects.includes('draggable={canManageKanbanTasks && !movingTaskId}'));
+  assert.ok(projects.includes('draggable={canManageKanbanTasks && !movingTaskId && updatingSubtaskId === null}'));
   assert.ok(projects.includes('{canManageKanbanTasks && ('));
 
   const clients = await fs.readFile(path.join(root, 'src/pages/admin/AdminClients.tsx'), 'utf8');
