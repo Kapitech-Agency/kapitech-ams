@@ -803,3 +803,30 @@
 .ams-shell .settings-system-table tbody tr:hover td{
   background:color-mix(in srgb,var(--text) 4%,transparent)!important;
 }
+
+/* AMS DRAWER SYSTEM: canonical geometry, field type scale, and form rhythm. */
+.ams-drawer{--ams-drawer-gutter:20px;font-family:var(--font-sans);color:var(--text)}
+.ams-drawer-header{padding:16px var(--ams-drawer-gutter)}
+.ams-drawer-header h2{margin:0;font-size:14px;line-height:20px;font-weight:600}
+.ams-drawer-header p{margin-top:4px;font-size:12px;line-height:16px}
+.ams-drawer-close{width:36px;min-width:36px;height:36px;min-height:36px;padding:0}
+.ams-drawer-body{padding:20px var(--ams-drawer-gutter);font-size:13px;line-height:18px}
+.ams-drawer-body form{display:flex;flex-direction:column;gap:20px}
+.ams-drawer-body form > :not(:first-child){margin-block-start:0}
+.ams-drawer-body .grid:not([data-ams-drawer-layout="sections"]):not([data-ams-drawer-preview] *){gap:12px}
+.ams-drawer-body label{font-size:12px;line-height:16px;font-weight:500;color:var(--muted);margin-block-end:0}
+.ams-drawer-body label:not(:has(input,textarea,select,button,[role="combobox"])){margin-block-end:6px}
+.ams-drawer-body label > span:first-child{display:block;margin-block-end:6px;font-size:12px;line-height:16px;font-weight:500;letter-spacing:normal;text-transform:none;color:var(--muted)}
+.ams-drawer-body label.space-y-1\.5 > span:first-child{margin-block-end:0}
+.ams-drawer-body label + input,.ams-drawer-body label + textarea,.ams-drawer-body label + select{margin-block-start:0}
+.ams-drawer-body input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]):not([type="hidden"]),.ams-drawer-body select{min-height:40px;border-radius:8px;font-size:13px;line-height:18px}
+.ams-drawer-body textarea{min-height:88px;border-radius:8px;font-size:13px;line-height:18px}
+.ams-drawer-body textarea[data-ams-drawer-size="large"]{min-height:130px}
+.ams-drawer-body button[aria-haspopup="listbox"]{min-height:40px;height:40px;border-radius:8px;padding-inline:12px;font-size:13px;line-height:18px}
+.ams-drawer-body p:not([data-ams-drawer-keep-typography]):not([data-ams-drawer-preview] *){font-size:12px;line-height:18px}
+.ams-drawer-body h3:not([data-ams-drawer-keep-typography]):not([data-ams-drawer-preview] *){font-size:14px;line-height:20px;font-weight:600;letter-spacing:normal;text-transform:none}
+.ams-drawer-body h4:not([data-ams-drawer-keep-typography]):not([data-ams-drawer-preview] *){font-size:12px;line-height:16px;font-weight:600;letter-spacing:normal;text-transform:none}
+.ams-drawer-body .rounded-card.border:not([data-ams-drawer-preview] *){padding:16px}
+.ams-drawer-footer{padding:16px var(--ams-drawer-gutter)}
+.ams-drawer-footer > button,.ams-drawer-footer > a{min-height:36px;height:36px;padding-inline:12px;font-size:12px;line-height:16px}
+@media(max-width:599px){.ams-drawer{--ams-drawer-gutter:16px}.ams-drawer-body{padding-block:16px}.ams-drawer-footer{padding-bottom:max(16px,env(safe-area-inset-bottom))}}

@@ -842,7 +842,7 @@ export const AdminCmsCareers: React.FC = () => {
             </label>
           </section>
 
-          <div className="grid min-w-0 gap-4 xl:grid-cols-2">
+          <div data-ams-drawer-layout="sections" className="grid min-w-0 gap-4 xl:grid-cols-2">
             <section className="cms-career-language-panel min-w-0 space-y-4 rounded-card border border-line bg-bg p-4">
               <div className="flex items-center gap-2 border-b border-line pb-2.5">
                 <span className="flex h-6 w-6 items-center justify-center rounded-badge border border-line bg-panel text-[10px] font-semibold text-fg">EN</span>
@@ -869,8 +869,8 @@ export const AdminCmsCareers: React.FC = () => {
               </div>
               <div className="cms-career-editor-group space-y-3">
                 <h4 className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Responsibilities & requirements</h4>
-              <Field label="Responsibilities (one per line)"><textarea className={textareaClass + ' min-h-[130px]'} value={listToText(draft.responsibilities)} onChange={event => updateDraft('responsibilities', textToList(event.target.value))} placeholder={'Own the feature lifecycle\nCollaborate with design and engineering'} /></Field>
-              <Field label="Requirements (one per line)"><textarea className={textareaClass + ' min-h-[130px]'} value={listToText(draft.requirements)} onChange={event => updateDraft('requirements', textToList(event.target.value))} placeholder={'Strong portfolio\nClear written communication'} /></Field>
+              <Field label="Responsibilities (one per line)"><textarea data-ams-drawer-size="large" className={textareaClass + ' min-h-[130px]'} value={listToText(draft.responsibilities)} onChange={event => updateDraft('responsibilities', textToList(event.target.value))} placeholder={'Own the feature lifecycle\nCollaborate with design and engineering'} /></Field>
+              <Field label="Requirements (one per line)"><textarea data-ams-drawer-size="large" className={textareaClass + ' min-h-[130px]'} value={listToText(draft.requirements)} onChange={event => updateDraft('requirements', textToList(event.target.value))} placeholder={'Strong portfolio\nClear written communication'} /></Field>
               </div>
             </section>
 

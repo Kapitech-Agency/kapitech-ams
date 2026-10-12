@@ -596,8 +596,7 @@ export const AdminCmsProjects: React.FC = () => {
       <Drawer slug="cms-project-editor-drawer"
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        size="lg"
-        dialogClassName="border-l border-line bg-panel max-w-[560px]"
+        size="xl"
         title={editingProject?.title ? 'Edit: ' + editingProject.title : 'Add new case study'}
         description="Maintain the public case study content, media, and presentation."
         footer={modalTab === 'details'
@@ -636,7 +635,7 @@ export const AdminCmsProjects: React.FC = () => {
             </div>
 
             {modalTab === 'preview' ? (
-              <div className="space-y-5 py-4">
+              <div data-ams-drawer-preview className="space-y-5 py-4">
                 <div className="rounded-card border border-line bg-bg p-3 text-[11px] text-muted">
                   Live case study preview. This is the content structure that will feed the public <code className="text-fg">/work</code> detail modal.
                 </div>

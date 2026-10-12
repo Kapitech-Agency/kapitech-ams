@@ -105,7 +105,7 @@ export const UserProfilePublicDrawer: React.FC<UserProfilePublicDrawerProps> = (
           </div>
         </section>
 
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div data-ams-drawer-layout="sections" className="grid gap-4 lg:grid-cols-2">
           <section className="rounded-card border border-line bg-panel p-4">
             <div className="mb-4 flex items-center gap-2 border-b border-line pb-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-control border border-line bg-bg text-muted">
