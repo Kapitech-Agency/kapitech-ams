@@ -70,3 +70,10 @@ This bridge is an initial cash-basis workflow, not a complete general ledger or 
 Vendor bills now expose the three worksheet stages as calculated amounts and paid amounts. Payments can be assigned to stage 1 (30%), stage 2 (20%), or stage 3 (50%); legacy payments with no stage remain supported and are allocated FIFO. The backend prevents bill-level overpayment and also prevents a new or edited payment from exceeding its selected stage's remaining balance. The next-payment indicator derives from the first stage with an outstanding amount.
 
 The workbook supplies one due date per bill, not separate milestone dates. AMS therefore retains the bill-level due date and does not fabricate dates for Payment 1, Payment 2, or Payment 3. Stage allocations are derived views of persisted bills and linked payment records, not separate duplicate payable records.
+
+
+## Monthly Closing control parity
+
+Monthly Closing now uses the workbook's 11 checklist rows and PIC defaults: All revenue recorded (Baim), All expenses recorded (Fikri), Cash & bank reconciled, Receivables reviewed, Payables reviewed, Project margins reviewed, Journal balanced, P&L reviewed, Cash Flow reviewed, Balance Sheet reviewed, and Management approval. The backend close-period guard checks this same set rather than the previous set of 10 substitute controls.
+
+A saved checklist remains an operator sign-off, not reconciliation evidence by itself. In particular, Cash & bank reconciled and Balance Sheet reviewed must not be interpreted as system-verified reconciliation until statement matching and a complete posted ledger exist.

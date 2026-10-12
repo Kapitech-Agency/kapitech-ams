@@ -144,16 +144,17 @@ const EXPENSE_CLASS_LABELS: Record<WorkbookExpenseClass, string> = {
 };
 
 const WORKBOOK_CLOSING_ITEMS = [
-  { label: 'All revenue recorded', owner: 'Finance' },
-  { label: 'All expenses recorded', owner: 'Finance' },
+  { label: 'All revenue recorded', owner: 'Baim' },
+  { label: 'All expenses recorded', owner: 'Fikri' },
   { label: 'Cash & bank reconciled', owner: 'Finance' },
   { label: 'Receivables reviewed', owner: 'Finance' },
   { label: 'Payables reviewed', owner: 'Finance' },
   { label: 'Project margins reviewed', owner: 'Project owner' },
-  { label: 'Project allocation reviewed', owner: 'Management' },
-  { label: 'General journal balanced', owner: 'Finance' },
-  { label: 'Balance sheet reviewed', owner: 'Management' },
-  { label: 'Monthly reports approved', owner: 'Management' }
+  { label: 'Journal balanced', owner: 'Finance' },
+  { label: 'P&L reviewed', owner: 'Finance' },
+  { label: 'Cash Flow reviewed', owner: 'Finance' },
+  { label: 'Balance Sheet reviewed', owner: 'Management' },
+  { label: 'Management approval', owner: 'Management' }
 ];
 
 
@@ -1406,16 +1407,29 @@ export const AdminFinanceWorkspace: React.FC = () => {
       case 'monthly-closing': {
         const records=getRegisterRecords('monthly-closing').filter((record)=>String(record.payload.period||record.periodKey||'')===selectedMonth);
         const locked=getRegisterRecords('monthly-closing-lock').some((record)=>String(record.periodKey||record.payload.period||'')===selectedMonth);
-        const rows=WORKBOOK_CLOSING_ITEMS.map((item,index)=>{
+        const closingPurposes: Record<string,string> = {
+          'All revenue recorded': 'Confirm all source revenue and client receipts for the selected month are captured.',
+          'All expenses recorded': 'Confirm the month’s expense records and supporting evidence are complete.',
+          'Cash & bank reconciled': 'Compare cash and bank balances with the available statements and opening balance.',
+          'Receivables reviewed': 'Review outstanding client invoices and due dates.',
+          'Payables reviewed': 'Review vendor bills, payments, and outstanding obligations.',
+          'Project margins reviewed': 'Review contract value, recorded costs, and project margin.',
+          'Journal balanced': 'Confirm each journal entry has equal debit and credit totals.',
+          'P&L reviewed': 'Review the period profit-and-loss preview and its source coverage.',
+          'Cash Flow reviewed': 'Review dated inflows, outflows, and net cash movement.',
+          'Balance Sheet reviewed': 'Review opening balances and account readiness; totals remain provisional until reconciled.',
+          'Management approval': 'Record management sign-off only after the preceding controls have been reviewed.'
+        };
+        const rows=WORKBOOK_CLOSING_ITEMS.map((item)=>{
           const record=records.find((candidate)=>String(candidate.payload.checklistItem||'').toLowerCase()===item.label.toLowerCase());
           const state=String(record?.payload.status||record?.status||'Open');
-          return {id:item.label,cells:[item.label,item.owner,record?<StatusBadge value={state}/>:<AdminStatusBadge tone="warning">Not recorded</AdminStatusBadge>,index===0?'All issued revenue is traceable to source invoices.':index===1?'Expenses are classified and supported by evidence.':index===2?'Bank activity agrees to the bank statement and opening balance.':index===7?'Total debit equals total credit.':'Review and document before the period is closed.',record?registerRecordActions('monthly-closing',record):<Button variant="secondary" type="button" disabled={locked} onClick={()=>openRegisterForm('monthly-closing',undefined,{period:selectedMonth,checklistItem:item.label,status:'Open'})}>Create control</Button>]};
+          return {id:item.label,cells:[item.label,item.owner,record?<StatusBadge value={state}/>:<AdminStatusBadge tone="warning">Not recorded</AdminStatusBadge>,closingPurposes[item.label]||'Review and document before the period is closed.',record?registerRecordActions('monthly-closing',record):<Button variant="secondary" type="button" disabled={locked} onClick={()=>openRegisterForm('monthly-closing',undefined,{period:selectedMonth,checklistItem:item.label,status:'Open'})}>Create control</Button>]};
         });
         const completed=WORKBOOK_CLOSING_ITEMS.filter((item)=>records.some((record)=>String(record.payload.checklistItem||'').toLowerCase()===item.label.toLowerCase()&&String(record.payload.status||record.status)==='Done')).length;
         return (
           <div className="space-y-4">
             <WorkbookNote tone={locked?'info':'warning'} title={locked?'Selected period is closed':'Monthly closing requires all workbook control items'}>
-              Selected period: {selectedMonth}. {completed} of {WORKBOOK_CLOSING_ITEMS.length} controls are completed and approved. The period-lock endpoint rejects closing until all ten expected control items are persisted as Done and posted journals balance.
+              Selected period: {selectedMonth}. {completed} of {WORKBOOK_CLOSING_ITEMS.length} controls are completed and approved. The period-lock endpoint rejects closing until all eleven workbook control items are persisted as Done and posted journals balance.
             </WorkbookNote>
             <AdminPanel title="Closing period" bodyClassName="p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">

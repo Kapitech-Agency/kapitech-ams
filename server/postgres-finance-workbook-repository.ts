@@ -451,7 +451,7 @@ export class PostgresFinanceWorkbookRepository {
       if(prior.rows[0]) throw new FinanceWorkbookConflictError('Finance period is already closed.');
       const rows=await client.query<Row>("SELECT payload FROM finance_workbook_records WHERE record_type='monthly-closing' AND period_key=$1 AND archived_at IS NULL",[period]);
       const byName=new Map(rows.rows.map((r:Row)=>[keyText(obj(r.payload).checklistItem),obj(r.payload)]));
-      const required=['all revenue recorded','all expenses recorded','cash & bank reconciled','receivables reviewed','payables reviewed','project margins reviewed','project allocation reviewed','general journal balanced','balance sheet reviewed','monthly reports approved'];
+      const required=['all revenue recorded','all expenses recorded','cash & bank reconciled','receivables reviewed','payables reviewed','project margins reviewed','journal balanced','p&l reviewed','cash flow reviewed','balance sheet reviewed','management approval'];
       const open=required.filter(label=>String(byName.get(label)?.status||'')!=='Done');
       if(open.length) throw new FinanceWorkbookConflictError('Cannot close '+period+'. Complete: '+open.join(', ')+'.');
       const journals=await client.query<Row>("SELECT payload FROM finance_workbook_records WHERE record_type='journal-entry' AND period_key=$1 AND status='posted' AND archived_at IS NULL",[period]);
