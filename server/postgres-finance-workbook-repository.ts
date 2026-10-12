@@ -274,7 +274,16 @@ export class PostgresFinanceWorkbookRepository {
               ? 'Overdue'
               : 'Unpaid';
         const schedulePercentages = Array.isArray(bill.payload.paymentSchedule) ? bill.payload.paymentSchedule as number[] : undefined;
-        const installments = getVendorBillInstallmentSchedule(total, billPayments, schedulePercentages);
+        const installments = getVendorBillInstallmentSchedule(
+          total,
+          billPayments.map((payment) => ({
+            id: payment.id,
+            amount: payment.amount,
+            installmentNumber: payment.installmentNumber,
+            paidDate: payment.paidDate
+          })),
+          schedulePercentages
+        );
         const next = installments.find((installment) => installment.outstanding > 0.01);
         return {
           ...bill,
@@ -313,7 +322,15 @@ export class PostgresFinanceWorkbookRepository {
         if ([1,2,3].includes(installmentNumber)) {
           const schedule = getVendorBillInstallmentSchedule(
             total,
-            paid.rows.map((row:Row)=>obj(row.payload)),
+            paid.rows.map((row:Row) => {
+              const payment = obj(row.payload);
+              return {
+                id: row.id,
+                amount: payment.amount,
+                installmentNumber: payment.installmentNumber,
+                paidDate: payment.paidDate
+              };
+            }),
             Array.isArray(billPayload.paymentSchedule) ? billPayload.paymentSchedule as number[] : undefined
           );
           const installment = schedule.find((item)=>item.number===installmentNumber);
@@ -365,7 +382,15 @@ export class PostgresFinanceWorkbookRepository {
         if([1,2,3].includes(installmentNumber)){
           const schedule=getVendorBillInstallmentSchedule(
             total,
-            otherPayments.rows.map((row:Row)=>obj(row.payload)),
+            otherPayments.rows.map((row:Row) => {
+              const payment = obj(row.payload);
+              return {
+                id: row.id,
+                amount: payment.amount,
+                installmentNumber: payment.installmentNumber,
+                paidDate: payment.paidDate
+              };
+            }),
             Array.isArray(billPayload.paymentSchedule)?billPayload.paymentSchedule as number[]:undefined
           );
           const installment=schedule.find((item)=>item.number===installmentNumber);
