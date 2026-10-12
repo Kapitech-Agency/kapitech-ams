@@ -335,6 +335,17 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ payload })
       }),
+    workbookSyncJournalDrafts: () =>
+      apiRequest<{
+        success: boolean;
+        summary?: { created: number; alreadyPresent: number; skipped: number; closedPeriodSkipped: number; failed: number; candidates: number };
+        skippedSources?: Array<{ sourceType: string; sourceId: string; reason: string }>;
+        failedSources?: Array<{ sourceType: string; sourceId: string; reason: string }>;
+        error?: string;
+      }>('/api/finance/workbook/journal-drafts/sync', {
+        method: 'POST',
+        body: JSON.stringify({})
+      }),
     workbookUpdate: (type: string, id: string, payload: Record<string, unknown>, version: number) =>
       apiRequest<{ success: boolean; record: any }>(`/api/finance/workbook/${encodeURIComponent(type)}/${encodeURIComponent(id)}`, {
         method: 'PUT',

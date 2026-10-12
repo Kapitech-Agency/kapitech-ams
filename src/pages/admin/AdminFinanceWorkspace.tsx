@@ -12,6 +12,7 @@ import {
   classifyWorkbookExpense,
   EXCEL_CHART_OF_ACCOUNTS,
   FINANCE_WORKBOOK_GROUPS,
+  buildFinanceSourceJournalDrafts,
   getInvoiceCollected,
   getInvoiceDate,
   getInvoiceOutstanding,
@@ -363,6 +364,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
   const [registerErrors, setRegisterErrors] = useState<string[]>([]);
   const [registerSaving, setRegisterSaving] = useState(false);
   const [registerActionError, setRegisterActionError] = useState<string | null>(null);
+  const [journalSyncSummary, setJournalSyncSummary] = useState<string | null>(null);
   const [editor, setEditor] = useState<{ type: string; record?: WorkbookRecord; payload: Record<string, any> } | null>(null);
   const [sourceErrors, setSourceErrors] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -646,6 +648,32 @@ export const AdminFinanceWorkspace: React.FC = () => {
       await loadData(true);
     } catch (error) {
       setRegisterActionError(error instanceof Error ? error.message : 'The Finance record could not be saved.');
+    } finally {
+      setRegisterSaving(false);
+    }
+  };
+
+  const syncSourceJournalDrafts = async () => {
+    if (registerSaving) return;
+    setRegisterSaving(true);
+    setRegisterActionError(null);
+    setJournalSyncSummary(null);
+    try {
+      const response = await api.finance.workbookSyncJournalDrafts();
+      if (!response.success || !response.summary) throw new Error(response.error || 'Source journal drafts could not be generated.');
+      const summary = response.summary;
+      setJournalSyncSummary(
+        'Sync completed: ' + summary.created + ' draft(s) created, ' +
+        summary.alreadyPresent + ' already present, ' + summary.skipped + ' skipped' +
+        (summary.failed ? ', ' + summary.failed + ' failed' : '') +
+        '. Nothing was automatically posted.'
+      );
+      if (summary.failed) {
+        setRegisterActionError('Some source rows could not be synchronized. Review the failed-source details or server logs, then retry; existing drafts remain available.');
+      }
+      await loadData(true);
+    } catch (error) {
+      setRegisterActionError(error instanceof Error ? error.message : 'Source journal drafts could not be generated.');
     } finally {
       setRegisterSaving(false);
     }
@@ -1399,24 +1427,54 @@ export const AdminFinanceWorkspace: React.FC = () => {
         );
       }
       case 'journal': {
-        const records=getRegisterRecords('journal-entry').filter((record)=>matching([record.payload.date,record.payload.reference,record.payload.description,record.payload.projectId,record.status]));
-        const journalSources=[
-          ...reportInvoices.filter((invoice)=>getInvoiceOutstanding(invoice)>0||getInvoiceCollected(invoice)>0).map((invoice)=>({id:'invoice-'+invoice.id,date:getInvoiceDate(invoice),reference:invoice.invoiceNumber,description:'Invoice source · '+invoiceClient(invoice),amount:Number(invoice.total)||0,source:'Invoice'})),
-          ...cashMovements.map((entry)=>({id:entry.id,date:entry.date,reference:entry.reference,description:entry.description,amount:entry.cashIn||entry.cashOut,source:entry.source}))
-        ].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,50);
+        const allJournalRecords = getRegisterRecords('journal-entry');
+        const records = allJournalRecords.filter((record) => matching([record.payload.date,record.payload.reference,record.payload.description,record.payload.projectId,record.status]));
+        const plan = buildFinanceSourceJournalDrafts(reportInvoices, expenses as any[], getRegisterRecords('cash-bank-transaction'));
+        const linkedJournal = new Map<string, WorkbookRecord>();
+        for (const record of allJournalRecords) {
+          const sourceType = String(record.payload.sourceType || '');
+          const sourceId = String(record.payload.sourceId || '');
+          if (sourceType && sourceId) linkedJournal.set(sourceType + '|' + sourceId, record);
+        }
+        const journalSources = [
+          ...plan.drafts.map((draft) => {
+            const source = linkedJournal.get(draft.sourceType + '|' + draft.sourceId);
+            const status = source ? (source.status === 'posted' ? 'Posted journal' : 'Draft generated · review required') : 'Ready to generate draft';
+            return {
+              id: draft.sourceType + ':' + draft.sourceId,
+              date: draft.date,
+              reference: draft.reference,
+              description: draft.description,
+              amount: draft.lines.reduce((sum, line) => sum + line.debit, 0),
+              source: draft.sourceType,
+              status,
+              tone: source?.status === 'posted' ? 'success' as const : source ? 'info' as const : 'warning' as const
+            };
+          }),
+          ...plan.skipped.map((item) => ({
+            id: 'skipped:' + item.sourceType + ':' + item.sourceId,
+            date: item.date,
+            reference: item.reference,
+            description: item.description,
+            amount: item.amount,
+            source: item.sourceType,
+            status: 'Skipped · ' + item.reason,
+            tone: 'warning' as const
+          }))
+        ].sort((a,b) => String(b.date).localeCompare(String(a.date))).slice(0,50);
         return (
           <div className="space-y-4">
-            <WorkbookNote tone="warning" title="Journal entries are stored separately from unposted source activity">
-              Journal entries use double-entry lines and are checked server-side so total debit equals total credit. Existing invoice and expense events remain source transactions until an explicit audited posting bridge is implemented; they are not claimed as journalled automatically.
+            <WorkbookNote tone="info" title="Source sync creates drafts only">
+              Generate source drafts prepares balanced two-line entries from dated IDR client receipts, classifiable expense records and posted internal cash transfers. Nothing is approved or posted automatically. Expense payment status and payment account may be unverified in AMS; those drafts explicitly require verification. Ambiguous or unsupported sources remain skipped with a reason.
             </WorkbookNote>
-            <FinanceDataTable title="General Journal" description="Draft entries need a different authorized user to approve/post. Posted entries cannot be edited or deleted." columns={[{label:'Date'},{label:'Reference'},{label:'Description'},{label:'Project'},{label:'Debit total',align:'right'},{label:'Credit total',align:'right'},{label:'Status'},{label:'Actions'}]} rows={records.map((record)=>({id:record.id,cells:[formatDate(record.payload.date),String(record.payload.reference||record.recordKey),String(record.payload.description||''),String(record.payload.projectId||'—'),formatMoney(Number(record.payload.debitTotal)||0),formatMoney(Number(record.payload.creditTotal)||0),<StatusBadge value={record.status}/>,registerRecordActions('journal-entry',record)]}))} emptyMessage="No general journal entries have been saved." actions={registerAddButton('journal-entry','Add journal entry')}/>
-            <FinanceDataTable title="Source transactions awaiting journal posting" description="Recent existing-source activity for traceability; these are not posted journal lines." columns={[{label:'Date'},{label:'Reference'},{label:'Source'},{label:'Description'},{label:'Amount',align:'right'},{label:'Posting state'}]} rows={journalSources.map((row)=>({id:row.id,cells:[formatDate(row.date),row.reference||'—',row.source,row.description,formatMoney(row.amount),<AdminStatusBadge tone="warning">Awaiting posting rule</AdminStatusBadge>]}))} emptyMessage="No invoice, receipt or expense source transactions are available."/>
-            <FinanceDataTable title="Excel Chart of Accounts posting map" description="Reference postings from the workbook's account structure. Transaction-to-journal automation is a separate controlled step." columns={[{label:'Event'},{label:'Debit'},{label:'Credit'},{label:'Posting dependency'}]} rows={[
-              {id:'invoice',cells:['Invoice issued','1300 · Accounts Receivable','4000 · Project Revenue','Invoice and tax treatment']},
-              {id:'receipt',cells:['Client payment','1000 · Cash & Bank','1300 · Accounts Receivable','Payment record / bank account']},
-              {id:'vendor-bill',cells:['Vendor bill approved','5100 · Vendor / Direct Project Cost','2000 · Accounts Payable','Bill approval and project reference']},
-              {id:'vendor-payment',cells:['Vendor bill paid','2000 · Accounts Payable','1000 · Cash & Bank','Bill reference and payment proof']},
-              {id:'petty-transfer',cells:['Bank to petty cash','1100 · Petty Cash Reserve','1000 · Cash & Bank','Shared internal transfer ID']}
+            {journalSyncSummary && <WorkbookNote tone="info" title="Source journal sync result">{journalSyncSummary}</WorkbookNote>}
+            <FinanceDataTable title="General Journal" description="Generated records retain their source reference. Review every draft and supporting document; a different authorized user must approve/post it. Posted entries are immutable." columns={[{label:'Date'},{label:'Reference'},{label:'Description'},{label:'Project'},{label:'Debit total',align:'right'},{label:'Credit total',align:'right'},{label:'Status'},{label:'Actions'}]} rows={records.map((record)=>({id:record.id,cells:[formatDate(record.payload.date),String(record.payload.reference||record.recordKey),String(record.payload.description||''),String(record.payload.projectId||'—'),formatMoney(Number(record.payload.debitTotal)||0),formatMoney(Number(record.payload.creditTotal)||0),<StatusBadge value={record.status}/>,registerRecordActions('journal-entry',record)]}))} emptyMessage="No general journal entries have been saved." actions={<div className="flex flex-wrap items-center gap-2">{registerAddButton('journal-entry','Add journal entry')}<Button variant="secondary" type="button" loading={registerSaving} icon={<RefreshCw size={14}/>} onClick={() => void syncSourceJournalDrafts()}>Generate source drafts</Button></div>}/>
+            <FinanceDataTable title="Source transaction posting queue" description="Source rows show the matching journal state or why automatic draft creation was skipped. These rows are not themselves journal entries." columns={[{label:'Date'},{label:'Reference'},{label:'Source'},{label:'Description'},{label:'Amount',align:'right'},{label:'Posting state'}]} rows={journalSources.map((row)=>({id:row.id,cells:[formatDate(row.date),row.reference||'—',row.source,row.description,formatMoney(row.amount),<AdminStatusBadge tone={row.tone}>{row.status}</AdminStatusBadge>]}))} emptyMessage="No eligible or skipped source rows were found."/>
+            <FinanceDataTable title="Workbook Chart of Accounts posting map" description="Examples follow the cash-basis treatment in Kapitech Finance Final Automated.xlsx. This is a draft mapping, not an authoritative ledger or bank reconciliation." columns={[{label:'Event'},{label:'Debit'},{label:'Credit'},{label:'Review requirement'}]} rows={[
+              {id:'receipt',cells:['Client receipt','1000 · Cash & Bank','4000 · Project Revenue','Match the receipt to the invoice and evidence']},
+              {id:'expense',cells:['Expense paid','5100 / 5200 / 5300–5320 / 5400 / 5500 / 5600 · Expense account','1000 / verified 1100 / 1200 · Cash account','Confirm category, payment status and actual payment account']},
+              {id:'petty-transfer',cells:['Bank to petty cash','1100 · Petty Cash Reserve','1000 · Cash & Bank','Confirm paired internal-transfer reference']},
+              {id:'vendor-payment',cells:['Vendor bill / payment','5100 · Vendor / Direct Project Cost','1000 · Cash & Bank','Not generated by this sync; use linked bill/payment evidence']}
             ]}/>
           </div>
         );

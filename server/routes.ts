@@ -68,6 +68,7 @@ import { postgresTaskRepository } from './postgres-task-repository.ts';
 import { postgresTimeLogRepository } from './postgres-time-log-repository.ts';
 import { postgresInvoiceRepository } from './postgres-invoice-repository.ts';
 import { postgresExpenseRepository, ExpenseImmutableError, ExpenseNotFoundError, ExpenseVersionConflictError, ExpenseProjectNotFoundError } from './postgres-expense-repository.ts';
+import { buildFinanceSourceJournalDrafts } from '../src/lib/financeWorkbook.ts';
 import { postgresApprovalRepository } from './postgres-approval-repository.ts';
 import { postgresNotificationRepository } from './postgres-notification-repository.ts';
 import { canViewNotification, getHiddenNotificationTypes } from './notification-access.ts';
@@ -3846,6 +3847,89 @@ apiRouter.post('/finance/workbook/periods/:period/close', requireAuth, requirePe
     res.json({ success: true, record });
   } catch (error) {
     financeWorkbookError(res, error);
+  }
+});
+
+apiRouter.post('/finance/workbook/journal-drafts/sync', requireAuth, requirePermission('canManageInvoices'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  if (!ensureFinanceWorkbookPostgres(res)) return;
+  try {
+    const [invoices, expenses, transfers, existingJournals] = await Promise.all([
+      postgresInvoiceRepository.list(),
+      postgresExpenseRepository.list(),
+      postgresFinanceWorkbookRepository.list('cash-bank-transaction'),
+      postgresFinanceWorkbookRepository.list('journal-entry')
+    ]);
+    const plan = buildFinanceSourceJournalDrafts(
+      invoices as any[],
+      expenses as any[],
+      transfers.map((record) => ({ id: record.id, status: record.status, payload: record.payload }))
+    );
+    const existingSourceKeys = new Set(existingJournals
+      .map((record) => {
+        const type = String(record.payload.sourceType || '');
+        const id = String(record.payload.sourceId || '');
+        return type && id ? type + '|' + id : '';
+      })
+      .filter(Boolean));
+    let created = 0;
+    let alreadyPresent = 0;
+    let closedPeriodSkipped = 0;
+    const failed: Array<{ sourceType: string; sourceId: string; reason: string }> = [];
+    for (const draft of plan.drafts) {
+      const sourceKey = draft.sourceType + '|' + draft.sourceId;
+      if (existingSourceKeys.has(sourceKey)) {
+        alreadyPresent++;
+        continue;
+      }
+      try {
+        await postgresFinanceWorkbookRepository.create(
+          'journal-entry',
+          draft,
+          financeWorkbookActor(req),
+          financeWorkbookAudit(
+            req,
+            'FINANCE_SOURCE_JOURNAL_DRAFT_CREATED',
+            'Created a draft journal from ' + draft.sourceType + ' source ' + draft.sourceId + '.'
+          )
+        );
+        existingSourceKeys.add(sourceKey);
+        created++;
+        // This endpoint creates drafts only; it never approves or posts a journal.
+      } catch (error) {
+        const code = typeof error === 'object' && error !== null && 'code' in error
+          ? String((error as { code?: unknown }).code || '') : '';
+        if (error instanceof FinanceWorkbookPeriodClosedError) {
+          closedPeriodSkipped++;
+          continue;
+        }
+        if (code === '23505') {
+          alreadyPresent++;
+          existingSourceKeys.add(sourceKey);
+          continue;
+        }
+        failed.push({
+          sourceType: draft.sourceType,
+          sourceId: draft.sourceId,
+          reason: error instanceof Error ? error.message : 'Unknown journal draft error.'
+        });
+      }
+    }
+    res.json({
+      success: true,
+      summary: {
+        created,
+        alreadyPresent,
+        skipped: plan.skipped.length + closedPeriodSkipped,
+        closedPeriodSkipped,
+        failed: failed.length,
+        candidates: plan.drafts.length
+      },
+      skippedSources: plan.skipped.slice(0, 30),
+      failedSources: failed.slice(0, 10)
+    });
+  } catch (error) {
+    console.error('[Finance Source Journal Drafts] Sync failed:', error);
+    res.status(503).json({ success: false, error: 'Source journal drafts could not be generated. Check the connected Finance sources and retry.' });
   }
 });
 

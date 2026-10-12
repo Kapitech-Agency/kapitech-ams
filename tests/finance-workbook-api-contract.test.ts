@@ -46,3 +46,21 @@ test('Finance client provides CRUD, approval and period-close operations for reg
     assert.match(client, new RegExp(method + ':'));
   }
 });
+
+
+test('Journal source sync is permission-gated, draft-only and duplicate-safe', async () => {
+  const routes = await read('server/routes.ts');
+  const repository = await read('server/postgres-finance-workbook-repository.ts');
+  const mapping = await read('src/lib/financeWorkbook.ts');
+  assert.match(routes, /finance\/workbook\/journal-drafts\/sync/);
+  assert.match(routes, /apiRouter\.post\('\/finance\/workbook\/journal-drafts\/sync', requireAuth, requirePermission\('canManageInvoices'\)/);
+  assert.match(routes, /FINANCE_SOURCE_JOURNAL_DRAFT_CREATED/);
+  assert.match(routes, /existingSourceKeys/);
+  assert.match(repository, /Journal source type and source ID must be supplied together/);
+  assert.match(repository, /key = sourceType && sourceId \? 'source:' \+ sourceType \+ ':' \+ sourceId : reference/);
+  assert.match(mapping, /buildFinanceSourceJournalDrafts/);
+  assert.match(mapping, /No draft returned by this function is approved or posted/);
+  assert.match(mapping, /provisional workbook default/);
+  const client = await read('src/lib/apiClient.ts');
+  assert.match(client, /workbookSyncJournalDrafts:/);
+});

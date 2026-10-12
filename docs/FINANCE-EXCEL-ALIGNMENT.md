@@ -54,3 +54,12 @@ The next backend step required for full accounting parity is a reviewed posting 
 - The vendor payment schedule [30, 20, 50] is recorded as the workbook schedule metadata, while payments are entered against bills; automatic generation of three due instalments is not implemented yet.
 
 Do not remove these caveats until matching integration tests and reconciliation evidence exist.
+
+
+## Source journal draft generation
+
+The Journal worksheet has a controlled **Generate source drafts** action. It prepares draft-only, balanced two-line entries from dated IDR client receipts, classified expense records and posted internal cash transfers, using the cash-basis examples in the workbook. Each generated entry stores a source type and source ID and is keyed by that provenance, so a repeat sync does not create a second entry for the same source.
+
+Draft generation is not posting. A separate authorized user still needs to review the source evidence and use the existing maker-checker action. Entries remain skipped with a reason when the currency, date, expense classification, petty-cash relationship or cash-account mapping is incomplete. Since the AMS expense source does not always verify that an expense has been paid or identify the actual payment account, a draft without explicit payment status/account metadata is marked for review; 1000 Cash & Bank is only a provisional workbook default.
+
+This bridge is an initial cash-basis workflow, not a complete general ledger or bank reconciliation. Invoice issuance/accrual accounting, tax splitting, vendor bill and payment automation, petty-cash expense account assignment, bank statement matching, opening trial-balance reconciliation, and authoritative Balance Sheet/P&L totals remain outside this implementation.

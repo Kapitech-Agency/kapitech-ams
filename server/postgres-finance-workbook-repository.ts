@@ -185,8 +185,22 @@ function normalise(type: FinanceWorkbookRecordType, raw: unknown, approval = fal
       if (Math.abs(debits-credits)>0.01) throw new FinanceWorkbookValidationError('Journal entry must balance: total debit must equal total credit.');
       status = choice(v.status,['draft','posted'],'Journal status','draft');
       if (status === 'posted' && !approval) throw new FinanceWorkbookValidationError('A journal must be approved before posting.');
-      p = { date:d, reference, description, projectId:project, lines, debitTotal:debits, creditTotal:credits, notes:txt(v.notes,600), status };
-      key = reference; period = periodOf(d); break;
+      const sourceType = txt(v.sourceType, 40);
+      const sourceId = txt(v.sourceId, 160);
+      const allowedSourceTypes = ['invoice-payment', 'expense', 'cash-bank-transfer'];
+      if ((sourceType && !sourceId) || (!sourceType && sourceId)) {
+        throw new FinanceWorkbookValidationError('Journal source type and source ID must be supplied together.');
+      }
+      if (sourceType && !allowedSourceTypes.includes(sourceType)) {
+        throw new FinanceWorkbookValidationError('Journal source type is not supported.');
+      }
+      p = {
+        date:d, reference, description, projectId:project, lines, debitTotal:debits, creditTotal:credits,
+        notes:txt(v.notes,600), status,
+        ...(sourceType && sourceId ? { sourceType, sourceId } : {})
+      };
+      key = sourceType && sourceId ? 'source:' + sourceType + ':' + sourceId : reference;
+      period = periodOf(d); break;
     }
     case 'monthly-closing': {
       const m = month(v.period), checklistItem = txt(v.checklistItem,200);
