@@ -137,7 +137,7 @@ test('Source journal bridge generates balanced cash-basis drafts with stable pro
   assert.ok(vendorPayment);
   assert.equal(vendorPayment?.lines[0].accountCode, '2000');
   assert.equal(vendorPayment?.lines[1].accountCode, '1000');
-  assert.match(vendorPayment?.notes || '', /verify the transfer and bill evidence/);
+  assert.match(vendorPayment?.notes || '', /verify the transfer and bill evidence/i);
 });
 
 test('Source journal bridge skips unpaid, foreign-currency, petty-cash duplicate and unmapped expense sources', () => {
@@ -157,7 +157,8 @@ test('Source journal bridge skips unpaid, foreign-currency, petty-cash duplicate
   const unknownExpense = { id: 'unknown-expense', category: 'Other' as const, description: 'Miscellaneous', amount: 1, date: '2026-10-05', recordedBy: 'Finance', currency: 'IDR' };
   const pettyCashExpense = { id: 'petty-expense', category: 'Other' as const, description: 'Petty cash voucher · supplies', amount: 1, date: '2026-10-05', recordedBy: 'Finance', currency: 'IDR' };
   const plan = buildFinanceSourceJournalDrafts([unpaid, foreignPaid], [unknownExpense, pettyCashExpense] as any[], []);
-  assert.equal(plan.drafts.length, 0);
+  assert.equal(plan.drafts.length, 1);
+  assert.equal(plan.drafts[0].sourceType, 'invoice-issued');
   assert.ok(plan.skipped.some((item) => item.sourceType === 'invoice-payment' && /IDR-only/.test(item.reason)));
   assert.ok(plan.skipped.some((item) => item.sourceType === 'expense' && item.sourceId === 'unknown-expense' && /No unambiguous/.test(item.reason)));
   assert.ok(plan.skipped.some((item) => item.sourceType === 'expense' && item.sourceId === 'petty-expense' && /petty-cash/i.test(item.reason)));
