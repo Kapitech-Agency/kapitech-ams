@@ -68,6 +68,7 @@ test('Kanban drag handles use native button semantics and visible design-system 
     assert.ok(source.includes('type="button"'));
     assert.ok(source.includes('focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'));
     assert.ok(source.includes('aria-keyshortcuts="ArrowLeft ArrowRight Enter Space"'));
-    assert.ok(source.includes("!target?.closest('[data-drag-handle=\"true\"]') && target?.closest('button,a,input,textarea,select,[data-no-drag=\"true\"]')"));
   }
+
+  assert.ok(projects.includes("!target?.closest('[data-drag-handle=\"true\"]') && target?.closest('button,a,input,textarea,select,[data-no-drag=\"true\"]')"));
 });
