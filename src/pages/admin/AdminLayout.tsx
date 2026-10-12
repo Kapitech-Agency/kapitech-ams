@@ -614,7 +614,7 @@ export const AdminLayout: React.FC = () => {
               {location.pathname.startsWith('/admin/clients') ? (
                 <AdminTopbarTabs
                   ariaLabel="Clients sections"
-                  activeKey={location.pathname === '/admin/clients/retainers' ? 'retainers' : location.pathname === '/admin/clients/sla-monitoring' ? 'sla-monitoring' : 'all-clients'}
+                  activeKey={location.pathname === '/admin/clients/retainers' ? 'retainers' : location.pathname === '/admin/clients/sla-monitoring' ? 'sla-monitoring' : location.pathname === '/admin/clients' || location.pathname === '/admin/clients/all-clients' ? 'all-clients' : ''}
                   items={[
                     { key: 'all-clients', label: 'All Clients', to: '/admin/clients/all-clients' },
                     { key: 'retainers', label: 'Retainers', to: '/admin/clients/retainers' },
@@ -690,7 +690,8 @@ export const AdminLayout: React.FC = () => {
                     { key: 'jobs', label: 'Job Applications', to: '/admin/inbox?view=jobs', slug: 'inbox-tab-jobs' },
                     { key: 'starred', label: 'Starred', to: '/admin/inbox?view=starred', slug: 'inbox-tab-starred' }
                   ]}
-                />              ) : location.pathname === '/admin/invoicing' ? (
+                />
+              ) : location.pathname === '/admin/invoicing' ? (
                 <AdminTopbarTabs
                   ariaLabel="Finance sections"
                   activeKey={new URLSearchParams(location.search).get('finance') || 'invoices'}
