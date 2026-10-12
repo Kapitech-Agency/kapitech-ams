@@ -17,15 +17,15 @@ test('Settings section navigation remains visible on desktop and mobile', async 
   }
 });
 
-test('Users can reopen their own Security & MFA settings even when MFA is already enabled', async () => {
+test('MFA setup stays reachable without admin rights while routine security access remains permission-gated', async () => {
   const source = await read('src/pages/admin/AdminSettings.tsx');
 
-  assert.ok(source.includes("const fallbackTab: SettingsTab = canAccessServer ? 'overview' : canViewAuditLogs ? 'audit' : 'security';"));
-  assert.ok(source.includes("if ((tab === 'overview' || tab === 'integrations') && !canAccessServer) return;"));
-  assert.ok(!source.includes('mfaSetupRequired'));
-  assert.ok(source.includes("if (tab === 'audit' && !canViewAuditLogs) return;"));
+  assert.ok(source.includes("const mfaSetupRequired = searchParams.get('mfaRequired') === '1' || session?.user?.mfaEnabled !== true;"));
+  assert.ok(source.includes("(requestedTab === 'security' && !mfaSetupRequired && !canManageAdminAccounts && !canAccessServer)"));
+  assert.ok(source.includes("if (tab === 'security' && !mfaSetupRequired && !canManageAdminAccounts && !canAccessServer) return;"));
+  assert.ok(source.includes("(tab.key !== 'security' || mfaSetupRequired || canManageAdminAccounts || canAccessServer)"));
+  assert.ok(source.includes("const fallbackTab: SettingsTab = canAccessServer ? 'overview' : canViewAuditLogs ? 'audit' : (mfaSetupRequired || canManageAdminAccounts) ? 'security' : 'overview';"));
 });
-
 test('System integrity and snapshot controls are hidden without server permissions', async () => {
   const source = await read('src/pages/admin/AdminSettings.tsx');
 
