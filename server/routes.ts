@@ -3868,37 +3868,82 @@ apiRouter.post('/finance/workbook/journal-drafts/sync', requireAuth, requirePerm
       vendorBills.map((record) => ({ id: record.id, recordKey: record.recordKey, projectId: record.projectId, payload: record.payload })),
       vendorBillPayments.map((record) => ({ id: record.id, status: record.status, payload: record.payload }))
     );
-    const existingSourceKeys = new Set(existingJournals
-      .map((record) => {
-        const type = String(record.payload.sourceType || '');
-        const id = String(record.payload.sourceId || '');
-        return type && id ? type + '|' + id : '';
-      })
-      .filter(Boolean));
+    const existingSourceRecords = new Map<string, (typeof existingJournals)[number]>();
+    for (const record of existingJournals) {
+      const type = String(record.payload.sourceType || '');
+      const id = String(record.payload.sourceId || '');
+      if (type && id) existingSourceRecords.set(type + '|' + id, record);
+    }
+    const snapshot = (value: Record<string, any>): string => JSON.stringify({
+      date: String(value.date || ''),
+      reference: String(value.reference || ''),
+      description: String(value.description || ''),
+      projectId: String(value.projectId || ''),
+      notes: String(value.notes || ''),
+      lines: (Array.isArray(value.lines) ? value.lines : []).map((line: Record<string, any>) => ({
+        accountCode: String(line.accountCode || ''),
+        accountName: String(line.accountName || ''),
+        debit: Number(line.debit) || 0,
+        credit: Number(line.credit) || 0,
+        notes: String(line.notes || '')
+      }))
+    });
     let created = 0;
+    let updated = 0;
     let alreadyPresent = 0;
     let closedPeriodSkipped = 0;
     const failed: Array<{ sourceType: string; sourceId: string; reason: string }> = [];
+    const actor = financeWorkbookActor(req);
     for (const draft of plan.drafts) {
       const sourceKey = draft.sourceType + '|' + draft.sourceId;
-      if (existingSourceKeys.has(sourceKey)) {
-        alreadyPresent++;
+      const existing = existingSourceRecords.get(sourceKey);
+      if (existing) {
+        if (existing.status !== 'draft' || snapshot(existing.payload) === snapshot(draft)) {
+          alreadyPresent++;
+          continue;
+        }
+        try {
+          const refreshed = await postgresFinanceWorkbookRepository.update(
+            'journal-entry',
+            existing.id,
+            { ...draft, status: 'draft' },
+            existing.version,
+            actor,
+            financeWorkbookAudit(
+              req,
+              'FINANCE_SOURCE_JOURNAL_DRAFT_REFRESHED',
+              'Refreshed an unposted journal draft from ' + draft.sourceType + ' source ' + draft.sourceId + '.'
+            )
+          );
+          existingSourceRecords.set(sourceKey, refreshed);
+          updated++;
+        } catch (error) {
+          if (error instanceof FinanceWorkbookPeriodClosedError) {
+            closedPeriodSkipped++;
+            continue;
+          }
+          failed.push({
+            sourceType: draft.sourceType,
+            sourceId: draft.sourceId,
+            reason: error instanceof Error ? error.message : 'Unknown journal draft refresh error.'
+          });
+        }
         continue;
       }
       try {
-        await postgresFinanceWorkbookRepository.create(
+        const createdRecord = await postgresFinanceWorkbookRepository.create(
           'journal-entry',
-          draft,
-          financeWorkbookActor(req),
+          { ...draft, status: 'draft' },
+          actor,
           financeWorkbookAudit(
             req,
             'FINANCE_SOURCE_JOURNAL_DRAFT_CREATED',
             'Created a draft journal from ' + draft.sourceType + ' source ' + draft.sourceId + '.'
           )
         );
-        existingSourceKeys.add(sourceKey);
+        existingSourceRecords.set(sourceKey, createdRecord);
         created++;
-        // This endpoint creates drafts only; it never approves or posts a journal.
+        // This endpoint creates/refreshes drafts only; it never approves or posts a journal.
       } catch (error) {
         const code = typeof error === 'object' && error !== null && 'code' in error
           ? String((error as { code?: unknown }).code || '') : '';
@@ -3908,7 +3953,6 @@ apiRouter.post('/finance/workbook/journal-drafts/sync', requireAuth, requirePerm
         }
         if (code === '23505') {
           alreadyPresent++;
-          existingSourceKeys.add(sourceKey);
           continue;
         }
         failed.push({
@@ -3922,6 +3966,7 @@ apiRouter.post('/finance/workbook/journal-drafts/sync', requireAuth, requirePerm
       success: true,
       summary: {
         created,
+        updated,
         alreadyPresent,
         skipped: plan.skipped.length + closedPeriodSkipped,
         closedPeriodSkipped,

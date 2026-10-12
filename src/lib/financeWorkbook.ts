@@ -362,6 +362,17 @@ export function buildFinanceSourceJournalDrafts(
     const sourceId = sourceIdentifier(expenseId);
     const sourceType: FinanceSourceJournalType = 'expense';
     const searchable = [expense.category, expense.description, expense.type].map((value) => String(value || '').toLowerCase()).join(' ');
+    const vendorLinked = Boolean(
+      expense.vendorId || expense.vendorContractId || expense.vendorPayment ||
+      metadata.vendorId || metadata.vendorContractId || metadata.vendorPayment
+    );
+    if (vendorLinked) {
+      skip({
+        sourceType: 'expense', sourceId, date: expenseDate, reference, description, amount,
+        reason: 'This expense is linked to a vendor or vendor contract. Match it to the Accounts Payable bill/payment workflow or confirm that it is not the same obligation before generating a journal; automatic expense posting is withheld to prevent duplicate cost and cash entries.'
+      });
+      continue;
+    }
     const recordStatus = String(expense.status || metadata.status || '').toLowerCase();
     const paymentStatus = String(expense.paymentStatus || metadata.paymentStatus || '').toLowerCase();
     if (recordStatus && ['voided', 'cancelled', 'canceled', 'rejected', 'deleted', 'draft', 'pending'].includes(recordStatus)) continue;

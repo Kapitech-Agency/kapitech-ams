@@ -84,3 +84,10 @@ A saved checklist remains an operator sign-off, not reconciliation evidence by i
 Invoice issuance with zero recorded tax now prepares a draft debit to **1300 Accounts Receivable** and credit to **4000 Project Revenue**. A dated client receipt prepares debit to **1000 Cash & Bank** and credit to **1300 Accounts Receivable**, so collection does not recognize the same revenue a second time. These drafts still require Finance review and confirmation that the source invoice was not already recognized. Taxable invoice issuance remains skipped with a reason because the current workbook Chart of Accounts does not include a dedicated tax-liability account; the tax portion is not silently credited to revenue.
 
 The source sync also prepares vendor-payment drafts for IDR vendor bills when the payment method has a supportable workbook account mapping: bank transfer proposes credit to 1000 Cash & Bank, and cash proposes a provisional credit to 1100 Petty Cash Reserve. Credit-card and other methods are held for explicit account mapping. The journal entry debits 2000 Accounts Payable. These are source-linked drafts only; vendor bill expense recognition, bill-to-ledger reconciliation, payment source verification, and independent approval remain required before posting.
+
+
+## Source refresh and vendor-linked expense safety
+
+Repeated source syncs now refresh an existing journal only when it is still a draft and its normalized lines/source values have changed. Posted journals are never rewritten; unchanged drafts are counted as already present. The source identifier remains stable across amount/date corrections to a payment record, and the unique index on (record_type, record_key) continues to protect concurrent duplicate creation.
+
+Expense rows with vendor or vendor-contract linkage are withheld from the generic expense-to-cash draft lane. This avoids creating both a vendor bill/payment journal and a second expense/cash journal for the same obligation before the AMS source is explicitly matched. Such rows remain visible in the skipped queue and need Finance to reconcile them to a bill or confirm that the expense is a separate obligation.

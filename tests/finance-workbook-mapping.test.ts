@@ -156,12 +156,14 @@ test('Source journal bridge skips unpaid, foreign-currency, petty-cash duplicate
   };
   const unknownExpense = { id: 'unknown-expense', category: 'Other' as const, description: 'Miscellaneous', amount: 1, date: '2026-10-05', recordedBy: 'Finance', currency: 'IDR' };
   const pettyCashExpense = { id: 'petty-expense', category: 'Other' as const, description: 'Petty cash voucher · supplies', amount: 1, date: '2026-10-05', recordedBy: 'Finance', currency: 'IDR' };
-  const plan = buildFinanceSourceJournalDrafts([unpaid, foreignPaid], [unknownExpense, pettyCashExpense] as any[], []);
+  const vendorLinkedExpense = { id: 'vendor-expense', category: 'Other' as const, description: 'Vendor delivery cost', amount: 100, date: '2026-10-05', recordedBy: 'Finance', currency: 'IDR', vendorContractId: 'contract-1' };
+  const plan = buildFinanceSourceJournalDrafts([unpaid, foreignPaid], [unknownExpense, pettyCashExpense, vendorLinkedExpense] as any[], []);
   assert.equal(plan.drafts.length, 1);
   assert.equal(plan.drafts[0].sourceType, 'invoice-issued');
   assert.ok(plan.skipped.some((item) => item.sourceType === 'invoice-payment' && /IDR-only/.test(item.reason)));
   assert.ok(plan.skipped.some((item) => item.sourceType === 'expense' && item.sourceId === 'unknown-expense' && /No unambiguous/.test(item.reason)));
   assert.ok(plan.skipped.some((item) => item.sourceType === 'expense' && item.sourceId === 'petty-expense' && /petty-cash/i.test(item.reason)));
+  assert.ok(plan.skipped.some((item) => item.sourceType === 'expense' && item.sourceId === 'vendor-expense' && /duplicate cost and cash entries/.test(item.reason)));
 
   const taxable = {
     ...unpaid, id: 'taxable-invoice', invoiceNumber: 'INV-TAX', issueDate: '2026-10-02',

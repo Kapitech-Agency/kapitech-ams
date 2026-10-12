@@ -677,7 +677,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
       if (!response.success || !summary) throw new Error(response.error || response.data?.error || 'Source journal drafts could not be generated.');
       setJournalSyncSummary(
         'Sync completed: ' + summary.created + ' draft(s) created, ' +
-        summary.alreadyPresent + ' already present, ' + summary.skipped + ' skipped' +
+        summary.updated + ' refreshed, ' + summary.alreadyPresent + ' unchanged/already posted, ' + summary.skipped + ' skipped' +
         (summary.failed ? ', ' + summary.failed + ' failed' : '') +
         '. Nothing was automatically posted.'
       );

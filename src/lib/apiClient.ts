@@ -338,7 +338,7 @@ export const api = {
     workbookSyncJournalDrafts: () =>
       apiRequest<{
         success: boolean;
-        summary?: { created: number; alreadyPresent: number; skipped: number; closedPeriodSkipped: number; failed: number; candidates: number };
+        summary?: { created: number; updated: number; alreadyPresent: number; skipped: number; closedPeriodSkipped: number; failed: number; candidates: number };
         skippedSources?: Array<{ sourceType: string; sourceId: string; reason: string }>;
         failedSources?: Array<{ sourceType: string; sourceId: string; reason: string }>;
         error?: string;
