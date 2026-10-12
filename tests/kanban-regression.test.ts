@@ -50,3 +50,23 @@ test('horizontal board scrolling does not steal pointer interactions from Kanban
   assert.ok(source.includes("target.closest('[data-drag-handle]')"));
   assert.ok(source.includes('draggable="true"'));
 });
+
+
+test('Tasks workspace keeps Kanban drop lanes available when filters return no matches', async () => {
+  const source = await read('src/components/admin/TasksWorkspace.tsx');
+
+  assert.ok(source.includes("filteredRecords.length === 0 && layout !== 'board'"));
+  assert.ok(source.includes("data-ams-slug={'tasks-column-' + column.status}"));
+  assert.ok(source.includes("{!columnTasks.length && ("));
+});
+
+test('Kanban drag handles use native button semantics and visible design-system keyboard focus', async () => {
+  const workspace = await read('src/components/admin/TasksWorkspace.tsx');
+  const projects = await read('src/pages/admin/AdminProjects.tsx');
+
+  for (const source of [workspace, projects]) {
+    assert.ok(source.includes('type="button"'));
+    assert.ok(source.includes('focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'));
+    assert.ok(source.includes('aria-keyshortcuts="ArrowLeft ArrowRight Enter Space"'));
+  }
+});
