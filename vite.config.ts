@@ -34,7 +34,18 @@ export default defineConfig(() => {
               return 'router-vendor';
             }
 
-            return 'vendor';
+            if (id.includes('/motion/') || id.includes('/framer-motion/')) {
+              return 'motion-vendor';
+            }
+
+            if (id.includes('/@untitledui/icons/')) {
+              return 'icon-vendor';
+            }
+
+            // Leave other packages to Rollup so dependencies used only by
+            // lazy routes stay with those routes instead of forcing a large
+            // shared vendor chunk into the initial page load.
+            return undefined;
           },
         },
       },
