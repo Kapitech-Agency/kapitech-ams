@@ -674,7 +674,7 @@ export const AdminProjects: React.FC = () => {
   const metrics = useMemo(() => {
     const value = activeProjects.reduce((sum, project) => sum + project.budget, 0);
     const totalProgress = activeProjects.reduce((sum, project) => sum + project.progressPercent, 0);
-    const velocity = activeProjects.length ? Math.round(totalProgress / activeProjects.length) : 0;
+    const averageProgress = activeProjects.length ? Math.round(totalProgress / activeProjects.length) : 0;
     const risks = activeProjects.filter(project => project.health !== 'Good').length;
     const openTasks = activeProjects.reduce(
       (sum, project) => sum + project.tasks.filter(task => task.status !== 'done').length,
@@ -695,7 +695,7 @@ export const AdminProjects: React.FC = () => {
     );
     return {
       value,
-      velocity,
+      averageProgress,
       risks,
       openTasks,
       assignedPeople: assignedPeople.size,
@@ -1710,7 +1710,7 @@ export const AdminProjects: React.FC = () => {
           <span className="flex min-w-0 flex-wrap items-center gap-2.5">
             <span>{view === 'all' ? 'Projects & Delivery Kanban' : view === 'sprint' ? 'Sprint & Delivery' : view === 'budget' ? 'Budget vs Actual' : 'Archived Projects'}</span>
             <span className="rounded-badge border border-accent/25 bg-accent/10 px-2 py-1 text-[10px] font-semibold text-accent">
-              {activeProjects.length} Active Projects
+              {view === 'archived' ? archivedProjects.length + ' Completed Projects' : activeProjects.length + ' Active Projects'}
             </span>
           </span>
         )}
@@ -1791,8 +1791,8 @@ export const AdminProjects: React.FC = () => {
                 },
                 {
                   id: 'velocity',
-                  label: 'Avg delivery velocity',
-                  value: metrics.velocity + '%',
+                  label: 'Average project progress',
+                  value: metrics.averageProgress + '%',
                   change: metrics.openTasks + ' open tasks',
                   changeToneClassName: 'text-info',
                   context: 'Based on active project progress',
@@ -2288,7 +2288,7 @@ export const AdminProjects: React.FC = () => {
                     <div className="flex min-w-0 items-start justify-between gap-4">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="rounded-badge border border-accent/20 bg-accent/10 px-2 py-1 text-[10px] font-semibold text-accent-text">Active sprint</span>
+                          <span className="rounded-badge border border-accent/20 bg-accent/10 px-2 py-1 text-[10px] font-semibold text-accent-text">{selectedSprintProject.status === 'completed' ? 'Completed project' : 'Active delivery'}</span>
                           <span className={'rounded-badge border px-2 py-1 text-[10px] font-semibold ' + healthClass(selectedSprintProject.health)}>
                             {selectedSprintProject.health || 'Good'}
                           </span>
@@ -2956,7 +2956,7 @@ export const AdminProjects: React.FC = () => {
         <form id="projects-task-form" data-ams-feature-slug="projects-task-form" data-ams-slug="projects-task-form" onSubmit={saveTask} className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="text-xs text-muted sm:col-span-2">Task title<input required value={taskForm.title} onChange={event => setTaskForm({ ...taskForm, title: event.target.value })} className={fieldClass} /></label>
-            <div><label className="text-xs text-muted">Project</label><CustomSelect value={taskForm.projectId} onChange={value => setTaskForm({ ...taskForm, projectId: value })} options={activeProjects.map(project => ({ value: project.id, label: project.name }))} className="mt-1 w-full" /></div>
+            <div><label className="text-xs text-muted">Project</label><CustomSelect value={taskForm.projectId} onChange={value => setTaskForm({ ...taskForm, projectId: value })} options={projects.map(project => ({ value: project.id, label: project.name + (project.status === 'completed' ? ' (Completed)' : '') }))} className="mt-1 w-full" /></div>
             <label className="text-xs text-muted">Assignee
               <input
                 value={taskForm.assignee}
