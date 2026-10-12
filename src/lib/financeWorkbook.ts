@@ -111,7 +111,8 @@ export interface WorkbookExpenseLike {
 
 export function isIssuedInvoice(invoice: Partial<AgencyInvoice>): boolean {
   const status = String(invoice.status || '').toLowerCase();
-  return status !== 'draft' && status !== 'cancelled';
+  const type = String(invoice.type || 'invoice').toLowerCase();
+  return type !== 'quotation' && status !== 'draft' && status !== 'cancelled';
 }
 
 export function getInvoiceCollected(invoice: Partial<AgencyInvoice>): number {

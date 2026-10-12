@@ -50,6 +50,7 @@ test('Draft and cancelled invoices are excluded from workbook reporting sources'
   assert.equal(isIssuedInvoice({ status: 'cancelled' }), false);
   assert.equal(isIssuedInvoice({ status: 'sent' }), true);
   assert.equal(isIssuedInvoice({ status: 'paid' }), true);
+  assert.equal(isIssuedInvoice({ type: 'quotation', status: 'sent' }), false);
 });
 
 test('Expense classification keeps Team Reward and Team Fee separate', () => {

@@ -205,6 +205,10 @@ export const AdminFinanceWorkspace: React.FC = () => {
     void loadData();
   }, [loadData]);
 
+  useEffect(() => {
+    setSearchText('');
+  }, [activeTab.key]);
+
   const reportInvoices = useMemo(() => invoices.filter(isIssuedInvoice), [invoices]);
   const totalBilled = useMemo(() => sumAmounts(reportInvoices, (invoice) => Number(invoice.total) || 0), [reportInvoices]);
   const totalCollected = useMemo(() => sumAmounts(reportInvoices, getInvoiceCollected), [reportInvoices]);
@@ -429,7 +433,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
               description="Existing AMS expenses are the source for recorded costs. Unmapped categories should be resolved before final workbook-style P&L posting."
               columns={[{ label: 'Date' }, { label: 'Category' }, { label: 'Description' }, { label: 'Project' }, { label: 'Amount', align: 'right' }, { label: 'Account mapping' }, { label: 'Status' }]}
               rows={expenses.filter((expense) => matching([expense.category, expense.description, expense.projectId, expense.vendorId])).map((expense) => {
-                const classification = classifyWorkbookExpense(expense as AgencyExpense & Record<string, unknown>);
+                const classification = classifyWorkbookExpense(expense);
                 return {
                   id: expense.id,
                   cells: [formatDate(expense.date), expense.category, expense.description, projects.find((project) => project.id === expense.projectId)?.name || expense.projectId || '—', formatMoney(Number(expense.amount) || 0, String((expense as any).currency || 'IDR')), EXPENSE_CLASS_LABELS[classification], <StatusBadge value={(expense as any).status || 'posted'} />]
@@ -578,7 +582,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
           operatingExpense: 0,
           unclassified: 0
         };
-        for (const expense of monthExpenses) classTotals[classifyWorkbookExpense(expense as AgencyExpense & Record<string, unknown>)] += Number(expense.amount) || 0;
+        for (const expense of monthExpenses) classTotals[classifyWorkbookExpense(expense)] += Number(expense.amount) || 0;
         const classifiedExpense = classTotals.directProjectCost + classTotals.teamReward + classTotals.projectTeamFee + classTotals.operatingExpense;
         const grossProfit = revenue - classTotals.directProjectCost;
         const netPreview = grossProfit - classTotals.teamReward - classTotals.projectTeamFee - classTotals.operatingExpense;
@@ -671,7 +675,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
           </div>
         );
       case 'team-fee': {
-        const feeExpenses = expenses.filter((expense) => classifyWorkbookExpense(expense as AgencyExpense & Record<string, unknown>) === 'projectTeamFee');
+        const feeExpenses = expenses.filter((expense) => classifyWorkbookExpense(expense) === 'projectTeamFee');
         return (
           <div className="space-y-4">
             <WorkbookNote tone="warning" title="Team Fee and Team Reward remain separate">
