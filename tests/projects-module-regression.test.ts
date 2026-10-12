@@ -105,3 +105,21 @@ test('Project overview metrics and sprint project selection describe their actua
   assert.ok(source.includes("label: project.name + (project.status === 'completed' ? ' (Completed)' : '')"));
   assert.ok(source.includes("selectedSprintProject.status === 'completed' ? 'Completed project' : 'Active delivery'"));
 });
+
+test('Completed projects remain inspectable but cannot receive new tasks', async () => {
+  const source = await read('src/pages/admin/AdminProjects.tsx');
+
+  assert.ok(source.includes("if (selectedSprintProject.status === 'completed')"));
+  assert.ok(source.includes("Completed projects cannot receive new tasks."));
+  assert.ok(source.includes("selectedSprintProject.status !== 'completed'"));
+  assert.ok(source.includes("project.id === taskForm.projectId"));
+});
+
+test('Projects board, table, sprint, budget, and archive expose loading or empty states', async () => {
+  const source = await read('src/pages/admin/AdminProjects.tsx');
+
+  assert.ok(source.includes("No projects yet. Create a project to start the portfolio."));
+  assert.ok(source.includes("No projects have been created yet."));
+  assert.ok(source.includes('Loading project delivery'));
+  assert.ok(source.includes('loading && (view === \'budget\' || view === \'archived\')'));
+});
