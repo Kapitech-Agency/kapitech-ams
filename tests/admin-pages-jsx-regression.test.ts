@@ -164,6 +164,7 @@ test('AMS module tabs share canonical desktop and mobile navigation primitives',
   assert.ok(!/className="inline-flex h-9 shrink-0 items-center rounded-chip/.test(layout));
   assert.ok(!/<nav aria-label="(?:Clients|CMS|Dashboard|Projects|Tasks|Inbox|Finance|Team|Settings|Documents) sections"/.test(layout));
   assert.ok(dashboard.includes('<AdminSectionTabs') && dashboard.includes("{ key: 'tasks', label: 'Tasks', to: '/admin/dashboard?view=tasks' }"));
+  assert.ok(dashboard.includes('className="mb-0"') && dashboard.includes('ariaLabel="Dashboard view"'));
   assert.ok(!dashboard.includes('-mt-2'));
   assert.ok(inbox.includes('<AdminSectionTabs') && inbox.includes('inboxTabs.map((tab)')));
   assert.ok(finance.includes('<AdminModuleHeader') && finance.includes('<AdminSectionTabs'));
