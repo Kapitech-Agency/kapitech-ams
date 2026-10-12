@@ -139,8 +139,12 @@ test('All AMS record-entry forms use Drawer instead of Modal', () => {
   assert.ok(careers.includes('cms-careers-editor') && careers.includes('cms-career-applicant-details'));
   assert.ok(!careers.includes("import { Modal } from '../../components/ui/Modal'"));
   assert.ok(tasks.includes('<Drawer slug="task-create-modal"') && tasks.includes('<Drawer slug="task-edit-modal"'));
+  assert.ok(tasks.includes('aria-label="Project"') && tasks.includes('aria-label="Assignee"') && tasks.includes('aria-label="Priority"'));
+  assert.ok(tasks.includes('form="tasks-create-form"') && tasks.includes('form="tasks-edit-form"'));
   assert.ok(documents.includes('<Drawer') && documents.includes('documents-upload-form'));
+  assert.ok(documents.includes('aria-label="Category"') && documents.includes('aria-label="Related entity"'));
   assert.ok(teams.includes('<Drawer') && teams.includes('vendorFormOpen'));
+  assert.ok(teams.includes('aria-label="Primary capability"') && teams.includes('aria-label="Status"'));
   assert.ok(drawer.includes("'3xl': 'max-w-4xl'") && drawer.includes("'4xl': 'max-w-5xl'"));
   assert.ok(modal.includes('data-ams-modal-root="true"') && modal.includes('z-[80]'));
   assert.ok(drawer.includes("document.querySelector('[data-ams-modal-root=\"true\"]')"), 'A modal above a drawer must own focus and keyboard handling.');
