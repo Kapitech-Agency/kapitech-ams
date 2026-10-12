@@ -540,7 +540,7 @@ export const AdminSettings: React.FC = () => {
   }, [activeTab, canAccessServer, canManageAdminAccounts, loadAccounts, loadAuditLogs, loadMeta, loadOverview]);
 
   const triggerIntegrityCheck = async () => {
-    if (!canAccessServer) return;
+    if (!canAccessServer || integrityLoading) return;
     setIntegrityLoading(true);
     setOverviewMessage(null);
     try {
@@ -568,7 +568,7 @@ export const AdminSettings: React.FC = () => {
   };
 
   const createSnapshot = async () => {
-    if (!canAccessServer) return;
+    if (!canAccessServer || snapshotLoading) return;
     setSnapshotLoading(true);
     setOverviewMessage(null);
     try {
@@ -632,15 +632,20 @@ export const AdminSettings: React.FC = () => {
     setAccountPage(1);
   }, [accountPageSize]);
 
+  const auditPageCount = Math.max(1, Math.ceil(filteredLogs.length / auditPageSize));
   const pagedLogs = useMemo(
     () => filteredLogs.slice((auditPage - 1) * auditPageSize, auditPage * auditPageSize),
     [auditPage, auditPageSize, filteredLogs]
   );
 
+  const accountPageCount = Math.max(1, Math.ceil(accounts.length / accountPageSize));
   const pagedAccounts = useMemo(
     () => accounts.slice((accountPage - 1) * accountPageSize, accountPage * accountPageSize),
     [accountPage, accountPageSize, accounts]
   );
+
+  useEffect(() => { setAuditPage((page) => Math.min(page, auditPageCount)); }, [auditPageCount]);
+  useEffect(() => { setAccountPage((page) => Math.min(page, accountPageCount)); }, [accountPageCount]);
 
   const handleOpenAddAccount = () => {
     if (!canManageAdminAccounts || isCreatingAccount) return;
@@ -721,6 +726,7 @@ export const AdminSettings: React.FC = () => {
 
   const handleUpdateSecurity = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (securitySaving) return;
     setSecurityStatusMessage(null);
 
     if (!currentPassword) {
@@ -863,7 +869,7 @@ export const AdminSettings: React.FC = () => {
         />
       </div>
 
-      {overviewLoadError && canAccessServer && (
+      {overviewLoadError && canAccessServer && activeTab !== 'audit' && (
         <div className="flex flex-col gap-2 rounded-control border border-danger/20 bg-danger/5 px-4 py-3 text-xs text-danger sm:flex-row sm:items-center sm:justify-between" role="alert">
           <span>{overviewLoadError}</span>
           <Button type="button" variant="secondary" onClick={() => void loadOverview()} disabled={overviewLoading} loading={overviewLoading}>Retry</Button>
@@ -1815,7 +1821,7 @@ export const AdminSettings: React.FC = () => {
             <Button type="button" variant="secondary" onClick={() => setIsAddAccountModalOpen(false)} disabled={isCreatingAccount}>
               Cancel
             </Button>
-            <Button type="submit" form="add-admin-account-form" variant="primary" loading={isCreatingAccount}>
+            <Button type="submit" form="add-admin-account-form" variant="primary" loading={isCreatingAccount} disabled={!canManageAdminAccounts}>
               Create account
             </Button>
           </>
