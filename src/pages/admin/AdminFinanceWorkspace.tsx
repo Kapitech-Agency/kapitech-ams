@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowDownLeft, ArrowUpRight, BriefcaseBusiness, CalendarClock, CircleDollarSign, FileText, Landmark, RefreshCw, ShieldAlert, Wallet, WalletCards } from 'lucide-react';
+import { ArrowDown, ArrowUpRight, Briefcase, CalendarDays, CircleDollarSign, FileText, Landmark, RefreshCw, ShieldAlert, WalletCards } from 'lucide-react';
 import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminSectionTabs, AdminStatusBadge } from '../../components/admin/AdminModulePrimitives';
 import Button from '../../components/ui/Button';
 import { api } from '../../lib/apiClient';
@@ -308,7 +308,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
     const expenseInMonth = sumAmounts<AgencyExpense>(expenses.filter((expense) => getMonthKey(expense.date) === currentMonth), (expense) => Number(expense.amount) || 0);
     const metrics = [
       { id: 'billed', label: 'Total billed', value: formatMoney(totalBilled), context: 'Issued invoices excluding drafts and cancellations', icon: <FileText size={15} /> },
-      { id: 'collected', label: 'Total collected', value: formatMoney(totalCollected), context: 'Recorded client payments', icon: <ArrowDownLeft size={15} />, toneClassName: 'text-success' },
+      { id: 'collected', label: 'Total collected', value: formatMoney(totalCollected), context: 'Recorded client payments', icon: <ArrowDown size={15} />, toneClassName: 'text-success' },
       { id: 'receivable', label: 'Outstanding receivables', value: formatMoney(totalOutstanding), context: 'Derived from invoice balances', icon: <WalletCards size={15} />, toneClassName: 'text-warning' },
       { id: 'expenses', label: 'Recorded expenses', value: formatMoney(totalExpenses), context: 'Expense records returned by AMS', icon: <ArrowUpRight size={15} />, toneClassName: 'text-series-3' }
     ];
@@ -599,7 +599,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
             </AdminPanel>
             <AdminMetricStrip metrics={[
               { id: 'pnl-revenue', label: 'Invoice value', value: formatMoney(revenue), context: 'Issued invoices in selected month', icon: <FileText size={15} /> },
-              { id: 'pnl-direct', label: 'Direct project cost', value: formatMoney(classTotals.directProjectCost), context: 'Based on current category mapping', icon: <BriefcaseBusiness size={15} /> },
+              { id: 'pnl-direct', label: 'Direct project cost', value: formatMoney(classTotals.directProjectCost), context: 'Based on current category mapping', icon: <Briefcase size={15} /> },
               { id: 'pnl-operating', label: 'Operating expense', value: formatMoney(classTotals.operatingExpense), context: 'Mapped operating costs', icon: <ArrowUpRight size={15} /> },
               { id: 'pnl-net', label: 'Net preview', value: formatMoney(netPreview), context: 'Before unclassified ' + formatMoney(classTotals.unclassified), icon: <CircleDollarSign size={15} /> }
             ]} />
@@ -769,7 +769,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
             </AdminPanel>
             <AdminMetricStrip metrics={[
               { id: 'year-billed', label: 'Annual invoice value', value: formatMoney(yearBilled), context: selectedYear + ' · issued invoices', icon: <FileText size={15} /> },
-              { id: 'year-collected', label: 'Annual collections', value: formatMoney(yearCollected), context: 'Payments dated in selected year', icon: <ArrowDownLeft size={15} /> },
+              { id: 'year-collected', label: 'Annual collections', value: formatMoney(yearCollected), context: 'Payments dated in selected year', icon: <ArrowDown size={15} /> },
               { id: 'year-expenses', label: 'Annual recorded expenses', value: formatMoney(yearExpense), context: yearExpenses.length + ' source expense records', icon: <ArrowUpRight size={15} /> },
               { id: 'year-net', label: 'Net cash movement', value: formatMoney(yearCollected - yearOutflow), context: 'Not an accounting net profit', icon: <CircleDollarSign size={15} /> }
             ]} />
@@ -826,7 +826,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
       {loading ? renderLoading() : renderView(activeTab)}
       <div className="flex flex-col gap-2 border-t border-line pt-3 text-[11px] leading-5 text-muted sm:flex-row sm:items-center sm:justify-between">
         <span>Source of truth for workflow design: Kapitech Finance Final Automated.xlsx.</span>
-        <span className="inline-flex items-center gap-1.5"><CalendarClock size={13} /> Excel-alignment implementation · reports reflect connected AMS records</span>
+        <span className="inline-flex items-center gap-1.5"><CalendarDays size={13} /> Excel-alignment implementation · reports reflect connected AMS records</span>
       </div>
     </AdminPageShell>
   );
