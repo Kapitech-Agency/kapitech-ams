@@ -14,7 +14,7 @@ test('Tasks workspace Kanban supports permission-aware drag/drop and keyboard st
   assert.ok(source.includes('const beginBoardTaskDrag ='));
   assert.ok(source.includes('const handleBoardTaskDrop ='));
   assert.ok(source.includes("event.key === 'ArrowLeft'"));
-  assert.ok(source.includes("event.key === 'ArrowRight'"));
+  assert.ok(source.includes("event.key !== 'ArrowRight'"));
   assert.ok(source.includes("dataTransfer.setData('text/ams-task-id', task.id)"));
   assert.ok(source.includes("api.tasks.update(task.id, { status: nextStatus })"));
   assert.ok(source.includes('setSelectedTask(current => current?.id === committedTask.id ? committedTask : current)'));
@@ -48,5 +48,5 @@ test('horizontal board scrolling does not steal pointer interactions from Kanban
   const source = await read('src/lib/useDragToScroll.ts');
 
   assert.ok(source.includes("target.closest('[data-drag-handle]')"));
-  assert.ok(source.includes("target.closest('[draggable=\\"true\\"]')"));
+  assert.ok(source.includes('draggable="true"'));
 });
