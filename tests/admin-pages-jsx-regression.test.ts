@@ -125,7 +125,7 @@ test('All AMS record-entry forms use Drawer instead of Modal', () => {
     });
   }
   const commandPalette = fs.readFileSync(commandPalettePath, 'utf8');
-  assert.ok(commandPalette.includes('<Modal') && /type="search"|role="combobox"|command.*search/i.test(commandPalette), 'Command palette retains its dedicated searchable overlay.');
+  assert.ok(commandPalette.includes('<Modal') && commandPalette.includes('aria-label="Command results"') && commandPalette.includes('AMS search'), 'Command palette retains its dedicated searchable overlay.');
 
   assert.deepEqual(findings, [], 'Record-entry forms and interactive business inputs must be hosted by Drawer, not Modal. The keyboard-first command palette is the only exception.');
 
@@ -134,6 +134,7 @@ test('All AMS record-entry forms use Drawer instead of Modal', () => {
   const documents = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminDocuments.tsx'), 'utf8');
   const teams = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminTeams.tsx'), 'utf8');
   const drawer = fs.readFileSync(path.resolve(process.cwd(), 'src/components/ui/Drawer.tsx'), 'utf8');
+  const modal = fs.readFileSync(path.resolve(process.cwd(), 'src/components/ui/Modal.tsx'), 'utf8');
 
   assert.ok(careers.includes('cms-careers-editor') && careers.includes('cms-career-applicant-details'));
   assert.ok(!careers.includes("import { Modal } from '../../components/ui/Modal'"));
@@ -141,4 +142,6 @@ test('All AMS record-entry forms use Drawer instead of Modal', () => {
   assert.ok(documents.includes('<Drawer') && documents.includes('documents-upload-form'));
   assert.ok(teams.includes('<Drawer') && teams.includes('vendorFormOpen'));
   assert.ok(drawer.includes("'3xl': 'max-w-4xl'") && drawer.includes("'4xl': 'max-w-5xl'"));
+  assert.ok(modal.includes('data-ams-modal-root="true"') && modal.includes('z-[80]'));
+  assert.ok(drawer.includes("document.querySelector('[data-ams-modal-root=\"true\"]')"), 'A modal above a drawer must own focus and keyboard handling.');
 });
