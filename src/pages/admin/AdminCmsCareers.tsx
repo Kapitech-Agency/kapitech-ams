@@ -751,7 +751,7 @@ export const AdminCmsCareers: React.FC = () => {
 
       <Drawer
         open={!!selectedApplicant}
-        onClose={() => setSelectedApplicant(null)}
+        onClose={() => !savingApplicantNotes && setSelectedApplicant(null)}
         title={selectedApplicant?.fullName || (isId ? 'Detail pelamar' : 'Applicant details')}
         description={selectedApplicant ? [selectedApplicant.positionTitle, selectedApplicant.email].filter(Boolean).join(' · ') : undefined}
         size="3xl"
@@ -816,7 +816,7 @@ export const AdminCmsCareers: React.FC = () => {
 
       <Drawer
         open={editorOpen}
-        onClose={() => setEditorOpen(false)}
+        onClose={() => !saving && setEditorOpen(false)}
         title={editorMode === 'create' ? (isId ? 'Tambah lowongan baru' : 'Add a job opening') : (isId ? 'Edit lowongan' : 'Edit job opening')}
         description={isId ? 'Konten bilingual ini ditampilkan pada halaman Career public site.' : 'Edit bilingual content shown on the public Careers page.'}
         size="4xl"
