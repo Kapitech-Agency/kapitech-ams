@@ -440,3 +440,13 @@ Use Tailwind v4 @theme tokens, lucide-react icons, the motion package, and hand-
 Respect roles, MFA and document-vault patterns; never expose secrets or storage URLs.
 Build responsive (1440 / 1024 / 768 / 390), support both themes, and finish by running the Definition of Done checklist (npm run lint and npm run build must pass). List assumptions at the end.
 ```
+
+
+## Kanban interaction contract
+
+- The Projects portfolio board, Sprint & Delivery task board, and Tasks workspace board share the same operational expectations: visible stage labels/counts, semantic token colors, permission-aware controls, and clear empty/drop states.
+- On boards with movement enabled, drag handles move a card between stages. The focused handle also supports **Left/Right Arrow** to move one stage and **Enter/Space** to open card details. Keep a separate tap/click path for card details and status actions so mobile users do not depend on native drag-and-drop.
+- Status writes must use the existing task/project API and preserve the current authorization checks. Disable conflicting status/bulk writes while a save is pending; do not create a parallel business-data source.
+- Keep the card and open detail surface synchronized during optimistic updates. On API failure, restore both to the previous server state and show the existing error feedback. Never make a detail modal appear saved merely because its button was clicked.
+- Drag/drop should visibly mark the target lane and reset drag state on drop, cancellation, or invalid targets. Preserve filtering and sorting behavior; stage movement must not silently reorder cards within a stage when ordering is not persisted.
+- Read-only roles must not expose active drag handles or mutate status. Test empty lanes, permission-limited views, overlapping updates, keyboard navigation, filtered boards, narrow screens, and save rollback.
