@@ -91,3 +91,6 @@ The source sync also prepares vendor-payment drafts for IDR vendor bills when th
 Repeated source syncs now refresh an existing journal only when it is still a draft and its normalized lines/source values have changed. Posted journals are never rewritten; unchanged drafts are counted as already present. The source identifier remains stable across amount/date corrections to a payment record, and the unique index on (record_type, record_key) continues to protect concurrent duplicate creation.
 
 Expense rows with vendor or vendor-contract linkage are withheld from the generic expense-to-cash draft lane. This avoids creating both a vendor bill/payment journal and a second expense/cash journal for the same obligation before the AMS source is explicitly matched. Such rows remain visible in the skipped queue and need Finance to reconcile them to a bill or confirm that the expense is a separate obligation.
+
+
+A sync also detects when a source no longer matches an already posted journal. It reports the conflict without editing the posted record; Finance must reconcile the source and use the approved reversal/adjustment path instead of silently changing a posted period.

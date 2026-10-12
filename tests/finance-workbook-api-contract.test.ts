@@ -57,7 +57,8 @@ test('Journal source sync is permission-gated, draft-only and duplicate-safe', a
   assert.match(routes, /FINANCE_SOURCE_JOURNAL_DRAFT_CREATED/);
   assert.match(routes, /FINANCE_SOURCE_JOURNAL_DRAFT_REFRESHED/);
   assert.match(routes, /existingSourceRecords/);
-  assert.match(routes, /existing\.status !== 'draft'/);
+  assert.match(routes, /existing\.status === 'posted'/);
+  assert.match(routes, /differs from an already posted journal/);
   assert.match(routes, /updated,/);
   assert.match(repository, /Journal source type and source ID must be supplied together/);
   assert.match(repository, /key = sourceType && sourceId \? 'source:' \+ sourceType \+ ':' \+ sourceId : reference/);

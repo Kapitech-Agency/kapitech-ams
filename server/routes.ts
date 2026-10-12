@@ -3898,7 +3898,20 @@ apiRouter.post('/finance/workbook/journal-drafts/sync', requireAuth, requirePerm
       const sourceKey = draft.sourceType + '|' + draft.sourceId;
       const existing = existingSourceRecords.get(sourceKey);
       if (existing) {
-        if (existing.status !== 'draft' || snapshot(existing.payload) === snapshot(draft)) {
+        const sourceIsUnchanged = snapshot(existing.payload) === snapshot(draft);
+        if (existing.status === 'posted') {
+          if (!sourceIsUnchanged) {
+            failed.push({
+              sourceType: draft.sourceType,
+              sourceId: draft.sourceId,
+              reason: 'The source differs from an already posted journal. The posted journal is immutable; review supporting evidence and create an approved reversal or adjustment instead of auto-overwriting it.'
+            });
+          } else {
+            alreadyPresent++;
+          }
+          continue;
+        }
+        if (sourceIsUnchanged) {
           alreadyPresent++;
           continue;
         }
