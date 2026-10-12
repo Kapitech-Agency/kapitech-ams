@@ -41,7 +41,7 @@ test('Projects and Sprint Kanban drag handles provide keyboard operation and res
   assert.ok(source.includes("draggable={canManageProjects && !movingProjectId}"));
   assert.ok(source.includes("draggable={canManageKanbanTasks && !movingTaskId && updatingSubtaskId === null}"));
   assert.ok(source.includes("if (!canManageProjects || movingProjectId)"));
-  assert.ok(source.includes("if (!canManageKanbanTasks || movingTaskId)"));
+  assert.ok(source.includes("if (!canManageKanbanTasks || movingTaskId || updatingSubtaskId)"));
 });
 
 test('horizontal board scrolling does not steal pointer interactions from Kanban drag handles', async () => {
