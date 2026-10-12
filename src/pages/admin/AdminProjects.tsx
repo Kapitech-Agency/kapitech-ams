@@ -1067,7 +1067,7 @@ export const AdminProjects: React.FC = () => {
     }
 
     const target = event.target as HTMLElement | null;
-    if (target?.closest('button,a,input,textarea,select,[data-no-drag="true"]')) {
+    if (!target?.closest('[data-drag-handle="true"]') && target?.closest('button,a,input,textarea,select,[data-no-drag="true"]')) {
       event.preventDefault();
       return;
     }
@@ -1093,7 +1093,7 @@ export const AdminProjects: React.FC = () => {
     }
 
     const target = event.target as HTMLElement | null;
-    if (target?.closest('button,a,input,textarea,select,[data-no-drag="true"]')) {
+    if (!target?.closest('[data-drag-handle="true"]') && target?.closest('button,a,input,textarea,select,[data-no-drag="true"]')) {
       event.preventDefault();
       return;
     }
