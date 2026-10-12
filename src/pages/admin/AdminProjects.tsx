@@ -1488,10 +1488,10 @@ export const AdminProjects: React.FC = () => {
         <div className="text-xs text-muted">This action can be tested with the seeded task data without changing the API contract.</div>
       </Modal>
 
-      <Modal
+      <Drawer
         open={Boolean(selectedProjectDetail)}
         onClose={clearProjectSelection}
-        size="lg"
+        size="xl"
         title={selectedProjectDetail?.name || 'Project details'}
         description={selectedProjectDetail ? selectedProjectDetail.clientCompany : undefined}
         footer={(
@@ -1623,12 +1623,12 @@ export const AdminProjects: React.FC = () => {
             </div>
           </div>
         )}
-      </Modal>
+      </Drawer>
 
-      <Modal
+      <Drawer
         open={Boolean(selectedTask)}
         onClose={() => setSelectedTask(null)}
-        size="md"
+        size="xl"
         title={selectedTask?.title || 'Task details'}
         description={selectedTask ? selectedSprintProject?.name : undefined}
         footer={(
@@ -1701,7 +1701,7 @@ export const AdminProjects: React.FC = () => {
             )}
           </div>
         )}
-      </Modal>
+      </Drawer>
 
       <AdminModuleHeader
         className="mb-0"
