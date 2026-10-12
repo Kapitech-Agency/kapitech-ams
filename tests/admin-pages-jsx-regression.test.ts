@@ -172,3 +172,22 @@ test('AMS module tabs share canonical desktop and mobile navigation primitives',
   assert.ok(finance.indexOf('<AdminModuleHeader') < finance.indexOf('<AdminSectionTabs'));
   assert.ok(clients.includes('<AdminSectionTabs') && retainers.includes('<AdminSectionTabs') && sla.includes('<AdminSectionTabs'));
 });
+
+test('Lazy module navigation keeps the AMS shell mounted and recovers locally on module failure', () => {
+  const source = fs.readFileSync(path.resolve(process.cwd(), 'src/App.tsx'), 'utf8');
+  const routeStart = source.indexOf('const ModuleRoute: React.FC<');
+  const routeEnd = source.indexOf('const TeamWorkspaceRoute:', routeStart);
+  assert.ok(routeStart >= 0 && routeEnd > routeStart, 'ModuleRoute is defined in the expected application routing section.');
+
+  const moduleRoute = source.slice(routeStart, routeEnd);
+  assert.ok(source.includes('const ModuleLoadingFallback = () => ('));
+  assert.ok(source.includes('role="status" aria-label="Loading module"'));
+  assert.ok(source.includes('class ModuleRouteErrorBoundary extends React.Component'));
+  assert.ok(moduleRoute.includes('<ModuleRouteErrorBoundary>'));
+  assert.ok(moduleRoute.includes('<Suspense fallback={<ModuleLoadingFallback />}>'));
+  assert.ok(moduleRoute.includes('<RequireModuleAccess'));
+  assert.ok(moduleRoute.includes('{children}'));
+  assert.ok(source.includes('The rest of AMS is still available.'));
+  assert.ok(source.includes('Reload section'));
+  assert.ok(source.includes('<Suspense fallback={<LoadingScreen />}>'), 'The full-screen fallback remains available for initial application loading.');
+});

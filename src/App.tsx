@@ -198,14 +198,86 @@ const ProtectedAdminRoutes = () => (
   </RequireAdminAuth>
 );
 
+const ModuleLoadingFallback = () => (
+  <div className="min-h-[320px] min-w-0 space-y-5 p-4 sm:p-6" role="status" aria-label="Loading module">
+    <div className="space-y-2">
+      <div className="h-5 w-44 max-w-full rounded-control bg-line/60" />
+      <div className="h-3 w-64 max-w-full rounded-control bg-line/40" />
+    </div>
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      {[0, 1, 2].map((item) => (
+        <div key={item} className="h-20 rounded-card border border-line bg-panel p-4">
+          <div className="h-3 w-20 rounded-control bg-line/50" />
+          <div className="mt-4 h-5 w-14 rounded-control bg-line/40" />
+        </div>
+      ))}
+    </div>
+    <div className="rounded-card border border-line bg-panel p-4">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="h-4 w-36 rounded-control bg-line/50" />
+        <div className="h-8 w-24 rounded-control bg-line/40" />
+      </div>
+      <div className="space-y-3">
+        {[0, 1, 2, 3].map((item) => (
+          <div key={item} className="grid grid-cols-3 gap-3">
+            <div className="h-3 rounded-control bg-line/40" />
+            <div className="h-3 rounded-control bg-line/30" />
+            <div className="h-3 rounded-control bg-line/30" />
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+class ModuleRouteErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { error: Error | null }
+> {
+  state: { error: Error | null } = { error: null };
+
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+
+  render() {
+    if (!this.state.error) return this.props.children;
+
+    return (
+      <div className="mx-4 my-6 rounded-card border border-danger/25 bg-danger/5 p-5 sm:mx-6" role="alert">
+        <h2 className="text-sm font-semibold text-fg">This section could not be loaded</h2>
+        <p className="mt-1 text-xs leading-5 text-muted">
+          The rest of AMS is still available. Reload this section to try again.
+        </p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="mt-4 inline-flex min-h-9 items-center justify-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg transition-colors hover:bg-panel-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        >
+          Reload section
+        </button>
+        {import.meta.env.DEV && (
+          <pre className="mt-4 max-h-40 overflow-auto rounded-control border border-line bg-bg p-3 text-left text-[10px] text-danger">
+            {this.state.error.message}
+          </pre>
+        )}
+      </div>
+    );
+  }
+}
+
 const ModuleRoute: React.FC<{
   moduleKey: string;
   moduleLabel: string;
   children: React.ReactNode;
 }> = ({ moduleKey, moduleLabel, children }) => (
-  <RequireModuleAccess moduleKey={moduleKey} moduleLabel={moduleLabel}>
-    {children}
-  </RequireModuleAccess>
+  <ModuleRouteErrorBoundary>
+    <RequireModuleAccess moduleKey={moduleKey} moduleLabel={moduleLabel}>
+      <Suspense fallback={<ModuleLoadingFallback />}>
+        {children}
+      </Suspense>
+    </RequireModuleAccess>
+  </ModuleRouteErrorBoundary>
 );
 
 const TeamWorkspaceRoute: React.FC = () => {
