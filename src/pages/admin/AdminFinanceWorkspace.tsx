@@ -634,6 +634,10 @@ export const AdminFinanceWorkspace: React.FC = () => {
           projectId: payload.projectId,
           notes: payload.notes,
           status: editor.record?.status || 'draft',
+          ...(editor.record?.payload.sourceType && editor.record?.payload.sourceId ? {
+            sourceType: editor.record.payload.sourceType,
+            sourceId: editor.record.payload.sourceId
+          } : {}),
           lines: [
             { accountCode: debitCode, accountName: debitName, debit: numericAmount, credit: 0, notes: payload.notes || '' },
             { accountCode: creditCode, accountName: creditName, debit: 0, credit: numericAmount, notes: payload.notes || '' }
