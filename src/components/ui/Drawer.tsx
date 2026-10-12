@@ -9,7 +9,7 @@ export interface DrawerProps {
   description?: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl';
   closeOnOutsideClick?: boolean;
   closeOnEscape?: boolean;
   closeLabel?: string;
@@ -25,7 +25,9 @@ const sizes = {
   md: 'max-w-md',
   lg: 'max-w-lg',
   xl: 'max-w-xl',
-  '2xl': 'max-w-2xl'
+  '2xl': 'max-w-2xl',
+  '3xl': 'max-w-4xl',
+  '4xl': 'max-w-5xl'
 };
 
 const drawerStack: string[] = [];
@@ -104,6 +106,7 @@ export const Drawer: React.FC<DrawerProps> = ({
 
     const handleFocusIn = (event: FocusEvent) => {
       if (drawerStack[drawerStack.length - 1] !== instanceId) return;
+      if (document.querySelector('[data-ams-modal-root="true"]')) return;
       const target = event.target as Node | null;
       if (target && dialogRef.current?.contains(target)) return;
       getInitialFocus()?.focus();
@@ -111,6 +114,7 @@ export const Drawer: React.FC<DrawerProps> = ({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (drawerStack[drawerStack.length - 1] !== instanceId) return;
+      if (document.querySelector('[data-ams-modal-root="true"]')) return;
 
       if (event.key === 'Escape') {
         if (!closeOnEscape) return;

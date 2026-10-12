@@ -37,6 +37,7 @@ import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { Modal } from '../../components/ui/Modal';
+import { Drawer } from '../../components/ui/Drawer';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import { api } from '../../lib/apiClient';
@@ -1819,35 +1820,38 @@ export const AdminTeams: React.FC = () => {
         )}
       </Modal>
 
-      <Modal
+      <Drawer
         open={vendorFormOpen}
-        onClose={() => setVendorFormOpen(false)}
-        title={editingVendor ? 'Edit Vendor' : 'Add Vendor'}
+        onClose={() => !savingVendor && setVendorFormOpen(false)}
+        title={editingVendor ? 'Edit vendor' : 'Add vendor'}
         description="Maintain the vendor directory using the existing AMS vendor record."
-        size="xl"
+        size="3xl"
+        footer={(
+          <>
+            <Button type="button" variant="secondary" onClick={() => setVendorFormOpen(false)} disabled={savingVendor}>Cancel</Button>
+            <Button type="submit" form="team-vendor-form" variant="primary" loading={savingVendor}>{editingVendor ? 'Save changes' : 'Create vendor'}</Button>
+          </>
+        )}
       >
-        <form onSubmit={saveVendor} className="space-y-5">
+        <form id="team-vendor-form" onSubmit={saveVendor} className="space-y-5">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="space-y-1.5"><span className="text-[11px] text-muted">Name</span><input value={vendorForm.name} onChange={(event) => setVendorForm((current) => ({ ...current, name: event.target.value }))} className="ams-control w-full" required /></label>
             <label className="space-y-1.5"><span className="text-[11px] text-muted">Company</span><input value={vendorForm.companyName} onChange={(event) => setVendorForm((current) => ({ ...current, companyName: event.target.value }))} className="ams-control w-full" /></label>
             <label className="space-y-1.5"><span className="text-[11px] text-muted">Email</span><input type="email" value={vendorForm.email} onChange={(event) => setVendorForm((current) => ({ ...current, email: event.target.value }))} className="ams-control w-full" required /></label>
             <label className="space-y-1.5"><span className="text-[11px] text-muted">Phone</span><input value={vendorForm.phone} onChange={(event) => setVendorForm((current) => ({ ...current, phone: event.target.value }))} className="ams-control w-full" /></label>
-            <label className="space-y-1.5"><span className="text-[11px] text-muted">Type</span><CustomSelect value={vendorForm.type} onChange={(value) => setVendorForm((current) => ({ ...current, type: value as VendorType }))} options={Object.keys(vendorTypeLabel).map((value) => ({ value, label: vendorTypeLabel[value as VendorType] }))} /></label>
-            <label className="space-y-1.5"><span className="text-[11px] text-muted">Primary capability</span><CustomSelect value={vendorForm.primaryCategory} onChange={(value) => setVendorForm((current) => ({ ...current, primaryCategory: value as AgencyVendor['primaryCategory'] }))} options={['Frontend Dev', 'Backend Dev', 'UI/UX Design', 'DevOps & Cloud', 'SEO & Copy', '3D & Motion', 'Legal & Accounting'].map((value) => ({ value, label: value }))} /></label>
+            <label className="space-y-1.5"><span className="text-[11px] text-muted">Type</span><CustomSelect aria-label="Type" value={vendorForm.type} onChange={(value) => setVendorForm((current) => ({ ...current, type: value as VendorType }))} options={Object.keys(vendorTypeLabel).map((value) => ({ value, label: vendorTypeLabel[value as VendorType] }))} /></label>
+            <label className="space-y-1.5"><span className="text-[11px] text-muted">Primary capability</span><CustomSelect aria-label="Primary capability" value={vendorForm.primaryCategory} onChange={(value) => setVendorForm((current) => ({ ...current, primaryCategory: value as AgencyVendor['primaryCategory'] }))} options={['Frontend Dev', 'Backend Dev', 'UI/UX Design', 'DevOps & Cloud', 'SEO & Copy', '3D & Motion', 'Legal & Accounting'].map((value) => ({ value, label: value }))} /></label>
             <label className="space-y-1.5"><span className="text-[11px] text-muted">Hourly rate</span><input type="number" min={0} value={vendorForm.hourlyRate} onChange={(event) => setVendorForm((current) => ({ ...current, hourlyRate: Number(event.target.value) }))} className="ams-control w-full" /></label>
             <label className="space-y-1.5"><span className="text-[11px] text-muted">Rating</span><input type="number" min={0} max={5} step={0.1} value={vendorForm.rating} onChange={(event) => setVendorForm((current) => ({ ...current, rating: Number(event.target.value) }))} className="ams-control w-full" /></label>
             <label className="space-y-1.5 sm:col-span-2"><span className="text-[11px] text-muted">Skills</span><input value={vendorForm.skills} onChange={(event) => setVendorForm((current) => ({ ...current, skills: event.target.value }))} placeholder="React, TypeScript, Tailwind CSS" className="ams-control w-full" /></label>
             <label className="space-y-1.5"><span className="text-[11px] text-muted">Location</span><input value={vendorForm.location} onChange={(event) => setVendorForm((current) => ({ ...current, location: event.target.value }))} className="ams-control w-full" /></label>
-            <label className="space-y-1.5"><span className="text-[11px] text-muted">Status</span><CustomSelect value={vendorForm.status} onChange={(value) => setVendorForm((current) => ({ ...current, status: value as VendorStatus }))} options={Object.keys(vendorStatusLabel).map((value) => ({ value, label: vendorStatusLabel[value as VendorStatus] }))} /></label>
+            <label className="space-y-1.5"><span className="text-[11px] text-muted">Status</span><CustomSelect aria-label="Status" value={vendorForm.status} onChange={(value) => setVendorForm((current) => ({ ...current, status: value as VendorStatus }))} options={Object.keys(vendorStatusLabel).map((value) => ({ value, label: vendorStatusLabel[value as VendorStatus] }))} /></label>
             <label className="inline-flex h-10 items-center gap-2 rounded-control border border-line bg-bg px-3 text-xs sm:col-span-2"><input type="checkbox" checked={vendorForm.isVetted} onChange={(event) => setVendorForm((current) => ({ ...current, isVetted: event.target.checked }))} className="accent-accent" /> Vetted</label>
             <label className="space-y-1.5 sm:col-span-2"><span className="text-[11px] text-muted">Notes</span><textarea value={vendorForm.notes} onChange={(event) => setVendorForm((current) => ({ ...current, notes: event.target.value }))} rows={3} className="ams-control w-full" /></label>
           </div>
-          <div className="flex justify-end gap-2 border-t border-line pt-4">
-            <Button type="button" variant="secondary" onClick={() => setVendorFormOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="primary" loading={savingVendor}>{editingVendor ? 'Save changes' : 'Create vendor'}</Button>
-          </div>
+
         </form>
-      </Modal>
+      </Drawer>
 
       <Modal
         open={Boolean(vendorDetail)}

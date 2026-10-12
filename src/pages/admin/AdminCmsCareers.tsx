@@ -8,7 +8,7 @@ import {
 import { useLanguage } from '../../lib/LanguageContext';
 import { api } from '../../lib/apiClient';
 import Button from '../../components/ui/Button';
-import { Modal } from '../../components/ui/Modal';
+import { Drawer } from '../../components/ui/Drawer';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { AdminCmsSectionTabs, AdminDataTableShell, AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination, Skeleton } from '../../components/admin/AdminModulePrimitives';
@@ -749,12 +749,12 @@ export const AdminCmsCareers: React.FC = () => {
         </section>
       )}
 
-      <Modal
+      <Drawer
         open={!!selectedApplicant}
-        onClose={() => setSelectedApplicant(null)}
+        onClose={() => !savingApplicantNotes && setSelectedApplicant(null)}
         title={selectedApplicant?.fullName || (isId ? 'Detail pelamar' : 'Applicant details')}
         description={selectedApplicant ? [selectedApplicant.positionTitle, selectedApplicant.email].filter(Boolean).join(' · ') : undefined}
-        size="xl"
+        size="3xl"
         slug="cms-career-applicant-details"
         footer={
           <>
@@ -812,14 +812,14 @@ export const AdminCmsCareers: React.FC = () => {
             </div>
           );
         })()}
-      </Modal>
+      </Drawer>
 
-      <Modal
+      <Drawer
         open={editorOpen}
-        onClose={() => setEditorOpen(false)}
+        onClose={() => !saving && setEditorOpen(false)}
         title={editorMode === 'create' ? (isId ? 'Tambah lowongan baru' : 'Add a job opening') : (isId ? 'Edit lowongan' : 'Edit job opening')}
         description={isId ? 'Konten bilingual ini ditampilkan pada halaman Career public site.' : 'Edit bilingual content shown on the public Careers page.'}
-        size="2xl"
+        size="4xl"
         slug="cms-careers-editor"
         footer={
           <>
@@ -903,7 +903,7 @@ export const AdminCmsCareers: React.FC = () => {
             </section>
           </div>
         </form>
-      </Modal>
+      </Drawer>
     </AdminPageShell>
   );
 };

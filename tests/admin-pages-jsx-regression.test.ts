@@ -103,3 +103,49 @@ test('Authenticated AMS pages use one canonical responsive page frame', () => {
   assert.ok(layout.includes('<div className="ams-content flex-1 min-h-0 w-full max-w-[1560px] mx-auto">'));
   assert.ok(dashboard.includes('<AdminPageShell featureSlug="dashboard-module" className="ams-dashboard">'));
 });
+test('All AMS record-entry forms use Drawer instead of Modal', () => {
+  const srcRoot = path.resolve(process.cwd(), 'src');
+  const walk = (directory) => fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const fullPath = path.join(directory, entry.name);
+    if (entry.isDirectory()) return walk(fullPath);
+    return entry.isFile() && entry.name.endsWith('.tsx') ? [fullPath] : [];
+  });
+  const inputPattern = /<(?:form|input|textarea|select|CustomSelect|DatePicker|Input|Textarea|Select|Combobox|MultiSelect)\b/i;
+  const findings = [];
+  const commandPalettePath = path.resolve(srcRoot, 'components/admin/CommandPalette.tsx');
+
+  for (const file of walk(srcRoot)) {
+    const source = fs.readFileSync(file, 'utf8');
+    const modalBlocks = source.match(/<Modal\b[\s\S]*?<\/Modal>/g) || [];
+    modalBlocks.forEach((block, index) => {
+      // The command palette is a keyboard-first search overlay, not a record-entry form.
+      if (file !== commandPalettePath && inputPattern.test(block)) {
+        findings.push(path.relative(process.cwd(), file) + ' (Modal #' + (index + 1) + ')');
+      }
+    });
+  }
+  const commandPalette = fs.readFileSync(commandPalettePath, 'utf8');
+  assert.ok(commandPalette.includes('<Modal') && commandPalette.includes('aria-label="Command results"') && commandPalette.includes('AMS search'), 'Command palette retains its dedicated searchable overlay.');
+
+  assert.deepEqual(findings, [], 'Record-entry forms and interactive business inputs must be hosted by Drawer, not Modal. The keyboard-first command palette is the only exception.');
+
+  const careers = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsCareers.tsx'), 'utf8');
+  const tasks = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/TasksWorkspace.tsx'), 'utf8');
+  const documents = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminDocuments.tsx'), 'utf8');
+  const teams = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminTeams.tsx'), 'utf8');
+  const drawer = fs.readFileSync(path.resolve(process.cwd(), 'src/components/ui/Drawer.tsx'), 'utf8');
+  const modal = fs.readFileSync(path.resolve(process.cwd(), 'src/components/ui/Modal.tsx'), 'utf8');
+
+  assert.ok(careers.includes('cms-careers-editor') && careers.includes('cms-career-applicant-details'));
+  assert.ok(!careers.includes("import { Modal } from '../../components/ui/Modal'"));
+  assert.ok(tasks.includes('<Drawer slug="task-create-modal"') && tasks.includes('<Drawer slug="task-edit-modal"'));
+  assert.ok(tasks.includes('aria-label="Project"') && tasks.includes('aria-label="Assignee"') && tasks.includes('aria-label="Priority"'));
+  assert.ok(tasks.includes('form="tasks-create-form"') && tasks.includes('form="tasks-edit-form"'));
+  assert.ok(documents.includes('<Drawer') && documents.includes('documents-upload-form'));
+  assert.ok(documents.includes('aria-label="Category"') && documents.includes('aria-label="Related entity"'));
+  assert.ok(teams.includes('<Drawer') && teams.includes('vendorFormOpen'));
+  assert.ok(teams.includes('aria-label="Primary capability"') && teams.includes('aria-label="Status"'));
+  assert.ok(drawer.includes("'3xl': 'max-w-4xl'") && drawer.includes("'4xl': 'max-w-5xl'"));
+  assert.ok(modal.includes('data-ams-modal-root="true"') && modal.includes('z-[80]'));
+  assert.ok(drawer.includes("document.querySelector('[data-ams-modal-root=\"true\"]')"), 'A modal above a drawer must own focus and keyboard handling.');
+});

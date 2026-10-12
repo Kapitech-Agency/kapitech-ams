@@ -21,6 +21,7 @@ import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Modal } from '../../components/ui/Modal';
+import { Drawer } from '../../components/ui/Drawer';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
@@ -747,7 +748,7 @@ export const AdminDocuments: React.FC = () => {
         </section>
       </div>
 
-      <Modal
+      <Drawer
         open={uploadOpen}
         onClose={() => !uploading && setUploadOpen(false)}
         size="lg"
@@ -766,8 +767,8 @@ export const AdminDocuments: React.FC = () => {
             <input id="documents-upload-title" value={uploadTitle} onChange={(event) => setUploadTitle(event.target.value)} required placeholder="e.g. Master Services Agreement 2026" className="mt-1 h-10 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none placeholder:text-muted focus:border-accent" />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
-            <div data-ams-slug="documents-upload-category"><label className="text-xs font-medium text-muted">Category</label><CustomSelect value={uploadCategory} onChange={setUploadCategory} options={['Contract','Proposal','Invoice','Deliverable','Compliance','SOP & Guides','Legal & Charters','Financial Reports','HR & People','Security & Keys'].map((value) => ({ value, label: value }))} triggerClassName="mt-1 w-full" /></div>
-            <div data-ams-slug="documents-upload-related"><label className="text-xs font-medium text-muted">Related entity</label><CustomSelect value={uploadRelatedType} onChange={setUploadRelatedType} options={['General','Client','Deal','Project'].map((value) => ({ value, label: value }))} triggerClassName="mt-1 w-full" /></div>
+            <div data-ams-slug="documents-upload-category"><label className="text-xs font-medium text-muted">Category</label><CustomSelect aria-label="Category" value={uploadCategory} onChange={setUploadCategory} options={['Contract','Proposal','Invoice','Deliverable','Compliance','SOP & Guides','Legal & Charters','Financial Reports','HR & People','Security & Keys'].map((value) => ({ value, label: value }))} triggerClassName="mt-1 h-9 min-h-9 w-full" /></div>
+            <div data-ams-slug="documents-upload-related"><label className="text-xs font-medium text-muted">Related entity</label><CustomSelect aria-label="Related entity" value={uploadRelatedType} onChange={setUploadRelatedType} options={['General','Client','Deal','Project'].map((value) => ({ value, label: value }))} triggerClassName="mt-1 w-full" /></div>
           </div>
           <div data-ams-slug="documents-upload-file">
             <label className="text-xs font-medium text-muted">Document file</label>
@@ -776,7 +777,7 @@ export const AdminDocuments: React.FC = () => {
           </div>
           {uploadFile && <div className="flex items-center justify-between gap-3 rounded-control border border-line bg-bg px-3 py-2.5"><div className="min-w-0"><div className="truncate text-xs font-medium text-fg">{uploadFile.name}</div><div className="mt-1 text-[10px] text-muted">{formatBytes(uploadFile.size)} · {uploadFile.type || 'unknown type'}</div></div><button type="button" onClick={() => { setUploadFile(null); setInputKey((current) => current + 1); }} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-control text-muted hover:bg-danger/10 hover:text-danger" aria-label="Remove selected file"><X size={14} /></button></div>}
         </form>
-      </Modal>
+      </Drawer>
 
       <Modal
         open={Boolean(selectedDocument)}

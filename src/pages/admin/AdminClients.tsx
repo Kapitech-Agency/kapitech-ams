@@ -611,7 +611,7 @@ export const AdminClients: React.FC = () => {
         {!isLoading && <AdminTablePagination total={filteredClients.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="records" slug="client-directory-pagination" />}
       </section>
 
-      <Modal slug="client-directory-delete-modal"
+      <Modal slug="client-directory-detail-modal"
         open={!!selectedClient}
         onClose={() => setSelectedClient(null)}
         size="lg"

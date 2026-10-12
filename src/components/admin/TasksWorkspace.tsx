@@ -18,6 +18,7 @@ import {
 import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminSectionTabs, AdminTablePagination } from './AdminModulePrimitives';
 import { CustomSelect } from '../ui/CustomSelect';
 import { Modal } from '../ui/Modal';
+import { Drawer } from '../ui/Drawer';
 import { ProfileIdentity } from './ProfileIdentity';
 import Button from '../ui/Button';
 import { api } from '../../lib/apiClient';
@@ -1091,16 +1092,16 @@ export const TasksWorkspace: React.FC = () => {
         <AdminTablePagination total={filteredRecords.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="tasks" slug="tasks-pagination" />
       </AdminPanel>
 
-      <Modal slug="task-create-modal"
+      <Drawer slug="task-create-modal"
         open={taskFormOpen}
-        onClose={() => setTaskFormOpen(false)}
+        onClose={() => !savingTask && setTaskFormOpen(false)}
         size="md"
         title="Create task"
         description="Add a task to an existing project delivery queue."
         footer={(
           <>
             <Button type="button" variant="secondary" onClick={() => setTaskFormOpen(false)} disabled={savingTask} data-ams-slug="task-create-cancel">Cancel</Button>
-            <Button type="submit" variant="primary" form="tasks-create-form" loading={savingTask} data-ams-slug="task-create-submit">Create Task</Button>
+            <Button type="submit" variant="primary" form="tasks-create-form" loading={savingTask} data-ams-slug="task-create-submit">Create task</Button>
           </>
         )}
       >
@@ -1110,11 +1111,11 @@ export const TasksWorkspace: React.FC = () => {
             <input id="task-title" required value={taskForm.title} onChange={event => setTaskForm(current => ({ ...current, title: event.target.value }))} className="mt-1 h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent" placeholder="e.g. Finalize homepage responsive states" />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
-            <div data-ams-slug="task-create-project"><label className="text-[11px] font-medium text-muted">Project</label><CustomSelect value={taskForm.projectId} onChange={value => setTaskForm(current => ({ ...current, projectId: value }))} options={projectOptions.map(([value, label]) => ({ value, label }))} triggerClassName="mt-1 h-9 min-h-9 w-full" /></div>
-            <div data-ams-slug="task-create-assignee"><label className="text-[11px] font-medium text-muted">Assignee</label><CustomSelect value={taskForm.assignee} onChange={value => setTaskForm(current => ({ ...current, assignee: value }))} options={[{ value: '', label: 'Unassigned' }, ...assignees.map(item => ({ value: item.id, label: item.name }))]} triggerClassName="mt-1 h-9 min-h-9 w-full" /></div>
+            <div data-ams-slug="task-create-project"><label className="text-[11px] font-medium text-muted">Project</label><CustomSelect aria-label="Project" value={taskForm.projectId} onChange={value => setTaskForm(current => ({ ...current, projectId: value }))} options={projectOptions.map(([value, label]) => ({ value, label }))} triggerClassName="mt-1 h-9 min-h-9 w-full" /></div>
+            <div data-ams-slug="task-create-assignee"><label className="text-[11px] font-medium text-muted">Assignee</label><CustomSelect aria-label="Assignee" value={taskForm.assignee} onChange={value => setTaskForm(current => ({ ...current, assignee: value }))} options={[{ value: '', label: 'Unassigned' }, ...assignees.map(item => ({ value: item.id, label: item.name }))]} triggerClassName="mt-1 h-9 min-h-9 w-full" /></div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
-            <div data-ams-slug="task-create-priority"><label className="text-[11px] font-medium text-muted">Priority</label><CustomSelect value={taskForm.priority} onChange={value => setTaskForm(current => ({ ...current, priority: value as TaskPriority }))} options={Object.entries(taskPriorityLabel).map(([value, label]) => ({ value, label }))} triggerClassName="mt-1 h-9 min-h-9 w-full" /></div>
+            <div data-ams-slug="task-create-priority"><label className="text-[11px] font-medium text-muted">Priority</label><CustomSelect aria-label="Priority" value={taskForm.priority} onChange={value => setTaskForm(current => ({ ...current, priority: value as TaskPriority }))} options={Object.entries(taskPriorityLabel).map(([value, label]) => ({ value, label }))} triggerClassName="mt-1 h-9 min-h-9 w-full" /></div>
             <div data-ams-slug="task-create-due"><label htmlFor="task-due" className="text-[11px] font-medium text-muted">Due date</label><input id="task-due" type="date" required value={taskForm.dueDate} onChange={event => setTaskForm(current => ({ ...current, dueDate: event.target.value }))} className="mt-1 h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent" /></div>
           </div>
           <div data-ams-slug="task-create-tags">
@@ -1134,7 +1135,7 @@ export const TasksWorkspace: React.FC = () => {
             <textarea id="task-description" value={taskForm.description} onChange={event => setTaskForm(current => ({ ...current, description: event.target.value }))} rows={4} className="mt-1 w-full resize-none rounded-control border border-line bg-bg px-3 py-2 text-xs leading-5 text-fg outline-none focus:border-accent" placeholder="Task context, acceptance note, or handoff details." />
           </div>
         </form>
-      </Modal>
+      </Drawer>
 
       <Modal slug="task-detail-modal"
         open={Boolean(selectedTask)}
@@ -1266,10 +1267,10 @@ export const TasksWorkspace: React.FC = () => {
         )}
       </Modal>
 
-      <Modal slug="task-edit-modal"
+      <Drawer slug="task-edit-modal"
         open={Boolean(editingTask)}
         onClose={() => { if (!savingEditTask) setEditingTask(null); }}
-        size="lg"
+        size="2xl"
         title="Edit task"
         description={editingTask ? editingTask.projectName : undefined}
         footer={(
@@ -1287,11 +1288,11 @@ export const TasksWorkspace: React.FC = () => {
           <div className="grid gap-3 sm:grid-cols-2">
             <div data-ams-slug="task-edit-assignee">
               <label className="text-[11px] font-medium text-muted">Assignee</label>
-              <CustomSelect value={taskEditForm.assignee} onChange={value => setTaskEditForm(current => ({ ...current, assignee: value }))} options={[{ value: '', label: 'Unassigned' }, ...assignees.map(item => ({ value: item.id, label: item.name }))]} triggerClassName="mt-1 h-9 min-h-9 w-full" />
+              <CustomSelect aria-label="Assignee" value={taskEditForm.assignee} onChange={value => setTaskEditForm(current => ({ ...current, assignee: value }))} options={[{ value: '', label: 'Unassigned' }, ...assignees.map(item => ({ value: item.id, label: item.name }))]} triggerClassName="mt-1 h-9 min-h-9 w-full" />
             </div>
             <div data-ams-slug="task-edit-priority">
               <label className="text-[11px] font-medium text-muted">Priority</label>
-              <CustomSelect value={taskEditForm.priority} onChange={value => setTaskEditForm(current => ({ ...current, priority: value as TaskPriority }))} options={Object.entries(taskPriorityLabel).map(([value, label]) => ({ value, label }))} triggerClassName="mt-1 h-9 min-h-9 w-full" />
+              <CustomSelect aria-label="Priority" value={taskEditForm.priority} onChange={value => setTaskEditForm(current => ({ ...current, priority: value as TaskPriority }))} options={Object.entries(taskPriorityLabel).map(([value, label]) => ({ value, label }))} triggerClassName="mt-1 h-9 min-h-9 w-full" />
             </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -1313,7 +1314,7 @@ export const TasksWorkspace: React.FC = () => {
             <textarea id="task-edit-description-input" value={taskEditForm.description} onChange={event => setTaskEditForm(current => ({ ...current, description: event.target.value }))} rows={5} className="mt-1 w-full resize-none rounded-control border border-line bg-bg px-3 py-2 text-xs leading-5 text-fg outline-none focus:border-accent" placeholder="Task context, acceptance note, or handoff details." />
           </div>
         </form>
-      </Modal>
+      </Drawer>
     </AdminPageShell>
   );
 };
