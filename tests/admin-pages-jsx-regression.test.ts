@@ -44,7 +44,8 @@ test('Admin invoicing keeps financial mutations permission-gated and uses the sh
   assert.ok(source.includes('const getInvoiceCollectedTotal'));
   assert.ok(source.includes('quarterInvoices'));
   assert.ok(source.includes("expense.type !== 'CapEx'"));
-  assert.ok(source.includes('min-[900px]:hidden min-w-0 overflow-x-auto'));
+  assert.ok(source.includes('<AdminSectionTabs'));
+  assert.ok(source.includes('min-[900px]:hidden min-w-0'));
   assert.ok(!source.includes(' -mx-1 '));
   assert.ok(source.includes('const QuotationStatusBadge'));
   assert.ok(!source.includes('quotation.status as never'));
