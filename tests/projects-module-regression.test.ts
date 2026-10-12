@@ -123,3 +123,13 @@ test('Projects board, table, sprint, budget, and archive expose loading or empty
   assert.ok(source.includes('Loading project delivery'));
   assert.ok(source.includes('loading && (view === \'budget\' || view === \'archived\')'));
 });
+
+test('Sprint task sorting uses a transitive status order with stable priority and due-date tie-breakers', async () => {
+  const source = await read('src/pages/admin/AdminProjects.tsx');
+
+  assert.ok(source.includes('const statusOrder = TASK_COLUMNS.findIndex(column => column.id === a.status)'));
+  assert.ok(source.includes('if (statusOrder !== 0) return statusOrder;'));
+  assert.ok(source.includes('PRIORITY_ORDER[b.priority] - PRIORITY_ORDER[a.priority]'));
+  assert.ok(source.includes("(a.dueDate || '9999-12-31').localeCompare(b.dueDate || '9999-12-31')"));
+  assert.ok(!source.includes('if (a.status !== b.status) return 0;'));
+});
