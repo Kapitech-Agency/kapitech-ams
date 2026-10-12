@@ -2439,7 +2439,7 @@ export const AdminProjects: React.FC = () => {
                                         role="button"
                                         tabIndex={canManageKanbanTasks && !movingTaskId ? 0 : -1}
                                         aria-label={canManageKanbanTasks ? 'Move ' + task.title + ' between stages. Use left and right arrow keys.' : 'Task movement is read-only'}
-                                        draggable={canManageKanbanTasks}
+                                        draggable={canManageKanbanTasks && !movingTaskId}
                                         onDragStart={canManageKanbanTasks ? event => beginTaskDrag(event, task) : undefined}
                                         onDragEnd={() => {
                                           setDraggingTaskId(null);
