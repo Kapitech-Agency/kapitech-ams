@@ -20,8 +20,11 @@ import { Modal } from '../ui/Modal';
 import { DonutChart, TrendChart } from '../charts/DashboardCharts';
 import { isSlugFixtureMode } from '../../lib/runtimeMode';
 import { ProfileIdentity } from './ProfileIdentity';
-import { TasksWorkspace } from './TasksWorkspace';
 import { api } from '../../lib/apiClient';
+
+const TasksWorkspace = React.lazy(() =>
+  import('./TasksWorkspace').then((module) => ({ default: module.TasksWorkspace }))
+);
 
 type RangeKey = '30D' | 'Q2' | 'YTD' | '12M';
 type ProjectFilter = 'All' | 'Enterprise' | 'Retainer' | 'Fixed-fee';
