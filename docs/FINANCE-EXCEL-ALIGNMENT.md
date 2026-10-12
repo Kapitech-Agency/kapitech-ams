@@ -94,3 +94,10 @@ Expense rows with vendor or vendor-contract linkage are withheld from the generi
 
 
 A sync also detects when a source no longer matches an already posted journal. It reports the conflict without editing the posted record; Finance must reconcile the source and use the approved reversal/adjustment path instead of silently changing a posted period.
+
+
+## Prerequisite posting controls
+
+Source-linked client receipt journals can only be posted after the matching invoice-issued journal is posted. Source-linked vendor payment journals can only be posted after the matching vendor-bill-issued accrual is posted. The prerequisite is verified inside the same PostgreSQL maker-checker transaction; it is not merely a warning in the UI.
+
+The sync prepares a vendor-bill-issued draft only when an IDR bill has a valid bill date and explicit AMS project linkage, giving it the initial workbook mapping Dr 5100 Direct Project Cost / Cr 2000 Accounts Payable. Bills without a known cost classification remain skipped, and their payment drafts are withheld until a matching eligible accrual can be prepared. Taxable client invoices and their receipt candidates are similarly held because a dedicated tax-liability account is not present in the current workbook Chart of Accounts.

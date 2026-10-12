@@ -99,14 +99,14 @@ test('Source journal bridge generates balanced cash-basis drafts with stable pro
     }],
     [{
       id: 'bill-1', recordKey: 'BILL-001', projectId: 'project-1',
-      payload: { billNo: 'BILL-001', vendorName: 'Vendor Co', currency: 'IDR', total: 150000, dueDate: '2026-10-31' }
+      payload: { billNo: 'BILL-001', vendorName: 'Vendor Co', currency: 'IDR', total: 150000, billDate: '2026-10-05', dueDate: '2026-10-31' }
     }],
     [{
       id: 'vendor-payment-1', status: 'posted',
       payload: { billId: 'bill-1', paidDate: '2026-10-07', amount: 50000, method: 'bank_transfer', reference: 'VP-001' }
     }]
   );
-  assert.equal(plan.drafts.length, 5);
+  assert.equal(plan.drafts.length, 6);
   const issued = plan.drafts.find((draft) => draft.sourceType === 'invoice-issued');
   assert.ok(issued);
   assert.equal(issued?.lines[0].accountCode, '1300');
@@ -133,11 +133,18 @@ test('Source journal bridge generates balanced cash-basis drafts with stable pro
   assert.equal(transfer?.lines[0].accountCode, '1100');
   assert.equal(transfer?.lines[1].accountCode, '1000');
 
+  const vendorBill = plan.drafts.find((draft) => draft.sourceType === 'vendor-bill-issued');
+  assert.ok(vendorBill);
+  assert.equal(vendorBill?.lines[0].accountCode, '5100');
+  assert.equal(vendorBill?.lines[1].accountCode, '2000');
+  assert.equal(vendorBill?.sourceId, 'bill-1');
+
   const vendorPayment = plan.drafts.find((draft) => draft.sourceType === 'vendor-bill-payment');
   assert.ok(vendorPayment);
   assert.equal(vendorPayment?.lines[0].accountCode, '2000');
   assert.equal(vendorPayment?.lines[1].accountCode, '1000');
-  assert.match(vendorPayment?.notes || '', /verify the transfer and bill evidence/i);
+  assert.equal(vendorPayment?.relatedSourceId, 'bill-1');
+  assert.match(vendorPayment?.notes || '', /linked vendor-bill-issued journal is posted/);
 });
 
 test('Source journal bridge skips unpaid, foreign-currency, petty-cash duplicate and unmapped expense sources', () => {
@@ -168,7 +175,8 @@ test('Source journal bridge skips unpaid, foreign-currency, petty-cash duplicate
   const taxable = {
     ...unpaid, id: 'taxable-invoice', invoiceNumber: 'INV-TAX', issueDate: '2026-10-02',
     currency: 'IDR' as const, taxAmount: 110000, amountPaid: 0, balanceDue: 1110000,
-    subtotal: 1000000, total: 1110000
+    subtotal: 1000000, total: 1110000,
+    payments: [{ id: 'tax-payment', amount: 100000, date: '2026-10-03', method: 'bank_transfer' as const, reference: 'TAX-RCPT' }]
   };
   const unsupportedPayment = {
     id: 'vendor-card-payment', status: 'posted',
@@ -182,6 +190,7 @@ test('Source journal bridge skips unpaid, foreign-currency, petty-cash duplicate
     [unsupportedPayment]
   );
   assert.ok(safePlan.skipped.some((item) => item.sourceType === 'invoice-issued' && /tax-liability account/.test(item.reason)));
+  assert.ok(safePlan.skipped.some((item) => item.sourceType === 'invoice-payment' && /issuance draft is held/.test(item.reason)));
   assert.ok(safePlan.skipped.some((item) => item.sourceType === 'vendor-bill-payment' && /no confirmed matching credit account/.test(item.reason)));
 });
 

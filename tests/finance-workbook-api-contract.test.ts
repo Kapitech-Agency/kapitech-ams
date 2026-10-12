@@ -110,3 +110,17 @@ test('Monthly Closing exposes and enforces the exact 11 workbook controls', asyn
   assert.match(workspace, /all eleven workbook control items/);
   assert.doesNotMatch(workspace, /General journal balanced|Project allocation reviewed|Monthly reports approved/);
 });
+
+
+test('Client receipts and vendor payments require their recognized source journals before posting', async () => {
+  const repository = await read('server/postgres-finance-workbook-repository.ts');
+  const mapping = await read('src/lib/financeWorkbook.ts');
+  const ui = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  assert.match(repository, /relatedSourceId/);
+  assert.match(repository, /Cannot post this client receipt until the linked invoice-issued journal is posted/);
+  assert.match(repository, /Cannot post this vendor payment until the linked vendor-bill-issued journal is posted/);
+  assert.match(repository, /invoice-issued.*invoice-payment.*expense.*cash-bank-transfer.*vendor-bill-issued.*vendor-bill-payment/);
+  assert.match(mapping, /Posting is blocked until the linked invoice-issued journal is posted/);
+  assert.match(mapping, /Posting is blocked until the linked vendor-bill-issued journal is posted/);
+  assert.match(ui, /relatedSourceId: editor\.record\.payload\.relatedSourceId/);
+});

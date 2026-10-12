@@ -186,7 +186,7 @@ export function sumAmounts<T>(items: T[], amountOf: (item: T) => number): number
 }
 
 
-export type FinanceSourceJournalType = 'invoice-issued' | 'invoice-payment' | 'expense' | 'cash-bank-transfer' | 'vendor-bill-payment';
+export type FinanceSourceJournalType = 'invoice-issued' | 'invoice-payment' | 'expense' | 'cash-bank-transfer' | 'vendor-bill-issued' | 'vendor-bill-payment';
 
 export interface FinanceSourceJournalDraft {
   sourceType: FinanceSourceJournalType;
@@ -195,6 +195,7 @@ export interface FinanceSourceJournalDraft {
   reference: string;
   description: string;
   projectId?: string;
+  relatedSourceId?: string;
   lines: Array<{ accountCode: string; accountName: string; debit: number; credit: number; notes: string }>;
   notes: string;
 }
@@ -241,6 +242,7 @@ function buildTwoLineFinanceDraft(input: {
   creditCode: string;
   amount: number;
   projectId?: string;
+  relatedSourceId?: string;
   notes: string;
 }): FinanceSourceJournalDraft {
   return {
@@ -250,6 +252,7 @@ function buildTwoLineFinanceDraft(input: {
     reference: input.reference,
     description: input.description,
     projectId: input.projectId || undefined,
+    ...(input.relatedSourceId ? { relatedSourceId: input.relatedSourceId } : {}),
     lines: [
       { accountCode: input.debitCode, accountName: accountName(input.debitCode), debit: input.amount, credit: 0, notes: input.notes },
       { accountCode: input.creditCode, accountName: accountName(input.creditCode), debit: 0, credit: input.amount, notes: input.notes }
@@ -312,6 +315,21 @@ export function buildFinanceSourceJournalDrafts(
     }
 
     const payments = getPaymentRows(invoice);
+    if (safeFinanceMoney(invoice.taxAmount) > 0.01) {
+      for (let paymentIndex = 0; paymentIndex < payments.length; paymentIndex++) {
+        const payment = payments[paymentIndex];
+        skip({
+          sourceType: 'invoice-payment',
+          sourceId: sourceIdentifier(invoice.id, 'payment', payment.id, String(paymentIndex)),
+          date: payment.date,
+          reference: String(payment.reference || invoice.invoiceNumber || invoice.id || ''),
+          description: 'Client receipt · ' + String(invoice.clientCompany || invoice.clientName || 'Client not set'),
+          amount: Number(payment.amount) || 0,
+          reason: 'The related invoice is taxable and its issuance draft is held because a tax-liability account is missing. Reconcile the invoice AR/tax posting before generating a cash-receipt journal.'
+        });
+      }
+      continue;
+    }
     if (payments.length === 0 && getInvoiceCollected(invoice) > 0) {
       skip({
         sourceType: 'invoice-payment',
@@ -347,7 +365,8 @@ export function buildFinanceSourceJournalDrafts(
       drafts.push(buildTwoLineFinanceDraft({
         sourceType: 'invoice-payment', sourceId, date: payment.date, reference, description,
         debitCode: '1000', creditCode: '1300', amount, projectId: invoice.projectId,
-        notes: notes + ' Only post after confirming the matching invoice receivable has already been recognized.'
+        relatedSourceId: sourceIdentifier(invoice.id, 'issued'),
+        notes: notes + ' Posting is blocked until the linked invoice-issued journal is posted.'
       }));
     }
   }
@@ -445,6 +464,40 @@ export function buildFinanceSourceJournalDrafts(
   }
 
   const billsById = new Map(vendorBills.map((bill) => [String(bill.id), bill]));
+  const eligibleVendorBillIds = new Set<string>();
+  for (const bill of vendorBills) {
+    const payload = bill.payload || {};
+    const billId = String(bill.id || '').trim();
+    const billDate = String(payload.billDate || '').slice(0, 10);
+    const amount = safeFinanceMoney(payload.total);
+    const reference = String(payload.billNo || bill.recordKey || billId || '').slice(0, 160);
+    const description = 'Vendor bill recognized · ' + String(payload.vendorName || 'Vendor not set');
+    const sourceId = sourceIdentifier(billId);
+    const projectId = String(bill.projectId || payload.projectId || '').trim();
+    if (!billId || !amount || !isValidFinanceDate(billDate)) {
+      skip({
+        sourceType: 'vendor-bill-issued', sourceId: sourceId || 'missing-bill-id',
+        date: billDate, reference, description, amount: Number(payload.total) || 0,
+        reason: 'Vendor bill accrual needs a stable bill ID, positive amount and valid bill date.'
+      });
+      continue;
+    }
+    if (safeFinanceCurrency(payload.currency) !== 'IDR') {
+      skip({ sourceType: 'vendor-bill-issued', sourceId, date: billDate, reference, description, amount, reason: 'The workbook ledger is IDR-only. Document the FX rate and conversion before creating a bill accrual journal.' });
+      continue;
+    }
+    if (!projectId) {
+      skip({ sourceType: 'vendor-bill-issued', sourceId, date: billDate, reference, description, amount, reason: 'The vendor bill is not linked to an AMS project or expense account classification. Classify the debit account before generating an Accounts Payable accrual.' });
+      continue;
+    }
+    const notes = 'Draft generated from an IDR vendor bill linked to an AMS project. Debit Direct Project Cost and credit Accounts Payable. Verify the bill, project allocation and that the obligation has not already been recognized; not posted.';
+    drafts.push(buildTwoLineFinanceDraft({
+      sourceType: 'vendor-bill-issued', sourceId, date: billDate, reference, description,
+      debitCode: '5100', creditCode: '2000', amount, projectId, notes
+    }));
+    eligibleVendorBillIds.add(billId);
+  }
+
   for (const payment of vendorBillPayments) {
     const payload = payment.payload || {};
     const paymentId = String(payment.id || '').trim();
@@ -466,6 +519,13 @@ export function buildFinanceSourceJournalDrafts(
     }
     if (String(payment.status || '').toLowerCase() !== 'posted') {
       skip({ sourceType: 'vendor-bill-payment', sourceId, date: paidDate, reference, description, amount, reason: 'Vendor payment is not in the posted source state.' });
+      continue;
+    }
+    if (!eligibleVendorBillIds.has(bill.id)) {
+      skip({
+        sourceType: 'vendor-bill-payment', sourceId, date: paidDate, reference, description, amount,
+        reason: 'The linked vendor bill does not have an eligible draft accrual. Classify and review the bill first so this payment cannot reduce an Accounts Payable balance that was never recognized by the source sync.'
+      });
       continue;
     }
     if (!isValidFinanceDate(paidDate) || !amount) {
@@ -491,7 +551,8 @@ export function buildFinanceSourceJournalDrafts(
     drafts.push(buildTwoLineFinanceDraft({
       sourceType: 'vendor-bill-payment', sourceId, date: paidDate, reference, description,
       debitCode: '2000', creditCode, amount,
-      projectId: String(bill.projectId || payload.projectId || '') || undefined, notes
+      projectId: String(bill.projectId || bill.payload.projectId || payload.projectId || '') || undefined,
+      relatedSourceId: sourceIdentifier(bill.id), notes: notes + ' Posting is blocked until the linked vendor-bill-issued journal is posted.'
     }));
   }
 

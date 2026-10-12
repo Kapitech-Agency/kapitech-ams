@@ -194,17 +194,26 @@ function normalise(type: FinanceWorkbookRecordType, raw: unknown, approval = fal
       if (status === 'posted' && !approval) throw new FinanceWorkbookValidationError('A journal must be approved before posting.');
       const sourceType = txt(v.sourceType, 40);
       const sourceId = txt(v.sourceId, 160);
-      const allowedSourceTypes = ['invoice-issued', 'invoice-payment', 'expense', 'cash-bank-transfer', 'vendor-bill-payment'];
+      const allowedSourceTypes = ['invoice-issued', 'invoice-payment', 'expense', 'cash-bank-transfer', 'vendor-bill-issued', 'vendor-bill-payment'];
       if ((sourceType && !sourceId) || (!sourceType && sourceId)) {
         throw new FinanceWorkbookValidationError('Journal source type and source ID must be supplied together.');
       }
       if (sourceType && !allowedSourceTypes.includes(sourceType)) {
         throw new FinanceWorkbookValidationError('Journal source type is not supported.');
       }
+      const relatedSourceId = txt(v.relatedSourceId, 160);
+      const requiresRelatedJournal = sourceType === 'invoice-payment' || sourceType === 'vendor-bill-payment';
+      if (requiresRelatedJournal && !relatedSourceId) {
+        throw new FinanceWorkbookValidationError('A source-linked receipt/payment journal must include its prerequisite journal source ID.');
+      }
+      if (relatedSourceId && !requiresRelatedJournal) {
+        throw new FinanceWorkbookValidationError('Only client receipt and vendor payment journals may reference a prerequisite journal.');
+      }
       p = {
         date:d, reference, description, projectId:project, lines, debitTotal:debits, creditTotal:credits,
         notes:txt(v.notes,600), status,
-        ...(sourceType && sourceId ? { sourceType, sourceId } : {})
+        ...(sourceType && sourceId ? { sourceType, sourceId } : {}),
+        ...(relatedSourceId ? { relatedSourceId } : {})
       };
       key = sourceType && sourceId ? 'source:' + sourceType + ':' + sourceId : reference;
       period = periodOf(d); break;
@@ -419,6 +428,29 @@ export class PostgresFinanceWorkbookRepository {
         payload={...current.payload,status:'approved',approvedBy:actor.name||actor.username,approvedAt:timeNow(),approvalNotes:txt(notes,500)}; status='approved';
       } else if(type==='journal-entry'){
         if(current.status==='posted') throw new FinanceWorkbookConflictError('Journal is already posted.');
+        const sourceType = String(current.payload.sourceType || '');
+        const dependencyType = sourceType === 'invoice-payment'
+          ? 'invoice-issued'
+          : sourceType === 'vendor-bill-payment'
+            ? 'vendor-bill-issued'
+            : '';
+        if (dependencyType) {
+          const relatedSourceId = String(current.payload.relatedSourceId || '');
+          if (!relatedSourceId) {
+            throw new FinanceWorkbookValidationError('Source-linked receipt/payment journal is missing its prerequisite source reference.');
+          }
+          const dependency = await client.query<Row>(
+            "SELECT status FROM finance_workbook_records WHERE record_type='journal-entry' AND record_key=$1 AND archived_at IS NULL FOR UPDATE",
+            ['source:' + dependencyType + ':' + relatedSourceId]
+          );
+          if (!dependency.rows[0] || String(dependency.rows[0].status) !== 'posted') {
+            throw new FinanceWorkbookConflictError(
+              dependencyType === 'invoice-issued'
+                ? 'Cannot post this client receipt until the linked invoice-issued journal is posted.'
+                : 'Cannot post this vendor payment until the linked vendor-bill-issued journal is posted.'
+            );
+          }
+        }
         payload={...current.payload,status:'posted',approvedBy:actor.name||actor.username,postedAt:timeNow(),approvalNotes:txt(notes,500)}; status='posted';
       } else if(type==='monthly-closing'){
         if(current.payload.status==='Done') return current;
