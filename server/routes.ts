@@ -60,6 +60,7 @@ import { postgresAuthRepository } from './postgres-repository.ts';
 import { postgresClientRepository } from './postgres-client-repository.ts';
 import { postgresProjectRepository, ProjectConcurrencyError } from './postgres-project-repository.ts';
 import { postgresVendorRepository } from './postgres-vendor-repository.ts';
+import { postgresFinanceWorkbookRepository, FinanceWorkbookConflictError, FinanceWorkbookNotFoundError, FinanceWorkbookPeriodClosedError, FinanceWorkbookValidationError } from './postgres-finance-workbook-repository.ts';
 import { postgresLeadRepository } from './postgres-lead-repository.ts';
 import { postgresCrmDealRepository } from './postgres-crm-deal-repository.ts';
 import { postgresProposalRepository } from './postgres-proposal-repository.ts';
@@ -3759,6 +3760,183 @@ apiRouter.get('/finance/metrics', requireAuth, requirePermission('canViewFinanci
   } catch (error) {
     console.error('[Finance Metrics] Failed:', error);
     res.status(503).json({ success: false, error: 'Financial metrics are temporarily unavailable.' });
+  }
+});
+
+// ----------------------------------------------------
+// Excel-aligned Finance workbook registers
+// These support the supplementary registers that do not belong in the existing invoice/expense store.
+// ----------------------------------------------------
+
+function financeWorkbookError(res: Response, error: unknown): void {
+  if (error instanceof FinanceWorkbookNotFoundError) {
+    res.status(404).json({ success: false, error: error.message });
+    return;
+  }
+  if (error instanceof FinanceWorkbookConflictError) {
+    res.status(409).json({ success: false, error: error.message });
+    return;
+  }
+  if (error instanceof FinanceWorkbookPeriodClosedError) {
+    res.status(423).json({ success: false, error: error.message });
+    return;
+  }
+  if (error instanceof FinanceWorkbookValidationError) {
+    res.status(400).json({ success: false, error: error.message });
+    return;
+  }
+  const code = typeof error === 'object' && error !== null && 'code' in error
+    ? String((error as { code?: unknown }).code || '') : '';
+  if (code === '23505') {
+    res.status(409).json({ success: false, error: 'A Finance record with the same business reference already exists.' });
+    return;
+  }
+  console.error('[Finance Workbook] Request failed:', error);
+  res.status(503).json({ success: false, error: 'Finance workbook service is temporarily unavailable.' });
+}
+
+function financeWorkbookActor(req: AuthenticatedRequest) {
+  return {
+    id: req.user!.id,
+    name: req.user!.name || req.user!.username,
+    username: req.user!.username,
+    role: req.user!.role
+  };
+}
+
+function financeWorkbookAudit(req: AuthenticatedRequest, action: string, details: string, severity = 'info') {
+  return makeAuditEntry(req, action, details, severity);
+}
+
+function ensureFinanceWorkbookPostgres(res: Response): boolean {
+  if (getDataSourceMode() === 'postgres') return true;
+  res.status(503).json({
+    success: false,
+    error: 'Excel-aligned Finance registers require the configured PostgreSQL data source. No browser/local-only financial persistence is used.'
+  });
+  return false;
+}
+
+apiRouter.get('/finance/workbook/:type', requireAuth, requirePermission('canViewFinancials'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  if (!postgresFinanceWorkbookRepository.isRecordType(req.params.type)) {
+    res.status(400).json({ success: false, error: 'Unsupported Finance workbook register.' });
+    return;
+  }
+  if (!ensureFinanceWorkbookPostgres(res)) return;
+  try {
+    const records = await postgresFinanceWorkbookRepository.list(req.params.type, {
+      period: typeof req.query.period === 'string' ? req.query.period : undefined,
+      projectId: typeof req.query.projectId === 'string' ? req.query.projectId : undefined,
+      includeArchived: req.query.includeArchived === 'true' && Boolean(req.user?.permissions?.canViewSecurityAuditLogs)
+    });
+    res.json({ success: true, records });
+  } catch (error) {
+    financeWorkbookError(res, error);
+  }
+});
+
+apiRouter.post('/finance/workbook/periods/:period/close', requireAuth, requirePermission('canApproveBudgets'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  if (!ensureFinanceWorkbookPostgres(res)) return;
+  try {
+    const record = await postgresFinanceWorkbookRepository.closePeriod(
+      req.params.period,
+      financeWorkbookActor(req),
+      financeWorkbookAudit(req, 'FINANCE_PERIOD_CLOSED', 'Closed Excel-aligned Finance period ' + req.params.period + '.', 'warning')
+    );
+    res.json({ success: true, record });
+  } catch (error) {
+    financeWorkbookError(res, error);
+  }
+});
+
+apiRouter.post('/finance/workbook/:type', requireAuth, requirePermission('canManageInvoices'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  if (!postgresFinanceWorkbookRepository.isRecordType(req.params.type) || req.params.type === 'monthly-closing-lock') {
+    res.status(400).json({ success: false, error: 'Unsupported Finance workbook register.' });
+    return;
+  }
+  if (!ensureFinanceWorkbookPostgres(res)) return;
+  try {
+    const payload = req.body?.payload ?? req.body;
+    const record = await postgresFinanceWorkbookRepository.create(
+      req.params.type,
+      payload,
+      financeWorkbookActor(req),
+      financeWorkbookAudit(req, 'FINANCE_WORKBOOK_RECORD_CREATED', 'Created ' + req.params.type + ' record in the Excel-aligned Finance workflow.')
+    );
+    res.status(201).json({ success: true, record });
+  } catch (error) {
+    financeWorkbookError(res, error);
+  }
+});
+
+apiRouter.put('/finance/workbook/:type/:id', requireAuth, requirePermission('canManageInvoices'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  if (!postgresFinanceWorkbookRepository.isRecordType(req.params.type) || req.params.type === 'monthly-closing-lock') {
+    res.status(400).json({ success: false, error: 'Unsupported Finance workbook register.' });
+    return;
+  }
+  if (!ensureFinanceWorkbookPostgres(res)) return;
+  const version = Number(req.body?.version);
+  try {
+    const record = await postgresFinanceWorkbookRepository.update(
+      req.params.type,
+      req.params.id,
+      req.body?.payload ?? req.body,
+      version,
+      financeWorkbookActor(req),
+      financeWorkbookAudit(req, 'FINANCE_WORKBOOK_RECORD_UPDATED', 'Updated ' + req.params.type + ' record ' + req.params.id + '.')
+    );
+    res.json({ success: true, record });
+  } catch (error) {
+    financeWorkbookError(res, error);
+  }
+});
+
+apiRouter.post('/finance/workbook/:type/:id/approve', requireAuth, requirePermission('canApproveBudgets'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  if (!postgresFinanceWorkbookRepository.isRecordType(req.params.type) || !['petty-cash-voucher','journal-entry','monthly-closing'].includes(req.params.type)) {
+    res.status(400).json({ success: false, error: 'This Finance record type does not support approval.' });
+    return;
+  }
+  if (!ensureFinanceWorkbookPostgres(res)) return;
+  try {
+    const existing = await postgresFinanceWorkbookRepository.get(req.params.type, req.params.id);
+    if (!existing) {
+      res.status(404).json({ success: false, error: 'Finance workbook record was not found.' });
+      return;
+    }
+    if (existing.createdByUserId && existing.createdByUserId === req.user!.id) {
+      res.status(403).json({ success: false, error: 'Maker-checker rule: the record creator cannot approve their own Finance record.' });
+      return;
+    }
+    const record = await postgresFinanceWorkbookRepository.approve(
+      req.params.type,
+      req.params.id,
+      financeWorkbookActor(req),
+      financeWorkbookAudit(req, 'FINANCE_WORKBOOK_RECORD_APPROVED', 'Approved ' + req.params.type + ' record ' + req.params.id + '.', 'warning'),
+      typeof req.body?.notes === 'string' ? req.body.notes : ''
+    );
+    res.json({ success: true, record });
+  } catch (error) {
+    financeWorkbookError(res, error);
+  }
+});
+
+apiRouter.delete('/finance/workbook/:type/:id', requireAuth, requirePermission('canManageInvoices'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  if (!postgresFinanceWorkbookRepository.isRecordType(req.params.type) || req.params.type === 'monthly-closing-lock') {
+    res.status(400).json({ success: false, error: 'Unsupported Finance workbook register.' });
+    return;
+  }
+  if (!ensureFinanceWorkbookPostgres(res)) return;
+  try {
+    const record = await postgresFinanceWorkbookRepository.archive(
+      req.params.type,
+      req.params.id,
+      Number(req.body?.version),
+      financeWorkbookActor(req),
+      financeWorkbookAudit(req, 'FINANCE_WORKBOOK_RECORD_ARCHIVED', 'Archived ' + req.params.type + ' record ' + req.params.id + '.', 'warning')
+    );
+    res.json({ success: true, record });
+  } catch (error) {
+    financeWorkbookError(res, error);
   }
 });
 

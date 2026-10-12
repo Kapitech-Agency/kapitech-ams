@@ -321,7 +321,40 @@ export const api = {
         method: 'DELETE',
         body: version == null ? undefined : JSON.stringify({ version })
       }),
-    getMetrics: (currency?: string) => apiRequest<{ success: boolean; metrics: any }>('/api/finance/metrics' + (currency ? `?currency=${encodeURIComponent(currency)}` : ''))
+    getMetrics: (currency?: string) => apiRequest<{ success: boolean; metrics: any }>('/api/finance/metrics' + (currency ? `?currency=${encodeURIComponent(currency)}` : '')),
+    workbookList: (type: string, filters: { period?: string; projectId?: string; includeArchived?: boolean } = {}) => {
+      const params = new URLSearchParams();
+      if (filters.period) params.set('period', filters.period);
+      if (filters.projectId) params.set('projectId', filters.projectId);
+      if (filters.includeArchived) params.set('includeArchived', 'true');
+      const query = params.toString();
+      return apiRequest<{ success: boolean; records: any[] }>(`/api/finance/workbook/${encodeURIComponent(type)}${query ? '?' + query : ''}`);
+    },
+    workbookCreate: (type: string, payload: Record<string, unknown>) =>
+      apiRequest<{ success: boolean; record: any }>(`/api/finance/workbook/${encodeURIComponent(type)}`, {
+        method: 'POST',
+        body: JSON.stringify({ payload })
+      }),
+    workbookUpdate: (type: string, id: string, payload: Record<string, unknown>, version: number) =>
+      apiRequest<{ success: boolean; record: any }>(`/api/finance/workbook/${encodeURIComponent(type)}/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        body: JSON.stringify({ payload, version })
+      }),
+    workbookApprove: (type: string, id: string, notes = '') =>
+      apiRequest<{ success: boolean; record: any }>(`/api/finance/workbook/${encodeURIComponent(type)}/${encodeURIComponent(id)}/approve`, {
+        method: 'POST',
+        body: JSON.stringify({ notes })
+      }),
+    workbookDelete: (type: string, id: string, version: number) =>
+      apiRequest<{ success: boolean; record: any }>(`/api/finance/workbook/${encodeURIComponent(type)}/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        body: JSON.stringify({ version })
+      }),
+    workbookClosePeriod: (period: string) =>
+      apiRequest<{ success: boolean; record: any }>(`/api/finance/workbook/periods/${encodeURIComponent(period)}/close`, {
+        method: 'POST',
+        body: JSON.stringify({})
+      })
   },
 
   // Vendors
