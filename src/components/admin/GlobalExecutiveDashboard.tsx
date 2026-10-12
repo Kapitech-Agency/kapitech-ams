@@ -584,6 +584,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   return (
     <AdminPageShell featureSlug="dashboard-module" className="ams-dashboard">
       <AdminModuleHeader slug="dashboard-header"
+        className="mb-0"
         title="Agency overview"
         description="Real-time metrics, project pacing, and financial health for the agency."
         actions={(
