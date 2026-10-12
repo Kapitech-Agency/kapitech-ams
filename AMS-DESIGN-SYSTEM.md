@@ -225,6 +225,15 @@ For every component define default, hover, focus-visible, active, and disabled s
 - **Section/submodule navigation uses the shared pill treatment:** 32px control height, 6px radius, transparent border and muted text when inactive, a subtle panel/background hover, and a 10–14% accent tint with a light accent border and stronger text when active. Do not use an underline for CMS and other section tabs.
 - Segmented controls inside a view can use their own neutral selected state; do not style every active control red.
 
+### Drawers, modals, and form interaction
+
+- **Drawer is the default for create/edit workflows and multi-field input:** career openings and applicant notes, projects/tasks, clients, vendors, finance records, document upload, user accounts, CMS content, and other record forms.
+- Use the shared `Drawer` component so the right-side panel, full-height scroll behavior, title/description, close control, focus trap, Escape handling, focus restoration, and pinned action footer are consistent. Do not build page-specific drawer shells.
+- Use the `3xl` and `4xl` drawer sizes for long or multi-column forms. Keep responsive forms single-column when the available width cannot support readable columns.
+- **Modal is for concise non-input context**, such as read-only detail previews and short utility summaries. Do not place `<form>`, text/number/date inputs, textareas, selects, or custom input controls inside a `Modal`.
+- Destructive actions should use the shared `ConfirmDialog` pattern wherever practical. Keep the object name and consequence clear, disable duplicate submission while pending, and preserve the existing permission checks and API flow.
+- Every form drawer must use explicit labels, a visible validation/error message, disabled/pending submit state, and Cancel/Close behavior that prevents accidental loss while saving. Long forms scroll inside the drawer; the primary action footer stays visible.
+- Keep form control geometry consistent: 36px minimum height per the control token, 8px radius, 12px horizontal field padding, and consistent field-label spacing. Use the shared `CustomSelect` instead of native select styling for AMS-managed dropdowns.
 ### KPI card
 - No panel background (sits on `--bg`). Label (`small`, muted) above value (`display`). Unit is `small`, muted, directly after the value.
 - Optional change badge: inverted pill (`--text` background, `--bg` text, radius 5, 11px, 600).
