@@ -121,7 +121,7 @@ test('Source journal bridge generates balanced cash-basis drafts with stable pro
   assert.equal(receipt?.reference, 'RCPT-001');
   assert.equal(receipt?.lines[0].debit, receipt?.lines[1].credit);
   assert.match(receipt?.sourceId || '', /^invoice-1:payment:/);
-  assert.match(receipt?.notes || '', /matching invoice receivable has already been recognized/);
+  assert.match(receipt?.notes || '', /linked invoice-issued journal is posted/);
 
   const mappedExpense = plan.drafts.find((draft) => draft.sourceType === 'expense');
   assert.equal(mappedExpense?.lines[0].accountCode, '5100');
@@ -186,9 +186,11 @@ test('Source journal bridge skips unpaid, foreign-currency, petty-cash duplicate
     [taxable],
     [],
     [],
-    [{ id: 'bill-card', payload: { billNo: 'BILL-CARD', currency: 'IDR', total: 1000 } }],
+    [{ id: 'bill-card', recordKey: 'BILL-CARD', projectId: 'project-card', payload: { billNo: 'BILL-CARD', currency: 'IDR', total: 1000, billDate: '2026-10-05' } }],
     [unsupportedPayment]
   );
+  assert.equal(safePlan.drafts.length, 1);
+  assert.equal(safePlan.drafts[0].sourceType, 'vendor-bill-issued');
   assert.ok(safePlan.skipped.some((item) => item.sourceType === 'invoice-issued' && /tax-liability account/.test(item.reason)));
   assert.ok(safePlan.skipped.some((item) => item.sourceType === 'invoice-payment' && /issuance draft is held/.test(item.reason)));
   assert.ok(safePlan.skipped.some((item) => item.sourceType === 'vendor-bill-payment' && /no confirmed matching credit account/.test(item.reason)));
