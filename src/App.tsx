@@ -100,6 +100,11 @@ const AdminInvoicing = lazyWithRetry(
   'admin-invoicing'
 );
 
+const AdminFinanceWorkspace = lazyWithRetry(
+  () => import('./pages/admin/AdminFinanceWorkspace').then((m) => ({ default: m.AdminFinanceWorkspace })),
+  'admin-finance-workspace'
+);
+
 const AdminProjects = lazyWithRetry(
   () => import('./pages/admin/AdminProjects').then((m) => ({ default: m.AdminProjects })),
   'admin-projects'
@@ -317,6 +322,7 @@ const App = () => {
                 <Route path="inbox" element={<ModuleRoute moduleKey="inbox" moduleLabel="the inbox"><AdminInbox /></ModuleRoute>} />
                 <Route path="crm" element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="proposals" element={<Navigate to="/admin/dashboard" replace />} />
+                <Route path="finance" element={<ModuleRoute moduleKey="invoicing" moduleLabel="finance"><AdminFinanceWorkspace /></ModuleRoute>} />
                 <Route path="invoicing" element={<ModuleRoute moduleKey="invoicing" moduleLabel="invoicing"><AdminInvoicing /></ModuleRoute>} />
                 <Route path="projects" element={<ModuleRoute moduleKey="projects" moduleLabel="projects"><AdminProjects /></ModuleRoute>} />
                 <Route path="approvals" element={<Navigate to="/admin/dashboard" replace />} />
