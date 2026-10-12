@@ -344,6 +344,7 @@ export const AdminProjects: React.FC = () => {
   const [dragOverProjectStatus, setDragOverProjectStatus] = useState<ProjectStatus | null>(null);
   const [dragOverProjectId, setDragOverProjectId] = useState<string | null>(null);
   const [movingProjectId, setMovingProjectId] = useState<string | null>(null);
+  const [movingTaskId, setMovingTaskId] = useState<string | null>(null);
   const [taskSearch, setTaskSearch] = useState('');
   const [taskPriorityFilter, setTaskPriorityFilter] = useState('');
   const [taskAssigneeFilter, setTaskAssigneeFilter] = useState('');
@@ -965,6 +966,12 @@ export const AdminProjects: React.FC = () => {
 
   // Drag & Drop Handlers
   const updateTaskStatus = async (task: ProjectTask, status: TaskStatus) => {
+    if (!canManageKanbanTasks || movingTaskId) {
+      setDraggingTaskId(null);
+      setDragOverTaskStatus(null);
+      setDragOverTaskId(null);
+      return;
+    }
     if (!serverModeRef.current && !isSlugFixtureMode()) {
       setDraggingTaskId(null);
       setDragOverTaskStatus(null);
@@ -981,6 +988,7 @@ export const AdminProjects: React.FC = () => {
 
     setDraggingTaskId(null);
     setDragOverTaskStatus(null);
+    setMovingTaskId(task.id);
 
     const taskOverrides = readStatusOverrides<TaskStatus>(TASK_STATUS_OVERRIDES_KEY);
     taskOverrides[task.id] = status;
@@ -997,6 +1005,7 @@ export const AdminProjects: React.FC = () => {
           : project
       )
     );
+    setSelectedTask(current => current?.id === task.id ? { ...current, status } : current);
 
     try {
       const response = await api.tasks.update(task.id, { status });
@@ -1022,6 +1031,7 @@ export const AdminProjects: React.FC = () => {
               : project
           )
         );
+        setSelectedTask(current => current?.id === task.id ? { ...current, status: task.status } : current);
         showToast(language === 'id' ? 'Status tugas gagal diperbarui dan dikembalikan.' : 'Task status could not be saved and was reverted.');
       } else {
         showToast(language === 'id' ? 'Status tugas diperbarui lokal.' : 'Task status updated locally for this session.');
@@ -1040,15 +1050,18 @@ export const AdminProjects: React.FC = () => {
               : project
           )
         );
+        setSelectedTask(current => current?.id === task.id ? { ...current, status: task.status } : current);
         showToast(language === 'id' ? 'Status tugas gagal diperbarui dan dikembalikan.' : 'Task status could not be saved and was reverted.');
       } else {
         showToast(language === 'id' ? 'Status tugas diperbarui lokal.' : 'Task status updated locally for this session.');
       }
+    } finally {
+      setMovingTaskId(null);
     }
   };
 
   const beginProjectDrag = (event: React.DragEvent<HTMLElement>, project: ProjectRecord) => {
-    if (!canManageProjects || movingProjectId === project.id) {
+    if (!canManageProjects || movingProjectId) {
       event.preventDefault();
       return;
     }
@@ -1074,7 +1087,7 @@ export const AdminProjects: React.FC = () => {
   };
 
   const beginTaskDrag = (event: React.DragEvent<HTMLElement>, task: ProjectTask) => {
-    if (!canManageKanbanTasks) {
+    if (!canManageKanbanTasks || movingTaskId) {
       event.preventDefault();
       return;
     }
@@ -1100,7 +1113,7 @@ export const AdminProjects: React.FC = () => {
   };
 
   const updateProjectStatus = async (project: ProjectRecord, status: ProjectStatus) => {
-    if (!canManageProjects || project.status === status || movingProjectId === project.id) {
+    if (!canManageProjects || project.status === status || movingProjectId) {
       setDraggingProjectId(null);
       setDragOverProjectStatus(null);
       setDragOverProjectId(null);
@@ -1557,8 +1570,9 @@ export const AdminProjects: React.FC = () => {
                   <button
                     key={column.id}
                     type="button"
-                    onClick={() => { void updateTaskStatus(selectedTask, column.id); setSelectedTask({ ...selectedTask, status: column.id }); }}
-                    className={'min-h-10 rounded-control border px-3 text-xs font-medium transition-colors ' + (selectedTask.status === column.id ? 'border-accent/30 bg-accent/10 text-accent' : 'border-line bg-bg text-muted hover:text-fg')}
+                    onClick={() => void updateTaskStatus(selectedTask, column.id)}
+                    disabled={!canManageKanbanTasks || Boolean(movingTaskId) || selectedTask.status === column.id}
+                    className={'min-h-10 rounded-control border px-3 text-xs font-medium transition-colors ' + (selectedTask.status === column.id ? 'border-accent/30 bg-accent/10 text-accent' : 'border-line bg-bg text-muted hover:text-fg') + ((!canManageKanbanTasks || movingTaskId || selectedTask.status === column.id) ? ' cursor-not-allowed opacity-50' : '')}
                   >
                     {column.label}
                   </button>
@@ -1953,23 +1967,38 @@ export const AdminProjects: React.FC = () => {
                                     <div className="flex min-w-0 items-start gap-2">
                                       <span
                                         data-drag-handle="true"
-                                        draggable={canManageProjects && movingProjectId !== project.id}
+                                        draggable={canManageProjects && !movingProjectId}
                                         onDragStart={event => beginProjectDrag(event, project)}
                                         onDragEnd={() => {
                                           setDraggingProjectId(null);
                                           setDragOverProjectStatus(null);
                                           setDragOverProjectId(null);
                                         }}
+                                        onClick={() => openProjectDetail(project)}
+                                        onKeyDown={event => {
+                                          if (event.key === 'Enter' || event.key === ' ') {
+                                            event.preventDefault();
+                                            openProjectDetail(project);
+                                            return;
+                                          }
+                                          if ((event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') || movingProjectId) return;
+                                          const currentIndex = PROJECT_KANBAN_COLUMNS.findIndex(item => item.id === project.status);
+                                          const nextIndex = currentIndex + (event.key === 'ArrowLeft' ? -1 : 1);
+                                          const nextColumn = PROJECT_KANBAN_COLUMNS[nextIndex];
+                                          if (!nextColumn) return;
+                                          event.preventDefault();
+                                          void updateProjectStatus(project, nextColumn.id);
+                                        }}
                                         role="button"
-                                        tabIndex={canManageProjects && movingProjectId !== project.id ? 0 : -1}
-                                        aria-label={canManageProjects ? 'Drag project' : 'Project status'}
+                                        tabIndex={canManageProjects && !movingProjectId ? 0 : -1}
+                                        aria-label={canManageProjects ? 'Move ' + project.name + ' between stages. Use left and right arrow keys.' : 'Project status'}
                                         className={[
                                           'mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted transition-[background-color,border-color,color] select-none',
-                                          canManageProjects && movingProjectId !== project.id
+                                          canManageProjects && !movingProjectId
                                             ? 'cursor-grab hover:border-accent/35 hover:bg-panel-hover hover:text-fg active:cursor-grabbing'
                                             : 'cursor-default opacity-70',
                                         ].join(' ')}
-                                        title={canManageProjects ? 'Drag this handle to move the project' : 'Project status'}
+                                        title={canManageProjects ? 'Drag to move; use left/right arrows or press Enter for details' : 'Project status'}
                                       >
                                         <GripVertical size={16} strokeWidth={2.2} />
                                       </span>
@@ -2271,7 +2300,7 @@ export const AdminProjects: React.FC = () => {
                     </div>
                     <span className="inline-flex items-center gap-1.5 text-muted">
                       <SlidersHorizontal size={12} />
-                      {canManageKanbanTasks ? 'Drag the handle to change stage' : 'Task movement is read-only'}
+                      {canManageKanbanTasks ? 'Drag the handle or use left/right arrow keys to change stage' : 'Task movement is read-only'}
                     </span>
                   </div>
                 </div>
@@ -2408,8 +2437,8 @@ export const AdminProjects: React.FC = () => {
                                     <div className="flex items-start gap-2.5">
                                       <span
                                         role="button"
-                                        tabIndex={canManageKanbanTasks ? 0 : -1}
-                                        aria-label={canManageKanbanTasks ? 'Drag task' : 'Task movement is read-only'}
+                                        tabIndex={canManageKanbanTasks && !movingTaskId ? 0 : -1}
+                                        aria-label={canManageKanbanTasks ? 'Move ' + task.title + ' between stages. Use left and right arrow keys.' : 'Task movement is read-only'}
                                         draggable={canManageKanbanTasks}
                                         onDragStart={canManageKanbanTasks ? event => beginTaskDrag(event, task) : undefined}
                                         onDragEnd={() => {
@@ -2417,14 +2446,29 @@ export const AdminProjects: React.FC = () => {
                                           setDragOverTaskStatus(null);
                                           setDragOverTaskId(null);
                                         }}
+                                        onClick={() => setSelectedTask(task)}
+                                        onKeyDown={event => {
+                                          if (event.key === 'Enter' || event.key === ' ') {
+                                            event.preventDefault();
+                                            setSelectedTask(task);
+                                            return;
+                                          }
+                                          if ((event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') || movingTaskId) return;
+                                          const currentIndex = TASK_COLUMNS.findIndex(item => item.id === task.status);
+                                          const nextIndex = currentIndex + (event.key === 'ArrowLeft' ? -1 : 1);
+                                          const nextColumn = TASK_COLUMNS[nextIndex];
+                                          if (!nextColumn) return;
+                                          event.preventDefault();
+                                          void updateTaskStatus(task, nextColumn.id);
+                                        }}
                                         data-drag-handle="true"
                                         className={[
                                           'mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted transition-[background-color,border-color,color,transform] select-none',
-                                          canManageKanbanTasks
+                                          canManageKanbanTasks && !movingTaskId
                                             ? 'cursor-grab hover:border-accent/35 hover:bg-panel-hover hover:text-fg active:cursor-grabbing'
                                             : 'cursor-default opacity-70',
                                         ].join(' ')}
-                                        title={canManageKanbanTasks ? 'Drag this handle to move task' : 'Task movement is read-only'}
+                                        title={canManageKanbanTasks ? 'Drag to move; use left/right arrows or press Enter for details' : 'Task movement is read-only'}
                                       >
                                         <GripVertical size={16} strokeWidth={2} />
                                       </span>

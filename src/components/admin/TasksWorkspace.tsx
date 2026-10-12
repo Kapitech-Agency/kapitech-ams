@@ -2,8 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   AlertTriangle,
+  ArrowLeft,
   ArrowUpRight,
   CheckCircle2,
+  GripVertical,
   Clock3,
   Eye,
   FolderKanban,
@@ -215,6 +217,8 @@ export const TasksWorkspace: React.FC = () => {
   const [selectedTask, setSelectedTask] = useState<TaskRecord | null>(null);
   const [editingTask, setEditingTask] = useState<TaskRecord | null>(null);
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
+  const [draggingBoardTaskId, setDraggingBoardTaskId] = useState<string | null>(null);
+  const [dragOverBoardStatus, setDragOverBoardStatus] = useState<TaskStatus | null>(null);
   const [bulkUpdating, setBulkUpdating] = useState(false);
   const [taskFormOpen, setTaskFormOpen] = useState(false);
   const [savingTask, setSavingTask] = useState(false);
@@ -347,7 +351,7 @@ export const TasksWorkspace: React.FC = () => {
   );
 
   const updateTaskStatus = async (task: TaskRecord, nextStatus: TaskStatus) => {
-    if (!canManageTasks || task.status === nextStatus || updatingTaskId === task.id) return;
+    if (!canManageTasks || task.status === nextStatus || updatingTaskId !== null || bulkUpdating) return;
     const previousTask = records.find(item => item.id === task.id) || task;
     setUpdatingTaskId(task.id);
     setRecords(current => current.map(item => item.id === task.id ? {
@@ -605,7 +609,7 @@ export const TasksWorkspace: React.FC = () => {
   };
 
   const bulkUpdateStatus = async (nextStatus: TaskStatus) => {
-    if (!canManageTasks || !selectedIds.length || bulkUpdating) return;
+    if (!canManageTasks || !selectedIds.length || bulkUpdating || updatingTaskId !== null) return;
     setBulkUpdating(true);
     const selectedTasks = records.filter(task => selectedIds.includes(task.id));
     const previousRecords = records;
@@ -767,6 +771,64 @@ export const TasksWorkspace: React.FC = () => {
     { status: 'done', label: 'Done' },
   ];
 
+  const clearBoardTaskDrag = () => {
+    setDraggingBoardTaskId(null);
+    setDragOverBoardStatus(null);
+  };
+
+  const beginBoardTaskDrag = (event: React.DragEvent<HTMLElement>, task: TaskRecord) => {
+    if (!canManageTasks || updatingTaskId !== null || bulkUpdating) {
+      event.preventDefault();
+      return;
+    }
+
+    setDraggingBoardTaskId(task.id);
+    setDragOverBoardStatus(task.status);
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/ams-task-id', task.id);
+    event.dataTransfer.setData('text/plain', task.id);
+    try {
+      event.dataTransfer.setDragImage(event.currentTarget, 18, 18);
+    } catch {
+      // Native drag previews are not available in every browser.
+    }
+  };
+
+  const handleBoardTaskDrop = (event: React.DragEvent<HTMLElement>, nextStatus: TaskStatus) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!canManageTasks || updatingTaskId !== null || bulkUpdating) {
+      clearBoardTaskDrag();
+      return;
+    }
+
+    const taskId =
+      event.dataTransfer.getData('text/ams-task-id') ||
+      event.dataTransfer.getData('text/plain') ||
+      draggingBoardTaskId;
+    const task = records.find(item => item.id === taskId);
+    clearBoardTaskDrag();
+    if (task && task.status !== nextStatus) void updateTaskStatus(task, nextStatus);
+  };
+
+  const handleBoardTaskKeyDown = (event: React.KeyboardEvent<HTMLElement>, task: TaskRecord) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      setSelectedTask(task);
+      return;
+    }
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    if (updatingTaskId !== null || bulkUpdating) return;
+
+    const currentIndex = boardColumns.findIndex(column => column.status === task.status);
+    const targetIndex = currentIndex + (event.key === 'ArrowLeft' ? -1 : 1);
+    const targetColumn = boardColumns[targetIndex];
+    if (!targetColumn) return;
+
+    event.preventDefault();
+    void updateTaskStatus(task, targetColumn.status);
+  };
+
   const scopeLabel = scopeLabels[taskScope] || 'All Tasks';
 
   const sortIcon = (key: TaskSortKey) => {
@@ -901,9 +963,9 @@ export const TasksWorkspace: React.FC = () => {
               {selectedIds.length > 0 && canManageTasks && (
                 <div className="flex items-center gap-1.5 rounded-control border border-line bg-bg p-0.5" data-ams-slug="tasks-bulk-actions">
                   <span className="px-2 text-[10px] font-semibold text-fg">{selectedIds.length} selected</span>
-                  <button type="button" disabled={bulkUpdating} onClick={() => void bulkUpdateStatus('in_progress')} data-ams-slug="tasks-bulk-start" className="h-8 rounded-control px-2 text-[10px] font-medium text-muted hover:bg-panel hover:text-fg disabled:opacity-40">Start</button>
-                  <button type="button" disabled={bulkUpdating} onClick={() => void bulkUpdateStatus('review')} data-ams-slug="tasks-bulk-review" className="h-8 rounded-control px-2 text-[10px] font-medium text-muted hover:bg-panel hover:text-fg disabled:opacity-40">Review</button>
-                  <button type="button" disabled={bulkUpdating} onClick={() => void bulkUpdateStatus('done')} data-ams-slug="tasks-bulk-done" className="h-8 rounded-control px-2 text-[10px] font-medium text-success hover:bg-success/10 disabled:opacity-40">Done</button>
+                  <button type="button" disabled={bulkUpdating || updatingTaskId !== null} onClick={() => void bulkUpdateStatus('in_progress')} data-ams-slug="tasks-bulk-start" className="h-8 rounded-control px-2 text-[10px] font-medium text-muted hover:bg-panel hover:text-fg disabled:opacity-40">Start</button>
+                  <button type="button" disabled={bulkUpdating || updatingTaskId !== null} onClick={() => void bulkUpdateStatus('review')} data-ams-slug="tasks-bulk-review" className="h-8 rounded-control px-2 text-[10px] font-medium text-muted hover:bg-panel hover:text-fg disabled:opacity-40">Review</button>
+                  <button type="button" disabled={bulkUpdating || updatingTaskId !== null} onClick={() => void bulkUpdateStatus('done')} data-ams-slug="tasks-bulk-done" className="h-8 rounded-control px-2 text-[10px] font-medium text-success hover:bg-success/10 disabled:opacity-40">Done</button>
                 </div>
               )}
               <div className="inline-flex h-9 shrink-0 items-center gap-0.5 rounded-control border border-line bg-bg p-0.5" aria-label="Task layout" data-ams-slug="tasks-layout-toggle">
@@ -948,57 +1010,130 @@ export const TasksWorkspace: React.FC = () => {
           </div>
         ) : layout === 'board' ? (
           <div className="overflow-x-auto custom-scrollbar" data-ams-feature-slug="tasks-board-view">
-            <div className="grid min-w-[1040px] grid-cols-4 gap-3 p-4">
+            <div className="border-b border-line px-4 py-2 text-[10px] text-muted" data-ams-slug="tasks-board-instructions">
+              {canManageTasks ? 'Drag a card by its handle, or focus the handle and use the left/right arrow keys. Press Enter to open task details.' : 'Task movement is read-only for your current role.'}
+            </div>
+            <div className="flex min-w-max items-start gap-3 p-4">
               {boardColumns.map(column => {
                 const columnTasks = filteredRecords.filter(task => task.status === column.status);
+                const isDropTarget = dragOverBoardStatus === column.status;
                 return (
-                  <section key={column.status} className="min-w-0 rounded-card border border-line bg-bg p-3" data-ams-slug={'tasks-column-' + column.status}>
+                  <section
+                    key={column.status}
+                    aria-label={column.label + ' task column'}
+                    className={'flex w-[252px] shrink-0 flex-col rounded-card border bg-bg p-3 transition-colors sm:w-[268px] ' + (isDropTarget ? 'border-accent/45 bg-accent/5' : 'border-line')}
+                    data-ams-slug={'tasks-column-' + column.status}
+                    data-drop-target={isDropTarget ? 'true' : 'false'}
+                    onDragEnter={event => {
+                      if (!canManageTasks || updatingTaskId !== null || bulkUpdating) return;
+                      event.preventDefault();
+                      setDragOverBoardStatus(column.status);
+                    }}
+                    onDragOver={event => {
+                      if (!canManageTasks || updatingTaskId !== null || bulkUpdating) return;
+                      event.preventDefault();
+                      event.dataTransfer.dropEffect = 'move';
+                      setDragOverBoardStatus(column.status);
+                    }}
+                    onDragLeave={event => {
+                      const nextTarget = event.relatedTarget as Node | null;
+                      if (!nextTarget || !event.currentTarget.contains(nextTarget)) {
+                        setDragOverBoardStatus(current => current === column.status ? null : current);
+                      }
+                    }}
+                    onDrop={event => handleBoardTaskDrop(event, column.status)}
+                  >
                     <div className="flex items-center justify-between gap-2 border-b border-line pb-3">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-fg">
-                        <span className={'h-1.5 w-1.5 rounded-full ' + (column.status === 'todo' ? 'bg-info' : column.status === 'in_progress' ? 'bg-accent' : column.status === 'review' ? 'bg-warning' : 'bg-success')} />
-                        {column.label}
+                      <div className="flex min-w-0 items-center gap-2 text-xs font-semibold text-fg">
+                        <span className={'h-1.5 w-1.5 shrink-0 rounded-full ' + (column.status === 'todo' ? 'bg-info' : column.status === 'in_progress' ? 'bg-accent' : column.status === 'review' ? 'bg-warning' : 'bg-success')} />
+                        <span>{column.label}</span>
                       </div>
                       <span className="rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-muted">{columnTasks.length}</span>
                     </div>
-                    <div className="mt-3 space-y-2">
-                      {columnTasks.map(task => (
-                        <article key={task.id} data-ams-slug={task.slug} className="rounded-control border border-line bg-panel p-3 transition-colors hover:bg-panel-hover">
-                          <button type="button" className="block w-full text-left" onClick={() => setSelectedTask(task)} data-ams-slug={task.slug + '-open'}>
-                            <div className="flex items-start justify-between gap-2">
-                              <span className="min-w-0 text-xs font-semibold leading-5 text-fg">{task.title}</span>
-                              <span className={'shrink-0 rounded-badge border px-1.5 py-0.5 text-[9px] font-semibold ' + taskPriorityClass[task.priority]}>{taskPriorityLabel[task.priority]}</span>
+                    <div className="mt-3 flex min-h-[120px] flex-col gap-2">
+                      {columnTasks.map(task => {
+                        const columnIndex = boardColumns.findIndex(item => item.status === task.status);
+                        const isDragging = draggingBoardTaskId === task.id;
+                        return (
+                          <article
+                            key={task.id}
+                            data-ams-slug={task.slug}
+                            data-dragging={isDragging ? 'true' : 'false'}
+                            className={'min-w-0 rounded-control border p-3 transition-[border-color,opacity,background-color] ' + (isDragging ? 'border-accent/40 bg-panel opacity-60' : 'border-line bg-panel hover:bg-panel-hover')}
+                          >
+                            <div className="flex items-start gap-2">
+                              {canManageTasks && (
+                                <span
+                                  role="button"
+                                  tabIndex={0}
+                                  aria-label={'Move ' + task.title + ' between stages. Use left and right arrow keys.'}
+                                  title="Drag to move; use left/right arrows or press Enter for details"
+                                  draggable={updatingTaskId === null && !bulkUpdating}
+                                  onClick={() => setSelectedTask(task)}
+                                  onKeyDown={event => handleBoardTaskKeyDown(event, task)}
+                                  onDragStart={event => beginBoardTaskDrag(event, task)}
+                                  onDragEnd={clearBoardTaskDrag}
+                                  data-drag-handle="true"
+                                  className="mt-0.5 inline-flex h-8 w-6 shrink-0 cursor-grab items-center justify-center rounded-control text-muted transition-colors hover:bg-bg hover:text-fg active:cursor-grabbing"
+                                >
+                                  <GripVertical size={15} />
+                                </span>
+                              )}
+                              <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setSelectedTask(task)} data-ams-slug={task.slug + '-open'}>
+                                <div className="flex items-start justify-between gap-2">
+                                  <span className="min-w-0 text-xs font-semibold leading-5 text-fg">{task.title}</span>
+                                  <span className={'shrink-0 rounded-badge border px-1.5 py-0.5 text-[9px] font-semibold ' + taskPriorityClass[task.priority]}>{taskPriorityLabel[task.priority]}</span>
+                                </div>
+                                <div className="mt-2 truncate text-[10px] text-muted">{task.projectName}</div>
+                                <div className="mt-1 flex items-center justify-between gap-2 text-[10px]">
+                                  <span className={taskDueState(task) === 'overdue' ? 'text-danger' : taskDueState(task) === 'due-soon' ? 'text-warning' : 'text-muted'}>{formatTaskDue(task.dueDate)}</span>
+                                  {task.blocked && <span className="text-danger">Blocked</span>}
+                                </div>
+                              </button>
                             </div>
-                            <div className="mt-2 truncate text-[10px] text-muted">{task.projectName}</div>
-                            <div className="mt-1 flex items-center justify-between gap-2 text-[10px]">
-                              <span className={taskDueState(task) === 'overdue' ? 'text-danger' : taskDueState(task) === 'due-soon' ? 'text-warning' : 'text-muted'}>{formatTaskDue(task.dueDate)}</span>
-                              {task.blocked && <span className="text-danger">Blocked</span>}
+                            <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-2">
+                              <span className="min-w-0 truncate font-mono text-[9px] text-muted/60">slug: {task.slug}</span>
+                              {canManageTasks && (
+                                <div className="flex shrink-0 items-center gap-1.5" data-ams-slug={task.slug + '-actions'}>
+                                  {columnIndex > 0 && (
+                                    <button
+                                      type="button"
+                                      title={'Move to ' + boardColumns[columnIndex - 1].label}
+                                      aria-label={'Move ' + task.title + ' to ' + boardColumns[columnIndex - 1].label}
+                                      disabled={updatingTaskId !== null || bulkUpdating}
+                                      onClick={() => void updateTaskStatus(task, boardColumns[columnIndex - 1].status)}
+                                      data-ams-slug={task.slug + '-previous'}
+                                      className="inline-flex h-7 w-7 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg disabled:opacity-40"
+                                    >
+                                      <ArrowLeft size={13} />
+                                    </button>
+                                  )}
+                                  {task.status === 'todo' && (
+                                    <button type="button" title="Start task" aria-label={'Start ' + task.title} disabled={updatingTaskId !== null || bulkUpdating} onClick={() => void updateTaskStatus(task, 'in_progress')} data-ams-slug={task.slug + '-start'} className="inline-flex h-7 w-7 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg disabled:opacity-40">
+                                      <Clock3 size={13} />
+                                    </button>
+                                  )}
+                                  {task.status === 'in_progress' && (
+                                    <button type="button" title="Move to review" aria-label={'Move ' + task.title + ' to review'} disabled={updatingTaskId !== null || bulkUpdating} onClick={() => void updateTaskStatus(task, 'review')} data-ams-slug={task.slug + '-review'} className="inline-flex h-7 w-7 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg disabled:opacity-40">
+                                      <ArrowUpRight size={13} />
+                                    </button>
+                                  )}
+                                  {task.status !== 'done' && (
+                                    <button type="button" title="Mark done" aria-label={'Mark ' + task.title + ' done'} disabled={updatingTaskId !== null || bulkUpdating} onClick={() => void updateTaskStatus(task, 'done')} data-ams-slug={task.slug + '-done'} className="inline-flex h-7 w-7 items-center justify-center rounded-control border border-line bg-bg text-muted hover:border-success/30 hover:bg-success/10 hover:text-success disabled:opacity-40">
+                                      <CheckCircle2 size={13} />
+                                    </button>
+                                  )}
+                                </div>
+                              )}
                             </div>
-                          </button>
-                          <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-2">
-                            <span className="min-w-0 truncate font-mono text-[9px] text-muted/60">slug: {task.slug}</span>
-                            {canManageTasks && (
-                              <div className="flex shrink-0 items-center gap-1.5" data-ams-slug={task.slug + '-actions'}>
-                                {task.status === 'todo' && (
-                                  <button type="button" title="Start task" aria-label={'Start ' + task.title} disabled={updatingTaskId === task.id} onClick={() => void updateTaskStatus(task, 'in_progress')} data-ams-slug={task.slug + '-start'} className="inline-flex h-7 w-7 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg disabled:opacity-40">
-                                    <Clock3 size={13} />
-                                  </button>
-                                )}
-                                {task.status === 'in_progress' && (
-                                  <button type="button" title="Move to review" aria-label={'Move ' + task.title + ' to review'} disabled={updatingTaskId === task.id} onClick={() => void updateTaskStatus(task, 'review')} data-ams-slug={task.slug + '-review'} className="inline-flex h-7 w-7 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg disabled:opacity-40">
-                                    <ArrowUpRight size={13} />
-                                  </button>
-                                )}
-                                {task.status !== 'done' && (
-                                  <button type="button" title="Mark done" aria-label={'Mark ' + task.title + ' done'} disabled={updatingTaskId === task.id} onClick={() => void updateTaskStatus(task, 'done')} data-ams-slug={task.slug + '-done'} className="inline-flex h-7 w-7 items-center justify-center rounded-control border border-line bg-bg text-muted hover:border-success/30 hover:bg-success/10 hover:text-success disabled:opacity-40">
-                                    <CheckCircle2 size={13} />
-                                  </button>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </article>
-                      ))}
-                      {!columnTasks.length && <div className="rounded-control border border-dashed border-line px-3 py-8 text-center text-[10px] text-muted" data-ams-slug={'tasks-column-empty-' + column.status}>No tasks</div>}
+                          </article>
+                        );
+                      })}
+                      {!columnTasks.length && (
+                        <div className={'flex min-h-[104px] flex-1 items-center justify-center rounded-control border border-dashed px-3 py-8 text-center text-[10px] text-muted transition-colors ' + (isDropTarget ? 'border-accent/40 bg-accent/5 text-fg' : 'border-line')}>
+                          {isDropTarget && canManageTasks ? 'Drop task here' : canManageTasks ? 'No tasks. Add one from the task form or move a card here.' : 'No tasks in this stage.'}
+                        </div>
+                      )}
                     </div>
                   </section>
                 );
@@ -1073,7 +1208,7 @@ export const TasksWorkspace: React.FC = () => {
                           <Eye size={14} />
                         </button>
                         {canManageTasks && task.status !== 'done' && (
-                          <button type="button" title={task.status === 'todo' ? 'Start task' : task.status === 'in_progress' ? 'Move to review' : 'Mark done'} aria-label={task.status === 'todo' ? 'Start ' + task.title : task.status === 'in_progress' ? 'Move ' + task.title + ' to review' : 'Mark ' + task.title + ' done'} disabled={updatingTaskId === task.id} onClick={() => void updateTaskStatus(task, task.status === 'todo' ? 'in_progress' : task.status === 'in_progress' ? 'review' : 'done')} data-ams-slug={task.slug + '-quick-action'} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:border-accent/30 hover:bg-bg hover:text-fg disabled:opacity-40">
+                          <button type="button" title={task.status === 'todo' ? 'Start task' : task.status === 'in_progress' ? 'Move to review' : 'Mark done'} aria-label={task.status === 'todo' ? 'Start ' + task.title : task.status === 'in_progress' ? 'Move ' + task.title + ' to review' : 'Mark ' + task.title + ' done'} disabled={updatingTaskId !== null || bulkUpdating} onClick={() => void updateTaskStatus(task, task.status === 'todo' ? 'in_progress' : task.status === 'in_progress' ? 'review' : 'done')} data-ams-slug={task.slug + '-quick-action'} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:border-accent/30 hover:bg-bg hover:text-fg disabled:opacity-40">
                             {task.status === 'todo' ? <Clock3 size={14} /> : task.status === 'in_progress' ? <ArrowUpRight size={14} /> : <CheckCircle2 size={14} />}
                           </button>
                         )}
