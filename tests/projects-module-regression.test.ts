@@ -84,3 +84,24 @@ test('Toast timers are replaced and cleared on unmount', async () => {
   assert.ok(source.includes('if (toastTimeoutRef.current !== null) window.clearTimeout(toastTimeoutRef.current);'));
   assert.ok(source.includes('toastTimeoutRef.current = null'));
 });
+
+test('Interactive project and task details follow the shared Drawer guideline', async () => {
+  const source = await read('src/pages/admin/AdminProjects.tsx');
+
+  assert.ok(source.includes('<Drawer\\n        open={Boolean(selectedProjectDetail)}'));
+  assert.ok(source.includes('<Drawer\\n        open={Boolean(selectedTask)}'));
+  assert.ok(source.includes('<Modal\\n        open={Boolean(deleteProject)}'));
+  assert.ok(source.includes('<Modal\\n        open={Boolean(deleteTask)}'));
+  assert.ok(!source.includes('<Modal\\n        open={Boolean(selectedTask)}'));
+  assert.ok(!source.includes('<Modal\\n        open={Boolean(selectedProjectDetail)}'));
+});
+
+test('Project overview metrics and sprint project selection describe their actual context', async () => {
+  const source = await read('src/pages/admin/AdminProjects.tsx');
+
+  assert.ok(source.includes("label: 'Average project progress'"));
+  assert.ok(source.includes("value: metrics.averageProgress + '%'"));
+  assert.ok(source.includes("'Completed Projects' : activeProjects.length + ' Active Projects'"));
+  assert.ok(source.includes("label: project.name + (project.status === 'completed' ? ' (Completed)' : '')"));
+  assert.ok(source.includes("selectedSprintProject.status === 'completed' ? 'Completed project' : 'Active delivery'"));
+});
