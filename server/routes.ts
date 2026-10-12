@@ -3804,7 +3804,7 @@ function financeWorkbookActor(req: AuthenticatedRequest) {
   };
 }
 
-function financeWorkbookAudit(req: AuthenticatedRequest, action: string, details: string, severity = 'info') {
+function financeWorkbookAudit(req: AuthenticatedRequest, action: string, details: string, severity: 'info' | 'warning' | 'critical' = 'info') {
   return makeAuditEntry(req, action, details, severity);
 }
 
