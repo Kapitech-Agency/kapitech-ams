@@ -108,8 +108,8 @@ const formatSize = (bytes: number) => {
 
 const archiveIdentifier = (createdAt: string, index: number) => {
   const date = new Date(createdAt);
-  if (Number.isNaN(date.getTime())) return 'ams_prod_snapshot_' + String(index + 1).padStart(2, '0');
-  const stamp = date.toISOString().replace(/[-:]/g, '').replace(/\\.\\d{3}Z$/, '');
+  if (Number.isNaN(date.getTime())) return 'ams_prod_snapshot_' + String(index + 1).padStart(2, '0') + '.tar.zst';
+  const stamp = date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, '');
   return 'ams_prod_snapshot_' + stamp + '.tar.zst';
 };
 
