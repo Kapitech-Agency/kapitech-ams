@@ -18,6 +18,7 @@ import {
 import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminSectionTabs, AdminTablePagination } from './AdminModulePrimitives';
 import { CustomSelect } from '../ui/CustomSelect';
 import { Modal } from '../ui/Modal';
+import { Drawer } from '../ui/Drawer';
 import { ProfileIdentity } from './ProfileIdentity';
 import Button from '../ui/Button';
 import { api } from '../../lib/apiClient';
@@ -1091,7 +1092,7 @@ export const TasksWorkspace: React.FC = () => {
         <AdminTablePagination total={filteredRecords.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="tasks" slug="tasks-pagination" />
       </AdminPanel>
 
-      <Modal slug="task-create-modal"
+      <Drawer slug="task-create-modal"
         open={taskFormOpen}
         onClose={() => setTaskFormOpen(false)}
         size="md"
@@ -1134,7 +1135,7 @@ export const TasksWorkspace: React.FC = () => {
             <textarea id="task-description" value={taskForm.description} onChange={event => setTaskForm(current => ({ ...current, description: event.target.value }))} rows={4} className="mt-1 w-full resize-none rounded-control border border-line bg-bg px-3 py-2 text-xs leading-5 text-fg outline-none focus:border-accent" placeholder="Task context, acceptance note, or handoff details." />
           </div>
         </form>
-      </Modal>
+      </Drawer>
 
       <Modal slug="task-detail-modal"
         open={Boolean(selectedTask)}
@@ -1266,10 +1267,10 @@ export const TasksWorkspace: React.FC = () => {
         )}
       </Modal>
 
-      <Modal slug="task-edit-modal"
+      <Drawer slug="task-edit-modal"
         open={Boolean(editingTask)}
         onClose={() => { if (!savingEditTask) setEditingTask(null); }}
-        size="lg"
+        size="2xl"
         title="Edit task"
         description={editingTask ? editingTask.projectName : undefined}
         footer={(
@@ -1313,7 +1314,7 @@ export const TasksWorkspace: React.FC = () => {
             <textarea id="task-edit-description-input" value={taskEditForm.description} onChange={event => setTaskEditForm(current => ({ ...current, description: event.target.value }))} rows={5} className="mt-1 w-full resize-none rounded-control border border-line bg-bg px-3 py-2 text-xs leading-5 text-fg outline-none focus:border-accent" placeholder="Task context, acceptance note, or handoff details." />
           </div>
         </form>
-      </Modal>
+      </Drawer>
     </AdminPageShell>
   );
 };
