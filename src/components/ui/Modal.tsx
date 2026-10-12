@@ -17,6 +17,8 @@ export interface ModalProps {
   initialFocusRef?: React.RefObject<HTMLElement | null>;
   /** Keep the dialog body fully visible without an internal scroll region. */
   fitContent?: boolean;
+  /** Prevent closing while an async confirmation or mutation is in flight. */
+  busy?: boolean;
   dialogClassName?: string;
   slug?: string;
 }
@@ -51,6 +53,7 @@ export const Modal: React.FC<ModalProps> = ({
   labelledBy,
   initialFocusRef,
   fitContent = false,
+  busy = false,
   dialogClassName,
   slug
 }) => {
@@ -58,10 +61,12 @@ export const Modal: React.FC<ModalProps> = ({
   const triggerRef = useRef<HTMLElement | null>(null);
   const onCloseRef = useRef(onClose);
   const initialFocusRefRef = useRef(initialFocusRef);
+  const busyRef = useRef(busy);
   const instanceId = useId();
 
   onCloseRef.current = onClose;
   initialFocusRefRef.current = initialFocusRef;
+  busyRef.current = busy;
 
   const titleId = labelledBy ?? `ams-modal-title-${instanceId}`;
   const descriptionId = `${titleId}-description`;
@@ -118,7 +123,7 @@ export const Modal: React.FC<ModalProps> = ({
       if (modalStack[modalStack.length - 1] !== instanceId) return;
 
       if (event.key === 'Escape') {
-        if (!closeOnEscape) return;
+        if (!closeOnEscape || busyRef.current) return;
         event.preventDefault();
         onCloseRef.current();
         return;
@@ -166,12 +171,12 @@ export const Modal: React.FC<ModalProps> = ({
   if (!open) return null;
 
   return (
-    <div data-ams-feature-slug={slug} data-ams-slug={slug} data-ams-modal-root="true" className="fixed inset-0 z-[80] flex items-center justify-center p-3 pb-[max(12px,env(safe-area-inset-bottom))] pt-[max(12px,env(safe-area-inset-top))] sm:p-4" role="presentation">
+    <div data-ams-feature-slug={slug} data-ams-slug={slug} data-ams-modal-root="true" className="ams-modal-backdrop fixed inset-0 z-[80] flex items-center justify-center p-3 pb-[max(12px,env(safe-area-inset-bottom))] pt-[max(12px,env(safe-area-inset-top))] sm:p-4" role="presentation">
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-bg/80"
+        className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"
         onMouseDown={(event) => {
-          if (closeOnOutsideClick && event.target === event.currentTarget) {
+          if (closeOnOutsideClick && !busyRef.current && event.target === event.currentTarget) {
             onClose();
           }
         }}
@@ -184,15 +189,16 @@ export const Modal: React.FC<ModalProps> = ({
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={description ? descriptionId : undefined}
-        className={`relative w-full ${sizes[size]} max-h-[calc(100dvh-24px)] sm:max-h-[calc(100dvh-32px)] flex flex-col overflow-hidden rounded-card border border-line bg-panel ${dialogClassName || ''}`}
+        aria-busy={busy || undefined}
+        className={`ams-modal relative w-full ${sizes[size]} max-h-[calc(100dvh-24px)] sm:max-h-[calc(100dvh-32px)] flex flex-col overflow-hidden rounded-card border border-line bg-panel ${dialogClassName || ""}`}
       >
-        <header className="flex shrink-0 items-start justify-between gap-4 border-b border-line px-4 py-4">
+        <header className="ams-modal-header flex shrink-0 items-start justify-between gap-4 border-b border-line">
           <div className="min-w-0">
-            <h2 id={titleId} className="text-base font-semibold leading-5 text-fg">
+            <h2 id={titleId} className="text-sm font-semibold leading-5 text-fg">
               {title}
             </h2>
             {description && (
-              <p id={descriptionId} className="mt-1.5 max-w-2xl text-xs leading-5 text-muted">
+              <p id={descriptionId} className="mt-1 max-w-2xl text-xs leading-4 text-muted">
                 {description}
               </p>
             )}
@@ -204,17 +210,18 @@ export const Modal: React.FC<ModalProps> = ({
             onClick={onClose}
             aria-label={closeLabel}
             title={closeLabel}
+            disabled={busy}
             icon={<X size={16} />}
-            className="h-10 w-10 shrink-0 p-0 sm:h-9 sm:w-9"
+            className="ams-modal-close h-9 w-9 shrink-0 p-0"
           />
         </header>
 
-        <div className={`min-h-0 flex-1 px-4 py-4 ${fitContent ? 'overflow-visible' : 'overflow-y-auto'}`}>
+        <div className={`ams-modal-body min-h-0 flex-1 ${fitContent ? "overflow-visible" : "overflow-y-auto overscroll-contain"}`}>
           {children}
         </div>
 
         {footer && (
-          <footer className="flex shrink-0 flex-col items-stretch justify-end gap-2 border-t border-line bg-panel px-4 py-3.5 sm:flex-row sm:flex-wrap sm:items-center">
+          <footer className="ams-modal-footer flex shrink-0 flex-col items-stretch justify-end gap-2 border-t border-line bg-panel sm:flex-row sm:flex-wrap sm:items-center">
             {footer}
           </footer>
         )}
