@@ -423,10 +423,12 @@ export const AdminFinanceWorkspace: React.FC = () => {
   }, [activeTab.key]);
 
   const reportInvoices = useMemo(() => invoices.filter(isIssuedInvoice), [invoices]);
-  const totalBilled = useMemo(() => sumAmounts<AgencyInvoice>(reportInvoices, (invoice) => Number(invoice.total) || 0), [reportInvoices]);
-  const totalCollected = useMemo(() => sumAmounts<AgencyInvoice>(reportInvoices, getInvoiceCollected), [reportInvoices]);
-  const totalOutstanding = useMemo(() => sumAmounts<AgencyInvoice>(reportInvoices, getInvoiceOutstanding), [reportInvoices]);
-  const totalExpenses = useMemo(() => sumAmounts<AgencyExpense>(expenses, (expense) => Number(expense.amount) || 0), [expenses]);
+  const idrInvoices = useMemo(() => reportInvoices.filter((invoice) => (invoice.currency || 'IDR') === 'IDR'), [reportInvoices]);
+  const idrExpenses = useMemo(() => expenses.filter((expense) => String((expense as any).currency || 'IDR') === 'IDR'), [expenses]);
+  const totalBilled = useMemo(() => sumAmounts<AgencyInvoice>(idrInvoices, (invoice) => Number(invoice.total) || 0), [idrInvoices]);
+  const totalCollected = useMemo(() => sumAmounts<AgencyInvoice>(idrInvoices, getInvoiceCollected), [idrInvoices]);
+  const totalOutstanding = useMemo(() => sumAmounts<AgencyInvoice>(idrInvoices, getInvoiceOutstanding), [idrInvoices]);
+  const totalExpenses = useMemo(() => sumAmounts<AgencyExpense>(idrExpenses, (expense) => Number(expense.amount) || 0), [idrExpenses]);
   const cashMovements = useMemo<CashMovement[]>(() => {
     const entries: CashMovement[] = [];
     for (const invoice of reportInvoices) {
@@ -496,6 +498,17 @@ export const AdminFinanceWorkspace: React.FC = () => {
 
 
   const getRegisterRecords = (type: string): WorkbookRecord[] => registerRecords[type] || [];
+  const getOpeningBalance = (accountCode: string): number | null => {
+    const record = getRegisterRecords('cash-bank-opening').find((item) => String(item.payload.accountCode) === accountCode);
+    return record ? Number(record.payload.openingBalance) || 0 : null;
+  };
+
+  const getProjectFinanceRecord = (project: AgencyProject): WorkbookRecord | undefined =>
+    getRegisterRecords('project-finance').find((record) =>
+      (Boolean(record.projectId) && record.projectId === project.id) ||
+      String(record.payload.projectName || '').toLowerCase() === String(project.name || '').toLowerCase()
+    );
+
 
   const openRegisterForm = (type: string, record?: WorkbookRecord, initialPayload: Record<string, any> = {}) => {
     const definition = REGISTER_FORMS[type];
@@ -824,14 +837,14 @@ export const AdminFinanceWorkspace: React.FC = () => {
 
   const renderSummary = (dashboard: boolean) => {
     const currentMonth = selectedMonth;
-    const billedInMonth = sumAmounts<AgencyInvoice>(reportInvoices.filter((invoice) => getMonthKey(getInvoiceDate(invoice)) === currentMonth), (invoice) => Number(invoice.total) || 0);
-    const collectedInMonth = sumAmounts<CashMovement>(cashMovements.filter((movement) => getMonthKey(movement.date) === currentMonth), (movement) => movement.cashIn);
-    const expenseInMonth = sumAmounts<AgencyExpense>(expenses.filter((expense) => getMonthKey(expense.date) === currentMonth), (expense) => Number(expense.amount) || 0);
+    const billedInMonth = sumAmounts<AgencyInvoice>(idrInvoices.filter((invoice) => getMonthKey(getInvoiceDate(invoice)) === currentMonth), (invoice) => Number(invoice.total) || 0);
+    const collectedInMonth = sumAmounts<CashMovement>(cashMovements.filter((movement) => movement.currency === 'IDR' && getMonthKey(movement.date) === currentMonth), (movement) => movement.cashIn);
+    const expenseInMonth = sumAmounts<AgencyExpense>(idrExpenses.filter((expense) => getMonthKey(expense.date) === currentMonth), (expense) => Number(expense.amount) || 0);
     const metrics = [
-      { id: 'billed', label: 'Total billed', value: formatMoney(totalBilled), context: 'Issued invoices excluding drafts and cancellations', icon: <FileText size={15} /> },
-      { id: 'collected', label: 'Total collected', value: formatMoney(totalCollected), context: 'Recorded client payments', icon: <ArrowDown size={15} />, toneClassName: 'text-success' },
-      { id: 'receivable', label: 'Outstanding receivables', value: formatMoney(totalOutstanding), context: 'Derived from invoice balances', icon: <WalletCards size={15} />, toneClassName: 'text-warning' },
-      { id: 'expenses', label: 'Recorded expenses', value: formatMoney(totalExpenses), context: 'Expense records returned by AMS', icon: <ArrowUpRight size={15} />, toneClassName: 'text-series-3' }
+      { id: 'billed', label: 'Total billed', value: formatMoney(totalBilled), context: 'IDR issued invoices; non-IDR invoices remain visible in transaction registers', icon: <FileText size={15} /> },
+      { id: 'collected', label: 'Total collected', value: formatMoney(totalCollected), context: 'Recorded IDR client payments', icon: <ArrowDown size={15} />, toneClassName: 'text-success' },
+      { id: 'receivable', label: 'Outstanding receivables', value: formatMoney(totalOutstanding), context: 'Derived from IDR invoice balances', icon: <WalletCards size={15} />, toneClassName: 'text-warning' },
+      { id: 'expenses', label: 'Recorded expenses', value: formatMoney(totalExpenses), context: 'IDR expense records returned by AMS', icon: <ArrowUpRight size={15} />, toneClassName: 'text-series-3' }
     ];
     const recentInvoices: TableRow[] = [...reportInvoices]
       .sort((a, b) => String(b.issueDate || '').localeCompare(String(a.issueDate || '')))
@@ -1024,7 +1037,8 @@ export const AdminFinanceWorkspace: React.FC = () => {
         const bills = getRegisterRecords('vendor-bill').filter((record) => matching([
           record.recordKey, record.payload.billNo, record.payload.vendorName, record.payload.projectName, record.payload.dueDate, record.payload.paymentStatus
         ]));
-        const payableTotal = sumAmounts<WorkbookRecord>(bills,(record)=>Number(record.payload.outstanding ?? record.payload.total)||0);
+        const payableTotalIDR = sumAmounts<WorkbookRecord>(bills.filter((record)=>(String(record.payload.currency||'IDR')==='IDR')),(record)=>Number(record.payload.outstanding ?? record.payload.total)||0);
+        const foreignCurrencyBillCount = bills.filter((record)=>String(record.payload.currency||'IDR')!=='IDR').length;
         return (
           <div className="space-y-4">
             <WorkbookNote title="Vendor Bill is the payable source of truth">
@@ -1032,7 +1046,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
             </WorkbookNote>
             <AdminMetricStrip metrics={[
               {id:'ap-bills',label:'Vendor bills',value:String(bills.length),context:'Persistent workbook register',icon:<FileText size={15}/>},
-              {id:'ap-total',label:'Outstanding total',value:formatMoney(payableTotal),context:'Derived from bill value less recorded instalments',icon:<WalletCards size={15}/>}
+              {id:'ap-total',label:'IDR outstanding',value:formatMoney(payableTotalIDR),context:foreignCurrencyBillCount+' non-IDR bills listed separately',icon:<WalletCards size={15} />}
             ]}/>
             <FinanceDataTable
               title="Accounts Payable register"
@@ -1103,10 +1117,13 @@ export const AdminFinanceWorkspace: React.FC = () => {
           const collected=sumAmounts<AgencyInvoice>(projectInvoices,getInvoiceCollected);
           const costs=sumAmounts<AgencyExpense>(projectExpenses,(expense)=>Number(expense.amount)||0);
           const contractValue=record?Number(payload.contractValue)||0:null;
+          const billedIDR=sumAmounts<AgencyInvoice>(projectInvoices.filter((invoice)=>(invoice.currency||'IDR')==='IDR'),(invoice)=>Number(invoice.total)||0);
+          const collectedIDR=sumAmounts<AgencyInvoice>(projectInvoices.filter((invoice)=>(invoice.currency||'IDR')==='IDR'),getInvoiceCollected);
+          const costsIDR=sumAmounts<AgencyExpense>(projectExpenses.filter((expense)=>String((expense as any).currency||'IDR')==='IDR'),(expense)=>Number(expense.amount)||0);
           return {id:project.id,cells:[
             projectLabel(project),project.clientCompany||project.clientName||'—',
             contractValue===null?<AdminStatusBadge tone="warning">Setup required</AdminStatusBadge>:formatMoney(contractValue),
-            formatMoney(billed),formatMoney(collected),formatMoney(costs),<StatusBadge value={project.status}/>,
+            formatMoney(billedIDR),formatMoney(collectedIDR),formatMoney(costsIDR),<StatusBadge value={project.status}/>,
             record?registerRecordActions('project-finance',record):<Button variant="secondary" type="button" onClick={()=>openRegisterForm('project-finance',undefined,{projectId:project.id,projectName:project.name,clientName:project.clientCompany||project.clientName,startDate:project.startDate,endDate:project.targetEndDate,projectStatus:project.status})}>Configure</Button>
           ]};
         });
@@ -1178,7 +1195,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
         for(const record of transferRows){
           const payload=record.payload||{};
           const amount=Number(payload.amount)||0;
-          const isCashIn=String(payload.counterpartAccountCode||'')==='1100'&&String(payload.accountCode||'')!=='1100';
+          const isCashIn=(String(payload.counterpartAccountCode||'')==='1100'&&String(payload.accountCode||'')!=='1100')||(String(payload.accountCode||'')==='1100'&&String(payload.counterpartAccountCode||'')!=='1000'&&String(payload.direction||'out')==='in');
           movements.push({id:record.id,date:String(payload.date||''),reference:String(payload.reference||record.recordKey),description:String(payload.description||'Cash transfer'),cashIn:isCashIn?amount:0,cashOut:isCashIn?0:amount,status:record.status,source:'Internal cash transfer',record});
         }
         for(const record of vouchers){
@@ -1195,8 +1212,9 @@ export const AdminFinanceWorkspace: React.FC = () => {
         });
         const rows=allPettyLedgerRows.filter((row)=>matching(row.search)).reverse();
         const pending=vouchers.filter((record)=>['pending','approved'].includes(String(record.payload.status||record.status))).length;
-        const totalIn=sumAmounts(vouchers.filter((record)=>record.status==='posted'),(record)=>record.payload.direction==='in'?Number(record.payload.amount)||0:0);
-        const totalOut=sumAmounts(vouchers.filter((record)=>record.status==='posted'),(record)=>record.payload.direction==='out'?Number(record.payload.amount)||0:0);
+        const postedPettyMovements=movements.filter((movement)=>movement.source==='Internal cash transfer'||movement.status==='posted');
+        const totalIn=sumAmounts<typeof postedPettyMovements[number]>(postedPettyMovements,(movement)=>movement.cashIn);
+        const totalOut=sumAmounts<typeof postedPettyMovements[number]>(postedPettyMovements,(movement)=>movement.cashOut);
         return (
           <div className="space-y-4">
             <WorkbookNote tone={opening===null?'warning':'info'} title={opening===null?'Petty cash needs an opening balance':'Petty cash register connected'}>
@@ -1213,8 +1231,8 @@ export const AdminFinanceWorkspace: React.FC = () => {
         );
       }
       case 'monthly-pnl': {
-        const monthInvoices = reportInvoices.filter((invoice) => getMonthKey(getInvoiceDate(invoice)) === selectedMonth);
-        const monthExpenses = expenses.filter((expense) => getMonthKey(expense.date) === selectedMonth);
+        const monthInvoices = idrInvoices.filter((invoice) => getMonthKey(getInvoiceDate(invoice)) === selectedMonth);
+        const monthExpenses = idrExpenses.filter((expense) => getMonthKey(expense.date) === selectedMonth);
         const revenue = sumAmounts<AgencyInvoice>(monthInvoices, (invoice) => Number(invoice.total) || 0);
         const classTotals: Record<WorkbookExpenseClass, number> = {
           directProjectCost: 0,
@@ -1259,7 +1277,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
       }
       case 'cash-flow': {
         const monthly = new Map<string, { month: string; inflow: number; outflow: number; count: number }>();
-        for (const movement of cashMovements) {
+        for (const movement of cashMovements.filter((item) => item.currency === 'IDR')) {
           const month = getMonthKey(movement.date);
           if (!month) continue;
           const item = monthly.get(month) || { month, inflow: 0, outflow: 0, count: 0 };
@@ -1277,7 +1295,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
             <WorkbookNote tone="warning" title="Cash-flow movement, not reconciled ending cash">
               Inflows use dated invoice payments; outflows use dated AMS expense records. Opening bank balance, bank account IDs, internal transfers and independent petty-cash balances are not yet linked, so the final column is net movement rather than an authoritative bank ending balance.
             </WorkbookNote>
-            <FinanceDataTable title="Monthly Cash Flow" description="The workbook's cash-in / cash-out structure, derived from live AMS transaction sources." columns={[{ label: 'Month' }, { label: 'Total cash in', align: 'right' }, { label: 'Total cash out', align: 'right' }, { label: 'Net cash movement', align: 'right' }, { label: 'Source rows', align: 'right' }]} rows={rows} emptyMessage="No dated receipts or expense movements are available." />
+            <FinanceDataTable title="Monthly Cash Flow" description="The workbook cash-in / cash-out structure, shown in IDR from live AMS transaction sources." columns={[{ label: 'Month' }, { label: 'Total cash in', align: 'right' }, { label: 'Total cash out', align: 'right' }, { label: 'Net cash movement', align: 'right' }, { label: 'Source rows', align: 'right' }]} rows={rows} emptyMessage="No dated receipts or expense movements are available." />
           </div>
         );
       }
@@ -1394,9 +1412,9 @@ export const AdminFinanceWorkspace: React.FC = () => {
         );
       }
       case 'annual-summary': {
-        const yearInvoices = reportInvoices.filter((invoice) => getYearKey(getInvoiceDate(invoice)) === selectedYear);
-        const yearExpenses = expenses.filter((expense) => getYearKey(expense.date) === selectedYear);
-        const yearCollections = cashMovements.filter((movement) => getYearKey(movement.date) === selectedYear);
+        const yearInvoices = idrInvoices.filter((invoice) => getYearKey(getInvoiceDate(invoice)) === selectedYear);
+        const yearExpenses = idrExpenses.filter((expense) => getYearKey(expense.date) === selectedYear);
+        const yearCollections = cashMovements.filter((movement) => movement.currency === 'IDR' && getYearKey(movement.date) === selectedYear);
         const yearBilled = sumAmounts<AgencyInvoice>(yearInvoices, (invoice) => Number(invoice.total) || 0);
         const yearCollected = sumAmounts<CashMovement>(yearCollections, (movement) => movement.cashIn);
         const yearOutflow = sumAmounts<CashMovement>(yearCollections, (movement) => movement.cashOut);
@@ -1421,8 +1439,8 @@ export const AdminFinanceWorkspace: React.FC = () => {
               { id: 'year-expenses', label: 'Annual recorded expenses', value: formatMoney(yearExpense), context: yearExpenses.length + ' source expense records', icon: <ArrowUpRight size={15} /> },
               { id: 'year-net', label: 'Net cash movement', value: formatMoney(yearCollected - yearOutflow), context: 'Not an accounting net profit', icon: <CircleDollarSign size={15} /> }
             ]} />
-            <FinanceDataTable title="Annual summary" description="Period-filtered view; accounting net profit and closing cash depend on the missing ledger, opening balances and posting workflow." columns={[{ label: 'Metric' }, { label: 'Amount', align: 'right' }, { label: 'Basis' }]} rows={[
-              { id: 'a-revenue', cells: ['Annual Revenue / Invoice Value', formatMoney(yearBilled), 'Invoice issue date'] },
+            <FinanceDataTable title="Annual summary" description="IDR-only period view; accounting net profit and closing cash depend on ledger posting, opening balances and reconciliation." columns={[{ label: 'Metric' }, { label: 'Amount', align: 'right' }, { label: 'Basis' }]} rows={[
+              { id: 'a-revenue', cells: ['Annual Revenue / Invoice Value (IDR)', formatMoney(yearBilled), 'IDR invoice issue date'] },
               { id: 'a-collected', cells: ['Annual Collections', formatMoney(yearCollected), 'Payment date'] },
               { id: 'a-expense', cells: ['Annual Recorded Expenses', formatMoney(yearExpense), 'Expense date'] },
               { id: 'a-outflow', cells: ['Recorded cash outflow', formatMoney(yearOutflow), 'Expense source dates'] },

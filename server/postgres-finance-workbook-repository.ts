@@ -175,7 +175,7 @@ function normalise(type: FinanceWorkbookRecordType, raw: unknown, approval = fal
       let debits = 0, credits = 0;
       const lines = rawLines.map((rawLine,index) => {
         const line = obj(rawLine), code = txt(line.accountCode,4);
-        if (!accountCodes.has(code)) throw new FinanceWorkbookValidationError('Unknown account on journal line ' + (index+1) + '.');
+        if (!/^\d{4}$/.test(code)) throw new FinanceWorkbookValidationError('Journal line ' + (index+1) + ' must use a four-digit account code.');
         const debit = money(line.debit,'Debit'), credit = money(line.credit,'Credit');
         if ((debit>0&&credit>0)||(debit===0&&credit===0)) throw new FinanceWorkbookValidationError('Each journal line needs one positive debit or credit amount.');
         debits += debit; credits += credit;
@@ -198,7 +198,7 @@ function normalise(type: FinanceWorkbookRecordType, raw: unknown, approval = fal
     }
     case 'balance-sheet-opening': {
       const code = txt(v.accountCode,4);
-      if (!accountCodes.has(code)) throw new FinanceWorkbookValidationError('Unknown opening-balance account.');
+      if (!/^\d{4}$/.test(code)) throw new FinanceWorkbookValidationError('Opening balance must use a four-digit account code.');
       const asOfDate = date(v.asOfDate,'Opening balance date');
       p = { accountCode:code, asOfDate, openingAmount:money(v.openingAmount,'Opening amount'), side:choice(v.side,['Debit','Credit'],'Balance side'), notes:txt(v.notes,500) };
       key = asOfDate + '|' + code; period = periodOf(asOfDate); break;
