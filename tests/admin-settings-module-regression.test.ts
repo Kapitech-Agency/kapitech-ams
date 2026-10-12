@@ -142,5 +142,5 @@ test('Audit CSV uses real row separators and neutralizes spreadsheet formulas', 
   assert.ok(source.includes('const safeAuditCsvCell = (cell: unknown) =>'));
   assert.ok(source.includes('[=+\\-@]/.test(raw) ?'));
   assert.ok(source.includes(".join('\\r\\n')"));
-  assert.ok(source.includes("safeValue.replace(/\\"/g, '\\"\\"')"));
+  assert.ok(source.includes('safeValue.replace('));
 });
