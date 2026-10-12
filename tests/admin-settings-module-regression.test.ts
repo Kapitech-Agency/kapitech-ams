@@ -135,3 +135,12 @@ test('Backup archive identifiers strip milliseconds and keep a consistent filena
   assert.ok(source.includes("String(index + 1).padStart(2, '0') + '.tar.zst'"));
   assert.ok(source.includes(String.raw`replace(/\.\d{3}Z$/, '')`));
 });
+
+test('Audit CSV uses real row separators and neutralizes spreadsheet formulas', async () => {
+  const source = await read('src/pages/admin/AdminSettings.tsx');
+
+  assert.ok(source.includes('const safeAuditCsvCell = (cell: unknown) =>'));
+  assert.ok(source.includes('[=+\\-@]/.test(raw) ?'));
+  assert.ok(source.includes(".join('\\r\\n')"));
+  assert.ok(source.includes("safeValue.replace(/\\"/g, '\\"\\"')"));
+});
