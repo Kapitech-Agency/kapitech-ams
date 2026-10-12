@@ -645,11 +645,25 @@ export const AdminProjects: React.FC = () => {
         return matchesQuery && matchesPriority && matchesAssignee;
       })
       .sort((a, b) => {
-        if (taskSort === 'due') return (a.dueDate || '9999-12-31').localeCompare(b.dueDate || '9999-12-31');
+        if (taskSort === 'due') {
+          return (a.dueDate || '9999-12-31').localeCompare(b.dueDate || '9999-12-31')
+            || a.title.localeCompare(b.title);
+        }
         if (taskSort === 'title') return a.title.localeCompare(b.title);
-        if (taskSort === 'created') return (b.createdAt || '').localeCompare(a.createdAt || '');
-        if (a.status !== b.status) return 0;
-        return PRIORITY_ORDER[b.priority] - PRIORITY_ORDER[a.priority];
+        if (taskSort === 'created') {
+          return (b.createdAt || '').localeCompare(a.createdAt || '')
+            || a.title.localeCompare(b.title);
+        }
+
+        // The board renders one lane per status. Keep the comparator transitive,
+        // then sort each lane by priority and due date.
+        const statusOrder = TASK_COLUMNS.findIndex(column => column.id === a.status)
+          - TASK_COLUMNS.findIndex(column => column.id === b.status);
+        if (statusOrder !== 0) return statusOrder;
+
+        return PRIORITY_ORDER[b.priority] - PRIORITY_ORDER[a.priority]
+          || (a.dueDate || '9999-12-31').localeCompare(b.dueDate || '9999-12-31')
+          || a.title.localeCompare(b.title);
       });
   }, [selectedSprintProject, taskSearch, taskPriorityFilter, taskAssigneeFilter, taskSort]);
 
