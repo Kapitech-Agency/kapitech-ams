@@ -103,7 +103,7 @@ test('Authenticated AMS pages use one canonical responsive page frame', () => {
   assert.ok(layout.includes('<div className="ams-content flex-1 min-h-0 w-full max-w-[1560px] mx-auto">'));
   assert.ok(dashboard.includes('<AdminPageShell featureSlug="dashboard-module" className="ams-dashboard">'));
 });
-test('All AMS form and input overlays use Drawer instead of Modal', () => {
+test('All AMS record-entry forms use Drawer instead of Modal', () => {
   const srcRoot = path.resolve(process.cwd(), 'src');
   const walk = (directory) => fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const fullPath = path.join(directory, entry.name);
@@ -112,16 +112,22 @@ test('All AMS form and input overlays use Drawer instead of Modal', () => {
   });
   const inputPattern = /<(?:form|input|textarea|select|CustomSelect|DatePicker|Input|Textarea|Select|Combobox|MultiSelect)\b/i;
   const findings = [];
+  const commandPalettePath = path.resolve(srcRoot, 'components/admin/CommandPalette.tsx');
 
   for (const file of walk(srcRoot)) {
     const source = fs.readFileSync(file, 'utf8');
     const modalBlocks = source.match(/<Modal\b[\s\S]*?<\/Modal>/g) || [];
     modalBlocks.forEach((block, index) => {
-      if (inputPattern.test(block)) findings.push(path.relative(process.cwd(), file) + ' (Modal #' + (index + 1) + ')');
+      // The command palette is a keyboard-first search overlay, not a record-entry form.
+      if (file !== commandPalettePath && inputPattern.test(block)) {
+        findings.push(path.relative(process.cwd(), file) + ' (Modal #' + (index + 1) + ')');
+      }
     });
   }
+  const commandPalette = fs.readFileSync(commandPalettePath, 'utf8');
+  assert.ok(commandPalette.includes('<Modal') && /type="search"|role="combobox"|command.*search/i.test(commandPalette), 'Command palette retains its dedicated searchable overlay.');
 
-  assert.deepEqual(findings, [], 'Create/edit forms and interactive inputs must be hosted by Drawer, not Modal.');
+  assert.deepEqual(findings, [], 'Record-entry forms and interactive business inputs must be hosted by Drawer, not Modal. The keyboard-first command palette is the only exception.');
 
   const careers = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsCareers.tsx'), 'utf8');
   const tasks = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/TasksWorkspace.tsx'), 'utf8');
