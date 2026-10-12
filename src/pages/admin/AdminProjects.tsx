@@ -1931,6 +1931,18 @@ export const AdminProjects: React.FC = () => {
               </div>
             ) : projectLayout === 'board' ? (
               <div ref={projectKanbanScrollRef} className="ams-project-kanban-board overflow-x-auto overflow-y-visible cursor-grab">
+                {filteredProjects.length === 0 && (
+                  <div role="status" className="mx-3 mt-3 flex flex-wrap items-center justify-between gap-3 rounded-control border border-line bg-panel p-3 sm:mx-4">
+                    <div className="text-xs text-muted">
+                      {projects.length === 0 ? 'No projects yet. Create a project to start the portfolio.' : 'No projects match the current filters.'}
+                    </div>
+                    {activeProjectFilters > 0 && (
+                      <button type="button" onClick={clearProjectFilters} className="inline-flex h-8 items-center rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-fg hover:bg-panel-hover">
+                        Reset filters
+                      </button>
+                    )}
+                  </div>
+                )}
                 <div className="flex min-w-max items-start gap-3 px-3 pb-5 pt-3 sm:gap-3.5 sm:px-4 sm:pb-6 sm:pt-4">
                   {PROJECT_KANBAN_COLUMNS.map(column => {
                     const items = filteredProjects.filter(project => project.status === column.id);
@@ -2235,7 +2247,19 @@ export const AdminProjects: React.FC = () => {
                         </tr>
                       );
                     })}
-                  </tbody>
+                                      {filteredProjects.length === 0 && (
+                      <tr>
+                        <td colSpan={7} className="py-12 text-center text-xs text-muted">
+                          <div>{projects.length === 0 ? 'No projects have been created yet.' : 'No projects match the current filters.'}</div>
+                          {(activeProjectFilters > 0 || projectSort !== 'updated') && (
+                            <button type="button" onClick={clearProjectFilters} className="mt-3 inline-flex h-8 items-center rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-fg hover:bg-panel-hover">
+                              Reset filters
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    )}
+</tbody>
                 </table>
               </div>
             )}
@@ -2271,7 +2295,7 @@ export const AdminProjects: React.FC = () => {
                     next.set('project', project.slug);
                     setSearchParams(next, { replace: true });
                   }}
-                  options={activeProjects.map(project => ({ value: project.id, label: project.name }))}
+                  options={projects.map(project => ({ value: project.id, label: project.name + (project.status === 'completed' ? ' (Completed)' : '') }))}
                   className="w-full sm:w-64"
                   aria-label="Select sprint project"
                 />
@@ -2956,7 +2980,7 @@ export const AdminProjects: React.FC = () => {
         <form id="projects-task-form" data-ams-feature-slug="projects-task-form" data-ams-slug="projects-task-form" onSubmit={saveTask} className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="text-xs text-muted sm:col-span-2">Task title<input required value={taskForm.title} onChange={event => setTaskForm({ ...taskForm, title: event.target.value })} className={fieldClass} /></label>
-            <div><label className="text-xs text-muted">Project</label><CustomSelect value={taskForm.projectId} onChange={value => setTaskForm({ ...taskForm, projectId: value })} options={projects.map(project => ({ value: project.id, label: project.name + (project.status === 'completed' ? ' (Completed)' : '') }))} className="mt-1 w-full" /></div>
+            <div><label className="text-xs text-muted">Project</label><CustomSelect value={taskForm.projectId} onChange={value => setTaskForm({ ...taskForm, projectId: value })} options={activeProjects.map(project => ({ value: project.id, label: project.name }))} className="mt-1 w-full" /></div>
             <label className="text-xs text-muted">Assignee
               <input
                 value={taskForm.assignee}
