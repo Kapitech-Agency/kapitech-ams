@@ -30,7 +30,7 @@ test('Sprint Kanban keeps selected task state consistent with optimistic save an
   assert.ok(source.includes('setMovingTaskId(null);'));
   assert.ok(source.includes("onClick={() => void updateTaskStatus(selectedTask, column.id)}"));
   assert.ok(!source.includes('setSelectedTask({ ...selectedTask, status: column.id })'));
-  assert.ok(source.includes('disabled={!canManageKanbanTasks || Boolean(movingTaskId) || selectedTask.status === column.id}'));
+  assert.ok(source.includes('disabled={!canManageKanbanTasks || Boolean(movingTaskId) || updatingSubtaskId !== null || selectedTask.status === column.id}'));
 });
 
 test('Projects and Sprint Kanban drag handles provide keyboard operation and respect in-flight moves', async () => {
