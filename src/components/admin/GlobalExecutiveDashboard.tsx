@@ -642,7 +642,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       <section data-ams-feature-slug="dashboard-overview" data-ams-slug="dashboard-overview" className="mb-5 grid gap-3 min-[1100px]:grid-cols-12" aria-label="Executive overview controls">
         <div className="min-[1100px]:col-span-9">
           <AdminMetricStrip
-            className="grid-cols-1 sm:grid-cols-2 min-[760px]:grid-cols-3 min-[1100px]:grid-cols-4"
+            className="grid-cols-1 sm:grid-cols-2 min-[760px]:grid-cols-4"
             metrics={[
               {
                 id: 'active-projects', label: 'Active projects',
@@ -699,6 +699,19 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 context: dashboardOverview.metrics?.totalBilled != null && dashboardOverview.metrics?.activeProjects != null ? 'Live project base' : fixtureMode ? 'Preview data' : dashboardOverview.loading ? 'Loading live data' : 'Live data unavailable',
                 sparkline: fixtureMode ? [24, 25.5, 28, 29.8] : undefined,
                 icon: <FolderKanban size={15} />, toneClassName: 'text-fg', slug: 'dashboard-avg-project-value'
+              },
+              {
+                id: 'net-operating-profit', label: 'Net operating profit',
+                value: dashboardOverview.financials?.netOperatingProfit != null
+                  ? formatLiveMoney(Number(dashboardOverview.financials.netOperatingProfit), String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase())
+                  : fixtureMode ? formatLiveMoney(32300, String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase()) : '—',
+                context: dashboardOverview.financials?.netOperatingProfit != null ? 'Current month · live data' : fixtureMode ? 'Preview data' : dashboardOverview.loading ? 'Loading live data' : 'Live data unavailable',
+                sparkline: fixtureMode ? [19600, 22600, 28800, 32300] : undefined,
+                icon: <CircleDollarSign size={15} />,
+                toneClassName: dashboardOverview.financials?.netOperatingProfit != null
+                  ? Number(dashboardOverview.financials.netOperatingProfit) >= 0 ? 'text-success' : 'text-danger'
+                  : fixtureMode ? 'text-success' : 'text-fg',
+                slug: 'dashboard-net-operating-profit'
               }
             ]}
           />
