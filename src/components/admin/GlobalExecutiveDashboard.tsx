@@ -14,7 +14,7 @@ import {
   ReceiptText,
   Users,
 } from 'lucide-react';
-import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminTablePagination } from './AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminSectionTabs, AdminTablePagination } from './AdminModulePrimitives';
 import { CustomSelect } from '../ui/CustomSelect';
 import { Modal } from '../ui/Modal';
 import { DonutChart, TrendChart } from '../charts/DashboardCharts';
@@ -612,29 +612,17 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         )}
       />
 
-      <div className="min-[900px]:hidden mb-4 -mt-2">
-        <nav aria-label="Dashboard view" className="grid w-full grid-cols-4 gap-1 rounded-control bg-panel border border-line p-1">
-          {[
-            { key: 'overview', label: 'Overview', search: '' },
-            { key: 'performance', label: 'Performance', search: '?view=performance' },
-            { key: 'analytics', label: 'Analytics', search: '?view=analytics' },
-            { key: 'tasks', label: 'Tasks', search: '' },
-          ].map((tab) => (
-            <Link
-              key={tab.key}
-              to={`/admin/dashboard${tab.search}`}
-              className={[
-                'min-w-0 rounded-chip border px-2 py-2 text-center text-[11px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
-                view === tab.key
-                  ? 'border-accent/25 bg-accent/10 font-semibold text-fg'
-                  : 'border-transparent text-muted hover:bg-bg hover:text-fg',
-              ].join(' ')}
-              aria-current={view === tab.key ? 'page' : undefined}
-            >
-              {tab.label}
-            </Link>
-          ))}
-        </nav>
+      <div className="min-[900px]:hidden min-w-0">
+        <AdminSectionTabs
+          ariaLabel="Dashboard view"
+          activeKey={view}
+          items={[
+            { key: 'overview', label: 'Overview', to: '/admin/dashboard' },
+            { key: 'performance', label: 'Performance', to: '/admin/dashboard?view=performance' },
+            { key: 'analytics', label: 'Analytics', to: '/admin/dashboard?view=analytics' },
+            { key: 'tasks', label: 'Tasks', to: '/admin/dashboard?view=tasks' }
+          ]}
+        />
       </div>
 
       {view === 'overview' ? (
