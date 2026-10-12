@@ -155,6 +155,14 @@ test('AMS module tabs share canonical desktop and mobile navigation primitives',
   const primitives = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/AdminModulePrimitives.tsx'), 'utf8');
   const dashboard = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/GlobalExecutiveDashboard.tsx'), 'utf8');
   const inbox = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInbox.tsx'), 'utf8');
+  const careers = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsCareers.tsx'), 'utf8');
+  const cmsProjects = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsProjects.tsx'), 'utf8');
+  const cmsServices = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsServices.tsx'), 'utf8');
+  const teams = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminTeams.tsx'), 'utf8');
+  const settings = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminSettings.tsx'), 'utf8');
+  const clients = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClients.tsx'), 'utf8');
+  const projects = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminProjects.tsx'), 'utf8');
+  const invoicing = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInvoicing.tsx'), 'utf8');
   const finance = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInvoicing.tsx'), 'utf8');
   const clients = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClients.tsx'), 'utf8');
   const retainers = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientRetainers.tsx'), 'utf8');
@@ -255,4 +263,12 @@ test('Shared modal visual contract and busy-state behavior stay consistent', () 
   assert.ok(designSystem.includes('fixed translucent black scrim'));
   assert.ok(designSystem.includes('in-flight async confirmation must set busy'));
   assert.ok(inbox.includes('bg-danger hover:bg-danger/90') && inbox.includes('bg-accent hover:bg-accent/90'));
+  assert.ok(inbox.includes('busy={confirmActionLoading}') && inbox.includes('disabled={confirmActionLoading}'));
+  assert.ok(careers.includes('loading={deletingJob}') && careers.includes('loading={deletingApplicant}'));
+  assert.ok(cmsProjects.includes('loading={deletingProject}') && cmsServices.includes('loading={deletingService}'));
+  assert.ok(teams.includes('loading={vendorDeleteLoading}') && teams.includes('loading={timeDeleteLoading}'));
+  assert.ok(settings.includes('busy={isDeletingAccount}') && settings.includes('loading={isDeletingAccount}'));
+  assert.ok(clients.includes('busy={isDeleting}') && clients.includes('loading={isDeleting}'));
+  assert.ok(projects.includes('busy={deletingProjectRecord}') && projects.includes('busy={deletingTaskRecord}'));
+  assert.ok(invoicing.includes('busy={confirmingAction}'));
 });

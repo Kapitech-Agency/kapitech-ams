@@ -252,6 +252,7 @@ export const AdminSettings: React.FC = () => {
   const [accountPageSize, setAccountPageSize] = useState(10);
   const [isAddAccountModalOpen, setIsAddAccountModalOpen] = useState(false);
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
   const [accountMessage, setAccountMessage] = useState<{ success: boolean; text: string } | null>(null);
 
@@ -661,15 +662,22 @@ export const AdminSettings: React.FC = () => {
   };
 
   const confirmDeleteAccount = async () => {
-    if (!confirmDelete) return;
-    const res = await deleteAdminAccount(confirmDelete.id);
-    if (res.success) {
-      setAccountMessage({ success: true, text: 'Account deleted successfully.' });
-      await loadAccounts();
-    } else {
-      setAccountMessage({ success: false, text: res.error || 'Account deletion failed. Try again.' });
+    if (!confirmDelete || isDeletingAccount) return;
+    setIsDeletingAccount(true);
+    try {
+      const res = await deleteAdminAccount(confirmDelete.id);
+      if (res.success) {
+        setAccountMessage({ success: true, text: 'Account deleted successfully.' });
+        await loadAccounts();
+      } else {
+        setAccountMessage({ success: false, text: res.error || 'Account deletion failed. Try again.' });
+      }
+    } catch (error) {
+      setAccountMessage({ success: false, text: error instanceof Error ? error.message : 'Account deletion failed. Try again.' });
+    } finally {
+      setConfirmDelete(null);
+      setIsDeletingAccount(false);
     }
-    setConfirmDelete(null);
   };
 
   const handleUpdateSecurity = async (event: React.FormEvent) => {
@@ -1792,16 +1800,17 @@ export const AdminSettings: React.FC = () => {
 
       <Modal
         open={Boolean(confirmDelete)}
-        onClose={() => setConfirmDelete(null)}
+        onClose={() => { if (!isDeletingAccount) setConfirmDelete(null); }}
+        busy={isDeletingAccount}
         size="sm"
         title="Delete admin account?"
         description={confirmDelete ? 'Remove ' + confirmDelete.name + ' from the server-managed account list.' : 'Remove this admin account.'}
         footer={
           <>
-            <Button type="button" variant="secondary" onClick={() => setConfirmDelete(null)}>
+            <Button type="button" variant="secondary" onClick={() => setConfirmDelete(null)} disabled={isDeletingAccount}>
               Cancel
             </Button>
-            <Button type="button" variant="destructive" onClick={() => void confirmDeleteAccount()}>
+            <Button type="button" variant="destructive" onClick={() => void confirmDeleteAccount()} loading={isDeletingAccount}>
               Delete
             </Button>
           </>

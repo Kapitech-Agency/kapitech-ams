@@ -340,6 +340,7 @@ export const AdminTeams: React.FC = () => {
   const [vendorFormOpen, setVendorFormOpen] = useState(false);
   const [vendorDetail, setVendorDetail] = useState<VendorRecord | null>(null);
   const [vendorDeleteTarget, setVendorDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [vendorDeleteLoading, setVendorDeleteLoading] = useState(false);
   const [editingVendor, setEditingVendor] = useState<VendorRecord | null>(null);
   const [vendorForm, setVendorForm] = useState(emptyVendorForm);
   const [savingVendor, setSavingVendor] = useState(false);
@@ -353,6 +354,7 @@ export const AdminTeams: React.FC = () => {
   const [timeIsBillable, setTimeIsBillable] = useState(true);
   const [timeNotes, setTimeNotes] = useState('');
   const [timeDeleteTarget, setTimeDeleteTarget] = useState<TimeLog | null>(null);
+  const [timeDeleteLoading, setTimeDeleteLoading] = useState(false);
 
   const loadData = async (silent = false) => {
     if (silent) setRefreshing(true);
@@ -865,7 +867,8 @@ export const AdminTeams: React.FC = () => {
   };
 
   const deleteVendor = async () => {
-    if (!vendorDeleteTarget || !canManageVendors) return;
+    if (!vendorDeleteTarget || !canManageVendors || vendorDeleteLoading) return;
+    setVendorDeleteLoading(true);
     try {
       const response = await api.vendors.delete(vendorDeleteTarget.id);
       if (response.success) {
@@ -879,6 +882,7 @@ export const AdminTeams: React.FC = () => {
       setNotice({ tone: 'danger', message: error instanceof Error ? error.message : 'Vendor could not be removed.' });
     } finally {
       setVendorDeleteTarget(null);
+      setVendorDeleteLoading(false);
     }
   };
 
@@ -916,7 +920,7 @@ export const AdminTeams: React.FC = () => {
   };
 
   const deleteTimeLog = async () => {
-    if (!timeDeleteTarget || !canManageTimeLogs) return;
+    if (!timeDeleteTarget || !canManageTimeLogs || timeDeleteLoading) return;
     const sessionId = (() => {
       try {
         const raw = sessionStorage.getItem('kapitech_admin_profile_v2') || localStorage.getItem('kapitech_admin_profile_v2');
@@ -932,6 +936,7 @@ export const AdminTeams: React.FC = () => {
       return;
     }
 
+    setTimeDeleteLoading(true);
     try {
       const response = await api.timeLogs.delete(timeDeleteTarget.id);
       if (response.success) {
@@ -944,6 +949,7 @@ export const AdminTeams: React.FC = () => {
       setNotice({ tone: 'danger', message: error instanceof Error ? error.message : 'Time entry could not be removed.' });
     } finally {
       setTimeDeleteTarget(null);
+      setTimeDeleteLoading(false);
     }
   };
 
@@ -1891,7 +1897,8 @@ export const AdminTeams: React.FC = () => {
 
       <ConfirmDialog
         open={Boolean(vendorDeleteTarget)}
-        onClose={() => setVendorDeleteTarget(null)}
+        onClose={() => { if (!vendorDeleteLoading) setVendorDeleteTarget(null); }}
+        loading={vendorDeleteLoading}
         title="Delete vendor"
         description={vendorDeleteTarget ? 'Remove ' + vendorDeleteTarget.name + ' from the vendor directory.' : 'Remove this vendor from the directory.'}
         confirmLabel="Delete"
@@ -1900,7 +1907,8 @@ export const AdminTeams: React.FC = () => {
 
       <ConfirmDialog
         open={Boolean(timeDeleteTarget)}
-        onClose={() => setTimeDeleteTarget(null)}
+        onClose={() => { if (!timeDeleteLoading) setTimeDeleteTarget(null); }}
+        loading={timeDeleteLoading}
         title="Delete time entry"
         description={timeDeleteTarget ? (timeDeleteTarget.projectName || 'General') + ' · ' + (timeDeleteTarget.taskTitle || 'General activity') + ' · ' + formatHours(timeDeleteTarget.durationMinutes) : 'Remove this time entry.'}
         confirmLabel="Delete"

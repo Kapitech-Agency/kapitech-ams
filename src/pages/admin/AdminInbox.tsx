@@ -91,6 +91,7 @@ export const AdminInbox: React.FC = () => {
   const [prevCount, setPrevCount] = useState<number | null>(null);
   const [toastMessage, setToastMessage] = useState<{ text: string; link?: string; linkText?: string; tone?: 'success' | 'danger' } | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ type: 'delete' | 'mark-read'; id?: string; count?: number; targetStatus?: ContactSubmission['status'] } | null>(null);
+  const [confirmActionLoading, setConfirmActionLoading] = useState(false);
 
   // Server-backed inbox refresh. The API is the only source of truth.
   const refreshInbox = async (silent = false) => {
@@ -376,6 +377,8 @@ export const AdminInbox: React.FC = () => {
   };
 
   const confirmDelete = async (id: string) => {
+    if (confirmActionLoading) return;
+    setConfirmActionLoading(true);
     try {
       const res = await api.leads.delete(id);
       if (!res.success) throw new Error(res.error || 'Delete failed');
@@ -395,6 +398,7 @@ export const AdminInbox: React.FC = () => {
       window.setTimeout(() => setToastMessage(null), 3000);
     } finally {
       setConfirmAction(null);
+      setConfirmActionLoading(false);
     }
   };
 
@@ -412,6 +416,8 @@ export const AdminInbox: React.FC = () => {
   };
 
   const confirmMarkAllRead = async (count: number, targetStatus?: ContactSubmission['status']) => {
+    if (confirmActionLoading) return;
+    setConfirmActionLoading(true);
     try {
       const unread = activeTabItems.filter((item) => item.status === 'new');
       for (const item of unread) {
@@ -434,6 +440,7 @@ export const AdminInbox: React.FC = () => {
       window.setTimeout(() => setToastMessage(null), 3000);
     } finally {
       setConfirmAction(null);
+      setConfirmActionLoading(false);
     }
   };
 
@@ -2093,7 +2100,8 @@ export const AdminInbox: React.FC = () => {
       {/* Shared confirmation dialog */}
       <Modal slug="inbox-modal"
         open={Boolean(confirmAction)}
-        onClose={() => setConfirmAction(null)}
+        onClose={() => { if (!confirmActionLoading) setConfirmAction(null); }}
+        busy={confirmActionLoading}
         title={confirmAction?.type === 'delete'
           ? (language === 'id' ? 'Hapus pesan?' : 'Delete message?')
           : activeInboxTab === 'jobs'
@@ -2116,9 +2124,11 @@ export const AdminInbox: React.FC = () => {
                 : `${confirmAction?.count ?? 0} new messages will be moved to In Review.`)}
         footer={(
           <>
-            <button type="button" onClick={() => setConfirmAction(null)} className="min-h-10 rounded-control border border-line bg-panel px-4 text-xs font-medium text-muted hover:bg-bg hover:text-fg">Cancel</button>
+            <button type="button" onClick={() => setConfirmAction(null)} disabled={confirmActionLoading} className="min-h-10 rounded-control border border-line bg-panel px-4 text-xs font-medium text-muted hover:bg-bg hover:text-fg disabled:cursor-not-allowed disabled:opacity-50">Cancel</button>
             <button
               type="button"
+              disabled={confirmActionLoading}
+              aria-busy={confirmActionLoading || undefined}
               onClick={() => confirmAction?.type === 'delete' && confirmAction.id
                 ? void confirmDelete(confirmAction.id)
                 : confirmAction?.count
@@ -2126,13 +2136,15 @@ export const AdminInbox: React.FC = () => {
                   : setConfirmAction(null)}
               className={`min-h-10 rounded-control px-4 text-xs font-semibold text-white ${confirmAction?.type === 'delete' ? 'bg-danger hover:bg-danger/90' : 'bg-accent hover:bg-accent/90'}`}
             >
-              {confirmAction?.type === 'delete'
-                ? (language === 'id' ? 'Hapus Permanen' : 'Delete Permanently')
-                : activeInboxTab === 'jobs'
-                  ? (language === 'id' ? 'Pindahkan ke Screening' : 'Move to Screening')
-                  : isMixedInboxTab
-                    ? (language === 'id' ? 'Proses Record' : 'Process Records')
-                    : (language === 'id' ? 'Tandai In Review' : 'Mark In Review')}
+              {confirmActionLoading
+                ? (language === 'id' ? 'Memproses...' : 'Processing...')
+                : confirmAction?.type === 'delete'
+                  ? (language === 'id' ? 'Hapus Permanen' : 'Delete Permanently')
+                  : activeInboxTab === 'jobs'
+                    ? (language === 'id' ? 'Pindahkan ke Screening' : 'Move to Screening')
+                    : isMixedInboxTab
+                      ? (language === 'id' ? 'Proses Record' : 'Process Records')
+                      : (language === 'id' ? 'Tandai In Review' : 'Mark In Review')}
             </button>
           </>
         )}

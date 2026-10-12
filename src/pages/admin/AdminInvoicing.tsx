@@ -4164,12 +4164,13 @@ export const AdminInvoicing: React.FC = () => {
       <Modal
         open={!!confirmAction}
         onClose={() => { if (!confirmingAction) setConfirmAction(null); }}
+        busy={confirmingAction}
         size="sm"
         title={confirmAction?.type === 'invoice' ? 'Cancel invoice?' : 'Void expense?'}
         description={confirmAction ? confirmAction.label : undefined}
         footer={
           <>
-            <button type="button" onClick={() => setConfirmAction(null)} className={actionClass}>Keep record</button>
+            <button type="button" onClick={() => setConfirmAction(null)} className={actionClass} disabled={confirmingAction}>Keep record</button>
             <button type="button" onClick={() => void confirmDelete()} disabled={confirmingAction} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control bg-danger px-3.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"><Trash2 size={14} />{confirmingAction ? 'Processing...' : 'Confirm'}</button>
           </>
         }
