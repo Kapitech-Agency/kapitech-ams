@@ -26,6 +26,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 type Column = { label: string; align?: 'left' | 'right' | 'center'; className?: string };
 type TableRow = { id: string; cells: React.ReactNode[] };
 type SourceResult = { label: string; data: any; error?: string };
+type CashMovement = { id: string; date: string; reference: string; description: string; cashIn: number; cashOut: number; source: string; currency: string };
 
 const formatMoney = (value: number, currency = 'IDR') => new Intl.NumberFormat('id-ID', {
   style: 'currency',
@@ -210,12 +211,12 @@ export const AdminFinanceWorkspace: React.FC = () => {
   }, [activeTab.key]);
 
   const reportInvoices = useMemo(() => invoices.filter(isIssuedInvoice), [invoices]);
-  const totalBilled = useMemo(() => sumAmounts(reportInvoices, (invoice) => Number(invoice.total) || 0), [reportInvoices]);
-  const totalCollected = useMemo(() => sumAmounts(reportInvoices, getInvoiceCollected), [reportInvoices]);
-  const totalOutstanding = useMemo(() => sumAmounts(reportInvoices, getInvoiceOutstanding), [reportInvoices]);
-  const totalExpenses = useMemo(() => sumAmounts(expenses, (expense) => Number(expense.amount) || 0), [expenses]);
-  const cashMovements = useMemo(() => {
-    const entries: Array<{ id: string; date: string; reference: string; description: string; cashIn: number; cashOut: number; source: string; currency: string }> = [];
+  const totalBilled = useMemo(() => sumAmounts<AgencyInvoice>(reportInvoices, (invoice) => Number(invoice.total) || 0), [reportInvoices]);
+  const totalCollected = useMemo(() => sumAmounts<AgencyInvoice>(reportInvoices, getInvoiceCollected), [reportInvoices]);
+  const totalOutstanding = useMemo(() => sumAmounts<AgencyInvoice>(reportInvoices, getInvoiceOutstanding), [reportInvoices]);
+  const totalExpenses = useMemo(() => sumAmounts<AgencyExpense>(expenses, (expense) => Number(expense.amount) || 0), [expenses]);
+  const cashMovements = useMemo<CashMovement[]>(() => {
+    const entries: CashMovement[] = [];
     for (const invoice of reportInvoices) {
       for (const payment of getPaymentRows(invoice)) {
         if (!payment.date || payment.amount <= 0) continue;
@@ -302,9 +303,9 @@ export const AdminFinanceWorkspace: React.FC = () => {
 
   const renderSummary = (dashboard: boolean) => {
     const currentMonth = selectedMonth;
-    const billedInMonth = sumAmounts(reportInvoices.filter((invoice) => getMonthKey(getInvoiceDate(invoice)) === currentMonth), (invoice) => Number(invoice.total) || 0);
-    const collectedInMonth = sumAmounts(cashMovements.filter((movement) => getMonthKey(movement.date) === currentMonth), (movement) => movement.cashIn);
-    const expenseInMonth = sumAmounts(expenses.filter((expense) => getMonthKey(expense.date) === currentMonth), (expense) => Number(expense.amount) || 0);
+    const billedInMonth = sumAmounts<AgencyInvoice>(reportInvoices.filter((invoice) => getMonthKey(getInvoiceDate(invoice)) === currentMonth), (invoice) => Number(invoice.total) || 0);
+    const collectedInMonth = sumAmounts<CashMovement>(cashMovements.filter((movement) => getMonthKey(movement.date) === currentMonth), (movement) => movement.cashIn);
+    const expenseInMonth = sumAmounts<AgencyExpense>(expenses.filter((expense) => getMonthKey(expense.date) === currentMonth), (expense) => Number(expense.amount) || 0);
     const metrics = [
       { id: 'billed', label: 'Total billed', value: formatMoney(totalBilled), context: 'Issued invoices excluding drafts and cancellations', icon: <FileText size={15} /> },
       { id: 'collected', label: 'Total collected', value: formatMoney(totalCollected), context: 'Recorded client payments', icon: <ArrowDownLeft size={15} />, toneClassName: 'text-success' },
@@ -476,7 +477,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
               || (structured?.vendorId === vendor.id && structured?.contractId === contract.id)
               || expense.description.startsWith('[VENDOR_PAYMENT]|' + vendor.id + '|' + contract.id + '|');
           });
-          return { vendor, contract, linkedCount: linked.length, linkedAmount: sumAmounts(linked, (expense) => Number(expense.amount) || 0) };
+          return { vendor, contract, linkedCount: linked.length, linkedAmount: sumAmounts<AgencyExpense>(linked, (expense) => Number(expense.amount) || 0) };
         }));
         return (
           <div className="space-y-4">
@@ -526,7 +527,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
                 const projectExpenses = expenses.filter((expense) => expense.projectId === project.id);
                 return {
                   id: project.id,
-                  cells: [projectLabel(project), project.clientCompany || project.clientName || '—', formatMoney(Number(project.budget) || 0), formatMoney(sumAmounts(projectInvoices, (invoice) => Number(invoice.total) || 0)), formatMoney(sumAmounts(projectInvoices, getInvoiceCollected)), formatMoney(sumAmounts(projectExpenses, (expense) => Number(expense.amount) || 0)), <StatusBadge value={project.status} />]
+                  cells: [projectLabel(project), project.clientCompany || project.clientName || '—', formatMoney(Number(project.budget) || 0), formatMoney(sumAmounts<AgencyInvoice>(projectInvoices, (invoice) => Number(invoice.total) || 0)), formatMoney(sumAmounts<AgencyInvoice>(projectInvoices, getInvoiceCollected)), formatMoney(sumAmounts<AgencyExpense>(projectExpenses, (expense) => Number(expense.amount) || 0)), <StatusBadge value={project.status} />]
                 };
               })}
               emptyMessage="No AMS projects were returned. Link invoices and expenses to projects to populate this view."
@@ -574,7 +575,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
       case 'monthly-pnl': {
         const monthInvoices = reportInvoices.filter((invoice) => getMonthKey(getInvoiceDate(invoice)) === selectedMonth);
         const monthExpenses = expenses.filter((expense) => getMonthKey(expense.date) === selectedMonth);
-        const revenue = sumAmounts(monthInvoices, (invoice) => Number(invoice.total) || 0);
+        const revenue = sumAmounts<AgencyInvoice>(monthInvoices, (invoice) => Number(invoice.total) || 0);
         const classTotals: Record<WorkbookExpenseClass, number> = {
           directProjectCost: 0,
           teamReward: 0,
@@ -748,10 +749,10 @@ export const AdminFinanceWorkspace: React.FC = () => {
         const yearInvoices = reportInvoices.filter((invoice) => getYearKey(getInvoiceDate(invoice)) === selectedYear);
         const yearExpenses = expenses.filter((expense) => getYearKey(expense.date) === selectedYear);
         const yearCollections = cashMovements.filter((movement) => getYearKey(movement.date) === selectedYear);
-        const yearBilled = sumAmounts(yearInvoices, (invoice) => Number(invoice.total) || 0);
-        const yearCollected = sumAmounts(yearCollections, (movement) => movement.cashIn);
-        const yearOutflow = sumAmounts(yearCollections, (movement) => movement.cashOut);
-        const yearExpense = sumAmounts(yearExpenses, (expense) => Number(expense.amount) || 0);
+        const yearBilled = sumAmounts<AgencyInvoice>(yearInvoices, (invoice) => Number(invoice.total) || 0);
+        const yearCollected = sumAmounts<CashMovement>(yearCollections, (movement) => movement.cashIn);
+        const yearOutflow = sumAmounts<CashMovement>(yearCollections, (movement) => movement.cashOut);
+        const yearExpense = sumAmounts<AgencyExpense>(yearExpenses, (expense) => Number(expense.amount) || 0);
         const years = Array.from(new Set([
           String(new Date().getFullYear()),
           ...reportInvoices.map((invoice) => getYearKey(getInvoiceDate(invoice))),
