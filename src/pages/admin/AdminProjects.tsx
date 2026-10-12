@@ -1509,7 +1509,7 @@ export const AdminProjects: React.FC = () => {
       <Drawer
         open={Boolean(selectedProjectDetail)}
         onClose={clearProjectSelection}
-        size="xl"
+        size="2xl"
         title={selectedProjectDetail?.name || 'Project details'}
         description={selectedProjectDetail ? selectedProjectDetail.clientCompany : undefined}
         footer={(
@@ -1541,7 +1541,10 @@ export const AdminProjects: React.FC = () => {
               {[
                 ['Progress', selectedProjectDetail.progressPercent + '%'],
                 ['Budget', formatAmount(selectedProjectDetail.budget, currency)],
+                ['Start date', formatDate(selectedProjectDetail.startDate)],
                 ['Deadline', formatDate(selectedProjectDetail.targetEndDate)],
+                ['Client contact', selectedProjectDetail.clientName || 'Not provided'],
+                ['Client email', selectedProjectDetail.clientEmail || 'Not provided'],
                 ['Tasks', selectedProjectDetail.tasks.filter(task => task.status === 'done').length + '/' + selectedProjectDetail.tasks.length + ' done'],
                 ['Service', selectedProjectDetail.serviceCategory || 'Delivery'],
               ].map(([label, value]) => (
@@ -1604,6 +1607,69 @@ export const AdminProjects: React.FC = () => {
                 <div className="h-full rounded-full bg-accent" style={{ width: selectedProjectDetail.progressPercent + '%' }} />
               </div>
             </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-card border border-line bg-bg p-4">
+                <div className="text-[11px] font-semibold text-fg">Team members</div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {selectedProjectDetail.teamMembers.length > 0
+                    ? selectedProjectDetail.teamMembers.map(member => (
+                      <span key={member} className="rounded-chip border border-line bg-panel px-2.5 py-1.5 text-[11px] text-muted">{member}</span>
+                    ))
+                    : <span className="text-xs text-muted">No team members assigned.</span>}
+                </div>
+              </div>
+              <div className="rounded-card border border-line bg-bg p-4">
+                <div className="text-[11px] font-semibold text-fg">Technology stack</div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {selectedProjectDetail.techStack.length > 0
+                    ? selectedProjectDetail.techStack.map(technology => (
+                      <span key={technology} className="rounded-chip border border-line bg-panel px-2.5 py-1.5 text-[11px] text-muted">{technology}</span>
+                    ))
+                    : <span className="text-xs text-muted">No technologies specified.</span>}
+                </div>
+              </div>
+            </div>
+
+            <section aria-label="Project milestones" className="rounded-card border border-line bg-bg p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-[11px] font-semibold text-fg">Milestones</div>
+                <span className="rounded-badge border border-line bg-panel px-2 py-1 text-[10px] font-medium tabular-nums text-muted">
+                  {selectedProjectDetail.milestones.filter(milestone => milestone.completed).length}/{selectedProjectDetail.milestones.length} completed
+                </span>
+              </div>
+              {selectedProjectDetail.milestones.length === 0 ? (
+                <p className="mt-3 text-xs text-muted">No milestones have been defined for this project.</p>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  {selectedProjectDetail.milestones.map(milestone => {
+                    const overdueMilestone = !milestone.completed && isOverdue(milestone.dueDate);
+                    return (
+                      <div key={milestone.id} className="flex flex-wrap items-start justify-between gap-3 rounded-control border border-line bg-panel p-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="text-xs font-medium text-fg">{milestone.title}</div>
+                          <div className="mt-1 text-[10px] text-muted">
+                            Due {formatDate(milestone.dueDate)}
+                            {typeof milestone.paymentTrigger === 'number' && milestone.paymentTrigger > 0
+                              ? ' · Payment trigger ' + formatAmount(milestone.paymentTrigger, currency)
+                              : ''}
+                          </div>
+                        </div>
+                        <span className={'rounded-badge border px-2 py-1 text-[10px] font-semibold ' + (
+                          milestone.completed
+                            ? 'border-success/25 bg-success/10 text-success'
+                            : overdueMilestone
+                              ? 'border-danger/25 bg-danger/10 text-danger'
+                              : 'border-line bg-bg text-muted'
+                        )}>
+                          {milestone.completed ? 'Completed' : overdueMilestone ? 'Overdue' : 'Upcoming'}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
 
             {selectedProjectDetail.notes && (
               <div>
