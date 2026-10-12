@@ -178,6 +178,7 @@ export const AdminCmsCareers: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ text: string; tone: 'success' | 'danger' } | null>(null);
   const [deleteJobTarget, setDeleteJobTarget] = useState<CareerPosition | null>(null);
+  const [deletingJob, setDeletingJob] = useState(false);
 
   const [applicants, setApplicants] = useState<Applicant[]>([]);
   const [applicantsLoading, setApplicantsLoading] = useState(false);
@@ -189,6 +190,7 @@ export const AdminCmsCareers: React.FC = () => {
   const [applicantsPageSize, setApplicantsPageSize] = useState(10);
   const [updatingApplicantId, setUpdatingApplicantId] = useState<string | null>(null);
   const [deleteApplicantTarget, setDeleteApplicantTarget] = useState<Applicant | null>(null);
+  const [deletingApplicant, setDeletingApplicant] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
   const [internalNotesDraft, setInternalNotesDraft] = useState('');
   const [savingApplicantNotes, setSavingApplicantNotes] = useState(false);
@@ -342,9 +344,9 @@ export const AdminCmsCareers: React.FC = () => {
   };
 
   const confirmDeleteJob = async () => {
-    if (!deleteJobTarget) return;
+    if (!deleteJobTarget || deletingJob) return;
     const target = deleteJobTarget;
-    setDeleteJobTarget(null);
+    setDeletingJob(true);
     try {
       const result = await api.cms.deleteCareer(target.id);
       if (!result.success) throw new Error(result.error || 'Career position could not be deleted.');
@@ -352,6 +354,9 @@ export const AdminCmsCareers: React.FC = () => {
       setStatusMessage({ text: isId ? 'Lowongan dihapus. Data lamaran yang sudah masuk tetap tersimpan.' : 'Job deleted. Existing applicant records are retained.', tone: 'success' });
     } catch (error) {
       setStatusMessage({ text: error instanceof Error ? error.message : 'Career position could not be deleted.', tone: 'danger' });
+    } finally {
+      setDeleteJobTarget(null);
+      setDeletingJob(false);
     }
   };
 
@@ -394,9 +399,9 @@ export const AdminCmsCareers: React.FC = () => {
   };
 
   const confirmDeleteApplicant = async () => {
-    if (!deleteApplicantTarget) return;
+    if (!deleteApplicantTarget || deletingApplicant) return;
     const target = deleteApplicantTarget;
-    setDeleteApplicantTarget(null);
+    setDeletingApplicant(true);
     try {
       const result = await api.leads.delete(target.id);
       if (!result.success) throw new Error(result.error || 'Applicant record could not be deleted.');
@@ -404,6 +409,9 @@ export const AdminCmsCareers: React.FC = () => {
       setStatusMessage({ text: isId ? 'Data pelamar dihapus.' : 'Applicant record deleted.', tone: 'success' });
     } catch (error) {
       setStatusMessage({ text: error instanceof Error ? error.message : 'Applicant record could not be deleted.', tone: 'danger' });
+    } finally {
+      setDeleteApplicantTarget(null);
+      setDeletingApplicant(false);
     }
   };
 
@@ -411,7 +419,8 @@ export const AdminCmsCareers: React.FC = () => {
     <AdminPageShell featureSlug="cms-careers-module" className="ams-cms-module">
       <ConfirmDialog
         open={!!deleteJobTarget}
-        onClose={() => setDeleteJobTarget(null)}
+        onClose={() => { if (!deletingJob) setDeleteJobTarget(null); }}
+        loading={deletingJob}
         title={isId ? 'Hapus lowongan?' : 'Delete job opening?'}
         description={isId
           ? 'Lowongan akan dihapus dari public site. Data lamaran yang sudah masuk tidak ikut dihapus.'
@@ -421,7 +430,8 @@ export const AdminCmsCareers: React.FC = () => {
       />
       <ConfirmDialog
         open={!!deleteApplicantTarget}
-        onClose={() => setDeleteApplicantTarget(null)}
+        onClose={() => { if (!deletingApplicant) setDeleteApplicantTarget(null); }}
+        loading={deletingApplicant}
         title={isId ? 'Hapus data pelamar?' : 'Delete applicant record?'}
         description={isId
           ? 'Data pelamar akan dihapus dari Inbox. Tindakan ini tidak dapat dibatalkan.'

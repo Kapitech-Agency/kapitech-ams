@@ -80,6 +80,7 @@ export const AdminCmsProjects: React.FC = () => {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
+  const [deletingProject, setDeletingProject] = useState(false);
   const [isDraggingFile, setIsDraggingFile] = useState(false);
   const [galleryInput, setGalleryInput] = useState('');
 
@@ -165,9 +166,9 @@ export const AdminCmsProjects: React.FC = () => {
   };
 
   const confirmDeleteProject = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget || deletingProject) return;
     const { id } = deleteTarget;
-    setDeleteTarget(null);
+    setDeletingProject(true);
     try {
       const res = await api.cms.deleteProject(id);
       if (!res.success) {
@@ -178,8 +179,11 @@ export const AdminCmsProjects: React.FC = () => {
       setStatusMessage('Case study deleted successfully.');
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : 'Delete failed.');
+    } finally {
+      setDeleteTarget(null);
+      setDeletingProject(false);
+      window.setTimeout(() => setStatusMessage(null), 3000);
     }
-    setTimeout(() => setStatusMessage(null), 3000);
   };
 
   const handleToggleFeatured = async (project: ProjectItem) => {
@@ -390,7 +394,8 @@ export const AdminCmsProjects: React.FC = () => {
     <AdminPageShell featureSlug="cms-projects-module" className="ams-cms-module">
         <ConfirmDialog
           open={!!deleteTarget}
-          onClose={() => setDeleteTarget(null)}
+          onClose={() => { if (!deletingProject) setDeleteTarget(null); }}
+          loading={deletingProject}
           title="Delete case study?"
           description={deleteTarget ? `Case study "${deleteTarget.title}" will be permanently removed.` : 'This case study will be permanently removed.'}
           confirmLabel="Delete"

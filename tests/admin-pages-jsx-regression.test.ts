@@ -223,3 +223,52 @@ test('All drawers use canonical geometry, typography, and named width presets', 
   assert.ok(cmsTestimonials.includes('size="lg"'));
   assert.equal((careers.match(/data-ams-drawer-size="large"/g) || []).length, 2);
 });
+
+test('Shared modal visual contract and busy-state behavior stay consistent', () => {
+  const modal = fs.readFileSync(path.resolve(process.cwd(), 'src/components/ui/Modal.tsx'), 'utf8');
+  const confirm = fs.readFileSync(path.resolve(process.cwd(), 'src/components/ui/ConfirmDialog.tsx'), 'utf8');
+  const stylesheet = fs.readFileSync(path.resolve(process.cwd(), 'src/index.css'), 'utf8');
+  const designSystem = fs.readFileSync(path.resolve(process.cwd(), 'AMS-DESIGN-SYSTEM.md'), 'utf8');
+  const inbox = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInbox.tsx'), 'utf8');
+  const careers = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsCareers.tsx'), 'utf8');
+  const cmsProjects = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsProjects.tsx'), 'utf8');
+  const cmsServices = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsServices.tsx'), 'utf8');
+  const teams = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminTeams.tsx'), 'utf8');
+  const settings = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminSettings.tsx'), 'utf8');
+  const clients = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClients.tsx'), 'utf8');
+  const projects = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminProjects.tsx'), 'utf8');
+  const invoicing = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInvoicing.tsx'), 'utf8');
+
+  assert.ok(modal.includes('busy?: boolean'));
+  assert.ok(modal.includes('busyRef.current'));
+  assert.ok(modal.includes('!closeOnEscape || busyRef.current'));
+  assert.ok(modal.includes('!busyRef.current && event.target === event.currentTarget'));
+  assert.ok(modal.includes('data-ams-modal-root="true"'));
+  assert.ok(modal.includes('ams-modal-header'));
+  assert.ok(modal.includes('ams-modal-body'));
+  assert.ok(modal.includes('ams-modal-footer'));
+  assert.ok(modal.includes('bg-black/45 backdrop-blur-[2px]'));
+  assert.ok(!modal.includes('bg-bg/80'), 'The modal scrim must not inherit the page background in light theme.');
+  assert.ok(modal.includes('disabled={busy}'));
+
+  assert.ok(confirm.includes('busy={loading}'));
+  assert.ok(confirm.includes('disabled={loading}'));
+  assert.ok(confirm.includes('if (!loading) onClose()'));
+
+  assert.ok(stylesheet.includes('.ams-modal-header h2{'));
+  assert.ok(stylesheet.includes('.ams-modal-header p{'));
+  assert.ok(stylesheet.includes('.ams-modal-footer button:not([data-ams-keep-size])'));
+  assert.ok(stylesheet.includes('rgb(0 0 0 / 45%)'));
+  assert.ok(stylesheet.includes('env(safe-area-inset-bottom)'));
+  assert.ok(designSystem.includes('fixed translucent black scrim'));
+  assert.ok(designSystem.includes('in-flight async confirmation must set busy'));
+  assert.ok(inbox.includes('bg-danger hover:bg-danger/90') && inbox.includes('bg-accent hover:bg-accent/90'));
+  assert.ok(inbox.includes('busy={confirmActionLoading}') && inbox.includes('disabled={confirmActionLoading}'));
+  assert.ok(careers.includes('loading={deletingJob}') && careers.includes('loading={deletingApplicant}'));
+  assert.ok(cmsProjects.includes('loading={deletingProject}') && cmsServices.includes('loading={deletingService}'));
+  assert.ok(teams.includes('loading={vendorDeleteLoading}') && teams.includes('loading={timeDeleteLoading}'));
+  assert.ok(settings.includes('busy={isDeletingAccount}') && settings.includes('loading={isDeletingAccount}'));
+  assert.ok(clients.includes('busy={isDeleting}') && clients.includes('loading={isDeleting}'));
+  assert.ok(projects.includes('busy={deletingProjectRecord}') && projects.includes('busy={deletingTaskRecord}'));
+  assert.ok(invoicing.includes('busy={confirmingAction}'));
+});

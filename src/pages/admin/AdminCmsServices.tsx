@@ -113,6 +113,7 @@ export const AdminCmsServices: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedServiceForDetail, setSelectedServiceForDetail] = useState<ServiceItemData | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deletingService, setDeletingService] = useState(false);
 
   // New Service Form State
   const [newTitle, setNewTitle] = useState('');
@@ -222,9 +223,9 @@ export const AdminCmsServices: React.FC = () => {
   };
 
   const confirmDeleteService = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget || deletingService) return;
     const slug = deleteTarget;
-    setDeleteTarget(null);
+    setDeletingService(true);
     try {
       const res = await api.cms.deleteService(slug);
       if (!res.success) {
@@ -235,15 +236,19 @@ export const AdminCmsServices: React.FC = () => {
       setStatusMessage('Service deleted successfully.');
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : 'Service could not be deleted.');
+    } finally {
+      setDeleteTarget(null);
+      setDeletingService(false);
+      window.setTimeout(() => setStatusMessage(null), 3000);
     }
-    setTimeout(() => setStatusMessage(null), 3000);
   };
 
   return (
     <AdminPageShell featureSlug="cms-services-module" className="ams-cms-module">
         <ConfirmDialog
           open={!!deleteTarget}
-          onClose={() => setDeleteTarget(null)}
+          onClose={() => { if (!deletingService) setDeleteTarget(null); }}
+          loading={deletingService}
           title={language === 'id' ? 'Hapus layanan?' : 'Delete service?'}
           description={language === 'id' ? 'Layanan ini akan dihapus dari CMS.' : 'This service will be removed from the CMS.'}
           confirmLabel={language === 'id' ? 'Hapus' : 'Delete'}

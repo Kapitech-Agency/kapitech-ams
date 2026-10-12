@@ -359,6 +359,8 @@ export const AdminProjects: React.FC = () => {
   const [editingTask, setEditingTask] = useState<ProjectTask | null>(null);
   const [deleteProject, setDeleteProject] = useState<ProjectRecord | null>(null);
   const [deleteTask, setDeleteTask] = useState<ProjectTask | null>(null);
+  const [deletingProjectRecord, setDeletingProjectRecord] = useState(false);
+  const [deletingTaskRecord, setDeletingTaskRecord] = useState(false);
 
   const view = (searchParams.get('projects') || 'all') as ProjectsView;
   const selectedProjectSlug = searchParams.get('project') || '';
@@ -1204,12 +1206,13 @@ export const AdminProjects: React.FC = () => {
   };
 
   const confirmDeleteProject = async () => {
-    if (!deleteProject) return;
+    if (!deleteProject || deletingProjectRecord) return;
     if (!serverModeRef.current && !isSlugFixtureMode()) {
       showToast('Project service is unavailable. Refresh before deleting projects.');
       return;
     }
     const target = deleteProject;
+    setDeletingProjectRecord(true);
 
     try {
       const response = await api.projects.delete(target.id);
@@ -1231,6 +1234,8 @@ export const AdminProjects: React.FC = () => {
         showToast(error instanceof Error ? error.message : 'Project could not be deleted.');
         return;
       }
+    } finally {
+      setDeletingProjectRecord(false);
     }
 
     setProjects(current => current.filter(project => project.id !== target.id));
@@ -1239,12 +1244,13 @@ export const AdminProjects: React.FC = () => {
   };
 
   const confirmDeleteTask = async () => {
-    if (!deleteTask || !selectedSprintProject) return;
+    if (!deleteTask || !selectedSprintProject || deletingTaskRecord) return;
     if (!serverModeRef.current && !isSlugFixtureMode()) {
       showToast('Project service is unavailable. Refresh before deleting tasks.');
       return;
     }
     const target = deleteTask;
+    setDeletingTaskRecord(true);
 
     try {
       const response = await api.tasks.delete(target.id);
@@ -1273,6 +1279,8 @@ export const AdminProjects: React.FC = () => {
         showToast(error instanceof Error ? error.message : 'Task could not be deleted.');
         return;
       }
+    } finally {
+      setDeletingTaskRecord(false);
     }
 
     setProjects(current =>
@@ -1349,14 +1357,15 @@ export const AdminProjects: React.FC = () => {
     <AdminPageShell featureSlug="projects-module" className="projects-module">
       <Modal
         open={Boolean(deleteProject)}
-        onClose={() => setDeleteProject(null)}
+        onClose={() => { if (!deletingProjectRecord) setDeleteProject(null); }}
+        busy={deletingProjectRecord}
         size="sm"
         title="Delete project?"
         description={deleteProject ? 'Project "' + deleteProject.name + '" will be removed.' : undefined}
         footer={(
           <>
-            <Button type="button" variant="secondary" onClick={() => setDeleteProject(null)}>Cancel</Button>
-            <Button type="button" variant="destructive" onClick={() => void confirmDeleteProject()}>Delete</Button>
+            <Button type="button" variant="secondary" onClick={() => setDeleteProject(null)} disabled={deletingProjectRecord}>Cancel</Button>
+            <Button type="button" variant="destructive" onClick={() => void confirmDeleteProject()} loading={deletingProjectRecord}>Delete</Button>
           </>
         )}
       >
@@ -1365,14 +1374,15 @@ export const AdminProjects: React.FC = () => {
 
       <Modal
         open={Boolean(deleteTask)}
-        onClose={() => setDeleteTask(null)}
+        onClose={() => { if (!deletingTaskRecord) setDeleteTask(null); }}
+        busy={deletingTaskRecord}
         size="sm"
         title="Delete task?"
         description={deleteTask ? 'Task "' + deleteTask.title + '" will be removed.' : undefined}
         footer={(
           <>
-            <Button type="button" variant="secondary" onClick={() => setDeleteTask(null)}>Cancel</Button>
-            <Button type="button" variant="destructive" onClick={() => void confirmDeleteTask()}>Delete</Button>
+            <Button type="button" variant="secondary" onClick={() => setDeleteTask(null)} disabled={deletingTaskRecord}>Cancel</Button>
+            <Button type="button" variant="destructive" onClick={() => void confirmDeleteTask()} loading={deletingTaskRecord}>Delete</Button>
           </>
         )}
       >

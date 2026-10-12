@@ -799,6 +799,7 @@ export const AdminClients: React.FC = () => {
       <Modal
         open={!!deleteTarget}
         onClose={() => !isDeleting && setDeleteTarget(null)}
+        busy={isDeleting}
         size="sm"
         title="Delete client?"
         description={deleteTarget ? `This will remove the client record for ${deleteTarget.company}.` : undefined}

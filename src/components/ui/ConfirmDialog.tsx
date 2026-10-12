@@ -26,13 +26,14 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 }) => (
   <Modal
     open={open}
-    onClose={onClose}
+    onClose={() => { if (!loading) onClose(); }}
+    busy={loading}
     size="sm"
     title={title}
     description={description}
     footer={(
       <>
-        <Button type="button" variant="secondary" onClick={onClose}>
+        <Button type="button" variant="secondary" onClick={onClose} disabled={loading}>
           {cancelLabel}
         </Button>
         <Button type="button" variant="destructive" loading={loading} onClick={onConfirm} icon={<AlertTriangle size={14} />}>
@@ -47,7 +48,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       </div>
       <div className="min-w-0">
         <p className="text-xs font-semibold text-fg">Confirm this action</p>
-        <p className="mt-1 text-[11px] leading-5 text-muted">This action is destructive and cannot be undone.</p>
+        <p className="mt-1 text-xs leading-5 text-muted">Review the stated impact before continuing. This action may be permanent.</p>
       </div>
     </div>
   </Modal>

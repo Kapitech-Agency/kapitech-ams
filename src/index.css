@@ -830,3 +830,16 @@
 .ams-drawer-footer{padding:16px var(--ams-drawer-gutter)}
 .ams-drawer-footer > button,.ams-drawer-footer > a{min-height:36px;height:36px;padding-inline:12px;font-size:12px;line-height:16px}
 @media(max-width:599px){.ams-drawer{--ams-drawer-gutter:16px}.ams-drawer-body{padding-block:16px}.ams-drawer-footer{padding-bottom:max(16px,env(safe-area-inset-bottom))}}
+
+/* AMS MODAL SYSTEM: stable cross-theme colors, type hierarchy, and action geometry. */
+.ams-modal{background:var(--panel);color:var(--text);border-color:var(--line);font-family:var(--font-sans)}
+.ams-modal-backdrop>div[aria-hidden="true"]{background:rgb(0 0 0 / 45%);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+.ams-modal-header{padding:16px 20px;background:var(--panel);border-color:var(--line)}
+.ams-modal-header h2{margin:0;color:var(--text);font-size:14px;line-height:20px;font-weight:600;letter-spacing:normal}
+.ams-modal-header p{margin-top:4px;color:var(--muted);font-size:12px;line-height:16px;font-weight:400}
+.ams-modal-close{width:36px;min-width:36px;height:36px;min-height:36px;padding:0}
+.ams-modal-body{min-width:0;padding:20px;color:var(--text);font-size:13px;line-height:18px}
+.ams-modal-footer{gap:8px;padding:16px 20px;background:var(--panel);border-color:var(--line)}
+.ams-modal-footer button:not([data-ams-keep-size]),.ams-modal-footer a{min-height:40px;height:40px;padding-inline:12px;font-size:12px;line-height:16px}
+@media(min-width:640px){.ams-modal-footer button:not([data-ams-keep-size]),.ams-modal-footer a{min-height:36px;height:36px}}
+@media(max-width:639px){.ams-modal-header,.ams-modal-body,.ams-modal-footer{padding-inline:16px}.ams-modal-body{padding-block:16px}.ams-modal-footer{padding-bottom:max(16px,env(safe-area-inset-bottom))}}
