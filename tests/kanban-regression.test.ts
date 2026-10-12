@@ -39,7 +39,7 @@ test('Projects and Sprint Kanban drag handles provide keyboard operation and res
   assert.ok(source.includes("event.key !== 'ArrowLeft'"));
   assert.ok(source.includes("event.key !== 'ArrowRight'"));
   assert.ok(source.includes("draggable={canManageProjects && !movingProjectId}"));
-  assert.ok(source.includes("draggable={canManageKanbanTasks && !movingTaskId}"));
+  assert.ok(source.includes("draggable={canManageKanbanTasks}"));
   assert.ok(source.includes("if (!canManageProjects || movingProjectId)"));
   assert.ok(source.includes("if (!canManageKanbanTasks || movingTaskId)"));
 });
