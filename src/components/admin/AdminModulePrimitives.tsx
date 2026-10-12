@@ -1,6 +1,6 @@
 import React, { useId } from 'react';
 import { Search, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, AlertTriangle, HelpCircle, X } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { CustomSelect } from '../ui/CustomSelect';
 import { cn } from '../../lib/cn';
 
@@ -31,6 +31,7 @@ export interface AdminSectionTabItem {
   key: string;
   label: string;
   to: string;
+  slug?: string;
 }
 
 export interface AdminSectionTabsProps {
@@ -71,6 +72,39 @@ export const AdminSectionTabs: React.FC<AdminSectionTabsProps> = ({
         >
           {item.label}
         </NavLink>
+      );
+    })}
+  </nav>
+);
+
+export const AdminTopbarTabs: React.FC<AdminSectionTabsProps> = ({
+  items,
+  activeKey,
+  ariaLabel,
+  className
+}) => (
+  <nav
+    aria-label={ariaLabel}
+    className={cn('inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll', className)}
+  >
+    {items.map((item) => {
+      const active = activeKey === item.key;
+      return (
+        <Link
+          key={item.key}
+          to={item.to}
+          end
+          aria-current={active ? 'page' : undefined}
+          data-ams-slug={item.slug ?? item.key}
+          className={cn(
+            'inline-flex h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+            active
+              ? 'border-accent/25 bg-accent/10 font-semibold text-fg'
+              : 'border-transparent text-muted hover:bg-bg hover:text-fg'
+          )}
+        >
+          {item.label}
+        </Link>
       );
     })}
   </nav>
