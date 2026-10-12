@@ -6654,7 +6654,49 @@ const handleOverview = async (req: AuthenticatedRequest, res: Response): Promise
     const canViewProjects=isMaster||Boolean(req.user!.permissions?.canManageProjects||req.user!.permissions?.canManageKanbanTasks);
     const canViewApprovals=isMaster||Boolean(req.user!.permissions?.canApproveBudgets||req.user!.permissions?.canManageProjects);
     const canViewAudit=isMaster||Boolean(req.user!.permissions?.canViewSecurityAuditLogs);
-    const leads=canViewCrm?(usePostgres?await postgresLeadRepository.list():(db!.leads||[])):[],deals=canViewCrm?(usePostgres?await postgresCrmDealRepository.list():(db!.crmDeals||[])):[],proposals=(canViewCrm||canViewFinancials||canViewApprovals)?(usePostgres?await postgresProposalRepository.list():(db!.proposals||[])):[],approvals=canViewApprovals?(usePostgres?await postgresApprovalRepository.list():(db!.approvals||[])):[];
+    const [
+      leads,
+      deals,
+      proposals,
+      approvals,
+      projects,
+      tasks,
+      invoices,
+      expenses,
+      recentActivity
+    ] = await Promise.all([
+      canViewCrm
+        ? (usePostgres ? postgresLeadRepository.list() : Promise.resolve(db!.leads || []))
+        : [],
+      canViewCrm
+        ? (usePostgres ? postgresCrmDealRepository.list() : Promise.resolve(db!.crmDeals || []))
+        : [],
+      (canViewCrm || canViewFinancials || canViewApprovals)
+        ? (usePostgres ? postgresProposalRepository.list() : Promise.resolve(db!.proposals || []))
+        : [],
+      canViewApprovals
+        ? (usePostgres ? postgresApprovalRepository.list() : Promise.resolve(db!.approvals || []))
+        : [],
+      canViewProjects
+        ? (usePostgres ? postgresProjectRepository.list() : Promise.resolve(db!.projects || []))
+        : [],
+      canViewProjects
+        ? (usePostgres ? postgresTaskRepository.list() : Promise.resolve(db!.tasks || []))
+        : [],
+      canViewFinancials
+        ? (usePostgres ? postgresInvoiceRepository.list() : Promise.resolve((db!.invoices ||= [])))
+        : [],
+      canViewFinancials
+        ? (usePostgres
+            ? postgresExpenseRepository.list()
+            : Promise.resolve((db!.expenses || []).filter((e: any) => e.status !== 'voided')))
+        : [],
+      canViewAudit
+        ? (usePostgres
+            ? postgresAuditLogRepository.list(10)
+            : Promise.resolve((db!.auditLogs || []).slice(0, 10)))
+        : []
+    ]);
     const projects=canViewProjects?(usePostgres?await postgresProjectRepository.list():(db!.projects||[])):[],tasks=canViewProjects?(usePostgres?await postgresTaskRepository.list():(db!.tasks||[])):[];
     const invoices=canViewFinancials?(usePostgres?await postgresInvoiceRepository.list():(db.invoices||=[])):[];
     const expenses=canViewFinancials?(usePostgres?await postgresExpenseRepository.list():(db.expenses||[]).filter((e:any)=>e.status!=='voided')):[];
@@ -6670,7 +6712,7 @@ const handleOverview = async (req: AuthenticatedRequest, res: Response): Promise
     const pendingApprovalsCount=approvals.filter(a=>a.status==='Pending').length,overdueTasksCount=tasks.filter(t=>t.status!=='done'&&t.dueDate&&new Date(t.dueDate)<now).length;
     const pipelineByStage=canViewCrm?CRM_STAGES.map(stage=>{const ds=deals.filter(d=>d.stage===stage);return{stage,count:ds.length,value:ds.reduce((s,d)=>s+(Number(d.value)||0),0)}}):[];
     const attentionItems:any[]=[];if(canViewFinancials&&primary.overdueInvoicesCount>0)attentionItems.push({id:'att_invoices_overdue',title:primary.overdueInvoicesCount+' Invoices Overdue',description:'Follow-up required on unpaid accounts totaling '+primary.currency+' '+primary.overdueReceivables.toLocaleString(),severity:'danger',category:'Finance',linkUrl:'/admin/invoicing'});if(canViewApprovals&&pendingApprovalsCount>0)attentionItems.push({id:'att_pending_approvals',title:pendingApprovalsCount+' Executive Approvals Awaiting Review',description:'Budget and operational approvals are waiting for review.',severity:'warning',category:'Operations',linkUrl:'/admin/approvals'});if(canViewProjects&&projectsAtRiskCount>0)attentionItems.push({id:'att_projects_risk',title:projectsAtRiskCount+' Projects Flagged At Risk',description:'Delivery timeline or resource constraints require attention.',severity:'danger',category:'Delivery',linkUrl:'/admin/projects'});if(canViewProjects&&overdueTasksCount>0)attentionItems.push({id:'att_tasks_overdue',title:overdueTasksCount+' Tasks Overdue in Active Sprints',description:'Tasks passed their due dates and may require rescheduling.',severity:'warning',category:'Delivery',linkUrl:'/admin/projects'});if(canViewCrm&&openLeadsCount>3)attentionItems.push({id:'att_leads_new',title:openLeadsCount+' Inbound Inquiries Unassigned',description:'Website inquiries are waiting for qualification.',severity:'info',category:'Sales',linkUrl:'/admin/inbox'});
-    res.json({success:true,metrics:{currency,revenueCollected:canViewFinancials?primary.revenueCollected:null,totalBilled:canViewFinancials?primary.totalBilled:null,outstandingReceivables:canViewFinancials?primary.outstandingReceivables:null,overdueReceivables:canViewFinancials?primary.overdueReceivables:null,activePipeline:canViewCrm?activePipelineValue:null,activeProjects:canViewProjects?activeProjectsCount:0,projectsAtRisk:canViewProjects?projectsAtRiskCount:0,pendingApprovals:canViewApprovals?pendingApprovalsCount:0,overdueTasks:canViewProjects?overdueTasksCount:0,openLeads:canViewCrm?openLeadsCount:0,byCurrency:Array.from(financeByCurrency.values())},todayAtKapitech:{openLeadsCount:canViewCrm?openLeadsCount:0,dealsInPipelineCount:canViewCrm?dealsInPipelineCount:0,pipelineValue:canViewFinancials?activePipelineValue:null,proposalsAwaitingCount:(canViewCrm||canViewFinancials||canViewApprovals)?proposalsAwaitingCount:0,projectsAtRiskCount:canViewProjects?projectsAtRiskCount:0,overdueInvoicesCount:canViewFinancials?primary.overdueInvoicesCount:0,cashOutstanding:canViewFinancials?primary.outstandingReceivables:null,currency},financials:canViewFinancials?{currency,revenueThisMonth:primary.revenueThisMonth,cashCollected:primary.revenueThisMonth,outstandingReceivables:primary.outstandingReceivables,operatingExpenses:primary.monthlyOperatingExpenses,netOperatingProfit:netOperatingProfitThisMonth,margin:netMarginThisMonth}:{currency,revenueThisMonth:null,cashCollected:null,outstandingReceivables:null,operatingExpenses:null,netOperatingProfit:null,margin:null},pipelineByStage,attentionItems,projects:canViewProjects?activeProjectsList.slice(0,10):[],recentActivity:canViewAudit?(usePostgres?await postgresAuditLogRepository.list(10):(db!.auditLogs||[]).slice(0,10)):[]});
+    res.json({success:true,metrics:{currency,revenueCollected:canViewFinancials?primary.revenueCollected:null,totalBilled:canViewFinancials?primary.totalBilled:null,outstandingReceivables:canViewFinancials?primary.outstandingReceivables:null,overdueReceivables:canViewFinancials?primary.overdueReceivables:null,activePipeline:canViewCrm?activePipelineValue:null,activeProjects:canViewProjects?activeProjectsCount:0,projectsAtRisk:canViewProjects?projectsAtRiskCount:0,pendingApprovals:canViewApprovals?pendingApprovalsCount:0,overdueTasks:canViewProjects?overdueTasksCount:0,openLeads:canViewCrm?openLeadsCount:0,byCurrency:Array.from(financeByCurrency.values())},todayAtKapitech:{openLeadsCount:canViewCrm?openLeadsCount:0,dealsInPipelineCount:canViewCrm?dealsInPipelineCount:0,pipelineValue:canViewFinancials?activePipelineValue:null,proposalsAwaitingCount:(canViewCrm||canViewFinancials||canViewApprovals)?proposalsAwaitingCount:0,projectsAtRiskCount:canViewProjects?projectsAtRiskCount:0,overdueInvoicesCount:canViewFinancials?primary.overdueInvoicesCount:0,cashOutstanding:canViewFinancials?primary.outstandingReceivables:null,currency},financials:canViewFinancials?{currency,revenueThisMonth:primary.revenueThisMonth,cashCollected:primary.revenueThisMonth,outstandingReceivables:primary.outstandingReceivables,operatingExpenses:primary.monthlyOperatingExpenses,netOperatingProfit:netOperatingProfitThisMonth,margin:netMarginThisMonth}:{currency,revenueThisMonth:null,cashCollected:null,outstandingReceivables:null,operatingExpenses:null,netOperatingProfit:null,margin:null},pipelineByStage,attentionItems,projects:canViewProjects?activeProjectsList.slice(0,10):[],recentActivity});
   }catch(error){console.error('[Dashboard Overview] Failed:',error);res.status(503).json({success:false,error:'Dashboard data is temporarily unavailable.'});}
 };
 
