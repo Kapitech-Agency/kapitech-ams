@@ -997,7 +997,7 @@ export const TasksWorkspace: React.FC = () => {
           <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4" data-ams-slug="tasks-loading">
             {[1, 2, 3, 4].map(item => <div key={item} className="h-24 animate-pulse rounded-control border border-line bg-bg" data-ams-slug={'tasks-loading-' + item} />)}
           </div>
-        ) : filteredRecords.length === 0 ? (
+        ) : filteredRecords.length === 0 && layout !== 'board' ? (
           <div className="px-5 py-16 text-center" data-ams-slug="tasks-empty-state">
             <FolderKanban size={22} className="mx-auto text-muted" aria-hidden="true" />
             <p className="mt-3 text-sm font-semibold text-fg">{activeFilterCount ? 'No tasks match these filters' : 'No tasks in this queue'}</p>
@@ -1059,14 +1059,18 @@ export const TasksWorkspace: React.FC = () => {
                             key={task.id}
                             data-ams-slug={task.slug}
                             data-dragging={isDragging ? 'true' : 'false'}
-                            className={'min-w-0 rounded-control border p-3 transition-[border-color,opacity,background-color] ' + (isDragging ? 'border-accent/40 bg-panel opacity-60' : 'border-line bg-panel hover:bg-panel-hover')}
+                            aria-busy={updatingTaskId === task.id}
+                            className={'min-w-0 rounded-control border p-3 transition-[border-color,opacity,background-color] ' + (isDragging ? 'border-accent/40 bg-panel opacity-60' : updatingTaskId === task.id ? 'border-accent/40 bg-panel/80' : 'border-line bg-panel hover:bg-panel-hover')}
                           >
+                            {updatingTaskId === task.id && (
+                              <div role="status" className="mb-2 text-[10px] font-medium text-accent-text">Saving status…</div>
+                            )}
                             <div className="flex items-start gap-2">
                               {canManageTasks && (
-                                <span
-                                  role="button"
+                                <button type="button"
                                   tabIndex={0}
                                   aria-label={'Move ' + task.title + ' between stages. Use left and right arrow keys.'}
+                                  aria-keyshortcuts="ArrowLeft ArrowRight Enter Space"
                                   title="Drag to move; use left/right arrows or press Enter for details"
                                   draggable={updatingTaskId === null && !bulkUpdating}
                                   onClick={() => setSelectedTask(task)}
@@ -1074,10 +1078,10 @@ export const TasksWorkspace: React.FC = () => {
                                   onDragStart={event => beginBoardTaskDrag(event, task)}
                                   onDragEnd={clearBoardTaskDrag}
                                   data-drag-handle="true"
-                                  className="mt-0.5 inline-flex h-8 w-6 shrink-0 cursor-grab items-center justify-center rounded-control text-muted transition-colors hover:bg-bg hover:text-fg active:cursor-grabbing"
+                                  className="mt-0.5 inline-flex h-8 w-6 shrink-0 cursor-grab items-center justify-center rounded-control text-muted transition-colors hover:bg-bg hover:text-fg active:cursor-grabbing focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                                 >
                                   <GripVertical size={15} />
-                                </span>
+                                </button>
                               )}
                               <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setSelectedTask(task)} data-ams-slug={task.slug + '-open'}>
                                 <div className="flex items-start justify-between gap-2">
