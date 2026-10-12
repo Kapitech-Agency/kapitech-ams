@@ -4,7 +4,6 @@ import { MotionConfig } from 'motion/react';
 import { LanguageProvider } from './lib/LanguageContext';
 import { RequireAdminAuth } from './components/admin/RequireAdminAuth';
 import { RequireModuleAccess } from './components/admin/RequireModuleAccess';
-import { TasksWorkspace } from './components/admin/TasksWorkspace';
 
 type LazyModule = { default: React.ComponentType<any> };
 
@@ -30,6 +29,11 @@ const lazyWithRetry = (loader: () => Promise<LazyModule>, key: string) =>
       throw error;
     }
   });
+
+const TasksWorkspace = lazyWithRetry(
+  () => import('./components/admin/TasksWorkspace').then((m) => ({ default: m.TasksWorkspace })),
+  'tasks-workspace'
+);
 
 class AppErrorBoundary extends React.Component<
   { children: React.ReactNode },
