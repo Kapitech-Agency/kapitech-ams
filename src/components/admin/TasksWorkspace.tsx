@@ -1094,7 +1094,7 @@ export const TasksWorkspace: React.FC = () => {
 
       <Drawer slug="task-create-modal"
         open={taskFormOpen}
-        onClose={() => setTaskFormOpen(false)}
+        onClose={() => !savingTask && setTaskFormOpen(false)}
         size="md"
         title="Create task"
         description="Add a task to an existing project delivery queue."
