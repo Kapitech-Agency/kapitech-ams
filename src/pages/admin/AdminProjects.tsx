@@ -1346,7 +1346,7 @@ export const AdminProjects: React.FC = () => {
     );
 
   return (
-    <AdminPageShell featureSlug="projects-module" className="projects-module pb-10">
+    <AdminPageShell featureSlug="projects-module" className="projects-module">
       <Modal
         open={Boolean(deleteProject)}
         onClose={() => setDeleteProject(null)}

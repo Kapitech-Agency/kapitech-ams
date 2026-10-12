@@ -2718,7 +2718,7 @@ export const AdminInvoicing: React.FC = () => {
 
   return (
     <AdminPageShell featureSlug="finance-module" className="finance-module">
-      <div className="min-[900px]:hidden -mx-1 mb-4 overflow-x-auto min-w-0">
+      <div className="min-[900px]:hidden min-w-0 overflow-x-auto">
         <AdminSectionTabs
           ariaLabel="Finance sections"
           activeKey={financeView === 'invoices' ? 'invoices' : financeView}

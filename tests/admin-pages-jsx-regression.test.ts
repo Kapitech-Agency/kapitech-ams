@@ -44,7 +44,8 @@ test('Admin invoicing keeps financial mutations permission-gated and uses the sh
   assert.ok(source.includes('const getInvoiceCollectedTotal'));
   assert.ok(source.includes('quarterInvoices'));
   assert.ok(source.includes("expense.type !== 'CapEx'"));
-  assert.ok(source.includes('min-[900px]:hidden -mx-1 mb-4 overflow-x-auto'));
+  assert.ok(source.includes('min-[900px]:hidden min-w-0 overflow-x-auto'));
+  assert.ok(!source.includes(' -mx-1 '));
   assert.ok(source.includes('const QuotationStatusBadge'));
   assert.ok(!source.includes('quotation.status as never'));
   assert.ok(source.includes('Quarter net cash'));
@@ -86,4 +87,19 @@ test('Admin topbar keeps active Finance sections in canonical order without reti
     lastIndex = index;
   }
   assert.equal(source.includes("label: 'Quotation'"), false);
+});
+test('Authenticated AMS pages use one canonical responsive page frame', () => {
+  const primitives = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/AdminModulePrimitives.tsx'), 'utf8');
+  const stylesheet = fs.readFileSync(path.resolve(process.cwd(), 'src/index.css'), 'utf8');
+  const layout = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminLayout.tsx'), 'utf8');
+  const dashboard = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/GlobalExecutiveDashboard.tsx'), 'utf8');
+
+  assert.ok(primitives.includes("className={cn('ams-page-shell min-h-full min-w-0', className)}"));
+  assert.ok(stylesheet.includes('.ams-shell>main>.ams-content{min-width:0;padding:0}'));
+  assert.ok(stylesheet.includes('.ams-shell .ams-page-shell{display:flex;flex-direction:column;gap:24px;padding:24px 24px 32px}'));
+  assert.ok(stylesheet.includes('.ams-shell .ams-page-shell{padding:24px 20px 32px}'));
+  assert.ok(stylesheet.includes('.ams-shell .ams-page-shell{padding:16px 16px 24px}'));
+  assert.ok(stylesheet.includes('.ams-shell .ams-page-shell{padding:16px 14px max(24px,env(safe-area-inset-bottom))}'));
+  assert.ok(layout.includes('<div className="ams-content flex-1 min-h-0 w-full max-w-[1560px] mx-auto">'));
+  assert.ok(dashboard.includes('<AdminPageShell featureSlug="dashboard-module" className="ams-dashboard">'));
 });

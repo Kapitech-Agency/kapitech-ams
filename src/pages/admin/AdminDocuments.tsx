@@ -432,7 +432,7 @@ export const AdminDocuments: React.FC = () => {
   const tabLabel = DOCUMENT_TABS.find((tab) => tab.key === activeTab)?.label || 'All Internal Documents';
 
   return (
-    <AdminPageShell featureSlug="documents-module" className="documents-module pb-10">
+    <AdminPageShell featureSlug="documents-module" className="documents-module">
       {notice && (
         <div
           className="fixed left-3 right-3 top-16 z-50 flex items-center gap-2 rounded-card border border-line bg-panel px-4 py-2.5 text-xs text-fg sm:left-auto sm:right-6 sm:top-20"

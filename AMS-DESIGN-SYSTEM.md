@@ -168,12 +168,31 @@ Theme switching: set `document.documentElement.dataset.theme` to `"dark"` or `"l
 
 ## 3. Layout
 
-- **App shell:** left sidebar (220px, collapsible to 64px) + main column. Main column has a 52px top bar, then a 24px padded content area.
+- **App shell:** left sidebar (220px, collapsible to 64px) + main column. Main column has a 52px top bar, then a route-level `AdminPageShell` that owns all page padding. `.ams-content` must not add a second layer of page padding.
 - **Responsive section navigation:** below 900px, every topbar section/submodule navigation must remain available inside the page using `AdminSectionTabs` or an equivalent shared pattern. Do not make submodules reachable only through a desktop topbar.
 - **Grid:** content uses a 12-column CSS grid with 12px gaps. Common patterns: KPI strip of 6 equal columns; hero chart full width; secondary cards 4 across.
 - **Breakpoints:** ≥1100 full layout; 900-1099 KPI strip 3 columns and secondary cards 2 across; <900 sidebar becomes a drawer; <600 single column (KPIs 2 across).
 - **Alignment:** left-align text; right-align numeric table columns.
 - **Safe areas:** add `env(safe-area-inset-*)` padding on mobile for edge-hugging elements.
+### Canonical page frame and padding
+
+`AdminPageShell` is the only source of outer page padding for every authenticated module and every module tab. It is implemented in `src/components/admin/AdminModulePrimitives.tsx` and styled in `src/index.css`.
+
+| Viewport | Inline padding | Top padding | Bottom padding |
+|---|---:|---:|---:|
+| Desktop, 1100px and wider | 24px | 24px | 32px |
+| Compact desktop, 900px to 1099px | 20px | 24px | 32px |
+| Tablet, 600px to 899px | 16px | 16px | 24px |
+| Mobile, below 600px | 14px | 16px | `max(24px, env(safe-area-inset-bottom))` |
+
+Rules:
+- The root element rendered by every authenticated module route must be `<AdminPageShell>`. Dashboard overview must use the same shell. Tabs within a module must remain inside that root shell. Changing a tab must not introduce a second page gutter.
+- `.ams-content` only constrains width and min-width. Do not put page padding there or apply page-level padding to individual module roots. This prevents compounded gutters.
+- The `AdminPageShell.className` prop is for module scoping and layout variants only. Do not add `px-*`, `py-*`, `pt-*`, `pb-*`, `mx-*`, or negative margins to the outer shell.
+- Do not use negative horizontal margins to make tab bars bleed outside the page gutter. Tab navigation, page headings, filters, metrics, tables, empty states, and tab content align to the same inline gutter.
+- Use the shell's 24px vertical `gap` for sibling sections. Avoid using section-level `mt-*` or `mb-*` on direct children to create the page rhythm. Spacing inside a card or component remains local to that component.
+- Fixed notifications, portals, dialogs, and drawers are overlays, not page sections, and must not contribute to the layout gap.
+- Before adding a new module or tab, verify its root uses `AdminPageShell` and compare alignment at 1440px, 1024px, 768px, and 390px viewport widths.
 
 ```
 ┌───────────┬──────────────────────────────────────────┐
