@@ -34,7 +34,10 @@ test('Finance supplementary repository preserves period locks, maker approval ac
   assert.match(repository, /Journal entry must balance/);
   assert.match(repository, /Only pending petty cash vouchers can be approved/);
   assert.match(repository, /Cannot close /);
+  assert.match(repository, /Only an approved petty cash voucher can be posted/);
   assert.match(repository, /vendor-bill-payment/);
+  assert.match(repository, /postPettyCashVoucher/);
+  assert.match(repository, /A vendor bill with recorded payments cannot be archived/);
 });
 
 test('Finance client provides CRUD, approval and period-close operations for register APIs', async () => {

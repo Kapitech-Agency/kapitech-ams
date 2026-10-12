@@ -3904,16 +3904,28 @@ apiRouter.post('/finance/workbook/:type/:id/approve', requireAuth, requirePermis
       return;
     }
     if (existing.createdByUserId && existing.createdByUserId === req.user!.id) {
-      res.status(403).json({ success: false, error: 'Maker-checker rule: the record creator cannot approve their own Finance record.' });
+      res.status(403).json({ success: false, error: 'Maker-checker rule: the record creator cannot approve or post their own Finance record.' });
       return;
     }
-    const record = await postgresFinanceWorkbookRepository.approve(
-      req.params.type,
-      req.params.id,
-      financeWorkbookActor(req),
-      financeWorkbookAudit(req, 'FINANCE_WORKBOOK_RECORD_APPROVED', 'Approved ' + req.params.type + ' record ' + req.params.id + '.', 'warning'),
-      typeof req.body?.notes === 'string' ? req.body.notes : ''
-    );
+    const action = String(req.body?.action || 'approve');
+    if (action === 'post' && req.params.type !== 'petty-cash-voucher') {
+      res.status(400).json({ success: false, error: 'Only an approved petty cash voucher supports this posting action.' });
+      return;
+    }
+    const record = action === 'post'
+      ? await postgresFinanceWorkbookRepository.postPettyCashVoucher(
+          req.params.id,
+          financeWorkbookActor(req),
+          financeWorkbookAudit(req, 'FINANCE_PETTY_CASH_VOUCHER_POSTED', 'Posted petty cash voucher ' + req.params.id + '.', 'warning'),
+          typeof req.body?.notes === 'string' ? req.body.notes : ''
+        )
+      : await postgresFinanceWorkbookRepository.approve(
+          req.params.type,
+          req.params.id,
+          financeWorkbookActor(req),
+          financeWorkbookAudit(req, 'FINANCE_WORKBOOK_RECORD_APPROVED', 'Approved ' + req.params.type + ' record ' + req.params.id + '.', 'warning'),
+          typeof req.body?.notes === 'string' ? req.body.notes : ''
+        );
     res.json({ success: true, record });
   } catch (error) {
     financeWorkbookError(res, error);

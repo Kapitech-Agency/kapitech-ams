@@ -1,45 +1,56 @@
 # Excel-aligned Finance workflow
 
-## Source of truth
+## Source of truth and UI constraints
 
-The workbook Kapitech Finance Final Automated.xlsx is the business-process reference for the AMS Finance module. The AMS design system in AMS-DESIGN-SYSTEM.md remains the UI source of truth. Do not restyle existing components or introduce a second color system.
+The workbook **Kapitech Finance Final Automated.xlsx** is the business-process reference for AMS Finance. The AMS design system and existing UI implementation remain the visual source of truth. The workspace reuses AdminPageShell, AdminModuleHeader, AdminSectionTabs, AdminPanel, AdminMetricStrip, AdminStatusBadge, the shared Button and Drawer, and the existing color tokens. Do not introduce a new palette or redesign existing Finance screens.
 
 ## Navigation map
 
-The Finance workspace provides all twenty workbook sheet destinations, grouped for navigation:
+The Finance workspace provides all twenty workbook sheet destinations in five navigation groups.
 
 | Workbook sheet | AMS view | Current source / implementation status |
 |---|---|---|
-| 00 Executive Summary | Executive Summary | Live invoice, expense, project and vendor source views |
-| 01 Dashboard | Dashboard | Live source counts and period-filtered activity |
-| 02 Chart of Accounts | Chart of Accounts | 17 account codes mapped from Excel; read-only baseline |
-| 03 Revenue | Revenue | Issued invoices and their payment records |
-| 04 Expenses | Expenses | Existing AMS expense API, with explicit unmapped category visibility |
-| 05 Cash & Bank | Cash & Bank | Derived activity feed; not a reconciled bank ledger |
+| 00 Executive Summary | Executive Summary | Live invoice, expense, project and vendor sources |
+| 01 Dashboard | Dashboard | Source metrics and period-filtered activity |
+| 02 Chart of Accounts | Chart of Accounts | 17 workbook accounts seeded in PostgreSQL; additional accounts can be recorded |
+| 03 Revenue | Revenue | Issued client invoices and their payment records |
+| 04 Expenses | Expenses | Existing AMS expense register |
+| 05 Cash & Bank | Cash & Bank | Opening balance and movement register; includes source-derived collections/expense views, but is not a bank-statement reconciliation |
 | 06 Accounts Receivable | Accounts Receivable | Derived from invoice balances |
-| 07 Accounts Payable | Accounts Payable | Commitment-reference view; no dedicated vendor-bill ledger yet |
-| 08 Project Finance | Project Finance | Project budgets, linked invoices, collections and linked expenses |
-| 09 Operational Budget | Operational Budget | Actual expense aggregates; monthly budget/PIC/variance store still needed |
-| 10 Petty Cash | Petty Cash | Explicitly identified petty-cash-related expenses only; no voucher ledger yet |
-| 11 Vendor & Freelancer | Vendor & Freelancer | Existing vendor and contract source |
-| 12 Monthly P&L | Monthly P&L | Period-filtered preview with unclassified expense bucket |
-| 13 Cash Flow | Cash Flow | Dated collections and recorded expenses; no opening cash balance |
-| 14 Monthly Closing | Monthly Closing | Workbook checklist visible; completion and lock not persisted |
-| 15 Project Allocation | Project Allocation | Workbook percentage policy mapped; project-specific posting still requires obligations |
-| 16 Team Fee | Team Fee | Explicitly classified expense records; individual entitlement register still needed |
-| 17 Balance Sheet | Balance Sheet | Account-readiness view; no authoritative balance totals until ledgers/opening balances exist |
-| 18 Journal | Journal | Source activity and posting-map preview; no persistent General Journal endpoint yet |
+| 07 Accounts Payable | Accounts Payable | Persisted vendor bills and linked payments; vendor contracts remain a distinct commitment source |
+| 08 Project Finance | Project Finance | Persisted contract/commitment setup with linked invoice, collection and expense summaries |
+| 09 Operational Budget | Operational Budget | Persisted monthly budget by category/PIC; expense actuals aggregated from the existing expense source |
+| 10 Petty Cash | Petty Cash | Persistent vouchers with pending → approved → posted flow and internal cash-transfer linkage |
+| 11 Vendor & Freelancer | Vendor & Freelancer | Existing AMS vendor and contract source |
+| 12 Monthly P&L | Monthly P&L | Period-filtered preview; full automatic accrual/posting mapping is still incomplete |
+| 13 Cash Flow | Cash Flow | Period-filtered dated receipts and recorded outflows; not yet a verified bank cash-flow reconciliation |
+| 14 Monthly Closing | Monthly Closing | Persistent checklist items, reviewer approval and period lock |
+| 15 Project Allocation | Project Allocation | Server-calculated persisted allocations from contract value less vendor commitments and other obligations |
+| 16 Team Fee | Team Fee | Persistent project/member/role entitlement register, kept separate from Team Reward |
+| 17 Balance Sheet | Balance Sheet | Opening balances and account readiness; totals remain non-authoritative until all transaction sources feed the ledger |
+| 18 Journal | Journal | Persistent balanced journal entries with maker-checker posting; existing invoice/expense events are still not automatically posted |
 | 19 Annual Summary | Annual Summary | Year-filtered invoice, collection and expense summary |
 
-## Rules for keeping AMS aligned with Excel
+## Persistence and security
 
-- Each of the twenty sheets has one matching destination in the Finance workspace.
-- Invoice and payment data stay sourced from the existing Finance API; expenses, projects and vendors use their existing APIs. Do not duplicate these records into another frontend-only store.
-- The Excel Chart of Accounts is a read-only baseline until an account persistence API and migration are implemented.
-- A workbook tab must not show an unverified cash balance, AP balance, journal, closing status or Balance Sheet total as authoritative.
-- Expense classifications not supported by the current AMS fields must remain visibly unclassified until a reviewed mapping is agreed.
-- Keep all styling on shared AMS primitives and tokens in src/components/admin/AdminModulePrimitives.tsx, src/components/ui, and src/index.css.
+- Existing invoice, payment, expense, project and vendor records remain in the existing AMS services; they are not copied into a second frontend store.
+- Supplementary Excel-specific records use PostgreSQL table finance_workbook_records and migration 052_excel_aligned_finance_workbook_records.sql.
+- Supplementary API routes require existing Finance permissions. Mutations use version checks and append to the AMS audit log. Period-locked records cannot be changed.
+- Petty cash vouchers start pending, require a different authorized user to approve, and then must be explicitly posted before affecting the voucher ledger.
+- Journal entries must have at least two debit/credit lines, use active workbook account codes, and balance before save; posting is a separate authorized action. Posted journal entries cannot be edited or archived.
+- The period-close operation requires all ten workbook checklist controls marked Done and checks posted journals for balanced debit/credit totals.
+- Vendor bills with recorded payments cannot be archived. Vendor-bill payment totals are constrained to the bill total.
+- The supplementary register API is PostgreSQL-only because production AMS uses PostgreSQL as the authoritative store. It deliberately returns an unavailable response rather than silently saving these records into local/browser state.
 
-## Remaining backend work
+## Accounting boundary: what is not claimed yet
 
-This first alignment exposes the missing persistence required to make the complete Excel flow transactional rather than read-only: Chart of Accounts CRUD, bank/cash ledgers and opening balances, petty-cash vouchers/approvals, vendor bills and scheduled instalments, monthly operational budgets, member-level Team Fee records, project allocation records, General Journal header/lines and posting rules, plus a period-closing checklist with reviewer/sign-off and locking. These should be introduced in reviewed PostgreSQL migrations and protected Finance API routes; they should not be faked with local storage or dashboard-only numbers.
+This work aligns page destinations, persists the missing workbook registers and wires the corresponding create/edit/approval operations. It does not claim a complete general-ledger integration yet.
+
+The next backend step required for full accounting parity is a reviewed posting engine that turns invoice issuance, client receipts, expense recognition, vendor bill approval/payment, petty-cash posting and internal transfers into audited journal entries under the workbook's account rules. At present:
+- Cash/bank movement views include source-derived records, but the existing expense model has no verified bank-account/payment-method field and the register is not reconciled to a bank statement.
+- Cash and balance-sheet opening balances are separate records. A complete trial balance requires the full transaction posting bridge, verified opening balances and reconciliation.
+- Monthly P&L and annual totals are period-filtered previews while the existing expense categories are mapped to the workbook classes; unclassified costs stay visible rather than being silently assigned.
+- Project setup records are not an automatic replacement for client contracts, approved vendor bills or linked project-cost source documents. Project IDs need to be linked consistently.
+- The vendor payment schedule [30, 20, 50] is recorded as the workbook schedule metadata, while payments are entered against bills; automatic generation of three due instalments is not implemented yet.
+
+Do not remove these caveats until matching integration tests and reconciliation evidence exist.

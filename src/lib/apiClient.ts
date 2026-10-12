@@ -340,10 +340,10 @@ export const api = {
         method: 'PUT',
         body: JSON.stringify({ payload, version })
       }),
-    workbookApprove: (type: string, id: string, notes = '') =>
+    workbookApprove: (type: string, id: string, notes = '', action: 'approve' | 'post' = 'approve') =>
       apiRequest<{ success: boolean; record: any }>(`/api/finance/workbook/${encodeURIComponent(type)}/${encodeURIComponent(id)}/approve`, {
         method: 'POST',
-        body: JSON.stringify({ notes })
+        body: JSON.stringify({ notes, action })
       }),
     workbookDelete: (type: string, id: string, version: number) =>
       apiRequest<{ success: boolean; record: any }>(`/api/finance/workbook/${encodeURIComponent(type)}/${encodeURIComponent(id)}`, {

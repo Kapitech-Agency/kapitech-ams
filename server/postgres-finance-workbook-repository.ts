@@ -46,7 +46,6 @@ const choice = (v: unknown, allowed: string[], label: string, fallback = ''): st
 const periodOf = (s: string): string => s ? s.slice(0, 7) : '';
 const timeNow = () => new Date().toISOString();
 const uid = (prefix: string) => prefix + '_' + Date.now().toString(36) + '_' + crypto.randomBytes(5).toString('hex');
-const accountCodes = new Set(['1000','1100','1200','1300','1400','2000','3000','3100','4000','5100','5200','5300','5310','5320','5400','5500','5600']);
 const keyText = (v: unknown): string => txt(v, 220).toLowerCase();
 
 function mapRow(row: Row): FinanceWorkbookRecord {
@@ -254,10 +253,11 @@ export class PostgresFinanceWorkbookRepository {
         const currentPaid=paid.rows.reduce((s:number,r:Row)=>s+Number(obj(r.payload).amount||0),0), total=Number(obj(bill.rows[0].payload).total||0);
         if(currentPaid+Number(n.payload.amount)>total+0.01) throw new FinanceWorkbookConflictError('Vendor bill payments cannot exceed the bill amount.');
       }
-      if(type==='journal-entry'){
+      if(type==='journal-entry'||type==='balance-sheet-opening'){
         const acc=await client.query<Row>("SELECT payload FROM finance_workbook_records WHERE record_type='chart-of-accounts' AND status='active' AND archived_at IS NULL");
         const active=new Set(acc.rows.map((r:Row)=>String(obj(r.payload).code||'')));
-        for(const line of n.payload.lines as Array<Record<string,unknown>>) if(!active.has(String(line.accountCode))) throw new FinanceWorkbookValidationError('Journal entry contains an inactive account.');
+        const codes=type==='journal-entry' ? (n.payload.lines as Array<Record<string,unknown>>).map((line)=>String(line.accountCode)) : [String(n.payload.accountCode||'')];
+        for(const code of codes) if(!active.has(code)) throw new FinanceWorkbookValidationError('Finance record references an account that is not active.');
       }
       const result=await client.query<Row>(
         'INSERT INTO finance_workbook_records (id,record_type,record_key,period_key,project_id,status,payload,version,created_by_user_id,updated_by_user_id) VALUES ($1,$2,$3,$4,$5,$6,$7::jsonb,1,$8,$8) RETURNING *',
@@ -311,6 +311,20 @@ export class PostgresFinanceWorkbookRepository {
       return mapRow(updated.rows[0]);
     });
   }
+  async postPettyCashVoucher(id:string,actor:Actor,audit?:AuditEntry,notes=''):Promise<FinanceWorkbookRecord>{
+    return withPostgresTransaction(async client=>{
+      const found=await client.query<Row>("SELECT * FROM finance_workbook_records WHERE record_type='petty-cash-voucher' AND id=$1 AND archived_at IS NULL FOR UPDATE",[id]);
+      if(!found.rows[0]) throw new FinanceWorkbookNotFoundError('Petty cash voucher was not found.');
+      const current=mapRow(found.rows[0]);
+      await this.ensurePeriodOpen(client,current.periodKey);
+      if(current.payload.status!=='approved') throw new FinanceWorkbookConflictError('Only an approved petty cash voucher can be posted.');
+      const payload={...current.payload,status:'posted',postedBy:actor.name||actor.username,postedAt:timeNow(),postingNotes:txt(notes,500)};
+      const updated=await client.query<Row>("UPDATE finance_workbook_records SET status='posted',payload=$2::jsonb,version=version+1,updated_by_user_id=$3,updated_at=NOW() WHERE id=$1 AND version=$4 AND archived_at IS NULL RETURNING *",[id,JSON.stringify(payload),actor.id,current.version]);
+      if(!updated.rows[0]) throw new FinanceWorkbookConflictError('Petty cash voucher changed during posting.');
+      if(audit) await postgresAuditLogRepository.appendWithinTransaction(client,audit);
+      return mapRow(updated.rows[0]);
+    });
+  }
   async closePeriod(periodValue:string,actor:Actor,audit?:AuditEntry):Promise<FinanceWorkbookRecord>{
     const period=month(periodValue);
     return withPostgresTransaction(async client=>{
@@ -336,6 +350,10 @@ export class PostgresFinanceWorkbookRepository {
       const current=mapRow(found.rows[0]);
       if(current.version!==version) throw new FinanceWorkbookConflictError('Record changed. Refresh and retry.');
       if(['chart-of-accounts','journal-entry','monthly-closing-lock'].includes(type)) throw new FinanceWorkbookConflictError('This record type cannot be deleted; deactivate or use an approved accounting adjustment.');
+      if(type==='vendor-bill'){
+        const linked=await client.query<Row>("SELECT id FROM finance_workbook_records WHERE record_type='vendor-bill-payment' AND archived_at IS NULL AND payload->>'billId'=$1 LIMIT 1",[id]);
+        if(linked.rows[0]) throw new FinanceWorkbookConflictError('A vendor bill with recorded payments cannot be archived. Record an approved adjustment instead.');
+      }
       await this.ensurePeriodOpen(client,current.periodKey);
       const result=await client.query<Row>('UPDATE finance_workbook_records SET archived_at=NOW(),version=version+1,updated_by_user_id=$3,updated_at=NOW() WHERE id=$1 AND version=$2 RETURNING *',[id,version,actor.id]);
       if(!result.rows[0]) throw new FinanceWorkbookConflictError('Record changed. Refresh and retry.');

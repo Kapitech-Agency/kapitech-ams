@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowDown, ArrowUpRight, Briefcase, CalendarDays, CircleDollarSign, FileText, Landmark, RefreshCw, ShieldAlert, WalletCards } from 'lucide-react';
+import { ArrowDown, ArrowUpRight, Briefcase, CalendarDays, CircleDollarSign, FileText, Landmark, Plus, RefreshCw, ShieldAlert, WalletCards } from 'lucide-react';
 import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminSectionTabs, AdminStatusBadge } from '../../components/admin/AdminModulePrimitives';
 import Button from '../../components/ui/Button';
+import { Drawer } from '../../components/ui/Drawer';
 import { api } from '../../lib/apiClient';
 import { normalizeFinanceExpense, normalizeFinanceInvoice } from '../../lib/financeStore';
 import type { AgencyExpense, AgencyInvoice } from '../../lib/financeStore';
@@ -26,6 +27,8 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 type Column = { label: string; align?: 'left' | 'right' | 'center'; className?: string };
 type TableRow = { id: string; cells: React.ReactNode[] };
 type SourceResult = { label: string; data: any; error?: string };
+type WorkbookRecord = { id: string; recordType: string; recordKey: string; periodKey?: string; projectId?: string; status: string; payload: Record<string, any>; version: number; createdByUserId?: string; createdAt: string; updatedAt: string };
+type RegisterField = { key: string; label: string; type: 'text' | 'number' | 'date' | 'month' | 'select' | 'textarea'; required?: boolean; options?: string[]; optionSource?: 'vendorBills' | 'accounts' | 'cashAccounts' | 'projects' | 'vendors'; placeholder?: string; help?: string; defaultValue?: string | number; visibleWhen?: { key: string; values: string[] } };
 type CashMovement = { id: string; date: string; reference: string; description: string; cashIn: number; cashOut: number; source: string; currency: string };
 
 const formatMoney = (value: number, currency = 'IDR') => new Intl.NumberFormat('id-ID', {
@@ -151,6 +154,199 @@ const WORKBOOK_CLOSING_ITEMS = [
   { label: 'Monthly reports approved', owner: 'Management' }
 ];
 
+
+const SUPPLEMENTARY_FINANCE_RECORD_TYPES = [
+  'chart-of-accounts','cash-bank-opening','cash-bank-transaction','petty-cash-voucher',
+  'vendor-bill','vendor-bill-payment','operational-budget','project-finance','team-fee',
+  'project-allocation','journal-entry','monthly-closing','balance-sheet-opening','monthly-closing-lock'
+] as const;
+
+const REGISTER_FORMS: Record<string, { title: string; description: string; fields: RegisterField[] }> = {
+  'chart-of-accounts': {
+    title: 'Chart of Accounts',
+    description: 'Add an account using the workbook account-code, account-type and normal-balance structure.',
+    fields: [
+      { key:'code',label:'Account code',type:'text',required:true,placeholder:'e.g. 5700' },
+      { key:'name',label:'Account name',type:'text',required:true },
+      { key:'accountType',label:'Account type',type:'select',required:true,options:['Asset','Liability','Equity','Revenue','Expense'] },
+      { key:'normalBalance',label:'Normal balance',type:'select',required:true,options:['Debit','Credit'] },
+      { key:'description',label:'Description',type:'textarea' }
+    ]
+  },
+  'cash-bank-opening': {
+    title:'Cash & Bank Opening Balance',
+    description:'Opening balance is stored separately from cash movements and is not counted as period cash-in.',
+    fields:[
+      {key:'accountCode',label:'Cash account',type:'select',required:true,optionSource:'cashAccounts',defaultValue:'1000'},
+      {key:'openingDate',label:'Opening date',type:'date',required:true},
+      {key:'openingBalance',label:'Opening balance (IDR)',type:'number',required:true},
+      {key:'notes',label:'Notes',type:'textarea'}
+    ]
+  },
+  'cash-bank-transaction': {
+    title:'Cash & Bank Movement',
+    description:'Use this register for manual adjustments or internal transfers. Client receipts and expenses remain sourced from their existing transaction records.',
+    fields:[
+      {key:'date',label:'Transaction date',type:'date',required:true},
+      {key:'transactionKind',label:'Movement type',type:'select',required:true,options:['manual','bank-to-petty-cash','petty-cash-to-bank','bank-to-emergency-fund','emergency-fund-to-bank'],defaultValue:'manual'},
+      {key:'accountCode',label:'From / active account',type:'select',required:true,optionSource:'cashAccounts',defaultValue:'1000'},
+      {key:'counterpartAccountCode',label:'Counterpart account',type:'select',optionSource:'cashAccounts',visibleWhen:{key:'transactionKind',values:['bank-to-petty-cash','petty-cash-to-bank','bank-to-emergency-fund','emergency-fund-to-bank']}},
+      {key:'direction',label:'Movement direction',type:'select',required:true,options:['in','out'],defaultValue:'out'},
+      {key:'reference',label:'Reference',type:'text',placeholder:'Transfer / adjustment reference'},
+      {key:'description',label:'Description',type:'text',required:true},
+      {key:'amount',label:'Amount (IDR)',type:'number',required:true},
+      {key:'category',label:'Category',type:'text',defaultValue:'Manual movement'},
+      {key:'projectId',label:'AMS project (optional)',type:'select',optionSource:'projects'},
+      {key:'notes',label:'Notes',type:'textarea'}
+    ]
+  },
+  'petty-cash-voucher': {
+    title:'Petty Cash Voucher',
+    description:'New vouchers start as pending. Outgoing transactions above Rp100.000 require management approval before they affect the approved voucher balance.',
+    fields:[
+      {key:'date',label:'Voucher date',type:'date',required:true},
+      {key:'voucherNo',label:'Voucher number',type:'text',placeholder:'Leave blank to generate automatically'},
+      {key:'description',label:'Description',type:'text',required:true},
+      {key:'custodian',label:'Custodian',type:'text',required:true},
+      {key:'direction',label:'Cash movement',type:'select',required:true,options:['out','in'],defaultValue:'out'},
+      {key:'amount',label:'Amount (IDR)',type:'number',required:true},
+      {key:'notes',label:'Receipt / approval notes',type:'textarea'}
+    ]
+  },
+  'vendor-bill': {
+    title:'Vendor Bill / Payable',
+    description:'Create the payable record before recording its 30% / 20% / 50% payment instalments.',
+    fields:[
+      {key:'billNo',label:'Bill number',type:'text',required:true},
+      {key:'vendorId',label:'AMS vendor (optional)',type:'select',optionSource:'vendors'},
+      {key:'vendorName',label:'Vendor / freelancer',type:'text',required:true},
+      {key:'projectId',label:'AMS project (optional)',type:'select',optionSource:'projects'},
+      {key:'projectName',label:'Project name',type:'text'},
+      {key:'billDate',label:'Bill date',type:'date',required:true},
+      {key:'dueDate',label:'Due date',type:'date',required:true},
+      {key:'currency',label:'Currency',type:'select',required:true,options:['IDR','USD'],defaultValue:'IDR'},
+      {key:'total',label:'Bill amount',type:'number',required:true},
+      {key:'notes',label:'Notes',type:'textarea'}
+    ]
+  },
+  'vendor-bill-payment': {
+    title:'Record Vendor Payment',
+    description:'Payment is linked to a vendor bill. Cumulative payments are blocked if they exceed the bill amount.',
+    fields:[
+      {key:'billId',label:'Vendor bill',type:'select',required:true,optionSource:'vendorBills'},
+      {key:'paidDate',label:'Payment date',type:'date',required:true},
+      {key:'amount',label:'Payment amount',type:'number',required:true},
+      {key:'method',label:'Payment method',type:'select',required:true,options:['bank_transfer','credit_card','cash','other'],defaultValue:'bank_transfer'},
+      {key:'reference',label:'Payment reference',type:'text'},
+      {key:'notes',label:'Notes',type:'textarea'}
+    ]
+  },
+  'operational-budget': {
+    title:'Operational Budget',
+    description:'Budget is maintained by month and category. Actual is calculated from recorded expenses.',
+    fields:[
+      {key:'month',label:'Month',type:'month',required:true},
+      {key:'category',label:'Category',type:'text',required:true},
+      {key:'budgetAmount',label:'Budget amount (IDR)',type:'number',required:true},
+      {key:'pic',label:'PIC',type:'text'},
+      {key:'projectId',label:'AMS project (optional)',type:'select',optionSource:'projects'},
+      {key:'notes',label:'Notes',type:'textarea'}
+    ]
+  },
+  'project-finance': {
+    title:'Project Finance Setup',
+    description:'Store the contract value, vendor commitment and other obligations that drive the workbook project-profit calculation.',
+    fields:[
+      {key:'projectId',label:'AMS project (optional)',type:'select',optionSource:'projects'},
+      {key:'projectName',label:'Project name / Excel key',type:'text',required:true},
+      {key:'clientName',label:'Client',type:'text'},
+      {key:'pic',label:'PIC',type:'text'},
+      {key:'contractValue',label:'Contract value (IDR)',type:'number',required:true},
+      {key:'vendorCommitment',label:'Vendor commitment (IDR)',type:'number',required:true},
+      {key:'otherObligations',label:'Other obligations (IDR)',type:'number',required:true},
+      {key:'projectStatus',label:'Project status',type:'select',options:['Planning','Active','On Hold','Completed','Cancelled'],defaultValue:'Active'},
+      {key:'startDate',label:'Start date',type:'date'},
+      {key:'endDate',label:'End date',type:'date'},
+      {key:'notes',label:'Notes',type:'textarea'}
+    ]
+  },
+  'team-fee': {
+    title:'Project Team Fee',
+    description:'Team Fee is a separate workbook register and must not be combined with Team Reward.',
+    fields:[
+      {key:'projectId',label:'AMS project (optional)',type:'select',optionSource:'projects'},
+      {key:'projectName',label:'Project name / Excel key',type:'text',required:true},
+      {key:'memberName',label:'Team member',type:'text',required:true},
+      {key:'role',label:'Role',type:'text'},
+      {key:'feeAmount',label:'Fee amount (IDR)',type:'number',required:true},
+      {key:'dueDate',label:'Payment date / target date',type:'date'},
+      {key:'paymentStatus',label:'Payment status',type:'select',options:['planned','pending','paid'],defaultValue:'planned'},
+      {key:'notes',label:'Notes',type:'textarea'}
+    ]
+  },
+  'project-allocation': {
+    title:'Project Profit Allocation',
+    description:'Allocation amounts are calculated server-side using the workbook percentages and the net project profit base.',
+    fields:[
+      {key:'projectId',label:'AMS project (optional)',type:'select',optionSource:'projects'},
+      {key:'projectName',label:'Project name / Excel key',type:'text',required:true},
+      {key:'contractValue',label:'Contract value (IDR)',type:'number',required:true},
+      {key:'vendorCost',label:'Vendor commitment (IDR)',type:'number',required:true},
+      {key:'otherObligations',label:'Other obligations (IDR)',type:'number',required:true},
+      {key:'pettyCashPercent',label:'Petty cash reserve (%)',type:'number',required:true,defaultValue:10},
+      {key:'emergencyPercent',label:'Emergency fund (%)',type:'number',required:true,defaultValue:10},
+      {key:'teamRewardPercent',label:'Team Reward (%)',type:'number',required:true,defaultValue:10},
+      {key:'teamFeeAmount',label:'Project Team Fee (IDR)',type:'number',defaultValue:0},
+      {key:'emergencyStatus',label:'Emergency fund status',type:'select',options:['Reserved','Used','Released','Not allocated'],defaultValue:'Reserved'},
+      {key:'notes',label:'Notes',type:'textarea'}
+    ]
+  },
+  'journal-entry': {
+    title:'General Journal Entry',
+    description:'A balanced double-entry is required. This form creates a two-line journal; complex entries need an extended line editor.',
+    fields:[
+      {key:'date',label:'Journal date',type:'date',required:true},
+      {key:'reference',label:'Reference',type:'text',required:true},
+      {key:'description',label:'Description',type:'text',required:true},
+      {key:'projectId',label:'AMS project (optional)',type:'select',optionSource:'projects'},
+      {key:'debitAccountCode',label:'Debit account',type:'select',required:true,optionSource:'accounts'},
+      {key:'creditAccountCode',label:'Credit account',type:'select',required:true,optionSource:'accounts'},
+      {key:'amount',label:'Amount (IDR)',type:'number',required:true},
+      {key:'notes',label:'Notes',type:'textarea'}
+    ]
+  },
+  'monthly-closing': {
+    title:'Monthly Closing Control',
+    description:'Update the selected workbook checklist item. Marking a control Done requires separate management approval.',
+    fields:[
+      {key:'period',label:'Reporting month',type:'month',required:true},
+      {key:'checklistItem',label:'Checklist item',type:'select',required:true,options:WORKBOOK_CLOSING_ITEMS.map((x)=>x.label)},
+      {key:'status',label:'Status',type:'select',required:true,options:['Open','In Progress','Blocked'],defaultValue:'Open'},
+      {key:'pic',label:'PIC',type:'text'},
+      {key:'date',label:'Date',type:'date'},
+      {key:'notes',label:'Notes',type:'textarea'}
+    ]
+  },
+  'balance-sheet-opening': {
+    title:'Opening Balance',
+    description:'Opening balances are auditable records. The company balance sheet remains marked preliminary until its full journal and ledger sources are reconciled.',
+    fields:[
+      {key:'accountCode',label:'Account',type:'select',required:true,optionSource:'accounts'},
+      {key:'asOfDate',label:'Opening date',type:'date',required:true},
+      {key:'openingAmount',label:'Opening amount (IDR)',type:'number',required:true},
+      {key:'side',label:'Balance side',type:'select',required:true,options:['Debit','Credit'],defaultValue:'Debit'},
+      {key:'notes',label:'Notes',type:'textarea'}
+    ]
+  }
+};
+
+const ACCOUNT_OPTION_CODES = EXCEL_CHART_OF_ACCOUNTS.map((account)=>({ value:account.code, label:account.code+' · '+account.name }));
+const CASH_ACCOUNT_OPTIONS = [
+  {value:'1000',label:'1000 · Cash & Bank'},
+  {value:'1100',label:'1100 · Petty Cash Reserve'},
+  {value:'1200',label:'1200 · Emergency Fund'}
+];
+
 export const AdminFinanceWorkspace: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -163,6 +359,11 @@ export const AdminFinanceWorkspace: React.FC = () => {
   const [expenses, setExpenses] = useState<AgencyExpense[]>([]);
   const [projects, setProjects] = useState<AgencyProject[]>([]);
   const [vendors, setVendors] = useState<AgencyVendor[]>([]);
+  const [registerRecords, setRegisterRecords] = useState<Record<string, WorkbookRecord[]>>({});
+  const [registerErrors, setRegisterErrors] = useState<string[]>([]);
+  const [registerSaving, setRegisterSaving] = useState(false);
+  const [registerActionError, setRegisterActionError] = useState<string | null>(null);
+  const [editor, setEditor] = useState<{ type: string; record?: WorkbookRecord; payload: Record<string, any> } | null>(null);
   const [sourceErrors, setSourceErrors] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -173,16 +374,26 @@ export const AdminFinanceWorkspace: React.FC = () => {
   const loadData = useCallback(async (quiet = false) => {
     if (quiet) setRefreshing(true);
     else setLoading(true);
-    const results = await Promise.all([
+    const baseResults = await Promise.all([
       readSource('Invoices', () => api.finance.getInvoices()),
       readSource('Expenses', () => api.finance.getExpenses()),
       readSource('Projects', () => api.projects.getAll()),
       readSource('Vendors', () => api.vendors.getAll())
     ]);
-    const invoiceSource = results[0];
-    const expenseSource = results[1];
-    const projectSource = results[2];
-    const vendorSource = results[3];
+    const workbookResults = await Promise.all(SUPPLEMENTARY_FINANCE_RECORD_TYPES.map((type) =>
+      readSource('Workbook register ' + type, () => api.finance.workbookList(type))
+    ));
+    const invoiceSource = baseResults[0];
+    const expenseSource = baseResults[1];
+    const projectSource = baseResults[2];
+    const vendorSource = baseResults[3];
+    const nextRegisters: Record<string, WorkbookRecord[]> = {};
+    workbookResults.forEach((result, index) => {
+      const type = SUPPLEMENTARY_FINANCE_RECORD_TYPES[index];
+      nextRegisters[type] = Array.isArray(result.data?.records) ? result.data.records as WorkbookRecord[] : [];
+    });
+    setRegisterRecords(nextRegisters);
+    setRegisterErrors(workbookResults.filter((result) => result.error).map((result) => result.label + ': ' + result.error));
     const nextInvoices = Array.isArray(invoiceSource.data?.invoices)
       ? invoiceSource.data.invoices.map((item: AgencyInvoice) => normalizeFinanceInvoice({
           ...item,
@@ -197,7 +408,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
     setExpenses(nextExpenses);
     setProjects(Array.isArray(projectSource.data?.projects) ? projectSource.data.projects as AgencyProject[] : []);
     setVendors(Array.isArray(vendorSource.data?.vendors) ? vendorSource.data.vendors as AgencyVendor[] : []);
-    setSourceErrors(results.filter((result) => result.error).map((result) => result.label + ': ' + result.error));
+    setSourceErrors(baseResults.filter((result) => result.error).map((result) => result.label + ': ' + result.error));
     setLoading(false);
     setRefreshing(false);
   }, []);
@@ -208,6 +419,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
 
   useEffect(() => {
     setSearchText('');
+    setRegisterActionError(null);
   }, [activeTab.key]);
 
   const reportInvoices = useMemo(() => invoices.filter(isIssuedInvoice), [invoices]);
@@ -233,7 +445,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
       }
     }
     for (const expense of expenses) {
-      if (!expense.date || Number(expense.amount) <= 0) continue;
+      if (!expense.date || Number(expense.amount) <= 0 || isPettyCashRelated(expense)) continue;
       entries.push({
         id: 'expense-' + expense.id,
         date: String(expense.date).slice(0, 10),
@@ -245,13 +457,322 @@ export const AdminFinanceWorkspace: React.FC = () => {
         currency: String((expense as any).currency || 'IDR')
       });
     }
+    for (const record of registerRecords['cash-bank-transaction'] || []) {
+      const payload = record.payload || {};
+      const amount = Number(payload.amount) || 0;
+      const accountCode = String(payload.accountCode || '');
+      const counterpartAccountCode = String(payload.counterpartAccountCode || '');
+      const direction = String(payload.direction || 'out');
+      const kind = String(payload.transactionKind || 'manual');
+      let cashIn = 0;
+      let cashOut = 0;
+      if (accountCode === '1000') {
+        cashIn = direction === 'in' ? amount : 0;
+        cashOut = direction === 'out' ? amount : 0;
+      } else if (counterpartAccountCode === '1000') {
+        cashIn = amount;
+      } else {
+        continue;
+      }
+      if (amount <= 0) continue;
+      entries.push({
+        id: 'cash-workbook-' + record.id,
+        date: String(payload.date || '').slice(0, 10),
+        reference: String(payload.reference || record.recordKey || record.id),
+        description: String(payload.description || (kind === 'manual' ? 'Manual bank movement' : 'Internal cash transfer')),
+        cashIn,
+        cashOut,
+        source: kind === 'manual' ? 'Manual bank adjustment' : 'Internal transfer',
+        currency: 'IDR'
+      });
+    }
     return entries.sort((a, b) => b.date.localeCompare(a.date));
-  }, [reportInvoices, expenses]);
+  }, [reportInvoices, expenses, registerRecords]);
 
   const matching = useCallback((values: unknown[]) => {
     const needle = searchText.trim().toLowerCase();
     return !needle || values.some((value) => String(value || '').toLowerCase().includes(needle));
   }, [searchText]);
+
+
+  const getRegisterRecords = (type: string): WorkbookRecord[] => registerRecords[type] || [];
+
+  const openRegisterForm = (type: string, record?: WorkbookRecord, initialPayload: Record<string, any> = {}) => {
+    const definition = REGISTER_FORMS[type];
+    if (!definition) {
+      setRegisterActionError('This workbook section does not have an editable register form yet.');
+      return;
+    }
+    const today = new Date().toISOString().slice(0, 10);
+    const defaults: Record<string, any> = {};
+    for (const field of definition.fields) {
+      if (field.defaultValue !== undefined) defaults[field.key] = field.defaultValue;
+      else if (field.type === 'date') defaults[field.key] = today;
+      else if (field.type === 'month') defaults[field.key] = selectedMonth;
+      else if (field.type === 'number') defaults[field.key] = '';
+      else if (field.type === 'select') defaults[field.key] = field.optionSource ? '' : (field.options?.[0] || '');
+      else defaults[field.key] = '';
+    }
+    const savedPayload = record ? { ...record.payload } : {};
+    if (record && type === 'journal-entry' && Array.isArray(record.payload.lines) && record.payload.lines.length === 2) {
+      const lines = record.payload.lines as Array<Record<string, any>>;
+      savedPayload.debitAccountCode = lines.find((line) => Number(line.debit) > 0)?.accountCode || '';
+      savedPayload.creditAccountCode = lines.find((line) => Number(line.credit) > 0)?.accountCode || '';
+      savedPayload.amount = Number(lines.find((line) => Number(line.debit) > 0)?.debit || 0);
+    }
+    setEditor({ type, record, payload: { ...defaults, ...savedPayload, ...initialPayload } });
+    setRegisterActionError(null);
+  };
+
+  const getRegisterFieldOptions = (field: RegisterField): Array<{ value: string; label: string }> => {
+    if (field.optionSource === 'accounts') {
+      const storedAccounts = getRegisterRecords('chart-of-accounts')
+        .filter((record) => record.payload.active !== false)
+        .map((record) => ({ value: String(record.payload.code || record.recordKey), label: String(record.payload.code || record.recordKey) + ' · ' + String(record.payload.name || '') }));
+      return [{ value: '', label: 'Select an account' }, ...(storedAccounts.length ? storedAccounts : ACCOUNT_OPTION_CODES)];
+    }
+    if (field.optionSource === 'cashAccounts') return [{ value: '', label: 'Select a cash account' }, ...CASH_ACCOUNT_OPTIONS];
+    if (field.optionSource === 'projects') return [
+      { value: '', label: 'Not linked to an AMS project' },
+      ...projects.map((project) => ({ value: project.id, label: (project.name || project.slug || project.id) + ' · ' + project.id }))
+    ];
+    if (field.optionSource === 'vendors') return [
+      { value: '', label: 'Not linked to an AMS vendor' },
+      ...vendors.map((vendor) => ({ value: vendor.id, label: (vendor.companyName || vendor.name) + ' · ' + vendor.id }))
+    ];
+    if (field.optionSource === 'vendorBills') {
+      const bills = getRegisterRecords('vendor-bill');
+      return [
+        { value: '', label: bills.length ? 'Select a vendor bill' : 'No vendor bills available' },
+        ...bills.map((bill) => ({
+          value: bill.id,
+          label: String(bill.payload.billNo || bill.recordKey) + ' · ' + String(bill.payload.vendorName || 'Vendor') + ' · ' + formatMoney(Number(bill.payload.outstanding ?? bill.payload.total) || 0, String(bill.payload.currency || 'IDR'))
+        }))
+      ];
+    }
+    return [
+      { value: '', label: field.required ? 'Select an option' : 'Not specified' },
+      ...(field.options || []).map((value) => {
+        if (value.includes(' · ')) {
+          const index = value.indexOf(' · ');
+          return { value: value.slice(0, index), label: value };
+        }
+        return { value, label: normaliseStatus(value) };
+      })
+    ];
+  };
+
+  const changeRegisterField = (key: string, value: string) => {
+    setEditor((current) => {
+      if (!current) return current;
+      const payload = { ...current.payload, [key]: value };
+      if (current.type === 'cash-bank-transaction' && key === 'transactionKind') {
+        const rules: Record<string, { from: string; to: string; direction: string }> = {
+          'manual': { from: '1000', to: '', direction: 'out' },
+          'bank-to-petty-cash': { from: '1000', to: '1100', direction: 'out' },
+          'petty-cash-to-bank': { from: '1100', to: '1000', direction: 'out' },
+          'bank-to-emergency-fund': { from: '1000', to: '1200', direction: 'out' },
+          'emergency-fund-to-bank': { from: '1200', to: '1000', direction: 'out' }
+        };
+        const rule = rules[value];
+        if (rule) {
+          payload.accountCode = rule.from;
+          payload.counterpartAccountCode = rule.to;
+          payload.direction = rule.direction;
+        }
+      }
+      return { ...current, payload };
+    });
+  };
+
+  const submitRegisterForm = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!editor || registerSaving) return;
+    setRegisterSaving(true);
+    setRegisterActionError(null);
+    try {
+      let payload: Record<string, any> = { ...editor.payload };
+      if (editor.type === 'journal-entry') {
+        const debitCode = String(payload.debitAccountCode || '');
+        const creditCode = String(payload.creditAccountCode || '');
+        const numericAmount = Number(payload.amount);
+        if (!debitCode || !creditCode || debitCode === creditCode) {
+          setRegisterActionError('Choose two different accounts for the debit and credit lines.');
+          setRegisterSaving(false);
+          return;
+        }
+        if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+          setRegisterActionError('Journal amount must be a positive number.');
+          setRegisterSaving(false);
+          return;
+        }
+        const getAccountName = (code: string) => getRegisterRecords('chart-of-accounts').find((record) => String(record.payload.code || record.recordKey) === code)?.payload.name || EXCEL_CHART_OF_ACCOUNTS.find((account) => account.code === code)?.name || code;
+        const debitName = String(getAccountName(debitCode));
+        const creditName = String(getAccountName(creditCode));
+        payload = {
+          date: payload.date,
+          reference: payload.reference,
+          description: payload.description,
+          projectId: payload.projectId,
+          notes: payload.notes,
+          status: editor.record?.status || 'draft',
+          lines: [
+            { accountCode: debitCode, accountName: debitName, debit: numericAmount, credit: 0, notes: payload.notes || '' },
+            { accountCode: creditCode, accountName: creditName, debit: 0, credit: numericAmount, notes: payload.notes || '' }
+          ]
+        };
+      }
+      const result = editor.record
+        ? await api.finance.workbookUpdate(editor.type, editor.record.id, payload, editor.record.version)
+        : await api.finance.workbookCreate(editor.type, payload);
+      if (!result.success) throw new Error(result.error || 'The Finance record could not be saved.');
+      setEditor(null);
+      await loadData(true);
+    } catch (error) {
+      setRegisterActionError(error instanceof Error ? error.message : 'The Finance record could not be saved.');
+    } finally {
+      setRegisterSaving(false);
+    }
+  };
+
+  const approveWorkbookRecord = async (type: string, record: WorkbookRecord, action: 'approve' | 'post' = 'approve') => {
+    setRegisterActionError(null);
+    const response = await api.finance.workbookApprove(type, record.id, '', action);
+    if (!response.success) {
+      setRegisterActionError(response.error || 'The approval could not be completed.');
+      return;
+    }
+    await loadData(true);
+  };
+
+  const closeWorkbookPeriod = async () => {
+    if (registerSaving) return;
+    setRegisterSaving(true);
+    setRegisterActionError(null);
+    try {
+      const response = await api.finance.workbookClosePeriod(selectedMonth);
+      if (!response.success) throw new Error(response.error || 'The period could not be closed.');
+      await loadData(true);
+    } catch (error) {
+      setRegisterActionError(error instanceof Error ? error.message : 'The period could not be closed.');
+    } finally {
+      setRegisterSaving(false);
+    }
+  };
+
+  const openCashOpeningForm = (accountCode = '1000') => {
+    const existing = getRegisterRecords('cash-bank-opening').find((record) => String(record.payload.accountCode) === accountCode);
+    openRegisterForm('cash-bank-opening', existing, { accountCode });
+  };
+
+  const registerAddButton = (type: string, label = 'Add record', initialPayload: Record<string, any> = {}) => (
+    <Button variant="secondary" type="button" icon={<Plus size={14} />} onClick={() => openRegisterForm(type, undefined, initialPayload)}>{label}</Button>
+  );
+
+  const registerRecordActions = (type: string, record: WorkbookRecord, extra?: React.ReactNode) => {
+    const isPosted = type === 'journal-entry' && record.status === 'posted';
+    const isDone = type === 'monthly-closing' && String(record.payload.status || record.status) === 'Done';
+    const voucherStatus = String(record.payload.status || record.status);
+    const isApproved = type === 'petty-cash-voucher' && ['approved','posted'].includes(voucherStatus);
+    const canEdit = !isPosted && type !== 'monthly-closing-lock' && !isDone && !isApproved
+      && !(type === 'journal-entry' && Array.isArray(record.payload.lines) && record.payload.lines.length !== 2);
+    const canApprove = (type === 'petty-cash-voucher' && voucherStatus === 'pending')
+      || (type === 'journal-entry' && record.status === 'draft')
+      || (type === 'monthly-closing' && !isDone);
+    const canPostVoucher = type === 'petty-cash-voucher' && voucherStatus === 'approved';
+    const actionLabel = type === 'journal-entry' ? 'Post'
+      : type === 'petty-cash-voucher' ? 'Approve'
+      : type === 'monthly-closing' ? 'Complete' : 'Approve';
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        {canEdit && <Button variant="secondary" type="button" onClick={() => openRegisterForm(type, record)}>Edit</Button>}
+        {canApprove && <Button variant="secondary" type="button" onClick={() => void approveWorkbookRecord(type, record)}>{actionLabel}</Button>}
+        {canPostVoucher && <Button variant="secondary" type="button" onClick={() => void approveWorkbookRecord(type, record, 'post')}>Post cash movement</Button>}
+        {extra}
+      </div>
+    );
+  };
+
+  const renderRegisterEditor = () => {
+    if (!editor) return null;
+    const definition = REGISTER_FORMS[editor.type];
+    if (!definition) return null;
+    return (
+      <Drawer
+        open={Boolean(editor)}
+        onClose={() => { if (!registerSaving) setEditor(null); }}
+        title={editor.record ? 'Edit ' + definition.title : definition.title}
+        description={definition.description}
+        size="2xl"
+        slug="finance-workbook-register-editor"
+      >
+        <form onSubmit={(event) => void submitRegisterForm(event)} className="space-y-4 p-1">
+          <div className="space-y-1">
+            <span className="text-[11px] font-medium uppercase tracking-wide text-muted">Workbook register</span>
+            <h3 className="text-sm font-semibold text-fg">{definition.title}</h3>
+            <p className="text-xs leading-5 text-muted">{definition.description}</p>
+          </div>
+          {registerActionError && (
+            <div className="rounded-control border border-danger/25 bg-danger/5 p-3 text-xs leading-5 text-fg" role="alert">{registerActionError}</div>
+          )}
+          <div className="grid gap-4 sm:grid-cols-2">
+            {definition.fields.filter((field) => !field.visibleWhen || field.visibleWhen.values.includes(String(editor.payload[field.visibleWhen.key] || ''))).map((field) => {
+              const value = editor.payload[field.key] === undefined || editor.payload[field.key] === null ? '' : String(editor.payload[field.key]);
+              const disabled = editor.record?.recordType === 'chart-of-accounts' && field.key === 'code';
+              const commonClass = 'mt-1.5 block h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none transition-colors focus:border-accent disabled:cursor-not-allowed disabled:opacity-60';
+              return (
+                <label key={field.key} className={field.type === 'textarea' ? 'block sm:col-span-2 text-xs font-medium text-muted' : 'block text-xs font-medium text-muted'}>
+                  {field.label}{field.required ? ' *' : ''}
+                  {field.type === 'textarea' ? (
+                    <textarea
+                      value={value}
+                      required={field.required}
+                      rows={3}
+                      onChange={(event) => changeRegisterField(field.key, event.target.value)}
+                      placeholder={field.placeholder}
+                      className="mt-1.5 block w-full rounded-control border border-line bg-bg px-3 py-2 text-xs text-fg outline-none transition-colors focus:border-accent"
+                    />
+                  ) : field.type === 'select' ? (
+                    <select
+                      value={value}
+                      required={field.required}
+                      disabled={field.optionSource === 'vendorBills' && getRegisterRecords('vendor-bill').length === 0}
+                      onChange={(event) => changeRegisterField(field.key, event.target.value)}
+                      className={commonClass}
+                    >
+                      {getRegisterFieldOptions(field).map((option) => <option key={option.value || 'empty'} value={option.value}>{option.label}</option>)}
+                    </select>
+                  ) : (
+                    <input
+                      type={field.type}
+                      value={value}
+                      required={field.required}
+                      disabled={disabled}
+                      min={field.type === 'number' ? '0' : undefined}
+                      step={field.type === 'number' ? '0.01' : undefined}
+                      onChange={(event) => changeRegisterField(field.key, event.target.value)}
+                      placeholder={field.placeholder}
+                      className={commonClass}
+                    />
+                  )}
+                  {field.help && <span className="mt-1 block text-[11px] leading-4 text-muted">{field.help}</span>}
+                </label>
+              );
+            })}
+          </div>
+          {editor.type === 'journal-entry' && (
+            <WorkbookNote title="Posting control">
+              The entry is saved as Draft and requires a different authorized user to post it. Total debit and credit must balance before it can be saved.
+            </WorkbookNote>
+          )}
+          <div className="flex flex-wrap justify-end gap-2 border-t border-line pt-4">
+            <Button type="button" variant="secondary" onClick={() => setEditor(null)} disabled={registerSaving}>Cancel</Button>
+            <Button type="submit" loading={registerSaving} disabled={registerSaving}>{registerSaving ? 'Saving…' : editor.record ? 'Save changes' : 'Save record'}</Button>
+          </div>
+        </form>
+      </Drawer>
+    );
+  };
 
   const openLegacyTransactions = () => navigate('/admin/invoicing');
   const groupItems = FINANCE_WORKBOOK_GROUPS.map((group) => ({
@@ -290,7 +811,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
     return (
       <FinanceDataTable
         title="Recent transaction activity"
-        description="Derived from recorded invoice payments and expense records; this is not a separate bank statement."
+        description="Derived from invoice payments and expenses, plus explicitly recorded bank adjustments and internal cash transfers. This is not an imported bank statement."
         columns={[
           { label: 'Date' }, { label: 'Reference' }, { label: 'Description' }, { label: 'Source' },
           { label: 'Cash in', align: 'right' }, { label: 'Cash out', align: 'right' }
@@ -445,15 +966,46 @@ export const AdminFinanceWorkspace: React.FC = () => {
             />
           </div>
         );
-      case 'cash-bank':
+      case 'cash-bank': {
+        const opening = getOpeningBalance('1000');
+        const cashRows = cashMovements.filter((entry) => entry.currency === 'IDR').slice().sort((a,b) => a.date.localeCompare(b.date));
+        let running = opening ?? 0;
+        const allCashLedgerRows = cashRows.map((entry) => {
+          running += entry.cashIn - entry.cashOut;
+          return {
+            id: entry.id,
+            search: [entry.date,entry.reference,entry.description,entry.source],
+            cells: [formatDate(entry.date),entry.reference,entry.description,entry.source,entry.cashIn ? formatMoney(entry.cashIn) : '—',entry.cashOut ? formatMoney(entry.cashOut) : '—',(opening === null ? '—' : formatMoney(running))]
+          };
+        });
+        const rows = allCashLedgerRows.filter((row) => matching(row.search)).reverse();
+        const totalIn = sumAmounts<CashMovement>(cashRows, (entry) => entry.cashIn);
+        const totalOut = sumAmounts<CashMovement>(cashRows, (entry) => entry.cashOut);
         return (
           <div className="space-y-4">
-            <WorkbookNote tone="warning" title="Cash & Bank activity is derived, not a bank reconciliation">
-              This view combines recorded invoice payments and expense records. AMS does not yet have the workbook's dedicated cash/bank ledger, opening balance, bank-account field and verified running balance, so a bank balance is intentionally not inferred here.
+            <WorkbookNote tone={opening === null ? 'warning' : 'info'} title={opening === null ? 'Cash ledger needs its opening balance' : 'Cash ledger is connected to its opening balance'}>
+              {opening === null
+                ? 'Set the 1000 Cash & Bank opening balance before treating a running balance as meaningful. Current source movements are not a bank-statement reconciliation; the existing expense API does not yet carry a bank-account/payment-method field.'
+                : 'Opening balance is read from the persistent workbook register. Movement rows combine dated invoice collections, expense records and manually recorded bank/cash movements. Reconcile them with the bank statement before closing the month.'}
             </WorkbookNote>
+            <AdminMetricStrip metrics={[
+              {id:'cash-opening',label:'Opening balance',value:opening === null ? 'Not set' : formatMoney(opening),context:'Account 1000 · Cash & Bank',icon:<Landmark size={15}/>},
+              {id:'cash-in',label:'Recorded cash in',value:formatMoney(totalIn),context:'Dated movements in loaded source records',icon:<ArrowDown size={15}/>},
+              {id:'cash-out',label:'Recorded cash out',value:formatMoney(totalOut),context:'Dated movements in loaded source records',icon:<ArrowUpRight size={15}/>},
+              {id:'cash-closing',label:'Provisional balance',value:opening === null ? 'Not available' : formatMoney(opening+totalIn-totalOut),context:'Opening + in − out; un-reconciled',icon:<WalletCards size={15}/>}
+            ]}/>
+            <FinanceDataTable
+              title="Cash & Bank ledger"
+              description="Transactions stay connected to their AMS source record; manual transfer/adjustment entries use the supplementary workbook register."
+              columns={[{label:'Date'},{label:'Reference'},{label:'Description'},{label:'Source'},{label:'Cash in',align:'right'},{label:'Cash out',align:'right'},{label:'Running balance',align:'right'}]}
+              rows={rows.map((row) => ({...row}))}
+              emptyMessage="No dated cash movement is available. Set an opening balance or record a movement."
+              actions={<div className="flex flex-wrap gap-2">{registerAddButton('cash-bank-transaction','Add movement')}<Button type="button" variant="secondary" onClick={() => openCashOpeningForm('1000')}>{opening === null ? 'Set opening balance' : 'Edit opening balance'}</Button></div>}
+            />
             {renderRecentActivity()}
           </div>
         );
+      }
       case 'accounts-receivable':
         return (
           <FinanceDataTable
@@ -469,31 +1021,59 @@ export const AdminFinanceWorkspace: React.FC = () => {
           />
         );
       case 'accounts-payable': {
-        const contracts = vendors.flatMap((vendor) => (Array.isArray(vendor.contracts) ? vendor.contracts : []).map((contract) => {
-          const linked = expenses.filter((expense) => {
-            const expenseRecord = expense as AgencyExpense & { vendorContractId?: string; vendorPayment?: { vendorId?: string; contractId?: string }; metadata?: { vendorPayment?: { vendorId?: string; contractId?: string } } };
-            const structured = expenseRecord.vendorPayment || expenseRecord.metadata?.vendorPayment;
-            return (expenseRecord.vendorId === vendor.id && expenseRecord.vendorContractId === contract.id)
-              || (structured?.vendorId === vendor.id && structured?.contractId === contract.id)
-              || expense.description.startsWith('[VENDOR_PAYMENT]|' + vendor.id + '|' + contract.id + '|');
-          });
-          return { vendor, contract, linkedCount: linked.length, linkedAmount: sumAmounts<AgencyExpense>(linked, (expense) => Number(expense.amount) || 0) };
-        }));
+        const bills = getRegisterRecords('vendor-bill').filter((record) => matching([
+          record.recordKey, record.payload.billNo, record.payload.vendorName, record.payload.projectName, record.payload.dueDate, record.payload.paymentStatus
+        ]));
+        const payableTotal = sumAmounts<WorkbookRecord>(bills,(record)=>Number(record.payload.outstanding ?? record.payload.total)||0);
         return (
           <div className="space-y-4">
-            <WorkbookNote tone="warning" title="Vendor contracts are commitments, not vendor bills">
-              The workbook's Accounts Payable requires a bill amount, amount paid, due date and outstanding balance. AMS currently exposes vendor contracts and linked expense/payment references, but not a dedicated vendor-bill register. The table below shows commitment references only and intentionally does not invent an AP outstanding balance.
+            <WorkbookNote title="Vendor Bill is the payable source of truth">
+              Vendor contracts describe commitments. Accounts Payable is now kept in a separate persistent register; each bill can carry its own due date and payment schedule. Linked expenses remain source records and are not silently converted into bills.
             </WorkbookNote>
+            <AdminMetricStrip metrics={[
+              {id:'ap-bills',label:'Vendor bills',value:String(bills.length),context:'Persistent workbook register',icon:<FileText size={15}/>},
+              {id:'ap-total',label:'Outstanding total',value:formatMoney(payableTotal),context:'Derived from bill value less recorded instalments',icon:<WalletCards size={15}/>}
+            ]}/>
             <FinanceDataTable
-              title="Vendor obligation references"
-              description="Linked expense amounts are shown for traceability; they are not treated as a substitute for a bill ledger."
-              columns={[{ label: 'Vendor' }, { label: 'Contract' }, { label: 'Rate basis' }, { label: 'Contract rate/value', align: 'right' }, { label: 'Linked expense records', align: 'center' }, { label: 'AP balance' }]
-              }
-              rows={contracts.filter(({ vendor, contract }) => matching([vendor.name, vendor.companyName, contract.title, contract.rateType])).map(({ vendor, contract, linkedCount, linkedAmount }) => ({
-                id: vendor.id + '-' + contract.id,
-                cells: [vendor.companyName || vendor.name, contract.title, normaliseStatus(contract.rateType), formatMoney(Number(contract.rateAmount) || 0, contract.currency), linkedCount + ' · ' + formatMoney(linkedAmount, contract.currency), <AdminStatusBadge tone="warning">Bill ledger required</AdminStatusBadge>]
+              title="Accounts Payable register"
+              description="Bill state and outstanding values are calculated from payment records linked to the bill."
+              columns={[{label:'Bill no.'},{label:'Vendor'},{label:'Project'},{label:'Bill date'},{label:'Due date'},{label:'Bill amount',align:'right'},{label:'Paid',align:'right'},{label:'Outstanding',align:'right'},{label:'Status'},{label:'Actions'}]}
+              rows={bills.map((record)=> {
+                const total = Number(record.payload.total)||0;
+                const paid = Number(record.payload.paidAmount)||0;
+                const outstanding = Math.max(0,Number(record.payload.outstanding ?? total-paid)||0);
+                return {
+                  id:record.id,
+                  cells:[
+                    String(record.payload.billNo||record.recordKey),
+                    String(record.payload.vendorName||'—'),
+                    String(record.payload.projectName||record.projectId||'—'),
+                    formatDate(record.payload.billDate),
+                    formatDate(record.payload.dueDate),
+                    formatMoney(total,String(record.payload.currency||'IDR')),
+                    formatMoney(paid,String(record.payload.currency||'IDR')),
+                    formatMoney(outstanding,String(record.payload.currency||'IDR')),
+                    <StatusBadge value={record.payload.paymentStatus||record.status}/>,
+                    registerRecordActions('vendor-bill',record, outstanding>0 ? <Button variant="secondary" type="button" onClick={()=>openRegisterForm('vendor-bill-payment',undefined,{billId:record.id,paidDate:new Date().toISOString().slice(0,10),amount:outstanding})}>Record payment</Button> : undefined)
+                  ]
+                };
+              })}
+              emptyMessage="No vendor bills have been recorded yet."
+              actions={registerAddButton('vendor-bill','Add vendor bill')}
+            />
+            <FinanceDataTable
+              title="Vendor contract references"
+              description="Existing AMS contracts are shown as commitments; a contract alone is not treated as a payable bill."
+              columns={[{label:'Vendor'},{label:'Contract'},{label:'Rate basis'},{label:'Contract rate/value',align:'right'},{label:'Linked expense records',align:'right'}]}
+              rows={vendors.flatMap((vendor)=>(Array.isArray(vendor.contracts)?vendor.contracts:[]).map((contract)=> {
+                const linked=expenses.filter((expense)=>{
+                  const expenseRecord=expense as AgencyExpense & {vendorContractId?:string;vendorPayment?:{vendorId?:string;contractId?:string};metadata?:{vendorPayment?:{vendorId?:string;contractId?:string}}};
+                  const structured=expenseRecord.vendorPayment||expenseRecord.metadata?.vendorPayment;
+                  return (expenseRecord.vendorId===vendor.id&&expenseRecord.vendorContractId===contract.id)||(structured?.vendorId===vendor.id&&structured?.contractId===contract.id)||expense.description.startsWith('[VENDOR_PAYMENT]|'+vendor.id+'|'+contract.id+'|');
+                });
+                return {id:vendor.id+'-'+contract.id,cells:[vendor.companyName||vendor.name,contract.title,normaliseStatus(contract.rateType),formatMoney(Number(contract.rateAmount)||0,contract.currency),String(linked.length)+' · '+formatMoney(sumAmounts<AgencyExpense>(linked,(expense)=>Number(expense.amount)||0),contract.currency)]};
               }))}
-              emptyMessage="No vendor contracts are available. Create or link vendor contracts in the existing Vendors workspace."
+              emptyMessage="No vendor contracts are available in AMS."
             />
           </div>
         );
@@ -512,63 +1092,123 @@ export const AdminFinanceWorkspace: React.FC = () => {
             actions={<Button type="button" variant="secondary" onClick={() => navigate('/admin/team?view=vendor-directory')}>Open vendor directory</Button>}
           />
         );
-      case 'project-finance':
+      case 'project-finance': {
+        const financeRecords=getRegisterRecords('project-finance');
+        const rows=projects.filter((project)=>matching([project.name,project.clientCompany,project.clientName,project.status])).map((project)=>{
+          const record=getProjectFinanceRecord(project);
+          const projectInvoices=reportInvoices.filter((invoice)=>invoice.projectId===project.id);
+          const projectExpenses=expenses.filter((expense)=>expense.projectId===project.id);
+          const payload=record?.payload||{};
+          const billed=sumAmounts<AgencyInvoice>(projectInvoices,(invoice)=>Number(invoice.total)||0);
+          const collected=sumAmounts<AgencyInvoice>(projectInvoices,getInvoiceCollected);
+          const costs=sumAmounts<AgencyExpense>(projectExpenses,(expense)=>Number(expense.amount)||0);
+          const contractValue=record?Number(payload.contractValue)||0:null;
+          return {id:project.id,cells:[
+            projectLabel(project),project.clientCompany||project.clientName||'—',
+            contractValue===null?<AdminStatusBadge tone="warning">Setup required</AdminStatusBadge>:formatMoney(contractValue),
+            formatMoney(billed),formatMoney(collected),formatMoney(costs),<StatusBadge value={project.status}/>,
+            record?registerRecordActions('project-finance',record):<Button variant="secondary" type="button" onClick={()=>openRegisterForm('project-finance',undefined,{projectId:project.id,projectName:project.name,clientName:project.clientCompany||project.clientName,startDate:project.startDate,endDate:project.targetEndDate,projectStatus:project.status})}>Configure</Button>
+          ]};
+        });
+        const orphanRecords=financeRecords.filter((record)=>!projects.some((project)=>(record.projectId&&record.projectId===project.id)||String(record.payload.projectName||'').toLowerCase()===String(project.name||'').toLowerCase()));
         return (
           <div className="space-y-4">
-            <WorkbookNote title="Project Finance uses explicit AMS project links">
-              Invoice and expense values are linked by project ID only. Records that have not been linked to a project remain visible in their source register but are not silently assigned to a project.
+            <WorkbookNote title="Excel project finance register">
+              Contract value, vendor commitment and other obligations come only from the dedicated workbook-aligned project record. The existing AMS project budget is not substituted for contract value. Billed, collected and recorded costs remain linked to existing invoices and expenses using explicit project IDs.
             </WorkbookNote>
-            <FinanceDataTable
-              title="Project finance overview"
-              description="Project budget, billed invoice value, collected client payments and recorded expenses."
-              columns={[{ label: 'Project' }, { label: 'Client' }, { label: 'Budget', align: 'right' }, { label: 'Billed', align: 'right' }, { label: 'Collected', align: 'right' }, { label: 'Recorded cost', align: 'right' }, { label: 'Project status' }]}
-              rows={projects.filter((project) => matching([project.name, project.clientCompany, project.clientName, project.status])).map((project) => {
-                const projectInvoices = reportInvoices.filter((invoice) => invoice.projectId === project.id);
-                const projectExpenses = expenses.filter((expense) => expense.projectId === project.id);
-                return {
-                  id: project.id,
-                  cells: [projectLabel(project), project.clientCompany || project.clientName || '—', formatMoney(Number(project.budget) || 0), formatMoney(sumAmounts<AgencyInvoice>(projectInvoices, (invoice) => Number(invoice.total) || 0)), formatMoney(sumAmounts<AgencyInvoice>(projectInvoices, getInvoiceCollected)), formatMoney(sumAmounts<AgencyExpense>(projectExpenses, (expense) => Number(expense.amount) || 0)), <StatusBadge value={project.status} />]
-                };
-              })}
-              emptyMessage="No AMS projects were returned. Link invoices and expenses to projects to populate this view."
-            />
+            <FinanceDataTable title="Project Finance" description="Setup each project to record the same contract and commitment fields used by Excel." columns={[{label:'Project'},{label:'Client'},{label:'Contract value',align:'right'},{label:'Billed',align:'right'},{label:'Collected',align:'right'},{label:'Recorded cost',align:'right'},{label:'Project status'},{label:'Setup / actions'}]} rows={rows} emptyMessage="No AMS projects were returned. A named project record can still be created from the workbook register." actions={registerAddButton('project-finance','Add project finance record')}/>
+            {orphanRecords.length>0&&<FinanceDataTable title="Workbook project records without a linked AMS project" description="These records remain visible rather than being silently attached to another project." columns={[{label:'Project key'},{label:'Contract value',align:'right'},{label:'Vendor commitment',align:'right'},{label:'Other obligations',align:'right'},{label:'Status'},{label:'Actions'}]} rows={orphanRecords.map((record)=>({id:record.id,cells:[String(record.payload.projectName||record.recordKey),formatMoney(Number(record.payload.contractValue)||0),formatMoney(Number(record.payload.vendorCommitment)||0),formatMoney(Number(record.payload.otherObligations)||0),<StatusBadge value={record.status}/>,registerRecordActions('project-finance',record)]}))}/>}
           </div>
         );
+      }
       case 'operational-budget': {
-        const totalsByMonthCategory = new Map<string, { month: string; category: string; amount: number; count: number }>();
-        for (const expense of expenses) {
-          const month = getMonthKey(expense.date);
-          if (!month) continue;
-          const key = month + '|' + String(expense.category || 'Unclassified');
-          const current = totalsByMonthCategory.get(key) || { month, category: String(expense.category || 'Unclassified'), amount: 0, count: 0 };
-          current.amount += Number(expense.amount) || 0;
-          current.count += 1;
-          totalsByMonthCategory.set(key, current);
+        const budgetRecords = getRegisterRecords('operational-budget');
+        const actualByMonthCategory = new Map<string,{month:string;category:string;amount:number;count:number}>();
+        for(const expense of expenses){
+          const month=getMonthKey(expense.date);
+          if(!month) continue;
+          const category=String(expense.category||'Unclassified');
+          const key=month+'|'+category.toLowerCase();
+          const current=actualByMonthCategory.get(key)||{month,category,amount:0,count:0};
+          current.amount+=Number(expense.amount)||0;
+          current.count+=1;
+          actualByMonthCategory.set(key,current);
         }
-        const rows = [...totalsByMonthCategory.values()].sort((a, b) => b.month.localeCompare(a.month) || a.category.localeCompare(b.category)).filter((item) => matching([item.month, item.category])).map((item) => ({
-          id: item.month + '-' + item.category,
-          cells: [item.month, item.category, item.count, formatMoney(item.amount), 'Budget target not stored in current AMS']
-        }));
+        const keys=new Set<string>([
+          ...budgetRecords.map((record)=>String(record.payload.month||record.periodKey||'')+'|'+String(record.payload.category||'').toLowerCase()),
+          ...actualByMonthCategory.keys()
+        ]);
+        const records=[...keys].map((key)=>{
+          const [month,categoryKey]=key.split('|');
+          const budgetRecord=budgetRecords.find((record)=>String(record.payload.month||record.periodKey||'')===month&&String(record.payload.category||'').toLowerCase()===categoryKey);
+          const actual=actualByMonthCategory.get(key);
+          return {key,month,category:String(budgetRecord?.payload.category||actual?.category||categoryKey),budgetRecord,budget:Number(budgetRecord?.payload.budgetAmount)||0,actual:actual?.amount||0,count:actual?.count||0,pic:String(budgetRecord?.payload.pic||''),notes:String(budgetRecord?.payload.notes||'')};
+        }).filter((item)=>item.month&&matching([item.month,item.category,item.pic,item.notes])).sort((a,b)=>b.month.localeCompare(a.month)||a.category.localeCompare(b.category));
         return (
           <div className="space-y-4">
-            <WorkbookNote tone="warning" title="Budget comparison needs a dedicated monthly budget register">
-              AMS project budgets are available, but they are not equivalent to the workbook's monthly category budget, PIC, variance and notes. This screen reports recorded actual expenses by month and category without presenting a fabricated budget or variance.
+            <WorkbookNote title="Monthly budget versus actual">
+              Budget lines are stored by month, category and PIC. Actual costs remain sourced from expense records; the table does not insert zero-value placeholder budget rows.
             </WorkbookNote>
-            <FinanceDataTable title="Actual operating and project expenses" description="Aggregated from current expense records." columns={[{ label: 'Month' }, { label: 'Category' }, { label: 'Records', align: 'right' }, { label: 'Actual amount', align: 'right' }, { label: 'Budget / variance' }]} rows={rows} emptyMessage="No dated expenses are available for budget review." />
+            <FinanceDataTable
+              title="Operational Budget"
+              description="Variance is budget less expense actual for the same calendar month and expense category."
+              columns={[{label:'Month'},{label:'Category'},{label:'PIC'},{label:'Budget',align:'right'},{label:'Actual',align:'right'},{label:'Variance',align:'right'},{label:'Expense rows',align:'right'},{label:'Actions'}]}
+              rows={records.map((item)=>({
+                id:item.key,
+                cells:[
+                  item.month,item.category||'—',item.pic||'—',
+                  item.budgetRecord?formatMoney(item.budget):<AdminStatusBadge tone="warning">Budget not set</AdminStatusBadge>,
+                  formatMoney(item.actual),
+                  item.budgetRecord?formatMoney(item.budget-item.actual):'—',
+                  String(item.count),
+                  item.budgetRecord?registerRecordActions('operational-budget',item.budgetRecord):<Button variant="secondary" type="button" onClick={()=>openRegisterForm('operational-budget',undefined,{month:item.month,category:item.category})}>Set budget</Button>
+                ]
+              }))}
+              emptyMessage="No budget lines or dated expense records exist for the current search."
+              actions={registerAddButton('operational-budget','Add budget line',{month:selectedMonth})}
+            />
           </div>
         );
       }
       case 'petty-cash': {
-        const rows = expenses.filter((expense) => isPettyCashRelated(expense) && matching([expense.category, expense.description])).map((expense) => ({
-          id: expense.id,
-          cells: [formatDate(expense.date), expense.id, expense.description, (expense as any).custodian || 'Not stored', '—', formatMoney(Number(expense.amount) || 0), (expense as any).approvedBy || 'Not stored', 'Expense source']
-        }));
+        const opening=getOpeningBalance('1100');
+        const vouchers=getRegisterRecords('petty-cash-voucher');
+        const transferRows=getRegisterRecords('cash-bank-transaction').filter((record)=>String(record.payload.counterpartAccountCode||'')==='1100'||String(record.payload.accountCode||'')==='1100');
+        const movements:Array<{id:string;date:string;reference:string;description:string;cashIn:number;cashOut:number;status:string;source:string;record?:WorkbookRecord}>=[];
+        for(const record of transferRows){
+          const payload=record.payload||{};
+          const amount=Number(payload.amount)||0;
+          const isCashIn=String(payload.counterpartAccountCode||'')==='1100'&&String(payload.accountCode||'')!=='1100';
+          movements.push({id:record.id,date:String(payload.date||''),reference:String(payload.reference||record.recordKey),description:String(payload.description||'Cash transfer'),cashIn:isCashIn?amount:0,cashOut:isCashIn?0:amount,status:record.status,source:'Internal cash transfer',record});
+        }
+        for(const record of vouchers){
+          const payload=record.payload||{};
+          const status=String(payload.status||record.status);
+          movements.push({id:record.id,date:String(payload.date||''),reference:String(payload.voucherNo||record.recordKey),description:String(payload.description||''),cashIn:status==='posted'&&payload.direction==='in'?Number(payload.amount)||0:0,cashOut:status==='posted'&&payload.direction==='out'?Number(payload.amount)||0:0,status,source:'Petty cash voucher',record});
+        }
+        movements.sort((a,b)=>a.date.localeCompare(b.date)||a.reference.localeCompare(b.reference));
+        let running=opening??0;
+        const allPettyLedgerRows=movements.map((movement)=>{
+          const affectsBalance=movement.source==='Internal cash transfer'||movement.status==='posted';
+          if(affectsBalance)running+=movement.cashIn-movement.cashOut;
+          return {id:movement.id,search:[movement.date,movement.reference,movement.description,movement.status,movement.source],cells:[formatDate(movement.date),movement.reference,movement.description,movement.cashIn?formatMoney(movement.cashIn):'—',movement.cashOut?formatMoney(movement.cashOut):'—',(opening===null?'—':formatMoney(running)),<StatusBadge value={movement.status}/>,movement.record?registerRecordActions(movement.source==='Petty cash voucher'?'petty-cash-voucher':'cash-bank-transaction',movement.record):movement.source]};
+        });
+        const rows=allPettyLedgerRows.filter((row)=>matching(row.search)).reverse();
+        const pending=vouchers.filter((record)=>['pending','approved'].includes(String(record.payload.status||record.status))).length;
+        const totalIn=sumAmounts(vouchers.filter((record)=>record.status==='posted'),(record)=>record.payload.direction==='in'?Number(record.payload.amount)||0:0);
+        const totalOut=sumAmounts(vouchers.filter((record)=>record.status==='posted'),(record)=>record.payload.direction==='out'?Number(record.payload.amount)||0:0);
         return (
           <div className="space-y-4">
-            <WorkbookNote tone="warning" title="Dedicated petty-cash ledger is not available yet">
-              The workbook requires voucher number, custodian, cash in/out, running balance, approver and receipt notes. Those fields are not part of the current AMS expense API, so this view only lists clearly identified petty-cash-related expense records and does not calculate a cash balance.
+            <WorkbookNote tone={opening===null?'warning':'info'} title={opening===null?'Petty cash needs an opening balance':'Petty cash register connected'}>
+              Only posted vouchers affect the petty-cash ledger. Pending/approved vouchers remain visible in workflow but do not change the running balance. Internal transfers are shared with Cash & Bank and are not treated as an expense by themselves.
             </WorkbookNote>
-            <FinanceDataTable title="Petty-cash-related expense records" description="Source records only; not yet a complete petty-cash voucher ledger." columns={[{ label: 'Date' }, { label: 'Source ID' }, { label: 'Description' }, { label: 'Custodian' }, { label: 'Cash in', align: 'right' }, { label: 'Cash out', align: 'right' }, { label: 'Approved by' }, { label: 'Source' }]} rows={rows} emptyMessage="No expense record is explicitly identified as petty cash. Use the existing expense workspace for current expense entry." actions={<Button type="button" variant="secondary" onClick={openLegacyTransactions}>Open expense workspace</Button>} />
+            <AdminMetricStrip metrics={[
+              {id:'petty-opening',label:'Opening balance',value:opening===null?'Not set':formatMoney(opening),context:'Account 1100 · Petty Cash Reserve',icon:<WalletCards size={15}/>},
+              {id:'petty-in',label:'Posted cash in',value:formatMoney(totalIn),context:'Posted voucher receipts',icon:<ArrowDown size={15}/>},
+              {id:'petty-out',label:'Posted cash out',value:formatMoney(totalOut),context:'Posted voucher expenses',icon:<ArrowUpRight size={15}/>},
+              {id:'petty-pending',label:'Pending approval',value:String(pending),context:'Vouchers awaiting approve/post',icon:<ShieldAlert size={15}/>}
+            ]}/>
+            <FinanceDataTable title="Petty Cash Ledger" description="Voucher movements and internal cash transfers, sorted by date." columns={[{label:'Date'},{label:'Voucher / reference'},{label:'Description'},{label:'Cash in',align:'right'},{label:'Cash out',align:'right'},{label:'Running balance',align:'right'},{label:'Status'},{label:'Actions'}]} rows={rows} emptyMessage="No petty-cash vouchers or transfers are recorded." actions={<div className="flex flex-wrap gap-2">{registerAddButton('petty-cash-voucher','Add voucher')}<Button variant="secondary" type="button" onClick={()=>openRegisterForm('cash-bank-transaction',undefined,{transactionKind:'bank-to-petty-cash',accountCode:'1000',counterpartAccountCode:'1100',direction:'out',description:'Petty cash top-up'})}>Top up from bank</Button><Button variant="secondary" type="button" onClick={()=>openCashOpeningForm('1100')}>{opening===null?'Set opening balance':'Edit opening balance'}</Button></div>}/>
           </div>
         );
       }
@@ -641,107 +1281,115 @@ export const AdminFinanceWorkspace: React.FC = () => {
           </div>
         );
       }
-      case 'monthly-closing':
+      case 'monthly-closing': {
+        const records=getRegisterRecords('monthly-closing').filter((record)=>String(record.payload.period||record.periodKey||'')===selectedMonth);
+        const locked=getRegisterRecords('monthly-closing-lock').some((record)=>String(record.periodKey||record.payload.period||'')===selectedMonth);
+        const rows=WORKBOOK_CLOSING_ITEMS.map((item,index)=>{
+          const record=records.find((candidate)=>String(candidate.payload.checklistItem||'').toLowerCase()===item.label.toLowerCase());
+          const state=String(record?.payload.status||record?.status||'Open');
+          return {id:item.label,cells:[item.label,item.owner,record?<StatusBadge value={state}/>:<AdminStatusBadge tone="warning">Not recorded</AdminStatusBadge>,index===0?'All issued revenue is traceable to source invoices.':index===1?'Expenses are classified and supported by evidence.':index===2?'Bank activity agrees to the bank statement and opening balance.':index===7?'Total debit equals total credit.':'Review and document before the period is closed.',record?registerRecordActions('monthly-closing',record):<Button variant="secondary" type="button" disabled={locked} onClick={()=>openRegisterForm('monthly-closing',undefined,{period:selectedMonth,checklistItem:item.label,status:'Open'})}>Create control</Button>]};
+        });
+        const completed=WORKBOOK_CLOSING_ITEMS.filter((item)=>records.some((record)=>String(record.payload.checklistItem||'').toLowerCase()===item.label.toLowerCase()&&String(record.payload.status||record.status)==='Done')).length;
         return (
           <div className="space-y-4">
-            <WorkbookNote tone="warning" title="Monthly closing checklist is not yet persisted">
-              This tab preserves the ten control items from the workbook, but completion status, assigned owner, sign-off date and closing lock do not yet have a dedicated AMS backend record. Each item remains unconfirmed until that workflow is implemented.
+            <WorkbookNote tone={locked?'info':'warning'} title={locked?'Selected period is closed':'Monthly closing requires all workbook control items'}>
+              Selected period: {selectedMonth}. {completed} of {WORKBOOK_CLOSING_ITEMS.length} controls are completed and approved. The period-lock endpoint rejects closing until all ten expected control items are persisted as Done and posted journals balance.
             </WorkbookNote>
-            <FinanceDataTable title="Monthly closing controls" description="Workbook checklist template. A loaded source is not the same as a reconciled or approved closing." columns={[{ label: 'Checklist item' }, { label: 'Default owner' }, { label: 'Status' }, { label: 'Control purpose' }]} rows={WORKBOOK_CLOSING_ITEMS.map((item, index) => ({
-              id: String(index),
-              cells: [item.label, item.owner, <AdminStatusBadge tone="warning">Not confirmed</AdminStatusBadge>, index === 0 ? 'All issued revenue is traceable to source invoices.' : index === 1 ? 'Expenses are classified and supported by evidence.' : index === 2 ? 'Bank activity agrees to the bank statement and opening balance.' : index === 7 ? 'Total debit equals total credit.' : 'Review and document before the period is closed.']
-            }))} emptyMessage="No checklist items are configured." />
-          </div>
-        );
-      case 'project-allocation':
-        return (
-          <div className="space-y-4">
-            <WorkbookNote title="Allocation policy mapped from sheet 15">
-              The workbook calculates allocation from Net Project Profit after vendor costs and other project obligations. Amounts are not generated here until AMS has explicit vendor commitment and other-obligation values linked to the same project.
-            </WorkbookNote>
-            <AdminMetricStrip metrics={[
-              { id: 'alloc-petty', label: 'Petty cash reserve', value: '10%', context: 'Of Net Project Profit', icon: <WalletCards size={15} /> },
-              { id: 'alloc-emergency', label: 'Emergency fund', value: '10%', context: 'Of Net Project Profit', icon: <ShieldAlert size={15} /> },
-              { id: 'alloc-reward', label: 'Team Reward', value: '10%', context: 'Separate from Project Team Fee', icon: <CircleDollarSign size={15} /> },
-              { id: 'alloc-company', label: 'Company operational fund', value: '70%', context: 'Remainder after three allocations above', icon: <Landmark size={15} /> }
-            ]} />
-            <FinanceDataTable title="Team Reward distribution" description="Fixed allocation rules from the workbook." columns={[{ label: 'Recipient group' }, { label: 'Percentage of Net Project Profit' }, { label: 'Share of Team Reward' }]} rows={[
-              { id: 'sales', cells: ['Sales', '5%', '50%'] },
-              { id: 'vendor', cells: ['Vendor / PIC', '2.5%', '25%'] },
-              { id: 'management', cells: ['Management', '2.5%', '25%'] }
-            ]} emptyMessage="No allocation policy is available." />
-            <WorkbookNote tone="warning" title="Allocation cannot be posted yet">
-              The current AMS project model exposes a project budget, not the workbook's complete Contract Value, Vendor Commitment and Other Obligations register. The percentages are aligned, while per-project amounts and reserve status still require the missing links.
-            </WorkbookNote>
-          </div>
-        );
-      case 'team-fee': {
-        const feeExpenses = expenses.filter((expense) => classifyWorkbookExpense(expense) === 'projectTeamFee');
-        return (
-          <div className="space-y-4">
-            <WorkbookNote tone="warning" title="Team Fee and Team Reward remain separate">
-              The workbook's Team Fee register is allocated by project, member, role and fee amount. The current expense API has no member-level allocation fields, so this table only shows expense records explicitly classified as Project Team Fee; it does not infer individual entitlement or payment schedule.
-            </WorkbookNote>
-            <FinanceDataTable title="Project Team Fee source records" description="Only records with an explicit Team Fee classification are listed." columns={[{ label: 'Date' }, { label: 'Project' }, { label: 'Description' }, { label: 'Amount', align: 'right' }, { label: 'Record state' }]} rows={feeExpenses.map((expense) => ({
-              id: expense.id,
-              cells: [formatDate(expense.date), projects.find((project) => project.id === expense.projectId)?.name || expense.projectId || 'Not linked', expense.description, formatMoney(Number(expense.amount) || 0, String((expense as any).currency || 'IDR')), <StatusBadge value={(expense as any).status || 'recorded'} />]
-            }))} emptyMessage="No expense is explicitly mapped to Project Team Fee in the connected source. Member-level allocations need a dedicated persistent register." />
+            <AdminPanel title="Closing period" bodyClassName="p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <label className="block max-w-xs flex-1 text-xs font-medium text-muted">Reporting month
+                  <input type="month" value={selectedMonth} onChange={(event)=>setSelectedMonth(event.target.value)} className="mt-1.5 block h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent" disabled={locked}/>
+                </label>
+                <div className="flex items-center gap-2">
+                  <AdminStatusBadge tone={locked?'success':'warning'}>{locked?'Closed':'Open'}</AdminStatusBadge>
+                  <Button type="button" variant="secondary" disabled={locked||completed!==WORKBOOK_CLOSING_ITEMS.length||registerSaving} loading={registerSaving} onClick={()=>void closeWorkbookPeriod()}>Close period</Button>
+                </div>
+              </div>
+            </AdminPanel>
+            <FinanceDataTable title="Monthly Closing checklist" description="One persisted row per Excel control item, with assigned PIC, sign-off date and review notes." columns={[{label:'Checklist item'},{label:'Default owner'},{label:'Status'},{label:'Control purpose'},{label:'Actions'}]} rows={rows} emptyMessage="Create the checklist rows before requesting month-end close."/>
           </div>
         );
       }
-      case 'balance-sheet':
+      case 'project-allocation': {
+        const records=getRegisterRecords('project-allocation').filter((record)=>matching([record.payload.projectName,record.projectId,record.status]));
         return (
           <div className="space-y-4">
-            <WorkbookNote tone="danger" title="Balance Sheet is not ready to report totals">
-              The workbook requires company-wide cash and bank, petty cash, emergency fund, receivables, project prepayments, payables, owner capital and retained earnings. AMS does not yet expose a reconciled ledger/opening-balance source for all those accounts, so no total assets, liabilities or equity is presented as authoritative.
+            <WorkbookNote title="Excel allocation policy">
+              Net Project Profit is calculated from contract value less vendor commitment and other obligations. The percentages below follow the Excel policy; project-level amounts are saved through the allocation register rather than inferred from an AMS project budget.
             </WorkbookNote>
-            <FinanceDataTable title="Workbook balance-sheet accounts" description="Readiness of the account source, rather than an unverified balance." columns={[{ label: 'Section' }, { label: 'Account' }, { label: 'Current source' }, { label: 'Readiness' }]} rows={[
-              { id: 'cash', cells: ['Assets', 'Cash & Bank (1000)', 'Invoice receipts and expense activity only', <AdminStatusBadge tone="warning">Opening balance missing</AdminStatusBadge>] },
-              { id: 'petty', cells: ['Assets', 'Petty Cash (1100)', 'No independent petty-cash ledger', <AdminStatusBadge tone="warning">Ledger required</AdminStatusBadge>] },
-              { id: 'reserve', cells: ['Assets', 'Emergency Fund (1200)', 'Allocation policy only', <AdminStatusBadge tone="warning">Balance not posted</AdminStatusBadge>] },
-              { id: 'ar', cells: ['Assets', 'Accounts Receivable (1300)', 'Derived from invoice outstanding', <AdminStatusBadge tone="success">Source available</AdminStatusBadge>] },
-              { id: 'prepayment', cells: ['Assets', 'Project Asset / Prepayment (1400)', 'No dedicated prepayment register', <AdminStatusBadge tone="warning">Register required</AdminStatusBadge>] },
-              { id: 'ap', cells: ['Liabilities', 'Accounts Payable (2000)', 'Vendor contracts, not vendor bills', <AdminStatusBadge tone="warning">Bill ledger required</AdminStatusBadge>] },
-              { id: 'capital', cells: ['Equity', 'Owner / Capital (3000)', 'Opening equity not configured', <AdminStatusBadge tone="warning">Opening balance missing</AdminStatusBadge>] },
-              { id: 'retained', cells: ['Equity', 'Retained Earnings (3100)', 'Closing journal not persisted', <AdminStatusBadge tone="warning">Journal required</AdminStatusBadge>] }
-            ]} emptyMessage="No balance-sheet account mapping is available." />
+            <AdminMetricStrip metrics={[
+              {id:'alloc-petty',label:'Petty cash reserve',value:'10%',context:'Of Net Project Profit',icon:<WalletCards size={15}/>},
+              {id:'alloc-emergency',label:'Emergency fund',value:'10%',context:'Of Net Project Profit',icon:<ShieldAlert size={15}/>},
+              {id:'alloc-reward',label:'Team Reward',value:'10%',context:'Separate from Project Team Fee',icon:<CircleDollarSign size={15}/>},
+              {id:'alloc-company',label:'Company operational fund',value:'70%',context:'Remainder after the three standard allocations',icon:<Landmark size={15}/>}
+            ]}/>
+            <FinanceDataTable title="Project Allocation" description="Amounts are calculated on the server from each saved project's contract and obligation amounts." columns={[{label:'Project'},{label:'Net project profit',align:'right'},{label:'Petty cash reserve',align:'right'},{label:'Emergency fund',align:'right'},{label:'Team Reward',align:'right'},{label:'Company operational fund',align:'right'},{label:'Emergency fund status'},{label:'Actions'}]} rows={records.map((record)=>({id:record.id,cells:[String(record.payload.projectName||record.projectId||'—'),formatMoney(Number(record.payload.netProjectProfit)||0),formatMoney(Number(record.payload.pettyCashReserve ?? record.payload.pettyCash)||0),formatMoney(Number(record.payload.emergencyFund)||0),formatMoney(Number(record.payload.teamReward)||0),formatMoney(Number(record.payload.companyOperationalFund)||0),<StatusBadge value={record.payload.emergencyStatus||record.status}/>,registerRecordActions('project-allocation',record)]}))} emptyMessage="No project allocation has been saved yet. Configure it from the current contract value and project obligations." actions={registerAddButton('project-allocation','Calculate project allocation')}/>
+            <FinanceDataTable title="Team Reward distribution" description="Workbook split of the 10% Team Reward allocation." columns={[{label:'Recipient group'},{label:'Percentage of Net Project Profit'},{label:'Share of Team Reward'}]} rows={[
+              {id:'sales',cells:['Sales','5%','50%']},
+              {id:'vendor',cells:['Vendor / PIC','2.5%','25%']},
+              {id:'management',cells:['Management','2.5%','25%']}
+            ]}/>
           </div>
         );
-      case 'journal': {
-        const journalSources = [
-          ...reportInvoices.filter((invoice) => getInvoiceOutstanding(invoice) > 0 || getInvoiceCollected(invoice) > 0).map((invoice) => ({
-            id: 'invoice-' + invoice.id,
-            date: getInvoiceDate(invoice),
-            reference: invoice.invoiceNumber,
-            description: 'Invoice source · ' + invoiceClient(invoice),
-            amount: Number(invoice.total) || 0,
-            source: 'Invoice'
-          })),
-          ...cashMovements.map((entry) => ({
-            id: entry.id,
-            date: entry.date,
-            reference: entry.reference,
-            description: entry.description,
-            amount: entry.cashIn || entry.cashOut,
-            source: entry.source
-          }))
-        ].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 50);
+      }
+      case 'team-fee': {
+        const feeRecords=getRegisterRecords('team-fee').filter((record)=>matching([record.payload.projectName,record.projectId,record.payload.memberName,record.payload.role,record.payload.paymentStatus]));
+        const feeExpenses=expenses.filter((expense)=>classifyWorkbookExpense(expense)==='projectTeamFee');
         return (
           <div className="space-y-4">
-            <WorkbookNote tone="danger" title="Source activity is not a posted General Journal">
-              The current Finance API has no persistent journal header/line service. Rows below are source transactions awaiting posting, not debit/credit journal entries. Do not use this list as an accounting ledger or as proof that the trial balance balances.
+            <WorkbookNote title="Team Fee and Team Reward are separate workbook categories">
+              The member-level Team Fee register is persistent and stores project, member, role, fee amount, due date and payment state. Expense records classified as Project Team Fee are shown separately as source costs; they are not automatically assumed to settle a member-level entitlement.
             </WorkbookNote>
-            <FinanceDataTable title="Transactions awaiting journal posting" description="Recent invoice, receipt and expense source activity; duplicate source references are retained for traceability." columns={[{ label: 'Date' }, { label: 'Reference' }, { label: 'Source' }, { label: 'Description' }, { label: 'Amount', align: 'right' }, { label: 'Posting state' }]} rows={journalSources.map((row) => ({
-              id: row.id,
-              cells: [formatDate(row.date), row.reference || '—', row.source, row.description, formatMoney(row.amount), <AdminStatusBadge tone="warning">Not posted</AdminStatusBadge>]
-            }))} emptyMessage="No invoice, payment or expense source transactions are available." />
-            <FinanceDataTable title="Workbook account posting map" description="Reference rules from the workbook Chart of Accounts; journal generation must be implemented with auditable posting rules." columns={[{ label: 'Event' }, { label: 'Debit' }, { label: 'Credit' }, { label: 'Posting dependency' }]} rows={[
-              { id: 'invoice', cells: ['Invoice issued', '1300 · Accounts Receivable', '4000 · Project Revenue', 'Invoice status and tax treatment'] },
-              { id: 'receipt', cells: ['Client payment', '1000 · Cash & Bank', '1300 · Accounts Receivable', 'Payment record and bank account'] },
-              { id: 'vendor-bill', cells: ['Vendor bill approved', '5100 · Vendor / Direct Project Cost', '2000 · Accounts Payable', 'Dedicated vendor bill and project reference'] },
-              { id: 'vendor-payment', cells: ['Vendor bill paid', '2000 · Accounts Payable', '1000 · Cash & Bank', 'Bill reference and payment proof'] },
-              { id: 'petty-cash-transfer', cells: ['Bank to petty cash', '1100 · Petty Cash Reserve', '1000 · Cash & Bank', 'Transfer ID shared by both cash ledgers'] }
-            ]} emptyMessage="No account posting rules are available." />
+            <FinanceDataTable title="Project Team Fee allocation" description="One row per project and team member; status is maintained independently from Team Reward." columns={[{label:'Project'},{label:'Member'},{label:'Role'},{label:'Fee amount',align:'right'},{label:'Due date'},{label:'Payment status'},{label:'Actions'}]} rows={feeRecords.map((record)=>({id:record.id,cells:[String(record.payload.projectName||record.projectId||'—'),String(record.payload.memberName||'—'),String(record.payload.role||'—'),formatMoney(Number(record.payload.feeAmount)||0),formatDate(record.payload.dueDate),<StatusBadge value={record.payload.paymentStatus||record.status}/>,registerRecordActions('team-fee',record)]}))} emptyMessage="No individual Team Fee allocation has been recorded." actions={registerAddButton('team-fee','Add team fee')}/>
+            <FinanceDataTable title="Project Team Fee expense sources" description="Actual expense records that are explicitly classified as Project Team Fee." columns={[{label:'Date'},{label:'Project'},{label:'Description'},{label:'Amount',align:'right'},{label:'Record state'}]} rows={feeExpenses.map((expense)=>({id:expense.id,cells:[formatDate(expense.date),projects.find((project)=>project.id===expense.projectId)?.name||expense.projectId||'Not linked',expense.description,formatMoney(Number(expense.amount)||0,String((expense as any).currency||'IDR')),<StatusBadge value={(expense as any).status||'recorded'}/>]}))} emptyMessage="No expense source record is classified as Project Team Fee."/>
+          </div>
+        );
+      }
+      case 'balance-sheet': {
+        const openings=getRegisterRecords('balance-sheet-opening').filter((record)=>matching([record.payload.accountCode,record.payload.asOfDate,record.payload.notes]));
+        const latestByAccount=new Map<string,WorkbookRecord>();
+        for(const record of openings.slice().sort((a,b)=>String(a.payload.asOfDate||'').localeCompare(String(b.payload.asOfDate||'')))){
+          latestByAccount.set(String(record.payload.accountCode||''),record);
+        }
+        return (
+          <div className="space-y-4">
+            <WorkbookNote tone="warning" title="Balance Sheet totals are not yet authoritative">
+              Opening balances and account mappings are persisted, but invoice and expense activity is not yet fully posted into the General Journal. Until the full posting bridge and reconciliation are in place, this tab deliberately avoids presenting a fabricated total-assets / liabilities / equity balance.
+            </WorkbookNote>
+            <FinanceDataTable title="Workbook Balance Sheet account mapping" description="Current source coverage for the Excel account classes." columns={[{label:'Section'},{label:'Account'},{label:'Current source'},{label:'Readiness'}]} rows={[
+              {id:'cash',cells:['Assets','Cash & Bank (1000)','Invoice receipts, expenses and cash movements',<AdminStatusBadge tone={getOpeningBalance('1000')===null?'warning':'success'}>{getOpeningBalance('1000')===null?'Opening balance missing':'Opening balance saved'}</AdminStatusBadge>]},
+              {id:'petty',cells:['Assets','Petty Cash Reserve (1100)','Dedicated opening and voucher records',<AdminStatusBadge tone={getOpeningBalance('1100')===null?'warning':'success'}>{getOpeningBalance('1100')===null?'Opening balance missing':'Opening balance saved'}</AdminStatusBadge>]},
+              {id:'emergency',cells:['Assets','Emergency Fund (1200)','Opening balance and allocation registers',<AdminStatusBadge tone={getOpeningBalance('1200')===null?'warning':'success'}>{getOpeningBalance('1200')===null?'Opening balance missing':'Opening balance saved'}</AdminStatusBadge>]},
+              {id:'ar',cells:['Assets','Accounts Receivable (1300)','Derived from the existing invoice balance',<AdminStatusBadge tone="success">Source available</AdminStatusBadge>]},
+              {id:'prepayment',cells:['Assets','Project Asset / Prepayment (1400)','Opening balance only; no transaction roll-forward yet',<AdminStatusBadge tone="warning">Posting bridge required</AdminStatusBadge>]},
+              {id:'ap',cells:['Liabilities','Accounts Payable (2000)','Dedicated vendor bill and payment records',<AdminStatusBadge tone="success">Source available</AdminStatusBadge>]},
+              {id:'capital',cells:['Equity','Owner / Capital (3000)','Opening balance entry',<AdminStatusBadge tone={latestByAccount.has('3000')?'success':'warning'}>{latestByAccount.has('3000')?'Opening balance saved':'Opening balance missing'}</AdminStatusBadge>]},
+              {id:'retained',cells:['Equity','Retained Earnings (3100)','Opening balance and period closing journal',<AdminStatusBadge tone={latestByAccount.has('3100')?'success':'warning'}>{latestByAccount.has('3100')?'Opening balance saved':'Journal bridge required'}</AdminStatusBadge>]}
+            ]} actions={registerAddButton('balance-sheet-opening','Record opening balance')}/>
+            <FinanceDataTable title="Opening balance register" description="Persistent account opening entries. These records alone do not constitute a fully reconciled Balance Sheet." columns={[{label:'As of date'},{label:'Account code'},{label:'Account'},{label:'Balance side'},{label:'Opening amount',align:'right'},{label:'Notes'},{label:'Actions'}]} rows={openings.map((record)=>({id:record.id,cells:[formatDate(record.payload.asOfDate),String(record.payload.accountCode||''),EXCEL_CHART_OF_ACCOUNTS.find((account)=>account.code===String(record.payload.accountCode))?.name||String(record.payload.accountCode||''),String(record.payload.side||''),formatMoney(Number(record.payload.openingAmount)||0),String(record.payload.notes||'—'),registerRecordActions('balance-sheet-opening',record)]}))} emptyMessage="No opening balances have been entered."/>
+          </div>
+        );
+      }
+      case 'journal': {
+        const records=getRegisterRecords('journal-entry').filter((record)=>matching([record.payload.date,record.payload.reference,record.payload.description,record.payload.projectId,record.status]));
+        const journalSources=[
+          ...reportInvoices.filter((invoice)=>getInvoiceOutstanding(invoice)>0||getInvoiceCollected(invoice)>0).map((invoice)=>({id:'invoice-'+invoice.id,date:getInvoiceDate(invoice),reference:invoice.invoiceNumber,description:'Invoice source · '+invoiceClient(invoice),amount:Number(invoice.total)||0,source:'Invoice'})),
+          ...cashMovements.map((entry)=>({id:entry.id,date:entry.date,reference:entry.reference,description:entry.description,amount:entry.cashIn||entry.cashOut,source:entry.source}))
+        ].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,50);
+        return (
+          <div className="space-y-4">
+            <WorkbookNote tone="warning" title="Journal entries are stored separately from unposted source activity">
+              Journal entries use double-entry lines and are checked server-side so total debit equals total credit. Existing invoice and expense events remain source transactions until an explicit audited posting bridge is implemented; they are not claimed as journalled automatically.
+            </WorkbookNote>
+            <FinanceDataTable title="General Journal" description="Draft entries need a different authorized user to approve/post. Posted entries cannot be edited or deleted." columns={[{label:'Date'},{label:'Reference'},{label:'Description'},{label:'Project'},{label:'Debit total',align:'right'},{label:'Credit total',align:'right'},{label:'Status'},{label:'Actions'}]} rows={records.map((record)=>({id:record.id,cells:[formatDate(record.payload.date),String(record.payload.reference||record.recordKey),String(record.payload.description||''),String(record.payload.projectId||'—'),formatMoney(Number(record.payload.debitTotal)||0),formatMoney(Number(record.payload.creditTotal)||0),<StatusBadge value={record.status}/>,registerRecordActions('journal-entry',record)]}))} emptyMessage="No general journal entries have been saved." actions={registerAddButton('journal-entry','Add journal entry')}/>
+            <FinanceDataTable title="Source transactions awaiting journal posting" description="Recent existing-source activity for traceability; these are not posted journal lines." columns={[{label:'Date'},{label:'Reference'},{label:'Source'},{label:'Description'},{label:'Amount',align:'right'},{label:'Posting state'}]} rows={journalSources.map((row)=>({id:row.id,cells:[formatDate(row.date),row.reference||'—',row.source,row.description,formatMoney(row.amount),<AdminStatusBadge tone="warning">Awaiting posting rule</AdminStatusBadge>]}))} emptyMessage="No invoice, receipt or expense source transactions are available."/>
+            <FinanceDataTable title="Excel Chart of Accounts posting map" description="Reference postings from the workbook's account structure. Transaction-to-journal automation is a separate controlled step." columns={[{label:'Event'},{label:'Debit'},{label:'Credit'},{label:'Posting dependency'}]} rows={[
+              {id:'invoice',cells:['Invoice issued','1300 · Accounts Receivable','4000 · Project Revenue','Invoice and tax treatment']},
+              {id:'receipt',cells:['Client payment','1000 · Cash & Bank','1300 · Accounts Receivable','Payment record / bank account']},
+              {id:'vendor-bill',cells:['Vendor bill approved','5100 · Vendor / Direct Project Cost','2000 · Accounts Payable','Bill approval and project reference']},
+              {id:'vendor-payment',cells:['Vendor bill paid','2000 · Accounts Payable','1000 · Cash & Bank','Bill reference and payment proof']},
+              {id:'petty-transfer',cells:['Bank to petty cash','1100 · Petty Cash Reserve','1000 · Cash & Bank','Shared internal transfer ID']}
+            ]}/>
           </div>
         );
       }
@@ -818,12 +1466,21 @@ export const AdminFinanceWorkspace: React.FC = () => {
           </AdminStatusBadge>
         </div>
       </div>
+      {registerErrors.length > 0 && (
+        <WorkbookNote tone="warning" title="Supplementary Finance register warning">
+          {registerErrors.length} of {SUPPLEMENTARY_FINANCE_RECORD_TYPES.length} supplementary register requests failed. The service requires the configured PostgreSQL data source; values from unavailable registers are not inferred. {registerErrors[0]}
+        </WorkbookNote>
+      )}
+      {registerActionError && !editor && (
+        <WorkbookNote tone="danger" title="Finance action needs attention">{registerActionError}</WorkbookNote>
+      )}
       {sourceErrors.length > 0 && (
         <WorkbookNote tone="warning" title="Finance source warning">
           {sourceErrors.join(' · ')}. Check the connected AMS source before interpreting the affected views.
         </WorkbookNote>
       )}
       {loading ? renderLoading() : renderView(activeTab)}
+      {renderRegisterEditor()}
       <div className="flex flex-col gap-2 border-t border-line pt-3 text-[11px] leading-5 text-muted sm:flex-row sm:items-center sm:justify-between">
         <span>Source of truth for workflow design: Kapitech Finance Final Automated.xlsx.</span>
         <span className="inline-flex items-center gap-1.5"><CalendarDays size={13} /> Excel-alignment implementation · reports reflect connected AMS records</span>
