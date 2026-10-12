@@ -2305,7 +2305,11 @@ export const AdminProjects: React.FC = () => {
               </div>
             )}
           >
-            {selectedSprintProject ? (
+            {loading && !selectedSprintProject ? (
+              <div role="status" aria-label="Loading project delivery" className="grid min-h-[360px] gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
+                {[1, 2, 3, 4].map(item => <div key={item} className="h-64 animate-pulse rounded-card border border-line bg-bg" />)}
+              </div>
+            ) : selectedSprintProject ? (
               <>
                 <div className="grid gap-3 border-b border-line bg-bg/35 p-4 sm:p-5 lg:grid-cols-[minmax(0,1.6fr)_repeat(4,minmax(100px,0.5fr))]">
                   <div className="min-w-0 rounded-card border border-line bg-panel p-4">
@@ -2695,7 +2699,15 @@ export const AdminProjects: React.FC = () => {
       )}
 
       {/* CONTEXTUAL TASK DETAIL DRAWER */}
-      {view === 'budget' && (
+      {loading && (view === 'budget' || view === 'archived') && (
+        <AdminPanel title="Loading projects" description="Loading project records from the shared workspace.">
+          <div role="status" aria-label="Loading project records" className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4].map(item => <div key={item} className="h-24 animate-pulse rounded-card border border-line bg-bg" />)}
+          </div>
+        </AdminPanel>
+      )}
+
+      {view === 'budget' && !loading && (
         <>
           <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[
@@ -2781,7 +2793,7 @@ export const AdminProjects: React.FC = () => {
         </>
       )}
 
-      {view === 'archived' && (
+      {view === 'archived' && !loading && (
         <div className="space-y-4">
           <section data-ams-feature-slug="projects-archived-kpis" data-ams-slug="projects-archived-kpis" aria-label="Archived project summary">
             <AdminMetricStrip
