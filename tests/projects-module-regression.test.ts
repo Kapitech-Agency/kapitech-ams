@@ -133,3 +133,16 @@ test('Sprint task sorting uses a transitive status order with stable priority an
   assert.ok(source.includes("(a.dueDate || '9999-12-31').localeCompare(b.dueDate || '9999-12-31')"));
   assert.ok(!source.includes('if (a.status !== b.status) return 0;'));
 });
+
+test('Project details expose client, schedule, team, technology, and milestone context', async () => {
+  const source = await read('src/pages/admin/AdminProjects.tsx');
+
+  assert.ok(source.includes("['Start date', formatDate(selectedProjectDetail.startDate)]"));
+  assert.ok(source.includes("['Client contact', selectedProjectDetail.clientName || 'Not provided']"));
+  assert.ok(source.includes("['Client email', selectedProjectDetail.clientEmail || 'Not provided']"));
+  assert.ok(source.includes('>Team members</div>'));
+  assert.ok(source.includes('>Technology stack</div>'));
+  assert.ok(source.includes('aria-label="Project milestones"'));
+  assert.ok(source.includes("milestone.completed ? 'Completed' : overdueMilestone ? 'Overdue' : 'Upcoming'"));
+  assert.ok(source.includes("formatAmount(milestone.paymentTrigger, currency)"));
+});
