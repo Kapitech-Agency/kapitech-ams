@@ -37,6 +37,7 @@ import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { Modal } from '../../components/ui/Modal';
+import { Drawer } from '../../components/ui/Drawer';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import { api } from '../../lib/apiClient';
@@ -1819,7 +1820,7 @@ export const AdminTeams: React.FC = () => {
         )}
       </Modal>
 
-      <Modal
+      <Drawer
         open={vendorFormOpen}
         onClose={() => setVendorFormOpen(false)}
         title={editingVendor ? 'Edit Vendor' : 'Add Vendor'}
@@ -1847,7 +1848,7 @@ export const AdminTeams: React.FC = () => {
             <Button type="submit" variant="primary" loading={savingVendor}>{editingVendor ? 'Save changes' : 'Create vendor'}</Button>
           </div>
         </form>
-      </Modal>
+      </Drawer>
 
       <Modal
         open={Boolean(vendorDetail)}
