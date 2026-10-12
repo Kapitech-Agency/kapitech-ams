@@ -234,6 +234,7 @@ class ModuleRouteErrorBoundary extends React.Component<
   { children: React.ReactNode },
   { error: Error | null }
 > {
+  props!: { children: React.ReactNode };
   state: { error: Error | null } = { error: null };
 
   static getDerivedStateFromError(error: Error) {
