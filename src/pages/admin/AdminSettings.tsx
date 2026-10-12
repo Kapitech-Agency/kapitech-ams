@@ -35,8 +35,6 @@ import {
   SecurityAuditLog,
   createAdminAccount,
   deleteAdminAccount,
-  fetchAdminAccounts,
-  fetchServerAuditLogs,
   getAdminSession,
   getStoredAdminCredentials,
   isMasterAdministrator,
@@ -177,10 +175,6 @@ export const AdminSettings: React.FC = () => {
     Boolean(session?.user?.permissions?.canViewSecurityAuditLogs);
   const isCurrentMaster = isSuperAdmin;
   // Authenticated users must be able to configure their own MFA even without admin-management rights.
-  const mfaSetupRequired =
-    searchParams.get('mfaRequired') === '1' ||
-    session?.user?.mfaEnabled !== true;
-
   const normalizeTab = (value: string | null): SettingsTab => {
     if (value === 'audit') return 'audit';
     if (value === 'security' || value === 'profile' || value === 'rbac') return 'security';
@@ -188,37 +182,35 @@ export const AdminSettings: React.FC = () => {
     return 'overview';
   };
 
-  const requestedTab = normalizeTab(searchParams.get('tab'));
+  const requestedTabParam = searchParams.get('tab');
+  const requestedTab = normalizeTab(requestedTabParam);
   const [activeTab, setActiveTab] = useState<SettingsTab>(requestedTab);
+  const fallbackTab: SettingsTab = canAccessServer ? 'overview' : canViewAuditLogs ? 'audit' : 'security';
 
   useEffect(() => {
-    const allowed = requestedTab === 'audit' && !canViewAuditLogs
-      ? 'overview'
-      : requestedTab === 'security' && !mfaSetupRequired && !canManageAdminAccounts && !canAccessServer
-        ? 'overview'
-        : requestedTab === 'integrations' && !canAccessServer
-          ? 'overview'
-          : requestedTab;
+    const allowed: SettingsTab =
+      ((requestedTab === 'overview' || requestedTab === 'integrations') && !canAccessServer) ||
+      (requestedTab === 'audit' && !canViewAuditLogs)
+        ? fallbackTab
+        : requestedTab;
 
     if (activeTab !== allowed) setActiveTab(allowed);
-    if (allowed !== requestedTab || (searchParams.get('tab') === null && allowed !== 'overview')) {
+    if (allowed !== requestedTab || (requestedTabParam !== null && requestedTabParam !== allowed)) {
       setSearchParams({ tab: allowed }, { replace: true });
     }
   }, [
     activeTab,
     canAccessServer,
-    canManageAdminAccounts,
     canViewAuditLogs,
-    mfaSetupRequired,
+    fallbackTab,
     requestedTab,
-    searchParams,
+    requestedTabParam,
     setSearchParams
   ]);
 
   const selectTab = (tab: SettingsTab) => {
+    if ((tab === 'overview' || tab === 'integrations') && !canAccessServer) return;
     if (tab === 'audit' && !canViewAuditLogs) return;
-    if (tab === 'integrations' && !canAccessServer) return;
-    if (tab === 'security' && !mfaSetupRequired && !canManageAdminAccounts && !canAccessServer) return;
     setActiveTab(tab);
     setSearchParams({ tab });
   };
@@ -238,9 +230,11 @@ export const AdminSettings: React.FC = () => {
   const [integrityLoading, setIntegrityLoading] = useState(false);
   const [snapshotLoading, setSnapshotLoading] = useState(false);
   const [overviewMessage, setOverviewMessage] = useState<{ tone: 'success' | 'warning' | 'danger'; text: string } | null>(null);
+  const [overviewLoadError, setOverviewLoadError] = useState<string | null>(null);
 
   const [logs, setLogs] = useState<SecurityAuditLog[]>([]);
   const [auditLoading, setAuditLoading] = useState(false);
+  const [auditError, setAuditError] = useState<string | null>(null);
   const [auditQuery, setAuditQuery] = useState('');
   const [auditOutcome, setAuditOutcome] = useState<AuditOutcome>('all');
   const [auditPage, setAuditPage] = useState(1);
@@ -248,6 +242,9 @@ export const AdminSettings: React.FC = () => {
 
   const [accounts, setAccounts] = useState<AdminAccount[]>([]);
   const [accountsLoading, setAccountsLoading] = useState(false);
+  const [accountsError, setAccountsError] = useState<string | null>(null);
+  const [accountFormMessage, setAccountFormMessage] = useState<{ success: boolean; text: string } | null>(null);
+  const [deleteAccountMessage, setDeleteAccountMessage] = useState<string | null>(null);
   const [accountPage, setAccountPage] = useState(1);
   const [accountPageSize, setAccountPageSize] = useState(10);
   const [isAddAccountModalOpen, setIsAddAccountModalOpen] = useState(false);
@@ -299,6 +296,7 @@ export const AdminSettings: React.FC = () => {
   }, [session?.rememberMe]);
 
   const handleStartMfaSetup = async () => {
+    if (mfaLoading || mfaEnabled) return;
     setMfaLoading(true);
     setMfaMessage(null);
     try {
@@ -326,6 +324,7 @@ export const AdminSettings: React.FC = () => {
 
   const handleVerifyMfaSetup = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (mfaLoading) return;
     const code = mfaSetupCode.replace(/\D/g, '').slice(0, 6);
     if (!/^\d{6}$/.test(code)) {
       setMfaMessage({ success: false, text: 'Enter the 6-digit TOTP code from your authenticator app.' });
@@ -358,6 +357,7 @@ export const AdminSettings: React.FC = () => {
 
   const handleDisableMfa = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (mfaLoading || !mfaEnabled) return;
     if (!mfaDisablePassword || !/^\d{6}$/.test(mfaDisableCode)) {
       setMfaMessage({ success: false, text: 'Enter the current password and 6-digit MFA code to disable MFA.' });
       return;
@@ -419,35 +419,57 @@ export const AdminSettings: React.FC = () => {
     maintenanceMode: false
   });
   const [metaSaving, setMetaSaving] = useState(false);
-  const [metaMessage, setMetaMessage] = useState<string | null>(null);
+  const [metaMessage, setMetaMessage] = useState<{ success: boolean; text: string } | null>(null);
 
   const loadOverview = useCallback(async () => {
     if (!canAccessServer) return;
     setOverviewLoading(true);
+    setOverviewLoadError(null);
     setNotificationStatus('checking');
     try {
       const [backupRes, securityRes, notificationRes, readinessRes] = await Promise.all([
-        api.system.getBackups(),
-        api.system.securityStatus(),
-        api.notifications.getSettings(),
-        api.system.productionReadiness()
+        api.system.getBackups().catch(() => null),
+        api.system.securityStatus().catch(() => null),
+        api.notifications.getSettings().catch(() => null),
+        api.system.productionReadiness().catch(() => null)
       ]);
+      const failures: string[] = [];
 
-      if (backupRes.success && backupRes.data) {
+      if (backupRes?.success && backupRes.data) {
         setBackups(Array.isArray(backupRes.data.backups) ? backupRes.data.backups : []);
-        const res = backupRes;
-        setBackupRetentionDays(Number(res.data.retention ?? res.data.retentionDays ?? 14));
+        setBackupRetentionDays(Number(backupRes.data.retention ?? backupRes.data.retentionDays ?? 14));
+      } else {
+        failures.push('backup status');
       }
-      if (securityRes.success && securityRes.data?.status) {
+
+      if (securityRes?.success && securityRes.data?.status) {
         setSecurityStatus(securityRes.data.status);
         setBackupIntegrity(securityRes.data.status.backupIntegrity);
+      } else {
+        failures.push('security status');
       }
-      setNotificationStatus(notificationRes.success ? 'connected' : 'unavailable');
-      if (readinessRes.success && readinessRes.data) {
+
+      if (notificationRes?.success) {
+        setNotificationStatus('connected');
+      } else {
+        setNotificationStatus('unavailable');
+        failures.push('notification status');
+      }
+
+      if (readinessRes?.success && readinessRes.data) {
         setProductionReadiness(readinessRes.data);
+      } else {
+        failures.push('production readiness');
       }
-    } catch {
+
+      setOverviewLoadError(
+        failures.length
+          ? 'Some system status could not be loaded: ' + failures.join(', ') + '. Retry to refresh the latest server data.'
+          : null
+      );
+    } catch (error) {
       setNotificationStatus('unavailable');
+      setOverviewLoadError(error instanceof Error ? error.message : 'System status could not be loaded. Try again.');
     } finally {
       setOverviewLoading(false);
     }
@@ -456,11 +478,15 @@ export const AdminSettings: React.FC = () => {
   const loadAuditLogs = useCallback(async () => {
     if (!canViewAuditLogs) return;
     setAuditLoading(true);
+    setAuditError(null);
     try {
-      const next = await fetchServerAuditLogs();
-      setLogs(next);
-    } catch {
-      setLogs([]);
+      const response = await api.auditLogs.getAll();
+      if (!response.success || !Array.isArray(response.data?.logs)) {
+        throw new Error(response.error || 'Audit logs could not be loaded. Try again.');
+      }
+      setLogs(response.data.logs);
+    } catch (error) {
+      setAuditError(error instanceof Error ? error.message : 'Audit logs could not be loaded. Try again.');
     } finally {
       setAuditLoading(false);
     }
@@ -469,27 +495,34 @@ export const AdminSettings: React.FC = () => {
   const loadAccounts = useCallback(async () => {
     if (!canManageAdminAccounts) return;
     setAccountsLoading(true);
+    setAccountsError(null);
     try {
-      const next = await fetchAdminAccounts();
-      setAccounts(next);
-    } catch {
-      setAccounts([]);
+      const response = await api.auth.getUsers();
+      if (!response.success || !Array.isArray(response.data?.users)) {
+        throw new Error(response.error || 'Admin accounts could not be loaded. Try again.');
+      }
+      setAccounts(response.data.users);
+    } catch (error) {
+      setAccountsError(error instanceof Error ? error.message : 'Admin accounts could not be loaded. Try again.');
     } finally {
       setAccountsLoading(false);
     }
   }, [canManageAdminAccounts]);
 
   const loadMeta = useCallback(async () => {
+    setMetaMessage(null);
     try {
       const res = await api.cms.getSettings();
-      if (res.success && res.data?.settings) {
-        setMetaSettings(current => ({
-          ...current,
-          ...res.data.settings
-        }));
+      if (!res.success || !res.data?.settings) {
+        setMetaMessage({ success: false, text: res.error || 'Brand and metadata settings could not be loaded. Try again.' });
+        return;
       }
-    } catch {
-      // Keep the last known metadata state when the server is temporarily unavailable.
+      setMetaSettings(current => ({
+        ...current,
+        ...res.data.settings
+      }));
+    } catch (error) {
+      setMetaMessage({ success: false, text: error instanceof Error ? error.message : 'Brand and metadata settings could not be loaded. Try again.' });
     }
   }, []);
 
@@ -610,6 +643,8 @@ export const AdminSettings: React.FC = () => {
   );
 
   const handleOpenAddAccount = () => {
+    if (!canManageAdminAccounts || isCreatingAccount) return;
+    setAccountFormMessage(null);
     setNewAccName('');
     setNewAccUsername('');
     setNewAccEmail('');
@@ -633,8 +668,10 @@ export const AdminSettings: React.FC = () => {
 
   const submitNewAccount = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (newAccPassword.length < 12) {
-      setAccountMessage({ success: false, text: 'Temporary password must be 12 to 128 characters.' });
+    if (!canManageAdminAccounts || isCreatingAccount) return;
+    setAccountFormMessage(null);
+    if (newAccPassword.length < 12 || newAccPassword.length > 128) {
+      setAccountFormMessage({ success: false, text: 'Temporary password must be 12 to 128 characters.' });
       return;
     }
     setIsCreatingAccount(true);
@@ -649,33 +686,35 @@ export const AdminSettings: React.FC = () => {
       });
       if (res.success) {
         setIsAddAccountModalOpen(false);
+        setAccountFormMessage(null);
         setAccountMessage({ success: true, text: 'Account created successfully.' });
         await loadAccounts();
       } else {
-        setAccountMessage({ success: false, text: res.error || 'Account creation failed. Check the form and try again.' });
+        setAccountFormMessage({ success: false, text: res.error || 'Account creation failed. Check the form and try again.' });
       }
     } catch (error) {
-      setAccountMessage({ success: false, text: error instanceof Error ? error.message : 'Account creation failed. Check the form and try again.' });
+      setAccountFormMessage({ success: false, text: error instanceof Error ? error.message : 'Account creation failed. Check the form and try again.' });
     } finally {
       setIsCreatingAccount(false);
     }
   };
 
   const confirmDeleteAccount = async () => {
-    if (!confirmDelete || isDeletingAccount) return;
+    if (!canManageAdminAccounts || !confirmDelete || isDeletingAccount) return;
+    setDeleteAccountMessage(null);
     setIsDeletingAccount(true);
     try {
       const res = await deleteAdminAccount(confirmDelete.id);
       if (res.success) {
+        setConfirmDelete(null);
         setAccountMessage({ success: true, text: 'Account deleted successfully.' });
         await loadAccounts();
       } else {
-        setAccountMessage({ success: false, text: res.error || 'Account deletion failed. Try again.' });
+        setDeleteAccountMessage(res.error || 'Account deletion failed. Try again.');
       }
     } catch (error) {
-      setAccountMessage({ success: false, text: error instanceof Error ? error.message : 'Account deletion failed. Try again.' });
+      setDeleteAccountMessage(error instanceof Error ? error.message : 'Account deletion failed. Try again.');
     } finally {
-      setConfirmDelete(null);
       setIsDeletingAccount(false);
     }
   };
@@ -706,13 +745,23 @@ export const AdminSettings: React.FC = () => {
     }
 
     setSecuritySaving(true);
-    const res = await updateAdminCredentials(currentPassword, { newPassword });
-    setSecuritySaving(false);
+    let res: { success: boolean; error?: string };
+    try {
+      res = await updateAdminCredentials(currentPassword, { newPassword });
+    } catch (error) {
+      setSecurityStatusMessage({
+        success: false,
+        text: error instanceof Error ? error.message : 'Password update failed. Check the current password and try again.'
+      });
+      return;
+    } finally {
+      setSecuritySaving(false);
+    }
     if (!res.success) {
       setSecurityStatusMessage({ success: false, text: res.error || 'Password update failed. Check the current password and try again.' });
       return;
     }
-    setSecurityStatusMessage({ success: true, text: 'Master password updated successfully.' });
+    setSecurityStatusMessage({ success: true, text: 'Account password updated successfully.' });
     setCurrentPassword('');
     setNewPassword('');
     setConfirmPassword('');
@@ -720,17 +769,18 @@ export const AdminSettings: React.FC = () => {
 
   const handleSaveMeta = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (metaSaving) return;
     setMetaSaving(true);
     setMetaMessage(null);
     try {
       const res = await api.cms.updateSettings(metaSettings);
       if (!res.success) {
-        setMetaMessage(res.error || 'Settings could not be saved. Check the fields and try again.');
+        setMetaMessage({ success: false, text: res.error || 'Settings could not be saved. Check the fields and try again.' });
         return;
       }
-      setMetaMessage('Brand and metadata settings saved.');
+      setMetaMessage({ success: true, text: 'Brand and metadata settings saved.' });
     } catch (error) {
-      setMetaMessage(error instanceof Error ? error.message : 'Settings could not be saved. Check the fields and try again.');
+      setMetaMessage({ success: false, text: error instanceof Error ? error.message : 'Settings could not be saved. Check the fields and try again.' });
     } finally {
       setMetaSaving(false);
     }
