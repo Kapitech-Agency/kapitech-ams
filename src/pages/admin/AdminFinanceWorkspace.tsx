@@ -13,6 +13,7 @@ import {
   EXCEL_CHART_OF_ACCOUNTS,
   FINANCE_WORKBOOK_GROUPS,
   buildFinanceSourceJournalDrafts,
+  getVendorBillInstallmentSchedule,
   getInvoiceCollected,
   getInvoiceDate,
   getInvoiceOutstanding,
@@ -232,9 +233,10 @@ const REGISTER_FORMS: Record<string, { title: string; description: string; field
   },
   'vendor-bill-payment': {
     title:'Record Vendor Payment',
-    description:'Payment is linked to a vendor bill. Cumulative payments are blocked if they exceed the bill amount.',
+    description:'Link the payment to a vendor bill and, where known, its 30% / 20% / 50% installment. Unassigned payments are allocated FIFO.',
     fields:[
       {key:'billId',label:'Vendor bill',type:'select',required:true,optionSource:'vendorBills'},
+      {key:'installmentNumber',label:'Scheduled payment',type:'select',required:true,options:['Unassigned · FIFO','1 · 30%','2 · 20%','3 · 50%'],defaultValue:'Unassigned · FIFO'},
       {key:'paidDate',label:'Payment date',type:'date',required:true},
       {key:'amount',label:'Payment amount',type:'number',required:true},
       {key:'method',label:'Payment method',type:'select',required:true,options:['bank_transfer','credit_card','cash','other'],defaultValue:'bank_transfer'},
@@ -537,6 +539,12 @@ export const AdminFinanceWorkspace: React.FC = () => {
       savedPayload.debitAccountCode = lines.find((line) => Number(line.debit) > 0)?.accountCode || '';
       savedPayload.creditAccountCode = lines.find((line) => Number(line.credit) > 0)?.accountCode || '';
       savedPayload.amount = Number(lines.find((line) => Number(line.debit) > 0)?.debit || 0);
+    }
+    if (record && type === 'vendor-bill-payment') {
+      const installmentNumber = Number(record.payload.installmentNumber || 0);
+      savedPayload.installmentNumber = installmentNumber >= 1 && installmentNumber <= 3
+        ? installmentNumber + ' · ' + [30, 20, 50][installmentNumber - 1] + '%'
+        : 'Unassigned · FIFO';
     }
     setEditor({ type, record, payload: { ...defaults, ...savedPayload, ...initialPayload } });
     setRegisterActionError(null);
@@ -1131,20 +1139,74 @@ export const AdminFinanceWorkspace: React.FC = () => {
           </div>
         );
       }
-      case 'vendors':
+      case 'vendors': {
+        const vendorBills = getRegisterRecords('vendor-bill').filter((record) => matching([
+          record.recordKey, record.payload.billNo, record.payload.vendorName, record.payload.projectName, record.payload.paymentStatus
+        ]));
+        const vendorPayments = getRegisterRecords('vendor-bill-payment');
+        const scheduleRows = vendorBills.map((bill) => {
+          const billPayments = vendorPayments.filter((payment) => String(payment.payload.billId || '') === bill.id);
+          const schedule = getVendorBillInstallmentSchedule(
+            Number(bill.payload.total) || 0,
+            billPayments.map((payment) => ({
+              id: payment.id, amount: payment.payload.amount,
+              installmentNumber: payment.payload.installmentNumber, paidDate: payment.payload.paidDate
+            })),
+            Array.isArray(bill.payload.paymentSchedule) ? bill.payload.paymentSchedule as number[] : undefined
+          );
+          const currency = String(bill.payload.currency || 'IDR');
+          const paid = sumAmounts<WorkbookRecord>(billPayments, (payment) => Number(payment.payload.amount) || 0);
+          const total = Number(bill.payload.total) || 0;
+          const next = schedule.find((installment) => installment.outstanding > 0.01);
+          return {
+            id: bill.id,
+            cells: [
+              String(bill.payload.billNo || bill.recordKey),
+              String(bill.payload.vendorName || '—'),
+              String(bill.payload.projectName || bill.projectId || '—'),
+              formatMoney(total, currency),
+              formatMoney(schedule[0].amount, currency),
+              formatMoney(schedule[0].paidAmount, currency),
+              formatMoney(schedule[1].amount, currency),
+              formatMoney(schedule[1].paidAmount, currency),
+              formatMoney(schedule[2].amount, currency),
+              formatMoney(schedule[2].paidAmount, currency),
+              formatMoney(paid, currency),
+              formatMoney(Math.max(0, total - paid), currency),
+              next ? 'Payment ' + next.number + ' · ' + next.percentage + '%' : 'Complete',
+              <StatusBadge value={bill.payload.paymentStatus || bill.status} />
+            ]
+          };
+        });
         return (
-          <FinanceDataTable
-            title="Vendor & freelancer directory"
-            description="Uses the existing AMS vendor and contract source. Payment schedule and vendor-bill status still need to be linked to the workbook's 30/20/50 schedule."
-            columns={[{ label: 'Vendor / company' }, { label: 'Type' }, { label: 'Service' }, { label: 'Rate', align: 'right' }, { label: 'Contracts', align: 'center' }, { label: 'Status' }]}
-            rows={vendors.filter((vendor) => matching([vendor.name, vendor.companyName, vendor.type, vendor.primaryCategory, vendor.skills.join(' ')])).map((vendor) => ({
-              id: vendor.id,
-              cells: [vendor.companyName || vendor.name, normaliseStatus(vendor.type), vendor.primaryCategory, formatMoney(Number(vendor.hourlyRate) || 0, vendor.currency), String(Array.isArray(vendor.contracts) ? vendor.contracts.length : 0), <StatusBadge value={vendor.status} />]
-            }))}
-            emptyMessage="No vendor records were returned by AMS."
-            actions={<Button type="button" variant="secondary" onClick={() => navigate('/admin/team?view=vendor-directory')}>Open vendor directory</Button>}
-          />
+          <div className="space-y-4">
+            <FinanceDataTable
+              title="Vendor & freelancer directory"
+              description="Uses the existing AMS vendor and contract source. Vendor payment commitments and stage settlements are summarized below from the bill and payment registers."
+              columns={[{ label: 'Vendor / company' }, { label: 'Type' }, { label: 'Service' }, { label: 'Rate', align: 'right' }, { label: 'Contracts', align: 'center' }, { label: 'Status' }]}
+              rows={vendors.filter((vendor) => matching([vendor.name, vendor.companyName, vendor.type, vendor.primaryCategory, vendor.skills.join(' ')])).map((vendor) => ({
+                id: vendor.id,
+                cells: [vendor.companyName || vendor.name, normaliseStatus(vendor.type), vendor.primaryCategory, formatMoney(Number(vendor.hourlyRate) || 0, vendor.currency), String(Array.isArray(vendor.contracts) ? vendor.contracts.length : 0), <StatusBadge value={vendor.status} />]
+              }))}
+              emptyMessage="No vendor records were returned by AMS."
+              actions={<Button type="button" variant="secondary" onClick={() => navigate('/admin/team?view=vendor-directory')}>Open vendor directory</Button>}
+            />
+            <FinanceDataTable
+              title="Vendor & Freelancer · 30% / 20% / 50% schedule"
+              description="Amounts and paid amounts are derived from each persisted bill and its linked payments. Unassigned legacy payments are allocated FIFO; the single bill due date remains authoritative because the workbook has no separate due date per installment."
+              columns={[
+                { label: 'Bill no.' }, { label: 'Vendor / freelancer' }, { label: 'Project' }, { label: 'Contract value', align: 'right' },
+                { label: 'Payment 1 · 30%', align: 'right' }, { label: 'Paid 1', align: 'right' },
+                { label: 'Payment 2 · 20%', align: 'right' }, { label: 'Paid 2', align: 'right' },
+                { label: 'Payment 3 · 50%', align: 'right' }, { label: 'Paid 3', align: 'right' },
+                { label: 'Total paid', align: 'right' }, { label: 'Outstanding', align: 'right' }, { label: 'Next payment' }, { label: 'Status' }
+              ]}
+              rows={scheduleRows}
+              emptyMessage="No vendor bills have been entered. Create a bill in Accounts Payable to generate the 30% / 20% / 50% schedule."
+            />
+          </div>
         );
+      }
       case 'project-finance': {
         const financeRecords=getRegisterRecords('project-finance');
         const rows=projects.filter((project)=>matching([project.name,project.clientCompany,project.clientName,project.status])).map((project)=>{

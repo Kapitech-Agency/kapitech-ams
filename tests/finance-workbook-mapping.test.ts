@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   classifyWorkbookExpense,
   buildFinanceSourceJournalDrafts,
+  getVendorBillInstallmentSchedule,
   EXCEL_CHART_OF_ACCOUNTS,
   FINANCE_WORKBOOK_GROUPS,
   getInvoiceCollected,
@@ -138,4 +139,28 @@ test('Source journal bridge skips unpaid, foreign-currency, petty-cash duplicate
   assert.ok(plan.skipped.some((item) => item.sourceType === 'invoice-payment' && /IDR-only/.test(item.reason)));
   assert.ok(plan.skipped.some((item) => item.sourceType === 'expense' && item.sourceId === 'unknown-expense' && /No unambiguous/.test(item.reason)));
   assert.ok(plan.skipped.some((item) => item.sourceType === 'expense' && item.sourceId === 'petty-expense' && /petty-cash/i.test(item.reason)));
+});
+
+
+test('Vendor & Freelancer schedule calculates 30/20/50 amounts and allocates unassigned payments FIFO', () => {
+  const schedule = getVendorBillInstallmentSchedule(3500000, [
+    { id: 'payment-1', amount: 1050000, paidDate: '2026-10-01' },
+    { id: 'payment-2', amount: 200000, installmentNumber: 2, paidDate: '2026-10-05' }
+  ]);
+  assert.deepEqual(schedule.map((item) => item.amount), [1050000, 700000, 1750000]);
+  assert.deepEqual(schedule.map((item) => item.paidAmount), [1050000, 200000, 0]);
+  assert.deepEqual(schedule.map((item) => item.outstanding), [0, 500000, 1750000]);
+  assert.deepEqual(schedule.map((item) => item.status), ['Paid', 'Partially Paid', 'Unpaid']);
+  assert.equal(schedule.reduce((sum, item) => sum + item.amount, 0), 3500000);
+
+  const legacy = getVendorBillInstallmentSchedule(3500000, [{ amount: 1200000 }]);
+  assert.deepEqual(legacy.map((item) => item.paidAmount), [1050000, 150000, 0]);
+  assert.equal(legacy[1].status, 'Partially Paid');
+});
+
+test('Vendor & Freelancer schedule retains overpayment anomalies for review', () => {
+  const schedule = getVendorBillInstallmentSchedule(1000, [{ amount: 400, installmentNumber: 1 }]);
+  assert.equal(schedule[0].status, 'Overpaid');
+  assert.equal(schedule[0].paidAmount, 400);
+  assert.equal(schedule[0].outstanding, 0);
 });

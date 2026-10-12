@@ -427,3 +427,88 @@ export function buildFinanceSourceJournalDrafts(
 
   return { drafts, skipped };
 }
+
+
+export interface VendorBillInstallmentSummary {
+  number: 1 | 2 | 3;
+  percentage: 30 | 20 | 50;
+  amount: number;
+  paidAmount: number;
+  outstanding: number;
+  status: 'Paid' | 'Partially Paid' | 'Unpaid' | 'Overpaid';
+}
+
+export interface VendorBillInstallmentPayment {
+  id?: unknown;
+  amount: unknown;
+  installmentNumber?: unknown;
+  paidDate?: unknown;
+}
+
+/**
+ * Mirrors the Vendor & Freelancer worksheet: calculate installment amounts, allocate payments
+ * explicitly tagged to a stage, and distribute legacy/unassigned payments FIFO. The workbook has
+ * one bill due date, not three installment due dates, so this function does not invent stage dates.
+ */
+export function getVendorBillInstallmentSchedule(
+  totalValue: unknown,
+  paymentRecords: VendorBillInstallmentPayment[],
+  percentages: number[] = [30, 20, 50]
+): VendorBillInstallmentSummary[] {
+  const roundCurrency = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+  const total = Math.max(0, roundCurrency(Number(totalValue) || 0));
+  const validPercentages = percentages.length === 3
+    && percentages.every((value) => Number.isFinite(value) && value >= 0)
+    && Math.abs(percentages.reduce((sum, value) => sum + value, 0) - 100) < 0.001
+    ? percentages
+    : [30, 20, 50];
+  const firstAmount = roundCurrency(total * validPercentages[0] / 100);
+  const secondAmount = roundCurrency(total * validPercentages[1] / 100);
+  const amounts = [firstAmount, secondAmount, roundCurrency(Math.max(0, total - firstAmount - secondAmount))];
+  const paid = [0, 0, 0];
+  const orderedPayments = paymentRecords.slice().sort((a, b) =>
+    String(a.paidDate || '').localeCompare(String(b.paidDate || '')) ||
+    String(a.id || '').localeCompare(String(b.id || ''))
+  );
+
+  for (const payment of orderedPayments) {
+    const amount = Math.max(0, roundCurrency(Number(payment.amount) || 0));
+    if (amount <= 0) continue;
+    const installmentNumber = Number(payment.installmentNumber || 0);
+    if ([1, 2, 3].includes(installmentNumber)) {
+      const index = installmentNumber - 1;
+      paid[index] = roundCurrency(paid[index] + amount);
+      continue;
+    }
+    let remaining = amount;
+    for (let index = 0; index < 3 && remaining > 0.009; index++) {
+      const balance = Math.max(0, roundCurrency(amounts[index] - paid[index]));
+      if (balance <= 0.009) continue;
+      const applied = Math.min(balance, remaining);
+      paid[index] = roundCurrency(paid[index] + applied);
+      remaining = roundCurrency(remaining - applied);
+    }
+    // Retain excess on the final stage so legacy overpayment anomalies remain visible, not hidden.
+    if (remaining > 0.009) paid[2] = roundCurrency(paid[2] + remaining);
+  }
+
+  return amounts.map((amount, index) => {
+    const paidAmount = roundCurrency(paid[index]);
+    const outstanding = Math.max(0, roundCurrency(amount - paidAmount));
+    const status: VendorBillInstallmentSummary['status'] = paidAmount > amount + 0.01
+      ? 'Overpaid'
+      : amount > 0 && paidAmount >= amount - 0.01
+        ? 'Paid'
+        : paidAmount > 0
+          ? 'Partially Paid'
+          : 'Unpaid';
+    return {
+      number: (index + 1) as 1 | 2 | 3,
+      percentage: validPercentages[index] as 30 | 20 | 50,
+      amount,
+      paidAmount,
+      outstanding,
+      status
+    };
+  });
+}

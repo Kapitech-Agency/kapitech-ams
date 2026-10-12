@@ -1,3 +1,4 @@
+import { getVendorBillInstallmentSchedule } from '../src/lib/financeWorkbook.ts';
 import crypto from 'node:crypto';
 import { getPostgresPool, withPostgresTransaction } from './postgres.ts';
 import { postgresAuditLogRepository, type AuditEntry } from './postgres-audit-log-repository.ts';
@@ -129,8 +130,14 @@ function normalise(type: FinanceWorkbookRecordType, raw: unknown, approval = fal
     case 'vendor-bill-payment': {
       const billId = txt(v.billId,160), paidDate = date(v.paidDate,'Payment date');
       if (!billId) throw new FinanceWorkbookValidationError('Vendor bill is required.');
+      const rawInstallment = txt(v.installmentNumber,60);
+      const installmentMatch = rawInstallment.match(/^([123])(?:\s|$)/);
+      if (rawInstallment && !/^unassigned\b/i.test(rawInstallment) && !installmentMatch) {
+        throw new FinanceWorkbookValidationError('Choose Payment 1 (30%), Payment 2 (20%), Payment 3 (50%), or Unassigned / FIFO.');
+      }
+      const installmentNumber = installmentMatch ? Number(installmentMatch[1]) : undefined;
       const reference = txt(v.reference,160) || uid('VP');
-      p = { billId, paidDate, amount:money(v.amount,'Payment amount',false), method:choice(v.method,['bank_transfer','credit_card','cash','other'],'Payment method','bank_transfer'), reference, notes:txt(v.notes,500), projectId:project };
+      p = { billId, ...(installmentNumber ? { installmentNumber } : {}), paidDate, amount:money(v.amount,'Payment amount',false), method:choice(v.method,['bank_transfer','credit_card','cash','other'],'Payment method','bank_transfer'), reference, notes:txt(v.notes,500), projectId:project };
       key = reference; period = periodOf(paidDate); status = 'posted'; break;
     }
     case 'operational-budget': {
@@ -243,10 +250,44 @@ export class PostgresFinanceWorkbookRepository {
     const result = await getPostgresPool().query<Row>('SELECT * FROM finance_workbook_records WHERE '+where.join(' AND ')+' ORDER BY updated_at DESC, created_at DESC',values);
     const rows = result.rows.map(mapRow);
     if (type==='vendor-bill') {
-      const paymentRows = await getPostgresPool().query<Row>("SELECT payload FROM finance_workbook_records WHERE record_type='vendor-bill-payment' AND archived_at IS NULL");
-      const paid = new Map<string,number>();
-      for (const row of paymentRows.rows) { const p=obj(row.payload); const billId=String(p.billId||''); paid.set(billId,(paid.get(billId)||0)+Number(p.amount||0)); }
-      return rows.map(bill=>{const total=Number(bill.payload.total||0), amountPaid=Math.min(total,paid.get(bill.id)||0); const due=String(bill.payload.dueDate||''); const paymentStatus=amountPaid>=total?'Paid':amountPaid>0?'Partially Paid':due<new Date().toISOString().slice(0,10)?'Overdue':'Unpaid'; return {...bill,payload:{...bill.payload,paidAmount:amountPaid,outstanding:Math.max(0,total-amountPaid),paymentStatus}};});
+      const paymentRows = await getPostgresPool().query<Row>("SELECT id,payload FROM finance_workbook_records WHERE record_type='vendor-bill-payment' AND archived_at IS NULL");
+      const paymentsByBill = new Map<string, Array<Record<string, any>>>();
+      for (const row of paymentRows.rows) {
+        const payment = obj(row.payload);
+        const billId = String(payment.billId || '');
+        if (!billId) continue;
+        const items = paymentsByBill.get(billId) || [];
+        items.push({ ...payment, id: row.id });
+        paymentsByBill.set(billId, items);
+      }
+      return rows.map(bill => {
+        const total = Number(bill.payload.total || 0);
+        const billPayments = paymentsByBill.get(bill.id) || [];
+        const rawPaid = billPayments.reduce((sum, payment) => sum + Math.max(0, Number(payment.amount) || 0), 0);
+        const amountPaid = Math.min(total, rawPaid);
+        const due = String(bill.payload.dueDate || '');
+        const paymentStatus = amountPaid >= total && total > 0
+          ? 'Paid'
+          : amountPaid > 0
+            ? 'Partially Paid'
+            : due < new Date().toISOString().slice(0,10)
+              ? 'Overdue'
+              : 'Unpaid';
+        const schedulePercentages = Array.isArray(bill.payload.paymentSchedule) ? bill.payload.paymentSchedule as number[] : undefined;
+        const installments = getVendorBillInstallmentSchedule(total, billPayments, schedulePercentages);
+        const next = installments.find((installment) => installment.outstanding > 0.01);
+        return {
+          ...bill,
+          payload: {
+            ...bill.payload,
+            paidAmount: amountPaid,
+            outstanding: Math.max(0, total - amountPaid),
+            paymentStatus,
+            installments,
+            nextPayment: next ? 'Payment ' + next.number + ' - ' + next.percentage + '%' : 'Complete'
+          }
+        };
+      });
     }
     return rows;
   }
@@ -264,8 +305,25 @@ export class PostgresFinanceWorkbookRepository {
         const bill=await client.query<Row>("SELECT * FROM finance_workbook_records WHERE record_type='vendor-bill' AND id=$1 AND archived_at IS NULL FOR UPDATE",[String(n.payload.billId)]);
         if(!bill.rows[0]) throw new FinanceWorkbookNotFoundError('Vendor bill was not found.');
         const paid=await client.query<Row>("SELECT payload FROM finance_workbook_records WHERE record_type='vendor-bill-payment' AND archived_at IS NULL AND payload->>'billId'=$1",[String(n.payload.billId)]);
-        const currentPaid=paid.rows.reduce((s:number,r:Row)=>s+Number(obj(r.payload).amount||0),0), total=Number(obj(bill.rows[0].payload).total||0);
-        if(currentPaid+Number(n.payload.amount)>total+0.01) throw new FinanceWorkbookConflictError('Vendor bill payments cannot exceed the bill amount.');
+        const billPayload = obj(bill.rows[0].payload);
+        const currentPaid=paid.rows.reduce((s:number,r:Row)=>s+Number(obj(r.payload).amount||0),0), total=Number(billPayload.total||0);
+        const paymentAmount = Number(n.payload.amount)||0;
+        if(currentPaid+paymentAmount>total+0.01) throw new FinanceWorkbookConflictError('Vendor bill payments cannot exceed the bill amount.');
+        const installmentNumber = Number(n.payload.installmentNumber||0);
+        if ([1,2,3].includes(installmentNumber)) {
+          const schedule = getVendorBillInstallmentSchedule(
+            total,
+            paid.rows.map((row:Row)=>obj(row.payload)),
+            Array.isArray(billPayload.paymentSchedule) ? billPayload.paymentSchedule as number[] : undefined
+          );
+          const installment = schedule.find((item)=>item.number===installmentNumber);
+          if (!installment || paymentAmount>installment.outstanding+0.01) {
+            throw new FinanceWorkbookConflictError(
+              'Payment exceeds the outstanding amount for Payment ' + installmentNumber +
+              '. Remaining installment balance: ' + Number(installment?.outstanding||0).toLocaleString('id-ID') + '.'
+            );
+          }
+        }
       }
       if(type==='journal-entry'||type==='balance-sheet-opening'){
         const acc=await client.query<Row>("SELECT payload FROM finance_workbook_records WHERE record_type='chart-of-accounts' AND status='active' AND archived_at IS NULL");
@@ -294,6 +352,28 @@ export class PostgresFinanceWorkbookRepository {
     if(type==='monthly-closing'&&n.payload.status==='Done'&&current.payload.status!=='Done') throw new FinanceWorkbookValidationError('Closing control sign-off must use the approval endpoint.');
     return withPostgresTransaction(async client=>{
       await this.ensurePeriodOpen(client,current.periodKey);
+      await this.ensurePeriodOpen(client,n.period);
+      if(type==='vendor-bill-payment'){
+        const bill=await client.query<Row>("SELECT * FROM finance_workbook_records WHERE record_type='vendor-bill' AND id=$1 AND archived_at IS NULL FOR UPDATE",[String(n.payload.billId)]);
+        if(!bill.rows[0]) throw new FinanceWorkbookNotFoundError('Vendor bill was not found.');
+        const otherPayments=await client.query<Row>("SELECT id,payload FROM finance_workbook_records WHERE record_type='vendor-bill-payment' AND archived_at IS NULL AND payload->>'billId'=$1 AND id<>$2 FOR UPDATE",[String(n.payload.billId),id]);
+        const billPayload=obj(bill.rows[0].payload);
+        const priorPaid=otherPayments.rows.reduce((sum:number,row:Row)=>sum+Number(obj(row.payload).amount||0),0);
+        const total=Number(billPayload.total||0), paymentAmount=Number(n.payload.amount)||0;
+        if(priorPaid+paymentAmount>total+0.01) throw new FinanceWorkbookConflictError('Vendor bill payments cannot exceed the bill amount.');
+        const installmentNumber=Number(n.payload.installmentNumber||0);
+        if([1,2,3].includes(installmentNumber)){
+          const schedule=getVendorBillInstallmentSchedule(
+            total,
+            otherPayments.rows.map((row:Row)=>obj(row.payload)),
+            Array.isArray(billPayload.paymentSchedule)?billPayload.paymentSchedule as number[]:undefined
+          );
+          const installment=schedule.find((item)=>item.number===installmentNumber);
+          if(!installment||paymentAmount>installment.outstanding+0.01){
+            throw new FinanceWorkbookConflictError('Payment exceeds the outstanding amount for Payment '+installmentNumber+'. Remaining installment balance: '+Number(installment?.outstanding||0).toLocaleString('id-ID')+'.');
+          }
+        }
+      }
       const result=await client.query<Row>(
         'UPDATE finance_workbook_records SET record_key=$3,period_key=$4,project_id=$5,status=$6,payload=$7::jsonb,version=version+1,updated_by_user_id=$8,updated_at=NOW() WHERE record_type=$1 AND id=$2 AND version=$9 AND archived_at IS NULL RETURNING *',
         [type,id,n.key,n.period||null,n.project||null,n.status,JSON.stringify(n.payload),actor.id,version]

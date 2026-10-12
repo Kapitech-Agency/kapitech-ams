@@ -63,3 +63,10 @@ The Journal worksheet has a controlled **Generate source drafts** action. It pre
 Draft generation is not posting. A separate authorized user still needs to review the source evidence and use the existing maker-checker action. Entries remain skipped with a reason when the currency, date, expense classification, petty-cash relationship or cash-account mapping is incomplete. Since the AMS expense source does not always verify that an expense has been paid or identify the actual payment account, a draft without explicit payment status/account metadata is marked for review; 1000 Cash & Bank is only a provisional workbook default.
 
 This bridge is an initial cash-basis workflow, not a complete general ledger or bank reconciliation. Invoice issuance/accrual accounting, tax splitting, vendor bill and payment automation, petty-cash expense account assignment, bank statement matching, opening trial-balance reconciliation, and authoritative Balance Sheet/P&L totals remain outside this implementation.
+
+
+## Vendor & Freelancer 30% / 20% / 50% schedule
+
+Vendor bills now expose the three worksheet stages as calculated amounts and paid amounts. Payments can be assigned to stage 1 (30%), stage 2 (20%), or stage 3 (50%); legacy payments with no stage remain supported and are allocated FIFO. The backend prevents bill-level overpayment and also prevents a new or edited payment from exceeding its selected stage's remaining balance. The next-payment indicator derives from the first stage with an outstanding amount.
+
+The workbook supplies one due date per bill, not separate milestone dates. AMS therefore retains the bill-level due date and does not fabricate dates for Payment 1, Payment 2, or Payment 3. Stage allocations are derived views of persisted bills and linked payment records, not separate duplicate payable records.

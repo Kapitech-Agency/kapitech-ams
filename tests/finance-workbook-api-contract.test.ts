@@ -68,3 +68,18 @@ test('Journal source sync is permission-gated, draft-only and duplicate-safe', a
   assert.match(workspace, /sourceId: editor\.record\.payload\.sourceId/);
   assert.match(workspace, /const summary = response\.data\?\.summary/);
 });
+
+
+test('Vendor installment payments preserve the 30/20/50 schedule and enforce stage caps on create and update', async () => {
+  const repository = await read('server/postgres-finance-workbook-repository.ts');
+  const ui = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const mapping = await read('src/lib/financeWorkbook.ts');
+  assert.match(repository, /installmentNumber/);
+  assert.match(repository, /Payment exceeds the outstanding amount for Payment/);
+  assert.match(repository, /getVendorBillInstallmentSchedule/);
+  assert.match(mapping, /getVendorBillInstallmentSchedule/);
+  assert.match(ui, /Payment 1 · 30%/);
+  assert.match(ui, /Payment 2 · 20%/);
+  assert.match(ui, /Payment 3 · 50%/);
+  assert.match(ui, /Vendor & Freelancer · 30% \/ 20% \/ 50% schedule/);
+});
