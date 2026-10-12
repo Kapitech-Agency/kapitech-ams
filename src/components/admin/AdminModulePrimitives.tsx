@@ -60,7 +60,6 @@ export const AdminSectionTabs: React.FC<AdminSectionTabsProps> = ({
         <NavLink
           key={item.key}
           to={item.to}
-          end
           aria-current={active ? 'page' : undefined}
           data-ams-slug={item.key}
           className={cn(
