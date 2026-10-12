@@ -128,3 +128,10 @@ test('Settings keeps loading and mutation feedback accessible to assistive techn
   assert.ok(source.includes('aria-live="polite"'));
   assert.ok(source.includes('overviewLoadError || accountMessage?.text || accountFormMessage?.text'));
 });
+
+test('Backup archive identifiers strip milliseconds and keep a consistent filename suffix', async () => {
+  const source = await read('src/pages/admin/AdminSettings.tsx');
+
+  assert.ok(source.includes("String(index + 1).padStart(2, '0') + '.tar.zst'"));
+  assert.ok(source.includes(String.raw`replace(/\.\d{3}Z$/, '')`));
+});
