@@ -822,7 +822,7 @@ export const AdminSettings: React.FC = () => {
       <AdminModuleHeader slug="settings-header"
         title="System & Security"
         description="Automated backup verification, identity access governance, and immutable audit telemetry."
-        actions={
+        actions={canAccessServer ? (
           <>
             <Button
               type="button"
@@ -843,10 +843,10 @@ export const AdminSettings: React.FC = () => {
               Create Snapshot
             </Button>
           </>
-        }
+        ) : undefined}
       />
 
-      <div className="min-[900px]:hidden min-w-0" data-ams-slug="settings-mobile-tabs">
+      <div className="min-w-0" data-ams-slug="settings-tabs">
         <AdminSectionTabs
           ariaLabel="Settings sections"
           activeKey={activeTab}
@@ -856,12 +856,19 @@ export const AdminSettings: React.FC = () => {
             { key: 'security', label: 'Security & MFA', to: '/admin/settings?tab=security' },
             { key: 'integrations', label: 'Integrations', to: '/admin/settings?tab=integrations' },
           ].filter((tab) =>
+            (tab.key !== 'overview' || canAccessServer) &&
             (tab.key !== 'audit' || canViewAuditLogs) &&
-            (tab.key !== 'security' || mfaSetupRequired || canManageAdminAccounts || canAccessServer) &&
             (tab.key !== 'integrations' || canAccessServer)
           )}
         />
       </div>
+
+      {overviewLoadError && canAccessServer && (
+        <div className="flex flex-col gap-2 rounded-control border border-danger/20 bg-danger/5 px-4 py-3 text-xs text-danger sm:flex-row sm:items-center sm:justify-between" role="alert">
+          <span>{overviewLoadError}</span>
+          <Button type="button" variant="secondary" onClick={() => void loadOverview()} disabled={overviewLoading} loading={overviewLoading}>Retry</Button>
+        </div>
+      )}
 
       {overviewMessage && (
         <div className={
@@ -889,7 +896,7 @@ export const AdminSettings: React.FC = () => {
             <SummaryCard
               label="Security & MFA"
               value={overviewLoading ? 'Checking…' : mfaEnrolled}
-              context={overviewLoading ? 'Loading identity protection status' : ((securityStatus?.activeUserCount ?? 0) + ' active sessions reported by the server')}
+              context={overviewLoading ? 'Loading identity protection status' : ((securityStatus?.activeUserCount ?? 0) + ' active users reported by the server')}
               status={overviewLoading ? 'Checking' : securityStatus?.mfaCoveragePercent === 100 ? 'Enforced' : 'Review'}
               tone={overviewLoading ? 'neutral' : securityStatus?.mfaCoveragePercent === 100 ? 'success' : 'warning'}
             />
@@ -924,6 +931,7 @@ export const AdminSettings: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => void createSnapshot()}
+                    disabled={snapshotLoading}
                     className="mt-4 inline-flex min-h-9 items-center gap-2 rounded-control bg-accent px-3 text-xs font-medium text-white hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   >
                     <Database size={14} />
@@ -961,6 +969,7 @@ export const AdminSettings: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => void triggerIntegrityCheck()}
+                            disabled={integrityLoading}
                             className="inline-flex min-h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[11px] text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                           >
                             <CheckCircle2 size={13} />
@@ -1061,9 +1070,23 @@ export const AdminSettings: React.FC = () => {
             </div>
           </div>
 
+          {auditError && filteredLogs.length > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-danger/20 bg-danger/5 px-5 py-3 text-[11px] text-danger" role="alert">
+              <span>{auditError} Showing the last successfully loaded entries.</span>
+              <Button type="button" variant="secondary" onClick={() => void loadAuditLogs()} disabled={auditLoading} loading={auditLoading}>Retry</Button>
+            </div>
+          )}
+
           <div className="overflow-x-auto">
             {auditLoading ? (
               <div className="px-5 py-10">{renderSkeleton()}</div>
+            ) : auditError && filteredLogs.length === 0 ? (
+              <div className="flex min-h-[220px] flex-col items-center justify-center px-5 py-10 text-center" role="alert">
+                <AlertCircle size={24} className="text-danger" />
+                <p className="mt-3 text-sm font-medium text-fg">Audit logs could not be loaded</p>
+                <p className="mt-1 max-w-md text-xs leading-5 text-muted">{auditError}</p>
+                <Button type="button" variant="secondary" onClick={() => void loadAuditLogs()} disabled={auditLoading} loading={auditLoading} className="mt-4">Retry</Button>
+              </div>
             ) : filteredLogs.length === 0 ? (
               <div className="flex min-h-[220px] flex-col items-center justify-center px-5 py-10 text-center">
                 <Clock3 size={24} className="text-muted" />
@@ -1140,7 +1163,7 @@ export const AdminSettings: React.FC = () => {
               <div className="flex items-center gap-2 border-b border-line pb-4">
                 <UserCheck size={18} className="text-accent-text" />
                 <div>
-                  <h2 className="text-sm font-semibold text-fg">Master profile & identity</h2>
+                  <h2 className="text-sm font-semibold text-fg">Account profile & identity</h2>
                   <p className="mt-1 text-[10px] leading-4 text-muted">Identity and login state are sourced from the server session.</p>
                 </div>
               </div>
@@ -1219,7 +1242,13 @@ export const AdminSettings: React.FC = () => {
                         variant="secondary"
                         onClick={() => {
                           setMfaMessage(null);
-                          setMfaMode(mfaMode === 'disable' ? 'idle' : 'disable');
+                          if (mfaMode === 'disable') {
+                            setMfaDisablePassword('');
+                            setMfaDisableCode('');
+                            setMfaMode('idle');
+                          } else {
+                            setMfaMode('disable');
+                          }
                         }}
                         disabled={mfaLoading}
                       >
@@ -1417,7 +1446,7 @@ export const AdminSettings: React.FC = () => {
               <div className="flex items-center gap-2">
                 <KeyRound size={18} className="text-muted" />
                 <div>
-                  <h2 className="text-sm font-semibold text-fg">Change master password</h2>
+                  <h2 className="text-sm font-semibold text-fg">Change account password</h2>
                   <p className="mt-1 text-[10px] leading-4 text-muted">Current password verification is required before the server saves a new password.</p>
                 </div>
               </div>
@@ -1439,7 +1468,7 @@ export const AdminSettings: React.FC = () => {
                     required
                     value={newPassword}
                     onChange={(event) => setNewPassword(event.target.value)}
-                    placeholder="At least 8 characters"
+                    placeholder="At least 12 characters"
                     className="w-full bg-bg"
                   />
                 </label>
@@ -1462,7 +1491,7 @@ export const AdminSettings: React.FC = () => {
                   required
                   value={currentPassword}
                   onChange={(event) => setCurrentPassword(event.target.value)}
-                  placeholder="Enter the current admin password"
+                  placeholder="Enter your current account password"
                   className="w-full bg-bg"
                 />
               </label>
@@ -1490,6 +1519,12 @@ export const AdminSettings: React.FC = () => {
                   </Button>
                 </div>
 
+                {accountsError && accounts.length > 0 && (
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-danger/20 bg-danger/5 px-5 py-3 text-[11px] text-danger" role="alert">
+                    <span>{accountsError} Showing the last successfully loaded accounts.</span>
+                    <Button type="button" variant="secondary" onClick={() => void loadAccounts()} disabled={accountsLoading} loading={accountsLoading}>Retry</Button>
+                  </div>
+                )}
                 {accountMessage && (
                   <div className={'border-b px-5 py-3 text-xs ' + (accountMessage.success ? 'border-success/20 bg-success/10 text-success' : 'border-danger/20 bg-danger/10 text-danger')}>
                     {accountMessage.text}
@@ -1499,6 +1534,13 @@ export const AdminSettings: React.FC = () => {
                 <div className="overflow-x-auto">
                   {accountsLoading ? (
                     <div className="px-5 py-10">{renderSkeleton()}</div>
+                  ) : pagedAccounts.length === 0 && accountsError ? (
+                    <div className="flex min-h-[180px] flex-col items-center justify-center px-5 py-10 text-center" role="alert">
+                      <AlertCircle size={22} className="text-danger" />
+                      <p className="mt-3 text-sm font-medium text-fg">Admin accounts could not be loaded</p>
+                      <p className="mt-1 max-w-md text-xs leading-5 text-muted">{accountsError}</p>
+                      <Button type="button" variant="secondary" onClick={() => void loadAccounts()} disabled={accountsLoading} loading={accountsLoading} className="mt-4">Retry</Button>
+                    </div>
                   ) : pagedAccounts.length === 0 ? (
                     <div className="flex min-h-[180px] flex-col items-center justify-center px-5 py-10 text-center">
                       <Users size={22} className="text-muted" />
@@ -1538,7 +1580,7 @@ export const AdminSettings: React.FC = () => {
                                 {isCurrentMaster && !masterAccount ? (
                                   <button
                                     type="button"
-                                    onClick={() => setConfirmDelete({ id: account.id, name: account.name })}
+                                    onClick={() => { setDeleteAccountMessage(null); setConfirmDelete({ id: account.id, name: account.name }); }}
                                     className="inline-flex min-h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[11px] text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                                   >
                                     <Trash2 size={13} />
@@ -1727,7 +1769,7 @@ export const AdminSettings: React.FC = () => {
                     Enable live chat
                   </label>
                 </div>
-                {metaMessage && <div className="rounded-control border border-success/20 bg-success/10 px-3 py-2.5 text-[11px] text-success" role="status">{metaMessage}</div>}
+                {metaMessage && <div className={'rounded-control border px-3 py-2.5 text-[11px] ' + (metaMessage.success ? 'border-success/20 bg-success/10 text-success' : 'border-danger/20 bg-danger/10 text-danger')} role={metaMessage.success ? 'status' : 'alert'}>{metaMessage.text}</div>}
                 <div className="flex justify-end pt-1">
                   <Button type="submit" variant="primary" loading={metaSaving} icon={<Save size={14} />}>
                     Save changes
@@ -1813,6 +1855,11 @@ export const AdminSettings: React.FC = () => {
             </div>
           </div>
 
+          {accountFormMessage && (
+            <div className={'rounded-control border px-3 py-2.5 text-xs ' + (accountFormMessage.success ? 'border-success/20 bg-success/10 text-success' : 'border-danger/20 bg-danger/10 text-danger')} role={accountFormMessage.success ? 'status' : 'alert'}>
+              {accountFormMessage.text}
+            </div>
+          )}
           <div className="grid gap-3 sm:grid-cols-2">
             <label>
               <span className="mb-1 block text-[10px] font-medium text-muted">Full name</span>
@@ -1866,13 +1913,14 @@ export const AdminSettings: React.FC = () => {
           </>
         }
       >
+        {deleteAccountMessage && <div className="mb-3 rounded-control border border-danger/20 bg-danger/10 px-3 py-2.5 text-xs text-danger" role="alert">{deleteAccountMessage}</div>}
         <div className="rounded-card border border-danger/20 bg-danger/5 p-4 text-xs text-muted">
           This action removes the account. Confirm the account name before continuing.
         </div>
       </Modal>
 
       <span className="sr-only" aria-live="polite">
-        {overviewMessage?.text || accountMessage?.text || metaMessage || securityStatusMessage?.text || ''}
+        {overviewMessage?.text || overviewLoadError || accountMessage?.text || accountFormMessage?.text || deleteAccountMessage || metaMessage?.text || securityStatusMessage?.text || auditError || accountsError || ''}
       </span>
     </AdminPageShell>
   );
