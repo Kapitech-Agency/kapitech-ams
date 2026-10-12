@@ -44,7 +44,8 @@ test('Admin invoicing keeps financial mutations permission-gated and uses the sh
   assert.ok(source.includes('const getInvoiceCollectedTotal'));
   assert.ok(source.includes('quarterInvoices'));
   assert.ok(source.includes("expense.type !== 'CapEx'"));
-  assert.ok(source.includes('min-[900px]:hidden min-w-0 overflow-x-auto'));
+  assert.ok(source.includes('<AdminSectionTabs'));
+  assert.ok(source.includes('min-[900px]:hidden min-w-0'));
   assert.ok(!source.includes(' -mx-1 '));
   assert.ok(source.includes('const QuotationStatusBadge'));
   assert.ok(!source.includes('quotation.status as never'));
@@ -148,4 +149,26 @@ test('All AMS record-entry forms use Drawer instead of Modal', () => {
   assert.ok(drawer.includes("'3xl': 'max-w-4xl'") && drawer.includes("'4xl': 'max-w-5xl'"));
   assert.ok(modal.includes('data-ams-modal-root="true"') && modal.includes('z-[80]'));
   assert.ok(drawer.includes("document.querySelector('[data-ams-modal-root=\"true\"]')"), 'A modal above a drawer must own focus and keyboard handling.');
+});
+test('AMS module tabs share canonical desktop and mobile navigation primitives', () => {
+  const layout = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminLayout.tsx'), 'utf8');
+  const primitives = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/AdminModulePrimitives.tsx'), 'utf8');
+  const dashboard = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/GlobalExecutiveDashboard.tsx'), 'utf8');
+  const inbox = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInbox.tsx'), 'utf8');
+  const finance = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInvoicing.tsx'), 'utf8');
+  const clients = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClients.tsx'), 'utf8');
+  const retainers = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientRetainers.tsx'), 'utf8');
+  const sla = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientSlaMonitoring.tsx'), 'utf8');
+
+  assert.equal((layout.match(/<AdminTopbarTabs\b/g) || []).length, 11);
+  assert.ok(primitives.includes("'inline-flex h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent'"));
+  assert.ok(!/className="inline-flex h-9 shrink-0 items-center rounded-chip/.test(layout));
+  assert.ok(!/<nav aria-label="(?:Clients|CMS|Dashboard|Projects|Tasks|Inbox|Finance|Team|Settings|Documents) sections"/.test(layout));
+  assert.ok(dashboard.includes('<AdminSectionTabs') && dashboard.includes("{ key: 'tasks', label: 'Tasks', to: '/admin/dashboard?view=tasks' }"));
+  assert.ok(dashboard.includes('className="mb-0"') && dashboard.includes('ariaLabel="Dashboard view"'));
+  assert.ok(!dashboard.includes('-mt-2'));
+  assert.ok(inbox.includes('<AdminSectionTabs') && inbox.includes('inboxTabs.map((tab)'));
+  assert.ok(finance.includes('<AdminModuleHeader') && finance.includes('<AdminSectionTabs'));
+  assert.ok(finance.indexOf('<AdminModuleHeader') < finance.indexOf('<AdminSectionTabs'));
+  assert.ok(clients.includes('<AdminSectionTabs') && retainers.includes('<AdminSectionTabs') && sla.includes('<AdminSectionTabs'));
 });

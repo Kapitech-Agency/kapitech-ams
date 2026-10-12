@@ -26,6 +26,7 @@ import { AGENCY_TIER_LABELS, AgencyTier, getAgencyTier, useRbacRole } from '../.
 import { AmsBrandLogo } from '../../components/admin/AmsBrandLogo';
 import UserProfileSettingsModal from '../../components/admin/UserProfileSettingsModal';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
+import { AdminTopbarTabs } from '../../components/admin/AdminModulePrimitives';
 import Button from '../../components/ui/Button';
 
 interface NavItem {
@@ -611,282 +612,139 @@ export const AdminLayout: React.FC = () => {
           <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-5 lg:px-6 flex min-w-0 items-center justify-between gap-3">
             <div className="min-w-0 flex-1 overflow-hidden">
               {location.pathname.startsWith('/admin/clients') ? (
-                <nav aria-label="Clients sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
-                  {[
-                    { key: 'all-clients', label: 'All Clients', slug: '/admin/clients/all-clients' },
-                    { key: 'retainers', label: 'Retainers', slug: '/admin/clients/retainers' },
-                    { key: 'sla-monitoring', label: 'SLA Monitoring', slug: '/admin/clients/sla-monitoring' }
-                  ].map((tab) => {
-                    const active = location.pathname === tab.slug || (tab.key === 'all-clients' && location.pathname === '/admin/clients');
-                    return (
-                      <NavLink
-                        key={tab.key}
-                        to={tab.slug}
-                        end
-                        className={'group relative inline-flex h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (active ? 'border-accent/25 bg-accent/10 font-semibold text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg')}
-                      >
-                        {tab.label}
-                      </NavLink>
-                    );
-                  })}
-                </nav>
+                <AdminTopbarTabs
+                  ariaLabel="Clients sections"
+                  activeKey={location.pathname === '/admin/clients/retainers' ? 'retainers' : location.pathname === '/admin/clients/sla-monitoring' ? 'sla-monitoring' : location.pathname === '/admin/clients' || location.pathname === '/admin/clients/all-clients' ? 'all-clients' : ''}
+                  items={[
+                    { key: 'all-clients', label: 'All Clients', to: '/admin/clients/all-clients' },
+                    { key: 'retainers', label: 'Retainers', to: '/admin/clients/retainers' },
+                    { key: 'sla-monitoring', label: 'SLA Monitoring', to: '/admin/clients/sla-monitoring' }
+                  ]}
+                />
               ) : location.pathname.startsWith('/admin/cms/') ? (
-                <nav aria-label="CMS sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
-                  {[
-                    { key: 'projects', label: 'Projects', to: '/admin/cms/projects' },
-                    { key: 'services', label: 'Services', to: '/admin/cms/services' },
-                    { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials' },
-                    { key: 'insights', label: 'Insights', to: '/admin/cms/insights' },
-                    { key: 'careers', label: 'Careers', to: '/admin/cms/careers' }
-                  ].map((tab) => {
-                    const active = location.pathname === tab.to;
-                    return (
-                      <NavLink
-                        key={tab.key}
-                        to={tab.to}
-                        end
-                        data-ams-slug={'cms-tab-' + tab.key}
-                        className={'group relative inline-flex h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (
-                          active
-                            ? 'border-accent/25 bg-accent/10 font-semibold text-fg'
-                            : 'border-transparent text-muted hover:bg-bg hover:text-fg'
-                        )}
-                      >
-                        {tab.label}
-                      </NavLink>
-                    );
-                  })}
-                </nav>
+                <AdminTopbarTabs
+                  ariaLabel="CMS sections"
+                  activeKey={location.pathname.split('/').pop() || 'projects'}
+                  items={[
+                    { key: 'projects', label: 'Projects', to: '/admin/cms/projects', slug: 'cms-tab-projects' },
+                    { key: 'services', label: 'Services', to: '/admin/cms/services', slug: 'cms-tab-services' },
+                    { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials', slug: 'cms-tab-testimonials' },
+                    { key: 'insights', label: 'Insights', to: '/admin/cms/insights', slug: 'cms-tab-insights' },
+                    { key: 'careers', label: 'Careers', to: '/admin/cms/careers', slug: 'cms-tab-careers' }
+                  ]}
+                />
               ) : location.pathname === '/admin/dashboard' && new URLSearchParams(location.search).get('view') !== 'tasks' ? (
-                <nav aria-label="Dashboard view" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
-                  {[
-                    { key: 'overview', label: 'Overview', search: '' },
-                    { key: 'performance', label: 'Performance', search: '?view=performance' },
-                    { key: 'analytics', label: 'Analytics', search: '?view=analytics' },
-                  ].map((tab) => (
-                    <NavLink
-                      key={tab.key}
-                      to={'/admin/dashboard' + tab.search}
-                      end
-                      className={() => {
-                        const activeView = new URLSearchParams(location.search).get('view') || 'overview';
-                        return 'group relative inline-flex h-8 shrink-0 items-center rounded-chip px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (activeView === tab.key ? 'border border-accent/25 bg-accent/10 font-semibold text-fg' : 'border border-transparent text-muted hover:bg-bg hover:text-fg');
-                      }}
-                    >
-                      {tab.label}
-                    </NavLink>
-                  ))}
-                </nav>
+                <AdminTopbarTabs
+                  ariaLabel="Dashboard view"
+                  activeKey={new URLSearchParams(location.search).get('view') || 'overview'}
+                  items={[
+                    { key: 'overview', label: 'Overview', to: '/admin/dashboard' },
+                    { key: 'performance', label: 'Performance', to: '/admin/dashboard?view=performance' },
+                    { key: 'analytics', label: 'Analytics', to: '/admin/dashboard?view=analytics' }
+                  ]}
+                />
               ) : location.pathname === '/admin/projects' ? (
-                <nav aria-label="Projects sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
-                  {[
-                    { key: 'all', label: 'All Projects', search: '' },
-                    { key: 'sprint', label: 'Sprint & Delivery', search: '?projects=sprint' },
-                    { key: 'budget', label: 'Budget vs Actual', search: '?projects=budget' },
-                    { key: 'archived', label: 'Archived', search: '?projects=archived' },
-                  ].map((tab) => {
-                    const activeView = new URLSearchParams(location.search).get('projects') || 'all';
-                    const active = activeView === tab.key;
-                    return (
-                      <NavLink
-                        key={tab.key}
-                        to={'/admin/projects' + tab.search}
-                        end
-                        className={'group relative inline-flex h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (active ? 'border-accent/25 bg-accent/10 font-semibold text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg')}
-                      >
-                        {tab.label}
-                      </NavLink>
-                    );
-                  })}
-                </nav>
+                <AdminTopbarTabs
+                  ariaLabel="Projects sections"
+                  activeKey={new URLSearchParams(location.search).get('projects') || 'all'}
+                  items={[
+                    { key: 'all', label: 'All Projects', to: '/admin/projects' },
+                    { key: 'sprint', label: 'Sprint & Delivery', to: '/admin/projects?projects=sprint' },
+                    { key: 'budget', label: 'Budget vs Actual', to: '/admin/projects?projects=budget' },
+                    { key: 'archived', label: 'Archived', to: '/admin/projects?projects=archived' }
+                  ]}
+                />
               ) : location.pathname === '/admin/dashboard' && new URLSearchParams(location.search).get('view') === 'tasks' ? (
-                <nav aria-label="Tasks sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
-                  {[
-                    { key: 'all', label: 'All Tasks', search: '' },
-                    { key: 'my', label: 'My Tasks', search: '&taskscope=my' },
-                    { key: 'due', label: 'Due & Overdue', search: '&taskscope=due' },
-                    { key: 'review', label: 'Review Queue', search: '&taskscope=review' },
-                    { key: 'blocked', label: 'Blocked', search: '&taskscope=blocked' },
-                    { key: 'completed', label: 'Completed', search: '&taskscope=completed' },
-                  ].map((tab) => {
-                    const activeScope = new URLSearchParams(location.search).get('taskscope') || 'all';
-                    const query = '/admin/dashboard?view=tasks' + tab.search;
-                    return (
-                      <NavLink
-                        key={tab.key}
-                        to={query}
-                        end
-                        data-ams-slug={'task-tab-' + tab.key}
-                        className={'group relative inline-flex h-9 shrink-0 items-center rounded-chip border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (activeScope === tab.key ? 'border-accent/25 bg-accent/10 font-semibold text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg')}
-                      >
-                        {tab.label}
-                      </NavLink>
-                    );
-                  })}
-                </nav>
+                <AdminTopbarTabs
+                  ariaLabel="Tasks sections"
+                  activeKey={new URLSearchParams(location.search).get('taskscope') || 'all'}
+                  items={[
+                    { key: 'all', label: 'All Tasks', to: '/admin/dashboard?view=tasks', slug: 'task-tab-all' },
+                    { key: 'my', label: 'My Tasks', to: '/admin/dashboard?view=tasks&taskscope=my', slug: 'task-tab-my' },
+                    { key: 'due', label: 'Due & Overdue', to: '/admin/dashboard?view=tasks&taskscope=due', slug: 'task-tab-due' },
+                    { key: 'review', label: 'Review Queue', to: '/admin/dashboard?view=tasks&taskscope=review', slug: 'task-tab-review' },
+                    { key: 'blocked', label: 'Blocked', to: '/admin/dashboard?view=tasks&taskscope=blocked', slug: 'task-tab-blocked' },
+                    { key: 'completed', label: 'Completed', to: '/admin/dashboard?view=tasks&taskscope=completed', slug: 'task-tab-completed' }
+                  ]}
+                />
               ) : location.pathname === '/admin/tasks' ? (
-                <nav aria-label="Tasks sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
-                  {[
-                    { key: 'all', label: 'All Tasks', search: '' },
-                    { key: 'my', label: 'My Tasks', search: '?taskscope=my' },
-                    { key: 'due', label: 'Due & Overdue', search: '?taskscope=due' },
-                    { key: 'review', label: 'Review Queue', search: '?taskscope=review' },
-                    { key: 'blocked', label: 'Blocked', search: '?taskscope=blocked' },
-                    { key: 'completed', label: 'Completed', search: '?taskscope=completed' },
-                  ].map((tab) => {
-                    const activeScope = new URLSearchParams(location.search).get('taskscope') || 'all';
-                    const active = activeScope === tab.key;
-                    return (
-                      <NavLink
-                        key={tab.key}
-                        to={'/admin/tasks' + tab.search}
-                        end
-                        data-ams-slug={'task-tab-' + tab.key}
-                        className={'group relative inline-flex h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (
-                          active
-                            ? 'border-accent/25 bg-accent/10 font-semibold text-fg'
-                            : 'border-transparent text-muted hover:bg-bg hover:text-fg'
-                        )}
-                      >
-                        {tab.label}
-                      </NavLink>
-                    );
-                  })}
-                </nav>
+                <AdminTopbarTabs
+                  ariaLabel="Tasks sections"
+                  activeKey={new URLSearchParams(location.search).get('taskscope') || 'all'}
+                  items={[
+                    { key: 'all', label: 'All Tasks', to: '/admin/tasks', slug: 'task-tab-all' },
+                    { key: 'my', label: 'My Tasks', to: '/admin/tasks?taskscope=my', slug: 'task-tab-my' },
+                    { key: 'due', label: 'Due & Overdue', to: '/admin/tasks?taskscope=due', slug: 'task-tab-due' },
+                    { key: 'review', label: 'Review Queue', to: '/admin/tasks?taskscope=review', slug: 'task-tab-review' },
+                    { key: 'blocked', label: 'Blocked', to: '/admin/tasks?taskscope=blocked', slug: 'task-tab-blocked' },
+                    { key: 'completed', label: 'Completed', to: '/admin/tasks?taskscope=completed', slug: 'task-tab-completed' }
+                  ]}
+                />
               ) : location.pathname === '/admin/inbox' ? (
-                <nav aria-label="Inbox sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
-                  {[
-                    { key: 'overview', label: 'Overview', to: '/admin/inbox?view=overview' },
-                    { key: 'client', label: 'Client Inbox', to: '/admin/inbox?view=client' },
-                    { key: 'jobs', label: 'Job Applications', to: '/admin/inbox?view=jobs' },
-                    { key: 'starred', label: 'Starred', to: '/admin/inbox?view=starred' }
-                  ].map((tab) => {
-                    const activeView = new URLSearchParams(location.search).get('view') || 'overview';
-                    const active = activeView === tab.key;
-                    return (
-                      <NavLink
-                        key={tab.key}
-                        to={tab.to}
-                        end
-                        data-ams-slug={'inbox-tab-' + tab.key}
-                        className={'group relative inline-flex h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (
-                          active
-                            ? 'border-accent/25 bg-accent/10 font-semibold text-fg'
-                            : 'border-transparent text-muted hover:bg-bg hover:text-fg'
-                        )}
-                      >
-                        {tab.label}
-                      </NavLink>
-                    );
-                  })}
-                </nav>              ) : location.pathname === '/admin/invoicing' ? (
-                <nav aria-label="Finance sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
-                  {[
+                <AdminTopbarTabs
+                  ariaLabel="Inbox sections"
+                  activeKey={new URLSearchParams(location.search).get('view') || 'overview'}
+                  items={[
+                    { key: 'overview', label: 'Overview', to: '/admin/inbox?view=overview', slug: 'inbox-tab-overview' },
+                    { key: 'client', label: 'Client Inbox', to: '/admin/inbox?view=client', slug: 'inbox-tab-client' },
+                    { key: 'jobs', label: 'Job Applications', to: '/admin/inbox?view=jobs', slug: 'inbox-tab-jobs' },
+                    { key: 'starred', label: 'Starred', to: '/admin/inbox?view=starred', slug: 'inbox-tab-starred' }
+                  ]}
+                />
+              ) : location.pathname === '/admin/invoicing' ? (
+                <AdminTopbarTabs
+                  ariaLabel="Finance sections"
+                  activeKey={new URLSearchParams(location.search).get('finance') || 'invoices'}
+                  items={[
                     { key: 'invoices', label: 'Invoice', to: '/admin/invoicing' },
                     { key: 'income-expenses', label: 'Income & Expenses', to: '/admin/invoicing?finance=income-expenses' },
                     { key: 'tax-retainers', label: 'Tax & Retainers', to: '/admin/invoicing?finance=tax-retainers' },
                     { key: 'vendor-payments', label: 'Vendor Payments', to: '/admin/invoicing?finance=vendor-payments' },
-                    { key: 'financial-reports', label: 'Financial Reports', to: '/admin/invoicing?finance=financial-reports' },
-                  ].map((tab) => {
-                    const activeView = new URLSearchParams(location.search).get('finance') || 'invoices';
-                    return (
-                      <NavLink
-                        key={tab.key}
-                        to={tab.to}
-                        end
-                        className={'group relative inline-flex h-9 shrink-0 items-center rounded-chip border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (activeView === tab.key ? 'border-accent/25 bg-accent/10 font-semibold text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg')}
-                      >
-                        {tab.label}
-                      </NavLink>
-                    );
-                  })}
-                </nav>
+                    { key: 'financial-reports', label: 'Financial Reports', to: '/admin/invoicing?finance=financial-reports' }
+                  ]}
+                />
               ) : location.pathname === '/admin/team' || location.pathname === '/admin/time-logs' || location.pathname === '/admin/vendors' ? (
-                <nav aria-label="Team sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
-                  {[
-                    { key: 'team-directory', label: 'Team Directory', slug: '/admin/team' },
-                    { key: 'vendor-directory', label: 'Vendor Directory', slug: '/admin/team?view=vendor-directory' },
-                    { key: 'capacity-allocation', label: 'Capacity & Allocation', slug: '/admin/team?view=capacity-allocation' },
-                    { key: 'skill-matrix', label: 'Skill Matrix', slug: '/admin/team?view=skill-matrix' },
-                    { key: 'time-logs', label: 'Time Logs', slug: '/admin/team?view=time-logs' },
-                  ].map((tab) => {
-                    const activeView = new URLSearchParams(location.search).get('view') || 'team-directory';
-                    const active = location.pathname === '/admin/team'
-                      ? activeView === tab.key
-                      : tab.key === (location.pathname === '/admin/vendors' ? 'vendor-directory' : 'time-logs');
-                    return (
-                      <NavLink
-                        key={tab.key}
-                        to={tab.slug}
-                        end
-                        data-ams-slug={'team-tab-' + tab.key}
-                        className={'group relative inline-flex h-9 shrink-0 items-center rounded-chip border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (active ? 'border-accent/25 bg-accent/10 font-semibold text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg')}
-                      >
-                        {tab.label}
-                      </NavLink>
-                    );
-                  })}
-                </nav>
+                <AdminTopbarTabs
+                  ariaLabel="Team sections"
+                  activeKey={location.pathname === '/admin/team'
+                    ? (new URLSearchParams(location.search).get('view') || 'team-directory')
+                    : location.pathname === '/admin/vendors' ? 'vendor-directory' : 'time-logs'}
+                  items={[
+                    { key: 'team-directory', label: 'Team Directory', to: '/admin/team' },
+                    { key: 'vendor-directory', label: 'Vendor Directory', to: '/admin/team?view=vendor-directory' },
+                    { key: 'capacity-allocation', label: 'Capacity & Allocation', to: '/admin/team?view=capacity-allocation' },
+                    { key: 'skill-matrix', label: 'Skill Matrix', to: '/admin/team?view=skill-matrix' },
+                    { key: 'time-logs', label: 'Time Logs', to: '/admin/team?view=time-logs' }
+                  ]}
+                />
               ) : location.pathname === '/admin/settings' ? (
-                <nav aria-label="Settings sections" className="inline-flex h-full min-w-0 max-w-full items-center gap-6 overflow-x-auto ams-topnav-scroll">
-                  {[
-                    { key: 'overview', label: 'Overview & Backups' },
-                    { key: 'audit', label: 'Audit Logs' },
-                    { key: 'security', label: 'Security & MFA' },
-                    { key: 'integrations', label: 'Integrations' }
-                  ].map((tab) => {
+                <AdminTopbarTabs
+                  ariaLabel="Settings sections"
+                  activeKey={(() => {
                     const activeTab = new URLSearchParams(location.search).get('tab') || 'overview';
-                    const active = activeTab === tab.key || (
-                      tab.key === 'security' &&
-                      ['profile', 'rbac'].includes(activeTab)
-                    ) || (
-                      tab.key === 'integrations' &&
-                      ['branding', 'api'].includes(activeTab)
-                    );
-                    return (
-                      <NavLink
-                        key={tab.key}
-                        to={'/admin/settings?tab=' + tab.key}
-                        end
-                        className={
-                          'inline-flex h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' +
-                          (active
-                            ? 'border-accent/25 bg-accent/10 font-semibold text-fg'
-                            : 'border-transparent text-muted hover:bg-bg hover:text-fg')
-                        }
-                      >
-                        {tab.label}
-                      </NavLink>
-                    );
-                  })}
-                </nav>
+                    if (['profile', 'rbac'].includes(activeTab)) return 'security';
+                    if (['branding', 'api'].includes(activeTab)) return 'integrations';
+                    return activeTab;
+                  })()}
+                  items={[
+                    { key: 'overview', label: 'Overview & Backups', to: '/admin/settings?tab=overview' },
+                    { key: 'audit', label: 'Audit Logs', to: '/admin/settings?tab=audit' },
+                    { key: 'security', label: 'Security & MFA', to: '/admin/settings?tab=security' },
+                    { key: 'integrations', label: 'Integrations', to: '/admin/settings?tab=integrations' }
+                  ]}
+                />
               ) : location.pathname === '/admin/documents' ? (
-                <nav aria-label="Documents sections" className="inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll">
-                  {[
-                    { key: 'all', label: 'All Internal Documents', to: '/admin/documents' },
-                    { key: 'sops', label: 'SOPs & Policies', to: '/admin/documents?documents=sops' },
-                    { key: 'legal', label: 'Legal & Corporate', to: '/admin/documents?documents=legal' },
-                    { key: 'finance', label: 'Finance & Tax', to: '/admin/documents?documents=finance' },
-                    { key: 'infra', label: 'Infrastructure & Keys', to: '/admin/documents?documents=infra' },
-                  ].map((tab) => {
-                    const activeTab = new URLSearchParams(location.search).get('documents') || 'all';
-                    return (
-                      <NavLink
-                        key={tab.key}
-                        to={tab.to}
-                        end
-                        data-ams-slug={'documents-tab-' + tab.key}
-                        className={'group relative inline-flex h-9 shrink-0 items-center rounded-chip border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (
-                          activeTab === tab.key
-                            ? 'border-accent/25 bg-accent/10 font-semibold text-fg'
-                            : 'border-transparent text-muted hover:bg-bg hover:text-fg'
-                        )}
-                      >
-                        {tab.label}
-                      </NavLink>
-                    );
-                  })}
-                </nav>
+                <AdminTopbarTabs
+                  ariaLabel="Documents sections"
+                  activeKey={new URLSearchParams(location.search).get('documents') || 'all'}
+                  items={[
+                    { key: 'all', label: 'All Internal Documents', to: '/admin/documents', slug: 'documents-tab-all' },
+                    { key: 'sops', label: 'SOPs & Policies', to: '/admin/documents?documents=sops', slug: 'documents-tab-sops' },
+                    { key: 'legal', label: 'Legal & Corporate', to: '/admin/documents?documents=legal', slug: 'documents-tab-legal' },
+                    { key: 'finance', label: 'Finance & Tax', to: '/admin/documents?documents=finance', slug: 'documents-tab-finance' },
+                    { key: 'infra', label: 'Infrastructure & Keys', to: '/admin/documents?documents=infra', slug: 'documents-tab-infra' }
+                  ]}
+                />
               ) : (
                 <nav aria-label="Breadcrumb">
                   <ol className="flex min-w-0 items-center gap-2 text-[11px]">

@@ -50,7 +50,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
 
-import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminTablePagination, AdminPageShell } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminSectionTabs, AdminTablePagination, AdminPageShell } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 export const AdminInbox: React.FC = () => {
   const { language } = useLanguage();
@@ -742,6 +742,18 @@ export const AdminInbox: React.FC = () => {
         )}
       />
 
+      <div className="min-[900px]:hidden min-w-0">
+        <AdminSectionTabs
+          ariaLabel="Inbox sections"
+          activeKey={activeInboxTab}
+          items={inboxTabs.map((tab) => ({
+            key: tab.key,
+            label: tab.label,
+            to: '/admin/inbox?view=' + tab.key,
+            slug: 'inbox-tab-' + tab.key
+          }))}
+        />
+      </div>
 
       {/* ------------------------------------------------------------- */}
       {/* 2. TAB-SPECIFIC KPI WORKSPACE */}

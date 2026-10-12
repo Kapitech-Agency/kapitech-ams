@@ -2718,20 +2718,6 @@ export const AdminInvoicing: React.FC = () => {
 
   return (
     <AdminPageShell featureSlug="finance-module" className="finance-module">
-      <div className="min-[900px]:hidden min-w-0 overflow-x-auto">
-        <AdminSectionTabs
-          ariaLabel="Finance sections"
-          activeKey={financeView === 'invoices' ? 'invoices' : financeView}
-          items={[
-            { key: 'invoices', label: 'Invoice', to: '/admin/invoicing' },
-            { key: 'quotations', label: 'Quotation', to: '/admin/invoicing?finance=quotations' },
-            { key: 'income-expenses', label: 'Income & Expenses', to: '/admin/invoicing?finance=income-expenses' },
-            { key: 'tax-retainers', label: 'Tax & Retainers', to: '/admin/invoicing?finance=tax-retainers' },
-            { key: 'vendor-payments', label: 'Vendor Payments', to: '/admin/invoicing?finance=vendor-payments' },
-            { key: 'financial-reports', label: 'Financial Reports', to: '/admin/invoicing?finance=financial-reports' },
-          ]}
-        />
-      </div>
       <AdminModuleHeader
         className="mb-0"
         title={financeView === 'quotations' ? 'Quotations' : financeView === 'income-expenses' ? 'Income & Expenses' : financeView === 'tax-retainers' ? 'Tax & Retainers' : financeView === 'vendor-payments' ? 'Vendor Payments' : financeView === 'financial-reports' ? 'Financial Reports' : 'Invoices'}
@@ -2789,6 +2775,20 @@ export const AdminInvoicing: React.FC = () => {
           </>
         )}
       />
+      <div className="min-[900px]:hidden min-w-0">
+        <AdminSectionTabs
+          ariaLabel="Finance sections"
+          activeKey={financeView === 'invoices' ? 'invoices' : financeView}
+          items={[
+            { key: 'invoices', label: 'Invoice', to: '/admin/invoicing' },
+            { key: 'quotations', label: 'Quotation', to: '/admin/invoicing?finance=quotations' },
+            { key: 'income-expenses', label: 'Income & Expenses', to: '/admin/invoicing?finance=income-expenses' },
+            { key: 'tax-retainers', label: 'Tax & Retainers', to: '/admin/invoicing?finance=tax-retainers' },
+            { key: 'vendor-payments', label: 'Vendor Payments', to: '/admin/invoicing?finance=vendor-payments' },
+            { key: 'financial-reports', label: 'Financial Reports', to: '/admin/invoicing?finance=financial-reports' },
+          ]}
+        />
+      </div>
       {notice && (
         <div className="fixed right-4 top-[68px] z-[60] w-[min(420px,calc(100vw-32px))]" aria-live="polite" aria-atomic="true">
           <div className={'flex items-start gap-3 rounded-card border px-5 py-3 text-xs ' + (notice.tone === 'success' ? 'border-success/30 bg-panel text-success' : 'border-danger/30 bg-panel text-danger')} role="status">

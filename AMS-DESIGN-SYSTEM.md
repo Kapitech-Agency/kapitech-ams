@@ -222,7 +222,10 @@ For every component define default, hover, focus-visible, active, and disabled s
 
 ### Top bar and section tabs
 - 52px high, bottom border `--line`. Keep section tabs on the left and utilities on the right.
-- **Section/submodule navigation uses the shared pill treatment:** 32px control height, 6px radius, transparent border and muted text when inactive, a subtle panel/background hover, and a 10–14% accent tint with a light accent border and stronger text when active. Do not use an underline for CMS and other section tabs.
+- **Desktop section navigation uses `AdminTopbarTabs` only.** Its links share one geometry: 32px height, 6px radius, 12px horizontal padding, 11px text, 2px visible keyboard focus, transparent border when inactive, subtle panel hover, and a 10–14% accent tint plus light accent border when active. Do not create module-specific tab heights or typography.
+- **Responsive page navigation uses `AdminSectionTabs` only** below 900px. Dashboard, Inbox, Finance, Clients, Retainers, and SLA Monitoring must use the same component, align to the page gutter, and sit immediately after the module header. Do not apply negative top margins or custom grid/pill markup for individual modules.
+- Desktop and mobile tab sets must preserve the same reachable views and active-state semantics. Query-string views must use a shared `activeKey` derived from the URL; the Dashboard Tasks tab must link to `?view=tasks`. Every tab should expose `aria-current="page"` only for the active destination.
+- Keep data-automation slugs stable where they already exist. Do not bypass the shared tab primitives to add module-specific active/hover/focus styles.
 - Segmented controls inside a view can use their own neutral selected state; do not style every active control red.
 
 ### Drawers, modals, and form interaction
