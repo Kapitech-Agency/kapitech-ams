@@ -174,7 +174,8 @@ export const AdminSettings: React.FC = () => {
     isSuperAdmin ||
     Boolean(session?.user?.permissions?.canViewSecurityAuditLogs);
   const isCurrentMaster = isSuperAdmin;
-  // Authenticated users must be able to configure their own MFA even without admin-management rights.
+  // Users who must enroll in MFA can reach their own security setup without admin-management permissions.
+  const mfaSetupRequired = searchParams.get('mfaRequired') === '1' || session?.user?.mfaEnabled !== true;
   const normalizeTab = (value: string | null): SettingsTab => {
     if (value === 'audit') return 'audit';
     if (value === 'security' || value === 'profile' || value === 'rbac') return 'security';
@@ -185,12 +186,13 @@ export const AdminSettings: React.FC = () => {
   const requestedTabParam = searchParams.get('tab');
   const requestedTab = normalizeTab(requestedTabParam);
   const [activeTab, setActiveTab] = useState<SettingsTab>(requestedTab);
-  const fallbackTab: SettingsTab = canAccessServer ? 'overview' : canViewAuditLogs ? 'audit' : 'security';
+  const fallbackTab: SettingsTab = canAccessServer ? 'overview' : canViewAuditLogs ? 'audit' : (mfaSetupRequired || canManageAdminAccounts) ? 'security' : 'overview';
 
   useEffect(() => {
     const allowed: SettingsTab =
       ((requestedTab === 'overview' || requestedTab === 'integrations') && !canAccessServer) ||
-      (requestedTab === 'audit' && !canViewAuditLogs)
+      (requestedTab === 'audit' && !canViewAuditLogs) ||
+      (requestedTab === 'security' && !mfaSetupRequired && !canManageAdminAccounts && !canAccessServer)
         ? fallbackTab
         : requestedTab;
 
@@ -201,8 +203,10 @@ export const AdminSettings: React.FC = () => {
   }, [
     activeTab,
     canAccessServer,
+    canManageAdminAccounts,
     canViewAuditLogs,
     fallbackTab,
+    mfaSetupRequired,
     requestedTab,
     requestedTabParam,
     setSearchParams
@@ -211,6 +215,7 @@ export const AdminSettings: React.FC = () => {
   const selectTab = (tab: SettingsTab) => {
     if ((tab === 'overview' || tab === 'integrations') && !canAccessServer) return;
     if (tab === 'audit' && !canViewAuditLogs) return;
+    if (tab === 'security' && !mfaSetupRequired && !canManageAdminAccounts && !canAccessServer) return;
     setActiveTab(tab);
     setSearchParams({ tab });
   };
@@ -437,7 +442,8 @@ export const AdminSettings: React.FC = () => {
 
       if (backupRes?.success && backupRes.data) {
         setBackups(Array.isArray(backupRes.data.backups) ? backupRes.data.backups : []);
-        setBackupRetentionDays(Number(backupRes.data.retention ?? backupRes.data.retentionDays ?? 14));
+        const res = backupRes;
+        setBackupRetentionDays(Number(res.data.retention ?? res.data.retentionDays ?? 14));
       } else {
         failures.push('backup status');
       }
@@ -864,6 +870,7 @@ export const AdminSettings: React.FC = () => {
           ].filter((tab) =>
             (tab.key !== 'overview' || canAccessServer) &&
             (tab.key !== 'audit' || canViewAuditLogs) &&
+            (tab.key !== 'security' || mfaSetupRequired || canManageAdminAccounts || canAccessServer) &&
             (tab.key !== 'integrations' || canAccessServer)
           )}
         />
@@ -889,7 +896,14 @@ export const AdminSettings: React.FC = () => {
         </div>
       )}
 
-      {activeTab === 'overview' && (
+      {activeTab === 'overview' && !canAccessServer && (
+        <section className="rounded-card border border-line bg-panel p-5" role="status">
+          <h2 className="text-sm font-semibold text-fg">System settings access is restricted</h2>
+          <p className="mt-2 text-xs leading-5 text-muted">This account does not have permission to view backup, server, or integration settings. Contact an administrator if you need access.</p>
+        </section>
+      )}
+
+      {activeTab === 'overview' && canAccessServer && (
         <section data-ams-feature-slug="settings-overview" data-ams-slug="settings-overview" aria-label="System Status Summary" className="space-y-6">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             <SummaryCard
