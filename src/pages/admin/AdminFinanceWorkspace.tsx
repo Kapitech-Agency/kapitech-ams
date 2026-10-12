@@ -498,8 +498,11 @@ export const AdminFinanceWorkspace: React.FC = () => {
 
 
   const getRegisterRecords = (type: string): WorkbookRecord[] => registerRecords[type] || [];
+  const getOpeningRecord = (accountCode: string): WorkbookRecord | undefined =>
+    getRegisterRecords('cash-bank-opening').find((item) => String(item.payload.accountCode) === accountCode);
+
   const getOpeningBalance = (accountCode: string): number | null => {
-    const record = getRegisterRecords('cash-bank-opening').find((item) => String(item.payload.accountCode) === accountCode);
+    const record = getOpeningRecord(accountCode);
     return record ? Number(record.payload.openingBalance) || 0 : null;
   };
 
@@ -980,8 +983,12 @@ export const AdminFinanceWorkspace: React.FC = () => {
           </div>
         );
       case 'cash-bank': {
-        const opening = getOpeningBalance('1000');
-        const cashRows = cashMovements.filter((entry) => entry.currency === 'IDR').slice().sort((a,b) => a.date.localeCompare(b.date));
+        const openingRecord = getOpeningRecord('1000');
+        const opening = openingRecord ? Number(openingRecord.payload.openingBalance) || 0 : null;
+        const openingDate = String(openingRecord?.payload.openingDate || '').slice(0, 10);
+        const cashRows = cashMovements
+          .filter((entry) => entry.currency === 'IDR' && (!openingDate || entry.date.slice(0, 10) >= openingDate))
+          .slice().sort((a,b) => a.date.localeCompare(b.date));
         let running = opening ?? 0;
         const allCashLedgerRows = cashRows.map((entry) => {
           running += entry.cashIn - entry.cashOut;
@@ -1188,7 +1195,9 @@ export const AdminFinanceWorkspace: React.FC = () => {
         );
       }
       case 'petty-cash': {
-        const opening=getOpeningBalance('1100');
+        const openingRecord=getOpeningRecord('1100');
+        const opening=openingRecord?Number(openingRecord.payload.openingBalance)||0:null;
+        const openingDate=String(openingRecord?.payload.openingDate||'').slice(0,10);
         const vouchers=getRegisterRecords('petty-cash-voucher');
         const transferRows=getRegisterRecords('cash-bank-transaction').filter((record)=>String(record.payload.counterpartAccountCode||'')==='1100'||String(record.payload.accountCode||'')==='1100');
         const movements:Array<{id:string;date:string;reference:string;description:string;cashIn:number;cashOut:number;status:string;source:string;record?:WorkbookRecord}>=[];
@@ -1204,21 +1213,22 @@ export const AdminFinanceWorkspace: React.FC = () => {
           movements.push({id:record.id,date:String(payload.date||''),reference:String(payload.voucherNo||record.recordKey),description:String(payload.description||''),cashIn:status==='posted'&&payload.direction==='in'?Number(payload.amount)||0:0,cashOut:status==='posted'&&payload.direction==='out'?Number(payload.amount)||0:0,status,source:'Petty cash voucher',record});
         }
         movements.sort((a,b)=>a.date.localeCompare(b.date)||a.reference.localeCompare(b.reference));
+        const ledgerMovements=movements.filter((movement)=>!openingDate||movement.date.slice(0,10)>=openingDate);
         let running=opening??0;
-        const allPettyLedgerRows=movements.map((movement)=>{
+        const allPettyLedgerRows=ledgerMovements.map((movement)=>{
           const affectsBalance=movement.source==='Internal cash transfer'||movement.status==='posted';
           if(affectsBalance)running+=movement.cashIn-movement.cashOut;
           return {id:movement.id,search:[movement.date,movement.reference,movement.description,movement.status,movement.source],cells:[formatDate(movement.date),movement.reference,movement.description,movement.cashIn?formatMoney(movement.cashIn):'—',movement.cashOut?formatMoney(movement.cashOut):'—',(opening===null?'—':formatMoney(running)),<StatusBadge value={movement.status}/>,movement.record?registerRecordActions(movement.source==='Petty cash voucher'?'petty-cash-voucher':'cash-bank-transaction',movement.record):movement.source]};
         });
         const rows=allPettyLedgerRows.filter((row)=>matching(row.search)).reverse();
         const pending=vouchers.filter((record)=>['pending','approved'].includes(String(record.payload.status||record.status))).length;
-        const postedPettyMovements=movements.filter((movement)=>movement.source==='Internal cash transfer'||movement.status==='posted');
+        const postedPettyMovements=ledgerMovements.filter((movement)=>movement.source==='Internal cash transfer'||movement.status==='posted');
         const totalIn=sumAmounts<typeof postedPettyMovements[number]>(postedPettyMovements,(movement)=>movement.cashIn);
         const totalOut=sumAmounts<typeof postedPettyMovements[number]>(postedPettyMovements,(movement)=>movement.cashOut);
         return (
           <div className="space-y-4">
             <WorkbookNote tone={opening===null?'warning':'info'} title={opening===null?'Petty cash needs an opening balance':'Petty cash register connected'}>
-              Only posted vouchers affect the petty-cash ledger. Pending/approved vouchers remain visible in workflow but do not change the running balance. Internal transfers are shared with Cash & Bank and are not treated as an expense by themselves.
+              Only posted vouchers affect the petty-cash ledger. Pending/approved vouchers remain visible in workflow but do not change the running balance. The ledger starts at the saved opening date; earlier movements are excluded from the opening-balance roll-forward. Internal transfers are shared with Cash & Bank and are not treated as an expense by themselves.
             </WorkbookNote>
             <AdminMetricStrip metrics={[
               {id:'petty-opening',label:'Opening balance',value:opening===null?'Not set':formatMoney(opening),context:'Account 1100 · Petty Cash Reserve',icon:<WalletCards size={15}/>},
