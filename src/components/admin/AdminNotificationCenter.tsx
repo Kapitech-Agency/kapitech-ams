@@ -54,8 +54,8 @@ export const AdminNotificationCenter: React.FC = () => {
   const [markingAllRead, setMarkingAllRead] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
-  const refresh = async () => {
-    setLoading(true);
+  const refresh = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const res = await api.notifications.getAll();
       if (res.success && Array.isArray(res.data?.notifications)) {
@@ -80,13 +80,13 @@ export const AdminNotificationCenter: React.FC = () => {
       setUsingSampleData(true);
       setError(null);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
   useEffect(() => {
     void refresh();
-    const timer = window.setInterval(() => void refresh(), 30000);
+    const timer = window.setInterval(() => void refresh(true), 30000);
     return () => window.clearInterval(timer);
   }, [language]);
 
