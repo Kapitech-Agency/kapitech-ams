@@ -14,7 +14,7 @@ import {
   ReceiptText,
   Users,
 } from 'lucide-react';
-import { AdminMetricStrip, AdminModuleHeader, AdminPanel, AdminTablePagination } from './AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminTablePagination } from './AdminModulePrimitives';
 import { CustomSelect } from '../ui/CustomSelect';
 import { Modal } from '../ui/Modal';
 import { DonutChart, TrendChart } from '../charts/DashboardCharts';
@@ -582,7 +582,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   }
 
   return (
-    <div className="ams-dashboard min-h-full pb-10">
+    <AdminPageShell featureSlug="dashboard-module" className="ams-dashboard">
       <AdminModuleHeader slug="dashboard-header"
         title="Agency overview"
         description="Real-time metrics, project pacing, and financial health for the agency."
@@ -1115,7 +1115,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           </div>
         )}
       </Modal>
-    </div>
+    </AdminPageShell>
   );
 };
 
