@@ -899,6 +899,10 @@ export const AdminProjects: React.FC = () => {
       showToast('Select a project first.');
       return;
     }
+    if (selectedSprintProject.status === 'completed') {
+      showToast('Completed projects cannot receive new tasks.');
+      return;
+    }
     setEditingTask(null);
     setTaskForm({
       title: '',
@@ -2299,7 +2303,7 @@ export const AdminProjects: React.FC = () => {
                   className="w-full sm:w-64"
                   aria-label="Select sprint project"
                 />
-                {canManageKanbanTasks && (
+                {canManageKanbanTasks && selectedSprintProject && selectedSprintProject.status !== 'completed' && (
                   <Button icon={<Plus size={14} />} onClick={() => handleAddTask('todo')}>New task</Button>
                 )}
               </div>
@@ -2499,7 +2503,7 @@ export const AdminProjects: React.FC = () => {
                                   {column.id === 'todo' ? 'Ready to pick up' : column.id === 'in_progress' ? 'Actively being worked' : column.id === 'review' ? 'Waiting for review' : 'Completed delivery'}
                                 </p>
                               </div>
-                              {canManageKanbanTasks && (
+                              {canManageKanbanTasks && selectedSprintProject.status !== 'completed' && (
                                 <button
                                   type="button"
                                   onClick={() => handleAddTask(column.id)}
@@ -2529,7 +2533,7 @@ export const AdminProjects: React.FC = () => {
                                   <span className="mt-1 block text-[10px] leading-4 text-muted">
                                     {isDropTarget ? 'Release to move this task into the stage.' : canManageKanbanTasks ? 'Add a task or drag one here.' : 'No tasks currently in this stage.'}
                                   </span>
-                                  {canManageKanbanTasks && !isDropTarget && (
+                                  {canManageKanbanTasks && selectedSprintProject.status !== 'completed' && !isDropTarget && (
                                     <button type="button" onClick={() => handleAddTask(column.id)} className="mt-3 text-[10px] font-medium text-accent-text hover:text-accent">
                                       Add task
                                     </button>
@@ -2992,7 +2996,7 @@ export const AdminProjects: React.FC = () => {
         <form id="projects-task-form" data-ams-feature-slug="projects-task-form" data-ams-slug="projects-task-form" onSubmit={saveTask} className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="text-xs text-muted sm:col-span-2">Task title<input required value={taskForm.title} onChange={event => setTaskForm({ ...taskForm, title: event.target.value })} className={fieldClass} /></label>
-            <div><label className="text-xs text-muted">Project</label><CustomSelect value={taskForm.projectId} onChange={value => setTaskForm({ ...taskForm, projectId: value })} options={activeProjects.map(project => ({ value: project.id, label: project.name }))} className="mt-1 w-full" /></div>
+            <div><label className="text-xs text-muted">Project</label><CustomSelect value={taskForm.projectId} onChange={value => setTaskForm({ ...taskForm, projectId: value })} options={projects.filter(project => project.status !== 'completed' || project.id === taskForm.projectId).map(project => ({ value: project.id, label: project.name + (project.status === 'completed' ? ' (Completed)' : '') }))} className="mt-1 w-full" /></div>
             <label className="text-xs text-muted">Assignee
               <input
                 value={taskForm.assignee}
