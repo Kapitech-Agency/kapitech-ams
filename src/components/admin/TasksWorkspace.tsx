@@ -1111,11 +1111,11 @@ export const TasksWorkspace: React.FC = () => {
             <input id="task-title" required value={taskForm.title} onChange={event => setTaskForm(current => ({ ...current, title: event.target.value }))} className="mt-1 h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent" placeholder="e.g. Finalize homepage responsive states" />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
-            <div data-ams-slug="task-create-project"><label className="text-[11px] font-medium text-muted">Project</label><CustomSelect value={taskForm.projectId} onChange={value => setTaskForm(current => ({ ...current, projectId: value }))} options={projectOptions.map(([value, label]) => ({ value, label }))} triggerClassName="mt-1 h-9 min-h-9 w-full" /></div>
-            <div data-ams-slug="task-create-assignee"><label className="text-[11px] font-medium text-muted">Assignee</label><CustomSelect value={taskForm.assignee} onChange={value => setTaskForm(current => ({ ...current, assignee: value }))} options={[{ value: '', label: 'Unassigned' }, ...assignees.map(item => ({ value: item.id, label: item.name }))]} triggerClassName="mt-1 h-9 min-h-9 w-full" /></div>
+            <div data-ams-slug="task-create-project"><label className="text-[11px] font-medium text-muted">Project</label><CustomSelect aria-label="Project" value={taskForm.projectId} onChange={value => setTaskForm(current => ({ ...current, projectId: value }))} options={projectOptions.map(([value, label]) => ({ value, label }))} triggerClassName="mt-1 h-9 min-h-9 w-full" /></div>
+            <div data-ams-slug="task-create-assignee"><label className="text-[11px] font-medium text-muted">Assignee</label><CustomSelect aria-label="Assignee" value={taskForm.assignee} onChange={value => setTaskForm(current => ({ ...current, assignee: value }))} options={[{ value: '', label: 'Unassigned' }, ...assignees.map(item => ({ value: item.id, label: item.name }))]} triggerClassName="mt-1 h-9 min-h-9 w-full" /></div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
-            <div data-ams-slug="task-create-priority"><label className="text-[11px] font-medium text-muted">Priority</label><CustomSelect value={taskForm.priority} onChange={value => setTaskForm(current => ({ ...current, priority: value as TaskPriority }))} options={Object.entries(taskPriorityLabel).map(([value, label]) => ({ value, label }))} triggerClassName="mt-1 h-9 min-h-9 w-full" /></div>
+            <div data-ams-slug="task-create-priority"><label className="text-[11px] font-medium text-muted">Priority</label><CustomSelect aria-label="Priority" value={taskForm.priority} onChange={value => setTaskForm(current => ({ ...current, priority: value as TaskPriority }))} options={Object.entries(taskPriorityLabel).map(([value, label]) => ({ value, label }))} triggerClassName="mt-1 h-9 min-h-9 w-full" /></div>
             <div data-ams-slug="task-create-due"><label htmlFor="task-due" className="text-[11px] font-medium text-muted">Due date</label><input id="task-due" type="date" required value={taskForm.dueDate} onChange={event => setTaskForm(current => ({ ...current, dueDate: event.target.value }))} className="mt-1 h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent" /></div>
           </div>
           <div data-ams-slug="task-create-tags">
@@ -1288,11 +1288,11 @@ export const TasksWorkspace: React.FC = () => {
           <div className="grid gap-3 sm:grid-cols-2">
             <div data-ams-slug="task-edit-assignee">
               <label className="text-[11px] font-medium text-muted">Assignee</label>
-              <CustomSelect value={taskEditForm.assignee} onChange={value => setTaskEditForm(current => ({ ...current, assignee: value }))} options={[{ value: '', label: 'Unassigned' }, ...assignees.map(item => ({ value: item.id, label: item.name }))]} triggerClassName="mt-1 h-9 min-h-9 w-full" />
+              <CustomSelect aria-label="Assignee" value={taskEditForm.assignee} onChange={value => setTaskEditForm(current => ({ ...current, assignee: value }))} options={[{ value: '', label: 'Unassigned' }, ...assignees.map(item => ({ value: item.id, label: item.name }))]} triggerClassName="mt-1 h-9 min-h-9 w-full" />
             </div>
             <div data-ams-slug="task-edit-priority">
               <label className="text-[11px] font-medium text-muted">Priority</label>
-              <CustomSelect value={taskEditForm.priority} onChange={value => setTaskEditForm(current => ({ ...current, priority: value as TaskPriority }))} options={Object.entries(taskPriorityLabel).map(([value, label]) => ({ value, label }))} triggerClassName="mt-1 h-9 min-h-9 w-full" />
+              <CustomSelect aria-label="Priority" value={taskEditForm.priority} onChange={value => setTaskEditForm(current => ({ ...current, priority: value as TaskPriority }))} options={Object.entries(taskPriorityLabel).map(([value, label]) => ({ value, label }))} triggerClassName="mt-1 h-9 min-h-9 w-full" />
             </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
