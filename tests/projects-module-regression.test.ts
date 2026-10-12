@@ -88,12 +88,12 @@ test('Toast timers are replaced and cleared on unmount', async () => {
 test('Interactive project and task details follow the shared Drawer guideline', async () => {
   const source = await read('src/pages/admin/AdminProjects.tsx');
 
-  assert.match(source, /<Drawer\\s+open=\\{Boolean\\(selectedProjectDetail\\)\\}/);
-  assert.match(source, /<Drawer\\s+open=\\{Boolean\\(selectedTask\\)\\}/);
-  assert.match(source, /<Modal\\s+open=\\{Boolean\\(deleteProject\\)\\}/);
-  assert.match(source, /<Modal\\s+open=\\{Boolean\\(deleteTask\\)\\}/);
-  assert.doesNotMatch(source, /<Modal\\s+open=\\{Boolean\\(selectedTask\\)\\}/);
-  assert.doesNotMatch(source, /<Modal\\s+open=\\{Boolean\\(selectedProjectDetail\\)\\}/);
+  assert.match(source, /<Drawer\s+open=\{Boolean\(selectedProjectDetail\)\}/);
+  assert.match(source, /<Drawer\s+open=\{Boolean\(selectedTask\)\}/);
+  assert.match(source, /<Modal\s+open=\{Boolean\(deleteProject\)\}/);
+  assert.match(source, /<Modal\s+open=\{Boolean\(deleteTask\)\}/);
+  assert.doesNotMatch(source, /<Modal\s+open=\{Boolean\(selectedTask\)\}/);
+  assert.doesNotMatch(source, /<Modal\s+open=\{Boolean\(selectedProjectDetail\)\}/);
 });
 
 test('Project overview metrics and sprint project selection describe their actual context', async () => {
