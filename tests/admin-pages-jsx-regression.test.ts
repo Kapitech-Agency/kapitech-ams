@@ -132,7 +132,7 @@ test('All AMS form and input overlays use Drawer instead of Modal', () => {
   assert.ok(careers.includes('cms-careers-editor') && careers.includes('cms-career-applicant-details'));
   assert.ok(!careers.includes("import { Modal } from '../../components/ui/Modal'"));
   assert.ok(tasks.includes('<Drawer slug="task-create-modal"') && tasks.includes('<Drawer slug="task-edit-modal"'));
-  assert.ok(documents.includes('<Drawer') && documents.includes('documents-upload-form')));
-  assert.ok(teams.includes('<Drawer') && teams.includes('vendorFormOpen')));
+  assert.ok(documents.includes('<Drawer') && documents.includes('documents-upload-form'));
+  assert.ok(teams.includes('<Drawer') && teams.includes('vendorFormOpen'));
   assert.ok(drawer.includes("'3xl': 'max-w-4xl'") && drawer.includes("'4xl': 'max-w-5xl'"));
 });
