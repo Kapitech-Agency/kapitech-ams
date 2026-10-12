@@ -103,3 +103,36 @@ test('Authenticated AMS pages use one canonical responsive page frame', () => {
   assert.ok(layout.includes('<div className="ams-content flex-1 min-h-0 w-full max-w-[1560px] mx-auto">'));
   assert.ok(dashboard.includes('<AdminPageShell featureSlug="dashboard-module" className="ams-dashboard">'));
 });
+test('All AMS form and input overlays use Drawer instead of Modal', () => {
+  const srcRoot = path.resolve(process.cwd(), 'src');
+  const walk = (directory) => fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const fullPath = path.join(directory, entry.name);
+    if (entry.isDirectory()) return walk(fullPath);
+    return entry.isFile() && entry.name.endsWith('.tsx') ? [fullPath] : [];
+  });
+  const inputPattern = /<(?:form|input|textarea|select|CustomSelect|DatePicker|Input|Textarea|Select|Combobox|MultiSelect)\b/i;
+  const findings = [];
+
+  for (const file of walk(srcRoot)) {
+    const source = fs.readFileSync(file, 'utf8');
+    const modalBlocks = source.match(/<Modal\b[\s\S]*?<\/Modal>/g) || [];
+    modalBlocks.forEach((block, index) => {
+      if (inputPattern.test(block)) findings.push(path.relative(process.cwd(), file) + ' (Modal #' + (index + 1) + ')');
+    });
+  }
+
+  assert.deepEqual(findings, [], 'Create/edit forms and interactive inputs must be hosted by Drawer, not Modal.');
+
+  const careers = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsCareers.tsx'), 'utf8');
+  const tasks = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/TasksWorkspace.tsx'), 'utf8');
+  const documents = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminDocuments.tsx'), 'utf8');
+  const teams = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminTeams.tsx'), 'utf8');
+  const drawer = fs.readFileSync(path.resolve(process.cwd(), 'src/components/ui/Drawer.tsx'), 'utf8');
+
+  assert.ok(careers.includes('cms-careers-editor') && careers.includes('cms-career-applicant-details'));
+  assert.ok(!careers.includes("import { Modal } from '../../components/ui/Modal'"));
+  assert.ok(tasks.includes('<Drawer slug="task-create-modal"') && tasks.includes('<Drawer slug="task-edit-modal"'));
+  assert.ok(documents.includes('<Drawer') && documents.includes('documents-upload-form')));
+  assert.ok(teams.includes('<Drawer') && teams.includes('vendorFormOpen')));
+  assert.ok(drawer.includes("'3xl': 'max-w-4xl'") && drawer.includes("'4xl': 'max-w-5xl'"));
+});
