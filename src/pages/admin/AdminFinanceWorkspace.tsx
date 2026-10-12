@@ -660,7 +660,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
               The workbook calculates allocation from Net Project Profit after vendor costs and other project obligations. Amounts are not generated here until AMS has explicit vendor commitment and other-obligation values linked to the same project.
             </WorkbookNote>
             <AdminMetricStrip metrics={[
-              { id: 'alloc-petty', label: 'Petty cash reserve', value: '10%', context: 'Of Net Project Profit', icon: <Wallet size={15} /> },
+              { id: 'alloc-petty', label: 'Petty cash reserve', value: '10%', context: 'Of Net Project Profit', icon: <WalletCards size={15} /> },
               { id: 'alloc-emergency', label: 'Emergency fund', value: '10%', context: 'Of Net Project Profit', icon: <ShieldAlert size={15} /> },
               { id: 'alloc-reward', label: 'Team Reward', value: '10%', context: 'Separate from Project Team Fee', icon: <CircleDollarSign size={15} /> },
               { id: 'alloc-company', label: 'Company operational fund', value: '70%', context: 'Remainder after three allocations above', icon: <Landmark size={15} /> }
