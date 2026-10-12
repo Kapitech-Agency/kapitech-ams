@@ -194,7 +194,7 @@ function normalise(type: FinanceWorkbookRecordType, raw: unknown, approval = fal
       if (status === 'posted' && !approval) throw new FinanceWorkbookValidationError('A journal must be approved before posting.');
       const sourceType = txt(v.sourceType, 40);
       const sourceId = txt(v.sourceId, 160);
-      const allowedSourceTypes = ['invoice-payment', 'expense', 'cash-bank-transfer'];
+      const allowedSourceTypes = ['invoice-issued', 'invoice-payment', 'expense', 'cash-bank-transfer', 'vendor-bill-payment'];
       if ((sourceType && !sourceId) || (!sourceType && sourceId)) {
         throw new FinanceWorkbookValidationError('Journal source type and source ID must be supplied together.');
       }

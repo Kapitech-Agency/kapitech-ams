@@ -77,3 +77,10 @@ The workbook supplies one due date per bill, not separate milestone dates. AMS t
 Monthly Closing now uses the workbook's 11 checklist rows and PIC defaults: All revenue recorded (Baim), All expenses recorded (Fikri), Cash & bank reconciled, Receivables reviewed, Payables reviewed, Project margins reviewed, Journal balanced, P&L reviewed, Cash Flow reviewed, Balance Sheet reviewed, and Management approval. The backend close-period guard checks this same set rather than the previous set of 10 substitute controls.
 
 A saved checklist remains an operator sign-off, not reconciliation evidence by itself. In particular, Cash & bank reconciled and Balance Sheet reviewed must not be interpreted as system-verified reconciliation until statement matching and a complete posted ledger exist.
+
+
+## Source journal mapping correction and vendor payment coverage
+
+Invoice issuance with zero recorded tax now prepares a draft debit to **1300 Accounts Receivable** and credit to **4000 Project Revenue**. A dated client receipt prepares debit to **1000 Cash & Bank** and credit to **1300 Accounts Receivable**, so collection does not recognize the same revenue a second time. These drafts still require Finance review and confirmation that the source invoice was not already recognized. Taxable invoice issuance remains skipped with a reason because the current workbook Chart of Accounts does not include a dedicated tax-liability account; the tax portion is not silently credited to revenue.
+
+The source sync also prepares vendor-payment drafts for IDR vendor bills when the payment method has a supportable workbook account mapping: bank transfer proposes credit to 1000 Cash & Bank, and cash proposes a provisional credit to 1100 Petty Cash Reserve. Credit-card and other methods are held for explicit account mapping. The journal entry debits 2000 Accounts Payable. These are source-linked drafts only; vendor bill expense recognition, bill-to-ledger reconciliation, payment source verification, and independent approval remain required before posting.

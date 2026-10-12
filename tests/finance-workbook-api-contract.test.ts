@@ -61,6 +61,11 @@ test('Journal source sync is permission-gated, draft-only and duplicate-safe', a
   assert.match(mapping, /buildFinanceSourceJournalDrafts/);
   assert.match(mapping, /No draft returned by this function is approved or posted/);
   assert.match(mapping, /provisional workbook default/);
+  assert.match(mapping, /debitCode: '1000', creditCode: '1300'/);
+  assert.match(mapping, /sourceType: 'invoice-issued'/);
+  assert.match(mapping, /sourceType: 'vendor-bill-payment'/);
+  assert.match(repository, /invoice-issued.*invoice-payment.*expense.*cash-bank-transfer.*vendor-bill-payment/);
+  assert.match(routes, /postgresFinanceWorkbookRepository\.list\('vendor-bill-payment'\)/);
   const client = await read('src/lib/apiClient.ts');
   assert.match(client, /workbookSyncJournalDrafts:/);
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');

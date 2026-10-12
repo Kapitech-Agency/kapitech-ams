@@ -1509,7 +1509,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
       case 'journal': {
         const allJournalRecords = getRegisterRecords('journal-entry');
         const records = allJournalRecords.filter((record) => matching([record.payload.date,record.payload.reference,record.payload.description,record.payload.projectId,record.status]));
-        const plan = buildFinanceSourceJournalDrafts(reportInvoices, expenses as any[], getRegisterRecords('cash-bank-transaction'));
+        const plan = buildFinanceSourceJournalDrafts(reportInvoices, expenses as any[], getRegisterRecords('cash-bank-transaction'), getRegisterRecords('vendor-bill'), getRegisterRecords('vendor-bill-payment'));
         const linkedJournal = new Map<string, WorkbookRecord>();
         for (const record of allJournalRecords) {
           const sourceType = String(record.payload.sourceType || '');
@@ -1545,7 +1545,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
         return (
           <div className="space-y-4">
             <WorkbookNote tone="info" title="Source sync creates drafts only">
-              Generate source drafts prepares balanced two-line entries from dated IDR client receipts, classifiable expense records and posted internal cash transfers. Nothing is approved or posted automatically. Expense payment status and payment account may be unverified in AMS; those drafts explicitly require verification. Ambiguous or unsupported sources remain skipped with a reason.
+              Generate source drafts prepares invoice-recognition entries where the tax mapping is supported, client receipts that clear Accounts Receivable, classifiable expense entries, vendor bill payments with a supported account proposal, and posted internal cash transfers. Nothing is approved or posted automatically. Unsupported tax or payment-account mappings stay skipped with a reason; verify each source and its related ledger entry before approval.
             </WorkbookNote>
             {journalSyncSummary && <WorkbookNote tone="info" title="Source journal sync result">{journalSyncSummary}</WorkbookNote>}
             <FinanceDataTable title="General Journal" description="Generated records retain their source reference. Review every draft and supporting document; a different authorized user must approve/post it. Posted entries are immutable." columns={[{label:'Date'},{label:'Reference'},{label:'Description'},{label:'Project'},{label:'Debit total',align:'right'},{label:'Credit total',align:'right'},{label:'Status'},{label:'Actions'}]} rows={records.map((record)=>({id:record.id,cells:[formatDate(record.payload.date),String(record.payload.reference||record.recordKey),String(record.payload.description||''),String(record.payload.projectId||'—'),formatMoney(Number(record.payload.debitTotal)||0),formatMoney(Number(record.payload.creditTotal)||0),<StatusBadge value={record.status}/>,registerRecordActions('journal-entry',record)]}))} emptyMessage="No general journal entries have been saved." actions={<div className="flex flex-wrap items-center gap-2">{registerAddButton('journal-entry','Add journal entry')}<Button variant="secondary" type="button" loading={registerSaving} icon={<RefreshCw size={14}/>} onClick={() => void syncSourceJournalDrafts()}>Generate source drafts</Button></div>}/>

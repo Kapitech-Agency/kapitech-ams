@@ -96,16 +96,32 @@ test('Source journal bridge generates balanced cash-basis drafts with stable pro
         accountCode: '1000', counterpartAccountCode: '1100', direction: 'out',
         reference: 'TR-001', description: 'Petty cash top up'
       }
+    }],
+    [{
+      id: 'bill-1', recordKey: 'BILL-001', projectId: 'project-1',
+      payload: { billNo: 'BILL-001', vendorName: 'Vendor Co', currency: 'IDR', total: 150000, dueDate: '2026-10-31' }
+    }],
+    [{
+      id: 'vendor-payment-1', status: 'posted',
+      payload: { billId: 'bill-1', paidDate: '2026-10-07', amount: 50000, method: 'bank_transfer', reference: 'VP-001' }
     }]
   );
-  assert.equal(plan.drafts.length, 3);
+  assert.equal(plan.drafts.length, 5);
+  const issued = plan.drafts.find((draft) => draft.sourceType === 'invoice-issued');
+  assert.ok(issued);
+  assert.equal(issued?.lines[0].accountCode, '1300');
+  assert.equal(issued?.lines[1].accountCode, '4000');
+  assert.equal(issued?.lines[0].debit, issued?.lines[1].credit);
+  assert.match(issued?.notes || '', /zero recorded tax/);
+
   const receipt = plan.drafts.find((draft) => draft.sourceType === 'invoice-payment');
   assert.ok(receipt);
   assert.equal(receipt?.lines[0].accountCode, '1000');
-  assert.equal(receipt?.lines[1].accountCode, '4000');
+  assert.equal(receipt?.lines[1].accountCode, '1300');
   assert.equal(receipt?.reference, 'RCPT-001');
   assert.equal(receipt?.lines[0].debit, receipt?.lines[1].credit);
   assert.match(receipt?.sourceId || '', /^invoice-1:payment:/);
+  assert.match(receipt?.notes || '', /matching invoice receivable has already been recognized/);
 
   const mappedExpense = plan.drafts.find((draft) => draft.sourceType === 'expense');
   assert.equal(mappedExpense?.lines[0].accountCode, '5100');
@@ -116,6 +132,12 @@ test('Source journal bridge generates balanced cash-basis drafts with stable pro
   const transfer = plan.drafts.find((draft) => draft.sourceType === 'cash-bank-transfer');
   assert.equal(transfer?.lines[0].accountCode, '1100');
   assert.equal(transfer?.lines[1].accountCode, '1000');
+
+  const vendorPayment = plan.drafts.find((draft) => draft.sourceType === 'vendor-bill-payment');
+  assert.ok(vendorPayment);
+  assert.equal(vendorPayment?.lines[0].accountCode, '2000');
+  assert.equal(vendorPayment?.lines[1].accountCode, '1000');
+  assert.match(vendorPayment?.notes || '', /verify the transfer and bill evidence/);
 });
 
 test('Source journal bridge skips unpaid, foreign-currency, petty-cash duplicate and unmapped expense sources', () => {
@@ -139,6 +161,25 @@ test('Source journal bridge skips unpaid, foreign-currency, petty-cash duplicate
   assert.ok(plan.skipped.some((item) => item.sourceType === 'invoice-payment' && /IDR-only/.test(item.reason)));
   assert.ok(plan.skipped.some((item) => item.sourceType === 'expense' && item.sourceId === 'unknown-expense' && /No unambiguous/.test(item.reason)));
   assert.ok(plan.skipped.some((item) => item.sourceType === 'expense' && item.sourceId === 'petty-expense' && /petty-cash/i.test(item.reason)));
+
+  const taxable = {
+    ...unpaid, id: 'taxable-invoice', invoiceNumber: 'INV-TAX', issueDate: '2026-10-02',
+    currency: 'IDR' as const, taxAmount: 110000, amountPaid: 0, balanceDue: 1110000,
+    subtotal: 1000000, total: 1110000
+  };
+  const unsupportedPayment = {
+    id: 'vendor-card-payment', status: 'posted',
+    payload: { billId: 'bill-card', paidDate: '2026-10-06', amount: 100, method: 'credit_card', reference: 'VP-CARD' }
+  };
+  const safePlan = buildFinanceSourceJournalDrafts(
+    [taxable],
+    [],
+    [],
+    [{ id: 'bill-card', payload: { billNo: 'BILL-CARD', currency: 'IDR', total: 1000 } }],
+    [unsupportedPayment]
+  );
+  assert.ok(safePlan.skipped.some((item) => item.sourceType === 'invoice-issued' && /tax-liability account/.test(item.reason)));
+  assert.ok(safePlan.skipped.some((item) => item.sourceType === 'vendor-bill-payment' && /no confirmed matching credit account/.test(item.reason)));
 });
 
 

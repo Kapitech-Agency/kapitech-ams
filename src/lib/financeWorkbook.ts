@@ -186,7 +186,7 @@ export function sumAmounts<T>(items: T[], amountOf: (item: T) => number): number
 }
 
 
-export type FinanceSourceJournalType = 'invoice-payment' | 'expense' | 'cash-bank-transfer';
+export type FinanceSourceJournalType = 'invoice-issued' | 'invoice-payment' | 'expense' | 'cash-bank-transfer' | 'vendor-bill-payment';
 
 export interface FinanceSourceJournalDraft {
   sourceType: FinanceSourceJournalType;
@@ -266,7 +266,9 @@ function buildTwoLineFinanceDraft(input: {
 export function buildFinanceSourceJournalDrafts(
   invoices: AgencyInvoice[],
   expenses: Array<AgencyExpense & Record<string, any>>,
-  cashBankTransactions: Array<{ id: string; status?: string; payload: Record<string, unknown> }>
+  cashBankTransactions: Array<{ id: string; status?: string; payload: Record<string, unknown> }>,
+  vendorBills: Array<{ id: string; recordKey?: string; projectId?: string; payload: Record<string, unknown> }> = [],
+  vendorBillPayments: Array<{ id: string; status?: string; payload: Record<string, unknown> }> = []
 ): FinanceSourceJournalPlan {
   const drafts: FinanceSourceJournalDraft[] = [];
   const skipped: FinanceSourceJournalSkip[] = [];
@@ -274,6 +276,41 @@ export function buildFinanceSourceJournalDrafts(
 
   for (const invoice of invoices) {
     if (!isIssuedInvoice(invoice)) continue;
+
+    const invoiceId = String(invoice.id || '').trim();
+    const issueDate = String(invoice.issueDate || '').slice(0, 10);
+    const invoiceAmount = safeFinanceMoney(invoice.total);
+    const invoiceReference = String(invoice.invoiceNumber || invoiceId || '').slice(0, 160);
+    const invoiceDescription = 'Invoice issued · ' + String(invoice.clientCompany || invoice.clientName || 'Client not set');
+    const invoiceSourceId = sourceIdentifier(invoiceId, 'issued');
+    if (!invoiceId || !invoiceAmount || !isValidFinanceDate(issueDate)) {
+      skip({
+        sourceType: 'invoice-issued', sourceId: invoiceSourceId, date: issueDate,
+        reference: invoiceReference, description: invoiceDescription, amount: Number(invoice.total) || 0,
+        reason: 'Invoice issuance needs a stable invoice ID, valid issue date and positive total.'
+      });
+    } else if (safeFinanceCurrency(invoice.currency) !== 'IDR') {
+      skip({
+        sourceType: 'invoice-issued', sourceId: invoiceSourceId, date: issueDate,
+        reference: invoiceReference, description: invoiceDescription, amount: invoiceAmount,
+        reason: 'The workbook ledger is IDR-only. Document the FX rate and conversion before creating a journal.'
+      });
+    } else if (safeFinanceMoney(invoice.taxAmount) > 0.01) {
+      skip({
+        sourceType: 'invoice-issued', sourceId: invoiceSourceId, date: issueDate,
+        reference: invoiceReference, description: invoiceDescription, amount: invoiceAmount,
+        reason: 'Taxable invoice issuance is held because the current workbook Chart of Accounts has no dedicated tax-liability account; do not credit tax to revenue.'
+      });
+    } else {
+      const notes = 'Draft generated from an issued AMS invoice with zero recorded tax. Debit Accounts Receivable and credit Project Revenue. Confirm invoice items, discounts and that this invoice has not already been recognized in the ledger; not posted.';
+      drafts.push(buildTwoLineFinanceDraft({
+        sourceType: 'invoice-issued', sourceId: invoiceSourceId, date: issueDate,
+        reference: invoiceReference, description: invoiceDescription,
+        debitCode: '1300', creditCode: '4000', amount: invoiceAmount,
+        projectId: invoice.projectId, notes
+      }));
+    }
+
     const payments = getPaymentRows(invoice);
     if (payments.length === 0 && getInvoiceCollected(invoice) > 0) {
       skip({
@@ -288,9 +325,9 @@ export function buildFinanceSourceJournalDrafts(
       continue;
     }
 
-    for (const payment of payments) {
+    payments.forEach((payment, paymentIndex) => {
       const amount = safeFinanceMoney(payment.amount);
-      const sourceId = sourceIdentifier(invoice.id, 'payment', payment.id, payment.date, String(amount));
+      const sourceId = sourceIdentifier(invoice.id, 'payment', payment.id, String(paymentIndex));
       const reference = String(payment.reference || invoice.invoiceNumber || invoice.id || '').slice(0, 160);
       const description = 'Client receipt · ' + String(invoice.clientCompany || invoice.clientName || 'Client not set');
       if (!amount) {
@@ -308,9 +345,10 @@ export function buildFinanceSourceJournalDrafts(
       const notes = 'Draft generated from an AMS invoice payment. Confirm the receipt against supporting evidence; this follows the workbook cash-basis receipt example and is not posted.';
       drafts.push(buildTwoLineFinanceDraft({
         sourceType: 'invoice-payment', sourceId, date: payment.date, reference, description,
-        debitCode: '1000', creditCode: '4000', amount, projectId: invoice.projectId, notes
+        debitCode: '1000', creditCode: '1300', amount, projectId: invoice.projectId,
+        notes: notes + ' Only post after confirming the matching invoice receivable has already been recognized.'
       }));
-    }
+    });
   }
 
   for (const expense of expenses) {
@@ -391,6 +429,57 @@ export function buildFinanceSourceJournalDrafts(
     drafts.push(buildTwoLineFinanceDraft({
       sourceType, sourceId, date: expenseDate, reference, description, debitCode, creditCode,
       amount, projectId: expense.projectId, notes
+    }));
+  }
+
+  const billsById = new Map(vendorBills.map((bill) => [String(bill.id), bill]));
+  for (const payment of vendorBillPayments) {
+    const payload = payment.payload || {};
+    const paymentId = String(payment.id || '').trim();
+    const billId = String(payload.billId || '').trim();
+    const bill = billsById.get(billId);
+    const paidDate = String(payload.paidDate || '').slice(0, 10);
+    const amount = safeFinanceMoney(payload.amount);
+    const reference = String(payload.reference || paymentId || '').slice(0, 160);
+    const description = 'Vendor payment · ' + String(bill?.payload.billNo || bill?.recordKey || billId || 'Unlinked bill');
+    const sourceId = sourceIdentifier(paymentId);
+
+    if (!paymentId || !bill) {
+      skip({
+        sourceType: 'vendor-bill-payment', sourceId: sourceId || 'missing-payment-id',
+        date: paidDate, reference, description, amount,
+        reason: 'Vendor payment cannot be mapped because its source payment ID or linked vendor bill is missing.'
+      });
+      continue;
+    }
+    if (String(payment.status || '').toLowerCase() !== 'posted') {
+      skip({ sourceType: 'vendor-bill-payment', sourceId, date: paidDate, reference, description, amount, reason: 'Vendor payment is not in the posted source state.' });
+      continue;
+    }
+    if (!isValidFinanceDate(paidDate) || !amount) {
+      skip({ sourceType: 'vendor-bill-payment', sourceId, date: paidDate, reference, description, amount: Number(payload.amount) || 0, reason: 'Vendor payment needs a valid payment date and positive amount.' });
+      continue;
+    }
+    if (safeFinanceCurrency(bill.payload.currency) !== 'IDR') {
+      skip({ sourceType: 'vendor-bill-payment', sourceId, date: paidDate, reference, description, amount, reason: 'The workbook ledger is IDR-only. Document the FX rate and conversion before creating a journal.' });
+      continue;
+    }
+    const method = String(payload.method || '').trim().toLowerCase();
+    const creditCode = method === 'bank_transfer' ? '1000' : method === 'cash' ? '1100' : '';
+    if (!creditCode) {
+      skip({
+        sourceType: 'vendor-bill-payment', sourceId, date: paidDate, reference, description, amount,
+        reason: 'The payment method has no confirmed matching credit account in the current Chart of Accounts. Credit-card and other methods need an explicit account mapping.'
+      });
+      continue;
+    }
+    const notes = method === 'cash'
+      ? 'Draft generated from an AMS vendor bill payment. Debit Accounts Payable and provisionally credit Petty Cash Reserve for a cash payment. Verify the actual payment source and bill evidence before approval; not posted.'
+      : 'Draft generated from an AMS vendor bill payment. Debit Accounts Payable and credit Cash & Bank for a bank-transfer payment. Verify the transfer and bill evidence before approval; not posted.';
+    drafts.push(buildTwoLineFinanceDraft({
+      sourceType: 'vendor-bill-payment', sourceId, date: paidDate, reference, description,
+      debitCode: '2000', creditCode, amount,
+      projectId: String(bill.projectId || payload.projectId || '') || undefined, notes
     }));
   }
 

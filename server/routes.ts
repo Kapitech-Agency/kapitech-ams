@@ -3853,16 +3853,20 @@ apiRouter.post('/finance/workbook/periods/:period/close', requireAuth, requirePe
 apiRouter.post('/finance/workbook/journal-drafts/sync', requireAuth, requirePermission('canManageInvoices'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   if (!ensureFinanceWorkbookPostgres(res)) return;
   try {
-    const [invoices, expenses, transfers, existingJournals] = await Promise.all([
+    const [invoices, expenses, transfers, vendorBills, vendorBillPayments, existingJournals] = await Promise.all([
       postgresInvoiceRepository.list(),
       postgresExpenseRepository.list(),
       postgresFinanceWorkbookRepository.list('cash-bank-transaction'),
+      postgresFinanceWorkbookRepository.list('vendor-bill'),
+      postgresFinanceWorkbookRepository.list('vendor-bill-payment'),
       postgresFinanceWorkbookRepository.list('journal-entry')
     ]);
     const plan = buildFinanceSourceJournalDrafts(
       invoices as any[],
       expenses as any[],
-      transfers.map((record) => ({ id: record.id, status: record.status, payload: record.payload }))
+      transfers.map((record) => ({ id: record.id, status: record.status, payload: record.payload })),
+      vendorBills.map((record) => ({ id: record.id, recordKey: record.recordKey, projectId: record.projectId, payload: record.payload })),
+      vendorBillPayments.map((record) => ({ id: record.id, status: record.status, payload: record.payload }))
     );
     const existingSourceKeys = new Set(existingJournals
       .map((record) => {
