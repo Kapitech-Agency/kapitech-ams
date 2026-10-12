@@ -737,7 +737,7 @@ export const AdminClients: React.FC = () => {
             </div>
           )}
 
-          <section aria-labelledby="client-contact-section" className="grid gap-4 sm:grid-cols-[176px_minmax(0,1fr)] sm:gap-5">
+          <section aria-labelledby="client-contact-section" data-ams-drawer-layout="sections" className="grid gap-4 sm:grid-cols-[176px_minmax(0,1fr)] sm:gap-5">
             <div>
               <h3 id="client-contact-section" className="text-sm font-semibold text-fg">Contact information</h3>
               <p className="mt-1 text-xs leading-4 text-muted">Primary contact and company details.</p>
@@ -754,7 +754,7 @@ export const AdminClients: React.FC = () => {
             </div>
           </section>
 
-          <section aria-labelledby="client-account-section" className="grid gap-4 border-t border-line pt-5 sm:grid-cols-[176px_minmax(0,1fr)] sm:gap-5">
+          <section aria-labelledby="client-account-section" data-ams-drawer-layout="sections" className="grid gap-4 border-t border-line pt-5 sm:grid-cols-[176px_minmax(0,1fr)] sm:gap-5">
             <div>
               <h3 id="client-account-section" className="text-sm font-semibold text-fg">Account settings</h3>
               <p className="mt-1 text-xs leading-4 text-muted">Keep the account state aligned with the relationship.</p>
@@ -765,7 +765,7 @@ export const AdminClients: React.FC = () => {
             </div>
           </section>
 
-          <section aria-labelledby="client-relationship-section" className="grid gap-4 border-t border-line pt-5 sm:grid-cols-[176px_minmax(0,1fr)] sm:gap-5">
+          <section aria-labelledby="client-relationship-section" data-ams-drawer-layout="sections" className="grid gap-4 border-t border-line pt-5 sm:grid-cols-[176px_minmax(0,1fr)] sm:gap-5">
             <div>
               <h3 id="client-relationship-section" className="text-sm font-semibold text-fg">Client relationship</h3>
               <p className="mt-1 text-xs leading-4 text-muted">Operational values tracked on the client record.</p>
@@ -776,7 +776,7 @@ export const AdminClients: React.FC = () => {
             </div>
           </section>
 
-          <section aria-labelledby="client-sla-section" className="grid gap-3 border-t border-line pt-4 sm:grid-cols-[160px_minmax(0,1fr)]">
+          <section aria-labelledby="client-sla-section" data-ams-drawer-layout="sections" className="grid gap-3 border-t border-line pt-4 sm:grid-cols-[160px_minmax(0,1fr)]">
             <div>
               <h3 id="client-sla-section" className="text-sm font-semibold text-fg">Daily ad-spend SLA</h3>
               <p className="mt-1 text-xs leading-4 text-muted">Optional tracking for the configured daily cap.</p>
@@ -787,7 +787,7 @@ export const AdminClients: React.FC = () => {
             </div>
           </section>
 
-          <section aria-labelledby="client-notes-section" className="grid gap-3 border-t border-line pt-4 sm:grid-cols-[160px_minmax(0,1fr)]">
+          <section aria-labelledby="client-notes-section" data-ams-drawer-layout="sections" className="grid gap-3 border-t border-line pt-4 sm:grid-cols-[160px_minmax(0,1fr)]">
             <div>
               <h3 id="client-notes-section" className="text-sm font-semibold text-fg">Notes & requirements</h3>
               <p className="mt-1 text-xs leading-4 text-muted">Preferences, requirements, billing context, or operational notes.</p>

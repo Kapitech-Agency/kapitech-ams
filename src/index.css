@@ -813,8 +813,9 @@
 .ams-drawer-body{padding:20px var(--ams-drawer-gutter);font-size:13px;line-height:18px}
 .ams-drawer-body form{display:flex;flex-direction:column;gap:20px}
 .ams-drawer-body form > :not(:first-child){margin-block-start:0}
-.ams-drawer-body form .grid:not([data-ams-drawer-layout="sections"]){gap:12px}
-.ams-drawer-body label{font-size:12px;line-height:16px;font-weight:500;color:var(--muted);margin-block-end:6px}
+.ams-drawer-body .grid:not([data-ams-drawer-layout="sections"]):not([data-ams-drawer-preview] *){gap:12px}
+.ams-drawer-body label{font-size:12px;line-height:16px;font-weight:500;color:var(--muted);margin-block-end:0}
+.ams-drawer-body label:not(:has(input,textarea,select,button,[role="combobox"])){margin-block-end:6px}
 .ams-drawer-body label > span:first-child{display:block;margin-block-end:6px;font-size:12px;line-height:16px;font-weight:500;letter-spacing:normal;text-transform:none;color:var(--muted)}
 .ams-drawer-body label.space-y-1\.5 > span:first-child{margin-block-end:0}
 .ams-drawer-body label + input,.ams-drawer-body label + textarea,.ams-drawer-body label + select{margin-block-start:0}

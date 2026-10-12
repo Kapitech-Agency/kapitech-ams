@@ -842,7 +842,7 @@ export const AdminCmsCareers: React.FC = () => {
             </label>
           </section>
 
-          <div className="grid min-w-0 gap-4 xl:grid-cols-2">
+          <div data-ams-drawer-layout="sections" className="grid min-w-0 gap-4 xl:grid-cols-2">
             <section className="cms-career-language-panel min-w-0 space-y-4 rounded-card border border-line bg-bg p-4">
               <div className="flex items-center gap-2 border-b border-line pb-2.5">
                 <span className="flex h-6 w-6 items-center justify-center rounded-badge border border-line bg-panel text-[10px] font-semibold text-fg">EN</span>
