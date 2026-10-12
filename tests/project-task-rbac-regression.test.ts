@@ -11,7 +11,7 @@ test('project task controls use task-specific permission in the admin UI',()=>{
   assert.doesNotMatch(taskSection,/if \(!canManageProjects/);
 
   const board=s.slice(s.indexOf('Task Execution Board'), s.indexOf('CONTEXTUAL TASK DETAIL DRAWER'));
-  assert.match(board,/draggable=\{canManageKanbanTasks\}/);
+  assert.match(board,/draggable=\{canManageKanbanTasks && !movingTaskId\}/);
   assert.match(board,/\{canManageKanbanTasks && \(/);
 });
 
