@@ -342,8 +342,7 @@ export const AdminCmsTestimonials: React.FC = () => {
         <Drawer slug="cms-testimonial-editor-drawer"
           open={isModalOpen}
           onClose={() => !isSaving && setIsModalOpen(false)}
-          size="md"
-          dialogClassName="border-l border-line bg-panel max-w-[520px]"
+          size="lg"
           title={editingItem.author ? `Edit: ${editingItem.author}` : (language === 'id' ? 'Tambah Testimoni Klien' : 'Add client testimonial')}
           footer={(
             <>
@@ -372,7 +371,7 @@ export const AdminCmsTestimonials: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="block text-xs font-sans text-muted mb-1 font-semibold">
                     {language === 'id' ? 'Jabatan' : 'Role / Position'}

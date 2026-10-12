@@ -191,3 +191,35 @@ test('Lazy module navigation keeps the AMS shell mounted and recovers locally on
   assert.ok(source.includes('Reload section'));
   assert.ok(source.includes('<Suspense fallback={<LoadingScreen />}>'), 'The full-screen fallback remains available for initial application loading.');
 });
+
+test('All drawers use canonical geometry, typography, and named width presets', () => {
+  const drawer = fs.readFileSync(path.resolve(process.cwd(), 'src/components/ui/Drawer.tsx'), 'utf8');
+  const stylesheet = fs.readFileSync(path.resolve(process.cwd(), 'src/index.css'), 'utf8');
+  const guidelines = fs.readFileSync(path.resolve(process.cwd(), 'docs/AMS-DRAWER-GUIDELINES.md'), 'utf8');
+  const cmsProjects = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsProjects.tsx'), 'utf8');
+  const cmsServices = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsServices.tsx'), 'utf8');
+  const cmsTestimonials = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsTestimonials.tsx'), 'utf8');
+  const careers = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsCareers.tsx'), 'utf8');
+
+  assert.ok(drawer.includes('ams-drawer-header'));
+  assert.ok(drawer.includes('ams-drawer-body'));
+  assert.ok(drawer.includes('ams-drawer-footer'));
+  assert.equal(drawer.includes('dialogClassName'), false, 'Drawer widths must use named presets only.');
+  assert.ok(stylesheet.includes('.ams-drawer-header{'));
+  assert.ok(stylesheet.includes('.ams-drawer-body form{'));
+  assert.ok(stylesheet.includes('.ams-drawer-body button[aria-haspopup="listbox"]'));
+  assert.ok(stylesheet.includes('.ams-drawer-footer > button,'));
+  assert.ok(stylesheet.includes('data-ams-drawer-size="large"'));
+  assert.ok(guidelines.includes('Copy-paste template'));
+  assert.ok(guidelines.includes('40px'));
+  assert.ok(guidelines.includes('data-ams-drawer-layout="sections"'));
+
+  assert.equal(cmsProjects.includes('dialogClassName'), false);
+  assert.equal(cmsServices.includes('dialogClassName'), false);
+  assert.equal(cmsTestimonials.includes('dialogClassName'), false);
+  assert.ok(cmsProjects.includes('data-ams-drawer-preview'));
+  assert.ok(cmsProjects.includes('size="xl"'));
+  assert.ok(cmsServices.includes('size="lg"'));
+  assert.ok(cmsTestimonials.includes('size="lg"'));
+  assert.equal((careers.match(/data-ams-drawer-size="large"/g) || []).length, 2);
+});

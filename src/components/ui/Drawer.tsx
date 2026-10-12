@@ -16,7 +16,6 @@ export interface DrawerProps {
   labelledBy?: string;
   initialFocusRef?: React.RefObject<HTMLElement | null>;
   fitContent?: boolean;
-  dialogClassName?: string;
   slug?: string;
 }
 
@@ -52,7 +51,6 @@ export const Drawer: React.FC<DrawerProps> = ({
   labelledBy,
   initialFocusRef,
   fitContent = false,
-  dialogClassName,
   slug
 }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -180,12 +178,12 @@ export const Drawer: React.FC<DrawerProps> = ({
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={description ? descriptionId : undefined}
-        className={`relative z-10 flex h-full w-full ${sizes[size]} flex-col overflow-hidden border-l border-line bg-panel ${dialogClassName || ''}`}
+        className={`ams-drawer relative z-10 flex h-full w-full ${sizes[size]} flex-col overflow-hidden border-l border-line bg-panel`}
       >
-        <header className="flex shrink-0 items-start justify-between gap-3 border-b border-line bg-panel px-4 py-3">
+        <header className="ams-drawer-header flex shrink-0 items-start justify-between gap-4 border-b border-line bg-panel">
           <div className="min-w-0">
             <h2 id={titleId} className="text-sm font-semibold leading-5 text-fg">{title}</h2>
-            {description && <p id={descriptionId} className="mt-1 max-w-2xl text-[11px] leading-4 text-muted">{description}</p>}
+            {description && <p id={descriptionId} className="mt-1 max-w-2xl leading-4 text-muted">{description}</p>}
           </div>
           <Button
             type="button"
@@ -194,16 +192,16 @@ export const Drawer: React.FC<DrawerProps> = ({
             aria-label={closeLabel}
             title={closeLabel}
             icon={<X size={16} />}
-            className="h-8 w-8 shrink-0 p-0"
+            className="ams-drawer-close h-9 w-9 shrink-0 p-0"
           />
         </header>
 
-        <div className={`min-h-0 flex-1 custom-scrollbar px-4 py-4 ${fitContent ? 'overflow-visible' : 'overflow-y-auto'}`}>
+        <div className={`ams-drawer-body min-h-0 flex-1 custom-scrollbar ${fitContent ? "overflow-visible" : "overflow-y-auto overscroll-contain"}`}>
           {children}
         </div>
 
         {footer && (
-          <footer className="flex shrink-0 flex-col items-stretch justify-end gap-2 border-t border-line bg-panel px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center">
+          <footer className="ams-drawer-footer flex shrink-0 flex-col items-stretch justify-end gap-2 border-t border-line bg-panel sm:flex-row sm:flex-wrap sm:items-center">
             {footer}
           </footer>
         )}

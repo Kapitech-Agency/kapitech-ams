@@ -563,8 +563,7 @@ export const AdminCmsServices: React.FC = () => {
       <Drawer slug="cms-service-editor-drawer"
         open={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        size="md"
-        dialogClassName="border-l border-line bg-panel max-w-[520px]"
+        size="lg"
         title="Add agency service"
         description="Create a service entry for the public agency catalog."
         footer={(
@@ -590,7 +589,7 @@ export const AdminCmsServices: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="block text-muted mb-1 font-medium">URL Slug *</label>
                   <input
