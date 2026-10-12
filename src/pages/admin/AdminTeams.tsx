@@ -1822,12 +1822,18 @@ export const AdminTeams: React.FC = () => {
 
       <Drawer
         open={vendorFormOpen}
-        onClose={() => setVendorFormOpen(false)}
-        title={editingVendor ? 'Edit Vendor' : 'Add Vendor'}
+        onClose={() => !savingVendor && setVendorFormOpen(false)}
+        title={editingVendor ? 'Edit vendor' : 'Add vendor'}
         description="Maintain the vendor directory using the existing AMS vendor record."
-        size="xl"
+        size="3xl"
+        footer={(
+          <>
+            <Button type="button" variant="secondary" onClick={() => setVendorFormOpen(false)} disabled={savingVendor}>Cancel</Button>
+            <Button type="submit" form="team-vendor-form" variant="primary" loading={savingVendor}>{editingVendor ? 'Save changes' : 'Create vendor'}</Button>
+          </>
+        )}
       >
-        <form onSubmit={saveVendor} className="space-y-5">
+        <form id="team-vendor-form" onSubmit={saveVendor} className="space-y-5">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="space-y-1.5"><span className="text-[11px] text-muted">Name</span><input value={vendorForm.name} onChange={(event) => setVendorForm((current) => ({ ...current, name: event.target.value }))} className="ams-control w-full" required /></label>
             <label className="space-y-1.5"><span className="text-[11px] text-muted">Company</span><input value={vendorForm.companyName} onChange={(event) => setVendorForm((current) => ({ ...current, companyName: event.target.value }))} className="ams-control w-full" /></label>
@@ -1843,10 +1849,7 @@ export const AdminTeams: React.FC = () => {
             <label className="inline-flex h-10 items-center gap-2 rounded-control border border-line bg-bg px-3 text-xs sm:col-span-2"><input type="checkbox" checked={vendorForm.isVetted} onChange={(event) => setVendorForm((current) => ({ ...current, isVetted: event.target.checked }))} className="accent-accent" /> Vetted</label>
             <label className="space-y-1.5 sm:col-span-2"><span className="text-[11px] text-muted">Notes</span><textarea value={vendorForm.notes} onChange={(event) => setVendorForm((current) => ({ ...current, notes: event.target.value }))} rows={3} className="ams-control w-full" /></label>
           </div>
-          <div className="flex justify-end gap-2 border-t border-line pt-4">
-            <Button type="button" variant="secondary" onClick={() => setVendorFormOpen(false)}>Cancel</Button>
-            <Button type="submit" variant="primary" loading={savingVendor}>{editingVendor ? 'Save changes' : 'Create vendor'}</Button>
-          </div>
+
         </form>
       </Drawer>
 
