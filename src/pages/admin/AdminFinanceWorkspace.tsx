@@ -664,8 +664,8 @@ export const AdminFinanceWorkspace: React.FC = () => {
     setJournalSyncSummary(null);
     try {
       const response = await api.finance.workbookSyncJournalDrafts();
-      if (!response.success || !response.summary) throw new Error(response.error || 'Source journal drafts could not be generated.');
-      const summary = response.summary;
+      const summary = response.data?.summary;
+      if (!response.success || !summary) throw new Error(response.error || response.data?.error || 'Source journal drafts could not be generated.');
       setJournalSyncSummary(
         'Sync completed: ' + summary.created + ' draft(s) created, ' +
         summary.alreadyPresent + ' already present, ' + summary.skipped + ' skipped' +

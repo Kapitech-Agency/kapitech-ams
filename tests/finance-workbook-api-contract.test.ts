@@ -66,4 +66,5 @@ test('Journal source sync is permission-gated, draft-only and duplicate-safe', a
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   assert.match(workspace, /sourceType: editor\.record\.payload\.sourceType/);
   assert.match(workspace, /sourceId: editor\.record\.payload\.sourceId/);
+  assert.match(workspace, /const summary = response\.data\?\.summary/);
 });
