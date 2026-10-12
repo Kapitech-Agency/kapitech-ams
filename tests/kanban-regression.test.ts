@@ -30,7 +30,7 @@ test('Sprint Kanban keeps selected task state consistent with optimistic save an
   assert.ok(source.includes('setMovingTaskId(null);'));
   assert.ok(source.includes("onClick={() => void updateTaskStatus(selectedTask, column.id)}"));
   assert.ok(!source.includes('setSelectedTask({ ...selectedTask, status: column.id })'));
-  assert.ok(source.includes('disabled={!canManageKanbanTasks || Boolean(movingTaskId) || selectedTask.status === column.id}'));
+  assert.ok(source.includes('disabled={!canManageKanbanTasks || Boolean(movingTaskId) || updatingSubtaskId !== null || selectedTask.status === column.id}'));
 });
 
 test('Projects and Sprint Kanban drag handles provide keyboard operation and respect in-flight moves', async () => {
@@ -39,9 +39,9 @@ test('Projects and Sprint Kanban drag handles provide keyboard operation and res
   assert.ok(source.includes("event.key !== 'ArrowLeft'"));
   assert.ok(source.includes("event.key !== 'ArrowRight'"));
   assert.ok(source.includes("draggable={canManageProjects && !movingProjectId}"));
-  assert.ok(source.includes("draggable={canManageKanbanTasks && !movingTaskId}"));
+  assert.ok(source.includes("draggable={canManageKanbanTasks && !movingTaskId && updatingSubtaskId === null}"));
   assert.ok(source.includes("if (!canManageProjects || movingProjectId)"));
-  assert.ok(source.includes("if (!canManageKanbanTasks || movingTaskId)"));
+  assert.ok(source.includes("if (!canManageKanbanTasks || movingTaskId || updatingSubtaskId)"));
 });
 
 test('horizontal board scrolling does not steal pointer interactions from Kanban drag handles', async () => {

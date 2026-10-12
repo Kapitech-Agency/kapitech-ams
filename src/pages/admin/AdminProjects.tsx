@@ -90,7 +90,18 @@ const slugify = (value: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '') || 'project';
 
-const todayIso = () => new Date().toISOString().slice(0, 10);
+const todayIso = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const toFiniteNumber = (value: unknown, fallback = 0) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
 
 const formatDate = (value: string) => {
   if (!value) return 'Not set';
@@ -143,8 +154,8 @@ const normalizeProject = (project: any): ProjectRecord => {
     clientEmail: String(project?.clientEmail || ''),
     serviceCategory: String(project?.serviceCategory || ''),
     status,
-    budget: Number(project?.budget || 0),
-    progressPercent: Math.min(100, Math.max(0, Number(project?.progressPercent || 0))),
+    budget: Math.max(0, toFiniteNumber(project?.budget)),
+    progressPercent: Math.min(100, Math.max(0, toFiniteNumber(project?.progressPercent))),
     startDate: String(project?.startDate || ''),
     targetEndDate: String(project?.targetEndDate || ''),
     teamLead: String(project?.teamLead || ''),
@@ -319,6 +330,7 @@ export const AdminProjects: React.FC = () => {
   };
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const toastTimeoutRef = React.useRef<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [projectSearch, setProjectSearch] = useState('');
   const [projectStatusFilter, setProjectStatusFilter] = useState('');
@@ -345,6 +357,7 @@ export const AdminProjects: React.FC = () => {
   const [dragOverProjectId, setDragOverProjectId] = useState<string | null>(null);
   const [movingProjectId, setMovingProjectId] = useState<string | null>(null);
   const [movingTaskId, setMovingTaskId] = useState<string | null>(null);
+  const [updatingSubtaskId, setUpdatingSubtaskId] = useState<string | null>(null);
   const [taskSearch, setTaskSearch] = useState('');
   const [taskPriorityFilter, setTaskPriorityFilter] = useState('');
   const [taskAssigneeFilter, setTaskAssigneeFilter] = useState('');
@@ -363,8 +376,23 @@ export const AdminProjects: React.FC = () => {
   const [deletingProjectRecord, setDeletingProjectRecord] = useState(false);
   const [deletingTaskRecord, setDeletingTaskRecord] = useState(false);
 
-  const view = (searchParams.get('projects') || 'all') as ProjectsView;
+  const requestedView = searchParams.get('projects');
+  const view: ProjectsView = requestedView === 'sprint' || requestedView === 'budget' || requestedView === 'archived'
+    ? requestedView
+    : 'all';
   const selectedProjectSlug = searchParams.get('project') || '';
+
+  React.useEffect(() => {
+    if (requestedView && !['sprint', 'budget', 'archived'].includes(requestedView)) {
+      const next = new URLSearchParams(searchParams);
+      next.delete('projects');
+      setSearchParams(next, { replace: true });
+    }
+  }, [requestedView, searchParams, setSearchParams]);
+
+  React.useEffect(() => {
+    setProjectLayout(searchParams.get('layout') === 'table' ? 'table' : 'board');
+  }, [searchParams]);
 
   const [projectForm, setProjectForm] = useState({
     name: '',
@@ -402,12 +430,16 @@ export const AdminProjects: React.FC = () => {
   });
 
   const showToast = (message: string) => {
+    if (toastTimeoutRef.current !== null) window.clearTimeout(toastTimeoutRef.current);
     setToast(message);
-    window.setTimeout(() => setToast(null), 3200);
+    toastTimeoutRef.current = window.setTimeout(() => {
+      setToast(null);
+      toastTimeoutRef.current = null;
+    }, 3200);
   };
 
-  const syncProjects = async () => {
-    setLoading(true);
+  const syncProjects = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
       const response = await api.projects.getAll();
       // An empty array is a valid server response. Never replace it with demo records.
@@ -433,7 +465,7 @@ export const AdminProjects: React.FC = () => {
         setProjects(isSlugFixtureMode() ? applyKanbanStatusOverrides(demoProjects) : []);
       }
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -444,7 +476,10 @@ export const AdminProjects: React.FC = () => {
       setCurrency(detail?.currency || getActiveCurrency());
     };
     window.addEventListener(CURRENCY_EVENT, handleCurrency);
-    return () => window.removeEventListener(CURRENCY_EVENT, handleCurrency);
+    return () => {
+      window.removeEventListener(CURRENCY_EVENT, handleCurrency);
+      if (toastTimeoutRef.current !== null) window.clearTimeout(toastTimeoutRef.current);
+    };
   }, []);
 
   React.useEffect(() => {
@@ -567,12 +602,21 @@ export const AdminProjects: React.FC = () => {
   const selectedSprintProject = useMemo(() => {
     return (
       projects.find(project => project.slug === selectedProjectSlug) ||
-      activeProjects.find(project => project.slug === selectedProjectSlug) ||
       activeProjects[0] ||
       projects[0] ||
       null
     );
   }, [activeProjects, projects, selectedProjectSlug]);
+
+  React.useEffect(() => {
+    if (!selectedTask) return;
+    const latestTask = selectedSprintProject?.tasks.find(task => task.id === selectedTask.id);
+    if (!latestTask) {
+      setSelectedTask(null);
+      return;
+    }
+    setSelectedTask(current => current && current.id === latestTask.id && current !== latestTask ? latestTask : current);
+  }, [selectedSprintProject, selectedTask?.id]);
 
   const taskAssigneeOptions = useMemo(() => {
     if (!selectedSprintProject) return [];
@@ -601,11 +645,25 @@ export const AdminProjects: React.FC = () => {
         return matchesQuery && matchesPriority && matchesAssignee;
       })
       .sort((a, b) => {
-        if (taskSort === 'due') return (a.dueDate || '9999-12-31').localeCompare(b.dueDate || '9999-12-31');
+        if (taskSort === 'due') {
+          return (a.dueDate || '9999-12-31').localeCompare(b.dueDate || '9999-12-31')
+            || a.title.localeCompare(b.title);
+        }
         if (taskSort === 'title') return a.title.localeCompare(b.title);
-        if (taskSort === 'created') return (b.createdAt || '').localeCompare(a.createdAt || '');
-        if (a.status !== b.status) return 0;
-        return PRIORITY_ORDER[b.priority] - PRIORITY_ORDER[a.priority];
+        if (taskSort === 'created') {
+          return (b.createdAt || '').localeCompare(a.createdAt || '')
+            || a.title.localeCompare(b.title);
+        }
+
+        // The board renders one lane per status. Keep the comparator transitive,
+        // then sort each lane by priority and due date.
+        const statusOrder = TASK_COLUMNS.findIndex(column => column.id === a.status)
+          - TASK_COLUMNS.findIndex(column => column.id === b.status);
+        if (statusOrder !== 0) return statusOrder;
+
+        return PRIORITY_ORDER[b.priority] - PRIORITY_ORDER[a.priority]
+          || (a.dueDate || '9999-12-31').localeCompare(b.dueDate || '9999-12-31')
+          || a.title.localeCompare(b.title);
       });
   }, [selectedSprintProject, taskSearch, taskPriorityFilter, taskAssigneeFilter, taskSort]);
 
@@ -630,7 +688,7 @@ export const AdminProjects: React.FC = () => {
   const metrics = useMemo(() => {
     const value = activeProjects.reduce((sum, project) => sum + project.budget, 0);
     const totalProgress = activeProjects.reduce((sum, project) => sum + project.progressPercent, 0);
-    const velocity = activeProjects.length ? Math.round(totalProgress / activeProjects.length) : 0;
+    const averageProgress = activeProjects.length ? Math.round(totalProgress / activeProjects.length) : 0;
     const risks = activeProjects.filter(project => project.health !== 'Good').length;
     const openTasks = activeProjects.reduce(
       (sum, project) => sum + project.tasks.filter(task => task.status !== 'done').length,
@@ -651,7 +709,7 @@ export const AdminProjects: React.FC = () => {
     );
     return {
       value,
-      velocity,
+      averageProgress,
       risks,
       openTasks,
       assignedPeople: assignedPeople.size,
@@ -697,6 +755,7 @@ export const AdminProjects: React.FC = () => {
   };
 
   const openNewProject = (status: ProjectStatus = 'planning') => {
+    if (!canManageProjects || saving) return;
     setEditingProject(null);
     setProjectForm({
       name: '',
@@ -722,6 +781,7 @@ export const AdminProjects: React.FC = () => {
   };
 
   const openEditProject = (project: ProjectRecord) => {
+    if (!canManageProjects || saving) return;
     setEditingProject(project);
     setProjectForm({
       name: project.name,
@@ -748,6 +808,7 @@ export const AdminProjects: React.FC = () => {
 
   const saveProject = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (!canManageProjects || saving) return;
     if (!projectForm.name.trim() || !projectForm.clientCompany.trim()) {
       showToast('Project name and client company are required.');
       return;
@@ -755,8 +816,12 @@ export const AdminProjects: React.FC = () => {
 
     const budget = Number(projectForm.budget || 0);
     const progress = Number(projectForm.progressPercent || 0);
-    if (!Number.isFinite(budget) || budget < 0 || progress < 0 || progress > 100) {
-      showToast('Enter valid budget and progress values.');
+    if (!Number.isFinite(budget) || budget < 0 || budget > 100_000_000_000 || !Number.isFinite(progress) || progress < 0 || progress > 100) {
+      showToast('Enter a valid budget and progress between 0 and 100%.');
+      return;
+    }
+    if (projectForm.startDate && projectForm.targetEndDate && projectForm.targetEndDate < projectForm.startDate) {
+      showToast('Project deadline must be on or after the start date.');
       return;
     }
 
@@ -800,7 +865,15 @@ export const AdminProjects: React.FC = () => {
 
       if (response.success) {
         setServerConnected(true);
-        await syncProjects();
+        const persistedProject = response.data?.project ? normalizeProject(response.data.project) : null;
+        if (persistedProject) {
+          setProjects(current => editingProject
+            ? current.map(item => item.id === editingProject.id ? persistedProject : item)
+            : [persistedProject, ...current.filter(item => item.id !== persistedProject.id)]);
+        } else if (editingProject) {
+          setProjects(current => current.map(item => item.id === editingProject.id ? localProject : item));
+        }
+        await syncProjects(false);
         showToast(language === 'id' ? 'Proyek berhasil disimpan.' : 'Project saved.');
         savedToData = true;
       } else if (serverModeRef.current || !isSlugFixtureMode()) {
@@ -835,9 +908,13 @@ export const AdminProjects: React.FC = () => {
 
   // Task creation entry point
   const handleAddTask = (status: TaskStatus = 'todo') => {
-    if (!canManageKanbanTasks) return;
+    if (!canManageKanbanTasks || saving || movingTaskId || updatingSubtaskId) return;
     if (!selectedSprintProject) {
       showToast('Select a project first.');
+      return;
+    }
+    if (selectedSprintProject.status === 'completed') {
+      showToast('Completed projects cannot receive new tasks.');
       return;
     }
     setEditingTask(null);
@@ -856,6 +933,7 @@ export const AdminProjects: React.FC = () => {
   };
 
   const openEditTask = (task: ProjectTask) => {
+    if (!canManageKanbanTasks || saving || movingTaskId || updatingSubtaskId) return;
     setEditingTask(task);
     setTaskForm({
       title: task.title,
@@ -873,6 +951,7 @@ export const AdminProjects: React.FC = () => {
 
   const saveTask = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (!canManageKanbanTasks || saving || movingTaskId || updatingSubtaskId) return;
     const project = projects.find(item => item.id === taskForm.projectId);
     if (!project || !taskForm.title.trim()) {
       showToast('Task title and project are required.');
@@ -923,7 +1002,15 @@ export const AdminProjects: React.FC = () => {
 
       if (response.success) {
         setServerConnected(true);
-        await syncProjects();
+        const persistedTask = response.data?.task ? normalizeTask(response.data.task) : localTask;
+        setProjects(current => current.map(item => {
+          if (item.id !== project.id) return item;
+          const tasks = editingTask
+            ? item.tasks.map(task => task.id === editingTask.id ? persistedTask : task)
+            : [persistedTask, ...item.tasks.filter(task => task.id !== persistedTask.id)];
+          return { ...item, tasks, updatedAt: new Date().toISOString() };
+        }));
+        await syncProjects(false);
         showToast(language === 'id' ? 'Tugas berhasil disimpan.' : 'Task saved.');
         savedToData = true;
       } else if (serverModeRef.current || !isSlugFixtureMode()) {
@@ -966,7 +1053,7 @@ export const AdminProjects: React.FC = () => {
 
   // Drag & Drop Handlers
   const updateTaskStatus = async (task: ProjectTask, status: TaskStatus) => {
-    if (!canManageKanbanTasks || movingTaskId) {
+    if (!canManageKanbanTasks || movingTaskId || updatingSubtaskId) {
       setDraggingTaskId(null);
       setDragOverTaskStatus(null);
       setDragOverTaskId(null);
@@ -1013,7 +1100,7 @@ export const AdminProjects: React.FC = () => {
         delete taskOverrides[task.id];
         writeStatusOverrides(TASK_STATUS_OVERRIDES_KEY, taskOverrides);
         setServerConnected(true);
-        await syncProjects();
+        await syncProjects(false);
         showToast(language === 'id' ? 'Status tugas diperbarui.' : 'Task status updated.');
         return;
       }
@@ -1087,7 +1174,7 @@ export const AdminProjects: React.FC = () => {
   };
 
   const beginTaskDrag = (event: React.DragEvent<HTMLElement>, task: ProjectTask) => {
-    if (!canManageKanbanTasks || movingTaskId) {
+    if (!canManageKanbanTasks || movingTaskId || updatingSubtaskId) {
       event.preventDefault();
       return;
     }
@@ -1147,7 +1234,7 @@ export const AdminProjects: React.FC = () => {
         delete projectOverrides[project.id];
         writeStatusOverrides(PROJECT_STATUS_OVERRIDES_KEY, projectOverrides);
         setServerConnected(true);
-        await syncProjects();
+        await syncProjects(false);
         showToast(language === 'id' ? 'Status proyek diperbarui.' : 'Project status updated.');
         return;
       }
@@ -1177,49 +1264,66 @@ export const AdminProjects: React.FC = () => {
   };
 
   const toggleSubtask = async (task: ProjectTask, subtaskId: string) => {
-    if (!selectedSprintProject) return;
+    if (!canManageKanbanTasks || updatingSubtaskId || movingTaskId || !selectedSprintProject) return;
     if (!serverModeRef.current && !isSlugFixtureMode()) {
       showToast('Project service is unavailable. Refresh before changing subtasks.');
       return;
     }
 
-    const nextSubtasks = (task.subtasks || []).map(item =>
+    const projectId = selectedSprintProject.id;
+    const currentProject = projects.find(project => project.id === projectId);
+    const currentTask = currentProject?.tasks.find(item => item.id === task.id) || task;
+    const previousSubtasks = currentTask.subtasks || [];
+    if (!previousSubtasks.some(item => item.id === subtaskId)) return;
+
+    const nextSubtasks = previousSubtasks.map(item =>
       item.id === subtaskId ? { ...item, completed: !item.completed } : item
     );
+    const applySubtasks = (subtasks: ProjectTask['subtasks']) => {
+      setProjects(current => current.map(project => project.id === projectId
+        ? {
+            ...project,
+            tasks: project.tasks.map(item => item.id === task.id ? { ...item, subtasks } : item),
+          }
+        : project));
+      setSelectedTask(current => current?.id === task.id ? { ...current, subtasks } : current);
+    };
 
+    setUpdatingSubtaskId(subtaskId);
+    applySubtasks(nextSubtasks);
     try {
       const response = await api.tasks.update(task.id, { subtasks: nextSubtasks });
       if (response.success) {
-        await syncProjects();
+        setServerConnected(true);
+        const savedSubtasks = Array.isArray(response.data?.task?.subtasks)
+          ? response.data.task.subtasks
+          : nextSubtasks;
+        applySubtasks(savedSubtasks);
+        await syncProjects(false);
+        showToast(language === 'id' ? 'Checklist diperbarui.' : 'Checklist updated.');
         return;
       }
 
       if (serverModeRef.current || !isSlugFixtureMode()) {
-        showToast(response.error || (language === 'id' ? 'Subtask gagal diperbarui.' : 'Subtask could not be updated.'));
+        applySubtasks(previousSubtasks);
+        showToast(response.error || (language === 'id' ? 'Checklist gagal diperbarui. Perubahan dikembalikan.' : 'Checklist could not be updated. Changes were reverted.'));
         return;
       }
+      showToast(language === 'id' ? 'Checklist diperbarui untuk sesi demo.' : 'Checklist updated for this demo session.');
     } catch (error) {
       if (serverModeRef.current || !isSlugFixtureMode()) {
-        showToast(error instanceof Error ? error.message : (language === 'id' ? 'Subtask gagal diperbarui.' : 'Subtask could not be updated.'));
+        applySubtasks(previousSubtasks);
+        showToast(error instanceof Error ? error.message : (language === 'id' ? 'Checklist gagal diperbarui. Perubahan dikembalikan.' : 'Checklist could not be updated. Changes were reverted.'));
         return;
       }
+      showToast(language === 'id' ? 'Checklist diperbarui untuk sesi demo.' : 'Checklist updated for this demo session.');
+    } finally {
+      setUpdatingSubtaskId(null);
     }
-
-    setProjects(current =>
-      current.map(project =>
-        project.id === selectedSprintProject.id
-          ? {
-              ...project,
-              tasks: project.tasks.map(item => item.id === task.id ? { ...item, subtasks: nextSubtasks } : item),
-              updatedAt: new Date().toISOString(),
-            }
-          : project
-      )
-    );
   };
 
   const confirmDeleteProject = async () => {
-    if (!deleteProject || deletingProjectRecord) return;
+    if (!canManageProjects || !deleteProject || deletingProjectRecord) return;
     if (!serverModeRef.current && !isSlugFixtureMode()) {
       showToast('Project service is unavailable. Refresh before deleting projects.');
       return;
@@ -1232,7 +1336,7 @@ export const AdminProjects: React.FC = () => {
       if (response.success) {
         setProjects(current => current.filter(project => project.id !== target.id));
         setServerConnected(true);
-        await syncProjects();
+        await syncProjects(false);
         showToast('Project deleted.');
         setDeleteProject(null);
         return;
@@ -1257,7 +1361,7 @@ export const AdminProjects: React.FC = () => {
   };
 
   const confirmDeleteTask = async () => {
-    if (!deleteTask || !selectedSprintProject || deletingTaskRecord) return;
+    if (!canManageKanbanTasks || !deleteTask || !selectedSprintProject || deletingTaskRecord) return;
     if (!serverModeRef.current && !isSlugFixtureMode()) {
       showToast('Project service is unavailable. Refresh before deleting tasks.');
       return;
@@ -1276,7 +1380,7 @@ export const AdminProjects: React.FC = () => {
           )
         );
         setServerConnected(true);
-        await syncProjects();
+        await syncProjects(false);
         showToast('Task deleted.');
         setDeleteTask(null);
         setSelectedTask(null);
@@ -1402,10 +1506,10 @@ export const AdminProjects: React.FC = () => {
         <div className="text-xs text-muted">This action can be tested with the seeded task data without changing the API contract.</div>
       </Modal>
 
-      <Modal
+      <Drawer
         open={Boolean(selectedProjectDetail)}
         onClose={clearProjectSelection}
-        size="lg"
+        size="2xl"
         title={selectedProjectDetail?.name || 'Project details'}
         description={selectedProjectDetail ? selectedProjectDetail.clientCompany : undefined}
         footer={(
@@ -1437,7 +1541,10 @@ export const AdminProjects: React.FC = () => {
               {[
                 ['Progress', selectedProjectDetail.progressPercent + '%'],
                 ['Budget', formatAmount(selectedProjectDetail.budget, currency)],
+                ['Start date', formatDate(selectedProjectDetail.startDate)],
                 ['Deadline', formatDate(selectedProjectDetail.targetEndDate)],
+                ['Client contact', selectedProjectDetail.clientName || 'Not provided'],
+                ['Client email', selectedProjectDetail.clientEmail || 'Not provided'],
                 ['Tasks', selectedProjectDetail.tasks.filter(task => task.status === 'done').length + '/' + selectedProjectDetail.tasks.length + ' done'],
                 ['Service', selectedProjectDetail.serviceCategory || 'Delivery'],
               ].map(([label, value]) => (
@@ -1501,6 +1608,69 @@ export const AdminProjects: React.FC = () => {
               </div>
             </div>
 
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-card border border-line bg-bg p-4">
+                <div className="text-[11px] font-semibold text-fg">Team members</div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {selectedProjectDetail.teamMembers.length > 0
+                    ? selectedProjectDetail.teamMembers.map(member => (
+                      <span key={member} className="rounded-chip border border-line bg-panel px-2.5 py-1.5 text-[11px] text-muted">{member}</span>
+                    ))
+                    : <span className="text-xs text-muted">No team members assigned.</span>}
+                </div>
+              </div>
+              <div className="rounded-card border border-line bg-bg p-4">
+                <div className="text-[11px] font-semibold text-fg">Technology stack</div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {selectedProjectDetail.techStack.length > 0
+                    ? selectedProjectDetail.techStack.map(technology => (
+                      <span key={technology} className="rounded-chip border border-line bg-panel px-2.5 py-1.5 text-[11px] text-muted">{technology}</span>
+                    ))
+                    : <span className="text-xs text-muted">No technologies specified.</span>}
+                </div>
+              </div>
+            </div>
+
+            <section aria-label="Project milestones" className="rounded-card border border-line bg-bg p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-[11px] font-semibold text-fg">Milestones</div>
+                <span className="rounded-badge border border-line bg-panel px-2 py-1 text-[10px] font-medium tabular-nums text-muted">
+                  {selectedProjectDetail.milestones.filter(milestone => milestone.completed).length}/{selectedProjectDetail.milestones.length} completed
+                </span>
+              </div>
+              {selectedProjectDetail.milestones.length === 0 ? (
+                <p className="mt-3 text-xs text-muted">No milestones have been defined for this project.</p>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  {selectedProjectDetail.milestones.map(milestone => {
+                    const overdueMilestone = !milestone.completed && isOverdue(milestone.dueDate);
+                    return (
+                      <div key={milestone.id} className="flex flex-wrap items-start justify-between gap-3 rounded-control border border-line bg-panel p-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="text-xs font-medium text-fg">{milestone.title}</div>
+                          <div className="mt-1 text-[10px] text-muted">
+                            Due {formatDate(milestone.dueDate)}
+                            {typeof milestone.paymentTrigger === 'number' && milestone.paymentTrigger > 0
+                              ? ' · Payment trigger ' + formatAmount(milestone.paymentTrigger, currency)
+                              : ''}
+                          </div>
+                        </div>
+                        <span className={'rounded-badge border px-2 py-1 text-[10px] font-semibold ' + (
+                          milestone.completed
+                            ? 'border-success/25 bg-success/10 text-success'
+                            : overdueMilestone
+                              ? 'border-danger/25 bg-danger/10 text-danger'
+                              : 'border-line bg-bg text-muted'
+                        )}>
+                          {milestone.completed ? 'Completed' : overdueMilestone ? 'Overdue' : 'Upcoming'}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+
             {selectedProjectDetail.notes && (
               <div>
                 <div className="text-[11px] font-semibold text-muted">Notes</div>
@@ -1537,12 +1707,12 @@ export const AdminProjects: React.FC = () => {
             </div>
           </div>
         )}
-      </Modal>
+      </Drawer>
 
-      <Modal
+      <Drawer
         open={Boolean(selectedTask)}
         onClose={() => setSelectedTask(null)}
-        size="md"
+        size="xl"
         title={selectedTask?.title || 'Task details'}
         description={selectedTask ? selectedSprintProject?.name : undefined}
         footer={(
@@ -1571,7 +1741,7 @@ export const AdminProjects: React.FC = () => {
                     key={column.id}
                     type="button"
                     onClick={() => void updateTaskStatus(selectedTask, column.id)}
-                    disabled={!canManageKanbanTasks || Boolean(movingTaskId) || selectedTask.status === column.id}
+                    disabled={!canManageKanbanTasks || Boolean(movingTaskId) || updatingSubtaskId !== null || selectedTask.status === column.id}
                     className={'min-h-10 rounded-control border px-3 text-xs font-medium transition-colors ' + (selectedTask.status === column.id ? 'border-accent/30 bg-accent/10 text-accent' : 'border-line bg-bg text-muted hover:text-fg') + ((!canManageKanbanTasks || movingTaskId || selectedTask.status === column.id) ? ' cursor-not-allowed opacity-50' : '')}
                   >
                     {column.label}
@@ -1588,6 +1758,7 @@ export const AdminProjects: React.FC = () => {
                 <span>Checklist</span>
                 <span className="font-normal">{(selectedTask.subtasks || []).filter(item => item.completed).length}/{(selectedTask.subtasks || []).length}</span>
               </div>
+              {!canManageKanbanTasks && <p className="mt-1 text-[11px] text-muted">Checklist is read-only for your current role.</p>}
               <div className="mt-2 space-y-2">
                 {(selectedTask.subtasks || []).length === 0 ? (
                   <div className="rounded-control border border-dashed border-line p-3 text-xs text-muted">No checklist items.</div>
@@ -1596,14 +1767,11 @@ export const AdminProjects: React.FC = () => {
                     <button
                       key={item.id}
                       type="button"
-                      onClick={() => {
-                        void toggleSubtask(selectedTask, item.id);
-                        setSelectedTask({
-                          ...selectedTask,
-                          subtasks: (selectedTask.subtasks || []).map(subtask => subtask.id === item.id ? { ...subtask, completed: !subtask.completed } : subtask),
-                        });
-                      }}
-                      className="flex w-full items-center gap-2.5 rounded-control border border-line bg-bg p-3 text-left"
+                      disabled={!canManageKanbanTasks || updatingSubtaskId !== null || Boolean(movingTaskId)}
+                      aria-label={(item.completed ? 'Reopen checklist item ' : 'Complete checklist item ') + item.title}
+                      aria-busy={updatingSubtaskId === item.id}
+                      onClick={() => { void toggleSubtask(selectedTask, item.id); }}
+                      className={'flex w-full items-center gap-2.5 rounded-control border border-line bg-bg p-3 text-left transition-colors ' + ((!canManageKanbanTasks || updatingSubtaskId !== null || movingTaskId) ? 'cursor-not-allowed opacity-60' : 'hover:bg-panel-hover')}
                     >
                       {item.completed ? <CheckCircle2 size={15} className="shrink-0 text-success" /> : <span className="h-4 w-4 shrink-0 rounded border border-muted" />}
                       <span className={'text-xs ' + (item.completed ? 'text-muted line-through' : 'text-fg')}>{item.title}</span>
@@ -1617,7 +1785,7 @@ export const AdminProjects: React.FC = () => {
             )}
           </div>
         )}
-      </Modal>
+      </Drawer>
 
       <AdminModuleHeader
         className="mb-0"
@@ -1626,7 +1794,7 @@ export const AdminProjects: React.FC = () => {
           <span className="flex min-w-0 flex-wrap items-center gap-2.5">
             <span>{view === 'all' ? 'Projects & Delivery Kanban' : view === 'sprint' ? 'Sprint & Delivery' : view === 'budget' ? 'Budget vs Actual' : 'Archived Projects'}</span>
             <span className="rounded-badge border border-accent/25 bg-accent/10 px-2 py-1 text-[10px] font-semibold text-accent">
-              {activeProjects.length} Active Projects
+              {view === 'archived' ? archivedProjects.length + ' Completed Projects' : activeProjects.length + ' Active Projects'}
             </span>
           </span>
         )}
@@ -1707,8 +1875,8 @@ export const AdminProjects: React.FC = () => {
                 },
                 {
                   id: 'velocity',
-                  label: 'Avg delivery velocity',
-                  value: metrics.velocity + '%',
+                  label: 'Average project progress',
+                  value: metrics.averageProgress + '%',
                   change: metrics.openTasks + ' open tasks',
                   changeToneClassName: 'text-info',
                   context: 'Based on active project progress',
@@ -1847,6 +2015,18 @@ export const AdminProjects: React.FC = () => {
               </div>
             ) : projectLayout === 'board' ? (
               <div ref={projectKanbanScrollRef} className="ams-project-kanban-board overflow-x-auto overflow-y-visible cursor-grab">
+                {filteredProjects.length === 0 && (
+                  <div role="status" className="mx-3 mt-3 flex flex-wrap items-center justify-between gap-3 rounded-control border border-line bg-panel p-3 sm:mx-4">
+                    <div className="text-xs text-muted">
+                      {projects.length === 0 ? 'No projects yet. Create a project to start the portfolio.' : 'No projects match the current filters.'}
+                    </div>
+                    {activeProjectFilters > 0 && (
+                      <button type="button" onClick={clearProjectFilters} className="inline-flex h-8 items-center rounded-control border border-line bg-bg px-3 text-[11px] font-medium text-fg hover:bg-panel-hover">
+                        Reset filters
+                      </button>
+                    )}
+                  </div>
+                )}
                 <div className="flex min-w-max items-start gap-3 px-3 pb-5 pt-3 sm:gap-3.5 sm:px-4 sm:pb-6 sm:pt-4">
                   {PROJECT_KANBAN_COLUMNS.map(column => {
                     const items = filteredProjects.filter(project => project.status === column.id);
@@ -2151,7 +2331,19 @@ export const AdminProjects: React.FC = () => {
                         </tr>
                       );
                     })}
-                  </tbody>
+                                      {filteredProjects.length === 0 && (
+                      <tr>
+                        <td colSpan={7} className="py-12 text-center text-xs text-muted">
+                          <div>{projects.length === 0 ? 'No projects have been created yet.' : 'No projects match the current filters.'}</div>
+                          {(activeProjectFilters > 0 || projectSort !== 'updated') && (
+                            <button type="button" onClick={clearProjectFilters} className="mt-3 inline-flex h-8 items-center rounded-control border border-line bg-panel px-3 text-[11px] font-medium text-fg hover:bg-panel-hover">
+                              Reset filters
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    )}
+</tbody>
                 </table>
               </div>
             )}
@@ -2174,28 +2366,41 @@ export const AdminProjects: React.FC = () => {
                   value={selectedSprintProject?.id || ''}
                   onChange={value => {
                     const project = projects.find(item => item.id === value);
+                    if (!project || project.id === selectedSprintProject?.id) return;
+                    setSelectedTask(null);
+                    setTaskSearch('');
+                    setTaskPriorityFilter('');
+                    setTaskAssigneeFilter('');
+                    setTaskSort('priority');
+                    setDraggingTaskId(null);
+                    setDragOverTaskStatus(null);
+                    setDragOverTaskId(null);
                     const next = new URLSearchParams(searchParams);
-                    if (project) next.set('project', project.slug);
+                    next.set('project', project.slug);
                     setSearchParams(next, { replace: true });
                   }}
-                  options={activeProjects.map(project => ({ value: project.id, label: project.name }))}
+                  options={projects.map(project => ({ value: project.id, label: project.name + (project.status === 'completed' ? ' (Completed)' : '') }))}
                   className="w-full sm:w-64"
                   aria-label="Select sprint project"
                 />
-                {canManageKanbanTasks && (
+                {canManageKanbanTasks && selectedSprintProject && selectedSprintProject.status !== 'completed' && (
                   <Button icon={<Plus size={14} />} onClick={() => handleAddTask('todo')}>New task</Button>
                 )}
               </div>
             )}
           >
-            {selectedSprintProject ? (
+            {loading && !selectedSprintProject ? (
+              <div role="status" aria-label="Loading project delivery" className="grid min-h-[360px] gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
+                {[1, 2, 3, 4].map(item => <div key={item} className="h-64 animate-pulse rounded-card border border-line bg-bg" />)}
+              </div>
+            ) : selectedSprintProject ? (
               <>
                 <div className="grid gap-3 border-b border-line bg-bg/35 p-4 sm:p-5 lg:grid-cols-[minmax(0,1.6fr)_repeat(4,minmax(100px,0.5fr))]">
                   <div className="min-w-0 rounded-card border border-line bg-panel p-4">
                     <div className="flex min-w-0 items-start justify-between gap-4">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="rounded-badge border border-accent/20 bg-accent/10 px-2 py-1 text-[10px] font-semibold text-accent-text">Active sprint</span>
+                          <span className="rounded-badge border border-accent/20 bg-accent/10 px-2 py-1 text-[10px] font-semibold text-accent-text">{selectedSprintProject.status === 'completed' ? 'Completed project' : 'Active delivery'}</span>
                           <span className={'rounded-badge border px-2 py-1 text-[10px] font-semibold ' + healthClass(selectedSprintProject.health)}>
                             {selectedSprintProject.health || 'Good'}
                           </span>
@@ -2320,14 +2525,14 @@ export const AdminProjects: React.FC = () => {
                           key={column.id}
                           aria-label={column.label + ' task column'}
                           onDragOver={event => {
-                            if (!canManageKanbanTasks) return;
+                            if (!canManageKanbanTasks || movingTaskId || updatingSubtaskId) return;
                             event.preventDefault();
                             event.dataTransfer.dropEffect = 'move';
                             setDragOverTaskStatus(column.id);
                             setDragOverTaskId(null);
                           }}
                           onDragEnter={event => {
-                            if (!canManageKanbanTasks) return;
+                            if (!canManageKanbanTasks || movingTaskId || updatingSubtaskId) return;
                             event.preventDefault();
                             setDragOverTaskStatus(column.id);
                             setDragOverTaskId(null);
@@ -2342,7 +2547,7 @@ export const AdminProjects: React.FC = () => {
                           onDrop={event => {
                             event.preventDefault();
                             event.stopPropagation();
-                            if (!canManageKanbanTasks) {
+                            if (!canManageKanbanTasks || movingTaskId || updatingSubtaskId) {
                               setDraggingTaskId(null);
                               setDragOverTaskStatus(null);
                               setDragOverTaskId(null);
@@ -2378,7 +2583,7 @@ export const AdminProjects: React.FC = () => {
                                   {column.id === 'todo' ? 'Ready to pick up' : column.id === 'in_progress' ? 'Actively being worked' : column.id === 'review' ? 'Waiting for review' : 'Completed delivery'}
                                 </p>
                               </div>
-                              {canManageKanbanTasks && (
+                              {canManageKanbanTasks && selectedSprintProject.status !== 'completed' && (
                                 <button
                                   type="button"
                                   onClick={() => handleAddTask(column.id)}
@@ -2408,7 +2613,7 @@ export const AdminProjects: React.FC = () => {
                                   <span className="mt-1 block text-[10px] leading-4 text-muted">
                                     {isDropTarget ? 'Release to move this task into the stage.' : canManageKanbanTasks ? 'Add a task or drag one here.' : 'No tasks currently in this stage.'}
                                   </span>
-                                  {canManageKanbanTasks && !isDropTarget && (
+                                  {canManageKanbanTasks && selectedSprintProject.status !== 'completed' && !isDropTarget && (
                                     <button type="button" onClick={() => handleAddTask(column.id)} className="mt-3 text-[10px] font-medium text-accent-text hover:text-accent">
                                       Add task
                                     </button>
@@ -2450,10 +2655,10 @@ export const AdminProjects: React.FC = () => {
                                     )}
                                     <div className="flex items-start gap-2.5">
                                       <button type="button"
-                                        tabIndex={canManageKanbanTasks && !movingTaskId ? 0 : -1}
+                                        tabIndex={canManageKanbanTasks && !movingTaskId && updatingSubtaskId === null ? 0 : -1}
                                         aria-label={canManageKanbanTasks ? 'Move ' + task.title + ' between stages. Use left and right arrow keys.' : 'Open details for ' + task.title}
                                   aria-keyshortcuts="ArrowLeft ArrowRight Enter Space"
-                                        draggable={canManageKanbanTasks && !movingTaskId}
+                                        draggable={canManageKanbanTasks && !movingTaskId && updatingSubtaskId === null}
                                         onDragStart={canManageKanbanTasks ? event => beginTaskDrag(event, task) : undefined}
                                         onDragEnd={() => {
                                           setDraggingTaskId(null);
@@ -2467,7 +2672,7 @@ export const AdminProjects: React.FC = () => {
                                             setSelectedTask(task);
                                             return;
                                           }
-                                          if ((event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') || movingTaskId) return;
+                                          if (!canManageKanbanTasks || (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') || movingTaskId || updatingSubtaskId) return;
                                           const currentIndex = TASK_COLUMNS.findIndex(item => item.id === task.status);
                                           const nextIndex = currentIndex + (event.key === 'ArrowLeft' ? -1 : 1);
                                           const nextColumn = TASK_COLUMNS[nextIndex];
@@ -2578,7 +2783,15 @@ export const AdminProjects: React.FC = () => {
       )}
 
       {/* CONTEXTUAL TASK DETAIL DRAWER */}
-      {view === 'budget' && (
+      {loading && (view === 'budget' || view === 'archived') && (
+        <AdminPanel title="Loading projects" description="Loading project records from the shared workspace.">
+          <div role="status" aria-label="Loading project records" className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[1, 2, 3, 4].map(item => <div key={item} className="h-24 animate-pulse rounded-card border border-line bg-bg" />)}
+          </div>
+        </AdminPanel>
+      )}
+
+      {view === 'budget' && !loading && (
         <>
           <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[
@@ -2664,7 +2877,7 @@ export const AdminProjects: React.FC = () => {
         </>
       )}
 
-      {view === 'archived' && (
+      {view === 'archived' && !loading && (
         <div className="space-y-4">
           <section data-ams-feature-slug="projects-archived-kpis" data-ams-slug="projects-archived-kpis" aria-label="Archived project summary">
             <AdminMetricStrip
@@ -2819,7 +3032,7 @@ export const AdminProjects: React.FC = () => {
         footer={(
           <>
             <Button type="button" variant="secondary" onClick={() => setProjectDrawerOpen(false)} disabled={saving}>Cancel</Button>
-            <Button type="submit" form="projects-form" loading={saving}>{editingProject ? 'Save changes' : 'Create project'}</Button>
+            <Button type="submit" form="projects-form" loading={saving} disabled={!canManageProjects}>{editingProject ? 'Save changes' : 'Create project'}</Button>
           </>
         )}
       >
@@ -2856,14 +3069,14 @@ export const AdminProjects: React.FC = () => {
         footer={(
           <>
             <Button type="button" variant="secondary" onClick={() => setTaskDrawerOpen(false)} disabled={saving}>Cancel</Button>
-            <Button type="submit" form="projects-task-form" loading={saving}>{editingTask ? 'Save changes' : 'Create task'}</Button>
+            <Button type="submit" form="projects-task-form" loading={saving} disabled={!canManageKanbanTasks}>{editingTask ? 'Save changes' : 'Create task'}</Button>
           </>
         )}
       >
         <form id="projects-task-form" data-ams-feature-slug="projects-task-form" data-ams-slug="projects-task-form" onSubmit={saveTask} className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="text-xs text-muted sm:col-span-2">Task title<input required value={taskForm.title} onChange={event => setTaskForm({ ...taskForm, title: event.target.value })} className={fieldClass} /></label>
-            <div><label className="text-xs text-muted">Project</label><CustomSelect value={taskForm.projectId} onChange={value => setTaskForm({ ...taskForm, projectId: value })} options={activeProjects.map(project => ({ value: project.id, label: project.name }))} className="mt-1 w-full" /></div>
+            <div><label className="text-xs text-muted">Project</label><CustomSelect value={taskForm.projectId} onChange={value => setTaskForm({ ...taskForm, projectId: value })} options={projects.filter(project => project.status !== 'completed' || project.id === taskForm.projectId).map(project => ({ value: project.id, label: project.name + (project.status === 'completed' ? ' (Completed)' : '') }))} className="mt-1 w-full" /></div>
             <label className="text-xs text-muted">Assignee
               <input
                 value={taskForm.assignee}
