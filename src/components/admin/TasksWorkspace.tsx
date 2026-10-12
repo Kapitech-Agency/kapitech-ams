@@ -1101,7 +1101,7 @@ export const TasksWorkspace: React.FC = () => {
         footer={(
           <>
             <Button type="button" variant="secondary" onClick={() => setTaskFormOpen(false)} disabled={savingTask} data-ams-slug="task-create-cancel">Cancel</Button>
-            <Button type="submit" variant="primary" form="tasks-create-form" loading={savingTask} data-ams-slug="task-create-submit">Create Task</Button>
+            <Button type="submit" variant="primary" form="tasks-create-form" loading={savingTask} data-ams-slug="task-create-submit">Create task</Button>
           </>
         )}
       >
