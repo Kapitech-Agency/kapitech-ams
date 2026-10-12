@@ -35,8 +35,6 @@ import {
   SecurityAuditLog,
   createAdminAccount,
   deleteAdminAccount,
-  fetchAdminAccounts,
-  fetchServerAuditLogs,
   getAdminSession,
   getStoredAdminCredentials,
   isMasterAdministrator,
@@ -110,8 +108,8 @@ const formatSize = (bytes: number) => {
 
 const archiveIdentifier = (createdAt: string, index: number) => {
   const date = new Date(createdAt);
-  if (Number.isNaN(date.getTime())) return 'ams_prod_snapshot_' + String(index + 1).padStart(2, '0');
-  const stamp = date.toISOString().replace(/[-:]/g, '').replace(/\\.\\d{3}Z$/, '');
+  if (Number.isNaN(date.getTime())) return 'ams_prod_snapshot_' + String(index + 1).padStart(2, '0') + '.tar.zst';
+  const stamp = date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, '');
   return 'ams_prod_snapshot_' + stamp + '.tar.zst';
 };
 
@@ -176,11 +174,8 @@ export const AdminSettings: React.FC = () => {
     isSuperAdmin ||
     Boolean(session?.user?.permissions?.canViewSecurityAuditLogs);
   const isCurrentMaster = isSuperAdmin;
-  // Authenticated users must be able to configure their own MFA even without admin-management rights.
-  const mfaSetupRequired =
-    searchParams.get('mfaRequired') === '1' ||
-    session?.user?.mfaEnabled !== true;
-
+  // Users who must enroll in MFA can reach their own security setup without admin-management permissions.
+  const mfaSetupRequired = searchParams.get('mfaRequired') === '1' || session?.user?.mfaEnabled !== true;
   const normalizeTab = (value: string | null): SettingsTab => {
     if (value === 'audit') return 'audit';
     if (value === 'security' || value === 'profile' || value === 'rbac') return 'security';
@@ -188,20 +183,21 @@ export const AdminSettings: React.FC = () => {
     return 'overview';
   };
 
-  const requestedTab = normalizeTab(searchParams.get('tab'));
+  const requestedTabParam = searchParams.get('tab');
+  const requestedTab = normalizeTab(requestedTabParam);
   const [activeTab, setActiveTab] = useState<SettingsTab>(requestedTab);
+  const fallbackTab: SettingsTab = canAccessServer ? 'overview' : canViewAuditLogs ? 'audit' : (mfaSetupRequired || canManageAdminAccounts) ? 'security' : 'overview';
 
   useEffect(() => {
-    const allowed = requestedTab === 'audit' && !canViewAuditLogs
-      ? 'overview'
-      : requestedTab === 'security' && !mfaSetupRequired && !canManageAdminAccounts && !canAccessServer
-        ? 'overview'
-        : requestedTab === 'integrations' && !canAccessServer
-          ? 'overview'
-          : requestedTab;
+    const allowed: SettingsTab =
+      ((requestedTab === 'overview' || requestedTab === 'integrations') && !canAccessServer) ||
+      (requestedTab === 'audit' && !canViewAuditLogs) ||
+      (requestedTab === 'security' && !mfaSetupRequired && !canManageAdminAccounts && !canAccessServer)
+        ? fallbackTab
+        : requestedTab;
 
     if (activeTab !== allowed) setActiveTab(allowed);
-    if (allowed !== requestedTab || (searchParams.get('tab') === null && allowed !== 'overview')) {
+    if (allowed !== requestedTab || (requestedTabParam !== null && requestedTabParam !== allowed)) {
       setSearchParams({ tab: allowed }, { replace: true });
     }
   }, [
@@ -209,15 +205,16 @@ export const AdminSettings: React.FC = () => {
     canAccessServer,
     canManageAdminAccounts,
     canViewAuditLogs,
+    fallbackTab,
     mfaSetupRequired,
     requestedTab,
-    searchParams,
+    requestedTabParam,
     setSearchParams
   ]);
 
   const selectTab = (tab: SettingsTab) => {
+    if ((tab === 'overview' || tab === 'integrations') && !canAccessServer) return;
     if (tab === 'audit' && !canViewAuditLogs) return;
-    if (tab === 'integrations' && !canAccessServer) return;
     if (tab === 'security' && !mfaSetupRequired && !canManageAdminAccounts && !canAccessServer) return;
     setActiveTab(tab);
     setSearchParams({ tab });
@@ -238,9 +235,11 @@ export const AdminSettings: React.FC = () => {
   const [integrityLoading, setIntegrityLoading] = useState(false);
   const [snapshotLoading, setSnapshotLoading] = useState(false);
   const [overviewMessage, setOverviewMessage] = useState<{ tone: 'success' | 'warning' | 'danger'; text: string } | null>(null);
+  const [overviewLoadError, setOverviewLoadError] = useState<string | null>(null);
 
   const [logs, setLogs] = useState<SecurityAuditLog[]>([]);
   const [auditLoading, setAuditLoading] = useState(false);
+  const [auditError, setAuditError] = useState<string | null>(null);
   const [auditQuery, setAuditQuery] = useState('');
   const [auditOutcome, setAuditOutcome] = useState<AuditOutcome>('all');
   const [auditPage, setAuditPage] = useState(1);
@@ -248,6 +247,9 @@ export const AdminSettings: React.FC = () => {
 
   const [accounts, setAccounts] = useState<AdminAccount[]>([]);
   const [accountsLoading, setAccountsLoading] = useState(false);
+  const [accountsError, setAccountsError] = useState<string | null>(null);
+  const [accountFormMessage, setAccountFormMessage] = useState<{ success: boolean; text: string } | null>(null);
+  const [deleteAccountMessage, setDeleteAccountMessage] = useState<string | null>(null);
   const [accountPage, setAccountPage] = useState(1);
   const [accountPageSize, setAccountPageSize] = useState(10);
   const [isAddAccountModalOpen, setIsAddAccountModalOpen] = useState(false);
@@ -299,6 +301,7 @@ export const AdminSettings: React.FC = () => {
   }, [session?.rememberMe]);
 
   const handleStartMfaSetup = async () => {
+    if (mfaLoading || mfaEnabled) return;
     setMfaLoading(true);
     setMfaMessage(null);
     try {
@@ -326,6 +329,7 @@ export const AdminSettings: React.FC = () => {
 
   const handleVerifyMfaSetup = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (mfaLoading) return;
     const code = mfaSetupCode.replace(/\D/g, '').slice(0, 6);
     if (!/^\d{6}$/.test(code)) {
       setMfaMessage({ success: false, text: 'Enter the 6-digit TOTP code from your authenticator app.' });
@@ -358,6 +362,7 @@ export const AdminSettings: React.FC = () => {
 
   const handleDisableMfa = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (mfaLoading || !mfaEnabled) return;
     if (!mfaDisablePassword || !/^\d{6}$/.test(mfaDisableCode)) {
       setMfaMessage({ success: false, text: 'Enter the current password and 6-digit MFA code to disable MFA.' });
       return;
@@ -419,35 +424,58 @@ export const AdminSettings: React.FC = () => {
     maintenanceMode: false
   });
   const [metaSaving, setMetaSaving] = useState(false);
-  const [metaMessage, setMetaMessage] = useState<string | null>(null);
+  const [metaMessage, setMetaMessage] = useState<{ success: boolean; text: string } | null>(null);
 
   const loadOverview = useCallback(async () => {
     if (!canAccessServer) return;
     setOverviewLoading(true);
+    setOverviewLoadError(null);
     setNotificationStatus('checking');
     try {
       const [backupRes, securityRes, notificationRes, readinessRes] = await Promise.all([
-        api.system.getBackups(),
-        api.system.securityStatus(),
-        api.notifications.getSettings(),
-        api.system.productionReadiness()
+        api.system.getBackups().catch(() => null),
+        api.system.securityStatus().catch(() => null),
+        api.notifications.getSettings().catch(() => null),
+        api.system.productionReadiness().catch(() => null)
       ]);
+      const failures: string[] = [];
 
-      if (backupRes.success && backupRes.data) {
+      if (backupRes?.success && backupRes.data) {
         setBackups(Array.isArray(backupRes.data.backups) ? backupRes.data.backups : []);
         const res = backupRes;
         setBackupRetentionDays(Number(res.data.retention ?? res.data.retentionDays ?? 14));
+      } else {
+        failures.push('backup status');
       }
-      if (securityRes.success && securityRes.data?.status) {
+
+      if (securityRes?.success && securityRes.data?.status) {
         setSecurityStatus(securityRes.data.status);
         setBackupIntegrity(securityRes.data.status.backupIntegrity);
+      } else {
+        failures.push('security status');
       }
-      setNotificationStatus(notificationRes.success ? 'connected' : 'unavailable');
-      if (readinessRes.success && readinessRes.data) {
+
+      if (notificationRes?.success) {
+        setNotificationStatus('connected');
+      } else {
+        setNotificationStatus('unavailable');
+        failures.push('notification status');
+      }
+
+      if (readinessRes?.success && readinessRes.data) {
         setProductionReadiness(readinessRes.data);
+      } else {
+        failures.push('production readiness');
       }
-    } catch {
+
+      setOverviewLoadError(
+        failures.length
+          ? 'Some system status could not be loaded: ' + failures.join(', ') + '. Retry to refresh the latest server data.'
+          : null
+      );
+    } catch (error) {
       setNotificationStatus('unavailable');
+      setOverviewLoadError(error instanceof Error ? error.message : 'System status could not be loaded. Try again.');
     } finally {
       setOverviewLoading(false);
     }
@@ -456,11 +484,15 @@ export const AdminSettings: React.FC = () => {
   const loadAuditLogs = useCallback(async () => {
     if (!canViewAuditLogs) return;
     setAuditLoading(true);
+    setAuditError(null);
     try {
-      const next = await fetchServerAuditLogs();
-      setLogs(next);
-    } catch {
-      setLogs([]);
+      const response = await api.auditLogs.getAll();
+      if (!response.success || !Array.isArray(response.data?.logs)) {
+        throw new Error(response.error || 'Audit logs could not be loaded. Try again.');
+      }
+      setLogs(response.data.logs);
+    } catch (error) {
+      setAuditError(error instanceof Error ? error.message : 'Audit logs could not be loaded. Try again.');
     } finally {
       setAuditLoading(false);
     }
@@ -469,27 +501,34 @@ export const AdminSettings: React.FC = () => {
   const loadAccounts = useCallback(async () => {
     if (!canManageAdminAccounts) return;
     setAccountsLoading(true);
+    setAccountsError(null);
     try {
-      const next = await fetchAdminAccounts();
-      setAccounts(next);
-    } catch {
-      setAccounts([]);
+      const response = await api.auth.getUsers();
+      if (!response.success || !Array.isArray(response.data?.users)) {
+        throw new Error(response.error || 'Admin accounts could not be loaded. Try again.');
+      }
+      setAccounts(response.data.users);
+    } catch (error) {
+      setAccountsError(error instanceof Error ? error.message : 'Admin accounts could not be loaded. Try again.');
     } finally {
       setAccountsLoading(false);
     }
   }, [canManageAdminAccounts]);
 
   const loadMeta = useCallback(async () => {
+    setMetaMessage(null);
     try {
       const res = await api.cms.getSettings();
-      if (res.success && res.data?.settings) {
-        setMetaSettings(current => ({
-          ...current,
-          ...res.data.settings
-        }));
+      if (!res.success || !res.data?.settings) {
+        setMetaMessage({ success: false, text: res.error || 'Brand and metadata settings could not be loaded. Try again.' });
+        return;
       }
-    } catch {
-      // Keep the last known metadata state when the server is temporarily unavailable.
+      setMetaSettings(current => ({
+        ...current,
+        ...res.data.settings
+      }));
+    } catch (error) {
+      setMetaMessage({ success: false, text: error instanceof Error ? error.message : 'Brand and metadata settings could not be loaded. Try again.' });
     }
   }, []);
 
@@ -507,7 +546,7 @@ export const AdminSettings: React.FC = () => {
   }, [activeTab, canAccessServer, canManageAdminAccounts, loadAccounts, loadAuditLogs, loadMeta, loadOverview]);
 
   const triggerIntegrityCheck = async () => {
-    if (!canAccessServer) return;
+    if (!canAccessServer || integrityLoading) return;
     setIntegrityLoading(true);
     setOverviewMessage(null);
     try {
@@ -535,7 +574,7 @@ export const AdminSettings: React.FC = () => {
   };
 
   const createSnapshot = async () => {
-    if (!canAccessServer) return;
+    if (!canAccessServer || snapshotLoading) return;
     setSnapshotLoading(true);
     setOverviewMessage(null);
     try {
@@ -566,10 +605,14 @@ export const AdminSettings: React.FC = () => {
         log.severity === 'critical' ? 'Critical' : log.severity === 'warning' ? 'Warning' : 'Success'
       ])
     ];
+    const safeAuditCsvCell = (cell: unknown) => {
+      const raw = String(cell ?? '');
+      const safeValue = /^[\s\u0000-\u001f]*[=+\-@]/.test(raw) ? "'" + raw : raw;
+      return '"' + safeValue.replace(/"/g, '""') + '"';
+    };
     const csv = rows
-      .map((row) => row.map((cell) => '"' + String(cell ?? '').replace(/"/g, '""') + '"').join(','))
-      .join('\
-');
+      .map((row) => row.map(safeAuditCsvCell).join(','))
+      .join('\r\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -599,17 +642,24 @@ export const AdminSettings: React.FC = () => {
     setAccountPage(1);
   }, [accountPageSize]);
 
+  const auditPageCount = Math.max(1, Math.ceil(filteredLogs.length / auditPageSize));
   const pagedLogs = useMemo(
     () => filteredLogs.slice((auditPage - 1) * auditPageSize, auditPage * auditPageSize),
     [auditPage, auditPageSize, filteredLogs]
   );
 
+  const accountPageCount = Math.max(1, Math.ceil(accounts.length / accountPageSize));
   const pagedAccounts = useMemo(
     () => accounts.slice((accountPage - 1) * accountPageSize, accountPage * accountPageSize),
     [accountPage, accountPageSize, accounts]
   );
 
+  useEffect(() => { setAuditPage((page) => Math.min(page, auditPageCount)); }, [auditPageCount]);
+  useEffect(() => { setAccountPage((page) => Math.min(page, accountPageCount)); }, [accountPageCount]);
+
   const handleOpenAddAccount = () => {
+    if (!canManageAdminAccounts || isCreatingAccount) return;
+    setAccountFormMessage(null);
     setNewAccName('');
     setNewAccUsername('');
     setNewAccEmail('');
@@ -633,8 +683,10 @@ export const AdminSettings: React.FC = () => {
 
   const submitNewAccount = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (newAccPassword.length < 12) {
-      setAccountMessage({ success: false, text: 'Temporary password must be 12 to 128 characters.' });
+    if (!canManageAdminAccounts || isCreatingAccount) return;
+    setAccountFormMessage(null);
+    if (newAccPassword.length < 12 || newAccPassword.length > 128) {
+      setAccountFormMessage({ success: false, text: 'Temporary password must be 12 to 128 characters.' });
       return;
     }
     setIsCreatingAccount(true);
@@ -649,39 +701,42 @@ export const AdminSettings: React.FC = () => {
       });
       if (res.success) {
         setIsAddAccountModalOpen(false);
+        setAccountFormMessage(null);
         setAccountMessage({ success: true, text: 'Account created successfully.' });
         await loadAccounts();
       } else {
-        setAccountMessage({ success: false, text: res.error || 'Account creation failed. Check the form and try again.' });
+        setAccountFormMessage({ success: false, text: res.error || 'Account creation failed. Check the form and try again.' });
       }
     } catch (error) {
-      setAccountMessage({ success: false, text: error instanceof Error ? error.message : 'Account creation failed. Check the form and try again.' });
+      setAccountFormMessage({ success: false, text: error instanceof Error ? error.message : 'Account creation failed. Check the form and try again.' });
     } finally {
       setIsCreatingAccount(false);
     }
   };
 
   const confirmDeleteAccount = async () => {
-    if (!confirmDelete || isDeletingAccount) return;
+    if (!canManageAdminAccounts || !confirmDelete || isDeletingAccount) return;
+    setDeleteAccountMessage(null);
     setIsDeletingAccount(true);
     try {
       const res = await deleteAdminAccount(confirmDelete.id);
       if (res.success) {
+        setConfirmDelete(null);
         setAccountMessage({ success: true, text: 'Account deleted successfully.' });
         await loadAccounts();
       } else {
-        setAccountMessage({ success: false, text: res.error || 'Account deletion failed. Try again.' });
+        setDeleteAccountMessage(res.error || 'Account deletion failed. Try again.');
       }
     } catch (error) {
-      setAccountMessage({ success: false, text: error instanceof Error ? error.message : 'Account deletion failed. Try again.' });
+      setDeleteAccountMessage(error instanceof Error ? error.message : 'Account deletion failed. Try again.');
     } finally {
-      setConfirmDelete(null);
       setIsDeletingAccount(false);
     }
   };
 
   const handleUpdateSecurity = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (securitySaving) return;
     setSecurityStatusMessage(null);
 
     if (!currentPassword) {
@@ -706,13 +761,23 @@ export const AdminSettings: React.FC = () => {
     }
 
     setSecuritySaving(true);
-    const res = await updateAdminCredentials(currentPassword, { newPassword });
-    setSecuritySaving(false);
+    let res: { success: boolean; error?: string };
+    try {
+      res = await updateAdminCredentials(currentPassword, { newPassword });
+    } catch (error) {
+      setSecurityStatusMessage({
+        success: false,
+        text: error instanceof Error ? error.message : 'Password update failed. Check the current password and try again.'
+      });
+      return;
+    } finally {
+      setSecuritySaving(false);
+    }
     if (!res.success) {
       setSecurityStatusMessage({ success: false, text: res.error || 'Password update failed. Check the current password and try again.' });
       return;
     }
-    setSecurityStatusMessage({ success: true, text: 'Master password updated successfully.' });
+    setSecurityStatusMessage({ success: true, text: 'Account password updated successfully.' });
     setCurrentPassword('');
     setNewPassword('');
     setConfirmPassword('');
@@ -720,17 +785,18 @@ export const AdminSettings: React.FC = () => {
 
   const handleSaveMeta = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (metaSaving) return;
     setMetaSaving(true);
     setMetaMessage(null);
     try {
       const res = await api.cms.updateSettings(metaSettings);
       if (!res.success) {
-        setMetaMessage(res.error || 'Settings could not be saved. Check the fields and try again.');
+        setMetaMessage({ success: false, text: res.error || 'Settings could not be saved. Check the fields and try again.' });
         return;
       }
-      setMetaMessage('Brand and metadata settings saved.');
+      setMetaMessage({ success: true, text: 'Brand and metadata settings saved.' });
     } catch (error) {
-      setMetaMessage(error instanceof Error ? error.message : 'Settings could not be saved. Check the fields and try again.');
+      setMetaMessage({ success: false, text: error instanceof Error ? error.message : 'Settings could not be saved. Check the fields and try again.' });
     } finally {
       setMetaSaving(false);
     }
@@ -772,7 +838,7 @@ export const AdminSettings: React.FC = () => {
       <AdminModuleHeader slug="settings-header"
         title="System & Security"
         description="Automated backup verification, identity access governance, and immutable audit telemetry."
-        actions={
+        actions={canAccessServer ? (
           <>
             <Button
               type="button"
@@ -793,10 +859,10 @@ export const AdminSettings: React.FC = () => {
               Create Snapshot
             </Button>
           </>
-        }
+        ) : undefined}
       />
 
-      <div className="min-[900px]:hidden min-w-0" data-ams-slug="settings-mobile-tabs">
+      <div className="min-w-0" data-ams-slug="settings-tabs">
         <AdminSectionTabs
           ariaLabel="Settings sections"
           activeKey={activeTab}
@@ -806,12 +872,20 @@ export const AdminSettings: React.FC = () => {
             { key: 'security', label: 'Security & MFA', to: '/admin/settings?tab=security' },
             { key: 'integrations', label: 'Integrations', to: '/admin/settings?tab=integrations' },
           ].filter((tab) =>
+            (tab.key !== 'overview' || canAccessServer) &&
             (tab.key !== 'audit' || canViewAuditLogs) &&
             (tab.key !== 'security' || mfaSetupRequired || canManageAdminAccounts || canAccessServer) &&
             (tab.key !== 'integrations' || canAccessServer)
           )}
         />
       </div>
+
+      {overviewLoadError && canAccessServer && activeTab !== 'audit' && (
+        <div className="flex flex-col gap-2 rounded-control border border-danger/20 bg-danger/5 px-4 py-3 text-xs text-danger sm:flex-row sm:items-center sm:justify-between" role="alert">
+          <span>{overviewLoadError}</span>
+          <Button type="button" variant="secondary" onClick={() => void loadOverview()} disabled={overviewLoading} loading={overviewLoading}>Retry</Button>
+        </div>
+      )}
 
       {overviewMessage && (
         <div className={
@@ -826,7 +900,14 @@ export const AdminSettings: React.FC = () => {
         </div>
       )}
 
-      {activeTab === 'overview' && (
+      {activeTab === 'overview' && !canAccessServer && (
+        <section className="rounded-card border border-line bg-panel p-5" role="status">
+          <h2 className="text-sm font-semibold text-fg">System settings access is restricted</h2>
+          <p className="mt-2 text-xs leading-5 text-muted">This account does not have permission to view backup, server, or integration settings. Contact an administrator if you need access.</p>
+        </section>
+      )}
+
+      {activeTab === 'overview' && canAccessServer && (
         <section data-ams-feature-slug="settings-overview" data-ams-slug="settings-overview" aria-label="System Status Summary" className="space-y-6">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             <SummaryCard
@@ -839,7 +920,7 @@ export const AdminSettings: React.FC = () => {
             <SummaryCard
               label="Security & MFA"
               value={overviewLoading ? 'Checking…' : mfaEnrolled}
-              context={overviewLoading ? 'Loading identity protection status' : ((securityStatus?.activeUserCount ?? 0) + ' active sessions reported by the server')}
+              context={overviewLoading ? 'Loading identity protection status' : ((securityStatus?.activeUserCount ?? 0) + ' active users reported by the server')}
               status={overviewLoading ? 'Checking' : securityStatus?.mfaCoveragePercent === 100 ? 'Enforced' : 'Review'}
               tone={overviewLoading ? 'neutral' : securityStatus?.mfaCoveragePercent === 100 ? 'success' : 'warning'}
             />
@@ -874,6 +955,7 @@ export const AdminSettings: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => void createSnapshot()}
+                    disabled={snapshotLoading}
                     className="mt-4 inline-flex min-h-9 items-center gap-2 rounded-control bg-accent px-3 text-xs font-medium text-white hover:bg-accent/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   >
                     <Database size={14} />
@@ -911,6 +993,7 @@ export const AdminSettings: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => void triggerIntegrityCheck()}
+                            disabled={integrityLoading}
                             className="inline-flex min-h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[11px] text-muted transition-colors hover:bg-panel hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                           >
                             <CheckCircle2 size={13} />
@@ -1011,9 +1094,23 @@ export const AdminSettings: React.FC = () => {
             </div>
           </div>
 
+          {auditError && filteredLogs.length > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-danger/20 bg-danger/5 px-5 py-3 text-[11px] text-danger" role="alert">
+              <span>{auditError} Showing the last successfully loaded entries.</span>
+              <Button type="button" variant="secondary" onClick={() => void loadAuditLogs()} disabled={auditLoading} loading={auditLoading}>Retry</Button>
+            </div>
+          )}
+
           <div className="overflow-x-auto">
             {auditLoading ? (
               <div className="px-5 py-10">{renderSkeleton()}</div>
+            ) : auditError && filteredLogs.length === 0 ? (
+              <div className="flex min-h-[220px] flex-col items-center justify-center px-5 py-10 text-center" role="alert">
+                <AlertCircle size={24} className="text-danger" />
+                <p className="mt-3 text-sm font-medium text-fg">Audit logs could not be loaded</p>
+                <p className="mt-1 max-w-md text-xs leading-5 text-muted">{auditError}</p>
+                <Button type="button" variant="secondary" onClick={() => void loadAuditLogs()} disabled={auditLoading} loading={auditLoading} className="mt-4">Retry</Button>
+              </div>
             ) : filteredLogs.length === 0 ? (
               <div className="flex min-h-[220px] flex-col items-center justify-center px-5 py-10 text-center">
                 <Clock3 size={24} className="text-muted" />
@@ -1090,7 +1187,7 @@ export const AdminSettings: React.FC = () => {
               <div className="flex items-center gap-2 border-b border-line pb-4">
                 <UserCheck size={18} className="text-accent-text" />
                 <div>
-                  <h2 className="text-sm font-semibold text-fg">Master profile & identity</h2>
+                  <h2 className="text-sm font-semibold text-fg">Account profile & identity</h2>
                   <p className="mt-1 text-[10px] leading-4 text-muted">Identity and login state are sourced from the server session.</p>
                 </div>
               </div>
@@ -1169,7 +1266,13 @@ export const AdminSettings: React.FC = () => {
                         variant="secondary"
                         onClick={() => {
                           setMfaMessage(null);
-                          setMfaMode(mfaMode === 'disable' ? 'idle' : 'disable');
+                          if (mfaMode === 'disable') {
+                            setMfaDisablePassword('');
+                            setMfaDisableCode('');
+                            setMfaMode('idle');
+                          } else {
+                            setMfaMode('disable');
+                          }
                         }}
                         disabled={mfaLoading}
                       >
@@ -1367,7 +1470,7 @@ export const AdminSettings: React.FC = () => {
               <div className="flex items-center gap-2">
                 <KeyRound size={18} className="text-muted" />
                 <div>
-                  <h2 className="text-sm font-semibold text-fg">Change master password</h2>
+                  <h2 className="text-sm font-semibold text-fg">Change account password</h2>
                   <p className="mt-1 text-[10px] leading-4 text-muted">Current password verification is required before the server saves a new password.</p>
                 </div>
               </div>
@@ -1389,7 +1492,7 @@ export const AdminSettings: React.FC = () => {
                     required
                     value={newPassword}
                     onChange={(event) => setNewPassword(event.target.value)}
-                    placeholder="At least 8 characters"
+                    placeholder="At least 12 characters"
                     className="w-full bg-bg"
                   />
                 </label>
@@ -1412,7 +1515,7 @@ export const AdminSettings: React.FC = () => {
                   required
                   value={currentPassword}
                   onChange={(event) => setCurrentPassword(event.target.value)}
-                  placeholder="Enter the current admin password"
+                  placeholder="Enter your current account password"
                   className="w-full bg-bg"
                 />
               </label>
@@ -1440,6 +1543,12 @@ export const AdminSettings: React.FC = () => {
                   </Button>
                 </div>
 
+                {accountsError && accounts.length > 0 && (
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-danger/20 bg-danger/5 px-5 py-3 text-[11px] text-danger" role="alert">
+                    <span>{accountsError} Showing the last successfully loaded accounts.</span>
+                    <Button type="button" variant="secondary" onClick={() => void loadAccounts()} disabled={accountsLoading} loading={accountsLoading}>Retry</Button>
+                  </div>
+                )}
                 {accountMessage && (
                   <div className={'border-b px-5 py-3 text-xs ' + (accountMessage.success ? 'border-success/20 bg-success/10 text-success' : 'border-danger/20 bg-danger/10 text-danger')}>
                     {accountMessage.text}
@@ -1449,6 +1558,13 @@ export const AdminSettings: React.FC = () => {
                 <div className="overflow-x-auto">
                   {accountsLoading ? (
                     <div className="px-5 py-10">{renderSkeleton()}</div>
+                  ) : pagedAccounts.length === 0 && accountsError ? (
+                    <div className="flex min-h-[180px] flex-col items-center justify-center px-5 py-10 text-center" role="alert">
+                      <AlertCircle size={22} className="text-danger" />
+                      <p className="mt-3 text-sm font-medium text-fg">Admin accounts could not be loaded</p>
+                      <p className="mt-1 max-w-md text-xs leading-5 text-muted">{accountsError}</p>
+                      <Button type="button" variant="secondary" onClick={() => void loadAccounts()} disabled={accountsLoading} loading={accountsLoading} className="mt-4">Retry</Button>
+                    </div>
                   ) : pagedAccounts.length === 0 ? (
                     <div className="flex min-h-[180px] flex-col items-center justify-center px-5 py-10 text-center">
                       <Users size={22} className="text-muted" />
@@ -1488,7 +1604,7 @@ export const AdminSettings: React.FC = () => {
                                 {isCurrentMaster && !masterAccount ? (
                                   <button
                                     type="button"
-                                    onClick={() => setConfirmDelete({ id: account.id, name: account.name })}
+                                    onClick={() => { setDeleteAccountMessage(null); setConfirmDelete({ id: account.id, name: account.name }); }}
                                     className="inline-flex min-h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[11px] text-muted hover:border-danger/30 hover:bg-danger/10 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                                   >
                                     <Trash2 size={13} />
@@ -1677,7 +1793,7 @@ export const AdminSettings: React.FC = () => {
                     Enable live chat
                   </label>
                 </div>
-                {metaMessage && <div className="rounded-control border border-success/20 bg-success/10 px-3 py-2.5 text-[11px] text-success" role="status">{metaMessage}</div>}
+                {metaMessage && <div className={'rounded-control border px-3 py-2.5 text-[11px] ' + (metaMessage.success ? 'border-success/20 bg-success/10 text-success' : 'border-danger/20 bg-danger/10 text-danger')} role={metaMessage.success ? 'status' : 'alert'}>{metaMessage.text}</div>}
                 <div className="flex justify-end pt-1">
                   <Button type="submit" variant="primary" loading={metaSaving} icon={<Save size={14} />}>
                     Save changes
@@ -1723,7 +1839,7 @@ export const AdminSettings: React.FC = () => {
             <Button type="button" variant="secondary" onClick={() => setIsAddAccountModalOpen(false)} disabled={isCreatingAccount}>
               Cancel
             </Button>
-            <Button type="submit" form="add-admin-account-form" variant="primary" loading={isCreatingAccount}>
+            <Button type="submit" form="add-admin-account-form" variant="primary" loading={isCreatingAccount} disabled={!canManageAdminAccounts}>
               Create account
             </Button>
           </>
@@ -1763,6 +1879,11 @@ export const AdminSettings: React.FC = () => {
             </div>
           </div>
 
+          {accountFormMessage && (
+            <div className={'rounded-control border px-3 py-2.5 text-xs ' + (accountFormMessage.success ? 'border-success/20 bg-success/10 text-success' : 'border-danger/20 bg-danger/10 text-danger')} role={accountFormMessage.success ? 'status' : 'alert'}>
+              {accountFormMessage.text}
+            </div>
+          )}
           <div className="grid gap-3 sm:grid-cols-2">
             <label>
               <span className="mb-1 block text-[10px] font-medium text-muted">Full name</span>
@@ -1816,13 +1937,14 @@ export const AdminSettings: React.FC = () => {
           </>
         }
       >
+        {deleteAccountMessage && <div className="mb-3 rounded-control border border-danger/20 bg-danger/10 px-3 py-2.5 text-xs text-danger" role="alert">{deleteAccountMessage}</div>}
         <div className="rounded-card border border-danger/20 bg-danger/5 p-4 text-xs text-muted">
           This action removes the account. Confirm the account name before continuing.
         </div>
       </Modal>
 
       <span className="sr-only" aria-live="polite">
-        {overviewMessage?.text || accountMessage?.text || metaMessage || securityStatusMessage?.text || ''}
+        {overviewMessage?.text || overviewLoadError || accountMessage?.text || accountFormMessage?.text || deleteAccountMessage || metaMessage?.text || securityStatusMessage?.text || auditError || accountsError || ''}
       </span>
     </AdminPageShell>
   );
