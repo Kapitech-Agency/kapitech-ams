@@ -93,8 +93,8 @@ export const AdminInbox: React.FC = () => {
   const [confirmAction, setConfirmAction] = useState<{ type: 'delete' | 'mark-read'; id?: string; count?: number; targetStatus?: ContactSubmission['status'] } | null>(null);
 
   // Server-backed inbox refresh. The API is the only source of truth.
-  const refreshInbox = async () => {
-    setLoading(true);
+  const refreshInbox = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const res = await api.leads.getAll();
 
@@ -115,13 +115,13 @@ export const AdminInbox: React.FC = () => {
         tone: 'danger'
       });
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
   useEffect(() => {
     void refreshInbox();
-    const timer = window.setInterval(() => void refreshInbox(), 30000);
+    const timer = window.setInterval(() => void refreshInbox(true), 30000);
     return () => window.clearInterval(timer);
   }, []);
 
