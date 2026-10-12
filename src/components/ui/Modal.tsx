@@ -166,7 +166,7 @@ export const Modal: React.FC<ModalProps> = ({
   if (!open) return null;
 
   return (
-    <div data-ams-feature-slug={slug} data-ams-slug={slug} className="fixed inset-0 z-50 flex items-center justify-center p-3 pb-[max(12px,env(safe-area-inset-bottom))] pt-[max(12px,env(safe-area-inset-top))] sm:p-4" role="presentation">
+    <div data-ams-feature-slug={slug} data-ams-slug={slug} data-ams-modal-root="true" className="fixed inset-0 z-[80] flex items-center justify-center p-3 pb-[max(12px,env(safe-area-inset-bottom))] pt-[max(12px,env(safe-area-inset-top))] sm:p-4" role="presentation">
       <div
         aria-hidden="true"
         className="absolute inset-0 bg-bg/80"
