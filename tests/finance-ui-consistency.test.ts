@@ -327,6 +327,7 @@ test('Finance add and record-creation actions use the red primary button style',
 
 test('Finance date and month inputs use the shared custom calendar control', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
   const picker = await read('src/components/ui/CustomDatePicker.tsx');
 
   assert.match(workspace, /import \{ CustomDatePicker \} from '\.\.\/\.\.\/components\/ui\/CustomDatePicker'/);
@@ -337,6 +338,11 @@ test('Finance date and month inputs use the shared custom calendar control', asy
   assert.match(workspace, /slug="finance-vendor-contract-start"/);
   assert.match(workspace, /slug="finance-vendor-contract-end"/);
   assert.doesNotMatch(workspace, /<input type="(?:date|month)"/);
+  assert.match(invoicing, /import \\{ CustomDatePicker \\} from '\\.\\.\\/\\.\\/components\\/ui\\/CustomDatePicker'/);
+  for (const id of ['finance-quotation-valid-until', 'vendor-payment-date', 'finance-issue-date', 'finance-due-date', 'finance-expense-date', 'finance-payment-date']) {
+    assert.match(invoicing, new RegExp('<CustomDatePicker id="' + id + '"'));
+  }
+  assert.doesNotMatch(invoicing, /<input id="[^"]+"[^>]*type="date"/);
   assert.match(workspace, /const missingRequired = definition\?\.fields\.find/);
   assert.match(workspace, /Due date cannot be earlier than the bill date/);
   assert.match(picker, /from '\.\/DropdownPortal'/);
