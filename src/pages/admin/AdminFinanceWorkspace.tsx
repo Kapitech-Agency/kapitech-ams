@@ -248,7 +248,7 @@ const FinanceDataTable: React.FC<{
     const exportableRows = sortedRows.map((row) => row.cells.map((cell, index) => {
       if (/^actions?$/i.test((columns[index]?.label || '').trim())) return '';
       const value = financeCellText(cell);
-      return /^[=+@]/.test(value) ? "'" + value : value;
+      return /^[=+@-]/.test(value) && !/^-?\\d[\\d.,%]*$/.test(value) ? "'" + value : value;
     }));
     exportFinanceCsv('finance-' + safeTitle + '-' + getLocalDateInputValue() + '.csv', columns.map((column) => column.label), exportableRows);
   };
@@ -282,7 +282,7 @@ const FinanceDataTable: React.FC<{
                       type="button"
                       disabled={!sortable}
                       onClick={() => handleSort(index, column.label)}
-                      className={'inline-flex max-w-full items-center gap-1.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-default ' + (sortable ? 'hover:text-fg' : '') + (column.align === 'right' ? ' ml-auto' : '')}
+                      className={'flex w-full items-center gap-1.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-default ' + (column.align === 'right' ? 'justify-end ' : column.align === 'center' ? 'justify-center ' : 'justify-start ') + (sortable ? 'hover:text-fg' : '')}
                       aria-label={sortable ? 'Sort by ' + column.label : column.label}
                     >
                       <span>{column.label}</span>
