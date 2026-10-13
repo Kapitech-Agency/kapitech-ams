@@ -358,7 +358,10 @@ test('Finance registers provide sortable headers, usable pagination, and CSV exp
   assert.match(workspace, /const compareFinanceSortText = \(left: string, right: string\)/);
   assert.match(workspace, /aria-sort=\{isSorted \? \(sort\?\.direction === 'asc' \? 'ascending' : 'descending'\) : 'none'\}/);
   assert.match(workspace, /Rows per page for ' \+ title/);
-  assert.match(workspace, /Showing <span className="tabular-nums text-fg">\{firstRow\}–\{lastRow\}<\/span> of/);
+  assert.match(workspace, /<AdminTablePagination/);
+  assert.match(workspace, /page=\{currentPage \+ 1\}/);
+  assert.match(workspace, /onPageChange=\{\(nextPage\) => setPage\(nextPage - 1\)\}/);
+  assert.match(workspace, /pageSizeAriaLabel=\{'Rows per page for ' \+ title\}/);
   assert.match(workspace, /const exportRows = \(\) =>/);
   assert.match(workspace, /const exportableRows = sortedRows\.map/);
   assert.match(workspace, /exportable = true/);

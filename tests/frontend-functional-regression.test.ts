@@ -375,7 +375,8 @@ test('AMS UI defaults no longer override component focus, form sizing, or compac
   const select = await read('src/components/ui/CustomSelect.tsx');
   assert.match(select, /xs: 'h-8 min-h-8/);
   const primitives = await read('src/components/admin/AdminModulePrimitives.tsx');
-  assert.match(primitives, /pageSizeOptions\.map[\s\S]{0,160}size="xs"[\s\S]{0,100}aria-label="Rows per page"/);
+  assert.match(primitives, /pageSizeOptions\.map[\s\S]{0,160}size="xs"[\s\S]{0,100}aria-label=\{pageSizeAriaLabel\}/);
+  assert.match(primitives, /pageSizeAriaLabel = 'Rows per page'/);
 });
 
 test('Careers tabs, filters, and modal fields use consistent AMS interactions', async () => {

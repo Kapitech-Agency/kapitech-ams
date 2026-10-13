@@ -3650,7 +3650,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
             </div>
             <div>
               <label htmlFor="finance-quotation-valid-until" className="mb-1.5 block text-xs font-medium text-muted">Valid until *</label>
-              <CustomDatePicker id="finance-quotation-valid-until" value={quotationValidUntil} onChange={setQuotationValidUntil} type="date" required locale={language === 'id' ? 'id-ID' : 'en-US'} className="w-full" triggerClassName="h-9 min-h-9" aria-label="Quotation valid until" />
+              <CustomDatePicker id="finance-quotation-valid-until" value={quotationValidUntil} onChange={setQuotationValidUntil} type="date" required locale={language === 'id' ? 'id-ID' : 'en-US'} className="w-full" triggerClassName="h-10 min-h-10" aria-label="Quotation valid until" />
             </div>
             <div className="sm:col-span-2">
               <div className="flex items-center justify-between gap-3">
@@ -3845,7 +3845,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
             </div>
             <div>
               <label htmlFor="vendor-payment-date" className="mb-1.5 block text-xs font-medium text-muted">Payment date *</label>
-              <CustomDatePicker id="vendor-payment-date" value={vendorPaymentDate} onChange={setVendorPaymentDate} type="date" locale={language === 'id' ? 'id-ID' : 'en-US'} className="w-full" triggerClassName="h-9 min-h-9" aria-label="Vendor payment date" />
+              <CustomDatePicker id="vendor-payment-date" value={vendorPaymentDate} onChange={setVendorPaymentDate} type="date" locale={language === 'id' ? 'id-ID' : 'en-US'} className="w-full" triggerClassName="h-10 min-h-10" aria-label="Vendor payment date" />
             </div>
             <div>
               <label htmlFor="vendor-payment-reference" className="mb-1.5 block text-xs font-medium text-muted">Reference</label>
@@ -4019,8 +4019,8 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
                 <div><label htmlFor="finance-tax" className="mb-1.5 block text-xs font-medium text-muted">Tax %</label><input id="finance-tax" disabled={invoiceBillingLocked} type="number" min="0" max="100" step="0.01" value={taxPercent} onChange={(event) => setTaxPercent(Number(event.target.value))} className={fieldClass} /></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div><label htmlFor="finance-issue-date" className="mb-1.5 block text-xs font-medium text-muted">Issue date</label><CustomDatePicker id="finance-issue-date" value={issueDate} onChange={setIssueDate} type="date" disabled={invoiceBillingLocked} locale={language === 'id' ? 'id-ID' : 'en-US'} className="w-full" triggerClassName="h-9 min-h-9" aria-label="Invoice issue date" /></div>
-                <div><label htmlFor="finance-due-date" className="mb-1.5 block text-xs font-medium text-muted">Due date</label><CustomDatePicker id="finance-due-date" value={dueDate} onChange={setDueDate} type="date" min={issueDate || undefined} disabled={invoiceBillingLocked} locale={language === 'id' ? 'id-ID' : 'en-US'} className="w-full" triggerClassName="h-9 min-h-9" aria-label="Invoice due date" /></div>
+                <div><label htmlFor="finance-issue-date" className="mb-1.5 block text-xs font-medium text-muted">Issue date</label><CustomDatePicker id="finance-issue-date" value={issueDate} onChange={setIssueDate} type="date" disabled={invoiceBillingLocked} locale={language === 'id' ? 'id-ID' : 'en-US'} className="w-full" triggerClassName="h-10 min-h-10" aria-label="Invoice issue date" /></div>
+                <div><label htmlFor="finance-due-date" className="mb-1.5 block text-xs font-medium text-muted">Due date</label><CustomDatePicker id="finance-due-date" value={dueDate} onChange={setDueDate} type="date" min={issueDate || undefined} disabled={invoiceBillingLocked} locale={language === 'id' ? 'id-ID' : 'en-US'} className="w-full" triggerClassName="h-10 min-h-10" aria-label="Invoice due date" /></div>
               </div>
               <div><label htmlFor="finance-payment-terms" className="mb-1.5 block text-xs font-medium text-muted">Payment terms</label><input id="finance-payment-terms" maxLength={500} value={paymentTerms} onChange={(event) => setPaymentTerms(event.target.value)} className={fieldClass} placeholder="e.g. Net 14" /></div>
               <div><label htmlFor="finance-invoice-notes" className="mb-1.5 block text-xs font-medium text-muted">Notes</label><textarea id="finance-invoice-notes" maxLength={5000} value={invoiceNotes} onChange={(event) => setInvoiceNotes(event.target.value)} rows={4} className={fieldClass + ' py-2.5'} /></div>
@@ -4095,7 +4095,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div><label htmlFor="finance-expense-amount" className="mb-1.5 block text-xs font-medium text-muted">Amount *</label><input id="finance-expense-amount" required type="number" min="0.01" max="100000000000" step="0.01" value={expenseAmount} onChange={(event) => setExpenseAmount(Number(event.target.value))} className={fieldClass} /></div>
-            <div><label htmlFor="finance-expense-date" className="mb-1.5 block text-xs font-medium text-muted">Date *</label><CustomDatePicker id="finance-expense-date" value={expenseDate} onChange={setExpenseDate} type="date" required max={getDateInputValue()} locale={language === 'id' ? 'id-ID' : 'en-US'} className="w-full" triggerClassName="h-9 min-h-9" aria-label="Expense date" /></div>
+            <div><label htmlFor="finance-expense-date" className="mb-1.5 block text-xs font-medium text-muted">Date *</label><CustomDatePicker id="finance-expense-date" value={expenseDate} onChange={setExpenseDate} type="date" required max={getDateInputValue()} locale={language === 'id' ? 'id-ID' : 'en-US'} className="w-full" triggerClassName="h-10 min-h-10" aria-label="Expense date" /></div>
           </div>
         </form>
       </Drawer>
@@ -4165,7 +4165,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
               </div></div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div><label className="mb-1.5 block text-xs font-medium text-muted">Payment method</label><CustomSelect aria-label="Payment method" value={paymentMethod} onChange={(value) => { setPaymentDirty(true); setPaymentMethod(value as typeof paymentMethod); }} options={[{ value: 'bank_transfer', label: 'Bank transfer' }, { value: 'credit_card', label: 'Credit card' }, { value: 'cash', label: 'Cash' }, { value: 'other', label: 'Other' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" /></div>
-              <div><label htmlFor="finance-payment-date" className="mb-1.5 block text-xs font-medium text-muted">Payment date</label><CustomDatePicker id="finance-payment-date" value={paymentDate} onChange={setPaymentDate} type="date" required max={getDateInputValue()} locale={language === 'id' ? 'id-ID' : 'en-US'} className="w-full" triggerClassName="h-9 min-h-9" aria-label="Invoice payment date" /></div>
+              <div><label htmlFor="finance-payment-date" className="mb-1.5 block text-xs font-medium text-muted">Payment date</label><CustomDatePicker id="finance-payment-date" value={paymentDate} onChange={setPaymentDate} type="date" required max={getDateInputValue()} locale={language === 'id' ? 'id-ID' : 'en-US'} className="w-full" triggerClassName="h-10 min-h-10" aria-label="Invoice payment date" /></div>
             </div>
             <div><label htmlFor="finance-payment-reference" className="mb-1.5 block text-xs font-medium text-muted">Reference</label><input id="finance-payment-reference" maxLength={160} value={paymentReference} onChange={(event) => setPaymentReference(event.target.value)} className={fieldClass} placeholder="Transaction reference" /></div>
             <div><label htmlFor="finance-payment-notes" className="mb-1.5 block text-xs font-medium text-muted">Notes</label><textarea id="finance-payment-notes" maxLength={1000} value={paymentNotes} onChange={(event) => setPaymentNotes(event.target.value)} rows={3} className={fieldClass + ' py-2.5'} /></div>
