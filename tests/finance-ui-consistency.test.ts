@@ -69,6 +69,9 @@ test('Cash Flow and Annual Summary disclose transfer and petty-cash source bound
   assert.match(workspace, /Petty-cash vouchers remain in their separate ledger and are not included in this monthly view/);
   assert.match(workspace, /metric: 'Recorded cash outflow \(proxy\)'[\s\S]*?AMS expense dates and saved Cash & Bank movements; excludes petty-cash vouchers/);
   assert.match(workspace, /Collections minus recorded bank outflow proxy; excludes petty-cash voucher spending/);
+  assert.match(workspace, /metric: 'Annual recorded cash in'[\s\S]*?Invoice payments and saved Cash & Bank inflows; excludes petty-cash voucher receipts/);
+  assert.doesNotMatch(workspace, /metric: 'Annual Collections'[\s\S]*?basis: 'Payment date'/);
+  assert.match(workspace, /Recorded cash in minus outflow proxy; cash transfers and petty-cash voucher activity are not a complete consolidated view/);
   assert.match(workspace, /FINANCE_UI_COPY: Record<string, string> = \{[\s\S]*?Perlakukan hasilnya sebagai pergerakan bersih/);
 });
 
