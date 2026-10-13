@@ -450,3 +450,12 @@ Build responsive (1440 / 1024 / 768 / 390), support both themes, and finish by r
 - Keep the card and open detail surface synchronized during optimistic updates. On API failure, restore both to the previous server state and show the existing error feedback. Never make a detail modal appear saved merely because its button was clicked.
 - Drag/drop should visibly mark the target lane and reset drag state on drop, cancellation, or invalid targets. Preserve filtering and sorting behavior; stage movement must not silently reorder cards within a stage when ordering is not persisted.
 - Read-only roles must not expose active drag handles or mutate status. Test empty lanes, permission-limited views, overlapping updates, keyboard navigation, filtered boards, narrow screens, and save rollback.
+
+
+## Reporting period and calendar controls
+
+- Shared date and month calendars must allow users to jump directly to a year, rather than paging through every month or year one at a time. Year navigation must respect configured minimum and maximum dates.
+- Report periods use one consistent control for Month, Quarter, and Year. Months and quarters must keep the year visible, offer quick actions for the current and previous period, and show the exact inclusive date range.
+- Period comparisons must state the comparison baseline (previous period or same period in the prior year). Percentage change is shown as unavailable when the comparison baseline is zero; do not silently invent a percentage.
+- Aggregated quarter and year views must include every month in the selected range. CSV exports must reflect the selected period and its comparison values, while preserving the existing caveats about provisional accounting figures.
+- Period selectors are filters only. They must not change record dates, trigger posting, bypass permissions, or alter financial business rules.

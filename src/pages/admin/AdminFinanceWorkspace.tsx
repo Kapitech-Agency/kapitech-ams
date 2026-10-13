@@ -7,6 +7,8 @@ import { AdminVendors } from './AdminVendors';
 import { Drawer } from '../../components/ui/Drawer';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { CustomDatePicker } from '../../components/ui/CustomDatePicker';
+import { CustomReportPeriodPicker } from '../../components/ui/CustomReportPeriodPicker';
+import { formatReportingPeriodLabel, getPreviousReportingPeriodValue, getReportingPeriodRange, type ReportingPeriodComparison, type ReportingPeriodMode } from '../../lib/reportingPeriods';
 import { api } from '../../lib/apiClient';
 import { normalizeFinanceExpense, normalizeFinanceInvoice } from '../../lib/financeStore';
 import type { AgencyExpense, AgencyInvoice } from '../../lib/financeStore';
@@ -107,7 +109,7 @@ const localizeFinanceValue = (value: unknown, language: Language, propKey = ''):
     return nextValue;
   }
   return value;
-};
+,"Period type":"Jenis periode","Month":"Bulan","Quarter":"Kuartal","Year":"Tahun","Reporting year":"Tahun pelaporan","Reporting month":"Bulan pelaporan","Reporting quarter":"Kuartal pelaporan","This month":"Bulan ini","Last month":"Bulan lalu","This quarter":"Kuartal ini","Last quarter":"Kuartal lalu","This year":"Tahun ini","Last year":"Tahun lalu","Previous period":"Periode sebelumnya","Same period last year":"Periode yang sama tahun lalu","Compare with":"Bandingkan dengan","Comparison period":"Periode pembanding","Change":"Perubahan","Change %":"Perubahan %","Selected period":"Periode terpilih","Line item":"Pos laporan","Metric":"Metrik","Revenue":"Pendapatan","Direct project cost":"Biaya proyek langsung","Gross profit":"Laba kotor","Operating expense":"Biaya operasional","Unclassified expense":"Biaya belum diklasifikasikan","Net profit (preview)":"Laba bersih (pratinjau)","Net cash movement":"Pergerakan kas bersih","Cash in":"Kas masuk","Cash out":"Kas keluar","Source rows":"Baris sumber","Period comparison":"Perbandingan periode","Profit & Loss detail":"Rincian laba rugi","Cash Flow by Month":"Arus Kas per Bulan","Export comparison":"Ekspor perbandingan","Export period detail":"Ekspor rincian periode","Choose a month, quarter, or full year. Quick actions include the previous period, and the comparison below keeps the selected period visible.":"Pilih bulan, kuartal, atau satu tahun penuh. Aksi cepat tersedia untuk periode lalu dan perbandingan menampilkan kedua periode secara jelas.","Choose a month, quarter, or year. The table shows monthly detail within the selected period and a separate comparison against the prior period.":"Pilih bulan, kuartal, atau tahun. Tabel menampilkan rincian bulanan dalam periode terpilih dan perbandingan terpisah dengan periode sebelumnya.","Change is current minus comparison; percentage is unavailable when the comparison baseline is zero.":"Perubahan dihitung dari periode terpilih dikurangi periode pembanding. Persentase tidak tersedia bila nilai pembanding nol.","Monthly detail inside the selected reporting period; switch to Quarter or Year for grouped period review.":"Rincian bulanan di dalam periode yang dipilih. Gunakan Kuartal atau Tahun untuk meninjau periode yang lebih luas.","No activity exists for the selected period.":"Tidak ada aktivitas pada periode yang dipilih.","No dated receipts or expense movements are available for the selected period.":"Tidak ada penerimaan bertanggal atau pergerakan pengeluaran pada periode yang dipilih.","Invoice value":"Nilai invoice","Net preview":"Pratinjau laba bersih","Before unclassified ":"Sebelum biaya yang belum diklasifikasikan ","Based on current category mapping":"Berdasarkan pemetaan kategori saat ini","Mapped operating costs":"Biaya operasional yang dipetakan","Issued invoices · ":"Invoice terbit · ","Classified expense total: ":"Total pengeluaran terklasifikasi: "," · Source records in selected period: ":" · Catatan sumber pada periode terpilih: "," expenses, ":" pengeluaran, "," invoices.":" invoice."};
 const normaliseStatus = (value: unknown) => String(value || 'Not recorded').replace(/[_-]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
 
 const statusTone = (status: unknown): 'success' | 'warning' | 'danger' | 'info' | 'neutral' => {
@@ -650,6 +652,9 @@ export const AdminFinanceWorkspace: React.FC = () => {
   const [searchText, setSearchText] = useState('');
   const [selectedMonth, setSelectedMonth] = useState(new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0'));
   const [selectedYear, setSelectedYear] = useState(String(new Date().getFullYear()));
+  const [reportPeriodMode, setReportPeriodMode] = useState<ReportingPeriodMode>('month');
+  const [reportPeriodValue, setReportPeriodValue] = useState(new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0'));
+  const [reportComparisonMode, setReportComparisonMode] = useState<ReportingPeriodComparison>('previous-period');
 
   const loadData = useCallback(async (quiet = false) => {
     if (!canViewFinancials) {
@@ -1865,20 +1870,41 @@ export const AdminFinanceWorkspace: React.FC = () => {
         );
       }
       case 'monthly-pnl': {
-        const monthInvoices = idrInvoices.filter((invoice) => getMonthKey(getInvoiceDate(invoice)) === selectedMonth);
-        const monthExpenses = idrExpenses.filter((expense) => getMonthKey(expense.date) === selectedMonth);
-        const revenue = sumAmounts<AgencyInvoice>(monthInvoices, (invoice) => Number(invoice.total) || 0);
-        const classTotals: Record<WorkbookExpenseClass, number> = {
-          directProjectCost: 0,
-          teamReward: 0,
-          projectTeamFee: 0,
-          operatingExpense: 0,
-          unclassified: 0
+        const getPnlForPeriod = (periodValue: string) => {
+          const range = getReportingPeriodRange(periodValue, reportPeriodMode, locale);
+          const periodInvoices = range ? idrInvoices.filter((invoice) => {
+            const month = getMonthKey(getInvoiceDate(invoice));
+            return month >= range.startMonth && month <= range.endMonth;
+          }) : [];
+          const periodExpenses = range ? idrExpenses.filter((expense) => {
+            const month = getMonthKey(expense.date);
+            return month >= range.startMonth && month <= range.endMonth;
+          }) : [];
+          const classTotals: Record<WorkbookExpenseClass, number> = {
+            directProjectCost: 0,
+            teamReward: 0,
+            projectTeamFee: 0,
+            operatingExpense: 0,
+            unclassified: 0
+          };
+          for (const expense of periodExpenses) classTotals[classifyWorkbookExpense(expense)] += Number(expense.amount) || 0;
+          const revenue = sumAmounts<AgencyInvoice>(periodInvoices, (invoice) => Number(invoice.total) || 0);
+          const classifiedExpense = classTotals.directProjectCost + classTotals.teamReward + classTotals.projectTeamFee + classTotals.operatingExpense;
+          const grossProfit = revenue - classTotals.directProjectCost;
+          const netPreview = grossProfit - classTotals.teamReward - classTotals.projectTeamFee - classTotals.operatingExpense;
+          return { range, invoices: periodInvoices, expenses: periodExpenses, revenue, classTotals, classifiedExpense, grossProfit, netPreview };
         };
-        for (const expense of monthExpenses) classTotals[classifyWorkbookExpense(expense)] += Number(expense.amount) || 0;
-        const classifiedExpense = classTotals.directProjectCost + classTotals.teamReward + classTotals.projectTeamFee + classTotals.operatingExpense;
-        const grossProfit = revenue - classTotals.directProjectCost;
-        const netPreview = grossProfit - classTotals.teamReward - classTotals.projectTeamFee - classTotals.operatingExpense;
+        const currentPnl = getPnlForPeriod(reportPeriodValue);
+        const comparisonMode = reportPeriodMode === 'year' ? 'previous-period' : reportComparisonMode;
+        const comparisonPeriodValue = getPreviousReportingPeriodValue(reportPeriodValue, reportPeriodMode, comparisonMode);
+        const comparisonPnl = getPnlForPeriod(comparisonPeriodValue);
+        const periodLabel = formatReportingPeriodLabel(reportPeriodValue, reportPeriodMode, locale);
+        const comparisonLabel = formatReportingPeriodLabel(comparisonPeriodValue, reportPeriodMode, locale);
+        const classTotals = currentPnl.classTotals;
+        const revenue = currentPnl.revenue;
+        const classifiedExpense = currentPnl.classifiedExpense;
+        const grossProfit = currentPnl.grossProfit;
+        const netPreview = currentPnl.netPreview;
         const pnlRows = [
           { id: 'rev', label: 'Revenue', amount: revenue, basis: 'Invoice issue date' },
           { id: 'direct', label: 'Direct Project Cost', amount: classTotals.directProjectCost, basis: 'Mapped expense records' },
@@ -1889,24 +1915,79 @@ export const AdminFinanceWorkspace: React.FC = () => {
           { id: 'unmapped', label: 'Unclassified Expense', amount: classTotals.unclassified, basis: 'Requires category mapping; excluded from net preview' },
           { id: 'net', label: 'Net Profit (preview)', amount: netPreview, basis: 'Gross Profit less mapped reward, fee and operating expense' }
         ];
+        const comparisonMetrics = [
+          { id: 'revenue', label: 'Revenue', current: currentPnl.revenue, comparison: comparisonPnl.revenue },
+          { id: 'direct', label: 'Direct project cost', current: currentPnl.classTotals.directProjectCost, comparison: comparisonPnl.classTotals.directProjectCost },
+          { id: 'gross', label: 'Gross profit', current: currentPnl.grossProfit, comparison: comparisonPnl.grossProfit },
+          { id: 'reward', label: 'Team Reward', current: currentPnl.classTotals.teamReward, comparison: comparisonPnl.classTotals.teamReward },
+          { id: 'fee', label: 'Project Team Fee', current: currentPnl.classTotals.projectTeamFee, comparison: comparisonPnl.classTotals.projectTeamFee },
+          { id: 'opex', label: 'Operating expense', current: currentPnl.classTotals.operatingExpense, comparison: comparisonPnl.classTotals.operatingExpense },
+          { id: 'unclassified', label: 'Unclassified expense', current: currentPnl.classTotals.unclassified, comparison: comparisonPnl.classTotals.unclassified },
+          { id: 'net', label: 'Net profit (preview)', current: currentPnl.netPreview, comparison: comparisonPnl.netPreview }
+        ];
+        const comparisonRows = comparisonMetrics.map((item) => {
+          const change = item.current - item.comparison;
+          const changePercent = item.comparison === 0 ? (item.current === 0 ? '0.0%' : 'N/A') : ((change / Math.abs(item.comparison)) * 100).toFixed(1) + '%';
+          return { id: item.id, cells: [item.label, formatMoney(item.current), formatMoney(item.comparison), formatMoney(change), changePercent] };
+        });
+        const reportYears = Array.from(new Set([
+          ...reportInvoices.map((invoice) => Number(getYearKey(getInvoiceDate(invoice)))),
+          ...idrExpenses.map((expense) => Number(getYearKey(expense.date))),
+          ...cashMovements.map((movement) => Number(getYearKey(movement.date)))
+        ])).filter((year) => Number.isInteger(year) && year >= 1000 && year <= 9999);
         return (
           <div className="space-y-4">
             <WorkbookNote tone="warning" title="Preliminary P&L mapping">
               The report uses invoice issue dates and expense dates. Expense categories that are not mapped to project or operating costs remain separate and are excluded from the preliminary net figure until reviewed.
             </WorkbookNote>
-            <AdminPanel title="Reporting period" bodyClassName="p-4">
-              <label className="block text-xs font-medium text-muted">Month
-                <CustomDatePicker type="month" value={selectedMonth} onChange={setSelectedMonth} locale={locale} className="mt-1.5 w-full sm:max-w-xs" triggerClassName="h-10 min-h-10" aria-label="Reporting month" slug="finance-pnl-month-picker" />
-              </label>
+            <AdminPanel title="Reporting period" description="Choose a month, quarter, or full year. Quick actions include the previous period, and the comparison below keeps the selected period visible." bodyClassName="p-4">
+              <CustomReportPeriodPicker
+                mode={reportPeriodMode}
+                value={reportPeriodValue}
+                onModeChange={setReportPeriodMode}
+                onChange={setReportPeriodValue}
+                availableYears={reportYears}
+                locale={locale}
+                slug="finance-pnl-report-period-picker"
+              />
+              <div className="mt-4 grid gap-3 border-t border-line pt-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:items-end">
+                <div className="min-w-0 text-xs text-muted">
+                  <div className="font-medium text-fg">Comparison period</div>
+                  <div className="mt-1">{comparisonLabel}</div>
+                </div>
+                {reportPeriodMode !== 'year' && (
+                  <label className="block min-w-0 text-xs font-medium text-muted">
+                    Compare with
+                    <CustomSelect
+                      value={reportComparisonMode}
+                      onChange={(nextValue) => setReportComparisonMode(nextValue as ReportingPeriodComparison)}
+                      options={[{ value: 'previous-period', label: 'Previous period' }, { value: 'previous-year', label: 'Same period last year' }]}
+                      className="mt-1.5 w-full"
+                      triggerClassName="h-10 min-h-10 w-full"
+                      aria-label="Compare reporting period with"
+                      slug="finance-pnl-comparison-mode"
+                    />
+                  </label>
+                )}
+              </div>
             </AdminPanel>
             <AdminMetricStrip metrics={[
-              { id: 'pnl-revenue', label: 'Invoice value', value: formatMoney(revenue), context: 'Issued invoices in selected month', icon: <FileText size={15} /> },
+              { id: 'pnl-revenue', label: 'Invoice value', value: formatMoney(revenue), context: 'Issued invoices · ' + periodLabel, icon: <FileText size={15} /> },
               { id: 'pnl-direct', label: 'Direct project cost', value: formatMoney(classTotals.directProjectCost), context: 'Based on current category mapping', icon: <Briefcase size={15} /> },
               { id: 'pnl-operating', label: 'Operating expense', value: formatMoney(classTotals.operatingExpense), context: 'Mapped operating costs', icon: <ArrowUpRight size={15} /> },
               { id: 'pnl-net', label: 'Net preview', value: formatMoney(netPreview), context: 'Before unclassified ' + formatMoney(classTotals.unclassified), icon: <CircleDollarSign size={15} /> }
             ]} />
-            <FinanceDataTable title="Monthly Profit & Loss" description="Values remain a preview until account classifications and posting rules are approved." columns={[{ label: 'Line item' }, { label: 'Amount', align: 'right' }, { label: 'Basis' }]} rows={pnlRows.map((item) => ({ id: item.id, cells: [item.label, formatMoney(item.amount), item.basis] }))} emptyMessage="No activity exists for the selected month." exportable={false} actions={<Button variant="secondary" type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-monthly-pnl-' + selectedMonth + '.csv', ['Line item', 'Amount', 'Basis'], pnlRows.map((item) => [item.label, item.amount, item.basis]))}>Export CSV</Button>} />
-            <div className="text-xs text-muted">Classified expense total: {formatMoney(classifiedExpense)} · Source records in selected month: {monthExpenses.length} expenses, {monthInvoices.length} invoices.</div>
+            <FinanceDataTable
+              title="Period comparison"
+              description={periodLabel + ' compared with ' + comparisonLabel + '. Change is current minus comparison; percentage is unavailable when the comparison baseline is zero.'}
+              columns={[{ label: 'Line item' }, { label: 'Selected period', align: 'right' }, { label: 'Comparison period', align: 'right' }, { label: 'Change', align: 'right' }, { label: 'Change %', align: 'right' }]}
+              rows={comparisonRows}
+              emptyMessage="No activity exists for the selected period."
+              exportable={false}
+              actions={<Button variant="secondary" type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-pnl-comparison-' + reportPeriodValue + '.csv', ['Line item', 'Selected period', 'Comparison period', 'Change', 'Change percent'], comparisonMetrics.map((item) => [item.label, item.current, item.comparison, item.current - item.comparison, item.comparison === 0 ? 'N/A' : (((item.current - item.comparison) / Math.abs(item.comparison)) * 100).toFixed(1) + '%']))}>Export comparison</Button>}
+            />
+            <FinanceDataTable title="Profit & Loss detail" description="Values remain a preview until account classifications and posting rules are approved." columns={[{ label: 'Line item' }, { label: 'Amount', align: 'right' }, { label: 'Basis' }]} rows={pnlRows.map((item) => ({ id: item.id, cells: [item.label, formatMoney(item.amount), item.basis] }))} emptyMessage="No activity exists for the selected period." exportable={false} actions={<Button variant="secondary" type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-pnl-' + reportPeriodValue + '.csv', ['Line item', 'Amount', 'Basis'], pnlRows.map((item) => [item.label, item.amount, item.basis]))}>Export CSV</Button>} />
+            <div className="text-xs text-muted">Classified expense total: {formatMoney(classifiedExpense)} · Source records in selected period: {currentPnl.expenses.length} expenses, {currentPnl.invoices.length} invoices.</div>
           </div>
         );
       }
@@ -1921,17 +2002,102 @@ export const AdminFinanceWorkspace: React.FC = () => {
           item.count += 1;
           monthly.set(month, item);
         }
-        const monthlyRows = [...monthly.values()].sort((a, b) => b.month.localeCompare(a.month));
-        const rows = monthlyRows.map((item) => ({
-          id: item.month,
-          cells: [item.month, formatMoney(item.inflow), formatMoney(item.outflow), formatMoney(item.inflow - item.outflow), item.count]
-        }));
+        const allMonthlyRows = [...monthly.values()].sort((a, b) => b.month.localeCompare(a.month));
+        const selectedRange = getReportingPeriodRange(reportPeriodValue, reportPeriodMode, locale);
+        const visibleMonthlyRows = selectedRange
+          ? allMonthlyRows.filter((item) => item.month >= selectedRange.startMonth && item.month <= selectedRange.endMonth)
+          : [];
+        const periodLabel = formatReportingPeriodLabel(reportPeriodValue, reportPeriodMode, locale);
+        const comparisonMode = reportPeriodMode === 'year' ? 'previous-period' : reportComparisonMode;
+        const comparisonPeriodValue = getPreviousReportingPeriodValue(reportPeriodValue, reportPeriodMode, comparisonMode);
+        const comparisonLabel = formatReportingPeriodLabel(comparisonPeriodValue, reportPeriodMode, locale);
+        const getCashFlowForPeriod = (periodValue: string) => {
+          const range = getReportingPeriodRange(periodValue, reportPeriodMode, locale);
+          const periodMovements = range ? cashMovements.filter((movement) => {
+            const date = String(movement.date || '').slice(0, 10);
+            return movement.currency === 'IDR' && date >= range.startDate && date <= range.endDate;
+          }) : [];
+          const inflow = periodMovements.reduce((total, movement) => total + (Number(movement.cashIn) || 0), 0);
+          const outflow = periodMovements.reduce((total, movement) => total + (Number(movement.cashOut) || 0), 0);
+          return { inflow, outflow, net: inflow - outflow, count: periodMovements.length };
+        };
+        const currentFlow = getCashFlowForPeriod(reportPeriodValue);
+        const comparisonFlow = getCashFlowForPeriod(comparisonPeriodValue);
+        const flowComparisonMetrics = [
+          { id: 'inflow', label: 'Cash in', current: currentFlow.inflow, comparison: comparisonFlow.inflow },
+          { id: 'outflow', label: 'Cash out', current: currentFlow.outflow, comparison: comparisonFlow.outflow },
+          { id: 'net', label: 'Net cash movement', current: currentFlow.net, comparison: comparisonFlow.net },
+          { id: 'sources', label: 'Source rows', current: currentFlow.count, comparison: comparisonFlow.count }
+        ];
+        const flowComparisonRows = flowComparisonMetrics.map((item) => {
+          const change = item.current - item.comparison;
+          const percent = item.comparison === 0 ? (item.current === 0 ? '0.0%' : 'N/A') : ((change / Math.abs(item.comparison)) * 100).toFixed(1) + '%';
+          return { id: item.id, cells: [item.label, item.id === 'sources' ? String(item.current) : formatMoney(item.current), item.id === 'sources' ? String(item.comparison) : formatMoney(item.comparison), item.id === 'sources' ? String(change) : formatMoney(change), percent] };
+        });
+        const reportYears = Array.from(new Set([
+          ...reportInvoices.map((invoice) => Number(getYearKey(getInvoiceDate(invoice)))),
+          ...idrExpenses.map((expense) => Number(getYearKey(expense.date))),
+          ...cashMovements.map((movement) => Number(getYearKey(movement.date)))
+        ])).filter((year) => Number.isInteger(year) && year >= 1000 && year <= 9999);
         return (
           <div className="space-y-4">
             <WorkbookNote tone="warning" title="Cash-flow movement, not reconciled ending cash">
-              Inflows include dated invoice payments and saved Cash & Bank entries touching account 1000. Outflows include eligible dated AMS expense records, excluding items identified as petty cash, and saved bank-side adjustments/transfers. Petty-cash vouchers remain in their separate ledger and are not included in this monthly view. Treat the result as net movement, not an authoritative ending cash balance, until opening balances and bank statements are reconciled.
+              Inflows include dated invoice payments and saved Cash & Bank entries touching account 1000. Outflows include eligible dated AMS expense records, excluding items identified as petty cash, and saved bank-side adjustments/transfers. Petty-cash vouchers remain in their separate ledger and are not included in this view. Treat the result as net movement, not an authoritative ending cash balance, until opening balances and bank statements are reconciled.
             </WorkbookNote>
-            <FinanceDataTable title="Monthly Cash Flow" description="Monthly cash-in, cash-out, and net movement calculated from live AMS transaction sources." columns={[{ label: 'Month' }, { label: 'Total cash in', align: 'right' }, { label: 'Total cash out', align: 'right' }, { label: 'Net cash movement', align: 'right' }, { label: 'Source rows', align: 'right' }]} rows={rows} emptyMessage="No dated receipts or expense movements are available." exportable={false} actions={<Button variant="secondary" type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-cash-flow.csv', ['Month', 'Total cash in', 'Total cash out', 'Net cash movement', 'Source rows'], monthlyRows.map((item) => [item.month, item.inflow, item.outflow, item.inflow - item.outflow, item.count]))}>Export CSV</Button>} />
+            <AdminPanel title="Reporting period" description="Choose a month, quarter, or year. The table shows monthly detail within the selected period and a separate comparison against the prior period." bodyClassName="p-4">
+              <CustomReportPeriodPicker
+                mode={reportPeriodMode}
+                value={reportPeriodValue}
+                onModeChange={setReportPeriodMode}
+                onChange={setReportPeriodValue}
+                availableYears={reportYears}
+                locale={locale}
+                slug="finance-cash-flow-report-period-picker"
+              />
+              <div className="mt-4 grid gap-3 border-t border-line pt-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:items-end">
+                <div className="min-w-0 text-xs text-muted">
+                  <div className="font-medium text-fg">Comparison period</div>
+                  <div className="mt-1">{comparisonLabel}</div>
+                </div>
+                {reportPeriodMode !== 'year' && (
+                  <label className="block min-w-0 text-xs font-medium text-muted">
+                    Compare with
+                    <CustomSelect
+                      value={reportComparisonMode}
+                      onChange={(nextValue) => setReportComparisonMode(nextValue as ReportingPeriodComparison)}
+                      options={[{ value: 'previous-period', label: 'Previous period' }, { value: 'previous-year', label: 'Same period last year' }]}
+                      className="mt-1.5 w-full"
+                      triggerClassName="h-10 min-h-10 w-full"
+                      aria-label="Compare reporting period with"
+                      slug="finance-cash-flow-comparison-mode"
+                    />
+                  </label>
+                )}
+              </div>
+            </AdminPanel>
+            <AdminMetricStrip metrics={[
+              { id: 'cash-in-period', label: 'Cash in', value: formatMoney(currentFlow.inflow), context: periodLabel, icon: <ArrowDown size={15} /> },
+              { id: 'cash-out-period', label: 'Cash out', value: formatMoney(currentFlow.outflow), context: periodLabel, icon: <ArrowUpRight size={15} /> },
+              { id: 'cash-net-period', label: 'Net movement (proxy)', value: formatMoney(currentFlow.net), context: 'Compared periods are calculated from recorded source rows', icon: <CircleDollarSign size={15} /> }
+            ]} />
+            <FinanceDataTable
+              title="Period comparison"
+              description={periodLabel + ' compared with ' + comparisonLabel + '. Net cash movement remains a proxy until opening balances and bank statements are reconciled.'}
+              columns={[{ label: 'Metric' }, { label: 'Selected period', align: 'right' }, { label: 'Comparison period', align: 'right' }, { label: 'Change', align: 'right' }, { label: 'Change %', align: 'right' }]}
+              rows={flowComparisonRows}
+              emptyMessage="No dated receipts or expense movements are available for the selected period."
+              exportable={false}
+              actions={<Button variant="secondary" type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-cash-flow-comparison-' + reportPeriodValue + '.csv', ['Metric', 'Selected period', 'Comparison period', 'Change', 'Change percent'], flowComparisonMetrics.map((item) => [item.label, item.current, item.comparison, item.current - item.comparison, item.comparison === 0 ? 'N/A' : (((item.current - item.comparison) / Math.abs(item.comparison)) * 100).toFixed(1) + '%']))}>Export comparison</Button>}
+            />
+            <FinanceDataTable
+              title="Cash Flow by Month"
+              description="Monthly detail inside the selected reporting period; switch to Quarter or Year for grouped period review."
+              columns={[{ label: 'Month' }, { label: 'Total cash in', align: 'right' }, { label: 'Total cash out', align: 'right' }, { label: 'Net cash movement', align: 'right' }, { label: 'Source rows', align: 'right' }]}
+              rows={visibleMonthlyRows.map((item) => ({ id: item.month, cells: [item.month, formatMoney(item.inflow), formatMoney(item.outflow), formatMoney(item.inflow - item.outflow), item.count] }))}
+              emptyMessage="No dated receipts or expense movements are available for the selected period."
+              exportable={false}
+              actions={<Button variant="secondary" type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-cash-flow-' + reportPeriodValue + '.csv', ['Month', 'Total cash in', 'Total cash out', 'Net cash movement', 'Source rows'], visibleMonthlyRows.map((item) => [item.month, item.inflow, item.outflow, item.inflow - item.outflow, item.count]))}>Export period detail</Button>}
+            />
           </div>
         );
       }

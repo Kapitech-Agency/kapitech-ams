@@ -333,7 +333,9 @@ test('Finance date and month inputs use the shared custom calendar control', asy
   assert.match(workspace, /import \{ CustomDatePicker \} from '\.\.\/\.\.\/components\/ui\/CustomDatePicker'/);
   assert.match(workspace, /field\.type === 'date' \|\| field\.type === 'month'[\s\S]*?<CustomDatePicker/);
   assert.match(workspace, /slug="finance-dashboard-month-picker"/);
-  assert.match(workspace, /slug="finance-pnl-month-picker"/);
+  assert.match(workspace, /import \{ CustomReportPeriodPicker \} from '\.\.\/\.\.\/components\/ui\/CustomReportPeriodPicker'/);
+  assert.match(workspace, /slug="finance-pnl-report-period-picker"/);
+  assert.match(workspace, /slug="finance-cash-flow-report-period-picker"/);
   assert.match(workspace, /slug="finance-closing-month-picker"/);
   assert.match(workspace, /slug="finance-vendor-contract-start"/);
   assert.match(workspace, /slug="finance-vendor-contract-end"/);
@@ -350,6 +352,17 @@ test('Finance date and month inputs use the shared custom calendar control', asy
   assert.match(picker, /aria-expanded=\{isOpen\}/);
   assert.match(picker, /event\.key === 'ArrowLeft'/);
   assert.match(picker, /isMonthDisabled/);
+  assert.match(picker, /aria-label="Choose year"/);
+  assert.match(picker, /showYearPicker \? 'Previous 12 years'/);
+  const reportingPeriods = await read('src/lib/reportingPeriods.ts');
+  const periodPicker = await read('src/components/ui/CustomReportPeriodPicker.tsx');
+  assert.match(periodPicker, /This month/);
+  assert.match(periodPicker, /Last month/);
+  assert.match(periodPicker, /This quarter/);
+  assert.match(periodPicker, /Last quarter/);
+  assert.match(periodPicker, /Reporting year/);
+  assert.match(reportingPeriods, /export const getPreviousReportingPeriodValue/);
+  assert.match(reportingPeriods, /export const getReportingPeriodRange/);
 });
 
 test('Finance registers provide sortable headers, usable pagination, and CSV export for the full sorted result', async () => {
