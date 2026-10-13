@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowDown, ArrowUpRight, Briefcase, CircleDollarSign, Download, FileText, Landmark, Plus, RefreshCw, Search, ShieldAlert, WalletCards, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpRight, Briefcase, ChevronLeft, ChevronRight, ChevronsUpDown, CircleDollarSign, Download, FileText, Landmark, Plus, RefreshCw, Search, ShieldAlert, WalletCards, X } from 'lucide-react';
 import { AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminPanel, AdminSectionTabs, AdminStatusBadge } from '../../components/admin/AdminModulePrimitives';
 import Button from '../../components/ui/Button';
 import { AdminInvoicing } from './AdminInvoicing';
 import { AdminVendors } from './AdminVendors';
 import { Drawer } from '../../components/ui/Drawer';
 import { CustomSelect } from '../../components/ui/CustomSelect';
+import { CustomDatePicker } from '../../components/ui/CustomDatePicker';
 import { api } from '../../lib/apiClient';
 import { normalizeFinanceExpense, normalizeFinanceInvoice } from '../../lib/financeStore';
 import type { AgencyExpense, AgencyInvoice } from '../../lib/financeStore';
@@ -122,6 +123,77 @@ const StatusBadge: React.FC<{ value: unknown }> = ({ value }) => (
   <AdminStatusBadge tone={statusTone(value)}>{normaliseStatus(value)}</AdminStatusBadge>
 );
 
+const financeCellText = (node: React.ReactNode): string => {
+  if (node === null || node === undefined || typeof node === 'boolean') return '';
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(financeCellText).filter(Boolean).join(' · ');
+  if (React.isValidElement(node)) {
+    return financeCellText((node.props as { children?: React.ReactNode }).children);
+  }
+  return '';
+};
+
+const parseFinanceSortDate = (value: string): number | null => {
+  const text = value.trim();
+  const iso = text.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);
+  if (iso) return Date.UTC(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
+  const months: Record<string, number> = {
+    jan: 0, january: 0, januari: 0,
+    feb: 1, february: 1, februari: 1,
+    mar: 2, march: 2, maret: 2,
+    apr: 3, april: 3,
+    may: 4, mei: 4,
+    jun: 5, june: 5, juni: 5,
+    jul: 6, july: 6, juli: 6,
+    aug: 7, august: 7, agu: 7, agustus: 7,
+    sep: 8, sept: 8, september: 8,
+    oct: 9, october: 9, okt: 9, oktober: 9,
+    nov: 10, november: 10,
+    dec: 11, december: 11, des: 11, desember: 11
+  };
+  const dayFirst = text.toLowerCase().replace(/\\./g, '').match(/^(\\d{1,2})\\s+([a-zà-ÿ]+)\\s+(\\d{4})$/i);
+  const monthFirst = text.toLowerCase().replace(/\\./g, '').match(/^([a-zà-ÿ]+)\\s+(\\d{1,2}),?\\s+(\\d{4})$/i);
+  const match = dayFirst || monthFirst;
+  if (!match) return null;
+  const monthName = dayFirst ? match[2] : match[1];
+  const day = Number(dayFirst ? match[1] : match[2]);
+  const year = Number(match[3]);
+  const month = months[monthName];
+  if (month === undefined || day < 1 || day > 31) return null;
+  return Date.UTC(year, month, day);
+};
+
+const parseFinanceSortNumber = (value: string): number | null => {
+  let text = value.trim().replace(/^(?:rp|idr|usd|[$€£])\\s*/i, '').replace(/\\s/g, '');
+  if (!text || !/^[+-]?[\\d.,]+%?$/.test(text)) return null;
+  text = text.replace(/%$/, '');
+  const lastDot = text.lastIndexOf('.');
+  const lastComma = text.lastIndexOf(',');
+  if (lastDot >= 0 && lastComma >= 0) {
+    if (lastComma > lastDot) text = text.replace(/\\./g, '').replace(',', '.');
+    else text = text.replace(/,/g, '');
+  } else if (lastDot >= 0) {
+    const after = text.length - lastDot - 1;
+    if ((text.match(/\\./g) || []).length > 1 || after === 3) text = text.replace(/\\./g, '');
+  } else if (lastComma >= 0) {
+    const after = text.length - lastComma - 1;
+    if ((text.match(/,/g) || []).length > 1 || after === 3) text = text.replace(/,/g, '');
+    else text = text.replace(',', '.');
+  }
+  const parsed = Number(text);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const compareFinanceSortText = (left: string, right: string): number => {
+  const leftDate = parseFinanceSortDate(left);
+  const rightDate = parseFinanceSortDate(right);
+  if (leftDate !== null && rightDate !== null) return leftDate - rightDate;
+  const leftNumber = parseFinanceSortNumber(left);
+  const rightNumber = parseFinanceSortNumber(right);
+  if (leftNumber !== null && rightNumber !== null) return leftNumber - rightNumber;
+  return left.localeCompare(right, undefined, { numeric: true, sensitivity: 'base' });
+};
+
 const FinanceDataTable: React.FC<{
   title: string;
   description?: string;
@@ -129,39 +201,155 @@ const FinanceDataTable: React.FC<{
   rows: TableRow[];
   emptyMessage: string;
   actions?: React.ReactNode;
-}> = ({ title, description, columns, rows, emptyMessage, actions }) => (
-  <AdminPanel title={title} description={description} actions={actions} bodyClassName="p-0">
-    <div className="max-w-full overflow-x-auto">
-      <table className="w-full min-w-[760px] border-collapse text-left text-xs">
-        <thead className="bg-bg text-[11px] font-medium text-muted">
-          <tr>
-            {columns.map((column, index) => (
-              <th key={column.label + '-' + index} scope="col" className={'px-4 py-3 font-medium ' + (column.align === 'right' ? 'text-right ' : column.align === 'center' ? 'text-center ' : '') + (column.className || '')}>
-                {column.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.length ? rows.map((row) => (
-            <tr key={row.id} className="border-t border-line align-middle">
-              {row.cells.map((cell, index) => (
-                <td key={row.id + '-' + index} className={'px-4 py-3 text-fg ' + (columns[index]?.align === 'right' ? 'text-right tabular-nums ' : columns[index]?.align === 'center' ? 'text-center ' : '') + (columns[index]?.className || '')}>
-                  {cell}
-                </td>
-              ))}
-            </tr>
-          )) : (
-            <tr>
-              <td colSpan={columns.length} className="px-4 py-10 text-center text-xs leading-5 text-muted">{emptyMessage}</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-  </AdminPanel>
-);
+  exportable?: boolean;
+}> = ({ title, description, columns, rows, emptyMessage, actions, exportable = true }) => {
+  const [sort, setSort] = useState<{ index: number; direction: 'asc' | 'desc' } | null>(null);
+  const [pageSize, setPageSize] = useState(10);
+  const [page, setPage] = useState(0);
 
+  useEffect(() => {
+    setPage(0);
+    setSort(null);
+  }, [title, rows.length]);
+
+  const sortedRows = useMemo(() => {
+    if (!sort) return rows;
+    const column = columns[sort.index];
+    if (!column || /^actions?$/i.test(column.label.trim())) return rows;
+    return rows.slice().sort((left, right) => {
+      const compared = compareFinanceSortText(
+        financeCellText(left.cells[sort.index]),
+        financeCellText(right.cells[sort.index])
+      );
+      return sort.direction === 'asc' ? compared : -compared;
+    });
+  }, [columns, rows, sort]);
+
+  const pageCount = Math.max(1, Math.ceil(sortedRows.length / pageSize));
+  const currentPage = Math.min(page, pageCount - 1);
+  const visibleRows = sortedRows.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
+  const firstRow = sortedRows.length ? currentPage * pageSize + 1 : 0;
+  const lastRow = Math.min((currentPage + 1) * pageSize, sortedRows.length);
+
+  useEffect(() => {
+    if (page !== currentPage) setPage(currentPage);
+  }, [page, currentPage]);
+
+  const handleSort = (index: number, label: string) => {
+    if (/^actions?$/i.test(label.trim())) return;
+    setSort((current) => current?.index === index
+      ? { index, direction: current.direction === 'asc' ? 'desc' : 'asc' }
+      : { index, direction: 'asc' });
+    setPage(0);
+  };
+
+  const exportRows = () => {
+    const safeTitle = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'finance-register';
+    const exportableRows = sortedRows.map((row) => row.cells.map((cell, index) => {
+      if (/^actions?$/i.test((columns[index]?.label || '').trim())) return '';
+      const value = financeCellText(cell);
+      return /^[=+@]/.test(value) ? "'" + value : value;
+    }));
+    exportFinanceCsv('finance-' + safeTitle + '-' + getLocalDateInputValue() + '.csv', columns.map((column) => column.label), exportableRows);
+  };
+
+  const panelActions = actions || (exportable && rows.length > 0) ? (
+    <div className="flex flex-wrap items-center justify-end gap-2">
+      {actions}
+      {exportable && rows.length > 0 && (
+        <Button variant="secondary" type="button" icon={<Download size={14} />} onClick={exportRows}>Export CSV</Button>
+      )}
+    </div>
+  ) : undefined;
+
+  return (
+    <AdminPanel title={title} description={description} actions={panelActions} bodyClassName="p-0">
+      <div className="max-w-full overflow-x-auto">
+        <table className="w-full min-w-[760px] border-collapse text-left text-xs">
+          <thead className="bg-bg text-[11px] font-medium text-muted">
+            <tr>
+              {columns.map((column, index) => {
+                const sortable = !/^actions?$/i.test(column.label.trim());
+                const isSorted = sort?.index === index;
+                return (
+                  <th
+                    key={column.label + '-' + index}
+                    scope="col"
+                    aria-sort={isSorted ? (sort?.direction === 'asc' ? 'ascending' : 'descending') : 'none'}
+                    className={'px-4 py-3 font-medium ' + (column.align === 'right' ? 'text-right ' : column.align === 'center' ? 'text-center ' : '') + (column.className || '')}
+                  >
+                    <button
+                      type="button"
+                      disabled={!sortable}
+                      onClick={() => handleSort(index, column.label)}
+                      className={'inline-flex max-w-full items-center gap-1.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-default ' + (sortable ? 'hover:text-fg' : '') + (column.align === 'right' ? ' ml-auto' : '')}
+                      aria-label={sortable ? 'Sort by ' + column.label : column.label}
+                    >
+                      <span>{column.label}</span>
+                      {sortable && (isSorted
+                        ? sort?.direction === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />
+                        : <ChevronsUpDown size={12} className="opacity-45" />)}
+                    </button>
+                  </th>
+                );
+              })}
+            </tr>
+          </thead>
+          <tbody>
+            {visibleRows.length ? visibleRows.map((row) => (
+              <tr key={row.id} className="border-t border-line align-middle hover:bg-panel-hover/40">
+                {row.cells.map((cell, index) => (
+                  <td key={row.id + '-' + index} className={'px-4 py-3 text-fg ' + (columns[index]?.align === 'right' ? 'text-right tabular-nums ' : columns[index]?.align === 'center' ? 'text-center ' : '') + (columns[index]?.className || '')}>
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            )) : (
+              <tr>
+                <td colSpan={columns.length} className="px-4 py-10 text-center text-xs leading-5 text-muted">{emptyMessage}</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      {rows.length > 0 && (
+        <div className="flex flex-col gap-3 border-t border-line px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-[11px] text-muted">
+            Showing <span className="tabular-nums text-fg">{firstRow}–{lastRow}</span> of <span className="tabular-nums text-fg">{sortedRows.length}</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[11px] text-muted">Rows</span>
+            <CustomSelect
+              value={String(pageSize)}
+              onChange={(nextValue) => { setPageSize(Number(nextValue) || 10); setPage(0); }}
+              options={[{ value: '10', label: '10' }, { value: '25', label: '25' }, { value: '50', label: '50' }]}
+              size="xs"
+              className="w-[68px]"
+              aria-label={'Rows per page for ' + title}
+            />
+            <button
+              type="button"
+              disabled={currentPage === 0}
+              onClick={() => setPage((current) => Math.max(0, current - 1))}
+              className="inline-flex h-8 items-center gap-1 rounded-control border border-line px-2.5 text-[11px] font-medium text-fg transition-colors hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <ChevronLeft size={13} /> Previous
+            </button>
+            <span aria-live="polite" className="min-w-[48px] text-center text-[11px] tabular-nums text-muted">{currentPage + 1} / {pageCount}</span>
+            <button
+              type="button"
+              disabled={currentPage >= pageCount - 1}
+              onClick={() => setPage((current) => Math.min(pageCount - 1, current + 1))}
+              className="inline-flex h-8 items-center gap-1 rounded-control border border-line px-2.5 text-[11px] font-medium text-fg transition-colors hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Next <ChevronRight size={13} />
+            </button>
+          </div>
+        </div>
+      )}
+    </AdminPanel>
+  );
+};
 const WorkbookNote: React.FC<{ tone?: 'info' | 'warning' | 'danger'; title: string; children: React.ReactNode }> = ({ tone = 'info', title, children }) => {
   const styles = {
     info: 'border-info/25 bg-info/5',
@@ -773,8 +961,30 @@ export const AdminFinanceWorkspace: React.FC = () => {
   const submitRegisterForm = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!editor || registerSaving) return;
-    setRegisterSaving(true);
     setRegisterActionError(null);
+    const definition = REGISTER_FORMS[editor.type];
+    const missingRequired = definition?.fields.find((field) =>
+      field.required
+      && (!field.visibleWhen || field.visibleWhen.values.includes(String(editor.payload[field.visibleWhen.key] || '')))
+      && !String(editor.payload[field.key] ?? '').trim()
+    );
+    if (missingRequired) {
+      setRegisterActionError(missingRequired.label + ' is required.');
+      return;
+    }
+    const dateRanges: Array<[string, string, string]> = [
+      ['billDate', 'dueDate', 'Due date cannot be earlier than the bill date.'],
+      ['startDate', 'endDate', 'End date cannot be earlier than the start date.']
+    ];
+    for (const [startKey, endKey, message] of dateRanges) {
+      const startDate = String(editor.payload[startKey] || '');
+      const endDate = String(editor.payload[endKey] || '');
+      if (startDate && endDate && endDate < startDate) {
+        setRegisterActionError(message);
+        return;
+      }
+    }
+    setRegisterSaving(true);
     try {
       let payload: Record<string, any> = { ...editor.payload };
       if (editor.type === 'chart-of-accounts') {
@@ -988,6 +1198,19 @@ export const AdminFinanceWorkspace: React.FC = () => {
                       placeholder={field.placeholder}
                       className="mt-1.5 block w-full rounded-control border border-line bg-bg px-3 py-2 text-xs text-fg outline-none transition-colors focus:border-accent"
                     />
+                  ) : field.type === 'date' || field.type === 'month' ? (
+                    <CustomDatePicker
+                      value={value}
+                      onChange={(nextValue) => changeRegisterField(field.key, nextValue)}
+                      type={field.type}
+                      min={field.key === 'endDate' ? String(editor.payload.startDate || '') : field.key === 'dueDate' ? String(editor.payload.billDate || '') : undefined}
+                      required={field.required}
+                      locale={locale}
+                      className="mt-1.5 w-full"
+                      triggerClassName="h-9 text-xs"
+                      placeholder={field.placeholder}
+                      aria-label={field.label}
+                    />
                   ) : field.type === 'select' ? (
                     <select
                       value={value}
@@ -1133,7 +1356,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
               </div>
               <label className="flex items-center gap-2 text-xs font-medium text-muted">
                 Reporting month
-                <input type="month" value={selectedMonth} onChange={(event) => setSelectedMonth(event.target.value)} className="h-9 w-40 rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent" />
+                <CustomDatePicker type="month" value={selectedMonth} onChange={setSelectedMonth} locale={locale} className="w-40" triggerClassName="h-9" aria-label="Reporting month" slug="finance-dashboard-month-picker" />
               </label>
             </div>
             <AdminMetricStrip metrics={dashboardMetrics} />
@@ -1263,11 +1486,11 @@ export const AdminFinanceWorkspace: React.FC = () => {
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label htmlFor="finance-vendor-contract-start" className="mb-1.5 block text-xs font-medium text-muted">Start date *</label>
-              <input id="finance-vendor-contract-start" type="date" required value={draft.startDate} onChange={(event) => update({ startDate: event.target.value })} className={fieldClass} />
+              <CustomDatePicker value={draft.startDate} onChange={(startDate) => update({ startDate })} type="date" required locale={locale} className="w-full" triggerClassName="h-10" aria-label="Contract start date" slug="finance-vendor-contract-start" />
             </div>
             <div>
               <label htmlFor="finance-vendor-contract-end" className="mb-1.5 block text-xs font-medium text-muted">End date</label>
-              <input id="finance-vendor-contract-end" type="date" min={draft.startDate} value={draft.endDate} onChange={(event) => update({ endDate: event.target.value })} className={fieldClass} />
+              <CustomDatePicker value={draft.endDate} onChange={(endDate) => update({ endDate })} type="date" min={draft.startDate} locale={locale} className="w-full" triggerClassName="h-10" aria-label="Contract end date" slug="finance-vendor-contract-end" />
             </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -1692,7 +1915,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
             </WorkbookNote>
             <AdminPanel title="Reporting period" bodyClassName="p-4">
               <label className="block text-xs font-medium text-muted">Month
-                <input type="month" value={selectedMonth} onChange={(event) => setSelectedMonth(event.target.value)} className="mt-1.5 block h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent sm:max-w-xs" />
+                <CustomDatePicker type="month" value={selectedMonth} onChange={setSelectedMonth} locale={locale} className="mt-1.5 w-full sm:max-w-xs" aria-label="Reporting month" slug="finance-pnl-month-picker" />
               </label>
             </AdminPanel>
             <AdminMetricStrip metrics={[
@@ -1702,6 +1925,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
               { id: 'pnl-net', label: 'Net preview', value: formatMoney(netPreview), context: 'Before unclassified ' + formatMoney(classTotals.unclassified), icon: <CircleDollarSign size={15} /> }
             ]} />
             <FinanceDataTable title="Monthly Profit & Loss" description="Values remain a preview until account classifications and posting rules are approved." columns={[{ label: 'Line item' }, { label: 'Amount', align: 'right' }, { label: 'Basis' }]} rows={pnlRows.map((item) => ({ id: item.id, cells: [item.label, formatMoney(item.amount), item.basis] }))} emptyMessage="No activity exists for the selected month." actions={<Button variant="secondary" type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-monthly-pnl-' + selectedMonth + '.csv', ['Line item', 'Amount', 'Basis'], pnlRows.map((item) => [item.label, item.amount, item.basis]))}>Export CSV</Button>} />
+              exportable={false}
             <div className="text-xs text-muted">Classified expense total: {formatMoney(classifiedExpense)} · Source records in selected month: {monthExpenses.length} expenses, {monthInvoices.length} invoices.</div>
           </div>
         );
@@ -1728,6 +1952,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
               Inflows include dated invoice payments and saved Cash & Bank entries touching account 1000. Outflows include eligible dated AMS expense records, excluding items identified as petty cash, and saved bank-side adjustments/transfers. Petty-cash vouchers remain in their separate ledger and are not included in this monthly view. Treat the result as net movement, not an authoritative ending cash balance, until opening balances and bank statements are reconciled.
             </WorkbookNote>
             <FinanceDataTable title="Monthly Cash Flow" description="Monthly cash-in, cash-out, and net movement calculated from live AMS transaction sources." columns={[{ label: 'Month' }, { label: 'Total cash in', align: 'right' }, { label: 'Total cash out', align: 'right' }, { label: 'Net cash movement', align: 'right' }, { label: 'Source rows', align: 'right' }]} rows={rows} emptyMessage="No dated receipts or expense movements are available." actions={<Button variant="secondary" type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-cash-flow.csv', ['Month', 'Total cash in', 'Total cash out', 'Net cash movement', 'Source rows'], monthlyRows.map((item) => [item.month, item.inflow, item.outflow, item.inflow - item.outflow, item.count]))}>Export CSV</Button>} />
+              exportable={false}
           </div>
         );
       }
@@ -1761,7 +1986,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
             <AdminPanel title="Closing period" bodyClassName="p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <label className="block max-w-xs flex-1 text-xs font-medium text-muted">Reporting month
-                  <input type="month" value={selectedMonth} onChange={(event)=>setSelectedMonth(event.target.value)} className="mt-1.5 block h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent"/>
+                  <CustomDatePicker type="month" value={selectedMonth} onChange={setSelectedMonth} locale={locale} className="mt-1.5 w-full" aria-label="Reporting month" slug="finance-closing-month-picker" />
                 </label>
                 <div className="flex items-center gap-2">
                   <AdminStatusBadge tone={locked?'success':'warning'}>{locked?'Closed':'Open'}</AdminStatusBadge>
@@ -1947,6 +2172,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
               { id: 'year-net', label: 'Net cash movement (proxy)', value: formatMoney(yearCollected - yearOutflow), context: 'Cash-in/out proxy; petty-cash voucher activity is excluded', icon: <CircleDollarSign size={15} /> }
             ]} />
             <FinanceDataTable title="Annual summary" description="IDR-only period view; accounting net profit and closing cash depend on ledger posting, opening balances and reconciliation." columns={[{ label: 'Metric' }, { label: 'Amount', align: 'right' }, { label: 'Basis' }]} rows={annualRows.map((item) => ({ id: item.id, cells: [item.metric, formatMoney(item.amount), item.basis] }))} emptyMessage="No records exist for the selected year." actions={<Button variant="secondary" type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-annual-summary-' + selectedYear + '.csv', ['Metric', 'Amount', 'Basis'], annualRows.map((item) => [item.metric, item.amount, item.basis]))}>Export CSV</Button>} />
+              exportable={false}
           </div>
         );
       }
