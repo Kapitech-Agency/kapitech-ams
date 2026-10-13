@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 import {
   Activity,
   AlertTriangle,
@@ -79,6 +80,7 @@ const SortButton: React.FC<{ label: string; sortKey: SortKey; activeKey: SortKey
   );
 
 export const AdminClientSlaMonitoring: React.FC = () => {
+  const { matchesDate } = useReportingPeriod();
   const fixtureMode = isSlugFixtureMode();
   const [records] = useState<SlaAccount[]>(() => fixtureMode ? seed : []);
   const [query, setQuery] = useState('');
@@ -104,13 +106,13 @@ export const AdminClientSlaMonitoring: React.FC = () => {
     const normalized = query.trim().toLowerCase();
     return records.filter((item) => {
       const searchable = `${item.client} ${item.pod} ${tierLabel[item.tier]} ${item.incidentTitle} ${item.id}`.toLowerCase();
-      return (!normalized || searchable.includes(normalized)) && (tier === 'all' || item.tier === tier) && (status === 'all' || item.compliance === status) && (pod === 'all' || item.pod === pod);
+      return matchesDate((item as any).snapshotAt || (item as any).updatedAt || item.lastIncidentAt) && (!normalized || searchable.includes(normalized)) && (tier === 'all' || item.tier === tier) && (status === 'all' || item.compliance === status) && (pod === 'all' || item.pod === pod);
     }).sort((a, b) => {
       const av = sortValue(a, sortKey); const bv = sortValue(b, sortKey);
       const comparison = typeof av === 'number' && typeof bv === 'number' ? av - bv : String(av).localeCompare(String(bv), undefined, { sensitivity: 'base' });
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-  }, [records, query, tier, status, pod, sortKey, sortDirection]);
+  }, [records, query, tier, status, pod, sortKey, sortDirection, matchesDate]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const visible = filtered.slice((page - 1) * pageSize, page * pageSize);

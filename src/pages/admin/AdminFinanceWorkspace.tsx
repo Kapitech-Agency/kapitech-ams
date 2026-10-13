@@ -8,7 +8,7 @@ import { Drawer } from '../../components/ui/Drawer';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { CustomDatePicker } from '../../components/ui/CustomDatePicker';
 import { CustomReportPeriodPicker } from '../../components/ui/CustomReportPeriodPicker';
-import { formatReportingPeriodLabel, getPreviousReportingPeriodValue, getReportingPeriodRange, type ReportingPeriodComparison, type ReportingPeriodMode } from '../../lib/reportingPeriods';
+import { formatReportingPeriodLabel, getPreviousReportingPeriodValue, getReportingPeriodRange, type ReportingPeriodComparison } from '../../lib/reportingPeriods';
 import { api } from '../../lib/apiClient';
 import { normalizeFinanceExpense, normalizeFinanceInvoice } from '../../lib/financeStore';
 import type { AgencyExpense, AgencyInvoice } from '../../lib/financeStore';
@@ -35,6 +35,7 @@ import type { FinanceWorkbookTab, WorkbookExpenseClass } from '../../lib/finance
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLanguage } from '../../lib/LanguageContext';
 import type { Language } from '../../lib/LanguageContext';
+import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 
 type Column = { label: string; align?: 'left' | 'right' | 'center'; className?: string };
 type TableRow = { id: string; cells: React.ReactNode[] };
@@ -593,6 +594,7 @@ const CASH_ACCOUNT_OPTIONS = [
 ];
 
 export const AdminFinanceWorkspace: React.FC = () => {
+  const { mode: reportPeriodMode, value: reportPeriodValue, setMode: setReportPeriodMode, setValue: setReportPeriodValue } = useReportingPeriod();
   const { language } = useLanguage();
   const locale = language === 'id' ? 'id-ID' : 'en-US';
   const canViewFinancials = hasAdminPermission('canViewFinancials');
@@ -653,8 +655,6 @@ export const AdminFinanceWorkspace: React.FC = () => {
   const [searchText, setSearchText] = useState('');
   const [selectedMonth, setSelectedMonth] = useState(new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0'));
   const [selectedYear, setSelectedYear] = useState(String(new Date().getFullYear()));
-  const [reportPeriodMode, setReportPeriodMode] = useState<ReportingPeriodMode>('month');
-  const [reportPeriodValue, setReportPeriodValue] = useState(new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0'));
   const [reportComparisonMode, setReportComparisonMode] = useState<ReportingPeriodComparison>('previous-period');
 
   const loadData = useCallback(async (quiet = false) => {
