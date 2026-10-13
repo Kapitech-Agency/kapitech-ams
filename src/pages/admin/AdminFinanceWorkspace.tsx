@@ -880,10 +880,22 @@ export const AdminFinanceWorkspace: React.FC = () => {
   };
 
   const openLegacyTransactions = () => navigate('/admin/invoicing');
+  const groupEntryTabs: Record<string, string> = {
+    overview: 'executive-summary',
+    transactions: 'cash-bank',
+    receivables: 'accounts-payable',
+    projects: 'project-finance',
+    accounting: 'journal'
+  };
   const groupItems = FINANCE_WORKBOOK_GROUPS.map((group) => ({
     key: group.key,
     label: group.label,
-    to: '/admin/finance?tab=' + group.items[0].key
+    to: '/admin/finance?tab=' + (groupEntryTabs[group.key] || group.items[0].key)
+  }));
+  const sheetItems = activeGroup.items.map((item) => ({
+    key: item.key,
+    label: item.label,
+    to: '/admin/finance?tab=' + item.key
   }));
   const renderLoading = () => (
     <AdminPanel title="Loading finance sources" description="Reading live AMS invoice, expense, project and vendor records.">
@@ -921,7 +933,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
     );
   };
 
-  const renderSummary = () => {
+  const renderSummary = (dashboard: boolean) => {
     const currentMonth = selectedMonth;
     const billedInMonth = sumAmounts<AgencyInvoice>(idrInvoices.filter((invoice) => getMonthKey(getInvoiceDate(invoice)) === currentMonth), (invoice) => Number(invoice.total) || 0);
     const collectedInMonth = sumAmounts<CashMovement>(cashMovements.filter((movement) => movement.currency === 'IDR' && getMonthKey(movement.date) === currentMonth), (movement) => movement.cashIn);
@@ -949,7 +961,8 @@ export const AdminFinanceWorkspace: React.FC = () => {
     return (
       <div className="space-y-4">
         <AdminMetricStrip metrics={metrics} />
-        <AdminPanel title="Selected-month activity" description="Choose a month to inspect invoice and expense activity for that period.">
+        {dashboard && (
+          <AdminPanel title="Selected-month activity" description="Choose a month to inspect invoice and expense activity for that period.">
             <div className="grid gap-4 p-4 sm:grid-cols-3">
               <label className="block text-xs font-medium text-muted">Reporting month
                 <input type="month" value={selectedMonth} onChange={(event) => setSelectedMonth(event.target.value)} className="mt-1.5 block h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent" />
@@ -963,7 +976,8 @@ export const AdminFinanceWorkspace: React.FC = () => {
                 <strong className="mt-1 block text-base font-semibold tabular-nums text-fg">{formatMoney(collectedInMonth)} / {formatMoney(expenseInMonth)}</strong>
               </div>
             </div>
-        </AdminPanel>
+          </AdminPanel>
+        )}
         {sourceErrors.length > 0 && (
           <WorkbookNote tone="warning" title="Some finance sources are unavailable">
             {sourceErrors.join(' · ')}. KPI values only reflect source records that loaded successfully. Refresh after the connection is restored.
@@ -977,13 +991,17 @@ export const AdminFinanceWorkspace: React.FC = () => {
           emptyMessage="No issued invoices were returned by AMS."
           actions={<Button variant="secondary" type="button" onClick={openLegacyTransactions}>Manage invoices</Button>}
         />
-        {renderRecentActivity()}
+        {dashboard && renderRecentActivity()}
       </div>
     );
   };
 
   const renderView = (tab: FinanceWorkbookTab) => {
     switch (tab.key) {
+      case 'executive-summary':
+        return renderSummary(false);
+      case 'dashboard':
+        return renderSummary(true);
       case 'chart-of-accounts':
         return (
           <div className="space-y-4">
@@ -1629,19 +1647,6 @@ export const AdminFinanceWorkspace: React.FC = () => {
     }
   };
 
-  const renderFinanceGroup = () => {
-    if (activeGroup.key === 'overview') return renderSummary();
-    return (
-      <div className="space-y-6">
-        {activeGroup.items.map((tab) => (
-          <section key={tab.key} data-ams-finance-section={tab.key} className="min-w-0">
-            {renderView(tab)}
-          </section>
-        ))}
-      </div>
-    );
-  };
-
   const financePage = (
     <AdminPageShell featureSlug="excel-aligned-finance-workspace" className="space-y-4">
       <AdminModuleHeader
@@ -1651,6 +1656,10 @@ export const AdminFinanceWorkspace: React.FC = () => {
       />
       <div className="min-[900px]:hidden">
         <AdminSectionTabs ariaLabel="Finance groups" activeKey={activeGroup.key} items={groupItems} />
+      </div>
+      <AdminSectionTabs ariaLabel="Finance sub-sections" activeKey={activeTab.key} items={sheetItems} />
+      <div className="border-b border-line pb-3">
+        <h2 className="text-base font-semibold text-fg">{activeTab.label}</h2>
       </div>
       {registerErrors.length > 0 && (
         <WorkbookNote tone="warning" title="Some finance records are unavailable">
@@ -1665,7 +1674,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
           {sourceErrors.join(' · ')}. Check the connected AMS source before interpreting the affected views.
         </WorkbookNote>
       )}
-      {loading ? renderLoading() : renderFinanceGroup()}
+      {loading ? renderLoading() : renderView(activeTab)}
       {renderRegisterEditor()}
     </AdminPageShell>
   );
