@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowDown, ArrowUp, ArrowUpRight, Briefcase, ArrowUpDown, CircleDollarSign, Download, FileText, Landmark, Plus, RefreshCw, Search, ShieldAlert, WalletCards, X } from 'lucide-react';
 import { AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminPanel, AdminSectionTabs, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import Button from '../../components/ui/Button';
@@ -8,7 +8,7 @@ import { Drawer } from '../../components/ui/Drawer';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { CustomDatePicker } from '../../components/ui/CustomDatePicker';
 import { CustomReportPeriodPicker } from '../../components/ui/CustomReportPeriodPicker';
-import { formatReportingPeriodLabel, getPreviousReportingPeriodValue, getReportingPeriodRange, type ReportingPeriodComparison } from '../../lib/reportingPeriods';
+import { formatReportingPeriodLabel, getPreviousReportingPeriodValue, getReportingPeriodRange, getReportingYearOptions, type ReportingPeriodComparison } from '../../lib/reportingPeriods';
 import { api } from '../../lib/apiClient';
 import { normalizeFinanceExpense, normalizeFinanceInvoice } from '../../lib/financeStore';
 import type { AgencyExpense, AgencyInvoice } from '../../lib/financeStore';
@@ -594,7 +594,7 @@ const CASH_ACCOUNT_OPTIONS = [
 ];
 
 export const AdminFinanceWorkspace: React.FC = () => {
-  const { mode: reportPeriodMode, value: reportPeriodValue, setMode: setReportPeriodMode, setValue: setReportPeriodValue } = useReportingPeriod();
+  const { mode: reportPeriodMode, value: reportPeriodValue, setMode: setReportPeriodMode, setValue: setReportPeriodValue, matchesDate, matchesInterval } = useReportingPeriod();
   const { language } = useLanguage();
   const locale = language === 'id' ? 'id-ID' : 'en-US';
   const canViewFinancials = hasAdminPermission('canViewFinancials');
@@ -657,7 +657,14 @@ export const AdminFinanceWorkspace: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState(String(new Date().getFullYear()));
   const [reportComparisonMode, setReportComparisonMode] = useState<ReportingPeriodComparison>('previous-period');
 
+  const loadRequestId = useRef(0);
+
+  useEffect(() => () => {
+    loadRequestId.current += 1;
+  }, []);
+
   const loadData = useCallback(async (quiet = false) => {
+    const requestId = ++loadRequestId.current;
     if (!canViewFinancials) {
       setLoading(false);
       setRefreshing(false);
@@ -674,6 +681,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
     const workbookResults = await Promise.all(SUPPLEMENTARY_FINANCE_RECORD_TYPES.map((type) =>
       readSource('Finance register ' + type, () => api.finance.workbookList(type))
     ));
+    if (requestId !== loadRequestId.current) return;
     const invoiceSource = baseResults[0];
     const expenseSource = baseResults[1];
     const projectSource = baseResults[2];
@@ -1564,11 +1572,12 @@ export const AdminFinanceWorkspace: React.FC = () => {
           running += entry.cashIn - entry.cashOut;
           return {
             id: entry.id,
+            date: entry.date,
             search: [entry.date,entry.reference,entry.description,entry.source],
             cells: [formatDate(entry.date),entry.reference,entry.description,entry.source,entry.cashIn ? formatMoney(entry.cashIn) : '—',entry.cashOut ? formatMoney(entry.cashOut) : '—',(opening === null ? '—' : formatMoney(running))]
           };
         });
-        const rows = allCashLedgerRows.filter((row) => matching(row.search)).reverse();
+        const rows = allCashLedgerRows.filter((row) => matchesDate(row.date) && matching(row.search)).reverse();
         const totalIn = sumAmounts<CashMovement>(cashRows, (entry) => entry.cashIn);
         const totalOut = sumAmounts<CashMovement>(cashRows, (entry) => entry.cashOut);
         return (
@@ -1598,7 +1607,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
       case 'accounts-receivable':
         return <AdminInvoicing key={tab.key} embeddedView="receivables" />;
       case 'accounts-payable': {
-        const bills = getRegisterRecords('vendor-bill').filter((record) => matching([
+        const bills = getRegisterRecords('vendor-bill').filter((record) => matchesDate(record.payload.billDate || record.payload.dueDate || record.createdAt) && matching([
           record.recordKey, record.payload.billNo, record.payload.vendorName, record.payload.projectName, record.payload.dueDate, record.payload.paymentStatus
         ]));
         const payableTotalIDR = sumAmounts<WorkbookRecord>(bills.filter((record)=>(String(record.payload.currency||'IDR')==='IDR')),(record)=>Number(record.payload.outstanding ?? record.payload.total)||0);
@@ -1703,14 +1712,15 @@ export const AdminFinanceWorkspace: React.FC = () => {
       case 'vendors': {
         const contractRows = vendors.flatMap((vendor) => (
           (Array.isArray(vendor.contracts) ? vendor.contracts : [])
-            .filter((contract) => matching([vendor.name, vendor.companyName, contract.title, contract.rateType, contract.startDate, contract.endDate, contract.status, contract.rateAmount]))
+            .filter((contract) => matchesInterval(contract.startDate, contract.endDate, (contract as any).createdAt) && matching([vendor.name, vendor.companyName, contract.title, contract.rateType, contract.startDate, contract.endDate, contract.status, contract.rateAmount]))
             .map((contract) => {
               const linkedExpenses = expenses.filter((expense) => {
                 const expenseRecord = expense as AgencyExpense & { vendorContractId?: string; vendorPayment?: { vendorId?: string; contractId?: string }; metadata?: { vendorPayment?: { vendorId?: string; contractId?: string } } };
                 const structured = expenseRecord.vendorPayment || expenseRecord.metadata?.vendorPayment;
-                return (expenseRecord.vendorId === vendor.id && expenseRecord.vendorContractId === contract.id)
+                const linkedToContract = (expenseRecord.vendorId === vendor.id && expenseRecord.vendorContractId === contract.id)
                   || (structured?.vendorId === vendor.id && structured?.contractId === contract.id)
                   || expense.description.startsWith('[VENDOR_PAYMENT]|' + vendor.id + '|' + contract.id + '|');
+                return linkedToContract && matchesDate(expense.date);
               });
               return {
                 id: vendor.id + '-' + contract.id,
@@ -1797,7 +1807,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
           const budgetRecord=budgetRecords.find((record)=>String(record.payload.month||record.periodKey||'')===month&&String(record.payload.category||'').toLowerCase()===categoryKey);
           const actual=actualByMonthCategory.get(key);
           return {key,month,category:String(budgetRecord?.payload.category||actual?.category||categoryKey),budgetRecord,budget:Number(budgetRecord?.payload.budgetAmount)||0,actual:actual?.amount||0,count:actual?.count||0,pic:String(budgetRecord?.payload.pic||''),notes:String(budgetRecord?.payload.notes||'')};
-        }).filter((item)=>item.month&&matching([item.month,item.category,item.pic,item.notes])).sort((a,b)=>b.month.localeCompare(a.month)||a.category.localeCompare(b.category));
+        }).filter((item)=>item.month&&matchesDate(item.month + '-01')&&matching([item.month,item.category,item.pic,item.notes])).sort((a,b)=>b.month.localeCompare(a.month)||a.category.localeCompare(b.category));
         return (
           <div className="space-y-4">
             <WorkbookNote title="Monthly budget versus actual">
@@ -1848,9 +1858,9 @@ export const AdminFinanceWorkspace: React.FC = () => {
         const allPettyLedgerRows=ledgerMovements.map((movement)=>{
           const affectsBalance=movement.source==='Internal cash transfer'||movement.status==='posted';
           if(affectsBalance)running+=movement.cashIn-movement.cashOut;
-          return {id:movement.id,search:[movement.date,movement.reference,movement.description,movement.status,movement.source],cells:[formatDate(movement.date),movement.reference,movement.description,movement.cashIn?formatMoney(movement.cashIn):'—',movement.cashOut?formatMoney(movement.cashOut):'—',(opening===null?'—':formatMoney(running)),<StatusBadge value={movement.status}/>,movement.record?registerRecordActions(movement.source==='Petty cash voucher'?'petty-cash-voucher':'cash-bank-transaction',movement.record):movement.source]};
+          return {id:movement.id,date:movement.date,search:[movement.date,movement.reference,movement.description,movement.status,movement.source],cells:[formatDate(movement.date),movement.reference,movement.description,movement.cashIn?formatMoney(movement.cashIn):'—',movement.cashOut?formatMoney(movement.cashOut):'—',(opening===null?'—':formatMoney(running)),<StatusBadge value={movement.status}/>,movement.record?registerRecordActions(movement.source==='Petty cash voucher'?'petty-cash-voucher':'cash-bank-transaction',movement.record):movement.source]};
         });
-        const rows=allPettyLedgerRows.filter((row)=>matching(row.search)).reverse();
+        const rows=allPettyLedgerRows.filter((row)=>matchesDate(row.date)&&matching(row.search)).reverse();
         const pending=vouchers.filter((record)=>['pending','approved'].includes(String(record.payload.status||record.status))).length;
         const postedPettyMovements=ledgerMovements.filter((movement)=>movement.source==='Internal cash transfer'||movement.status==='posted');
         const totalIn=sumAmounts<typeof postedPettyMovements[number]>(postedPettyMovements,(movement)=>movement.cashIn);
@@ -2191,8 +2201,8 @@ export const AdminFinanceWorkspace: React.FC = () => {
         );
       }
       case 'team-fee': {
-        const feeRecords=getRegisterRecords('team-fee').filter((record)=>matching([record.payload.projectName,record.projectId,record.payload.memberName,record.payload.role,record.payload.paymentStatus]));
-        const feeExpenses=expenses.filter((expense)=>classifyWorkbookExpense(expense)==='projectTeamFee'&&matching([expense.date,expense.projectId,expense.description,expense.category,expense.amount]));
+        const feeRecords=getRegisterRecords('team-fee').filter((record)=>matchesDate(record.payload.dueDate || record.createdAt) && matching([record.payload.projectName,record.projectId,record.payload.memberName,record.payload.role,record.payload.paymentStatus]));
+        const feeExpenses=expenses.filter((expense)=>classifyWorkbookExpense(expense)==='projectTeamFee'&&matchesDate(expense.date)&&matching([expense.date,expense.projectId,expense.description,expense.category,expense.amount]));
         return (
           <div className="space-y-4">
             <WorkbookNote title="Separate team allocations">
@@ -2204,9 +2214,10 @@ export const AdminFinanceWorkspace: React.FC = () => {
         );
       }
       case 'balance-sheet': {
-        const openings=getRegisterRecords('balance-sheet-opening').filter((record)=>matching([record.payload.accountCode,record.payload.asOfDate,record.payload.notes]));
+        const allOpenings=getRegisterRecords('balance-sheet-opening');
+        const openings=allOpenings.filter((record)=>matchesDate(record.payload.asOfDate || record.createdAt) && matching([record.payload.accountCode,record.payload.asOfDate,record.payload.notes]));
         const latestByAccount=new Map<string,WorkbookRecord>();
-        for(const record of openings.slice().sort((a,b)=>String(a.payload.asOfDate||'').localeCompare(String(b.payload.asOfDate||'')))){
+        for(const record of allOpenings.slice().sort((a,b)=>String(a.payload.asOfDate||'').localeCompare(String(b.payload.asOfDate||'')))){
           latestByAccount.set(String(record.payload.accountCode||''),record);
         }
         return (
@@ -2230,7 +2241,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
       }
       case 'journal': {
         const allJournalRecords = getRegisterRecords('journal-entry');
-        const records = allJournalRecords.filter((record) => matching([record.payload.date,record.payload.reference,record.payload.description,record.payload.projectId,record.status]));
+        const records = allJournalRecords.filter((record) => matchesDate(record.payload.date || record.createdAt) && matching([record.payload.date,record.payload.reference,record.payload.description,record.payload.projectId,record.status]));
         const plan = buildFinanceSourceJournalDrafts(reportInvoices, expenses as any[], getRegisterRecords('cash-bank-transaction'), getRegisterRecords('vendor-bill'), getRegisterRecords('vendor-bill-payment'));
         const linkedJournal = new Map<string, WorkbookRecord>();
         for (const record of allJournalRecords) {
@@ -2263,7 +2274,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
             status: 'Skipped · ' + item.reason,
             tone: 'warning' as const
           }))
-        ].filter((row) => matching([row.date,row.reference,row.description,row.source,row.status])).sort((a,b) => String(b.date).localeCompare(String(a.date))).slice(0,50);
+        ].filter((row) => matchesDate(row.date) && matching([row.date,row.reference,row.description,row.source,row.status])).sort((a,b) => String(b.date).localeCompare(String(a.date))).slice(0,50);
         return (
           <div className="space-y-4">
             <WorkbookNote tone="info" title="Source sync creates drafts only">
@@ -2289,12 +2300,12 @@ export const AdminFinanceWorkspace: React.FC = () => {
         const yearCollected = sumAmounts<CashMovement>(yearCollections, (movement) => movement.cashIn);
         const yearOutflow = sumAmounts<CashMovement>(yearCollections, (movement) => movement.cashOut);
         const yearExpense = sumAmounts<AgencyExpense>(yearExpenses, (expense) => Number(expense.amount) || 0);
-        const years = Array.from(new Set([
-          String(new Date().getFullYear()),
-          ...reportInvoices.map((invoice) => getYearKey(getInvoiceDate(invoice))),
-          ...expenses.map((expense) => getYearKey(expense.date)),
-          ...cashMovements.map((movement) => getYearKey(movement.date))
-        ].filter((value) => /^\d{4}$/.test(value)))).sort((a, b) => b.localeCompare(a));
+        const availableYears = [
+          ...reportInvoices.map((invoice) => Number(getYearKey(getInvoiceDate(invoice)))),
+          ...expenses.map((expense) => Number(getYearKey(expense.date))),
+          ...cashMovements.map((movement) => Number(getYearKey(movement.date)))
+        ].filter((year) => Number.isInteger(year) && year >= 2021 && year <= 9999);
+        const years = getReportingYearOptions(new Date().getFullYear(), availableYears, Number(selectedYear)).map(String);
         const annualRows = [
           { id: 'a-revenue', metric: 'Annual Revenue / Invoice Value (IDR)', amount: yearBilled, basis: 'IDR invoice issue date' },
           { id: 'a-collected', metric: 'Annual recorded cash in', amount: yearCollected, basis: 'Invoice payments and saved Cash & Bank inflows; excludes petty-cash voucher receipts' },
