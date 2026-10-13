@@ -51,7 +51,7 @@ const VendorWorkspaceContainer: React.FC<{ embedded?: boolean; children: React.R
     : <AdminPageShell featureSlug="vendors-module">{children}</AdminPageShell>
 );
 
-export const AdminVendors: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
+export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }> = ({ embedded = false, searchTerm }) => {
   const { t, language } = useLanguage();
   const canManageVendors = hasAdminPermission('canManageVendors');
   const canViewVendors =
@@ -62,6 +62,7 @@ export const AdminVendors: React.FC<{ embedded?: boolean }> = ({ embedded = fals
   const [vendors, setVendors] = useState<AgencyVendor[]>([]);
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
   const [searchQuery, setSearchQuery] = useState('');
+  const effectiveSearchQuery = searchTerm ?? searchQuery;
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedType, setSelectedType] = useState<string>('All');
   const [statusFilter, setStatusFilter] = useState<string>('All');
@@ -161,10 +162,10 @@ export const AdminVendors: React.FC<{ embedded?: boolean }> = ({ embedded = fals
   const filteredVendors = useMemo(() => {
     return vendors.filter(v => {
       const matchSearch =
-        v.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (v.companyName && v.companyName.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        v.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        v.skills.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()));
+        v.name.toLowerCase().includes(effectiveSearchQuery.toLowerCase()) ||
+        (v.companyName && v.companyName.toLowerCase().includes(effectiveSearchQuery.toLowerCase())) ||
+        v.email.toLowerCase().includes(effectiveSearchQuery.toLowerCase()) ||
+        v.skills.some(s => s.toLowerCase().includes(effectiveSearchQuery.toLowerCase()));
 
       const matchCat = selectedCategory === 'All' || v.primaryCategory === selectedCategory;
       const matchType = selectedType === 'All' || v.type === selectedType;
@@ -173,14 +174,14 @@ export const AdminVendors: React.FC<{ embedded?: boolean }> = ({ embedded = fals
 
       return matchSearch && matchCat && matchType && matchStatus && matchVetted;
     });
-  }, [vendors, searchQuery, selectedCategory, selectedType, statusFilter, vettedFilter]);
+  }, [vendors, effectiveSearchQuery, selectedCategory, selectedType, statusFilter, vettedFilter]);
 
   const vendorPageCount = Math.max(1, Math.ceil(filteredVendors.length / vendorPageSize));
   const paginatedVendors = filteredVendors.slice((vendorPage - 1) * vendorPageSize, vendorPage * vendorPageSize);
 
   useEffect(() => {
     setVendorPage(1);
-  }, [searchQuery, selectedCategory, selectedType, statusFilter, vettedFilter]);
+  }, [effectiveSearchQuery, selectedCategory, selectedType, statusFilter, vettedFilter]);
 
   useEffect(() => {
     setVendorPage((current) => Math.min(current, vendorPageCount));
@@ -437,7 +438,7 @@ export const AdminVendors: React.FC<{ embedded?: boolean }> = ({ embedded = fals
 
       {/* Filter & Search Bar */}
       <section data-ams-feature-slug="vendor-directory-filters" data-ams-slug="vendor-directory-filters" className="w-full rounded-card bg-panel border border-line p-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between" aria-label="Vendor directory controls">
-        <div className="relative w-full lg:w-96">
+        <div className={searchTerm !== undefined ? 'hidden' : 'relative w-full lg:w-96'}>
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
           <input
             type="text"
