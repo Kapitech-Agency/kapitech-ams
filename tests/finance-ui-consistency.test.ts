@@ -313,3 +313,12 @@ test('Finance drawer uses the shared drawer header once and keeps source errors 
   assert.match(workspace, /Previously loaded records remain visible where available\. Treat affected data as stale until the source refreshes successfully\./);
 });
 
+
+test('Finance add and record-creation actions use the red primary button style', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  assert.match(workspace, /const registerAddButton[\s\S]*?<Button variant="primary" type="button" icon=\{<Plus size=\{14\} \/>\}/);
+  assert.match(workspace, /variant="primary" type="button" icon=\{<Plus size=\{14\} \/>\} onClick=\{\(\) => openVendorContractEditor\(\)\}>Add contract/);
+  assert.match(workspace, /variant="primary" type="button" icon=\{<Plus size=\{14\} \/>\}[\s\S]{0,260}>Record payment/);
+  assert.match(workspace, /variant="primary" type="button" icon=\{<Plus size=\{14\} \/>\}[\s\S]{0,260}>Set budget/);
+  assert.match(workspace, /variant="primary" type="button" icon=\{<Plus size=\{14\} \/>\}[\s\S]{0,260}>Create control/);
+});
