@@ -65,7 +65,7 @@ test('date-aware Finance worksheets use the shared reporting period without chan
   const invoicing = await fs.readFile('src/pages/admin/AdminInvoicing.tsx', 'utf8');
 
   assert.ok(workspace.includes('const { mode: reportPeriodMode, value: reportPeriodValue, enabled: reportPeriodEnabled, setMode: setReportPeriodMode, setValue: setReportPeriodValue, matchesDate, matchesInterval } = useReportingPeriod()'));
-  assert.ok(workspace.includes('matchesDate(entry.date) && matching(row.search)'));
+  assert.ok(workspace.includes('allCashLedgerRows.filter((row) => matchesDate(row.date) && matching(row.search)).reverse()'));
   assert.ok(workspace.includes('matchesDate(record.payload.billDate || record.payload.dueDate || record.createdAt)'));
   assert.ok(workspace.includes('matchesDate(item.month + \'-01\')'));
   assert.ok(workspace.includes('matchesDate(record.payload.dueDate || record.createdAt)'));
