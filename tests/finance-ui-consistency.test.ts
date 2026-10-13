@@ -18,7 +18,7 @@ test('Finance sections use the shared topbar on desktop and the shared section t
   const headerStart = workspace.indexOf('<AdminModuleHeader');
   const headerEnd = workspace.indexOf('</AdminModuleHeader>', headerStart);
   assert.ok(headerStart >= 0 && headerEnd > headerStart, 'Finance must use the shared module header.');
-  assert.doesNotMatch(workspace.slice(headerStart, headerEnd), /\\bicon=/, 'Finance header and its actions must not render icons.');
+  assert.doesNotMatch(workspace.slice(headerStart, headerEnd), /\bicon=/, 'Finance header and its actions must not render icons.');
 });
 
 test('Finance locale uses the selected application language and localizes Indonesian workbook labels', async () => {
