@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 import { useSearchParams } from 'react-router-dom';
 import {
   Activity,
@@ -152,6 +153,7 @@ const SummaryCard: React.FC<{
 );
 
 export const AdminSettings: React.FC = () => {
+  const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const [searchParams, setSearchParams] = useSearchParams();
   const session = getAdminSession();
   const storedCreds = getStoredAdminCredentials() ?? {
@@ -622,9 +624,12 @@ export const AdminSettings: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
+  const periodBackups = useMemo(() => backups.filter((backup) => matchesDate(backup.createdAt)), [backups, matchesDate]);
+
   const filteredLogs = useMemo(() => {
     const query = auditQuery.trim().toLowerCase();
     return logs.filter((log) => {
+      if (!matchesDate(log.timestamp)) return false;
       const matchesQuery = !query || [log.actor, log.action, log.details, log.ip].some((value) => String(value || '').toLowerCase().includes(query));
       const matchesOutcome =
         auditOutcome === 'all' ||
@@ -632,11 +637,11 @@ export const AdminSettings: React.FC = () => {
         (auditOutcome === 'attention' && (log.severity === 'warning' || log.severity === 'critical'));
       return matchesQuery && matchesOutcome;
     });
-  }, [auditOutcome, auditQuery, logs]);
+  }, [auditOutcome, auditQuery, logs, matchesDate]);
 
   useEffect(() => {
     setAuditPage(1);
-  }, [auditOutcome, auditQuery]);
+  }, [auditOutcome, auditQuery, reportPeriodValue, reportPeriodEnabled]);
 
   useEffect(() => {
     setAccountPage(1);
@@ -975,7 +980,13 @@ export const AdminSettings: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {backups.slice(0, 8).map((backup, index) => (
+                    {periodBackups.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-3 py-6 text-center text-xs text-muted">
+                          {reportPeriodEnabled ? 'No backup snapshots in the selected reporting period.' : 'No backup snapshots are available.'}
+                        </td>
+                      </tr>
+                    ) : periodBackups.slice(0, 8).map((backup, index) => (
                       <tr key={backup.createdAt + String(index)}>
                         <td className="font-mono text-[11px] text-fg">{archiveIdentifier(backup.createdAt, index)}</td>
                         <td>

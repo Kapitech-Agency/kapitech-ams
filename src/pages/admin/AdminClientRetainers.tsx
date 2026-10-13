@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 import {
   ArrowUp,
   ArrowUpDown,
@@ -112,6 +113,7 @@ const SortButton: React.FC<{ label: string; sortKey: SortKey; activeKey: SortKey
   );
 
 export const AdminClientRetainers: React.FC = () => {
+  const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const { language } = useLanguage();
   const fixtureMode = isSlugFixtureMode();
   const canManageRetainers = fixtureMode || hasAdminPermission('canManageClients');
@@ -180,6 +182,7 @@ export const AdminClientRetainers: React.FC = () => {
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     return records.filter((item) => {
+      if (!matchesDate(item.renewal)) return false;
       const searchable = `${item.client} ${item.id} ${tierLabel[item.tier]} ${cycleLabel[item.cycle]}`.toLowerCase();
       return (!normalized || searchable.includes(normalized)) && (cycle === 'all' || item.cycle === cycle) && (tier === 'all' || item.tier === tier) && (health === 'all' || item.health === health);
     }).sort((a, b) => {
@@ -188,11 +191,11 @@ export const AdminClientRetainers: React.FC = () => {
       const comparison = typeof av === 'number' && typeof bv === 'number' ? av - bv : String(av).localeCompare(String(bv), undefined, { sensitivity: 'base' });
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-  }, [records, query, cycle, tier, health, sortKey, sortDirection]);
+  }, [records, query, cycle, tier, health, sortKey, sortDirection, matchesDate]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const visible = filtered.slice((page - 1) * pageSize, page * pageSize);
-  useEffect(() => { setPage(1); }, [query, cycle, tier, health, sortKey, sortDirection]);
+  useEffect(() => { setPage(1); }, [query, cycle, tier, health, sortKey, sortDirection, reportPeriodValue, reportPeriodEnabled]);
   useEffect(() => { if (page > pageCount) setPage(pageCount); }, [page, pageCount]);
 
   const mrr = records.reduce((sum, item) => sum + item.monthlyValue, 0);

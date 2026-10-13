@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 // Shared module chrome renders the canonical ams-dashboard-header primitive.
 import {
   Activity,
@@ -82,6 +83,7 @@ const formatDate = (value: string, language: string) => {
 };
 
 export const AdminClients: React.FC = () => {
+  const { matchesDate } = useReportingPeriod();
   const canManageClients = hasAdminPermission('canManageClients');
   const { t, language } = useLanguage();
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
@@ -162,6 +164,7 @@ export const AdminClients: React.FC = () => {
     const query = searchQuery.trim().toLowerCase();
 
     const result = clients.filter((client) => {
+      if (!matchesDate(client.createdAt || client.updatedAt)) return false;
       const searchable = [
         client.name,
         client.company,
@@ -225,7 +228,8 @@ export const AdminClients: React.FC = () => {
     slaFilter,
     statusScope,
     sortKey,
-    sortDirection
+    sortDirection,
+    matchesDate,
   ]);
 
   useEffect(() => {

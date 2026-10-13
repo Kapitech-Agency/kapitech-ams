@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 import { useSearchParams } from 'react-router-dom';
 import {
   Download,
@@ -314,6 +315,7 @@ const fieldClass =
   'mt-1 h-9 min-h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none transition-colors placeholder:text-muted focus:border-accent';
 
 export const AdminProjects: React.FC = () => {
+  const { matchesDate, matchesInterval, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const { language } = useLanguage();
   const canManageProjects = hasAdminPermission('canManageProjects');
   const canManageKanbanTasks = hasAdminPermission('canManageKanbanTasks');
@@ -499,13 +501,13 @@ export const AdminProjects: React.FC = () => {
   }, [canManageKanbanTasks]);
 
   const activeProjects = useMemo(
-    () => projects.filter(project => project.status !== 'completed'),
-    [projects]
+    () => projects.filter(project => project.status !== 'completed' && matchesInterval(project.startDate, project.targetEndDate, project.createdAt)),
+    [projects, matchesInterval]
   );
 
   const archivedProjects = useMemo(
-    () => projects.filter(project => project.status === 'completed'),
-    [projects]
+    () => projects.filter(project => project.status === 'completed' && matchesInterval(project.startDate, project.targetEndDate, project.createdAt)),
+    [projects, matchesInterval]
   );
 
   const filteredArchivedProjects = useMemo(() => {
@@ -565,7 +567,8 @@ export const AdminProjects: React.FC = () => {
       const matchesHealth = !projectHealthFilter || project.health === projectHealthFilter;
       const matchesClient = !projectClientFilter || project.clientCompany === projectClientFilter;
       const matchesOwner = !projectOwnerFilter || project.teamLead === projectOwnerFilter;
-      return matchesQuery && matchesStatus && matchesHealth && matchesClient && matchesOwner;
+      const matchesPeriod = matchesInterval(project.startDate, project.targetEndDate, project.createdAt);
+      return matchesQuery && matchesStatus && matchesHealth && matchesClient && matchesOwner && matchesPeriod;
     });
 
     return [...result].sort((a, b) => {
@@ -583,12 +586,13 @@ export const AdminProjects: React.FC = () => {
     projectClientFilter,
     projectOwnerFilter,
     projectSort,
+    matchesInterval,
   ]);
 
   const projectTablePageCount = Math.max(1, Math.ceil(filteredProjects.length / projectTablePageSize));
   const pagedProjectTableRows = filteredProjects.slice((projectTablePage - 1) * projectTablePageSize, projectTablePage * projectTablePageSize);
   React.useEffect(() => { setProjectTablePage((page) => Math.min(page, projectTablePageCount)); }, [projectTablePageCount]);
-  React.useEffect(() => { setProjectTablePage(1); }, [projectSearch, projectStatusFilter, projectHealthFilter, projectClientFilter, projectOwnerFilter, projectSort]);
+  React.useEffect(() => { setProjectTablePage(1); }, [projectSearch, projectStatusFilter, projectHealthFilter, projectClientFilter, projectOwnerFilter, projectSort, reportPeriodValue, reportPeriodEnabled]);
 
   const clearProjectFilters = () => {
     setProjectSearch('');
@@ -642,7 +646,7 @@ export const AdminProjects: React.FC = () => {
             .includes(query);
         const matchesPriority = !taskPriorityFilter || task.priority === taskPriorityFilter;
         const matchesAssignee = !taskAssigneeFilter || task.assignedTo === taskAssigneeFilter;
-        return matchesQuery && matchesPriority && matchesAssignee;
+        return matchesQuery && matchesPriority && matchesAssignee && matchesDate(task.dueDate || task.createdAt);
       })
       .sort((a, b) => {
         if (taskSort === 'due') {
@@ -665,7 +669,7 @@ export const AdminProjects: React.FC = () => {
           || (a.dueDate || '9999-12-31').localeCompare(b.dueDate || '9999-12-31')
           || a.title.localeCompare(b.title);
       });
-  }, [selectedSprintProject, taskSearch, taskPriorityFilter, taskAssigneeFilter, taskSort]);
+  }, [selectedSprintProject, taskSearch, taskPriorityFilter, taskAssigneeFilter, taskSort, matchesDate]);
 
   const activeTaskFilters = [taskSearch, taskPriorityFilter, taskAssigneeFilter].filter(Boolean).length;
 

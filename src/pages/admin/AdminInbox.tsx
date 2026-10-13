@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 // Shared module chrome renders the canonical ams-dashboard-header primitive.
 import { Link, useSearchParams } from 'react-router-dom';
 import { Skeleton } from '../../components/ui/Skeleton';
@@ -53,6 +54,7 @@ import { hasAdminPermission } from '../../lib/adminAuth';
 import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminSectionTabs, AdminTablePagination, AdminPageShell } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 export const AdminInbox: React.FC = () => {
+  const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const { language } = useLanguage();
   const canManageCrm = hasAdminPermission('canManageCrm');
   const canManageClients = hasAdminPermission('canManageClients');
@@ -514,9 +516,9 @@ export const AdminInbox: React.FC = () => {
         (item.linkedinUrl || '').toLowerCase().includes(queryLower)
       );
 
-      return matchesStatus && matchesPriority && matchesStarred && matchesSearch;
+      return matchesStatus && matchesPriority && matchesStarred && matchesSearch && matchesDate(item.createdAt);
     });
-  }, [activeTabItems, filterStatus, filterPriority, searchQuery]);
+  }, [activeTabItems, filterStatus, filterPriority, searchQuery, matchesDate]);
 
   const triageItems = useMemo(() => {
     return filteredItems
@@ -541,7 +543,7 @@ export const AdminInbox: React.FC = () => {
   const pageCount = Math.max(1, Math.ceil(filteredItems.length / pageSize));
   const pagedItems = filteredItems.slice((page - 1) * pageSize, page * pageSize);
   useEffect(() => { setPage((current) => Math.min(current, pageCount)); }, [pageCount]);
-  useEffect(() => { setPage(1); }, [activeInboxTab, filterStatus, filterPriority, searchQuery]);
+  useEffect(() => { setPage(1); }, [activeInboxTab, filterStatus, filterPriority, searchQuery, reportPeriodValue, reportPeriodEnabled]);
 
   // Export CSV
   const handleExportCSV = () => {

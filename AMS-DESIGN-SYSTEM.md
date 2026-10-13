@@ -459,3 +459,12 @@ Build responsive (1440 / 1024 / 768 / 390), support both themes, and finish by r
 - Period comparisons must state the comparison baseline (previous period or same period in the prior year). Percentage change is shown as unavailable when the comparison baseline is zero; do not silently invent a percentage.
 - Aggregated quarter and year views must include every month in the selected range. CSV exports must reflect the selected period and its comparison values, while preserving the existing caveats about provisional accounting figures.
 - Period selectors are filters only. They must not change record dates, trigger posting, bypass permissions, or alter financial business rules.
+
+
+## Global reporting period across AMS modules and tabs
+
+- Mount the shared `AdminReportingPeriodBar` in the authenticated admin layout so it stays available while staff navigate between modules and internal tabs.
+- Keep the initial filter disabled (`All dates`) until a user selects a period. Persist the user's selection across module navigation, and make the active period explicit with a one-click reset to all dates.
+- A selected period filters date-stamped operational lists and supported reports. Records without usable dates stay visible so legacy or master records are not silently removed. Current-state KPIs and configuration forms remain current-state, not historical snapshots.
+- Date-specific workflows such as a monthly closing checklist can retain their own narrower operational period where needed. Do not use a quarter/year selection to trigger a posting or closing action.
+- Use the shared Month / Quarter / Year vocabulary and custom select component. Expose the exact inclusive date range, quick actions for the current and previous period, and an explicit baseline for comparison tables.

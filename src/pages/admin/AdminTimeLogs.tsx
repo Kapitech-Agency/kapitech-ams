@@ -1,4 +1,5 @@
 import React, { FormEvent, useEffect, useMemo, useState } from 'react';
+import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 import { Plus, Trash2, RefreshCw, CalendarDays, Timer, ReceiptText } from 'lucide-react';
 import { api } from '../../lib/apiClient';
 import { CustomSelect } from '../../components/ui/CustomSelect';
@@ -29,6 +30,7 @@ type TimeLog = {
 };
 
 export const AdminTimeLogs: React.FC = () => {
+  const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const canManage = hasAdminPermission('canManageProjects') || hasAdminPermission('canManageKanbanTasks');
   const canDeleteAll = hasAdminPermission('canManageProjects');
   const [logs, setLogs] = useState<TimeLog[]>([]);
@@ -94,10 +96,12 @@ export const AdminTimeLogs: React.FC = () => {
 
   useEffect(() => { void load(); }, []);
 
-  const totalMinutes = useMemo(() => logs.reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0), [logs]);
-  const billableMinutes = useMemo(() => logs.filter(log => log.billable).reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0), [logs]);
-  const totalPages = Math.max(1, Math.ceil(logs.length / pageSize));
-  const pagedLogs = logs.slice((page - 1) * pageSize, page * pageSize);
+  const periodLogs = useMemo(() => logs.filter((log) => matchesDate(log.date)), [logs, matchesDate]);
+  const totalMinutes = useMemo(() => periodLogs.reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0), [periodLogs]);
+  const billableMinutes = useMemo(() => periodLogs.filter(log => log.billable).reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0), [periodLogs]);
+  const totalPages = Math.max(1, Math.ceil(periodLogs.length / pageSize));
+  const pagedLogs = periodLogs.slice((page - 1) * pageSize, page * pageSize);
+  useEffect(() => { setPage(1); }, [reportPeriodValue, reportPeriodEnabled]);
   useEffect(() => {
     setPage((current) => Math.min(current, totalPages));
   }, [totalPages]);

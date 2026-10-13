@@ -41,6 +41,7 @@ import { api } from '../../lib/apiClient';
 import { AdminMetricCard, AdminTablePagination, AdminStatusBadge } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { isSlugFixtureMode } from '../../lib/runtimeMode';
+import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 
 
 type SortKey = 'updated' | 'due' | 'oldest' | 'amount_high' | 'amount_low' | 'invoice';
@@ -713,6 +714,7 @@ type AdminInvoicingProps = {
   embeddedIncomeExpenseMode?: 'income' | 'expenses';
 };
 export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, embeddedIncomeExpenseMode }) => {
+  const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const { language } = useLanguage();
   const canViewFinancials = hasAdminPermission('canViewFinancials');
   const canManageInvoices = hasAdminPermission('canManageInvoices');
@@ -1296,7 +1298,8 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
       const dueState: DueFilter = isPastDueInvoice(invoice) ? 'overdue' : isDueSoonInvoice(invoice) ? 'due_soon' : 'later';
       const searchable = [invoice.invoiceNumber, invoice.clientName, invoice.clientCompany, invoice.clientEmail, projectsById.get(invoice.projectId)?.name || ''].join(' ').toLowerCase();
       const hasOpenReceivable = invoice.status !== 'draft' && invoice.status !== 'cancelled' && balance > 0.009;
-      return (!embeddedReceivablesOnly || hasOpenReceivable)
+      return matchesDate(invoice.issueDate || invoice.createdAt)
+        && (!embeddedReceivablesOnly || hasOpenReceivable)
         && (!query || searchable.includes(query))
         && (statusFilter === 'all' || (statusFilter === 'due_soon' ? isDueSoonInvoice(invoice) : invoice.status === statusFilter))
         && (paymentFilter === 'all' || paymentState === paymentFilter)
@@ -1310,15 +1313,15 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
       if (sort === 'invoice') return a.invoiceNumber.localeCompare(b.invoiceNumber);
       return String(b.updatedAt || '').localeCompare(String(a.updatedAt || ''));
     });
-  }, [ledgerInvoices, search, statusFilter, paymentFilter, dueFilter, sort, projectsById, embeddedReceivablesOnly]);
+  }, [ledgerInvoices, search, statusFilter, paymentFilter, dueFilter, sort, projectsById, embeddedReceivablesOnly, matchesDate]);
 
   useEffect(() => {
     setInvoicePage(1);
-  }, [search, statusFilter, paymentFilter, dueFilter, sort, currency]);
+  }, [search, statusFilter, paymentFilter, dueFilter, sort, currency, reportPeriodValue, reportPeriodEnabled]);
 
   useEffect(() => {
     setExpensePage(1);
-  }, [expenseSearch, expenseTypeFilter, expenseSort, currency]);
+  }, [expenseSearch, expenseTypeFilter, expenseSort, currency, reportPeriodValue, reportPeriodEnabled]);
 
   const paginatedInvoices = useMemo(() => {
     const start = (invoicePage - 1) * invoicePageSize;
@@ -1394,9 +1397,10 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
       });
     const query = incomeSearch.trim().toLowerCase();
     return rows
+      .filter((row) => matchesDate(row.date))
       .filter((row) => !query || [row.invoiceNumber, row.clientCompany, row.date].join(' ').toLowerCase().includes(query))
       .sort((a, b) => b.date.localeCompare(a.date));
-  }, [currencyInvoices, incomeSearch]);
+  }, [currencyInvoices, incomeSearch, matchesDate]);
 
   const paginatedIncomeRows = useMemo(() => {
     const start = (incomePage - 1) * incomePageSize;
@@ -1406,7 +1410,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 
   useEffect(() => {
     setIncomePage(1);
-  }, [incomeSearch, currency]);
+  }, [incomeSearch, currency, reportPeriodValue, reportPeriodEnabled]);
 
   useEffect(() => {
     setIncomePage(1);
@@ -1424,6 +1428,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
       const matchesSearch = !query || searchable.includes(query);
       const matchesType = expenseTypeFilter === 'all' || (expense.type || 'OpEx') === expenseTypeFilter;
       const matchesCategory = expenseCategoryFilter === 'all' || expense.category === expenseCategoryFilter;
+      const matchesGlobalPeriod = matchesDate(expense.date);
       const expenseDateValue = new Date(String(expense.date || '') + 'T00:00:00');
       const today = new Date();
       today.setHours(23, 59, 59, 999);
@@ -1436,7 +1441,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
               ? new Date(today.getFullYear(), 0, 1)
               : null;
       const matchesPeriod = !periodStart || (!Number.isNaN(expenseDateValue.getTime()) && expenseDateValue >= periodStart && expenseDateValue <= today);
-      return matchesSearch && matchesType && matchesCategory && matchesPeriod;
+      return matchesSearch && matchesType && matchesCategory && matchesPeriod && matchesGlobalPeriod;
     });
 
     return [...result].sort((a, b) => {
@@ -1445,7 +1450,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
       if (expenseSort === 'date_asc') return String(a.date || '').localeCompare(String(b.date || ''));
       return String(b.date || '').localeCompare(String(a.date || ''));
     });
-  }, [currencyExpenses, expenseSearch, expenseTypeFilter, expenseCategoryFilter, expensePeriodFilter, expenseSort]);
+  }, [currencyExpenses, expenseSearch, expenseTypeFilter, expenseCategoryFilter, expensePeriodFilter, expenseSort, matchesDate]);
 
   const paginatedExpenses = useMemo(() => {
     const start = (expensePage - 1) * expensePageSize;
@@ -2335,7 +2340,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
     return quotations
       .filter((quotation) => {
         const searchable = [quotation.quotationNumber, quotation.title, quotation.clientName, quotation.clientCompany, quotation.owner].join(' ').toLowerCase();
-        return (!query || searchable.includes(query)) && (quotationStatusFilter === 'all' || quotation.status === quotationStatusFilter);
+        return matchesDate(quotation.createdAt || quotation.validUntil) && (!query || searchable.includes(query)) && (quotationStatusFilter === 'all' || quotation.status === quotationStatusFilter);
       })
       .sort((a,b) => quotationSort === 'oldest'
         ? String(a.createdAt).localeCompare(String(b.createdAt))
@@ -2346,7 +2351,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
             : quotationSort === 'valid_until'
               ? String(a.validUntil).localeCompare(String(b.validUntil))
               : String(b.createdAt).localeCompare(String(a.createdAt)));
-  }, [quotations, quotationSearch, quotationStatusFilter, quotationSort]);
+  }, [quotations, quotationSearch, quotationStatusFilter, quotationSort, matchesDate]);
 
   const quotationPageCount = Math.max(1, Math.ceil(filteredQuotations.length / quotationPageSize));
   const paginatedQuotations = filteredQuotations.slice((quotationPage - 1) * quotationPageSize, quotationPage * quotationPageSize);
