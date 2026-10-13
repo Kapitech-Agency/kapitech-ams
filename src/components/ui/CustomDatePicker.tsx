@@ -64,9 +64,15 @@ export const CustomDatePicker = ({
   const selectedDate = parsePickerValue(value, type);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dayRefs = useRef(new Map<string, HTMLButtonElement>());
+  const monthRefs = useRef(new Map<string, HTMLButtonElement>());
   const [isOpen, setIsOpen] = useState(false);
   const [viewDate, setViewDate] = useState(() => selectedDate || new Date());
   const [activeDate, setActiveDate] = useState(() => selectedDate ? toLocalIsoDate(selectedDate) : toLocalIsoDate(new Date()));
+  const [showYearPicker, setShowYearPicker] = useState(false);
+  const [yearPageStart, setYearPageStart] = useState(() => {
+    const year = (selectedDate || new Date()).getFullYear();
+    return Math.floor(year / 12) * 12;
+  });
 
   const minBound = normaliseBound(min, type);
   const maxBound = normaliseBound(max, type);
@@ -104,6 +110,7 @@ export const CustomDatePicker = ({
     if (isBounded(date)) return;
     onChange(nextValue);
     setActiveDate(toLocalIsoDate(date));
+    setShowYearPicker(false);
     setIsOpen(false);
     requestAnimationFrame(() => triggerRef.current?.focus());
   };
@@ -112,6 +119,8 @@ export const CustomDatePicker = ({
     if (disabled) return;
     setViewDate(selectedDate || new Date());
     setActiveDate(selectedDate ? toLocalIsoDate(selectedDate) : todayDate);
+    setYearPageStart(Math.floor((selectedDate || new Date()).getFullYear() / 12) * 12);
+    setShowYearPicker(false);
     setIsOpen((current) => !current);
   };
 
@@ -171,26 +180,79 @@ export const CustomDatePicker = ({
           <div className="flex items-center justify-between gap-2">
             <button
               type="button"
-              aria-label={type === 'month' ? 'Previous year' : 'Previous month'}
-              onClick={() => moveCalendar(-1)}
+              aria-label={showYearPicker ? 'Previous 12 years' : type === 'month' ? 'Previous year' : 'Previous month'}
+              onClick={() => showYearPicker ? setYearPageStart((current) => current - 12) : moveCalendar(-1)}
               className="flex h-8 w-8 items-center justify-center rounded-control border border-line text-muted transition-colors hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-accent"
             >
               <ChevronLeft size={15} />
             </button>
             <div className="min-w-0 text-center text-[13px] font-semibold text-fg">
-              {type === 'month' ? viewDate.getFullYear() : monthFormatter.format(viewDate)}
+              {showYearPicker ? (
+                <span>{yearPageStart + '–' + (yearPageStart + 11)}</span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setYearPageStart(Math.floor(viewDate.getFullYear() / 12) * 12);
+                    setShowYearPicker(true);
+                  }}
+                  aria-label="Choose year"
+                  className="rounded-control px-2 py-1 hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-accent"
+                >
+                  {type === 'month' ? viewDate.getFullYear() : monthFormatter.format(viewDate)}
+                </button>
+              )}
             </div>
             <button
               type="button"
-              aria-label={type === 'month' ? 'Next year' : 'Next month'}
-              onClick={() => moveCalendar(1)}
+              aria-label={showYearPicker ? 'Next 12 years' : type === 'month' ? 'Next year' : 'Next month'}
+              onClick={() => showYearPicker ? setYearPageStart((current) => current + 12) : moveCalendar(1)}
               className="flex h-8 w-8 items-center justify-center rounded-control border border-line text-muted transition-colors hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-accent"
             >
               <ChevronRight size={15} />
             </button>
           </div>
 
-          {type === 'month' ? (
+          {showYearPicker ? (
+            <div className="grid grid-cols-3 gap-1.5" role="group" aria-label="Years">
+              {Array.from({ length: 12 }, (_, index) => yearPageStart + index).map((year) => {
+                const startValue = type === 'month' ? String(year) + '-01' : String(year) + '-01-01';
+                const endValue = type === 'month' ? String(year) + '-12' : String(year) + '-12-31';
+                const yearDisabled = Boolean((minBound && endValue < minBound) || (maxBound && startValue > maxBound));
+                const yearSelected = viewDate.getFullYear() === year;
+                const yearCurrent = today.getFullYear() === year;
+                return (
+                  <button
+                    key={year}
+                    type="button"
+                    disabled={yearDisabled}
+                    aria-label={String(year)}
+                    aria-pressed={yearSelected}
+                    onClick={() => {
+                      const active = new Date(year, viewDate.getMonth(), Math.min(viewDate.getDate(), new Date(year, viewDate.getMonth() + 1, 0).getDate()));
+                      setViewDate(new Date(year, viewDate.getMonth(), 1));
+                      setActiveDate(toLocalIsoDate(active));
+                      setYearPageStart(Math.floor(year / 12) * 12);
+                      setShowYearPicker(false);
+                      requestAnimationFrame(() => {
+                        if (type === 'month') monthRefs.current.get(toLocalIsoMonth(new Date(year, viewDate.getMonth(), 1)))?.focus();
+                        else dayRefs.current.get(toLocalIsoDate(active))?.focus();
+                      });
+                    }}
+                    className={'flex h-10 items-center justify-center rounded-control border text-xs font-medium tabular-nums transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-35 ' + (
+                      yearSelected
+                        ? 'border-accent/50 bg-accent/14 text-fg'
+                        : yearCurrent
+                          ? 'border-line text-accent-text hover:bg-panel-hover'
+                          : 'border-transparent text-muted hover:border-line hover:bg-panel-hover hover:text-fg'
+                    )}
+                  >
+                    {year}
+                  </button>
+                );
+              })}
+            </div>
+          ) : type === 'month' ? (
             <div className="grid grid-cols-3 gap-1.5" role="group" aria-label="Months">
               {Array.from({ length: 12 }, (_, monthIndex) => {
                 const date = new Date(viewDate.getFullYear(), monthIndex, 1);
@@ -202,6 +264,10 @@ export const CustomDatePicker = ({
                 return (
                   <button
                     key={monthValue}
+                    ref={(element) => {
+                      if (element) monthRefs.current.set(monthValue, element);
+                      else monthRefs.current.delete(monthValue);
+                    }}
                     type="button"
                     disabled={isDisabled}
                     aria-pressed={isSelected}
