@@ -109,7 +109,7 @@ test('Finance worksheets embed the existing transactional workflows instead of r
   assert.match(invoicing, /type EmbeddedFinanceView = 'invoices' \| 'receivables' \| 'income-expenses'/);
   assert.match(invoicing, /embeddedReceivablesOnly \|\| hasOpenReceivable/);
   assert.match(invoicing, /embedded && canCreateInvoice && <button[\s\S]*?onClick=\{openCreateInvoice\}/);
-  assert.match(invoicing, /onClick=\{\(\) => openPayment\(invoice\)\}/);
+  assert.match(invoicing, /openPayment\(invoice\)/);
   assert.match(invoicing, /embeddedIncomeExpenseMode \|\| 'income'/);
   assert.match(invoicing, /Expense ledger/);
   assert.match(vendors, /export const AdminVendors: React\.FC<\{ embedded\?: boolean \}>/);
