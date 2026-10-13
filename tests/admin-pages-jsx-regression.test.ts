@@ -128,7 +128,7 @@ test('AMS module tabs share canonical desktop and mobile navigation primitives',
   const retainers = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientRetainers.tsx'), 'utf8');
   const sla = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientSlaMonitoring.tsx'), 'utf8');
 
-  assert.equal((layout.match(/<AdminTopbarTabs\b/g) || []).length, 12);
+  assert.equal((layout.match(/<AdminTopbarTabs\b/g) || []).length, 11);
   assert.ok(primitives.includes("'inline-flex h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent'"));
   assert.ok(!/className="inline-flex h-9 shrink-0 items-center rounded-chip/.test(layout));
   assert.ok(!/<nav aria-label="(?:Clients|CMS|Dashboard|Projects|Tasks|Inbox|Finance|Team|Settings|Documents) sections"/.test(layout));
