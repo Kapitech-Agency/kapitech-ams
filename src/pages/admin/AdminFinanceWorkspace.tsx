@@ -1370,6 +1370,10 @@ export const AdminFinanceWorkspace: React.FC = () => {
                 emptyMessage="No vendor bills have been entered. Create a bill to see its payment schedule."
               />
             )}
+            <WorkbookNote title="Contract-linked vendor payments">
+              Use this register for payments planned against vendor contracts. These records remain linked to their contract and expense evidence; they do not settle a vendor bill in the Accounts Payable register above. Record bill settlements against the bill itself so the bill balance and installment schedule stay accurate.
+            </WorkbookNote>
+            <AdminInvoicing embeddedView="vendor-payments" />
           </div>
         );
       }
