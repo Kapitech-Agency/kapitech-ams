@@ -33,6 +33,59 @@ test('global period presets roll backwards across calendar boundaries', () => {
   assert.equal(convertReportingPeriodValue('2026-10', 'month', 'quarter'), '2026-Q4');
 });
 
+test('Finance workbook keeps all 20 sheets reachable through the worksheet renderer', async () => {
+  const fs = await import('node:fs/promises');
+  const workbook = await fs.readFile('src/lib/financeWorkbook.ts', 'utf8');
+  const workspace = await fs.readFile('src/pages/admin/AdminFinanceWorkspace.tsx', 'utf8');
+  const layout = await fs.readFile('src/pages/admin/AdminLayout.tsx', 'utf8');
+  const workbookBlock = workbook.slice(
+    workbook.indexOf('export const FINANCE_WORKBOOK_GROUPS'),
+    workbook.indexOf('export interface ExcelChartAccount')
+  );
+  const worksheetKeys = [...workbookBlock.matchAll(/\{ key: '([^']+)', sheet: '([^']+)'/g)].map((match) => match[1]);
+  const rendererStart = workspace.indexOf('const renderView = (tab: FinanceWorkbookTab) => {');
+  const rendererEnd = workspace.indexOf('if (!canViewFinancials)', rendererStart);
+  assert.ok(rendererStart >= 0 && rendererEnd > rendererStart);
+  const renderer = workspace.slice(rendererStart, rendererEnd);
+  const renderedKeys = [...renderer.matchAll(/case '([^']+)':/g)].map((match) => match[1]);
+
+  assert.equal(worksheetKeys.length, 20);
+  assert.equal(new Set(worksheetKeys).size, worksheetKeys.length);
+  assert.deepEqual([...renderedKeys].sort(), [...worksheetKeys].sort());
+  for (const tab of ['overview-control', 'transactions-cash', 'receivables-payables', 'project-finance', 'accounting-reports']) {
+    assert.ok(layout.includes('finance-tab-' + tab));
+  }
+  assert.ok(workspace.includes('const groupEntryTabs: Record<string, string>'));
+  assert.ok(workspace.includes('data-ams-slug="finance-workspace-navigation"'));
+});
+
+test('date-aware Finance worksheets use the shared reporting period without changing their ledger roll-forward', async () => {
+  const fs = await import('node:fs/promises');
+  const workspace = await fs.readFile('src/pages/admin/AdminFinanceWorkspace.tsx', 'utf8');
+  const invoicing = await fs.readFile('src/pages/admin/AdminInvoicing.tsx', 'utf8');
+
+  assert.ok(workspace.includes('const { mode: reportPeriodMode, value: reportPeriodValue, enabled: reportPeriodEnabled, setMode: setReportPeriodMode, setValue: setReportPeriodValue, matchesDate, matchesInterval } = useReportingPeriod()'));
+  assert.ok(workspace.includes('allCashLedgerRows.filter((row) => matchesDate(row.date) && matching(row.search)).reverse()'));
+  assert.ok(workspace.includes('matchesDate(record.payload.billDate || record.payload.dueDate || record.createdAt)'));
+  assert.ok(workspace.includes('matchesDate(item.month + \'-01\')'));
+  assert.ok(workspace.includes('matchesDate(record.payload.dueDate || record.createdAt)'));
+  assert.ok(workspace.includes('matchesDate(expense.date)'));
+  assert.ok(workspace.includes('matchesDate(record.payload.date || record.createdAt)'));
+  assert.ok(workspace.includes('getReportingYearOptions(new Date().getFullYear(), availableYears, Number(selectedYear)).map(String)'));
+  assert.ok(workspace.includes('const latestByAccount=new Map<string,WorkbookRecord>();'));
+  assert.ok(workspace.includes('for(const record of allOpenings.slice()'));
+  assert.ok(workspace.includes('const requestId = ++loadRequestId.current;'));
+  assert.ok(workspace.includes('if (requestId !== loadRequestId.current) return;'));
+  assert.ok(workspace.includes('const selectedCashRange = reportPeriodEnabled ? getReportingPeriodRange(reportPeriodValue, reportPeriodMode) : null;'));
+  assert.ok(workspace.includes('const periodClosingBalance = closingBalanceAvailable'));
+  assert.ok(workspace.includes('const selectedPettyRange = reportPeriodEnabled ? getReportingPeriodRange(reportPeriodValue, reportPeriodMode) : null;'));
+  assert.ok(workspace.includes('Number(record.payload.outstanding ?? ((Number(record.payload.total) || 0) - (Number(record.payload.paidAmount) || 0)))'));
+  assert.ok(invoicing.includes('return matchesDate(row.dueDate)'));
+  assert.ok(invoicing.includes('vendorPaymentSort, matchesDate]'));
+  assert.ok(invoicing.includes('return source.filter((invoice) => matchesDate(invoice.issueDate || invoice.createdAt))'));
+  assert.ok(invoicing.includes('setRetainerPage(1); }, [currency, reportPeriodValue, reportPeriodEnabled, matchesDate]'));
+});
+
 test('global reporting period controls stay in the admin layout shared by modules and tabs', async () => {
   const fs = await import('node:fs/promises');
   const layout = await fs.readFile('src/pages/admin/AdminLayout.tsx', 'utf8');

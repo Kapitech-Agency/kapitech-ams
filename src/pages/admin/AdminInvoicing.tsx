@@ -1100,7 +1100,8 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
     const query = vendorPaymentSearch.trim().toLowerCase();
     const rows = vendorPaymentRecords.filter((row) => {
       const haystack = [row.vendor.name, row.vendor.companyName || '', row.vendor.primaryCategory, row.contract.title, row.contract.rateType].join(' ').toLowerCase();
-      return (!query || haystack.includes(query))
+      return matchesDate(row.dueDate)
+        && (!query || haystack.includes(query))
         && (vendorPaymentStatusFilter === 'all' || row.status === vendorPaymentStatusFilter)
         && (vendorPaymentVendorFilter === 'all' || row.vendor.id === vendorPaymentVendorFilter);
     });
@@ -1111,7 +1112,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
       const bTime = new Date(b.dueDate + 'T00:00:00').getTime();
       return vendorPaymentSort === 'due_desc' ? bTime - aTime : aTime - bTime;
     });
-  }, [vendorPaymentRecords, vendorPaymentSearch, vendorPaymentStatusFilter, vendorPaymentVendorFilter, vendorPaymentSort]);
+  }, [vendorPaymentRecords, vendorPaymentSearch, vendorPaymentStatusFilter, vendorPaymentVendorFilter, vendorPaymentSort, matchesDate]);
 
   const vendorPaymentPageCount = Math.max(1, Math.ceil(filteredVendorPayments.length / vendorPaymentPageSize));
   const paginatedVendorPayments = filteredVendorPayments.slice((vendorPaymentPage - 1) * vendorPaymentPageSize, vendorPaymentPage * vendorPaymentPageSize);
@@ -1176,10 +1177,13 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   );
 
   const retainerLedgerInvoices = useMemo(() => {
-    if (retainerInvoices.length) return retainerInvoices;
-    if (!slugDataMode) return [];
-    return STITCH_FINANCE_RETAINER_INVOICES.filter((invoice) => invoice.currency === currency).map(normalizeFinanceInvoice);
-  }, [currency, retainerInvoices, slugDataMode]);
+    const source = retainerInvoices.length
+      ? retainerInvoices
+      : slugDataMode
+        ? STITCH_FINANCE_RETAINER_INVOICES.filter((invoice) => invoice.currency === currency).map(normalizeFinanceInvoice)
+        : [];
+    return source.filter((invoice) => matchesDate(invoice.issueDate || invoice.createdAt));
+  }, [currency, retainerInvoices, slugDataMode, matchesDate]);
 
   const usingDemoRetainerLedger = retainerInvoices.length === 0 && retainerLedgerInvoices.length > 0;
   const retainerPageCount = Math.max(1, Math.ceil(retainerLedgerInvoices.length / retainerPageSize));
@@ -1335,6 +1339,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   }, [invoicePageCount]);
   useEffect(() => { setVendorPaymentPage((page) => Math.min(page, vendorPaymentPageCount)); }, [vendorPaymentPageCount]);
   useEffect(() => { setRetainerPage((page) => Math.min(page, retainerPageCount)); }, [retainerPageCount]);
+  useEffect(() => { setRetainerPage(1); }, [currency, reportPeriodValue, reportPeriodEnabled, matchesDate]);
 
   const actionRequiredInvoices = useMemo(() => {
     const today = new Date();
