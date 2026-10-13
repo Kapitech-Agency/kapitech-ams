@@ -83,7 +83,7 @@ test('date-aware Finance worksheets use the shared reporting period without chan
   assert.ok(invoicing.includes('return matchesDate(row.dueDate)'));
   assert.ok(invoicing.includes('vendorPaymentSort, matchesDate]'));
   assert.ok(invoicing.includes('return source.filter((invoice) => matchesDate(invoice.issueDate || invoice.createdAt))'));
-  assert.ok(invoicing.includes('retainerPage, matchesDate]'));
+  assert.ok(invoicing.includes('setRetainerPage(1); }, [currency, reportPeriodValue, reportPeriodEnabled, matchesDate]'));
 });
 
 test('global reporting period controls stay in the admin layout shared by modules and tabs', async () => {
