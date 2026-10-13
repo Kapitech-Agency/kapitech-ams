@@ -27,6 +27,7 @@ import { AmsBrandLogo } from '../../components/admin/AmsBrandLogo';
 import UserProfileSettingsModal from '../../components/admin/UserProfileSettingsModal';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { AdminTopbarTabs } from '../../components/admin/AdminModulePrimitives';
+import { FINANCE_WORKBOOK_GROUPS } from '../../lib/financeWorkbook';
 import Button from '../../components/ui/Button';
 
 interface NavItem {
@@ -689,6 +690,21 @@ export const AdminLayout: React.FC = () => {
                     { key: 'client', label: 'Client Inbox', to: '/admin/inbox?view=client', slug: 'inbox-tab-client' },
                     { key: 'jobs', label: 'Job Applications', to: '/admin/inbox?view=jobs', slug: 'inbox-tab-jobs' },
                     { key: 'starred', label: 'Starred', to: '/admin/inbox?view=starred', slug: 'inbox-tab-starred' }
+                  ]}
+                />
+              ) : location.pathname === '/admin/finance' ? (
+                <AdminTopbarTabs
+                  ariaLabel={t('admin.finance.sections')}
+                  activeKey={(() => {
+                    const requestedTab = new URLSearchParams(location.search).get('tab') || 'executive-summary';
+                    return FINANCE_WORKBOOK_GROUPS.find((group) => group.items.some((item) => item.key === requestedTab))?.key || 'overview';
+                  })()}
+                  items={[
+                    { key: 'overview', label: t('admin.finance.tab.overviewControl'), to: '/admin/finance?tab=executive-summary', slug: 'finance-tab-overview-control' },
+                    { key: 'transactions', label: t('admin.finance.tab.transactionsCash'), to: '/admin/finance?tab=cash-bank', slug: 'finance-tab-transactions-cash' },
+                    { key: 'receivables', label: t('admin.finance.tab.receivablesPayables'), to: '/admin/finance?tab=accounts-receivable', slug: 'finance-tab-receivables-payables' },
+                    { key: 'projects', label: t('admin.finance.tab.projectFinance'), to: '/admin/finance?tab=project-finance', slug: 'finance-tab-project-finance' },
+                    { key: 'accounting', label: t('admin.finance.tab.accountingReports'), to: '/admin/finance?tab=journal', slug: 'finance-tab-accounting-reports' }
                   ]}
                 />
               ) : location.pathname === '/admin/team' || location.pathname === '/admin/time-logs' || location.pathname === '/admin/vendors' ? (
