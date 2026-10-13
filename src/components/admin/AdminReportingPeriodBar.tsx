@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Filter, RotateCcw, X } from 'lucide-react';
+import { CalendarDays, RotateCcw, X } from 'lucide-react';
 import Button from '../ui/Button';
 import { CustomReportPeriodPicker } from '../ui/CustomReportPeriodPicker';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
@@ -14,6 +14,14 @@ export const AdminReportingPeriodBar: React.FC = () => {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const label = formatReportingPeriodLabel(value, mode, locale);
+  const selectedLabel = mode === 'month'
+    ? new Intl.DateTimeFormat(locale, { month: 'short', year: 'numeric' }).format(new Date(value + '-01T00:00:00'))
+    : mode === 'quarter'
+      ? (() => {
+          const match = /^(\d{4})-Q([1-4])$/.exec(value);
+          return match ? 'Q' + match[2] + ' ' + match[1] : value;
+        })()
+      : value;
 
   useEffect(() => {
     if (!open) return;
@@ -43,19 +51,19 @@ export const AdminReportingPeriodBar: React.FC = () => {
       <Button
         type="button"
         variant="secondary"
-        icon={<Filter size={14} aria-hidden="true" />}
+        icon={<CalendarDays size={14} aria-hidden="true" />}
         onClick={() => setOpen((current) => !current)}
-        aria-label={isId ? 'Filter periode tanggal' : 'Filter by reporting period'}
+        aria-label={isId ? 'Pilih periode laporan' : 'Choose reporting period'}
         aria-expanded={open}
         aria-controls="global-reporting-period-popover"
-        title={enabled ? label : (isId ? 'Filter periode tanggal' : 'Filter by reporting period')}
+        title={enabled ? label : (isId ? 'Periode terpilih, belum diterapkan' : 'Selected period, not applied')}
         className={[
           'h-8 min-h-8 gap-1.5 px-2.5 text-[11px]',
           enabled ? 'border-accent/35 bg-accent/10 text-fg' : ''
         ].join(' ')}
         slug="global-reporting-period-trigger"
       >
-        <span>Filter</span>
+        <span>{selectedLabel}</span>
         {enabled && <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true" />}
       </Button>
 
@@ -63,13 +71,13 @@ export const AdminReportingPeriodBar: React.FC = () => {
         <section
           id="global-reporting-period-popover"
           role="dialog"
-          aria-label={isId ? 'Filter periode laporan' : 'Reporting period filter'}
+          aria-label={isId ? 'Periode laporan' : 'Reporting period'}
           className="fixed right-3 top-[60px] z-50 w-[min(360px,calc(100vw-24px))] rounded-card border border-line bg-panel p-3 min-[900px]:absolute min-[900px]:right-0 min-[900px]:top-[calc(100%+8px)]"
           data-ams-slug="global-reporting-period-popover"
         >
           <div className="flex min-w-0 items-start justify-between gap-3">
             <div className="min-w-0">
-              <h2 className="text-xs font-semibold text-fg">{isId ? 'Periode tanggal' : 'Reporting period'}</h2>
+              <h2 className="text-xs font-semibold text-fg">{isId ? 'Periode laporan' : 'Reporting period'}</h2>
               <p className="mt-0.5 text-[11px] text-muted">
                 {enabled ? label : (isId ? 'Semua tanggal' : 'All dates')}
               </p>
@@ -77,7 +85,7 @@ export const AdminReportingPeriodBar: React.FC = () => {
             <button
               type="button"
               onClick={() => setOpen(false)}
-              aria-label={isId ? 'Tutup filter periode' : 'Close reporting period filter'}
+              aria-label={isId ? 'Tutup periode laporan' : 'Close reporting period'}
               className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-control text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
               <X size={14} aria-hidden="true" />
@@ -98,8 +106,8 @@ export const AdminReportingPeriodBar: React.FC = () => {
 
           <p className="mt-2 text-[10px] leading-4 text-muted">
             {isId
-              ? 'Filter berlaku pada daftar dan laporan bertanggal. KPI kondisi saat ini dan data master tanpa tanggal tidak berubah.'
-              : 'This filters date-aware lists and reports. Current-state KPIs and undated master data stay unchanged.'}
+              ? 'Periode yang diterapkan membatasi daftar dan laporan bertanggal. KPI kondisi saat ini dan data master tanpa tanggal tidak berubah.'
+              : 'The applied period scopes date-aware lists and reports. Current-state KPIs and undated master data stay unchanged.'}
           </p>
 
           <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-2">

@@ -39,6 +39,10 @@ test('global reporting period controls stay in the admin layout shared by module
   assert.ok(!layout.includes('global-reporting-period-container'));
   assert.ok(periodFilter.includes('global-reporting-period-trigger'));
   assert.ok(periodFilter.includes('global-reporting-period-popover'));
+  assert.ok(periodFilter.includes('<span>{selectedLabel}</span>'));
+  assert.ok(periodFilter.includes('new Intl.DateTimeFormat(locale, { month: \'short\', year: \'numeric\' })'));
+  assert.ok(periodFilter.includes("return match ? 'Q' + match[2] + ' ' + match[1] : value;"));
+  assert.ok(!periodFilter.includes('<span>Filter</span>'));
   assert.ok(inbox.includes('matchesDate(item.createdAt)'));
   assert.ok(tasks.includes('matchesDate(task.dueDate || task.createdAt)'));
   assert.ok(projects.includes('matchesInterval(project.startDate, project.targetEndDate, project.createdAt)'));
