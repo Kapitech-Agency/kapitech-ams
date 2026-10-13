@@ -1800,6 +1800,13 @@ export const AdminFinanceWorkspace: React.FC = () => {
           ...reportInvoices.map((invoice) => getYearKey(getInvoiceDate(invoice))),
           ...expenses.map((expense) => getYearKey(expense.date))
         ].filter((value) => /^\d{4}$/.test(value)))).sort((a, b) => b.localeCompare(a));
+        const annualRows = [
+          { id: 'a-revenue', metric: 'Annual Revenue / Invoice Value (IDR)', amount: yearBilled, basis: 'IDR invoice issue date' },
+          { id: 'a-collected', metric: 'Annual Collections', amount: yearCollected, basis: 'Payment date' },
+          { id: 'a-expense', metric: 'Annual Recorded Expenses', amount: yearExpense, basis: 'Expense date' },
+          { id: 'a-outflow', metric: 'Recorded cash outflow', amount: yearOutflow, basis: 'Expense source dates' },
+          { id: 'a-net', metric: 'Net Cash Movement (proxy)', amount: yearCollected - yearOutflow, basis: 'Collections minus recorded outflow' }
+        ];
         return (
           <div className="space-y-4">
             <AdminPanel title="Reporting year" bodyClassName="p-4">
@@ -1815,13 +1822,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
               { id: 'year-expenses', label: 'Annual recorded expenses', value: formatMoney(yearExpense), context: yearExpenses.length + ' source expense records', icon: <ArrowUpRight size={15} /> },
               { id: 'year-net', label: 'Net cash movement', value: formatMoney(yearCollected - yearOutflow), context: 'Not an accounting net profit', icon: <CircleDollarSign size={15} /> }
             ]} />
-            <FinanceDataTable title="Annual summary" description="IDR-only period view; accounting net profit and closing cash depend on ledger posting, opening balances and reconciliation." columns={[{ label: 'Metric' }, { label: 'Amount', align: 'right' }, { label: 'Basis' }]} rows={[
-              { id: 'a-revenue', cells: ['Annual Revenue / Invoice Value (IDR)', formatMoney(yearBilled), 'IDR invoice issue date'] },
-              { id: 'a-collected', cells: ['Annual Collections', formatMoney(yearCollected), 'Payment date'] },
-              { id: 'a-expense', cells: ['Annual Recorded Expenses', formatMoney(yearExpense), 'Expense date'] },
-              { id: 'a-outflow', cells: ['Recorded cash outflow', formatMoney(yearOutflow), 'Expense source dates'] },
-              { id: 'a-net', cells: ['Net Cash Movement (proxy)', formatMoney(yearCollected - yearOutflow), 'Collections minus recorded outflow'] }
-            ]} emptyMessage="No records exist for the selected year." />
+            <FinanceDataTable title="Annual summary" description="IDR-only period view; accounting net profit and closing cash depend on ledger posting, opening balances and reconciliation." columns={[{ label: 'Metric' }, { label: 'Amount', align: 'right' }, { label: 'Basis' }]} rows={annualRows.map((item) => ({ id: item.id, cells: [item.metric, formatMoney(item.amount), item.basis] }))} emptyMessage="No records exist for the selected year." actions={<Button variant="secondary" type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-annual-summary-' + selectedYear + '.csv', ['Metric', 'Amount', 'Basis'], annualRows.map((item) => [item.metric, item.amount, item.basis]))}>Export CSV</Button>} />
           </div>
         );
       }
