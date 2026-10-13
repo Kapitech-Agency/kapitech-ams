@@ -111,11 +111,11 @@ const localizeFinanceValue = (value: unknown, language: Language, propKey = ''):
 const normaliseStatus = (value: unknown) => String(value || 'Not recorded').replace(/[_-]+/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
 
 const statusTone = (status: unknown): 'success' | 'warning' | 'danger' | 'info' | 'neutral' => {
-  const value = String(status || '').toLowerCase();
+  const value = String(status || '').trim().toLowerCase().replace(/[_-]+/g, ' ');
   if (value === 'paid' || value === 'completed' || value === 'active' || value === 'posted') return 'success';
   if (value === 'overdue' || value === 'voided' || value === 'cancelled' || value === 'failed') return 'danger';
-  if (value === 'partially_paid' || value === 'pending' || value === 'open' || value === 'draft') return 'warning';
-  if (value === 'sent' || value === 'in_progress') return 'info';
+  if (value === 'partially paid' || value === 'pending' || value === 'open' || value === 'draft') return 'warning';
+  if (value === 'sent' || value === 'in progress') return 'info';
   return 'neutral';
 };
 
@@ -1337,7 +1337,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
               </div>
               <label className="flex items-center gap-2 text-xs font-medium text-muted">
                 Reporting month
-                <CustomDatePicker type="month" value={selectedMonth} onChange={setSelectedMonth} locale={locale} className="w-40" triggerClassName="h-9" aria-label="Reporting month" slug="finance-dashboard-month-picker" />
+                <CustomDatePicker type="month" value={selectedMonth} onChange={setSelectedMonth} locale={locale} className="w-40" triggerClassName="h-10 min-h-10" aria-label="Reporting month" slug="finance-dashboard-month-picker" />
               </label>
             </div>
             <AdminMetricStrip metrics={dashboardMetrics} />
@@ -1896,7 +1896,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
             </WorkbookNote>
             <AdminPanel title="Reporting period" bodyClassName="p-4">
               <label className="block text-xs font-medium text-muted">Month
-                <CustomDatePicker type="month" value={selectedMonth} onChange={setSelectedMonth} locale={locale} className="mt-1.5 w-full sm:max-w-xs" aria-label="Reporting month" slug="finance-pnl-month-picker" />
+                <CustomDatePicker type="month" value={selectedMonth} onChange={setSelectedMonth} locale={locale} className="mt-1.5 w-full sm:max-w-xs" triggerClassName="h-10 min-h-10" aria-label="Reporting month" slug="finance-pnl-month-picker" />
               </label>
             </AdminPanel>
             <AdminMetricStrip metrics={[
@@ -1965,7 +1965,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
             <AdminPanel title="Closing period" bodyClassName="p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <label className="block max-w-xs flex-1 text-xs font-medium text-muted">Reporting month
-                  <CustomDatePicker type="month" value={selectedMonth} onChange={setSelectedMonth} locale={locale} className="mt-1.5 w-full" aria-label="Reporting month" slug="finance-closing-month-picker" />
+                  <CustomDatePicker type="month" value={selectedMonth} onChange={setSelectedMonth} locale={locale} className="mt-1.5 w-full" triggerClassName="h-10 min-h-10" aria-label="Reporting month" slug="finance-closing-month-picker" />
                 </label>
                 <div className="flex items-center gap-2">
                   <AdminStatusBadge tone={locked?'success':'warning'}>{locked?'Closed':'Open'}</AdminStatusBadge>
@@ -2139,9 +2139,15 @@ export const AdminFinanceWorkspace: React.FC = () => {
           <div className="space-y-4">
             <AdminPanel title="Reporting year" bodyClassName="p-4">
               <label className="block text-xs font-medium text-muted">Year
-                <select value={selectedYear} onChange={(event) => setSelectedYear(event.target.value)} className="mt-1.5 block h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent sm:max-w-xs">
-                  {years.map((year) => <option key={year} value={year}>{year}</option>)}
-                </select>
+                <CustomSelect
+                  value={selectedYear}
+                  onChange={setSelectedYear}
+                  options={years.map((year) => ({ value: year, label: year }))}
+                  className="mt-1.5 w-full sm:max-w-xs"
+                  triggerClassName="h-10 min-h-10 w-full"
+                  aria-label="Reporting year"
+                  slug="finance-annual-summary-year-picker"
+                />
               </label>
             </AdminPanel>
             <AdminMetricStrip metrics={[
