@@ -1243,7 +1243,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
               title="Vendor contract references"
               description="Existing AMS contracts are shown as commitments; a contract alone is not treated as a payable bill."
               columns={[{label:'Vendor'},{label:'Contract'},{label:'Rate basis'},{label:'Contract rate/value',align:'right'},{label:'Linked expense records',align:'right'}]}
-              rows={vendors.flatMap((vendor)=>(Array.isArray(vendor.contracts)?vendor.contracts:[]).map((contract)=> {
+              rows={vendors.flatMap((vendor)=>(Array.isArray(vendor.contracts)?vendor.contracts:[]).filter((contract)=>!searchText.trim()||matching([vendor.name,vendor.companyName,contract.title,contract.rateType,contract.rateAmount])).map((contract)=> {
                 const linked=expenses.filter((expense)=>{
                   const expenseRecord=expense as AgencyExpense & {vendorContractId?:string;vendorPayment?:{vendorId?:string;contractId?:string};metadata?:{vendorPayment?:{vendorId?:string;contractId?:string}}};
                   const structured=expenseRecord.vendorPayment||expenseRecord.metadata?.vendorPayment;
