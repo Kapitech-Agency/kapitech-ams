@@ -605,7 +605,8 @@ export const AdminFinanceWorkspace: React.FC = () => {
       const storedAccounts = getRegisterRecords('chart-of-accounts')
         .filter((record) => record.payload.active !== false)
         .map((record) => ({ value: String(record.payload.code || record.recordKey), label: String(record.payload.code || record.recordKey) + ' · ' + String(record.payload.name || '') }));
-      const accountsByCode = new Map<string, { value: string; label: string }>(ACCOUNT_OPTION_CODES.map((account) => [account.value, account]));
+      const accountsByCode = new Map<string, { value: string; label: string }>();
+      ACCOUNT_OPTION_CODES.forEach((account) => accountsByCode.set(account.value, account));
       storedAccounts.forEach((account) => accountsByCode.set(account.value, account));
       return [{ value: '', label: 'Select an account' }, ...accountsByCode.values()];
     }
