@@ -4,7 +4,7 @@ import test from 'node:test';
 
 const read = (path: string) => readFile(new URL('../' + path, import.meta.url), 'utf8');
 
-test('Finance sections use the shared topbar on desktop and the shared section tabs on mobile', async () => {
+test('Finance top-level tabs and clean sub-tabs preserve direct transaction entry', async () => {
   const layout = await read('src/pages/admin/AdminLayout.tsx');
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   assert.match(layout, /location\.pathname === '\/admin\/finance'[\s\S]*?<AdminTopbarTabs/);
@@ -13,15 +13,40 @@ test('Finance sections use the shared topbar on desktop and the shared section t
   assert.match(layout, /admin\.finance\.tab\.receivablesPayables/);
   assert.match(layout, /admin\.finance\.tab\.projectFinance/);
   assert.match(layout, /admin\.finance\.tab\.accountingReports/);
+  assert.match(layout, /admin\.finance\.tab\.transactionsCash'[\s\S]*?to: '\/admin\/finance\?tab=cash-bank'/);
+  assert.match(layout, /admin\.finance\.tab\.receivablesPayables'[\s\S]*?to: '\/admin\/finance\?tab=accounts-payable'/);
+  assert.match(layout, /admin\.finance\.tab\.accountingReports'[\s\S]*?to: '\/admin\/finance\?tab=journal'/);
   assert.match(workspace, /className="min-\[900px\]:hidden"/);
-  assert.match(workspace, /AdminSectionTabs ariaLabel="Finance workbook sheets"/);
-  const headerStart = workspace.indexOf('<AdminModuleHeader');
-  const headerEnd = workspace.indexOf('      />\n      <div className="min-[900px]:hidden">', headerStart);
+  assert.match(workspace, /AdminSectionTabs ariaLabel="Finance sub-sections" activeKey=\{activeTab\.key\} items=\{sheetItems\}/);
+  assert.match(workspace, /const sheetItems = activeGroup\.items\.map\(\(item\) =>/);
+  assert.match(workspace, /label: item\.label/);
+  assert.doesNotMatch(workspace, /label: item\.sheet \+ ' ' \+ item\.label/);
+  assert.match(workspace, /\{loading \? renderLoading\(\) : renderView\(activeTab\)\}/);
+  const pageStart = workspace.indexOf('const financePage = (');
+  const pageEnd = workspace.indexOf('return localizeFinanceValue(financePage, language)', pageStart);
+  assert.ok(pageStart >= 0 && pageEnd > pageStart, 'Finance page render must remain available.');
+  const renderedPage = workspace.slice(pageStart, pageEnd);
+  const uiSourceStart = workspace.indexOf('const renderSummary =');
+  const uiSource = workspace.slice(uiSourceStart, pageStart);
+  assert.doesNotMatch(uiSource, /Sheet \{activeTab\.sheet\}|Source of truth for workflow design|Excel-alignment implementation|Excel-aligned finance workflow|Open transaction workspace|workbook's Project Cost|Finance workbook sheets|Project name \/ Excel key/);
+  assert.doesNotMatch(renderedPage, /Sheet \{activeTab\.sheet\}|Source of truth for workflow design|Excel-alignment implementation|Excel-aligned finance workflow|Open transaction workspace|Finance workbook sheets/);
+  const headerStart = renderedPage.indexOf('<AdminModuleHeader');
+  const headerEnd = renderedPage.indexOf('      />', headerStart);
   assert.ok(headerStart >= 0 && headerEnd > headerStart, 'Finance must use the shared module header.');
-  assert.doesNotMatch(workspace.slice(headerStart, headerEnd), /\bicon=/, 'Finance header and its actions must not render icons.');
+  assert.doesNotMatch(renderedPage.slice(headerStart, headerEnd), /\bicon=/, 'Finance header must not render icons.');
+  assert.match(uiSource, /Manage invoices/);
+  assert.match(uiSource, /Manage expenses/);
+  assert.match(uiSource, /Add movement/);
+  assert.match(uiSource, /Add vendor bill/);
+  assert.match(uiSource, /Add project finance record/);
+  assert.match(uiSource, /Add budget line/);
+  assert.match(uiSource, /Add voucher/);
+  assert.match(uiSource, /Add team fee/);
+  assert.match(uiSource, /Add journal entry/);
+  assert.match(uiSource, /Calculate project allocation/);
 });
 
-test('Finance locale uses the selected application language and localizes Indonesian workbook labels', async () => {
+test('Finance locale uses the selected application language and localized finance account labels', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   const translations = await read('src/lib/LanguageContext.tsx');
   assert.match(workspace, /const \{ language \} = useLanguage\(\)/);
