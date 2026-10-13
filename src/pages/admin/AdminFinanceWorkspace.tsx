@@ -225,10 +225,9 @@ const FinanceDataTable: React.FC<{
     });
   }, [columns, rows, sort]);
 
+  const pageCount = Math.max(1, Math.ceil(sortedRows.length / pageSize));
   const currentPage = Math.min(page, pageCount - 1);
   const visibleRows = sortedRows.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
-  const firstRow = sortedRows.length ? currentPage * pageSize + 1 : 0;
-  const lastRow = Math.min((currentPage + 1) * pageSize, sortedRows.length);
 
   useEffect(() => {
     if (page !== currentPage) setPage(currentPage);
