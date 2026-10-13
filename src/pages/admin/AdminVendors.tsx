@@ -48,6 +48,7 @@ import { toSlug } from '../../lib/slug';
 
 import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
+import { VENDOR_EVENT_NAME } from '../../lib/vendorStore';
 
 const VendorWorkspaceContainer: React.FC<{ embedded?: boolean; children: React.ReactNode }> = ({ embedded = false, children }) => (
   embedded
@@ -110,13 +111,15 @@ export const AdminVendors: React.FC<{ embedded?: boolean }> = ({ embedded = fals
   const [formStatus, setFormStatus] = useState<VendorStatus>('active');
   const [formIsVetted, setFormIsVetted] = useState<boolean>(true);
 
-  const loadVendors = async () => {
-    setIsLoading(true);
+  const loadVendors = async (silent = false) => {
+    if (!silent) {
+      setIsLoading(true);
+      showStatus(null);
+    }
     setLoadError(false);
-    showStatus(null);
     if (!canViewVendors) {
       setVendors([]);
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
       return;
     }
     try {
@@ -131,18 +134,21 @@ export const AdminVendors: React.FC<{ embedded?: boolean }> = ({ embedded = fals
         })));
       } else {
         setLoadError(true);
-        showStatus(res.error || (language === 'id' ? 'Vendor gagal dimuat.' : 'Failed to load vendors.'));
+        if (!silent) showStatus(res.error || (language === 'id' ? 'Vendor gagal dimuat.' : 'Failed to load vendors.'));
       }
     } catch {
       setLoadError(true);
-      showStatus(language === 'id' ? 'Vendor gagal dimuat.' : 'Failed to load vendors.');
+      if (!silent) showStatus(language === 'id' ? 'Vendor gagal dimuat.' : 'Failed to load vendors.');
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   };
 
   useEffect(() => {
     void loadVendors();
+    const handleVendorUpdate = () => void loadVendors(true);
+    window.addEventListener(VENDOR_EVENT_NAME, handleVendorUpdate);
+    return () => window.removeEventListener(VENDOR_EVENT_NAME, handleVendorUpdate);
   }, [canViewVendors, language]);
 
   useEffect(() => {
@@ -250,6 +256,7 @@ export const AdminVendors: React.FC<{ embedded?: boolean }> = ({ embedded = fals
       const savedVendor = res.data.vendor as AgencyVendor;
       setVendors(prev => prev.map(item => item.id === v.id ? savedVendor : item));
       if (selectedVendor?.id === v.id) setSelectedVendor(savedVendor);
+      window.dispatchEvent(new Event(VENDOR_EVENT_NAME));
       showStatus(
         language === 'id'
           ? `Status verifikasi ${v.name} diubah menjadi ${savedVendor.isVetted ? 'Terverifikasi (Vetted)' : 'Standar'}`
@@ -315,6 +322,7 @@ export const AdminVendors: React.FC<{ embedded?: boolean }> = ({ embedded = fals
     setVendors(prev => editingVendor
       ? prev.map(item => item.id === savedVendor.id ? savedVendor : item)
       : [savedVendor, ...prev]);
+    window.dispatchEvent(new Event(VENDOR_EVENT_NAME));
     setIsModalOpen(false);
     showStatus(language === 'id' ? 'Data vendor berhasil disimpan!' : 'Vendor profile saved successfully!', 'success');
     setTimeout(() => showStatus(null), 3500);
@@ -337,6 +345,7 @@ export const AdminVendors: React.FC<{ embedded?: boolean }> = ({ embedded = fals
         return;
       }
       setVendors(prev => prev.filter(item => item.id !== id));
+      window.dispatchEvent(new Event(VENDOR_EVENT_NAME));
       if (selectedVendor?.id === id) {
         setIsDrawerOpen(false);
         setSelectedVendor(null);
