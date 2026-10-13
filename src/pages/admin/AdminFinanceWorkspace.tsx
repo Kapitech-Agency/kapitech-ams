@@ -41,6 +41,13 @@ type FinanceVendorContractDraft = { vendorId: string; id?: string; title: string
 type RegisterField = { key: string; label: string; type: 'text' | 'number' | 'date' | 'month' | 'select' | 'textarea'; required?: boolean; options?: string[]; optionSource?: 'vendorBills' | 'accounts' | 'cashAccounts' | 'projects' | 'vendors'; placeholder?: string; help?: string; defaultValue?: string | number; visibleWhen?: { key: string; values: string[] } };
 type CashMovement = { id: string; date: string; reference: string; description: string; cashIn: number; cashOut: number; source: string; currency: string };
 
+const getLocalDateInputValue = (date = new Date()): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const exportFinanceCsv = (filename: string, headers: string[], rows: Array<Array<string | number | boolean | null | undefined>>) => {
   const csv = [headers, ...rows]
     .map((row) => row.map((value) => '"' + String(value ?? '').replace(/"/g, '""') + '"').join(','))
@@ -629,7 +636,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
       setRegisterActionError('This finance record type cannot be edited from this form yet.');
       return;
     }
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getLocalDateInputValue();
     const defaults: Record<string, any> = {};
     for (const field of definition.fields) {
       if (field.defaultValue !== undefined) defaults[field.key] = field.defaultValue;
@@ -1101,7 +1108,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
   };
 
   const openVendorContractEditor = (vendor?: AgencyVendor, contract?: VendorContract) => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getLocalDateInputValue();
     setVendorContractError(null);
     setVendorContractEditor({
       vendorId: vendor?.id || '',
@@ -1327,7 +1334,6 @@ export const AdminFinanceWorkspace: React.FC = () => {
               emptyMessage="No dated cash movement is available. Set an opening balance or record a movement."
               actions={<div className="flex flex-wrap gap-2">{registerAddButton('cash-bank-transaction','Add movement')}{canManageFinanceRecords && <Button type="button" variant="secondary" onClick={() => openCashOpeningForm('1000')}>{opening === null ? 'Set opening balance' : 'Edit opening balance'}</Button>}</div>}
             />
-            {renderRecentActivity()}
           </div>
         );
       }
@@ -1409,7 +1415,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
                     formatMoney(paid,String(record.payload.currency||'IDR')),
                     formatMoney(outstanding,String(record.payload.currency||'IDR')),
                     <StatusBadge value={record.payload.paymentStatus||record.status}/>,
-                    registerRecordActions('vendor-bill',record, outstanding>0 && canManageFinanceRecords ? <Button variant="secondary" type="button" onClick={()=>openRegisterForm('vendor-bill-payment',undefined,{billId:record.id,paidDate:new Date().toISOString().slice(0,10),amount:outstanding})}>Record payment</Button> : undefined)
+                    registerRecordActions('vendor-bill',record, outstanding>0 && canManageFinanceRecords ? <Button variant="secondary" type="button" onClick={()=>openRegisterForm('vendor-bill-payment',undefined,{billId:record.id,paidDate:getLocalDateInputValue(),amount:outstanding})}>Record payment</Button> : undefined)
                   ]
                 };
               })}
