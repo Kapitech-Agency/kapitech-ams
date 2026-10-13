@@ -3,7 +3,9 @@ import test from 'node:test';
 import {
   convertReportingPeriodValue,
   getReportingPeriodRange,
-  getPreviousReportingPeriodValue
+  getPreviousReportingPeriodValue,
+  getReportingYearOptions,
+  MIN_REPORTING_YEAR
 } from '../src/lib/reportingPeriods.ts';
 
 test('global period ranges include exactly the selected month, quarter, or year', () => {
@@ -12,6 +14,16 @@ test('global period ranges include exactly the selected month, quarter, or year'
   assert.equal(getReportingPeriodRange('2026-Q2', 'quarter')?.endDate, '2026-06-30');
   assert.equal(getReportingPeriodRange('2025', 'year')?.startDate, '2025-01-01');
   assert.equal(getReportingPeriodRange('2025', 'year')?.endDate, '2025-12-31');
+});
+
+test('reporting year options never predate the company founding year', () => {
+  const years = getReportingYearOptions(2026, [2018, 2020, 2021, 2027], 2020);
+  assert.equal(MIN_REPORTING_YEAR, 2021);
+  assert.equal(years[years.length - 1], 2021);
+  assert.ok(years.includes(2021));
+  assert.ok(years.includes(2028));
+  assert.ok(!years.includes(2020));
+  assert.ok(!years.includes(2018));
 });
 
 test('global period presets roll backwards across calendar boundaries', () => {
@@ -45,6 +57,8 @@ test('global reporting period controls stay in the admin layout shared by module
   assert.ok(periodFilter.includes("return match ? 'Q' + match[2] + ' ' + match[1] : value;"));
   assert.ok(!periodFilter.includes('<span>Filter</span>'));
   assert.ok(periodPicker.includes('compact ? "grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2"'));
+  assert.ok(periodPicker.includes('getReportingYearOptions(currentYear, availableYears, parsedYear)'));
+  assert.ok(periodPicker.includes('disabled={!canChoosePreviousPeriod}'));
   assert.ok(!periodPicker.includes('compact ? "grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3"'));
   assert.ok(inbox.includes('matchesDate(item.createdAt)'));
   assert.ok(tasks.includes('matchesDate(task.dueDate || task.createdAt)'));
