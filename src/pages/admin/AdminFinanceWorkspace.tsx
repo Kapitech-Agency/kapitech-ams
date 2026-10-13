@@ -46,8 +46,9 @@ const localizeFinanceValue = (value: unknown, language: Language, propKey = ''):
   if (Array.isArray(value)) return value.map((item) => localizeFinanceValue(item, language, propKey));
   if (React.isValidElement(value)) {
     const nextProps: Record<string, unknown> = {};
-    for (const [key, child] of Object.entries(value.props as Record<string, unknown>)) nextProps[key] = localizeFinanceValue(child, language, key);
-    return React.cloneElement(value, nextProps as any);
+    const element = value as React.ReactElement;
+    for (const [key, child] of Object.entries(element.props as Record<string, unknown>)) nextProps[key] = localizeFinanceValue(child, language, key);
+    return React.cloneElement(element, nextProps as any);
   }
   if (value && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype) {
     const nextValue: Record<string, unknown> = {};
