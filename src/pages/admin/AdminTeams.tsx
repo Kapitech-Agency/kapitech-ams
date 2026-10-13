@@ -733,7 +733,6 @@ export const AdminTeams: React.FC = () => {
       const weeks = weeklyCapacity.map((week) => {
         const minutes = logs
           .filter((log) => log.userId === member.id || (!log.userId && log.user === member.name))
-          .filter((log) => matchesDate(log.date))
           .filter((log) => {
             const date = new Date(log.date + 'T00:00:00');
             return date >= week.start && date < week.end;

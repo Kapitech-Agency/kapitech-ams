@@ -83,7 +83,7 @@ export const CustomReportPeriodPicker: React.FC<CustomReportPeriodPickerProps> =
           <CustomSelect
             value={mode}
             onChange={changeMode}
-            options={MODE_OPTIONS}
+            options={MODE_OPTIONS.map((option) => ({ ...option, label: isId ? (option.value === 'month' ? 'Bulan' : option.value === 'quarter' ? 'Kuartal' : 'Tahun') : option.label }))}
             className="mt-1.5 w-full"
             triggerClassName="h-10 min-h-10 w-full"
             aria-label={isId ? 'Jenis periode laporan' : 'Reporting period type'}
