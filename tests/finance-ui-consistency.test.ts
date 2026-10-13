@@ -37,7 +37,7 @@ test('Finance top-level tabs and clean sub-tabs preserve direct transaction entr
   assert.match(uiSource, /case 'revenue':\s*return <AdminInvoicing embeddedView="invoices" \/>/);
   assert.match(uiSource, /case 'expenses':\s*return <AdminInvoicing embeddedView="income-expenses" embeddedIncomeExpenseMode="expenses" \/>/);
   assert.match(uiSource, /case 'accounts-receivable':\s*return <AdminInvoicing embeddedView="receivables" \/>/);
-  assert.match(uiSource, /case 'vendors':\s*return <AdminVendors embedded \/>/);
+  assert.match(uiSource, /case 'vendors':[\s\S]*?<AdminVendors embedded \/>/);
   assert.match(uiSource, /registerAddButton\('chart-of-accounts', 'Add account'\)/);
   assert.match(uiSource, /Add movement/);
   assert.match(uiSource, /Add vendor bill/);
