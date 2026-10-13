@@ -2910,7 +2910,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
             <span className="sr-only">Search expense</span>
             <input value={expenseSearch} onChange={(event) => setExpenseSearch(event.target.value)} placeholder="Search expense..." className={fieldClass + ' h-10 pl-8'}/>
           </label>
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(150px,1fr)_minmax(150px,1fr)_minmax(140px,1fr)_minmax(150px,1fr)_auto_auto]">
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(150px,1fr)_minmax(150px,1fr)_minmax(140px,1fr)_minmax(150px,1fr)_auto_auto_auto]">
             <CustomSelect value={expenseTypeFilter} onChange={setExpenseTypeFilter} options={expenseTypeOptions} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Expense type filter"/>
             <CustomSelect value={expenseCategoryFilter} onChange={setExpenseCategoryFilter} options={expenseCategoryOptions} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Expense category filter"/>
             <CustomSelect value={expensePeriodFilter} onChange={(value) => setExpensePeriodFilter(value as typeof expensePeriodFilter)} options={expensePeriodOptions} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Expense period filter"/>
