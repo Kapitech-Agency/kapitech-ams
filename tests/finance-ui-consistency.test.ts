@@ -62,6 +62,16 @@ test('The Finance worksheet search controls the embedded vendor directory withou
   assert.match(vendors, /className=\{searchTerm !== undefined \? 'hidden' : 'relative w-full lg:w-96'\}/);
 });
 
+test('Cash Flow and Annual Summary disclose transfer and petty-cash source boundaries', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+
+  assert.match(workspace, /Inflows include dated invoice payments and saved Cash & Bank entries touching account 1000/);
+  assert.match(workspace, /Petty-cash vouchers remain in their separate ledger and are not included in this monthly view/);
+  assert.match(workspace, /metric: 'Recorded cash outflow \(proxy\)'[\s\S]*?AMS expense dates and saved Cash & Bank movements; excludes petty-cash vouchers/);
+  assert.match(workspace, /Collections minus recorded bank outflow proxy; excludes petty-cash voucher spending/);
+  assert.match(workspace, /FINANCE_UI_COPY: Record<string, string> = \{[\s\S]*?Perlakukan hasilnya sebagai pergerakan bersih/);
+});
+
 test('Finance read permission blocks unauthorized register loads and shows an explicit restricted state', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
 
