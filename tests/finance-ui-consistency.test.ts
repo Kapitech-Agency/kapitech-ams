@@ -338,7 +338,7 @@ test('Finance date and month inputs use the shared custom calendar control', asy
   assert.match(workspace, /slug="finance-vendor-contract-start"/);
   assert.match(workspace, /slug="finance-vendor-contract-end"/);
   assert.doesNotMatch(workspace, /<input type="(?:date|month)"/);
-  assert.match(invoicing, /import \\{ CustomDatePicker \\} from '\\.\\.\\/\\.\\/components\\/ui\\/CustomDatePicker'/);
+  assert.ok(invoicing.includes("import { CustomDatePicker } from '../../components/ui/CustomDatePicker';"));
   for (const id of ['finance-quotation-valid-until', 'vendor-payment-date', 'finance-issue-date', 'finance-due-date', 'finance-expense-date', 'finance-payment-date']) {
     assert.match(invoicing, new RegExp('<CustomDatePicker id="' + id + '"'));
   }
