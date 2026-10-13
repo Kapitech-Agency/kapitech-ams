@@ -1504,7 +1504,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
         ));
         return (
           <div className="space-y-4">
-            <AdminVendors embedded />
+            <AdminVendors embedded searchTerm={searchText} />
             <FinanceDataTable
               title="Vendor contract register"
               description="Manage contract scope, dates, rate basis, value, and lifecycle here. Vendor bills and their installment schedule remain in Accounts Payable."
