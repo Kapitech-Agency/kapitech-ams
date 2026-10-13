@@ -108,7 +108,7 @@ export const CustomReportPeriodPicker: React.FC<CustomReportPeriodPickerProps> =
               onChange={(period) => onChange(mode === 'month' ? String(parsedYear) + '-' + period : String(parsedYear) + '-Q' + period)}
               options={mode === 'month' ? monthOptions : quarterOptions}
               className="mt-1.5 w-full"
-              triggerClassName="h-10 min-h-10 w-full"
+              triggerClassName={compact ? "h-9 min-h-9 w-full" : "h-10 min-h-10 w-full"}
               aria-label={mode === 'month' ? (isId ? 'Bulan laporan' : 'Reporting month') : (isId ? 'Kuartal laporan' : 'Reporting quarter')}
             />
           </label>
