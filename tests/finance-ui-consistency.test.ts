@@ -15,7 +15,10 @@ test('Finance sections use the shared topbar on desktop and the shared section t
   assert.match(layout, /admin\.finance\.tab\.accountingReports/);
   assert.match(workspace, /className="min-\[900px\]:hidden"/);
   assert.match(workspace, /AdminSectionTabs ariaLabel="Finance workbook sheets"/);
-  assert.doesNotMatch(workspace, /slug="finance-workspace-header"[\s\S]*?icon=\{<Landmark/);
+  const headerStart = workspace.indexOf('<AdminModuleHeader');
+  const headerEnd = workspace.indexOf('</AdminModuleHeader>', headerStart);
+  assert.ok(headerStart >= 0 && headerEnd > headerStart, 'Finance must use the shared module header.');
+  assert.doesNotMatch(workspace.slice(headerStart, headerEnd), /\\bicon=/, 'Finance header and its actions must not render icons.');
 });
 
 test('Finance locale uses the selected application language and localizes Indonesian workbook labels', async () => {
