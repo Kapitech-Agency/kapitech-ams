@@ -83,7 +83,9 @@ test('Finance groups and vendor workflows are separated by user task', async () 
   assert.match(apView, /bills\.length > 0 &&/);
   assert.match(workspace, /receivables: 'accounts-receivable'/);
   assert.doesNotMatch(apView, /title="Vendor contract references"/);
-  assert.match(vendorsView, /return <AdminVendors embedded \/>/);
+  assert.match(vendorsView, /<AdminVendors embedded \/>/);
+  assert.match(vendorsView, /Vendor contract register/);
+  assert.match(vendorsView, /openVendorContractEditor\(vendor, contract\)/);
   assert.doesNotMatch(vendorsView, /Vendor & Freelancer payment schedule/);
   assert.match(apView, /installment\.percentage/);
   assert.match(apView, /Outstanding \{formatMoney\(installment\.outstanding, currency\)\}/);
