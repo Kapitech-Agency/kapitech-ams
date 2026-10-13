@@ -30,12 +30,12 @@ test('global reporting period controls stay in the admin layout shared by module
   const documents = await fs.readFile('src/pages/admin/AdminDocuments.tsx', 'utf8');
   const teams = await fs.readFile('src/pages/admin/AdminTeams.tsx', 'utf8');
 
-  assert.match(layout, /<ReportingPeriodProvider>/);
-  assert.match(layout, /<AdminReportingPeriodBar \\/>/);
-  assert.match(layout, /<Outlet \\/>/);
-  assert.match(inbox, /matchesDate\\(item\\.createdAt\\)/);
-  assert.match(tasks, /matchesDate\\(task\\.dueDate \\|\\| task\\.createdAt\\)/);
-  assert.match(projects, /matchesInterval\\(project\\.startDate, project\\.targetEndDate, project\\.createdAt\\)/);
-  assert.match(documents, /matchesDate\\(doc\\.updatedAt \\|\\| doc\\.uploadedAt \\|\\| doc\\.uploadedDate \\|\\| doc\\.createdAt\\)/);
-  assert.match(teams, /matchesDate\\(log\\.date\\)/);
+  assert.ok(layout.includes('<ReportingPeriodProvider>'));
+  assert.ok(layout.includes('<AdminReportingPeriodBar />'));
+  assert.ok(layout.includes('<Outlet />'));
+  assert.ok(inbox.includes('matchesDate(item.createdAt)'));
+  assert.ok(tasks.includes('matchesDate(task.dueDate || task.createdAt)'));
+  assert.ok(projects.includes('matchesInterval(project.startDate, project.targetEndDate, project.createdAt)'));
+  assert.ok(documents.includes('matchesDate(doc.updatedAt || doc.uploadedAt || doc.uploadedDate || (doc as any).createdAt)'));
+  assert.ok(teams.includes('matchesDate(log.date)'));
 });
