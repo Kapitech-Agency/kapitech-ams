@@ -18,7 +18,7 @@ export const AdminReportingPeriodBar: React.FC = () => {
     ? new Intl.DateTimeFormat(locale, { month: 'short', year: 'numeric' }).format(new Date(value + '-01T00:00:00'))
     : mode === 'quarter'
       ? (() => {
-          const match = /^(\\d{4})-Q([1-4])$/.exec(value);
+          const match = /^(\d{4})-Q([1-4])$/.exec(value);
           return match ? 'Q' + match[2] + ' ' + match[1] : value;
         })()
       : value;
