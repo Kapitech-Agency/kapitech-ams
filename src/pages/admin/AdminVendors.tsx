@@ -28,12 +28,8 @@ import {
   ArrowUpRight,
   RefreshCw
 } from 'lucide-react';
-import {
-  AgencyVendor,
-  VendorContract,
-  VendorType,
-  VendorStatus,
-} from '../../lib/vendorStore';
+import { VENDOR_EVENT_NAME } from '../../lib/vendorStore';
+import type { AgencyVendor, VendorContract, VendorType, VendorStatus } from '../../lib/vendorStore';
 import { formatAmount, getActiveCurrency, CurrencyCode, CURRENCY_EVENT } from '../../lib/currency';
 import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
@@ -48,7 +44,6 @@ import { toSlug } from '../../lib/slug';
 
 import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
-import { VENDOR_EVENT_NAME } from '../../lib/vendorStore';
 
 const VendorWorkspaceContainer: React.FC<{ embedded?: boolean; children: React.ReactNode }> = ({ embedded = false, children }) => (
   embedded
