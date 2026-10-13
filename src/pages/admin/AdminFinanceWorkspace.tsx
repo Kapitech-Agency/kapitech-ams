@@ -968,11 +968,6 @@ export const AdminFinanceWorkspace: React.FC = () => {
         slug="finance-workbook-register-editor"
       >
         <form onSubmit={(event) => void submitRegisterForm(event)} className="space-y-4 p-1">
-          <div className="space-y-1">
-            <span className="text-[11px] font-medium uppercase tracking-wide text-muted">Finance register</span>
-            <h3 className="text-sm font-semibold text-fg">{definition.title}</h3>
-            <p className="text-xs leading-5 text-muted">{definition.description}</p>
-          </div>
           {registerActionError && (
             <div className="rounded-control border border-danger/25 bg-danger/5 p-3 text-xs leading-5 text-fg" role="alert">{registerActionError}</div>
           )}
@@ -1792,14 +1787,17 @@ export const AdminFinanceWorkspace: React.FC = () => {
               {id:'alloc-company',label:'Default company fund',value:'70%',context:'Remainder for new allocations',icon:<Landmark size={15}/>}
             ]}/>
              <FinanceDataTable title="Project Allocation" description="Amounts and percentages come from each project's saved allocation. The default split above applies only to new records." columns={[{label:'Project'},{label:'Net project profit',align:'right'},{label:'Petty cash reserve',align:'right'},{label:'Emergency fund',align:'right'},{label:'Team Reward',align:'right'},{label:'Company operational fund',align:'right'},{label:'Emergency fund status'},{label:'Actions'}]} rows={records.map((record)=> {
-               const pettyPercent = Number(record.payload.pettyCashPercent ?? 10);
-               const emergencyPercent = Number(record.payload.emergencyPercent ?? 10);
-               const rewardPercent = Number(record.payload.teamRewardPercent ?? 10);
-               const companyPercent = Math.max(0, 100 - pettyPercent - emergencyPercent - rewardPercent);
-               const allocationCell = (amount: unknown, percent: number) => (
+               const pettyPercent = record.payload.pettyCashPercent == null ? null : Number(record.payload.pettyCashPercent);
+               const emergencyPercent = record.payload.emergencyPercent == null ? null : Number(record.payload.emergencyPercent);
+               const rewardPercent = record.payload.teamRewardPercent == null ? null : Number(record.payload.teamRewardPercent);
+               const hasConfiguredPercentages = pettyPercent !== null && emergencyPercent !== null && rewardPercent !== null;
+               const companyPercent = hasConfiguredPercentages
+                 ? Math.max(0, 100 - pettyPercent - emergencyPercent - rewardPercent)
+                 : null;
+               const allocationCell = (amount: unknown, percent: number | null) => (
                  <div className="space-y-0.5">
                    <div className="tabular-nums">{formatMoney(Number(amount) || 0)}</div>
-                   <div className="text-[11px] text-muted">{percent}% of net profit</div>
+                   <div className="text-[11px] text-muted">{percent === null ? 'Share not recorded' : percent + '% of net profit'}</div>
                  </div>
                );
                return {id:record.id,cells:[
@@ -1813,7 +1811,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
                  registerRecordActions('project-allocation',record)
                ]};
              })} emptyMessage="No project allocation has been saved yet. Configure it from the current contract value and project obligations." actions={registerAddButton('project-allocation','Calculate project allocation')}/>
-            <FinanceDataTable title="Team Reward distribution" description="Distribution of the 10% Team Reward allocation." columns={[{label:'Recipient group'},{label:'Percentage of Net Project Profit'},{label:'Share of Team Reward'}]} rows={[
+            <FinanceDataTable title="Team Reward distribution" description="Standard distribution when Team Reward uses the default 10% allocation." columns={[{label:'Recipient group'},{label:'Percentage of Net Project Profit'},{label:'Share of Team Reward'}]} rows={[
               {id:'sales',cells:['Sales','5%','50%']},
               {id:'vendor',cells:['Vendor / PIC','2.5%','25%']},
               {id:'management',cells:['Management','2.5%','25%']}
@@ -2054,6 +2052,9 @@ export const AdminFinanceWorkspace: React.FC = () => {
                   <strong>Core source errors:</strong> {sourceErrors.slice(0, 3).join(' · ')}
                   {sourceErrors.length > 3 ? ' · and ' + (sourceErrors.length - 3) + ' more' : ''}. Check the connected AMS source before interpreting the affected views.
                 </p>
+              )}
+              {(registerErrors.length > 0 || sourceErrors.length > 0) && (
+                <p>Previously loaded records remain visible where available. Treat affected data as stale until the source refreshes successfully.</p>
               )}
             </div>
           </AdminModuleNotice>
