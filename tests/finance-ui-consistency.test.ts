@@ -39,9 +39,9 @@ test('Finance top-level tabs and clean sub-tabs preserve direct transaction entr
   assert.doesNotMatch(renderedPage.slice(headerStart, headerEnd), /\bicon=/, 'Finance header must not render icons.');
   assert.match(renderedPage.slice(headerStart, headerEnd), /description="Manage revenue, expenses, cash, receivables, payables, and financial reporting in one place\."/);
   assert.doesNotMatch(renderedPage, /<div className="border-b border-line pb-3">\s*<h2 className="text-base font-semibold text-fg">\{activeTab\.label\}<\/h2>\s*<\/div>/, 'The selected worksheet must not repeat its label as a separate header below the subtabs.');
-  assert.match(uiSource, /case 'revenue':\s*return <AdminInvoicing embeddedView="invoices" \/>/);
-  assert.match(uiSource, /case 'expenses':\s*return <AdminInvoicing embeddedView="income-expenses" embeddedIncomeExpenseMode="expenses" \/>/);
-  assert.match(uiSource, /case 'accounts-receivable':\s*return <AdminInvoicing embeddedView="receivables" \/>/);
+  assert.match(uiSource, /case 'revenue':\s*return <AdminInvoicing key=\{tab\.key\} embeddedView="invoices" \/>/);
+  assert.match(uiSource, /case 'expenses':\s*return <AdminInvoicing key=\{tab\.key\} embeddedView="income-expenses" embeddedIncomeExpenseMode="expenses" \/>/);
+  assert.match(uiSource, /case 'accounts-receivable':\s*return <AdminInvoicing key=\{tab\.key\} embeddedView="receivables" \/>/);
   assert.match(uiSource, /case 'vendors':[\s\S]*?<AdminVendors embedded searchTerm=\{searchText\} \/>/);
   assert.match(uiSource, /registerAddButton\('chart-of-accounts', 'Add account'\)/);
   assert.match(uiSource, /Add movement/);
@@ -234,4 +234,67 @@ test('Finance workbook replaces legacy finance navigation and keeps all operatio
   assert.match(workspace, /AdminInvoicing embeddedView="vendor-payments"/);
   assert.match(invoicing, /Contract-linked vendor payments/);
   assert.match(invoicing, /onClick=\{exportVendorPaymentsCsv\}[\s\S]*?Export CSV/);
+});
+
+test('Finance Executive Summary and Dashboard have distinct scopes and period-aware activity', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const start = workspace.indexOf('const renderSummary = (dashboard: boolean) =>');
+  const end = workspace.indexOf('const openVendorContractEditor', start);
+  assert.ok(start >= 0 && end > start, 'Summary renderer should remain available.');
+  const summary = workspace.slice(start, end);
+
+  assert.match(summary, /const dashboardMetrics = \[/);
+  assert.match(summary, /label: 'Invoice value issued'[\s\S]*?billedInMonth/);
+  assert.match(summary, /label: 'Recorded cash in'[\s\S]*?cashInThisMonth/);
+  assert.match(summary, /label: 'Recorded cash out'[\s\S]*?cashOutThisMonth/);
+  assert.match(summary, /label: 'Net cash movement \(proxy\)'[\s\S]*?cashInThisMonth - cashOutThisMonth/);
+  assert.match(summary, /data-ams-slug="finance-dashboard-period"/);
+  assert.match(summary, /renderRecentActivity\(currentMonth\)/);
+  assert.match(summary, /title="Recent invoice register"/);
+  assert.match(summary, /\{dashboard \? \([\s\S]*?AdminMetricStrip metrics=\{dashboardMetrics\}[\s\S]*?\) : \(/);
+  assert.match(summary, /AdminMetricStrip metrics=\{metrics\}/);
+  assert.doesNotMatch(summary, /Selected-month activity/);
+});
+
+test('Finance refresh keeps last successful source records available when a request fails', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+
+  assert.match(workspace, /setRegisterRecords\(\(current\) => \{[\s\S]*?if \(result\.error\) return;[\s\S]*?return next;\s*\}\);/);
+  assert.match(workspace, /if \(!invoiceSource\.error\) \{[\s\S]*?setInvoices\(nextInvoices\);/);
+  assert.match(workspace, /if \(!expenseSource\.error\) \{[\s\S]*?setExpenses\(nextExpenses\);/);
+  assert.match(workspace, /if \(!projectSource\.error\) \{\s*setProjects\(/);
+  assert.match(workspace, /if \(!vendorSource\.error\) \{\s*setVendors\(/);
+  assert.match(workspace, /setRegisterErrors\(workbookResults\.filter\(\(result\) => result\.error\)/);
+  assert.match(workspace, /setSourceErrors\(baseResults\.filter\(\(result\) => result\.error\)/);
+});
+
+test('Annual Summary includes years represented only by Cash & Bank records', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const start = workspace.indexOf("case 'annual-summary': {");
+  const end = workspace.indexOf('\n      default:', start);
+  assert.ok(start >= 0 && end > start);
+  const annual = workspace.slice(start, end);
+  assert.match(annual, /cashMovements\.map\(\(movement\) => getYearKey\(movement\.date\)\)/);
+});
+
+test('Project Allocation explains defaults and displays the saved percentage per record', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const start = workspace.indexOf("case 'project-allocation': {");
+  const end = workspace.indexOf("case 'team-fee': {", start);
+  assert.ok(start >= 0 && end > start);
+  const allocation = workspace.slice(start, end);
+  assert.match(allocation, /label:'Default petty cash reserve'[\s\S]*?context:'For new allocations'/);
+  assert.match(allocation, /Number\(record\.payload\.pettyCashPercent \?\? 10\)/);
+  assert.match(allocation, /Number\(record\.payload\.emergencyPercent \?\? 10\)/);
+  assert.match(allocation, /Number\(record\.payload\.teamRewardPercent \?\? 10\)/);
+  assert.match(allocation, /\{percent\}% of net profit/);
+  assert.match(allocation, /The default split above applies only to new records/);
+});
+
+test('Embedded invoice, expense, and receivable workflows do not leak UI state across worksheets', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+
+  assert.match(workspace, /case 'revenue':[\s\S]{0,100}key=\{tab\.key\} embeddedView="invoices"/);
+  assert.match(workspace, /case 'expenses':[\s\S]{0,150}key=\{tab\.key\} embeddedView="income-expenses"/);
+  assert.match(workspace, /case 'accounts-receivable':[\s\S]{0,120}key=\{tab\.key\} embeddedView="receivables"/);
 });
