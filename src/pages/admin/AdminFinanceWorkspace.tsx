@@ -1506,7 +1506,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
             record?registerRecordActions('project-finance',record):canManageFinanceRecords?<Button variant="secondary" type="button" onClick={()=>openRegisterForm('project-finance',undefined,{projectId:project.id,projectName:project.name,clientName:project.clientCompany||project.clientName,startDate:project.startDate,endDate:project.targetEndDate,projectStatus:project.status})}>Configure</Button>:<span className="text-muted">View only</span>
           ]};
         });
-        const orphanRecords=financeRecords.filter((record)=>!projects.some((project)=>(record.projectId&&record.projectId===project.id)||String(record.payload.projectName||'').toLowerCase()===String(project.name||'').toLowerCase()));
+        const orphanRecords=financeRecords.filter((record)=>!projects.some((project)=>(record.projectId&&record.projectId===project.id)||String(record.payload.projectName||'').toLowerCase()===String(project.name||'').toLowerCase())&&matching([record.payload.projectName,record.recordKey,record.projectId,record.payload.clientName,record.status]));
         return (
           <div className="space-y-4">
             <WorkbookNote title="Project finance setup">
@@ -1749,7 +1749,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
       }
       case 'team-fee': {
         const feeRecords=getRegisterRecords('team-fee').filter((record)=>matching([record.payload.projectName,record.projectId,record.payload.memberName,record.payload.role,record.payload.paymentStatus]));
-        const feeExpenses=expenses.filter((expense)=>classifyWorkbookExpense(expense)==='projectTeamFee');
+        const feeExpenses=expenses.filter((expense)=>classifyWorkbookExpense(expense)==='projectTeamFee'&&matching([expense.date,expense.projectId,expense.description,expense.category,expense.amount]));
         return (
           <div className="space-y-4">
             <WorkbookNote title="Separate team allocations">
@@ -1820,7 +1820,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
             status: 'Skipped · ' + item.reason,
             tone: 'warning' as const
           }))
-        ].sort((a,b) => String(b.date).localeCompare(String(a.date))).slice(0,50);
+        ].filter((row) => matching([row.date,row.reference,row.description,row.source,row.status])).sort((a,b) => String(b.date).localeCompare(String(a.date))).slice(0,50);
         return (
           <div className="space-y-4">
             <WorkbookNote tone="info" title="Source sync creates drafts only">
