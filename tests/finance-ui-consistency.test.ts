@@ -287,7 +287,7 @@ test('Project Allocation explains defaults and displays the saved percentage per
   assert.match(allocation, /record\.payload\.pettyCashPercent == null \? null : Number\(record\.payload\.pettyCashPercent\)/);
   assert.match(allocation, /record\.payload\.emergencyPercent == null \? null : Number\(record\.payload\.emergencyPercent\)/);
   assert.match(allocation, /record\.payload\.teamRewardPercent == null \? null : Number\(record\.payload\.teamRewardPercent\)/);
-  assert.match(allocation, /\{percent\}% of net profit/);
+  assert.match(allocation, /percent === null \? 'Share not recorded' : percent \+ '% of net profit'/);
   assert.match(allocation, /The default split above applies only to new records/);
 });
 
