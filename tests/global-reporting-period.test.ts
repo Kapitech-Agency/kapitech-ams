@@ -58,6 +58,8 @@ test('global reporting period controls stay in the admin layout shared by module
   assert.ok(!periodFilter.includes('<span>Filter</span>'));
   assert.ok(periodPicker.includes('compact ? "grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2"'));
   assert.ok(periodPicker.includes('getReportingYearOptions(currentYear, availableYears, parsedYear)'));
+  assert.ok(periodPicker.includes('rawParsedYear < MIN_REPORTING_YEAR'));
+  assert.ok(periodPicker.includes('setReportingPeriodYear(value, mode, MIN_REPORTING_YEAR)'));
   assert.ok(periodPicker.includes('disabled={!canChoosePreviousPeriod}'));
   assert.ok(!periodPicker.includes('compact ? "grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3"'));
   assert.ok(inbox.includes('matchesDate(item.createdAt)'));
