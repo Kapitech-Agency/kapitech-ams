@@ -664,12 +664,12 @@ export const AdminFinanceWorkspace: React.FC = () => {
   }, []);
 
   const loadData = useCallback(async (quiet = false) => {
-    const requestId = ++loadRequestId.current;
     if (!canViewFinancials) {
       setLoading(false);
       setRefreshing(false);
       return;
     }
+    const requestId = ++loadRequestId.current;
     if (quiet) setRefreshing(true);
     else setLoading(true);
     const baseResults = await Promise.all([
@@ -2323,10 +2323,10 @@ export const AdminFinanceWorkspace: React.FC = () => {
         const yearOutflow = sumAmounts<CashMovement>(yearCollections, (movement) => movement.cashOut);
         const yearExpense = sumAmounts<AgencyExpense>(yearExpenses, (expense) => Number(expense.amount) || 0);
         const availableYears = [
-          ...reportInvoices.map((invoice) => Number(getYearKey(getInvoiceDate(invoice)))),
-          ...expenses.map((expense) => Number(getYearKey(expense.date))),
-          ...cashMovements.map((movement) => Number(getYearKey(movement.date)))
-        ].filter((year) => Number.isInteger(year) && year >= 2021 && year <= 9999);
+          ...reportInvoices.map((invoice) => getYearKey(getInvoiceDate(invoice))),
+          ...expenses.map((expense) => getYearKey(expense.date)),
+          ...cashMovements.map((movement) => getYearKey(movement.date))
+        ].map(Number).filter((year) => Number.isInteger(year) && year >= 2021 && year <= 9999);
         const years = getReportingYearOptions(new Date().getFullYear(), availableYears, Number(selectedYear)).map(String);
         const annualRows = [
           { id: 'a-revenue', metric: 'Annual Revenue / Invoice Value (IDR)', amount: yearBilled, basis: 'IDR invoice issue date' },
