@@ -319,6 +319,7 @@ const FinanceDataTable: React.FC<{
           onPageSizeChange={setPageSize}
           itemLabel="records"
           pageSizeOptions={[10, 25, 50]}
+          pageSizeAriaLabel={'Rows per page for ' + title}
           slug={'finance-' + (title.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'register') + '-pagination'}
         />
       )}
