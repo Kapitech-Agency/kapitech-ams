@@ -4,7 +4,7 @@ import test from 'node:test';
 
 const read = (path: string) => readFile(new URL('../' + path, import.meta.url), 'utf8');
 
-test('Finance top-level tabs are the only section navigation and each tab renders its complete work area', async () => {
+test('Finance top-level tabs and clean sub-tabs preserve direct transaction entry', async () => {
   const layout = await read('src/pages/admin/AdminLayout.tsx');
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   assert.match(layout, /location\.pathname === '\/admin\/finance'[\s\S]*?<AdminTopbarTabs/);
@@ -13,11 +13,15 @@ test('Finance top-level tabs are the only section navigation and each tab render
   assert.match(layout, /admin\.finance\.tab\.receivablesPayables/);
   assert.match(layout, /admin\.finance\.tab\.projectFinance/);
   assert.match(layout, /admin\.finance\.tab\.accountingReports/);
+  assert.match(layout, /admin\.finance\.tab\.transactionsCash'[\s\S]*?to: '\/admin\/finance\?tab=cash-bank'/);
+  assert.match(layout, /admin\.finance\.tab\.receivablesPayables'[\s\S]*?to: '\/admin\/finance\?tab=accounts-payable'/);
+  assert.match(layout, /admin\.finance\.tab\.accountingReports'[\s\S]*?to: '\/admin\/finance\?tab=journal'/);
   assert.match(workspace, /className="min-\[900px\]:hidden"/);
-  assert.doesNotMatch(workspace, /AdminSectionTabs ariaLabel="Finance workbook sheets"/);
-  assert.match(workspace, /const renderFinanceGroup = \(\) => \{/);
-  assert.match(workspace, /activeGroup\.items\.map\(\(tab\) =>/);
-  assert.match(workspace, /\{renderView\(tab\)\}/);
+  assert.match(workspace, /AdminSectionTabs ariaLabel="Finance sub-sections" activeKey=\{activeTab\.key\} items=\{sheetItems\}/);
+  assert.match(workspace, /const sheetItems = activeGroup\.items\.map\(\(item\) =>/);
+  assert.match(workspace, /label: item\.label/);
+  assert.doesNotMatch(workspace, /label: item\.sheet \+ ' ' \+ item\.label/);
+  assert.match(workspace, /\{loading \? renderLoading\(\) : renderView\(activeTab\)\}/);
   const pageStart = workspace.indexOf('const financePage = (');
   const pageEnd = workspace.indexOf('return localizeFinanceValue(financePage, language)', pageStart);
   assert.ok(pageStart >= 0 && pageEnd > pageStart, 'Finance page render must remain available.');
@@ -25,7 +29,7 @@ test('Finance top-level tabs are the only section navigation and each tab render
   const uiSourceStart = workspace.indexOf('const renderSummary =');
   const uiSource = workspace.slice(uiSourceStart, pageStart);
   assert.doesNotMatch(uiSource, /Sheet \{activeTab\.sheet\}|Source of truth for workflow design|Excel-alignment implementation|Excel-aligned finance workflow|Open transaction workspace|workbook's Project Cost|Finance workbook sheets|Project name \/ Excel key/);
-  assert.doesNotMatch(renderedPage, /Source of truth for workflow design|Excel-alignment implementation|Excel-aligned finance workflow|Open transaction workspace/);
+  assert.doesNotMatch(renderedPage, /Sheet \{activeTab\.sheet\}|Source of truth for workflow design|Excel-alignment implementation|Excel-aligned finance workflow|Open transaction workspace|Finance workbook sheets/);
   const headerStart = renderedPage.indexOf('<AdminModuleHeader');
   const headerEnd = renderedPage.indexOf('      />', headerStart);
   assert.ok(headerStart >= 0 && headerEnd > headerStart, 'Finance must use the shared module header.');
