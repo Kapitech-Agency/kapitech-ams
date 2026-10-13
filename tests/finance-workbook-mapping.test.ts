@@ -21,7 +21,7 @@ test('Finance workspace maps exactly twenty unique workbook sheets', () => {
 });
 
 test('Finance navigation groups preserve the planned workbook grouping', () => {
-  assert.deepEqual(FINANCE_WORKBOOK_GROUPS.map((group) => group.items.length), [2, 5, 4, 3, 6]);
+  assert.deepEqual(FINANCE_WORKBOOK_GROUPS.map((group) => group.items.length), [2, 4, 3, 4, 7]);
 });
 
 test('Chart of Accounts mirrors the seventeen source workbook accounts', () => {
