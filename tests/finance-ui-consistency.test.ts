@@ -58,6 +58,12 @@ test('Finance worksheet search, date display, and register permissions are wired
     workspace.includes(String.raw`if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return '—';`),
     'Finance tables must validate ISO dates with digit patterns so valid dates render.'
   );
+  assert.match(workspace, /const getLocalDateInputValue = \(date = new Date\(\)\): string =>/);
+  assert.doesNotMatch(workspace, /new Date\(\)\.toISOString\(\)\.slice\(0,\s*10\)/, 'Date-only finance defaults must use local time, not UTC.');
+  const cashBankStart = workspace.indexOf("case 'cash-bank': {");
+  const receivablesStart = workspace.indexOf("case 'accounts-receivable':", cashBankStart);
+  assert.ok(cashBankStart >= 0 && receivablesStart > cashBankStart);
+  assert.doesNotMatch(workspace.slice(cashBankStart, receivablesStart), /renderRecentActivity\(\)/, 'Cash & Bank should not repeat a second table of the same movements.');
   assert.match(workspace, /SEARCHABLE_FINANCE_TABS\.has\(activeTab\.key\)/);
   assert.match(workspace, /value=\{searchText\}[\s\S]*?onChange=\{\(event\) => setSearchText\(event\.target\.value\)\}/);
   assert.match(workspace, /onClick=\{\(\) => setSearchText\(''\)\}/);
