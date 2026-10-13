@@ -1618,7 +1618,8 @@ export const AdminFinanceWorkspace: React.FC = () => {
           item.count += 1;
           monthly.set(month, item);
         }
-        const rows = [...monthly.values()].sort((a, b) => b.month.localeCompare(a.month)).map((item) => ({
+        const monthlyRows = [...monthly.values()].sort((a, b) => b.month.localeCompare(a.month));
+        const rows = monthlyRows.map((item) => ({
           id: item.month,
           cells: [item.month, formatMoney(item.inflow), formatMoney(item.outflow), formatMoney(item.inflow - item.outflow), item.count]
         }));
@@ -1627,7 +1628,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
             <WorkbookNote tone="warning" title="Cash-flow movement, not reconciled ending cash">
               Inflows use dated invoice payments; outflows use dated AMS expense records. Opening bank balance, bank account IDs, internal transfers and independent petty-cash balances are not yet linked, so the final column is net movement rather than an authoritative bank ending balance.
             </WorkbookNote>
-            <FinanceDataTable title="Monthly Cash Flow" description="Monthly cash-in, cash-out, and net movement calculated from live AMS transaction sources." columns={[{ label: 'Month' }, { label: 'Total cash in', align: 'right' }, { label: 'Total cash out', align: 'right' }, { label: 'Net cash movement', align: 'right' }, { label: 'Source rows', align: 'right' }]} rows={rows} emptyMessage="No dated receipts or expense movements are available." />
+            <FinanceDataTable title="Monthly Cash Flow" description="Monthly cash-in, cash-out, and net movement calculated from live AMS transaction sources." columns={[{ label: 'Month' }, { label: 'Total cash in', align: 'right' }, { label: 'Total cash out', align: 'right' }, { label: 'Net cash movement', align: 'right' }, { label: 'Source rows', align: 'right' }]} rows={rows} emptyMessage="No dated receipts or expense movements are available." actions={<Button variant="secondary" type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-cash-flow.csv', ['Month', 'Total cash in', 'Total cash out', 'Net cash movement', 'Source rows'], monthlyRows.map((item) => [item.month, item.inflow, item.outflow, item.inflow - item.outflow, item.count]))}>Export CSV</Button>} />
           </div>
         );
       }
