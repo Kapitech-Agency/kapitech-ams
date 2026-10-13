@@ -53,11 +53,6 @@ const readInitialState = (): StoredReportingPeriod => {
 export const ReportingPeriodProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<StoredReportingPeriod>(readInitialState);
 
-  const persist = useCallback((next: StoredReportingPeriod) => {
-    setState(next);
-    try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch {}
-  }, []);
-
   const setMode = useCallback((mode: ReportingPeriodMode) => {
     setState((current) => {
       const next = {
@@ -103,9 +98,9 @@ export const ReportingPeriodProvider: React.FC<{ children: React.ReactNode }> = 
     const start = dateOnly(startValue);
     const end = dateOnly(endValue);
     if (!start && !end) return matchesDate(fallbackValue);
-    const intervalStart = start || end;
-    const intervalEnd = end || start;
-    return Boolean(intervalStart && intervalEnd && intervalStart <= range.endDate && intervalEnd >= range.startDate);
+    const intervalStart = start || '0001-01-01';
+    const intervalEnd = end || '9999-12-31';
+    return intervalStart <= range.endDate && intervalEnd >= range.startDate;
   }, [matchesDate, state.enabled, state.mode, state.value]);
 
   const contextValue = useMemo(() => ({
