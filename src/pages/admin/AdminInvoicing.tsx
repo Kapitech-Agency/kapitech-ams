@@ -3292,7 +3292,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
           <CustomSelect
             value={statusFilter}
             onChange={setStatusFilter}
-            options={statusOptions}
+            options={embeddedReceivablesOnly ? statusOptions.filter((option) => ['all', 'sent', 'partially_paid', 'overdue'].includes(option.value)) : statusOptions}
             className="min-w-0 xl:shrink-0"
             triggerClassName="h-10 min-h-10 w-full whitespace-nowrap xl:w-[150px]"
           />
@@ -3348,7 +3348,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
         </div>
       )}
     </div>
-  </div><div className="overflow-hidden">{filteredInvoices.length===0?<div className="p-5"><EmptyState title="No invoices found" description="No invoices match the current filters." action={canManageInvoices?<button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>Create invoice</button>:undefined}/></div>:<table className="ams-finance-table table-fixed border-separate border-spacing-0 text-xs">
+  </div><div className="overflow-hidden">{filteredInvoices.length===0?<div className="p-5"><EmptyState title={embeddedReceivablesOnly ? 'No outstanding receivables' : 'No invoices found'} description={embeddedReceivablesOnly ? 'No open invoice balances match the current filters.' : 'No invoices match the current filters.'} action={canManageInvoices?<button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>{embeddedReceivablesOnly ? 'Create invoice' : 'Create invoice'}</button>:undefined}/></div>:<table className="ams-finance-table table-fixed border-separate border-spacing-0 text-xs">
 <thead><tr>
   <th className="w-[20%]">Invoice</th>
   {columnVisibility.client&&<th className="w-[19%]">Client & project</th>}
