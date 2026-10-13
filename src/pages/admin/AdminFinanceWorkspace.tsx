@@ -1090,7 +1090,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
         id,
         title: draft.title.trim(),
         startDate: draft.startDate,
-        ...(draft.endDate ? { endDate: draft.endDate } : {}),
+        endDate: draft.endDate || undefined,
         rateType: draft.rateType,
         rateAmount: amount,
         currency: draft.currency,
