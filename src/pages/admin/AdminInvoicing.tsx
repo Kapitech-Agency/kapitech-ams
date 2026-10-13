@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   AlertCircle,
   ArrowDown,
@@ -3072,13 +3072,14 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
                 <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2.5">
-                      <h2 className="text-sm font-semibold text-fg">Vendor payment ledger</h2>
+                      <h2 className="text-sm font-semibold text-fg">Contract-linked vendor payments</h2>
                       <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] font-medium text-muted">{filteredVendorPayments.length} visible</span>
                     </div>
-                    <p className="mt-1 text-xs text-muted">Track contractor and partner payment obligations from vendor contracts.</p>
+                    <p className="mt-1 text-xs text-muted">Track payments against vendor contracts separately from bill settlements in the Accounts Payable register.</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{currency}</span>
+                    <button type="button" onClick={exportVendorPaymentsCsv} disabled={!filteredVendorPayments.length} className={actionClass}><Download size={14}/>Export CSV</button>
                     {canManageInvoices && <button type="button" onClick={() => openVendorPaymentModal()} className={primaryClass}><Plus size={14}/>Record payment</button>}
                   </div>
                 </div>
