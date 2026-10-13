@@ -93,6 +93,12 @@ test('Finance worksheet search, date display, and register permissions are wired
   assert.match(workspace, /const canApproveFinanceRecords = hasAdminPermission\('canApproveBudgets'\)/);
   assert.match(workspace, /const isPeriodLocked = Boolean\(recordPeriod\) && getRegisterRecords\('monthly-closing-lock'\)/);
   assert.match(workspace, /canApproveFinanceRecords && !isPeriodLocked && type === 'petty-cash-voucher'/);
+  const closingStart = workspace.indexOf("case 'monthly-closing': {");
+  const allocationStart = workspace.indexOf("case 'project-allocation':", closingStart);
+  assert.ok(closingStart >= 0 && allocationStart > closingStart);
+  const closingView = workspace.slice(closingStart, allocationStart);
+  assert.match(closingView, /<input type="month" value=\{selectedMonth\} onChange=\{\(event\)=>setSelectedMonth\(event\.target\.value\)\}/);
+  assert.doesNotMatch(closingView, /<input type="month" value=\{selectedMonth\}[\s\S]{0,220}disabled=\{locked\}/, 'Users must be able to navigate away from a locked month.');
   assert.match(workspace, /You do not have permission to approve Finance records/);
   assert.match(workspace, /finally \{\s*setRegisterSaving\(false\);\s*\}/);
 });
