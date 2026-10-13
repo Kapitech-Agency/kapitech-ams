@@ -126,7 +126,7 @@ test('Finance workbook replaces legacy finance navigation and keeps all operatio
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
 
-  assert.match(app, /<Route path="invoicing" element=\{<Navigate to="\/admin\/finance\?tab=revenue" replace \/> \} \/>/);
+  assert.ok(app.includes('<Route path="invoicing" element={<Navigate to="/admin/finance?tab=revenue" replace />} />'));
   assert.doesNotMatch(app, /const AdminInvoicing = lazyWithRetry/);
   assert.doesNotMatch(layout, /location\.pathname === '\/admin\/invoicing'/);
   assert.doesNotMatch(layout, /Finance sections|finance=tax-retainers|finance=vendor-payments|finance=financial-reports/);
