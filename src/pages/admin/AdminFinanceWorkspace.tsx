@@ -1939,13 +1939,15 @@ export const AdminFinanceWorkspace: React.FC = () => {
         description="Manage revenue, expenses, cash, receivables, payables, and financial reporting in one place."
         actions={<Button variant="secondary" type="button" onClick={() => void loadData(true)} loading={refreshing}>Refresh data</Button>}
       />
-      <div className="min-[900px]:hidden">
-        <AdminSectionTabs ariaLabel="Finance groups" activeKey={activeGroup.key} items={groupItems} />
+      <div className="min-w-0 space-y-3" data-ams-slug="finance-workspace-navigation">
+        <div className="min-[900px]:hidden">
+          <AdminSectionTabs ariaLabel="Finance groups" activeKey={activeGroup.key} items={groupItems} />
+        </div>
+        <AdminSectionTabs ariaLabel="Finance sub-sections" activeKey={activeTab.key} items={sheetItems} className="w-full" />
       </div>
-      <AdminSectionTabs ariaLabel="Finance sub-sections" activeKey={activeTab.key} items={sheetItems} />
       {SEARCHABLE_FINANCE_TABS.has(activeTab.key) && (
-        <div className="flex min-w-0 items-center gap-2" data-ams-slug="finance-worksheet-search">
-          <label className="relative block w-full max-w-md">
+        <div className="rounded-card border border-line bg-panel p-3" data-ams-slug="finance-worksheet-search">
+          <label className="relative block w-full max-w-lg">
             <Search size={14} aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
             <input
               type="search"
@@ -1954,7 +1956,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
               placeholder="Search this worksheet..."
               aria-label="Search this worksheet"
               autoComplete="off"
-              className="h-9 w-full rounded-control border border-line bg-panel pl-9 pr-9 text-xs text-fg outline-none transition-colors focus:border-accent"
+              className="h-9 w-full rounded-control border border-line bg-bg pl-9 pr-9 text-xs text-fg outline-none transition-colors focus:border-accent"
             />
             {searchText && (
               <button
@@ -1962,7 +1964,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
                 aria-label="Clear worksheet search"
                 title="Clear worksheet search"
                 onClick={() => setSearchText('')}
-                className="absolute right-1 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-chip text-muted transition-colors hover:bg-bg hover:text-fg"
+                className="absolute right-1 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-chip text-muted transition-colors hover:bg-panel-hover hover:text-fg"
               >
                 <X size={13} aria-hidden="true" />
               </button>
@@ -1970,20 +1972,32 @@ export const AdminFinanceWorkspace: React.FC = () => {
           </label>
         </div>
       )}
-      {registerErrors.length > 0 && (
-        <WorkbookNote tone="warning" title="Some finance records are unavailable">
-          {registerErrors.length} of {SUPPLEMENTARY_FINANCE_RECORD_TYPES.length} supporting finance record requests failed. Values from unavailable records are not inferred. {registerErrors[0]}
+      {(Boolean(registerActionError && !editor) || registerErrors.length > 0 || sourceErrors.length > 0) && (
+        <WorkbookNote
+          tone={registerActionError && !editor ? 'danger' : 'warning'}
+          title={registerActionError && !editor ? 'Finance action needs attention' : 'Finance source warning'}
+        >
+          <div className="space-y-1.5">
+            {registerActionError && !editor && <p>{registerActionError}</p>}
+            {registerErrors.length > 0 && (
+              <p>
+                {registerErrors.length} of {SUPPLEMENTARY_FINANCE_RECORD_TYPES.length} supporting finance record requests failed.
+                Values from unavailable records are not inferred. {registerErrors.slice(0, 2).join(' · ')}
+              </p>
+            )}
+            {sourceErrors.length > 0 && (
+              <p>
+                Core source errors: {sourceErrors.slice(0, 3).join(' · ')}
+                {sourceErrors.length > 3 ? ' · and ' + (sourceErrors.length - 3) + ' more' : ''}.
+                Check the connected AMS source before interpreting the affected views.
+              </p>
+            )}
+          </div>
         </WorkbookNote>
       )}
-      {registerActionError && !editor && (
-        <WorkbookNote tone="danger" title="Finance action needs attention">{registerActionError}</WorkbookNote>
-      )}
-      {sourceErrors.length > 0 && (
-        <WorkbookNote tone="warning" title="Finance source warning">
-          {sourceErrors.join(' · ')}. Check the connected AMS source before interpreting the affected views.
-        </WorkbookNote>
-      )}
-      {loading ? renderLoading() : renderView(activeTab)}
+      <div className="min-w-0 space-y-4" data-ams-feature-slug={activeTab.key} data-ams-slug="finance-active-worksheet">
+        {loading ? renderLoading() : renderView(activeTab)}
+      </div>
       {renderRegisterEditor()}
       {renderVendorContractEditor()}
     </AdminPageShell>
