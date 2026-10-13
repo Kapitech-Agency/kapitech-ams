@@ -3404,6 +3404,57 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   </tr>;
 })}
 </tbody></table>}</div><AdminTablePagination total={filteredInvoices.length} page={invoicePage} pageSize={invoicePageSize} onPageChange={setInvoicePage} onPageSizeChange={setInvoicePageSize} itemLabel="records" slug="finance-invoices-pagination" /></section>
+{embedded && !embeddedReceivablesOnly && (
+  <section className="space-y-4 rounded-card border border-line bg-panel p-4 sm:p-5" data-ams-feature-slug="finance-revenue-tax-retainer" data-ams-slug="finance-revenue-tax-retainer">
+    <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <h2 className="text-sm font-semibold text-fg">Tax & retainer overview</h2>
+        <p className="mt-1 text-xs text-muted">Invoice tax and retainer billing are kept inside Revenue; this replaces the retired standalone tab.</p>
+      </div>
+      <button type="button" onClick={exportTaxCsv} disabled={!currencyInvoices.length} className={actionClass + ' h-9 min-h-9'}><Download size={14}/>Export tax detail</button>
+    </header>
+    <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-5">
+      <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Tax provision</p><p className="mt-1 text-sm font-semibold tabular-nums text-fg">{formatFinanceCardAmount(taxProvision,currency)}</p></div>
+      <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Tax collected</p><p className="mt-1 text-sm font-semibold tabular-nums text-success">{formatFinanceCardAmount(taxCollected,currency)}</p></div>
+      <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Tax outstanding</p><p className="mt-1 text-sm font-semibold tabular-nums text-warning">{formatFinanceCardAmount(taxOutstanding,currency)}</p></div>
+      <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Retainer billed</p><p className="mt-1 text-sm font-semibold tabular-nums text-fg">{formatFinanceCardAmount(retainerBilled,currency)}</p></div>
+      <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Retainer collected</p><p className="mt-1 text-sm font-semibold tabular-nums text-success">{formatFinanceCardAmount(retainerCollected,currency)}</p></div>
+    </div>
+    <section className="overflow-hidden rounded-card border border-line">
+      <div className="border-b border-line p-4">
+        <h3 className="text-sm font-semibold text-fg">Retainer invoice register</h3>
+        <p className="mt-1 text-xs text-muted">Open the invoice number to inspect its tax, payment terms, and balance details.</p>
+      </div>
+      {retainerLedgerInvoices.length === 0 ? <div className="p-5"><EmptyState title="No retainer invoices" description="Retainer invoices will appear here when their payment terms identify them as retainers."/></div> : (
+        <div className="overflow-x-auto">
+          <table className="ams-finance-table min-w-[900px] border-separate border-spacing-0 text-xs">
+            <thead><tr><th>Invoice</th><th>Client</th><th>Issued</th><th>Due</th><th className="text-right">Billed</th><th className="text-right">Collected</th><th>Status</th></tr></thead>
+            <tbody>{paginatedRetainerLedgerInvoices.map((invoice)=><tr key={invoice.id}>
+              <td><button type="button" onClick={()=>openPrintPreview(invoice)} className="font-semibold text-fg hover:text-accent-text">{invoice.invoiceNumber}</button><p className="mt-1 text-[10px] text-muted">{invoice.paymentTerms || 'Retainer invoice'}</p></td>
+              <td><p className="font-medium text-fg">{invoice.clientCompany || invoice.clientName}</p><p className="mt-1 text-[10px] text-muted">{invoice.clientName}</p></td>
+              <td className="tabular-nums text-muted">{formatFinanceTableDate(invoice.issueDate)}</td>
+              <td className="tabular-nums text-muted">{formatFinanceTableDate(invoice.dueDate)}</td>
+              <td className="text-right font-semibold tabular-nums">{formatNativeAmount(invoice.total,invoice.currency,true)}</td>
+              <td className="text-right font-semibold tabular-nums text-success">{formatNativeAmount(getInvoiceCollectedTotal(invoice),invoice.currency,true)}</td>
+              <td><StatusBadge status={invoice.status}/></td>
+            </tr>)}</tbody>
+          </table>
+        </div>
+      )}
+      <AdminTablePagination total={retainerLedgerInvoices.length} page={retainerPage} pageSize={retainerPageSize} onPageChange={setRetainerPage} onPageSizeChange={setRetainerPageSize} itemLabel="retainer invoices" slug="finance-retainer-pagination" />
+    </section>
+    <div className="grid gap-4 lg:grid-cols-2">
+      <section className="rounded-control border border-line bg-bg p-4">
+        <h3 className="text-xs font-semibold text-fg">Tax provision progress</h3>
+        <div className="mt-3 space-y-3">{[{label:'Collected',value:taxCollected,tone:'bg-success'},{label:'Outstanding',value:taxOutstanding,tone:'bg-warning'}].map((item)=>{const percent=taxProvision>0?Math.min(100,item.value/taxProvision*100):0;return <div key={item.label}><div className="flex justify-between gap-3 text-xs"><span className="text-muted">{item.label}</span><span className="font-medium tabular-nums">{formatNativeAmount(item.value,currency,true)}</span></div><div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-panel"><div className={'h-full '+item.tone} style={{width:percent+'%'}}/></div></div>})}</div>
+      </section>
+      <section className="rounded-control border border-line bg-bg p-4">
+        <div className="flex items-center justify-between gap-3"><div><h3 className="text-xs font-semibold text-fg">Retainer collection rate</h3><p className="mt-1 text-[10px] text-muted">Collected versus billed</p></div><span className="text-sm font-semibold tabular-nums">{retainerBilled>0?((retainerCollected/retainerBilled)*100).toFixed(1):'0.0'}%</span></div>
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-panel"><div className="h-full rounded-full bg-success" style={{width:(retainerBilled>0?Math.min(100,retainerCollected/retainerBilled*100):0)+'%'}}/></div>
+      </section>
+    </div>
+  </section>
+)}
 {!embedded && (
           <section className="rounded-card border border-line bg-panel overflow-hidden">
   <div className="border-b border-line p-4">
