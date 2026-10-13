@@ -883,7 +883,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
   const groupEntryTabs: Record<string, string> = {
     overview: 'executive-summary',
     transactions: 'cash-bank',
-    receivables: 'accounts-payable',
+    receivables: 'accounts-receivable',
     projects: 'project-finance',
     accounting: 'journal'
   };
@@ -1209,17 +1209,19 @@ export const AdminFinanceWorkspace: React.FC = () => {
               emptyMessage="No vendor bills have been recorded yet."
               actions={registerAddButton('vendor-bill','Add vendor bill')}
             />
-            <FinanceDataTable
-              title="Vendor payment schedule"
-              description="Installments use each bill's saved payment schedule and linked payment records. Review the overall due date in the Accounts Payable register."
-              columns={[
-                { label: 'Bill no.' }, { label: 'Vendor' }, { label: 'Project' }, { label: 'Bill amount', align: 'right' },
-                { label: 'Payment 1' }, { label: 'Payment 2' }, { label: 'Payment 3' },
-                { label: 'Total paid', align: 'right' }, { label: 'Outstanding', align: 'right' }, { label: 'Next payment' }, { label: 'Status' }
-              ]}
-              rows={scheduleRows}
-              emptyMessage="No vendor bills have been entered. Create a bill to see its payment schedule."
-            />
+            {bills.length > 0 && (
+              <FinanceDataTable
+                title="Vendor payment schedule"
+                description="Installments use each bill's saved payment schedule and linked payment records. Review the overall due date in the Accounts Payable register."
+                columns={[
+                  { label: 'Bill no.' }, { label: 'Vendor' }, { label: 'Project' }, { label: 'Bill amount', align: 'right' },
+                  { label: 'Payment 1' }, { label: 'Payment 2' }, { label: 'Payment 3' },
+                  { label: 'Total paid', align: 'right' }, { label: 'Outstanding', align: 'right' }, { label: 'Next payment' }, { label: 'Status' }
+                ]}
+                rows={scheduleRows}
+                emptyMessage="No vendor bills have been entered. Create a bill to see its payment schedule."
+              />
+            )}
           </div>
         );
       }
