@@ -1486,11 +1486,11 @@ export const AdminFinanceWorkspace: React.FC = () => {
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label htmlFor="finance-vendor-contract-start" className="mb-1.5 block text-xs font-medium text-muted">Start date *</label>
-              <CustomDatePicker value={draft.startDate} onChange={(startDate) => update({ startDate })} type="date" required locale={locale} className="w-full" triggerClassName="h-10" aria-label="Contract start date" slug="finance-vendor-contract-start" />
+              <CustomDatePicker id="finance-vendor-contract-start" value={draft.startDate} onChange={(startDate) => update({ startDate })} type="date" required locale={locale} className="w-full" triggerClassName="h-10" aria-label="Contract start date" slug="finance-vendor-contract-start" />
             </div>
             <div>
               <label htmlFor="finance-vendor-contract-end" className="mb-1.5 block text-xs font-medium text-muted">End date</label>
-              <CustomDatePicker value={draft.endDate} onChange={(endDate) => update({ endDate })} type="date" min={draft.startDate} locale={locale} className="w-full" triggerClassName="h-10" aria-label="Contract end date" slug="finance-vendor-contract-end" />
+              <CustomDatePicker id="finance-vendor-contract-end" value={draft.endDate} onChange={(endDate) => update({ endDate })} type="date" min={draft.startDate} locale={locale} className="w-full" triggerClassName="h-10" aria-label="Contract end date" slug="finance-vendor-contract-end" />
             </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
