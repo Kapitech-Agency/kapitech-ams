@@ -123,8 +123,9 @@ test('Finance worksheet search, date display, and register permissions are wired
   const allocationStart = workspace.indexOf("case 'project-allocation':", closingStart);
   assert.ok(closingStart >= 0 && allocationStart > closingStart);
   const closingView = workspace.slice(closingStart, allocationStart);
-  assert.match(closingView, /<input type="month" value=\{selectedMonth\} onChange=\{\(event\)=>setSelectedMonth\(event\.target\.value\)\}/);
-  assert.doesNotMatch(closingView, /<input type="month" value=\{selectedMonth\}[\s\S]{0,220}disabled=\{locked\}/, 'Users must be able to navigate away from a locked month.');
+  assert.match(closingView, /<CustomDatePicker type="month" value=\{selectedMonth\} onChange=\{setSelectedMonth\}/);
+  assert.match(closingView, /slug="finance-closing-month-picker"/);
+  assert.doesNotMatch(closingView, /slug="finance-closing-month-picker"[^>]*disabled=\{locked\}/, 'Users must be able to navigate away from a locked month.');
   assert.match(workspace, /You do not have permission to approve Finance records/);
   assert.match(workspace, /finally \{\s*setRegisterSaving\(false\);\s*\}/);
 });
@@ -321,4 +322,39 @@ test('Finance add and record-creation actions use the red primary button style',
   assert.match(workspace, /variant="primary" type="button" icon=\{<Plus size=\{14\} \/>\}[\s\S]{0,260}>Record payment/);
   assert.match(workspace, /variant="primary" type="button" icon=\{<Plus size=\{14\} \/>\}[\s\S]{0,260}>Set budget/);
   assert.match(workspace, /variant="primary" type="button" icon=\{<Plus size=\{14\} \/>\}[\s\S]{0,260}>Create control/);
+});
+
+
+test('Finance date and month inputs use the shared custom calendar control', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const picker = await read('src/components/ui/CustomDatePicker.tsx');
+
+  assert.match(workspace, /import \{ CustomDatePicker \} from '\.\.\/\.\.\/components\/ui\/CustomDatePicker'/);
+  assert.match(workspace, /field\.type === 'date' \|\| field\.type === 'month'[\s\S]*?<CustomDatePicker/);
+  assert.match(workspace, /slug="finance-dashboard-month-picker"/);
+  assert.match(workspace, /slug="finance-pnl-month-picker"/);
+  assert.match(workspace, /slug="finance-closing-month-picker"/);
+  assert.match(workspace, /slug="finance-vendor-contract-start"/);
+  assert.match(workspace, /slug="finance-vendor-contract-end"/);
+  assert.doesNotMatch(workspace, /<input type="(?:date|month)"/);
+  assert.match(workspace, /const missingRequired = definition\?\.fields\.find/);
+  assert.match(workspace, /Due date cannot be earlier than the bill date/);
+  assert.match(picker, /from '\.\/DropdownPortal'/);
+  assert.match(picker, /CalendarDays/);
+  assert.match(picker, /aria-expanded=\{isOpen\}/);
+  assert.match(picker, /event\.key === 'ArrowLeft'/);
+  assert.match(picker, /isMonthDisabled/);
+});
+
+test('Finance registers provide sortable headers, usable pagination, and CSV export for the full sorted result', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+
+  assert.match(workspace, /const compareFinanceSortText = \(left: string, right: string\)/);
+  assert.match(workspace, /aria-sort=\{isSorted \? \(sort\?\.direction === 'asc' \? 'ascending' : 'descending'\) : 'none'\}/);
+  assert.match(workspace, /Rows per page for ' \+ title/);
+  assert.match(workspace, /Showing <span className="tabular-nums text-fg">\{firstRow\}–\{lastRow\}<\/span> of/);
+  assert.match(workspace, /const exportRows = \(\) =>/);
+  assert.match(workspace, /const exportableRows = sortedRows\.map/);
+  assert.match(workspace, /exportable = true/);
+  assert.match(workspace, /exportable=\{false\} actions=\{<Button variant="secondary" type="button" icon=\{<Download size=\{14\} \/>\}/);
 });
