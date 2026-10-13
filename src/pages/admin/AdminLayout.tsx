@@ -29,6 +29,8 @@ import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { AdminTopbarTabs } from '../../components/admin/AdminModulePrimitives';
 import { FINANCE_WORKBOOK_GROUPS } from '../../lib/financeWorkbook';
 import Button from '../../components/ui/Button';
+import { ReportingPeriodProvider } from '../../lib/ReportingPeriodContext';
+import { AdminReportingPeriodBar } from '../../components/admin/AdminReportingPeriodBar';
 
 interface NavItem {
   key: string;
@@ -252,7 +254,8 @@ export const AdminLayout: React.FC = () => {
   const getGroupItems = (group: NavItem['group']) => filteredNavItems.filter(item => item.group === group);
 
   return (
-    <div className="h-screen w-full bg-bg text-fg flex flex-col min-[900px]:flex-row selection:bg-accent selection:text-fg font-sans antialiased overflow-hidden ams-shell">
+    <ReportingPeriodProvider>
+      <div className="h-screen w-full bg-bg text-fg flex flex-col min-[900px]:flex-row selection:bg-accent selection:text-fg font-sans antialiased overflow-hidden ams-shell">
       
       {/* Universal Command Palette */}
       <CommandPalette 
@@ -796,13 +799,17 @@ export const AdminLayout: React.FC = () => {
           </div>
         </header>
         {/* View Outlet */}
-        <div className="ams-content flex-1 min-h-0 w-full max-w-[1560px] mx-auto">
+        <div className="ams-content flex-1 min-h-0 w-full max-w-[1560px] mx-auto overflow-y-auto custom-scrollbar">
+          <div className="px-3 pt-3 md:px-6" data-ams-slug="global-reporting-period-container">
+            <AdminReportingPeriodBar />
+          </div>
           <Outlet />
         </div>
 
       </main>
 
-    </div>
+      </div>
+    </ReportingPeriodProvider>
   );
 };
 export default AdminLayout;
