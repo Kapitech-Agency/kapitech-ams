@@ -284,9 +284,9 @@ test('Project Allocation explains defaults and displays the saved percentage per
   assert.ok(start >= 0 && end > start);
   const allocation = workspace.slice(start, end);
   assert.match(allocation, /label:'Default petty cash reserve'[\s\S]*?context:'For new allocations'/);
-  assert.match(allocation, /Number\(record\.payload\.pettyCashPercent \?\? 10\)/);
-  assert.match(allocation, /Number\(record\.payload\.emergencyPercent \?\? 10\)/);
-  assert.match(allocation, /Number\(record\.payload\.teamRewardPercent \?\? 10\)/);
+  assert.match(allocation, /record\.payload\.pettyCashPercent == null \? null : Number\(record\.payload\.pettyCashPercent\)/);
+  assert.match(allocation, /record\.payload\.emergencyPercent == null \? null : Number\(record\.payload\.emergencyPercent\)/);
+  assert.match(allocation, /record\.payload\.teamRewardPercent == null \? null : Number\(record\.payload\.teamRewardPercent\)/);
   assert.match(allocation, /\{percent\}% of net profit/);
   assert.match(allocation, /The default split above applies only to new records/);
 });
@@ -298,3 +298,18 @@ test('Embedded invoice, expense, and receivable workflows do not leak UI state a
   assert.match(workspace, /case 'expenses':[\s\S]{0,150}key=\{tab\.key\} embeddedView="income-expenses"/);
   assert.match(workspace, /case 'accounts-receivable':[\s\S]{0,120}key=\{tab\.key\} embeddedView="receivables"/);
 });
+
+test('Finance drawer uses the shared drawer header once and keeps source errors actionable', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const start = workspace.indexOf('const renderRegisterEditor = () =>');
+  const end = workspace.indexOf('const groupEntryTabs:', start);
+  assert.ok(start >= 0 && end > start);
+  const drawer = workspace.slice(start, end);
+
+  assert.match(drawer, /title=\{editor\.record \? 'Edit ' \+ definition\.title : definition\.title\}/);
+  assert.match(drawer, /description=\{definition\.description\}/);
+  assert.doesNotMatch(drawer, /<h3 className="text-sm font-semibold text-fg">\{definition\.title\}<\/h3>/);
+  assert.doesNotMatch(drawer, /<p className="text-xs leading-5 text-muted">\{definition\.description\}<\/p>/);
+  assert.match(workspace, /Previously loaded records remain visible where available\. Treat affected data as stale until the source refreshes successfully\./);
+});
+
