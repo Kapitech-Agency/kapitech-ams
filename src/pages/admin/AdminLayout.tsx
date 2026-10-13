@@ -707,18 +707,6 @@ export const AdminLayout: React.FC = () => {
                     { key: 'accounting', label: t('admin.finance.tab.accountingReports'), to: '/admin/finance?tab=journal', slug: 'finance-tab-accounting-reports' }
                   ]}
                 />
-              ) : location.pathname === '/admin/invoicing' ? (
-                <AdminTopbarTabs
-                  ariaLabel="Finance sections"
-                  activeKey={new URLSearchParams(location.search).get('finance') || 'invoices'}
-                  items={[
-                    { key: 'invoices', label: 'Invoice', to: '/admin/invoicing' },
-                    { key: 'income-expenses', label: 'Income & Expenses', to: '/admin/invoicing?finance=income-expenses' },
-                    { key: 'tax-retainers', label: 'Tax & Retainers', to: '/admin/invoicing?finance=tax-retainers' },
-                    { key: 'vendor-payments', label: 'Vendor Payments', to: '/admin/invoicing?finance=vendor-payments' },
-                    { key: 'financial-reports', label: 'Financial Reports', to: '/admin/invoicing?finance=financial-reports' }
-                  ]}
-                />
               ) : location.pathname === '/admin/team' || location.pathname === '/admin/time-logs' || location.pathname === '/admin/vendors' ? (
                 <AdminTopbarTabs
                   ariaLabel="Team sections"

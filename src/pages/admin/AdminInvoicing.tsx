@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   AlertCircle,
   ArrowDown,
@@ -37,7 +37,7 @@ import { Modal } from '../../components/ui/Modal';
 import { InvoiceStatusDropdown } from '../../components/ui/InvoiceStatusDropdown';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { api } from '../../lib/apiClient';
-import { AdminMetricCard, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination, AdminStatusBadge } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricCard, AdminTablePagination, AdminStatusBadge } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { isSlugFixtureMode } from '../../lib/runtimeMode';
 
@@ -704,38 +704,28 @@ const FinanceCashFlowChart: React.FC<{
 };
 const FinanceMetricCard: React.FC<React.ComponentProps<typeof AdminMetricCard>> = AdminMetricCard;
 
-type EmbeddedFinanceView = 'invoices' | 'receivables' | 'income-expenses';
+type EmbeddedFinanceView = 'invoices' | 'receivables' | 'income-expenses' | 'vendor-payments';
 type AdminInvoicingProps = {
   /** Reuse the existing transactional invoice/expense flows from a Finance worksheet. */
-  embeddedView?: EmbeddedFinanceView;
+  embeddedView: EmbeddedFinanceView;
   /** Lock the embedded transaction ledger to one worksheet workflow. */
   embeddedIncomeExpenseMode?: 'income' | 'expenses';
 };
-const FinanceWorkspaceContainer: React.FC<{ embedded?: boolean; children: React.ReactNode }> = ({ embedded = false, children }) => (
-  embedded
-    ? <div className="min-w-0 space-y-5">{children}</div>
-    : <AdminPageShell featureSlug="finance-module" className="finance-module">{children}</AdminPageShell>
-);
-
 export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, embeddedIncomeExpenseMode }) => {
   const { language } = useLanguage();
-  const location = useLocation();
   const canViewFinancials = hasAdminPermission('canViewFinancials');
   const canManageInvoices = hasAdminPermission('canManageInvoices');
   const canCreateInvoice = canManageInvoices;
   const canDeleteInvoice = canManageInvoices;
 
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
-  const embedded = Boolean(embeddedView);
+  const embedded = true;
   const embeddedReceivablesOnly = embeddedView === 'receivables';
 
-  const financeView = useMemo(() => {
-    if (embeddedView === 'receivables') return 'invoices';
-    if (embeddedView) return embeddedView;
-    const requestedView = new URLSearchParams(location.search).get('finance') || 'invoices';
-    // Proposals are retired as a standalone business module. Keep legacy links safe by routing them to invoices.
-    return requestedView === 'quotations' ? 'invoices' : requestedView;
-  }, [embeddedView, location.search]);
+  const financeView: string = useMemo(
+    () => embeddedView === 'receivables' ? 'invoices' : embeddedView,
+    [embeddedView]
+  );
   const [invoices, setInvoices] = useState<AgencyInvoice[]>([]);
   const [expenses, setExpenses] = useState<FinanceExpense[]>([]);
   const [clients, setClients] = useState<FinanceClient[]>([]);
@@ -2737,87 +2727,20 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   }
 
   return (
-    <FinanceWorkspaceContainer embedded={embedded}>
-      {!embedded && <AdminModuleHeader
-        className="mb-0"
-        title={financeView === 'quotations' ? 'Quotations' : financeView === 'income-expenses' ? 'Income & Expenses' : financeView === 'tax-retainers' ? 'Tax & Retainers' : financeView === 'vendor-payments' ? 'Vendor Payments' : financeView === 'financial-reports' ? 'Financial Reports' : 'Invoices'}
-        description={financeView === 'quotations'
-          ? 'Manage the commercial pipeline from draft through approval, acceptance, and invoice conversion.'
-          : financeView === 'income-expenses'
-            ? 'Track actual cash collections, operating expenses, and net cash movement.'
-            : financeView === 'tax-retainers'
-              ? 'Monitor tax provision, tax collection, and retainer billing and collection.'
-              : financeView === 'financial-reports'
-                ? 'Review collection performance, margin, expense mix, and financial trends.'
-                : financeView === 'vendor-payments'
-                  ? 'Schedule, review, record, and reconcile payments owed to agency vendors and contractors.'
-                  : 'Manage billing, receivables, collection risk, and invoice activity.'}
-        actions={(
-          <>
-            {(usingDemoFinance || (financeView === 'quotations' && usingDemoQuotations)) && (
-              <AdminStatusBadge tone="warning">A/B data</AdminStatusBadge>
-            )}
-            <div className="inline-flex min-h-9 items-center rounded-control border border-line bg-panel p-1" aria-label="Finance currency">
-              {(['IDR', 'USD'] as CurrencyCode[]).map((item) => <button key={item} type="button" onClick={() => setActiveCurrency(item)} aria-pressed={currency === item} className={'min-h-7 rounded-chip px-2.5 text-[11px] font-semibold ' + (currency === item ? 'bg-accent/10 text-fg border border-accent/25' : 'text-muted hover:bg-bg hover:text-fg border border-transparent')}>{item}</button>)}
-            </div>
-            <button type="button" onClick={() => void loadData(true)} disabled={refreshing} className={actionClass} title="Refresh finance data"><RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />{refreshing ? 'Refreshing' : 'Refresh'}</button>
-            {financeView === 'quotations' ? (
-              <>
-                <button type="button" onClick={exportQuotationsCsv} disabled={!filteredQuotations.length} className={actionClass}><Download size={14}/>Export CSV</button>
-                {canManageInvoices && <button type="button" onClick={openCreateQuotation} className={primaryClass}><Plus size={14}/>New quotation</button>}
-              </>
-            ) : financeView === 'income-expenses' ? (
-              <>
-                <button type="button" onClick={() => incomeExpenseMode === 'income' ? exportInvoicesCsv() : exportExpensesCsv()} disabled={incomeExpenseMode === 'income' ? !incomeRows.length : !filteredExpenses.length} className={actionClass}><Download size={14}/>Export CSV</button>
-                {canManageInvoices && <button type="button" onClick={openExpenseModal} className={primaryClass}><Plus size={14}/>Add expense</button>}
-              </>
-            ) : financeView === 'tax-retainers' ? (
-              <>
-                <button type="button" onClick={exportTaxCsv} disabled={!currencyInvoices.length} className={actionClass}><Download size={14}/>Export tax detail</button>
-                {canManageInvoices && <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>New invoice</button>}
-              </>
-            ) : financeView === 'vendor-payments' ? (
-              <>
-                <button type="button" onClick={exportVendorPaymentsCsv} disabled={!filteredVendorPayments.length} className={actionClass}><Download size={14}/>Export CSV</button>
-                {canManageInvoices && <button type="button" onClick={() => openVendorPaymentModal()} className={primaryClass}><Plus size={14}/>Record payment</button>}
-              </>
-            ) : financeView === 'financial-reports' ? (
-              <button type="button" onClick={exportReportCsv} disabled={!financeChartData.length} className={actionClass}><Download size={14}/>Export report</button>
-            ) : (
-              <>
-                <button type="button" onClick={exportInvoicesCsv} disabled={!currencyInvoices.length} className={actionClass}><Download size={14}/>Export CSV</button>
-                {canManageInvoices && <>
-                  <button type="button" onClick={openCreateQuotation} className={actionClass}><FileText size={14}/>New quotation</button>
-                  <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>New invoice</button>
-                </>}
-              </>
-            )}
-          </>
-        )}
-      />}
-      {!embedded && <div className="min-[900px]:hidden min-w-0">
-        <AdminSectionTabs
-          ariaLabel="Finance sections"
-          activeKey={financeView === 'invoices' ? 'invoices' : financeView}
-          items={[
-            { key: 'invoices', label: 'Invoice', to: '/admin/invoicing' },
-            { key: 'quotations', label: 'Quotation', to: '/admin/invoicing?finance=quotations' },
-            { key: 'income-expenses', label: 'Income & Expenses', to: '/admin/invoicing?finance=income-expenses' },
-            { key: 'tax-retainers', label: 'Tax & Retainers', to: '/admin/invoicing?finance=tax-retainers' },
-            { key: 'vendor-payments', label: 'Vendor Payments', to: '/admin/invoicing?finance=vendor-payments' },
-            { key: 'financial-reports', label: 'Financial Reports', to: '/admin/invoicing?finance=financial-reports' },
-          ]}
-        />
-      </div>}
-      {embedded && (
-        <div className="flex justify-end">
-          <div className="inline-flex min-h-9 items-center rounded-control border border-line bg-panel p-1" aria-label="Finance currency">
-            {(['IDR', 'USD'] as CurrencyCode[]).map((item) => (
-              <button key={item} type="button" onClick={() => setActiveCurrency(item)} aria-pressed={currency === item} className={'min-h-7 rounded-chip px-2.5 text-[11px] font-semibold ' + (currency === item ? 'bg-accent/10 text-fg border border-accent/25' : 'text-muted hover:bg-bg hover:text-fg border border-transparent')}>{item}</button>
-            ))}
-          </div>
+    <div className="min-w-0 space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="inline-flex min-h-9 items-center rounded-control border border-line bg-panel p-1" aria-label="Finance currency">
+          {(['IDR', 'USD'] as CurrencyCode[]).map((item) => (
+            <button key={item} type="button" onClick={() => setActiveCurrency(item)} aria-pressed={currency === item} className={'min-h-7 rounded-chip px-2.5 text-[11px] font-semibold ' + (currency === item ? 'bg-accent/10 text-fg border border-accent/25' : 'text-muted hover:bg-bg hover:text-fg border border-transparent')}>{item}</button>
+          ))}
         </div>
-      )}
+        {usingDemoFinance && (
+          <div className="flex min-w-0 items-center gap-2 rounded-control border border-warning/25 bg-warning/5 px-3 py-2 text-[11px] text-warning" role="status">
+            <AdminStatusBadge tone="warning">Sample data</AdminStatusBadge>
+            <span>Some finance records use fallback sample data. Verify the source before relying on these values.</span>
+          </div>
+        )}
+      </div>
       {notice && (
         <div className="fixed right-4 top-[68px] z-[60] w-[min(420px,calc(100vw-32px))]" aria-live="polite" aria-atomic="true">
           <div className={'flex items-start gap-3 rounded-card border px-5 py-3 text-xs ' + (notice.tone === 'success' ? 'border-success/30 bg-panel text-success' : 'border-danger/30 bg-panel text-danger')} role="status">
@@ -2987,11 +2910,13 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
             <span className="sr-only">Search expense</span>
             <input value={expenseSearch} onChange={(event) => setExpenseSearch(event.target.value)} placeholder="Search expense..." className={fieldClass + ' h-10 pl-8'}/>
           </label>
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(150px,1fr)_minmax(150px,1fr)_minmax(140px,1fr)_minmax(150px,1fr)_auto]">
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(150px,1fr)_minmax(150px,1fr)_minmax(140px,1fr)_minmax(150px,1fr)_auto_auto_auto]">
             <CustomSelect value={expenseTypeFilter} onChange={setExpenseTypeFilter} options={expenseTypeOptions} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Expense type filter"/>
             <CustomSelect value={expenseCategoryFilter} onChange={setExpenseCategoryFilter} options={expenseCategoryOptions} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Expense category filter"/>
             <CustomSelect value={expensePeriodFilter} onChange={(value) => setExpensePeriodFilter(value as typeof expensePeriodFilter)} options={expensePeriodOptions} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Expense period filter"/>
             <CustomSelect value={expenseSort} onChange={(value) => setExpenseSort(value as typeof expenseSort)} options={[{value:'date_desc',label:'Newest'},{value:'date_asc',label:'Oldest'},{value:'amount_high',label:'Highest amount'},{value:'amount_low',label:'Lowest amount'}]} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Expense sort"/>
+            <button type="button" onClick={() => void loadData(true)} disabled={refreshing} className={actionClass + ' h-10 min-h-10'}><RefreshCw size={14} className={refreshing ? 'animate-spin' : ''}/>{refreshing ? 'Refreshing' : 'Refresh'}</button>
+            <button type="button" onClick={exportExpensesCsv} disabled={!filteredExpenses.length} className={actionClass + ' h-10 min-h-10'}><Download size={14}/>Export CSV</button>
             {canManageInvoices && <button type="button" onClick={openExpenseModal} className={primaryClass + ' h-10 min-h-10 shrink-0'}><Plus size={14}/>Add expense</button>}
           </div>
         </div>
@@ -3075,13 +3000,15 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
                 <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2.5">
-                      <h2 className="text-sm font-semibold text-fg">Vendor payment ledger</h2>
+                      <h2 className="text-sm font-semibold text-fg">Contract-linked vendor payments</h2>
                       <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] font-medium text-muted">{filteredVendorPayments.length} visible</span>
                     </div>
-                    <p className="mt-1 text-xs text-muted">Track contractor and partner payment obligations from vendor contracts.</p>
+                    <p className="mt-1 text-xs text-muted">Track payments against vendor contracts separately from bill settlements in the Accounts Payable register.</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{currency}</span>
+                    <button type="button" onClick={() => void loadData(true)} disabled={refreshing} className={actionClass}><RefreshCw size={14} className={refreshing ? 'animate-spin' : ''}/>{refreshing ? 'Refreshing' : 'Refresh'}</button>
+                    <button type="button" onClick={exportVendorPaymentsCsv} disabled={!filteredVendorPayments.length} className={actionClass}><Download size={14}/>Export CSV</button>
                     {canManageInvoices && <button type="button" onClick={() => openVendorPaymentModal()} className={primaryClass}><Plus size={14}/>Record payment</button>}
                   </div>
                 </div>
@@ -3217,7 +3144,9 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
-          {embedded && canCreateInvoice && <button type="button" onClick={openCreateInvoice} className={primaryClass + ' h-9 min-h-9'}><Plus size={14}/>New invoice</button>}
+          <button type="button" onClick={() => void loadData(true)} disabled={refreshing} className={actionClass + ' h-9 min-h-9'}><RefreshCw size={14} className={refreshing ? 'animate-spin' : ''}/>{refreshing ? 'Refreshing' : 'Refresh'}</button>
+          <button type="button" onClick={exportInvoicesCsv} disabled={!filteredInvoices.length} className={actionClass + ' h-9 min-h-9'}><Download size={14}/>Export CSV</button>
+          {!embeddedReceivablesOnly && canCreateInvoice && <button type="button" onClick={openCreateInvoice} className={primaryClass + ' h-9 min-h-9'}><Plus size={14}/>New invoice</button>}
           <div className="inline-flex items-center rounded-control border border-line bg-bg p-0.5">
             <button
               type="button"
@@ -3348,7 +3277,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
         </div>
       )}
     </div>
-  </div><div className="overflow-hidden">{filteredInvoices.length===0?<div className="p-5"><EmptyState title={embeddedReceivablesOnly ? 'No outstanding receivables' : 'No invoices found'} description={embeddedReceivablesOnly ? 'No open invoice balances match the current filters.' : 'No invoices match the current filters.'} action={canManageInvoices?<button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>{embeddedReceivablesOnly ? 'Create invoice' : 'Create invoice'}</button>:undefined}/></div>:<table className="ams-finance-table table-fixed border-separate border-spacing-0 text-xs">
+  </div><div className="overflow-hidden">{filteredInvoices.length===0?<div className="p-5"><EmptyState title={embeddedReceivablesOnly ? 'No outstanding receivables' : 'No invoices found'} description={embeddedReceivablesOnly ? 'No open invoice balances match the current filters.' : 'No invoices match the current filters.'} action={canManageInvoices && !embeddedReceivablesOnly ? <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>Create invoice</button> : undefined}/></div>:<table className="ams-finance-table table-fixed border-separate border-spacing-0 text-xs">
 <thead><tr>
   <th className="w-[20%]">Invoice</th>
   {columnVisibility.client&&<th className="w-[19%]">Client & project</th>}
@@ -3406,6 +3335,57 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   </tr>;
 })}
 </tbody></table>}</div><AdminTablePagination total={filteredInvoices.length} page={invoicePage} pageSize={invoicePageSize} onPageChange={setInvoicePage} onPageSizeChange={setInvoicePageSize} itemLabel="records" slug="finance-invoices-pagination" /></section>
+{embedded && !embeddedReceivablesOnly && (
+  <section className="space-y-4 rounded-card border border-line bg-panel p-4 sm:p-5" data-ams-feature-slug="finance-revenue-tax-retainer" data-ams-slug="finance-revenue-tax-retainer">
+    <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <h2 className="text-sm font-semibold text-fg">Tax & retainer overview</h2>
+        <p className="mt-1 text-xs text-muted">Invoice tax and retainer billing are kept inside Revenue; this replaces the retired standalone tab.</p>
+      </div>
+      <button type="button" onClick={exportTaxCsv} disabled={!currencyInvoices.length} className={actionClass + ' h-9 min-h-9'}><Download size={14}/>Export tax detail</button>
+    </header>
+    <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-5">
+      <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Tax provision</p><p className="mt-1 text-sm font-semibold tabular-nums text-fg">{formatFinanceCardAmount(taxProvision,currency)}</p></div>
+      <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Tax collected</p><p className="mt-1 text-sm font-semibold tabular-nums text-success">{formatFinanceCardAmount(taxCollected,currency)}</p></div>
+      <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Tax outstanding</p><p className="mt-1 text-sm font-semibold tabular-nums text-warning">{formatFinanceCardAmount(taxOutstanding,currency)}</p></div>
+      <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Retainer billed</p><p className="mt-1 text-sm font-semibold tabular-nums text-fg">{formatFinanceCardAmount(retainerBilled,currency)}</p></div>
+      <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Retainer collected</p><p className="mt-1 text-sm font-semibold tabular-nums text-success">{formatFinanceCardAmount(retainerCollected,currency)}</p></div>
+    </div>
+    <section className="overflow-hidden rounded-card border border-line">
+      <div className="border-b border-line p-4">
+        <h3 className="text-sm font-semibold text-fg">Retainer invoice register</h3>
+        <p className="mt-1 text-xs text-muted">Open the invoice number to inspect its tax, payment terms, and balance details.</p>
+      </div>
+      {retainerLedgerInvoices.length === 0 ? <div className="p-5"><EmptyState title="No retainer invoices" description="Retainer invoices will appear here when their payment terms identify them as retainers."/></div> : (
+        <div className="overflow-x-auto">
+          <table className="ams-finance-table min-w-[900px] border-separate border-spacing-0 text-xs">
+            <thead><tr><th>Invoice</th><th>Client</th><th>Issued</th><th>Due</th><th className="text-right">Billed</th><th className="text-right">Collected</th><th>Status</th></tr></thead>
+            <tbody>{paginatedRetainerLedgerInvoices.map((invoice)=><tr key={invoice.id}>
+              <td><button type="button" onClick={()=>openPrintPreview(invoice)} className="font-semibold text-fg hover:text-accent-text">{invoice.invoiceNumber}</button><p className="mt-1 text-[10px] text-muted">{invoice.paymentTerms || 'Retainer invoice'}</p></td>
+              <td><p className="font-medium text-fg">{invoice.clientCompany || invoice.clientName}</p><p className="mt-1 text-[10px] text-muted">{invoice.clientName}</p></td>
+              <td className="tabular-nums text-muted">{formatFinanceTableDate(invoice.issueDate)}</td>
+              <td className="tabular-nums text-muted">{formatFinanceTableDate(invoice.dueDate)}</td>
+              <td className="text-right font-semibold tabular-nums">{formatNativeAmount(invoice.total,invoice.currency,true)}</td>
+              <td className="text-right font-semibold tabular-nums text-success">{formatNativeAmount(getInvoiceCollectedTotal(invoice),invoice.currency,true)}</td>
+              <td><StatusBadge status={invoice.status}/></td>
+            </tr>)}</tbody>
+          </table>
+        </div>
+      )}
+      <AdminTablePagination total={retainerLedgerInvoices.length} page={retainerPage} pageSize={retainerPageSize} onPageChange={setRetainerPage} onPageSizeChange={setRetainerPageSize} itemLabel="retainer invoices" slug="finance-retainer-pagination" />
+    </section>
+    <div className="grid gap-4 lg:grid-cols-2">
+      <section className="rounded-control border border-line bg-bg p-4">
+        <h3 className="text-xs font-semibold text-fg">Tax provision progress</h3>
+        <div className="mt-3 space-y-3">{[{label:'Collected',value:taxCollected,tone:'bg-success'},{label:'Outstanding',value:taxOutstanding,tone:'bg-warning'}].map((item)=>{const percent=taxProvision>0?Math.min(100,item.value/taxProvision*100):0;return <div key={item.label}><div className="flex justify-between gap-3 text-xs"><span className="text-muted">{item.label}</span><span className="font-medium tabular-nums">{formatNativeAmount(item.value,currency,true)}</span></div><div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-panel"><div className={'h-full '+item.tone} style={{width:percent+'%'}}/></div></div>})}</div>
+      </section>
+      <section className="rounded-control border border-line bg-bg p-4">
+        <div className="flex items-center justify-between gap-3"><div><h3 className="text-xs font-semibold text-fg">Retainer collection rate</h3><p className="mt-1 text-[10px] text-muted">Collected versus billed</p></div><span className="text-sm font-semibold tabular-nums">{retainerBilled>0?((retainerCollected/retainerBilled)*100).toFixed(1):'0.0'}%</span></div>
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-panel"><div className="h-full rounded-full bg-success" style={{width:(retainerBilled>0?Math.min(100,retainerCollected/retainerBilled*100):0)+'%'}}/></div>
+      </section>
+    </div>
+  </section>
+)}
 {!embedded && (
           <section className="rounded-card border border-line bg-panel overflow-hidden">
   <div className="border-b border-line p-4">
@@ -4303,7 +4283,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
           </div>
         )}
       </Modal>
-    </FinanceWorkspaceContainer>
+    </div>
   );
 };
 
