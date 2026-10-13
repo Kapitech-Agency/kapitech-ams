@@ -594,7 +594,7 @@ const CASH_ACCOUNT_OPTIONS = [
 ];
 
 export const AdminFinanceWorkspace: React.FC = () => {
-  const { mode: reportPeriodMode, value: reportPeriodValue, setMode: setReportPeriodMode, setValue: setReportPeriodValue, matchesDate, matchesInterval } = useReportingPeriod();
+  const { mode: reportPeriodMode, value: reportPeriodValue, enabled: reportPeriodEnabled, setMode: setReportPeriodMode, setValue: setReportPeriodValue, matchesDate, matchesInterval } = useReportingPeriod();
   const { language } = useLanguage();
   const locale = language === 'id' ? 'id-ID' : 'en-US';
   const canViewFinancials = hasAdminPermission('canViewFinancials');
@@ -1327,6 +1327,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
       { id: 'month-net', label: 'Net cash movement (proxy)', value: formatMoney(cashInThisMonth - cashOutThisMonth), context: 'Recorded movement only; not reconciled closing cash', icon: <CircleDollarSign size={15} /> }
     ];
     const recentInvoices: TableRow[] = [...reportInvoices]
+      .filter((invoice) => matchesDate(getInvoiceDate(invoice)))
       .sort((a, b) => String(b.issueDate || '').localeCompare(String(a.issueDate || '')))
       .slice(0, 6)
       .map((invoice) => ({
@@ -1362,7 +1363,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
             <AdminMetricStrip metrics={metrics} />
             <FinanceDataTable
               title="Recent invoice register"
-              description="Latest issued invoices with current outstanding balances."
+              description={reportPeriodEnabled ? 'Issued invoices within the selected reporting period, with current outstanding balances.' : 'Latest issued invoices with current outstanding balances.'}
               columns={[{ label: 'Invoice no.' }, { label: 'Client' }, { label: 'Issue date' }, { label: 'Invoice value', align: 'right' }, { label: 'Outstanding', align: 'right' }, { label: 'Status' }]}
               rows={recentInvoices}
               emptyMessage="No issued invoices were returned by AMS."
@@ -1578,8 +1579,19 @@ export const AdminFinanceWorkspace: React.FC = () => {
           };
         });
         const rows = allCashLedgerRows.filter((row) => matchesDate(row.date) && matching(row.search)).reverse();
-        const totalIn = sumAmounts<CashMovement>(cashRows, (entry) => entry.cashIn);
-        const totalOut = sumAmounts<CashMovement>(cashRows, (entry) => entry.cashOut);
+        const selectedCashRange = reportPeriodEnabled ? getReportingPeriodRange(reportPeriodValue, reportPeriodMode) : null;
+        const cashKpiRows = selectedCashRange
+          ? cashRows.filter((entry) => /^\\d{4}-\\d{2}-\\d{2}$/.test(entry.date) && entry.date >= selectedCashRange.startDate && entry.date <= selectedCashRange.endDate)
+          : cashRows;
+        const totalIn = sumAmounts<CashMovement>(cashKpiRows, (entry) => entry.cashIn);
+        const totalOut = sumAmounts<CashMovement>(cashKpiRows, (entry) => entry.cashOut);
+        const cashBalanceRows = selectedCashRange
+          ? cashRows.filter((entry) => /^\\d{4}-\\d{2}-\\d{2}$/.test(entry.date) && entry.date <= selectedCashRange.endDate)
+          : cashRows;
+        const closingBalanceAvailable = opening !== null && !(selectedCashRange && openingDate && selectedCashRange.endDate < openingDate);
+        const periodClosingBalance = closingBalanceAvailable
+          ? opening! + sumAmounts<CashMovement>(cashBalanceRows, (entry) => entry.cashIn - entry.cashOut)
+          : null;
         return (
           <div className="space-y-4">
             <WorkbookNote tone={opening === null ? 'warning' : 'info'} title={opening === null ? 'Cash ledger needs its opening balance' : 'Cash ledger is connected to its opening balance'}>
@@ -1588,10 +1600,10 @@ export const AdminFinanceWorkspace: React.FC = () => {
                 : 'Opening balance comes from the saved finance register. Movements combine invoice collections, expenses, and recorded bank or cash adjustments. Reconcile the result with the bank statement before closing the month.'}
             </WorkbookNote>
             <AdminMetricStrip metrics={[
-              {id:'cash-opening',label:'Opening balance',value:opening === null ? 'Not set' : formatMoney(opening),context:'Account 1000 · Cash & Bank',icon:<Landmark size={15}/>},
-              {id:'cash-in',label:'Recorded cash in',value:formatMoney(totalIn),context:'Dated movements in loaded source records',icon:<ArrowDown size={15}/>},
-              {id:'cash-out',label:'Recorded cash out',value:formatMoney(totalOut),context:'Dated movements in loaded source records',icon:<ArrowUpRight size={15}/>},
-              {id:'cash-closing',label:'Provisional balance',value:opening === null ? 'Not available' : formatMoney(opening+totalIn-totalOut),context:'Opening + in − out; un-reconciled',icon:<WalletCards size={15}/>}
+              {id:'cash-opening',label:'Opening balance',value:opening === null ? 'Not set' : formatMoney(opening),context:openingDate ? 'Account 1000 · from ' + formatDate(openingDate) : 'Account 1000 · Cash & Bank',icon:<Landmark size={15}/>},
+              {id:'cash-in',label:'Recorded cash in',value:formatMoney(totalIn),context:reportPeriodEnabled ? 'Dated movements in selected period' : 'Dated movements in loaded source records',icon:<ArrowDown size={15}/>},
+              {id:'cash-out',label:'Recorded cash out',value:formatMoney(totalOut),context:reportPeriodEnabled ? 'Dated movements in selected period' : 'Dated movements in loaded source records',icon:<ArrowUpRight size={15}/>},
+              {id:'cash-closing',label:reportPeriodEnabled ? 'Provisional period-end balance' : 'Provisional balance',value:periodClosingBalance === null ? 'Not available' : formatMoney(periodClosingBalance),context:'Opening balance plus recorded movements through period end; unreconciled',icon:<WalletCards size={15}/>}
             ]}/>
             <FinanceDataTable
               title="Cash & Bank ledger"
@@ -1610,9 +1622,20 @@ export const AdminFinanceWorkspace: React.FC = () => {
         const bills = getRegisterRecords('vendor-bill').filter((record) => matchesDate(record.payload.billDate || record.payload.dueDate || record.createdAt) && matching([
           record.recordKey, record.payload.billNo, record.payload.vendorName, record.payload.projectName, record.payload.dueDate, record.payload.paymentStatus
         ]));
-        const payableTotalIDR = sumAmounts<WorkbookRecord>(bills.filter((record)=>(String(record.payload.currency||'IDR')==='IDR')),(record)=>Number(record.payload.outstanding ?? record.payload.total)||0);
-        const foreignCurrencyBillCount = bills.filter((record)=>String(record.payload.currency||'IDR')!=='IDR').length;
         const vendorPayments = getRegisterRecords('vendor-bill-payment');
+        const billPaidFromLinkedPayments = (bill: WorkbookRecord) => sumAmounts<WorkbookRecord>(
+          vendorPayments.filter((payment) => String(payment.payload.billId || '') === bill.id),
+          (payment) => Number(payment.payload.amount) || 0
+        );
+        const billOutstandingFromLinkedPayments = (bill: WorkbookRecord) => Math.max(
+          0,
+          (Number(bill.payload.total) || 0) - billPaidFromLinkedPayments(bill)
+        );
+        const payableTotalIDR = sumAmounts<WorkbookRecord>(
+          bills.filter((record) => String(record.payload.currency || 'IDR') === 'IDR'),
+          billOutstandingFromLinkedPayments
+        );
+        const foreignCurrencyBillCount = bills.filter((record)=>String(record.payload.currency||'IDR')!=='IDR').length;
         const scheduleRows = bills.map((bill) => {
           const billPayments = vendorPayments.filter((payment) => String(payment.payload.billId || '') === bill.id);
           const schedule = getVendorBillInstallmentSchedule(
@@ -1664,12 +1687,12 @@ export const AdminFinanceWorkspace: React.FC = () => {
             ]}/>
             <FinanceDataTable
               title="Accounts Payable register"
-              description="Bill state and outstanding values are calculated from payment records linked to the bill."
+              description="Bill paid and outstanding values use payment records linked to each bill, so the register, installment schedule, and summary stay aligned."
               columns={[{label:'Bill no.'},{label:'Vendor'},{label:'Project'},{label:'Bill date'},{label:'Due date'},{label:'Bill amount',align:'right'},{label:'Paid',align:'right'},{label:'Outstanding',align:'right'},{label:'Status'},{label:'Actions'}]}
               rows={bills.map((record)=> {
                 const total = Number(record.payload.total)||0;
-                const paid = Number(record.payload.paidAmount)||0;
-                const outstanding = Math.max(0,Number(record.payload.outstanding ?? total-paid)||0);
+                const paid = billPaidFromLinkedPayments(record);
+                const outstanding = billOutstandingFromLinkedPayments(record);
                 return {
                   id:record.id,
                   cells:[
@@ -1863,8 +1886,12 @@ export const AdminFinanceWorkspace: React.FC = () => {
         const rows=allPettyLedgerRows.filter((row)=>matchesDate(row.date)&&matching(row.search)).reverse();
         const pending=vouchers.filter((record)=>['pending','approved'].includes(String(record.payload.status||record.status))).length;
         const postedPettyMovements=ledgerMovements.filter((movement)=>movement.source==='Internal cash transfer'||movement.status==='posted');
-        const totalIn=sumAmounts<typeof postedPettyMovements[number]>(postedPettyMovements,(movement)=>movement.cashIn);
-        const totalOut=sumAmounts<typeof postedPettyMovements[number]>(postedPettyMovements,(movement)=>movement.cashOut);
+        const selectedPettyRange = reportPeriodEnabled ? getReportingPeriodRange(reportPeriodValue, reportPeriodMode) : null;
+        const pettyCashKpiMovements = selectedPettyRange
+          ? postedPettyMovements.filter((movement) => /^\\d{4}-\\d{2}-\\d{2}$/.test(movement.date) && movement.date >= selectedPettyRange.startDate && movement.date <= selectedPettyRange.endDate)
+          : postedPettyMovements;
+        const totalIn=sumAmounts<typeof postedPettyMovements[number]>(pettyCashKpiMovements,(movement)=>movement.cashIn);
+        const totalOut=sumAmounts<typeof postedPettyMovements[number]>(pettyCashKpiMovements,(movement)=>movement.cashOut);
         return (
           <div className="space-y-4">
             <WorkbookNote tone={opening===null?'warning':'info'} title={opening===null?'Petty cash needs an opening balance':'Petty cash register connected'}>
@@ -1872,8 +1899,8 @@ export const AdminFinanceWorkspace: React.FC = () => {
             </WorkbookNote>
             <AdminMetricStrip metrics={[
               {id:'petty-opening',label:'Opening balance',value:opening===null?'Not set':formatMoney(opening),context:'Account 1100 · Petty Cash Reserve',icon:<WalletCards size={15}/>},
-              {id:'petty-in',label:'Posted cash in',value:formatMoney(totalIn),context:'Posted voucher receipts',icon:<ArrowDown size={15}/>},
-              {id:'petty-out',label:'Posted cash out',value:formatMoney(totalOut),context:'Posted voucher expenses',icon:<ArrowUpRight size={15}/>},
+              {id:'petty-in',label:'Posted cash in',value:formatMoney(totalIn),context:reportPeriodEnabled ? 'Posted movements in selected period' : 'Posted voucher receipts',icon:<ArrowDown size={15}/>},
+              {id:'petty-out',label:'Posted cash out',value:formatMoney(totalOut),context:reportPeriodEnabled ? 'Posted movements in selected period' : 'Posted voucher expenses',icon:<ArrowUpRight size={15}/>},
               {id:'petty-pending',label:'Pending approval',value:String(pending),context:'Vouchers awaiting approve/post',icon:<ShieldAlert size={15}/>}
             ]}/>
             <FinanceDataTable title="Petty Cash Ledger" description="Voucher movements and internal cash transfers, sorted by date." columns={[{label:'Date'},{label:'Voucher / reference'},{label:'Description'},{label:'Cash in',align:'right'},{label:'Cash out',align:'right'},{label:'Running balance',align:'right'},{label:'Status'},{label:'Actions'}]} rows={rows} emptyMessage="No petty-cash vouchers or transfers are recorded." actions={<div className="flex flex-wrap gap-2">{registerAddButton('petty-cash-voucher','Add voucher')}{canManageFinanceRecords && <><Button variant="secondary" type="button" onClick={()=>openRegisterForm('cash-bank-transaction',undefined,{transactionKind:'bank-to-petty-cash',accountCode:'1000',counterpartAccountCode:'1100',direction:'out',description:'Petty cash top-up'})}>Top up from bank</Button><Button variant="secondary" type="button" onClick={()=>openCashOpeningForm('1100')}>{opening===null?'Set opening balance':'Edit opening balance'}</Button></>}</div>}/>
