@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowDown, ArrowUp, ArrowUpRight, Briefcase, ChevronsUpDown, CircleDollarSign, Download, FileText, Landmark, Plus, RefreshCw, Search, ShieldAlert, WalletCards, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpRight, Briefcase, ArrowUpDown, CircleDollarSign, Download, FileText, Landmark, Plus, RefreshCw, Search, ShieldAlert, WalletCards, X } from 'lucide-react';
 import { AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminPanel, AdminSectionTabs, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import Button from '../../components/ui/Button';
 import { AdminInvoicing } from './AdminInvoicing';
@@ -286,7 +286,7 @@ const FinanceDataTable: React.FC<{
                       <span>{column.label}</span>
                       {sortable && (isSorted
                         ? sort?.direction === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />
-                        : <ChevronsUpDown size={12} className="opacity-45" />)}
+                        : <ArrowUpDown size={12} className="opacity-45" />)}
                     </button>
                   </th>
                 );
