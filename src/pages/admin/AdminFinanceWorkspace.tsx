@@ -1658,8 +1658,8 @@ export const AdminFinanceWorkspace: React.FC = () => {
         description="Excel-aligned finance workflow · 20 workbook sheets · existing AMS design system"
         actions={
           <>
-            <Button variant="secondary" type="button" onClick={openLegacyTransactions} icon={<ArrowUpRight size={14} />}>Open transaction workspace</Button>
-            <Button variant="secondary" type="button" onClick={() => void loadData(true)} loading={refreshing} icon={<RefreshCw size={14} />}>Refresh data</Button>
+            <Button variant="secondary" type="button" onClick={openLegacyTransactions}>Open transaction workspace</Button>
+            <Button variant="secondary" type="button" onClick={() => void loadData(true)} loading={refreshing}>Refresh data</Button>
           </>
         }
       />
