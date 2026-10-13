@@ -200,7 +200,7 @@ const SUPPLEMENTARY_FINANCE_RECORD_TYPES = [
 const REGISTER_FORMS: Record<string, { title: string; description: string; fields: RegisterField[] }> = {
   'chart-of-accounts': {
     title: 'Chart of Accounts',
-    description: 'Add an account using the workbook account-code, account-type and normal-balance structure.',
+    description: 'Add an account using its code, type, and normal balance.',
     fields: [
       { key:'code',label:'Account code',type:'text',required:true,placeholder:'e.g. 5700' },
       { key:'name',label:'Account name',type:'text',required:true },
@@ -292,10 +292,10 @@ const REGISTER_FORMS: Record<string, { title: string; description: string; field
   },
   'project-finance': {
     title:'Project Finance Setup',
-    description:'Store the contract value, vendor commitment and other obligations that drive the workbook project-profit calculation.',
+    description:'Store the contract value, vendor commitments, and other obligations used to calculate project profit.',
     fields:[
       {key:'projectId',label:'AMS project (optional)',type:'select',optionSource:'projects'},
-      {key:'projectName',label:'Project name / Excel key',type:'text',required:true},
+      {key:'projectName',label:'Project name / reference',type:'text',required:true},
       {key:'clientName',label:'Client',type:'text'},
       {key:'pic',label:'PIC',type:'text'},
       {key:'contractValue',label:'Contract value (IDR)',type:'number',required:true},
@@ -309,7 +309,7 @@ const REGISTER_FORMS: Record<string, { title: string; description: string; field
   },
   'team-fee': {
     title:'Project Team Fee',
-    description:'Team Fee is a separate workbook register and must not be combined with Team Reward.',
+    description:'Team Fee is tracked separately from Team Reward.',
     fields:[
       {key:'projectId',label:'AMS project (optional)',type:'select',optionSource:'projects'},
       {key:'projectName',label:'Project name / Excel key',type:'text',required:true},
@@ -323,7 +323,7 @@ const REGISTER_FORMS: Record<string, { title: string; description: string; field
   },
   'project-allocation': {
     title:'Project Profit Allocation',
-    description:'Allocation amounts are calculated server-side using the workbook percentages and the net project profit base.',
+    description:'Allocation amounts are calculated using the configured percentages and net project profit.',
     fields:[
       {key:'projectId',label:'AMS project (optional)',type:'select',optionSource:'projects'},
       {key:'projectName',label:'Project name / Excel key',type:'text',required:true},
@@ -354,7 +354,7 @@ const REGISTER_FORMS: Record<string, { title: string; description: string; field
   },
   'monthly-closing': {
     title:'Monthly Closing Control',
-    description:'Update the selected workbook checklist item. Marking a control Done requires separate management approval.',
+    description:'Update the selected closing control. Marking a control Done requires separate management approval.',
     fields:[
       {key:'period',label:'Reporting month',type:'month',required:true},
       {key:'checklistItem',label:'Checklist item',type:'select',required:true,options:WORKBOOK_CLOSING_ITEMS.map((x)=>x.label)},
@@ -433,7 +433,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
       readSource('Vendors', () => api.vendors.getAll())
     ]);
     const workbookResults = await Promise.all(SUPPLEMENTARY_FINANCE_RECORD_TYPES.map((type) =>
-      readSource('Workbook register ' + type, () => api.finance.workbookList(type))
+      readSource('Finance register ' + type, () => api.finance.workbookList(type))
     ));
     const invoiceSource = baseResults[0];
     const expenseSource = baseResults[1];
@@ -568,7 +568,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
   const openRegisterForm = (type: string, record?: WorkbookRecord, initialPayload: Record<string, any> = {}) => {
     const definition = REGISTER_FORMS[type];
     if (!definition) {
-      setRegisterActionError('This workbook section does not have an editable register form yet.');
+      setRegisterActionError('This finance record type cannot be edited from this form yet.');
       return;
     }
     const today = new Date().toISOString().slice(0, 10);
