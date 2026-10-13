@@ -311,7 +311,7 @@ const REGISTER_FORMS: Record<string, { title: string; description: string; field
     description:'Link the payment to a vendor bill and, where known, its 30% / 20% / 50% installment. Unassigned payments are allocated FIFO.',
     fields:[
       {key:'billId',label:'Vendor bill',type:'select',required:true,optionSource:'vendorBills'},
-      {key:'installmentNumber',label:'Scheduled payment',type:'select',required:true,options:['Unassigned · FIFO','1 · 30%','2 · 20%','3 · 50%'],defaultValue:'Unassigned · FIFO'},
+      {key:'installmentNumber',label:'Scheduled payment',type:'select',required:true,options:['Unassigned · FIFO','1 · 30%','2 · 20%','3 · 50%'],defaultValue:'Unassigned'},
       {key:'paidDate',label:'Payment date',type:'date',required:true},
       {key:'amount',label:'Payment amount',type:'number',required:true},
       {key:'method',label:'Payment method',type:'select',required:true,options:['bank_transfer','credit_card','cash','other'],defaultValue:'bank_transfer'},
@@ -656,8 +656,8 @@ export const AdminFinanceWorkspace: React.FC = () => {
     if (record && type === 'vendor-bill-payment') {
       const installmentNumber = Number(record.payload.installmentNumber || 0);
       savedPayload.installmentNumber = installmentNumber >= 1 && installmentNumber <= 3
-        ? installmentNumber + ' · ' + [30, 20, 50][installmentNumber - 1] + '%'
-        : 'Unassigned · FIFO';
+        ? String(installmentNumber)
+        : 'Unassigned';
     }
     setEditor({ type, record, payload: { ...defaults, ...savedPayload, ...initialPayload } });
     setRegisterActionError(null);
@@ -721,6 +721,30 @@ export const AdminFinanceWorkspace: React.FC = () => {
           payload.accountCode = rule.from;
           payload.counterpartAccountCode = rule.to;
           payload.direction = rule.direction;
+        }
+      }
+      if (current.type === 'vendor-bill-payment' && ['billId', 'installmentNumber'].includes(key)) {
+        const bill = getRegisterRecords('vendor-bill').find((record) => record.id === String(payload.billId || ''));
+        if (bill) {
+          const payments = getRegisterRecords('vendor-bill-payment')
+            .filter((record) => record.id !== current.record?.id && String(record.payload.billId || '') === bill.id)
+            .map((record) => ({
+              id: record.id,
+              amount: record.payload.amount,
+              installmentNumber: record.payload.installmentNumber,
+              paidDate: record.payload.paidDate
+            }));
+          const schedule = getVendorBillInstallmentSchedule(
+            Number(bill.payload.total) || 0,
+            payments,
+            Array.isArray(bill.payload.paymentSchedule) ? bill.payload.paymentSchedule as number[] : undefined
+          );
+          const billOutstanding = Math.max(0, (Number(bill.payload.total) || 0) - payments.reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0));
+          const installmentNumber = Number(payload.installmentNumber);
+          const selectedOutstanding = [1, 2, 3].includes(installmentNumber)
+            ? Number(schedule.find((item) => item.number === installmentNumber)?.outstanding) || 0
+            : schedule.reduce((sum, item) => sum + item.outstanding, 0);
+          payload.amount = Math.min(billOutstanding, Math.max(0, selectedOutstanding));
         }
       }
       return { ...current, payload };
