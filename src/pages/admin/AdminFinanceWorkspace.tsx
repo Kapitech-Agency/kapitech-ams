@@ -1380,7 +1380,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
         return (
           <div className="space-y-4">
             <WorkbookNote tone="warning" title="Preliminary P&L mapping">
-              Reporting month is filtered by invoice issue date and expense date. AMS expense categories are not yet identical to the workbook's Project Cost / Operating Cost field, so unmapped expenses are shown separately and excluded from the preliminary net figure until the mapping is approved.
+              The report uses invoice issue dates and expense dates. Expense categories that are not mapped to project or operating costs remain separate and are excluded from the preliminary net figure until reviewed.
             </WorkbookNote>
             <AdminPanel title="Reporting period" bodyClassName="p-4">
               <label className="block text-xs font-medium text-muted">Month
