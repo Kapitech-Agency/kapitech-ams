@@ -28,12 +28,8 @@ import {
   ArrowUpRight,
   RefreshCw
 } from 'lucide-react';
-import {
-  AgencyVendor,
-  VendorContract,
-  VendorType,
-  VendorStatus,
-} from '../../lib/vendorStore';
+import { VENDOR_EVENT_NAME } from '../../lib/vendorStore';
+import type { AgencyVendor, VendorContract, VendorType, VendorStatus } from '../../lib/vendorStore';
 import { formatAmount, getActiveCurrency, CurrencyCode, CURRENCY_EVENT } from '../../lib/currency';
 import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
@@ -48,7 +44,14 @@ import { toSlug } from '../../lib/slug';
 
 import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
-export const AdminVendors: React.FC = () => {
+
+const VendorWorkspaceContainer: React.FC<{ embedded?: boolean; children: React.ReactNode }> = ({ embedded = false, children }) => (
+  embedded
+    ? <div className="min-w-0 space-y-4">{children}</div>
+    : <AdminPageShell featureSlug="vendors-module">{children}</AdminPageShell>
+);
+
+export const AdminVendors: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
   const { t, language } = useLanguage();
   const canManageVendors = hasAdminPermission('canManageVendors');
   const canViewVendors =
@@ -103,13 +106,15 @@ export const AdminVendors: React.FC = () => {
   const [formStatus, setFormStatus] = useState<VendorStatus>('active');
   const [formIsVetted, setFormIsVetted] = useState<boolean>(true);
 
-  const loadVendors = async () => {
-    setIsLoading(true);
+  const loadVendors = async (silent = false) => {
+    if (!silent) {
+      setIsLoading(true);
+      showStatus(null);
+    }
     setLoadError(false);
-    showStatus(null);
     if (!canViewVendors) {
       setVendors([]);
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
       return;
     }
     try {
@@ -124,18 +129,21 @@ export const AdminVendors: React.FC = () => {
         })));
       } else {
         setLoadError(true);
-        showStatus(res.error || (language === 'id' ? 'Vendor gagal dimuat.' : 'Failed to load vendors.'));
+        if (!silent) showStatus(res.error || (language === 'id' ? 'Vendor gagal dimuat.' : 'Failed to load vendors.'));
       }
     } catch {
       setLoadError(true);
-      showStatus(language === 'id' ? 'Vendor gagal dimuat.' : 'Failed to load vendors.');
+      if (!silent) showStatus(language === 'id' ? 'Vendor gagal dimuat.' : 'Failed to load vendors.');
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   };
 
   useEffect(() => {
     void loadVendors();
+    const handleVendorUpdate = () => void loadVendors(true);
+    window.addEventListener(VENDOR_EVENT_NAME, handleVendorUpdate);
+    return () => window.removeEventListener(VENDOR_EVENT_NAME, handleVendorUpdate);
   }, [canViewVendors, language]);
 
   useEffect(() => {
@@ -243,6 +251,7 @@ export const AdminVendors: React.FC = () => {
       const savedVendor = res.data.vendor as AgencyVendor;
       setVendors(prev => prev.map(item => item.id === v.id ? savedVendor : item));
       if (selectedVendor?.id === v.id) setSelectedVendor(savedVendor);
+      window.dispatchEvent(new Event(VENDOR_EVENT_NAME));
       showStatus(
         language === 'id'
           ? `Status verifikasi ${v.name} diubah menjadi ${savedVendor.isVetted ? 'Terverifikasi (Vetted)' : 'Standar'}`
@@ -308,6 +317,7 @@ export const AdminVendors: React.FC = () => {
     setVendors(prev => editingVendor
       ? prev.map(item => item.id === savedVendor.id ? savedVendor : item)
       : [savedVendor, ...prev]);
+    window.dispatchEvent(new Event(VENDOR_EVENT_NAME));
     setIsModalOpen(false);
     showStatus(language === 'id' ? 'Data vendor berhasil disimpan!' : 'Vendor profile saved successfully!', 'success');
     setTimeout(() => showStatus(null), 3500);
@@ -330,6 +340,7 @@ export const AdminVendors: React.FC = () => {
         return;
       }
       setVendors(prev => prev.filter(item => item.id !== id));
+      window.dispatchEvent(new Event(VENDOR_EVENT_NAME));
       if (selectedVendor?.id === id) {
         setIsDrawerOpen(false);
         setSelectedVendor(null);
@@ -344,7 +355,7 @@ export const AdminVendors: React.FC = () => {
 
   if (isLoading && vendors.length === 0) {
     return (
-      <AdminPageShell featureSlug="vendors-module">
+      <VendorWorkspaceContainer embedded={embedded}>
         <AdminModuleHeader slug="vendors-header"
           className="mb-0"
           title={t('admin.nav.vendors')}
@@ -358,19 +369,21 @@ export const AdminVendors: React.FC = () => {
           </div>
           <Skeleton className="h-[420px] rounded-card border border-line bg-panel" />
         </div>
-      </AdminPageShell>
+      </VendorWorkspaceContainer>
     );
   }
 
   return (
-    <AdminPageShell featureSlug="vendors-module">
+    <VendorWorkspaceContainer embedded={embedded}>
       {/* Top Header */}
       <AdminModuleHeader
         className="mb-0"
         title={(
-          <span className="flex items-center gap-2.5"><Users className="shrink-0 text-accent-text" size={22} />{language === 'id' ? 'Personel Vendor' : 'Vendor Personnel'}</span>
+          <span className="flex items-center gap-2.5"><Users className="shrink-0 text-accent-text" size={22} />{embedded ? (language === 'id' ? 'Direktori Vendor & Freelancer' : 'Vendor & Freelancer Directory') : (language === 'id' ? 'Personel Vendor' : 'Vendor Personnel')}</span>
         )}
-        description={language === 'id' ? 'Direktori personel vendor, freelance, kontraktor, dan partner operasional yang digunakan lintas project.' : 'Directory of vendor personnel, freelancers, contractors, and operational partners used across projects.'}
+        description={embedded
+          ? (language === 'id' ? 'Kelola profil vendor, freelancer, rate, kontrak, dan verifikasi tanpa meninggalkan tab Finance.' : 'Manage vendor profiles, rates, contracts, and verification without leaving the Finance tab.')
+          : (language === 'id' ? 'Direktori personel vendor, freelance, kontraktor, dan partner operasional yang digunakan lintas project.' : 'Directory of vendor personnel, freelancers, contractors, and operational partners used across projects.')}
         actions={(
           <button type="button" onClick={handleOpenAdd} disabled={!canManageVendors} className="h-9 min-h-9 px-3.5 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-semibold flex items-center gap-2 transition-all disabled:cursor-not-allowed disabled:opacity-50">
             <Plus size={15} />
@@ -380,7 +393,7 @@ export const AdminVendors: React.FC = () => {
       />
 
 
-      <div className="min-[900px]:hidden min-w-0" data-ams-slug="team-mobile-tabs">
+      {!embedded && <div className="min-[900px]:hidden min-w-0" data-ams-slug="team-mobile-tabs">
         <AdminSectionTabs
           ariaLabel="Team sections"
           activeKey="vendor-directory"
@@ -392,7 +405,7 @@ export const AdminVendors: React.FC = () => {
             { key: 'time-logs', label: 'Time Logs', to: '/admin/time-logs' },
           ]}
         />
-      </div>
+      </div>}
 
 
       {/* Operation feedback */}
@@ -932,6 +945,6 @@ export const AdminVendors: React.FC = () => {
         confirmLabel={language === 'id' ? 'Hapus' : 'Delete'}
         onConfirm={() => { if (deleteTarget) void confirmDeleteVendor(deleteTarget.id); }}
       />
-    </AdminPageShell>
+    </VendorWorkspaceContainer>
   );
 };

@@ -34,8 +34,11 @@ test('Finance top-level tabs and clean sub-tabs preserve direct transaction entr
   const headerEnd = renderedPage.indexOf('      />', headerStart);
   assert.ok(headerStart >= 0 && headerEnd > headerStart, 'Finance must use the shared module header.');
   assert.doesNotMatch(renderedPage.slice(headerStart, headerEnd), /\bicon=/, 'Finance header must not render icons.');
-  assert.match(uiSource, /Manage invoices/);
-  assert.match(uiSource, /Manage expenses/);
+  assert.match(uiSource, /case 'revenue':\s*return <AdminInvoicing embeddedView="invoices" \/>/);
+  assert.match(uiSource, /case 'expenses':\s*return <AdminInvoicing embeddedView="income-expenses" embeddedIncomeExpenseMode="expenses" \/>/);
+  assert.match(uiSource, /case 'accounts-receivable':\s*return <AdminInvoicing embeddedView="receivables" \/>/);
+  assert.match(uiSource, /case 'vendors':[\s\S]*?<AdminVendors embedded \/>/);
+  assert.match(uiSource, /registerAddButton\('chart-of-accounts', 'Add account'\)/);
   assert.match(uiSource, /Add movement/);
   assert.match(uiSource, /Add vendor bill/);
   assert.match(uiSource, /Add project finance record/);
@@ -70,7 +73,7 @@ test('Finance groups and vendor workflows are separated by user task', async () 
   assert.match(accountingGroup, /key: 'chart-of-accounts'/);
 
   const apStart = workspace.indexOf("case 'accounts-payable': {");
-  const vendorsStart = workspace.indexOf("case 'vendors': {", apStart);
+  const vendorsStart = workspace.indexOf("case 'vendors':", apStart);
   const projectStart = workspace.indexOf("case 'project-finance': {", vendorsStart);
   assert.ok(apStart >= 0 && vendorsStart > apStart && projectStart > vendorsStart);
   const apView = workspace.slice(apStart, vendorsStart);
@@ -80,8 +83,9 @@ test('Finance groups and vendor workflows are separated by user task', async () 
   assert.match(apView, /bills\.length > 0 &&/);
   assert.match(workspace, /receivables: 'accounts-receivable'/);
   assert.doesNotMatch(apView, /title="Vendor contract references"/);
-  assert.match(vendorsView, /title="Vendor & freelancer directory"/);
-  assert.match(vendorsView, /title="Vendor contract references"/);
+  assert.match(vendorsView, /<AdminVendors embedded \/>/);
+  assert.match(vendorsView, /Vendor contract register/);
+  assert.match(vendorsView, /openVendorContractEditor\(vendor, contract\)/);
   assert.doesNotMatch(vendorsView, /Vendor & Freelancer payment schedule/);
   assert.match(apView, /installment\.percentage/);
   assert.match(apView, /Outstanding \{formatMoney\(installment\.outstanding, currency\)\}/);
@@ -97,4 +101,21 @@ test('Finance locale uses the selected application language and localized financ
   assert.match(workspace, /Cash and bank accounts/);
   assert.match(translations, /'admin\.finance\.tab\.overviewControl': 'Overview & Control'/);
   assert.match(translations, /'admin\.finance\.tab\.overviewControl': 'Ringkasan & Kontrol'/);
+});
+
+test('Finance worksheets embed the existing transactional workflows instead of routing users away', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
+  const vendors = await read('src/pages/admin/AdminVendors.tsx');
+
+  assert.match(invoicing, /type EmbeddedFinanceView = 'invoices' \| 'receivables' \| 'income-expenses'/);
+  assert.match(invoicing, /embeddedReceivablesOnly \|\| hasOpenReceivable/);
+  assert.match(invoicing, /embedded && canCreateInvoice && <button[\s\S]*?onClick=\{openCreateInvoice\}/);
+  assert.match(invoicing, /openPayment\(invoice\)/);
+  assert.match(invoicing, /embeddedIncomeExpenseMode \|\| 'income'/);
+  assert.match(invoicing, /Expense ledger/);
+  assert.match(vendors, /export const AdminVendors: React\.FC<\{ embedded\?: boolean \}>/);
+  assert.match(vendors, /!embedded && <div className="min-\[900px\]:hidden min-w-0" data-ams-slug="team-mobile-tabs">/);
+  assert.match(workspace, /accountsByCode\.values\(\)/);
+  assert.match(workspace, /This account code already exists/);
 });

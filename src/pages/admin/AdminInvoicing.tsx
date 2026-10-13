@@ -703,7 +703,21 @@ const FinanceCashFlowChart: React.FC<{
   );
 };
 const FinanceMetricCard: React.FC<React.ComponentProps<typeof AdminMetricCard>> = AdminMetricCard;
-export const AdminInvoicing: React.FC = () => {
+
+type EmbeddedFinanceView = 'invoices' | 'receivables' | 'income-expenses';
+type AdminInvoicingProps = {
+  /** Reuse the existing transactional invoice/expense flows from a Finance worksheet. */
+  embeddedView?: EmbeddedFinanceView;
+  /** Lock the embedded transaction ledger to one worksheet workflow. */
+  embeddedIncomeExpenseMode?: 'income' | 'expenses';
+};
+const FinanceWorkspaceContainer: React.FC<{ embedded?: boolean; children: React.ReactNode }> = ({ embedded = false, children }) => (
+  embedded
+    ? <div className="min-w-0 space-y-5">{children}</div>
+    : <AdminPageShell featureSlug="finance-module" className="finance-module">{children}</AdminPageShell>
+);
+
+export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, embeddedIncomeExpenseMode }) => {
   const { language } = useLanguage();
   const location = useLocation();
   const canViewFinancials = hasAdminPermission('canViewFinancials');
@@ -712,12 +726,16 @@ export const AdminInvoicing: React.FC = () => {
   const canDeleteInvoice = canManageInvoices;
 
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
+  const embedded = Boolean(embeddedView);
+  const embeddedReceivablesOnly = embeddedView === 'receivables';
 
   const financeView = useMemo(() => {
+    if (embeddedView === 'receivables') return 'invoices';
+    if (embeddedView) return embeddedView;
     const requestedView = new URLSearchParams(location.search).get('finance') || 'invoices';
     // Proposals are retired as a standalone business module. Keep legacy links safe by routing them to invoices.
     return requestedView === 'quotations' ? 'invoices' : requestedView;
-  }, [location.search]);
+  }, [embeddedView, location.search]);
   const [invoices, setInvoices] = useState<AgencyInvoice[]>([]);
   const [expenses, setExpenses] = useState<FinanceExpense[]>([]);
   const [clients, setClients] = useState<FinanceClient[]>([]);
@@ -733,7 +751,7 @@ export const AdminInvoicing: React.FC = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sort, setSort] = useState<SortKey>('updated');
-  const [ledgerPeriod, setLedgerPeriod] = useState<LedgerPeriod>('reporting-quarter');
+  const [ledgerPeriod, setLedgerPeriod] = useState<LedgerPeriod>(embeddedView ? 'all' : 'reporting-quarter');
   const [paymentFilter, setPaymentFilter] = useState<PaymentFilter>('all');
   const [dueFilter, setDueFilter] = useState<DueFilter>('all');
   const [periodMenuOpen, setPeriodMenuOpen] = useState(false);
@@ -813,7 +831,7 @@ export const AdminInvoicing: React.FC = () => {
   const [usingDemoFinance, setUsingDemoFinance] = useState(false);
   const [usingDemoInvoices, setUsingDemoInvoices] = useState(false);
   const [usingDemoExpenses, setUsingDemoExpenses] = useState(false);
-  const [incomeExpenseMode, setIncomeExpenseMode] = useState<'income' | 'expenses'>('income');
+  const [incomeExpenseMode, setIncomeExpenseMode] = useState<'income' | 'expenses'>(embeddedIncomeExpenseMode || 'income');
   const [incomeSearch, setIncomeSearch] = useState('');
   const [incomePage, setIncomePage] = useState(1);
   const [incomePageSize, setIncomePageSize] = useState(10);
@@ -1286,7 +1304,9 @@ export const AdminInvoicing: React.FC = () => {
       const paymentState: PaymentFilter = balance <= 0 || invoice.status === 'paid' ? 'paid' : collected > 0 ? 'partial' : 'unpaid';
       const dueState: DueFilter = isPastDueInvoice(invoice) ? 'overdue' : isDueSoonInvoice(invoice) ? 'due_soon' : 'later';
       const searchable = [invoice.invoiceNumber, invoice.clientName, invoice.clientCompany, invoice.clientEmail, projectsById.get(invoice.projectId)?.name || ''].join(' ').toLowerCase();
-      return (!query || searchable.includes(query))
+      const hasOpenReceivable = invoice.status !== 'draft' && invoice.status !== 'cancelled' && balance > 0.009;
+      return (!embeddedReceivablesOnly || hasOpenReceivable)
+        && (!query || searchable.includes(query))
         && (statusFilter === 'all' || (statusFilter === 'due_soon' ? isDueSoonInvoice(invoice) : invoice.status === statusFilter))
         && (paymentFilter === 'all' || paymentState === paymentFilter)
         && (dueFilter === 'all' || dueState === dueFilter);
@@ -1299,7 +1319,7 @@ export const AdminInvoicing: React.FC = () => {
       if (sort === 'invoice') return a.invoiceNumber.localeCompare(b.invoiceNumber);
       return String(b.updatedAt || '').localeCompare(String(a.updatedAt || ''));
     });
-  }, [ledgerInvoices, search, statusFilter, paymentFilter, dueFilter, sort, projectsById]);
+  }, [ledgerInvoices, search, statusFilter, paymentFilter, dueFilter, sort, projectsById, embeddedReceivablesOnly]);
 
   useEffect(() => {
     setInvoicePage(1);
@@ -2717,8 +2737,8 @@ export const AdminInvoicing: React.FC = () => {
   }
 
   return (
-    <AdminPageShell featureSlug="finance-module" className="finance-module">
-      <AdminModuleHeader
+    <FinanceWorkspaceContainer embedded={embedded}>
+      {!embedded && <AdminModuleHeader
         className="mb-0"
         title={financeView === 'quotations' ? 'Quotations' : financeView === 'income-expenses' ? 'Income & Expenses' : financeView === 'tax-retainers' ? 'Tax & Retainers' : financeView === 'vendor-payments' ? 'Vendor Payments' : financeView === 'financial-reports' ? 'Financial Reports' : 'Invoices'}
         description={financeView === 'quotations'
@@ -2774,8 +2794,8 @@ export const AdminInvoicing: React.FC = () => {
             )}
           </>
         )}
-      />
-      <div className="min-[900px]:hidden min-w-0">
+      />}
+      {!embedded && <div className="min-[900px]:hidden min-w-0">
         <AdminSectionTabs
           ariaLabel="Finance sections"
           activeKey={financeView === 'invoices' ? 'invoices' : financeView}
@@ -2788,7 +2808,16 @@ export const AdminInvoicing: React.FC = () => {
             { key: 'financial-reports', label: 'Financial Reports', to: '/admin/invoicing?finance=financial-reports' },
           ]}
         />
-      </div>
+      </div>}
+      {embedded && (
+        <div className="flex justify-end">
+          <div className="inline-flex min-h-9 items-center rounded-control border border-line bg-panel p-1" aria-label="Finance currency">
+            {(['IDR', 'USD'] as CurrencyCode[]).map((item) => (
+              <button key={item} type="button" onClick={() => setActiveCurrency(item)} aria-pressed={currency === item} className={'min-h-7 rounded-chip px-2.5 text-[11px] font-semibold ' + (currency === item ? 'bg-accent/10 text-fg border border-accent/25' : 'text-muted hover:bg-bg hover:text-fg border border-transparent')}>{item}</button>
+            ))}
+          </div>
+        </div>
+      )}
       {notice && (
         <div className="fixed right-4 top-[68px] z-[60] w-[min(420px,calc(100vw-32px))]" aria-live="polite" aria-atomic="true">
           <div className={'flex items-start gap-3 rounded-card border px-5 py-3 text-xs ' + (notice.tone === 'success' ? 'border-success/30 bg-panel text-success' : 'border-danger/30 bg-panel text-danger')} role="status">
@@ -2912,24 +2941,35 @@ export const AdminInvoicing: React.FC = () => {
         </div>
       ) : financeView === 'income-expenses' ? (
         <div className="space-y-5">
-          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Income YTD" value={formatFinanceCardAmount(ytdCollected,currency)} context={ytdCollectionRate.toFixed(1)+'% collected vs issued'} sparkline={financeChartData.map((point) => point.inflow)} icon={<WalletCards size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Invoiced YTD" value={formatFinanceCardAmount(ytdInvoiced,currency)} context="Issued billings" sparkline={financeChartData.map((point) => point.inflow + point.retainerTarget)} icon={<Receipt size={15}/>}/><FinanceMetricCard label="Expenses YTD" value={formatFinanceCardAmount(ytdExpenses,currency)} context={currencyExpenses.length+' expense records'} sparkline={financeChartData.map((point) => point.outflow)} icon={<ArrowDown size={15}/>}/><FinanceMetricCard label="Net cash YTD" value={formatFinanceCardAmount(ytdNetCash,currency)} context="Collected less expenses" sparkline={financeChartData.map((point) => point.net)} icon={<TrendingUp size={15}/>} toneClassName={ytdNetCash>=0?'text-success':'text-danger'}/></section>
+          {incomeExpenseMode === 'expenses' ? (
+            <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+              <FinanceMetricCard label="Expenses YTD" value={formatFinanceCardAmount(ytdExpenses,currency)} context="Recorded expense date in the current year" sparkline={financeChartData.map((point) => point.outflow)} icon={<ArrowDown size={15}/>} />
+              <FinanceMetricCard label="Expense records" value={currencyExpenses.filter((expense) => String(expense.date || '').slice(0,4) === String(currentYear)).length} context="Current year · selected currency" icon={<FileText size={15}/>} />
+              <FinanceMetricCard label="Average expense" value={formatFinanceCardAmount(currencyExpenses.length ? currencyExpenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0) / currencyExpenses.length : 0,currency)} context="Across loaded expense records" icon={<WalletCards size={15}/>} />
+              <FinanceMetricCard label="Recurring expenses" value={currencyExpenses.filter((expense) => expense.recurringInterval && expense.recurringInterval !== 'none').length} context="Scheduled cadence recorded" icon={<RefreshCw size={15}/>} />
+            </section>
+          ) : (
+            <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Income YTD" value={formatFinanceCardAmount(ytdCollected,currency)} context={ytdCollectionRate.toFixed(1)+'% collected vs issued'} sparkline={financeChartData.map((point) => point.inflow)} icon={<WalletCards size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Invoiced YTD" value={formatFinanceCardAmount(ytdInvoiced,currency)} context="Issued billings" sparkline={financeChartData.map((point) => point.inflow + point.retainerTarget)} icon={<Receipt size={15}/>}/><FinanceMetricCard label="Expenses YTD" value={formatFinanceCardAmount(ytdExpenses,currency)} context={currencyExpenses.length+' expense records'} sparkline={financeChartData.map((point) => point.outflow)} icon={<ArrowDown size={15}/>}/><FinanceMetricCard label="Net cash YTD" value={formatFinanceCardAmount(ytdNetCash,currency)} context="Collected less expenses" sparkline={financeChartData.map((point) => point.net)} icon={<TrendingUp size={15}/>} toneClassName={ytdNetCash>=0?'text-success':'text-danger'}/></section>
+          )}
           <section data-ams-feature-slug="finance-income-expenses-ledger" data-ams-slug="finance-income-expenses-ledger" className="rounded-card border border-line bg-panel overflow-hidden" aria-label="Income and expenses ledger">
   <header className="border-b border-line bg-panel p-4 sm:px-5">
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2.5">
-            <h2 className="text-sm font-semibold text-fg">Income & expenses ledger</h2>
+            <h2 className="text-sm font-semibold text-fg">{incomeExpenseMode === 'expenses' ? 'Expense ledger' : 'Income & expenses ledger'}</h2>
             <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] font-medium text-muted">
               {incomeExpenseMode === 'income' ? incomeRows.length + ' payments' : filteredExpenses.length + ' expenses'}
             </span>
           </div>
-          <p className="mt-1 text-xs text-muted">Review collected income and recorded operating spend from the same finance workspace.</p>
+          <p className="mt-1 text-xs text-muted">{incomeExpenseMode === 'expenses' ? 'Record and review expenses directly in this Finance tab. Voiding keeps an auditable server record.' : 'Review collected income and recorded operating spend from the same finance workspace.'}</p>
         </div>
-        <div className="inline-flex shrink-0 items-center rounded-control border border-line bg-bg p-0.5" role="tablist" aria-label="Ledger type">
-          <button type="button" role="tab" aria-selected={incomeExpenseMode === 'income'} onClick={() => setIncomeExpenseMode('income')} className={'min-h-8 rounded-chip border px-3 text-[11px] font-semibold transition-colors ' + (incomeExpenseMode === 'income' ? 'border-accent/25 bg-accent/10 text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}>Income</button>
-          <button type="button" role="tab" aria-selected={incomeExpenseMode === 'expenses'} onClick={() => setIncomeExpenseMode('expenses')} className={'min-h-8 rounded-chip border px-3 text-[11px] font-semibold transition-colors ' + (incomeExpenseMode === 'expenses' ? 'border-accent/25 bg-accent/10 text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}>Expenses</button>
-        </div>
+        {!embeddedIncomeExpenseMode && (
+          <div className="inline-flex shrink-0 items-center rounded-control border border-line bg-bg p-0.5" role="tablist" aria-label="Ledger type">
+            <button type="button" role="tab" aria-selected={incomeExpenseMode === 'income'} onClick={() => setIncomeExpenseMode('income')} className={'min-h-8 rounded-chip border px-3 text-[11px] font-semibold transition-colors ' + (incomeExpenseMode === 'income' ? 'border-accent/25 bg-accent/10 text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}>Income</button>
+            <button type="button" role="tab" aria-selected={incomeExpenseMode === 'expenses'} onClick={() => setIncomeExpenseMode('expenses')} className={'min-h-8 rounded-chip border px-3 text-[11px] font-semibold transition-colors ' + (incomeExpenseMode === 'expenses' ? 'border-accent/25 bg-accent/10 text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')}>Expenses</button>
+          </div>
+        )}
       </div>
       {incomeExpenseMode === 'income' ? (
         <div className="grid gap-2 lg:grid-cols-[minmax(240px,1fr)_minmax(240px,320px)]">
@@ -3143,27 +3183,41 @@ export const AdminInvoicing: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-5">
-          <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Quarter billed" value={formatFinanceCardAmount(currentQuarterTotal,currency)} context={quarterChangePercent===null?'Current quarter':(quarterChangePercent>=0?'+':'')+quarterChangePercent.toFixed(1)+'% vs previous quarter'} sparkline={financeChartData.map((point) => point.inflow + point.retainerTarget)} icon={<Receipt size={15}/>}/><FinanceMetricCard label="Collected YTD" value={formatFinanceCardAmount(ytdCollected,currency)} context={ytdCollectionRate.toFixed(1)+'% collection rate'} sparkline={financeChartData.map((point) => point.inflow)} icon={<WalletCards size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Outstanding" value={formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} context={pendingInvoiceCount+' open invoices'} icon={<Hourglass size={15} className="text-warning"/>} toneClassName="text-warning"/><FinanceMetricCard label="Overdue" value={formatFinanceCardAmount(overdueBalance,currency)} context={criticalOverdueCount+' invoices need attention'} sparkline={financeChartData.map((point) => point.outflow)} icon={<AlertCircle size={15} className="text-danger"/>} toneClassName="text-danger"/></section>
+          {embeddedReceivablesOnly ? (
+            <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+              <FinanceMetricCard label="Outstanding receivables" value={formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} context="Open invoice balances" icon={<WalletCards size={15}/>} toneClassName="text-warning"/>
+              <FinanceMetricCard label="Overdue balance" value={formatFinanceCardAmount(overdueBalance,currency)} context="Past-due invoice balances" icon={<Hourglass size={15}/>} toneClassName="text-danger"/>
+              <FinanceMetricCard label="Open invoices" value={pendingInvoiceCount} context="Issued and not fully paid" icon={<Receipt size={15}/>} />
+              <FinanceMetricCard label="Overdue invoices" value={criticalOverdueCount} context="Require collection follow-up" icon={<AlertCircle size={15}/>} toneClassName="text-danger"/>
+            </section>
+          ) : (
+            <section className="grid grid-cols-2 gap-3 xl:grid-cols-4"><FinanceMetricCard label="Quarter billed" value={formatFinanceCardAmount(currentQuarterTotal,currency)} context={quarterChangePercent===null?'Current quarter':(quarterChangePercent>=0?'+':'')+quarterChangePercent.toFixed(1)+'% vs previous quarter'} sparkline={financeChartData.map((point) => point.inflow + point.retainerTarget)} icon={<Receipt size={15}/>}/><FinanceMetricCard label="Collected YTD" value={formatFinanceCardAmount(ytdCollected,currency)} context={ytdCollectionRate.toFixed(1)+'% collection rate'} sparkline={financeChartData.map((point) => point.inflow)} icon={<WalletCards size={15} className="text-success"/>} toneClassName="text-success"/><FinanceMetricCard label="Outstanding" value={formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} context={pendingInvoiceCount+' open invoices'} icon={<Hourglass size={15} className="text-warning"/>} toneClassName="text-warning"/><FinanceMetricCard label="Overdue" value={formatFinanceCardAmount(overdueBalance,currency)} context={criticalOverdueCount+' invoices need attention'} sparkline={financeChartData.map((point) => point.outflow)} icon={<AlertCircle size={15} className="text-danger"/>} toneClassName="text-danger"/></section>
+          )}
+{!embedded && (
           <section className="grid gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]"><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><div className="flex justify-between gap-3"><div><h2 className="text-sm font-semibold text-fg">Cash Flow vs Operating Burn</h2><p className="mt-1 text-xs text-muted">Six-month view of actual cash collected versus recorded operating spend.</p></div><div className="shrink-0 rounded-control border border-line bg-bg px-3 py-2 text-right">
   <p className="text-[9px] font-semibold uppercase tracking-[0.08em] text-muted">Quarter net cash</p>
   <p className={'mt-0.5 text-sm font-semibold tabular-nums '+(quarterNetCash>=0?'text-success':'text-danger')}>{formatFinanceCardAmount(quarterNetCash,currency)}</p>
 </div></div></div><div className="p-4">{hasTrendData?<FinanceCashFlowChart data={financeChartData} currency={currency} ariaLabel="Finance cash flow trend comparing cash collected, operating burn, and net cash."/>:<EmptyState title="No trend data" description="Billing payments and expenses will populate this trend."/>}</div></section><section className="rounded-card border border-line bg-panel overflow-hidden"><div className="border-b border-line p-4"><h2 className="text-sm font-semibold text-fg">Aging receivables</h2><p className="mt-1 text-xs text-muted">{formatFinanceCardAmount(derivedMetrics.totalOutstanding,currency)} outstanding across 5 aging buckets.</p></div><div className="p-4"><div className="flex h-2.5 overflow-hidden rounded-full bg-bg border border-line">{agingBuckets.map((bucket)=><div key={bucket.label} className={'h-full '+(bucket.tone==='success'?'bg-success':bucket.tone==='warning'?'bg-warning':'bg-danger')} style={{width:bucket.percent+'%'}}/>)}</div><div className="mt-4 space-y-2.5">{agingBuckets.map((bucket)=><div key={bucket.label} className="flex items-center justify-between rounded-control border border-line bg-bg px-3 py-3"><div><p className="text-xs font-medium text-fg">{bucket.label}</p><p className="mt-1 text-[10px] text-muted">{bucket.count} account{bucket.count===1?'':'s'}</p></div><div className="text-right"><p className="text-xs font-semibold tabular-nums">{formatNativeAmount(bucket.amount,currency,true)}</p><p className="mt-1 text-[10px] text-muted">{bucket.percent}%</p></div></div>)}</div><button type="button" onClick={()=>setDunningOpen(true)} disabled={!actionRequiredInvoices.length} className={actionClass+' mt-4 w-full'}><Send size={14}/>Prepare collection notices</button></div></section></section>
+          )}
           <section className="rounded-card border border-line bg-panel overflow-hidden">
   <div className="border-b border-line bg-panel p-4 sm:px-5">
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-            <h2 className="text-sm font-semibold text-fg">Invoice ledger</h2>
+            <h2 className="text-sm font-semibold text-fg">{embeddedReceivablesOnly ? 'Accounts receivable' : 'Invoice ledger'}</h2>
             <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] font-medium text-muted">
               {filteredInvoices.length} visible
             </span>
           </div>
           <p className="mt-1 text-[10px] text-muted">
-            {ledgerPeriod === 'all' ? 'All periods' : reportingQuarter?.label || 'Current quarter'} · Search, filter, and manage receivables.
+            {embeddedReceivablesOnly
+              ? 'Outstanding client invoices only · record and review payments in this tab.'
+              : (ledgerPeriod === 'all' ? 'All periods' : reportingQuarter?.label || 'Current quarter') + ' · Search, filter, and manage billing records.'}
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
+          {embedded && canCreateInvoice && <button type="button" onClick={openCreateInvoice} className={primaryClass + ' h-9 min-h-9'}><Plus size={14}/>New invoice</button>}
           <div className="inline-flex items-center rounded-control border border-line bg-bg p-0.5">
             <button
               type="button"
@@ -3238,7 +3292,7 @@ export const AdminInvoicing: React.FC = () => {
           <CustomSelect
             value={statusFilter}
             onChange={setStatusFilter}
-            options={statusOptions}
+            options={embeddedReceivablesOnly ? statusOptions.filter((option) => ['all', 'sent', 'partially_paid', 'overdue'].includes(option.value)) : statusOptions}
             className="min-w-0 xl:shrink-0"
             triggerClassName="h-10 min-h-10 w-full whitespace-nowrap xl:w-[150px]"
           />
@@ -3294,7 +3348,7 @@ export const AdminInvoicing: React.FC = () => {
         </div>
       )}
     </div>
-  </div><div className="overflow-hidden">{filteredInvoices.length===0?<div className="p-5"><EmptyState title="No invoices found" description="No invoices match the current filters." action={canManageInvoices?<button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>Create invoice</button>:undefined}/></div>:<table className="ams-finance-table table-fixed border-separate border-spacing-0 text-xs">
+  </div><div className="overflow-hidden">{filteredInvoices.length===0?<div className="p-5"><EmptyState title={embeddedReceivablesOnly ? 'No outstanding receivables' : 'No invoices found'} description={embeddedReceivablesOnly ? 'No open invoice balances match the current filters.' : 'No invoices match the current filters.'} action={canManageInvoices?<button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>{embeddedReceivablesOnly ? 'Create invoice' : 'Create invoice'}</button>:undefined}/></div>:<table className="ams-finance-table table-fixed border-separate border-spacing-0 text-xs">
 <thead><tr>
   <th className="w-[20%]">Invoice</th>
   {columnVisibility.client&&<th className="w-[19%]">Client & project</th>}
@@ -3352,6 +3406,7 @@ export const AdminInvoicing: React.FC = () => {
   </tr>;
 })}
 </tbody></table>}</div><AdminTablePagination total={filteredInvoices.length} page={invoicePage} pageSize={invoicePageSize} onPageChange={setInvoicePage} onPageSizeChange={setInvoicePageSize} itemLabel="records" slug="finance-invoices-pagination" /></section>
+{!embedded && (
           <section className="rounded-card border border-line bg-panel overflow-hidden">
   <div className="border-b border-line p-4">
     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -3490,6 +3545,8 @@ export const AdminInvoicing: React.FC = () => {
     </div>
   </div>
 </section>
+          )}
+
         </div>
       )}
       <Modal
@@ -4246,7 +4303,7 @@ export const AdminInvoicing: React.FC = () => {
           </div>
         )}
       </Modal>
-    </AdminPageShell>
+    </FinanceWorkspaceContainer>
   );
 };
 
