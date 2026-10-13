@@ -24,6 +24,7 @@ test('global period presets roll backwards across calendar boundaries', () => {
 test('global reporting period controls stay in the admin layout shared by modules and tabs', async () => {
   const fs = await import('node:fs/promises');
   const layout = await fs.readFile('src/pages/admin/AdminLayout.tsx', 'utf8');
+  const periodFilter = await fs.readFile('src/components/admin/AdminReportingPeriodBar.tsx', 'utf8');
   const inbox = await fs.readFile('src/pages/admin/AdminInbox.tsx', 'utf8');
   const tasks = await fs.readFile('src/components/admin/TasksWorkspace.tsx', 'utf8');
   const projects = await fs.readFile('src/pages/admin/AdminProjects.tsx', 'utf8');
@@ -33,8 +34,11 @@ test('global reporting period controls stay in the admin layout shared by module
   const settings = await fs.readFile('src/pages/admin/AdminSettings.tsx', 'utf8');
 
   assert.ok(layout.includes('<ReportingPeriodProvider>'));
-  assert.ok(layout.includes('<AdminReportingPeriodBar />'));
+  assert.equal((layout.match(/<AdminReportingPeriodBar \/>/g) || []).length, 2);
   assert.ok(layout.includes('<Outlet />'));
+  assert.ok(!layout.includes('global-reporting-period-container'));
+  assert.ok(periodFilter.includes('global-reporting-period-trigger'));
+  assert.ok(periodFilter.includes('global-reporting-period-popover'));
   assert.ok(inbox.includes('matchesDate(item.createdAt)'));
   assert.ok(tasks.includes('matchesDate(task.dueDate || task.createdAt)'));
   assert.ok(projects.includes('matchesInterval(project.startDate, project.targetEndDate, project.createdAt)'));

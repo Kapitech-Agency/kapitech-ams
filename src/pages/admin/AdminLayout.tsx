@@ -431,6 +431,7 @@ export const AdminLayout: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
+          <AdminReportingPeriodBar />
           <AdminNotificationCenter />
           <Button
             type="button"
@@ -763,6 +764,7 @@ export const AdminLayout: React.FC = () => {
               )}
             </div>
             <div className="flex shrink-0 items-center gap-1">
+              <AdminReportingPeriodBar />
               <AdminNotificationCenter />
               <Button
                 type="button"
@@ -800,9 +802,6 @@ export const AdminLayout: React.FC = () => {
         </header>
         {/* View Outlet */}
         <div className="ams-content flex-1 min-h-0 w-full max-w-[1560px] mx-auto">
-          <div className="px-3 pt-3 md:px-6" data-ams-slug="global-reporting-period-container">
-            <AdminReportingPeriodBar />
-          </div>
           <Outlet />
         </div>
 

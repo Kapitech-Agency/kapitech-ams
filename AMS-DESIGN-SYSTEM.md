@@ -463,8 +463,9 @@ Build responsive (1440 / 1024 / 768 / 390), support both themes, and finish by r
 
 ## Global reporting period across AMS modules and tabs
 
-- Mount the shared `AdminReportingPeriodBar` in the authenticated admin layout so it stays available while staff navigate between modules and internal tabs.
-- Keep the initial filter disabled (`All dates`) until a user selects a period. Persist the user's selection across module navigation, and make the active period explicit with a one-click reset to all dates.
+- Keep the shared reporting-period control as a compact **Filter** action in the authenticated AMS topbar beside the notification and profile actions. Do not render a separate full-width card or extra content row above each module.
+- Open the Month / Quarter / Year picker in a small anchored popover only when the user clicks Filter. Include the current selection, exact inclusive date range, quick actions for the current and previous period, and a one-click reset to `All dates`.
+- Keep the initial filter disabled (`All dates`) until a user selects a period. Persist the user's selection across module navigation and internal tabs; show a subtle active indicator on the Filter button when a period is applied.
 - A selected period filters date-stamped operational lists and supported reports. Records without usable dates stay visible so legacy or master records are not silently removed. Current-state KPIs and configuration forms remain current-state, not historical snapshots.
 - Date-specific workflows such as a monthly closing checklist can retain their own narrower operational period where needed. Do not use a quarter/year selection to trigger a posting or closing action.
-- Use the shared Month / Quarter / Year vocabulary and custom select component. Expose the exact inclusive date range, quick actions for the current and previous period, and an explicit baseline for comparison tables.
+- Use the shared Month / Quarter / Year vocabulary and existing custom select component. Keep the control unobtrusive and consistent in both desktop and mobile headers; avoid a duplicate page-level filter bar.
