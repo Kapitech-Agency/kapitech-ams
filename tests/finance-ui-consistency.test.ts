@@ -22,15 +22,27 @@ test('Finance top-level tabs are the only section navigation and each tab render
   const pageEnd = workspace.indexOf('return localizeFinanceValue(financePage, language)', pageStart);
   assert.ok(pageStart >= 0 && pageEnd > pageStart, 'Finance page render must remain available.');
   const renderedPage = workspace.slice(pageStart, pageEnd);
-  assert.doesNotMatch(renderedPage, /Sheet \{activeTab\.sheet\}|Source of truth for workflow design|Excel-alignment implementation|Excel-aligned finance workflow|Open transaction workspace/);
+  const uiSourceStart = workspace.indexOf('const renderSummary =');
+  const uiSource = workspace.slice(uiSourceStart, pageStart);
+  assert.doesNotMatch(uiSource, /Sheet \{activeTab\.sheet\}|Source of truth for workflow design|Excel-alignment implementation|Excel-aligned finance workflow|Open transaction workspace|workbook's Project Cost|Finance workbook sheets|Project name \/ Excel key/);
+  assert.doesNotMatch(renderedPage, /Source of truth for workflow design|Excel-alignment implementation|Excel-aligned finance workflow|Open transaction workspace/);
   const headerStart = renderedPage.indexOf('<AdminModuleHeader');
   const headerEnd = renderedPage.indexOf('      />', headerStart);
   assert.ok(headerStart >= 0 && headerEnd > headerStart, 'Finance must use the shared module header.');
   assert.doesNotMatch(renderedPage.slice(headerStart, headerEnd), /\bicon=/, 'Finance header must not render icons.');
-  assert.match(renderedPage, /Manage invoices/);
+  assert.match(uiSource, /Manage invoices/);
+  assert.match(uiSource, /Manage expenses/);
+  assert.match(uiSource, /Add movement/);
+  assert.match(uiSource, /Add vendor bill/);
+  assert.match(uiSource, /Add project finance record/);
+  assert.match(uiSource, /Add budget line/);
+  assert.match(uiSource, /Add voucher/);
+  assert.match(uiSource, /Add team fee/);
+  assert.match(uiSource, /Add journal entry/);
+  assert.match(uiSource, /Calculate project allocation/);
 });
 
-test('Finance locale uses the selected application language and localized workbook account labels', async () => {
+test('Finance locale uses the selected application language and localized finance account labels', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   const translations = await read('src/lib/LanguageContext.tsx');
   assert.match(workspace, /const \{ language \} = useLanguage\(\)/);
