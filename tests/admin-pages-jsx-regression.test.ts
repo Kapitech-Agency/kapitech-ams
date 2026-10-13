@@ -8,61 +8,37 @@ test('Retired CRM route redirects without loading a legacy page', () => {
   assert.ok(source.includes('<Route path="crm" element={<Navigate to="/admin/dashboard" replace />} />'));
   assert.doesNotMatch(source, /pages\/admin\/AdminCrm/);
 });
-test('Admin invoicing keeps financial mutations permission-gated and uses the shared AMS visual language', () => {
+test('Finance transaction worksheets keep mutations permission-gated and use embedded workbook workflows', () => {
   const source = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInvoicing.tsx'), 'utf8');
+  const workspace = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminFinanceWorkspace.tsx'), 'utf8');
 
   assert.ok(source.includes("const canManageInvoices = hasAdminPermission('canManageInvoices');"));
   assert.ok(source.includes('{canManageInvoices &&'));
-  assert.ok(source.includes('<AdminModuleHeader'));
   assert.ok(source.includes('const FinanceMetricCard'));
   assert.ok(source.includes('computeInvoiceTotals'));
   assert.ok(source.includes('api.finance.getMetrics(currency)'));
   assert.ok(!source.includes('123-00-998877-1'));
   assert.ok(source.includes('serverMetrics.totalInvoicesCount'));
-  assert.ok(source.includes('Cash Flow vs Operating Burn'));
-  assert.ok(source.includes('Finance snapshot'));
-  assert.ok(source.includes('Cash position'));
-  assert.ok(source.includes('Total outstanding balance'));
-  assert.ok(source.includes('Collection progress'));
-  assert.ok(source.includes('How to read this:'));
-  assert.ok(source.includes('overdueInvoiceCount'));
   assert.ok(source.includes('paymentFilter'));
   assert.ok(source.includes('dueFilter'));
-  assert.ok(source.includes('grid-cols-2 gap-3 xl:grid-cols-4'));
   assert.ok(source.includes('table-fixed'));
   assert.ok(source.includes('retainerLedgerInvoices'));
   assert.ok(source.includes('usingDemoRetainerLedger'));
-  assert.ok(source.includes('border-separate border-spacing-0 text-xs'));
-  assert.ok(source.includes('overflow-x-auto px-1 custom-scrollbar'));
-  assert.ok(!source.includes('xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]'));
-  assert.ok(source.includes('sticky top-0 z-10'));
-  assert.ok(source.includes('Tax & Retainers'));
-  assert.ok(source.includes('Financial Reports'));
-  assert.ok(source.includes('Quotations'));
-  assert.ok(source.includes('space-y-5"><section className="rounded-card border border-line bg-panel overflow-hidden">'));
-  assert.ok(source.includes('grid gap-5 lg:grid-cols-2'));
-  assert.ok(source.includes('const getInvoiceCollectedTotal'));
-  assert.ok(source.includes('quarterInvoices'));
-  assert.ok(source.includes("expense.type !== 'CapEx'"));
-  assert.ok(source.includes('<AdminSectionTabs'));
-  assert.ok(source.includes('min-[900px]:hidden min-w-0'));
-  assert.ok(!source.includes(' -mx-1 '));
-  assert.ok(source.includes('const QuotationStatusBadge'));
-  assert.ok(!source.includes('quotation.status as never'));
-  assert.ok(source.includes('Quarter net cash'));
-  assert.ok(source.includes('xl:w-[150px]'));
-  assert.ok(source.includes('whitespace-nowrap'));
-  assert.equal((source.match(/xl:shrink-0/g) || []).length, 4);
-  assert.equal((source.match(/xl:w-\[176px\]/g) || []).length, 2);
-  assert.ok(source.includes('px-5 py-4'));
-  assert.ok(source.includes('border border-line bg-panel text-muted'));
-  const financeNavOrder = ['label: ' + String.fromCharCode(39) + 'Invoice', 'label: ' + String.fromCharCode(39) + 'Quotation', 'label: ' + String.fromCharCode(39) + 'Income & Expenses', 'label: ' + String.fromCharCode(39) + 'Tax & Retainers', 'label: ' + String.fromCharCode(39) + 'Financial Reports'];
-  let lastIndex = -1;
-  for (const marker of financeNavOrder) {
-    const index = source.indexOf(marker);
-    assert.ok(index > lastIndex);
-    lastIndex = index;
-  }
+  assert.ok(source.includes('openPayment(invoice)'));
+  assert.ok(source.includes('finance-revenue-tax-retainer'));
+  assert.ok(source.includes('Contract-linked vendor payments'));
+  assert.ok(source.includes('onClick={exportInvoicesCsv}'));
+  assert.ok(source.includes('onClick={exportExpensesCsv}'));
+  assert.ok(source.includes('onClick={exportVendorPaymentsCsv}'));
+  assert.ok(!source.includes('<AdminModuleHeader'));
+  assert.ok(!source.includes('<AdminSectionTabs'));
+  assert.ok(!source.includes('Finance sections'));
+  assert.ok(!source.includes('finance=tax-retainers'));
+  assert.ok(workspace.includes("case 'revenue':"));
+  assert.ok(workspace.includes("case 'expenses':"));
+  assert.ok(workspace.includes("case 'accounts-receivable':"));
+  assert.ok(workspace.includes("case 'accounts-payable':"));
+  assert.ok(workspace.includes('<AdminInvoicing embeddedView="vendor-payments" />'));
 });
 
 test('Admin projects mutation actions stay behind their permissions', () => {
@@ -72,22 +48,14 @@ test('Admin projects mutation actions stay behind their permissions', () => {
   assert.ok(!source.includes('Legacy regression guard:'));
 });
 
-test('Admin topbar keeps active Finance sections in canonical order without retired quotations', () => {
+test('Admin topbar no longer exposes the retired standalone Finance tabs', () => {
   const source = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminLayout.tsx'), 'utf8');
-  const markers = [
-    "label: 'Invoice'",
-    "label: 'Income & Expenses'",
-    "label: 'Tax & Retainers'",
-    "label: 'Vendor Payments'",
-    "label: 'Financial Reports'"
-  ];
-  let lastIndex = -1;
-  for (const marker of markers) {
-    const index = source.indexOf(marker);
-    assert.ok(index > lastIndex);
-    lastIndex = index;
-  }
-  assert.equal(source.includes("label: 'Quotation'"), false);
+  assert.equal(source.includes("location.pathname === '/admin/invoicing'"), false);
+  assert.equal(source.includes('Finance sections'), false);
+  assert.equal(source.includes("to: '/admin/invoicing?finance="), false);
+  assert.ok(source.includes("location.pathname === '/admin/finance'"));
+  assert.ok(source.includes("label: t('admin.finance.tab.transactionsCash')"));
+  assert.ok(source.includes("label: t('admin.finance.tab.receivablesPayables')"));
 });
 test('Authenticated AMS pages use one canonical responsive page frame', () => {
   const primitives = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/AdminModulePrimitives.tsx'), 'utf8');
@@ -155,7 +123,7 @@ test('AMS module tabs share canonical desktop and mobile navigation primitives',
   const primitives = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/AdminModulePrimitives.tsx'), 'utf8');
   const dashboard = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/GlobalExecutiveDashboard.tsx'), 'utf8');
   const inbox = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInbox.tsx'), 'utf8');
-  const finance = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInvoicing.tsx'), 'utf8');
+  const finance = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminFinanceWorkspace.tsx'), 'utf8');
   const clients = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClients.tsx'), 'utf8');
   const retainers = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientRetainers.tsx'), 'utf8');
   const sla = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientSlaMonitoring.tsx'), 'utf8');
