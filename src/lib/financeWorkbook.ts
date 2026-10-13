@@ -27,9 +27,9 @@ export const FINANCE_WORKBOOK_GROUPS: FinanceWorkbookGroup[] = [
     key: 'transactions',
     label: 'Transactions & Cash',
     items: [
+      { key: 'cash-bank', sheet: '05', label: 'Cash & Bank', description: 'Cash movement view built from recorded receipts and expenses.' },
       { key: 'revenue', sheet: '03', label: 'Revenue', description: 'Revenue register sourced from issued client invoices.' },
       { key: 'expenses', sheet: '04', label: 'Expenses', description: 'Expense register sourced from finance expenses in AMS.' },
-      { key: 'cash-bank', sheet: '05', label: 'Cash & Bank', description: 'Cash movement view built from recorded receipts and expenses.' },
       { key: 'petty-cash', sheet: '10', label: 'Petty Cash', description: 'Petty-cash register and controls required by the workbook.' }
     ]
   },
@@ -56,12 +56,12 @@ export const FINANCE_WORKBOOK_GROUPS: FinanceWorkbookGroup[] = [
     key: 'accounting',
     label: 'Accounting & Reports',
     items: [
-      { key: 'chart-of-accounts', sheet: '02', label: 'Chart of Accounts', description: 'Master account codes and normal balances from the workbook.' },
       { key: 'journal', sheet: '18', label: 'Journal', description: 'Double-entry mapping and source transactions awaiting posting.' },
+      { key: 'chart-of-accounts', sheet: '02', label: 'Chart of Accounts', description: 'Master account codes and normal balances from the workbook.' },
       { key: 'monthly-pnl', sheet: '12', label: 'Monthly P&L', description: 'Monthly profit-and-loss view based on the workbook structure.' },
       { key: 'cash-flow', sheet: '13', label: 'Cash Flow', description: 'Monthly cash inflow, outflow and net movement.' },
-      { key: 'monthly-closing', sheet: '14', label: 'Monthly Closing', description: 'Month-end checklist and reconciliation controls.' },
       { key: 'balance-sheet', sheet: '17', label: 'Balance Sheet', description: 'Company-wide assets, liabilities and equity readiness.' },
+      { key: 'monthly-closing', sheet: '14', label: 'Monthly Closing', description: 'Month-end checklist and reconciliation controls.' },
       { key: 'annual-summary', sheet: '19', label: 'Annual Summary', description: 'Company-wide annual finance summary.' }
     ]
   }
