@@ -1936,7 +1936,12 @@ export const AdminFinanceWorkspace: React.FC = () => {
         actions={<Button variant="secondary" type="button" onClick={() => void loadData(true)} loading={refreshing}>Refresh data</Button>}
         className="mb-0"
       />
-      <div className="min-w-0 space-y-3" data-ams-slug="finance-workspace-navigation">
+      <div
+        className={SEARCHABLE_FINANCE_TABS.has(activeTab.key) && activeGroup.items.length <= 4
+          ? 'grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-center'
+          : 'min-w-0 space-y-3'}
+        data-ams-slug="finance-workspace-navigation"
+      >
         <div className="min-[900px]:hidden grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-3" data-ams-slug="finance-area-mobile-selector">
           <span className="text-[11px] font-medium text-muted">Finance area</span>
           <CustomSelect
