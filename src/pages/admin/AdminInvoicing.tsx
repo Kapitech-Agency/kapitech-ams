@@ -37,7 +37,7 @@ import { Modal } from '../../components/ui/Modal';
 import { InvoiceStatusDropdown } from '../../components/ui/InvoiceStatusDropdown';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { api } from '../../lib/apiClient';
-import { AdminMetricCard, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination, AdminStatusBadge } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricCard, AdminTablePagination, AdminStatusBadge } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { isSlugFixtureMode } from '../../lib/runtimeMode';
 
@@ -711,12 +711,6 @@ type AdminInvoicingProps = {
   /** Lock the embedded transaction ledger to one worksheet workflow. */
   embeddedIncomeExpenseMode?: 'income' | 'expenses';
 };
-const FinanceWorkspaceContainer: React.FC<{ embedded?: boolean; children: React.ReactNode }> = ({ embedded = false, children }) => (
-  embedded
-    ? <div className="min-w-0 space-y-5">{children}</div>
-    : <AdminPageShell featureSlug="finance-module" className="finance-module">{children}</AdminPageShell>
-);
-
 export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, embeddedIncomeExpenseMode }) => {
   const { language } = useLanguage();
   const canViewFinancials = hasAdminPermission('canViewFinancials');
@@ -725,7 +719,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   const canDeleteInvoice = canManageInvoices;
 
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
-  const embedded = Boolean(embeddedView);
+  const embedded = true;
   const embeddedReceivablesOnly = embeddedView === 'receivables';
 
   const financeView: string = useMemo(
@@ -2733,78 +2727,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   }
 
   return (
-    <FinanceWorkspaceContainer embedded={embedded}>
-      {!embedded && <AdminModuleHeader
-        className="mb-0"
-        title={financeView === 'quotations' ? 'Quotations' : financeView === 'income-expenses' ? 'Income & Expenses' : financeView === 'tax-retainers' ? 'Tax & Retainers' : financeView === 'vendor-payments' ? 'Vendor Payments' : financeView === 'financial-reports' ? 'Financial Reports' : 'Invoices'}
-        description={financeView === 'quotations'
-          ? 'Manage the commercial pipeline from draft through approval, acceptance, and invoice conversion.'
-          : financeView === 'income-expenses'
-            ? 'Track actual cash collections, operating expenses, and net cash movement.'
-            : financeView === 'tax-retainers'
-              ? 'Monitor tax provision, tax collection, and retainer billing and collection.'
-              : financeView === 'financial-reports'
-                ? 'Review collection performance, margin, expense mix, and financial trends.'
-                : financeView === 'vendor-payments'
-                  ? 'Schedule, review, record, and reconcile payments owed to agency vendors and contractors.'
-                  : 'Manage billing, receivables, collection risk, and invoice activity.'}
-        actions={(
-          <>
-            {(usingDemoFinance || (financeView === 'quotations' && usingDemoQuotations)) && (
-              <AdminStatusBadge tone="warning">A/B data</AdminStatusBadge>
-            )}
-            <div className="inline-flex min-h-9 items-center rounded-control border border-line bg-panel p-1" aria-label="Finance currency">
-              {(['IDR', 'USD'] as CurrencyCode[]).map((item) => <button key={item} type="button" onClick={() => setActiveCurrency(item)} aria-pressed={currency === item} className={'min-h-7 rounded-chip px-2.5 text-[11px] font-semibold ' + (currency === item ? 'bg-accent/10 text-fg border border-accent/25' : 'text-muted hover:bg-bg hover:text-fg border border-transparent')}>{item}</button>)}
-            </div>
-            <button type="button" onClick={() => void loadData(true)} disabled={refreshing} className={actionClass} title="Refresh finance data"><RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />{refreshing ? 'Refreshing' : 'Refresh'}</button>
-            {financeView === 'quotations' ? (
-              <>
-                <button type="button" onClick={exportQuotationsCsv} disabled={!filteredQuotations.length} className={actionClass}><Download size={14}/>Export CSV</button>
-                {canManageInvoices && <button type="button" onClick={openCreateQuotation} className={primaryClass}><Plus size={14}/>New quotation</button>}
-              </>
-            ) : financeView === 'income-expenses' ? (
-              <>
-                <button type="button" onClick={() => incomeExpenseMode === 'income' ? exportInvoicesCsv() : exportExpensesCsv()} disabled={incomeExpenseMode === 'income' ? !incomeRows.length : !filteredExpenses.length} className={actionClass}><Download size={14}/>Export CSV</button>
-                {canManageInvoices && <button type="button" onClick={openExpenseModal} className={primaryClass}><Plus size={14}/>Add expense</button>}
-              </>
-            ) : financeView === 'tax-retainers' ? (
-              <>
-                <button type="button" onClick={exportTaxCsv} disabled={!currencyInvoices.length} className={actionClass}><Download size={14}/>Export tax detail</button>
-                {canManageInvoices && <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>New invoice</button>}
-              </>
-            ) : financeView === 'vendor-payments' ? (
-              <>
-                <button type="button" onClick={exportVendorPaymentsCsv} disabled={!filteredVendorPayments.length} className={actionClass}><Download size={14}/>Export CSV</button>
-                {canManageInvoices && <button type="button" onClick={() => openVendorPaymentModal()} className={primaryClass}><Plus size={14}/>Record payment</button>}
-              </>
-            ) : financeView === 'financial-reports' ? (
-              <button type="button" onClick={exportReportCsv} disabled={!financeChartData.length} className={actionClass}><Download size={14}/>Export report</button>
-            ) : (
-              <>
-                <button type="button" onClick={exportInvoicesCsv} disabled={!currencyInvoices.length} className={actionClass}><Download size={14}/>Export CSV</button>
-                {canManageInvoices && <>
-                  <button type="button" onClick={openCreateQuotation} className={actionClass}><FileText size={14}/>New quotation</button>
-                  <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>New invoice</button>
-                </>}
-              </>
-            )}
-          </>
-        )}
-      />}
-      {!embedded && <div className="min-[900px]:hidden min-w-0">
-        <AdminSectionTabs
-          ariaLabel="Finance sections"
-          activeKey={financeView === 'invoices' ? 'invoices' : financeView}
-          items={[
-            { key: 'invoices', label: 'Invoice', to: '/admin/invoicing' },
-            { key: 'quotations', label: 'Quotation', to: '/admin/invoicing?finance=quotations' },
-            { key: 'income-expenses', label: 'Income & Expenses', to: '/admin/invoicing?finance=income-expenses' },
-            { key: 'tax-retainers', label: 'Tax & Retainers', to: '/admin/invoicing?finance=tax-retainers' },
-            { key: 'vendor-payments', label: 'Vendor Payments', to: '/admin/invoicing?finance=vendor-payments' },
-            { key: 'financial-reports', label: 'Financial Reports', to: '/admin/invoicing?finance=financial-reports' },
-          ]}
-        />
-      </div>}
+    <div className="min-w-0 space-y-5">
       {embedded && (
         <div className="flex justify-end">
           <div className="inline-flex min-h-9 items-center rounded-control border border-line bg-panel p-1" aria-label="Finance currency">
@@ -4353,7 +4276,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
           </div>
         )}
       </Modal>
-    </FinanceWorkspaceContainer>
+    </div>
   );
 };
 
