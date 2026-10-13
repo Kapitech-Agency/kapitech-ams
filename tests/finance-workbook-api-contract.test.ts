@@ -94,7 +94,7 @@ test('Vendor installment payments preserve the 30/20/50 schedule and enforce sta
 });
 
 
-test('Monthly Closing exposes and enforces the exact 11 workbook controls', async () => {
+test('Monthly Closing exposes and enforces all required controls', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   const repository = await read('server/postgres-finance-workbook-repository.ts');
   const workbookControls = [
@@ -107,7 +107,7 @@ test('Monthly Closing exposes and enforces the exact 11 workbook controls', asyn
     assert.match(workspace, new RegExp(item.replace(/[.*+?^\${}()|[\\]\\\\]/g, '\\\\$&')));
     assert.ok(repository.toLowerCase().includes("'" + item.toLowerCase() + "'"), 'Backend closing control missing: ' + item);
   }
-  assert.match(workspace, /all eleven workbook control items/);
+  assert.match(workspace, /period can close after all 11 required controls are marked Done/);
   assert.doesNotMatch(workspace, /General journal balanced|Project allocation reviewed|Monthly reports approved/);
 });
 
