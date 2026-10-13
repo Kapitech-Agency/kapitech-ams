@@ -312,7 +312,7 @@ const REGISTER_FORMS: Record<string, { title: string; description: string; field
     description:'Team Fee is tracked separately from Team Reward.',
     fields:[
       {key:'projectId',label:'AMS project (optional)',type:'select',optionSource:'projects'},
-      {key:'projectName',label:'Project name / Excel key',type:'text',required:true},
+      {key:'projectName',label:'Project name / reference',type:'text',required:true},
       {key:'memberName',label:'Team member',type:'text',required:true},
       {key:'role',label:'Role',type:'text'},
       {key:'feeAmount',label:'Fee amount (IDR)',type:'number',required:true},
@@ -326,7 +326,7 @@ const REGISTER_FORMS: Record<string, { title: string; description: string; field
     description:'Allocation amounts are calculated using the configured percentages and net project profit.',
     fields:[
       {key:'projectId',label:'AMS project (optional)',type:'select',optionSource:'projects'},
-      {key:'projectName',label:'Project name / Excel key',type:'text',required:true},
+      {key:'projectName',label:'Project name / reference',type:'text',required:true},
       {key:'contractValue',label:'Contract value (IDR)',type:'number',required:true},
       {key:'vendorCost',label:'Vendor commitment (IDR)',type:'number',required:true},
       {key:'otherObligations',label:'Other obligations (IDR)',type:'number',required:true},
