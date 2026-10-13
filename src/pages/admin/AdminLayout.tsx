@@ -799,7 +799,7 @@ export const AdminLayout: React.FC = () => {
           </div>
         </header>
         {/* View Outlet */}
-        <div className="ams-content flex-1 min-h-0 w-full max-w-[1560px] mx-auto overflow-y-auto custom-scrollbar">
+        <div className="ams-content flex-1 min-h-0 w-full max-w-[1560px] mx-auto">
           <div className="px-3 pt-3 md:px-6" data-ams-slug="global-reporting-period-container">
             <AdminReportingPeriodBar />
           </div>
