@@ -1,5 +1,5 @@
-import React from 'react';
-import { CalendarDays, RotateCcw } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Filter, RotateCcw, X } from 'lucide-react';
 import Button from '../ui/Button';
 import { CustomReportPeriodPicker } from '../ui/CustomReportPeriodPicker';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
@@ -11,74 +11,119 @@ export const AdminReportingPeriodBar: React.FC = () => {
   const isId = language === 'id';
   const locale = isId ? 'id-ID' : 'en-US';
   const { mode, value, enabled, setMode, setValue, clearFilter } = useReportingPeriod();
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
   const label = formatReportingPeriodLabel(value, mode, locale);
 
+  useEffect(() => {
+    if (!open) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open]);
+
   return (
-    <section
-      aria-label={isId ? 'Periode laporan global' : 'Global reporting period'}
-      data-ams-slug="global-reporting-period"
-      className="mb-3 min-w-0 rounded-card border border-line bg-panel px-3 py-3 sm:px-4"
-    >
-      <div className="mb-3 flex min-w-0 flex-wrap items-center justify-between gap-2">
-        <div className="flex min-w-0 items-start gap-2.5">
-          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted">
-            <CalendarDays size={15} aria-hidden="true" />
-          </span>
-          <div className="min-w-0">
-            <h2 className="text-xs font-semibold text-fg">{isId ? 'Periode laporan' : 'Reporting period'}</h2>
-            <p className="mt-0.5 text-[11px] leading-4 text-muted">
-              {isId
-                ? 'Satu pilihan periode digunakan di seluruh modul dan tab AMS.'
-                : 'One period selection is shared across AMS modules and tabs.'}
-            </p>
+    <div ref={rootRef} className="relative shrink-0" data-ams-slug="global-reporting-period-filter">
+      <Button
+        type="button"
+        variant="secondary"
+        icon={<Filter size={14} aria-hidden="true" />}
+        onClick={() => setOpen((current) => !current)}
+        aria-label={isId ? 'Filter periode tanggal' : 'Filter by reporting period'}
+        aria-expanded={open}
+        aria-controls="global-reporting-period-popover"
+        title={enabled ? label : (isId ? 'Filter periode tanggal' : 'Filter by reporting period')}
+        className={[
+          'h-8 min-h-8 gap-1.5 px-2.5 text-[11px]',
+          enabled ? 'border-accent/35 bg-accent/10 text-fg' : ''
+        ].join(' ')}
+        slug="global-reporting-period-trigger"
+      >
+        <span>{isId ? 'Filter' : 'Filter'}</span>
+        {enabled && <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true" />}
+      </Button>
+
+      {open && (
+        <section
+          id="global-reporting-period-popover"
+          role="dialog"
+          aria-label={isId ? 'Filter periode laporan' : 'Reporting period filter'}
+          className="fixed right-3 top-[60px] z-50 w-[min(360px,calc(100vw-24px))] rounded-card border border-line bg-panel p-3 min-[900px]:absolute min-[900px]:right-0 min-[900px]:top-[calc(100%+8px)]"
+          data-ams-slug="global-reporting-period-popover"
+        >
+          <div className="flex min-w-0 items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="text-xs font-semibold text-fg">{isId ? 'Periode tanggal' : 'Reporting period'}</h2>
+              <p className="mt-0.5 text-[11px] text-muted">
+                {enabled ? label : (isId ? 'Semua tanggal' : 'All dates')}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label={isId ? 'Tutup filter periode' : 'Close reporting period filter'}
+              className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-control text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              <X size={14} aria-hidden="true" />
+            </button>
           </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span
-            role="status"
-            aria-live="polite"
-            data-ams-slug="global-reporting-period-status"
-            className={enabled
-              ? 'inline-flex min-h-7 items-center rounded-badge border border-accent/25 bg-accent/10 px-2.5 text-[10px] font-medium text-fg'
-              : 'inline-flex min-h-7 items-center rounded-badge border border-line bg-bg px-2.5 text-[10px] font-medium text-muted'}
-          >
-            {enabled
-              ? (isId ? 'Filter aktif · ' : 'Filter active · ') + label
-              : (isId ? 'Semua tanggal' : 'All dates')}
-          </span>
-          {enabled && (
+
+          <div className="mt-3">
+            <CustomReportPeriodPicker
+              mode={mode}
+              value={value}
+              onModeChange={setMode}
+              onChange={setValue}
+              locale={locale}
+              compact
+              slug="global-reporting-period-picker"
+            />
+          </div>
+
+          <p className="mt-2 text-[10px] leading-4 text-muted">
+            {isId
+              ? 'Filter berlaku pada daftar dan laporan bertanggal. KPI kondisi saat ini dan data master tanpa tanggal tidak berubah.'
+              : 'This filters date-aware lists and reports. Current-state KPIs and undated master data stay unchanged.'}
+          </p>
+
+          <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-2">
+            <Button
+              type="button"
+              variant="ghost"
+              icon={<RotateCcw size={12} aria-hidden="true" />}
+              className="h-8 min-h-8 px-2 text-[11px]"
+              disabled={!enabled}
+              onClick={() => {
+                clearFilter();
+                setOpen(false);
+              }}
+              slug="global-reporting-period-clear"
+            >
+              {isId ? 'Semua tanggal' : 'All dates'}
+            </Button>
             <Button
               type="button"
               variant="secondary"
-              icon={<RotateCcw size={13} />}
-              className="min-h-8 h-8 px-2.5 text-[11px]"
-              onClick={clearFilter}
-              slug="global-reporting-period-clear"
+              onClick={() => setOpen(false)}
+              className="h-8 min-h-8 px-3 text-[11px]"
             >
-              {isId ? 'Tampilkan semua' : 'Show all dates'}
+              {isId ? 'Selesai' : 'Done'}
             </Button>
-          )}
-        </div>
-      </div>
-      <CustomReportPeriodPicker
-        mode={mode}
-        value={value}
-        onModeChange={setMode}
-        onChange={setValue}
-        locale={locale}
-        compact
-        slug="global-reporting-period-picker"
-      />
-      <p className="mt-2 text-[10px] leading-4 text-muted">
-        {enabled
-          ? (isId
-            ? 'Filter berlaku pada daftar dan laporan yang memiliki tanggal. KPI kondisi saat ini dan data master tanpa tanggal tetap ditampilkan apa adanya. Form input dan perubahan data tidak terpengaruh.'
-            : 'The filter scopes date-aware lists and reports. Current-state KPIs and undated master data remain unchanged; entry forms and data mutations are unaffected.')
-          : (isId
-            ? 'Pilih periode untuk memfilter data bertanggal di seluruh modul dan tab yang mendukungnya. KPI kondisi saat ini dan data master tanpa tanggal tidak berubah.'
-            : 'Choose a period to filter date-aware lists and reports across modules and tabs. Current-state KPIs and undated master data remain unchanged.')}
-      </p>
-    </section>
+          </div>
+        </section>
+      )}
+    </div>
   );
 };
 
