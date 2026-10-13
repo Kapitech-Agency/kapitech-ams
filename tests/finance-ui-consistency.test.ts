@@ -354,6 +354,9 @@ test('Finance date and month inputs use the shared custom calendar control', asy
   assert.match(picker, /isMonthDisabled/);
   assert.match(picker, /aria-label="Choose year"/);
   assert.match(picker, /showYearPicker \? 'Previous 12 years'/);
+  assert.match(picker, /const monthRefs = useRef/);
+  assert.match(picker, /setActiveDate\(toLocalIsoDate\(active\)\)/);
+  assert.match(picker, /dayRefs\.current\.get\(toLocalIsoDate\(active\)\)\?\.focus\(\)/);
   const reportingPeriods = await read('src/lib/reportingPeriods.ts');
   const periodPicker = await read('src/components/ui/CustomReportPeriodPicker.tsx');
   assert.match(periodPicker, /This month/);

@@ -64,6 +64,7 @@ export const CustomDatePicker = ({
   const selectedDate = parsePickerValue(value, type);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dayRefs = useRef(new Map<string, HTMLButtonElement>());
+  const monthRefs = useRef(new Map<string, HTMLButtonElement>());
   const [isOpen, setIsOpen] = useState(false);
   const [viewDate, setViewDate] = useState(() => selectedDate || new Date());
   const [activeDate, setActiveDate] = useState(() => selectedDate ? toLocalIsoDate(selectedDate) : toLocalIsoDate(new Date()));
@@ -228,9 +229,15 @@ export const CustomDatePicker = ({
                     aria-label={String(year)}
                     aria-pressed={yearSelected}
                     onClick={() => {
-                      setViewDate((current) => new Date(year, current.getMonth(), 1));
+                      const active = new Date(year, viewDate.getMonth(), Math.min(viewDate.getDate(), new Date(year, viewDate.getMonth() + 1, 0).getDate()));
+                      setViewDate(new Date(year, viewDate.getMonth(), 1));
+                      setActiveDate(toLocalIsoDate(active));
                       setYearPageStart(Math.floor(year / 12) * 12);
                       setShowYearPicker(false);
+                      requestAnimationFrame(() => {
+                        if (type === 'month') monthRefs.current.get(toLocalIsoMonth(new Date(year, viewDate.getMonth(), 1)))?.focus();
+                        else dayRefs.current.get(toLocalIsoDate(active))?.focus();
+                      });
                     }}
                     className={'flex h-10 items-center justify-center rounded-control border text-xs font-medium tabular-nums transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-35 ' + (
                       yearSelected
@@ -257,6 +264,10 @@ export const CustomDatePicker = ({
                 return (
                   <button
                     key={monthValue}
+                    ref={(element) => {
+                      if (element) monthRefs.current.set(monthValue, element);
+                      else monthRefs.current.delete(monthValue);
+                    }}
                     type="button"
                     disabled={isDisabled}
                     aria-pressed={isSelected}
