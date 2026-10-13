@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowDown, ArrowUpRight, Briefcase, CircleDollarSign, Download, FileText, Landmark, Plus, RefreshCw, Search, ShieldAlert, WalletCards, X } from 'lucide-react';
-import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminSectionTabs, AdminStatusBadge } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminSectionTabs, AdminStatusBadge, AdminTopbarTabs } from '../../components/admin/AdminModulePrimitives';
 import Button from '../../components/ui/Button';
 import { AdminInvoicing } from './AdminInvoicing';
 import { AdminVendors } from './AdminVendors';
@@ -1121,11 +1121,6 @@ export const AdminFinanceWorkspace: React.FC = () => {
             </div>
           </AdminPanel>
         )}
-        {sourceErrors.length > 0 && (
-          <WorkbookNote tone="warning" title="Some finance sources are unavailable">
-            {sourceErrors.join(' · ')}. KPI values only reflect source records that loaded successfully. Refresh after the connection is restored.
-          </WorkbookNote>
-        )}
         <FinanceDataTable
           title="Recent invoice register"
           description="Latest issued invoices with current outstanding balances."
@@ -1940,8 +1935,8 @@ export const AdminFinanceWorkspace: React.FC = () => {
         actions={<Button variant="secondary" type="button" onClick={() => void loadData(true)} loading={refreshing}>Refresh data</Button>}
       />
       <div className="min-w-0 space-y-3" data-ams-slug="finance-workspace-navigation">
-        <div className="min-[900px]:hidden">
-          <AdminSectionTabs ariaLabel="Finance groups" activeKey={activeGroup.key} items={groupItems} />
+        <div className="min-[900px]:hidden min-w-0">
+          <AdminTopbarTabs ariaLabel="Finance groups" activeKey={activeGroup.key} items={groupItems} className="w-full" />
         </div>
         <AdminSectionTabs ariaLabel="Finance sub-sections" activeKey={activeTab.key} items={sheetItems} className="w-full" />
       </div>
