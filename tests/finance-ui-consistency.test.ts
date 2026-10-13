@@ -34,6 +34,8 @@ test('Finance top-level tabs and clean sub-tabs preserve direct transaction entr
   const headerEnd = renderedPage.indexOf('      />', headerStart);
   assert.ok(headerStart >= 0 && headerEnd > headerStart, 'Finance must use the shared module header.');
   assert.doesNotMatch(renderedPage.slice(headerStart, headerEnd), /\bicon=/, 'Finance header must not render icons.');
+  assert.match(renderedPage.slice(headerStart, headerEnd), /description="Manage revenue, expenses, cash, receivables, payables, and financial reporting in one place\."/);
+  assert.doesNotMatch(renderedPage, /<div className="border-b border-line pb-3">\s*<h2 className="text-base font-semibold text-fg">\{activeTab\.label\}<\/h2>\s*<\/div>/, 'The selected worksheet must not repeat its label as a separate header below the subtabs.');
   assert.match(uiSource, /case 'revenue':\s*return <AdminInvoicing embeddedView="invoices" \/>/);
   assert.match(uiSource, /case 'expenses':\s*return <AdminInvoicing embeddedView="income-expenses" embeddedIncomeExpenseMode="expenses" \/>/);
   assert.match(uiSource, /case 'accounts-receivable':\s*return <AdminInvoicing embeddedView="receivables" \/>/);
