@@ -8,6 +8,7 @@ interface CustomDatePickerProps {
   value: string;
   onChange: (value: string) => void;
   type?: PickerType;
+  id?: string;
   min?: string;
   max?: string;
   disabled?: boolean;
@@ -48,6 +49,7 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   value,
   onChange,
   type = 'date',
+  id,
   min,
   max,
   disabled = false,
@@ -136,6 +138,7 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   return (
     <div data-ams-slug={slug} className={'relative min-w-0 ' + className}>
       <button
+        id={id}
         ref={triggerRef}
         type="button"
         disabled={disabled}
