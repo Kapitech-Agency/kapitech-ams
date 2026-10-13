@@ -39,7 +39,7 @@ test('Finance top-level tabs and clean sub-tabs preserve direct transaction entr
   assert.match(uiSource, /case 'revenue':\s*return <AdminInvoicing embeddedView="invoices" \/>/);
   assert.match(uiSource, /case 'expenses':\s*return <AdminInvoicing embeddedView="income-expenses" embeddedIncomeExpenseMode="expenses" \/>/);
   assert.match(uiSource, /case 'accounts-receivable':\s*return <AdminInvoicing embeddedView="receivables" \/>/);
-  assert.match(uiSource, /case 'vendors':[\s\S]*?<AdminVendors embedded \/>/);
+  assert.match(uiSource, /case 'vendors':[\s\S]*?<AdminVendors embedded searchTerm=\{searchText\} \/>/);
   assert.match(uiSource, /registerAddButton\('chart-of-accounts', 'Add account'\)/);
   assert.match(uiSource, /Add movement/);
   assert.match(uiSource, /Add vendor bill/);
@@ -49,6 +49,17 @@ test('Finance top-level tabs and clean sub-tabs preserve direct transaction entr
   assert.match(uiSource, /Add team fee/);
   assert.match(uiSource, /Add journal entry/);
   assert.match(uiSource, /Calculate project allocation/);
+});
+
+test('The Finance worksheet search controls the embedded vendor directory without a duplicate search field', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const vendors = await read('src/pages/admin/AdminVendors.tsx');
+
+  assert.match(workspace, /<AdminVendors embedded searchTerm=\{searchText\} \/>/);
+  assert.match(vendors, /embedded\?: boolean; searchTerm\?: string/);
+  assert.match(vendors, /const effectiveSearchQuery = searchTerm \?\? searchQuery/);
+  assert.match(vendors, /v\.name\.toLowerCase\(\)\.includes\(effectiveSearchQuery\.toLowerCase\(\)\)/);
+  assert.match(vendors, /className=\{searchTerm !== undefined \? 'hidden' : 'relative w-full lg:w-96'\}/);
 });
 
 test('Finance read permission blocks unauthorized register loads and shows an explicit restricted state', async () => {
@@ -131,7 +142,7 @@ test('Finance groups and vendor workflows are separated by user task', async () 
   assert.match(apView, /bills\.length > 0 &&/);
   assert.match(workspace, /receivables: 'accounts-receivable'/);
   assert.doesNotMatch(apView, /title="Vendor contract references"/);
-  assert.match(vendorsView, /<AdminVendors embedded \/>/);
+  assert.match(vendorsView, /<AdminVendors embedded searchTerm=\{searchText\} \/>/);
   assert.match(vendorsView, /Vendor contract register/);
   assert.match(vendorsView, /openVendorContractEditor\(vendor, contract\)/);
   assert.doesNotMatch(vendorsView, /Vendor & Freelancer payment schedule/);
