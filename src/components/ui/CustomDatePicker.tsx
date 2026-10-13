@@ -45,7 +45,7 @@ const parsePickerValue = (value: string, type: PickerType): Date | null => {
 const normaliseBound = (value: string | undefined, type: PickerType) =>
   value ? value.slice(0, type === 'month' ? 7 : 10) : '';
 
-export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
+export const CustomDatePicker = ({
   value,
   onChange,
   type = 'date',
@@ -60,7 +60,7 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   locale = 'en-US',
   slug,
   'aria-label': ariaLabel
-}) => {
+}: CustomDatePickerProps) => {
   const selectedDate = parsePickerValue(value, type);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dayRefs = useRef(new Map<string, HTMLButtonElement>());
