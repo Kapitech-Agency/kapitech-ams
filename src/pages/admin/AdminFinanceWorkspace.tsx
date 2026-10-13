@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ArrowDown, ArrowUpRight, Briefcase, CircleDollarSign, FileText, Landmark, Plus, RefreshCw, ShieldAlert, WalletCards } from 'lucide-react';
 import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminPanel, AdminSectionTabs, AdminStatusBadge } from '../../components/admin/AdminModulePrimitives';
 import Button from '../../components/ui/Button';
+import { AdminInvoicing } from './AdminInvoicing';
+import { AdminVendors } from './AdminVendors';
 import { Drawer } from '../../components/ui/Drawer';
 import { api } from '../../lib/apiClient';
 import { normalizeFinanceExpense, normalizeFinanceInvoice } from '../../lib/financeStore';
@@ -603,7 +605,9 @@ export const AdminFinanceWorkspace: React.FC = () => {
       const storedAccounts = getRegisterRecords('chart-of-accounts')
         .filter((record) => record.payload.active !== false)
         .map((record) => ({ value: String(record.payload.code || record.recordKey), label: String(record.payload.code || record.recordKey) + ' · ' + String(record.payload.name || '') }));
-      return [{ value: '', label: 'Select an account' }, ...(storedAccounts.length ? storedAccounts : ACCOUNT_OPTION_CODES)];
+      const accountsByCode = new Map<string, { value: string; label: string }>(ACCOUNT_OPTION_CODES.map((account) => [account.value, account]));
+      storedAccounts.forEach((account) => accountsByCode.set(account.value, account));
+      return [{ value: '', label: 'Select an account' }, ...accountsByCode.values()];
     }
     if (field.optionSource === 'cashAccounts') return [{ value: '', label: 'Select a cash account' }, ...CASH_ACCOUNT_OPTIONS];
     if (field.optionSource === 'projects') return [
@@ -666,6 +670,26 @@ export const AdminFinanceWorkspace: React.FC = () => {
     setRegisterActionError(null);
     try {
       let payload: Record<string, any> = { ...editor.payload };
+      if (editor.type === 'chart-of-accounts') {
+        const code = String(payload.code || '').trim();
+        const name = String(payload.name || '').trim();
+        const currentCode = String(editor.record?.payload.code || editor.record?.recordKey || '');
+        const conflictsWithDefault = EXCEL_CHART_OF_ACCOUNTS.some((account) => account.code.toLowerCase() === code.toLowerCase()) && currentCode.toLowerCase() !== code.toLowerCase();
+        const conflictsWithCustom = getRegisterRecords('chart-of-accounts').some((record) =>
+          record.id !== editor.record?.id && String(record.payload.code || record.recordKey).toLowerCase() === code.toLowerCase()
+        );
+        if (!code || !name) {
+          setRegisterActionError('Account code and account name are required.');
+          setRegisterSaving(false);
+          return;
+        }
+        if (conflictsWithDefault || conflictsWithCustom) {
+          setRegisterActionError('This account code already exists. Use a unique account code.');
+          setRegisterSaving(false);
+          return;
+        }
+        payload = { ...payload, code, name, description: String(payload.description || '').trim() };
+      }
       if (editor.type === 'journal-entry') {
         const debitCode = String(payload.debitAccountCode || '');
         const creditCode = String(payload.creditAccountCode || '');
@@ -1002,72 +1026,49 @@ export const AdminFinanceWorkspace: React.FC = () => {
         return renderSummary(false);
       case 'dashboard':
         return renderSummary(true);
-      case 'chart-of-accounts':
+      case 'chart-of-accounts': {
+        const customAccounts = getRegisterRecords('chart-of-accounts')
+          .filter((record) => matching([record.payload.code, record.payload.name, record.payload.accountType, record.payload.normalBalance, record.payload.description]))
+          .filter((record) => !EXCEL_CHART_OF_ACCOUNTS.some((account) => account.code === String(record.payload.code || record.recordKey)));
+        const baseCodes = new Set(EXCEL_CHART_OF_ACCOUNTS.map((account) => account.code));
+        const accountRows = [
+          ...EXCEL_CHART_OF_ACCOUNTS.filter((account) => matching([account.code, account.name, account.type, account.description])).map((account) => ({
+            id: 'default-' + account.code,
+            cells: [account.code, account.name, account.type, account.normalBalance, account.description, <StatusBadge value={account.active ? 'active' : 'inactive'} />, <span className="text-muted">Default</span>]
+          })),
+          ...customAccounts.filter((record) => !baseCodes.has(String(record.payload.code || record.recordKey))).map((record) => ({
+            id: record.id,
+            cells: [
+              String(record.payload.code || record.recordKey),
+              String(record.payload.name || '—'),
+              normaliseStatus(record.payload.accountType || '—'),
+              normaliseStatus(record.payload.normalBalance || '—'),
+              String(record.payload.description || '—'),
+              <StatusBadge value={record.payload.active === false ? 'inactive' : 'active'} />,
+              registerRecordActions('chart-of-accounts', record)
+            ]
+          }))
+        ];
         return (
           <div className="space-y-4">
-            <WorkbookNote title="Account reference">
-              These account codes and normal balances are used by finance records. Account setup remains read-only until editing is supported.
+            <WorkbookNote title="Chart of Accounts">
+              Default accounts remain fixed for consistent finance reporting. Create and edit additional agency-specific accounts here. Existing report calculations are not changed by adding an account; account posting and reporting mappings must be supported before it is treated as a reconciled ledger source.
             </WorkbookNote>
             <FinanceDataTable
               title="Chart of Accounts"
-              description="Account codes and normal balances used by finance records."
-              columns={[{ label: 'Account code' }, { label: 'Account name' }, { label: 'Account type' }, { label: 'Normal balance' }, { label: 'Description' }, { label: 'Status' }]}
-              rows={EXCEL_CHART_OF_ACCOUNTS.filter((account) => matching([account.code, account.name, account.type, account.description])).map((account) => ({
-                id: account.code,
-                cells: [account.code, account.name, account.type, account.normalBalance, account.description, <StatusBadge value={account.active ? 'active' : 'inactive'} />]
-              }))}
+              description="Account codes and normal balances used by finance records. Default accounts are reference-only; custom accounts can be managed here."
+              columns={[{ label: 'Account code' }, { label: 'Account name' }, { label: 'Account type' }, { label: 'Normal balance' }, { label: 'Description' }, { label: 'Status' }, { label: 'Management' }]}
+              rows={accountRows}
               emptyMessage="No chart-of-account rows match the current search."
+              actions={registerAddButton('chart-of-accounts', 'Add account')}
             />
           </div>
         );
+      }
       case 'revenue':
-        return (
-          <div className="space-y-4">
-            <WorkbookNote title="Revenue sourced from invoices">
-              Invoice records are the current transaction source. Revenue fields such as project, revenue account, due date and payment status are shown from invoice data where those fields exist in AMS.
-            </WorkbookNote>
-            <AdminPanel title="Search revenue records" bodyClassName="p-4">
-              <label className="block text-xs font-medium text-muted">Search invoice, client or project
-                <input value={searchText} onChange={(event) => setSearchText(event.target.value)} placeholder="Search invoices…" className="mt-1.5 block h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent sm:max-w-md" />
-              </label>
-            </AdminPanel>
-            <FinanceDataTable
-              title="Revenue register"
-              description="Revenue is calculated from issued invoices. Collections remain linked to their invoice payment records."
-              columns={[{ label: 'Date' }, { label: 'Invoice no.' }, { label: 'Client' }, { label: 'Project' }, { label: 'Amount', align: 'right' }, { label: 'Payment status' }, { label: 'Due date' }]}
-              rows={reportInvoices.filter((invoice) => matching([invoice.invoiceNumber, invoiceClient(invoice), invoice.projectId, invoice.notes])).map((invoice) => ({
-                id: invoice.id,
-                cells: [formatDate(getInvoiceDate(invoice)), invoice.invoiceNumber, invoiceClient(invoice), projects.find((project) => project.id === invoice.projectId)?.name || invoice.projectId || '—', formatMoney(Number(invoice.total) || 0, invoice.currency), <StatusBadge value={invoice.status} />, formatDate(invoice.dueDate)]
-              }))}
-              emptyMessage="No issued invoice data is available for the selected search."
-              actions={<Button type="button" variant="secondary" onClick={openLegacyTransactions}>Manage invoices</Button>}
-            />
-          </div>
-        );
+        return <AdminInvoicing embeddedView="invoices" />;
       case 'expenses':
-        return (
-          <div className="space-y-4">
-            <AdminPanel title="Search expense records" bodyClassName="p-4">
-              <label className="block text-xs font-medium text-muted">Search category, description, project or vendor
-                <input value={searchText} onChange={(event) => setSearchText(event.target.value)} placeholder="Search expenses…" className="mt-1.5 block h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent sm:max-w-md" />
-              </label>
-            </AdminPanel>
-            <FinanceDataTable
-              title="Expense register"
-              description="Recorded costs come from AMS expenses. Map unclassified expense categories before finalizing profit and loss reporting."
-              columns={[{ label: 'Date' }, { label: 'Category' }, { label: 'Description' }, { label: 'Project' }, { label: 'Amount', align: 'right' }, { label: 'Account mapping' }, { label: 'Status' }]}
-              rows={expenses.filter((expense) => matching([expense.category, expense.description, expense.projectId, expense.vendorId])).map((expense) => {
-                const classification = classifyWorkbookExpense(expense);
-                return {
-                  id: expense.id,
-                  cells: [formatDate(expense.date), expense.category, expense.description, projects.find((project) => project.id === expense.projectId)?.name || expense.projectId || '—', formatMoney(Number(expense.amount) || 0, String((expense as any).currency || 'IDR')), EXPENSE_CLASS_LABELS[classification], <StatusBadge value={(expense as any).status || 'posted'} />]
-                };
-              })}
-              emptyMessage="No expense records match the selected search."
-              actions={<Button type="button" variant="secondary" onClick={openLegacyTransactions}>Manage expenses</Button>}
-            />
-          </div>
-        );
+        return <AdminInvoicing embeddedView="income-expenses" embeddedIncomeExpenseMode="expenses" />;
       case 'cash-bank': {
         const openingRecord = getOpeningRecord('1000');
         const opening = openingRecord ? Number(openingRecord.payload.openingBalance) || 0 : null;
@@ -1113,19 +1114,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
         );
       }
       case 'accounts-receivable':
-        return (
-          <FinanceDataTable
-            title="Accounts receivable"
-            description="Outstanding is derived from the same invoice balance; paid amount and due date stay linked to the invoice source."
-            columns={[{ label: 'Invoice no.' }, { label: 'Invoice date' }, { label: 'Client' }, { label: 'Project' }, { label: 'Invoice amount', align: 'right' }, { label: 'Paid amount', align: 'right' }, { label: 'Outstanding', align: 'right' }, { label: 'Status' }, { label: 'Due date' }]}
-            rows={reportInvoices.filter((invoice) => getInvoiceOutstanding(invoice) > 0).map((invoice) => ({
-              id: invoice.id,
-              cells: [invoice.invoiceNumber, formatDate(getInvoiceDate(invoice)), invoiceClient(invoice), projects.find((project) => project.id === invoice.projectId)?.name || invoice.projectId || '—', formatMoney(Number(invoice.total) || 0, invoice.currency), formatMoney(getInvoiceCollected(invoice), invoice.currency), formatMoney(getInvoiceOutstanding(invoice), invoice.currency), <StatusBadge value={invoice.status} />, formatDate(invoice.dueDate)]
-            }))}
-            emptyMessage="No outstanding invoice balances were returned by the current AMS invoice source."
-            actions={<Button type="button" variant="secondary" onClick={openLegacyTransactions}>Open invoices</Button>}
-          />
-        );
+        return <AdminInvoicing embeddedView="receivables" />;
       case 'accounts-payable': {
         const bills = getRegisterRecords('vendor-bill').filter((record) => matching([
           record.recordKey, record.payload.billNo, record.payload.vendorName, record.payload.projectName, record.payload.dueDate, record.payload.paymentStatus
@@ -1225,37 +1214,8 @@ export const AdminFinanceWorkspace: React.FC = () => {
           </div>
         );
       }
-      case 'vendors': {
-        return (
-          <div className="space-y-4">
-            <FinanceDataTable
-              title="Vendor & freelancer directory"
-              description="Vendor master records and service details from the existing AMS directory. Contract commitments are listed below; bills and payment schedules are managed in Accounts Payable."
-              columns={[{ label: 'Vendor / company' }, { label: 'Type' }, { label: 'Service' }, { label: 'Rate', align: 'right' }, { label: 'Contracts', align: 'center' }, { label: 'Status' }]}
-              rows={vendors.filter((vendor) => matching([vendor.name, vendor.companyName, vendor.type, vendor.primaryCategory, vendor.skills.join(' ')])).map((vendor) => ({
-                id: vendor.id,
-                cells: [vendor.companyName || vendor.name, normaliseStatus(vendor.type), vendor.primaryCategory, formatMoney(Number(vendor.hourlyRate) || 0, vendor.currency), String(Array.isArray(vendor.contracts) ? vendor.contracts.length : 0), <StatusBadge value={vendor.status} />]
-              }))}
-              emptyMessage="No vendor records were returned by AMS."
-              actions={<Button type="button" variant="secondary" onClick={() => navigate('/admin/team?view=vendor-directory')}>Open vendor directory</Button>}
-            />
-            <FinanceDataTable
-              title="Vendor contract references"
-              description="Existing AMS contracts are shown as commitments; a contract alone is not treated as a payable bill."
-              columns={[{label:'Vendor'},{label:'Contract'},{label:'Rate basis'},{label:'Contract rate/value',align:'right'},{label:'Linked expense records',align:'right'}]}
-              rows={vendors.flatMap((vendor)=>(Array.isArray(vendor.contracts)?vendor.contracts:[]).filter((contract)=>!searchText.trim()||matching([vendor.name,vendor.companyName,contract.title,contract.rateType,contract.rateAmount])).map((contract)=> {
-                const linked=expenses.filter((expense)=>{
-                  const expenseRecord=expense as AgencyExpense & {vendorContractId?:string;vendorPayment?:{vendorId?:string;contractId?:string};metadata?:{vendorPayment?:{vendorId?:string;contractId?:string}}};
-                  const structured=expenseRecord.vendorPayment||expenseRecord.metadata?.vendorPayment;
-                  return (expenseRecord.vendorId===vendor.id&&expenseRecord.vendorContractId===contract.id)||(structured?.vendorId===vendor.id&&structured?.contractId===contract.id)||expense.description.startsWith('[VENDOR_PAYMENT]|'+vendor.id+'|'+contract.id+'|');
-                });
-                return {id:vendor.id+'-'+contract.id,cells:[vendor.companyName||vendor.name,contract.title,normaliseStatus(contract.rateType),formatMoney(Number(contract.rateAmount)||0,contract.currency),String(linked.length)+' · '+formatMoney(sumAmounts<AgencyExpense>(linked,(expense)=>Number(expense.amount)||0),contract.currency)]};
-              }))}
-              emptyMessage="No vendor contracts are available in AMS."
-            />
-          </div>
-        );
-      }
+      case 'vendors':
+        return <AdminVendors embedded />;
       case 'project-finance': {
         const financeRecords=getRegisterRecords('project-finance');
         const rows=projects.filter((project)=>matching([project.name,project.clientCompany,project.clientName,project.status])).map((project)=>{
