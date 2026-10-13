@@ -25,6 +25,7 @@ test('global reporting period controls stay in the admin layout shared by module
   const fs = await import('node:fs/promises');
   const layout = await fs.readFile('src/pages/admin/AdminLayout.tsx', 'utf8');
   const periodFilter = await fs.readFile('src/components/admin/AdminReportingPeriodBar.tsx', 'utf8');
+  const periodPicker = await fs.readFile('src/components/ui/CustomReportPeriodPicker.tsx', 'utf8');
   const inbox = await fs.readFile('src/pages/admin/AdminInbox.tsx', 'utf8');
   const tasks = await fs.readFile('src/components/admin/TasksWorkspace.tsx', 'utf8');
   const projects = await fs.readFile('src/pages/admin/AdminProjects.tsx', 'utf8');
@@ -43,6 +44,8 @@ test('global reporting period controls stay in the admin layout shared by module
   assert.ok(periodFilter.includes('new Intl.DateTimeFormat(locale, { month: \'short\', year: \'numeric\' })'));
   assert.ok(periodFilter.includes("return match ? 'Q' + match[2] + ' ' + match[1] : value;"));
   assert.ok(!periodFilter.includes('<span>Filter</span>'));
+  assert.ok(periodPicker.includes('compact ? "grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2"'));
+  assert.ok(!periodPicker.includes('compact ? "grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3"'));
   assert.ok(inbox.includes('matchesDate(item.createdAt)'));
   assert.ok(tasks.includes('matchesDate(task.dueDate || task.createdAt)'));
   assert.ok(projects.includes('matchesInterval(project.startDate, project.targetEndDate, project.createdAt)'));
