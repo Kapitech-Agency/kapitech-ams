@@ -77,7 +77,7 @@ export const CustomReportPeriodPicker: React.FC<CustomReportPeriodPickerProps> =
 
   return (
     <div className={compact ? "min-w-0 space-y-2" : "min-w-0 space-y-3"} data-ams-slug={slug}>
-      <div className={compact ? "grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3" : "grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3"}>
+      <div className={compact ? "grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2" : "grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3"}>
         <label className="block min-w-0 text-xs font-medium text-muted">
           {isId ? 'Jenis periode' : 'Period type'}
           <CustomSelect
@@ -96,7 +96,7 @@ export const CustomReportPeriodPicker: React.FC<CustomReportPeriodPickerProps> =
             onChange={(year) => onChange(setReportingPeriodYear(value, mode, Number(year)))}
             options={years.map((year) => ({ value: String(year), label: String(year) }))}
             className="mt-1.5 w-full"
-            triggerClassName="h-10 min-h-10 w-full"
+            triggerClassName={compact ? "h-9 min-h-9 w-full" : "h-10 min-h-10 w-full"}
             aria-label={isId ? 'Tahun laporan' : 'Reporting year'}
           />
         </label>
