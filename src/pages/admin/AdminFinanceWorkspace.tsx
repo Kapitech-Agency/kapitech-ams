@@ -1744,7 +1744,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
             <AdminPanel title="Closing period" bodyClassName="p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <label className="block max-w-xs flex-1 text-xs font-medium text-muted">Reporting month
-                  <input type="month" value={selectedMonth} onChange={(event)=>setSelectedMonth(event.target.value)} className="mt-1.5 block h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent" disabled={locked}/>
+                  <input type="month" value={selectedMonth} onChange={(event)=>setSelectedMonth(event.target.value)} className="mt-1.5 block h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent"/>
                 </label>
                 <div className="flex items-center gap-2">
                   <AdminStatusBadge tone={locked?'success':'warning'}>{locked?'Closed':'Open'}</AdminStatusBadge>
