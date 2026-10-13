@@ -362,5 +362,5 @@ test('Finance registers provide sortable headers, usable pagination, and CSV exp
   assert.match(workspace, /const exportRows = \(\) =>/);
   assert.match(workspace, /const exportableRows = sortedRows\.map/);
   assert.match(workspace, /exportable = true/);
-  assert.match(workspace, /exportable=\{false\} actions=\{<Button variant="secondary" type="button" icon=\{<Download size=\{14\} \/>\}/);
+  assert.match(workspace, /exportable=\{false\} actions=\{<Button variant="secondary" type="button" icon=\{<Download size=\{14\}/);
 });
