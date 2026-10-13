@@ -1015,7 +1015,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
             </AdminPanel>
             <FinanceDataTable
               title="Revenue register"
-              description="The workbook's Revenue tab maps to issued invoices; payment collections remain attached to the invoice payment records."
+              description="Revenue is calculated from issued invoices. Collections remain linked to their invoice payment records."
               columns={[{ label: 'Date' }, { label: 'Invoice no.' }, { label: 'Client' }, { label: 'Project' }, { label: 'Amount', align: 'right' }, { label: 'Payment status' }, { label: 'Due date' }]}
               rows={reportInvoices.filter((invoice) => matching([invoice.invoiceNumber, invoiceClient(invoice), invoice.projectId, invoice.notes])).map((invoice) => ({
                 id: invoice.id,
@@ -1116,7 +1116,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
         const foreignCurrencyBillCount = bills.filter((record)=>String(record.payload.currency||'IDR')!=='IDR').length;
         return (
           <div className="space-y-4">
-            <WorkbookNote title="Vendor Bill is the payable source of truth">
+            <WorkbookNote title="Vendor bills and linked payments determine payable balances">
               Vendor contracts describe commitments. Accounts Payable is now kept in a separate persistent register; each bill can carry its own due date and payment schedule. Linked expenses remain source records and are not silently converted into bills.
             </WorkbookNote>
             <AdminMetricStrip metrics={[
@@ -1220,8 +1220,8 @@ export const AdminFinanceWorkspace: React.FC = () => {
               actions={<Button type="button" variant="secondary" onClick={() => navigate('/admin/team?view=vendor-directory')}>Open vendor directory</Button>}
             />
             <FinanceDataTable
-              title="Vendor & Freelancer · 30% / 20% / 50% schedule"
-              description="Amounts and paid amounts are derived from each persisted bill and its linked payments. Unassigned legacy payments are allocated FIFO; the single bill due date remains authoritative because the workbook has no separate due date per installment."
+              title="Vendor & Freelancer payment schedule"
+              description="Amounts and paid amounts are derived from each persisted bill and its linked payments. Unassigned legacy payments are allocated FIFO; each payment schedule uses the saved bill due date. Separate due dates per installment are not recorded."
               columns={[
                 { label: 'Bill no.' }, { label: 'Vendor / freelancer' }, { label: 'Project' }, { label: 'Contract value', align: 'right' },
                 { label: 'Payment 1 · 30%', align: 'right' }, { label: 'Paid 1', align: 'right' },
@@ -1393,7 +1393,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
               { id: 'pnl-operating', label: 'Operating expense', value: formatMoney(classTotals.operatingExpense), context: 'Mapped operating costs', icon: <ArrowUpRight size={15} /> },
               { id: 'pnl-net', label: 'Net preview', value: formatMoney(netPreview), context: 'Before unclassified ' + formatMoney(classTotals.unclassified), icon: <CircleDollarSign size={15} /> }
             ]} />
-            <FinanceDataTable title="Monthly Profit & Loss" description="Workbook line items; values remain a preview until AMS account classifications and posting rules are approved." columns={[{ label: 'Line item' }, { label: 'Amount', align: 'right' }, { label: 'Basis' }]} rows={[
+            <FinanceDataTable title="Monthly Profit & Loss" description="Values remain a preview until account classifications and posting rules are approved." columns={[{ label: 'Line item' }, { label: 'Amount', align: 'right' }, { label: 'Basis' }]} rows={[
               { id: 'rev', cells: ['Revenue', formatMoney(revenue), 'Invoice issue date'] },
               { id: 'direct', cells: ['Direct Project Cost', formatMoney(classTotals.directProjectCost), 'Mapped expense records'] },
               { id: 'gross', cells: ['Gross Profit', formatMoney(grossProfit), 'Revenue minus direct project cost'] },
@@ -1427,7 +1427,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
             <WorkbookNote tone="warning" title="Cash-flow movement, not reconciled ending cash">
               Inflows use dated invoice payments; outflows use dated AMS expense records. Opening bank balance, bank account IDs, internal transfers and independent petty-cash balances are not yet linked, so the final column is net movement rather than an authoritative bank ending balance.
             </WorkbookNote>
-            <FinanceDataTable title="Monthly Cash Flow" description="The workbook cash-in / cash-out structure, shown in IDR from live AMS transaction sources." columns={[{ label: 'Month' }, { label: 'Total cash in', align: 'right' }, { label: 'Total cash out', align: 'right' }, { label: 'Net cash movement', align: 'right' }, { label: 'Source rows', align: 'right' }]} rows={rows} emptyMessage="No dated receipts or expense movements are available." />
+            <FinanceDataTable title="Monthly Cash Flow" description="Monthly cash-in, cash-out, and net movement calculated from live AMS transaction sources." columns={[{ label: 'Month' }, { label: 'Total cash in', align: 'right' }, { label: 'Total cash out', align: 'right' }, { label: 'Net cash movement', align: 'right' }, { label: 'Source rows', align: 'right' }]} rows={rows} emptyMessage="No dated receipts or expense movements are available." />
           </div>
         );
       }
@@ -1455,7 +1455,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
         const completed=WORKBOOK_CLOSING_ITEMS.filter((item)=>records.some((record)=>String(record.payload.checklistItem||'').toLowerCase()===item.label.toLowerCase()&&String(record.payload.status||record.status)==='Done')).length;
         return (
           <div className="space-y-4">
-            <WorkbookNote tone={locked?'info':'warning'} title={locked?'Selected period is closed':'Monthly closing requires all workbook control items'}>
+            <WorkbookNote tone={locked?'info':'warning'} title={locked?'Selected period is closed':'Monthly closing requires all control items'}>
               Selected period: {selectedMonth}. {completed} of {WORKBOOK_CLOSING_ITEMS.length} controls are completed and approved. The period can close after all 11 required controls are marked Done and posted journal entries balance.
             </WorkbookNote>
             <AdminPanel title="Closing period" bodyClassName="p-4">
@@ -1469,7 +1469,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
                 </div>
               </div>
             </AdminPanel>
-            <FinanceDataTable title="Monthly closing checklist" description="One persisted row per Excel control item, with assigned PIC, sign-off date and review notes." columns={[{label:'Checklist item'},{label:'Default owner'},{label:'Status'},{label:'Control purpose'},{label:'Actions'}]} rows={rows} emptyMessage="Create the checklist rows before requesting month-end close."/>
+            <FinanceDataTable title="Monthly closing checklist" description="One saved row for each monthly closing control, with an assigned owner, sign-off date, and review notes." columns={[{label:'Checklist item'},{label:'Default owner'},{label:'Status'},{label:'Control purpose'},{label:'Actions'}]} rows={rows} emptyMessage="Create the checklist rows before requesting month-end close."/>
           </div>
         );
       }
@@ -1625,7 +1625,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
         );
       }
       default:
-        return <WorkbookNote title="Finance worksheet">{tab.description}</WorkbookNote>;
+        return null;
     }
   };
 
@@ -1653,8 +1653,8 @@ export const AdminFinanceWorkspace: React.FC = () => {
         <AdminSectionTabs ariaLabel="Finance groups" activeKey={activeGroup.key} items={groupItems} />
       </div>
       {registerErrors.length > 0 && (
-        <WorkbookNote tone="warning" title="Supplementary Finance register warning">
-          {registerErrors.length} of {SUPPLEMENTARY_FINANCE_RECORD_TYPES.length} supplementary register requests failed. The service requires the configured PostgreSQL data source; values from unavailable registers are not inferred. {registerErrors[0]}
+        <WorkbookNote tone="warning" title="Some finance records are unavailable">
+          {registerErrors.length} of {SUPPLEMENTARY_FINANCE_RECORD_TYPES.length} supporting finance record requests failed. Values from unavailable records are not inferred. {registerErrors[0]}
         </WorkbookNote>
       )}
       {registerActionError && !editor && (
