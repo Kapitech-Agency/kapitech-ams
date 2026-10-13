@@ -1622,20 +1622,15 @@ export const AdminFinanceWorkspace: React.FC = () => {
         const bills = getRegisterRecords('vendor-bill').filter((record) => matchesDate(record.payload.billDate || record.payload.dueDate || record.createdAt) && matching([
           record.recordKey, record.payload.billNo, record.payload.vendorName, record.payload.projectName, record.payload.dueDate, record.payload.paymentStatus
         ]));
-        const vendorPayments = getRegisterRecords('vendor-bill-payment');
-        const billPaidFromLinkedPayments = (bill: WorkbookRecord) => sumAmounts<WorkbookRecord>(
-          vendorPayments.filter((payment) => String(payment.payload.billId || '') === bill.id),
-          (payment) => Number(payment.payload.amount) || 0
-        );
-        const billOutstandingFromLinkedPayments = (bill: WorkbookRecord) => Math.max(
-          0,
-          (Number(bill.payload.total) || 0) - billPaidFromLinkedPayments(bill)
-        );
         const payableTotalIDR = sumAmounts<WorkbookRecord>(
           bills.filter((record) => String(record.payload.currency || 'IDR') === 'IDR'),
-          billOutstandingFromLinkedPayments
+          (record) => Math.max(
+            0,
+            Number(record.payload.outstanding ?? ((Number(record.payload.total) || 0) - (Number(record.payload.paidAmount) || 0))) || 0
+          )
         );
-        const foreignCurrencyBillCount = bills.filter((record)=>String(record.payload.currency||'IDR')!=='IDR').length;
+        const foreignCurrencyBillCount = bills.filter((record) => String(record.payload.currency || 'IDR') !== 'IDR').length;
+        const vendorPayments = getRegisterRecords('vendor-bill-payment');
         const scheduleRows = bills.map((bill) => {
           const billPayments = vendorPayments.filter((payment) => String(payment.payload.billId || '') === bill.id);
           const schedule = getVendorBillInstallmentSchedule(
@@ -1687,12 +1682,12 @@ export const AdminFinanceWorkspace: React.FC = () => {
             ]}/>
             <FinanceDataTable
               title="Accounts Payable register"
-              description="Bill paid and outstanding values use payment records linked to each bill, so the register, installment schedule, and summary stay aligned."
+              description="Outstanding uses the saved bill balance when available, with the stored paid amount as a legacy fallback. The installment schedule uses linked payment records."
               columns={[{label:'Bill no.'},{label:'Vendor'},{label:'Project'},{label:'Bill date'},{label:'Due date'},{label:'Bill amount',align:'right'},{label:'Paid',align:'right'},{label:'Outstanding',align:'right'},{label:'Status'},{label:'Actions'}]}
               rows={bills.map((record)=> {
                 const total = Number(record.payload.total)||0;
-                const paid = billPaidFromLinkedPayments(record);
-                const outstanding = billOutstandingFromLinkedPayments(record);
+                const paid = Number(record.payload.paidAmount)||0;
+                const outstanding = Math.max(0,Number(record.payload.outstanding ?? (total-paid))||0);
                 return {
                   id:record.id,
                   cells:[
