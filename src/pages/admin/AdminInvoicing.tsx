@@ -704,10 +704,10 @@ const FinanceCashFlowChart: React.FC<{
 };
 const FinanceMetricCard: React.FC<React.ComponentProps<typeof AdminMetricCard>> = AdminMetricCard;
 
-type EmbeddedFinanceView = 'invoices' | 'receivables' | 'income-expenses';
+type EmbeddedFinanceView = 'invoices' | 'receivables' | 'income-expenses' | 'vendor-payments';
 type AdminInvoicingProps = {
   /** Reuse the existing transactional invoice/expense flows from a Finance worksheet. */
-  embeddedView?: EmbeddedFinanceView;
+  embeddedView: EmbeddedFinanceView;
   /** Lock the embedded transaction ledger to one worksheet workflow. */
   embeddedIncomeExpenseMode?: 'income' | 'expenses';
 };
@@ -719,7 +719,6 @@ const FinanceWorkspaceContainer: React.FC<{ embedded?: boolean; children: React.
 
 export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, embeddedIncomeExpenseMode }) => {
   const { language } = useLanguage();
-  const location = useLocation();
   const canViewFinancials = hasAdminPermission('canViewFinancials');
   const canManageInvoices = hasAdminPermission('canManageInvoices');
   const canCreateInvoice = canManageInvoices;
@@ -729,13 +728,10 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   const embedded = Boolean(embeddedView);
   const embeddedReceivablesOnly = embeddedView === 'receivables';
 
-  const financeView = useMemo(() => {
-    if (embeddedView === 'receivables') return 'invoices';
-    if (embeddedView) return embeddedView;
-    const requestedView = new URLSearchParams(location.search).get('finance') || 'invoices';
-    // Proposals are retired as a standalone business module. Keep legacy links safe by routing them to invoices.
-    return requestedView === 'quotations' ? 'invoices' : requestedView;
-  }, [embeddedView, location.search]);
+  const financeView: string = useMemo(
+    () => embeddedView === 'receivables' ? 'invoices' : embeddedView,
+    [embeddedView]
+  );
   const [invoices, setInvoices] = useState<AgencyInvoice[]>([]);
   const [expenses, setExpenses] = useState<FinanceExpense[]>([]);
   const [clients, setClients] = useState<FinanceClient[]>([]);
@@ -2987,11 +2983,12 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
             <span className="sr-only">Search expense</span>
             <input value={expenseSearch} onChange={(event) => setExpenseSearch(event.target.value)} placeholder="Search expense..." className={fieldClass + ' h-10 pl-8'}/>
           </label>
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(150px,1fr)_minmax(150px,1fr)_minmax(140px,1fr)_minmax(150px,1fr)_auto]">
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(150px,1fr)_minmax(150px,1fr)_minmax(140px,1fr)_minmax(150px,1fr)_auto_auto]">
             <CustomSelect value={expenseTypeFilter} onChange={setExpenseTypeFilter} options={expenseTypeOptions} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Expense type filter"/>
             <CustomSelect value={expenseCategoryFilter} onChange={setExpenseCategoryFilter} options={expenseCategoryOptions} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Expense category filter"/>
             <CustomSelect value={expensePeriodFilter} onChange={(value) => setExpensePeriodFilter(value as typeof expensePeriodFilter)} options={expensePeriodOptions} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Expense period filter"/>
             <CustomSelect value={expenseSort} onChange={(value) => setExpenseSort(value as typeof expenseSort)} options={[{value:'date_desc',label:'Newest'},{value:'date_asc',label:'Oldest'},{value:'amount_high',label:'Highest amount'},{value:'amount_low',label:'Lowest amount'}]} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Expense sort"/>
+            {embedded && <button type="button" onClick={exportExpensesCsv} disabled={!filteredExpenses.length} className={actionClass + ' h-10 min-h-10'}><Download size={14}/>Export CSV</button>}
             {canManageInvoices && <button type="button" onClick={openExpenseModal} className={primaryClass + ' h-10 min-h-10 shrink-0'}><Plus size={14}/>Add expense</button>}
           </div>
         </div>
@@ -3217,7 +3214,8 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
-          {embedded && canCreateInvoice && <button type="button" onClick={openCreateInvoice} className={primaryClass + ' h-9 min-h-9'}><Plus size={14}/>New invoice</button>}
+          {embedded && <button type="button" onClick={exportInvoicesCsv} disabled={!filteredInvoices.length} className={actionClass + ' h-9 min-h-9'}><Download size={14}/>Export CSV</button>}
+          {embedded && !embeddedReceivablesOnly && canCreateInvoice && <button type="button" onClick={openCreateInvoice} className={primaryClass + ' h-9 min-h-9'}><Plus size={14}/>New invoice</button>}
           <div className="inline-flex items-center rounded-control border border-line bg-bg p-0.5">
             <button
               type="button"
