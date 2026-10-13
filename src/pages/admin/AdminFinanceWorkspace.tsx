@@ -909,7 +909,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
     const isPosted = type === 'journal-entry' && record.status === 'posted';
     const isDone = type === 'monthly-closing' && String(record.payload.status || record.status) === 'Done';
     const recordPeriod = String(record.payload.period || record.periodKey || '');
-    const isPeriodLocked = type === 'monthly-closing' && Boolean(recordPeriod) && getRegisterRecords('monthly-closing-lock').some(
+    const isPeriodLocked = Boolean(recordPeriod) && getRegisterRecords('monthly-closing-lock').some(
       (lock) => String(lock.periodKey || lock.payload.period || '') === recordPeriod
     );
     const voucherStatus = String(record.payload.status || record.status);
@@ -921,7 +921,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
       || (type === 'journal-entry' && record.status === 'draft')
       || (type === 'monthly-closing' && !isDone)
     );
-    const canPostVoucher = canApproveFinanceRecords && type === 'petty-cash-voucher' && voucherStatus === 'approved';
+    const canPostVoucher = canApproveFinanceRecords && !isPeriodLocked && type === 'petty-cash-voucher' && voucherStatus === 'approved';
     const actionLabel = type === 'journal-entry' ? 'Post'
       : type === 'petty-cash-voucher' ? 'Approve'
       : type === 'monthly-closing' ? 'Complete' : 'Approve';
