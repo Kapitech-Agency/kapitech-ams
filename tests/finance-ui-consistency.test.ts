@@ -173,7 +173,7 @@ test('Finance worksheets embed the existing transactional workflows instead of r
   assert.match(invoicing, /openPayment\(invoice\)/);
   assert.match(invoicing, /embeddedIncomeExpenseMode \|\| 'income'/);
   assert.match(invoicing, /Expense ledger/);
-  assert.match(vendors, /export const AdminVendors: React\.FC<\{ embedded\?: boolean \}>/);
+  assert.match(vendors, /export const AdminVendors: React\.FC<\{ embedded\?: boolean; searchTerm\?: string \}>/);
   assert.match(vendors, /!embedded && <div className="min-\[900px\]:hidden min-w-0" data-ams-slug="team-mobile-tabs">/);
   assert.match(workspace, /accountsByCode\.values\(\)/);
   assert.match(workspace, /This account code already exists/);
