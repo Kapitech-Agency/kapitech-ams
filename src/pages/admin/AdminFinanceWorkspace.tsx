@@ -508,27 +508,38 @@ export const AdminFinanceWorkspace: React.FC = () => {
     const expenseSource = baseResults[1];
     const projectSource = baseResults[2];
     const vendorSource = baseResults[3];
-    const nextRegisters: Record<string, WorkbookRecord[]> = {};
-    workbookResults.forEach((result, index) => {
-      const type = SUPPLEMENTARY_FINANCE_RECORD_TYPES[index];
-      nextRegisters[type] = Array.isArray(result.data?.records) ? result.data.records as WorkbookRecord[] : [];
+    setRegisterRecords((current) => {
+      const next = { ...current };
+      workbookResults.forEach((result, index) => {
+        if (result.error) return;
+        const type = SUPPLEMENTARY_FINANCE_RECORD_TYPES[index];
+        next[type] = Array.isArray(result.data?.records) ? result.data.records as WorkbookRecord[] : [];
+      });
+      return next;
     });
-    setRegisterRecords(nextRegisters);
     setRegisterErrors(workbookResults.filter((result) => result.error).map((result) => result.label + ': ' + result.error));
-    const nextInvoices = Array.isArray(invoiceSource.data?.invoices)
-      ? invoiceSource.data.invoices.map((item: AgencyInvoice) => normalizeFinanceInvoice({
-          ...item,
-          currency: item.currency || 'IDR',
-          items: Array.isArray(item.items) ? item.items : []
-        } as AgencyInvoice))
-      : [];
-    const nextExpenses = Array.isArray(expenseSource.data?.expenses)
-      ? expenseSource.data.expenses.map((item: AgencyExpense) => normalizeFinanceExpense(item))
-      : [];
-    setInvoices(nextInvoices);
-    setExpenses(nextExpenses);
-    setProjects(Array.isArray(projectSource.data?.projects) ? projectSource.data.projects as AgencyProject[] : []);
-    setVendors(Array.isArray(vendorSource.data?.vendors) ? vendorSource.data.vendors as AgencyVendor[] : []);
+    if (!invoiceSource.error) {
+      const nextInvoices = Array.isArray(invoiceSource.data?.invoices)
+        ? invoiceSource.data.invoices.map((item: AgencyInvoice) => normalizeFinanceInvoice({
+            ...item,
+            currency: item.currency || 'IDR',
+            items: Array.isArray(item.items) ? item.items : []
+          } as AgencyInvoice))
+        : [];
+      setInvoices(nextInvoices);
+    }
+    if (!expenseSource.error) {
+      const nextExpenses = Array.isArray(expenseSource.data?.expenses)
+        ? expenseSource.data.expenses.map((item: AgencyExpense) => normalizeFinanceExpense(item))
+        : [];
+      setExpenses(nextExpenses);
+    }
+    if (!projectSource.error) {
+      setProjects(Array.isArray(projectSource.data?.projects) ? projectSource.data.projects as AgencyProject[] : []);
+    }
+    if (!vendorSource.error) {
+      setVendors(Array.isArray(vendorSource.data?.vendors) ? vendorSource.data.vendors as AgencyVendor[] : []);
+    }
     setSourceErrors(baseResults.filter((result) => result.error).map((result) => result.label + ': ' + result.error));
     setLoading(false);
     setRefreshing(false);
@@ -1051,8 +1062,11 @@ export const AdminFinanceWorkspace: React.FC = () => {
     </AdminPanel>
   );
 
-  const renderRecentActivity = () => {
-    const rows: TableRow[] = cashMovements.slice(0, 8).map((entry) => ({
+  const renderRecentActivity = (month?: string) => {
+    const activity = month
+      ? cashMovements.filter((entry) => getMonthKey(entry.date) === month)
+      : cashMovements;
+    const rows: TableRow[] = activity.slice(0, 8).map((entry) => ({
       id: entry.id,
       cells: [
         formatDate(entry.date),
@@ -1065,14 +1079,18 @@ export const AdminFinanceWorkspace: React.FC = () => {
     }));
     return (
       <FinanceDataTable
-        title="Recent transaction activity"
-        description="Derived from invoice payments and expenses, plus explicitly recorded bank adjustments and internal cash transfers. This is not an imported bank statement."
+        title={month ? 'Selected-month transaction activity' : 'Recent transaction activity'}
+        description={month
+          ? 'Recorded movements for ' + month + '. Values are transaction-based and are not a reconciled bank statement.'
+          : 'Derived from invoice payments and expenses, plus explicitly recorded bank adjustments and internal cash transfers. This is not an imported bank statement.'}
         columns={[
           { label: 'Date' }, { label: 'Reference' }, { label: 'Description' }, { label: 'Source' },
           { label: 'Cash in', align: 'right' }, { label: 'Cash out', align: 'right' }
         ]}
         rows={rows}
-        emptyMessage="No recorded payment or expense activity is available from the connected AMS sources."
+        emptyMessage={month
+          ? 'No recorded movements exist for the selected month.'
+          : 'No recorded payment or expense activity is available from the connected AMS sources.'}
       />
     );
   };
@@ -1080,13 +1098,20 @@ export const AdminFinanceWorkspace: React.FC = () => {
   const renderSummary = (dashboard: boolean) => {
     const currentMonth = selectedMonth;
     const billedInMonth = sumAmounts<AgencyInvoice>(idrInvoices.filter((invoice) => getMonthKey(getInvoiceDate(invoice)) === currentMonth), (invoice) => Number(invoice.total) || 0);
-    const collectedInMonth = sumAmounts<CashMovement>(cashMovements.filter((movement) => movement.currency === 'IDR' && getMonthKey(movement.date) === currentMonth), (movement) => movement.cashIn);
-    const expenseInMonth = sumAmounts<AgencyExpense>(idrExpenses.filter((expense) => getMonthKey(expense.date) === currentMonth), (expense) => Number(expense.amount) || 0);
+    const monthMovements = cashMovements.filter((movement) => movement.currency === 'IDR' && getMonthKey(movement.date) === currentMonth);
+    const cashInThisMonth = sumAmounts<CashMovement>(monthMovements, (movement) => movement.cashIn);
+    const cashOutThisMonth = sumAmounts<CashMovement>(monthMovements, (movement) => movement.cashOut);
     const metrics = [
       { id: 'billed', label: 'Total billed', value: formatMoney(totalBilled), context: 'IDR issued invoices; non-IDR invoices remain visible in transaction registers', icon: <FileText size={15} /> },
       { id: 'collected', label: 'Total collected', value: formatMoney(totalCollected), context: 'Recorded IDR client payments', icon: <ArrowDown size={15} />, toneClassName: 'text-success' },
       { id: 'receivable', label: 'Outstanding receivables', value: formatMoney(totalOutstanding), context: 'Derived from IDR invoice balances', icon: <WalletCards size={15} />, toneClassName: 'text-warning' },
       { id: 'expenses', label: 'Recorded expenses', value: formatMoney(totalExpenses), context: 'IDR expense records returned by AMS', icon: <ArrowUpRight size={15} />, toneClassName: 'text-series-3' }
+    ];
+    const dashboardMetrics = [
+      { id: 'month-billed', label: 'Invoice value issued', value: formatMoney(billedInMonth), context: currentMonth + ' · issued IDR invoices', icon: <FileText size={15} /> },
+      { id: 'month-in', label: 'Recorded cash in', value: formatMoney(cashInThisMonth), context: 'Dated IDR movements touching Cash & Bank', icon: <ArrowDown size={15} />, toneClassName: 'text-success' },
+      { id: 'month-out', label: 'Recorded cash out', value: formatMoney(cashOutThisMonth), context: 'Dated IDR movements touching Cash & Bank', icon: <ArrowUpRight size={15} />, toneClassName: 'text-series-3' },
+      { id: 'month-net', label: 'Net cash movement (proxy)', value: formatMoney(cashInThisMonth - cashOutThisMonth), context: 'Recorded movement only; not reconciled closing cash', icon: <CircleDollarSign size={15} /> }
     ];
     const recentInvoices: TableRow[] = [...reportInvoices]
       .sort((a, b) => String(b.issueDate || '').localeCompare(String(a.issueDate || '')))
@@ -1104,32 +1129,33 @@ export const AdminFinanceWorkspace: React.FC = () => {
       }));
     return (
       <div className="space-y-4">
-        <AdminMetricStrip metrics={metrics} />
-        {dashboard && (
-          <AdminPanel title="Selected-month activity" description="Choose a month to inspect invoice and expense activity for that period.">
-            <div className="grid gap-4 p-4 sm:grid-cols-3">
-              <label className="block text-xs font-medium text-muted">Reporting month
-                <input type="month" value={selectedMonth} onChange={(event) => setSelectedMonth(event.target.value)} className="mt-1.5 block h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent" />
+        {dashboard ? (
+          <>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between" data-ams-slug="finance-dashboard-period">
+              <div>
+                <h2 className="text-sm font-semibold text-fg">Monthly dashboard</h2>
+                <p className="mt-0.5 text-xs text-muted">Review recorded cash movement and invoice activity for one reporting month.</p>
+              </div>
+              <label className="flex items-center gap-2 text-xs font-medium text-muted">
+                Reporting month
+                <input type="month" value={selectedMonth} onChange={(event) => setSelectedMonth(event.target.value)} className="h-9 w-40 rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent" />
               </label>
-              <div className="rounded-control border border-line bg-bg p-3">
-                <span className="block text-xs text-muted">Invoice value issued</span>
-                <strong className="mt-1 block text-base font-semibold tabular-nums text-fg">{formatMoney(billedInMonth)}</strong>
-              </div>
-              <div className="rounded-control border border-line bg-bg p-3">
-                <span className="block text-xs text-muted">Cash movement in / out</span>
-                <strong className="mt-1 block text-base font-semibold tabular-nums text-fg">{formatMoney(collectedInMonth)} / {formatMoney(expenseInMonth)}</strong>
-              </div>
             </div>
-          </AdminPanel>
+            <AdminMetricStrip metrics={dashboardMetrics} />
+            {renderRecentActivity(currentMonth)}
+          </>
+        ) : (
+          <>
+            <AdminMetricStrip metrics={metrics} />
+            <FinanceDataTable
+              title="Recent invoice register"
+              description="Latest issued invoices with current outstanding balances."
+              columns={[{ label: 'Invoice no.' }, { label: 'Client' }, { label: 'Issue date' }, { label: 'Invoice value', align: 'right' }, { label: 'Outstanding', align: 'right' }, { label: 'Status' }]}
+              rows={recentInvoices}
+              emptyMessage="No issued invoices were returned by AMS."
+            />
+          </>
         )}
-        <FinanceDataTable
-          title="Recent invoice register"
-          description="Latest issued invoices with current outstanding balances."
-          columns={[{ label: 'Invoice no.' }, { label: 'Client' }, { label: 'Issue date' }, { label: 'Invoice value', align: 'right' }, { label: 'Outstanding', align: 'right' }, { label: 'Status' }]}
-          rows={recentInvoices}
-          emptyMessage="No issued invoices were returned by AMS."
-        />
-        {dashboard && renderRecentActivity()}
       </div>
     );
   };
@@ -1318,9 +1344,9 @@ export const AdminFinanceWorkspace: React.FC = () => {
         );
       }
       case 'revenue':
-        return <AdminInvoicing embeddedView="invoices" />;
+        return <AdminInvoicing key={tab.key} embeddedView="invoices" />;
       case 'expenses':
-        return <AdminInvoicing embeddedView="income-expenses" embeddedIncomeExpenseMode="expenses" />;
+        return <AdminInvoicing key={tab.key} embeddedView="income-expenses" embeddedIncomeExpenseMode="expenses" />;
       case 'cash-bank': {
         const openingRecord = getOpeningRecord('1000');
         const opening = openingRecord ? Number(openingRecord.payload.openingBalance) || 0 : null;
@@ -1365,7 +1391,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
         );
       }
       case 'accounts-receivable':
-        return <AdminInvoicing embeddedView="receivables" />;
+        return <AdminInvoicing key={tab.key} embeddedView="receivables" />;
       case 'accounts-payable': {
         const bills = getRegisterRecords('vendor-bill').filter((record) => matching([
           record.recordKey, record.payload.billNo, record.payload.vendorName, record.payload.projectName, record.payload.dueDate, record.payload.paymentStatus
@@ -1760,12 +1786,33 @@ export const AdminFinanceWorkspace: React.FC = () => {
               Net Project Profit is calculated from contract value less vendor commitment and other obligations. The percentages below follow the configured allocation policy. Project amounts use saved contract values and obligations, not the general AMS project budget.
             </WorkbookNote>
             <AdminMetricStrip metrics={[
-              {id:'alloc-petty',label:'Petty cash reserve',value:'10%',context:'Of Net Project Profit',icon:<WalletCards size={15}/>},
-              {id:'alloc-emergency',label:'Emergency fund',value:'10%',context:'Of Net Project Profit',icon:<ShieldAlert size={15}/>},
-              {id:'alloc-reward',label:'Team Reward',value:'10%',context:'Separate from Project Team Fee',icon:<CircleDollarSign size={15}/>},
-              {id:'alloc-company',label:'Company operational fund',value:'70%',context:'Remainder after the three standard allocations',icon:<Landmark size={15}/>}
+              {id:'alloc-petty',label:'Default petty cash reserve',value:'10%',context:'For new allocations',icon:<WalletCards size={15}/>},
+              {id:'alloc-emergency',label:'Default emergency fund',value:'10%',context:'For new allocations',icon:<ShieldAlert size={15}/>},
+              {id:'alloc-reward',label:'Default Team Reward',value:'10%',context:'For new allocations',icon:<CircleDollarSign size={15}/>},
+              {id:'alloc-company',label:'Default company fund',value:'70%',context:'Remainder for new allocations',icon:<Landmark size={15}/>}
             ]}/>
-            <FinanceDataTable title="Project Allocation" description="Amounts are calculated on the server from each saved project's contract and obligation amounts." columns={[{label:'Project'},{label:'Net project profit',align:'right'},{label:'Petty cash reserve',align:'right'},{label:'Emergency fund',align:'right'},{label:'Team Reward',align:'right'},{label:'Company operational fund',align:'right'},{label:'Emergency fund status'},{label:'Actions'}]} rows={records.map((record)=>({id:record.id,cells:[String(record.payload.projectName||record.projectId||'—'),formatMoney(Number(record.payload.netProjectProfit)||0),formatMoney(Number(record.payload.pettyCashReserve ?? record.payload.pettyCash)||0),formatMoney(Number(record.payload.emergencyFund)||0),formatMoney(Number(record.payload.teamReward)||0),formatMoney(Number(record.payload.companyOperationalFund)||0),<StatusBadge value={record.payload.emergencyStatus||record.status}/>,registerRecordActions('project-allocation',record)]}))} emptyMessage="No project allocation has been saved yet. Configure it from the current contract value and project obligations." actions={registerAddButton('project-allocation','Calculate project allocation')}/>
+             <FinanceDataTable title="Project Allocation" description="Amounts and percentages come from each project's saved allocation. The default split above applies only to new records." columns={[{label:'Project'},{label:'Net project profit',align:'right'},{label:'Petty cash reserve',align:'right'},{label:'Emergency fund',align:'right'},{label:'Team Reward',align:'right'},{label:'Company operational fund',align:'right'},{label:'Emergency fund status'},{label:'Actions'}]} rows={records.map((record)=> {
+               const pettyPercent = Number(record.payload.pettyCashPercent ?? 10);
+               const emergencyPercent = Number(record.payload.emergencyPercent ?? 10);
+               const rewardPercent = Number(record.payload.teamRewardPercent ?? 10);
+               const companyPercent = Math.max(0, 100 - pettyPercent - emergencyPercent - rewardPercent);
+               const allocationCell = (amount: unknown, percent: number) => (
+                 <div className="space-y-0.5">
+                   <div className="tabular-nums">{formatMoney(Number(amount) || 0)}</div>
+                   <div className="text-[11px] text-muted">{percent}% of net profit</div>
+                 </div>
+               );
+               return {id:record.id,cells:[
+                 String(record.payload.projectName||record.projectId||'—'),
+                 formatMoney(Number(record.payload.netProjectProfit)||0),
+                 allocationCell(record.payload.pettyCashReserve ?? record.payload.pettyCash, pettyPercent),
+                 allocationCell(record.payload.emergencyFund, emergencyPercent),
+                 allocationCell(record.payload.teamReward, rewardPercent),
+                 allocationCell(record.payload.companyOperationalFund, companyPercent),
+                 <StatusBadge value={record.payload.emergencyStatus||record.status}/>,
+                 registerRecordActions('project-allocation',record)
+               ]};
+             })} emptyMessage="No project allocation has been saved yet. Configure it from the current contract value and project obligations." actions={registerAddButton('project-allocation','Calculate project allocation')}/>
             <FinanceDataTable title="Team Reward distribution" description="Distribution of the 10% Team Reward allocation." columns={[{label:'Recipient group'},{label:'Percentage of Net Project Profit'},{label:'Share of Team Reward'}]} rows={[
               {id:'sales',cells:['Sales','5%','50%']},
               {id:'vendor',cells:['Vendor / PIC','2.5%','25%']},
@@ -1876,7 +1923,8 @@ export const AdminFinanceWorkspace: React.FC = () => {
         const years = Array.from(new Set([
           String(new Date().getFullYear()),
           ...reportInvoices.map((invoice) => getYearKey(getInvoiceDate(invoice))),
-          ...expenses.map((expense) => getYearKey(expense.date))
+          ...expenses.map((expense) => getYearKey(expense.date)),
+          ...cashMovements.map((movement) => getYearKey(movement.date))
         ].filter((value) => /^\d{4}$/.test(value)))).sort((a, b) => b.localeCompare(a));
         const annualRows = [
           { id: 'a-revenue', metric: 'Annual Revenue / Invoice Value (IDR)', amount: yearBilled, basis: 'IDR invoice issue date' },
