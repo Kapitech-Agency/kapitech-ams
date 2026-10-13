@@ -51,6 +51,23 @@ test('Finance top-level tabs and clean sub-tabs preserve direct transaction entr
   assert.match(uiSource, /Calculate project allocation/);
 });
 
+test('Finance worksheet search, date display, and register permissions are wired end to end', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+
+  assert.ok(
+    workspace.includes(String.raw`if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return '—';`),
+    'Finance tables must validate ISO dates with digit patterns so valid dates render.'
+  );
+  assert.match(workspace, /SEARCHABLE_FINANCE_TABS\.has\(activeTab\.key\)/);
+  assert.match(workspace, /value=\{searchText\}[\s\S]*?onChange=\{\(event\) => setSearchText\(event\.target\.value\)\}/);
+  assert.match(workspace, /onClick=\{\(\) => setSearchText\(''\)\}/);
+  assert.match(workspace, /const canManageFinanceRecords = hasAdminPermission\('canManageInvoices'\)/);
+  assert.match(workspace, /const canApproveFinanceRecords = hasAdminPermission\('canApproveBudgets'\)/);
+  assert.match(workspace, /const isPeriodLocked = type === 'monthly-closing'/);
+  assert.match(workspace, /You do not have permission to approve Finance records/);
+  assert.match(workspace, /finally \{\s*setRegisterSaving\(false\);\s*\}/);
+});
+
 test('Finance groups and vendor workflows are separated by user task', async () => {
   const workbook = await read('src/lib/financeWorkbook.ts');
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
