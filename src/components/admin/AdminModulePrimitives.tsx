@@ -511,6 +511,7 @@ export interface AdminTablePaginationProps {
   pageSizeOptions?: number[];
   slug?: string;
   secondaryLabel?: React.ReactNode;
+  pageSizeAriaLabel?: string;
 }
 
 export const AdminTablePagination: React.FC<AdminTablePaginationProps> = ({
@@ -522,7 +523,8 @@ export const AdminTablePagination: React.FC<AdminTablePaginationProps> = ({
   itemLabel = 'records',
   pageSizeOptions = [10, 25, 50],
   slug,
-  secondaryLabel
+  secondaryLabel,
+  pageSizeAriaLabel = 'Rows per page'
 }) => {
   const normalizedPageSize = Math.max(1, pageSize);
   const totalPages = Math.max(1, Math.ceil(Math.max(0, total) / normalizedPageSize));
@@ -578,7 +580,7 @@ export const AdminTablePagination: React.FC<AdminTablePaginationProps> = ({
               options={pageSizeOptions.map((value) => ({ value: String(value), label: String(value) }))}
               size="xs"
               triggerClassName="w-[76px] shrink-0"
-              aria-label="Rows per page"
+              aria-label={pageSizeAriaLabel}
             />
           </div>
 
