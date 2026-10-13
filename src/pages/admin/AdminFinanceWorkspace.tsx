@@ -29,7 +29,7 @@ import {
   sumAmounts
 } from '../../lib/financeWorkbook';
 import type { FinanceWorkbookTab, WorkbookExpenseClass } from '../../lib/financeWorkbook';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useLanguage } from '../../lib/LanguageContext';
 import type { Language } from '../../lib/LanguageContext';
 
@@ -407,7 +407,6 @@ export const AdminFinanceWorkspace: React.FC = () => {
     return date.toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' });
   }, [locale]);
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const requestedTab = searchParams.get('tab') || 'executive-summary';
   const flatTabs = FINANCE_WORKBOOK_GROUPS.flatMap((group) => group.items);
   const activeTab = flatTabs.find((item) => item.key === requestedTab) || flatTabs[0];
@@ -927,7 +926,6 @@ export const AdminFinanceWorkspace: React.FC = () => {
     );
   };
 
-  const openLegacyTransactions = () => navigate('/admin/invoicing');
   const groupEntryTabs: Record<string, string> = {
     overview: 'executive-summary',
     transactions: 'cash-bank',
@@ -1037,7 +1035,6 @@ export const AdminFinanceWorkspace: React.FC = () => {
           columns={[{ label: 'Invoice no.' }, { label: 'Client' }, { label: 'Issue date' }, { label: 'Invoice value', align: 'right' }, { label: 'Outstanding', align: 'right' }, { label: 'Status' }]}
           rows={recentInvoices}
           emptyMessage="No issued invoices were returned by AMS."
-          actions={<Button variant="secondary" type="button" onClick={openLegacyTransactions}>Manage invoices</Button>}
         />
         {dashboard && renderRecentActivity()}
       </div>
