@@ -88,7 +88,9 @@ export const ReportingPeriodProvider: React.FC<{ children: React.ReactNode }> = 
     const range = getReportingPeriodRange(state.value, state.mode);
     if (!range) return true;
     const date = dateOnly(value);
-    return Boolean(date && date >= range.startDate && date <= range.endDate);
+    // Preserve legacy/master records with no usable timestamp instead of silently hiding them.
+    if (!date) return true;
+    return date >= range.startDate && date <= range.endDate;
   }, [state.enabled, state.mode, state.value]);
 
   const matchesInterval = useCallback((startValue: unknown, endValue?: unknown, fallbackValue?: unknown) => {

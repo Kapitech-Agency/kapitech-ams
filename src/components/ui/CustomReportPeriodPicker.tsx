@@ -47,7 +47,7 @@ export const CustomReportPeriodPicker: React.FC<CustomReportPeriodPickerProps> =
   const selectedMonth = monthMatch?.[2] || '01';
   const selectedQuarter = quarterMatch?.[2] || '1';
   const years = Array.from(new Set([
-    ...Array.from({ length: 13 }, (_, index) => currentYear + 2 - index),
+    ...Array.from({ length: 53 }, (_, index) => currentYear + 2 - index),
     ...availableYears,
     parsedYear
   ])).filter((year) => Number.isInteger(year) && year >= 1000 && year <= 9999).sort((a, b) => b - a);
