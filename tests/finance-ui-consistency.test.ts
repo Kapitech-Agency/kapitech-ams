@@ -74,6 +74,17 @@ test('Finance worksheet search, date display, and register permissions are wired
   assert.match(workspace, /finally \{\s*setRegisterSaving\(false\);\s*\}/);
 });
 
+test('Accounts Payable installment selection uses canonical values and remaining installment balances', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const repository = await read('server/postgres-finance-workbook-repository.ts');
+
+  assert.match(workspace, /defaultValue:'Unassigned'/);
+  assert.match(workspace, /savedPayload\.installmentNumber = installmentNumber >= 1 && installmentNumber <= 3\s*\? String\(installmentNumber\)\s*: 'Unassigned';/);
+  assert.match(workspace, /current\.type === 'vendor-bill-payment' && \['billId', 'installmentNumber'\]\.includes\(key\)/);
+  assert.match(workspace, /payload\.amount = Math\.min\(billOutstanding, Math\.max\(0, selectedOutstanding\)\)/);
+  assert.match(repository, /Payment exceeds the outstanding amount for Payment/);
+});
+
 test('Finance groups and vendor workflows are separated by user task', async () => {
   const workbook = await read('src/lib/financeWorkbook.ts');
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
