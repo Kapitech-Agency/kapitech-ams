@@ -701,10 +701,10 @@ export const AdminLayout: React.FC = () => {
                   })()}
                   items={[
                     { key: 'overview', label: t('admin.finance.tab.overviewControl'), to: '/admin/finance?tab=executive-summary', slug: 'finance-tab-overview-control' },
-                    { key: 'transactions', label: t('admin.finance.tab.transactionsCash'), to: '/admin/finance?tab=chart-of-accounts', slug: 'finance-tab-transactions-cash' },
-                    { key: 'receivables', label: t('admin.finance.tab.receivablesPayables'), to: '/admin/finance?tab=accounts-receivable', slug: 'finance-tab-receivables-payables' },
+                    { key: 'transactions', label: t('admin.finance.tab.transactionsCash'), to: '/admin/finance?tab=cash-bank', slug: 'finance-tab-transactions-cash' },
+                    { key: 'receivables', label: t('admin.finance.tab.receivablesPayables'), to: '/admin/finance?tab=accounts-payable', slug: 'finance-tab-receivables-payables' },
                     { key: 'projects', label: t('admin.finance.tab.projectFinance'), to: '/admin/finance?tab=project-finance', slug: 'finance-tab-project-finance' },
-                    { key: 'accounting', label: t('admin.finance.tab.accountingReports'), to: '/admin/finance?tab=monthly-pnl', slug: 'finance-tab-accounting-reports' }
+                    { key: 'accounting', label: t('admin.finance.tab.accountingReports'), to: '/admin/finance?tab=journal', slug: 'finance-tab-accounting-reports' }
                   ]}
                 />
               ) : location.pathname === '/admin/invoicing' ? (
