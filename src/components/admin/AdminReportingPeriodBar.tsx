@@ -19,7 +19,12 @@ export const AdminReportingPeriodBar: React.FC = () => {
     if (!open) return;
 
     const handlePointerDown = (event: MouseEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+      const target = event.target;
+      if (rootRef.current?.contains(target as Node)) return;
+      // CustomSelect menus render in a portal outside this popover's DOM subtree.
+      // Treat those menu surfaces as part of the filter so selecting an option does not close it first.
+      if (target instanceof Element && target.closest('.ams-popover-surface')) return;
+      setOpen(false);
     };
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setOpen(false);
@@ -50,7 +55,7 @@ export const AdminReportingPeriodBar: React.FC = () => {
         ].join(' ')}
         slug="global-reporting-period-trigger"
       >
-        <span>{isId ? 'Filter' : 'Filter'}</span>
+        <span>Filter</span>
         {enabled && <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden="true" />}
       </Button>
 
