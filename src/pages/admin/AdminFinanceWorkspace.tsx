@@ -5,11 +5,14 @@ import Button from '../../components/ui/Button';
 import { AdminInvoicing } from './AdminInvoicing';
 import { AdminVendors } from './AdminVendors';
 import { Drawer } from '../../components/ui/Drawer';
+import { CustomSelect } from '../../components/ui/CustomSelect';
 import { api } from '../../lib/apiClient';
 import { normalizeFinanceExpense, normalizeFinanceInvoice } from '../../lib/financeStore';
 import type { AgencyExpense, AgencyInvoice } from '../../lib/financeStore';
 import type { AgencyProject } from '../../lib/projectStore';
-import type { AgencyVendor } from '../../lib/vendorStore';
+import { VENDOR_EVENT_NAME } from '../../lib/vendorStore';
+import type { AgencyVendor, VendorContract } from '../../lib/vendorStore';
+import { hasAdminPermission } from '../../lib/adminAuth';
 import {
   classifyWorkbookExpense,
   EXCEL_CHART_OF_ACCOUNTS,
@@ -34,6 +37,7 @@ type Column = { label: string; align?: 'left' | 'right' | 'center'; className?: 
 type TableRow = { id: string; cells: React.ReactNode[] };
 type SourceResult = { label: string; data: any; error?: string };
 type WorkbookRecord = { id: string; recordType: string; recordKey: string; periodKey?: string; projectId?: string; status: string; payload: Record<string, any>; version: number; createdByUserId?: string; createdAt: string; updatedAt: string };
+type FinanceVendorContractDraft = { vendorId: string; id?: string; title: string; startDate: string; endDate: string; rateType: VendorContract['rateType']; rateAmount: number; currency: VendorContract['currency']; status: VendorContract['status'] };
 type RegisterField = { key: string; label: string; type: 'text' | 'number' | 'date' | 'month' | 'select' | 'textarea'; required?: boolean; options?: string[]; optionSource?: 'vendorBills' | 'accounts' | 'cashAccounts' | 'projects' | 'vendors'; placeholder?: string; help?: string; defaultValue?: string | number; visibleWhen?: { key: string; values: string[] } };
 type CashMovement = { id: string; date: string; reference: string; description: string; cashIn: number; cashOut: number; source: string; currency: string };
 
@@ -389,6 +393,7 @@ const CASH_ACCOUNT_OPTIONS = [
 export const AdminFinanceWorkspace: React.FC = () => {
   const { language } = useLanguage();
   const locale = language === 'id' ? 'id-ID' : 'en-US';
+  const canManageVendorContracts = hasAdminPermission('canManageVendors');
   const formatMoney = useCallback((value: number, currency = 'IDR') => new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: currency === 'USD' ? 'USD' : 'IDR',
@@ -418,8 +423,26 @@ export const AdminFinanceWorkspace: React.FC = () => {
   const [registerActionError, setRegisterActionError] = useState<string | null>(null);
   const [journalSyncSummary, setJournalSyncSummary] = useState<string | null>(null);
   const [editor, setEditor] = useState<{ type: string; record?: WorkbookRecord; payload: Record<string, any> } | null>(null);
+  const [vendorContractEditor, setVendorContractEditor] = useState<FinanceVendorContractDraft | null>(null);
+  const [vendorContractSaving, setVendorContractSaving] = useState(false);
+  const [vendorContractError, setVendorContractError] = useState<string | null>(null);
   const [sourceErrors, setSourceErrors] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const syncVendors = async () => {
+      try {
+        const response = await api.vendors.getAll();
+        if (response.success && Array.isArray(response.data?.vendors)) {
+          setVendors(response.data.vendors as AgencyVendor[]);
+        }
+      } catch {
+        // Keep the last known vendor data visible if a background refresh fails.
+      }
+    };
+    window.addEventListener(VENDOR_EVENT_NAME, syncVendors);
+    return () => window.removeEventListener(VENDOR_EVENT_NAME, syncVendors);
+  }, []);
   const [refreshing, setRefreshing] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [selectedMonth, setSelectedMonth] = useState(new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0'));
@@ -1021,6 +1044,144 @@ export const AdminFinanceWorkspace: React.FC = () => {
     );
   };
 
+  const openVendorContractEditor = (vendor?: AgencyVendor, contract?: VendorContract) => {
+    const today = new Date().toISOString().slice(0, 10);
+    setVendorContractError(null);
+    setVendorContractEditor({
+      vendorId: vendor?.id || '',
+      id: contract?.id,
+      title: contract?.title || '',
+      startDate: contract?.startDate || today,
+      endDate: contract?.endDate || '',
+      rateType: contract?.rateType || 'project',
+      rateAmount: Number(contract?.rateAmount) || 0,
+      currency: contract?.currency || 'IDR',
+      status: contract?.status || 'active'
+    });
+  };
+
+  const saveVendorContract = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!vendorContractEditor || vendorContractSaving) return;
+    if (!canManageVendorContracts) {
+      setVendorContractError('You do not have permission to manage vendor contracts.');
+      return;
+    }
+    const draft = vendorContractEditor;
+    const vendor = vendors.find((item) => item.id === draft.vendorId);
+    const amount = Number(draft.rateAmount);
+    if (!vendor) {
+      setVendorContractError('Select a vendor or freelancer before saving the contract.');
+      return;
+    }
+    if (!draft.title.trim() || !draft.startDate || !Number.isFinite(amount) || amount <= 0) {
+      setVendorContractError('Contract title, start date, and a positive contract rate are required.');
+      return;
+    }
+    if (draft.endDate && draft.endDate < draft.startDate) {
+      setVendorContractError('Contract end date cannot be earlier than its start date.');
+      return;
+    }
+    setVendorContractSaving(true);
+    setVendorContractError(null);
+    try {
+      const id = draft.id || 'cnt_' + Date.now().toString(36);
+      const nextContract: VendorContract = {
+        id,
+        title: draft.title.trim(),
+        startDate: draft.startDate,
+        ...(draft.endDate ? { endDate: draft.endDate } : {}),
+        rateType: draft.rateType,
+        rateAmount: amount,
+        currency: draft.currency,
+        status: draft.status
+      };
+      const existingContracts = Array.isArray(vendor.contracts) ? vendor.contracts : [];
+      const nextContracts = draft.id
+        ? existingContracts.map((contract) => contract.id === draft.id ? { ...contract, ...nextContract } : contract)
+        : [nextContract, ...existingContracts];
+      const response = await api.vendors.update(vendor.id, { ...vendor, contracts: nextContracts, updatedAt: new Date().toISOString() });
+      if (!response.success || !response.data?.vendor) {
+        throw new Error(response.error || 'The vendor contract could not be saved.');
+      }
+      const savedVendor = response.data.vendor as AgencyVendor;
+      setVendors((current) => current.map((item) => item.id === savedVendor.id ? savedVendor : item));
+      setVendorContractEditor(null);
+      window.dispatchEvent(new Event(VENDOR_EVENT_NAME));
+    } catch (error) {
+      setVendorContractError(error instanceof Error ? error.message : 'The vendor contract could not be saved.');
+    } finally {
+      setVendorContractSaving(false);
+    }
+  };
+
+  const renderVendorContractEditor = () => {
+    if (!vendorContractEditor) return null;
+    const draft = vendorContractEditor;
+    const fieldClass = 'h-10 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent';
+    const update = (patch: Partial<FinanceVendorContractDraft>) => setVendorContractEditor((current) => current ? { ...current, ...patch } : current);
+    const vendorOptions = [
+      { value: '', label: 'Select vendor / freelancer' },
+      ...vendors.map((vendor) => ({ value: vendor.id, label: (vendor.companyName || vendor.name) + ' · ' + vendor.name }))
+    ];
+    return (
+      <Drawer
+        open
+        onClose={() => { if (!vendorContractSaving) { setVendorContractEditor(null); setVendorContractError(null); } }}
+        title={draft.id ? 'Edit vendor contract' : 'Add vendor contract'}
+        description="Maintain contract commitments here. Bills and payment installments are managed in Accounts Payable."
+        size="xl"
+        slug="finance-vendor-contract-editor"
+        footer={(
+          <div className="flex items-center justify-end gap-2">
+            <Button type="button" variant="secondary" onClick={() => { setVendorContractEditor(null); setVendorContractError(null); }} disabled={vendorContractSaving}>Cancel</Button>
+            <Button type="submit" form="finance-vendor-contract-form" loading={vendorContractSaving} disabled={vendorContractSaving || !canManageVendorContracts}>{vendorContractSaving ? 'Saving…' : 'Save contract'}</Button>
+          </div>
+        )}
+      >
+        <form id="finance-vendor-contract-form" onSubmit={(event) => void saveVendorContract(event)} className="space-y-4 p-1">
+          {vendorContractError && <WorkbookNote tone="danger" title="Contract not saved">{vendorContractError}</WorkbookNote>}
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-muted">Vendor / freelancer *</label>
+            <CustomSelect value={draft.vendorId} onChange={(value) => update({ vendorId: value })} options={vendorOptions} className="w-full" triggerClassName="h-10 min-h-10 w-full" />
+          </div>
+          <div>
+            <label htmlFor="finance-vendor-contract-title" className="mb-1.5 block text-xs font-medium text-muted">Contract title *</label>
+            <input id="finance-vendor-contract-title" required maxLength={180} value={draft.title} onChange={(event) => update({ title: event.target.value })} className={fieldClass} />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label htmlFor="finance-vendor-contract-start" className="mb-1.5 block text-xs font-medium text-muted">Start date *</label>
+              <input id="finance-vendor-contract-start" type="date" required value={draft.startDate} onChange={(event) => update({ startDate: event.target.value })} className={fieldClass} />
+            </div>
+            <div>
+              <label htmlFor="finance-vendor-contract-end" className="mb-1.5 block text-xs font-medium text-muted">End date</label>
+              <input id="finance-vendor-contract-end" type="date" min={draft.startDate} value={draft.endDate} onChange={(event) => update({ endDate: event.target.value })} className={fieldClass} />
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-muted">Rate basis *</label>
+              <CustomSelect value={draft.rateType} onChange={(value) => update({ rateType: value as VendorContract['rateType'] })} options={[{ value: 'hourly', label: 'Hourly' }, { value: 'project', label: 'Per project' }, { value: 'monthly_retainer', label: 'Monthly retainer' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-muted">Currency *</label>
+              <CustomSelect value={draft.currency} onChange={(value) => update({ currency: value as VendorContract['currency'] })} options={[{ value: 'IDR', label: 'IDR' }, { value: 'USD', label: 'USD' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="finance-vendor-contract-rate" className="mb-1.5 block text-xs font-medium text-muted">Contract rate / value *</label>
+            <input id="finance-vendor-contract-rate" type="number" min="1" step="1" required value={draft.rateAmount} onChange={(event) => update({ rateAmount: Number(event.target.value) })} className={fieldClass} />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-muted">Contract status</label>
+            <CustomSelect value={draft.status} onChange={(value) => update({ status: value as VendorContract['status'] })} options={[{ value: 'active', label: 'Active' }, { value: 'expired', label: 'Expired' }, { value: 'terminated', label: 'Terminated' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" />
+          </div>
+        </form>
+      </Drawer>
+    );
+  };
+
   const renderView = (tab: FinanceWorkbookTab) => {
     switch (tab.key) {
       case 'executive-summary':
@@ -1215,8 +1376,49 @@ export const AdminFinanceWorkspace: React.FC = () => {
           </div>
         );
       }
-      case 'vendors':
-        return <AdminVendors embedded />;
+      case 'vendors': {
+        const contractRows = vendors.flatMap((vendor) => (
+          (Array.isArray(vendor.contracts) ? vendor.contracts : [])
+            .filter((contract) => matching([vendor.name, vendor.companyName, contract.title, contract.rateType, contract.startDate, contract.endDate, contract.status, contract.rateAmount]))
+            .map((contract) => {
+              const linkedExpenses = expenses.filter((expense) => {
+                const expenseRecord = expense as AgencyExpense & { vendorContractId?: string; vendorPayment?: { vendorId?: string; contractId?: string }; metadata?: { vendorPayment?: { vendorId?: string; contractId?: string } } };
+                const structured = expenseRecord.vendorPayment || expenseRecord.metadata?.vendorPayment;
+                return (expenseRecord.vendorId === vendor.id && expenseRecord.vendorContractId === contract.id)
+                  || (structured?.vendorId === vendor.id && structured?.contractId === contract.id)
+                  || expense.description.startsWith('[VENDOR_PAYMENT]|' + vendor.id + '|' + contract.id + '|');
+              });
+              return {
+                id: vendor.id + '-' + contract.id,
+                cells: [
+                  vendor.companyName || vendor.name,
+                  contract.title,
+                  formatDate(contract.startDate) + (contract.endDate ? ' – ' + formatDate(contract.endDate) : ' · Ongoing'),
+                  normaliseStatus(contract.rateType),
+                  formatMoney(Number(contract.rateAmount) || 0, contract.currency),
+                  String(linkedExpenses.length) + ' · ' + formatMoney(sumAmounts<AgencyExpense>(linkedExpenses, (expense) => Number(expense.amount) || 0), contract.currency),
+                  <StatusBadge value={contract.status} />,
+                  canManageVendorContracts
+                    ? <Button variant="secondary" type="button" onClick={() => openVendorContractEditor(vendor, contract)}>Edit</Button>
+                    : <span className="text-muted">View only</span>
+                ]
+              };
+            })
+        ));
+        return (
+          <div className="space-y-4">
+            <AdminVendors embedded />
+            <FinanceDataTable
+              title="Vendor contract register"
+              description="Manage contract scope, dates, rate basis, value, and lifecycle here. Vendor bills and their installment schedule remain in Accounts Payable."
+              columns={[{ label: 'Vendor' }, { label: 'Contract' }, { label: 'Contract period' }, { label: 'Rate basis' }, { label: 'Rate / value', align: 'right' }, { label: 'Linked expense records' }, { label: 'Status' }, { label: 'Actions' }]}
+              rows={contractRows}
+              emptyMessage="No vendor contracts match the current search. Add a contract to keep commitments visible."
+              actions={canManageVendorContracts ? <Button variant="secondary" type="button" onClick={() => openVendorContractEditor()}>Add contract</Button> : undefined}
+            />
+          </div>
+        );
+      }
       case 'project-finance': {
         const financeRecords=getRegisterRecords('project-finance');
         const rows=projects.filter((project)=>matching([project.name,project.clientCompany,project.clientName,project.status])).map((project)=>{
@@ -1640,6 +1842,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
       )}
       {loading ? renderLoading() : renderView(activeTab)}
       {renderRegisterEditor()}
+      {renderVendorContractEditor()}
     </AdminPageShell>
   );
   return localizeFinanceValue(financePage, language) as React.ReactElement;
