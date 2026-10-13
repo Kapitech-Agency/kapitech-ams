@@ -108,9 +108,9 @@ test('Finance worksheets embed the existing transactional workflows instead of r
   const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
   const vendors = await read('src/pages/admin/AdminVendors.tsx');
 
-  assert.match(invoicing, /type EmbeddedFinanceView = 'invoices' \| 'receivables' \| 'income-expenses'/);
+  assert.match(invoicing, /type EmbeddedFinanceView = 'invoices' \| 'receivables' \| 'income-expenses' \| 'vendor-payments'/);
   assert.match(invoicing, /embeddedReceivablesOnly \|\| hasOpenReceivable/);
-  assert.match(invoicing, /embedded && canCreateInvoice && <button[\s\S]*?onClick=\{openCreateInvoice\}/);
+  assert.match(invoicing, /embedded && !embeddedReceivablesOnly && canCreateInvoice && <button[\s\S]*?onClick=\{openCreateInvoice\}/);
   assert.match(invoicing, /openPayment\(invoice\)/);
   assert.match(invoicing, /embeddedIncomeExpenseMode \|\| 'income'/);
   assert.match(invoicing, /Expense ledger/);
@@ -118,4 +118,29 @@ test('Finance worksheets embed the existing transactional workflows instead of r
   assert.match(vendors, /!embedded && <div className="min-\[900px\]:hidden min-w-0" data-ams-slug="team-mobile-tabs">/);
   assert.match(workspace, /accountsByCode\.values\(\)/);
   assert.match(workspace, /This account code already exists/);
+});
+
+test('Finance workbook replaces legacy finance navigation and keeps all operational actions in workbook tabs', async () => {
+  const app = await read('src/App.tsx');
+  const layout = await read('src/pages/admin/AdminLayout.tsx');
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
+
+  assert.match(app, /<Route path="invoicing" element=\{<Navigate to="\/admin\/finance\?tab=revenue" replace \/> \} \/>/);
+  assert.doesNotMatch(app, /const AdminInvoicing = lazyWithRetry/);
+  assert.doesNotMatch(layout, /location\.pathname === '\/admin\/invoicing'/);
+  assert.doesNotMatch(layout, /Finance sections|finance=tax-retainers|finance=vendor-payments|finance=financial-reports/);
+
+  const summaryStart = workspace.indexOf('const renderSummary =');
+  const summaryEnd = workspace.indexOf('const openVendorContractEditor', summaryStart);
+  assert.ok(summaryStart >= 0 && summaryEnd > summaryStart, 'Overview and dashboard render block should remain intact.');
+  const summary = workspace.slice(summaryStart, summaryEnd);
+  assert.doesNotMatch(summary, /Manage invoices|openLegacyTransactions/);
+
+  assert.match(invoicing, /onClick=\{exportInvoicesCsv\}[\s\S]*?Export CSV/);
+  assert.match(invoicing, /onClick=\{exportExpensesCsv\}[\s\S]*?Export CSV/);
+  assert.match(invoicing, /finance-revenue-tax-retainer/);
+  assert.match(workspace, /AdminInvoicing embeddedView="vendor-payments"/);
+  assert.match(invoicing, /Contract-linked vendor payments/);
+  assert.match(invoicing, /onClick=\{exportVendorPaymentsCsv\}[\s\S]*?Export CSV/);
 });
