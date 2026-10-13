@@ -69,7 +69,8 @@ test('Finance worksheet search, date display, and register permissions are wired
   assert.match(workspace, /onClick=\{\(\) => setSearchText\(''\)\}/);
   assert.match(workspace, /const canManageFinanceRecords = hasAdminPermission\('canManageInvoices'\)/);
   assert.match(workspace, /const canApproveFinanceRecords = hasAdminPermission\('canApproveBudgets'\)/);
-  assert.match(workspace, /const isPeriodLocked = type === 'monthly-closing'/);
+  assert.match(workspace, /const isPeriodLocked = Boolean\(recordPeriod\) && getRegisterRecords\('monthly-closing-lock'\)/);
+  assert.match(workspace, /canApproveFinanceRecords && !isPeriodLocked && type === 'petty-cash-voucher'/);
   assert.match(workspace, /You do not have permission to approve Finance records/);
   assert.match(workspace, /finally \{\s*setRegisterSaving\(false\);\s*\}/);
 });
