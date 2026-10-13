@@ -920,7 +920,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
 
   const registerAddButton = (type: string, label = 'Add record', initialPayload: Record<string, any> = {}) => (
     canManageFinanceRecords
-      ? <Button variant="secondary" type="button" icon={<Plus size={14} />} onClick={() => openRegisterForm(type, undefined, initialPayload)}>{label}</Button>
+      ? <Button variant="primary" type="button" icon={<Plus size={14} />} onClick={() => openRegisterForm(type, undefined, initialPayload)}>{label}</Button>
       : null
   );
 
@@ -1463,7 +1463,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
                     formatMoney(paid,String(record.payload.currency||'IDR')),
                     formatMoney(outstanding,String(record.payload.currency||'IDR')),
                     <StatusBadge value={record.payload.paymentStatus||record.status}/>,
-                    registerRecordActions('vendor-bill',record, outstanding>0 && canManageFinanceRecords ? <Button variant="secondary" type="button" onClick={()=>openRegisterForm('vendor-bill-payment',undefined,{billId:record.id,paidDate:getLocalDateInputValue(),amount:outstanding})}>Record payment</Button> : undefined)
+                    registerRecordActions('vendor-bill',record, outstanding>0 && canManageFinanceRecords ? <Button variant="primary" type="button" icon={<Plus size={14} />} onClick={()=>openRegisterForm('vendor-bill-payment',undefined,{billId:record.id,paidDate:getLocalDateInputValue(),amount:outstanding})}>Record payment</Button> : undefined)
                   ]
                 };
               })}
@@ -1528,7 +1528,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
               columns={[{ label: 'Vendor' }, { label: 'Contract' }, { label: 'Contract period' }, { label: 'Rate basis' }, { label: 'Rate / value', align: 'right' }, { label: 'Linked expense records' }, { label: 'Status' }, { label: 'Actions' }]}
               rows={contractRows}
               emptyMessage="No vendor contracts match the current search. Add a contract to keep commitments visible."
-              actions={canManageVendorContracts ? <Button variant="secondary" type="button" onClick={() => openVendorContractEditor()}>Add contract</Button> : undefined}
+              actions={canManageVendorContracts ? <Button variant="primary" type="button" icon={<Plus size={14} />} onClick={() => openVendorContractEditor()}>Add contract</Button> : undefined}
             />
           </div>
         );
@@ -1551,7 +1551,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
             projectLabel(project),project.clientCompany||project.clientName||'—',
             contractValue===null?<AdminStatusBadge tone="warning">Setup required</AdminStatusBadge>:formatMoney(contractValue),
             formatMoney(billedIDR),formatMoney(collectedIDR),formatMoney(costsIDR),<StatusBadge value={project.status}/>,
-            record?registerRecordActions('project-finance',record):canManageFinanceRecords?<Button variant="secondary" type="button" onClick={()=>openRegisterForm('project-finance',undefined,{projectId:project.id,projectName:project.name,clientName:project.clientCompany||project.clientName,startDate:project.startDate,endDate:project.targetEndDate,projectStatus:project.status})}>Configure</Button>:<span className="text-muted">View only</span>
+            record?registerRecordActions('project-finance',record):canManageFinanceRecords?<Button variant="primary" type="button" icon={<Plus size={14} />} onClick={()=>openRegisterForm('project-finance',undefined,{projectId:project.id,projectName:project.name,clientName:project.clientCompany||project.clientName,startDate:project.startDate,endDate:project.targetEndDate,projectStatus:project.status})}>Configure</Button>:<span className="text-muted">View only</span>
           ]};
         });
         const orphanRecords=financeRecords.filter((record)=>!projects.some((project)=>(record.projectId&&record.projectId===project.id)||String(record.payload.projectName||'').toLowerCase()===String(project.name||'').toLowerCase())&&matching([record.payload.projectName,record.recordKey,record.projectId,record.payload.clientName,record.status]));
@@ -1605,7 +1605,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
                   formatMoney(item.actual),
                   item.budgetRecord?formatMoney(item.budget-item.actual):'—',
                   String(item.count),
-                  item.budgetRecord?registerRecordActions('operational-budget',item.budgetRecord):canManageFinanceRecords?<Button variant="secondary" type="button" onClick={()=>openRegisterForm('operational-budget',undefined,{month:item.month,category:item.category})}>Set budget</Button>:<span className="text-muted">View only</span>
+                  item.budgetRecord?registerRecordActions('operational-budget',item.budgetRecord):canManageFinanceRecords?<Button variant="primary" type="button" icon={<Plus size={14} />} onClick={()=>openRegisterForm('operational-budget',undefined,{month:item.month,category:item.category})}>Set budget</Button>:<span className="text-muted">View only</span>
                 ]
               }))}
               emptyMessage="No budget lines or dated expense records exist for the current search."
@@ -1750,7 +1750,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
         const rows=WORKBOOK_CLOSING_ITEMS.map((item)=>{
           const record=records.find((candidate)=>String(candidate.payload.checklistItem||'').toLowerCase()===item.label.toLowerCase());
           const state=String(record?.payload.status||record?.status||'Open');
-          return {id:item.label,cells:[item.label,item.owner,record?<StatusBadge value={state}/>:<AdminStatusBadge tone="warning">Not recorded</AdminStatusBadge>,closingPurposes[item.label]||'Review and document before the period is closed.',record?registerRecordActions('monthly-closing',record):canManageFinanceRecords?<Button variant="secondary" type="button" disabled={locked||registerSaving} onClick={()=>openRegisterForm('monthly-closing',undefined,{period:selectedMonth,checklistItem:item.label,status:'Open'})}>Create control</Button>:<span className="text-muted">View only</span>]};
+          return {id:item.label,cells:[item.label,item.owner,record?<StatusBadge value={state}/>:<AdminStatusBadge tone="warning">Not recorded</AdminStatusBadge>,closingPurposes[item.label]||'Review and document before the period is closed.',record?registerRecordActions('monthly-closing',record):canManageFinanceRecords?<Button variant="primary" type="button" icon={<Plus size={14} />} disabled={locked||registerSaving} onClick={()=>openRegisterForm('monthly-closing',undefined,{period:selectedMonth,checklistItem:item.label,status:'Open'})}>Create control</Button>:<span className="text-muted">View only</span>]};
         });
         const completed=WORKBOOK_CLOSING_ITEMS.filter((item)=>records.some((record)=>String(record.payload.checklistItem||'').toLowerCase()===item.label.toLowerCase()&&String(record.payload.status||record.status)==='Done')).length;
         return (
