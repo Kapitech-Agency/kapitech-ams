@@ -14,7 +14,7 @@ test('Finance top-level tabs and clean sub-tabs preserve direct transaction entr
   assert.match(layout, /admin\.finance\.tab\.projectFinance/);
   assert.match(layout, /admin\.finance\.tab\.accountingReports/);
   assert.match(layout, /admin\.finance\.tab\.transactionsCash'[\s\S]*?to: '\/admin\/finance\?tab=cash-bank'/);
-  assert.match(layout, /admin\.finance\.tab\.receivablesPayables'[\s\S]*?to: '\/admin\/finance\?tab=accounts-payable'/);
+  assert.match(layout, /admin\.finance\.tab\.receivablesPayables'[\s\S]*?to: '\/admin\/finance\?tab=accounts-receivable'/);
   assert.match(layout, /admin\.finance\.tab\.accountingReports'[\s\S]*?to: '\/admin\/finance\?tab=journal'/);
   assert.match(workspace, /className="min-\[900px\]:hidden"/);
   assert.match(workspace, /AdminSectionTabs ariaLabel="Finance sub-sections" activeKey=\{activeTab\.key\} items=\{sheetItems\}/);
@@ -62,6 +62,8 @@ test('Finance groups and vendor workflows are separated by user task', async () 
   const receivablesGroup = workbook.slice(receivablesStart, projectsStart);
   const projectsGroup = workbook.slice(projectsStart, accountingStart);
   const accountingGroup = workbook.slice(accountingStart, groupsEnd);
+  assert.match(transactionsGroup, /items: \[\s*\{ key: 'cash-bank'/);
+  assert.match(accountingGroup, /items: \[\s*\{ key: 'journal'/);
   assert.doesNotMatch(transactionsGroup, /key: 'chart-of-accounts'/);
   assert.doesNotMatch(receivablesGroup, /key: 'team-fee'/);
   assert.match(projectsGroup, /key: 'team-fee'/);
@@ -75,6 +77,8 @@ test('Finance groups and vendor workflows are separated by user task', async () 
   const vendorsView = workspace.slice(vendorsStart, projectStart);
   assert.match(apView, /title="Accounts Payable register"/);
   assert.match(apView, /title="Vendor payment schedule"/);
+  assert.match(apView, /bills\.length > 0 &&/);
+  assert.match(workspace, /receivables: 'accounts-receivable'/);
   assert.doesNotMatch(apView, /title="Vendor contract references"/);
   assert.match(vendorsView, /title="Vendor & freelancer directory"/);
   assert.match(vendorsView, /title="Vendor contract references"/);
