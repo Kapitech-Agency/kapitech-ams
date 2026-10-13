@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from './CustomSelect';
 import {
@@ -7,6 +7,8 @@ import {
   getCurrentReportingPeriodValue,
   getPreviousReportingPeriodValue,
   getReportingPeriodRange,
+  getReportingYearOptions,
+  MIN_REPORTING_YEAR,
   setReportingPeriodYear,
   type ReportingPeriodMode
 } from '../../lib/reportingPeriods';
@@ -41,16 +43,19 @@ export const CustomReportPeriodPicker: React.FC<CustomReportPeriodPickerProps> =
   const { language } = useLanguage();
   const isId = language === 'id';
   const currentYear = new Date().getFullYear();
-  const parsedYear = Number(/^(\d{4})/.exec(value)?.[1]) || currentYear;
+  const rawParsedYear = Number(/^(\d{4})/.exec(value)?.[1]) || currentYear;
+  const parsedYear = Math.max(MIN_REPORTING_YEAR, rawParsedYear);
+
+  useEffect(() => {
+    if (rawParsedYear < MIN_REPORTING_YEAR) {
+      onChange(setReportingPeriodYear(value, mode, MIN_REPORTING_YEAR));
+    }
+  }, [mode, onChange, rawParsedYear, value]);
   const monthMatch = /^(\d{4})-(\d{2})$/.exec(value);
   const quarterMatch = /^(\d{4})-Q([1-4])$/.exec(value);
   const selectedMonth = monthMatch?.[2] || '01';
   const selectedQuarter = quarterMatch?.[2] || '1';
-  const years = Array.from(new Set([
-    ...Array.from({ length: 53 }, (_, index) => currentYear + 2 - index),
-    ...availableYears,
-    parsedYear
-  ])).filter((year) => Number.isInteger(year) && year >= 1000 && year <= 9999).sort((a, b) => b - a);
+  const years = getReportingYearOptions(currentYear, availableYears, parsedYear);
   const monthOptions = Array.from({ length: 12 }, (_, index) => {
     const date = new Date(parsedYear, index, 1);
     return { value: String(index + 1).padStart(2, '0'), label: new Intl.DateTimeFormat(locale, { month: 'long' }).format(date) };
@@ -62,6 +67,8 @@ export const CustomReportPeriodPicker: React.FC<CustomReportPeriodPickerProps> =
   });
   const currentValue = getCurrentReportingPeriodValue(mode);
   const previousValue = getPreviousReportingPeriodValue(currentValue, mode);
+  const previousValueYear = Number(/^(\d{4})/.exec(previousValue)?.[1]) || currentYear;
+  const canChoosePreviousPeriod = previousValueYear >= MIN_REPORTING_YEAR;
   const currentLabel = mode === 'month' ? 'This month' : mode === 'quarter' ? 'This quarter' : 'This year';
   const previousLabel = mode === 'month' ? 'Last month' : mode === 'quarter' ? 'Last quarter' : 'Last year';
   const range = getReportingPeriodRange(value, mode, locale);
@@ -118,7 +125,7 @@ export const CustomReportPeriodPicker: React.FC<CustomReportPeriodPickerProps> =
         <button type="button" onClick={() => onChange(currentValue)} className="inline-flex h-8 items-center rounded-control border border-line px-2.5 text-[11px] font-medium text-muted transition-colors hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
           {isId ? (mode === 'month' ? 'Bulan ini' : mode === 'quarter' ? 'Kuartal ini' : 'Tahun ini') : currentLabel}
         </button>
-        <button type="button" onClick={() => onChange(previousValue)} className="inline-flex h-8 items-center rounded-control border border-line px-2.5 text-[11px] font-medium text-muted transition-colors hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+        <button type="button" disabled={!canChoosePreviousPeriod} onClick={() => onChange(previousValue)} className="inline-flex h-8 items-center rounded-control border border-line px-2.5 text-[11px] font-medium text-muted transition-colors hover:bg-panel-hover hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-40">
           {isId ? (mode === 'month' ? 'Bulan lalu' : mode === 'quarter' ? 'Kuartal lalu' : 'Tahun lalu') : previousLabel}
         </button>
       </div>

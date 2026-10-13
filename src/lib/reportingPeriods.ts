@@ -36,6 +36,30 @@ const parseValue = (value: string, mode: ReportingPeriodMode) => {
   return null;
 };
 
+
+export const MIN_REPORTING_YEAR = 2021;
+
+/** Reporting years start in the company's founding year and include a small future-planning window. */
+export const getReportingYearOptions = (
+  currentYear = new Date().getFullYear(),
+  availableYears: number[] = [],
+  selectedYear = currentYear
+): number[] => {
+  const latestYear = Math.max(MIN_REPORTING_YEAR, currentYear + 2);
+  const generatedYears = Array.from(
+    { length: latestYear - MIN_REPORTING_YEAR + 1 },
+    (_, index) => latestYear - index
+  );
+
+  return Array.from(new Set([
+    ...generatedYears,
+    ...availableYears.filter((year) => Number.isInteger(year) && year >= MIN_REPORTING_YEAR && year <= 9999),
+    selectedYear >= MIN_REPORTING_YEAR ? selectedYear : MIN_REPORTING_YEAR
+  ]))
+    .filter((year) => Number.isInteger(year) && year >= MIN_REPORTING_YEAR && year <= 9999)
+    .sort((a, b) => b - a);
+};
+
 export const getCurrentReportingPeriodValue = (
   mode: ReportingPeriodMode,
   now: Date = new Date()
