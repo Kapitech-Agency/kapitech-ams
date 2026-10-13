@@ -16,8 +16,11 @@ test('Finance top-level tabs and clean sub-tabs preserve direct transaction entr
   assert.match(layout, /admin\.finance\.tab\.transactionsCash'[\s\S]*?to: '\/admin\/finance\?tab=cash-bank'/);
   assert.match(layout, /admin\.finance\.tab\.receivablesPayables'[\s\S]*?to: '\/admin\/finance\?tab=accounts-receivable'/);
   assert.match(layout, /admin\.finance\.tab\.accountingReports'[\s\S]*?to: '\/admin\/finance\?tab=journal'/);
-  assert.match(workspace, /className="min-\[900px\]:hidden"/);
-  assert.match(workspace, /AdminSectionTabs ariaLabel="Finance sub-sections" activeKey=\{activeTab\.key\} items=\{sheetItems\}/);
+  assert.match(workspace, /className="min-\[900px\]:hidden min-w-0"/);
+  assert.match(workspace, /AdminTopbarTabs ariaLabel="Finance groups" activeKey=\{activeGroup\.key\} items=\{groupItems\} className="w-full"/);
+  assert.match(workspace, /AdminSectionTabs ariaLabel="Finance sub-sections" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="w-full"/);
+  assert.match(workspace, /data-ams-slug="finance-workspace-navigation"/);
+  assert.match(workspace, /data-ams-slug="finance-active-worksheet"/);
   assert.match(workspace, /const sheetItems = activeGroup\.items\.map\(\(item\) =>/);
   assert.match(workspace, /label: item\.label/);
   assert.doesNotMatch(workspace, /label: item\.sheet \+ ' ' \+ item\.label/);
@@ -49,6 +52,16 @@ test('Finance top-level tabs and clean sub-tabs preserve direct transaction entr
   assert.match(uiSource, /Add team fee/);
   assert.match(uiSource, /Add journal entry/);
   assert.match(uiSource, /Calculate project allocation/);
+});
+
+test('Finance workspace groups navigation, search, and alerts using the shared AMS layout patterns', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+
+  assert.match(workspace, /rounded-card border border-line bg-panel p-3[^\n]*data-ams-slug="finance-worksheet-search"/);
+  assert.match(workspace, /\(Boolean\(registerActionError && !editor\) \|\| registerErrors\.length > 0 \|\| sourceErrors\.length > 0\)/);
+  assert.match(workspace, /<WorkbookNote[\s\S]{0,250}Finance source warning/);
+  assert.doesNotMatch(workspace, /\{sourceErrors\.length > 0 && \(\s*<WorkbookNote tone="warning" title="Some finance sources are unavailable">/);
+  assert.match(workspace, /<div className="min-w-0 space-y-4" data-ams-feature-slug=\{activeTab\.key\} data-ams-slug="finance-active-worksheet">/);
 });
 
 test('The Finance worksheet search controls the embedded vendor directory without a duplicate search field', async () => {
