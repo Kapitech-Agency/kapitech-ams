@@ -51,6 +51,17 @@ test('Finance top-level tabs and clean sub-tabs preserve direct transaction entr
   assert.match(uiSource, /Calculate project allocation/);
 });
 
+test('Finance read permission blocks unauthorized register loads and shows an explicit restricted state', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+
+  assert.match(workspace, /const canViewFinancials = hasAdminPermission\('canViewFinancials'\)/);
+  assert.match(workspace, /const loadData = useCallback\(async \(quiet = false\) => \{\s*if \(!canViewFinancials\) \{\s*setLoading\(false\);\s*setRefreshing\(false\);\s*return;/);
+  assert.match(workspace, /if \(!canViewFinancials\) return;/);
+  assert.match(workspace, /if \(!canViewFinancials\) \{[\s\S]*?const restrictedPage = \(/);
+  assert.match(workspace, /title="Financial access restricted"/);
+  assert.match(workspace, /Your account does not have permission to view Finance data\./);
+});
+
 test('Finance worksheet search, date display, and register permissions are wired end to end', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
 
