@@ -1,5 +1,5 @@
 import React from 'react';
-import { CalendarRange, RotateCcw } from 'lucide-react';
+import { CalendarDays, RotateCcw } from 'lucide-react';
 import Button from '../ui/Button';
 import { CustomReportPeriodPicker } from '../ui/CustomReportPeriodPicker';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
@@ -22,7 +22,7 @@ export const AdminReportingPeriodBar: React.FC = () => {
       <div className="mb-3 flex min-w-0 flex-wrap items-center justify-between gap-2">
         <div className="flex min-w-0 items-start gap-2.5">
           <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted">
-            <CalendarRange size={15} aria-hidden="true" />
+            <CalendarDays size={15} aria-hidden="true" />
           </span>
           <div className="min-w-0">
             <h2 className="text-xs font-semibold text-fg">{isId ? 'Periode laporan' : 'Reporting period'}</h2>
