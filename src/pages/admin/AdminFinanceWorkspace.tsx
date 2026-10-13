@@ -1581,12 +1581,12 @@ export const AdminFinanceWorkspace: React.FC = () => {
         const rows = allCashLedgerRows.filter((row) => matchesDate(row.date) && matching(row.search)).reverse();
         const selectedCashRange = reportPeriodEnabled ? getReportingPeriodRange(reportPeriodValue, reportPeriodMode) : null;
         const cashKpiRows = selectedCashRange
-          ? cashRows.filter((entry) => /^\\d{4}-\\d{2}-\\d{2}$/.test(entry.date) && entry.date >= selectedCashRange.startDate && entry.date <= selectedCashRange.endDate)
+          ? cashRows.filter((entry) => /^\d{4}-\d{2}-\d{2}$/.test(entry.date) && entry.date >= selectedCashRange.startDate && entry.date <= selectedCashRange.endDate)
           : cashRows;
         const totalIn = sumAmounts<CashMovement>(cashKpiRows, (entry) => entry.cashIn);
         const totalOut = sumAmounts<CashMovement>(cashKpiRows, (entry) => entry.cashOut);
         const cashBalanceRows = selectedCashRange
-          ? cashRows.filter((entry) => /^\\d{4}-\\d{2}-\\d{2}$/.test(entry.date) && entry.date <= selectedCashRange.endDate)
+          ? cashRows.filter((entry) => /^\d{4}-\d{2}-\d{2}$/.test(entry.date) && entry.date <= selectedCashRange.endDate)
           : cashRows;
         const closingBalanceAvailable = opening !== null && !(selectedCashRange && openingDate && selectedCashRange.endDate < openingDate);
         const periodClosingBalance = closingBalanceAvailable
@@ -1888,7 +1888,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
         const postedPettyMovements=ledgerMovements.filter((movement)=>movement.source==='Internal cash transfer'||movement.status==='posted');
         const selectedPettyRange = reportPeriodEnabled ? getReportingPeriodRange(reportPeriodValue, reportPeriodMode) : null;
         const pettyCashKpiMovements = selectedPettyRange
-          ? postedPettyMovements.filter((movement) => /^\\d{4}-\\d{2}-\\d{2}$/.test(movement.date) && movement.date >= selectedPettyRange.startDate && movement.date <= selectedPettyRange.endDate)
+          ? postedPettyMovements.filter((movement) => /^\d{4}-\d{2}-\d{2}$/.test(movement.date) && movement.date >= selectedPettyRange.startDate && movement.date <= selectedPettyRange.endDate)
           : postedPettyMovements;
         const totalIn=sumAmounts<typeof postedPettyMovements[number]>(pettyCashKpiMovements,(movement)=>movement.cashIn);
         const totalOut=sumAmounts<typeof postedPettyMovements[number]>(pettyCashKpiMovements,(movement)=>movement.cashOut);
