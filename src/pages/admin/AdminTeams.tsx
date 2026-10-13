@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 import { Link, useLocation } from 'react-router-dom';
 import {
   Activity,
@@ -288,6 +289,7 @@ const emptyVendorForm = {
 };
 
 export const AdminTeams: React.FC = () => {
+  const { matchesDate } = useReportingPeriod();
   const location = useLocation();
   const activeView = (new URLSearchParams(location.search).get('view') || 'team-directory') as TeamView;
   const validTeamViews: TeamView[] = ['team-directory', 'vendor-directory', 'capacity-allocation', 'skill-matrix', 'time-logs'];
@@ -692,12 +694,13 @@ export const AdminTeams: React.FC = () => {
     return [...logs]
       .filter((log) => {
         const haystack = [log.projectName || '', log.taskTitle || '', log.user || '', log.date, log.notes || ''].join(' ').toLowerCase();
-        return (!query || haystack.includes(query))
+        return matchesDate(log.date)
+          && (!query || haystack.includes(query))
           && (timeProject === 'all' || log.projectId === timeProject)
           && (timeBillable === 'all' || (timeBillable === 'billable' ? log.billable !== false : log.billable === false));
       })
       .sort((a, b) => b.date.localeCompare(a.date));
-  }, [logs, timeSearch, timeProject, timeBillable]);
+  }, [logs, timeSearch, timeProject, timeBillable, matchesDate]);
 
   const timeMetrics = useMemo(() => {
     const total = filteredLogs.reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0);
@@ -730,6 +733,7 @@ export const AdminTeams: React.FC = () => {
       const weeks = weeklyCapacity.map((week) => {
         const minutes = logs
           .filter((log) => log.userId === member.id || (!log.userId && log.user === member.name))
+          .filter((log) => matchesDate(log.date))
           .filter((log) => {
             const date = new Date(log.date + 'T00:00:00');
             return date >= week.start && date < week.end;
@@ -739,7 +743,7 @@ export const AdminTeams: React.FC = () => {
       });
       return { member, weeks };
     });
-  }, [members, logs, weeklyCapacity]);
+  }, [members, logs, weeklyCapacity, matchesDate]);
 
   const capacityPageCount = Math.max(1, Math.ceil(capacityRows.length / capacityPageSize));
   const pagedCapacityRows = capacityRows.slice((capacityPage - 1) * capacityPageSize, capacityPage * capacityPageSize);

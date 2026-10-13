@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 import { Link } from 'react-router-dom';
 // Shared module chrome renders the canonical ams-dashboard-header primitive.
 import {
@@ -52,6 +53,7 @@ const VendorWorkspaceContainer: React.FC<{ embedded?: boolean; children: React.R
 );
 
 export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }> = ({ embedded = false, searchTerm }) => {
+  const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const { t, language } = useLanguage();
   const canManageVendors = hasAdminPermission('canManageVendors');
   const canViewVendors =
@@ -161,6 +163,7 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
   // Filtered list
   const filteredVendors = useMemo(() => {
     return vendors.filter(v => {
+      if (!matchesDate(v.createdAt || v.updatedAt)) return false;
       const matchSearch =
         v.name.toLowerCase().includes(effectiveSearchQuery.toLowerCase()) ||
         (v.companyName && v.companyName.toLowerCase().includes(effectiveSearchQuery.toLowerCase())) ||
@@ -174,14 +177,14 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
 
       return matchSearch && matchCat && matchType && matchStatus && matchVetted;
     });
-  }, [vendors, effectiveSearchQuery, selectedCategory, selectedType, statusFilter, vettedFilter]);
+  }, [vendors, effectiveSearchQuery, selectedCategory, selectedType, statusFilter, vettedFilter, matchesDate]);
 
   const vendorPageCount = Math.max(1, Math.ceil(filteredVendors.length / vendorPageSize));
   const paginatedVendors = filteredVendors.slice((vendorPage - 1) * vendorPageSize, vendorPage * vendorPageSize);
 
   useEffect(() => {
     setVendorPage(1);
-  }, [effectiveSearchQuery, selectedCategory, selectedType, statusFilter, vettedFilter]);
+  }, [effectiveSearchQuery, selectedCategory, selectedType, statusFilter, vettedFilter, reportPeriodValue, reportPeriodEnabled]);
 
   useEffect(() => {
     setVendorPage((current) => Math.min(current, vendorPageCount));

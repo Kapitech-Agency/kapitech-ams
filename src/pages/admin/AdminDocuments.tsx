@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 import { useSearchParams } from 'react-router-dom';
 import {
   Building2,
@@ -174,6 +175,7 @@ const statusTone = (doc: DocumentItem) => readyOf(doc)
 const statusLabel = (doc: DocumentItem) => readyOf(doc) ? 'Ready' : 'Pending';
 
 export const AdminDocuments: React.FC = () => {
+  const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const [searchParams, setSearchParams] = useSearchParams();
   const canManageDocuments =
     hasAdminPermission('canManageProjects') ||
@@ -269,7 +271,7 @@ export const AdminDocuments: React.FC = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [activeTab, categoryFilter, searchQuery, pageSize]);
+  }, [activeTab, categoryFilter, searchQuery, pageSize, reportPeriodValue, reportPeriodEnabled]);
 
   const categoryCounts = useMemo(() => ({
     all: documents.length,
@@ -285,6 +287,7 @@ export const AdminDocuments: React.FC = () => {
     const items = documents.filter((doc) =>
       matchesTab(doc, activeTab) &&
       matchesCategory(doc, categoryFilter) &&
+      matchesDate(doc.updatedAt || doc.uploadedAt || doc.uploadedDate || (doc as any).createdAt) &&
       (!q || searchTextOf(doc).includes(q))
     );
 
@@ -300,7 +303,7 @@ export const AdminDocuments: React.FC = () => {
       }
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-  }, [documents, activeTab, categoryFilter, searchQuery, sortKey, sortDirection]);
+  }, [documents, activeTab, categoryFilter, searchQuery, sortKey, sortDirection, matchesDate]);
 
   const totalPages = Math.max(1, Math.ceil(filteredDocuments.length / pageSize));
   const safePage = Math.min(page, totalPages);

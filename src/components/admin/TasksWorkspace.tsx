@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   AlertTriangle,
@@ -194,6 +195,7 @@ const scopeLabels: Record<string, string> = {
 };
 
 export const TasksWorkspace: React.FC = () => {
+  const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const [searchParams] = useSearchParams();
   const taskScope = scopeLabels[searchParams.get('taskscope') || 'all'] ? (searchParams.get('taskscope') || 'all') : 'all';
   const currentUser = getAdminSession()?.user;
@@ -511,6 +513,7 @@ export const TasksWorkspace: React.FC = () => {
   };
 
   const scopedRecords = useMemo(() => records.filter(task => {
+    if (!matchesDate(task.dueDate || task.createdAt)) return false;
     if (taskScope === 'my') {
       return currentUserNames.has(task.assignee.trim().toLowerCase()) ||
         currentUserNames.has(task.assigneeId.trim().toLowerCase());
@@ -520,7 +523,7 @@ export const TasksWorkspace: React.FC = () => {
     if (taskScope === 'blocked') return task.blocked;
     if (taskScope === 'completed') return task.status === 'done';
     return true;
-  }), [records, taskScope, currentUserNames]);
+  }), [records, taskScope, currentUserNames, matchesDate]);
 
   const filteredRecords = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -559,7 +562,7 @@ export const TasksWorkspace: React.FC = () => {
   useEffect(() => {
     setPage(1);
     setSelectedIds([]);
-  }, [taskScope, query, projectFilter, priorityFilter, statusFilter, assigneeFilter, sortKey, sortDirection]);
+  }, [taskScope, query, projectFilter, priorityFilter, statusFilter, assigneeFilter, sortKey, sortDirection, reportPeriodValue, reportPeriodEnabled]);
 
   const totalPages = Math.max(1, Math.ceil(filteredRecords.length / pageSize));
   const pagedRecords = filteredRecords.slice((page - 1) * pageSize, page * pageSize);
