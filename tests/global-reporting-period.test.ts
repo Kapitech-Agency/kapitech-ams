@@ -64,7 +64,7 @@ test('date-aware Finance worksheets use the shared reporting period without chan
   const workspace = await fs.readFile('src/pages/admin/AdminFinanceWorkspace.tsx', 'utf8');
   const invoicing = await fs.readFile('src/pages/admin/AdminInvoicing.tsx', 'utf8');
 
-  assert.ok(workspace.includes('const { mode: reportPeriodMode, value: reportPeriodValue, setMode: setReportPeriodMode, setValue: setReportPeriodValue, matchesDate, matchesInterval } = useReportingPeriod()'));
+  assert.ok(workspace.includes('const { mode: reportPeriodMode, value: reportPeriodValue, enabled: reportPeriodEnabled, setMode: setReportPeriodMode, setValue: setReportPeriodValue, matchesDate, matchesInterval } = useReportingPeriod()'));
   assert.ok(workspace.includes('matchesDate(entry.date) && matching(row.search)'));
   assert.ok(workspace.includes('matchesDate(record.payload.billDate || record.payload.dueDate || record.createdAt)'));
   assert.ok(workspace.includes('matchesDate(item.month + \'-01\')'));
@@ -76,8 +76,14 @@ test('date-aware Finance worksheets use the shared reporting period without chan
   assert.ok(workspace.includes('for(const record of allOpenings.slice()'));
   assert.ok(workspace.includes('const requestId = ++loadRequestId.current;'));
   assert.ok(workspace.includes('if (requestId !== loadRequestId.current) return;'));
+  assert.ok(workspace.includes('const selectedCashRange = reportPeriodEnabled ? getReportingPeriodRange(reportPeriodValue, reportPeriodMode) : null;'));
+  assert.ok(workspace.includes('const periodClosingBalance = closingBalanceAvailable'));
+  assert.ok(workspace.includes('const selectedPettyRange = reportPeriodEnabled ? getReportingPeriodRange(reportPeriodValue, reportPeriodMode) : null;'));
+  assert.ok(workspace.includes('Number(record.payload.outstanding ?? ((Number(record.payload.total) || 0) - (Number(record.payload.paidAmount) || 0)))'));
   assert.ok(invoicing.includes('return matchesDate(row.dueDate)'));
   assert.ok(invoicing.includes('vendorPaymentSort, matchesDate]'));
+  assert.ok(invoicing.includes('return source.filter((invoice) => matchesDate(invoice.issueDate || invoice.createdAt))'));
+  assert.ok(invoicing.includes('retainerPage, matchesDate]'));
 });
 
 test('global reporting period controls stay in the admin layout shared by modules and tabs', async () => {
