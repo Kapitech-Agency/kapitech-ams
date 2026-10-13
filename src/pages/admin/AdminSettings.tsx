@@ -624,6 +624,8 @@ export const AdminSettings: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
+  const periodBackups = useMemo(() => backups.filter((backup) => matchesDate(backup.createdAt)), [backups, matchesDate]);
+
   const filteredLogs = useMemo(() => {
     const query = auditQuery.trim().toLowerCase();
     return logs.filter((log) => {
@@ -978,7 +980,13 @@ export const AdminSettings: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {backups.slice(0, 8).map((backup, index) => (
+                    {periodBackups.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-3 py-6 text-center text-xs text-muted">
+                          {reportPeriodEnabled ? 'No backup snapshots in the selected reporting period.' : 'No backup snapshots are available.'}
+                        </td>
+                      </tr>
+                    ) : periodBackups.slice(0, 8).map((backup, index) => (
                       <tr key={backup.createdAt + String(index)}>
                         <td className="font-mono text-[11px] text-fg">{archiveIdentifier(backup.createdAt, index)}</td>
                         <td>

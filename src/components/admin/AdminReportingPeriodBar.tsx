@@ -72,11 +72,11 @@ export const AdminReportingPeriodBar: React.FC = () => {
       <p className="mt-2 text-[10px] leading-4 text-muted">
         {enabled
           ? (isId
-            ? 'Filter diterapkan pada daftar dan laporan bertanggal. Form input, pengaturan, dan perubahan data tidak terpengaruh.'
-            : 'The filter applies to dated lists and reports. Entry forms, settings, and data mutations are unaffected.')
+            ? 'Filter berlaku pada daftar dan laporan yang memiliki tanggal. KPI kondisi saat ini dan data master tanpa tanggal tetap ditampilkan apa adanya. Form input dan perubahan data tidak terpengaruh.'
+            : 'The filter scopes date-aware lists and reports. Current-state KPIs and undated master data remain unchanged; entry forms and data mutations are unaffected.')
           : (isId
-            ? 'Pilih periode untuk memfilter data bertanggal di seluruh modul. Pilih Tampilkan semua tanggal untuk kembali ke semua data.'
-            : 'Choose a period to filter dated data across modules. Use Show all dates to return to the full data set.')}
+            ? 'Pilih periode untuk memfilter data bertanggal di seluruh modul dan tab yang mendukungnya. KPI kondisi saat ini dan data master tanpa tanggal tidak berubah.'
+            : 'Choose a period to filter date-aware lists and reports across modules and tabs. Current-state KPIs and undated master data remain unchanged.')}
       </p>
     </section>
   );

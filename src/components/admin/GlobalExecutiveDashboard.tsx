@@ -21,6 +21,7 @@ import { DonutChart, TrendChart } from '../charts/DashboardCharts';
 import { isSlugFixtureMode } from '../../lib/runtimeMode';
 import { ProfileIdentity } from './ProfileIdentity';
 import { api } from '../../lib/apiClient';
+import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 
 const TasksWorkspace = React.lazy(() =>
   import('./TasksWorkspace').then((module) => ({ default: module.TasksWorkspace }))
@@ -39,6 +40,9 @@ interface DashboardProject {
   progress: number;
   lead: string;
   budget: string;
+  startDate?: string;
+  targetEndDate?: string;
+  createdAt?: string;
 }
 
 interface TeamMember {
@@ -51,11 +55,11 @@ interface TeamMember {
 }
 
 const sampleProjects: DashboardProject[] = [
-  { id: 'proj-001', name: 'Atlas Brand System', client: 'Atlas Group', type: 'Enterprise', status: 'On track', statusTone: 'success', progress: 78, lead: 'Fikri', budget: '$42,000' },
-  { id: 'proj-002', name: 'Meridian Commerce', client: 'Meridian Labs', type: 'Fixed-fee', status: 'At risk', statusTone: 'warning', progress: 61, lead: 'Sarah', budget: '$28,500' },
-  { id: 'proj-003', name: 'Nova Growth Retainer', client: 'Nova Ventures', type: 'Retainer', status: 'On track', statusTone: 'success', progress: 72, lead: 'Dimas', budget: '$18,000' },
-  { id: 'proj-004', name: 'Orbit Product Launch', client: 'Orbit Health', type: 'Enterprise', status: 'Delayed', statusTone: 'danger', progress: 44, lead: 'Raka', budget: '$36,800' },
-  { id: 'proj-005', name: 'Northstar Campaign', client: 'Northstar Capital', type: 'Retainer', status: 'In review', statusTone: 'info', progress: 86, lead: 'Nadia', budget: '$24,000' },
+  { id: 'proj-001', name: 'Atlas Brand System', client: 'Atlas Group', type: 'Enterprise', status: 'On track', statusTone: 'success', progress: 78, lead: 'Fikri', budget: '$42,000', startDate: '2026-01-01', targetEndDate: '2026-06-30' },
+  { id: 'proj-002', name: 'Meridian Commerce', client: 'Meridian Labs', type: 'Fixed-fee', status: 'At risk', statusTone: 'warning', progress: 61, lead: 'Sarah', budget: '$28,500', startDate: '2026-03-01', targetEndDate: '2026-08-31' },
+  { id: 'proj-003', name: 'Nova Growth Retainer', client: 'Nova Ventures', type: 'Retainer', status: 'On track', statusTone: 'success', progress: 72, lead: 'Dimas', budget: '$18,000', startDate: '2026-06-01', targetEndDate: '2026-12-31' },
+  { id: 'proj-004', name: 'Orbit Product Launch', client: 'Orbit Health', type: 'Enterprise', status: 'Delayed', statusTone: 'danger', progress: 44, lead: 'Raka', budget: '$36,800', startDate: '2025-11-01', targetEndDate: '2026-03-31' },
+  { id: 'proj-005', name: 'Northstar Campaign', client: 'Northstar Capital', type: 'Retainer', status: 'In review', statusTone: 'info', progress: 86, lead: 'Nadia', budget: '$24,000', startDate: '2026-04-01', targetEndDate: '2026-12-31' },
 ];
 
 const sampleTeam: TeamMember[] = [
@@ -457,6 +461,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const navigate = useNavigate();
   const view = (searchParams.get('view') || 'overview') as 'overview' | 'performance' | 'analytics' | 'tasks';
   const fixtureMode = isSlugFixtureMode();
+  const { matchesInterval, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const [range, setRange] = useState<RangeKey>('Q2');
   const [projectFilter, setProjectFilter] = useState<ProjectFilter>('All');
   const [projectActionId, setProjectActionId] = useState<string | null>(null);
@@ -550,7 +555,10 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             budget: formatLiveMoney(
               Number(project.budget ?? project.totalBudget ?? 0) || 0,
               String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase()
-            )
+            ),
+            startDate: String(project.startDate || project.start || ''),
+            targetEndDate: String(project.targetEndDate || project.endDate || project.dueDate || ''),
+            createdAt: String(project.createdAt || project.updatedAt || '')
           };
         })
       : [];
@@ -558,8 +566,11 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   }, [dashboardOverview.projects, fixtureMode]);
 
   const filteredProjects = useMemo(
-    () => projectFilter === 'All' ? dashboardProjects : dashboardProjects.filter((project) => project.type === projectFilter),
-    [dashboardProjects, projectFilter],
+    () => dashboardProjects.filter((project) =>
+      matchesInterval(project.startDate, project.targetEndDate, project.createdAt)
+      && (projectFilter === 'All' || project.type === projectFilter)
+    ),
+    [dashboardProjects, projectFilter, matchesInterval],
   );
 
   const dashboardProjectPageCount = Math.max(1, Math.ceil(filteredProjects.length / dashboardProjectPageSize));
@@ -568,6 +579,9 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     dashboardProjectPage * dashboardProjectPageSize,
   );
 
+  useEffect(() => {
+    setDashboardProjectPage(1);
+  }, [reportPeriodValue, reportPeriodEnabled]);
   useEffect(() => {
     setDashboardProjectPage((current) => Math.min(current, dashboardProjectPageCount));
   }, [dashboardProjectPageCount]);
@@ -589,19 +603,24 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         description="Real-time metrics, project pacing, and financial health for the agency."
         actions={(
           <>
-            <div className="flex w-full items-center gap-0.5 rounded-control bg-bg p-0.5 sm:w-auto">
-              {(['30D', 'Q2', 'YTD', '12M'] as RangeKey[]).map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  aria-pressed={range === item}
-                  onClick={() => setRange(item)}
-                  className={['rounded-chip px-2.5 py-1.5 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent', range === item ? 'bg-line font-medium text-fg' : 'text-muted hover:text-fg'].join(' ')}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
+            {fixtureMode && (
+              <div className="space-y-1">
+                <span className="block text-[10px] text-muted">Preview chart range</span>
+                <div className="flex w-full items-center gap-0.5 rounded-control bg-bg p-0.5 sm:w-auto">
+                  {(['30D', 'Q2', 'YTD', '12M'] as RangeKey[]).map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      aria-pressed={range === item}
+                      onClick={() => setRange(item)}
+                      className={['rounded-chip px-2.5 py-1.5 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent', range === item ? 'bg-line font-medium text-fg' : 'text-muted hover:text-fg'].join(' ')}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <Link
               to="/admin/projects"
               className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-control bg-accent px-3 text-xs font-medium sm:min-h-9 sm:w-auto text-white transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"

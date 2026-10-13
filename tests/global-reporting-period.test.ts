@@ -29,6 +29,8 @@ test('global reporting period controls stay in the admin layout shared by module
   const projects = await fs.readFile('src/pages/admin/AdminProjects.tsx', 'utf8');
   const documents = await fs.readFile('src/pages/admin/AdminDocuments.tsx', 'utf8');
   const teams = await fs.readFile('src/pages/admin/AdminTeams.tsx', 'utf8');
+  const dashboard = await fs.readFile('src/components/admin/GlobalExecutiveDashboard.tsx', 'utf8');
+  const settings = await fs.readFile('src/pages/admin/AdminSettings.tsx', 'utf8');
 
   assert.ok(layout.includes('<ReportingPeriodProvider>'));
   assert.ok(layout.includes('<AdminReportingPeriodBar />'));
@@ -38,4 +40,6 @@ test('global reporting period controls stay in the admin layout shared by module
   assert.ok(projects.includes('matchesInterval(project.startDate, project.targetEndDate, project.createdAt)'));
   assert.ok(documents.includes('matchesDate(doc.updatedAt || doc.uploadedAt || doc.uploadedDate || (doc as any).createdAt)'));
   assert.ok(teams.includes('matchesDate(log.date)'));
+  assert.ok(dashboard.includes('matchesInterval(project.startDate, project.targetEndDate, project.createdAt)'));
+  assert.ok(settings.includes('backups.filter((backup) => matchesDate(backup.createdAt))'));
 });
