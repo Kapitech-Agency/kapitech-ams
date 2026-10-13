@@ -14,7 +14,7 @@ test('Finance top-level tabs and clean sub-tabs preserve direct transaction entr
   assert.match(layout, /admin\.finance\.tab\.projectFinance/);
   assert.match(layout, /admin\.finance\.tab\.accountingReports/);
   assert.match(layout, /admin\.finance\.tab\.transactionsCash'[\s\S]*?to: '\/admin\/finance\?tab=cash-bank'/);
-  assert.match(layout, /admin\.finance\.tab\.receivablesPayables'[\s\S]*?to: '\/admin\/finance\?tab=accounts-payable'/);
+  assert.match(layout, /admin\.finance\.tab\.receivablesPayables'[\s\S]*?to: '\/admin\/finance\?tab=accounts-receivable'/);
   assert.match(layout, /admin\.finance\.tab\.accountingReports'[\s\S]*?to: '\/admin\/finance\?tab=journal'/);
   assert.match(workspace, /className="min-\[900px\]:hidden"/);
   assert.match(workspace, /AdminSectionTabs ariaLabel="Finance sub-sections" activeKey=\{activeTab\.key\} items=\{sheetItems\}/);
@@ -44,6 +44,47 @@ test('Finance top-level tabs and clean sub-tabs preserve direct transaction entr
   assert.match(uiSource, /Add team fee/);
   assert.match(uiSource, /Add journal entry/);
   assert.match(uiSource, /Calculate project allocation/);
+});
+
+test('Finance groups and vendor workflows are separated by user task', async () => {
+  const workbook = await read('src/lib/financeWorkbook.ts');
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+
+  const transactionsStart = workbook.indexOf("key: 'transactions',");
+  const receivablesStart = workbook.indexOf("key: 'receivables',");
+  const projectsStart = workbook.indexOf("key: 'projects',");
+  const accountingStart = workbook.indexOf("key: 'accounting',");
+  const groupsEnd = workbook.indexOf('\n];', accountingStart);
+  assert.ok(transactionsStart >= 0 && receivablesStart > transactionsStart);
+  assert.ok(projectsStart > receivablesStart && accountingStart > projectsStart && groupsEnd > accountingStart);
+
+  const transactionsGroup = workbook.slice(transactionsStart, receivablesStart);
+  const receivablesGroup = workbook.slice(receivablesStart, projectsStart);
+  const projectsGroup = workbook.slice(projectsStart, accountingStart);
+  const accountingGroup = workbook.slice(accountingStart, groupsEnd);
+  assert.match(transactionsGroup, /items: \[\s*\{ key: 'cash-bank'/);
+  assert.match(accountingGroup, /items: \[\s*\{ key: 'journal'/);
+  assert.doesNotMatch(transactionsGroup, /key: 'chart-of-accounts'/);
+  assert.doesNotMatch(receivablesGroup, /key: 'team-fee'/);
+  assert.match(projectsGroup, /key: 'team-fee'/);
+  assert.match(accountingGroup, /key: 'chart-of-accounts'/);
+
+  const apStart = workspace.indexOf("case 'accounts-payable': {");
+  const vendorsStart = workspace.indexOf("case 'vendors': {", apStart);
+  const projectStart = workspace.indexOf("case 'project-finance': {", vendorsStart);
+  assert.ok(apStart >= 0 && vendorsStart > apStart && projectStart > vendorsStart);
+  const apView = workspace.slice(apStart, vendorsStart);
+  const vendorsView = workspace.slice(vendorsStart, projectStart);
+  assert.match(apView, /title="Accounts Payable register"/);
+  assert.match(apView, /title="Vendor payment schedule"/);
+  assert.match(apView, /bills\.length > 0 &&/);
+  assert.match(workspace, /receivables: 'accounts-receivable'/);
+  assert.doesNotMatch(apView, /title="Vendor contract references"/);
+  assert.match(vendorsView, /title="Vendor & freelancer directory"/);
+  assert.match(vendorsView, /title="Vendor contract references"/);
+  assert.doesNotMatch(vendorsView, /Vendor & Freelancer payment schedule/);
+  assert.match(apView, /installment\.percentage/);
+  assert.match(apView, /Outstanding \{formatMoney\(installment\.outstanding, currency\)\}/);
 });
 
 test('Finance locale uses the selected application language and localized finance account labels', async () => {

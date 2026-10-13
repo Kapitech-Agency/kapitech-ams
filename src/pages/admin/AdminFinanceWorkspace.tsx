@@ -883,7 +883,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
   const groupEntryTabs: Record<string, string> = {
     overview: 'executive-summary',
     transactions: 'cash-bank',
-    receivables: 'accounts-payable',
+    receivables: 'accounts-receivable',
     projects: 'project-finance',
     accounting: 'journal'
   };
@@ -1132,6 +1132,47 @@ export const AdminFinanceWorkspace: React.FC = () => {
         ]));
         const payableTotalIDR = sumAmounts<WorkbookRecord>(bills.filter((record)=>(String(record.payload.currency||'IDR')==='IDR')),(record)=>Number(record.payload.outstanding ?? record.payload.total)||0);
         const foreignCurrencyBillCount = bills.filter((record)=>String(record.payload.currency||'IDR')!=='IDR').length;
+        const vendorPayments = getRegisterRecords('vendor-bill-payment');
+        const scheduleRows = bills.map((bill) => {
+          const billPayments = vendorPayments.filter((payment) => String(payment.payload.billId || '') === bill.id);
+          const schedule = getVendorBillInstallmentSchedule(
+            Number(bill.payload.total) || 0,
+            billPayments.map((payment) => ({
+              id: payment.id,
+              amount: payment.payload.amount,
+              installmentNumber: payment.payload.installmentNumber,
+              paidDate: payment.payload.paidDate
+            })),
+            Array.isArray(bill.payload.paymentSchedule) ? bill.payload.paymentSchedule as number[] : undefined
+          );
+          const currency = String(bill.payload.currency || 'IDR');
+          const paid = sumAmounts<WorkbookRecord>(billPayments, (payment) => Number(payment.payload.amount) || 0);
+          const total = Number(bill.payload.total) || 0;
+          const next = schedule.find((installment) => installment.outstanding > 0.01);
+          const stageCell = (installment: typeof schedule[number]) => (
+            <div className="min-w-[112px] space-y-0.5">
+              <div className="font-medium tabular-nums">{formatMoney(installment.amount, currency)}</div>
+              <div className="text-[11px] text-muted tabular-nums">{installment.percentage}% · Paid {formatMoney(installment.paidAmount, currency)}</div>
+              <div className="text-[11px] text-muted tabular-nums">Outstanding {formatMoney(installment.outstanding, currency)}</div>
+            </div>
+          );
+          return {
+            id: bill.id,
+            cells: [
+              String(bill.payload.billNo || bill.recordKey),
+              String(bill.payload.vendorName || '—'),
+              String(bill.payload.projectName || bill.projectId || '—'),
+              formatMoney(total, currency),
+              stageCell(schedule[0]),
+              stageCell(schedule[1]),
+              stageCell(schedule[2]),
+              formatMoney(paid, currency),
+              formatMoney(Math.max(0, total - paid), currency),
+              next ? 'Payment ' + next.number + ' · ' + next.percentage + '%' : 'Complete',
+              <StatusBadge value={bill.payload.paymentStatus || bill.status} />
+            ]
+          };
+        });
         return (
           <div className="space-y-4">
             <WorkbookNote title="Vendor bills and linked payments determine payable balances">
@@ -1168,67 +1209,28 @@ export const AdminFinanceWorkspace: React.FC = () => {
               emptyMessage="No vendor bills have been recorded yet."
               actions={registerAddButton('vendor-bill','Add vendor bill')}
             />
-            <FinanceDataTable
-              title="Vendor contract references"
-              description="Existing AMS contracts are shown as commitments; a contract alone is not treated as a payable bill."
-              columns={[{label:'Vendor'},{label:'Contract'},{label:'Rate basis'},{label:'Contract rate/value',align:'right'},{label:'Linked expense records',align:'right'}]}
-              rows={vendors.flatMap((vendor)=>(Array.isArray(vendor.contracts)?vendor.contracts:[]).map((contract)=> {
-                const linked=expenses.filter((expense)=>{
-                  const expenseRecord=expense as AgencyExpense & {vendorContractId?:string;vendorPayment?:{vendorId?:string;contractId?:string};metadata?:{vendorPayment?:{vendorId?:string;contractId?:string}}};
-                  const structured=expenseRecord.vendorPayment||expenseRecord.metadata?.vendorPayment;
-                  return (expenseRecord.vendorId===vendor.id&&expenseRecord.vendorContractId===contract.id)||(structured?.vendorId===vendor.id&&structured?.contractId===contract.id)||expense.description.startsWith('[VENDOR_PAYMENT]|'+vendor.id+'|'+contract.id+'|');
-                });
-                return {id:vendor.id+'-'+contract.id,cells:[vendor.companyName||vendor.name,contract.title,normaliseStatus(contract.rateType),formatMoney(Number(contract.rateAmount)||0,contract.currency),String(linked.length)+' · '+formatMoney(sumAmounts<AgencyExpense>(linked,(expense)=>Number(expense.amount)||0),contract.currency)]};
-              }))}
-              emptyMessage="No vendor contracts are available in AMS."
-            />
+            {bills.length > 0 && (
+              <FinanceDataTable
+                title="Vendor payment schedule"
+                description="Installments use each bill's saved payment schedule and linked payment records. Review the overall due date in the Accounts Payable register."
+                columns={[
+                  { label: 'Bill no.' }, { label: 'Vendor' }, { label: 'Project' }, { label: 'Bill amount', align: 'right' },
+                  { label: 'Payment 1' }, { label: 'Payment 2' }, { label: 'Payment 3' },
+                  { label: 'Total paid', align: 'right' }, { label: 'Outstanding', align: 'right' }, { label: 'Next payment' }, { label: 'Status' }
+                ]}
+                rows={scheduleRows}
+                emptyMessage="No vendor bills have been entered. Create a bill to see its payment schedule."
+              />
+            )}
           </div>
         );
       }
       case 'vendors': {
-        const vendorBills = getRegisterRecords('vendor-bill').filter((record) => matching([
-          record.recordKey, record.payload.billNo, record.payload.vendorName, record.payload.projectName, record.payload.paymentStatus
-        ]));
-        const vendorPayments = getRegisterRecords('vendor-bill-payment');
-        const scheduleRows = vendorBills.map((bill) => {
-          const billPayments = vendorPayments.filter((payment) => String(payment.payload.billId || '') === bill.id);
-          const schedule = getVendorBillInstallmentSchedule(
-            Number(bill.payload.total) || 0,
-            billPayments.map((payment) => ({
-              id: payment.id, amount: payment.payload.amount,
-              installmentNumber: payment.payload.installmentNumber, paidDate: payment.payload.paidDate
-            })),
-            Array.isArray(bill.payload.paymentSchedule) ? bill.payload.paymentSchedule as number[] : undefined
-          );
-          const currency = String(bill.payload.currency || 'IDR');
-          const paid = sumAmounts<WorkbookRecord>(billPayments, (payment) => Number(payment.payload.amount) || 0);
-          const total = Number(bill.payload.total) || 0;
-          const next = schedule.find((installment) => installment.outstanding > 0.01);
-          return {
-            id: bill.id,
-            cells: [
-              String(bill.payload.billNo || bill.recordKey),
-              String(bill.payload.vendorName || '—'),
-              String(bill.payload.projectName || bill.projectId || '—'),
-              formatMoney(total, currency),
-              formatMoney(schedule[0].amount, currency),
-              formatMoney(schedule[0].paidAmount, currency),
-              formatMoney(schedule[1].amount, currency),
-              formatMoney(schedule[1].paidAmount, currency),
-              formatMoney(schedule[2].amount, currency),
-              formatMoney(schedule[2].paidAmount, currency),
-              formatMoney(paid, currency),
-              formatMoney(Math.max(0, total - paid), currency),
-              next ? 'Payment ' + next.number + ' · ' + next.percentage + '%' : 'Complete',
-              <StatusBadge value={bill.payload.paymentStatus || bill.status} />
-            ]
-          };
-        });
         return (
           <div className="space-y-4">
             <FinanceDataTable
               title="Vendor & freelancer directory"
-              description="Uses the existing AMS vendor and contract source. Vendor payment commitments and stage settlements are summarized below from the bill and payment registers."
+              description="Vendor master records and service details from the existing AMS directory. Contract commitments are listed below; bills and payment schedules are managed in Accounts Payable."
               columns={[{ label: 'Vendor / company' }, { label: 'Type' }, { label: 'Service' }, { label: 'Rate', align: 'right' }, { label: 'Contracts', align: 'center' }, { label: 'Status' }]}
               rows={vendors.filter((vendor) => matching([vendor.name, vendor.companyName, vendor.type, vendor.primaryCategory, vendor.skills.join(' ')])).map((vendor) => ({
                 id: vendor.id,
@@ -1238,17 +1240,18 @@ export const AdminFinanceWorkspace: React.FC = () => {
               actions={<Button type="button" variant="secondary" onClick={() => navigate('/admin/team?view=vendor-directory')}>Open vendor directory</Button>}
             />
             <FinanceDataTable
-              title="Vendor & Freelancer payment schedule"
-              description="Amounts and paid amounts are derived from each persisted bill and its linked payments. Unassigned legacy payments are allocated FIFO; each payment schedule uses the saved bill due date. Separate due dates per installment are not recorded."
-              columns={[
-                { label: 'Bill no.' }, { label: 'Vendor / freelancer' }, { label: 'Project' }, { label: 'Contract value', align: 'right' },
-                { label: 'Payment 1 · 30%', align: 'right' }, { label: 'Paid 1', align: 'right' },
-                { label: 'Payment 2 · 20%', align: 'right' }, { label: 'Paid 2', align: 'right' },
-                { label: 'Payment 3 · 50%', align: 'right' }, { label: 'Paid 3', align: 'right' },
-                { label: 'Total paid', align: 'right' }, { label: 'Outstanding', align: 'right' }, { label: 'Next payment' }, { label: 'Status' }
-              ]}
-              rows={scheduleRows}
-              emptyMessage="No vendor bills have been entered. Create a bill in Accounts Payable to generate the 30% / 20% / 50% schedule."
+              title="Vendor contract references"
+              description="Existing AMS contracts are shown as commitments; a contract alone is not treated as a payable bill."
+              columns={[{label:'Vendor'},{label:'Contract'},{label:'Rate basis'},{label:'Contract rate/value',align:'right'},{label:'Linked expense records',align:'right'}]}
+              rows={vendors.flatMap((vendor)=>(Array.isArray(vendor.contracts)?vendor.contracts:[]).filter((contract)=>!searchText.trim()||matching([vendor.name,vendor.companyName,contract.title,contract.rateType,contract.rateAmount])).map((contract)=> {
+                const linked=expenses.filter((expense)=>{
+                  const expenseRecord=expense as AgencyExpense & {vendorContractId?:string;vendorPayment?:{vendorId?:string;contractId?:string};metadata?:{vendorPayment?:{vendorId?:string;contractId?:string}}};
+                  const structured=expenseRecord.vendorPayment||expenseRecord.metadata?.vendorPayment;
+                  return (expenseRecord.vendorId===vendor.id&&expenseRecord.vendorContractId===contract.id)||(structured?.vendorId===vendor.id&&structured?.contractId===contract.id)||expense.description.startsWith('[VENDOR_PAYMENT]|'+vendor.id+'|'+contract.id+'|');
+                });
+                return {id:vendor.id+'-'+contract.id,cells:[vendor.companyName||vendor.name,contract.title,normaliseStatus(contract.rateType),formatMoney(Number(contract.rateAmount)||0,contract.currency),String(linked.length)+' · '+formatMoney(sumAmounts<AgencyExpense>(linked,(expense)=>Number(expense.amount)||0),contract.currency)]};
+              }))}
+              emptyMessage="No vendor contracts are available in AMS."
             />
           </div>
         );
