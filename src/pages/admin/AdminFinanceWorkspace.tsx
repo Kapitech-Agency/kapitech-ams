@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowDown, ArrowUp, ArrowUpRight, Briefcase, ChevronLeft, ChevronRight, ChevronsUpDown, CircleDollarSign, Download, FileText, Landmark, Plus, RefreshCw, Search, ShieldAlert, WalletCards, X } from 'lucide-react';
-import { AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminPanel, AdminSectionTabs, AdminStatusBadge } from '../../components/admin/AdminModulePrimitives';
+import { ArrowDown, ArrowUp, ArrowUpRight, Briefcase, ChevronsUpDown, CircleDollarSign, Download, FileText, Landmark, Plus, RefreshCw, Search, ShieldAlert, WalletCards, X } from 'lucide-react';
+import { AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminPanel, AdminSectionTabs, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import Button from '../../components/ui/Button';
 import { AdminInvoicing } from './AdminInvoicing';
 import { AdminVendors } from './AdminVendors';
@@ -225,7 +225,6 @@ const FinanceDataTable: React.FC<{
     });
   }, [columns, rows, sort]);
 
-  const pageCount = Math.max(1, Math.ceil(sortedRows.length / pageSize));
   const currentPage = Math.min(page, pageCount - 1);
   const visibleRows = sortedRows.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
   const firstRow = sortedRows.length ? currentPage * pageSize + 1 : 0;
@@ -313,39 +312,16 @@ const FinanceDataTable: React.FC<{
         </table>
       </div>
       {rows.length > 0 && (
-        <div className="flex flex-col gap-3 border-t border-line px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="text-[11px] text-muted">
-            Showing <span className="tabular-nums text-fg">{firstRow}–{lastRow}</span> of <span className="tabular-nums text-fg">{sortedRows.length}</span>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] text-muted">Rows</span>
-            <CustomSelect
-              value={String(pageSize)}
-              onChange={(nextValue) => { setPageSize(Number(nextValue) || 10); setPage(0); }}
-              options={[{ value: '10', label: '10' }, { value: '25', label: '25' }, { value: '50', label: '50' }]}
-              size="xs"
-              className="w-[68px]"
-              aria-label={'Rows per page for ' + title}
-            />
-            <button
-              type="button"
-              disabled={currentPage === 0}
-              onClick={() => setPage((current) => Math.max(0, current - 1))}
-              className="inline-flex h-8 items-center gap-1 rounded-control border border-line px-2.5 text-[11px] font-medium text-fg transition-colors hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <ChevronLeft size={13} /> Previous
-            </button>
-            <span aria-live="polite" className="min-w-[48px] text-center text-[11px] tabular-nums text-muted">{currentPage + 1} / {pageCount}</span>
-            <button
-              type="button"
-              disabled={currentPage >= pageCount - 1}
-              onClick={() => setPage((current) => Math.min(pageCount - 1, current + 1))}
-              className="inline-flex h-8 items-center gap-1 rounded-control border border-line px-2.5 text-[11px] font-medium text-fg transition-colors hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Next <ChevronRight size={13} />
-            </button>
-          </div>
-        </div>
+        <AdminTablePagination
+          total={sortedRows.length}
+          page={currentPage + 1}
+          pageSize={pageSize}
+          onPageChange={(nextPage) => setPage(nextPage - 1)}
+          onPageSizeChange={setPageSize}
+          itemLabel="records"
+          pageSizeOptions={[10, 25, 50]}
+          slug={'finance-' + (title.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'register') + '-pagination'}
+        />
       )}
     </AdminPanel>
   );
@@ -1174,18 +1150,26 @@ export const AdminFinanceWorkspace: React.FC = () => {
         onClose={() => { if (!registerSaving) setEditor(null); }}
         title={editor.record ? 'Edit ' + definition.title : definition.title}
         description={definition.description}
+        footer={
+          <>
+            <Button type="button" variant="secondary" onClick={() => setEditor(null)} disabled={registerSaving}>Cancel</Button>
+            <Button type="submit" form="finance-workbook-register-editor-form" loading={registerSaving} disabled={registerSaving}>
+              {registerSaving ? 'Saving…' : editor.record ? 'Save changes' : 'Save record'}
+            </Button>
+          </>
+        }
         size="2xl"
         slug="finance-workbook-register-editor"
       >
-        <form onSubmit={(event) => void submitRegisterForm(event)} className="space-y-4 p-1">
+        <form id="finance-workbook-register-editor-form" onSubmit={(event) => void submitRegisterForm(event)} className="space-y-5 p-1">
           {registerActionError && (
             <div className="rounded-control border border-danger/25 bg-danger/5 p-3 text-xs leading-5 text-fg" role="alert">{registerActionError}</div>
           )}
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2">
             {definition.fields.filter((field) => !field.visibleWhen || field.visibleWhen.values.includes(String(editor.payload[field.visibleWhen.key] || ''))).map((field) => {
               const value = editor.payload[field.key] === undefined || editor.payload[field.key] === null ? '' : String(editor.payload[field.key]);
               const disabled = editor.record?.recordType === 'chart-of-accounts' && field.key === 'code';
-              const commonClass = 'mt-1.5 block h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none transition-colors focus:border-accent disabled:cursor-not-allowed disabled:opacity-60';
+              const commonClass = 'mt-1.5 block h-10 min-h-10 w-full rounded-control border border-line bg-bg px-3 text-[13px] leading-[18px] text-fg outline-none transition-colors focus:border-accent disabled:cursor-not-allowed disabled:opacity-60';
               return (
                 <label key={field.key} className={field.type === 'textarea' ? 'block sm:col-span-2 text-xs font-medium text-muted' : 'block text-xs font-medium text-muted'}>
                   {field.label}{field.required ? ' *' : ''}
@@ -1196,7 +1180,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
                       rows={3}
                       onChange={(event) => changeRegisterField(field.key, event.target.value)}
                       placeholder={field.placeholder}
-                      className="mt-1.5 block w-full rounded-control border border-line bg-bg px-3 py-2 text-xs text-fg outline-none transition-colors focus:border-accent"
+                      className="mt-1.5 block min-h-[88px] w-full rounded-control border border-line bg-bg px-3 py-2 text-[13px] leading-[18px] text-fg outline-none transition-colors focus:border-accent"
                     />
                   ) : field.type === 'date' || field.type === 'month' ? (
                     <CustomDatePicker
@@ -1207,20 +1191,21 @@ export const AdminFinanceWorkspace: React.FC = () => {
                       required={field.required}
                       locale={locale}
                       className="mt-1.5 w-full"
-                      triggerClassName="h-9 text-xs"
+                      triggerClassName="h-10 min-h-10 text-[13px]"
                       placeholder={field.placeholder}
                       aria-label={field.label}
                     />
                   ) : field.type === 'select' ? (
-                    <select
+                    <CustomSelect
                       value={value}
-                      required={field.required}
+                      onChange={(nextValue) => changeRegisterField(field.key, nextValue)}
+                      options={getRegisterFieldOptions(field)}
                       disabled={field.optionSource === 'vendorBills' && getRegisterRecords('vendor-bill').length === 0}
-                      onChange={(event) => changeRegisterField(field.key, event.target.value)}
-                      className={commonClass}
-                    >
-                      {getRegisterFieldOptions(field).map((option) => <option key={option.value || 'empty'} value={option.value}>{option.label}</option>)}
-                    </select>
+                      className="mt-1.5 w-full"
+                      triggerClassName="h-10 min-h-10 w-full"
+                      placeholder={field.placeholder || ('Select ' + field.label.toLowerCase())}
+                      aria-label={field.label}
+                    />
                   ) : (
                     <input
                       type={field.type}
@@ -1244,10 +1229,6 @@ export const AdminFinanceWorkspace: React.FC = () => {
               The entry is saved as Draft and requires a different authorized user to post it. Total debit and credit must balance before it can be saved.
             </WorkbookNote>
           )}
-          <div className="flex flex-wrap justify-end gap-2 border-t border-line pt-4">
-            <Button type="button" variant="secondary" onClick={() => setEditor(null)} disabled={registerSaving}>Cancel</Button>
-            <Button type="submit" loading={registerSaving} disabled={registerSaving}>{registerSaving ? 'Saving…' : editor.record ? 'Save changes' : 'Save record'}</Button>
-          </div>
         </form>
       </Drawer>
     );
