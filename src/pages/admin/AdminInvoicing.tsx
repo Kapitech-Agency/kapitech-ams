@@ -1100,7 +1100,8 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
     const query = vendorPaymentSearch.trim().toLowerCase();
     const rows = vendorPaymentRecords.filter((row) => {
       const haystack = [row.vendor.name, row.vendor.companyName || '', row.vendor.primaryCategory, row.contract.title, row.contract.rateType].join(' ').toLowerCase();
-      return (!query || haystack.includes(query))
+      return matchesDate(row.dueDate)
+        && (!query || haystack.includes(query))
         && (vendorPaymentStatusFilter === 'all' || row.status === vendorPaymentStatusFilter)
         && (vendorPaymentVendorFilter === 'all' || row.vendor.id === vendorPaymentVendorFilter);
     });
@@ -1111,7 +1112,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
       const bTime = new Date(b.dueDate + 'T00:00:00').getTime();
       return vendorPaymentSort === 'due_desc' ? bTime - aTime : aTime - bTime;
     });
-  }, [vendorPaymentRecords, vendorPaymentSearch, vendorPaymentStatusFilter, vendorPaymentVendorFilter, vendorPaymentSort]);
+  }, [vendorPaymentRecords, vendorPaymentSearch, vendorPaymentStatusFilter, vendorPaymentVendorFilter, vendorPaymentSort, matchesDate]);
 
   const vendorPaymentPageCount = Math.max(1, Math.ceil(filteredVendorPayments.length / vendorPaymentPageSize));
   const paginatedVendorPayments = filteredVendorPayments.slice((vendorPaymentPage - 1) * vendorPaymentPageSize, vendorPaymentPage * vendorPaymentPageSize);
