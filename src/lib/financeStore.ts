@@ -25,6 +25,7 @@ export interface InvoicePaymentRecord {
   amount: number;
   date: string;
   method: 'bank_transfer' | 'credit_card' | 'cash' | 'other';
+  settlementAccountCode?: '1000' | '1010' | '1100' | '1200';
   reference?: string;
   recordedBy?: string;
   notes?: string;
