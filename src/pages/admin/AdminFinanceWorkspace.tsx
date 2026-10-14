@@ -898,11 +898,16 @@ export const AdminFinanceWorkspace: React.FC = () => {
       else defaults[field.key] = '';
     }
     const savedPayload = record ? { ...record.payload } : {};
-    if (record && type === 'journal-entry' && Array.isArray(record.payload.lines) && record.payload.lines.length === 2) {
-      const lines = record.payload.lines as Array<Record<string, any>>;
-      savedPayload.debitAccountCode = lines.find((line) => Number(line.debit) > 0)?.accountCode || '';
-      savedPayload.creditAccountCode = lines.find((line) => Number(line.credit) > 0)?.accountCode || '';
-      savedPayload.amount = Number(lines.find((line) => Number(line.debit) > 0)?.debit || 0);
+    if (type === 'journal-entry') {
+      const existingLines = record && Array.isArray(record.payload.lines) ? record.payload.lines as Array<Record<string, any>> : [];
+      savedPayload.lines = existingLines.length >= 2
+        ? existingLines.map((line) => ({ ...line }))
+        : Array.isArray(record?.payload.lines) && record.payload.lines.length > 0
+          ? existingLines.map((line) => ({ ...line }))
+          : [
+              { accountCode: '', accountName: '', debit: '', credit: 0, notes: '' },
+              { accountCode: '', accountName: '', debit: 0, credit: '', notes: '' }
+            ];
     }
     if (record && type === 'vendor-bill-payment') {
       const installmentNumber = Number(record.payload.installmentNumber || 0);
@@ -1036,6 +1041,38 @@ export const AdminFinanceWorkspace: React.FC = () => {
     });
   };
 
+  const changeJournalLine = (lineIndex: number, key: string, value: string | number) => {
+    setRegisterEditorDirty(true);
+    setEditor((current) => {
+      if (!current || current.type !== 'journal-entry') return current;
+      const lines = Array.isArray(current.payload.lines) ? current.payload.lines.map((line: Record<string, any>) => ({ ...line })) : [];
+      if (!lines[lineIndex]) return current;
+      lines[lineIndex] = { ...lines[lineIndex], [key]: value };
+      return { ...current, payload: { ...current.payload, lines } };
+    });
+  };
+
+  const addJournalLine = () => {
+    setRegisterEditorDirty(true);
+    setEditor((current) => {
+      if (!current || current.type !== 'journal-entry') return current;
+      const lines = Array.isArray(current.payload.lines) ? current.payload.lines.map((line: Record<string, any>) => ({ ...line })) : [];
+      if (lines.length >= 100) return current;
+      return { ...current, payload: { ...current.payload, lines: [...lines, { accountCode: '', accountName: '', debit: '', credit: '', notes: '' }] } };
+    });
+  };
+
+  const removeJournalLine = (lineIndex: number) => {
+    setRegisterEditorDirty(true);
+    setEditor((current) => {
+      if (!current || current.type !== 'journal-entry') return current;
+      const lines = Array.isArray(current.payload.lines) ? current.payload.lines.map((line: Record<string, any>) => ({ ...line })) : [];
+      if (lines.length <= 2 || !lines[lineIndex]) return current;
+      lines.splice(lineIndex, 1);
+      return { ...current, payload: { ...current.payload, lines } };
+    });
+  };
+
   const submitRegisterForm = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!editor || registerSaving) return;
@@ -1099,22 +1136,40 @@ export const AdminFinanceWorkspace: React.FC = () => {
         payload = { ...payload, projectId: projectId || undefined, teamFeeAmount: teamFeeTotal };
       }
       if (editor.type === 'journal-entry') {
-        const debitCode = String(payload.debitAccountCode || '');
-        const creditCode = String(payload.creditAccountCode || '');
-        const numericAmount = Number(payload.amount);
-        if (!debitCode || !creditCode || debitCode === creditCode) {
-          setRegisterActionError('Choose two different accounts for the debit and credit lines.');
+        const rawLines = Array.isArray(payload.lines) ? payload.lines as Array<Record<string, any>> : [];
+        if (rawLines.length < 2 || rawLines.length > 100) {
+          setRegisterActionError('A journal needs between 2 and 100 lines.');
           setRegisterSaving(false);
           return;
         }
-        if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
-          setRegisterActionError('Journal amount must be a positive number.');
-          setRegisterSaving(false);
-          return;
+        let debitTotal = 0;
+        let creditTotal = 0;
+        const getAccount = (code: string) => {
+          const custom = getRegisterRecords('chart-of-accounts').find((record) => String(record.payload.code || record.recordKey) === code && record.payload.active !== false);
+          const standard = EXCEL_CHART_OF_ACCOUNTS.find((account) => account.code === code && account.active);
+          return custom?.payload.active !== false && custom?.payload.name
+            ? String(custom.payload.name)
+            : standard?.name || '';
+        };
+        const lines = rawLines.map((line, index) => {
+          const accountCode = String(line.accountCode || '').trim();
+          const debit = Number(line.debit) || 0;
+          const credit = Number(line.credit) || 0;
+          if (!accountCode || !getAccount(accountCode)) {
+            throw new Error('Journal line ' + (index + 1) + ' needs an active Chart of Accounts entry.');
+          }
+          if (!Number.isFinite(debit) || !Number.isFinite(credit) || debit < 0 || credit < 0 || (debit > 0 && credit > 0) || (debit <= 0 && credit <= 0)) {
+            throw new Error('Journal line ' + (index + 1) + ' must have one positive debit or credit amount.');
+          }
+          debitTotal += debit;
+          creditTotal += credit;
+          return { accountCode, accountName: getAccount(accountCode), debit, credit, notes: String(line.notes || payload.notes || '') };
+        });
+        debitTotal = Math.round(debitTotal * 100) / 100;
+        creditTotal = Math.round(creditTotal * 100) / 100;
+        if (Math.abs(debitTotal - creditTotal) > 0.01) {
+          throw new Error('Journal must balance before it can be saved. Total debit: ' + formatMoney(debitTotal) + '; credit: ' + formatMoney(creditTotal) + '.');
         }
-        const getAccountName = (code: string) => getRegisterRecords('chart-of-accounts').find((record) => String(record.payload.code || record.recordKey) === code)?.payload.name || EXCEL_CHART_OF_ACCOUNTS.find((account) => account.code === code)?.name || code;
-        const debitName = String(getAccountName(debitCode));
-        const creditName = String(getAccountName(creditCode));
         payload = {
           date: payload.date,
           reference: payload.reference,
@@ -1127,10 +1182,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
             sourceId: editor.record.payload.sourceId,
             ...(editor.record.payload.relatedSourceId ? { relatedSourceId: editor.record.payload.relatedSourceId } : {})
           } : {}),
-          lines: [
-            { accountCode: debitCode, accountName: debitName, debit: numericAmount, credit: 0, notes: payload.notes || '' },
-            { accountCode: creditCode, accountName: creditName, debit: 0, credit: numericAmount, notes: payload.notes || '' }
-          ]
+          lines
         };
       }
       const result = editor.record
@@ -1280,7 +1332,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
     const voucherStatus = String(record.payload.status || record.status);
     const isApproved = type === 'petty-cash-voucher' && ['approved','posted'].includes(voucherStatus);
     const canEdit = canManageFinanceRecords && !isPosted && type !== 'monthly-closing-lock' && !isDone && !isApproved && !isPeriodLocked
-      && !(type === 'journal-entry' && Array.isArray(record.payload.lines) && record.payload.lines.length !== 2);
+      && !(type === 'journal-entry' && Boolean(record.payload.sourceType));
     const canApprove = canApproveFinanceRecords && !isPeriodLocked && (
       (type === 'petty-cash-voucher' && voucherStatus === 'pending')
       || (type === 'journal-entry' && record.status === 'draft')
@@ -1327,7 +1379,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
             <div className="rounded-control border border-danger/25 bg-danger/5 p-3 text-xs leading-5 text-fg" role="alert">{registerActionError}</div>
           )}
           <div className="grid gap-3 sm:grid-cols-2">
-            {definition.fields.filter((field) => !field.visibleWhen || field.visibleWhen.values.includes(String(editor.payload[field.visibleWhen.key] || ''))).map((field) => {
+            {definition.fields.filter((field) => !(editor.type === 'journal-entry' && ['debitAccountCode','creditAccountCode','amount'].includes(field.key))).filter((field) => !field.visibleWhen || field.visibleWhen.values.includes(String(editor.payload[field.visibleWhen.key] || ''))).map((field) => {
               const value = field.key === 'teamFeeAmount' && editor.type === 'project-allocation'
                 ? String((() => {
                     const projectId = String(editor.payload.projectId || editor.record?.projectId || '').trim();
@@ -1398,11 +1450,38 @@ export const AdminFinanceWorkspace: React.FC = () => {
               );
             })}
           </div>
-          {editor.type === 'journal-entry' && (
-            <WorkbookNote title="Posting control">
-              The entry is saved as Draft and requires a different authorized user to post it. Total debit and credit must balance before it can be saved.
-            </WorkbookNote>
-          )}
+          {editor.type === 'journal-entry' && (() => {
+            const journalLines = Array.isArray(editor.payload.lines) ? editor.payload.lines as Array<Record<string, any>> : [];
+            const debitTotal = journalLines.reduce((sum, line) => sum + Math.max(0, Number(line.debit) || 0), 0);
+            const creditTotal = journalLines.reduce((sum, line) => sum + Math.max(0, Number(line.credit) || 0), 0);
+            const balanced = Math.abs(debitTotal - creditTotal) <= 0.01 && journalLines.length >= 2 && journalLines.every((line) => Boolean(line.accountCode) && ((Number(line.debit) > 0) !== (Number(line.credit) > 0)));
+            return <div className="space-y-3 rounded-card border border-line bg-bg p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div><p className="text-xs font-semibold text-fg">Journal lines</p><p className="mt-1 text-[11px] text-muted">Use as many lines as needed. Each line must have one debit or one credit; total debits must equal total credits.</p></div>
+                <Button type="button" variant="secondary" icon={<Plus size={14}/>} onClick={addJournalLine} disabled={journalLines.length >= 100}>Add line</Button>
+              </div>
+              <div className="space-y-2">
+                {journalLines.map((line, index) => <div key={index} className="grid gap-2 rounded-control border border-line p-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
+                  <label className="block text-[11px] font-medium text-muted">Account {index + 1}
+                    <CustomSelect value={String(line.accountCode || '')} onChange={(value) => changeJournalLine(index,'accountCode',value)} options={getRegisterFieldOptions({key:'journalAccountCode',label:'Account',type:'select',optionSource:'accounts'})} className="mt-1.5 w-full" triggerClassName="h-10 min-h-10 w-full" placeholder="Select account" aria-label={'Journal line ' + (index + 1) + ' account'}/>
+                  </label>
+                  <label className="block text-[11px] font-medium text-muted">Debit (IDR)
+                    <input type="number" min="0" step="0.01" value={line.debit ?? ''} onChange={(event) => changeJournalLine(index,'debit',event.target.value)} className="mt-1.5 block h-10 min-h-10 w-full rounded-control border border-line bg-panel px-3 text-[13px] text-fg outline-none focus:border-accent" aria-label={'Journal line ' + (index + 1) + ' debit'}/>
+                  </label>
+                  <label className="block text-[11px] font-medium text-muted">Credit (IDR)
+                    <input type="number" min="0" step="0.01" value={line.credit ?? ''} onChange={(event) => changeJournalLine(index,'credit',event.target.value)} className="mt-1.5 block h-10 min-h-10 w-full rounded-control border border-line bg-panel px-3 text-[13px] text-fg outline-none focus:border-accent" aria-label={'Journal line ' + (index + 1) + ' credit'}/>
+                  </label>
+                  <Button type="button" variant="secondary" icon={<Trash2 size={14}/>} onClick={() => removeJournalLine(index)} disabled={journalLines.length <= 2} aria-label={'Remove journal line ' + (index + 1)}/>
+                </div>)}
+              </div>
+              <div className="grid gap-2 sm:grid-cols-3">
+                <div className="rounded-control border border-line p-2"><p className="text-[10px] text-muted">Total debit</p><p className="mt-1 text-xs font-semibold tabular-nums text-fg">{formatMoney(debitTotal)}</p></div>
+                <div className="rounded-control border border-line p-2"><p className="text-[10px] text-muted">Total credit</p><p className="mt-1 text-xs font-semibold tabular-nums text-fg">{formatMoney(creditTotal)}</p></div>
+                <div className={'rounded-control border p-2 ' + (balanced ? 'border-success/25' : 'border-warning/25')}><p className="text-[10px] text-muted">Balance</p><p className={'mt-1 text-xs font-semibold ' + (balanced ? 'text-success' : 'text-warning')}>{balanced ? 'Balanced' : 'Needs review'}</p></div>
+              </div>
+              <WorkbookNote title="Posting control">The entry is saved as Draft and requires a different authorized user to post it. Source-linked drafts are read-only; correct the source record and regenerate them. Posting an unbalanced journal is blocked by the server.</WorkbookNote>
+            </div>;
+          })()}
         </form>
       </Drawer>
     );
