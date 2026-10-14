@@ -3251,7 +3251,7 @@ apiRouter.put('/finance/invoices/:id', requireAuth, requirePermission('canManage
       res.json({ success: true, invoice: saved }); return;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Invoice could not be updated.';
-      res.status(message.includes('modified') || message.includes('Cancelled') || message.includes('PAID_INVOICE_LINKAGE_IMMUTABLE') || message.includes('PAID_INVOICE_TOTAL_IMMUTABLE') || message.includes('PAID_INVOICE_ITEMS_IMMUTABLE') || message.includes('PAID_INVOICE_FINANCIAL_FIELDS_IMMUTABLE') ? 409 : 400).json({ success: false, error: message }); return;
+      res.status(message.includes('modified') || message.includes('Cancelled') || message.includes('PAID_INVOICE_LINKAGE_IMMUTABLE') || message.includes('PAID_INVOICE_TOTAL_IMMUTABLE') || message.includes('PAID_INVOICE_ITEMS_IMMUTABLE') || message.includes('PAID_INVOICE_FINANCIAL_FIELDS_IMMUTABLE') || message==='INVOICE_POSTED_LEDGER_REVERSAL_REQUIRED' ? 409 : 400).json({ success: false, error: message==='INVOICE_POSTED_LEDGER_REVERSAL_REQUIRED' ? 'This invoice has a posted General Journal entry. Accounting fields are locked; create and approve a reversal or adjustment journal first.' : message }); return;
     }
   }
 
