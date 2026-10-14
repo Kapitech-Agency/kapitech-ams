@@ -773,24 +773,42 @@ export const AdminFinanceWorkspace: React.FC = () => {
       }
     }
     for (const expense of expenses) {
-      const metadata = expense.metadata && typeof expense.metadata === 'object' ? expense.metadata : {};
-      const paymentStatus = String(expense.paymentStatus || (metadata as Record<string, unknown>).paymentStatus || '').toLowerCase();
-      const paymentMethod = String(expense.paymentMethod || (metadata as Record<string, unknown>).paymentMethod || '').toLowerCase().replace(/[\s-]+/g, '_');
-      const accountCode = String(expense.paymentAccountCode || (metadata as Record<string, unknown>).paymentAccountCode || '');
-      const paidDate = String(expense.paidDate || (metadata as Record<string, unknown>).paidDate || '').slice(0, 10);
-      if (paymentStatus !== 'paid' || !paidDate || Number(expense.amount) <= 0 || isPettyCashRelated(expense)) continue;
-      if (!['bank_transfer', 'cash'].includes(paymentMethod) || !['1000','1100','1200'].includes(accountCode)) continue;
-      entries.push({
-        id: 'expense-' + expense.id,
-        date: paidDate,
-        reference: String((expense as any).reference || expense.id),
-        description: expenseLabel(expense),
-        cashIn: 0,
-        cashOut: Number(expense.amount) || 0,
-        source: 'Paid expense',
-        currency: String((expense as any).currency || 'IDR'),
-        accountCode
-      });
+      const metadata = expense.metadata && typeof expense.metadata === 'object' ? expense.metadata as Record<string, unknown> : {};
+      if (Number(expense.amount) <= 0 || isPettyCashRelated(expense)) continue;
+      const savedPayments = Array.isArray((expense as any).payments)
+        ? (expense as any).payments as Array<Record<string, unknown>>
+        : Array.isArray(metadata.payments) ? metadata.payments as Array<Record<string, unknown>> : [];
+      const paymentStatus = String(expense.paymentStatus || metadata.paymentStatus || '').toLowerCase();
+      const paymentRows = savedPayments.length > 0
+        ? savedPayments
+        : paymentStatus === 'paid'
+          ? [{
+              id: String(expense.id) + '-payment',
+              amount: Number(expense.amount) || 0,
+              date: expense.paidDate || metadata.paidDate || '',
+              method: expense.paymentMethod || metadata.paymentMethod || '',
+              paymentAccountCode: expense.paymentAccountCode || metadata.paymentAccountCode || '',
+              reference: (expense as any).paymentReference || metadata.paymentReference || (expense as any).reference || expense.id
+            }]
+          : [];
+      for (const payment of paymentRows) {
+        const paymentMethod = String(payment.method || '').toLowerCase().replace(/[\s-]+/g, '_');
+        const accountCode = String(payment.paymentAccountCode || payment.accountCode || payment.paidFromAccountCode || '');
+        const paidDate = String(payment.date || payment.paidDate || '').slice(0, 10);
+        const amount = Number(payment.amount) || 0;
+        if (!paidDate || amount <= 0 || !['bank_transfer', 'cash'].includes(paymentMethod) || !['1000','1100','1200'].includes(accountCode)) continue;
+        entries.push({
+          id: 'expense-' + expense.id + '-payment-' + String(payment.id || paidDate),
+          date: paidDate,
+          reference: String(payment.reference || (expense as any).reference || expense.id),
+          description: expenseLabel(expense),
+          cashIn: 0,
+          cashOut: amount,
+          source: 'Paid expense',
+          currency: String((expense as any).currency || 'IDR'),
+          accountCode
+        });
+      }
     }
     for (const record of registerRecords['cash-bank-transaction'] || []) {
       const payload = record.payload || {};
@@ -835,7 +853,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
       });
     }
     return entries.sort((a, b) => b.date.localeCompare(a.date));
-  }, [reportInvoices, expenses, registerRecords]);  }, [reportInvoices, expenses, registerRecords]);
+  }, [reportInvoices, expenses, registerRecords]);
 
   const matching = useCallback((values: unknown[]) => {
     const needle = searchText.trim().toLowerCase();
