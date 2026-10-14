@@ -149,7 +149,11 @@ function normalise(type: FinanceWorkbookRecordType, raw: unknown, approval = fal
       }
       const installmentNumber = installmentMatch ? Number(installmentMatch[1]) : undefined;
       const reference = txt(v.reference,160) || uid('VP');
-      p = { billId, ...(installmentNumber ? { installmentNumber } : {}), paidDate, amount:money(v.amount,'Payment amount',false), method:choice(v.method,['bank_transfer','credit_card','cash','other'],'Payment method','bank_transfer'), reference, notes:txt(v.notes,500), projectId:project };
+      const method = choice(v.method,['bank_transfer','credit_card','cash','other'],'Payment method','bank_transfer');
+      const settlementAccountCode = txt(v.settlementAccountCode,4);
+      if (settlementAccountCode && !['1000','1100','1200','2200'].includes(settlementAccountCode)) throw new FinanceWorkbookValidationError('Settlement account must be Cash & Bank, Petty Cash Reserve, Emergency Fund, or Credit Card Payable.');
+      if (method === 'other' && !settlementAccountCode) throw new FinanceWorkbookValidationError('Select the actual settlement account when the payment method is Other.');
+      p = { billId, ...(installmentNumber ? { installmentNumber } : {}), paidDate, amount:money(v.amount,'Payment amount',false), method, ...(settlementAccountCode ? { settlementAccountCode } : {}), reference, notes:txt(v.notes,500), projectId:project };
       key = reference; period = periodOf(paidDate); status = 'posted'; break;
     }
     case 'operational-budget': {
