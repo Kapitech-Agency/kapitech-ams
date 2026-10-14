@@ -1,4 +1,4 @@
-import { getVendorBillInstallmentSchedule } from '../src/lib/financeWorkbook.ts';
+import { EXCEL_CHART_OF_ACCOUNTS, getVendorBillInstallmentSchedule } from '../src/lib/financeWorkbook.ts';
 import crypto from 'node:crypto';
 import { getPostgresPool, withPostgresTransaction } from './postgres.ts';
 import { postgresAuditLogRepository, type AuditEntry } from './postgres-audit-log-repository.ts';
@@ -332,6 +332,21 @@ export class PostgresFinanceWorkbookRepository {
     }
     return rows;
   }
+  private async ensureJournalAccountsActive(client:any,payload:Record<string,any>):Promise<void>{
+    const lines=Array.isArray(payload.lines)?payload.lines as Array<Record<string,unknown>>:[];
+    const codes=[...new Set(lines.map((line)=>String(line.accountCode||'').trim()).filter(Boolean))];
+    const standard=new Set(EXCEL_CHART_OF_ACCOUNTS.filter((account)=>account.active).map((account)=>account.code));
+    const result=await client.query("SELECT record_key,payload FROM finance_workbook_records WHERE record_type='chart-of-accounts' AND archived_at IS NULL");
+    const custom=new Map<string,{active:boolean;name:string}>();
+    for(const row of result.rows){
+      const account=obj(row.payload);
+      const code=String(account.code||row.record_key||'').trim();
+      if(!code||standard.has(code)) continue;
+      custom.set(code,{active:account.active!==false,name:String(account.name||'')});
+    }
+    const invalid=codes.filter((code)=>!standard.has(code)&&(!custom.has(code)||custom.get(code)?.active!==true));
+    if(invalid.length) throw new FinanceWorkbookValidationError('Journal account code(s) are missing or inactive in Chart of Accounts: '+invalid.join(', ')+'. Add/activate the account before saving the journal.');
+  }
   async get(type: FinanceWorkbookRecordType,id:string):Promise<FinanceWorkbookRecord|null> {
     const result=await getPostgresPool().query<Row>('SELECT * FROM finance_workbook_records WHERE record_type=$1 AND id=$2 AND archived_at IS NULL LIMIT 1',[type,id]);
     return result.rows[0]?mapRow(result.rows[0]):null;
@@ -342,6 +357,7 @@ export class PostgresFinanceWorkbookRepository {
     const id=type==='chart-of-accounts'?'coa-'+n.key:uid(type.replace(/-/g,''));
     return withPostgresTransaction(async client=>{
       await this.ensurePeriodOpen(client,n.period);
+      if(type==='journal-entry') await this.ensureJournalAccountsActive(client,n.payload);
       if(type==='vendor-bill-payment'){
         const bill=await client.query<Row>("SELECT * FROM finance_workbook_records WHERE record_type='vendor-bill' AND id=$1 AND archived_at IS NULL FOR UPDATE",[String(n.payload.billId)]);
         if(!bill.rows[0]) throw new FinanceWorkbookNotFoundError('Vendor bill was not found.');
@@ -402,6 +418,12 @@ export class PostgresFinanceWorkbookRepository {
     return withPostgresTransaction(async client=>{
       await this.ensurePeriodOpen(client,current.periodKey);
       await this.ensurePeriodOpen(client,n.period);
+      if(type==='journal-entry') await this.ensureJournalAccountsActive(client,n.payload);
+      if(type==='chart-of-accounts' && (n.payload.active===false || String(n.payload.accountType||'')!==String(current.payload.accountType||''))) {
+        const code=String(n.payload.code||current.recordKey||'');
+        const referenced=await client.query("SELECT id FROM finance_workbook_records WHERE record_type='journal-entry' AND status='posted' AND archived_at IS NULL AND EXISTS (SELECT 1 FROM jsonb_array_elements(payload->'lines') AS line WHERE line->>'accountCode'=$1) LIMIT 1 FOR SHARE",[code]);
+        if(referenced.rows[0]) throw new FinanceWorkbookConflictError('This account is referenced by posted journals. Its type cannot change and it cannot be deactivated; use an approved reclassification journal and a new account instead.');
+      }
       if(type==='vendor-bill'){
         const lockedBill=await client.query<Row>("SELECT id FROM finance_workbook_records WHERE record_type='vendor-bill' AND id=$1 AND archived_at IS NULL FOR UPDATE",[id]);
         if(!lockedBill.rows[0]) throw new FinanceWorkbookNotFoundError('Vendor bill was not found.');
@@ -461,6 +483,7 @@ export class PostgresFinanceWorkbookRepository {
         payload={...current.payload,status:'approved',approvedBy:actor.name||actor.username,approvedAt:timeNow(),approvalNotes:txt(notes,500)}; status='approved';
       } else if(type==='journal-entry'){
         if(current.status==='posted') throw new FinanceWorkbookConflictError('Journal is already posted.');
+        await this.ensureJournalAccountsActive(client,current.payload);
         const sourceType = String(current.payload.sourceType || '');
         const dependencyType = sourceType === 'invoice-payment'
           ? 'invoice-issued'
