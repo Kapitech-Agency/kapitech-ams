@@ -3988,14 +3988,37 @@ apiRouter.post('/finance/workbook/periods/:period/close', requireAuth, requirePe
         vendorBillPayments.map((item) => ({ id: item.id, status: item.status, payload: item.payload })),
         chartAccounts.map((item) => ({ code: String(item.payload.code || item.recordKey), name: String(item.payload.name || ''), accountType: String(item.payload.accountType || ''), active: item.payload.active !== false }))
       );
-      const postedSources = new Set(existingJournals
-        .filter((item) => item.status === 'posted')
-        .map((item) => String(item.payload.sourceType || '') + '|' + String(item.payload.sourceId || '')));
+      const postedSources = new Map<string, (typeof existingJournals)[number]>();
+      for (const item of existingJournals) {
+        const sourceType = String(item.payload.sourceType || '');
+        const sourceId = String(item.payload.sourceId || '');
+        if (sourceType && sourceId) postedSources.set(sourceType + '|' + sourceId, item);
+      }
+      const sourceSnapshot = (value: Record<string, any>): string => JSON.stringify({
+        date: String(value.date || ''),
+        reference: String(value.reference || ''),
+        description: String(value.description || ''),
+        projectId: String(value.projectId || ''),
+        relatedSourceId: String(value.relatedSourceId || ''),
+        notes: String(value.notes || ''),
+        lines: (Array.isArray(value.lines) ? value.lines : []).map((line: Record<string, any>) => ({
+          accountCode: String(line.accountCode || ''),
+          accountName: String(line.accountName || ''),
+          debit: Number(line.debit) || 0,
+          credit: Number(line.credit) || 0,
+          notes: String(line.notes || '')
+        }))
+      });
       const issues: string[] = [];
       for (const draft of plan.drafts) {
         if (String(draft.date || '').slice(0, 7) !== period) continue;
-        if (!postedSources.has(String(draft.sourceType || '') + '|' + String(draft.sourceId || ''))) {
-          issues.push((draft.reference || draft.description || draft.sourceId) + ' (' + draft.sourceType + ') is not posted to the General Journal');
+        const key = String(draft.sourceType || '') + '|' + String(draft.sourceId || '');
+        const existing = postedSources.get(key);
+        const context = (draft.reference || draft.description || draft.sourceId) + ' (' + draft.sourceType + ')';
+        if (!existing || existing.status !== 'posted') {
+          issues.push(context + ' is not posted to the General Journal');
+        } else if (sourceSnapshot(existing.payload) !== sourceSnapshot(draft)) {
+          issues.push(context + ' differs from its posted journal. Resolve with an approved reversal or adjustment before closing.');
         }
       }
       for (const skipped of plan.skipped) {
