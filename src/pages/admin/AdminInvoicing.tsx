@@ -2053,6 +2053,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
       }
       setExpensePaymentDrawer(null);
       setExpenseSettlementId('');
+      if (result.data?.expense) setExpenseDetail(result.data.expense as FinanceExpense);
       showNotice('success', result.data?.replayed
         ? (language === 'id' ? 'Pelunasan ini sudah tercatat; data disinkronkan.' : 'This payment was already recorded; data has been synchronized.')
         : (language === 'id' ? 'Pelunasan berhasil dicatat.' : 'Expense payment recorded successfully.'));
