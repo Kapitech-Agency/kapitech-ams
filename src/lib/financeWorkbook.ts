@@ -661,11 +661,26 @@ export function buildFinanceSourceJournalDrafts(
       }));
       continue;
     }
-    if (!CASH_ACCOUNT_CODES.has(sourceCode) || !CASH_ACCOUNT_CODES.has(counterpartCode) || sourceCode === counterpartCode || !['bank-to-petty-cash', 'petty-cash-to-bank', 'bank-to-emergency-fund', 'emergency-fund-to-bank'].includes(kind)) {
-      skip({ sourceType: 'cash-bank-transfer', sourceId, date, reference, description, amount, reason: 'Internal transfer account mapping is incomplete or unsupported. Resolve source and counterpart accounts before journalizing.' });
+    const standardCashTransfer = ['bank-to-petty-cash', 'petty-cash-to-bank', 'bank-to-emergency-fund', 'emergency-fund-to-bank'].includes(kind);
+    const cardClearingTransfer = kind === 'card-clearing-to-bank'
+      && sourceCode === '1010' && counterpartCode === '1000'
+      && accountTypes.get('1010') === 'Asset' && accountTypes.get('1000') === 'Asset';
+    const creditCardLiabilitySettlement = kind === 'bank-to-credit-card-payable'
+      && sourceCode === '1000' && counterpartCode === '2200'
+      && accountTypes.get('1000') === 'Asset' && accountTypes.get('2200') === 'Liability';
+    if (sourceCode === counterpartCode || (
+      standardCashTransfer
+        ? (!CASH_ACCOUNT_CODES.has(sourceCode) || !CASH_ACCOUNT_CODES.has(counterpartCode))
+        : !(cardClearingTransfer || creditCardLiabilitySettlement)
+    )) {
+      skip({ sourceType: 'cash-bank-transfer', sourceId, date, reference, description, amount, reason: 'Transfer account mapping is incomplete or unsupported. Verify the active cash, card-clearing or credit-card payable accounts before journalizing.' });
       continue;
     }
-    const notes = 'Draft generated from a posted AMS internal cash transfer. This is a balance-sheet movement, not income or expense. Not posted.';
+    const notes = kind === 'card-clearing-to-bank'
+      ? 'Draft generated from a posted card-settlement transfer. Debit Cash & Bank and credit Card Settlement Clearing. Reconcile the processor statement and fees; not posted.'
+      : kind === 'bank-to-credit-card-payable'
+        ? 'Draft generated from a posted credit-card statement payment. Debit Credit Card Payable and credit Cash & Bank. Reconcile the card statement and bank payment; not posted.'
+        : 'Draft generated from a posted AMS internal cash transfer. This is a balance-sheet movement, not income or expense. Not posted.';
     drafts.push(buildTwoLineFinanceDraft({
       sourceType: 'cash-bank-transfer', sourceId, date, reference, description,
       debitCode: counterpartCode, creditCode: sourceCode, amount,
