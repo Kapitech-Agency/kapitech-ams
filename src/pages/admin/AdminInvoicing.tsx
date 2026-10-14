@@ -815,6 +815,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   const [paymentInvoice, setPaymentInvoice] = useState<AgencyInvoice | null>(null);
   const [paymentAmount, setPaymentAmount] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'credit_card' | 'cash' | 'other'>('bank_transfer');
+  const [paymentSettlementAccount, setPaymentSettlementAccount] = useState<'1000' | '1010' | '1100' | '1200'>('1000');
   const [paymentReference, setPaymentReference] = useState('');
   const [paymentDate, setPaymentDate] = useState(getDateInputValue());
   const [paymentNotes, setPaymentNotes] = useState('');
@@ -1875,6 +1876,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
     setPaymentInvoice(invoice);
     setPaymentAmount(Math.max(0, balance));
     setPaymentMethod('bank_transfer');
+    setPaymentSettlementAccount('1000');
     setPaymentReference('');
     setPaymentDate(getDateInputValue());
     setPaymentNotes('');
@@ -1903,6 +1905,10 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
       showNotice('danger', language === 'id' ? 'Tanggal pembayaran tidak boleh kosong atau berada di masa depan.' : 'Payment date must be valid and cannot be in the future.');
       return;
     }
+    if (paymentMethod === 'other' && !['1000','1010','1100','1200'].includes(paymentSettlementAccount)) {
+      showNotice('danger', language === 'id' ? 'Pilih akun penyelesaian yang benar untuk pembayaran Other.' : 'Select the actual settlement account for an Other payment.');
+      return;
+    }
 
     setSavingPayment(true);
     try {
@@ -1916,6 +1922,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
           amount,
           date: paymentDate,
           method: paymentMethod,
+          settlementAccountCode: paymentMethod === 'other' ? paymentSettlementAccount : undefined,
           reference: paymentReference.trim(),
           notes: paymentNotes.trim()
         };
@@ -1943,6 +1950,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
         amount,
         date: paymentDate,
         method: paymentMethod,
+        settlementAccountCode: paymentMethod === 'other' ? paymentSettlementAccount : undefined,
         reference: paymentReference.trim(),
         notes: paymentNotes.trim(),
         idempotencyKey: paymentIdempotencyKey
@@ -4362,6 +4370,11 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
               </div></div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div><label className="mb-1.5 block text-xs font-medium text-muted">Payment method</label><CustomSelect aria-label="Payment method" value={paymentMethod} onChange={(value) => { setPaymentDirty(true); setPaymentMethod(value as typeof paymentMethod); }} options={[{ value: 'bank_transfer', label: 'Bank transfer' }, { value: 'credit_card', label: 'Credit card' }, { value: 'cash', label: 'Cash' }, { value: 'other', label: 'Other' }]} className="w-full" triggerClassName="h-10 min-h-10 w-full" /></div>
+              {paymentMethod === 'other' && <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-muted">Actual settlement account *</label>
+                <CustomSelect aria-label="Invoice receipt settlement account" value={paymentSettlementAccount} onChange={(value) => { setPaymentDirty(true); setPaymentSettlementAccount(value as typeof paymentSettlementAccount); }} options={[{value:'1000',label:'1000 · Cash & Bank'},{value:'1010',label:'1010 · Card Settlement Clearing'},{value:'1100',label:'1100 · Petty Cash Reserve'},{value:'1200',label:'1200 · Emergency Fund'}]} className="w-full" triggerClassName="h-10 min-h-10 w-full" />
+                <p className="text-[11px] text-muted">This account is used for the receipt journal and cash reporting; it is not inferred from the label Other.</p>
+              </div>}
               <div><label htmlFor="finance-payment-date" className="mb-1.5 block text-xs font-medium text-muted">Payment date</label><CustomDatePicker id="finance-payment-date" value={paymentDate} onChange={setPaymentDate} type="date" required max={getDateInputValue()} locale={language === 'id' ? 'id-ID' : 'en-US'} className="w-full" triggerClassName="h-10 min-h-10" aria-label="Invoice payment date" /></div>
             </div>
             <div><label htmlFor="finance-payment-reference" className="mb-1.5 block text-xs font-medium text-muted">Reference</label><input id="finance-payment-reference" maxLength={160} value={paymentReference} onChange={(event) => setPaymentReference(event.target.value)} className={fieldClass} placeholder="Transaction reference" /></div>
