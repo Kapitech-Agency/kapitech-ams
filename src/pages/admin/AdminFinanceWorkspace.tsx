@@ -2106,10 +2106,12 @@ export const AdminFinanceWorkspace: React.FC = () => {
           );
           const payload=record?.payload||{};
           const billedIDR=sumAmounts<AgencyInvoice>(projectInvoices.filter((invoice)=>(invoice.currency||'IDR')==='IDR'),(invoice)=>Math.max(0,(Number(invoice.total)||0)-(Number(invoice.taxAmount)||0)));
-          const collectedIDR=sumAmounts(projectInvoices.filter((invoice)=>(invoice.currency||'IDR')==='IDR').flatMap((invoice)=>{
-            const paymentRows=getPaymentRows(invoice);
-            return paymentRows.filter((payment)=>matchesDate(payment.date)).map((payment)=>({amount:Number(payment.amount)||0}));
-          }),(payment)=>payment.amount);
+          const collectedPayments: Array<{ amount: number }> = projectInvoices
+            .filter((invoice)=>(invoice.currency||'IDR')==='IDR')
+            .flatMap((invoice)=>getPaymentRows(invoice)
+              .filter((payment)=>matchesDate(payment.date))
+              .map((payment)=>({amount:Number(payment.amount)||0})));
+          const collectedIDR=sumAmounts<{amount:number}>(collectedPayments,(payment)=>payment.amount);
           const costsIDR=sumAmounts<AgencyExpense>(projectExpenses.filter((expense)=>String((expense as any).currency||'IDR')==='IDR'),(expense)=>Number(expense.amount)||0);
           const vendorCommitment=record?Number(payload.vendorCommitment)||0:null;
           const otherObligations=record?Number(payload.otherObligations)||0:null;
