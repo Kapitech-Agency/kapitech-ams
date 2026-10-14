@@ -140,7 +140,7 @@ const financeCellText = (node: React.ReactNode): string => {
 
 const parseFinanceSortDate = (value: string): number | null => {
   const text = value.trim();
-  const iso = text.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);
+  const iso = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (iso) return Date.UTC(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
   const months: Record<string, number> = {
     jan: 0, january: 0, januari: 0,
@@ -156,8 +156,8 @@ const parseFinanceSortDate = (value: string): number | null => {
     nov: 10, november: 10,
     dec: 11, december: 11, des: 11, desember: 11
   };
-  const dayFirst = text.toLowerCase().replace(/\\./g, '').match(/^(\\d{1,2})\\s+([a-zà-ÿ]+)\\s+(\\d{4})$/i);
-  const monthFirst = text.toLowerCase().replace(/\\./g, '').match(/^([a-zà-ÿ]+)\\s+(\\d{1,2}),?\\s+(\\d{4})$/i);
+  const dayFirst = text.toLowerCase().replace(/\./g, '').match(/^(\d{1,2})\\s+([a-zà-ÿ]+)\\s+(\d{4})$/i);
+  const monthFirst = text.toLowerCase().replace(/\./g, '').match(/^([a-zà-ÿ]+)\\s+(\d{1,2}),?\\s+(\d{4})$/i);
   const match = dayFirst || monthFirst;
   if (!match) return null;
   const monthName = dayFirst ? match[2] : match[1];
@@ -170,16 +170,16 @@ const parseFinanceSortDate = (value: string): number | null => {
 
 const parseFinanceSortNumber = (value: string): number | null => {
   let text = value.trim().replace(/^(?:rp|idr|usd|[$€£])\\s*/i, '').replace(/\\s/g, '');
-  if (!text || !/^[+-]?[\\d.,]+%?$/.test(text)) return null;
+  if (!text || !/^[+-]?[\d.,]+%?$/.test(text)) return null;
   text = text.replace(/%$/, '');
   const lastDot = text.lastIndexOf('.');
   const lastComma = text.lastIndexOf(',');
   if (lastDot >= 0 && lastComma >= 0) {
-    if (lastComma > lastDot) text = text.replace(/\\./g, '').replace(',', '.');
+    if (lastComma > lastDot) text = text.replace(/\./g, '').replace(',', '.');
     else text = text.replace(/,/g, '');
   } else if (lastDot >= 0) {
     const after = text.length - lastDot - 1;
-    if ((text.match(/\\./g) || []).length > 1 || after === 3) text = text.replace(/\\./g, '');
+    if ((text.match(/\./g) || []).length > 1 || after === 3) text = text.replace(/\./g, '');
   } else if (lastComma >= 0) {
     const after = text.length - lastComma - 1;
     if ((text.match(/,/g) || []).length > 1 || after === 3) text = text.replace(/,/g, '');
@@ -251,7 +251,7 @@ const FinanceDataTable: React.FC<{
     const exportableRows = sortedRows.map((row) => row.cells.map((cell, index) => {
       if (/^actions?$/i.test((columns[index]?.label || '').trim())) return '';
       const value = financeCellText(cell);
-      return /^[=+@-]/.test(value) && !/^-?\\d[\\d.,%]*$/.test(value) ? "'" + value : value;
+      return /^[=+@-]/.test(value) && !/^-?\d[\d.,%]*$/.test(value) ? "'" + value : value;
     }));
     exportFinanceCsv('finance-' + safeTitle + '-' + getLocalDateInputValue() + '.csv', columns.map((column) => column.label), exportableRows);
   };
@@ -2691,7 +2691,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
         const postedJournals = getRegisterRecords('journal-entry').filter((record) => {
           if (record.status !== 'posted') return false;
           const entryDate = String(record.payload.date || '').slice(0, 10);
-          return /^\\d{4}-\\d{2}-\\d{2}$/.test(entryDate) && entryDate <= asOfDate;
+          return /^\d{4}-\d{2}-\d{2}$/.test(entryDate) && entryDate <= asOfDate;
         });
         const accountActivity = new Map<string, { debit: number; credit: number }>();
         for (const journal of postedJournals) {
