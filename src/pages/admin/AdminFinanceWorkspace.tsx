@@ -851,7 +851,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
         reference: String(payload.reference || record.recordKey || record.id),
         description: String(payload.description || (kind === 'manual' ? 'Manual cash movement' : 'Internal cash transfer')),
         cashIn, cashOut,
-        source: kind === 'manual' ? 'Manual cash adjustment' : kind === 'bank-to-credit-card-payable' ? 'Credit-card settlement' : 'Internal transfer',
+        source: kind === 'manual' ? 'Manual cash adjustment' : kind === 'card-clearing-to-bank' ? 'Card settlement' : kind === 'bank-to-credit-card-payable' ? 'Credit-card settlement' : 'Internal transfer',
         currency: 'IDR',
         accountCode: ledgerAccountCode
       });
