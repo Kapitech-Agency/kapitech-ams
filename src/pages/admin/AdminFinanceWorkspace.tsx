@@ -2539,7 +2539,10 @@ export const AdminFinanceWorkspace: React.FC = () => {
       case 'journal': {
         const allJournalRecords = getRegisterRecords('journal-entry');
         const records = allJournalRecords.filter((record) => matchesDate(record.payload.date || record.createdAt) && matching([record.payload.date,record.payload.reference,record.payload.description,record.payload.projectId,record.status]));
-        const plan = buildFinanceSourceJournalDrafts(reportInvoices, expenses as any[], getRegisterRecords('cash-bank-transaction'), getRegisterRecords('vendor-bill'), getRegisterRecords('vendor-bill-payment'), getRegisterRecords('chart-of-accounts').map((record) => ({ code: String(record.payload.code || record.recordKey), name: String(record.payload.name || ''), accountType: String(record.payload.accountType || ''), active: record.payload.active !== false })));
+        const plan = buildFinanceSourceJournalDrafts(reportInvoices, expenses as any[], getRegisterRecords('cash-bank-transaction'), getRegisterRecords('vendor-bill'), getRegisterRecords('vendor-bill-payment'), getRegisterRecords('chart-of-accounts').map((record) => ({ code: String(record.payload.code || record.recordKey), name: String(record.payload.name || ''), accountType: String(record.payload.accountType || ''), active: record.payload.active !== false })), [
+          ...getRegisterRecords('cash-bank-opening').map((record) => ({ id: record.id, recordType: 'cash-bank-opening' as const, recordKey: record.recordKey, status: record.status, payload: record.payload })),
+          ...getRegisterRecords('balance-sheet-opening').map((record) => ({ id: record.id, recordType: 'balance-sheet-opening' as const, recordKey: record.recordKey, status: record.status, payload: record.payload }))
+        ]);
         const linkedJournal = new Map<string, WorkbookRecord>();
         for (const record of allJournalRecords) {
           const sourceType = String(record.payload.sourceType || '');
