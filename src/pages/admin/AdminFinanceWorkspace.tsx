@@ -41,7 +41,7 @@ type Column = { label: string; align?: 'left' | 'right' | 'center'; className?: 
 type TableRow = { id: string; cells: React.ReactNode[] };
 type SourceResult = { label: string; data: any; error?: string };
 type WorkbookRecord = { id: string; recordType: string; recordKey: string; periodKey?: string; projectId?: string; status: string; payload: Record<string, any>; version: number; createdByUserId?: string; createdAt: string; updatedAt: string };
-type FinanceConfirmation = { kind: 'approve' | 'post' | 'archive'; type: string; record: WorkbookRecord } | { kind: 'close-period'; period: string } | { kind: 'discard-editor' };
+type FinanceConfirmation = { kind: 'approve' | 'post' | 'archive'; type: string; record: WorkbookRecord } | { kind: 'close-period'; period: string } | { kind: 'discard-editor' | 'discard-vendor-contract' };
 type FinanceVendorContractDraft = { vendorId: string; id?: string; title: string; startDate: string; endDate: string; rateType: VendorContract['rateType']; rateAmount: number; currency: VendorContract['currency']; status: VendorContract['status'] };
 type RegisterField = { key: string; label: string; type: 'text' | 'number' | 'date' | 'month' | 'select' | 'textarea'; required?: boolean; readOnly?: boolean; options?: string[]; optionSource?: 'vendorBills' | 'accounts' | 'cashAccounts' | 'expenseAccounts' | 'reconciliationAccounts' | 'projects' | 'vendors'; placeholder?: string; help?: string; defaultValue?: string | number; visibleWhen?: { key: string; values: string[] } };
 type CashMovement = { id: string; date: string; reference: string; description: string; cashIn: number; cashOut: number; source: string; currency: string; accountCode: string };
@@ -653,6 +653,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
   const [registerEditorDirty, setRegisterEditorDirty] = useState(false);
   const [pendingConfirmation, setPendingConfirmation] = useState<FinanceConfirmation | null>(null);
   const [vendorContractEditor, setVendorContractEditor] = useState<FinanceVendorContractDraft | null>(null);
+  const [vendorContractDirty, setVendorContractDirty] = useState(false);
   const [vendorContractSaving, setVendorContractSaving] = useState(false);
   const [vendorContractError, setVendorContractError] = useState<string | null>(null);
   const [sourceErrors, setSourceErrors] = useState<string[]>([]);
@@ -1436,6 +1437,13 @@ export const AdminFinanceWorkspace: React.FC = () => {
       setPendingConfirmation(null);
       return;
     }
+    if (pending.kind === 'discard-vendor-contract') {
+      setVendorContractEditor(null);
+      setVendorContractDirty(false);
+      setVendorContractError(null);
+      setPendingConfirmation(null);
+      return;
+    }
     try {
       if (pending.kind === 'approve') await approveWorkbookRecord(pending.type, pending.record, 'approve');
       else if (pending.kind === 'post') await approveWorkbookRecord(pending.type, pending.record, pending.type === 'journal-entry' ? 'approve' : 'post');
@@ -1780,6 +1788,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
 
   const openVendorContractEditor = (vendor?: AgencyVendor, contract?: VendorContract) => {
     const today = getLocalDateInputValue();
+    setVendorContractDirty(false);
     setVendorContractError(null);
     setVendorContractEditor({
       vendorId: vendor?.id || '',
@@ -1841,6 +1850,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
       const savedVendor = response.data.vendor as AgencyVendor;
       setVendors((current) => current.map((item) => item.id === savedVendor.id ? savedVendor : item));
       setVendorContractEditor(null);
+      setVendorContractDirty(false);
       window.dispatchEvent(new Event(VENDOR_EVENT_NAME));
     } catch (error) {
       setVendorContractError(error instanceof Error ? error.message : 'The vendor contract could not be saved.');
@@ -1853,7 +1863,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
     if (!vendorContractEditor) return null;
     const draft = vendorContractEditor;
     const fieldClass = 'h-10 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent';
-    const update = (patch: Partial<FinanceVendorContractDraft>) => setVendorContractEditor((current) => current ? { ...current, ...patch } : current);
+    const update = (patch: Partial<FinanceVendorContractDraft>) => { setVendorContractDirty(true); setVendorContractEditor((current) => current ? { ...current, ...patch } : current); };
     const vendorOptions = [
       { value: '', label: 'Select vendor / freelancer' },
       ...vendors.map((vendor) => ({ value: vendor.id, label: (vendor.companyName || vendor.name) + ' · ' + vendor.name }))
@@ -1861,14 +1871,14 @@ export const AdminFinanceWorkspace: React.FC = () => {
     return (
       <Drawer
         open
-        onClose={() => { if (!vendorContractSaving) { setVendorContractEditor(null); setVendorContractError(null); } }}
+        onClose={() => { if (!vendorContractSaving) { if (vendorContractDirty) setPendingConfirmation({ kind: 'discard-vendor-contract' }); else { setVendorContractEditor(null); setVendorContractError(null); } } }}
         title={draft.id ? 'Edit vendor contract' : 'Add vendor contract'}
         description="Maintain contract commitments here. Bills and payment installments are managed in Accounts Payable."
         size="xl"
         slug="finance-vendor-contract-editor"
         footer={(
           <div className="flex items-center justify-end gap-2">
-            <Button type="button" variant="secondary" onClick={() => { setVendorContractEditor(null); setVendorContractError(null); }} disabled={vendorContractSaving}>Cancel</Button>
+            <Button type="button" variant="secondary" onClick={() => { if (vendorContractDirty) setPendingConfirmation({ kind: 'discard-vendor-contract' }); else { setVendorContractEditor(null); setVendorContractError(null); } }} disabled={vendorContractSaving}>Cancel</Button>
             <Button type="submit" form="finance-vendor-contract-form" loading={vendorContractSaving} disabled={vendorContractSaving || !canManageVendorContracts}>{vendorContractSaving ? 'Saving…' : 'Save contract'}</Button>
           </div>
         )}
@@ -3154,7 +3164,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
       <Modal
         open={Boolean(pendingConfirmation)}
         onClose={() => { if (!registerSaving) setPendingConfirmation(null); }}
-        title={pendingConfirmation?.kind === 'discard-editor'
+        title={pendingConfirmation?.kind === 'discard-editor' || pendingConfirmation?.kind === 'discard-vendor-contract'
           ? 'Discard unsaved changes?'
           : pendingConfirmation?.kind === 'close-period'
             ? 'Close Finance period?'
@@ -3163,8 +3173,8 @@ export const AdminFinanceWorkspace: React.FC = () => {
               : pendingConfirmation?.kind === 'post'
                 ? (pendingConfirmation.type === 'journal-entry' ? 'Post journal entry?' : 'Post petty-cash voucher?')
                 : 'Approve Finance record?'}
-        description={pendingConfirmation?.kind === 'discard-editor'
-          ? 'Changes in this form have not been saved. Discarding them cannot be undone.'
+        description={pendingConfirmation?.kind === 'discard-editor' || pendingConfirmation?.kind === 'discard-vendor-contract'
+          ? (pendingConfirmation.kind === 'discard-vendor-contract' ? 'Vendor contract changes have not been saved. Discarding them cannot be undone.' : 'Changes in this form have not been saved. Discarding them cannot be undone.')
           : pendingConfirmation?.kind === 'close-period'
             ? 'Close ' + pendingConfirmation.period + ' after confirming the source records, bank reconciliation, receivables, payables, journals, reports and management sign-off. A closed period blocks further Finance workbook changes.'
             : pendingConfirmation?.kind === 'archive'
@@ -3174,15 +3184,15 @@ export const AdminFinanceWorkspace: React.FC = () => {
                   ? 'This posts the journal to the ledger. Posted entries are immutable; use an approved reversal or adjusting journal to correct an error.'
                   : 'Posting makes this voucher affect the approved petty-cash running balance. Confirm the supporting receipt and authorization.')
                 : 'Confirm that the supporting documents and accounting treatment have been reviewed by an authorized user.'}
-        busy={registerSaving}
+        busy={registerSaving || vendorContractSaving}
         closeOnOutsideClick={false}
         footer={
           <div className="flex items-center justify-end gap-2">
             <Button type="button" variant="secondary" disabled={registerSaving} onClick={() => setPendingConfirmation(null)}>
-              {pendingConfirmation?.kind === 'discard-editor' ? 'Keep editing' : 'Cancel'}
+              {pendingConfirmation?.kind === 'discard-editor' || pendingConfirmation?.kind === 'discard-vendor-contract' ? 'Keep editing' : 'Cancel'}
             </Button>
-            <Button type="button" disabled={registerSaving} loading={registerSaving} onClick={() => void confirmPendingFinanceAction()}>
-              {pendingConfirmation?.kind === 'discard-editor'
+            <Button type="button" disabled={registerSaving || vendorContractSaving} loading={registerSaving || vendorContractSaving} onClick={() => void confirmPendingFinanceAction()}>
+              {pendingConfirmation?.kind === 'discard-editor' || pendingConfirmation?.kind === 'discard-vendor-contract'
                 ? 'Discard changes'
                 : pendingConfirmation?.kind === 'close-period'
                   ? 'Confirm close'
