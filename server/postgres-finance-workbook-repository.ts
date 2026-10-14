@@ -210,7 +210,7 @@ function normalise(type: FinanceWorkbookRecordType, raw: unknown, approval = fal
       if (status === 'posted' && !approval) throw new FinanceWorkbookValidationError('A journal must be approved before posting.');
       const sourceType = txt(v.sourceType, 40);
       const sourceId = txt(v.sourceId, 160);
-      const allowedSourceTypes = ['invoice-issued', 'invoice-payment', 'expense', 'cash-bank-transfer', 'vendor-bill-issued', 'vendor-bill-payment'];
+      const allowedSourceTypes = ['invoice-issued', 'invoice-payment', 'expense', 'expense-payment', 'cash-bank-transfer', 'vendor-bill-issued', 'vendor-bill-payment'];
       if ((sourceType && !sourceId) || (!sourceType && sourceId)) {
         throw new FinanceWorkbookValidationError('Journal source type and source ID must be supplied together.');
       }
@@ -218,7 +218,7 @@ function normalise(type: FinanceWorkbookRecordType, raw: unknown, approval = fal
         throw new FinanceWorkbookValidationError('Journal source type is not supported.');
       }
       const relatedSourceId = txt(v.relatedSourceId, 160);
-      const requiresRelatedJournal = sourceType === 'invoice-payment' || sourceType === 'vendor-bill-payment';
+      const requiresRelatedJournal = sourceType === 'invoice-payment' || sourceType === 'vendor-bill-payment' || sourceType === 'expense-payment';
       if (requiresRelatedJournal && !relatedSourceId) {
         throw new FinanceWorkbookValidationError('A source-linked receipt/payment journal must include its prerequisite journal source ID.');
       }
@@ -460,7 +460,9 @@ export class PostgresFinanceWorkbookRepository {
           ? 'invoice-issued'
           : sourceType === 'vendor-bill-payment'
             ? 'vendor-bill-issued'
-            : '';
+            : sourceType === 'expense-payment'
+              ? 'expense'
+              : '';
         if (dependencyType) {
           const relatedSourceId = String(current.payload.relatedSourceId || '');
           if (!relatedSourceId) {
@@ -474,7 +476,9 @@ export class PostgresFinanceWorkbookRepository {
             throw new FinanceWorkbookConflictError(
               dependencyType === 'invoice-issued'
                 ? 'Cannot post this client receipt until the linked invoice-issued journal is posted.'
-                : 'Cannot post this vendor payment until the linked vendor-bill-issued journal is posted.'
+                : dependencyType === 'expense'
+                  ? 'Cannot post this expense payment until the linked expense accrual is posted.'
+                  : 'Cannot post this vendor payment until the linked vendor-bill-issued journal is posted.'
             );
           }
         }
