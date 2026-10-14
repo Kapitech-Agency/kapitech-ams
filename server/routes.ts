@@ -4071,8 +4071,11 @@ apiRouter.post('/finance/workbook/periods/:period/close', requireAuth, requirePe
         return Math.round(balance*100)/100;
       };
       for (const code of reconcilable) if (Math.abs(postedBalanceAsOf(code,monthEnd)) > 0.01) requiredAccounts.add(code);
-      if (!cashBankOpenings.some((record) => String(record.payload.accountCode || '') === '1000')) {
+      const bankOpening = cashBankOpenings.find((record) => String(record.payload.accountCode || '') === '1000');
+      if (!bankOpening) {
         issues.push('Cash & Bank opening balance (account 1000) is missing; record an opening balance before month-end reconciliation.');
+      } else if (String(bankOpening.payload.openingDate || '') > monthEnd) {
+        issues.push('Cash & Bank opening balance date is after the month being closed; a valid opening balance must exist on or before '+monthEnd+'.');
       }
       for (const code of requiredAccounts) {
         const record = reconciliationByAccount.get(code);
