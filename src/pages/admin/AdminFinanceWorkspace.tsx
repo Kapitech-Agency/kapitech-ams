@@ -434,9 +434,9 @@ const REGISTER_FORMS: Record<string, { title: string; description: string; field
     description:'Use this register for manual adjustments or internal transfers. Client receipts and expenses remain sourced from their existing transaction records.',
     fields:[
       {key:'date',label:'Transaction date',type:'date',required:true},
-      {key:'transactionKind',label:'Movement type',type:'select',required:true,options:['manual','bank-to-petty-cash','petty-cash-to-bank','bank-to-emergency-fund','emergency-fund-to-bank'],defaultValue:'manual'},
-      {key:'accountCode',label:'From / active account',type:'select',required:true,optionSource:'cashAccounts',defaultValue:'1000'},
-      {key:'counterpartAccountCode',label:'Counterpart account',type:'select',required:true,optionSource:'cashAccounts',help:'For manual adjustments, select the other ledger account. Transfers are restricted to cash accounts.'},
+      {key:'transactionKind',label:'Movement type',type:'select',required:true,options:['manual','bank-to-petty-cash','petty-cash-to-bank','bank-to-emergency-fund','emergency-fund-to-bank','card-clearing-to-bank','bank-to-credit-card-payable'],defaultValue:'manual'},
+      {key:'accountCode',label:'From / active account',type:'select',required:true,optionSource:'cashAccounts',defaultValue:'1000',help:'Card-clearing settlements start from 1010; credit-card bill payments start from Cash & Bank 1000.'},
+      {key:'counterpartAccountCode',label:'Counterpart account',type:'select',required:true,optionSource:'cashAccounts',help:'Manual adjustments need an active counter-account. Card clearing settles to 1000; card statements settle against 2200.'},
       {key:'direction',label:'Movement direction',type:'select',required:true,options:['in','out'],defaultValue:'out'},
       {key:'reference',label:'Reference',type:'text',placeholder:'Transfer / adjustment reference'},
       {key:'description',label:'Description',type:'text',required:true},
@@ -847,7 +847,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
         reference: String(payload.reference || record.recordKey || record.id),
         description: String(payload.description || (kind === 'manual' ? 'Manual cash movement' : 'Internal cash transfer')),
         cashIn, cashOut,
-        source: kind === 'manual' ? 'Manual cash adjustment' : 'Internal transfer',
+        source: kind === 'manual' ? 'Manual cash adjustment' : kind === 'bank-to-credit-card-payable' ? 'Credit-card settlement' : 'Internal transfer',
         currency: 'IDR',
         accountCode: ledgerAccountCode
       });
@@ -926,6 +926,16 @@ export const AdminFinanceWorkspace: React.FC = () => {
       return [{ value: '', label: 'Select an account' }, ...accountsByCode.values()];
     }
     if (field.optionSource === 'cashAccounts') {
+      if (editor?.type === 'cash-bank-transaction' && editor.payload.transactionKind === 'card-clearing-to-bank') {
+        return field.key === 'accountCode'
+          ? [{ value: '1010', label: '1010 · Card Settlement Clearing' }]
+          : [{ value: '1000', label: '1000 · Cash & Bank' }];
+      }
+      if (editor?.type === 'cash-bank-transaction' && editor.payload.transactionKind === 'bank-to-credit-card-payable') {
+        return field.key === 'accountCode'
+          ? [{ value: '1000', label: '1000 · Cash & Bank' }]
+          : [{ value: '2200', label: '2200 · Credit Card Payable' }];
+      }
       if (field.key === 'counterpartAccountCode' && editor?.type === 'cash-bank-transaction' && editor.payload.transactionKind === 'manual') {
         const accounts = new Map<string, { value: string; label: string }>();
         EXCEL_CHART_OF_ACCOUNTS.forEach((account) => accounts.set(account.code, { value: account.code, label: account.code + ' · ' + account.name }));
@@ -987,7 +997,9 @@ export const AdminFinanceWorkspace: React.FC = () => {
           'bank-to-petty-cash': { from: '1000', to: '1100', direction: 'out' },
           'petty-cash-to-bank': { from: '1100', to: '1000', direction: 'out' },
           'bank-to-emergency-fund': { from: '1000', to: '1200', direction: 'out' },
-          'emergency-fund-to-bank': { from: '1200', to: '1000', direction: 'out' }
+          'emergency-fund-to-bank': { from: '1200', to: '1000', direction: 'out' },
+          'card-clearing-to-bank': { from: '1010', to: '1000', direction: 'out' },
+          'bank-to-credit-card-payable': { from: '1000', to: '2200', direction: 'out' }
         };
         const rule = rules[value];
         if (rule) {
