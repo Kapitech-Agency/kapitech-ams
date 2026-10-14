@@ -43,6 +43,22 @@ test('Posted source journals lock accounting fields on their source records', as
   assert.match(routes, /Accounting fields are locked; create and approve a reversal or adjustment journal first/);
 });
 
+test('Month-end close requires period-scoped statement evidence reconciled to posted GL', async () => {
+  const repository = await read('server/postgres-finance-workbook-repository.ts');
+  const routes = await read('server/routes.ts');
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+
+  assert.match(repository, /'cash-reconciliation'/);
+  assert.match(repository, /statementDate!==monthEnd/);
+  assert.match(repository, /statementReference/);
+  assert.match(routes, /has no month-end statement\/count reconciliation/);
+  assert.match(routes, /differs from the posted GL/);
+  assert.match(routes, /Cash & Bank opening balance \(account 1000\) is missing/);
+  assert.match(workspace, /Statement reconciliation · '\+reconciliationMonth/);
+  assert.match(workspace, /Reconciliation exceptions/);
+  assert.match(workspace, /Record reconciliation/);
+});
+
 test('All supplementary Finance register routes have explicit auth and permissions', async () => {
   const routes = await read('server/routes.ts');
   const fragments = [
