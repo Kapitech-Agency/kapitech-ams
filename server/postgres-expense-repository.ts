@@ -23,7 +23,7 @@ export class ExpenseProjectNotFoundError extends Error{readonly code='EXPENSE_PR
 export class PostgresExpenseRepository{
   private async ensureFinancePeriodOpen(client:any,value:unknown):Promise<void>{
     const period=String(value||'').slice(0,7);
-    if(!/^\\d{4}-(0[1-9]|1[0-2])$/.test(period)) return;
+    if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(period)) return;
     await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))",['kapitech:finance-period:'+period]);
     const lock=await client.query<Row>("SELECT id FROM finance_workbook_records WHERE record_type='monthly-closing-lock' AND period_key=$1 AND archived_at IS NULL LIMIT 1",[period]);
     if(lock.rows[0]) throw new Error('FINANCE_PERIOD_CLOSED:'+period);
