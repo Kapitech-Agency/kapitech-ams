@@ -210,6 +210,55 @@ test('card clearing and credit-card statement payments generate distinct balance
   assert.equal(plan.skipped.length, 0);
 });
 
+test('cash and balance-sheet opening balances produce balanced journals through Opening Balance Equity', () => {
+  const plan = buildFinanceSourceJournalDrafts(
+    [], [], [], [], [], EXCEL_CHART_OF_ACCOUNTS,
+    [
+      {
+        id: 'opening_cash_001',
+        recordType: 'cash-bank-opening',
+        recordKey: '1000',
+        payload: { accountCode: '1000', openingDate: '2026-01-01', openingBalance: 5000 }
+      },
+      {
+        id: 'opening_ar_001',
+        recordType: 'balance-sheet-opening',
+        recordKey: '2026-01-01|1300',
+        payload: { accountCode: '1300', asOfDate: '2026-01-01', openingAmount: 800, side: 'Debit' }
+      },
+      {
+        id: 'opening_ap_001',
+        recordType: 'balance-sheet-opening',
+        recordKey: '2026-01-01|2000',
+        payload: { accountCode: '2000', asOfDate: '2026-01-01', openingAmount: 300, side: 'Credit' }
+      }
+    ]
+  );
+  assert.equal(plan.skipped.length, 0);
+  assert.equal(plan.drafts.length, 3);
+  const cash = plan.drafts.find((item) => item.sourceType === 'cash-bank-opening');
+  const receivable = plan.drafts.find((item) => item.sourceId === 'opening_ar_001');
+  const payable = plan.drafts.find((item) => item.sourceId === 'opening_ap_001');
+  assert.ok(cash && receivable && payable);
+  assert.deepEqual(cash.lines.map((line) => [line.accountCode,line.debit,line.credit]), [['1000',5000,0],['3200',0,5000]]);
+  assert.deepEqual(receivable.lines.map((line) => [line.accountCode,line.debit,line.credit]), [['1300',800,0],['3200',0,800]]);
+  assert.deepEqual(payable.lines.map((line) => [line.accountCode,line.debit,line.credit]), [['3200',300,0],['2000',0,300]]);
+  for (const draft of plan.drafts) assert.deepEqual(balance(draft), { debit: draft.lines.reduce((sum,line)=>sum+line.debit,0), credit: draft.lines.reduce((sum,line)=>sum+line.credit,0) });
+});
+
+test('opening balance sources reject cash accounts in the generic balance sheet register', () => {
+  const plan = buildFinanceSourceJournalDrafts([], [], [], [], [], EXCEL_CHART_OF_ACCOUNTS, [
+    {
+      id: 'invalid_opening',
+      recordType: 'balance-sheet-opening',
+      recordKey: '2026-01-01|1000',
+      payload: { accountCode: '1000', asOfDate: '2026-01-01', openingAmount: 100, side: 'Debit' }
+    }
+  ]);
+  assert.equal(plan.drafts.length, 0);
+  assert.ok(plan.skipped.some((item) => item.reason.includes('Use the Cash & Bank opening register')));
+});
+
 test('cancelled, voided, and quotation records do not become revenue journals', () => {
   for (const status of ['cancelled', 'voided', 'deleted', 'rejected']) {
     assert.equal(isIssuedInvoice(baseInvoice({ status })), false);
