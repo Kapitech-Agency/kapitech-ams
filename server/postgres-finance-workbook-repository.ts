@@ -216,7 +216,7 @@ function normalise(type: FinanceWorkbookRecordType, raw: unknown, approval = fal
       if (status === 'posted' && !approval) throw new FinanceWorkbookValidationError('A journal must be approved before posting.');
       const sourceType = txt(v.sourceType, 40);
       const sourceId = txt(v.sourceId, 160);
-      const allowedSourceTypes = ['invoice-issued', 'invoice-payment', 'expense', 'expense-payment', 'cash-bank-transfer', 'vendor-bill-issued', 'vendor-bill-payment'];
+      const allowedSourceTypes = ['invoice-issued', 'invoice-payment', 'expense', 'expense-payment', 'cash-bank-transfer', 'vendor-bill-issued', 'vendor-bill-payment', 'cash-bank-opening', 'balance-sheet-opening'];
       if ((sourceType && !sourceId) || (!sourceType && sourceId)) {
         throw new FinanceWorkbookValidationError('Journal source type and source ID must be supplied together.');
       }
@@ -250,9 +250,9 @@ function normalise(type: FinanceWorkbookRecordType, raw: unknown, approval = fal
     }
     case 'balance-sheet-opening': {
       const code = txt(v.accountCode,4);
-      if (!/^\d{4}$/.test(code)) throw new FinanceWorkbookValidationError('Opening balance must use a four-digit account code.');
+      if (!/^\d{4}$/.test(code) || ['1000','1100','1200','3200'].includes(code)) throw new FinanceWorkbookValidationError('Opening balance must use an eligible non-cash Asset, Liability or Equity account. Use Cash & Bank Opening for 1000, 1100 or 1200.');
       const asOfDate = date(v.asOfDate,'Opening balance date');
-      p = { accountCode:code, asOfDate, openingAmount:money(v.openingAmount,'Opening amount'), side:choice(v.side,['Debit','Credit'],'Balance side'), notes:txt(v.notes,500) };
+      p = { accountCode:code, counterpartAccountCode:'3200', asOfDate, openingAmount:money(v.openingAmount,'Opening amount'), side:choice(v.side,['Debit','Credit'],'Balance side'), notes:txt(v.notes,500) };
       key = asOfDate + '|' + code; period = periodOf(asOfDate); break;
     }
     case 'monthly-closing-lock': {
@@ -347,6 +347,19 @@ export class PostgresFinanceWorkbookRepository {
     const invalid=codes.filter((code)=>!standard.has(code)&&(!custom.has(code)||custom.get(code)?.active!==true));
     if(invalid.length) throw new FinanceWorkbookValidationError('Journal account code(s) are missing or inactive in Chart of Accounts: '+invalid.join(', ')+'. Add/activate the account before saving the journal.');
   }
+  private async ensureOpeningBalanceAccountActive(client:any,payload:Record<string,any>):Promise<void>{
+    const code=String(payload.accountCode||'').trim();
+    if(!/^\d{4}$/.test(code)||['1000','1100','1200','3200'].includes(code)) throw new FinanceWorkbookValidationError('Opening balance must use an eligible non-cash Asset, Liability or Equity account.');
+    const standard=EXCEL_CHART_OF_ACCOUNTS.find((account)=>account.code===code&&account.active);
+    let accountType=standard?.type||'';
+    if(!accountType){
+      const result=await client.query("SELECT payload FROM finance_workbook_records WHERE record_type='chart-of-accounts' AND record_key=$1 AND archived_at IS NULL LIMIT 1",[code]);
+      const account=result.rows[0]?obj(result.rows[0].payload):{};
+      if(account.active===false) throw new FinanceWorkbookValidationError('Opening balance account '+code+' is inactive.');
+      accountType=String(account.accountType||'');
+    }
+    if(!['Asset','Liability','Equity'].includes(accountType)) throw new FinanceWorkbookValidationError('Opening balance account '+code+' must be an active Asset, Liability or Equity account.');
+  }
   async get(type: FinanceWorkbookRecordType,id:string):Promise<FinanceWorkbookRecord|null> {
     const result=await getPostgresPool().query<Row>('SELECT * FROM finance_workbook_records WHERE record_type=$1 AND id=$2 AND archived_at IS NULL LIMIT 1',[type,id]);
     return result.rows[0]?mapRow(result.rows[0]):null;
@@ -358,6 +371,7 @@ export class PostgresFinanceWorkbookRepository {
     return withPostgresTransaction(async client=>{
       await this.ensurePeriodOpen(client,n.period);
       if(type==='journal-entry') await this.ensureJournalAccountsActive(client,n.payload);
+      if(type==='balance-sheet-opening') await this.ensureOpeningBalanceAccountActive(client,n.payload);
       if(type==='vendor-bill-payment'){
         const bill=await client.query<Row>("SELECT * FROM finance_workbook_records WHERE record_type='vendor-bill' AND id=$1 AND archived_at IS NULL FOR UPDATE",[String(n.payload.billId)]);
         if(!bill.rows[0]) throw new FinanceWorkbookNotFoundError('Vendor bill was not found.');
@@ -419,6 +433,7 @@ export class PostgresFinanceWorkbookRepository {
       await this.ensurePeriodOpen(client,current.periodKey);
       await this.ensurePeriodOpen(client,n.period);
       if(type==='journal-entry') await this.ensureJournalAccountsActive(client,n.payload);
+      if(type==='balance-sheet-opening') await this.ensureOpeningBalanceAccountActive(client,n.payload);
       if(type==='chart-of-accounts' && (n.payload.active===false || String(n.payload.accountType||'')!==String(current.payload.accountType||''))) {
         const code=String(n.payload.code||current.recordKey||'');
         const referenced=await client.query("SELECT id FROM finance_workbook_records WHERE record_type='journal-entry' AND status='posted' AND archived_at IS NULL AND EXISTS (SELECT 1 FROM jsonb_array_elements(payload->'lines') AS line WHERE line->>'accountCode'=$1) LIMIT 1 FOR SHARE",[code]);
