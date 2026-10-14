@@ -529,9 +529,14 @@ export class PostgresFinanceWorkbookRepository {
       const found=await client.query<Row>('SELECT * FROM finance_workbook_records WHERE record_type=$1 AND id=$2 AND archived_at IS NULL FOR UPDATE',[type,id]);
       if(!found.rows[0]) throw new FinanceWorkbookNotFoundError('Finance workbook record was not found.');
       const current=mapRow(found.rows[0]); await this.ensurePeriodOpen(client,current.periodKey);
-      if (['journal-entry','petty-cash-voucher','monthly-closing'].includes(type) && current.createdByUserId && current.createdByUserId === actor.id) {
-        throw new FinanceWorkbookConflictError('Maker-checker control: the record creator cannot approve or post their own Finance record. Ask another authorized Finance user.');
-      }
+       if (['journal-entry','petty-cash-voucher','monthly-closing'].includes(type)) {
+         if (!current.createdByUserId) {
+           throw new FinanceWorkbookConflictError('Maker-checker control cannot verify who created this record. Do not approve it until its creator metadata is restored or an auditable replacement record has been created.');
+         }
+         if (current.createdByUserId === actor.id) {
+           throw new FinanceWorkbookConflictError('Maker-checker control: the record creator cannot approve or post their own Finance record. Ask another authorized Finance user.');
+         }
+       }
       let payload:Record<string,unknown>; let status:string;
       if(type==='petty-cash-voucher'){
         if(current.payload.status!=='pending') throw new FinanceWorkbookConflictError('Only pending petty cash vouchers can be approved.');
