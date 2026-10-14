@@ -76,39 +76,41 @@ test('receipts cannot be generated when invoice recognition is blocked by an inv
   assert.ok(plan.skipped.some((item) => item.sourceType === 'invoice-payment' && item.reason.includes('invoice recognition')));
 });
 
-test('unpaid or undated expenses never create a cash-basis journal', () => {
-  const plan = buildFinanceSourceJournalDrafts([], [
-    baseExpense({ paymentStatus: 'unpaid', paidDate: undefined })
-  ], [], [], [], EXCEL_CHART_OF_ACCOUNTS);
-  assert.equal(plan.drafts.some((item) => item.sourceType === 'expense'), false);
-  assert.ok(plan.skipped.some((item) => item.sourceType === 'expense' && item.reason.includes('not marked paid')));
+test('unpaid expenses accrue to Accounts Payable without a cash settlement journal', () => {
+  const plan = buildFinanceSourceJournalDrafts([], [baseExpense({ paymentStatus: 'unpaid', paidDate: undefined })], [], [], [], EXCEL_CHART_OF_ACCOUNTS);
+  const accrual = plan.drafts.find((item) => item.sourceType === 'expense');
+  assert.ok(accrual);
+  assert.equal(accrual.date, '2026-10-02');
+  assert.deepEqual(accrual.lines.map((line) => [line.accountCode, line.debit, line.credit]), [['5600',25,0],['2000',0,25]]);
+  assert.equal(plan.drafts.some((item) => item.sourceType === 'expense-payment'), false);
 });
 
-test('paid expenses use explicit settlement details rather than assuming Cash & Bank', () => {
+test('paid expenses create an incurred-date accrual and a separate mapped settlement', () => {
   const valid = buildFinanceSourceJournalDrafts([], [baseExpense()], [], [], [], EXCEL_CHART_OF_ACCOUNTS);
-  const draft = valid.drafts.find((item) => item.sourceType === 'expense');
-  assert.ok(draft);
-  assert.equal(draft.date, '2026-10-03');
-  assert.deepEqual(draft.lines.map((line) => [line.accountCode, line.debit, line.credit]), [
-    ['5600', 25, 0],
-    ['1000', 0, 25]
-  ]);
+  const accrual = valid.drafts.find((item) => item.sourceType === 'expense');
+  const payment = valid.drafts.find((item) => item.sourceType === 'expense-payment');
+  assert.ok(accrual && payment);
+  assert.equal(accrual.date, '2026-10-02');
+  assert.deepEqual(accrual.lines.map((line) => [line.accountCode,line.debit,line.credit]), [['5600',25,0],['2000',0,25]]);
+  assert.equal(payment.date, '2026-10-03');
+  assert.equal(payment.relatedSourceId, 'exp_001');
+  assert.deepEqual(payment.lines.map((line) => [line.accountCode,line.debit,line.credit]), [['2000',25,0],['1000',0,25]]);
 
-  const missingAccount = buildFinanceSourceJournalDrafts([], [
-    baseExpense({ paymentAccountCode: undefined })
-  ], [], [], [], EXCEL_CHART_OF_ACCOUNTS);
-  assert.equal(missingAccount.drafts.some((item) => item.sourceType === 'expense'), false);
-  assert.ok(missingAccount.skipped.some((item) => item.reason.includes('Payment account is missing')));
+  const missingAccount = buildFinanceSourceJournalDrafts([], [baseExpense({ paymentAccountCode: undefined })], [], [], [], EXCEL_CHART_OF_ACCOUNTS);
+  assert.equal(missingAccount.drafts.some((item) => item.sourceType === 'expense'), true);
+  assert.equal(missingAccount.drafts.some((item) => item.sourceType === 'expense-payment'), false);
+  assert.ok(missingAccount.skipped.some((item) => item.sourceType === 'expense-payment' && item.reason.includes('Settlement method/account')));
 });
 
-test('credit-card paid expenses credit Credit Card Payable, not bank cash', () => {
-  const plan = buildFinanceSourceJournalDrafts([], [
-    baseExpense({ paymentMethod: 'credit_card', paymentAccountCode: undefined })
-  ], [], [], [], EXCEL_CHART_OF_ACCOUNTS);
-  const draft = plan.drafts.find((item) => item.sourceType === 'expense');
-  assert.ok(draft);
-  assert.equal(draft.lines[1].accountCode, '2200');
-  assert.deepEqual(balance(draft), { debit: 25, credit: 25 });
+test('credit-card settlement clears Accounts Payable to Credit Card Payable', () => {
+  const plan = buildFinanceSourceJournalDrafts([], [baseExpense({ paymentMethod: 'credit_card', paymentAccountCode: undefined })], [], [], [], EXCEL_CHART_OF_ACCOUNTS);
+  const accrual = plan.drafts.find((item) => item.sourceType === 'expense');
+  const payment = plan.drafts.find((item) => item.sourceType === 'expense-payment');
+  assert.ok(accrual && payment);
+  assert.equal(payment.lines[0].accountCode, '2000');
+  assert.equal(payment.lines[1].accountCode, '2200');
+  assert.deepEqual(balance(accrual), { debit: 25, credit: 25 });
+  assert.deepEqual(balance(payment), { debit: 25, credit: 25 });
 });
 
 test('manual cash entries require an existing counterpart account and generate balanced journals', () => {
