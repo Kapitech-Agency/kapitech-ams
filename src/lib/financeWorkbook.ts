@@ -266,7 +266,7 @@ function buildTwoLineFinanceDraft(input: {
 
 /**
  * Prepares draft-only entries for Finance source records. Expenses are accrued on incurred date,
- * while payments are separate entries that settle Accounts Payable. No draft is posted here.
+ * while payments are separate entries that settle Accounts Payable. No draft returned by this function is approved or posted.
  * Unsupported or ambiguous sources stay in the skipped list rather than silently guessing accounts.
  */
 export function buildFinanceSourceJournalDrafts(
