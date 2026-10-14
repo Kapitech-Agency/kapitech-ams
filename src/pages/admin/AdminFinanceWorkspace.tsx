@@ -156,8 +156,8 @@ const parseFinanceSortDate = (value: string): number | null => {
     nov: 10, november: 10,
     dec: 11, december: 11, des: 11, desember: 11
   };
-  const dayFirst = text.toLowerCase().replace(/\./g, '').match(/^(\d{1,2})\\s+([a-zà-ÿ]+)\\s+(\d{4})$/i);
-  const monthFirst = text.toLowerCase().replace(/\./g, '').match(/^([a-zà-ÿ]+)\\s+(\d{1,2}),?\\s+(\d{4})$/i);
+  const dayFirst = text.toLowerCase().replace(/\./g, '').match(/^(\d{1,2})\s+([a-zà-ÿ]+)\s+(\d{4})$/i);
+  const monthFirst = text.toLowerCase().replace(/\./g, '').match(/^([a-zà-ÿ]+)\s+(\d{1,2}),?\s+(\d{4})$/i);
   const match = dayFirst || monthFirst;
   if (!match) return null;
   const monthName = dayFirst ? match[2] : match[1];
@@ -169,7 +169,7 @@ const parseFinanceSortDate = (value: string): number | null => {
 };
 
 const parseFinanceSortNumber = (value: string): number | null => {
-  let text = value.trim().replace(/^(?:rp|idr|usd|[$€£])\\s*/i, '').replace(/\\s/g, '');
+  let text = value.trim().replace(/^(?:rp|idr|usd|[$€£])\s*/i, '').replace(/\s/g, '');
   if (!text || !/^[+-]?[\d.,]+%?$/.test(text)) return null;
   text = text.replace(/%$/, '');
   const lastDot = text.lastIndexOf('.');
