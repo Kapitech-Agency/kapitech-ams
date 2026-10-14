@@ -2885,18 +2885,27 @@ export const AdminFinanceWorkspace: React.FC = () => {
         const yearCollected = sumAmounts<CashMovement>(yearCollections, (movement) => movement.cashIn);
         const yearOutflow = sumAmounts<CashMovement>(yearCollections, (movement) => movement.cashOut);
         const yearExpense = sumAmounts<AgencyExpense>(yearExpenses, (expense) => Number(expense.amount) || 0);
+        const postedYearIncome = getPostedLedgerIncomeStatement(selectedYear + '-01-01', selectedYear + '-12-31');
+        const postedYearCashFlow = getPostedLedgerCashFlow(selectedYear + '-01-01', selectedYear + '-12-31');
+        const postedBasis = postedYearIncome.journalCount + ' posted journal entries; incomplete source mapping remains excluded until resolved.';
         const annualRows = [
           { id: 'a-revenue', metric: 'Annual Revenue / Invoice Value (IDR)', amount: yearBilled, basis: 'IDR invoice issue date' },
           { id: 'a-collected', metric: 'Annual recorded cash in', amount: yearCollected, basis: 'Invoice payments and saved Cash & Bank inflows; excludes petty-cash voucher receipts' },
           { id: 'a-expense', metric: 'Annual Recorded Expenses', amount: yearExpense, basis: 'Expense date' },
           { id: 'a-outflow', metric: 'Recorded cash outflow (proxy)', amount: yearOutflow, basis: 'AMS expense dates and saved Cash & Bank movements; excludes petty-cash vouchers' },
-          { id: 'a-net', metric: 'Net Cash Movement (proxy)', amount: yearCollected - yearOutflow, basis: 'Recorded cash in minus outflow proxy; cash transfers and petty-cash voucher activity are not a complete consolidated view' }
+          { id: 'a-net', metric: 'Net Cash Movement (proxy)', amount: yearCollected - yearOutflow, basis: 'Recorded cash in minus outflow proxy; cash transfers and petty-cash voucher activity are not a complete consolidated view' },
+          { id: 'gl-revenue', metric: 'Posted GL revenue', amount: postedYearIncome.revenue, basis: postedBasis },
+          { id: 'gl-expense', metric: 'Posted GL expenses', amount: postedYearIncome.expense, basis: postedBasis },
+          { id: 'gl-result', metric: 'Posted GL result · not final profit', amount: postedYearIncome.net, basis: 'Posted revenue minus posted expense-account activity; reconcile all source exceptions before relying on this as profit' },
+          { id: 'gl-cash-in', metric: 'Posted GL cash in', amount: postedYearCashFlow.inflow, basis: postedYearCashFlow.activityCount + ' cash-moving posted journal entries; opening balances excluded' },
+          { id: 'gl-cash-out', metric: 'Posted GL cash out', amount: postedYearCashFlow.outflow, basis: postedYearCashFlow.activityCount + ' cash-moving posted journal entries; inter-account transfers net to zero' },
+          { id: 'gl-cash-net', metric: 'Posted GL net cash movement', amount: postedYearCashFlow.net, basis: 'Posted journal activity on accounts 1000, 1100 and 1200; bank-statement reconciliation still required' }
         ];
         return (
           <div className="space-y-4">
             <div className="flex min-w-0 flex-col gap-1" data-ams-slug="finance-annual-summary-period">
               <h2 className="text-sm font-semibold text-fg">Annual summary · {selectedYear}</h2>
-              <p className="text-xs text-muted">Full-year results follow the reporting year selected in the topbar.</p>
+              <p className="text-xs text-muted">Full-year results follow the reporting year selected in the topbar. The source preview and posted General Ledger are listed separately below.</p>
             </div>
             <AdminMetricStrip metrics={[
               { id: 'year-billed', label: 'Annual invoice value', value: formatMoney(yearBilled), context: selectedYear + ' · issued invoices', icon: <FileText size={15} /> },
@@ -2904,7 +2913,18 @@ export const AdminFinanceWorkspace: React.FC = () => {
               { id: 'year-expenses', label: 'Annual recorded expenses', value: formatMoney(yearExpense), context: yearExpenses.length + ' source expense records', icon: <ArrowUpRight size={15} /> },
               { id: 'year-net', label: 'Net cash movement (proxy)', value: formatMoney(yearCollected - yearOutflow), context: 'Cash-in/out proxy; petty-cash voucher activity is excluded', icon: <CircleDollarSign size={15} /> }
             ]} />
-            <FinanceDataTable title="Annual summary" description="IDR-only period view; accounting net profit and closing cash depend on ledger posting, opening balances and reconciliation." columns={[{ label: 'Metric' }, { label: 'Amount', align: 'right' }, { label: 'Basis' }]} rows={annualRows.map((item) => ({ id: item.id, cells: [item.metric, formatMoney(item.amount), item.basis] }))} emptyMessage="No records exist for the selected year." exportable={false} actions={<Button variant="secondary" type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-annual-summary-' + selectedYear + '.csv', ['Metric', 'Amount', 'Basis'], annualRows.map((item) => [item.metric, item.amount, item.basis]))}>Export CSV</Button>} />
+            <WorkbookNote tone="warning" title="Posted General Ledger · annual view">
+              These annual accounting metrics use posted journals only. They may not represent final financial statements until every source row is mapped, posted and reconciled. The temporary Opening Balance Equity account must be cleared after opening balances are reviewed.
+            </WorkbookNote>
+            <AdminMetricStrip metrics={[
+              { id: 'annual-gl-revenue', label: 'Posted GL revenue', value: postedYearIncome.journalCount ? formatMoney(postedYearIncome.revenue) : 'No posted activity', context: postedYearIncome.journalCount + ' posted journal entries', icon: <FileText size={15}/> },
+              { id: 'annual-gl-expense', label: 'Posted GL expenses', value: postedYearIncome.journalCount ? formatMoney(postedYearIncome.expense) : 'No posted activity', context: 'Posted expense-account activity', icon: <ArrowUpRight size={15}/> },
+              { id: 'annual-gl-result', label: 'Posted GL result', value: postedYearIncome.journalCount ? formatMoney(postedYearIncome.net) : 'Not available', context: 'Not final profit until reconciled', icon: <CircleDollarSign size={15}/> },
+              { id: 'annual-gl-cashin', label: 'Posted GL cash in', value: postedYearCashFlow.journalCount ? formatMoney(postedYearCashFlow.inflow) : 'No posted activity', context: 'Opening balances excluded', icon: <ArrowDown size={15}/> },
+              { id: 'annual-gl-cashout', label: 'Posted GL cash out', value: postedYearCashFlow.journalCount ? formatMoney(postedYearCashFlow.outflow) : 'No posted activity', context: 'Internal cash transfers net to zero', icon: <ArrowUpRight size={15}/> },
+              { id: 'annual-gl-netcash', label: 'Posted GL net cash', value: postedYearCashFlow.journalCount ? formatMoney(postedYearCashFlow.net) : 'Not available', context: 'Bank statement reconciliation required', icon: <WalletCards size={15}/> }
+            ]} />
+            <FinanceDataTable title="Annual summary" description="IDR-only view. Source-derived operating proxies and posted-ledger accounting figures are listed separately in the same table with their basis clearly labelled." columns={[{ label: 'Metric' }, { label: 'Amount', align: 'right' }, { label: 'Basis' }]} rows={annualRows.map((item) => ({ id: item.id, cells: [item.metric, formatMoney(item.amount), item.basis] }))} emptyMessage="No records exist for the selected year." exportable={false} actions={<Button variant="secondary" type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-annual-summary-' + selectedYear + '.csv', ['Metric', 'Amount', 'Basis'], annualRows.map((item) => [item.metric, item.amount, item.basis]))}>Export CSV</Button>} />
           </div>
         );
       }
