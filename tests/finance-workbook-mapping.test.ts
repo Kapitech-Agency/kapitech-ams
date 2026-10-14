@@ -24,11 +24,14 @@ test('Finance navigation groups preserve the planned workbook grouping', () => {
   assert.deepEqual(FINANCE_WORKBOOK_GROUPS.map((group) => group.items.length), [2, 4, 3, 4, 7]);
 });
 
-test('Chart of Accounts mirrors the seventeen source workbook accounts', () => {
-  assert.equal(EXCEL_CHART_OF_ACCOUNTS.length, 17);
+test('Chart of Accounts includes operational and settlement accounts needed by source journals', () => {
+  assert.equal(EXCEL_CHART_OF_ACCOUNTS.length, 20);
   assert.equal(EXCEL_CHART_OF_ACCOUNTS[0].code, '1000');
   assert.equal(EXCEL_CHART_OF_ACCOUNTS.at(-1)?.code, '5600');
   assert.ok(EXCEL_CHART_OF_ACCOUNTS.every((account) => account.code.length === 4));
+  assert.equal(EXCEL_CHART_OF_ACCOUNTS.find((account) => account.code === '1010')?.type, 'Asset');
+  assert.equal(EXCEL_CHART_OF_ACCOUNTS.find((account) => account.code === '2100')?.type, 'Liability');
+  assert.equal(EXCEL_CHART_OF_ACCOUNTS.find((account) => account.code === '2200')?.type, 'Liability');
 });
 
 test('Invoice collections prefer payment-ledger records over the aggregate amount', () => {
@@ -71,7 +74,7 @@ test('Reporting period keys accept ISO dates without inventing a missing period'
 });
 
 
-test('Source journal bridge generates balanced cash-basis drafts with stable provenance', () => {
+test('Source journal bridge generates balanced accrual and settlement drafts with stable provenance', () => {
   const invoice = {
     id: 'invoice-1', invoiceNumber: 'INV-001', type: 'invoice' as const, status: 'sent' as const,
     clientName: 'Client', clientCompany: 'Client Co', clientEmail: 'finance@example.test',
@@ -122,12 +125,13 @@ test('Source journal bridge generates balanced cash-basis drafts with stable pro
   assert.equal(receipt?.lines[0].debit, receipt?.lines[1].credit);
   assert.match(receipt?.sourceId || '', /^invoice-1:payment:/);
   assert.match(receipt?.notes || '', /linked invoice-issued journal is posted/);
+  assert.equal(receipt?.relatedSourceId, 'invoice-1:issued');
 
   const mappedExpense = plan.drafts.find((draft) => draft.sourceType === 'expense');
   assert.equal(mappedExpense?.lines[0].accountCode, '5100');
-  assert.equal(mappedExpense?.lines[1].accountCode, '1000');
-  assert.match(mappedExpense?.notes || '', /provisional workbook default/);
-  assert.match(mappedExpense?.notes || '', /does not confirm that the expense is paid/);
+  assert.equal(mappedExpense?.lines[1].accountCode, '2000');
+  assert.match(mappedExpense?.notes || '', /credit Accounts Payable/);
+  assert.equal(plan.drafts.some((draft) => draft.sourceType === 'expense-payment'), false, 'An expense without a payment row must accrue without inventing a settlement.');
 
   const transfer = plan.drafts.find((draft) => draft.sourceType === 'cash-bank-transfer');
   assert.equal(transfer?.lines[0].accountCode, '1100');
@@ -147,7 +151,7 @@ test('Source journal bridge generates balanced cash-basis drafts with stable pro
   assert.match(vendorPayment?.notes || '', /linked vendor-bill-issued journal is posted/);
 });
 
-test('Source journal bridge skips unpaid, foreign-currency, petty-cash duplicate and unmapped expense sources', () => {
+test('Source journal bridge skips unsupported sources and handles tax/card entries when mappings exist', () => {
   const unpaid = {
     id: 'unpaid-invoice', invoiceNumber: 'INV-UNPAID', status: 'sent' as const,
     clientName: 'Client', clientCompany: 'Client Co', clientEmail: 'finance@example.test',
@@ -168,7 +172,7 @@ test('Source journal bridge skips unpaid, foreign-currency, petty-cash duplicate
   assert.equal(plan.drafts.length, 1);
   assert.equal(plan.drafts[0].sourceType, 'invoice-issued');
   assert.ok(plan.skipped.some((item) => item.sourceType === 'invoice-payment' && /IDR-only/.test(item.reason)));
-  assert.ok(plan.skipped.some((item) => item.sourceType === 'expense' && item.sourceId === 'unknown-expense' && /No unambiguous/.test(item.reason)));
+  assert.ok(plan.skipped.some((item) => item.sourceType === 'expense' && item.sourceId === 'unknown-expense' && /No active Expense account mapping/.test(item.reason)));
   assert.ok(plan.skipped.some((item) => item.sourceType === 'expense' && item.sourceId === 'petty-expense' && /petty-cash/i.test(item.reason)));
   assert.ok(plan.skipped.some((item) => item.sourceType === 'expense' && item.sourceId === 'vendor-expense' && /duplicate cost and cash entries/.test(item.reason)));
 
@@ -189,11 +193,17 @@ test('Source journal bridge skips unpaid, foreign-currency, petty-cash duplicate
     [{ id: 'bill-card', recordKey: 'BILL-CARD', projectId: 'project-card', payload: { billNo: 'BILL-CARD', currency: 'IDR', total: 1000, billDate: '2026-10-05' } }],
     [unsupportedPayment]
   );
-  assert.equal(safePlan.drafts.length, 1);
-  assert.equal(safePlan.drafts[0].sourceType, 'vendor-bill-issued');
-  assert.ok(safePlan.skipped.some((item) => item.sourceType === 'invoice-issued' && /tax-liability account/.test(item.reason)));
-  assert.ok(safePlan.skipped.some((item) => item.sourceType === 'invoice-payment' && /issuance draft is held/.test(item.reason)));
-  assert.ok(safePlan.skipped.some((item) => item.sourceType === 'vendor-bill-payment' && /no confirmed matching credit account/.test(item.reason)));
+  assert.equal(safePlan.drafts.length, 4);
+  const taxableJournal = safePlan.drafts.find((item) => item.sourceType === 'invoice-issued');
+  assert.ok(taxableJournal);
+  assert.deepEqual(taxableJournal?.lines.map((line) => [line.accountCode, line.debit, line.credit]), [['1300', 1110000, 0], ['4000', 0, 1000000], ['2100', 0, 110000]]);
+  const taxableReceipt = safePlan.drafts.find((item) => item.sourceType === 'invoice-payment');
+  assert.ok(taxableReceipt);
+  assert.equal(taxableReceipt?.relatedSourceId, 'taxable-invoice:issued');
+  const cardPayment = safePlan.drafts.find((item) => item.sourceType === 'vendor-bill-payment');
+  assert.ok(cardPayment);
+  assert.deepEqual(cardPayment?.lines.map((line) => [line.accountCode, line.debit, line.credit]), [['2000', 100, 0], ['2200', 0, 100]]);
+  assert.equal(safePlan.skipped.length, 0);
 });
 
 
