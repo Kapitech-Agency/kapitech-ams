@@ -2679,7 +2679,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
         return (
           <div className="space-y-4">
             <WorkbookNote tone={locked?'info':'warning'} title={locked?'Selected closing month is closed':'Monthly closing requires all control items'}>
-              Closing month: {selectedClosingMonth}. {completed} of {WORKBOOK_CLOSING_ITEMS.length} controls are completed and approved. The period can close after all 11 required controls are marked Done and posted journal entries balance.
+              Closing month: {selectedClosingMonth}. {completed} of {WORKBOOK_CLOSING_ITEMS.length} controls are completed and approved. The period can close only when all 11 controls are Done, source journals reconcile, every required cash/bank account has month-end statement evidence matching the posted GL, and posted journals balance.
             </WorkbookNote>
             <AdminPanel title="Closing period" bodyClassName="p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -3197,7 +3197,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
         }
       >
         <div className="space-y-2 text-sm leading-5 text-muted">
-          {pendingConfirmation?.kind === 'close-period' && <p>Any outstanding journal draft, missing control, unbalanced posted journal, or unresolved source validation will prevent the server from closing this period.</p>}
+          {pendingConfirmation?.kind === 'close-period' && <p>Any outstanding journal draft, missing control, unbalanced posted journal, unresolved source validation, missing bank/processor/cash-count evidence, or non-zero statement-to-GL difference will prevent the server from closing this period.</p>}
           {pendingConfirmation?.kind === 'archive' && <p>Archive is an audit-preserving action. It does not delete the journal history.</p>}
           {pendingConfirmation?.kind === 'post' && pendingConfirmation.type === 'journal-entry' && <p>Maker-checker is enforced by the server. The creator cannot post their own journal.</p>}
         </div>
