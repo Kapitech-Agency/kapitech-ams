@@ -114,6 +114,7 @@ test('global reporting period controls stay in the admin layout shared by module
   assert.ok(!layout.includes('global-reporting-period-container'));
   assert.ok(periodFilter.includes('global-reporting-period-trigger'));
   assert.ok(periodFilter.includes('global-reporting-period-popover'));
+  assert.ok(periodFilter.includes('The applied period scopes dated lists. Period-based reports such as Finance continue to use the selected period.'));
   assert.ok(periodFilter.includes('<span>{selectedLabel}</span>'));
   assert.ok(periodFilter.includes('new Intl.DateTimeFormat(locale, { month: \'short\', year: \'numeric\' })'));
   assert.ok(periodFilter.includes("return match ? 'Q' + match[2] + ' ' + match[1] : value;"));
