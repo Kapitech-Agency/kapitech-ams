@@ -89,6 +89,7 @@ export const EXCEL_CHART_OF_ACCOUNTS: ExcelChartAccount[] = [
   { code: '2200', name: 'Credit Card Payable', type: 'Liability', normalBalance: 'Credit', description: 'Company credit card obligation', active: true },
   { code: '3000', name: 'Owner / Capital', type: 'Equity', normalBalance: 'Credit', description: 'Modal', active: true },
   { code: '3100', name: 'Retained Earnings', type: 'Equity', normalBalance: 'Credit', description: 'Laba ditahan', active: true },
+  { code: '3200', name: 'Opening Balance Equity', type: 'Equity', normalBalance: 'Credit', description: 'Temporary offset for validated opening balances', active: true },
   { code: '4000', name: 'Project Revenue', type: 'Revenue', normalBalance: 'Credit', description: 'Pendapatan project', active: true },
   { code: '5100', name: 'Vendor / Direct Project Cost', type: 'Expense', normalBalance: 'Debit', description: 'Fee vendor/freelancer', active: true },
   { code: '5200', name: 'Other Project Obligations', type: 'Expense', normalBalance: 'Debit', description: 'Kewajiban project lain', active: true },
