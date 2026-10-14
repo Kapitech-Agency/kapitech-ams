@@ -2027,7 +2027,6 @@ export const AdminFinanceWorkspace: React.FC = () => {
         }
         const savedReconciliations = getRegisterRecords('cash-reconciliation').filter((record) => String(record.payload.reconciliationMonth || record.periodKey || '') === reconciliationMonth);
         const reconciliationByAccount = new Map(savedReconciliations.map((record) => [String(record.payload.accountCode || ''),record]));
-        const missingReconAccounts = [...requiredReconAccounts].filter((code) => !reconciliationByAccount.has(code));
         const reconciliationDiffs = [...requiredReconAccounts].map((code) => {
           const record = reconciliationByAccount.get(code);
           if (!record) return { code, record: undefined, ledger: postedBalanceAsOf(code,reconciliationMonthEnd), statement: null, difference: null };
