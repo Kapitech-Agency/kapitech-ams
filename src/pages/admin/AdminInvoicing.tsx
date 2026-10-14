@@ -761,6 +761,15 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   const [expenseCategoryFilter, setExpenseCategoryFilter] = useState('all');
   const [expensePeriodFilter, setExpensePeriodFilter] = useState<'all' | '30d' | '90d' | 'ytd'>('all');
   const [expenseDetail, setExpenseDetail] = useState<FinanceExpense | null>(null);
+  const [expensePaymentDrawer, setExpensePaymentDrawer] = useState<FinanceExpense | null>(null);
+  const [savingExpensePayment, setSavingExpensePayment] = useState(false);
+  const [expenseSettlementAmount, setExpenseSettlementAmount] = useState(0);
+  const [expenseSettlementDate, setExpenseSettlementDate] = useState(getDateInputValue());
+  const [expenseSettlementMethod, setExpenseSettlementMethod] = useState<'bank_transfer' | 'credit_card' | 'cash' | 'other'>('bank_transfer');
+  const [expenseSettlementAccount, setExpenseSettlementAccount] = useState<'1000' | '1100' | '1200'>('1000');
+  const [expenseSettlementReference, setExpenseSettlementReference] = useState('');
+  const [expenseSettlementNotes, setExpenseSettlementNotes] = useState('');
+  const [expenseSettlementId, setExpenseSettlementId] = useState('');
   const [expenseSort, setExpenseSort] = useState<'date_desc' | 'date_asc' | 'amount_high' | 'amount_low'>('date_desc');
   const [invoicePage, setInvoicePage] = useState(1);
   const [invoicePageSize, setInvoicePageSize] = useState(10);
@@ -1958,6 +1967,86 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
       showNotice('danger', err instanceof Error ? err.message : 'Payment could not be recorded.');
     } finally {
       setSavingPayment(false);
+    }
+  };
+
+  const getExpensePayments = (expense: FinanceExpense) => Array.isArray((expense as any).payments)
+    ? (expense as any).payments as Array<{ id: string; amount: number; date: string; method?: string; paymentAccountCode?: string; reference?: string; notes?: string; recordedBy?: string }>
+    : [];
+  const getExpensePaidAmount = (expense: FinanceExpense) =>
+    Math.min(Number(expense.amount) || 0, getExpensePayments(expense).reduce((sum, payment) => sum + Math.max(0, Number(payment.amount) || 0), 0));
+  const openExpensePayment = (expense: FinanceExpense) => {
+    const remaining = Math.max(0, Number(expense.amount || 0) - getExpensePaidAmount(expense));
+    if (remaining <= 0.01 || !canManageInvoices) return;
+    setExpensePaymentDrawer(expense);
+    setExpenseSettlementAmount(remaining);
+    setExpenseSettlementDate(getDateInputValue());
+    setExpenseSettlementMethod('bank_transfer');
+    setExpenseSettlementAccount('1000');
+    setExpenseSettlementReference('');
+    setExpenseSettlementNotes('');
+    setExpenseSettlementId(typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : 'expense-payment-' + expense.id + '-' + Date.now() + '-' + Math.random().toString(16).slice(2));
+  };
+
+  const handleExpensePayment = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const expense = expensePaymentDrawer;
+    if (!expense || !canManageInvoices || savingExpensePayment) return;
+    const amount = Number(expenseSettlementAmount);
+    const outstanding = Math.max(0, Number(expense.amount || 0) - getExpensePaidAmount(expense));
+    const selectedDate = new Date(expenseSettlementDate + 'T00:00:00');
+    const today = new Date(); today.setHours(23, 59, 59, 999);
+    if (!Number.isFinite(amount) || amount <= 0 || amount > outstanding + 0.01) {
+      showNotice('danger', language === 'id' ? 'Nominal pelunasan harus lebih dari 0 dan tidak boleh melebihi sisa kewajiban.' : 'Payment must be positive and cannot exceed the remaining expense balance.');
+      return;
+    }
+    if (!expenseSettlementDate || Number.isNaN(selectedDate.getTime()) || selectedDate > today) {
+      showNotice('danger', language === 'id' ? 'Tanggal pelunasan harus valid dan tidak boleh di masa depan.' : 'Actual payment date must be valid and cannot be in the future.');
+      return;
+    }
+    if (['bank_transfer','cash'].includes(expenseSettlementMethod) && !expenseSettlementAccount) {
+      showNotice('danger', language === 'id' ? 'Pilih akun kas atau bank yang benar-benar digunakan.' : 'Select the actual cash or bank account used.');
+      return;
+    }
+    setSavingExpensePayment(true);
+    try {
+      const payment = {
+        id: expenseSettlementId,
+        amount,
+        date: expenseSettlementDate,
+        method: expenseSettlementMethod,
+        paymentAccountCode: ['bank_transfer','cash'].includes(expenseSettlementMethod) ? expenseSettlementAccount : undefined,
+        reference: expenseSettlementReference.trim(),
+        notes: expenseSettlementNotes.trim(),
+        version: expense.version
+      };
+      if (usingDemoExpenses) {
+        const payments = [...getExpensePayments(expense), payment];
+        const paidTotal = payments.reduce((sum, item) => sum + Math.max(0, Number(item.amount) || 0), 0);
+        const nextExpense = { ...expense, payments, paymentStatus: paidTotal >= Number(expense.amount || 0) - 0.01 ? 'paid' : 'partially_paid' } as FinanceExpense;
+        setExpenses((current) => current.map((item) => item.id === expense.id ? nextExpense : item));
+        setExpenseDetail(nextExpense);
+        setExpensePaymentDrawer(null);
+        showNotice('success', language === 'id' ? 'Pelunasan demo dicatat.' : 'Demo payment recorded.');
+        return;
+      }
+      const result = await api.finance.recordExpensePayment(expense.id, payment);
+      if (!result.success) {
+        if (result.status === 409) await loadData(true);
+        throw new Error(result.error || 'Expense payment could not be recorded.');
+      }
+      setExpensePaymentDrawer(null);
+      setExpenseSettlementId('');
+      showNotice('success', result.data?.replayed
+        ? (language === 'id' ? 'Pelunasan ini sudah tercatat; data disinkronkan.' : 'This payment was already recorded; data has been synchronized.')
+        : (language === 'id' ? 'Pelunasan berhasil dicatat.' : 'Expense payment recorded successfully.'));
+      await loadData(true);
+    } catch (error) {
+      showNotice('danger', error instanceof Error ? error.message : 'Expense payment could not be recorded.');
+    } finally {
+      setSavingExpensePayment(false);
     }
   };
 
@@ -4175,10 +4264,48 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
               <div><p className="text-[10px] text-muted">Recorded by</p><p className="mt-1 text-xs text-fg">{expenseDetail.recordedBy || 'Finance'}</p></div>
               <div><p className="text-[10px] text-muted">Recurring</p><p className="mt-1 text-xs text-fg">{expenseDetail.recurringInterval && expenseDetail.recurringInterval !== 'none' ? expenseDetail.recurringInterval : 'One-time'}</p></div>
               <div><p className="text-[10px] text-muted">Receipt</p>{expenseDetail.receiptUrl ? <a href={expenseDetail.receiptUrl} target="_blank" rel="noreferrer" className="mt-1 inline-flex text-xs text-accent-text hover:underline">Open document</a> : <p className="mt-1 text-xs text-muted">Not attached</p>}</div>
+              <div><p className="text-[10px] text-muted">Payment status</p><p className="mt-1 text-xs text-fg capitalize">{String(expenseDetail.paymentStatus || 'unpaid').replace('_',' ')}</p></div>
+              <div><p className="text-[10px] text-muted">Paid / remaining</p><p className="mt-1 text-xs tabular-nums text-fg">{formatNativeAmount(getExpensePaidAmount(expenseDetail),expenseDetail.currency || currency,true)} / {formatNativeAmount(Math.max(0,Number(expenseDetail.amount||0)-getExpensePaidAmount(expenseDetail)),expenseDetail.currency || currency,true)}</p></div>
             </div>
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-fg">Payment history</p>
+              {getExpensePayments(expenseDetail).length === 0
+                ? <p className="text-xs text-muted">No settlement recorded yet.</p>
+                : <div className="overflow-x-auto rounded-control border border-line"><table className="w-full text-xs"><thead><tr className="border-b border-line text-left text-muted"><th className="p-2">Date</th><th className="p-2">Method / reference</th><th className="p-2 text-right">Amount</th></tr></thead><tbody>{getExpensePayments(expenseDetail).map((payment) => <tr key={payment.id} className="border-b border-line last:border-0"><td className="p-2 tabular-nums">{payment.date}</td><td className="p-2"><p>{String(payment.method||'other').replace('_',' ')}</p><p className="mt-0.5 text-[10px] text-muted">{payment.reference || 'No reference'}</p></td><td className="p-2 text-right tabular-nums">{formatNativeAmount(payment.amount,expenseDetail.currency||currency,true)}</td></tr>)}</tbody></table></div>}
+            </div>
+            {canManageInvoices && getExpensePaidAmount(expenseDetail) < Number(expenseDetail.amount||0) - 0.01 && <button type="button" onClick={() => openExpensePayment(expenseDetail)} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control bg-accent px-3.5 text-xs font-semibold text-white"><Plus size={14}/>Record payment</button>}
           </div>
         )}
       </Modal>
+
+      <Drawer
+        open={!!expensePaymentDrawer}
+        onClose={() => { if (!savingExpensePayment) setExpensePaymentDrawer(null); }}
+        size="md"
+        title="Record expense payment"
+        description={expensePaymentDrawer ? expensePaymentDrawer.description : undefined}
+        closeOnOutsideClick={!savingExpensePayment}
+        footer={<>
+          <button type="button" onClick={() => setExpensePaymentDrawer(null)} disabled={savingExpensePayment} className={actionClass}>Cancel</button>
+          <button type="submit" form="finance-expense-payment-form" disabled={savingExpensePayment} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-control bg-accent px-3.5 text-xs font-semibold text-white disabled:opacity-50"><Check size={14}/>{savingExpensePayment ? 'Saving…' : 'Record payment'}</button>
+        </>}
+      >
+        {expensePaymentDrawer && <form id="finance-expense-payment-form" onSubmit={handleExpensePayment} className="space-y-4">
+          <div className="rounded-card border border-line bg-bg p-4 space-y-2">
+            <div className="flex justify-between gap-3 text-xs"><span className="text-muted">Expense total</span><span className="tabular-nums text-fg">{formatNativeAmount(expensePaymentDrawer.amount,expensePaymentDrawer.currency||currency,true)}</span></div>
+            <div className="flex justify-between gap-3 text-xs"><span className="text-muted">Previously paid</span><span className="tabular-nums text-success">{formatNativeAmount(getExpensePaidAmount(expensePaymentDrawer),expensePaymentDrawer.currency||currency,true)}</span></div>
+            <div className="flex justify-between gap-3 border-t border-line pt-2 text-xs font-semibold"><span className="text-fg">Outstanding</span><span className="tabular-nums text-warning">{formatNativeAmount(Math.max(0,Number(expensePaymentDrawer.amount||0)-getExpensePaidAmount(expensePaymentDrawer)),expensePaymentDrawer.currency||currency,true)}</span></div>
+          </div>
+          <div><label htmlFor="finance-expense-settlement-amount" className="mb-1.5 block text-xs font-medium text-muted">Payment amount *</label><input id="finance-expense-settlement-amount" required type="number" min="0.01" max={Math.max(0,Number(expensePaymentDrawer.amount||0)-getExpensePaidAmount(expensePaymentDrawer))} step="0.01" value={expenseSettlementAmount} onChange={(event)=>setExpenseSettlementAmount(Number(event.target.value))} className={fieldClass}/></div>
+          <div><label htmlFor="finance-expense-settlement-date" className="mb-1.5 block text-xs font-medium text-muted">Actual payment date *</label><CustomDatePicker id="finance-expense-settlement-date" value={expenseSettlementDate} onChange={setExpenseSettlementDate} type="date" required max={getDateInputValue()} locale={language==='id'?'id-ID':'en-US'} className="w-full" triggerClassName="h-10 min-h-10" aria-label="Expense payment date"/></div>
+          <div><label className="mb-1.5 block text-xs font-medium text-muted">Payment method *</label><CustomSelect aria-label="Expense payment method" value={expenseSettlementMethod} onChange={(value)=>setExpenseSettlementMethod(value as 'bank_transfer'|'credit_card'|'cash'|'other')} options={[{value:'bank_transfer',label:'Bank transfer'},{value:'cash',label:'Cash / petty cash'},{value:'credit_card',label:'Credit card'},{value:'other',label:'Other / needs mapping'}]} className="w-full" triggerClassName="h-10 min-h-10 w-full"/></div>
+          {['bank_transfer','cash'].includes(expenseSettlementMethod) && <div><label className="mb-1.5 block text-xs font-medium text-muted">Paid from account *</label><CustomSelect aria-label="Expense settlement account" value={expenseSettlementAccount} onChange={(value)=>setExpenseSettlementAccount(value as '1000'|'1100'|'1200')} options={[{value:'1000',label:'1000 · Cash & Bank'},{value:'1100',label:'1100 · Petty Cash Reserve'},{value:'1200',label:'1200 · Emergency Fund'}]} className="w-full" triggerClassName="h-10 min-h-10 w-full"/></div>}
+          {expenseSettlementMethod==='credit_card' && <p className="text-xs text-muted">The payment clears Accounts Payable to Credit Card Payable. The subsequent card statement settlement must be recorded separately.</p>}
+          {expenseSettlementMethod==='other' && <p className="text-xs text-muted">This payment can be saved, but its journal will stay in the review queue until the settlement account is mapped.</p>}
+          <div><label htmlFor="finance-expense-settlement-reference" className="mb-1.5 block text-xs font-medium text-muted">Reference</label><input id="finance-expense-settlement-reference" value={expenseSettlementReference} onChange={(event)=>setExpenseSettlementReference(event.target.value)} className={fieldClass} maxLength={160} placeholder="Bank / card / transfer reference"/></div>
+          <div><label htmlFor="finance-expense-settlement-notes" className="mb-1.5 block text-xs font-medium text-muted">Notes</label><textarea id="finance-expense-settlement-notes" value={expenseSettlementNotes} onChange={(event)=>setExpenseSettlementNotes(event.target.value)} className={fieldClass} rows={3} maxLength={500}/></div>
+        </form>}
+      </Drawer>
 
       <Drawer
         open={!!paymentInvoice}
