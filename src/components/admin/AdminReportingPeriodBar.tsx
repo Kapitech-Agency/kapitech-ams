@@ -106,8 +106,8 @@ export const AdminReportingPeriodBar: React.FC = () => {
 
           <p className="mt-2 text-[10px] leading-4 text-muted">
             {isId
-              ? 'Periode yang diterapkan membatasi daftar bertanggal. Laporan berbasis periode seperti Finance tetap memakai periode yang dipilih. KPI kondisi saat ini dan data master tanpa tanggal tidak berubah.'
-              : 'The applied period scopes dated lists. Period-based reports such as Finance continue to use the selected period. Current-state KPIs and undated master data stay unchanged.'}
+              ? 'Periode yang diterapkan membatasi daftar bertanggal. Laporan Finance mengikuti periode terpilih. Monthly Closing memakai bulan penutupannya sendiri. KPI kondisi saat ini dan data master tanpa tanggal tidak berubah.'
+              : 'The applied period scopes dated lists. Finance reports follow the selected period. Monthly Closing uses its own closing month; current-state KPIs and undated master data stay unchanged.'}
           </p>
 
           <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-2">
