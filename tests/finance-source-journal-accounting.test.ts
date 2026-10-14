@@ -168,6 +168,48 @@ test('overhead vendor bills use their configured expense account without requiri
   assert.deepEqual(balance(draft), { debit: 500, credit: 500 });
 });
 
+test('card clearing and credit-card statement payments generate distinct balanced settlement journals', () => {
+  const transactions = [
+    {
+      id: 'card-clear-001',
+      status: 'posted',
+      payload: {
+        transactionKind: 'card-clearing-to-bank',
+        accountCode: '1010',
+        counterpartAccountCode: '1000',
+        direction: 'out',
+        date: '2026-10-10',
+        amount: 97,
+        reference: 'CARD-SETTLE-001',
+        description: 'Card processor settlement to bank'
+      }
+    },
+    {
+      id: 'card-payable-001',
+      status: 'posted',
+      payload: {
+        transactionKind: 'bank-to-credit-card-payable',
+        accountCode: '1000',
+        counterpartAccountCode: '2200',
+        direction: 'out',
+        date: '2026-10-11',
+        amount: 250,
+        reference: 'CARD-BANK-001',
+        description: 'Company credit card statement payment'
+      }
+    }
+  ];
+  const plan = buildFinanceSourceJournalDrafts([], [], transactions, [], [], EXCEL_CHART_OF_ACCOUNTS);
+  const clearing = plan.drafts.find((item) => item.sourceId === 'card-clear-001');
+  const liability = plan.drafts.find((item) => item.sourceId === 'card-payable-001');
+  assert.ok(clearing && liability);
+  assert.deepEqual(clearing.lines.map((line) => [line.accountCode,line.debit,line.credit]), [['1000',97,0],['1010',0,97]]);
+  assert.deepEqual(liability.lines.map((line) => [line.accountCode,line.debit,line.credit]), [['2200',250,0],['1000',0,250]]);
+  assert.deepEqual(balance(clearing), { debit: 97, credit: 97 });
+  assert.deepEqual(balance(liability), { debit: 250, credit: 250 });
+  assert.equal(plan.skipped.length, 0);
+});
+
 test('cancelled, voided, and quotation records do not become revenue journals', () => {
   for (const status of ['cancelled', 'voided', 'deleted', 'rejected']) {
     assert.equal(isIssuedInvoice(baseInvoice({ status })), false);
