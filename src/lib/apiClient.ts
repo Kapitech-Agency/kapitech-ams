@@ -316,6 +316,11 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(exp)
       }),
+    recordExpensePayment: (id: string, payment: any) =>
+      apiRequest(`/api/finance/expenses/${id}/payments`, {
+        method: 'POST',
+        body: JSON.stringify(payment)
+      }),
     deleteExpense: (id: string, version?: number) =>
       apiRequest(`/api/finance/expenses/${id}`, {
         method: 'DELETE',
