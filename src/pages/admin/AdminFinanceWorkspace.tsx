@@ -543,9 +543,9 @@ const REGISTER_FORMS: Record<string, { title: string; description: string; field
     fields:[
       {key:'projectId',label:'AMS project (optional)',type:'select',optionSource:'projects'},
       {key:'projectName',label:'Project name / reference',type:'text',required:true},
-      {key:'contractValue',label:'Contract value (IDR)',type:'number',required:true},
-      {key:'vendorCost',label:'Vendor commitment (IDR)',type:'number',required:true},
-      {key:'otherObligations',label:'Other obligations (IDR)',type:'number',required:true},
+      {key:'contractValue',label:'Contract value (IDR)',type:'number',readOnly:true,required:true,help:'Linked from the saved Project Finance record.'},
+      {key:'vendorCost',label:'Vendor commitment (IDR)',type:'number',readOnly:true,required:true,help:'Linked from the saved Project Finance record.'},
+      {key:'otherObligations',label:'Other obligations (IDR)',type:'number',readOnly:true,required:true,help:'Linked from the saved Project Finance record.'},
       {key:'pettyCashPercent',label:'Petty cash reserve (%)',type:'number',required:true,defaultValue:10},
       {key:'emergencyPercent',label:'Emergency fund (%)',type:'number',required:true,defaultValue:10},
       {key:'teamRewardPercent',label:'Team Reward (%)',type:'number',required:true,defaultValue:10},
@@ -872,9 +872,19 @@ export const AdminFinanceWorkspace: React.FC = () => {
 
   const getProjectFinanceRecord = (project: AgencyProject): WorkbookRecord | undefined =>
     getRegisterRecords('project-finance').find((record) =>
-      (Boolean(record.projectId) && record.projectId === project.id) ||
-      String(record.payload.projectName || '').toLowerCase() === String(project.name || '').toLowerCase()
+      (Boolean(record.projectId || record.payload.projectId) && String(record.projectId || record.payload.projectId) === project.id) ||
+      String(record.payload.projectName || '').trim().toLowerCase() === String(project.name || '').trim().toLowerCase()
     );
+
+  const getProjectFinanceRecordForRef = (projectId: string, projectName: string): WorkbookRecord | undefined => {
+    const id = String(projectId || '').trim();
+    const name = String(projectName || '').trim().toLowerCase();
+    return getRegisterRecords('project-finance').find((record) => {
+      const recordProjectId = String(record.projectId || record.payload.projectId || '').trim();
+      const recordProjectName = String(record.payload.projectName || '').trim().toLowerCase();
+      return Boolean(id && recordProjectId === id) || Boolean(name && recordProjectName === name);
+    });
+  };
 
 
   const openRegisterForm = (type: string, record?: WorkbookRecord, initialPayload: Record<string, any> = {}) => {
@@ -1008,6 +1018,10 @@ export const AdminFinanceWorkspace: React.FC = () => {
     setEditor((current) => {
       if (!current) return current;
       const payload = { ...current.payload, [key]: value };
+      if (current.type === 'project-allocation' && key === 'projectId') {
+        const selectedProject = projects.find((project) => project.id === value);
+        if (selectedProject) payload.projectName = selectedProject.name;
+      }
       if (current.type === 'cash-bank-transaction' && key === 'transactionKind') {
         const rules: Record<string, { from: string; to: string; direction: string }> = {
           'manual': { from: '1000', to: '', direction: 'out' },
@@ -1136,7 +1150,13 @@ export const AdminFinanceWorkspace: React.FC = () => {
       }
       if (editor.type === 'project-allocation') {
         const projectId = String(payload.projectId || editor.record?.projectId || '').trim();
-        const projectName = String(payload.projectName || '').trim().toLowerCase();
+        const selectedProject = projects.find((project) => project.id === projectId);
+        const projectNameValue = String(selectedProject?.name || payload.projectName || editor.record?.payload.projectName || '').trim();
+        const projectName = projectNameValue.toLowerCase();
+        const projectFinance = getProjectFinanceRecordForRef(projectId, projectNameValue);
+        if (!projectFinance && !editor.record) {
+          throw new Error('Configure Project Finance for this project first. Allocation amounts must come from the saved contract, vendor commitment and other obligation record.');
+        }
         const matchingFees = getRegisterRecords('team-fee').filter((record) => {
           const feeProjectId = String(record.projectId || record.payload.projectId || '').trim();
           const feeProjectName = String(record.payload.projectName || '').trim().toLowerCase();
@@ -1144,8 +1164,17 @@ export const AdminFinanceWorkspace: React.FC = () => {
         });
         const teamFeeTotal = matchingFees.length
           ? Math.round(matchingFees.reduce((sum, record) => sum + Math.max(0, Number(record.payload.feeAmount) || 0), 0) * 100) / 100
-          : Math.max(0, Number(payload.teamFeeAmount) || 0);
-        payload = { ...payload, projectId: projectId || undefined, teamFeeAmount: teamFeeTotal };
+          : Math.max(0, Number(editor.record?.payload.teamFeeAmount ?? payload.teamFeeAmount) || 0);
+        const financePayload = projectFinance?.payload || editor.record?.payload || {};
+        payload = {
+          ...payload,
+          projectId: projectId || undefined,
+          projectName: projectNameValue,
+          contractValue: Number(financePayload.contractValue ?? payload.contractValue) || 0,
+          vendorCost: Number(financePayload.vendorCommitment ?? financePayload.vendorCost ?? payload.vendorCost) || 0,
+          otherObligations: Number(financePayload.otherObligations ?? payload.otherObligations) || 0,
+          teamFeeAmount: teamFeeTotal
+        };
       }
       if (editor.type === 'journal-entry') {
         const rawLines = Array.isArray(payload.lines) ? payload.lines as Array<Record<string, any>> : [];
@@ -1392,7 +1421,16 @@ export const AdminFinanceWorkspace: React.FC = () => {
           )}
           <div className="grid gap-3 sm:grid-cols-2">
             {definition.fields.filter((field) => !(editor.type === 'journal-entry' && ['debitAccountCode','creditAccountCode','amount'].includes(field.key))).filter((field) => !field.visibleWhen || field.visibleWhen.values.includes(String(editor.payload[field.visibleWhen.key] || ''))).map((field) => {
-              const value = field.key === 'teamFeeAmount' && editor.type === 'project-allocation'
+              const financeSource = editor.type === 'project-allocation'
+                ? getProjectFinanceRecordForRef(String(editor.payload.projectId || editor.record?.projectId || ''), String(editor.payload.projectName || editor.record?.payload.projectName || ''))?.payload
+                : undefined;
+              const value = editor.type === 'project-allocation' && ['contractValue','vendorCost','otherObligations'].includes(field.key)
+                ? String(field.key === 'contractValue'
+                    ? financeSource?.contractValue ?? editor.record?.payload.contractValue ?? editor.payload.contractValue ?? 0
+                    : field.key === 'vendorCost'
+                      ? financeSource?.vendorCommitment ?? financeSource?.vendorCost ?? editor.record?.payload.vendorCost ?? editor.payload.vendorCost ?? 0
+                      : financeSource?.otherObligations ?? editor.record?.payload.otherObligations ?? editor.payload.otherObligations ?? 0)
+                : field.key === 'teamFeeAmount' && editor.type === 'project-allocation'
                 ? String((() => {
                     const projectId = String(editor.payload.projectId || editor.record?.projectId || '').trim();
                     const projectName = String(editor.payload.projectName || '').trim().toLowerCase();
@@ -1462,6 +1500,14 @@ export const AdminFinanceWorkspace: React.FC = () => {
               );
             })}
           </div>
+          {editor.type === 'project-allocation' && (() => {
+            const projectFinance = getProjectFinanceRecordForRef(String(editor.payload.projectId || editor.record?.projectId || ''), String(editor.payload.projectName || editor.record?.payload.projectName || ''));
+            return <WorkbookNote tone={projectFinance ? 'info' : 'warning'} title={projectFinance ? 'Allocation values linked to Project Finance' : 'Project Finance setup required'}>
+              {projectFinance
+                ? 'Contract value, vendor commitment and other obligations are read from the saved Project Finance record. Update them there first; this allocation form cannot create a conflicting second source.'
+                : 'Save the project contract value, vendor commitment and other obligations in the Project Finance tab first. Legacy allocations can still be edited, but new allocations need a linked Project Finance record.'}
+            </WorkbookNote>;
+          })()}
           {editor.type === 'journal-entry' && (() => {
             const journalLines = Array.isArray(editor.payload.lines) ? editor.payload.lines as Array<Record<string, any>> : [];
             const debitTotal = journalLines.reduce((sum, line) => sum + Math.max(0, Number(line.debit) || 0), 0);
