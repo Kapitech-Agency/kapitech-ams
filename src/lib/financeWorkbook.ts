@@ -293,6 +293,7 @@ export function buildFinanceSourceJournalDrafts(
 
   for (const invoice of invoices) {
     if (!isIssuedInvoice(invoice)) continue;
+    let invoiceRecognitionReady = true;
 
     const invoiceId = String(invoice.id || '').trim();
     const issueDate = String(invoice.issueDate || '').slice(0, 10);
@@ -315,8 +316,10 @@ export function buildFinanceSourceJournalDrafts(
     } else {
       const taxAmount = safeFinanceMoney(invoice.taxAmount);
       if (taxAmount > invoiceAmount + 0.01) {
+        invoiceRecognitionReady = false;
         skip({ sourceType: 'invoice-issued', sourceId: invoiceSourceId, date: issueDate, reference: invoiceReference, description: invoiceDescription, amount: invoiceAmount, reason: 'Invoice tax exceeds invoice total. Correct invoice totals before journalizing.' });
       } else if (taxAmount > 0.01 && accountTypes.get('2100') !== 'Liability') {
+        invoiceRecognitionReady = false;
         skip({ sourceType: 'invoice-issued', sourceId: invoiceSourceId, date: issueDate, reference: invoiceReference, description: invoiceDescription, amount: invoiceAmount, reason: 'The Tax Payable account (2100) must exist and be active before a taxable invoice can be journalized.' });
       } else if (taxAmount > 0.01) {
         const revenueAmount = Math.round((invoiceAmount - taxAmount) * 100) / 100;
@@ -353,6 +356,14 @@ export function buildFinanceSourceJournalDrafts(
         amount: getInvoiceCollected(invoice),
         reason: 'A collection amount exists without a dated payment row. Verify the receipt date before journalizing.'
       });
+      continue;
+    }
+
+    if (!invoiceRecognitionReady) {
+      for (let paymentIndex = 0; paymentIndex < payments.length; paymentIndex++) {
+        const payment = payments[paymentIndex];
+        skip({ sourceType: 'invoice-payment', sourceId: sourceIdentifier(invoice.id, 'payment', payment.id, String(paymentIndex)), date: payment.date, reference: String(payment.reference || invoice.invoiceNumber || invoice.id || ''), description: 'Client receipt · ' + String(invoice.clientCompany || invoice.clientName || 'Client not set'), amount: Number(payment.amount) || 0, reason: 'Receipt journal is held because the linked invoice recognition entry is not eligible. Correct the invoice tax and account mapping first.' });
+      }
       continue;
     }
 
@@ -393,7 +404,7 @@ export function buildFinanceSourceJournalDrafts(
   for (const expense of expenses) {
     const metadata = expense.metadata && typeof expense.metadata === 'object' ? expense.metadata as Record<string, unknown> : {};
     const expenseId = String(expense.id || '').trim();
-    const expenseDate = String(expense.paidDate || metadata.paidDate || expense.date || '').slice(0, 10);
+    const expenseDate = String(expense.paidDate || metadata.paidDate || '').slice(0, 10);
     const amount = safeFinanceMoney(expense.amount);
     const reference = String(expense.reference || metadata.reference || expenseId || '').slice(0, 160);
     const description = String(expense.description || expense.category || 'Expense record');
@@ -446,6 +457,10 @@ export function buildFinanceSourceJournalDrafts(
       : String(explicitAccountValue).trim();
     const expensePaymentMethod = String((expense as any).paymentMethod || metadata.paymentMethod || '').toLowerCase().replace(/[\s-]+/g, '_');
     const creditCardPaid = expensePaymentMethod === 'credit_card';
+    if (!creditCardPaid && !['bank_transfer', 'cash'].includes(expensePaymentMethod)) {
+      skip({ sourceType, sourceId, date: expenseDate, reference, description, amount, reason: 'This payment method requires an explicit settlement-account mapping; automated cash journal supports only bank transfer, cash and credit card.' });
+      continue;
+    }
     if (creditCardPaid && accountTypes.get('2200') !== 'Liability') {
       skip({ sourceType, sourceId, date: expenseDate, reference, description, amount, reason: 'Credit Card Payable account (2200) must exist and be active before posting a card-paid expense.' });
       continue;
@@ -571,8 +586,10 @@ export function buildFinanceSourceJournalDrafts(
       continue;
     }
     const notes = method === 'cash'
-      ? 'Draft generated from an AMS vendor bill payment. Debit Accounts Payable and provisionally credit Petty Cash Reserve for a cash payment. Verify the actual payment source and bill evidence before approval; not posted.'
-      : 'Draft generated from an AMS vendor bill payment. Debit Accounts Payable and credit Cash & Bank for a bank-transfer payment. Verify the transfer and bill evidence before approval; not posted.';
+      ? 'Draft generated from an AMS vendor bill payment. Debit Accounts Payable and credit Petty Cash Reserve. Verify actual cash source and bill evidence; not posted.'
+      : method === 'credit_card'
+        ? 'Draft generated from an AMS vendor bill payment. Debit Accounts Payable and credit Credit Card Payable; verify the card statement and bill evidence; not posted.'
+        : 'Draft generated from an AMS vendor bill payment. Debit Accounts Payable and credit Cash & Bank. Verify the bank transfer and bill evidence; not posted.';
     drafts.push(buildTwoLineFinanceDraft({
       sourceType: 'vendor-bill-payment', sourceId, date: paidDate, reference, description,
       debitCode: '2000', creditCode, amount,
@@ -600,7 +617,7 @@ export function buildFinanceSourceJournalDrafts(
       continue;
     }
     if (kind === 'manual') {
-      if (!CASH_ACCOUNT_CODES.has(sourceCode) || !/^\d{4}$/.test(counterpartCode) || sourceCode === counterpartCode || accountTypes.get(counterpartCode) === '__inactive__') {
+      if (!CASH_ACCOUNT_CODES.has(sourceCode) || !/^\d{4}$/.test(counterpartCode) || sourceCode === counterpartCode || !accountTypes.has(counterpartCode) || accountTypes.get(counterpartCode) === '__inactive__') {
         skip({ sourceType: 'cash-bank-transfer', sourceId, date, reference, description, amount, reason: 'Manual cash movement needs an active four-digit counterpart account different from the source cash account.' });
         continue;
       }
