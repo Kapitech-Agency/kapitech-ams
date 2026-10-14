@@ -758,7 +758,10 @@ export const AdminFinanceWorkspace: React.FC = () => {
       for (const payment of getPaymentRows(invoice)) {
         if (!payment.date || payment.amount <= 0) continue;
         const method = String(payment.method || '').toLowerCase().replace(/[\s-]+/g, '_');
-        const accountCode = method === 'bank_transfer' ? '1000' : method === 'cash' ? '1100' : '';
+        const settlementAccount = String(payment.settlementAccountCode || '');
+        const accountCode = method === 'bank_transfer' ? '1000'
+          : method === 'cash' ? '1100'
+            : method === 'other' && ['1000','1100','1200'].includes(settlementAccount) ? settlementAccount : '';
         if (!accountCode) continue;
         entries.push({
           id: 'payment-' + invoice.id + '-' + payment.id,
