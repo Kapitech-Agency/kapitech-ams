@@ -171,7 +171,6 @@ function normalise(type: FinanceWorkbookRecordType, raw: unknown, approval = fal
       if (status === 'paid' && !paidDate) throw new FinanceWorkbookValidationError('An actual payment date is required for a paid Team Fee installment.');
       p = { projectId:project, projectName, memberName, role:txt(v.role,120), feeAmount:money(v.feeAmount,'Team fee',false), dueDate, paymentReference, paymentStatus:status, paidDate, notes:txt(v.notes,500) };
       key = (project || keyText(projectName)) + '|' + keyText(memberName) + (paymentReference ? '|' + keyText(paymentReference) : ''); period = dueDate ? periodOf(dueDate) : ''; break;
-      key = (project || keyText(projectName)) + '|' + keyText(memberName); period = dueDate ? periodOf(dueDate) : ''; break;
     }
     case 'project-allocation': {
       const projectName = txt(v.projectName,200);
@@ -224,7 +223,7 @@ function normalise(type: FinanceWorkbookRecordType, raw: unknown, approval = fal
         throw new FinanceWorkbookValidationError('A source-linked receipt/payment journal must include its prerequisite journal source ID.');
       }
       if (relatedSourceId && !requiresRelatedJournal) {
-        throw new FinanceWorkbookValidationError('Only client receipt and vendor payment journals may reference a prerequisite journal.');
+        throw new FinanceWorkbookValidationError('Only client receipt, expense payment and vendor payment journals may reference a prerequisite journal.');
       }
       p = {
         date:d, reference, description, projectId:project, lines, debitTotal:debits, creditTotal:credits,
