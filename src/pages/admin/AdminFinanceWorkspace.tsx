@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, ArrowUpRight, Briefcase, ArrowUpDown, CircleDollarSign, Download, FileText, Landmark, Plus, RefreshCw, Search, ShieldAlert, WalletCards, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpRight, Briefcase, ArrowUpDown, CircleDollarSign, Download, FileText, Landmark, Plus, RefreshCw, Search, ShieldAlert, Trash2, WalletCards, X } from 'lucide-react';
 import { AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminPanel, AdminSectionTabs, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import Button from '../../components/ui/Button';
 import { AdminInvoicing } from './AdminInvoicing';
