@@ -112,6 +112,44 @@ export class PostgresExpenseRepository{
       return mapExpense(result.rows[0]);
     });
   }
+  async recordPayment(id:string,input:Record<string,any>,audit?:AuditEntry){
+    return withPostgresTransaction(async client=>{
+      const found=await client.query<Row>('SELECT * FROM expenses WHERE id=$1 FOR UPDATE',[id]);
+      if(!found.rows[0]) throw new ExpenseNotFoundError('Expense not found.');
+      const row=found.rows[0];
+      if(row.status==='voided'||row.archived_at) throw new ExpenseImmutableError('A voided expense cannot receive payments.');
+      if(input.expectedVersion!=null&&Number(row.version)!==Number(input.expectedVersion)) throw new ExpenseVersionConflictError('Expense was modified by another user. Refresh and retry.');
+      const amount=Number(input.amount), paymentDate=dateValue(input.date), method=String(input.method||'').toLowerCase();
+      if(!Number.isFinite(amount)||amount<=0||!paymentDate||!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(paymentDate)||Number.isNaN(new Date(paymentDate+'T00:00:00Z').getTime())||new Date(paymentDate+'T00:00:00Z').toISOString().slice(0,10)!==paymentDate) throw new Error('Valid positive payment amount and actual payment date are required.');
+      if(!['bank_transfer','credit_card','cash','other'].includes(method)) throw new Error('Payment method is not supported.');
+      const metadata=row.metadata&&typeof row.metadata==='object'&&!Array.isArray(row.metadata)?row.metadata:{};
+      const payments=Array.isArray(metadata.payments)?metadata.payments as Array<Record<string,any>>:[];
+      const paymentId=String(input.id||'').trim();
+      if(!paymentId) throw new Error('A unique expense payment ID is required.');
+      const fingerprint=JSON.stringify({amount:Math.round(amount*100)/100,date:paymentDate,method,paymentAccountCode:String(input.paymentAccountCode||''),reference:String(input.reference||''),notes:String(input.notes||'')});
+      const duplicate=payments.find(payment=>String(payment.id||'')===paymentId);
+      if(duplicate){
+        const existingFingerprint=JSON.stringify({amount:Math.round(Number(duplicate.amount||0)*100)/100,date:dateValue(duplicate.date),method:String(duplicate.method||''),paymentAccountCode:String(duplicate.paymentAccountCode||''),reference:String(duplicate.reference||''),notes:String(duplicate.notes||'')});
+        if(existingFingerprint!==fingerprint) throw new ExpenseVersionConflictError('Payment ID has already been used with different payment details.');
+        return {...mapExpense(row),__idempotentReplay:true};
+      }
+      const settledSoFar=payments.reduce((sum:number,payment)=>sum+Math.max(0,Number(payment.amount)||0),0);
+      if(settledSoFar+amount>Number(row.amount||0)+0.01) throw new ExpenseVersionConflictError('Total expense payments cannot exceed the recorded expense amount.');
+      const paymentAccountCode=String(input.paymentAccountCode||'');
+      if(['bank_transfer','cash'].includes(method)&&!['1000','1100','1200'].includes(paymentAccountCode)) throw new Error('Select the actual cash, bank or emergency-fund account used for this payment.');
+      if(method==='credit_card'&&paymentAccountCode) throw new Error('Credit-card settlement uses Credit Card Payable and does not accept a cash-account code.');
+      await this.ensureFinancePeriodOpen(client,paymentDate);
+      const payment={id:paymentId,amount:Math.round(amount*100)/100,date:paymentDate,method,paymentAccountCode:paymentAccountCode||undefined,reference:String(input.reference||'').slice(0,160),notes:String(input.notes||'').slice(0,500),recordedBy:String(input.recordedBy||'')};
+      const nextPayments=[...payments,payment];
+      const totalPaid=Math.round(nextPayments.reduce((sum:number,p)=>sum+Math.max(0,Number(p.amount)||0),0)*100)/100;
+      const nextStatus=totalPaid>=Number(row.amount||0)-0.01?'paid':'partially_paid';
+      const nextMetadata={...metadata,payments:nextPayments,paymentStatus:nextStatus,paidDate:paymentDate,paymentMethod:method,paymentAccountCode:payment.paymentAccountCode,paymentReference:payment.reference};
+      const updated=await client.query<Row>('UPDATE expenses SET metadata=$2,version=version+1 WHERE id=$1 AND version=$3 RETURNING *',[id,JSON.stringify(nextMetadata),Number(row.version||1)]);
+      if(!updated.rows[0]) throw new ExpenseVersionConflictError('Expense changed while recording payment. Refresh and retry.');
+      if(audit) await postgresAuditLogRepository.appendWithinTransaction(client,audit);
+      return mapExpense(updated.rows[0]);
+    });
+  }
   async void(id:string,expectedVersion?:number,audit?: AuditEntry){
     return withPostgresTransaction(async client=>{
       const current=await client.query<Row>('SELECT * FROM expenses WHERE id=$1 FOR UPDATE',[id]);if(!current.rows[0])throw new ExpenseNotFoundError('Expense not found.');
