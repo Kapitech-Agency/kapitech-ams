@@ -3999,7 +3999,8 @@ apiRouter.post('/finance/workbook/periods/:period/close', requireAuth, requirePe
         }
       }
       for (const skipped of plan.skipped) {
-        if (String(skipped.date || '').slice(0, 7) !== period) continue;
+        const sourcePeriod = String(skipped.date || '').slice(0, 7);
+        if (sourcePeriod && sourcePeriod !== period) continue;
         issues.push((skipped.reference || skipped.description || skipped.sourceId) + ': ' + skipped.reason);
       }
       return [...new Set(issues)];
