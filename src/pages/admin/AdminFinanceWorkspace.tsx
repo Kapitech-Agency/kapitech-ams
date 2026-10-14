@@ -1996,6 +1996,51 @@ export const AdminFinanceWorkspace: React.FC = () => {
         const periodClosingBalance = closingBalanceAvailable
           ? opening! + sumAmounts<CashMovement>(cashBalanceRows, (entry) => entry.cashIn - entry.cashOut)
           : null;
+        const reconciliationMonth = (selectedCashRange?.endDate || getLocalDateInputValue()).slice(0,7);
+        const reconciliationMonthEnd = new Date(Date.UTC(Number(reconciliationMonth.slice(0,4)),Number(reconciliationMonth.slice(5,7)),0)).toISOString().slice(0,10);
+        const reconciliableAccounts = new Set(['1000','1010','1100','1200']);
+        const postedJournalRecords = getRegisterRecords('journal-entry').filter((record) => record.status === 'posted');
+        const postedBalanceAsOf = (accountCode: string, asOfDate: string) => {
+          let balance = 0;
+          for (const journal of postedJournalRecords) {
+            const date = String(journal.payload.date || '').slice(0,10);
+            if (!date || date > asOfDate) continue;
+            const lines = Array.isArray(journal.payload.lines) ? journal.payload.lines as Array<Record<string,any>> : [];
+            for (const line of lines) if (String(line.accountCode || '') === accountCode) {
+              balance += (Number(line.debit) || 0) - (Number(line.credit) || 0);
+            }
+          }
+          return Math.round(balance * 100) / 100;
+        };
+        const requiredReconAccounts = new Set<string>(['1000']);
+        for (const journal of postedJournalRecords) {
+          const date = String(journal.payload.date || '').slice(0,10);
+          if (!date || date.slice(0,7) !== reconciliationMonth) continue;
+          const lines = Array.isArray(journal.payload.lines) ? journal.payload.lines as Array<Record<string,any>> : [];
+          for (const line of lines) {
+            const code = String(line.accountCode || '');
+            if (reconciliableAccounts.has(code)) requiredReconAccounts.add(code);
+          }
+        }
+        for (const code of reconciliableAccounts) {
+          if (Math.abs(postedBalanceAsOf(code,reconciliationMonthEnd)) > 0.01) requiredReconAccounts.add(code);
+        }
+        const savedReconciliations = getRegisterRecords('cash-reconciliation').filter((record) => String(record.payload.reconciliationMonth || record.periodKey || '') === reconciliationMonth);
+        const reconciliationByAccount = new Map(savedReconciliations.map((record) => [String(record.payload.accountCode || ''),record]));
+        const missingReconAccounts = [...requiredReconAccounts].filter((code) => !reconciliationByAccount.has(code));
+        const reconciliationDiffs = [...requiredReconAccounts].map((code) => {
+          const record = reconciliationByAccount.get(code);
+          if (!record) return { code, record: undefined, ledger: postedBalanceAsOf(code,reconciliationMonthEnd), statement: null, difference: null };
+          const statement = Number(record.payload.statementBalance) || 0;
+          const ledger = postedBalanceAsOf(code,String(record.payload.statementDate || reconciliationMonthEnd));
+          return { code, record, ledger, statement, difference: Math.round((ledger-statement)*100)/100 };
+        });
+        const reconciledCount = reconciliationDiffs.filter((item) => item.record && item.difference !== null && Math.abs(item.difference) <= 0.01).length;
+        const openReconCount = reconciliationDiffs.filter((item) => !item.record || item.difference === null || Math.abs(item.difference) > 0.01).length;
+        const reconciliationAccountName = (code: string) =>
+          EXCEL_CHART_OF_ACCOUNTS.find((account) => account.code === code)?.name
+          || getRegisterRecords('chart-of-accounts').find((record) => String(record.payload.code || record.recordKey) === code)?.payload.name
+          || code;
         return (
           <div className="space-y-4">
             <WorkbookNote tone={opening === null ? 'warning' : 'info'} title={opening === null ? 'Cash ledger needs its opening balance' : 'Cash ledger is connected to its opening balance'}>
@@ -2007,7 +2052,9 @@ export const AdminFinanceWorkspace: React.FC = () => {
               {id:'cash-opening',label:'Opening balance',value:opening === null ? 'Not set' : formatMoney(opening),context:openingDate ? 'Account 1000 · from ' + formatDate(openingDate) : 'Account 1000 · Cash & Bank',icon:<Landmark size={15}/>},
               {id:'cash-in',label:'Recorded cash in',value:formatMoney(totalIn),context:reportPeriodEnabled ? 'Dated movements in selected period' : 'Dated movements in loaded source records',icon:<ArrowDown size={15}/>},
               {id:'cash-out',label:'Recorded cash out',value:formatMoney(totalOut),context:reportPeriodEnabled ? 'Dated movements in selected period' : 'Dated movements in loaded source records',icon:<ArrowUpRight size={15}/>},
-              {id:'cash-closing',label:reportPeriodEnabled ? 'Provisional period-end balance' : 'Provisional balance',value:periodClosingBalance === null ? 'Not available' : formatMoney(periodClosingBalance),context:'Opening balance plus recorded movements through period end; unreconciled',icon:<WalletCards size={15}/>}
+              {id:'cash-closing',label:reportPeriodEnabled ? 'Provisional period-end balance' : 'Provisional balance',value:periodClosingBalance === null ? 'Not available' : formatMoney(periodClosingBalance),context:'Opening balance plus recorded movements through period end; unreconciled',icon:<WalletCards size={15}/>},
+              {id:'cash-recon-complete',label:'Reconciled accounts',value:reconciledCount+' / '+reconciliationDiffs.length,context:'Month-end · '+reconciliationMonth,icon:<ShieldAlert size={15}/>},
+              {id:'cash-recon-open',label:'Reconciliation exceptions',value:String(openReconCount),context:'Missing statement evidence or non-zero difference',icon:<CircleDollarSign size={15}/>}
             ]}/>
             <FinanceDataTable
               title="Cash & Bank ledger"
@@ -2016,6 +2063,29 @@ export const AdminFinanceWorkspace: React.FC = () => {
               rows={rows.map((row) => ({...row}))}
               emptyMessage="No dated cash movement is available. Set an opening balance or record a movement."
               actions={<div className="flex flex-wrap gap-2">{registerAddButton('cash-bank-transaction','Add movement')}{canManageFinanceRecords && <Button type="button" variant="secondary" onClick={() => openCashOpeningForm('1000')}>{opening === null ? 'Set opening balance' : 'Edit opening balance'}</Button>}</div>}
+            />
+            <WorkbookNote tone={openReconCount ? 'warning' : 'info'} title={openReconCount ? 'Month-end reconciliation is incomplete' : 'Month-end balances are reconciled'}>
+              Reconciliation month: {reconciliationMonth}. Compare every required cash, bank or clearing account to the actual bank statement, processor statement or physical cash count at month end. The server independently validates these records and blocks closing if evidence is missing or the posted ledger differs.
+            </WorkbookNote>
+            <FinanceDataTable
+              title={'Statement reconciliation · '+reconciliationMonth}
+              description="The variance is posted General Ledger balance less the recorded statement or counted balance. Save evidence for account 1000 every month and for other cash/clearing accounts with activity or a non-zero balance."
+              columns={[{label:'Account'},{label:'Statement / count date'},{label:'Statement / counted balance',align:'right'},{label:'Posted GL balance',align:'right'},{label:'Difference',align:'right'},{label:'Evidence reference'},{label:'Status'},{label:'Actions'}]}
+              rows={reconciliationDiffs.map((item) => ({
+                id: item.code,
+                cells: [
+                  item.code+' · '+String(reconciliationAccountName(item.code)),
+                  item.record ? formatDate(item.record.payload.statementDate) : 'Missing',
+                  item.statement === null ? '—' : formatMoney(item.statement),
+                  formatMoney(item.ledger),
+                  item.difference === null ? '—' : formatMoney(item.difference),
+                  String(item.record?.payload.statementReference || 'No evidence'),
+                  !item.record ? <AdminStatusBadge tone="warning">Missing</AdminStatusBadge> : Math.abs(Number(item.difference)||0)<=0.01 ? <AdminStatusBadge tone="success">Reconciled</AdminStatusBadge> : <AdminStatusBadge tone="danger">Difference</AdminStatusBadge>,
+                  item.record ? registerRecordActions('cash-reconciliation',item.record) : canManageFinanceRecords ? <Button variant="primary" type="button" onClick={() => openRegisterForm('cash-reconciliation',undefined,{reconciliationMonth,statementDate:reconciliationMonthEnd,accountCode:item.code})}>Record evidence</Button> : <span className="text-muted">View only</span>
+                ]
+              }))}
+              emptyMessage="No cash/bank account has a posted balance to reconcile for this month."
+              actions={registerAddButton('cash-reconciliation','Record reconciliation',{reconciliationMonth,statementDate:reconciliationMonthEnd})}
             />
           </div>
         );
