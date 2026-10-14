@@ -129,7 +129,7 @@ export class PostgresInvoiceRepository {
       if(postedLedger.rows[0]){
         const protectedFields=['invoiceNumber','type','clientId','projectId','subtotal','discountPercent','discountAmount','taxPercent','taxAmount','total','currency','issueDate'];
         const changed=protectedFields.some((key)=>JSON.stringify((next as any)[key]??null)!==JSON.stringify((current as any)[key]??null));
-        const itemFingerprint=(items:any[])=>JSON.stringify((items||[]).map((item:any)=>({description:String(item.description||''),quantity:Number(item.quantity),unitPrice:Number(item.unitPrice),amount:Number(item.amount??Number(item.quantity)*Number(item.unitPrice)})));
+        const itemFingerprint=(items:any[])=>JSON.stringify((items||[]).map((item:any)=>({description:String(item.description||''),quantity:Number(item.quantity),unitPrice:Number(item.unitPrice),amount:Number(item.amount ?? (Number(item.quantity)*Number(item.unitPrice)))})));
         const itemsChanged=patch.items!==undefined&&itemFingerprint(next.items)!==itemFingerprint(current.items);
         if(changed||itemsChanged) throw new Error('INVOICE_POSTED_LEDGER_REVERSAL_REQUIRED');
       }
