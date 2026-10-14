@@ -75,14 +75,14 @@ test('The Finance worksheet search controls the embedded vendor directory withou
   assert.match(vendors, /className=\{searchTerm !== undefined \? 'hidden' : 'relative w-full lg:w-96'\}/);
 });
 
-test('Cash Flow and Annual Summary disclose transfer and petty-cash source boundaries', async () => {
+test('Cash Flow and Annual Summary separate actual cash accounts and exclude internal transfers', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
 
-  assert.match(workspace, /Inflows include dated invoice payments and saved Cash & Bank entries touching account 1000/);
-  assert.match(workspace, /Petty-cash vouchers remain in their separate ledger and are not included in this monthly view/);
-  assert.match(workspace, /metric: 'Recorded cash outflow \(proxy\)'[\s\S]*?AMS expense dates and saved Cash & Bank movements; excludes petty-cash vouchers/);
+  assert.match(workspace, /Inflows and outflows include dated, explicitly paid transactions on cash accounts 1000, 1100 and 1200/);
+  assert.match(workspace, /Internal transfers between company cash accounts are excluded from consolidated cash flow/);
+  assert.match(workspace, /metric: 'Recorded cash outflow \(proxy\)'[\s\S]*?excludes petty-cash vouchers/);
   assert.match(workspace, /Collections minus recorded bank outflow proxy; excludes petty-cash voucher spending/);
-  assert.match(workspace, /metric: 'Annual recorded cash in'[\s\S]*?Invoice payments and saved Cash & Bank inflows; excludes petty-cash voucher receipts/);
+  assert.match(workspace, /metric: 'Annual recorded cash in'[\s\S]*?excludes petty-cash voucher receipts/);
   assert.doesNotMatch(workspace, /metric: 'Annual Collections'[\s\S]*?basis: 'Payment date'/);
   assert.match(workspace, /Recorded cash in minus outflow proxy; cash transfers and petty-cash voucher activity are not a complete consolidated view/);
   assert.match(workspace, /FINANCE_UI_COPY: Record<string, string> = \{[\s\S]*?Perlakukan hasilnya sebagai pergerakan bersih/);
