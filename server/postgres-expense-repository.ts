@@ -39,7 +39,11 @@ export class PostgresExpenseRepository{
         currency,
         date:expenseDate,
         projectId:projectId||'',
-        recurringInterval:String(input.recurringInterval||'none')
+        recurringInterval:String(input.recurringInterval||'none'),
+        paymentStatus:String(input.metadata?.paymentStatus||'unpaid'),
+        paidDate:String(input.metadata?.paidDate||''),
+        paymentMethod:String(input.metadata?.paymentMethod||'bank_transfer'),
+        paymentAccountCode:String(input.metadata?.paymentAccountCode||'')
       };
       if (vendorId || vendorContractId) {
         fingerprintData.vendorId = vendorId || '';
@@ -66,7 +70,25 @@ export class PostgresExpenseRepository{
             projectId:existing.rows[0].project_id?String(existing.rows[0].project_id):'',
             recurringInterval:String(existing.rows[0].recurring_interval||'none')
           }));
-          if(storedFingerprint!==requestFingerprint) throw new Error('EXPENSE_IDEMPOTENCY_KEY_REUSE_CONFLICT');
+          if(storedFingerprint!==requestFingerprint){
+            const legacyFingerprint=JSON.stringify({
+              type:String(existing.rows[0].type||'OpEx'),
+              category:String(existing.rows[0].category||'General'),
+              description:String(existing.rows[0].description||''),
+              amount:Math.round(Number(existing.rows[0].amount||0)*100)/100,
+              currency:String(existing.rows[0].currency||'IDR'),
+              date:dateValue(existing.rows[0].expense_date),
+              projectId:existing.rows[0].project_id?String(existing.rows[0].project_id):'',
+              recurringInterval:String(existing.rows[0].recurring_interval||'none')
+            });
+            const settlementHasBeenRecorded=['paymentStatus','paidDate','paymentMethod','paymentAccountCode'].some((key)=>existingMetadata[key]!==undefined);
+            const legacyDefaultReplay=!settlementHasBeenRecorded
+              && String(input.metadata?.paymentStatus||'unpaid')==='unpaid'
+              && !String(input.metadata?.paidDate||'')
+              && String(input.metadata?.paymentMethod||'bank_transfer')==='bank_transfer'
+              && !String(input.metadata?.paymentAccountCode||'');
+            if(!(legacyDefaultReplay&&storedFingerprint===legacyFingerprint)) throw new Error('EXPENSE_IDEMPOTENCY_KEY_REUSE_CONFLICT');
+          }
           return { ...mapExpense(existing.rows[0]), __idempotentReplay: true };
         }
       }
