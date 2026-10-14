@@ -3585,7 +3585,7 @@ apiRouter.post('/finance/expenses', requireAuth, requirePermission('canManageInv
     return;
   }
   if (paymentStatus === 'paid') {
-    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(paidDate) || Number.isNaN(new Date(paidDate + 'T00:00:00Z').getTime()) || new Date(paidDate + 'T00:00:00Z').toISOString().slice(0, 10) !== paidDate) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(paidDate) || Number.isNaN(new Date(paidDate + 'T00:00:00Z').getTime()) || new Date(paidDate + 'T00:00:00Z').toISOString().slice(0, 10) !== paidDate) {
       res.status(400).json({ success: false, error: 'A valid actual payment date is required for a paid expense.' });
       return;
     }
@@ -3598,8 +3598,10 @@ apiRouter.post('/finance/expenses', requireAuth, requirePermission('canManageInv
       return;
     }
   }
+  const newExpenseId = `exp_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
+  const initialPaymentId = newExpenseId + '-payment';
   const newExpense = {
-    id: `exp_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
+    id: newExpenseId,
     slug: slugifyFinanceRecord(exp.slug || ((exp.description || exp.category || 'expense') + '-' + (exp.date || ''))),
     type: ['OpEx', 'CapEx', 'Rentals'].includes(String(exp.type)) ? String(exp.type) : 'OpEx',
     category: cleanText(exp.category || 'General', 120),
@@ -3615,7 +3617,8 @@ apiRouter.post('/finance/expenses', requireAuth, requirePermission('canManageInv
       paymentStatus,
       paidDate: paymentStatus === 'paid' ? paidDate : undefined,
       paymentMethod,
-      paymentAccountCode: paymentStatus === 'paid' && paymentMethod !== 'credit_card' ? paymentAccountCode : undefined
+      paymentAccountCode: paymentStatus === 'paid' && paymentMethod !== 'credit_card' ? paymentAccountCode : undefined,
+      payments: paymentStatus === 'paid' ? [{ id: initialPaymentId, amount: Math.round(amount * 100) / 100, date: paidDate, method: paymentMethod, paymentAccountCode: paymentMethod !== 'credit_card' ? paymentAccountCode : undefined, reference: cleanText(exp.paymentReference || exp.reference || '', 160), notes: cleanText(exp.paymentNotes || '', 500), recordedBy: req.user!.name || req.user!.username }] : []
     },
     recurringInterval: cleanText(exp.recurringInterval || 'none', 40),
     recordedBy: req.user!.name || req.user!.username,
@@ -3641,6 +3644,83 @@ apiRouter.post('/finance/expenses', requireAuth, requirePermission('canManageInv
   db.expenses.unshift(newExpense); saveDatabase(db);
   recordAuditLog({ action:'EXPENSE_CREATED', actor:req.user!.username, actorRole:req.user!.role, ip:req.ip, userAgent:req.headers['user-agent'] as string, details:`Created expense "${newExpense.description || newExpense.id}" (${newExpense.currency} ${newExpense.amount}).`, severity:'info' });
   res.json({success:true,expense:newExpense});
+});
+
+apiRouter.post('/finance/expenses/:id/payments', requireAuth, requirePermission('canManageInvoices'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const body = req.body || {};
+  const amount = Number(body.amount);
+  const date = cleanText(body.date, 10);
+  const method = cleanText(body.method, 30).toLowerCase();
+  const paymentAccountCode = cleanText(body.paymentAccountCode, 4);
+  const paymentId = cleanText(body.id, 160) || crypto.randomUUID();
+  if (!Number.isFinite(amount) || amount <= 0 || amount > 100_000_000_000) {
+    res.status(400).json({ success: false, error: 'Payment amount must be a valid positive amount.' });
+    return;
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(new Date(date + 'T00:00:00Z').getTime()) || new Date(date + 'T00:00:00Z').toISOString().slice(0, 10) !== date) {
+    res.status(400).json({ success: false, error: 'A valid actual payment date is required.' });
+    return;
+  }
+  if (date > new Date().toISOString().slice(0, 10)) {
+    res.status(400).json({ success: false, error: 'Actual payment date cannot be in the future.' });
+    return;
+  }
+  if (!['bank_transfer', 'credit_card', 'cash', 'other'].includes(method)) {
+    res.status(400).json({ success: false, error: 'Payment method is not supported.' });
+    return;
+  }
+  if (['bank_transfer', 'cash'].includes(method) && !['1000', '1100', '1200'].includes(paymentAccountCode)) {
+    res.status(400).json({ success: false, error: 'Select the actual cash, bank, or emergency-fund account used for payment.' });
+    return;
+  }
+  if (method === 'credit_card' && paymentAccountCode) {
+    res.status(400).json({ success: false, error: 'Credit-card payments use Credit Card Payable, not a cash-account code.' });
+    return;
+  }
+  const payment = {
+    id: paymentId, amount: Math.round(amount * 100) / 100, date, method,
+    paymentAccountCode: paymentAccountCode || undefined,
+    reference: cleanText(body.reference, 160),
+    notes: cleanText(body.notes, 500),
+    recordedBy: req.user!.name || req.user!.username,
+    expectedVersion: Number.isFinite(Number(body.version)) ? Number(body.version) : undefined
+  };
+  if (getDataSourceMode() === 'postgres') {
+    try {
+      const expense = await postgresExpenseRepository.recordPayment(req.params.id, payment, makeAuditEntry(req, 'EXPENSE_PAYMENT_RECORDED', 'Recorded expense settlement ' + payment.reference + ' for ' + req.params.id + '.', 'warning'));
+      const replayed = expense.__idempotentReplay === true;
+      if (replayed) delete expense.__idempotentReplay;
+      res.json({ success: true, expense, replayed });
+    } catch (error) {
+      if (error instanceof ExpenseNotFoundError) { res.status(404).json({ success: false, error: error.message }); return; }
+      if (error instanceof ExpenseVersionConflictError || error instanceof ExpenseImmutableError) { res.status(409).json({ success: false, error: error.message, code: error.code }); return; }
+      const message = error instanceof Error ? error.message : 'Expense payment could not be recorded.';
+      res.status(message.startsWith('FINANCE_PERIOD_CLOSED:') ? 409 : 400).json({ success: false, error: message });
+    }
+    return;
+  }
+  const db = getDatabase();
+  const expense = (db.expenses || []).find((item: any) => String(item.id) === String(req.params.id));
+  if (!expense || expense.status === 'voided') { res.status(404).json({ success: false, error: 'Active expense not found.' }); return; }
+  const metadata = expense.metadata && typeof expense.metadata === 'object' ? expense.metadata : {};
+  const payments = Array.isArray(metadata.payments) ? metadata.payments : [];
+  const oldPayment = payments.find((item: any) => String(item.id) === paymentId);
+  if (oldPayment) {
+    if (Number(oldPayment.amount) !== payment.amount || String(oldPayment.date) !== date || String(oldPayment.method) !== method) {
+      res.status(409).json({ success: false, error: 'Payment ID has already been used with different payment details.' });
+      return;
+    }
+    res.json({ success: true, expense, replayed: true }); return;
+  }
+  const paidBefore = payments.reduce((sum: number, item: any) => sum + Math.max(0, Number(item.amount) || 0), 0);
+  if (paidBefore + payment.amount > Number(expense.amount || 0) + 0.01) { res.status(409).json({ success: false, error: 'Total expense payments cannot exceed the recorded expense amount.' }); return; }
+  const nextPayments = [...payments, payment];
+  const paidTotal = Math.round(nextPayments.reduce((sum: number, item: any) => sum + Math.max(0, Number(item.amount) || 0), 0) * 100) / 100;
+  expense.metadata = { ...metadata, payments: nextPayments, paymentStatus: paidTotal >= Number(expense.amount || 0) - 0.01 ? 'paid' : 'partially_paid', paidDate: date, paymentMethod: method, paymentAccountCode: payment.paymentAccountCode };
+  expense.version = Number(expense.version || 1) + 1;
+  saveDatabase(db);
+  recordAuditLog({ action: 'EXPENSE_PAYMENT_RECORDED', actor: req.user!.username, actorRole: req.user!.role, ip: req.ip, userAgent: req.headers['user-agent'] as string, details: 'Recorded expense settlement for "' + expense.description + '".', severity: 'warning' });
+  res.json({ success: true, expense });
 });
 
 apiRouter.delete('/finance/expenses/:id', requireAuth, requirePermission('canManageInvoices'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
