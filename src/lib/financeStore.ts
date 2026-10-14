@@ -94,6 +94,10 @@ export interface AgencyExpense {
   vendorId?: string;
   vendorContractId?: string;
   vendorPayment?: { vendorId: string; contractId: string; contractTitle?: string; reference?: string; notes?: string; legacyFormat?: boolean };
+  paymentStatus?: 'unpaid' | 'paid';
+  paidDate?: string;
+  paymentMethod?: InvoicePaymentRecord['method'];
+  paymentAccountCode?: '1000' | '1100' | '1200';
   metadata?: Record<string, unknown>;
   recordedBy: string;
   createdAt?: string;
