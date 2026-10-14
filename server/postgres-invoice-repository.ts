@@ -1,5 +1,6 @@
 import { getPostgresPool, withPostgresTransaction } from './postgres.ts';
 import { postgresAuditLogRepository, type AuditEntry } from './postgres-audit-log-repository.ts';
+import { EXCEL_CHART_OF_ACCOUNTS } from '../src/lib/financeWorkbook.ts';
 
 type Row = Record<string, any>;
 const obj=(v:unknown):Record<string,unknown>=>v&&typeof v==='object'?v as Record<string,unknown>:{};
@@ -11,7 +12,7 @@ function mapInvoice(row:Row, items:Row[], payments:Row[]):any {
   const slug=String(metadata.slug || String(row.invoice_number || row.id).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''));
   const mappedPayments=payments.map(p=>({
     id:p.id, amount:Number(p.amount), date:date(p.paid_at), method:p.method,
-    reference:p.reference||'', recordedBy:obj(metadata.paymentUsers)[p.id] || obj(p.metadata).recordedBy || '',
+    reference:p.reference||'', settlementAccountCode:obj(p.metadata).settlementAccountCode || undefined, recordedBy:obj(metadata.paymentUsers)[p.id] || obj(p.metadata).recordedBy || '',
     notes:obj(p.metadata).notes || ''
   }));
   const amountPaid=Number(row.amount_paid||mappedPayments.reduce((s,p)=>s+p.amount,0));
@@ -188,14 +189,16 @@ export class PostgresInvoiceRepository {
           method: String(payment.method||''),
           date: String(payment.date||''),
           reference: String(payment.reference||''),
-          notes: String(payment.notes||'')
+          notes: String(payment.notes||''),
+          ...(String(payment.settlementAccountCode||'') ? { settlementAccountCode: String(payment.settlementAccountCode) } : {})
         });
         const storedFingerprint=String(duplicateMetadata.requestFingerprint||JSON.stringify({
           amount: Math.round(Number(duplicate.rows[0].amount)*100)/100,
           method: String(duplicate.rows[0].method||''),
           date: date(duplicate.rows[0].paid_at),
           reference: String(duplicate.rows[0].reference||''),
-          notes: String(duplicateMetadata.notes||'')
+          notes: String(duplicateMetadata.notes||''),
+          ...(String(duplicateMetadata.settlementAccountCode||'') ? { settlementAccountCode: String(duplicateMetadata.settlementAccountCode) } : {})
         }));
         if (storedFingerprint!==requestedFingerprint) throw new Error('IDEMPOTENCY_KEY_REUSE_CONFLICT');
         const replayed = await this.findByIdTx(db,id); return replayed ? { ...replayed, __idempotentReplay: true } : replayed;
@@ -203,6 +206,16 @@ export class PostgresInvoiceRepository {
     }
     await this.ensureFinancePeriodOpen(db,payment.date);
     if(current.status==='cancelled')throw new Error('Cancelled invoices cannot receive payments.');
+    if(String(payment.method||'')==='other'){
+      const settlementCode=String(payment.settlementAccountCode||'').trim();
+      const defaultAccount=EXCEL_CHART_OF_ACCOUNTS.find((account)=>account.code===settlementCode&&account.active);
+      const savedAccount=await db.query("SELECT payload FROM finance_workbook_records WHERE record_type='chart-of-accounts' AND record_key=$1 AND archived_at IS NULL LIMIT 1",[settlementCode]);
+      const saved=savedAccount.rows[0]?obj(savedAccount.rows[0].payload):{};
+      if(!['1000','1010','1100','1200'].includes(settlementCode)||
+        (savedAccount.rows[0] ? saved.active===false || String(saved.accountType||'')!=='Asset' : !defaultAccount || defaultAccount.type!=='Asset')) {
+        throw new Error('An Other invoice receipt needs an active cash, bank, or clearing asset account.');
+      }
+    }
     const paymentAmount=Number(payment.amount);
     if(!Number.isFinite(paymentAmount)||paymentAmount<=0||paymentAmount>authoritativeBalance)throw new Error('Payment exceeds the current invoice balance.');
     const paymentMetadata={recordedBy:payment.recordedBy||payment.userId||'system',notes:payment.notes||'',idempotencyKey:payment.idempotencyKey||undefined,requestFingerprint:JSON.stringify({
@@ -210,11 +223,12 @@ export class PostgresInvoiceRepository {
       method: String(payment.method||''),
       date: String(payment.date||''),
       reference: String(payment.reference||''),
-      notes: String(payment.notes||'')
-    })};
+      notes: String(payment.notes||''),
+      ...(String(payment.settlementAccountCode||'') ? { settlementAccountCode: String(payment.settlementAccountCode) } : {})
+    }), ...(String(payment.settlementAccountCode||'') ? { settlementAccountCode: String(payment.settlementAccountCode) } : {})};
     await db.query(
       'INSERT INTO invoice_payments (id,invoice_id,amount,paid_at,method,reference,metadata) VALUES ($1,$2,$3,$4,$5,$6,$7)',
-      [payment.id,id,paymentAmount,payment.date,payment.method,payment.reference||null,JSON.stringify(paymentMetadata)]
+      [payment.id,id,paymentAmount,payment.date,payment.method,payment.reference||null,JSON.stringify({ ...paymentMetadata, ...(String(payment.settlementAccountCode||'') ? { settlementAccountCode: String(payment.settlementAccountCode) } : {}) })]
     );
     const totalPaid=authoritativePaid+paymentAmount;
     const balance=Math.max(0,current.total-totalPaid);
