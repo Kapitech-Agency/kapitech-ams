@@ -311,6 +311,14 @@ test('Embedded invoice, expense, and receivable workflows do not leak UI state a
   assert.match(vendors, /flex flex-col gap-3 border-b border-line pb-3 sm:flex-row sm:items-center sm:justify-between/);
 });
 
+test('Vendor contract editor protects unsaved changes on close and cancel', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  assert.match(workspace, /vendorContractDirty/);
+  assert.match(workspace, /kind: 'discard-vendor-contract'/);
+  assert.match(workspace, /Vendor contract changes have not been saved/);
+  assert.match(workspace, /if \(vendorContractDirty\) setPendingConfirmation\(\{ kind: 'discard-vendor-contract' \}\)/);
+});
+
 test('Finance drawer uses the shared drawer header once and keeps source errors actionable', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   const start = workspace.indexOf('const renderRegisterEditor = () =>');
