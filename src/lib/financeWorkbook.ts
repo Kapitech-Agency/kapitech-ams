@@ -388,9 +388,14 @@ export function buildFinanceSourceJournalDrafts(
         continue;
       }
       const paymentMethod = String(payment.method || '').toLowerCase().replace(/[\s-]+/g, '_');
-      const debitCode = paymentMethod === 'cash' ? '1100' : paymentMethod === 'bank_transfer' ? '1000' : paymentMethod === 'credit_card' ? '1010' : '';
-      if (!debitCode) {
-        skip({ sourceType: 'invoice-payment', sourceId, date: payment.date, reference, description, amount, reason: 'Payment method is not mapped to a cash, bank or card-clearing account. Record the actual settlement method before posting.' });
+      const settlementAccountCode = String(payment.settlementAccountCode || '').trim();
+      const debitCode = paymentMethod === 'cash' ? '1100'
+        : paymentMethod === 'bank_transfer' ? '1000'
+          : paymentMethod === 'credit_card' ? '1010'
+            : paymentMethod === 'other' ? settlementAccountCode : '';
+      const eligibleSettlementAsset = ['1000','1010','1100','1200'].includes(debitCode) && accountTypes.get(debitCode) === 'Asset';
+      if (!debitCode || accountTypes.get(debitCode) === '__inactive__' || (paymentMethod === 'other' && !eligibleSettlementAsset)) {
+        skip({ sourceType: 'invoice-payment', sourceId, date: payment.date, reference, description, amount, reason: paymentMethod === 'other' ? 'An Other invoice receipt needs an explicit active cash, bank or clearing asset account.' : 'Payment method is not mapped to a cash, bank or card-clearing account. Record the actual settlement method before posting.' });
         continue;
       }
       const notes = 'Draft generated from an AMS invoice payment. Verify receipt evidence; card receipts are posted to clearing until settled to bank. Not posted.';
