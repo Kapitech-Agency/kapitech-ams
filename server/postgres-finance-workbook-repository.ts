@@ -165,6 +165,7 @@ function normalise(type: FinanceWorkbookRecordType, raw: unknown, approval = fal
       if ((!project && !projectName) || !memberName) throw new FinanceWorkbookValidationError('Project and team member are required.');
       const dueDate = date(v.dueDate,'Due date',true);
       const paymentReference = txt(v.paymentReference,120);
+      if (!paymentReference) throw new FinanceWorkbookValidationError('Team Fee needs a milestone/reference so separate installments cannot overwrite one another.');
       status = choice(v.paymentStatus,['planned','pending','paid'],'Payment status','planned');
       const paidDate = date(v.paidDate,'Actual payment date',true);
       if (status === 'paid' && !paidDate) throw new FinanceWorkbookValidationError('An actual payment date is required for a paid Team Fee installment.');
