@@ -1970,9 +1970,23 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
     }
   };
 
-  const getExpensePayments = (expense: FinanceExpense) => Array.isArray((expense as any).payments)
-    ? (expense as any).payments as Array<{ id: string; amount: number; date: string; method?: string; paymentAccountCode?: string; reference?: string; notes?: string; recordedBy?: string }>
-    : [];
+  const getExpensePayments = (expense: FinanceExpense) => {
+    const rows = Array.isArray((expense as any).payments)
+      ? (expense as any).payments as Array<{ id: string; amount: number; date: string; method?: string; paymentAccountCode?: string; reference?: string; notes?: string; recordedBy?: string }>
+      : [];
+    if (rows.length) return rows;
+    if (String(expense.paymentStatus || '').toLowerCase() === 'paid' && (expense.paidDate || (expense as any).metadata?.paidDate)) {
+      return [{
+        id: String(expense.id) + '-payment',
+        amount: Number(expense.amount) || 0,
+        date: String(expense.paidDate || (expense as any).metadata?.paidDate || ''),
+        method: String(expense.paymentMethod || (expense as any).metadata?.paymentMethod || ''),
+        paymentAccountCode: String(expense.paymentAccountCode || (expense as any).metadata?.paymentAccountCode || ''),
+        reference: String((expense as any).paymentReference || (expense as any).metadata?.paymentReference || '')
+      }];
+    }
+    return [];
+  };
   const getExpensePaidAmount = (expense: FinanceExpense) =>
     Math.min(Number(expense.amount) || 0, getExpensePayments(expense).reduce((sum, payment) => sum + Math.max(0, Number(payment.amount) || 0), 0));
   const openExpensePayment = (expense: FinanceExpense) => {
