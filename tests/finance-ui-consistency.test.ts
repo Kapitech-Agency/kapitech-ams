@@ -78,8 +78,10 @@ test('The Finance worksheet search controls the embedded vendor directory withou
 test('Cash Flow and Annual Summary separate actual cash accounts and exclude internal transfers', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
 
-  assert.match(workspace, /Inflows and outflows include dated, explicitly paid transactions on cash accounts 1000, 1100 and 1200/);
-  assert.match(workspace, /Internal transfers between company cash accounts are excluded from consolidated cash flow/);
+  assert.match(workspace, /Posted General Ledger view below is calculated from posted journal lines/);
+  assert.match(workspace, /opening balance entries are not treated as cash flows/);
+  assert.match(workspace, /const getPostedLedgerCashFlow =/);
+  assert.match(workspace, /const postedCurrentFlow = selectedRange \? getPostedLedgerCashFlow/);
   assert.match(workspace, /metric: 'Recorded cash outflow \(proxy\)'[\s\S]*?excludes petty-cash vouchers/);
   assert.match(workspace, /Collections minus recorded bank outflow proxy; excludes petty-cash voucher spending/);
   assert.match(workspace, /metric: 'Annual recorded cash in'[\s\S]*?excludes petty-cash voucher receipts/);
