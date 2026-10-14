@@ -30,6 +30,13 @@ function metadata(i:any){const {id,invoiceNumber,proposalId,clientId,projectId,t
 
 export class PostgresInvoiceRepository {
   private readonly writableStatuses = new Set(['draft','sent','overdue']);
+  private async ensureFinancePeriodOpen(db:any,value:unknown):Promise<void>{
+    const period=String(value||'').slice(0,7);
+    if(!/^\\d{4}-(0[1-9]|1[0-2])$/.test(period)) return;
+    await db.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))",['kapitech:finance-period:'+period]);
+    const lock=await db.query<Row>("SELECT id FROM finance_workbook_records WHERE record_type='monthly-closing-lock' AND period_key=$1 AND archived_at IS NULL LIMIT 1",[period]);
+    if(lock.rows[0]) throw new Error('FINANCE_PERIOD_CLOSED:'+period);
+  }
   private async items(db:any,id:string){const r=await db.query('SELECT * FROM invoice_items WHERE invoice_id=$1 ORDER BY id ASC',[id]);return r.rows as Row[];}
   private async payments(db:any,id:string){const r=await db.query('SELECT * FROM invoice_payments WHERE invoice_id=$1 ORDER BY paid_at DESC, id DESC',[id]);return r.rows as Row[];}
   private validateFinancials(invoice:any):void {
@@ -55,6 +62,7 @@ export class PostgresInvoiceRepository {
   async create(i:any,audit?:AuditEntry):Promise<any>{return withPostgresTransaction(async db=>{
       const requestedStatus = String(i.status || 'draft');
       if (!this.writableStatuses.has(requestedStatus)) throw new Error('INVALID_INVOICE_STATUS');
+      if(requestedStatus!=='draft') await this.ensureFinancePeriodOpen(db,i.issueDate);
       let resolvedClientId = i.clientId ? String(i.clientId) : null;
       const projectId = i.projectId ? String(i.projectId) : null;
       const invoiceItems = Array.isArray(i.items) ? i.items : [];
@@ -113,8 +121,11 @@ export class PostgresInvoiceRepository {
       }
       await db.query('INSERT INTO invoices (id,proposal_id,invoice_number,client_id,project_id,type,subtotal,discount_percent,discount_amount,tax_percent,tax_amount,total,amount_paid,balance_due,currency,status,issue_date,due_date,notes,payment_terms,metadata,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23)',[i.id,i.proposalId||null,i.invoiceNumber,resolvedClientId,projectId,i.type||'invoice',i.subtotal,i.discountPercent||0,i.discountAmount||0,i.taxPercent||0,i.taxAmount||0,i.total,0,i.total,i.currency||'IDR',i.status||'draft',i.issueDate||null,i.dueDate||null,i.notes||null,i.paymentTerms||null,JSON.stringify(metadata(i)),i.createdAt,i.updatedAt]);for(const x of invoiceItems)await db.query('INSERT INTO invoice_items (id,invoice_id,description,quantity,unit_price,amount) VALUES ($1,$2,$3,$4,$5,$6)',[x.id,i.id,x.description,x.quantity,x.unitPrice,x.amount??Number(x.quantity)*Number(x.unitPrice)]);if(audit)await postgresAuditLogRepository.appendWithinTransaction(db,audit);return this.findByIdTx(db,i.id);});}
   private async findByIdTx(db:any,id:string){const r=await db.query('SELECT * FROM invoices WHERE id=$1',[id]);if(!r.rows[0])return null;return mapInvoice(r.rows[0],await this.items(db,id),await this.payments(db,id));}
-  async update(id:string,patch:any,audit?:AuditEntry):Promise<any|null>{return withPostgresTransaction(async db=>{const r=await db.query('SELECT * FROM invoices WHERE id=$1 FOR UPDATE',[id]);if(!r.rows[0])return null;const current=mapInvoice(r.rows[0],await this.items(db,id),await this.payments(db,id));const allowedStatuses=new Set(['draft','sent','overdue','partially_paid','paid','cancelled']);if(patch.status!==undefined&&!allowedStatuses.has(String(patch.status)))throw new Error('INVALID_INVOICE_STATUS');if(current.status==='cancelled'&&patch.status&&patch.status!=='cancelled')throw new Error('Cancelled invoices cannot be reopened.');
+  async update(id:string,patch:any,audit?:AuditEntry):Promise<any|null>{return withPostgresTransaction(async db=>{const r=await db.query('SELECT * FROM invoices WHERE id=$1 FOR UPDATE',[id]);if(!r.rows[0])return null;const current=mapInvoice(r.rows[0],await this.items(db,id),await this.payments(db,id));
+      if(current.status!=='draft') await this.ensureFinancePeriodOpen(db,current.issueDate);
+      const allowedStatuses=new Set(['draft','sent','overdue','partially_paid','paid','cancelled']);if(patch.status!==undefined&&!allowedStatuses.has(String(patch.status)))throw new Error('INVALID_INVOICE_STATUS');if(current.status==='cancelled'&&patch.status&&patch.status!=='cancelled')throw new Error('Cancelled invoices cannot be reopened.');
       if (patch.status === 'cancelled') throw new Error('INVOICE_CANCELLATION_REQUIRES_CANCEL_ENDPOINT');if(patch.updatedAt&&current.updatedAt!==patch.updatedAt)throw new Error('Invoice has been modified since it was loaded. Refresh and retry.');const next={...current,...patch,id,updatedAt:new Date().toISOString(),payments:current.payments};
+      if(String(next.status||'')!=='draft') await this.ensureFinancePeriodOpen(db,next.issueDate);
       let nextClientId = next.clientId ? String(next.clientId) : null;
       const nextProjectId = next.projectId ? String(next.projectId) : null;
       if (nextClientId) {
@@ -152,6 +163,7 @@ export class PostgresInvoiceRepository {
       this.validateFinancials(next);
       const paid=next.payments.reduce((s:any,p:any)=>s+Number(p.amount||0),0);if(Number(next.total)<paid)throw new Error('Invoice total cannot be lower than payments already recorded.');next.amountPaid=paid;next.balanceDue=Math.max(0,Number(next.total)-paid);if(patch.status==='paid'&&!(next.balanceDue===0&&next.total>0))throw new Error('Invoice can only be marked paid after the remaining balance is fully settled.');if(patch.status==='partially_paid'&&!(paid>0&&next.balanceDue>0))throw new Error('Invoice can only be partially paid when a payment has been recorded and a balance remains.');if(next.balanceDue<=0&&next.total>0)next.status='paid';else if(paid>0)next.status='partially_paid';await db.query('UPDATE invoices SET invoice_number=$2,client_id=$3,project_id=$4,type=$5,subtotal=$6,discount_percent=$7,discount_amount=$8,tax_percent=$9,tax_amount=$10,total=$11,amount_paid=$12,balance_due=$13,currency=$14,status=$15,issue_date=$16,due_date=$17,notes=$18,payment_terms=$19,metadata=$20,updated_at=$21 WHERE id=$1',[id,current.invoiceNumber,next.clientId||null,next.projectId||null,next.type,next.subtotal,next.discountPercent,next.discountAmount,next.taxPercent,next.taxAmount,next.total,paid,next.balanceDue,next.currency,next.status,next.issueDate||null,next.dueDate||null,next.notes||null,next.paymentTerms||null,JSON.stringify(metadata(next)),next.updatedAt]);if(patch.items!==undefined){await db.query('DELETE FROM invoice_items WHERE invoice_id=$1',[id]);for(const x of next.items||[])await db.query('INSERT INTO invoice_items (id,invoice_id,description,quantity,unit_price,amount) VALUES ($1,$2,$3,$4,$5,$6)',[x.id,id,x.description,x.quantity,x.unitPrice,x.amount??Number(x.quantity)*Number(x.unitPrice)])}if(audit)await postgresAuditLogRepository.appendWithinTransaction(db,audit);return this.findByIdTx(db,id);});}
   async recordPayment(id:string,payment:any,audit?:AuditEntry):Promise<any|null>{return withPostgresTransaction(async db=>{const r=await db.query('SELECT * FROM invoices WHERE id=$1 FOR UPDATE',[id]);if(!r.rows[0])return null;const current=mapInvoice(r.rows[0],await this.items(db,id),await this.payments(db,id));
+    await this.ensureFinancePeriodOpen(db,payment.date);
     const authoritativePaid=current.payments.reduce((sum:any,p:any)=>sum+Number(p.amount||0),0);
     const storedPaid=Number(r.rows[0].amount_paid||0);
     if(!Number.isFinite(storedPaid)||Math.abs(storedPaid-authoritativePaid)>0.01||authoritativePaid>Number(current.total||0)) throw new Error('INVOICE_PAYMENT_LEDGER_INCONSISTENT');
@@ -218,7 +230,11 @@ export class PostgresInvoiceRepository {
       );
     }
     if(audit)await postgresAuditLogRepository.appendWithinTransaction(db,audit);return this.findByIdTx(db,id);});}
-  async cancel(id:string,user:string,audit?:AuditEntry):Promise<any|null>{return withPostgresTransaction(async db=>{const r=await db.query('SELECT * FROM invoices WHERE id=$1 FOR UPDATE',[id]);if(!r.rows[0])return null;const current=mapInvoice(r.rows[0],await this.items(db,id),await this.payments(db,id));if(current.status==='cancelled')return current;if(current.payments.length>0)throw new Error('INVOICE_WITH_PAYMENTS_CANNOT_BE_CANCELLED');const auditTrail=[...current.auditTrail,{action:'cancelled',timestamp:new Date().toISOString(),user}];await db.query('UPDATE invoices SET status=$2,metadata=$3,updated_at=$4 WHERE id=$1',[id,'cancelled',JSON.stringify({...metadata(current),auditTrail:auditTrail}),new Date().toISOString()]);if(audit)await postgresAuditLogRepository.appendWithinTransaction(db,audit);return this.findByIdTx(db,id);});}
+  async cancel(id:string,user:string,audit?:AuditEntry):Promise<any|null>{return withPostgresTransaction(async db=>{const r=await db.query('SELECT * FROM invoices WHERE id=$1 FOR UPDATE',[id]);if(!r.rows[0])return null;const current=mapInvoice(r.rows[0],await this.items(db,id),await this.payments(db,id));if(current.status==='cancelled')return current;
+    if(current.status!=='draft') await this.ensureFinancePeriodOpen(db,current.issueDate);
+    if(current.payments.length>0)throw new Error('INVOICE_WITH_PAYMENTS_CANNOT_BE_CANCELLED');
+    const postedJournal=await db.query<Row>("SELECT id FROM finance_workbook_records WHERE record_type='journal-entry' AND status='posted' AND archived_at IS NULL AND payload->>'sourceType'='invoice-issued' AND payload->>'sourceId'=$1 LIMIT 1 FOR SHARE",[String(current.id)+':issued']);
+    if(postedJournal.rows[0]) throw new Error('INVOICE_POSTED_LEDGER_REVERSAL_REQUIRED');const auditTrail=[...current.auditTrail,{action:'cancelled',timestamp:new Date().toISOString(),user}];await db.query('UPDATE invoices SET status=$2,metadata=$3,updated_at=$4 WHERE id=$1',[id,'cancelled',JSON.stringify({...metadata(current),auditTrail:auditTrail}),new Date().toISOString()]);if(audit)await postgresAuditLogRepository.appendWithinTransaction(db,audit);return this.findByIdTx(db,id);});}
   async delete(id:string,audit?:AuditEntry){return this.cancel(id,'system',audit);}
 }
 export const postgresInvoiceRepository=new PostgresInvoiceRepository();
