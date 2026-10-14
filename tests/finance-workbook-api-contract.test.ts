@@ -64,7 +64,7 @@ test('Journal source sync is permission-gated, draft-only and duplicate-safe', a
   assert.match(repository, /key = sourceType && sourceId \? 'source:' \+ sourceType \+ ':' \+ sourceId : reference/);
   assert.match(mapping, /buildFinanceSourceJournalDrafts/);
   assert.match(mapping, /No draft returned by this function is approved or posted/);
-  assert.match(mapping, /the system will not assume Cash & Bank/);
+  assert.match(mapping, /Settlement method\/account is incomplete or unsupported/);
   assert.match(mapping, /debitCode, creditCode: '1300'/);
   assert.match(mapping, /sourceType: 'invoice-issued'/);
   assert.match(mapping, /sourceType: 'vendor-bill-payment'/);
