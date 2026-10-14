@@ -125,6 +125,7 @@ test('Finance worksheet search, date display, and register permissions are wired
   const closingView = workspace.slice(closingStart, allocationStart);
   assert.match(closingView, /<CustomDatePicker type="month" value=\{selectedClosingMonth\} onChange=\{setSelectedClosingMonth\}/);
   assert.match(closingView, /aria-label="Closing month"/);
+  assert.match(closingView, /Closing month: \{selectedClosingMonth\}/);
   assert.match(closingView, /slug="finance-closing-month-picker"/);
   assert.doesNotMatch(closingView, /slug="finance-closing-month-picker"[^>]*disabled=\{locked\}/, 'Users must be able to navigate away from a locked month.');
   assert.match(workspace, /You do not have permission to approve Finance records/);
@@ -305,6 +306,7 @@ test('Embedded invoice, expense, and receivable workflows do not leak UI state a
   assert.match(vendors, /\{!embedded && \([\s\S]{0,180}<AdminModuleHeader/);
   assert.match(vendors, /\{embedded && <button type="button" onClick=\{handleOpenAdd\}/);
   assert.match(vendors, /data-ams-slug="vendor-snapshot"/);
+  assert.match(vendors, /flex flex-col gap-3 border-b border-line pb-3 sm:flex-row sm:items-center sm:justify-between/);
 });
 
 test('Finance drawer uses the shared drawer header once and keeps source errors actionable', async () => {
