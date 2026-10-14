@@ -43,7 +43,7 @@ type SourceResult = { label: string; data: any; error?: string };
 type WorkbookRecord = { id: string; recordType: string; recordKey: string; periodKey?: string; projectId?: string; status: string; payload: Record<string, any>; version: number; createdByUserId?: string; createdAt: string; updatedAt: string };
 type FinanceConfirmation = { kind: 'approve' | 'post' | 'archive'; type: string; record: WorkbookRecord } | { kind: 'close-period'; period: string } | { kind: 'discard-editor' };
 type FinanceVendorContractDraft = { vendorId: string; id?: string; title: string; startDate: string; endDate: string; rateType: VendorContract['rateType']; rateAmount: number; currency: VendorContract['currency']; status: VendorContract['status'] };
-type RegisterField = { key: string; label: string; type: 'text' | 'number' | 'date' | 'month' | 'select' | 'textarea'; required?: boolean; readOnly?: boolean; options?: string[]; optionSource?: 'vendorBills' | 'accounts' | 'cashAccounts' | 'expenseAccounts' | 'projects' | 'vendors'; placeholder?: string; help?: string; defaultValue?: string | number; visibleWhen?: { key: string; values: string[] } };
+type RegisterField = { key: string; label: string; type: 'text' | 'number' | 'date' | 'month' | 'select' | 'textarea'; required?: boolean; readOnly?: boolean; options?: string[]; optionSource?: 'vendorBills' | 'accounts' | 'cashAccounts' | 'expenseAccounts' | 'reconciliationAccounts' | 'projects' | 'vendors'; placeholder?: string; help?: string; defaultValue?: string | number; visibleWhen?: { key: string; values: string[] } };
 type CashMovement = { id: string; date: string; reference: string; description: string; cashIn: number; cashOut: number; source: string; currency: string; accountCode: string };
 
 const getLocalDateInputValue = (date = new Date()): string => {
@@ -388,7 +388,7 @@ const WORKBOOK_CLOSING_ITEMS = [
 
 
 const SUPPLEMENTARY_FINANCE_RECORD_TYPES = [
-  'chart-of-accounts','cash-bank-opening','cash-bank-transaction','petty-cash-voucher',
+  'chart-of-accounts','cash-bank-opening','cash-bank-transaction','cash-reconciliation','petty-cash-voucher',
   'vendor-bill','vendor-bill-payment','operational-budget','project-finance','team-fee',
   'project-allocation','journal-entry','monthly-closing','balance-sheet-opening','monthly-closing-lock'
 ] as const;
@@ -427,6 +427,18 @@ const REGISTER_FORMS: Record<string, { title: string; description: string; field
       {key:'openingDate',label:'Opening date',type:'date',required:true},
       {key:'openingBalance',label:'Opening balance (IDR)',type:'number',required:true},
       {key:'notes',label:'Notes',type:'textarea'}
+    ]
+  },
+  'cash-reconciliation': {
+    title:'Cash / Bank Reconciliation',
+    description:'Record the actual statement or physical count at month end. The period cannot close unless the saved balance matches the posted General Ledger.',
+    fields:[
+      {key:'reconciliationMonth',label:'Reporting month',type:'month',required:true,defaultValue:''},
+      {key:'accountCode',label:'Account to reconcile',type:'select',required:true,optionSource:'reconciliationAccounts'},
+      {key:'statementDate',label:'Statement / count date',type:'date',required:true},
+      {key:'statementBalance',label:'Statement / counted balance (IDR)',type:'number',required:true},
+      {key:'statementReference',label:'Statement / processor / count reference',type:'text',required:true,placeholder:'Bank statement ID, processor batch, or cash count sheet'},
+      {key:'notes',label:'Reconciliation notes',type:'textarea'}
     ]
   },
   'cash-bank-transaction': {
@@ -1042,6 +1054,19 @@ export const AdminFinanceWorkspace: React.FC = () => {
         return [{ value: '', label: 'Select counterpart account' }, ...accounts.values()];
       }
       return [{ value: '', label: 'Select a cash account' }, ...CASH_ACCOUNT_OPTIONS];
+    }
+    if (field.optionSource === 'reconciliationAccounts') {
+      const allowed = new Set(['1000','1010','1100','1200']);
+      const accounts = new Map<string,{value:string;label:string}>(EXCEL_CHART_OF_ACCOUNTS
+        .filter((account) => allowed.has(account.code) && account.active)
+        .map((account) => [account.code,{value:account.code,label:account.code+' · '+account.name}] as const));
+      getRegisterRecords('chart-of-accounts').forEach((record) => {
+        const code=String(record.payload.code||record.recordKey||'').trim();
+        if(!allowed.has(code)) return;
+        if(record.payload.active===false) accounts.delete(code);
+        else accounts.set(code,{value:code,label:code+' · '+String(record.payload.name||code)});
+      });
+      return [{value:'',label:'Select an account'},...accounts.values()];
     }
     if (field.optionSource === 'expenseAccounts') {
       const accounts = new Map<string, { value: string; label: string }>();
