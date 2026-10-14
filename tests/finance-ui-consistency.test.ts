@@ -123,7 +123,8 @@ test('Finance worksheet search, date display, and register permissions are wired
   const allocationStart = workspace.indexOf("case 'project-allocation':", closingStart);
   assert.ok(closingStart >= 0 && allocationStart > closingStart);
   const closingView = workspace.slice(closingStart, allocationStart);
-  assert.match(closingView, /<CustomDatePicker type="month" value=\{selectedMonth\} onChange=\{setSelectedMonth\}/);
+  assert.match(closingView, /<CustomDatePicker type="month" value=\{selectedClosingMonth\} onChange=\{setSelectedClosingMonth\}/);
+  assert.match(closingView, /aria-label="Closing month"/);
   assert.match(closingView, /slug="finance-closing-month-picker"/);
   assert.doesNotMatch(closingView, /slug="finance-closing-month-picker"[^>]*disabled=\{locked\}/, 'Users must be able to navigate away from a locked month.');
   assert.match(workspace, /You do not have permission to approve Finance records/);
@@ -245,12 +246,14 @@ test('Finance Executive Summary and Dashboard have distinct scopes and period-aw
   const summary = workspace.slice(start, end);
 
   assert.match(summary, /const dashboardMetrics = \[/);
-  assert.match(summary, /label: 'Invoice value issued'[\s\S]*?billedInMonth/);
-  assert.match(summary, /label: 'Recorded cash in'[\s\S]*?cashInThisMonth/);
-  assert.match(summary, /label: 'Recorded cash out'[\s\S]*?cashOutThisMonth/);
-  assert.match(summary, /label: 'Net cash movement \(proxy\)'[\s\S]*?cashInThisMonth - cashOutThisMonth/);
+  assert.match(summary, /const dashboardRange = getReportingPeriodRange\(reportPeriodValue, reportPeriodMode, locale\)/);
+  assert.match(summary, /label: 'Invoice value issued'[\s\S]*?billedInPeriod/);
+  assert.match(summary, /label: 'Recorded cash in'[\s\S]*?cashInThisPeriod/);
+  assert.match(summary, /label: 'Recorded cash out'[\s\S]*?cashOutThisPeriod/);
+  assert.match(summary, /label: 'Net cash movement \(proxy\)'[\s\S]*?cashInThisPeriod - cashOutThisPeriod/);
   assert.match(summary, /data-ams-slug="finance-dashboard-period"/);
-  assert.match(summary, /renderRecentActivity\(currentMonth\)/);
+  assert.match(summary, /renderRecentActivity\(dashboardRange \?/);
+  assert.doesNotMatch(summary, /finance-dashboard-month-picker|setSelectedMonth/);
   assert.match(summary, /title="Recent invoice register"/);
   assert.match(summary, /\{dashboard \? \([\s\S]*?AdminMetricStrip metrics=\{dashboardMetrics\}[\s\S]*?\) : \(/);
   assert.match(summary, /AdminMetricStrip metrics=\{metrics\}/);
@@ -329,14 +332,17 @@ test('Finance date and month inputs use the shared custom calendar control', asy
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
   const picker = await read('src/components/ui/CustomDatePicker.tsx');
+  const reportBar = await read('src/components/admin/AdminReportingPeriodBar.tsx');
 
   assert.match(workspace, /import \{ CustomDatePicker \} from '\.\.\/\.\.\/components\/ui\/CustomDatePicker'/);
+  assert.match(reportBar, /slug="global-reporting-period-picker"/);
   assert.match(workspace, /field\.type === 'date' \|\| field\.type === 'month'[\s\S]*?<CustomDatePicker/);
-  assert.match(workspace, /slug="finance-dashboard-month-picker"/);
-  assert.match(workspace, /import \{ CustomReportPeriodPicker \} from '\.\.\/\.\.\/components\/ui\/CustomReportPeriodPicker'/);
-  assert.match(workspace, /slug="finance-pnl-report-period-picker"/);
-  assert.match(workspace, /slug="finance-cash-flow-report-period-picker"/);
+  assert.doesNotMatch(workspace, /slug="finance-dashboard-month-picker"/);
+  assert.doesNotMatch(workspace, /CustomReportPeriodPicker|finance-pnl-report-period-picker|finance-cash-flow-report-period-picker/);
+  assert.doesNotMatch(workspace, /<AdminPanel title="Reporting period"/);
   assert.match(workspace, /slug="finance-closing-month-picker"/);
+  assert.match(workspace, /const selectedYear = String\(Number\(reportPeriodValue\.slice\(0, 4\)\) \|\| new Date\(\)\.getFullYear\(\)\)/);
+  assert.match(workspace, /data-ams-slug="finance-annual-summary-period"/);
   assert.match(workspace, /slug="finance-vendor-contract-start"/);
   assert.match(workspace, /slug="finance-vendor-contract-end"/);
   assert.doesNotMatch(workspace, /<input type="(?:date|month)"/);
