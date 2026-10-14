@@ -2511,28 +2511,178 @@ export const AdminFinanceWorkspace: React.FC = () => {
         );
       }
       case 'balance-sheet': {
-        const allOpenings=getRegisterRecords('balance-sheet-opening');
-        const openings=allOpenings.filter((record)=>matchesDate(record.payload.asOfDate || record.createdAt) && matching([record.payload.accountCode,record.payload.asOfDate,record.payload.notes]));
-        const latestByAccount=new Map<string,WorkbookRecord>();
-        for(const record of allOpenings.slice().sort((a,b)=>String(a.payload.asOfDate||'').localeCompare(String(b.payload.asOfDate||'')))){
-          latestByAccount.set(String(record.payload.accountCode||''),record);
+        const selectedRange = getReportingPeriodRange(reportPeriodValue, reportPeriodMode, locale);
+        const asOfDate = selectedRange?.endDate || getLocalDateInputValue();
+        const periodLabel = formatReportingPeriodLabel(reportPeriodValue, reportPeriodMode, locale);
+        const allOpenings = getRegisterRecords('balance-sheet-opening');
+        const openings = allOpenings
+          .filter((record) => matchesDate(record.payload.asOfDate || record.createdAt) && matching([record.payload.accountCode,record.payload.asOfDate,record.payload.notes]))
+          .slice().sort((a,b) => String(b.payload.asOfDate || '').localeCompare(String(a.payload.asOfDate || '')));
+
+        const accountCatalog = new Map<string, { code: string; name: string; accountType: string; normalBalance: string }>();
+        for (const account of EXCEL_CHART_OF_ACCOUNTS) {
+          accountCatalog.set(account.code, { code: account.code, name: account.name, accountType: account.type, normalBalance: account.normalBalance });
         }
+        for (const record of getRegisterRecords('chart-of-accounts')) {
+          const code = String(record.payload.code || record.recordKey || '').trim();
+          if (!code) continue;
+          if (record.payload.active === false) {
+            accountCatalog.delete(code);
+            continue;
+          }
+          accountCatalog.set(code, {
+            code,
+            name: String(record.payload.name || code),
+            accountType: String(record.payload.accountType || ''),
+            normalBalance: String(record.payload.normalBalance || '')
+          });
+        }
+
+        const postedJournals = getRegisterRecords('journal-entry').filter((record) => {
+          if (record.status !== 'posted') return false;
+          const entryDate = String(record.payload.date || '').slice(0, 10);
+          return /^\\d{4}-\\d{2}-\\d{2}$/.test(entryDate) && entryDate <= asOfDate;
+        });
+        const accountActivity = new Map<string, { debit: number; credit: number }>();
+        for (const journal of postedJournals) {
+          const lines = Array.isArray(journal.payload.lines) ? journal.payload.lines as Array<Record<string, any>> : [];
+          for (const line of lines) {
+            const code = String(line.accountCode || '').trim();
+            if (!code) continue;
+            const activity = accountActivity.get(code) || { debit: 0, credit: 0 };
+            activity.debit += Number(line.debit) || 0;
+            activity.credit += Number(line.credit) || 0;
+            accountActivity.set(code, activity);
+          }
+        }
+        const accountBalance = (code: string, accountType?: string): number => {
+          const movement = accountActivity.get(code) || { debit: 0, credit: 0 };
+          const type = accountType || accountCatalog.get(code)?.accountType || '';
+          return type === 'Asset' || type === 'Expense'
+            ? movement.debit - movement.credit
+            : movement.credit - movement.debit;
+        };
+
+        const sourcePlan = buildFinanceSourceJournalDrafts(
+          reportInvoices,
+          expenses as any[],
+          getRegisterRecords('cash-bank-transaction'),
+          getRegisterRecords('vendor-bill'),
+          getRegisterRecords('vendor-bill-payment'),
+          getRegisterRecords('chart-of-accounts').map((record) => ({
+            code: String(record.payload.code || record.recordKey),
+            name: String(record.payload.name || ''),
+            accountType: String(record.payload.accountType || ''),
+            active: record.payload.active !== false
+          })),
+          [
+            ...getRegisterRecords('cash-bank-opening').map((record) => ({
+              id: record.id, recordType: 'cash-bank-opening' as const, recordKey: record.recordKey, status: record.status, payload: record.payload
+            })),
+            ...allOpenings.map((record) => ({
+              id: record.id, recordType: 'balance-sheet-opening' as const, recordKey: record.recordKey, status: record.status, payload: record.payload
+            }))
+          ]
+        );
+        const sourceJournals = new Map<string, WorkbookRecord>();
+        const sourceKey = (type: unknown, id: unknown) => String(type || '') + '|' + String(id || '');
+        for (const journal of getRegisterRecords('journal-entry')) {
+          const type = String(journal.payload.sourceType || '');
+          const id = String(journal.payload.sourceId || '');
+          if (type && id) sourceJournals.set(sourceKey(type, id), journal);
+        }
+        const sourceSnapshot = (value: Record<string, any>): string => JSON.stringify({
+          date: String(value.date || ''),
+          reference: String(value.reference || ''),
+          description: String(value.description || ''),
+          projectId: String(value.projectId || ''),
+          relatedSourceId: String(value.relatedSourceId || ''),
+          notes: String(value.notes || ''),
+          lines: (Array.isArray(value.lines) ? value.lines : []).map((line: Record<string, any>) => ({
+            accountCode: String(line.accountCode || ''),
+            accountName: String(line.accountName || ''),
+            debit: Number(line.debit) || 0,
+            credit: Number(line.credit) || 0,
+            notes: String(line.notes || '')
+          }))
+        });
+        const exceptionKeys = new Set<string>();
+        const expectedSources = new Set<string>();
+        for (const draft of sourcePlan.drafts) {
+          const key = sourceKey(draft.sourceType, draft.sourceId);
+          expectedSources.add(key);
+          if (String(draft.date || '').slice(0, 10) > asOfDate) continue;
+          const existing = sourceJournals.get(key);
+          if (!existing || existing.status !== 'posted') {
+            exceptionKeys.add('unposted:' + key);
+          } else if (sourceSnapshot(existing.payload) !== sourceSnapshot(draft)) {
+            exceptionKeys.add('changed:' + key);
+          }
+        }
+        for (const item of sourcePlan.skipped) {
+          const sourceDate = String(item.date || '').slice(0, 10);
+          if (!sourceDate || sourceDate <= asOfDate) exceptionKeys.add('skipped:' + sourceKey(item.sourceType, item.sourceId));
+        }
+        const mappedSourceTypes = new Set(['invoice-issued','invoice-payment','expense','expense-payment','cash-bank-transfer','vendor-bill-issued','vendor-bill-payment','cash-bank-opening','balance-sheet-opening']);
+        for (const journal of postedJournals) {
+          const type = String(journal.payload.sourceType || '');
+          const id = String(journal.payload.sourceId || '');
+          const key = sourceKey(type, id);
+          if (mappedSourceTypes.has(type) && id && !expectedSources.has(key)) exceptionKeys.add('orphan:' + key);
+        }
+        const sourceExceptionCount = exceptionKeys.size;
+
+        const accounts = [...accountCatalog.values()];
+        const assetAccounts = accounts.filter((account) => account.accountType === 'Asset').sort((a,b) => a.code.localeCompare(b.code));
+        const liabilityAccounts = accounts.filter((account) => account.accountType === 'Liability').sort((a,b) => a.code.localeCompare(b.code));
+        const equityAccounts = accounts.filter((account) => account.accountType === 'Equity').sort((a,b) => a.code.localeCompare(b.code));
+        const revenueAccounts = accounts.filter((account) => account.accountType === 'Revenue');
+        const expenseAccounts = accounts.filter((account) => account.accountType === 'Expense');
+        const currentEarnings = revenueAccounts.reduce((total, account) => total + accountBalance(account.code, 'Revenue'), 0)
+          - expenseAccounts.reduce((total, account) => total + accountBalance(account.code, 'Expense'), 0);
+        const totalAssets = assetAccounts.reduce((total, account) => total + accountBalance(account.code, 'Asset'), 0);
+        const totalLiabilities = liabilityAccounts.reduce((total, account) => total + accountBalance(account.code, 'Liability'), 0);
+        const recordedEquity = equityAccounts.reduce((total, account) => total + accountBalance(account.code, 'Equity'), 0);
+        const totalEquity = recordedEquity + currentEarnings;
+        const balanceDifference = totalAssets - totalLiabilities - totalEquity;
+        const openingOffset = accountBalance('3200', 'Equity');
+        const balanced = Math.abs(balanceDifference) <= 0.01;
+        const ledgerRows = [
+          ...assetAccounts.map((account) => ({ id: 'asset-' + account.code, cells: ['Assets', account.code, account.name, formatMoney(accountBalance(account.code, 'Asset')), 'Posted journals through ' + formatDate(asOfDate)] })),
+          ...liabilityAccounts.map((account) => ({ id: 'liability-' + account.code, cells: ['Liabilities', account.code, account.name, formatMoney(accountBalance(account.code, 'Liability')), 'Posted journals through ' + formatDate(asOfDate)] })),
+          ...equityAccounts.map((account) => ({ id: 'equity-' + account.code, cells: ['Equity', account.code, account.name + (account.code === '3200' ? ' · temporary opening offset' : ''), formatMoney(accountBalance(account.code, 'Equity')), 'Posted journals through ' + formatDate(asOfDate)] })),
+          { id: 'equity-current-earnings', cells: ['Equity', 'CURRENT-EARNINGS', 'Cumulative earnings not yet closed to retained earnings', formatMoney(currentEarnings), 'Revenue less expense account balances through ' + formatDate(asOfDate)] }
+        ];
         return (
           <div className="space-y-4">
-            <WorkbookNote tone="warning" title="Balance Sheet totals are not yet authoritative">
-              Opening balances and account mappings are persisted, but invoice and expense activity is not yet fully posted into the General Journal. Until the full posting bridge and reconciliation are in place, this tab deliberately avoids presenting a fabricated total-assets / liabilities / equity balance.
+            <WorkbookNote tone={sourceExceptionCount > 0 || !balanced || Math.abs(openingOffset) > 0.01 ? 'warning' : 'info'} title={sourceExceptionCount > 0 ? 'Posted ledger has unresolved source exceptions' : !balanced ? 'General Ledger is out of balance' : Math.abs(openingOffset) > 0.01 ? 'Opening balance offset needs reconciliation' : 'Posted ledger balance snapshot'}>
+              Balances below are calculated from posted General Journal lines through {formatDate(asOfDate)}. They are not silently filled from invoices, expenses or opening registers. {sourceExceptionCount} source item(s) still need mapping, posting, correction or reconciliation; {postedJournals.length} posted journal(s) are included. Account 3200 is a temporary opening balance offset and should be cleared to the appropriate equity account after opening balances are reconciled.
             </WorkbookNote>
-            <FinanceDataTable title="Balance Sheet account mapping" description="Source availability for each account group." columns={[{label:'Section'},{label:'Account'},{label:'Current source'},{label:'Readiness'}]} rows={[
-              {id:'cash',cells:['Assets','Cash & Bank (1000)','Invoice receipts, expenses and cash movements',<AdminStatusBadge tone={getOpeningBalance('1000')===null?'warning':'success'}>{getOpeningBalance('1000')===null?'Opening balance missing':'Opening balance saved'}</AdminStatusBadge>]},
-              {id:'petty',cells:['Assets','Petty Cash Reserve (1100)','Dedicated opening and voucher records',<AdminStatusBadge tone={getOpeningBalance('1100')===null?'warning':'success'}>{getOpeningBalance('1100')===null?'Opening balance missing':'Opening balance saved'}</AdminStatusBadge>]},
-              {id:'emergency',cells:['Assets','Emergency Fund (1200)','Opening balance and allocation registers',<AdminStatusBadge tone={getOpeningBalance('1200')===null?'warning':'success'}>{getOpeningBalance('1200')===null?'Opening balance missing':'Opening balance saved'}</AdminStatusBadge>]},
-              {id:'ar',cells:['Assets','Accounts Receivable (1300)','Derived from the existing invoice balance',<AdminStatusBadge tone="success">Source available</AdminStatusBadge>]},
-              {id:'prepayment',cells:['Assets','Project Asset / Prepayment (1400)','Opening balance only; no transaction roll-forward yet',<AdminStatusBadge tone="warning">Posting bridge required</AdminStatusBadge>]},
-              {id:'ap',cells:['Liabilities','Accounts Payable (2000)','Dedicated vendor bill and payment records',<AdminStatusBadge tone="success">Source available</AdminStatusBadge>]},
-              {id:'capital',cells:['Equity','Owner / Capital (3000)','Opening balance entry',<AdminStatusBadge tone={latestByAccount.has('3000')?'success':'warning'}>{latestByAccount.has('3000')?'Opening balance saved':'Opening balance missing'}</AdminStatusBadge>]},
-              {id:'retained',cells:['Equity','Retained Earnings (3100)','Opening balance and period closing journal',<AdminStatusBadge tone={latestByAccount.has('3100')?'success':'warning'}>{latestByAccount.has('3100')?'Opening balance saved':'Journal bridge required'}</AdminStatusBadge>]}
-            ]} actions={registerAddButton('balance-sheet-opening','Record opening balance')}/>
-            <FinanceDataTable title="Opening balance register" description="Persistent account opening entries. These records alone do not constitute a fully reconciled Balance Sheet." columns={[{label:'As of date'},{label:'Account code'},{label:'Account'},{label:'Balance side'},{label:'Opening amount',align:'right'},{label:'Notes'},{label:'Actions'}]} rows={openings.map((record)=>({id:record.id,cells:[formatDate(record.payload.asOfDate),String(record.payload.accountCode||''),EXCEL_CHART_OF_ACCOUNTS.find((account)=>account.code===String(record.payload.accountCode))?.name||String(record.payload.accountCode||''),String(record.payload.side||''),formatMoney(Number(record.payload.openingAmount)||0),String(record.payload.notes||'—'),registerRecordActions('balance-sheet-opening',record)]}))} emptyMessage="No opening balances have been entered."/>
+            <AdminMetricStrip metrics={[
+              { id: 'bs-assets', label: 'Total assets', value: formatMoney(totalAssets), context: 'Posted General Ledger · ' + periodLabel, icon: <Landmark size={15} /> },
+              { id: 'bs-liabilities', label: 'Total liabilities', value: formatMoney(totalLiabilities), context: 'As of ' + formatDate(asOfDate), icon: <ShieldAlert size={15} /> },
+              { id: 'bs-equity', label: 'Total equity incl. current earnings', value: formatMoney(totalEquity), context: 'Includes temporary account 3200', icon: <CircleDollarSign size={15} /> },
+              { id: 'bs-check', label: 'Accounting equation', value: balanced ? 'Balanced' : formatMoney(balanceDifference), context: 'Assets − liabilities − equity', icon: <WalletCards size={15} /> }
+            ]} />
+            <FinanceDataTable
+              title="Posted General Ledger Balance Sheet"
+              description={'Trial balance by normal account balance at ' + formatDate(asOfDate) + '. Current earnings are calculated from posted Revenue and Expense accounts; unresolved source items are disclosed above.'}
+              columns={[{label:'Section'},{label:'Code'},{label:'Account'},{label:'Balance (IDR)',align:'right'},{label:'Basis'}]}
+              rows={ledgerRows}
+              emptyMessage="No posted journal activity exists through the selected date."
+              exportable={true}
+            />
+            <FinanceDataTable
+              title="Opening balance register"
+              description="Opening balances are journalized via account 3200. Save an opening balance, run source sync, review the generated draft and have a second authorized user post it."
+              columns={[{label:'As of date'},{label:'Account code'},{label:'Account'},{label:'Balance side'},{label:'Opening amount',align:'right'},{label:'Notes'},{label:'Actions'}]}
+              rows={openings.map((record) => ({
+                id: record.id,
+                cells: [formatDate(record.payload.asOfDate),String(record.payload.accountCode||''),accountCatalog.get(String(record.payload.accountCode||''))?.name||String(record.payload.accountCode||''),String(record.payload.side||''),formatMoney(Number(record.payload.openingAmount)||0),String(record.payload.notes||'—'),registerRecordActions('balance-sheet-opening',record)]
+              }))}
+              emptyMessage="No opening balances have been entered."
+              actions={registerAddButton('balance-sheet-opening','Record opening balance')}
+            />
           </div>
         );
       }
