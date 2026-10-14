@@ -25,7 +25,7 @@ test('Finance navigation groups preserve the planned workbook grouping', () => {
 });
 
 test('Chart of Accounts includes operational and settlement accounts needed by source journals', () => {
-  assert.equal(EXCEL_CHART_OF_ACCOUNTS.length, 20);
+  assert.equal(EXCEL_CHART_OF_ACCOUNTS.length, 21);
   assert.equal(EXCEL_CHART_OF_ACCOUNTS[0].code, '1000');
   assert.equal(EXCEL_CHART_OF_ACCOUNTS.at(-1)?.code, '5600');
   assert.ok(EXCEL_CHART_OF_ACCOUNTS.every((account) => account.code.length === 4));
