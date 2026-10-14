@@ -168,6 +168,46 @@ test('overhead vendor bills use their configured expense account without requiri
   assert.deepEqual(balance(draft), { debit: 500, credit: 500 });
 });
 
+test('Other vendor payment methods require and use an explicit settlement account', () => {
+  const bill = {
+    id: 'bill_other_001',
+    recordKey: 'BILL-OTHER-001',
+    payload: {
+      billNo: 'BILL-OTHER-001',
+      vendorName: 'Operations Vendor',
+      billDate: '2026-10-08',
+      total: 150,
+      currency: 'IDR',
+      expenseAccountCode: '5600'
+    }
+  };
+  const payment = {
+    id: 'bill_payment_other_001',
+    status: 'posted',
+    payload: {
+      billId: 'bill_other_001',
+      paidDate: '2026-10-10',
+      amount: 150,
+      method: 'other',
+      settlementAccountCode: '1000',
+      reference: 'OTHER-SETTLEMENT-001'
+    }
+  };
+  const plan = buildFinanceSourceJournalDrafts([], [], [], [bill], [payment], EXCEL_CHART_OF_ACCOUNTS);
+  const settlement = plan.drafts.find((item) => item.sourceType === 'vendor-bill-payment');
+  assert.ok(settlement);
+  assert.equal(settlement.relatedSourceId, 'bill_other_001');
+  assert.deepEqual(settlement.lines.map((line) => [line.accountCode,line.debit,line.credit]), [['2000',150,0],['1000',0,150]]);
+  assert.equal(plan.skipped.length, 0);
+
+  const missingMapping = buildFinanceSourceJournalDrafts([], [], [], [bill], [{
+    ...payment,
+    payload: { ...payment.payload, settlementAccountCode: undefined }
+  }], EXCEL_CHART_OF_ACCOUNTS);
+  assert.equal(missingMapping.drafts.some((item) => item.sourceType === 'vendor-bill-payment'), false);
+  assert.ok(missingMapping.skipped.some((item) => item.sourceType === 'vendor-bill-payment' && item.reason.includes('explicit account')));
+});
+
 test('card clearing and credit-card statement payments generate distinct balanced settlement journals', () => {
   const transactions = [
     {
