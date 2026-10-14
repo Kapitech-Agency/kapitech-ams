@@ -125,6 +125,14 @@ export class PostgresInvoiceRepository {
       if(current.status!=='draft') await this.ensureFinancePeriodOpen(db,current.issueDate);
       const allowedStatuses=new Set(['draft','sent','overdue','partially_paid','paid','cancelled']);if(patch.status!==undefined&&!allowedStatuses.has(String(patch.status)))throw new Error('INVALID_INVOICE_STATUS');if(current.status==='cancelled'&&patch.status&&patch.status!=='cancelled')throw new Error('Cancelled invoices cannot be reopened.');
       if (patch.status === 'cancelled') throw new Error('INVOICE_CANCELLATION_REQUIRES_CANCEL_ENDPOINT');if(patch.updatedAt&&current.updatedAt!==patch.updatedAt)throw new Error('Invoice has been modified since it was loaded. Refresh and retry.');const next={...current,...patch,id,updatedAt:new Date().toISOString(),payments:current.payments};
+      const postedLedger=await db.query("SELECT id FROM finance_workbook_records WHERE record_type='journal-entry' AND status='posted' AND archived_at IS NULL AND payload->>'sourceType'='invoice-issued' AND payload->>'sourceId'=$1 LIMIT 1 FOR SHARE",[String(id)+':issued']);
+      if(postedLedger.rows[0]){
+        const protectedFields=['invoiceNumber','type','clientId','projectId','subtotal','discountPercent','discountAmount','taxPercent','taxAmount','total','currency','issueDate'];
+        const changed=protectedFields.some((key)=>JSON.stringify((next as any)[key]??null)!==JSON.stringify((current as any)[key]??null));
+        const itemFingerprint=(items:any[])=>JSON.stringify((items||[]).map((item:any)=>({description:String(item.description||''),quantity:Number(item.quantity),unitPrice:Number(item.unitPrice),amount:Number(item.amount??Number(item.quantity)*Number(item.unitPrice)})));
+        const itemsChanged=patch.items!==undefined&&itemFingerprint(next.items)!==itemFingerprint(current.items);
+        if(changed||itemsChanged) throw new Error('INVOICE_POSTED_LEDGER_REVERSAL_REQUIRED');
+      }
       if(String(next.status||'')!=='draft') await this.ensureFinancePeriodOpen(db,next.issueDate);
       let nextClientId = next.clientId ? String(next.clientId) : null;
       const nextProjectId = next.projectId ? String(next.projectId) : null;
