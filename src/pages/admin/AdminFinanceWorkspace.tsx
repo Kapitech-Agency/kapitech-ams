@@ -928,7 +928,19 @@ export const AdminFinanceWorkspace: React.FC = () => {
       const accountsByCode = new Map<string, { value: string; label: string }>();
       ACCOUNT_OPTION_CODES.forEach((account) => accountsByCode.set(account.value, account));
       storedAccounts.forEach((account) => accountsByCode.set(account.value, account));
-      return [{ value: '', label: 'Select an account' }, ...accountsByCode.values()];
+      const availableAccounts = [...accountsByCode.values()];
+      if (editor?.type === 'balance-sheet-opening' && field.key === 'accountCode') {
+        const eligible = new Set<string>(EXCEL_CHART_OF_ACCOUNTS
+          .filter((account) => ['Asset','Liability','Equity'].includes(account.type) && !['1000','1100','1200','3200'].includes(account.code))
+          .map((account) => account.code));
+        for (const record of getRegisterRecords('chart-of-accounts')) {
+          const code = String(record.payload.code || record.recordKey || '');
+          if (record.payload.active !== false && ['Asset','Liability','Equity'].includes(String(record.payload.accountType || '')) && !['1000','1100','1200','3200'].includes(code)) eligible.add(code);
+          else eligible.delete(code);
+        }
+        return [{ value: '', label: 'Select an eligible balance-sheet account' }, ...availableAccounts.filter((account) => eligible.has(account.value))];
+      }
+      return [{ value: '', label: 'Select an account' }, ...availableAccounts];
     }
     if (field.optionSource === 'cashAccounts') {
       if (editor?.type === 'cash-bank-transaction' && editor.payload.transactionKind === 'card-clearing-to-bank') {
