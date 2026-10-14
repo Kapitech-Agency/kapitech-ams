@@ -128,7 +128,9 @@ function normalise(type: FinanceWorkbookRecordType, raw: unknown, approval = fal
       const expenseAccountCode = txt(v.expenseAccountCode,4) || (project ? '5100' : '');
       if (expenseAccountCode && !/^\\d{4}$/.test(expenseAccountCode)) throw new FinanceWorkbookValidationError('Vendor bill expense account must be a four-digit account code.');
       if (!project && !expenseAccountCode) throw new FinanceWorkbookValidationError('An expense account is required for vendor bills that are not linked to an AMS project.');
-      p = { billNo, vendorId:txt(v.vendorId,160), vendorName, projectId:project, projectName:txt(v.projectName,200), expenseAccountCode, billDate, dueDate, currency, total:money(v.total,'Bill amount',false), paymentSchedule:[30,20,50], notes:txt(v.notes,600) };
+      const installmentDueDates = [date(v.installment1DueDate,'Payment 1 due date',true),date(v.installment2DueDate,'Payment 2 due date',true),date(v.installment3DueDate,'Payment 3 due date',true)];
+      if (installmentDueDates.some((due) => due && due < billDate)) throw new FinanceWorkbookValidationError('Installment due dates cannot precede the vendor bill date.');
+      p = { billNo, vendorId:txt(v.vendorId,160), vendorName, projectId:project, projectName:txt(v.projectName,200), expenseAccountCode, billDate, dueDate, installmentDueDates, currency, total:money(v.total,'Bill amount',false), paymentSchedule:[30,20,50], notes:txt(v.notes,600) };
       key = billNo; period = periodOf(billDate); status = 'open'; break;
     }
     case 'vendor-bill-payment': {
@@ -164,7 +166,9 @@ function normalise(type: FinanceWorkbookRecordType, raw: unknown, approval = fal
       const dueDate = date(v.dueDate,'Due date',true);
       const paymentReference = txt(v.paymentReference,120);
       status = choice(v.paymentStatus,['planned','pending','paid'],'Payment status','planned');
-      p = { projectId:project, projectName, memberName, role:txt(v.role,120), feeAmount:money(v.feeAmount,'Team fee',false), dueDate, paymentReference, paymentStatus:status, paidDate:date(v.paidDate,'Payment date',true), notes:txt(v.notes,500) };
+      const paidDate = date(v.paidDate,'Actual payment date',true);
+      if (status === 'paid' && !paidDate) throw new FinanceWorkbookValidationError('An actual payment date is required for a paid Team Fee installment.');
+      p = { projectId:project, projectName, memberName, role:txt(v.role,120), feeAmount:money(v.feeAmount,'Team fee',false), dueDate, paymentReference, paymentStatus:status, paidDate, notes:txt(v.notes,500) };
       key = (project || keyText(projectName)) + '|' + keyText(memberName) + (paymentReference ? '|' + keyText(paymentReference) : ''); period = dueDate ? periodOf(dueDate) : ''; break;
       key = (project || keyText(projectName)) + '|' + keyText(memberName); period = dueDate ? periodOf(dueDate) : ''; break;
     }
