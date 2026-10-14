@@ -85,16 +85,22 @@ function normalise(type: FinanceWorkbookRecordType, raw: unknown, approval = fal
     }
     case 'cash-bank-transaction': {
       const d = date(v.date,'Transaction date');
-      const kind = choice(v.transactionKind,['manual','bank-to-petty-cash','petty-cash-to-bank','bank-to-emergency-fund','emergency-fund-to-bank'],'Transaction kind','manual');
-      const accountCode = choice(v.accountCode,['1000','1100','1200'],'Account code','1000');
-      const counterpart = kind === 'manual' ? txt(v.counterpartAccountCode,4) : choice(v.counterpartAccountCode,['1000','1100','1200'],'Counterpart account');
+      const kind = choice(v.transactionKind,['manual','bank-to-petty-cash','petty-cash-to-bank','bank-to-emergency-fund','emergency-fund-to-bank','card-clearing-to-bank','bank-to-credit-card-payable'],'Transaction kind','manual');
+      const accountCode = kind === 'card-clearing-to-bank'
+        ? choice(v.accountCode,['1010'],'Card Settlement Clearing account')
+        : choice(v.accountCode,['1000','1100','1200'],'Account code','1000');
+      const counterpart = kind === 'manual' ? txt(v.counterpartAccountCode,4)
+        : kind === 'card-clearing-to-bank' ? choice(v.counterpartAccountCode,['1000'],'Cash & Bank counterpart')
+          : kind === 'bank-to-credit-card-payable' ? choice(v.counterpartAccountCode,['2200'],'Credit Card Payable counterpart')
+            : choice(v.counterpartAccountCode,['1000','1100','1200'],'Counterpart account');
       if (kind === 'manual' && !/^\d{4}$/.test(counterpart)) throw new FinanceWorkbookValidationError('Manual cash adjustments require a four-digit counterpart account.');
       if (counterpart && counterpart === accountCode) throw new FinanceWorkbookValidationError('Cash movements must use two different accounts.');
       const direction = choice(v.direction,['in','out'],'Direction');
       if (kind !== 'manual') {
         const expected: Record<string,string[]> = {
           'bank-to-petty-cash':['1000','1100','out'], 'petty-cash-to-bank':['1100','1000','out'],
-          'bank-to-emergency-fund':['1000','1200','out'], 'emergency-fund-to-bank':['1200','1000','out']
+          'bank-to-emergency-fund':['1000','1200','out'], 'emergency-fund-to-bank':['1200','1000','out'],
+          'card-clearing-to-bank':['1010','1000','out'], 'bank-to-credit-card-payable':['1000','2200','out']
         };
         const rule = expected[kind];
         if (accountCode !== rule[0] || counterpart !== rule[1] || direction !== rule[2]) throw new FinanceWorkbookValidationError('Account and direction do not match the transfer type.');
