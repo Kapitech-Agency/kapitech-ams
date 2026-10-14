@@ -32,7 +32,7 @@ export class PostgresInvoiceRepository {
   private readonly writableStatuses = new Set(['draft','sent','overdue']);
   private async ensureFinancePeriodOpen(db:any,value:unknown):Promise<void>{
     const period=String(value||'').slice(0,7);
-    if(!/^\\d{4}-(0[1-9]|1[0-2])$/.test(period)) return;
+    if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(period)) return;
     await db.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))",['kapitech:finance-period:'+period]);
     const lock=await db.query<Row>("SELECT id FROM finance_workbook_records WHERE record_type='monthly-closing-lock' AND period_key=$1 AND archived_at IS NULL LIMIT 1",[period]);
     if(lock.rows[0]) throw new Error('FINANCE_PERIOD_CLOSED:'+period);
@@ -163,7 +163,6 @@ export class PostgresInvoiceRepository {
       this.validateFinancials(next);
       const paid=next.payments.reduce((s:any,p:any)=>s+Number(p.amount||0),0);if(Number(next.total)<paid)throw new Error('Invoice total cannot be lower than payments already recorded.');next.amountPaid=paid;next.balanceDue=Math.max(0,Number(next.total)-paid);if(patch.status==='paid'&&!(next.balanceDue===0&&next.total>0))throw new Error('Invoice can only be marked paid after the remaining balance is fully settled.');if(patch.status==='partially_paid'&&!(paid>0&&next.balanceDue>0))throw new Error('Invoice can only be partially paid when a payment has been recorded and a balance remains.');if(next.balanceDue<=0&&next.total>0)next.status='paid';else if(paid>0)next.status='partially_paid';await db.query('UPDATE invoices SET invoice_number=$2,client_id=$3,project_id=$4,type=$5,subtotal=$6,discount_percent=$7,discount_amount=$8,tax_percent=$9,tax_amount=$10,total=$11,amount_paid=$12,balance_due=$13,currency=$14,status=$15,issue_date=$16,due_date=$17,notes=$18,payment_terms=$19,metadata=$20,updated_at=$21 WHERE id=$1',[id,current.invoiceNumber,next.clientId||null,next.projectId||null,next.type,next.subtotal,next.discountPercent,next.discountAmount,next.taxPercent,next.taxAmount,next.total,paid,next.balanceDue,next.currency,next.status,next.issueDate||null,next.dueDate||null,next.notes||null,next.paymentTerms||null,JSON.stringify(metadata(next)),next.updatedAt]);if(patch.items!==undefined){await db.query('DELETE FROM invoice_items WHERE invoice_id=$1',[id]);for(const x of next.items||[])await db.query('INSERT INTO invoice_items (id,invoice_id,description,quantity,unit_price,amount) VALUES ($1,$2,$3,$4,$5,$6)',[x.id,id,x.description,x.quantity,x.unitPrice,x.amount??Number(x.quantity)*Number(x.unitPrice)])}if(audit)await postgresAuditLogRepository.appendWithinTransaction(db,audit);return this.findByIdTx(db,id);});}
   async recordPayment(id:string,payment:any,audit?:AuditEntry):Promise<any|null>{return withPostgresTransaction(async db=>{const r=await db.query('SELECT * FROM invoices WHERE id=$1 FOR UPDATE',[id]);if(!r.rows[0])return null;const current=mapInvoice(r.rows[0],await this.items(db,id),await this.payments(db,id));
-    await this.ensureFinancePeriodOpen(db,payment.date);
     const authoritativePaid=current.payments.reduce((sum:any,p:any)=>sum+Number(p.amount||0),0);
     const storedPaid=Number(r.rows[0].amount_paid||0);
     if(!Number.isFinite(storedPaid)||Math.abs(storedPaid-authoritativePaid)>0.01||authoritativePaid>Number(current.total||0)) throw new Error('INVOICE_PAYMENT_LEDGER_INCONSISTENT');
@@ -194,6 +193,7 @@ export class PostgresInvoiceRepository {
         const replayed = await this.findByIdTx(db,id); return replayed ? { ...replayed, __idempotentReplay: true } : replayed;
       }
     }
+    await this.ensureFinancePeriodOpen(db,payment.date);
     if(current.status==='cancelled')throw new Error('Cancelled invoices cannot receive payments.');
     const paymentAmount=Number(payment.amount);
     if(!Number.isFinite(paymentAmount)||paymentAmount<=0||paymentAmount>authoritativeBalance)throw new Error('Payment exceeds the current invoice balance.');
