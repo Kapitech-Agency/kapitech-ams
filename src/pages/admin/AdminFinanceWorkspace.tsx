@@ -488,6 +488,7 @@ const REGISTER_FORMS: Record<string, { title: string; description: string; field
       {key:'paidDate',label:'Payment date',type:'date',required:true},
       {key:'amount',label:'Payment amount',type:'number',required:true},
       {key:'method',label:'Payment method',type:'select',required:true,options:['bank_transfer','credit_card','cash','other'],defaultValue:'bank_transfer'},
+      {key:'settlementAccountCode',label:'Settlement account',type:'select',optionSource:'accounts',visibleWhen:{key:'method',values:['other']},help:'Required for an unsupported payment method. Select the actual cash, bank or credit-card liability account.'},
       {key:'reference',label:'Payment reference',type:'text'},
       {key:'notes',label:'Notes',type:'textarea'}
     ]
@@ -980,6 +981,18 @@ export const AdminFinanceWorkspace: React.FC = () => {
 
   const getRegisterFieldOptions = (field: RegisterField): Array<{ value: string; label: string }> => {
     if (field.optionSource === 'accounts') {
+      if (editor?.type === 'vendor-bill-payment' && field.key === 'settlementAccountCode') {
+        const allowed = new Set(['1000','1100','1200','2200']);
+        const candidates = new Map<string,{value:string;label:string}>();
+        ACCOUNT_OPTION_CODES.filter((account)=>allowed.has(account.value)).forEach((account)=>candidates.set(account.value,account));
+        getRegisterRecords('chart-of-accounts').forEach((record)=>{
+          const code=String(record.payload.code||record.recordKey||'').trim();
+          if(!code||!allowed.has(code)) return;
+          if(record.payload.active===false) candidates.delete(code);
+          else candidates.set(code,{value:code,label:code+' · '+String(record.payload.name||code)});
+        });
+        return [{value:'',label:'Select settlement account'},...candidates.values()];
+      }
       const accountsByCode = new Map<string, { value: string; label: string }>();
       ACCOUNT_OPTION_CODES.forEach((account) => accountsByCode.set(account.value, account));
       getRegisterRecords('chart-of-accounts').forEach((record) => {
