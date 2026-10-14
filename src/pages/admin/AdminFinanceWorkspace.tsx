@@ -2078,7 +2078,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
             unclassified: 0
           };
           for (const expense of periodExpenses) classTotals[classifyWorkbookExpense(expense)] += Number(expense.amount) || 0;
-          const revenue = sumAmounts<AgencyInvoice>(periodInvoices, (invoice) => Math.max(0, (Number(invoice.total) || 0) - (Number(invoice.taxAmount) || 0));
+          const revenue = sumAmounts<AgencyInvoice>(periodInvoices, (invoice) => Math.max(0, (Number(invoice.total) || 0) - (Number(invoice.taxAmount) || 0)));
           const classifiedExpense = classTotals.directProjectCost + classTotals.teamReward + classTotals.projectTeamFee + classTotals.operatingExpense;
           const grossProfit = revenue - classTotals.directProjectCost;
           const netPreview = grossProfit - classTotals.teamReward - classTotals.projectTeamFee - classTotals.operatingExpense;
@@ -2477,7 +2477,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
         const yearInvoices = idrInvoices.filter((invoice) => getYearKey(getInvoiceDate(invoice)) === selectedYear);
         const yearExpenses = idrExpenses.filter((expense) => getYearKey(expense.date) === selectedYear);
         const yearCollections = cashMovements.filter((movement) => movement.currency === 'IDR' && ['1000','1100','1200'].includes(movement.accountCode) && movement.source !== 'Internal transfer' && getYearKey(movement.date) === selectedYear);
-        const yearBilled = sumAmounts<AgencyInvoice>(yearInvoices, (invoice) => Math.max(0, (Number(invoice.total) || 0) - (Number(invoice.taxAmount) || 0));
+        const yearBilled = sumAmounts<AgencyInvoice>(yearInvoices, (invoice) => Math.max(0, (Number(invoice.total) || 0) - (Number(invoice.taxAmount) || 0)));
         const yearCollected = sumAmounts<CashMovement>(yearCollections, (movement) => movement.cashIn);
         const yearOutflow = sumAmounts<CashMovement>(yearCollections, (movement) => movement.cashOut);
         const yearExpense = sumAmounts<AgencyExpense>(yearExpenses, (expense) => Number(expense.amount) || 0);
