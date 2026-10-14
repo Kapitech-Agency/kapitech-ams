@@ -81,6 +81,17 @@ export type ExpenseCategory =
   | 'Legal & Admin'
   | 'CapEx Equipment';
 
+export interface ExpensePaymentRecord {
+  id: string;
+  amount: number;
+  date: string;
+  method: InvoicePaymentRecord['method'];
+  paymentAccountCode?: '1000' | '1100' | '1200';
+  reference?: string;
+  notes?: string;
+  recordedBy?: string;
+}
+
 export interface AgencyExpense {
   id: string;
   slug?: string;
@@ -94,7 +105,8 @@ export interface AgencyExpense {
   vendorId?: string;
   vendorContractId?: string;
   vendorPayment?: { vendorId: string; contractId: string; contractTitle?: string; reference?: string; notes?: string; legacyFormat?: boolean };
-  paymentStatus?: 'unpaid' | 'paid';
+  paymentStatus?: 'unpaid' | 'partially_paid' | 'paid';
+  payments?: ExpensePaymentRecord[];
   paidDate?: string;
   paymentMethod?: InvoicePaymentRecord['method'];
   paymentAccountCode?: '1000' | '1100' | '1200';
