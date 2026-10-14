@@ -79,6 +79,8 @@ test('Finance supplementary repository preserves period locks, maker approval ac
   assert.match(repository, /Only pending petty cash vouchers can be approved/);
   assert.match(repository, /Cannot close /);
   assert.match(repository, /Only an approved petty cash voucher can be posted/);
+  assert.match(repository, /Maker-checker control cannot verify who created this record/);
+  assert.match(repository, /the record creator cannot approve or post their own Finance record/);
   assert.match(repository, /vendor-bill-payment/);
   assert.match(repository, /postPettyCashVoucher/);
   assert.match(repository, /A vendor bill with recorded payments cannot be archived/);
