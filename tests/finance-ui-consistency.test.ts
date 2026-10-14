@@ -297,10 +297,14 @@ test('Project Allocation explains defaults and displays the saved percentage per
 
 test('Embedded invoice, expense, and receivable workflows do not leak UI state across worksheets', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const vendors = await read('src/pages/admin/AdminVendors.tsx');
 
   assert.match(workspace, /case 'revenue':[\s\S]{0,100}key=\{tab\.key\} embeddedView="invoices"/);
   assert.match(workspace, /case 'expenses':[\s\S]{0,150}key=\{tab\.key\} embeddedView="income-expenses"/);
   assert.match(workspace, /case 'accounts-receivable':[\s\S]{0,120}key=\{tab\.key\} embeddedView="receivables"/);
+  assert.match(vendors, /\{!embedded && \([\s\S]{0,180}<AdminModuleHeader/);
+  assert.match(vendors, /\{embedded && <button type="button" onClick=\{handleOpenAdd\}/);
+  assert.match(vendors, /data-ams-slug="vendor-snapshot"/);
 });
 
 test('Finance drawer uses the shared drawer header once and keeps source errors actionable', async () => {
