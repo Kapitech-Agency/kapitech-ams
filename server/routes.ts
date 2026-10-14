@@ -3371,15 +3371,21 @@ apiRouter.post('/finance/invoices/:id/pay', requireAuth, requirePermission('canM
     res.status(400).json({ success: false, error: 'Valid payment amount is required.' });
     return;
   }
+  const requestedMethod = PAYMENT_METHODS.has(String(input.method)) ? String(input.method) : 'bank_transfer';
+  const settlementAccountCode = String(input.settlementAccountCode || '').trim();
+  if (requestedMethod === 'other' && !['1000','1010','1100','1200'].includes(settlementAccountCode)) {
+    res.status(400).json({ success: false, error: 'An Other invoice receipt must specify the actual active cash, bank or clearing account.' });
+    return;
+  }
 
   if (getDataSourceMode() === 'postgres') {
     const invoice = await postgresInvoiceRepository.findById(req.params.id);
     if (!invoice) { res.status(404).json({ success: false, error: 'Invoice not found.' }); return; }
     const payAmount = Number(input.amount);
     if (!Number.isFinite(payAmount) || payAmount <= 0) { res.status(400).json({ success: false, error: 'Valid payment amount is required.' }); return; }
-    const method = PAYMENT_METHODS.has(String(input.method)) ? String(input.method) : 'bank_transfer';
+    const method = requestedMethod;
     const date = normalizeDate(input.date, new Date().toISOString().slice(0,10));
-    const payment = { id: `pay_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`, amount: Math.round(payAmount*100)/100, date, method, reference: String(input.reference||'').trim().slice(0,160), notes: String(input.notes||'').trim().slice(0,1000), idempotencyKey: String(input.idempotencyKey || req.get('Idempotency-Key') || '').trim().slice(0,100), recordedBy: req.user!.name || req.user!.username, userId: req.user!.id };
+    const payment = { id: `pay_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`, amount: Math.round(payAmount*100)/100, date, method, ...(method === 'other' ? { settlementAccountCode } : {}), reference: String(input.reference||'').trim().slice(0,160), notes: String(input.notes||'').trim().slice(0,1000), idempotencyKey: String(input.idempotencyKey || req.get('Idempotency-Key') || '').trim().slice(0,100), recordedBy: req.user!.name || req.user!.username, userId: req.user!.id };
     try {
       const saved = await postgresInvoiceRepository.recordPayment(req.params.id, payment, makeAuditEntry(req, 'PAYMENT_RECORDED', `Recorded payment of ${payment.amount} for invoice ${req.params.id}.`));
       if (!saved) { res.status(404).json({ success:false,error:'Invoice not found.' }); return; }
@@ -3417,7 +3423,7 @@ apiRouter.post('/finance/invoices/:id/pay', requireAuth, requirePermission('canM
     return;
   }
 
-  const method = PAYMENT_METHODS.has(String(input.method)) ? String(input.method) : 'bank_transfer';
+  const method = requestedMethod;
   const date = normalizeDate(input.date, new Date().toISOString().slice(0, 10));
   const reference = String(input.reference || '').trim().slice(0, 160);
   const notes = String(input.notes || '').trim().slice(0, 1000);
@@ -3428,6 +3434,7 @@ apiRouter.post('/finance/invoices/:id/pay', requireAuth, requirePermission('canM
     amount: Math.round(payAmount * 100) / 100,
     date,
     method,
+    ...(method === 'other' ? { settlementAccountCode } : {}),
     reference,
     recordedBy: req.user!.name || req.user!.username,
     notes,
