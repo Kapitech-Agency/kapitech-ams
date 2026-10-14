@@ -41,8 +41,8 @@ type TableRow = { id: string; cells: React.ReactNode[] };
 type SourceResult = { label: string; data: any; error?: string };
 type WorkbookRecord = { id: string; recordType: string; recordKey: string; periodKey?: string; projectId?: string; status: string; payload: Record<string, any>; version: number; createdByUserId?: string; createdAt: string; updatedAt: string };
 type FinanceVendorContractDraft = { vendorId: string; id?: string; title: string; startDate: string; endDate: string; rateType: VendorContract['rateType']; rateAmount: number; currency: VendorContract['currency']; status: VendorContract['status'] };
-type RegisterField = { key: string; label: string; type: 'text' | 'number' | 'date' | 'month' | 'select' | 'textarea'; required?: boolean; options?: string[]; optionSource?: 'vendorBills' | 'accounts' | 'cashAccounts' | 'projects' | 'vendors'; placeholder?: string; help?: string; defaultValue?: string | number; visibleWhen?: { key: string; values: string[] } };
-type CashMovement = { id: string; date: string; reference: string; description: string; cashIn: number; cashOut: number; source: string; currency: string };
+type RegisterField = { key: string; label: string; type: 'text' | 'number' | 'date' | 'month' | 'select' | 'textarea'; required?: boolean; options?: string[]; optionSource?: 'vendorBills' | 'accounts' | 'cashAccounts' | 'expenseAccounts' | 'projects' | 'vendors'; placeholder?: string; help?: string; defaultValue?: string | number; visibleWhen?: { key: string; values: string[] } };
+type CashMovement = { id: string; date: string; reference: string; description: string; cashIn: number; cashOut: number; source: string; currency: string; accountCode: string };
 
 const getLocalDateInputValue = (date = new Date()): string => {
   const year = date.getFullYear();
@@ -434,7 +434,7 @@ const REGISTER_FORMS: Record<string, { title: string; description: string; field
       {key:'date',label:'Transaction date',type:'date',required:true},
       {key:'transactionKind',label:'Movement type',type:'select',required:true,options:['manual','bank-to-petty-cash','petty-cash-to-bank','bank-to-emergency-fund','emergency-fund-to-bank'],defaultValue:'manual'},
       {key:'accountCode',label:'From / active account',type:'select',required:true,optionSource:'cashAccounts',defaultValue:'1000'},
-      {key:'counterpartAccountCode',label:'Counterpart account',type:'select',optionSource:'cashAccounts',visibleWhen:{key:'transactionKind',values:['bank-to-petty-cash','petty-cash-to-bank','bank-to-emergency-fund','emergency-fund-to-bank']}},
+      {key:'counterpartAccountCode',label:'Counterpart account',type:'select',required:true,optionSource:'cashAccounts',help:'For manual adjustments, select the other ledger account. Transfers are restricted to cash accounts.'},
       {key:'direction',label:'Movement direction',type:'select',required:true,options:['in','out'],defaultValue:'out'},
       {key:'reference',label:'Reference',type:'text',placeholder:'Transfer / adjustment reference'},
       {key:'description',label:'Description',type:'text',required:true},
@@ -446,7 +446,7 @@ const REGISTER_FORMS: Record<string, { title: string; description: string; field
   },
   'petty-cash-voucher': {
     title:'Petty Cash Voucher',
-    description:'New vouchers start as pending. Outgoing transactions above Rp100.000 require management approval before they affect the approved voucher balance.',
+    description:'All vouchers begin as pending and require an authorized reviewer before posting to the petty-cash balance.',
     fields:[
       {key:'date',label:'Voucher date',type:'date',required:true},
       {key:'voucherNo',label:'Voucher number',type:'text',placeholder:'Leave blank to generate automatically'},
@@ -466,8 +466,12 @@ const REGISTER_FORMS: Record<string, { title: string; description: string; field
       {key:'vendorName',label:'Vendor / freelancer',type:'text',required:true},
       {key:'projectId',label:'AMS project (optional)',type:'select',optionSource:'projects'},
       {key:'projectName',label:'Project name',type:'text'},
+      {key:'expenseAccountCode',label:'Expense account',type:'select',required:true,optionSource:'expenseAccounts'},
       {key:'billDate',label:'Bill date',type:'date',required:true},
-      {key:'dueDate',label:'Due date',type:'date',required:true},
+      {key:'dueDate',label:'Overall due date',type:'date',required:true},
+      {key:'installment1DueDate',label:'Payment 1 due date · 30%',type:'date'},
+      {key:'installment2DueDate',label:'Payment 2 due date · 20%',type:'date'},
+      {key:'installment3DueDate',label:'Payment 3 due date · 50%',type:'date'},
       {key:'currency',label:'Currency',type:'select',required:true,options:['IDR','USD'],defaultValue:'IDR'},
       {key:'total',label:'Bill amount',type:'number',required:true},
       {key:'notes',label:'Notes',type:'textarea'}
@@ -524,14 +528,16 @@ const REGISTER_FORMS: Record<string, { title: string; description: string; field
       {key:'memberName',label:'Team member',type:'text',required:true},
       {key:'role',label:'Role',type:'text'},
       {key:'feeAmount',label:'Fee amount (IDR)',type:'number',required:true},
-      {key:'dueDate',label:'Payment date / target date',type:'date'},
+      {key:'paymentReference',label:'Fee milestone / reference',type:'text',placeholder:'e.g. Deposit, milestone 2, final payment'},
+      {key:'dueDate',label:'Due date / target date',type:'date'},
+      {key:'paidDate',label:'Actual payment date',type:'date'},
       {key:'paymentStatus',label:'Payment status',type:'select',options:['planned','pending','paid'],defaultValue:'planned'},
       {key:'notes',label:'Notes',type:'textarea'}
     ]
   },
   'project-allocation': {
     title:'Project Profit Allocation',
-    description:'Allocation amounts are calculated using the configured percentages and net project profit.',
+    description:'Team Fee is deducted before positive net project profit is allocated; reserve and reward allocations never go negative.',
     fields:[
       {key:'projectId',label:'AMS project (optional)',type:'select',optionSource:'projects'},
       {key:'projectName',label:'Project name / reference',type:'text',required:true},
@@ -746,6 +752,9 @@ export const AdminFinanceWorkspace: React.FC = () => {
     for (const invoice of reportInvoices) {
       for (const payment of getPaymentRows(invoice)) {
         if (!payment.date || payment.amount <= 0) continue;
+        const method = String(payment.method || '').toLowerCase().replace(/[\s-]+/g, '_');
+        const accountCode = method === 'bank_transfer' ? '1000' : method === 'cash' ? '1100' : '';
+        if (!accountCode) continue;
         entries.push({
           id: 'payment-' + invoice.id + '-' + payment.id,
           date: payment.date,
@@ -754,21 +763,29 @@ export const AdminFinanceWorkspace: React.FC = () => {
           cashIn: payment.amount,
           cashOut: 0,
           source: 'Invoice payment',
-          currency: invoice.currency || 'IDR'
+          currency: invoice.currency || 'IDR',
+          accountCode
         });
       }
     }
     for (const expense of expenses) {
-      if (!expense.date || Number(expense.amount) <= 0 || isPettyCashRelated(expense)) continue;
+      const metadata = expense.metadata && typeof expense.metadata === 'object' ? expense.metadata : {};
+      const paymentStatus = String(expense.paymentStatus || (metadata as Record<string, unknown>).paymentStatus || '').toLowerCase();
+      const paymentMethod = String(expense.paymentMethod || (metadata as Record<string, unknown>).paymentMethod || '').toLowerCase().replace(/[\s-]+/g, '_');
+      const accountCode = String(expense.paymentAccountCode || (metadata as Record<string, unknown>).paymentAccountCode || '');
+      const paidDate = String(expense.paidDate || (metadata as Record<string, unknown>).paidDate || '').slice(0, 10);
+      if (paymentStatus !== 'paid' || !paidDate || Number(expense.amount) <= 0 || isPettyCashRelated(expense)) continue;
+      if (!['bank_transfer', 'cash'].includes(paymentMethod) || !['1000','1100','1200'].includes(accountCode)) continue;
       entries.push({
         id: 'expense-' + expense.id,
-        date: String(expense.date).slice(0, 10),
+        date: paidDate,
         reference: String((expense as any).reference || expense.id),
         description: expenseLabel(expense),
         cashIn: 0,
         cashOut: Number(expense.amount) || 0,
-        source: 'Expense record',
-        currency: String((expense as any).currency || 'IDR')
+        source: 'Paid expense',
+        currency: String((expense as any).currency || 'IDR'),
+        accountCode
       });
     }
     for (const record of registerRecords['cash-bank-transaction'] || []) {
@@ -778,30 +795,43 @@ export const AdminFinanceWorkspace: React.FC = () => {
       const counterpartAccountCode = String(payload.counterpartAccountCode || '');
       const direction = String(payload.direction || 'out');
       const kind = String(payload.transactionKind || 'manual');
+      if (String(record.status || payload.status || '').toLowerCase() !== 'posted') continue;
+      if (amount <= 0) continue;
       let cashIn = 0;
       let cashOut = 0;
+      let ledgerAccountCode = '';
       if (accountCode === '1000') {
+        ledgerAccountCode = '1000';
         cashIn = direction === 'in' ? amount : 0;
         cashOut = direction === 'out' ? amount : 0;
       } else if (counterpartAccountCode === '1000') {
-        cashIn = amount;
+        ledgerAccountCode = '1000';
+        if (kind === 'manual') {
+          cashIn = direction === 'out' ? amount : 0;
+          cashOut = direction === 'in' ? amount : 0;
+        } else {
+          cashIn = amount;
+        }
+      } else if (['1000','1100','1200'].includes(accountCode) && kind === 'manual') {
+        ledgerAccountCode = accountCode;
+        cashIn = direction === 'in' ? amount : 0;
+        cashOut = direction === 'out' ? amount : 0;
       } else {
         continue;
       }
-      if (amount <= 0) continue;
       entries.push({
         id: 'cash-workbook-' + record.id,
         date: String(payload.date || '').slice(0, 10),
         reference: String(payload.reference || record.recordKey || record.id),
-        description: String(payload.description || (kind === 'manual' ? 'Manual bank movement' : 'Internal cash transfer')),
-        cashIn,
-        cashOut,
-        source: kind === 'manual' ? 'Manual bank adjustment' : 'Internal transfer',
-        currency: 'IDR'
+        description: String(payload.description || (kind === 'manual' ? 'Manual cash movement' : 'Internal cash transfer')),
+        cashIn, cashOut,
+        source: kind === 'manual' ? 'Manual cash adjustment' : 'Internal transfer',
+        currency: 'IDR',
+        accountCode: ledgerAccountCode
       });
     }
     return entries.sort((a, b) => b.date.localeCompare(a.date));
-  }, [reportInvoices, expenses, registerRecords]);
+  }, [reportInvoices, expenses, registerRecords]);  }, [reportInvoices, expenses, registerRecords]);
 
   const matching = useCallback((values: unknown[]) => {
     const needle = searchText.trim().toLowerCase();
@@ -872,7 +902,27 @@ export const AdminFinanceWorkspace: React.FC = () => {
       storedAccounts.forEach((account) => accountsByCode.set(account.value, account));
       return [{ value: '', label: 'Select an account' }, ...accountsByCode.values()];
     }
-    if (field.optionSource === 'cashAccounts') return [{ value: '', label: 'Select a cash account' }, ...CASH_ACCOUNT_OPTIONS];
+    if (field.optionSource === 'cashAccounts') {
+      if (field.key === 'counterpartAccountCode' && editor?.type === 'cash-bank-transaction' && editor.payload.transactionKind === 'manual') {
+        const accounts = new Map<string, { value: string; label: string }>();
+        EXCEL_CHART_OF_ACCOUNTS.forEach((account) => accounts.set(account.code, { value: account.code, label: account.code + ' · ' + account.name }));
+        getRegisterRecords('chart-of-accounts').filter((record) => record.payload.active !== false).forEach((record) => {
+          const code = String(record.payload.code || record.recordKey);
+          accounts.set(code, { value: code, label: code + ' · ' + String(record.payload.name || '') });
+        });
+        return [{ value: '', label: 'Select counterpart account' }, ...accounts.values()];
+      }
+      return [{ value: '', label: 'Select a cash account' }, ...CASH_ACCOUNT_OPTIONS];
+    }
+    if (field.optionSource === 'expenseAccounts') {
+      const accounts = new Map<string, { value: string; label: string }>();
+      EXCEL_CHART_OF_ACCOUNTS.filter((account) => account.type === 'Expense').forEach((account) => accounts.set(account.code, { value: account.code, label: account.code + ' · ' + account.name }));
+      getRegisterRecords('chart-of-accounts').filter((record) => record.payload.active !== false && String(record.payload.accountType || '') === 'Expense').forEach((record) => {
+        const code = String(record.payload.code || record.recordKey);
+        accounts.set(code, { value: code, label: code + ' · ' + String(record.payload.name || '') });
+      });
+      return [{ value: '', label: 'Select expense account' }, ...accounts.values()];
+    }
     if (field.optionSource === 'projects') return [
       { value: '', label: 'Not linked to an AMS project' },
       ...projects.map((project) => ({ value: project.id, label: (project.name || project.slug || project.id) + ' · ' + project.id }))
@@ -1581,7 +1631,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
         const opening = openingRecord ? Number(openingRecord.payload.openingBalance) || 0 : null;
         const openingDate = String(openingRecord?.payload.openingDate || '').slice(0, 10);
         const cashRows = cashMovements
-          .filter((entry) => entry.currency === 'IDR' && (!openingDate || entry.date.slice(0, 10) >= openingDate))
+          .filter((entry) => entry.currency === 'IDR' && entry.accountCode === '1000' && (!openingDate || entry.date.slice(0, 10) >= openingDate))
           .slice().sort((a,b) => a.date.localeCompare(b.date));
         let running = opening ?? 0;
         const allCashLedgerRows = cashRows.map((entry) => {
