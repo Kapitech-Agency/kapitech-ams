@@ -885,6 +885,31 @@ export const AdminFinanceWorkspace: React.FC = () => {
     return { inflow, outflow, net: inflow - outflow, activityCount, journalCount: journals.length };
   };
 
+  const getPostedLedgerIncomeStatement = (startDate: string, endDate: string) => {
+    const accountTypes = new Map<string, string>(EXCEL_CHART_OF_ACCOUNTS.map((account) => [account.code, account.type] as const));
+    for (const account of getRegisterRecords('chart-of-accounts')) {
+      const code = String(account.payload.code || account.recordKey);
+      accountTypes.set(code, account.payload.active === false ? '__inactive__' : String(account.payload.accountType || ''));
+    }
+    const journals = getRegisterRecords('journal-entry').filter((record) => {
+      if (record.status !== 'posted') return false;
+      const date = String(record.payload.date || '').slice(0, 10);
+      return date >= startDate && date <= endDate;
+    });
+    let revenue = 0, expense = 0;
+    for (const journal of journals) {
+      const lines = Array.isArray(journal.payload.lines) ? journal.payload.lines as Array<Record<string, any>> : [];
+      for (const line of lines) {
+        const type = accountTypes.get(String(line.accountCode || ''));
+        const debit = Number(line.debit) || 0;
+        const credit = Number(line.credit) || 0;
+        if (type === 'Revenue') revenue += credit - debit;
+        if (type === 'Expense') expense += debit - credit;
+      }
+    }
+    return { revenue, expense, net: revenue - expense, journalCount: journals.length, available: journals.length > 0 };
+  };
+
   const getOpeningRecord = (accountCode: string): WorkbookRecord | undefined =>
     getRegisterRecords('cash-bank-opening').find((item) => String(item.payload.accountCode) === accountCode);
 
@@ -2307,34 +2332,10 @@ export const AdminFinanceWorkspace: React.FC = () => {
           return { range, invoices: periodInvoices, expenses: periodExpenses, revenue, classTotals, classifiedExpense, grossProfit, netPreview };
         };
         const currentPnl = getPnlForPeriod(reportPeriodValue);
-        const getPostedLedgerPnl = (periodValue: string) => {
-          const range = getReportingPeriodRange(periodValue, reportPeriodMode, locale);
-          const accountTypes = new Map<string, string>(EXCEL_CHART_OF_ACCOUNTS.map((account) => [account.code, account.type] as const));
-          for (const account of getRegisterRecords('chart-of-accounts')) {
-            const code = String(account.payload.code || account.recordKey);
-            accountTypes.set(code, account.payload.active === false ? '__inactive__' : String(account.payload.accountType || ''));
-          }
-          const journals = range
-            ? getRegisterRecords('journal-entry').filter((record) => {
-                if (record.status !== 'posted') return false;
-                const entryDate = String(record.payload.date || '').slice(0, 10);
-                return entryDate >= range.startDate && entryDate <= range.endDate;
-              })
-            : [];
-          let revenue = 0, expense = 0;
-          for (const journal of journals) {
-            const lines = Array.isArray(journal.payload.lines) ? journal.payload.lines as Array<Record<string, any>> : [];
-            for (const line of lines) {
-              const type = accountTypes.get(String(line.accountCode || ''));
-              const debit = Number(line.debit) || 0;
-              const credit = Number(line.credit) || 0;
-              if (type === 'Revenue') revenue += credit - debit;
-              if (type === 'Expense') expense += debit - credit;
-            }
-          }
-          return { revenue, expense, net: revenue - expense, journalCount: journals.length, available: journals.length > 0 };
-        };
-        const postedLedger = getPostedLedgerPnl(reportPeriodValue);
+        const currentPnlRange = getReportingPeriodRange(reportPeriodValue, reportPeriodMode, locale);
+        const postedLedger = currentPnlRange
+          ? getPostedLedgerIncomeStatement(currentPnlRange.startDate, currentPnlRange.endDate)
+          : { revenue: 0, expense: 0, net: 0, journalCount: 0, available: false };
         const comparisonMode = reportPeriodMode === 'year' ? 'previous-period' : reportComparisonMode;
         const comparisonPeriodValue = getPreviousReportingPeriodValue(reportPeriodValue, reportPeriodMode, comparisonMode);
         const comparisonPnl = getPnlForPeriod(comparisonPeriodValue);
