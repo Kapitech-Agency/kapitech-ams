@@ -3706,7 +3706,13 @@ apiRouter.post('/finance/expenses/:id/payments', requireAuth, requirePermission(
   const payments = Array.isArray(metadata.payments) ? metadata.payments : [];
   const oldPayment = payments.find((item: any) => String(item.id) === paymentId);
   if (oldPayment) {
-    if (Number(oldPayment.amount) !== payment.amount || String(oldPayment.date) !== date || String(oldPayment.method) !== method) {
+    const samePayment = Number(oldPayment.amount) === payment.amount
+      && String(oldPayment.date || '') === date
+      && String(oldPayment.method || '') === method
+      && String(oldPayment.paymentAccountCode || '') === String(payment.paymentAccountCode || '')
+      && String(oldPayment.reference || '') === payment.reference
+      && String(oldPayment.notes || '') === payment.notes;
+    if (!samePayment) {
       res.status(409).json({ success: false, error: 'Payment ID has already been used with different payment details.' });
       return;
     }
