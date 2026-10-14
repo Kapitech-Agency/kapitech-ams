@@ -6,7 +6,7 @@ import { postgresAuditLogRepository, type AuditEntry } from './postgres-audit-lo
 export const FINANCE_WORKBOOK_RECORD_TYPES = [
   'chart-of-accounts', 'cash-bank-opening', 'cash-bank-transaction', 'petty-cash-voucher',
   'vendor-bill', 'vendor-bill-payment', 'operational-budget', 'project-finance', 'team-fee',
-  'project-allocation', 'journal-entry', 'monthly-closing', 'balance-sheet-opening', 'monthly-closing-lock'
+  'project-allocation', 'journal-entry', 'monthly-closing', 'cash-reconciliation', 'balance-sheet-opening', 'monthly-closing-lock'
 ] as const;
 export type FinanceWorkbookRecordType = typeof FINANCE_WORKBOOK_RECORD_TYPES[number];
 export type FinanceWorkbookRecord = {
@@ -31,7 +31,7 @@ const money = (v: unknown, label: string, allowZero = true): number => {
 const date = (v: unknown, label: string, optional = false): string => {
   const s = txt(v, 10);
   if (optional && !s) return '';
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(s) || Number.isNaN(new Date(s + 'T00:00:00Z').getTime())) throw new FinanceWorkbookValidationError(label + ' must use YYYY-MM-DD.');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s) || Number.isNaN(new Date(s + 'T00:00:00Z').getTime()) || new Date(s + 'T00:00:00Z').toISOString().slice(0,10) !== s) throw new FinanceWorkbookValidationError(label + ' must use a real calendar date in YYYY-MM-DD format.');
   return s;
 };
 const month = (v: unknown): string => {
@@ -251,6 +251,18 @@ function normalise(type: FinanceWorkbookRecordType, raw: unknown, approval = fal
       if (approval && status !== 'Done') throw new FinanceWorkbookValidationError('Approved control must be marked Done.');
       p = { period:m, checklistItem, status, pic:txt(v.pic,160), date:date(v.date,'Checklist date',true), notes:txt(v.notes,500) };
       key = m + '|' + keyText(checklistItem); period = m; break;
+    }
+    case 'cash-reconciliation': {
+      const reconciliationMonth = month(v.reconciliationMonth);
+      const accountCode = choice(v.accountCode,['1000','1010','1100','1200'],'Cash/bank account');
+      const statementDate = date(v.statementDate,'Statement or count date');
+      const monthEnd = new Date(Date.UTC(Number(reconciliationMonth.slice(0,4)),Number(reconciliationMonth.slice(5,7)),0)).toISOString().slice(0,10);
+      if(statementDate!==monthEnd) throw new FinanceWorkbookValidationError('Cash reconciliation must use the final calendar day of its reporting month ('+monthEnd+').');
+      if(statementDate>new Date().toISOString().slice(0,10)) throw new FinanceWorkbookValidationError('Cash reconciliation cannot be completed before the statement or count date has occurred.');
+      const statementReference = txt(v.statementReference,160);
+      if(!statementReference) throw new FinanceWorkbookValidationError('Bank, processor or cash-count reference is required for reconciliation evidence.');
+      p = { reconciliationMonth, accountCode, statementDate, statementBalance:money(v.statementBalance,'Statement/count balance'), statementReference, notes:txt(v.notes,500) };
+      key = reconciliationMonth+'|'+accountCode; period = reconciliationMonth; status = 'recorded'; break;
     }
     case 'balance-sheet-opening': {
       const code = txt(v.accountCode,4);
