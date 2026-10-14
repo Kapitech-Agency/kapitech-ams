@@ -3612,6 +3612,11 @@ apiRouter.post('/finance/expenses', requireAuth, requirePermission('canManageInv
     projectId: cleanText(exp.projectId, 100) || undefined,
     vendorId: vendorPaymentMetadata?.vendorId,
     vendorContractId: vendorPaymentMetadata?.contractId,
+    paymentStatus,
+    paidDate: paymentStatus === 'paid' ? paidDate : undefined,
+    paymentMethod,
+    paymentAccountCode: paymentStatus === 'paid' && paymentMethod !== 'credit_card' ? paymentAccountCode : undefined,
+    payments: paymentStatus === 'paid' ? [{ id: initialPaymentId, amount: Math.round(amount * 100) / 100, date: paidDate, method: paymentMethod, paymentAccountCode: paymentMethod !== 'credit_card' ? paymentAccountCode : undefined, reference: cleanText(exp.paymentReference || exp.reference || '', 160), notes: cleanText(exp.paymentNotes || '', 500), recordedBy: req.user!.name || req.user!.username }] : [],
     metadata: {
       ...(vendorPaymentMetadata ? { vendorPayment: vendorPaymentMetadata } : {}),
       paymentStatus,
@@ -3634,7 +3639,8 @@ apiRouter.post('/finance/expenses', requireAuth, requirePermission('canManageInv
       res.json({ success:true, expense, replayed });
     } catch (error) {
       if (error instanceof ExpenseProjectNotFoundError || (error instanceof Error && ['EXPENSE_IDEMPOTENCY_KEY_REUSE_CONFLICT', 'VENDOR_NOT_FOUND'].includes(error.message))) { res.status(409).json({ success:false,error:error.message }); return; }
-      res.status(400).json({ success:false,error:error instanceof Error?error.message:'Expense could not be created.' });
+      const message = error instanceof Error ? error.message : 'Expense could not be created.';
+      res.status(message.startsWith('FINANCE_PERIOD_CLOSED:') ? 409 : 400).json({ success:false,error:message });
     }
     return;
   }
@@ -3722,7 +3728,13 @@ apiRouter.post('/finance/expenses/:id/payments', requireAuth, requirePermission(
   if (paidBefore + payment.amount > Number(expense.amount || 0) + 0.01) { res.status(409).json({ success: false, error: 'Total expense payments cannot exceed the recorded expense amount.' }); return; }
   const nextPayments = [...payments, payment];
   const paidTotal = Math.round(nextPayments.reduce((sum: number, item: any) => sum + Math.max(0, Number(item.amount) || 0), 0) * 100) / 100;
-  expense.metadata = { ...metadata, payments: nextPayments, paymentStatus: paidTotal >= Number(expense.amount || 0) - 0.01 ? 'paid' : 'partially_paid', paidDate: date, paymentMethod: method, paymentAccountCode: payment.paymentAccountCode };
+  const nextStatus = paidTotal >= Number(expense.amount || 0) - 0.01 ? 'paid' : 'partially_paid';
+  expense.metadata = { ...metadata, payments: nextPayments, paymentStatus: nextStatus, paidDate: date, paymentMethod: method, paymentAccountCode: payment.paymentAccountCode };
+  expense.payments = nextPayments;
+  expense.paymentStatus = nextStatus;
+  expense.paidDate = date;
+  expense.paymentMethod = method;
+  expense.paymentAccountCode = payment.paymentAccountCode;
   expense.version = Number(expense.version || 1) + 1;
   saveDatabase(db);
   recordAuditLog({ action: 'EXPENSE_PAYMENT_RECORDED', actor: req.user!.username, actorRole: req.user!.role, ip: req.ip, userAgent: req.headers['user-agent'] as string, details: 'Recorded expense settlement for "' + expense.description + '".', severity: 'warning' });
