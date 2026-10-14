@@ -3913,6 +3913,7 @@ apiRouter.post('/finance/workbook/journal-drafts/sync', requireAuth, requirePerm
       reference: String(value.reference || ''),
       description: String(value.description || ''),
       projectId: String(value.projectId || ''),
+      relatedSourceId: String(value.relatedSourceId || ''),
       notes: String(value.notes || ''),
       lines: (Array.isArray(value.lines) ? value.lines : []).map((line: Record<string, any>) => ({
         accountCode: String(line.accountCode || ''),
