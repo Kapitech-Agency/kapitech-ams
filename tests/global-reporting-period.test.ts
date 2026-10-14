@@ -84,8 +84,12 @@ test('date-aware Finance worksheets use the shared reporting period without chan
   assert.ok(!workspace.includes('finance-dashboard-month-picker'));
   assert.ok(!workspace.includes('finance-pnl-report-period-picker'));
   assert.ok(!workspace.includes('finance-cash-flow-report-period-picker'));
-  assert.ok(workspace.includes('const latestByAccount=new Map<string,WorkbookRecord>();'));
-  assert.ok(workspace.includes('for(const record of allOpenings.slice()'));
+  assert.ok(workspace.includes('const accountActivity = new Map<string, { debit: number; credit: number }>();'));
+  assert.ok(workspace.includes('for (const journal of postedJournals)'));
+  assert.ok(workspace.includes('sourceType: \'cash-bank-opening\' as const'));
+  assert.ok(workspace.includes('sourceType: \'balance-sheet-opening\' as const'));
+  assert.ok(workspace.includes('const openingOffset = accountBalance(\'3200\', \'Equity\')'));
+  assert.ok(workspace.includes('const sourceExceptionCount = exceptionKeys.size'));
   assert.ok(workspace.includes('const requestId = ++loadRequestId.current;'));
   assert.ok(workspace.includes('if (requestId !== loadRequestId.current) return;'));
   assert.ok(workspace.includes('const selectedCashRange = reportPeriodEnabled ? getReportingPeriodRange(reportPeriodValue, reportPeriodMode) : null;'));
