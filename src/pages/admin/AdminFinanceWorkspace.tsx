@@ -593,7 +593,7 @@ const CASH_ACCOUNT_OPTIONS = [
 ];
 
 export const AdminFinanceWorkspace: React.FC = () => {
-  const { mode: reportPeriodMode, value: reportPeriodValue, enabled: reportPeriodEnabled, setMode: setReportPeriodMode, setValue: setReportPeriodValue, matchesDate, matchesInterval } = useReportingPeriod();
+  const { mode: reportPeriodMode, value: reportPeriodValue, enabled: reportPeriodEnabled, matchesDate, matchesInterval } = useReportingPeriod();
   const { language } = useLanguage();
   const locale = language === 'id' ? 'id-ID' : 'en-US';
   const canViewFinancials = hasAdminPermission('canViewFinancials');
