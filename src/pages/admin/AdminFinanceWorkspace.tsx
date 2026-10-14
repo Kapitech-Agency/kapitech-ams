@@ -2642,7 +2642,6 @@ export const AdminFinanceWorkspace: React.FC = () => {
                 : 'Confirm that the supporting documents and accounting treatment have been reviewed by an authorized user.'}
         busy={registerSaving}
         closeOnOutsideClick={false}
-        slug="finance-action-confirmation"
         footer={
           <div className="flex items-center justify-end gap-2">
             <Button type="button" variant="secondary" disabled={registerSaving} onClick={() => setPendingConfirmation(null)}>
