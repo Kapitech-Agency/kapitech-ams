@@ -25,7 +25,7 @@ export class PostgresExpenseRepository{
     const period=String(value||'').slice(0,7);
     if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(period)) return;
     await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))",['kapitech:finance-period:'+period]);
-    const lock=await client.query<Row>("SELECT id FROM finance_workbook_records WHERE record_type='monthly-closing-lock' AND period_key=$1 AND archived_at IS NULL LIMIT 1",[period]);
+    const lock=await client.query("SELECT id FROM finance_workbook_records WHERE record_type='monthly-closing-lock' AND period_key=$1 AND archived_at IS NULL LIMIT 1",[period]);
     if(lock.rows[0]) throw new Error('FINANCE_PERIOD_CLOSED:'+period);
   }
   async list(){const r=await getPostgresPool().query<Row>('SELECT * FROM expenses WHERE archived_at IS NULL AND status <> $1 ORDER BY expense_date DESC, created_at DESC',['voided']);return r.rows.map(mapExpense);}
