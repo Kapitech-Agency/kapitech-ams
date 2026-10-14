@@ -138,7 +138,7 @@ export function getInvoiceDate(invoice: Partial<AgencyInvoice>): string {
   return String(invoice.issueDate || invoice.createdAt || '').slice(0, 10);
 }
 
-export function getPaymentRows(invoice: Partial<AgencyInvoice>): Array<{ id: string; date: string; amount: number; reference: string; method: string }> {
+export function getPaymentRows(invoice: Partial<AgencyInvoice>): Array<{ id: string; date: string; amount: number; reference: string; method: string; settlementAccountCode?: string }> {
   const payments = Array.isArray(invoice.payments) ? invoice.payments : [];
   if (payments.length > 0) {
     return payments.map((payment) => ({
@@ -146,7 +146,8 @@ export function getPaymentRows(invoice: Partial<AgencyInvoice>): Array<{ id: str
       date: String(payment.date || '').slice(0, 10),
       amount: Math.max(0, Number(payment.amount) || 0),
       reference: String(payment.reference || invoice.invoiceNumber || ''),
-      method: String(payment.method || 'other')
+      method: String(payment.method || 'other'),
+      settlementAccountCode: String(payment.settlementAccountCode || '')
     }));
   }
   if (Number(invoice.amountPaid) > 0 && invoice.paidDate) {
