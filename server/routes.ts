@@ -3951,10 +3951,46 @@ apiRouter.get('/finance/workbook/:type', requireAuth, requirePermission('canView
 apiRouter.post('/finance/workbook/periods/:period/close', requireAuth, requirePermission('canApproveBudgets'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   if (!ensureFinanceWorkbookPostgres(res)) return;
   try {
+    const period = String(req.params.period || '').slice(0, 7);
+    const sourcePreflight = async (): Promise<string[]> => {
+      const [invoices, expenses, transfers, vendorBills, vendorBillPayments, existingJournals, chartAccounts] = await Promise.all([
+        postgresInvoiceRepository.list(),
+        postgresExpenseRepository.list(),
+        postgresFinanceWorkbookRepository.list('cash-bank-transaction'),
+        postgresFinanceWorkbookRepository.list('vendor-bill'),
+        postgresFinanceWorkbookRepository.list('vendor-bill-payment'),
+        postgresFinanceWorkbookRepository.list('journal-entry'),
+        postgresFinanceWorkbookRepository.list('chart-of-accounts')
+      ]);
+      const plan = buildFinanceSourceJournalDrafts(
+        invoices as any[],
+        expenses as any[],
+        transfers.map((item) => ({ id: item.id, status: item.status, payload: item.payload })),
+        vendorBills.map((item) => ({ id: item.id, recordKey: item.recordKey, projectId: item.projectId, payload: item.payload })),
+        vendorBillPayments.map((item) => ({ id: item.id, status: item.status, payload: item.payload })),
+        chartAccounts.map((item) => ({ code: String(item.payload.code || item.recordKey), name: String(item.payload.name || ''), accountType: String(item.payload.accountType || ''), active: item.payload.active !== false }))
+      );
+      const postedSources = new Set(existingJournals
+        .filter((item) => item.status === 'posted')
+        .map((item) => String(item.payload.sourceType || '') + '|' + String(item.payload.sourceId || '')));
+      const issues: string[] = [];
+      for (const draft of plan.drafts) {
+        if (String(draft.date || '').slice(0, 7) !== period) continue;
+        if (!postedSources.has(String(draft.sourceType || '') + '|' + String(draft.sourceId || ''))) {
+          issues.push((draft.reference || draft.description || draft.sourceId) + ' (' + draft.sourceType + ') is not posted to the General Journal');
+        }
+      }
+      for (const skipped of plan.skipped) {
+        if (String(skipped.date || '').slice(0, 7) !== period) continue;
+        issues.push((skipped.reference || skipped.description || skipped.sourceId) + ': ' + skipped.reason);
+      }
+      return [...new Set(issues)];
+    };
     const record = await postgresFinanceWorkbookRepository.closePeriod(
-      req.params.period,
+      period,
       financeWorkbookActor(req),
-      financeWorkbookAudit(req, 'FINANCE_PERIOD_CLOSED', 'Closed Excel-aligned Finance period ' + req.params.period + '.', 'warning')
+      financeWorkbookAudit(req, 'FINANCE_PERIOD_CLOSED', 'Closed Excel-aligned Finance period ' + period + '.', 'warning'),
+      sourcePreflight
     );
     res.json({ success: true, record });
   } catch (error) {
