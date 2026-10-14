@@ -205,7 +205,7 @@ test('Other vendor payment methods require and use an explicit settlement accoun
     payload: { ...payment.payload, settlementAccountCode: undefined }
   }], EXCEL_CHART_OF_ACCOUNTS);
   assert.equal(missingMapping.drafts.some((item) => item.sourceType === 'vendor-bill-payment'), false);
-  assert.ok(missingMapping.skipped.some((item) => item.sourceType === 'vendor-bill-payment' && item.reason.includes('explicit account')));
+  assert.ok(missingMapping.skipped.some((item) => item.sourceType === 'vendor-bill-payment' && item.reason.includes('actual account')));
 });
 
 test('card clearing and credit-card statement payments generate distinct balanced settlement journals', () => {
