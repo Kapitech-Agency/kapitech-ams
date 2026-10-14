@@ -4115,7 +4115,7 @@ apiRouter.post('/finance/workbook/periods/:period/close', requireAuth, requirePe
 apiRouter.post('/finance/workbook/journal-drafts/sync', requireAuth, requirePermission('canManageInvoices'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   if (!ensureFinanceWorkbookPostgres(res)) return;
   try {
-    const [invoices, expenses, transfers, vendorBills, vendorBillPayments, existingJournals, chartAccounts, cashBankOpenings, balanceSheetOpenings, cashReconciliations] = await Promise.all([
+    const [invoices, expenses, transfers, vendorBills, vendorBillPayments, existingJournals, chartAccounts, cashBankOpenings, balanceSheetOpenings] = await Promise.all([
       postgresInvoiceRepository.list(),
       postgresExpenseRepository.list(),
       postgresFinanceWorkbookRepository.list('cash-bank-transaction'),
@@ -4125,7 +4125,6 @@ apiRouter.post('/finance/workbook/journal-drafts/sync', requireAuth, requirePerm
       postgresFinanceWorkbookRepository.list('chart-of-accounts'),
       postgresFinanceWorkbookRepository.list('cash-bank-opening'),
       postgresFinanceWorkbookRepository.list('balance-sheet-opening'),
-      postgresFinanceWorkbookRepository.list('cash-reconciliation')
     ]);
     const plan = buildFinanceSourceJournalDrafts(
       invoices as any[],
