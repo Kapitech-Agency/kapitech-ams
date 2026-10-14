@@ -304,7 +304,7 @@ export const api = {
         method: 'PUT',
         body: JSON.stringify(updates)
       }),
-    payInvoice: (id: string, payment: { amount: number; date?: string; method?: string; reference?: string; notes?: string; idempotencyKey?: string }) =>
+    payInvoice: (id: string, payment: { amount: number; date?: string; method?: string; settlementAccountCode?: '1000' | '1010' | '1100' | '1200'; reference?: string; notes?: string; idempotencyKey?: string }) =>
       apiRequest(`/api/finance/invoices/${id}/pay`, {
         method: 'POST',
         body: JSON.stringify(payment)
