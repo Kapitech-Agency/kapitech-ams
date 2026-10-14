@@ -461,7 +461,7 @@ export function buildFinanceSourceJournalDrafts(
       }
     }
     if (!debitCode || accountTypes.get(debitCode) !== 'Expense') {
-      skip({ sourceType, sourceId, date: expenseDate, reference, description, amount, reason: 'No active Expense account mapping exists for this expense. Classify it before creating a journal.' });
+      skip({ sourceType, sourceId, date: expenseDate, reference, description, amount, reason: 'No unambiguous active Expense account mapping exists for this expense. Classify it before creating a journal.' });
       continue;
     }
     if (accountTypes.get('2000') !== 'Liability') {
