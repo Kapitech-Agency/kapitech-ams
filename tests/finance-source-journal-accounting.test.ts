@@ -76,6 +76,31 @@ test('receipts cannot be generated when invoice recognition is blocked by an inv
   assert.ok(plan.skipped.some((item) => item.sourceType === 'invoice-payment' && item.reason.includes('invoice recognition')));
 });
 
+test('invoice Other receipts require an explicit active settlement asset account', () => {
+  const invoice = baseInvoice({
+    payments: [{
+      id: 'other_receipt_001',
+      amount: 40,
+      date: '2026-10-05',
+      method: 'other',
+      settlementAccountCode: '1200',
+      reference: 'OTHER-RECEIPT-001'
+    }]
+  });
+  const plan = buildFinanceSourceJournalDrafts([invoice], [], [], [], [], EXCEL_CHART_OF_ACCOUNTS);
+  const receipt = plan.drafts.find((item) => item.sourceType === 'invoice-payment');
+  assert.ok(receipt);
+  assert.equal(receipt.lines[0].accountCode, '1200');
+  assert.equal(receipt.relatedSourceId, 'inv_001:issued');
+  assert.deepEqual(balance(receipt), { debit: 40, credit: 40 });
+
+  const missing = buildFinanceSourceJournalDrafts([baseInvoice({
+    payments: [{ id:'other_receipt_missing', amount:40, date:'2026-10-05', method:'other', reference:'OTHER-NO-ACCOUNT' }]
+  })], [], [], [], [], EXCEL_CHART_OF_ACCOUNTS);
+  assert.equal(missing.drafts.some((item) => item.sourceType === 'invoice-payment'), false);
+  assert.ok(missing.skipped.some((item) => item.sourceType === 'invoice-payment' && item.reason.includes('explicit active cash')));
+});
+
 test('unpaid expenses accrue to Accounts Payable without a cash settlement journal', () => {
   const plan = buildFinanceSourceJournalDrafts([], [baseExpense({ paymentStatus: 'unpaid', paidDate: undefined })], [], [], [], EXCEL_CHART_OF_ACCOUNTS);
   const accrual = plan.drafts.find((item) => item.sourceType === 'expense');
