@@ -264,6 +264,7 @@ export class PostgresFinanceWorkbookRepository {
   isRecordType(v: unknown): v is FinanceWorkbookRecordType { return FINANCE_WORKBOOK_RECORD_TYPES.includes(String(v) as FinanceWorkbookRecordType); }
   private async ensurePeriodOpen(client: { query: (sql:string, values?:unknown[])=>Promise<any> }, period?: string): Promise<void> {
     if (!period) return;
+    await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))",['kapitech:finance-period:'+period]);
     const r = await client.query("SELECT id FROM finance_workbook_records WHERE record_type='monthly-closing-lock' AND period_key=$1 AND archived_at IS NULL LIMIT 1",[period]);
     if (r.rows[0]) throw new FinanceWorkbookPeriodClosedError('Finance period ' + period + ' is closed.');
   }
@@ -505,6 +506,7 @@ export class PostgresFinanceWorkbookRepository {
   async closePeriod(periodValue:string,actor:Actor,audit?:AuditEntry):Promise<FinanceWorkbookRecord>{
     const period=month(periodValue);
     return withPostgresTransaction(async client=>{
+      await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))",['kapitech:finance-period:'+period]);
       const prior=await client.query<Row>("SELECT id FROM finance_workbook_records WHERE record_type='monthly-closing-lock' AND period_key=$1 AND archived_at IS NULL FOR UPDATE",[period]);
       if(prior.rows[0]) throw new FinanceWorkbookConflictError('Finance period is already closed.');
       const rows=await client.query<Row>("SELECT payload FROM finance_workbook_records WHERE record_type='monthly-closing' AND period_key=$1 AND archived_at IS NULL",[period]);
