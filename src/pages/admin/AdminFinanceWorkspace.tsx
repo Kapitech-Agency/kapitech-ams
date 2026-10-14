@@ -932,12 +932,17 @@ export const AdminFinanceWorkspace: React.FC = () => {
 
   const getRegisterFieldOptions = (field: RegisterField): Array<{ value: string; label: string }> => {
     if (field.optionSource === 'accounts') {
-      const storedAccounts = getRegisterRecords('chart-of-accounts')
-        .filter((record) => record.payload.active !== false)
-        .map((record) => ({ value: String(record.payload.code || record.recordKey), label: String(record.payload.code || record.recordKey) + ' · ' + String(record.payload.name || '') }));
       const accountsByCode = new Map<string, { value: string; label: string }>();
       ACCOUNT_OPTION_CODES.forEach((account) => accountsByCode.set(account.value, account));
-      storedAccounts.forEach((account) => accountsByCode.set(account.value, account));
+      getRegisterRecords('chart-of-accounts').forEach((record) => {
+        const code = String(record.payload.code || record.recordKey || '').trim();
+        if (!code) return;
+        if (record.payload.active === false) {
+          accountsByCode.delete(code);
+          return;
+        }
+        accountsByCode.set(code, { value: code, label: code + ' · ' + String(record.payload.name || code) });
+      });
       const availableAccounts = [...accountsByCode.values()];
       if (editor?.type === 'balance-sheet-opening' && field.key === 'accountCode') {
         const eligible = new Set<string>(EXCEL_CHART_OF_ACCOUNTS
