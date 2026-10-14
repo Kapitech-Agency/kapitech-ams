@@ -1971,11 +1971,15 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   };
 
   const getExpensePayments = (expense: FinanceExpense) => {
-    const rows = Array.isArray((expense as any).payments)
-      ? (expense as any).payments as Array<{ id: string; amount: number; date: string; method?: string; paymentAccountCode?: string; reference?: string; notes?: string; recordedBy?: string }>
-      : [];
+    const metadata = (expense as any).metadata && typeof (expense as any).metadata === 'object'
+      ? (expense as any).metadata as Record<string, unknown>
+      : {};
+    const typedRows = Array.isArray((expense as any).payments)
+      ? (expense as any).payments
+      : Array.isArray(metadata.payments) ? metadata.payments : [];
+    const rows = typedRows as Array<{ id: string; amount: number; date: string; method?: string; paymentAccountCode?: string; reference?: string; notes?: string; recordedBy?: string }>;
     if (rows.length) return rows;
-    if (String(expense.paymentStatus || '').toLowerCase() === 'paid' && (expense.paidDate || (expense as any).metadata?.paidDate)) {
+    if (String(expense.paymentStatus || metadata.paymentStatus || '').toLowerCase() === 'paid' && (expense.paidDate || metadata.paidDate)) {
       return [{
         id: String(expense.id) + '-payment',
         amount: Number(expense.amount) || 0,
