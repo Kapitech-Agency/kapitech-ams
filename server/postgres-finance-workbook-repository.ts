@@ -507,10 +507,11 @@ export class PostgresFinanceWorkbookRepository {
       return mapRow(updated.rows[0]);
     });
   }
-  async closePeriod(periodValue:string,actor:Actor,audit?:AuditEntry):Promise<FinanceWorkbookRecord>{
+  async closePeriod(periodValue:string,actor:Actor,audit?:AuditEntry,sourcePreflight?:()=>Promise<string[]>):Promise<FinanceWorkbookRecord>{
     const period=month(periodValue);
     return withPostgresTransaction(async client=>{
       await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))",['kapitech:finance-period:'+period]);
+      if(sourcePreflight){const sourceIssues=await sourcePreflight();if(sourceIssues.length)throw new FinanceWorkbookConflictError('Cannot close '+period+' until source journals are resolved: '+sourceIssues.slice(0,6).join(' · ')+(sourceIssues.length>6?' · and '+(sourceIssues.length-6)+' more.':'.'));}
       const prior=await client.query<Row>("SELECT id FROM finance_workbook_records WHERE record_type='monthly-closing-lock' AND period_key=$1 AND archived_at IS NULL FOR UPDATE",[period]);
       if(prior.rows[0]) throw new FinanceWorkbookConflictError('Finance period is already closed.');
       const rows=await client.query<Row>("SELECT payload FROM finance_workbook_records WHERE record_type='monthly-closing' AND period_key=$1 AND archived_at IS NULL",[period]);
