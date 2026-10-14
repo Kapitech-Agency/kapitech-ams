@@ -7,8 +7,7 @@ import { AdminVendors } from './AdminVendors';
 import { Drawer } from '../../components/ui/Drawer';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { CustomDatePicker } from '../../components/ui/CustomDatePicker';
-import { CustomReportPeriodPicker } from '../../components/ui/CustomReportPeriodPicker';
-import { formatReportingPeriodLabel, getPreviousReportingPeriodValue, getReportingPeriodRange, getReportingYearOptions, type ReportingPeriodComparison } from '../../lib/reportingPeriods';
+import { formatReportingPeriodLabel, getPreviousReportingPeriodValue, getReportingPeriodRange, type ReportingPeriodComparison } from '../../lib/reportingPeriods';
 import { api } from '../../lib/apiClient';
 import { normalizeFinanceExpense, normalizeFinanceInvoice } from '../../lib/financeStore';
 import type { AgencyExpense, AgencyInvoice } from '../../lib/financeStore';
@@ -653,8 +652,11 @@ export const AdminFinanceWorkspace: React.FC = () => {
   }, [canViewFinancials]);
   const [refreshing, setRefreshing] = useState(false);
   const [searchText, setSearchText] = useState('');
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0'));
-  const [selectedYear, setSelectedYear] = useState(String(new Date().getFullYear()));
+  const defaultFinanceMonth = getReportingPeriodRange(reportPeriodValue, reportPeriodMode, locale)?.startMonth || (new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0'));
+  const [selectedClosingMonth, setSelectedClosingMonth] = useState(() => {
+    const range = getReportingPeriodRange(reportPeriodValue, reportPeriodMode, locale);
+    return range?.startMonth || (new Date().getFullYear() + '-' + String(new Date().getMonth() + 1).padStart(2, '0'));
+  });
   const [reportComparisonMode, setReportComparisonMode] = useState<ReportingPeriodComparison>('previous-period');
 
   const loadRequestId = useRef(0);
@@ -838,7 +840,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
     for (const field of definition.fields) {
       if (field.defaultValue !== undefined) defaults[field.key] = field.defaultValue;
       else if (field.type === 'date') defaults[field.key] = today;
-      else if (field.type === 'month') defaults[field.key] = selectedMonth;
+      else if (field.type === 'month') defaults[field.key] = defaultFinanceMonth;
       else if (field.type === 'number') defaults[field.key] = '';
       else if (field.type === 'select') defaults[field.key] = field.optionSource ? '' : (field.options?.[0] || '');
       else defaults[field.key] = '';
@@ -1103,7 +1105,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
     setRegisterSaving(true);
     setRegisterActionError(null);
     try {
-      const response = await api.finance.workbookClosePeriod(selectedMonth);
+      const response = await api.finance.workbookClosePeriod(selectedClosingMonth);
       if (!response.success) throw new Error(response.error || 'The period could not be closed.');
       await loadData(true);
     } catch (error) {
@@ -1275,9 +1277,9 @@ export const AdminFinanceWorkspace: React.FC = () => {
     </AdminPanel>
   );
 
-  const renderRecentActivity = (month?: string) => {
-    const activity = month
-      ? cashMovements.filter((entry) => getMonthKey(entry.date) === month)
+  const renderRecentActivity = (range?: { startDate: string; endDate: string; label: string }) => {
+    const activity = range
+      ? cashMovements.filter((entry) => entry.date >= range.startDate && entry.date <= range.endDate)
       : cashMovements;
     const rows: TableRow[] = activity.slice(0, 8).map((entry) => ({
       id: entry.id,
@@ -1292,28 +1294,37 @@ export const AdminFinanceWorkspace: React.FC = () => {
     }));
     return (
       <FinanceDataTable
-        title={month ? 'Selected-month transaction activity' : 'Recent transaction activity'}
-        description={month
-          ? 'Recorded movements for ' + month + '. Values are transaction-based and are not a reconciled bank statement.'
+        title={range ? 'Selected-period transaction activity' : 'Recent transaction activity'}
+        description={range
+          ? 'Recorded movements for ' + range.label + '. Values are transaction-based and are not a reconciled bank statement.'
           : 'Derived from invoice payments and expenses, plus explicitly recorded bank adjustments and internal cash transfers. This is not an imported bank statement.'}
         columns={[
           { label: 'Date' }, { label: 'Reference' }, { label: 'Description' }, { label: 'Source' },
           { label: 'Cash in', align: 'right' }, { label: 'Cash out', align: 'right' }
         ]}
         rows={rows}
-        emptyMessage={month
-          ? 'No recorded movements exist for the selected month.'
+        emptyMessage={range
+          ? 'No recorded movements exist for the selected reporting period.'
           : 'No recorded payment or expense activity is available from the connected AMS sources.'}
       />
     );
   };
 
   const renderSummary = (dashboard: boolean) => {
-    const currentMonth = selectedMonth;
-    const billedInMonth = sumAmounts<AgencyInvoice>(idrInvoices.filter((invoice) => getMonthKey(getInvoiceDate(invoice)) === currentMonth), (invoice) => Number(invoice.total) || 0);
-    const monthMovements = cashMovements.filter((movement) => movement.currency === 'IDR' && getMonthKey(movement.date) === currentMonth);
-    const cashInThisMonth = sumAmounts<CashMovement>(monthMovements, (movement) => movement.cashIn);
-    const cashOutThisMonth = sumAmounts<CashMovement>(monthMovements, (movement) => movement.cashOut);
+    const dashboardRange = getReportingPeriodRange(reportPeriodValue, reportPeriodMode, locale);
+    const dashboardPeriodLabel = formatReportingPeriodLabel(reportPeriodValue, reportPeriodMode, locale);
+    const invoicesInPeriod = dashboardRange
+      ? idrInvoices.filter((invoice) => {
+          const date = getInvoiceDate(invoice);
+          return date >= dashboardRange.startDate && date <= dashboardRange.endDate;
+        })
+      : [];
+    const movementsInPeriod = dashboardRange
+      ? cashMovements.filter((movement) => movement.currency === 'IDR' && movement.date >= dashboardRange.startDate && movement.date <= dashboardRange.endDate)
+      : [];
+    const billedInPeriod = sumAmounts<AgencyInvoice>(invoicesInPeriod, (invoice) => Number(invoice.total) || 0);
+    const cashInThisPeriod = sumAmounts<CashMovement>(movementsInPeriod, (movement) => movement.cashIn);
+    const cashOutThisPeriod = sumAmounts<CashMovement>(movementsInPeriod, (movement) => movement.cashOut);
     const metrics = [
       { id: 'billed', label: 'Total billed', value: formatMoney(totalBilled), context: 'IDR issued invoices; non-IDR invoices remain visible in transaction registers', icon: <FileText size={15} /> },
       { id: 'collected', label: 'Total collected', value: formatMoney(totalCollected), context: 'Recorded IDR client payments', icon: <ArrowDown size={15} />, toneClassName: 'text-success' },
@@ -1321,10 +1332,10 @@ export const AdminFinanceWorkspace: React.FC = () => {
       { id: 'expenses', label: 'Recorded expenses', value: formatMoney(totalExpenses), context: 'IDR expense records returned by AMS', icon: <ArrowUpRight size={15} />, toneClassName: 'text-series-3' }
     ];
     const dashboardMetrics = [
-      { id: 'month-billed', label: 'Invoice value issued', value: formatMoney(billedInMonth), context: currentMonth + ' · issued IDR invoices', icon: <FileText size={15} /> },
-      { id: 'month-in', label: 'Recorded cash in', value: formatMoney(cashInThisMonth), context: 'Dated IDR movements touching Cash & Bank', icon: <ArrowDown size={15} />, toneClassName: 'text-success' },
-      { id: 'month-out', label: 'Recorded cash out', value: formatMoney(cashOutThisMonth), context: 'Dated IDR movements touching Cash & Bank', icon: <ArrowUpRight size={15} />, toneClassName: 'text-series-3' },
-      { id: 'month-net', label: 'Net cash movement (proxy)', value: formatMoney(cashInThisMonth - cashOutThisMonth), context: 'Recorded movement only; not reconciled closing cash', icon: <CircleDollarSign size={15} /> }
+      { id: 'period-billed', label: 'Invoice value issued', value: formatMoney(billedInPeriod), context: dashboardPeriodLabel + ' · issued IDR invoices', icon: <FileText size={15} /> },
+      { id: 'period-in', label: 'Recorded cash in', value: formatMoney(cashInThisPeriod), context: dashboardPeriodLabel + ' · dated IDR movements touching Cash & Bank', icon: <ArrowDown size={15} />, toneClassName: 'text-success' },
+      { id: 'period-out', label: 'Recorded cash out', value: formatMoney(cashOutThisPeriod), context: dashboardPeriodLabel + ' · dated IDR movements touching Cash & Bank', icon: <ArrowUpRight size={15} />, toneClassName: 'text-series-3' },
+      { id: 'period-net', label: 'Net cash movement (proxy)', value: formatMoney(cashInThisPeriod - cashOutThisPeriod), context: 'Recorded movement only; not reconciled closing cash', icon: <CircleDollarSign size={15} /> }
     ];
     const recentInvoices: TableRow[] = [...reportInvoices]
       .filter((invoice) => matchesDate(getInvoiceDate(invoice)))
@@ -1345,18 +1356,12 @@ export const AdminFinanceWorkspace: React.FC = () => {
       <div className="space-y-4">
         {dashboard ? (
           <>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between" data-ams-slug="finance-dashboard-period">
-              <div>
-                <h2 className="text-sm font-semibold text-fg">Monthly dashboard</h2>
-                <p className="mt-0.5 text-xs text-muted">Review recorded cash movement and invoice activity for one reporting month.</p>
-              </div>
-              <label className="flex items-center gap-2 text-xs font-medium text-muted">
-                Reporting month
-                <CustomDatePicker type="month" value={selectedMonth} onChange={setSelectedMonth} locale={locale} className="w-40" triggerClassName="h-10 min-h-10" aria-label="Reporting month" slug="finance-dashboard-month-picker" />
-              </label>
+            <div className="flex min-w-0 flex-col gap-1" data-ams-slug="finance-dashboard-period">
+              <h2 className="text-sm font-semibold text-fg">Selected-period dashboard</h2>
+              <p className="text-xs text-muted">Recorded cash movement and invoice activity for {dashboardPeriodLabel}.</p>
             </div>
             <AdminMetricStrip metrics={dashboardMetrics} />
-            {renderRecentActivity(currentMonth)}
+            {renderRecentActivity(dashboardRange ? { startDate: dashboardRange.startDate, endDate: dashboardRange.endDate, label: dashboardPeriodLabel } : undefined)}
           </>
         ) : (
           <>
@@ -1847,7 +1852,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
                 ]
               }))}
               emptyMessage="No budget lines or dated expense records exist for the current search."
-              actions={registerAddButton('operational-budget','Add budget line',{month:selectedMonth})}
+              actions={registerAddButton('operational-budget','Add budget line',{month:defaultFinanceMonth})}
             />
           </div>
         );
@@ -1963,47 +1968,31 @@ export const AdminFinanceWorkspace: React.FC = () => {
           const changePercent = item.comparison === 0 ? (item.current === 0 ? '0.0%' : 'N/A') : ((change / Math.abs(item.comparison)) * 100).toFixed(1) + '%';
           return { id: item.id, cells: [item.label, formatMoney(item.current), formatMoney(item.comparison), formatMoney(change), changePercent] };
         });
-        const reportYears = Array.from(new Set([
-          ...reportInvoices.map((invoice) => Number(getYearKey(getInvoiceDate(invoice)))),
-          ...idrExpenses.map((expense) => Number(getYearKey(expense.date))),
-          ...cashMovements.map((movement) => Number(getYearKey(movement.date)))
-        ])).filter((year) => Number.isInteger(year) && year >= 1000 && year <= 9999);
         return (
           <div className="space-y-4">
             <WorkbookNote tone="warning" title="Preliminary P&L mapping">
               The report uses invoice issue dates and expense dates. Expense categories that are not mapped to project or operating costs remain separate and are excluded from the preliminary net figure until reviewed.
             </WorkbookNote>
-            <AdminPanel title="Reporting period" description="Choose a month, quarter, or full year. Quick actions include the previous period, and the comparison below keeps the selected period visible." bodyClassName="p-4">
-              <CustomReportPeriodPicker
-                mode={reportPeriodMode}
-                value={reportPeriodValue}
-                onModeChange={setReportPeriodMode}
-                onChange={setReportPeriodValue}
-                availableYears={reportYears}
-                locale={locale}
-                slug="finance-pnl-report-period-picker"
-              />
-              <div className="mt-4 grid gap-3 border-t border-line pt-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:items-end">
-                <div className="min-w-0 text-xs text-muted">
-                  <div className="font-medium text-fg">Comparison period</div>
-                  <div className="mt-1">{comparisonLabel}</div>
-                </div>
-                {reportPeriodMode !== 'year' && (
-                  <label className="block min-w-0 text-xs font-medium text-muted">
-                    Compare with
-                    <CustomSelect
-                      value={reportComparisonMode}
-                      onChange={(nextValue) => setReportComparisonMode(nextValue as ReportingPeriodComparison)}
-                      options={[{ value: 'previous-period', label: 'Previous period' }, { value: 'previous-year', label: 'Same period last year' }]}
-                      className="mt-1.5 w-full"
-                      triggerClassName="h-10 min-h-10 w-full"
-                      aria-label="Compare reporting period with"
-                      slug="finance-pnl-comparison-mode"
-                    />
-                  </label>
-                )}
+            <div className="flex min-w-0 flex-col gap-3 border-b border-line pb-3 sm:flex-row sm:items-end sm:justify-between" data-ams-slug="finance-pnl-comparison-controls">
+              <div className="min-w-0 text-xs text-muted">
+                <div className="font-medium text-fg">Comparison period</div>
+                <div className="mt-1">{comparisonLabel}</div>
               </div>
-            </AdminPanel>
+              {reportPeriodMode !== 'year' && (
+                <label className="block w-full min-w-0 text-xs font-medium text-muted sm:w-64">
+                  Compare with
+                  <CustomSelect
+                    value={reportComparisonMode}
+                    onChange={(nextValue) => setReportComparisonMode(nextValue as ReportingPeriodComparison)}
+                    options={[{ value: 'previous-period', label: 'Previous period' }, { value: 'previous-year', label: 'Same period last year' }]}
+                    className="mt-1.5 w-full"
+                    triggerClassName="h-9 min-h-9 w-full"
+                    aria-label="Compare reporting period with"
+                    slug="finance-pnl-comparison-mode"
+                  />
+                </label>
+              )}
+            </div>
             <AdminMetricStrip metrics={[
               { id: 'pnl-revenue', label: 'Invoice value', value: formatMoney(revenue), context: 'Issued invoices · ' + periodLabel, icon: <FileText size={15} /> },
               { id: 'pnl-direct', label: 'Direct project cost', value: formatMoney(classTotals.directProjectCost), context: 'Based on current category mapping', icon: <Briefcase size={15} /> },
@@ -2067,47 +2056,31 @@ export const AdminFinanceWorkspace: React.FC = () => {
           const percent = item.comparison === 0 ? (item.current === 0 ? '0.0%' : 'N/A') : ((change / Math.abs(item.comparison)) * 100).toFixed(1) + '%';
           return { id: item.id, cells: [item.label, item.id === 'sources' ? String(item.current) : formatMoney(item.current), item.id === 'sources' ? String(item.comparison) : formatMoney(item.comparison), item.id === 'sources' ? String(change) : formatMoney(change), percent] };
         });
-        const reportYears = Array.from(new Set([
-          ...reportInvoices.map((invoice) => Number(getYearKey(getInvoiceDate(invoice)))),
-          ...idrExpenses.map((expense) => Number(getYearKey(expense.date))),
-          ...cashMovements.map((movement) => Number(getYearKey(movement.date)))
-        ])).filter((year) => Number.isInteger(year) && year >= 1000 && year <= 9999);
         return (
           <div className="space-y-4">
             <WorkbookNote tone="warning" title="Cash-flow movement, not reconciled ending cash">
               Inflows include dated invoice payments and saved Cash & Bank entries touching account 1000. Outflows include eligible dated AMS expense records, excluding items identified as petty cash, and saved bank-side adjustments/transfers. Petty-cash vouchers remain in their separate ledger and are not included in this view. Treat the result as net movement, not an authoritative ending cash balance, until opening balances and bank statements are reconciled.
             </WorkbookNote>
-            <AdminPanel title="Reporting period" description="Choose a month, quarter, or year. The table shows monthly detail within the selected period and a separate comparison against the prior period." bodyClassName="p-4">
-              <CustomReportPeriodPicker
-                mode={reportPeriodMode}
-                value={reportPeriodValue}
-                onModeChange={setReportPeriodMode}
-                onChange={setReportPeriodValue}
-                availableYears={reportYears}
-                locale={locale}
-                slug="finance-cash-flow-report-period-picker"
-              />
-              <div className="mt-4 grid gap-3 border-t border-line pt-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:items-end">
-                <div className="min-w-0 text-xs text-muted">
-                  <div className="font-medium text-fg">Comparison period</div>
-                  <div className="mt-1">{comparisonLabel}</div>
-                </div>
-                {reportPeriodMode !== 'year' && (
-                  <label className="block min-w-0 text-xs font-medium text-muted">
-                    Compare with
-                    <CustomSelect
-                      value={reportComparisonMode}
-                      onChange={(nextValue) => setReportComparisonMode(nextValue as ReportingPeriodComparison)}
-                      options={[{ value: 'previous-period', label: 'Previous period' }, { value: 'previous-year', label: 'Same period last year' }]}
-                      className="mt-1.5 w-full"
-                      triggerClassName="h-10 min-h-10 w-full"
-                      aria-label="Compare reporting period with"
-                      slug="finance-cash-flow-comparison-mode"
-                    />
-                  </label>
-                )}
+            <div className="flex min-w-0 flex-col gap-3 border-b border-line pb-3 sm:flex-row sm:items-end sm:justify-between" data-ams-slug="finance-cash-flow-comparison-controls">
+              <div className="min-w-0 text-xs text-muted">
+                <div className="font-medium text-fg">Comparison period</div>
+                <div className="mt-1">{comparisonLabel}</div>
               </div>
-            </AdminPanel>
+              {reportPeriodMode !== 'year' && (
+                <label className="block w-full min-w-0 text-xs font-medium text-muted sm:w-64">
+                  Compare with
+                  <CustomSelect
+                    value={reportComparisonMode}
+                    onChange={(nextValue) => setReportComparisonMode(nextValue as ReportingPeriodComparison)}
+                    options={[{ value: 'previous-period', label: 'Previous period' }, { value: 'previous-year', label: 'Same period last year' }]}
+                    className="mt-1.5 w-full"
+                    triggerClassName="h-9 min-h-9 w-full"
+                    aria-label="Compare reporting period with"
+                    slug="finance-cash-flow-comparison-mode"
+                  />
+                </label>
+              )}
+            </div>
             <AdminMetricStrip metrics={[
               { id: 'cash-in-period', label: 'Cash in', value: formatMoney(currentFlow.inflow), context: periodLabel, icon: <ArrowDown size={15} /> },
               { id: 'cash-out-period', label: 'Cash out', value: formatMoney(currentFlow.outflow), context: periodLabel, icon: <ArrowUpRight size={15} /> },
@@ -2135,8 +2108,8 @@ export const AdminFinanceWorkspace: React.FC = () => {
         );
       }
       case 'monthly-closing': {
-        const records=getRegisterRecords('monthly-closing').filter((record)=>String(record.payload.period||record.periodKey||'')===selectedMonth);
-        const locked=getRegisterRecords('monthly-closing-lock').some((record)=>String(record.periodKey||record.payload.period||'')===selectedMonth);
+        const records=getRegisterRecords('monthly-closing').filter((record)=>String(record.payload.period||record.periodKey||'')===selectedClosingMonth);
+        const locked=getRegisterRecords('monthly-closing-lock').some((record)=>String(record.periodKey||record.payload.period||'')===selectedClosingMonth);
         const closingPurposes: Record<string,string> = {
           'All revenue recorded': 'Confirm all source revenue and client receipts for the selected month are captured.',
           'All expenses recorded': 'Confirm the month’s expense records and supporting evidence are complete.',
@@ -2153,18 +2126,18 @@ export const AdminFinanceWorkspace: React.FC = () => {
         const rows=WORKBOOK_CLOSING_ITEMS.map((item)=>{
           const record=records.find((candidate)=>String(candidate.payload.checklistItem||'').toLowerCase()===item.label.toLowerCase());
           const state=String(record?.payload.status||record?.status||'Open');
-          return {id:item.label,cells:[item.label,item.owner,record?<StatusBadge value={state}/>:<AdminStatusBadge tone="warning">Not recorded</AdminStatusBadge>,closingPurposes[item.label]||'Review and document before the period is closed.',record?registerRecordActions('monthly-closing',record):canManageFinanceRecords?<Button variant="primary" type="button" icon={<Plus size={14} />} disabled={locked||registerSaving} onClick={()=>openRegisterForm('monthly-closing',undefined,{period:selectedMonth,checklistItem:item.label,status:'Open'})}>Create control</Button>:<span className="text-muted">View only</span>]};
+          return {id:item.label,cells:[item.label,item.owner,record?<StatusBadge value={state}/>:<AdminStatusBadge tone="warning">Not recorded</AdminStatusBadge>,closingPurposes[item.label]||'Review and document before the period is closed.',record?registerRecordActions('monthly-closing',record):canManageFinanceRecords?<Button variant="primary" type="button" icon={<Plus size={14} />} disabled={locked||registerSaving} onClick={()=>openRegisterForm('monthly-closing',undefined,{period:selectedClosingMonth,checklistItem:item.label,status:'Open'})}>Create control</Button>:<span className="text-muted">View only</span>]};
         });
         const completed=WORKBOOK_CLOSING_ITEMS.filter((item)=>records.some((record)=>String(record.payload.checklistItem||'').toLowerCase()===item.label.toLowerCase()&&String(record.payload.status||record.status)==='Done')).length;
         return (
           <div className="space-y-4">
             <WorkbookNote tone={locked?'info':'warning'} title={locked?'Selected period is closed':'Monthly closing requires all control items'}>
-              Selected period: {selectedMonth}. {completed} of {WORKBOOK_CLOSING_ITEMS.length} controls are completed and approved. The period can close after all 11 required controls are marked Done and posted journal entries balance.
+              Selected period: {selectedClosingMonth}. {completed} of {WORKBOOK_CLOSING_ITEMS.length} controls are completed and approved. The period can close after all 11 required controls are marked Done and posted journal entries balance.
             </WorkbookNote>
             <AdminPanel title="Closing period" bodyClassName="p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                <label className="block max-w-xs flex-1 text-xs font-medium text-muted">Reporting month
-                  <CustomDatePicker type="month" value={selectedMonth} onChange={setSelectedMonth} locale={locale} className="mt-1.5 w-full" triggerClassName="h-10 min-h-10" aria-label="Reporting month" slug="finance-closing-month-picker" />
+                <label className="block max-w-xs flex-1 text-xs font-medium text-muted">Closing month
+                  <CustomDatePicker type="month" value={selectedClosingMonth} onChange={setSelectedClosingMonth} locale={locale} className="mt-1.5 w-full" triggerClassName="h-10 min-h-10" aria-label="Closing month" slug="finance-closing-month-picker" />
                 </label>
                 <div className="flex items-center gap-2">
                   <AdminStatusBadge tone={locked?'success':'warning'}>{locked?'Closed':'Open'}</AdminStatusBadge>
@@ -2315,6 +2288,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
         );
       }
       case 'annual-summary': {
+        const selectedYear = String(Number(reportPeriodValue.slice(0, 4)) || new Date().getFullYear());
         const yearInvoices = idrInvoices.filter((invoice) => getYearKey(getInvoiceDate(invoice)) === selectedYear);
         const yearExpenses = idrExpenses.filter((expense) => getYearKey(expense.date) === selectedYear);
         const yearCollections = cashMovements.filter((movement) => movement.currency === 'IDR' && getYearKey(movement.date) === selectedYear);
@@ -2322,12 +2296,6 @@ export const AdminFinanceWorkspace: React.FC = () => {
         const yearCollected = sumAmounts<CashMovement>(yearCollections, (movement) => movement.cashIn);
         const yearOutflow = sumAmounts<CashMovement>(yearCollections, (movement) => movement.cashOut);
         const yearExpense = sumAmounts<AgencyExpense>(yearExpenses, (expense) => Number(expense.amount) || 0);
-        const availableYears = [
-          ...reportInvoices.map((invoice) => getYearKey(getInvoiceDate(invoice))),
-          ...expenses.map((expense) => getYearKey(expense.date)),
-          ...cashMovements.map((movement) => getYearKey(movement.date))
-        ].map(Number).filter((year) => Number.isInteger(year) && year >= 2021 && year <= 9999);
-        const years = getReportingYearOptions(new Date().getFullYear(), availableYears, Number(selectedYear)).map(String);
         const annualRows = [
           { id: 'a-revenue', metric: 'Annual Revenue / Invoice Value (IDR)', amount: yearBilled, basis: 'IDR invoice issue date' },
           { id: 'a-collected', metric: 'Annual recorded cash in', amount: yearCollected, basis: 'Invoice payments and saved Cash & Bank inflows; excludes petty-cash voucher receipts' },
@@ -2337,19 +2305,10 @@ export const AdminFinanceWorkspace: React.FC = () => {
         ];
         return (
           <div className="space-y-4">
-            <AdminPanel title="Reporting year" bodyClassName="p-4">
-              <label className="block text-xs font-medium text-muted">Year
-                <CustomSelect
-                  value={selectedYear}
-                  onChange={setSelectedYear}
-                  options={years.map((year) => ({ value: year, label: year }))}
-                  className="mt-1.5 w-full sm:max-w-xs"
-                  triggerClassName="h-10 min-h-10 w-full"
-                  aria-label="Reporting year"
-                  slug="finance-annual-summary-year-picker"
-                />
-              </label>
-            </AdminPanel>
+            <div className="flex min-w-0 flex-col gap-1" data-ams-slug="finance-annual-summary-period">
+              <h2 className="text-sm font-semibold text-fg">Annual summary · {selectedYear}</h2>
+              <p className="text-xs text-muted">Full-year results follow the reporting year selected in the topbar.</p>
+            </div>
             <AdminMetricStrip metrics={[
               { id: 'year-billed', label: 'Annual invoice value', value: formatMoney(yearBilled), context: selectedYear + ' · issued invoices', icon: <FileText size={15} /> },
               { id: 'year-collected', label: 'Annual recorded cash in', value: formatMoney(yearCollected), context: 'Invoice payments and saved Cash & Bank inflows', icon: <ArrowDown size={15} /> },
