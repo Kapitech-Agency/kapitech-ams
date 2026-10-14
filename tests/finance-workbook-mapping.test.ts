@@ -174,7 +174,7 @@ test('Source journal bridge skips unsupported sources and handles tax/card entri
   assert.ok(plan.skipped.some((item) => item.sourceType === 'invoice-payment' && /IDR-only/.test(item.reason)));
   assert.ok(plan.skipped.some((item) => item.sourceType === 'expense' && item.sourceId === 'unknown-expense' && /Expense account mapping/.test(item.reason)));
   assert.ok(plan.skipped.some((item) => item.sourceType === 'expense' && item.sourceId === 'petty-expense' && /petty-cash/i.test(item.reason)));
-  assert.ok(plan.skipped.some((item) => item.sourceType === 'expense' && item.sourceId === 'vendor-expense' && /duplicate cost and cash entries/.test(item.reason)));
+  assert.ok(plan.skipped.some((item) => item.sourceType === 'expense' && item.sourceId === 'vendor-expense' && /duplicate cost recognition/.test(item.reason)));
 
   const taxable = {
     ...unpaid, id: 'taxable-invoice', invoiceNumber: 'INV-TAX', issueDate: '2026-10-02',
