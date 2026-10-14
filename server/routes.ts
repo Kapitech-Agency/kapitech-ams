@@ -3971,14 +3971,16 @@ apiRouter.post('/finance/workbook/periods/:period/close', requireAuth, requirePe
   try {
     const period = String(req.params.period || '').slice(0, 7);
     const sourcePreflight = async (): Promise<string[]> => {
-      const [invoices, expenses, transfers, vendorBills, vendorBillPayments, existingJournals, chartAccounts] = await Promise.all([
+      const [invoices, expenses, transfers, vendorBills, vendorBillPayments, existingJournals, chartAccounts, cashBankOpenings, balanceSheetOpenings] = await Promise.all([
         postgresInvoiceRepository.list(),
         postgresExpenseRepository.list(),
         postgresFinanceWorkbookRepository.list('cash-bank-transaction'),
         postgresFinanceWorkbookRepository.list('vendor-bill'),
         postgresFinanceWorkbookRepository.list('vendor-bill-payment'),
         postgresFinanceWorkbookRepository.list('journal-entry'),
-        postgresFinanceWorkbookRepository.list('chart-of-accounts')
+        postgresFinanceWorkbookRepository.list('chart-of-accounts'),
+        postgresFinanceWorkbookRepository.list('cash-bank-opening'),
+        postgresFinanceWorkbookRepository.list('balance-sheet-opening')
       ]);
       const plan = buildFinanceSourceJournalDrafts(
         invoices as any[],
@@ -3986,7 +3988,11 @@ apiRouter.post('/finance/workbook/periods/:period/close', requireAuth, requirePe
         transfers.map((item) => ({ id: item.id, status: item.status, payload: item.payload })),
         vendorBills.map((item) => ({ id: item.id, recordKey: item.recordKey, projectId: item.projectId, payload: item.payload })),
         vendorBillPayments.map((item) => ({ id: item.id, status: item.status, payload: item.payload })),
-        chartAccounts.map((item) => ({ code: String(item.payload.code || item.recordKey), name: String(item.payload.name || ''), accountType: String(item.payload.accountType || ''), active: item.payload.active !== false }))
+        chartAccounts.map((item) => ({ code: String(item.payload.code || item.recordKey), name: String(item.payload.name || ''), accountType: String(item.payload.accountType || ''), active: item.payload.active !== false })),
+        [
+          ...cashBankOpenings.map((item) => ({ id: item.id, recordType: 'cash-bank-opening' as const, recordKey: item.recordKey, status: item.status, payload: item.payload })),
+          ...balanceSheetOpenings.map((item) => ({ id: item.id, recordType: 'balance-sheet-opening' as const, recordKey: item.recordKey, status: item.status, payload: item.payload }))
+        ]
       );
       const postedSources = new Map<string, (typeof existingJournals)[number]>();
       for (const item of existingJournals) {
@@ -4043,14 +4049,16 @@ apiRouter.post('/finance/workbook/periods/:period/close', requireAuth, requirePe
 apiRouter.post('/finance/workbook/journal-drafts/sync', requireAuth, requirePermission('canManageInvoices'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   if (!ensureFinanceWorkbookPostgres(res)) return;
   try {
-    const [invoices, expenses, transfers, vendorBills, vendorBillPayments, existingJournals, chartAccounts] = await Promise.all([
+    const [invoices, expenses, transfers, vendorBills, vendorBillPayments, existingJournals, chartAccounts, cashBankOpenings, balanceSheetOpenings] = await Promise.all([
       postgresInvoiceRepository.list(),
       postgresExpenseRepository.list(),
       postgresFinanceWorkbookRepository.list('cash-bank-transaction'),
       postgresFinanceWorkbookRepository.list('vendor-bill'),
       postgresFinanceWorkbookRepository.list('vendor-bill-payment'),
       postgresFinanceWorkbookRepository.list('journal-entry'),
-      postgresFinanceWorkbookRepository.list('chart-of-accounts')
+      postgresFinanceWorkbookRepository.list('chart-of-accounts'),
+      postgresFinanceWorkbookRepository.list('cash-bank-opening'),
+      postgresFinanceWorkbookRepository.list('balance-sheet-opening')
     ]);
     const plan = buildFinanceSourceJournalDrafts(
       invoices as any[],
@@ -4058,7 +4066,11 @@ apiRouter.post('/finance/workbook/journal-drafts/sync', requireAuth, requirePerm
       transfers.map((record) => ({ id: record.id, status: record.status, payload: record.payload })),
       vendorBills.map((record) => ({ id: record.id, recordKey: record.recordKey, projectId: record.projectId, payload: record.payload })),
       vendorBillPayments.map((record) => ({ id: record.id, status: record.status, payload: record.payload })),
-      chartAccounts.map((record) => ({ code: String(record.payload.code || record.recordKey), name: String(record.payload.name || ''), accountType: String(record.payload.accountType || ''), active: record.payload.active !== false }))
+      chartAccounts.map((record) => ({ code: String(record.payload.code || record.recordKey), name: String(record.payload.name || ''), accountType: String(record.payload.accountType || ''), active: record.payload.active !== false })),
+      [
+        ...cashBankOpenings.map((record) => ({ id: record.id, recordType: 'cash-bank-opening' as const, recordKey: record.recordKey, status: record.status, payload: record.payload })),
+        ...balanceSheetOpenings.map((record) => ({ id: record.id, recordType: 'balance-sheet-opening' as const, recordKey: record.recordKey, status: record.status, payload: record.payload }))
+      ]
     );
     const existingSourceRecords = new Map<string, (typeof existingJournals)[number]>();
     for (const record of existingJournals) {
