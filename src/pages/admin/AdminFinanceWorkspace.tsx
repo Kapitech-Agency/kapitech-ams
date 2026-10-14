@@ -1986,13 +1986,41 @@ export const AdminFinanceWorkspace: React.FC = () => {
             unclassified: 0
           };
           for (const expense of periodExpenses) classTotals[classifyWorkbookExpense(expense)] += Number(expense.amount) || 0;
-          const revenue = sumAmounts<AgencyInvoice>(periodInvoices, (invoice) => Number(invoice.total) || 0);
+          const revenue = sumAmounts<AgencyInvoice>(periodInvoices, (invoice) => Math.max(0, (Number(invoice.total) || 0) - (Number(invoice.taxAmount) || 0));
           const classifiedExpense = classTotals.directProjectCost + classTotals.teamReward + classTotals.projectTeamFee + classTotals.operatingExpense;
           const grossProfit = revenue - classTotals.directProjectCost;
           const netPreview = grossProfit - classTotals.teamReward - classTotals.projectTeamFee - classTotals.operatingExpense;
           return { range, invoices: periodInvoices, expenses: periodExpenses, revenue, classTotals, classifiedExpense, grossProfit, netPreview };
         };
         const currentPnl = getPnlForPeriod(reportPeriodValue);
+        const getPostedLedgerPnl = (periodValue: string) => {
+          const range = getReportingPeriodRange(periodValue, reportPeriodMode, locale);
+          const accountTypes = new Map<string, string>(EXCEL_CHART_OF_ACCOUNTS.map((account) => [account.code, account.type] as const));
+          for (const account of getRegisterRecords('chart-of-accounts')) {
+            const code = String(account.payload.code || account.recordKey);
+            accountTypes.set(code, account.payload.active === false ? '__inactive__' : String(account.payload.accountType || ''));
+          }
+          const journals = range
+            ? getRegisterRecords('journal-entry').filter((record) => {
+                if (record.status !== 'posted') return false;
+                const entryDate = String(record.payload.date || '').slice(0, 10);
+                return entryDate >= range.startDate && entryDate <= range.endDate;
+              })
+            : [];
+          let revenue = 0, expense = 0;
+          for (const journal of journals) {
+            const lines = Array.isArray(journal.payload.lines) ? journal.payload.lines as Array<Record<string, any>> : [];
+            for (const line of lines) {
+              const type = accountTypes.get(String(line.accountCode || ''));
+              const debit = Number(line.debit) || 0;
+              const credit = Number(line.credit) || 0;
+              if (type === 'Revenue') revenue += credit - debit;
+              if (type === 'Expense') expense += debit - credit;
+            }
+          }
+          return { revenue, expense, net: revenue - expense, journalCount: journals.length, available: journals.length > 0 };
+        };
+        const postedLedger = getPostedLedgerPnl(reportPeriodValue);
         const comparisonMode = reportPeriodMode === 'year' ? 'previous-period' : reportComparisonMode;
         const comparisonPeriodValue = getPreviousReportingPeriodValue(reportPeriodValue, reportPeriodMode, comparisonMode);
         const comparisonPnl = getPnlForPeriod(comparisonPeriodValue);
@@ -2030,8 +2058,8 @@ export const AdminFinanceWorkspace: React.FC = () => {
         });
         return (
           <div className="space-y-4">
-            <WorkbookNote tone="warning" title="Preliminary P&L mapping">
-              The report uses invoice issue dates and expense dates. Expense categories that are not mapped to project or operating costs remain separate and are excluded from the preliminary net figure until reviewed.
+            <WorkbookNote tone="warning" title="Operational source preview · not the posted General Ledger">
+              This preview uses invoice issue dates and expense records, excluding output tax from revenue. It is useful for operating review but is not accounting profit. Use posted General Journal balances as the accounting view; unmapped source rows, drafts and incomplete posting remain exceptions to resolve.
             </WorkbookNote>
             <div className="flex min-w-0 flex-col gap-3 border-b border-line pb-3 sm:flex-row sm:items-end sm:justify-between" data-ams-slug="finance-pnl-comparison-controls">
               <div className="min-w-0 text-xs text-muted">
@@ -2054,10 +2082,15 @@ export const AdminFinanceWorkspace: React.FC = () => {
               )}
             </div>
             <AdminMetricStrip metrics={[
-              { id: 'pnl-revenue', label: 'Invoice value', value: formatMoney(revenue), context: 'Issued invoices · ' + periodLabel, icon: <FileText size={15} /> },
+              { id: 'pnl-revenue', label: 'Source preview revenue', value: formatMoney(revenue), context: 'Tax-exclusive invoice value · ' + periodLabel, icon: <FileText size={15} /> },
               { id: 'pnl-direct', label: 'Direct project cost', value: formatMoney(classTotals.directProjectCost), context: 'Based on current category mapping', icon: <Briefcase size={15} /> },
               { id: 'pnl-operating', label: 'Operating expense', value: formatMoney(classTotals.operatingExpense), context: 'Mapped operating costs', icon: <ArrowUpRight size={15} /> },
               { id: 'pnl-net', label: 'Net preview', value: formatMoney(netPreview), context: 'Before unclassified ' + formatMoney(classTotals.unclassified), icon: <CircleDollarSign size={15} /> }
+            ]} />
+            <AdminMetricStrip metrics={[
+              { id: 'gl-revenue', label: 'Posted GL revenue', value: postedLedger.available ? formatMoney(postedLedger.revenue) : 'No posted entries', context: postedLedger.journalCount + ' posted journal entries · ' + periodLabel, icon: <FileText size={15} /> },
+              { id: 'gl-expense', label: 'Posted GL expenses', value: postedLedger.available ? formatMoney(postedLedger.expense) : 'No posted entries', context: 'Expense-account activity from posted journals', icon: <ArrowUpRight size={15} /> },
+              { id: 'gl-net', label: 'Posted GL result', value: postedLedger.available ? formatMoney(postedLedger.net) : 'Not available', context: 'Revenue less posted expense-account activity only', icon: <CircleDollarSign size={15} /> }
             ]} />
             <FinanceDataTable
               title="Period comparison"
@@ -2068,14 +2101,14 @@ export const AdminFinanceWorkspace: React.FC = () => {
               exportable={false}
               actions={<Button variant="secondary" type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-pnl-comparison-' + reportPeriodValue + '.csv', ['Line item', 'Selected period', 'Comparison period', 'Change', 'Change percent'], comparisonMetrics.map((item) => [item.label, item.current, item.comparison, item.current - item.comparison, item.comparison === 0 ? 'N/A' : (((item.current - item.comparison) / Math.abs(item.comparison)) * 100).toFixed(1) + '%']))}>Export comparison</Button>}
             />
-            <FinanceDataTable title="Profit & Loss detail" description="Values remain a preview until account classifications and posting rules are approved." columns={[{ label: 'Line item' }, { label: 'Amount', align: 'right' }, { label: 'Basis' }]} rows={pnlRows.map((item) => ({ id: item.id, cells: [item.label, formatMoney(item.amount), item.basis] }))} emptyMessage="No activity exists for the selected period." exportable={false} actions={<Button variant="secondary" type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-pnl-' + reportPeriodValue + '.csv', ['Line item', 'Amount', 'Basis'], pnlRows.map((item) => [item.label, item.amount, item.basis]))}>Export CSV</Button>} />
+            <FinanceDataTable title="Operational source preview detail" description="These source-derived values are separate from the Posted GL metrics above and must not be presented as final accounting profit." columns={[{ label: 'Line item' }, { label: 'Amount', align: 'right' }, { label: 'Basis' }]} rows={pnlRows.map((item) => ({ id: item.id, cells: [item.label, formatMoney(item.amount), item.basis] }))} emptyMessage="No activity exists for the selected period." exportable={false} actions={<Button variant="secondary" type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-pnl-' + reportPeriodValue + '.csv', ['Line item', 'Amount', 'Basis'], pnlRows.map((item) => [item.label, item.amount, item.basis]))}>Export CSV</Button>} />
             <div className="text-xs text-muted">Classified expense total: {formatMoney(classifiedExpense)} · Source records in selected period: {currentPnl.expenses.length} expenses, {currentPnl.invoices.length} invoices.</div>
           </div>
         );
       }
       case 'cash-flow': {
         const monthly = new Map<string, { month: string; inflow: number; outflow: number; count: number }>();
-        for (const movement of cashMovements.filter((item) => item.currency === 'IDR')) {
+        for (const movement of cashMovements.filter((item) => item.currency === 'IDR' && ['1000','1100','1200'].includes(item.accountCode) && item.source !== 'Internal transfer')) {
           const month = getMonthKey(movement.date);
           if (!month) continue;
           const item = monthly.get(month) || { month, inflow: 0, outflow: 0, count: 0 };
@@ -2097,7 +2130,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
           const range = getReportingPeriodRange(periodValue, reportPeriodMode, locale);
           const periodMovements = range ? cashMovements.filter((movement) => {
             const date = String(movement.date || '').slice(0, 10);
-            return movement.currency === 'IDR' && date >= range.startDate && date <= range.endDate;
+            return movement.currency === 'IDR' && ['1000','1100','1200'].includes(movement.accountCode) && movement.source !== 'Internal transfer' && date >= range.startDate && date <= range.endDate;
           }) : [];
           const inflow = periodMovements.reduce((total, movement) => total + (Number(movement.cashIn) || 0), 0);
           const outflow = periodMovements.reduce((total, movement) => total + (Number(movement.cashOut) || 0), 0);
@@ -2119,7 +2152,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
         return (
           <div className="space-y-4">
             <WorkbookNote tone="warning" title="Cash-flow movement, not reconciled ending cash">
-              Inflows include dated invoice payments and saved Cash & Bank entries touching account 1000. Outflows include eligible dated AMS expense records, excluding items identified as petty cash, and saved bank-side adjustments/transfers. Petty-cash vouchers remain in their separate ledger and are not included in this view. Treat the result as net movement, not an authoritative ending cash balance, until opening balances and bank statements are reconciled.
+              Inflows and outflows include dated, explicitly paid transactions on cash accounts 1000, 1100 and 1200. Internal transfers between company cash accounts are excluded from consolidated cash flow to prevent double-counting. Credit-card clearing, unpaid expenses, posted petty-cash voucher flows and unreconciled opening balances remain outside this preview.
             </WorkbookNote>
             <div className="flex min-w-0 flex-col gap-3 border-b border-line pb-3 sm:flex-row sm:items-end sm:justify-between" data-ams-slug="finance-cash-flow-comparison-controls">
               <div className="min-w-0 text-xs text-muted">
@@ -2297,7 +2330,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
       case 'journal': {
         const allJournalRecords = getRegisterRecords('journal-entry');
         const records = allJournalRecords.filter((record) => matchesDate(record.payload.date || record.createdAt) && matching([record.payload.date,record.payload.reference,record.payload.description,record.payload.projectId,record.status]));
-        const plan = buildFinanceSourceJournalDrafts(reportInvoices, expenses as any[], getRegisterRecords('cash-bank-transaction'), getRegisterRecords('vendor-bill'), getRegisterRecords('vendor-bill-payment'));
+        const plan = buildFinanceSourceJournalDrafts(reportInvoices, expenses as any[], getRegisterRecords('cash-bank-transaction'), getRegisterRecords('vendor-bill'), getRegisterRecords('vendor-bill-payment'), getRegisterRecords('chart-of-accounts').map((record) => ({ code: String(record.payload.code || record.recordKey), name: String(record.payload.name || ''), accountType: String(record.payload.accountType || ''), active: record.payload.active !== false })));
         const linkedJournal = new Map<string, WorkbookRecord>();
         for (const record of allJournalRecords) {
           const sourceType = String(record.payload.sourceType || '');
@@ -2351,8 +2384,8 @@ export const AdminFinanceWorkspace: React.FC = () => {
         const selectedYear = String(Number(reportPeriodValue.slice(0, 4)) || new Date().getFullYear());
         const yearInvoices = idrInvoices.filter((invoice) => getYearKey(getInvoiceDate(invoice)) === selectedYear);
         const yearExpenses = idrExpenses.filter((expense) => getYearKey(expense.date) === selectedYear);
-        const yearCollections = cashMovements.filter((movement) => movement.currency === 'IDR' && getYearKey(movement.date) === selectedYear);
-        const yearBilled = sumAmounts<AgencyInvoice>(yearInvoices, (invoice) => Number(invoice.total) || 0);
+        const yearCollections = cashMovements.filter((movement) => movement.currency === 'IDR' && ['1000','1100','1200'].includes(movement.accountCode) && movement.source !== 'Internal transfer' && getYearKey(movement.date) === selectedYear);
+        const yearBilled = sumAmounts<AgencyInvoice>(yearInvoices, (invoice) => Math.max(0, (Number(invoice.total) || 0) - (Number(invoice.taxAmount) || 0));
         const yearCollected = sumAmounts<CashMovement>(yearCollections, (movement) => movement.cashIn);
         const yearOutflow = sumAmounts<CashMovement>(yearCollections, (movement) => movement.cashOut);
         const yearExpense = sumAmounts<AgencyExpense>(yearExpenses, (expense) => Number(expense.amount) || 0);
