@@ -5,6 +5,7 @@ import Button from '../../components/ui/Button';
 import { AdminInvoicing } from './AdminInvoicing';
 import { AdminVendors } from './AdminVendors';
 import { Drawer } from '../../components/ui/Drawer';
+import { Modal } from '../../components/ui/Modal';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { CustomDatePicker } from '../../components/ui/CustomDatePicker';
 import { formatReportingPeriodLabel, getPreviousReportingPeriodValue, getReportingPeriodRange, type ReportingPeriodComparison } from '../../lib/reportingPeriods';
@@ -40,6 +41,7 @@ type Column = { label: string; align?: 'left' | 'right' | 'center'; className?: 
 type TableRow = { id: string; cells: React.ReactNode[] };
 type SourceResult = { label: string; data: any; error?: string };
 type WorkbookRecord = { id: string; recordType: string; recordKey: string; periodKey?: string; projectId?: string; status: string; payload: Record<string, any>; version: number; createdByUserId?: string; createdAt: string; updatedAt: string };
+type FinanceConfirmation = { kind: 'approve' | 'post' | 'archive'; type: string; record: WorkbookRecord } | { kind: 'close-period'; period: string } | { kind: 'discard-editor' };
 type FinanceVendorContractDraft = { vendorId: string; id?: string; title: string; startDate: string; endDate: string; rateType: VendorContract['rateType']; rateAmount: number; currency: VendorContract['currency']; status: VendorContract['status'] };
 type RegisterField = { key: string; label: string; type: 'text' | 'number' | 'date' | 'month' | 'select' | 'textarea'; required?: boolean; options?: string[]; optionSource?: 'vendorBills' | 'accounts' | 'cashAccounts' | 'expenseAccounts' | 'projects' | 'vendors'; placeholder?: string; help?: string; defaultValue?: string | number; visibleWhen?: { key: string; values: string[] } };
 type CashMovement = { id: string; date: string; reference: string; description: string; cashIn: number; cashOut: number; source: string; currency: string; accountCode: string };
@@ -635,6 +637,8 @@ export const AdminFinanceWorkspace: React.FC = () => {
   const [registerActionError, setRegisterActionError] = useState<string | null>(null);
   const [journalSyncSummary, setJournalSyncSummary] = useState<string | null>(null);
   const [editor, setEditor] = useState<{ type: string; record?: WorkbookRecord; payload: Record<string, any> } | null>(null);
+  const [registerEditorDirty, setRegisterEditorDirty] = useState(false);
+  const [pendingConfirmation, setPendingConfirmation] = useState<FinanceConfirmation | null>(null);
   const [vendorContractEditor, setVendorContractEditor] = useState<FinanceVendorContractDraft | null>(null);
   const [vendorContractSaving, setVendorContractSaving] = useState(false);
   const [vendorContractError, setVendorContractError] = useState<string | null>(null);
@@ -889,6 +893,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
         : 'Unassigned';
     }
     setEditor({ type, record, payload: { ...defaults, ...savedPayload, ...initialPayload } });
+    setRegisterEditorDirty(false);
     setRegisterActionError(null);
   };
 
@@ -954,6 +959,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
   };
 
   const changeRegisterField = (key: string, value: string) => {
+    setRegisterEditorDirty(true);
     setEditor((current) => {
       if (!current) return current;
       const payload = { ...current.payload, [key]: value };
@@ -1089,6 +1095,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
         : await api.finance.workbookCreate(editor.type, payload);
       if (!result.success) throw new Error(result.error || 'The Finance record could not be saved.');
       setEditor(null);
+      setRegisterEditorDirty(false);
       await loadData(true);
     } catch (error) {
       setRegisterActionError(error instanceof Error ? error.message : 'The Finance record could not be saved.');
@@ -1127,11 +1134,11 @@ export const AdminFinanceWorkspace: React.FC = () => {
     }
   };
 
-  const approveWorkbookRecord = async (type: string, record: WorkbookRecord, action: 'approve' | 'post' = 'approve') => {
-    if (registerSaving) return;
+  const approveWorkbookRecord = async (type: string, record: WorkbookRecord, action: 'approve' | 'post' = 'approve'): Promise<boolean> => {
+    if (registerSaving) return false;
     if (!canApproveFinanceRecords) {
       setRegisterActionError('You do not have permission to approve Finance records.');
-      return;
+      return false;
     }
     setRegisterSaving(true);
     setRegisterActionError(null);
@@ -1139,18 +1146,20 @@ export const AdminFinanceWorkspace: React.FC = () => {
       const response = await api.finance.workbookApprove(type, record.id, '', action);
       if (!response.success) throw new Error(response.error || 'The approval could not be completed.');
       await loadData(true);
+      return true;
     } catch (error) {
       setRegisterActionError(error instanceof Error ? error.message : 'The approval could not be completed.');
+      return false;
     } finally {
       setRegisterSaving(false);
     }
   };
 
-  const closeWorkbookPeriod = async () => {
-    if (registerSaving) return;
+  const closeWorkbookPeriod = async (): Promise<boolean> => {
+    if (registerSaving) return false;
     if (!canApproveFinanceRecords) {
       setRegisterActionError('You do not have permission to close Finance periods.');
-      return;
+      return false;
     }
     setRegisterSaving(true);
     setRegisterActionError(null);
@@ -1158,8 +1167,10 @@ export const AdminFinanceWorkspace: React.FC = () => {
       const response = await api.finance.workbookClosePeriod(selectedClosingMonth);
       if (!response.success) throw new Error(response.error || 'The period could not be closed.');
       await loadData(true);
+      return true;
     } catch (error) {
       setRegisterActionError(error instanceof Error ? error.message : 'The period could not be closed.');
+      return false;
     } finally {
       setRegisterSaving(false);
     }
@@ -1199,8 +1210,9 @@ export const AdminFinanceWorkspace: React.FC = () => {
     return (
       <div className="flex flex-wrap items-center gap-2">
         {canEdit && <Button variant="secondary" type="button" disabled={registerSaving} onClick={() => openRegisterForm(type, record)}>Edit</Button>}
-        {canApprove && <Button variant="secondary" type="button" disabled={registerSaving} onClick={() => void approveWorkbookRecord(type, record)}>{actionLabel}</Button>}
-        {canPostVoucher && <Button variant="secondary" type="button" disabled={registerSaving} onClick={() => void approveWorkbookRecord(type, record, 'post')}>Post cash movement</Button>}
+        {canManageFinanceRecords && type === 'journal-entry' && record.status === 'draft' && !isPeriodLocked && <Button variant="secondary" type="button" disabled={registerSaving} onClick={() => setPendingConfirmation({kind:'archive',type,record})}>Archive draft</Button>}
+        {canApprove && <Button variant="secondary" type="button" disabled={registerSaving} onClick={() => setPendingConfirmation({kind:type==='journal-entry'?'post':'approve',type,record})}>{actionLabel}</Button>}
+        {canPostVoucher && <Button variant="secondary" type="button" disabled={registerSaving} onClick={() => setPendingConfirmation({kind:'post',type,record})}>Post cash movement</Button>}
         {extra}
       </div>
     );
@@ -1213,12 +1225,12 @@ export const AdminFinanceWorkspace: React.FC = () => {
     return (
       <Drawer
         open={Boolean(editor)}
-        onClose={() => { if (!registerSaving) setEditor(null); }}
+        onClose={() => { if (!registerSaving) { if (registerEditorDirty) setPendingConfirmation({kind:'discard-editor'}); else setEditor(null); } }}
         title={editor.record ? 'Edit ' + definition.title : definition.title}
         description={definition.description}
         footer={
           <>
-            <Button type="button" variant="secondary" onClick={() => setEditor(null)} disabled={registerSaving}>Cancel</Button>
+            <Button type="button" variant="secondary" onClick={() => { if (registerEditorDirty) setPendingConfirmation({kind:'discard-editor'}); else setEditor(null); }} disabled={registerSaving}>Cancel</Button>
             <Button type="submit" form="finance-workbook-register-editor-form" loading={registerSaving} disabled={registerSaving}>
               {registerSaving ? 'Saving…' : editor.record ? 'Save changes' : 'Save record'}
             </Button>
@@ -2256,7 +2268,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
                 </label>
                 <div className="flex items-center gap-2">
                   <AdminStatusBadge tone={locked?'success':'warning'}>{locked?'Closed':'Open'}</AdminStatusBadge>
-                  {canApproveFinanceRecords && <Button type="button" variant="secondary" disabled={locked||completed!==WORKBOOK_CLOSING_ITEMS.length||registerSaving} loading={registerSaving} onClick={()=>void closeWorkbookPeriod()}>Close period</Button>}
+                  {canApproveFinanceRecords && <Button type="button" variant="secondary" disabled={locked||completed!==WORKBOOK_CLOSING_ITEMS.length||registerSaving} loading={registerSaving} onClick={()=>setPendingConfirmation({kind:'close-period',period:selectedClosingMonth})}>Close period</Button>}
                 </div>
               </div>
             </AdminPanel>
