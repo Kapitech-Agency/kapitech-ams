@@ -2365,7 +2365,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
         return (
           <div className="space-y-4">
             <WorkbookNote title="Allocation policy">
-              Net Project Profit is calculated from contract value less vendor commitment and other obligations. The percentages below follow the configured allocation policy. Project amounts use saved contract values and obligations, not the general AMS project budget.
+              Net Project Profit is calculated from contract value less vendor commitment, other obligations and the saved Team Fee milestones for that project. Team Fee is deducted before reserve/reward allocation; negative project results never create negative distributions. Project amounts use saved contract values and obligations, not the general AMS project budget.
             </WorkbookNote>
             <AdminMetricStrip metrics={[
               {id:'alloc-petty',label:'Default petty cash reserve',value:'10%',context:'For new allocations',icon:<WalletCards size={15}/>},
