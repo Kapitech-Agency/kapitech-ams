@@ -43,7 +43,7 @@ type SourceResult = { label: string; data: any; error?: string };
 type WorkbookRecord = { id: string; recordType: string; recordKey: string; periodKey?: string; projectId?: string; status: string; payload: Record<string, any>; version: number; createdByUserId?: string; createdAt: string; updatedAt: string };
 type FinanceConfirmation = { kind: 'approve' | 'post' | 'archive'; type: string; record: WorkbookRecord } | { kind: 'close-period'; period: string } | { kind: 'discard-editor' };
 type FinanceVendorContractDraft = { vendorId: string; id?: string; title: string; startDate: string; endDate: string; rateType: VendorContract['rateType']; rateAmount: number; currency: VendorContract['currency']; status: VendorContract['status'] };
-type RegisterField = { key: string; label: string; type: 'text' | 'number' | 'date' | 'month' | 'select' | 'textarea'; required?: boolean; options?: string[]; optionSource?: 'vendorBills' | 'accounts' | 'cashAccounts' | 'expenseAccounts' | 'projects' | 'vendors'; placeholder?: string; help?: string; defaultValue?: string | number; visibleWhen?: { key: string; values: string[] } };
+type RegisterField = { key: string; label: string; type: 'text' | 'number' | 'date' | 'month' | 'select' | 'textarea'; required?: boolean; readOnly?: boolean; options?: string[]; optionSource?: 'vendorBills' | 'accounts' | 'cashAccounts' | 'expenseAccounts' | 'projects' | 'vendors'; placeholder?: string; help?: string; defaultValue?: string | number; visibleWhen?: { key: string; values: string[] } };
 type CashMovement = { id: string; date: string; reference: string; description: string; cashIn: number; cashOut: number; source: string; currency: string; accountCode: string };
 
 const getLocalDateInputValue = (date = new Date()): string => {
@@ -549,7 +549,7 @@ const REGISTER_FORMS: Record<string, { title: string; description: string; field
       {key:'pettyCashPercent',label:'Petty cash reserve (%)',type:'number',required:true,defaultValue:10},
       {key:'emergencyPercent',label:'Emergency fund (%)',type:'number',required:true,defaultValue:10},
       {key:'teamRewardPercent',label:'Team Reward (%)',type:'number',required:true,defaultValue:10},
-      {key:'teamFeeAmount',label:'Project Team Fee (IDR)',type:'number',defaultValue:0},
+      {key:'teamFeeAmount',label:'Team Fee total (IDR)',type:'number',readOnly:true,defaultValue:0,help:'Calculated from the selected project’s Team Fee milestones. Legacy saved totals are retained until Team Fee records are entered.'},
       {key:'emergencyStatus',label:'Emergency fund status',type:'select',options:['Reserved','Used','Released','Not allocated'],defaultValue:'Reserved'},
       {key:'notes',label:'Notes',type:'textarea'}
     ]
@@ -1073,6 +1073,19 @@ export const AdminFinanceWorkspace: React.FC = () => {
         }
         payload = { ...payload, code, name, description: String(payload.description || '').trim() };
       }
+      if (editor.type === 'project-allocation') {
+        const projectId = String(payload.projectId || editor.record?.projectId || '').trim();
+        const projectName = String(payload.projectName || '').trim().toLowerCase();
+        const matchingFees = getRegisterRecords('team-fee').filter((record) => {
+          const feeProjectId = String(record.projectId || record.payload.projectId || '').trim();
+          const feeProjectName = String(record.payload.projectName || '').trim().toLowerCase();
+          return projectId ? feeProjectId === projectId : !feeProjectId && Boolean(projectName) && feeProjectName === projectName;
+        });
+        const teamFeeTotal = matchingFees.length
+          ? Math.round(matchingFees.reduce((sum, record) => sum + Math.max(0, Number(record.payload.feeAmount) || 0), 0) * 100) / 100
+          : Math.max(0, Number(payload.teamFeeAmount) || 0);
+        payload = { ...payload, projectId: projectId || undefined, teamFeeAmount: teamFeeTotal };
+      }
       if (editor.type === 'journal-entry') {
         const debitCode = String(payload.debitAccountCode || '');
         const creditCode = String(payload.creditAccountCode || '');
@@ -1303,8 +1316,21 @@ export const AdminFinanceWorkspace: React.FC = () => {
           )}
           <div className="grid gap-3 sm:grid-cols-2">
             {definition.fields.filter((field) => !field.visibleWhen || field.visibleWhen.values.includes(String(editor.payload[field.visibleWhen.key] || ''))).map((field) => {
-              const value = editor.payload[field.key] === undefined || editor.payload[field.key] === null ? '' : String(editor.payload[field.key]);
-              const disabled = editor.record?.recordType === 'chart-of-accounts' && field.key === 'code';
+              const value = field.key === 'teamFeeAmount' && editor.type === 'project-allocation'
+                ? String((() => {
+                    const projectId = String(editor.payload.projectId || editor.record?.projectId || '').trim();
+                    const projectName = String(editor.payload.projectName || '').trim().toLowerCase();
+                    const matchingFees = getRegisterRecords('team-fee').filter((record) => {
+                      const feeProjectId = String(record.projectId || record.payload.projectId || '').trim();
+                      const feeProjectName = String(record.payload.projectName || '').trim().toLowerCase();
+                      return projectId ? feeProjectId === projectId : !feeProjectId && Boolean(projectName) && feeProjectName === projectName;
+                    });
+                    return matchingFees.length
+                      ? Math.round(matchingFees.reduce((sum, record) => sum + Math.max(0, Number(record.payload.feeAmount) || 0), 0) * 100) / 100
+                      : Math.max(0, Number(editor.payload.teamFeeAmount) || 0);
+                  })())
+                : editor.payload[field.key] === undefined || editor.payload[field.key] === null ? '' : String(editor.payload[field.key]);
+              const disabled = field.readOnly || (editor.record?.recordType === 'chart-of-accounts' && field.key === 'code');
               const commonClass = 'mt-1.5 block h-10 min-h-10 w-full rounded-control border border-line bg-bg px-3 text-[13px] leading-[18px] text-fg outline-none transition-colors focus:border-accent disabled:cursor-not-allowed disabled:opacity-60';
               return (
                 <label key={field.key} className={field.type === 'textarea' ? 'block sm:col-span-2 text-xs font-medium text-muted' : 'block text-xs font-medium text-muted'}>
