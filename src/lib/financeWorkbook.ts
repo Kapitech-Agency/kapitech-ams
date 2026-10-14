@@ -190,7 +190,7 @@ export function sumAmounts<T>(items: T[], amountOf: (item: T) => number): number
 }
 
 
-export type FinanceSourceJournalType = 'invoice-issued' | 'invoice-payment' | 'expense' | 'expense-payment' | 'cash-bank-transfer' | 'vendor-bill-issued' | 'vendor-bill-payment';
+export type FinanceSourceJournalType = 'invoice-issued' | 'invoice-payment' | 'expense' | 'expense-payment' | 'cash-bank-transfer' | 'vendor-bill-issued' | 'vendor-bill-payment' | 'cash-bank-opening' | 'balance-sheet-opening';
 
 export interface FinanceSourceJournalDraft {
   sourceType: FinanceSourceJournalType;
@@ -276,7 +276,8 @@ export function buildFinanceSourceJournalDrafts(
   cashBankTransactions: Array<{ id: string; status?: string; payload: Record<string, unknown> }>,
   vendorBills: Array<{ id: string; recordKey?: string; projectId?: string; payload: Record<string, unknown> }> = [],
   vendorBillPayments: Array<{ id: string; status?: string; payload: Record<string, unknown> }> = [],
-  chartAccounts: Array<{ code: string; name?: string; type?: string; accountType?: string; active?: boolean }> = []
+  chartAccounts: Array<{ code: string; name?: string; type?: string; accountType?: string; active?: boolean }> = [],
+  openingBalanceSources: Array<{ id: string; recordType: 'cash-bank-opening' | 'balance-sheet-opening'; recordKey?: string; status?: string; payload: Record<string, unknown> }> = []
 ): FinanceSourceJournalPlan {
   const drafts: FinanceSourceJournalDraft[] = [];
   const skipped: FinanceSourceJournalSkip[] = [];
@@ -686,6 +687,64 @@ export function buildFinanceSourceJournalDrafts(
       sourceType: 'cash-bank-transfer', sourceId, date, reference, description,
       debitCode: counterpartCode, creditCode: sourceCode, amount,
       projectId: String(payload.projectId || '') || undefined, notes
+    }));
+  }
+
+  for (const opening of openingBalanceSources) {
+    const payload = opening.payload || {};
+    const sourceType: FinanceSourceJournalType = opening.recordType;
+    const sourceId = sourceIdentifier(opening.id);
+    const cashOpening = opening.recordType === 'cash-bank-opening';
+    const date = String(cashOpening ? payload.openingDate || '' : payload.asOfDate || '').slice(0, 10);
+    const accountCode = String(payload.accountCode || '').trim();
+    const reference = String(opening.recordKey || ('OPENING-' + accountCode + '-' + date)).slice(0, 160);
+    const description = (cashOpening ? 'Cash opening balance · ' : 'Balance sheet opening · ') + (accountNames.get(accountCode) || accountCode || 'Account not set');
+    const rawAmount = Number(cashOpening ? payload.openingBalance : payload.openingAmount);
+    const amount = safeFinanceMoney(rawAmount);
+    if (!Number.isFinite(rawAmount) || rawAmount < 0) {
+      skip({ sourceType, sourceId: sourceId || 'missing-opening-id', date, reference, description, amount: Number(rawAmount) || 0, reason: 'Opening balance must be a finite, non-negative amount.' });
+      continue;
+    }
+    if (rawAmount === 0) continue;
+    if (!sourceId || !isValidFinanceDate(date)) {
+      skip({ sourceType, sourceId: sourceId || 'missing-opening-id', date, reference, description, amount, reason: 'Opening balance needs a stable source ID and valid as-of date.' });
+      continue;
+    }
+    if (accountTypes.get('3200') !== 'Equity') {
+      skip({ sourceType, sourceId, date, reference, description, amount, reason: 'Opening Balance Equity account (3200) must be active before opening balance journals can be generated.' });
+      continue;
+    }
+    const accountType = accountTypes.get(accountCode);
+    if (!accountType || accountType === '__inactive__') {
+      skip({ sourceType, sourceId, date, reference, description, amount, reason: 'Opening balance account must exist and be active in the Chart of Accounts.' });
+      continue;
+    }
+    if (cashOpening) {
+      if (!CASH_ACCOUNT_CODES.has(accountCode) || accountType !== 'Asset') {
+        skip({ sourceType, sourceId, date, reference, description, amount, reason: 'Cash opening balances must use an active cash account 1000, 1100 or 1200. Use the Balance Sheet opening register for other accounts.' });
+        continue;
+      }
+    } else {
+      if (CASH_ACCOUNT_CODES.has(accountCode)) {
+        skip({ sourceType, sourceId, date, reference, description, amount, reason: 'Use the Cash & Bank opening register for accounts 1000, 1100 or 1200 to avoid duplicate opening balances.' });
+        continue;
+      }
+      if (!['Asset', 'Liability', 'Equity'].includes(accountType) || accountCode === '3200') {
+        skip({ sourceType, sourceId, date, reference, description, amount, reason: 'Opening balance register supports balance-sheet Asset, Liability and Equity accounts, excluding the temporary Opening Balance Equity account itself.' });
+        continue;
+      }
+    }
+    const balanceSide = cashOpening ? 'Debit' : String(payload.side || 'Debit');
+    if (!['Debit', 'Credit'].includes(balanceSide)) {
+      skip({ sourceType, sourceId, date, reference, description, amount, reason: 'Opening balance side must be Debit or Credit.' });
+      continue;
+    }
+    const notes = 'Draft generated from the saved opening balance. Opening Balance Equity (3200) is the temporary offset; reconcile all opening balances and clear the offset to the appropriate equity account before treating the Balance Sheet as final. Not posted.';
+    drafts.push(buildTwoLineFinanceDraft({
+      sourceType, sourceId, date, reference, description,
+      debitCode: balanceSide === 'Debit' ? accountCode : '3200',
+      creditCode: balanceSide === 'Debit' ? '3200' : accountCode,
+      amount, notes
     }));
   }
 
