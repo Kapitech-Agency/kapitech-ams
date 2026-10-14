@@ -2452,6 +2452,20 @@ export const AdminFinanceWorkspace: React.FC = () => {
         };
         const currentFlow = getCashFlowForPeriod(reportPeriodValue);
         const comparisonFlow = getCashFlowForPeriod(comparisonPeriodValue);
+        const postedCurrentFlow = selectedRange ? getPostedLedgerCashFlow(selectedRange.startDate, selectedRange.endDate) : { inflow: 0, outflow: 0, net: 0, activityCount: 0, journalCount: 0 };
+        const comparisonRange = getReportingPeriodRange(comparisonPeriodValue, reportPeriodMode, locale);
+        const postedComparisonFlow = comparisonRange ? getPostedLedgerCashFlow(comparisonRange.startDate, comparisonRange.endDate) : { inflow: 0, outflow: 0, net: 0, activityCount: 0, journalCount: 0 };
+        const postedFlowMetrics = [
+          { id: 'gl-inflow', label: 'Posted GL cash in', current: postedCurrentFlow.inflow, comparison: postedComparisonFlow.inflow },
+          { id: 'gl-outflow', label: 'Posted GL cash out', current: postedCurrentFlow.outflow, comparison: postedComparisonFlow.outflow },
+          { id: 'gl-net', label: 'Posted GL net cash movement', current: postedCurrentFlow.net, comparison: postedComparisonFlow.net },
+          { id: 'gl-journals', label: 'Posted journal entries', current: postedCurrentFlow.journalCount, comparison: postedComparisonFlow.journalCount }
+        ];
+        const postedFlowRows = postedFlowMetrics.map((item) => {
+          const change = item.current - item.comparison;
+          const percent = item.comparison === 0 ? (item.current === 0 ? '0.0%' : 'N/A') : ((change / Math.abs(item.comparison)) * 100).toFixed(1) + '%';
+          return { id: item.id, cells: [item.label, item.id === 'gl-journals' ? String(item.current) : formatMoney(item.current), item.id === 'gl-journals' ? String(item.comparison) : formatMoney(item.comparison), item.id === 'gl-journals' ? String(change) : formatMoney(change), percent] };
+        });
         const flowComparisonMetrics = [
           { id: 'inflow', label: 'Cash in', current: currentFlow.inflow, comparison: comparisonFlow.inflow },
           { id: 'outflow', label: 'Cash out', current: currentFlow.outflow, comparison: comparisonFlow.outflow },
@@ -2465,8 +2479,8 @@ export const AdminFinanceWorkspace: React.FC = () => {
         });
         return (
           <div className="space-y-4">
-            <WorkbookNote tone="warning" title="Cash-flow movement, not reconciled ending cash">
-              Inflows and outflows include dated, explicitly paid transactions on cash accounts 1000, 1100 and 1200. Internal transfers between company cash accounts are excluded from consolidated cash flow to prevent double-counting. Credit-card clearing, unpaid expenses, posted petty-cash voucher flows and unreconciled opening balances remain outside this preview.
+            <WorkbookNote tone="warning" title="Separate posted-ledger cash flow from the source preview">
+              The Posted General Ledger view below is calculated from posted journal lines on cash accounts 1000, 1100 and 1200; inter-account transfers net to zero, and opening balance entries are not treated as cash flows. The source preview below remains useful for unmatched or unposted activity, but it is not a reconciled bank statement or ending cash balance. Petty-cash voucher activity is still a separate control to reconcile.
             </WorkbookNote>
             <div className="flex min-w-0 flex-col gap-3 border-b border-line pb-3 sm:flex-row sm:items-end sm:justify-between" data-ams-slug="finance-cash-flow-comparison-controls">
               <div className="min-w-0 text-xs text-muted">
@@ -2489,22 +2503,36 @@ export const AdminFinanceWorkspace: React.FC = () => {
               )}
             </div>
             <AdminMetricStrip metrics={[
-              { id: 'cash-in-period', label: 'Cash in', value: formatMoney(currentFlow.inflow), context: periodLabel, icon: <ArrowDown size={15} /> },
+              { id: 'gl-cash-in-period', label: 'Posted GL cash in', value: postedCurrentFlow.journalCount ? formatMoney(postedCurrentFlow.inflow) : 'No posted activity', context: postedCurrentFlow.activityCount + ' cash-moving journal entries · ' + periodLabel, icon: <ArrowDown size={15} /> },
+              { id: 'gl-cash-out-period', label: 'Posted GL cash out', value: postedCurrentFlow.journalCount ? formatMoney(postedCurrentFlow.outflow) : 'No posted activity', context: 'Posted General Journal only', icon: <ArrowUpRight size={15} /> },
+              { id: 'gl-cash-net-period', label: 'Posted GL net cash', value: postedCurrentFlow.journalCount ? formatMoney(postedCurrentFlow.net) : 'Not available', context: 'Opening balances excluded; internal transfers net to zero', icon: <CircleDollarSign size={15} /> }
+            ]} />
+            <AdminMetricStrip metrics={[
+              { id: 'cash-in-period', label: 'Recorded cash in (proxy)', value: formatMoney(currentFlow.inflow), context: periodLabel, icon: <ArrowDown size={15} /> },
               { id: 'cash-out-period', label: 'Cash out', value: formatMoney(currentFlow.outflow), context: periodLabel, icon: <ArrowUpRight size={15} /> },
               { id: 'cash-net-period', label: 'Net movement (proxy)', value: formatMoney(currentFlow.net), context: 'Compared periods are calculated from recorded source rows', icon: <CircleDollarSign size={15} /> }
             ]} />
             <FinanceDataTable
-              title="Period comparison"
-              description={periodLabel + ' compared with ' + comparisonLabel + '. Net cash movement remains a proxy until opening balances and bank statements are reconciled.'}
+              title="Posted General Ledger cash flow"
+              description={periodLabel + ' compared with ' + comparisonLabel + '. These values use posted journal activity only and exclude opening balances; bank-statement reconciliation is still required.'}
+              columns={[{ label: 'Metric' }, { label: 'Selected period', align: 'right' }, { label: 'Comparison period', align: 'right' }, { label: 'Change', align: 'right' }, { label: 'Change %', align: 'right' }]}
+              rows={postedFlowRows}
+              emptyMessage="No posted journal entries affect the selected period cash accounts."
+              exportable={false}
+              actions={<Button variant="secondary" type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-posted-gl-cash-flow-' + reportPeriodValue + '.csv', ['Metric','Selected period','Comparison period','Change','Change percent'], postedFlowMetrics.map((item) => [item.label,item.current,item.comparison,item.current-item.comparison,item.comparison===0?'N/A':(((item.current-item.comparison)/Math.abs(item.comparison))*100).toFixed(1)+'%']))}>Export posted GL</Button>}
+            />
+            <FinanceDataTable
+              title="Source cash movement comparison (proxy)"
+              description={periodLabel + ' compared with ' + comparisonLabel + '. Source rows are not equivalent to posted ledger movements; reconcile any difference before closing.'}
               columns={[{ label: 'Metric' }, { label: 'Selected period', align: 'right' }, { label: 'Comparison period', align: 'right' }, { label: 'Change', align: 'right' }, { label: 'Change %', align: 'right' }]}
               rows={flowComparisonRows}
-              emptyMessage="No dated receipts or expense movements are available for the selected period."
+              emptyMessage="No dated source receipts or expense movements are available for the selected period."
               exportable={false}
               actions={<Button variant="secondary" type="button" icon={<Download size={14}/>} onClick={() => exportFinanceCsv('kapitech-cash-flow-comparison-' + reportPeriodValue + '.csv', ['Metric', 'Selected period', 'Comparison period', 'Change', 'Change percent'], flowComparisonMetrics.map((item) => [item.label, item.current, item.comparison, item.current - item.comparison, item.comparison === 0 ? 'N/A' : (((item.current - item.comparison) / Math.abs(item.comparison)) * 100).toFixed(1) + '%']))}>Export comparison</Button>}
             />
             <FinanceDataTable
-              title="Cash Flow by Month"
-              description="Monthly detail inside the selected reporting period; switch to Quarter or Year for grouped period review."
+              title="Recorded source cash movement by Month (proxy)"
+              description="Monthly source activity inside the selected reporting period. This does not replace the Posted General Ledger cash-flow comparison above."
               columns={[{ label: 'Month' }, { label: 'Total cash in', align: 'right' }, { label: 'Total cash out', align: 'right' }, { label: 'Net cash movement', align: 'right' }, { label: 'Source rows', align: 'right' }]}
               rows={visibleMonthlyRows.map((item) => ({ id: item.month, cells: [item.month, formatMoney(item.inflow), formatMoney(item.outflow), formatMoney(item.inflow - item.outflow), item.count] }))}
               emptyMessage="No dated receipts or expense movements are available for the selected period."
