@@ -862,6 +862,29 @@ export const AdminFinanceWorkspace: React.FC = () => {
 
 
   const getRegisterRecords = (type: string): WorkbookRecord[] => registerRecords[type] || [];
+  const getPostedLedgerCashFlow = (startDate: string, endDate: string) => {
+    const cashCodes = new Set(['1000','1100','1200']);
+    const journals = getRegisterRecords('journal-entry').filter((record) => {
+      if (record.status !== 'posted') return false;
+      const sourceType = String(record.payload.sourceType || '');
+      if (sourceType === 'cash-bank-opening' || sourceType === 'balance-sheet-opening') return false;
+      const date = String(record.payload.date || '').slice(0, 10);
+      return Boolean(date && date >= startDate && date <= endDate);
+    });
+    let inflow = 0;
+    let outflow = 0;
+    let activityCount = 0;
+    for (const journal of journals) {
+      const lines = Array.isArray(journal.payload.lines) ? journal.payload.lines as Array<Record<string, any>> : [];
+      const debit = lines.filter((line) => cashCodes.has(String(line.accountCode || ''))).reduce((sum, line) => sum + (Number(line.debit) || 0), 0);
+      const credit = lines.filter((line) => cashCodes.has(String(line.accountCode || ''))).reduce((sum, line) => sum + (Number(line.credit) || 0), 0);
+      const net = Math.round((debit - credit) * 100) / 100;
+      if (net > 0.01) { inflow += net; activityCount++; }
+      else if (net < -0.01) { outflow += Math.abs(net); activityCount++; }
+    }
+    return { inflow, outflow, net: inflow - outflow, activityCount, journalCount: journals.length };
+  };
+
   const getOpeningRecord = (accountCode: string): WorkbookRecord | undefined =>
     getRegisterRecords('cash-bank-opening').find((item) => String(item.payload.accountCode) === accountCode);
 
