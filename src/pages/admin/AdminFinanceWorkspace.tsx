@@ -1870,45 +1870,62 @@ export const AdminFinanceWorkspace: React.FC = () => {
       }
       case 'operational-budget': {
         const budgetRecords = getRegisterRecords('operational-budget');
-        const actualByMonthCategory = new Map<string,{month:string;category:string;amount:number;count:number}>();
-        for(const expense of expenses){
-          const month=getMonthKey(expense.date);
-          if(!month) continue;
-          const category=String(expense.category||'Unclassified');
-          const key=month+'|'+category.toLowerCase();
-          const current=actualByMonthCategory.get(key)||{month,category,amount:0,count:0};
-          current.amount+=Number(expense.amount)||0;
-          current.count+=1;
-          actualByMonthCategory.set(key,current);
+        const actualByMonthCategory = new Map<string,{month:string;category:string;projectId:string;amount:number;count:number}>();
+        for (const expense of expenses) {
+          const month = getMonthKey(expense.date);
+          if (!month) continue;
+          const category = String(expense.category || 'Unclassified');
+          const projectId = String(expense.projectId || '');
+          const key = month + '|' + category.toLowerCase() + '|' + (projectId || 'company');
+          const current = actualByMonthCategory.get(key) || { month, category, projectId, amount: 0, count: 0 };
+          current.amount += Number(expense.amount) || 0;
+          current.count += 1;
+          actualByMonthCategory.set(key, current);
         }
-        const keys=new Set<string>([
-          ...budgetRecords.map((record)=>String(record.payload.month||record.periodKey||'')+'|'+String(record.payload.category||'').toLowerCase()),
+        const budgetKey = (record: WorkbookRecord) => String(record.payload.month || record.periodKey || '') + '|' + String(record.payload.category || '').toLowerCase() + '|' + (String(record.payload.projectId || record.projectId || '') || 'company');
+        const keys = new Set<string>([
+          ...budgetRecords.map(budgetKey),
           ...actualByMonthCategory.keys()
         ]);
-        const records=[...keys].map((key)=>{
-          const [month,categoryKey]=key.split('|');
-          const budgetRecord=budgetRecords.find((record)=>String(record.payload.month||record.periodKey||'')===month&&String(record.payload.category||'').toLowerCase()===categoryKey);
-          const actual=actualByMonthCategory.get(key);
-          return {key,month,category:String(budgetRecord?.payload.category||actual?.category||categoryKey),budgetRecord,budget:Number(budgetRecord?.payload.budgetAmount)||0,actual:actual?.amount||0,count:actual?.count||0,pic:String(budgetRecord?.payload.pic||''),notes:String(budgetRecord?.payload.notes||'')};
-        }).filter((item)=>item.month&&matchesDate(item.month + '-01')&&matching([item.month,item.category,item.pic,item.notes])).sort((a,b)=>b.month.localeCompare(a.month)||a.category.localeCompare(b.category));
+        const records = [...keys].map((key) => {
+          const [month, categoryKey, projectIdKey = 'company'] = key.split('|');
+          const projectId = projectIdKey === 'company' ? '' : projectIdKey;
+          const budgetRecord = budgetRecords.find((record) =>
+            String(record.payload.month || record.periodKey || '') === month
+            && String(record.payload.category || '').toLowerCase() === categoryKey
+            && (String(record.payload.projectId || record.projectId || '') || 'company') === projectIdKey
+          );
+          const actual = actualByMonthCategory.get(key);
+          const recordProjectId = String(budgetRecord?.payload.projectId || budgetRecord?.projectId || actual?.projectId || '');
+          const projectName = projects.find((project) => project.id === recordProjectId)?.name || String(budgetRecord?.payload.projectName || '') || recordProjectId || 'Company-wide';
+          return {
+            key, month, category: String(budgetRecord?.payload.category || actual?.category || categoryKey),
+            projectId: recordProjectId, projectName, budgetRecord,
+            budget: Number(budgetRecord?.payload.budgetAmount) || 0, actual: actual?.amount || 0, count: actual?.count || 0,
+            pic: String(budgetRecord?.payload.pic || ''), notes: String(budgetRecord?.payload.notes || '')
+          };
+        }).filter((item) => item.month && matchesDate(item.month + '-01') && matching([item.month,item.category,item.projectName,item.projectId,item.pic,item.notes]))
+          .sort((a,b) => b.month.localeCompare(a.month) || a.projectName.localeCompare(b.projectName) || a.category.localeCompare(b.category));
         return (
           <div className="space-y-4">
             <WorkbookNote title="Monthly budget versus actual">
-              Budget lines are stored by month, category and PIC. Actual costs remain sourced from expense records; the table does not insert zero-value placeholder budget rows.
+              Budget lines and actual expenses are compared by month, category and project. Expenses without a project remain in the company-wide bucket instead of being silently mixed into a project's budget.
             </WorkbookNote>
             <FinanceDataTable
               title="Operational Budget"
-              description="Variance is budget less expense actual for the same calendar month and expense category."
-              columns={[{label:'Month'},{label:'Category'},{label:'PIC'},{label:'Budget',align:'right'},{label:'Actual',align:'right'},{label:'Variance',align:'right'},{label:'Expense rows',align:'right'},{label:'Actions'}]}
-              rows={records.map((item)=>({
-                id:item.key,
-                cells:[
-                  item.month,item.category||'—',item.pic||'—',
-                  item.budgetRecord?formatMoney(item.budget):<AdminStatusBadge tone="warning">Budget not set</AdminStatusBadge>,
+              description="Variance is budget less recorded expense actual for the same calendar month, expense category and project."
+              columns={[{label:'Month'},{label:'Category'},{label:'Project'},{label:'PIC'},{label:'Budget',align:'right'},{label:'Actual',align:'right'},{label:'Variance',align:'right'},{label:'Expense rows',align:'right'},{label:'Actions'}]}
+              rows={records.map((item) => ({
+                id: item.key,
+                cells: [
+                  item.month,item.category || '—',item.projectName,item.pic || '—',
+                  item.budgetRecord ? formatMoney(item.budget) : <AdminStatusBadge tone="warning">Budget not set</AdminStatusBadge>,
                   formatMoney(item.actual),
-                  item.budgetRecord?formatMoney(item.budget-item.actual):'—',
+                  item.budgetRecord ? formatMoney(item.budget-item.actual) : '—',
                   String(item.count),
-                  item.budgetRecord?registerRecordActions('operational-budget',item.budgetRecord):canManageFinanceRecords?<Button variant="primary" type="button" icon={<Plus size={14} />} onClick={()=>openRegisterForm('operational-budget',undefined,{month:item.month,category:item.category})}>Set budget</Button>:<span className="text-muted">View only</span>
+                  item.budgetRecord ? registerRecordActions('operational-budget',item.budgetRecord) : canManageFinanceRecords
+                    ? <Button variant="primary" type="button" icon={<Plus size={14} />} onClick={() => openRegisterForm('operational-budget',undefined,{month:item.month,category:item.category,projectId:item.projectId})}>Set budget</Button>
+                    : <span className="text-muted">View only</span>
                 ]
               }))}
               emptyMessage="No budget lines or dated expense records exist for the current search."
