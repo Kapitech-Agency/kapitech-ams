@@ -21,6 +21,13 @@ export class ExpenseImmutableError extends Error{readonly code='EXPENSE_IMMUTABL
 export class ExpenseVersionConflictError extends Error{readonly code='EXPENSE_VERSION_CONFLICT';}
 export class ExpenseProjectNotFoundError extends Error{readonly code='EXPENSE_PROJECT_NOT_FOUND';}
 export class PostgresExpenseRepository{
+  private async ensureFinancePeriodOpen(client:any,value:unknown):Promise<void>{
+    const period=String(value||'').slice(0,7);
+    if(!/^\\d{4}-(0[1-9]|1[0-2])$/.test(period)) return;
+    await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))",['kapitech:finance-period:'+period]);
+    const lock=await client.query<Row>("SELECT id FROM finance_workbook_records WHERE record_type='monthly-closing-lock' AND period_key=$1 AND archived_at IS NULL LIMIT 1",[period]);
+    if(lock.rows[0]) throw new Error('FINANCE_PERIOD_CLOSED:'+period);
+  }
   async list(){const r=await getPostgresPool().query<Row>('SELECT * FROM expenses WHERE archived_at IS NULL AND status <> $1 ORDER BY expense_date DESC, created_at DESC',['voided']);return r.rows.map(mapExpense);}
   async findById(id:string){const r=await getPostgresPool().query<Row>('SELECT * FROM expenses WHERE id=$1 LIMIT 1',[id]);return r.rows[0]?mapExpense(r.rows[0]):null;}
   async create(input:Record<string,any>, audit?: AuditEntry){
@@ -92,6 +99,7 @@ export class PostgresExpenseRepository{
           return { ...mapExpense(existing.rows[0]), __idempotentReplay: true };
         }
       }
+      await this.ensureFinancePeriodOpen(client,expenseDate);
       if(projectId){const project=await client.query<Row>('SELECT id FROM projects WHERE id=$1 FOR SHARE',[projectId]);if(!project.rows[0])throw new ExpenseProjectNotFoundError('Project not found.');}
       if (vendorId) {
         const vendor = await client.query<Row>('SELECT id FROM vendors WHERE id = $1 FOR SHARE', [vendorId]);
@@ -108,6 +116,9 @@ export class PostgresExpenseRepository{
     return withPostgresTransaction(async client=>{
       const current=await client.query<Row>('SELECT * FROM expenses WHERE id=$1 FOR UPDATE',[id]);if(!current.rows[0])throw new ExpenseNotFoundError('Expense not found.');
       const row=current.rows[0];if(row.status==='voided'||row.archived_at)throw new ExpenseImmutableError('Expense is already voided.');
+      await this.ensureFinancePeriodOpen(client,row.expense_date);
+      const postedJournal=await client.query<Row>("SELECT id FROM finance_workbook_records WHERE record_type='journal-entry' AND status='posted' AND archived_at IS NULL AND payload->>'sourceType'='expense' AND payload->>'sourceId'=$1 LIMIT 1 FOR SHARE",[String(row.id)]);
+      if(postedJournal.rows[0]) throw new ExpenseImmutableError('EXPENSE_POSTED_LEDGER_REVERSAL_REQUIRED: create an approved reversal journal before voiding this expense.');
       if(expectedVersion!=null&&Number(row.version)!==Number(expectedVersion))throw new ExpenseVersionConflictError('Expense was modified by another user.');
       const result=await client.query<Row>('UPDATE expenses SET status=$2,archived_at=NOW(),version=version+1 WHERE id=$1 RETURNING *',[id,'voided']);
       if (audit) await postgresAuditLogRepository.appendWithinTransaction(client, audit);
