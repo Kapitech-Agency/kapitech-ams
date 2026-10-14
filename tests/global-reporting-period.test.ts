@@ -72,6 +72,9 @@ test('date-aware Finance worksheets use the shared reporting period without chan
   assert.ok(workspace.includes('matchesDate(expense.date)'));
   assert.ok(workspace.includes('matchesDate(record.payload.date || record.createdAt)'));
   assert.ok(workspace.includes('const dashboardRange = getReportingPeriodRange(reportPeriodValue, reportPeriodMode, locale);'));
+  assert.ok(workspace.includes("const date = String(getInvoiceDate(invoice) || '').slice(0, 10);"));
+  assert.ok(workspace.includes("const date = String(entry.date || '').slice(0, 10);"));
+  assert.ok(workspace.includes("const date = String(movement.date || '').slice(0, 10);"));
   assert.ok(workspace.includes('const selectedYear = String(Number(reportPeriodValue.slice(0, 4)) || new Date().getFullYear());'));
   assert.ok(workspace.includes('renderRecentActivity(dashboardRange ?'));
   assert.ok(workspace.includes('const defaultFinanceMonth = getReportingPeriodRange(reportPeriodValue, reportPeriodMode, locale)?.startMonth'));
