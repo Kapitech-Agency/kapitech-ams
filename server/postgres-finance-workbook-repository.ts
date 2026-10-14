@@ -335,29 +335,25 @@ export class PostgresFinanceWorkbookRepository {
   private async ensureJournalAccountsActive(client:any,payload:Record<string,any>):Promise<void>{
     const lines=Array.isArray(payload.lines)?payload.lines as Array<Record<string,unknown>>:[];
     const codes=[...new Set(lines.map((line)=>String(line.accountCode||'').trim()).filter(Boolean))];
-    const standard=new Set(EXCEL_CHART_OF_ACCOUNTS.filter((account)=>account.active).map((account)=>account.code));
+    const accounts=new Map<string,{active:boolean}>(EXCEL_CHART_OF_ACCOUNTS.map((account)=>[account.code,{active:account.active}] as const));
     const result=await client.query("SELECT record_key,payload FROM finance_workbook_records WHERE record_type='chart-of-accounts' AND archived_at IS NULL");
-    const custom=new Map<string,{active:boolean;name:string}>();
     for(const row of result.rows){
       const account=obj(row.payload);
       const code=String(account.code||row.record_key||'').trim();
-      if(!code||standard.has(code)) continue;
-      custom.set(code,{active:account.active!==false,name:String(account.name||'')});
+      if(!code) continue;
+      accounts.set(code,{active:account.active!==false});
     }
-    const invalid=codes.filter((code)=>!standard.has(code)&&(!custom.has(code)||custom.get(code)?.active!==true));
+    const invalid=codes.filter((code)=>!accounts.has(code)||accounts.get(code)?.active!==true);
     if(invalid.length) throw new FinanceWorkbookValidationError('Journal account code(s) are missing or inactive in Chart of Accounts: '+invalid.join(', ')+'. Add/activate the account before saving the journal.');
   }
   private async ensureOpeningBalanceAccountActive(client:any,payload:Record<string,any>):Promise<void>{
     const code=String(payload.accountCode||'').trim();
     if(!/^\d{4}$/.test(code)||['1000','1100','1200','3200'].includes(code)) throw new FinanceWorkbookValidationError('Opening balance must use an eligible non-cash Asset, Liability or Equity account.');
     const standard=EXCEL_CHART_OF_ACCOUNTS.find((account)=>account.code===code&&account.active);
-    let accountType=standard?.type||'';
-    if(!accountType){
-      const result=await client.query("SELECT payload FROM finance_workbook_records WHERE record_type='chart-of-accounts' AND record_key=$1 AND archived_at IS NULL LIMIT 1",[code]);
-      const account=result.rows[0]?obj(result.rows[0].payload):{};
-      if(account.active===false) throw new FinanceWorkbookValidationError('Opening balance account '+code+' is inactive.');
-      accountType=String(account.accountType||'');
-    }
+    const result=await client.query("SELECT payload FROM finance_workbook_records WHERE record_type='chart-of-accounts' AND record_key=$1 AND archived_at IS NULL LIMIT 1",[code]);
+    const persisted=result.rows[0]?obj(result.rows[0].payload):{};
+    if(result.rows[0]&&persisted.active===false) throw new FinanceWorkbookValidationError('Opening balance account '+code+' is inactive.');
+    const accountType=result.rows[0]?String(persisted.accountType||''):String(standard?.type||'');
     if(!['Asset','Liability','Equity'].includes(accountType)) throw new FinanceWorkbookValidationError('Opening balance account '+code+' must be an active Asset, Liability or Equity account.');
   }
   private async ensurePostedSourceImmutable(client:any,type:FinanceWorkbookRecordType,id:string,current:Record<string,any>,next:Record<string,any>):Promise<void>{
