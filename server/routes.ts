@@ -3572,6 +3572,32 @@ apiRouter.post('/finance/expenses', requireAuth, requirePermission('canManageInv
     };
   }
 
+  const paymentStatus = cleanText(exp.paymentStatus || 'unpaid', 20).toLowerCase();
+  const paidDate = cleanText(exp.paidDate, 10);
+  const paymentMethod = cleanText(exp.paymentMethod || 'bank_transfer', 30).toLowerCase();
+  const paymentAccountCode = cleanText(exp.paymentAccountCode, 4);
+  if (!['unpaid', 'paid'].includes(paymentStatus)) {
+    res.status(400).json({ success: false, error: 'Expense payment status must be unpaid or paid.' });
+    return;
+  }
+  if (!['bank_transfer', 'credit_card', 'cash', 'other'].includes(paymentMethod)) {
+    res.status(400).json({ success: false, error: 'Expense payment method is not supported.' });
+    return;
+  }
+  if (paymentStatus === 'paid') {
+    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(paidDate) || Number.isNaN(new Date(paidDate + 'T00:00:00Z').getTime()) || new Date(paidDate + 'T00:00:00Z').toISOString().slice(0, 10) !== paidDate) {
+      res.status(400).json({ success: false, error: 'A valid actual payment date is required for a paid expense.' });
+      return;
+    }
+    if (paidDate > new Date().toISOString().slice(0, 10)) {
+      res.status(400).json({ success: false, error: 'Actual expense payment date cannot be in the future.' });
+      return;
+    }
+    if (paymentMethod !== 'credit_card' && !['1000', '1100', '1200'].includes(paymentAccountCode)) {
+      res.status(400).json({ success: false, error: 'Select the actual bank, petty-cash, or emergency-fund account for this payment.' });
+      return;
+    }
+  }
   const newExpense = {
     id: `exp_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
     slug: slugifyFinanceRecord(exp.slug || ((exp.description || exp.category || 'expense') + '-' + (exp.date || ''))),
@@ -3584,7 +3610,13 @@ apiRouter.post('/finance/expenses', requireAuth, requirePermission('canManageInv
     projectId: cleanText(exp.projectId, 100) || undefined,
     vendorId: vendorPaymentMetadata?.vendorId,
     vendorContractId: vendorPaymentMetadata?.contractId,
-    metadata: vendorPaymentMetadata ? { vendorPayment: vendorPaymentMetadata } : undefined,
+    metadata: {
+      ...(vendorPaymentMetadata ? { vendorPayment: vendorPaymentMetadata } : {}),
+      paymentStatus,
+      paidDate: paymentStatus === 'paid' ? paidDate : undefined,
+      paymentMethod,
+      paymentAccountCode: paymentStatus === 'paid' && paymentMethod !== 'credit_card' ? paymentAccountCode : undefined
+    },
     recurringInterval: cleanText(exp.recurringInterval || 'none', 40),
     recordedBy: req.user!.name || req.user!.username,
     recordedByUserId: req.user!.id,
@@ -3853,20 +3885,22 @@ apiRouter.post('/finance/workbook/periods/:period/close', requireAuth, requirePe
 apiRouter.post('/finance/workbook/journal-drafts/sync', requireAuth, requirePermission('canManageInvoices'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   if (!ensureFinanceWorkbookPostgres(res)) return;
   try {
-    const [invoices, expenses, transfers, vendorBills, vendorBillPayments, existingJournals] = await Promise.all([
+    const [invoices, expenses, transfers, vendorBills, vendorBillPayments, existingJournals, chartAccounts] = await Promise.all([
       postgresInvoiceRepository.list(),
       postgresExpenseRepository.list(),
       postgresFinanceWorkbookRepository.list('cash-bank-transaction'),
       postgresFinanceWorkbookRepository.list('vendor-bill'),
       postgresFinanceWorkbookRepository.list('vendor-bill-payment'),
-      postgresFinanceWorkbookRepository.list('journal-entry')
+      postgresFinanceWorkbookRepository.list('journal-entry'),
+      postgresFinanceWorkbookRepository.list('chart-of-accounts')
     ]);
     const plan = buildFinanceSourceJournalDrafts(
       invoices as any[],
       expenses as any[],
       transfers.map((record) => ({ id: record.id, status: record.status, payload: record.payload })),
       vendorBills.map((record) => ({ id: record.id, recordKey: record.recordKey, projectId: record.projectId, payload: record.payload })),
-      vendorBillPayments.map((record) => ({ id: record.id, status: record.status, payload: record.payload }))
+      vendorBillPayments.map((record) => ({ id: record.id, status: record.status, payload: record.payload })),
+      chartAccounts.map((record) => ({ code: String(record.payload.code || record.recordKey), name: String(record.payload.name || ''), accountType: String(record.payload.accountType || ''), active: record.payload.active !== false }))
     );
     const existingSourceRecords = new Map<string, (typeof existingJournals)[number]>();
     for (const record of existingJournals) {
