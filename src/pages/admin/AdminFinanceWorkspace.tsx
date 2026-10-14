@@ -779,7 +779,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
         ? (expense as any).payments as Array<Record<string, unknown>>
         : Array.isArray(metadata.payments) ? metadata.payments as Array<Record<string, unknown>> : [];
       const paymentStatus = String(expense.paymentStatus || metadata.paymentStatus || '').toLowerCase();
-      const paymentRows = savedPayments.length > 0
+      const paymentRows: Array<Record<string, unknown>> = savedPayments.length > 0
         ? savedPayments
         : paymentStatus === 'paid'
           ? [{
