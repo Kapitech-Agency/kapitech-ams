@@ -64,11 +64,11 @@ test('Journal source sync is permission-gated, draft-only and duplicate-safe', a
   assert.match(repository, /key = sourceType && sourceId \? 'source:' \+ sourceType \+ ':' \+ sourceId : reference/);
   assert.match(mapping, /buildFinanceSourceJournalDrafts/);
   assert.match(mapping, /No draft returned by this function is approved or posted/);
-  assert.match(mapping, /provisional workbook default/);
-  assert.match(mapping, /debitCode: '1000', creditCode: '1300'/);
+  assert.match(mapping, /the system will not assume Cash & Bank/);
+  assert.match(mapping, /debitCode, creditCode: '1300'/);
   assert.match(mapping, /sourceType: 'invoice-issued'/);
   assert.match(mapping, /sourceType: 'vendor-bill-payment'/);
-  assert.match(repository, /invoice-issued.*invoice-payment.*expense.*cash-bank-transfer.*vendor-bill-payment/);
+  assert.match(repository, /invoice-issued.*invoice-payment.*expense.*expense-payment.*cash-bank-transfer.*vendor-bill-payment/);
   assert.match(routes, /postgresFinanceWorkbookRepository\.list\('vendor-bill-payment'\)/);
   const client = await read('src/lib/apiClient.ts');
   assert.match(client, /workbookSyncJournalDrafts:/);
@@ -119,7 +119,8 @@ test('Client receipts and vendor payments require their recognized source journa
   assert.match(repository, /relatedSourceId/);
   assert.match(repository, /Cannot post this client receipt until the linked invoice-issued journal is posted/);
   assert.match(repository, /Cannot post this vendor payment until the linked vendor-bill-issued journal is posted/);
-  assert.match(repository, /invoice-issued.*invoice-payment.*expense.*cash-bank-transfer.*vendor-bill-issued.*vendor-bill-payment/);
+  assert.match(repository, /Cannot post this expense payment until the linked expense accrual is posted/);
+  assert.match(repository, /invoice-issued.*invoice-payment.*expense.*expense-payment.*cash-bank-transfer.*vendor-bill-issued.*vendor-bill-payment/);
   assert.match(mapping, /Posting is blocked until the linked invoice-issued journal is posted/);
   assert.match(mapping, /Posting is blocked until the linked vendor-bill-issued journal is posted/);
   assert.match(ui, /relatedSourceId: editor\.record\.payload\.relatedSourceId/);
