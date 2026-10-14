@@ -1279,7 +1279,10 @@ export const AdminFinanceWorkspace: React.FC = () => {
 
   const renderRecentActivity = (range?: { startDate: string; endDate: string; label: string }) => {
     const activity = range
-      ? cashMovements.filter((entry) => entry.date >= range.startDate && entry.date <= range.endDate)
+      ? cashMovements.filter((entry) => {
+          const date = String(entry.date || '').slice(0, 10);
+          return date >= range.startDate && date <= range.endDate;
+        })
       : cashMovements;
     const rows: TableRow[] = activity.slice(0, 8).map((entry) => ({
       id: entry.id,
@@ -1319,12 +1322,15 @@ export const AdminFinanceWorkspace: React.FC = () => {
     const dashboardPeriodLabel = formatReportingPeriodLabel(reportPeriodValue, reportPeriodMode, locale);
     const invoicesInPeriod = dashboardRange
       ? idrInvoices.filter((invoice) => {
-          const date = getInvoiceDate(invoice);
+          const date = String(getInvoiceDate(invoice) || '').slice(0, 10);
           return date >= dashboardRange.startDate && date <= dashboardRange.endDate;
         })
       : [];
     const movementsInPeriod = dashboardRange
-      ? cashMovements.filter((movement) => movement.currency === 'IDR' && movement.date >= dashboardRange.startDate && movement.date <= dashboardRange.endDate)
+      ? cashMovements.filter((movement) => {
+          const date = String(movement.date || '').slice(0, 10);
+          return movement.currency === 'IDR' && date >= dashboardRange.startDate && date <= dashboardRange.endDate;
+        })
       : [];
     const billedInPeriod = sumAmounts<AgencyInvoice>(invoicesInPeriod, (invoice) => Number(invoice.total) || 0);
     const cashInThisPeriod = sumAmounts<CashMovement>(movementsInPeriod, (movement) => movement.cashIn);
