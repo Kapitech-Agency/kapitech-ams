@@ -1155,7 +1155,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
     }
   };
 
-  const closeWorkbookPeriod = async (): Promise<boolean> => {
+  const closeWorkbookPeriod = async (period = selectedClosingMonth): Promise<boolean> => {
     if (registerSaving) return false;
     if (!canApproveFinanceRecords) {
       setRegisterActionError('You do not have permission to close Finance periods.');
@@ -1164,7 +1164,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
     setRegisterSaving(true);
     setRegisterActionError(null);
     try {
-      const response = await api.finance.workbookClosePeriod(selectedClosingMonth);
+      const response = await api.finance.workbookClosePeriod(period);
       if (!response.success) throw new Error(response.error || 'The period could not be closed.');
       await loadData(true);
       return true;
@@ -1173,6 +1173,46 @@ export const AdminFinanceWorkspace: React.FC = () => {
       return false;
     } finally {
       setRegisterSaving(false);
+    }
+  };
+
+  const archiveFinanceRecord = async (type: string, record: WorkbookRecord): Promise<boolean> => {
+    if (registerSaving) return false;
+    if (!canManageFinanceRecords) {
+      setRegisterActionError('You do not have permission to archive Finance records.');
+      return false;
+    }
+    setRegisterSaving(true);
+    setRegisterActionError(null);
+    try {
+      const response = await api.finance.workbookDelete(type, record.id, record.version);
+      if (!response.success) throw new Error(response.error || 'The draft could not be archived.');
+      await loadData(true);
+      return true;
+    } catch (error) {
+      setRegisterActionError(error instanceof Error ? error.message : 'The draft could not be archived.');
+      return false;
+    } finally {
+      setRegisterSaving(false);
+    }
+  };
+
+  const confirmPendingFinanceAction = async () => {
+    const pending = pendingConfirmation;
+    if (!pending || registerSaving) return;
+    if (pending.kind === 'discard-editor') {
+      setEditor(null);
+      setRegisterEditorDirty(false);
+      setPendingConfirmation(null);
+      return;
+    }
+    try {
+      if (pending.kind === 'approve') await approveWorkbookRecord(pending.type, pending.record, 'approve');
+      else if (pending.kind === 'post') await approveWorkbookRecord(pending.type, pending.record, 'post');
+      else if (pending.kind === 'archive') await archiveFinanceRecord(pending.type, pending.record);
+      else if (pending.kind === 'close-period') await closeWorkbookPeriod(pending.period);
+    } finally {
+      setPendingConfirmation(null);
     }
   };
 
@@ -2559,6 +2599,57 @@ export const AdminFinanceWorkspace: React.FC = () => {
       </div>
       {renderRegisterEditor()}
       {renderVendorContractEditor()}
+      <Modal
+        open={Boolean(pendingConfirmation)}
+        onClose={() => { if (!registerSaving) setPendingConfirmation(null); }}
+        title={pendingConfirmation?.kind === 'discard-editor'
+          ? 'Discard unsaved changes?'
+          : pendingConfirmation?.kind === 'close-period'
+            ? 'Close Finance period?'
+            : pendingConfirmation?.kind === 'archive'
+              ? 'Archive journal draft?'
+              : pendingConfirmation?.kind === 'post'
+                ? (pendingConfirmation.type === 'journal-entry' ? 'Post journal entry?' : 'Post petty-cash voucher?')
+                : 'Approve Finance record?'}
+        description={pendingConfirmation?.kind === 'discard-editor'
+          ? 'Changes in this form have not been saved. Discarding them cannot be undone.'
+          : pendingConfirmation?.kind === 'close-period'
+            ? 'Close ' + pendingConfirmation.period + ' after confirming the source records, bank reconciliation, receivables, payables, journals, reports and management sign-off. A closed period blocks further Finance workbook changes.'
+            : pendingConfirmation?.kind === 'archive'
+              ? 'Archive this unposted draft so it no longer blocks review or period closing. Posted journal entries cannot be archived.'
+              : pendingConfirmation?.kind === 'post'
+                ? (pendingConfirmation.type === 'journal-entry'
+                  ? 'This posts the journal to the ledger. Posted entries are immutable; use an approved reversal or adjusting journal to correct an error.'
+                  : 'Posting makes this voucher affect the approved petty-cash running balance. Confirm the supporting receipt and authorization.')
+                : 'Confirm that the supporting documents and accounting treatment have been reviewed by an authorized user.'}
+        busy={registerSaving}
+        closeOnOutsideClick={false}
+        slug="finance-action-confirmation"
+        footer={
+          <div className="flex items-center justify-end gap-2">
+            <Button type="button" variant="secondary" disabled={registerSaving} onClick={() => setPendingConfirmation(null)}>
+              {pendingConfirmation?.kind === 'discard-editor' ? 'Keep editing' : 'Cancel'}
+            </Button>
+            <Button type="button" disabled={registerSaving} loading={registerSaving} onClick={() => void confirmPendingFinanceAction()}>
+              {pendingConfirmation?.kind === 'discard-editor'
+                ? 'Discard changes'
+                : pendingConfirmation?.kind === 'close-period'
+                  ? 'Confirm close'
+                  : pendingConfirmation?.kind === 'archive'
+                    ? 'Archive draft'
+                    : pendingConfirmation?.kind === 'post'
+                      ? 'Confirm post'
+                      : 'Confirm approval'}
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-2 text-sm leading-5 text-muted">
+          {pendingConfirmation?.kind === 'close-period' && <p>Any outstanding journal draft, missing control, unbalanced posted journal, or unresolved source validation will prevent the server from closing this period.</p>}
+          {pendingConfirmation?.kind === 'archive' && <p>Archive is an audit-preserving action. It does not delete the journal history.</p>}
+          {pendingConfirmation?.kind === 'post' && pendingConfirmation.type === 'journal-entry' && <p>Maker-checker is enforced by the server. The creator cannot post their own journal.</p>}
+        </div>
+      </Modal>
     </AdminPageShell>
   );
   return localizeFinanceValue(financePage, language) as React.ReactElement;
