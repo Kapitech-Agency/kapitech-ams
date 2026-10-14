@@ -279,7 +279,7 @@ test('Annual Summary includes years represented only by Cash & Bank records', as
   const end = workspace.indexOf('\n      default:', start);
   assert.ok(start >= 0 && end > start);
   const annual = workspace.slice(start, end);
-  assert.match(annual, /cashMovements\.map\(\(movement\) => getYearKey\(movement\.date\)\)/);
+  assert.match(annual, /const yearCollections = cashMovements\.filter\(\(movement\) => movement\.currency === 'IDR'[\s\S]*?movement\.source !== 'Internal transfer'[\s\S]*?getYearKey\(movement\.date\) === selectedYear\)/);
 });
 
 test('Project Allocation explains defaults and displays the saved percentage per record', async () => {
