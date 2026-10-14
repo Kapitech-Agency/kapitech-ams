@@ -605,11 +605,20 @@ export function buildFinanceSourceJournalDrafts(
       continue;
     }
     const method = String(payload.method || '').trim().toLowerCase();
-    const creditCode = method === 'bank_transfer' ? '1000' : method === 'cash' ? '1100' : method === 'credit_card' && accountTypes.get('2200') === 'Liability' ? '2200' : '';
-    if (!creditCode) {
+    const creditCode = method === 'bank_transfer' ? '1000'
+      : method === 'cash' ? '1100'
+        : method === 'credit_card' ? '2200'
+          : method === 'other' ? String(payload.settlementAccountCode || '') : '';
+    const settlementType = accountTypes.get(creditCode);
+    const allowedOtherSettlement = ['1000','1100','1200','2200'].includes(creditCode);
+    if (!creditCode || accountTypes.get(creditCode) === '__inactive__' || !settlementType || (
+      method === 'credit_card' ? settlementType !== 'Liability' :
+        method === 'other' ? !allowedOtherSettlement || !['Asset','Liability'].includes(settlementType) :
+          !CASH_ACCOUNT_CODES.has(creditCode) || settlementType !== 'Asset'
+    )) {
       skip({
         sourceType: 'vendor-bill-payment', sourceId, date: paidDate, reference, description, amount,
-        reason: 'The payment method has no active settlement-account mapping. Use bank transfer or cash, or activate Credit Card Payable (2200) for card payments.'
+        reason: 'The payment method has no active settlement-account mapping. For Other, select the actual account; unsupported or inactive accounts cannot be journalized.'
       });
       continue;
     }
