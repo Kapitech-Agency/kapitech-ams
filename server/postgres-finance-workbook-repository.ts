@@ -360,6 +360,21 @@ export class PostgresFinanceWorkbookRepository {
     }
     if(!['Asset','Liability','Equity'].includes(accountType)) throw new FinanceWorkbookValidationError('Opening balance account '+code+' must be an active Asset, Liability or Equity account.');
   }
+  private async ensurePostedSourceImmutable(client:any,type:FinanceWorkbookRecordType,id:string,current:Record<string,any>,next:Record<string,any>):Promise<void>{
+    const sourceMap:Partial<Record<FinanceWorkbookRecordType,{sourceType:string;fields:string[]}>>={
+      'cash-bank-opening':{sourceType:'cash-bank-opening',fields:['accountCode','openingDate','openingBalance']},
+      'balance-sheet-opening':{sourceType:'balance-sheet-opening',fields:['accountCode','asOfDate','openingAmount','side']},
+      'cash-bank-transaction':{sourceType:'cash-bank-transfer',fields:['transactionKind','accountCode','counterpartAccountCode','direction','date','amount','reference','description','projectId']},
+      'vendor-bill':{sourceType:'vendor-bill-issued',fields:['billNo','vendorId','vendorName','projectId','billDate','total','currency','expenseAccountCode']},
+      'vendor-bill-payment':{sourceType:'vendor-bill-payment',fields:['billId','paidDate','amount','method','reference','installmentNumber']}
+    };
+    const rule=sourceMap[type];
+    if(!rule) return;
+    const posted=await client.query("SELECT id FROM finance_workbook_records WHERE record_type='journal-entry' AND status='posted' AND archived_at IS NULL AND payload->>'sourceType'=$1 AND payload->>'sourceId'=$2 LIMIT 1 FOR SHARE",[rule.sourceType,id]);
+    if(!posted.rows[0]) return;
+    const changed=rule.fields.filter((key)=>JSON.stringify(current[key]??null)!==JSON.stringify(next[key]??null));
+    if(changed.length) throw new FinanceWorkbookConflictError('This Finance source is linked to a posted General Journal entry. Accounting fields cannot be changed ('+changed.join(', ')+'); create and approve a reversal or adjustment journal instead.');
+  }
   async get(type: FinanceWorkbookRecordType,id:string):Promise<FinanceWorkbookRecord|null> {
     const result=await getPostgresPool().query<Row>('SELECT * FROM finance_workbook_records WHERE record_type=$1 AND id=$2 AND archived_at IS NULL LIMIT 1',[type,id]);
     return result.rows[0]?mapRow(result.rows[0]):null;
@@ -432,6 +447,7 @@ export class PostgresFinanceWorkbookRepository {
     return withPostgresTransaction(async client=>{
       await this.ensurePeriodOpen(client,current.periodKey);
       await this.ensurePeriodOpen(client,n.period);
+      await this.ensurePostedSourceImmutable(client,type,id,current.payload,n.payload);
       if(type==='journal-entry') await this.ensureJournalAccountsActive(client,n.payload);
       if(type==='balance-sheet-opening') await this.ensureOpeningBalanceAccountActive(client,n.payload);
       if(type==='chart-of-accounts' && (n.payload.active===false || String(n.payload.accountType||'')!==String(current.payload.accountType||''))) {
