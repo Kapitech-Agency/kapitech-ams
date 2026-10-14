@@ -3978,7 +3978,7 @@ apiRouter.post('/finance/workbook/periods/:period/close', requireAuth, requirePe
   try {
     const period = String(req.params.period || '').slice(0, 7);
     const sourcePreflight = async (): Promise<string[]> => {
-      const [invoices, expenses, transfers, vendorBills, vendorBillPayments, existingJournals, chartAccounts, cashBankOpenings, balanceSheetOpenings] = await Promise.all([
+      const [invoices, expenses, transfers, vendorBills, vendorBillPayments, existingJournals, chartAccounts, cashBankOpenings, balanceSheetOpenings, cashReconciliations] = await Promise.all([
         postgresInvoiceRepository.list(),
         postgresExpenseRepository.list(),
         postgresFinanceWorkbookRepository.list('cash-bank-transaction'),
@@ -3987,7 +3987,8 @@ apiRouter.post('/finance/workbook/periods/:period/close', requireAuth, requirePe
         postgresFinanceWorkbookRepository.list('journal-entry'),
         postgresFinanceWorkbookRepository.list('chart-of-accounts'),
         postgresFinanceWorkbookRepository.list('cash-bank-opening'),
-        postgresFinanceWorkbookRepository.list('balance-sheet-opening')
+        postgresFinanceWorkbookRepository.list('balance-sheet-opening'),
+        postgresFinanceWorkbookRepository.list('cash-reconciliation')
       ]);
       const plan = buildFinanceSourceJournalDrafts(
         invoices as any[],
@@ -4039,6 +4040,61 @@ apiRouter.post('/finance/workbook/periods/:period/close', requireAuth, requirePe
         if (sourcePeriod && sourcePeriod !== period) continue;
         issues.push((skipped.reference || skipped.description || skipped.sourceId) + ': ' + skipped.reason);
       }
+      const monthEnd = new Date(Date.UTC(Number(period.slice(0,4)),Number(period.slice(5,7)),0)).toISOString().slice(0,10);
+      const reconciliationByAccount = new Map<string,(typeof cashReconciliations)[number]>();
+      for (const record of cashReconciliations) {
+        if (String(record.payload.reconciliationMonth || record.periodKey || '') !== period) continue;
+        reconciliationByAccount.set(String(record.payload.accountCode || ''),record);
+      }
+      const reconcilable = new Set(['1000','1010','1100','1200']);
+      const requiredAccounts = new Set<string>(['1000']);
+      const posted = existingJournals.filter((record) => record.status === 'posted');
+      for (const journal of posted) {
+        const date = String(journal.payload.date || '').slice(0,10);
+        if (date.slice(0,7) !== period) continue;
+        const journalLines = Array.isArray(journal.payload.lines) ? journal.payload.lines as Array<Record<string,any>> : [];
+        for (const line of journalLines) {
+          const code = String(line.accountCode || '');
+          if (reconcilable.has(code)) requiredAccounts.add(code);
+        }
+      }
+      const postedBalanceAsOf = (accountCode: string, asOfDate: string) => {
+        let balance = 0;
+        for (const journal of posted) {
+          const date = String(journal.payload.date || '').slice(0,10);
+          if (!date || date > asOfDate) continue;
+          const journalLines = Array.isArray(journal.payload.lines) ? journal.payload.lines as Array<Record<string,any>> : [];
+          for (const line of journalLines) if (String(line.accountCode || '') === accountCode) {
+            balance += (Number(line.debit) || 0) - (Number(line.credit) || 0);
+          }
+        }
+        return Math.round(balance*100)/100;
+      };
+      for (const code of reconcilable) if (Math.abs(postedBalanceAsOf(code,monthEnd)) > 0.01) requiredAccounts.add(code);
+      if (!cashBankOpenings.some((record) => String(record.payload.accountCode || '') === '1000')) {
+        issues.push('Cash & Bank opening balance (account 1000) is missing; record an opening balance before month-end reconciliation.');
+      }
+      for (const code of requiredAccounts) {
+        const record = reconciliationByAccount.get(code);
+        const accountName = code === '1000' ? 'Cash & Bank' : code === '1010' ? 'Card Settlement Clearing' : code === '1100' ? 'Petty Cash Reserve' : code === '1200' ? 'Emergency Fund' : code;
+        if (!record) {
+          issues.push(accountName+' ('+code+') has no month-end statement/count reconciliation for '+period+'.');
+          continue;
+        }
+        const statementDate = String(record.payload.statementDate || '');
+        if (statementDate !== monthEnd) {
+          issues.push(accountName+' ('+code+') reconciliation must be dated '+monthEnd+'.');
+          continue;
+        }
+        const statementReference = String(record.payload.statementReference || '').trim();
+        if (!statementReference) issues.push(accountName+' ('+code+') reconciliation is missing its statement/count reference.');
+        const statementBalance = Number(record.payload.statementBalance);
+        const ledgerBalance = postedBalanceAsOf(code,statementDate);
+        const difference = Math.round((ledgerBalance-statementBalance)*100)/100;
+        if (Math.abs(difference) > 0.01) {
+          issues.push(accountName+' ('+code+') differs from the posted GL by '+difference.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})+' IDR. Resolve outstanding transactions or correct the reconciliation.');
+        }
+      }
       return [...new Set(issues)];
     };
     const record = await postgresFinanceWorkbookRepository.closePeriod(
@@ -4056,7 +4112,7 @@ apiRouter.post('/finance/workbook/periods/:period/close', requireAuth, requirePe
 apiRouter.post('/finance/workbook/journal-drafts/sync', requireAuth, requirePermission('canManageInvoices'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   if (!ensureFinanceWorkbookPostgres(res)) return;
   try {
-    const [invoices, expenses, transfers, vendorBills, vendorBillPayments, existingJournals, chartAccounts, cashBankOpenings, balanceSheetOpenings] = await Promise.all([
+    const [invoices, expenses, transfers, vendorBills, vendorBillPayments, existingJournals, chartAccounts, cashBankOpenings, balanceSheetOpenings, cashReconciliations] = await Promise.all([
       postgresInvoiceRepository.list(),
       postgresExpenseRepository.list(),
       postgresFinanceWorkbookRepository.list('cash-bank-transaction'),
@@ -4065,7 +4121,8 @@ apiRouter.post('/finance/workbook/journal-drafts/sync', requireAuth, requirePerm
       postgresFinanceWorkbookRepository.list('journal-entry'),
       postgresFinanceWorkbookRepository.list('chart-of-accounts'),
       postgresFinanceWorkbookRepository.list('cash-bank-opening'),
-      postgresFinanceWorkbookRepository.list('balance-sheet-opening')
+      postgresFinanceWorkbookRepository.list('balance-sheet-opening'),
+      postgresFinanceWorkbookRepository.list('cash-reconciliation')
     ]);
     const plan = buildFinanceSourceJournalDrafts(
       invoices as any[],
