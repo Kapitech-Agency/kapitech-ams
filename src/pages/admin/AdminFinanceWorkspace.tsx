@@ -1208,7 +1208,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
     }
     try {
       if (pending.kind === 'approve') await approveWorkbookRecord(pending.type, pending.record, 'approve');
-      else if (pending.kind === 'post') await approveWorkbookRecord(pending.type, pending.record, 'post');
+      else if (pending.kind === 'post') await approveWorkbookRecord(pending.type, pending.record, pending.type === 'journal-entry' ? 'approve' : 'post');
       else if (pending.kind === 'archive') await archiveFinanceRecord(pending.type, pending.record);
       else if (pending.kind === 'close-period') await closeWorkbookPeriod(pending.period);
     } finally {
