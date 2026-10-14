@@ -28,6 +28,21 @@ test('Finance settlement and tax accounts are added by a forward-only migration'
   assert.ok(!sql.includes('DELETE FROM finance_workbook_records'));
 });
 
+test('Posted source journals lock accounting fields on their source records', async () => {
+  const repository = await read('server/postgres-finance-workbook-repository.ts');
+  const invoices = await read('server/postgres-invoice-repository.ts');
+  const routes = await read('server/routes.ts');
+
+  assert.match(repository, /ensurePostedSourceImmutable/);
+  assert.match(repository, /'cash-bank-opening':\{sourceType:'cash-bank-opening',fields:\['accountCode','openingDate','openingBalance'\]\}/);
+  assert.match(repository, /'balance-sheet-opening':\{sourceType:'balance-sheet-opening',fields:\['accountCode','asOfDate','openingAmount','side'\]\}/);
+  assert.match(repository, /'vendor-bill':\{sourceType:'vendor-bill-issued'/);
+  assert.match(repository, /'vendor-bill-payment':\{sourceType:'vendor-bill-payment'/);
+  assert.match(repository, /await this\.ensurePostedSourceImmutable\(client,type,id,current\.payload,n\.payload\)/);
+  assert.match(invoices, /INVOICE_POSTED_LEDGER_REVERSAL_REQUIRED/);
+  assert.match(routes, /Accounting fields are locked; create and approve a reversal or adjustment journal first/);
+});
+
 test('All supplementary Finance register routes have explicit auth and permissions', async () => {
   const routes = await read('server/routes.ts');
   const fragments = [
