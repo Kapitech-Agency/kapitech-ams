@@ -346,6 +346,16 @@ export class PostgresFinanceWorkbookRepository {
     const invalid=codes.filter((code)=>!accounts.has(code)||accounts.get(code)?.active!==true);
     if(invalid.length) throw new FinanceWorkbookValidationError('Journal account code(s) are missing or inactive in Chart of Accounts: '+invalid.join(', ')+'. Add/activate the account before saving the journal.');
   }
+  private async ensureVendorBillExpenseAccountActive(client:any,payload:Record<string,any>):Promise<void>{
+    const code=String(payload.expenseAccountCode|| (payload.projectId?'5100':'')).trim();
+    if(!/^\d{4}$/.test(code)) throw new FinanceWorkbookValidationError('Vendor bills require an active Expense account classification.');
+    const standard=EXCEL_CHART_OF_ACCOUNTS.find((account)=>account.code===code&&account.active);
+    const result=await client.query("SELECT payload FROM finance_workbook_records WHERE record_type='chart-of-accounts' AND record_key=$1 AND archived_at IS NULL LIMIT 1",[code]);
+    const persisted=result.rows[0]?obj(result.rows[0].payload):{};
+    if(result.rows[0]&&persisted.active===false) throw new FinanceWorkbookValidationError('Vendor bill Expense account '+code+' is inactive.');
+    const accountType=result.rows[0]?String(persisted.accountType||''):String(standard?.type||'');
+    if(accountType!=='Expense') throw new FinanceWorkbookValidationError('Vendor bill account '+code+' must be an active Expense account.');
+  }
   private async ensureOpeningBalanceAccountActive(client:any,payload:Record<string,any>):Promise<void>{
     const code=String(payload.accountCode||'').trim();
     if(!/^\d{4}$/.test(code)||['1000','1100','1200','3200'].includes(code)) throw new FinanceWorkbookValidationError('Opening balance must use an eligible non-cash Asset, Liability or Equity account.');
@@ -382,6 +392,7 @@ export class PostgresFinanceWorkbookRepository {
     return withPostgresTransaction(async client=>{
       await this.ensurePeriodOpen(client,n.period);
       if(type==='journal-entry') await this.ensureJournalAccountsActive(client,n.payload);
+      if(type==='vendor-bill') await this.ensureVendorBillExpenseAccountActive(client,n.payload);
       if(type==='balance-sheet-opening') await this.ensureOpeningBalanceAccountActive(client,n.payload);
       if(type==='vendor-bill-payment'){
         const bill=await client.query<Row>("SELECT * FROM finance_workbook_records WHERE record_type='vendor-bill' AND id=$1 AND archived_at IS NULL FOR UPDATE",[String(n.payload.billId)]);
@@ -445,6 +456,7 @@ export class PostgresFinanceWorkbookRepository {
       await this.ensurePeriodOpen(client,n.period);
       await this.ensurePostedSourceImmutable(client,type,id,current.payload,n.payload);
       if(type==='journal-entry') await this.ensureJournalAccountsActive(client,n.payload);
+      if(type==='vendor-bill') await this.ensureVendorBillExpenseAccountActive(client,n.payload);
       if(type==='balance-sheet-opening') await this.ensureOpeningBalanceAccountActive(client,n.payload);
       if(type==='chart-of-accounts' && (n.payload.active===false || String(n.payload.accountType||'')!==String(current.payload.accountType||''))) {
         const code=String(n.payload.code||current.recordKey||'');
