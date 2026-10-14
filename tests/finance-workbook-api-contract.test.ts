@@ -15,6 +15,19 @@ test('Excel-aligned supplementary Finance registers use a persisted PostgreSQL s
   assert.equal((sql.match(/\('coa-\d{4}', 'chart-of-accounts'/g) || []).length, 17);
 });
 
+test('Finance settlement and tax accounts are added by a forward-only migration', async () => {
+  const sql = await read('db/postgres/053_finance_settlement_tax_accounts.sql');
+  assert.match(sql, /'coa-1010', 'chart-of-accounts', '1010'/);
+  assert.match(sql, /'coa-2100', 'chart-of-accounts', '2100'/);
+  assert.match(sql, /'coa-2200', 'chart-of-accounts', '2200'/);
+  assert.match(sql, /Card Settlement Clearing/);
+  assert.match(sql, /Tax Payable/);
+  assert.match(sql, /Credit Card Payable/);
+  assert.match(sql, /ON CONFLICT \(record_type, record_key\) DO NOTHING/);
+  assert.ok(!sql.includes('DROP TABLE'));
+  assert.ok(!sql.includes('DELETE FROM finance_workbook_records'));
+});
+
 test('All supplementary Finance register routes have explicit auth and permissions', async () => {
   const routes = await read('server/routes.ts');
   const fragments = [
