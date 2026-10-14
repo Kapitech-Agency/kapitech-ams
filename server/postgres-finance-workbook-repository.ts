@@ -88,7 +88,7 @@ function normalise(type: FinanceWorkbookRecordType, raw: unknown, approval = fal
       const kind = choice(v.transactionKind,['manual','bank-to-petty-cash','petty-cash-to-bank','bank-to-emergency-fund','emergency-fund-to-bank'],'Transaction kind','manual');
       const accountCode = choice(v.accountCode,['1000','1100','1200'],'Account code','1000');
       const counterpart = kind === 'manual' ? txt(v.counterpartAccountCode,4) : choice(v.counterpartAccountCode,['1000','1100','1200'],'Counterpart account');
-      if (kind === 'manual' && !/^\\d{4}$/.test(counterpart)) throw new FinanceWorkbookValidationError('Manual cash adjustments require a four-digit counterpart account.');
+      if (kind === 'manual' && !/^\d{4}$/.test(counterpart)) throw new FinanceWorkbookValidationError('Manual cash adjustments require a four-digit counterpart account.');
       if (counterpart && counterpart === accountCode) throw new FinanceWorkbookValidationError('Cash movements must use two different accounts.');
       const direction = choice(v.direction,['in','out'],'Direction');
       if (kind !== 'manual') {
@@ -126,7 +126,7 @@ function normalise(type: FinanceWorkbookRecordType, raw: unknown, approval = fal
       const currency = (txt(v.currency,3)||'IDR').toUpperCase();
       if (!/^[A-Z]{3}$/.test(currency)) throw new FinanceWorkbookValidationError('Currency must be a three-letter ISO currency code.');
       const expenseAccountCode = txt(v.expenseAccountCode,4) || (project ? '5100' : '');
-      if (expenseAccountCode && !/^\\d{4}$/.test(expenseAccountCode)) throw new FinanceWorkbookValidationError('Vendor bill expense account must be a four-digit account code.');
+      if (expenseAccountCode && !/^\d{4}$/.test(expenseAccountCode)) throw new FinanceWorkbookValidationError('Vendor bill expense account must be a four-digit account code.');
       if (!project && !expenseAccountCode) throw new FinanceWorkbookValidationError('An expense account is required for vendor bills that are not linked to an AMS project.');
       const installmentDueDates = [date(v.installment1DueDate,'Payment 1 due date',true),date(v.installment2DueDate,'Payment 2 due date',true),date(v.installment3DueDate,'Payment 3 due date',true)];
       if (installmentDueDates.some((due) => due && due < billDate)) throw new FinanceWorkbookValidationError('Installment due dates cannot precede the vendor bill date.');
