@@ -2088,32 +2088,49 @@ export const AdminFinanceWorkspace: React.FC = () => {
       }
       case 'project-finance': {
         const financeRecords=getRegisterRecords('project-finance');
+        const vendorBills=getRegisterRecords('vendor-bill');
+        const vendorBillPayments=getRegisterRecords('vendor-bill-payment');
+        const periodLabel=formatReportingPeriodLabel(reportPeriodValue,reportPeriodMode,locale);
         const rows=projects.filter((project)=>matching([project.name,project.clientCompany,project.clientName,project.status])).map((project)=>{
           const record=getProjectFinanceRecord(project);
-          const projectInvoices=reportInvoices.filter((invoice)=>invoice.projectId===project.id);
-          const projectExpenses=expenses.filter((expense)=>expense.projectId===project.id);
+          const projectInvoices=reportInvoices.filter((invoice)=>invoice.projectId===project.id&&matchesDate(invoice.issueDate||invoice.createdAt));
+          const projectExpenses=expenses.filter((expense)=>expense.projectId===project.id&&matchesDate(expense.date));
+          const projectBills=vendorBills.filter((bill)=>
+            String(bill.projectId||bill.payload.projectId||'')===project.id ||
+            String(bill.payload.projectName||'').trim().toLowerCase()===String(project.name||'').trim().toLowerCase()
+          );
           const payload=record?.payload||{};
-          const billed=sumAmounts<AgencyInvoice>(projectInvoices,(invoice)=>Number(invoice.total)||0);
-          const collected=sumAmounts<AgencyInvoice>(projectInvoices,getInvoiceCollected);
-          const costs=sumAmounts<AgencyExpense>(projectExpenses,(expense)=>Number(expense.amount)||0);
-          const contractValue=record?Number(payload.contractValue)||0:null;
-          const billedIDR=sumAmounts<AgencyInvoice>(projectInvoices.filter((invoice)=>(invoice.currency||'IDR')==='IDR'),(invoice)=>Number(invoice.total)||0);
-          const collectedIDR=sumAmounts<AgencyInvoice>(projectInvoices.filter((invoice)=>(invoice.currency||'IDR')==='IDR'),getInvoiceCollected);
+          const billedIDR=sumAmounts<AgencyInvoice>(projectInvoices.filter((invoice)=>(invoice.currency||'IDR')==='IDR'),(invoice)=>Math.max(0,(Number(invoice.total)||0)-(Number(invoice.taxAmount)||0)));
+          const collectedIDR=sumAmounts(projectInvoices.filter((invoice)=>(invoice.currency||'IDR')==='IDR').flatMap((invoice)=>{
+            const paymentRows=getPaymentRows(invoice);
+            return paymentRows.filter((payment)=>matchesDate(payment.date)).map((payment)=>({amount:Number(payment.amount)||0}));
+          }),(payment)=>payment.amount);
           const costsIDR=sumAmounts<AgencyExpense>(projectExpenses.filter((expense)=>String((expense as any).currency||'IDR')==='IDR'),(expense)=>Number(expense.amount)||0);
+          const vendorCommitment=record?Number(payload.vendorCommitment)||0:null;
+          const otherObligations=record?Number(payload.otherObligations)||0:null;
+          const apOutstandingIDR=sumAmounts(projectBills.filter((bill)=>String(bill.payload.currency||'IDR')==='IDR'),(bill)=>{
+            const linkedPayments=vendorBillPayments.filter((payment)=>String(payment.payload.billId||'')===bill.id);
+            const paid=sumAmounts(linkedPayments,(payment)=>Number(payment.payload.amount)||0);
+            return Math.max(0,(Number(bill.payload.total)||0)-paid);
+          });
+          const contractValue=record?Number(payload.contractValue)||0:null;
           return {id:project.id,cells:[
             projectLabel(project),project.clientCompany||project.clientName||'—',
             contractValue===null?<AdminStatusBadge tone="warning">Setup required</AdminStatusBadge>:formatMoney(contractValue),
-            formatMoney(billedIDR),formatMoney(collectedIDR),formatMoney(costsIDR),<StatusBadge value={project.status}/>,
+            vendorCommitment===null?'—':formatMoney(vendorCommitment),
+            otherObligations===null?'—':formatMoney(otherObligations),
+            formatMoney(billedIDR),formatMoney(collectedIDR),formatMoney(costsIDR),formatMoney(apOutstandingIDR),
+            <StatusBadge value={project.status}/>,
             record?registerRecordActions('project-finance',record):canManageFinanceRecords?<Button variant="primary" type="button" icon={<Plus size={14} />} onClick={()=>openRegisterForm('project-finance',undefined,{projectId:project.id,projectName:project.name,clientName:project.clientCompany||project.clientName,startDate:project.startDate,endDate:project.targetEndDate,projectStatus:project.status})}>Configure</Button>:<span className="text-muted">View only</span>
           ]};
         });
         const orphanRecords=financeRecords.filter((record)=>!projects.some((project)=>(record.projectId&&record.projectId===project.id)||String(record.payload.projectName||'').toLowerCase()===String(project.name||'').toLowerCase())&&matching([record.payload.projectName,record.recordKey,record.projectId,record.payload.clientName,record.status]));
         return (
           <div className="space-y-4">
-            <WorkbookNote title="Project finance setup">
-              Contract value, vendor commitments, and other obligations are stored in the finance record linked to the AMS project. Existing project budget values are kept separate. Billing and recorded costs continue to use the linked AMS invoices and expenses.
+            <WorkbookNote title="Project finance and source coverage">
+              Contract value, vendor commitment and other obligations are planning inputs stored once in Project Finance. Billed revenue, dated collections and recorded expenses follow the selected reporting period ({periodLabel}) and use linked AMS source records. Current AP outstanding is shown separately from vendor commitment to avoid treating the same supplier obligation as both a commitment and a paid cost. Collections without dated payment records are not assigned to a reporting month.
             </WorkbookNote>
-            <FinanceDataTable title="Project Finance" description="Store the project contract value, vendor commitments, and other obligations." columns={[{label:'Project'},{label:'Client'},{label:'Contract value',align:'right'},{label:'Billed',align:'right'},{label:'Collected',align:'right'},{label:'Recorded cost',align:'right'},{label:'Project status'},{label:'Setup / actions'}]} rows={rows} emptyMessage="No AMS projects were returned. Finance records can be saved and linked when a project is available." actions={registerAddButton('project-finance','Add project finance record')}/>
+            <FinanceDataTable title="Project Finance" description="Period performance and current supplier exposure by AMS project. Contract and commitment fields remain the saved planning values; period activity comes from linked records." columns={[{label:'Project'},{label:'Client'},{label:'Contract value',align:'right'},{label:'Vendor commitment',align:'right'},{label:'Other obligations',align:'right'},{label:'Billed ex. tax · period',align:'right'},{label:'Collected · period',align:'right'},{label:'Recorded expenses · period',align:'right'},{label:'AP outstanding · current',align:'right'},{label:'Project status'},{label:'Setup / actions'}]} rows={rows} emptyMessage="No AMS projects were returned. Finance records can be saved and linked when a project is available." actions={registerAddButton('project-finance','Add project finance record')}/>
             {orphanRecords.length>0&&<FinanceDataTable title="Unlinked project finance records" description="These records remain visible until they can be linked to the correct AMS project." columns={[{label:'Project key'},{label:'Contract value',align:'right'},{label:'Vendor commitment',align:'right'},{label:'Other obligations',align:'right'},{label:'Status'},{label:'Actions'}]} rows={orphanRecords.map((record)=>({id:record.id,cells:[String(record.payload.projectName||record.recordKey),formatMoney(Number(record.payload.contractValue)||0),formatMoney(Number(record.payload.vendorCommitment)||0),formatMoney(Number(record.payload.otherObligations)||0),<StatusBadge value={record.status}/>,registerRecordActions('project-finance',record)]}))}/>}
           </div>
         );
