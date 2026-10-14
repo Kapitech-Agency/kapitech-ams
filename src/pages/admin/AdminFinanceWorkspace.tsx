@@ -469,9 +469,9 @@ const REGISTER_FORMS: Record<string, { title: string; description: string; field
       {key:'expenseAccountCode',label:'Expense account',type:'select',required:true,optionSource:'expenseAccounts'},
       {key:'billDate',label:'Bill date',type:'date',required:true},
       {key:'dueDate',label:'Overall due date',type:'date',required:true},
-      {key:'installment1DueDate',label:'Payment 1 due date · 30%',type:'date'},
-      {key:'installment2DueDate',label:'Payment 2 due date · 20%',type:'date'},
-      {key:'installment3DueDate',label:'Payment 3 due date · 50%',type:'date'},
+      {key:'installment1DueDate',label:'Payment 1 due date · 30%',type:'date',defaultValue:''},
+      {key:'installment2DueDate',label:'Payment 2 due date · 20%',type:'date',defaultValue:''},
+      {key:'installment3DueDate',label:'Payment 3 due date · 50%',type:'date',defaultValue:''},
       {key:'currency',label:'Currency',type:'select',required:true,options:['IDR','USD'],defaultValue:'IDR'},
       {key:'total',label:'Bill amount',type:'number',required:true},
       {key:'notes',label:'Notes',type:'textarea'}
@@ -521,16 +521,16 @@ const REGISTER_FORMS: Record<string, { title: string; description: string; field
   },
   'team-fee': {
     title:'Project Team Fee',
-    description:'Team Fee is tracked separately from Team Reward.',
+    description:'Each team-fee milestone is a separate record with its own reference, target date, actual payment date and payment state. Team Fee is separate from Team Reward.',
     fields:[
       {key:'projectId',label:'AMS project (optional)',type:'select',optionSource:'projects'},
       {key:'projectName',label:'Project name / reference',type:'text',required:true},
       {key:'memberName',label:'Team member',type:'text',required:true},
       {key:'role',label:'Role',type:'text'},
       {key:'feeAmount',label:'Fee amount (IDR)',type:'number',required:true},
-      {key:'paymentReference',label:'Fee milestone / reference',type:'text',placeholder:'e.g. Deposit, milestone 2, final payment'},
+      {key:'paymentReference',label:'Fee milestone / reference',type:'text',required:true,placeholder:'e.g. Deposit, milestone 2, final payment'},
       {key:'dueDate',label:'Due date / target date',type:'date'},
-      {key:'paidDate',label:'Actual payment date',type:'date'},
+      {key:'paidDate',label:'Actual payment date',type:'date',required:true,defaultValue:'',visibleWhen:{key:'paymentStatus',values:['paid']}},
       {key:'paymentStatus',label:'Payment status',type:'select',options:['planned','pending','paid'],defaultValue:'planned'},
       {key:'notes',label:'Notes',type:'textarea'}
     ]
@@ -1661,8 +1661,8 @@ export const AdminFinanceWorkspace: React.FC = () => {
           <div className="space-y-4">
             <WorkbookNote tone={opening === null ? 'warning' : 'info'} title={opening === null ? 'Cash ledger needs its opening balance' : 'Cash ledger is connected to its opening balance'}>
               {opening === null
-                ? 'Set the 1000 Cash & Bank opening balance before treating a running balance as meaningful. Current source movements are not a bank-statement reconciliation; the existing expense API does not yet carry a bank-account/payment-method field.'
-                : 'Opening balance comes from the saved finance register. Movements combine invoice collections, expenses, and recorded bank or cash adjustments. Reconcile the result with the bank statement before closing the month.'}
+                ? 'Set the 1000 Cash & Bank opening balance before treating a running balance as meaningful. Only invoice receipts mapped to account 1000, paid expenses with an explicit 1000 settlement account, and bank-side movements appear here. This is not a bank-statement reconciliation.'
+                : 'Opening balance comes from the saved finance register. Paid expenses must record the actual paid date and settlement account; internal transfers are shown on the bank ledger but excluded from consolidated cash-flow movement. Reconcile to the bank statement before closing the month.'}
             </WorkbookNote>
             <AdminMetricStrip metrics={[
               {id:'cash-opening',label:'Opening balance',value:opening === null ? 'Not set' : formatMoney(opening),context:openingDate ? 'Account 1000 · from ' + formatDate(openingDate) : 'Account 1000 · Cash & Bank',icon:<Landmark size={15}/>},
@@ -1712,13 +1712,18 @@ export const AdminFinanceWorkspace: React.FC = () => {
           const paid = sumAmounts<WorkbookRecord>(billPayments, (payment) => Number(payment.payload.amount) || 0);
           const total = Number(bill.payload.total) || 0;
           const next = schedule.find((installment) => installment.outstanding > 0.01);
-          const stageCell = (installment: typeof schedule[number]) => (
-            <div className="min-w-[112px] space-y-0.5">
-              <div className="font-medium tabular-nums">{formatMoney(installment.amount, currency)}</div>
-              <div className="text-[11px] text-muted tabular-nums">{installment.percentage}% · Paid {formatMoney(installment.paidAmount, currency)}</div>
-              <div className="text-[11px] text-muted tabular-nums">Outstanding {formatMoney(installment.outstanding, currency)}</div>
-            </div>
-          );
+          const installmentDueDates = Array.isArray(bill.payload.installmentDueDates) ? bill.payload.installmentDueDates as string[] : [];
+          const stageCell = (installment: typeof schedule[number]) => {
+            const dueDate = String(installmentDueDates[installment.number - 1] || bill.payload.dueDate || '');
+            return (
+              <div className="min-w-[112px] space-y-0.5">
+                <div className="font-medium tabular-nums">{formatMoney(installment.amount, currency)}</div>
+                <div className="text-[11px] text-muted tabular-nums">{installment.percentage}% · Paid {formatMoney(installment.paidAmount, currency)}</div>
+                <div className="text-[11px] text-muted tabular-nums">Outstanding {formatMoney(installment.outstanding, currency)}</div>
+                <div className="text-[11px] text-muted">Due {formatDate(dueDate)}{installmentDueDates[installment.number - 1] ? '' : ' · overall due date'}</div>
+              </div>
+            );
+          };
           return {
             id: bill.id,
             cells: [
@@ -2313,7 +2318,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
             <WorkbookNote title="Separate team allocations">
               The member-level Team Fee register is persistent and stores project, member, role, fee amount, due date and payment state. Expense records classified as Project Team Fee are shown separately as source costs; they are not automatically assumed to settle a member-level entitlement.
             </WorkbookNote>
-            <FinanceDataTable title="Project Team Fee allocation" description="One row per project and team member; status is maintained independently from Team Reward." columns={[{label:'Project'},{label:'Member'},{label:'Role'},{label:'Fee amount',align:'right'},{label:'Due date'},{label:'Payment status'},{label:'Actions'}]} rows={feeRecords.map((record)=>({id:record.id,cells:[String(record.payload.projectName||record.projectId||'—'),String(record.payload.memberName||'—'),String(record.payload.role||'—'),formatMoney(Number(record.payload.feeAmount)||0),formatDate(record.payload.dueDate),<StatusBadge value={record.payload.paymentStatus||record.status}/>,registerRecordActions('team-fee',record)]}))} emptyMessage="No individual Team Fee allocation has been recorded." actions={registerAddButton('team-fee','Add team fee')}/>
+            <FinanceDataTable title="Project Team Fee allocation" description="One row per project and team member; status is maintained independently from Team Reward." columns={[{label:'Project'},{label:'Member'},{label:'Milestone / reference'},{label:'Role'},{label:'Fee amount',align:'right'},{label:'Due date'},{label:'Paid date'},{label:'Payment status'},{label:'Actions'}]} rows={feeRecords.map((record)=>({id:record.id,cells:[String(record.payload.projectName||record.projectId||'—'),String(record.payload.memberName||'—'),String(record.payload.paymentReference||'—'),String(record.payload.role||'—'),formatMoney(Number(record.payload.feeAmount)||0),formatDate(record.payload.dueDate),formatDate(record.payload.paidDate),<StatusBadge value={record.payload.paymentStatus||record.status}/>,registerRecordActions('team-fee',record)]}))} emptyMessage="No individual Team Fee allocation has been recorded." actions={registerAddButton('team-fee','Add team fee')}/>
             <FinanceDataTable title="Project Team Fee expense sources" description="Actual expense records that are explicitly classified as Project Team Fee." columns={[{label:'Date'},{label:'Project'},{label:'Description'},{label:'Amount',align:'right'},{label:'Record state'}]} rows={feeExpenses.map((expense)=>({id:expense.id,cells:[formatDate(expense.date),projects.find((project)=>project.id===expense.projectId)?.name||expense.projectId||'Not linked',expense.description,formatMoney(Number(expense.amount)||0,String((expense as any).currency||'IDR')),<StatusBadge value={(expense as any).status||'recorded'}/>]}))} emptyMessage="No expense source record is classified as Project Team Fee."/>
           </div>
         );
