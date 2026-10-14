@@ -3471,7 +3471,7 @@ apiRouter.delete('/finance/invoices/:id', requireAuth, requirePermission('canMan
       res.json({success:true,message:'Invoice cancelled.',invoice}); return;
     } catch(error) {
       const message=error instanceof Error?error.message:'Invoice could not be cancelled.';
-      res.status(message==='INVOICE_WITH_PAYMENTS_CANNOT_BE_CANCELLED'?409:400).json({success:false,error:message}); return;
+      res.status(['INVOICE_WITH_PAYMENTS_CANNOT_BE_CANCELLED','INVOICE_POSTED_LEDGER_REVERSAL_REQUIRED'].includes(message)?409:400).json({success:false,error:message==='INVOICE_POSTED_LEDGER_REVERSAL_REQUIRED'?'This invoice has a posted General Journal entry. Do not cancel it directly; create and approve a reversal or adjustment journal first.':message}); return;
     }
   }
 
