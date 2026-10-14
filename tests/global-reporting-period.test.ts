@@ -71,7 +71,16 @@ test('date-aware Finance worksheets use the shared reporting period without chan
   assert.ok(workspace.includes('matchesDate(record.payload.dueDate || record.createdAt)'));
   assert.ok(workspace.includes('matchesDate(expense.date)'));
   assert.ok(workspace.includes('matchesDate(record.payload.date || record.createdAt)'));
-  assert.ok(workspace.includes('getReportingYearOptions(new Date().getFullYear(), availableYears, Number(selectedYear)).map(String)'));
+  assert.ok(workspace.includes('const dashboardRange = getReportingPeriodRange(reportPeriodValue, reportPeriodMode, locale);'));
+  assert.ok(workspace.includes('const selectedYear = String(Number(reportPeriodValue.slice(0, 4)) || new Date().getFullYear());'));
+  assert.ok(workspace.includes('renderRecentActivity(dashboardRange ?'));
+  assert.ok(workspace.includes('const defaultFinanceMonth = getReportingPeriodRange(reportPeriodValue, reportPeriodMode, locale)?.startMonth'));
+  assert.ok(workspace.includes('const response = await api.finance.workbookClosePeriod(selectedClosingMonth);'));
+  assert.ok(!workspace.includes('getReportingYearOptions(new Date().getFullYear(), availableYears, Number(selectedYear)).map(String)'));
+  assert.ok(!workspace.includes('CustomReportPeriodPicker'));
+  assert.ok(!workspace.includes('finance-dashboard-month-picker'));
+  assert.ok(!workspace.includes('finance-pnl-report-period-picker'));
+  assert.ok(!workspace.includes('finance-cash-flow-report-period-picker'));
   assert.ok(workspace.includes('const latestByAccount=new Map<string,WorkbookRecord>();'));
   assert.ok(workspace.includes('for(const record of allOpenings.slice()'));
   assert.ok(workspace.includes('const requestId = ++loadRequestId.current;'));
