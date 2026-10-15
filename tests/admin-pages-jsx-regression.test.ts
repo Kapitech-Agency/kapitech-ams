@@ -259,3 +259,15 @@ test('AMS keeps core workflows in the existing modules instead of a separate Age
   assert.ok(app.includes('<Route path="tasks"'));
   assert.ok(app.includes('<Route path="crm"'));
 });
+
+
+test('Project management provides an in-place Gantt timeline using existing project records', () => {
+  const projects = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminProjects.tsx'), 'utf8');
+
+  assert.ok(projects.includes("type ProjectLayout = 'board' | 'table' | 'timeline';"));
+  assert.ok(projects.includes("openLayout('timeline')"));
+  assert.ok(projects.includes("aria-pressed={projectLayout === 'timeline'}"));
+  assert.ok(projects.includes('data-ams-feature-slug="projects-gantt-timeline"'));
+  assert.ok(projects.includes('projects={filteredProjects}'));
+  assert.ok(projects.includes('onOpenProject={openProjectDetail}'));
+});

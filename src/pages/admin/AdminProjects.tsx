@@ -53,7 +53,7 @@ type ProjectRecord = AgencyProject & {
 };
 
 type ProjectsView = 'all' | 'sprint' | 'budget' | 'archived';
-type ProjectLayout = 'board' | 'table';
+type ProjectLayout = 'board' | 'table' | 'timeline';
 
 const PROJECT_STATUSES: Array<{ value: ProjectStatus; label: string }> = [
   { value: 'planning', label: 'Planning' },
@@ -172,6 +172,184 @@ const normalizeProject = (project: any): ProjectRecord => {
     slug: String(project?.slug || slugify(name)),
   };
   return normalized;
+};
+
+
+const PROJECT_TIMELINE_TONES: Record<ProjectStatus, { bar: string; dot: string }> = {
+  planning: { bar: 'border-info/35 bg-info/15 text-info', dot: 'bg-info' },
+  in_progress: { bar: 'border-accent/40 bg-accent/15 text-accent-text', dot: 'bg-accent' },
+  review: { bar: 'border-warning/35 bg-warning/15 text-warning', dot: 'bg-warning' },
+  completed: { bar: 'border-success/35 bg-success/15 text-success', dot: 'bg-success' },
+  on_hold: { bar: 'border-danger/35 bg-danger/15 text-danger', dot: 'bg-danger' },
+};
+
+const parseTimelineDate = (value?: string | null): number | null => {
+  if (!value) return null;
+  const parsed = Date.parse(String(value).slice(0, 10) + 'T00:00:00Z');
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+interface ProjectTimelineProps {
+  projects: ProjectRecord[];
+  activeFilterCount: number;
+  onClearFilters: () => void;
+  onOpenProject: (project: ProjectRecord) => void;
+}
+
+const ProjectTimeline: React.FC<ProjectTimelineProps> = ({
+  projects,
+  activeFilterCount,
+  onClearFilters,
+  onOpenProject,
+}) => {
+  const dayMs = 24 * 60 * 60 * 1000;
+  const todayMs = parseTimelineDate(todayIso()) ?? Date.now();
+  const rows = projects.map((project) => {
+    const parsedStart = parseTimelineDate(project.startDate);
+    const parsedCreated = parseTimelineDate(project.createdAt);
+    const startMs = parsedStart ?? parsedCreated ?? todayMs;
+    const parsedEnd = parseTimelineDate(project.targetEndDate);
+    const endMs = parsedEnd !== null && parsedEnd >= startMs ? parsedEnd : startMs + 14 * dayMs;
+    return {
+      project,
+      startMs,
+      endMs,
+      estimatedDates: parsedStart === null || parsedEnd === null || parsedEnd < startMs,
+    };
+  });
+
+  if (!rows.length) {
+    return (
+      <div role="status" className="m-3 flex flex-col items-start gap-3 rounded-control border border-line bg-bg p-5 sm:m-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-fg">No projects to place on the timeline</p>
+          <p className="mt-1 text-xs leading-5 text-muted">
+            {activeFilterCount > 0
+              ? 'Adjust the project filters or reset them to see the full portfolio.'
+              : 'Create a project with start and target dates to plan its delivery.'}
+          </p>
+        </div>
+        {activeFilterCount > 0 && (
+          <Button type="button" variant="secondary" onClick={onClearFilters}>Reset filters</Button>
+        )}
+      </div>
+    );
+  }
+
+  const rangeStart = Math.floor(Math.min(...rows.map((row) => row.startMs)) / dayMs) * dayMs - 7 * dayMs;
+  const rangeEnd = Math.floor(Math.max(...rows.map((row) => row.endMs)) / dayMs) * dayMs + 8 * dayMs;
+  const rangeDays = Math.max(1, Math.ceil((rangeEnd - rangeStart) / dayMs));
+  const rangeWidth = Math.max(900, Math.min(2400, rangeDays * 16));
+  const weekStep = Math.max(1, (rangeWidth / rangeDays) * 7);
+  const todayPosition = ((todayMs - rangeStart) / (rangeEnd - rangeStart)) * 100;
+  const monthTicks: Array<{ key: string; left: number; label: string }> = [];
+  const monthCursor = new Date(rangeStart);
+  monthCursor.setUTCDate(1);
+  monthCursor.setUTCHours(0, 0, 0, 0);
+  while (monthCursor.getTime() < rangeEnd) {
+    const timestamp = monthCursor.getTime();
+    monthTicks.push({
+      key: monthCursor.toISOString().slice(0, 7),
+      left: Math.max(0, ((timestamp - rangeStart) / (rangeEnd - rangeStart)) * 100),
+      label: monthCursor.toLocaleDateString(undefined, { month: 'short', year: '2-digit', timeZone: 'UTC' }),
+    });
+    monthCursor.setUTCMonth(monthCursor.getUTCMonth() + 1);
+  }
+
+  return (
+    <section className="min-w-0" aria-label="Project Gantt timeline" data-ams-feature-slug="projects-gantt-timeline" data-ams-slug="projects-gantt-timeline">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-3 py-2.5 text-[11px] text-muted sm:px-4">
+        <span>Schedule range: {new Date(rangeStart).toLocaleDateString(undefined, { month: 'short', year: 'numeric', timeZone: 'UTC' })} – {new Date(rangeEnd).toLocaleDateString(undefined, { month: 'short', year: 'numeric', timeZone: 'UTC' })}</span>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-info" /> Planning</span>
+          <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-accent" /> In progress</span>
+          <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-warning" /> Review</span>
+          <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-success" /> Completed</span>
+          <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-danger" /> On hold</span>
+        </div>
+      </div>
+
+      <div className="overflow-x-auto custom-scrollbar" tabIndex={0} aria-label="Scrollable project schedule">
+        <div className="min-w-max">
+          <div className="flex border-b border-line bg-panel">
+            <div className="sticky left-0 z-30 flex h-11 w-[260px] shrink-0 items-center border-r border-line bg-panel px-3.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">
+              Project / owner
+            </div>
+            <div className="relative h-11 shrink-0" style={{ width: rangeWidth }}>
+              {monthTicks.map((tick) => (
+                <div key={tick.key} className="absolute inset-y-0 border-l border-line/80 pl-2 pt-3 text-[10px] font-medium text-muted" style={{ left: tick.left + '%' }}>
+                  <span className="whitespace-nowrap">{tick.label}</span>
+                </div>
+              ))}
+              {todayPosition >= 0 && todayPosition <= 100 && (
+                <div className="absolute inset-y-0 z-10 border-l border-dashed border-warning" style={{ left: todayPosition + '%' }}>
+                  <span className="absolute left-1 top-0.5 whitespace-nowrap rounded-badge border border-warning/30 bg-panel px-1 py-0.5 text-[9px] font-semibold text-warning">Today</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {rows.map((row) => {
+            const tone = PROJECT_TIMELINE_TONES[row.project.status];
+            const statusLabel = PROJECT_STATUSES.find((item) => item.value === row.project.status)?.label || row.project.status;
+            const left = ((row.startMs - rangeStart) / (rangeEnd - rangeStart)) * 100;
+            const width = ((row.endMs + dayMs - row.startMs) / (rangeEnd - rangeStart)) * 100;
+            const overdue = row.project.status !== 'completed' && row.endMs < todayMs;
+            const title = row.project.name + ': ' + formatDate(row.project.startDate || '') + ' to ' + formatDate(row.project.targetEndDate || '');
+            return (
+              <div key={row.project.id} className="group flex border-b border-line/70 hover:bg-panel-hover/40">
+                <button
+                  type="button"
+                  onClick={() => onOpenProject(row.project)}
+                  className="sticky left-0 z-20 flex min-h-[62px] w-[260px] shrink-0 items-center gap-2.5 border-r border-line bg-panel px-3.5 text-left transition-colors hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent"
+                  aria-label={'Open project ' + row.project.name}
+                >
+                  <span className={'h-2 w-2 shrink-0 rounded-full ' + tone.dot} aria-hidden="true" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-xs font-semibold text-fg">{row.project.name}</span>
+                    <span className="mt-1 block truncate text-[10px] text-muted">
+                      {row.project.teamLead || 'Owner unassigned'} · {statusLabel} · {row.project.progressPercent}%
+                    </span>
+                    <span className={'mt-0.5 block truncate text-[10px] ' + (overdue ? 'text-danger' : 'text-muted')}>
+                      {row.project.startDate ? formatDate(row.project.startDate) : 'Start date not set'} → {row.project.targetEndDate ? formatDate(row.project.targetEndDate) : 'Deadline not set'}
+                      {row.estimatedDates ? ' · estimated range' : ''}
+                    </span>
+                  </span>
+                  <ArrowUpRight size={13} className="shrink-0 text-muted opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true" />
+                </button>
+
+                <div
+                  className="relative min-h-[62px] shrink-0 border-b border-line/40"
+                  style={{
+                    width: rangeWidth,
+                    backgroundImage: 'repeating-linear-gradient(to right, var(--line) 0, var(--line) 1px, transparent 1px, transparent ' + weekStep + 'px)',
+                  }}
+                >
+                  {todayPosition >= 0 && todayPosition <= 100 && (
+                    <div className="pointer-events-none absolute inset-y-0 z-10 border-l border-dashed border-warning/50" style={{ left: todayPosition + '%' }} aria-hidden="true" />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => onOpenProject(row.project)}
+                    title={title}
+                    aria-label={'Open ' + title}
+                    className={'absolute top-[17px] z-20 flex h-7 min-w-[30px] items-center gap-1.5 overflow-hidden rounded-control border px-2 text-[10px] font-semibold shadow-none transition-[filter] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ' + tone.bar}
+                    style={{ left: left + '%', width: Math.max(1.5, width) + '%' }}
+                  >
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-current" aria-hidden="true" />
+                    <span className="truncate tabular-nums">{row.project.progressPercent}%</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <p className="border-t border-line px-3 py-2.5 text-[10px] leading-4 text-muted sm:px-4">
+        Select a project row or timeline bar to open its existing detail view. Drag-and-drop status changes remain available in Kanban.
+      </p>
+    </section>
+  );
 };
 
 const demoProjects: ProjectRecord[] = INITIAL_DEFAULT_PROJECTS.map(item =>
@@ -352,7 +530,7 @@ export const AdminProjects: React.FC = () => {
   const [archiveSearch, setArchiveSearch] = useState('');
   const [archiveHealthFilter, setArchiveHealthFilter] = useState('');
   const [projectLayout, setProjectLayout] = useState<ProjectLayout>(
-    searchParams.get('layout') === 'table' ? 'table' : 'board'
+    searchParams.get('layout') === 'table' ? 'table' : searchParams.get('layout') === 'timeline' ? 'timeline' : 'board'
   );
   const projectKanbanScrollRef = useDragToScroll<HTMLDivElement>();
   const taskKanbanScrollRef = useDragToScroll<HTMLDivElement>();
@@ -396,7 +574,8 @@ export const AdminProjects: React.FC = () => {
   }, [requestedView, searchParams, setSearchParams]);
 
   React.useEffect(() => {
-    setProjectLayout(searchParams.get('layout') === 'table' ? 'table' : 'board');
+    const requestedLayout = searchParams.get('layout');
+    setProjectLayout(requestedLayout === 'table' ? 'table' : requestedLayout === 'timeline' ? 'timeline' : 'board');
   }, [searchParams]);
 
   const [projectForm, setProjectForm] = useState({
@@ -1864,8 +2043,11 @@ export const AdminProjects: React.FC = () => {
                 <button type="button" onClick={() => openLayout('board')} className={'inline-flex h-7 items-center gap-1.5 rounded-chip px-3 text-xs font-medium transition-colors ' + (projectLayout === 'board' ? 'bg-line text-fg' : 'text-muted hover:bg-bg hover:text-fg')}>
                   <LayoutGrid size={13} /> Kanban
                 </button>
-                <button type="button" onClick={() => openLayout('table')} className={'inline-flex h-7 items-center gap-1.5 rounded-chip px-3 text-xs font-medium transition-colors ' + (projectLayout === 'table' ? 'bg-line text-fg' : 'text-muted hover:bg-bg hover:text-fg')}>
+                <button type="button" onClick={() => openLayout('table')} aria-pressed={projectLayout === 'table'} className={'inline-flex h-7 items-center gap-1.5 rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ' + (projectLayout === 'table' ? 'bg-line text-fg' : 'text-muted hover:bg-bg hover:text-fg')}>
                   <List size={13} /> Table
+                </button>
+                <button type="button" onClick={() => openLayout('timeline')} aria-pressed={projectLayout === 'timeline'} className={'inline-flex h-7 items-center gap-1.5 rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ' + (projectLayout === 'timeline' ? 'bg-line text-fg' : 'text-muted hover:bg-bg hover:text-fg')}>
+                  <CalendarDays size={13} /> Gantt
                 </button>
               </div>
             )}
@@ -2329,6 +2511,13 @@ export const AdminProjects: React.FC = () => {
                   })}
                 </div>
               </div>
+            ) : projectLayout === 'timeline' ? (
+              <ProjectTimeline
+                projects={filteredProjects}
+                activeFilterCount={activeProjectFilters}
+                onClearFilters={clearProjectFilters}
+                onOpenProject={openProjectDetail}
+              />
             ) : (
               <div className="overflow-x-auto custom-scrollbar">
                 <table className="ams-projects-table min-w-[1080px] text-left">
