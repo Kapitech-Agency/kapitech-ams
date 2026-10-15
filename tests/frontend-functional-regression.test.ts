@@ -158,7 +158,7 @@ test('Dashboard Performance and Analytics use AMS operational and finance record
 test('Project cost actuals come from linked Finance expenses, not delivery progress', async () => {
   const projects = await read('src/pages/admin/AdminProjects.tsx');
   assert.ok(projects.includes('api.finance.getExpenses()'));
-  assert.ok(projects.includes('const projectId = String(expense.projectId ||').valueOf());
+  assert.ok(projects.includes("const projectId = String(expense.projectId || '')"));
   assert.ok(projects.includes('recordedExpenseTotals'));
   assert.ok(projects.includes('getRecordedExpense(project.id)'));
   assert.ok(projects.includes('recorded_finance_cost'));
