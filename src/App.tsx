@@ -192,11 +192,6 @@ const AdminApprovals = lazyWithRetry(
   'admin-approvals'
 );
 
-const WorkspaceRouter = lazyWithRetry(
-  () => import('./workspace/WorkspaceRouter').then((m) => ({ default: m.WorkspaceRouter })),
-  'core-workspace'
-);
-
 const LoadingScreen = () => (
   <div className="min-h-screen bg-bg text-fg flex items-center justify-center p-6 font-sans">
     <div className="w-full max-w-[720px] space-y-3" role="status" aria-label="Loading AMS">
@@ -378,7 +373,6 @@ const App = () => {
         <AppErrorBoundary>
           <Suspense fallback={<LoadingScreen />}>
             <Routes>
-              <Route path="/workspace/*" element={<WorkspaceRouter />} />
               <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="/login" element={<Navigate to="/admin/login" replace />} />
               <Route path="/admin/login" element={<AdminLogin />} />
