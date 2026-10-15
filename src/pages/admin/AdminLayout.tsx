@@ -159,7 +159,6 @@ export const AdminLayout: React.FC = () => {
   );
   const profileTitle = session?.user?.role || DEFAULT_PROFILE_TITLE;
   const filteredNavItems = getNavigationGroupsForRole(amsRole)
-    .filter((group) => group.key !== 'system-settings')
     .flatMap((group) => group.items);
   const activeNavItem = filteredNavItems.find((item) =>
     isNavigationItemActive(item, location.pathname, location.search, location.hash)
