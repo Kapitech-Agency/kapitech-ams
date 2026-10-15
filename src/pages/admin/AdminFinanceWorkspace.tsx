@@ -500,7 +500,7 @@ const REGISTER_FORMS: Record<string, { title: string; description: string; field
       {key:'paidDate',label:'Payment date',type:'date',required:true},
       {key:'amount',label:'Payment amount',type:'number',required:true},
       {key:'method',label:'Payment method',type:'select',required:true,options:['bank_transfer','credit_card','cash','other'],defaultValue:'bank_transfer'},
-      {key:'settlementAccountCode',label:'Settlement account',type:'select',optionSource:'accounts',visibleWhen:{key:'method',values:['other']},help:'Required for an unsupported payment method. Select the actual cash, bank or credit-card liability account.'},
+      {key:'settlementAccountCode',label:'Settlement account',type:'select',required:true,optionSource:'accounts',visibleWhen:{key:'method',values:['other']},help:'Required for an unsupported payment method. Select the actual cash, bank or credit-card liability account.'},
       {key:'reference',label:'Payment reference',type:'text'},
       {key:'notes',label:'Notes',type:'textarea'}
     ]
