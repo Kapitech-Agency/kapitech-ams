@@ -49,7 +49,7 @@ function canRenderNavigationTab(item: AdminSectionTabItem): boolean {
   if (!session?.user) return !item.permission || hasAdminPermission(item.permission as Parameters<typeof hasAdminPermission>[0]);
 
   const target = new URL(item.to, 'https://ams.kapitech.local');
-  const role = getAmsRole(session.user.role);
+  const role = getAmsRole(session.user);
   const currentMfaSetup = session.user.mfaEnabled !== true
     && target.pathname === '/admin/settings'
     && target.searchParams.get('tab') === 'security';
