@@ -867,20 +867,22 @@ export const AdminSettings: React.FC = () => {
         ) : undefined}
       />
 
-      <div className="min-w-0" data-ams-slug="settings-tabs">
+      <div className="min-[900px]:hidden min-w-0" data-ams-slug="settings-tabs">
         <AdminSectionTabs
           ariaLabel="Settings sections"
           activeKey={activeTab}
           items={[
-            { key: 'overview', label: 'Overview & Backups', to: '/admin/settings?tab=overview' },
-            { key: 'audit', label: 'Audit Logs', to: '/admin/settings?tab=audit' },
-            { key: 'security', label: 'Security & MFA', to: '/admin/settings?tab=security' },
+            { key: 'overview', label: 'Backup', to: '/admin/settings?tab=overview' },
+            { key: 'audit', label: 'Audit', to: '/admin/settings?tab=audit' },
+            { key: 'security', label: 'Access', to: '/admin/settings?tab=security' },
             { key: 'integrations', label: 'Integrations', to: '/admin/settings?tab=integrations' },
+            { key: 'readiness', label: 'Readiness', to: '/admin/navigation/release-readiness' },
           ].filter((tab) =>
             (tab.key !== 'overview' || canAccessServer) &&
             (tab.key !== 'audit' || canViewAuditLogs) &&
             (tab.key !== 'security' || mfaSetupRequired || canManageAdminAccounts || canAccessServer) &&
-            (tab.key !== 'integrations' || canAccessServer)
+            (tab.key !== 'integrations' || canAccessServer) &&
+            (tab.key !== 'readiness' || canAccessServer)
           )}
         />
       </div>

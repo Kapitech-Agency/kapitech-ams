@@ -76,7 +76,7 @@ test('MFA enrolment route is accessible before module permissions are evaluated'
 });
 
 
-test('AMS navigation uses six role-based groups and shared responsive sidebars', async () => {
+test('AMS navigation uses concise primary modules and role-aware module tabs', async () => {
   const layout = await read('src/pages/admin/AdminLayout.tsx');
   const app = await read('src/App.tsx');
   const primitives = await read('src/components/admin/AdminModulePrimitives.tsx');
@@ -114,13 +114,16 @@ test('AMS navigation uses six role-based groups and shared responsive sidebars',
   assert.ok(app.includes('path="navigation/live-activity"'));
   assert.ok(app.includes('path="navigation/release-readiness"'));
 
-  assert.ok(layout.includes('ariaLabel="Team sections"'));
-  assert.ok(layout.includes("label: 'Team Directory'"));
+  assert.ok(layout.includes('ariaLabel="Projects sections"'));
+  assert.ok(layout.includes("label: 'Team'"));
   assert.ok(layout.includes("label: 'Capacity'"));
-  assert.ok(layout.includes('ariaLabel="Vendors sections"'));
-  assert.ok(layout.includes("label: 'Vendor Directory'"));
-  assert.ok(layout.includes("label: 'Skills'"));
+  assert.ok(layout.includes('ariaLabel="Finance sections"'));
+  assert.ok(layout.includes("label: 'Vendors'"));
+  assert.ok(vendors.includes("label: 'Vendors'"));
+  assert.ok(vendors.includes("label: 'Skills'"));
   assert.ok(vendors.includes('data-ams-slug="vendors-mobile-tabs"'));
+  assert.ok(layout.includes('getPrimaryNavigationForRole(amsRole)'));
+  assert.ok(sidebar.includes('getPrimaryNavigationForRole(role)'));
   assert.equal(teams.includes("to: '/admin/team?view=vendor-directory'"), false);
   assert.equal(teams.includes("to: '/admin/team?view=skill-matrix'"), false);
   assert.equal(teams.includes("to: '/admin/team?view=time-logs'"), false);

@@ -401,7 +401,7 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
             ariaLabel="Vendors sections"
             activeKey="vendor-directory"
             items={[
-              { key: 'vendor-directory', label: 'Vendor Directory', to: '/admin/vendors' },
+              { key: 'vendor-directory', label: 'Vendors', to: '/admin/vendors' },
               { key: 'skill-matrix', label: 'Skills', to: '/admin/vendors?view=skill-matrix' },
             ]}
           />
