@@ -71,6 +71,21 @@ const slaClasses = {
   neutral: 'border-line bg-bg text-muted'
 } as const;
 
+type ClientProfileReadinessItem = {
+  key: string;
+  label: string;
+  complete: boolean;
+};
+
+const getClientProfileReadiness = (client: AgencyClient): ClientProfileReadinessItem[] => [
+  { key: 'company', label: 'Company name', complete: Boolean(String(client.company || '').trim()) },
+  { key: 'contact', label: 'Primary contact', complete: Boolean(String(client.name || '').trim()) },
+  { key: 'email', label: 'Business email', complete: /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(String(client.email || '').trim()) },
+  { key: 'phone', label: 'Phone / WhatsApp', complete: Boolean(String(client.phone || '').trim()) },
+  { key: 'industry', label: 'Industry', complete: Boolean(String(client.industry || '').trim()) },
+  { key: 'location', label: 'Business location', complete: Boolean(String(client.location || '').trim()) },
+  { key: 'requirements', label: 'Project requirements / account notes', complete: Boolean(String(client.notes || '').trim()) },
+];
 
 const formatDate = (value: string, language: string) => {
   const date = new Date(value);
@@ -471,6 +486,12 @@ export const AdminClients: React.FC = () => {
     showToast(language === 'id' ? 'Direktori berhasil diekspor.' : 'Directory exported.');
   };
 
+  const selectedClientReadiness = selectedClient ? getClientProfileReadiness(selectedClient) : [];
+  const selectedClientReadinessCount = selectedClientReadiness.filter((item) => item.complete).length;
+  const selectedClientReadinessPercent = selectedClientReadiness.length
+    ? Math.round((selectedClientReadinessCount / selectedClientReadiness.length) * 100)
+    : 0;
+
   return (
     <AdminPageShell featureSlug="clients-module" className="ams-clients-module">
       <div data-ams-feature-slug="clients-header" data-ams-slug="clients-header">
@@ -620,7 +641,7 @@ export const AdminClients: React.FC = () => {
         size="lg"
         title={selectedClient?.company || 'Client details'}
         description={selectedClient ? `${selectedClient.name} · ${selectedClient.id} · ${getAgencyClientSlug(selectedClient as AgencyClient & Record<string, unknown>)}` : undefined}
-        footer={<Button type="button" variant="secondary" onClick={() => setSelectedClient(null)}>Close</Button>}
+        footer={<div className="flex justify-end gap-2">{canManageClients && <Button type="button" variant="secondary" onClick={() => { if (!selectedClient) return; const client = selectedClient; setSelectedClient(null); openEdit(client); }}>{selectedClient?.status === 'lead' ? 'Continue onboarding' : 'Edit client'}</Button>}<Button type="button" variant="secondary" onClick={() => setSelectedClient(null)}>Close</Button></div>}
       >
         {selectedClient && (
           <div className="space-y-6">
@@ -633,6 +654,44 @@ export const AdminClients: React.FC = () => {
                 {statusMeta[selectedClient.status].label}
               </span>
             </div>
+
+            {selectedClient.status === 'lead' && (
+              <section
+                aria-label="Onboarding profile readiness"
+                data-ams-feature-slug="client-onboarding-readiness"
+                data-ams-slug="client-onboarding-readiness"
+                className="rounded-card border border-line bg-bg p-4"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-sm font-semibold text-fg">Onboarding profile readiness</h3>
+                    <p className="mt-1 text-xs leading-5 text-muted">Required client profile details recorded in AMS.</p>
+                  </div>
+                  <span className="shrink-0 rounded-badge border border-line bg-panel px-2 py-1 text-xs font-semibold tabular-nums text-fg">
+                    {selectedClientReadinessCount}/{selectedClientReadiness.length} · {selectedClientReadinessPercent}%
+                  </span>
+                </div>
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-line" role="progressbar" aria-label="Client profile readiness" aria-valuemin={0} aria-valuemax={100} aria-valuenow={selectedClientReadinessPercent}>
+                  <div className="h-full rounded-full bg-accent transition-[width] duration-200" style={{ width: selectedClientReadinessPercent + '%' }} />
+                </div>
+                <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                  {selectedClientReadiness.map((item) => (
+                    <div key={item.key} className="flex min-w-0 items-center gap-2 rounded-control border border-line bg-panel px-3 py-2.5">
+                      {item.complete
+                        ? <CheckCircle2 size={14} className="shrink-0 text-success" aria-hidden="true" />
+                        : <CircleDashed size={14} className="shrink-0 text-muted" aria-hidden="true" />}
+                      <span className="min-w-0 flex-1 text-xs text-fg">{item.label}</span>
+                      <span className={'shrink-0 text-[10px] font-medium ' + (item.complete ? 'text-success' : 'text-muted')}>
+                        {item.complete ? 'Complete' : 'Missing'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-3 text-[10px] leading-4 text-muted">
+                  This score covers profile completeness only. Contract approval, project kickoff, and billing readiness must be verified in their existing AMS modules.
+                </p>
+              </section>
+            )}
 
             <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
               <div>
