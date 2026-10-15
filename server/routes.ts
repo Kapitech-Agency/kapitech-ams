@@ -2798,7 +2798,16 @@ apiRouter.delete('/clients/:id', requireAuth, requirePermission('canManageClient
 // ----------------------------------------------------
 
 apiRouter.get('/projects', requireAuth, requireAnyPermission('canManageProjects', 'canManageKanbanTasks'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  const projects = getDataSourceMode() === 'postgres' ? await postgresProjectRepository.list() : getDatabase().projects;
+  if (getDataSourceMode() === 'postgres') {
+    res.json({ success: true, projects: await postgresProjectRepository.list() });
+    return;
+  }
+  const db = getDatabase();
+  const globalTasks = Array.isArray(db.tasks) ? db.tasks : [];
+  const projects = (Array.isArray(db.projects) ? db.projects : []).map((project: any) => ({
+    ...project,
+    tasks: mergeJsonProjectTasks(project, globalTasks),
+  }));
   res.json({ success: true, projects });
 });
 
@@ -2978,7 +2987,16 @@ apiRouter.put('/projects/:id', requireAuth, requirePermission('canManageProjects
   if (patch.tasks !== undefined) {
     const nextTasks: any[] = Array.isArray(patch.tasks) ? patch.tasks.slice(0, 200) : [];
     patch.tasks = nextTasks;
-    const previousTasks: any[] = Array.isArray(db.projects[idx].tasks) ? db.projects[idx].tasks : [];
+    const previousTasksById = new Map<string, any>();
+    (Array.isArray(db.projects[idx].tasks) ? db.projects[idx].tasks : []).forEach((task: any) => {
+      const taskId = String(task?.id || '');
+      if (taskId) previousTasksById.set(taskId, task);
+    });
+    (Array.isArray(db.tasks) ? db.tasks : []).filter((task: any) => String(task?.projectId || '') === id).forEach((task: any) => {
+      const taskId = String(task?.id || '');
+      if (taskId) previousTasksById.set(taskId, { ...previousTasksById.get(taskId), ...task });
+    });
+    const previousTasks = Array.from(previousTasksById.values());
     const nextTaskIds = new Set(nextTasks.map((task: any) => String(task?.id || '')));
     const removedTaskIds = previousTasks.map((task: any) => String(task?.id || '')).filter(taskId => taskId && !nextTaskIds.has(taskId));
     if (removedTaskIds.some(taskId => (db.timeLogs || []).some((log: any) => String(log.taskId || '') === taskId))) {
@@ -3004,6 +3022,35 @@ apiRouter.put('/projects/:id', requireAuth, requirePermission('canManageProjects
     }
   }
   db.projects[idx] = { ...db.projects[idx], ...patch, updatedAt: new Date().toISOString() };
+  if (Array.isArray(patch.tasks)) {
+    if (!Array.isArray(db.tasks)) db.tasks = [];
+    const currentProject = db.projects[idx];
+    const projectTasks: any[] = Array.isArray(currentProject.tasks) ? currentProject.tasks : [];
+    const nextTaskIds = new Set(projectTasks.map((task: any) => String(task?.id || '')));
+    db.tasks = db.tasks.filter((task: any) =>
+      String(task?.projectId || '') !== id || nextTaskIds.has(String(task?.id || ''))
+    );
+    projectTasks.forEach((task: any) => {
+      const taskId = String(task?.id || '');
+      if (!taskId) return;
+      const existingIndex = db.tasks.findIndex((record: any) => String(record?.id || '') === taskId);
+      const existing = existingIndex >= 0 ? db.tasks[existingIndex] : {};
+      const assignedTo = String(task?.assignedTo || task?.assignee || existing?.assignee || '');
+      const linkedTask = {
+        ...existing,
+        ...task,
+        id: taskId,
+        projectId: id,
+        projectName: String(task?.projectName || currentProject.name || currentProject.title || ''),
+        clientName: String(task?.clientName || currentProject.clientCompany || currentProject.clientName || ''),
+        assignee: assignedTo,
+        assignedTo,
+        updatedAt: new Date().toISOString(),
+      };
+      if (existingIndex >= 0) db.tasks[existingIndex] = linkedTask;
+      else db.tasks.unshift(linkedTask);
+    });
+  }
   saveDatabase(db);
   recordAuditLog({ action: 'PROJECT_UPDATED', actor: req.user!.username, actorRole: req.user!.role, ip: req.ip, userAgent: req.headers['user-agent'] as string, details: `Updated project ${id}.`, severity: 'info' });
   res.json({ success: true, project: db.projects[idx] });
@@ -5639,8 +5686,101 @@ apiRouter.delete('/crm/proposals/:id', requireAuth, requirePermission('canManage
 // 14. PROJECT TASKS & TIME TRACKING (PARTS 16, 17, 18)
 // ----------------------------------------------------
 
+// JSON data mode historically stored some tasks inside projects and others in the
+// top-level task register. Keep both old and new records readable while new writes
+// synchronize both representations. PostgreSQL already uses the tasks table as the
+// canonical source and joins it into projects through the repositories.
+function mergeJsonProjectTasks(project: any, globalTasks: any[]): any[] {
+  const projectId = String(project?.id || '');
+  const projectName = String(project?.name || project?.title || 'Untitled project');
+  const clientName = String(project?.clientCompany || project?.clientName || '');
+  const byId = new Map<string, any>();
+  const nested = Array.isArray(project?.tasks) ? project.tasks : [];
+  nested.forEach((task: any) => {
+    const id = String(task?.id || '');
+    if (!id) return;
+    byId.set(id, {
+      ...task,
+      projectId: projectId,
+      projectName: String(task?.projectName || projectName),
+      clientName: String(task?.clientName || clientName),
+      assignee: String(task?.assignee || task?.assignedTo || ''),
+      assignedTo: String(task?.assignedTo || task?.assignee || ''),
+    });
+  });
+  globalTasks.filter((task: any) => String(task?.projectId || '') === projectId).forEach((task: any) => {
+    const id = String(task?.id || '');
+    if (!id) return;
+    byId.set(id, {
+      ...(byId.get(id) || {}),
+      ...task,
+      projectId,
+      projectName: String(task?.projectName || projectName),
+      clientName: String(task?.clientName || clientName),
+      assignee: String(task?.assignee || task?.assignedTo || byId.get(id)?.assignee || ''),
+      assignedTo: String(task?.assignedTo || task?.assignee || byId.get(id)?.assignedTo || ''),
+    });
+  });
+  return Array.from(byId.values());
+}
+
+function mergeJsonTaskCollection(db: any): any[] {
+  const projects = Array.isArray(db?.projects) ? db.projects : [];
+  const globalTasks = Array.isArray(db?.tasks) ? db.tasks : [];
+  const byId = new Map<string, any>();
+  projects.forEach((project: any) => {
+    mergeJsonProjectTasks(project, globalTasks).forEach((task: any) => {
+      const id = String(task?.id || '');
+      if (id) byId.set(id, task);
+    });
+  });
+  globalTasks.filter((task: any) => !String(task?.projectId || '')).forEach((task: any) => {
+    const id = String(task?.id || '');
+    if (id) byId.set(id, { ...(byId.get(id) || {}), ...task });
+  });
+  return Array.from(byId.values()).sort((a: any, b: any) =>
+    String(b?.createdAt || '').localeCompare(String(a?.createdAt || ''))
+  );
+}
+
+function removeJsonProjectTask(db: any, taskId: string, exceptProjectId = ''): void {
+  (Array.isArray(db?.projects) ? db.projects : []).forEach((project: any) => {
+    const projectId = String(project?.id || '');
+    if (projectId === exceptProjectId || !Array.isArray(project?.tasks)) return;
+    const next = project.tasks.filter((task: any) => String(task?.id || '') !== taskId);
+    if (next.length !== project.tasks.length) {
+      project.tasks = next;
+      project.updatedAt = new Date().toISOString();
+    }
+  });
+}
+
+function upsertJsonProjectTask(db: any, input: any, previousProjectId = ''): void {
+  const taskId = String(input?.id || '');
+  const projectId = String(input?.projectId || '');
+  if (!taskId) return;
+  if (previousProjectId && previousProjectId !== projectId) removeJsonProjectTask(db, taskId, projectId);
+  const project = (Array.isArray(db?.projects) ? db.projects : []).find((item: any) => String(item?.id || '') === projectId);
+  if (!project) return;
+  if (!Array.isArray(project.tasks)) project.tasks = [];
+  const index = project.tasks.findIndex((task: any) => String(task?.id || '') === taskId);
+  const linked = {
+    ...(index >= 0 ? project.tasks[index] : {}),
+    ...input,
+    projectId,
+    projectName: String(input?.projectName || project.name || project.title || ''),
+    clientName: String(input?.clientName || project.clientCompany || project.clientName || ''),
+    assignedTo: String(input?.assignedTo || input?.assignee || ''),
+  };
+  if (index >= 0) project.tasks[index] = linked;
+  else project.tasks.push(linked);
+  project.updatedAt = String(input?.updatedAt || new Date().toISOString());
+}
+
 apiRouter.get('/projects/tasks', requireAuth, requireAnyPermission('canManageKanbanTasks', 'canManageProjects'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  const tasks = getDataSourceMode() === 'postgres' ? await postgresTaskRepository.list() : getDatabase().tasks || [];
+  const tasks = getDataSourceMode() === 'postgres'
+    ? await postgresTaskRepository.list()
+    : mergeJsonTaskCollection(getDatabase());
   res.json({ success: true, tasks });
 });
 
@@ -5678,7 +5818,19 @@ apiRouter.post('/projects/tasks', requireAuth, requirePermission('canManageKanba
     }
   }
   const db = getDatabase();
+  const taskProjectId = String(newTask.projectId || '');
+  const taskProject = taskProjectId
+    ? (Array.isArray(db.projects) ? db.projects : []).find((project: any) => String(project?.id || '') === taskProjectId)
+    : undefined;
+  if (taskProjectId && !taskProject) {
+    res.status(404).json({ success: false, error: 'Project not found.' });
+    return;
+  }
+  if (!Array.isArray(db.tasks)) db.tasks = [];
   db.tasks.unshift(newTask);
+  if (taskProject) {
+    upsertJsonProjectTask(db, { ...newTask, assignedTo: newTask.assignee }, '');
+  }
   saveDatabase(db);
   recordAuditLog({ action: 'TASK_CREATED', actor: req.user!.username, actorRole: req.user!.role, ip: req.ip, userAgent: req.headers['user-agent'] as string, details: `Created task "${newTask.title}".`, severity: 'info' });
   res.json({ success: true, task: newTask });
@@ -5707,11 +5859,40 @@ apiRouter.put('/projects/tasks/:id', requireAuth, requirePermission('canManageKa
       res.status(message.includes('modified since') ? 409 : message.endsWith('not found.') ? 404 : 409).json({ success: false, error: message }); return;
     }
   }
-  const db = getDatabase(); const idx = (db.tasks || []).findIndex(t => t.id === id);
-  if (idx === -1) { res.status(404).json({ success: false, error: 'Task not found.' }); return; }
-  db.tasks[idx] = { ...db.tasks[idx], ...patch, updatedAt: new Date().toISOString() }; saveDatabase(db);
+  const db = getDatabase();
+  if (!Array.isArray(db.tasks)) db.tasks = [];
+  const globalIndex = db.tasks.findIndex((task: any) => String(task?.id || '') === id);
+  let embeddedTask: any = null;
+  let embeddedProjectId = '';
+  for (const project of (Array.isArray(db.projects) ? db.projects : [])) {
+    const matched = (Array.isArray(project?.tasks) ? project.tasks : []).find((task: any) => String(task?.id || '') === id);
+    if (matched) {
+      embeddedTask = { ...matched, projectId: String(project.id || ''), projectName: String(project.name || project.title || '') };
+      embeddedProjectId = String(project.id || '');
+      break;
+    }
+  }
+  const existingTask = globalIndex >= 0 ? db.tasks[globalIndex] : embeddedTask;
+  if (!existingTask) { res.status(404).json({ success: false, error: 'Task not found.' }); return; }
+  const previousProjectId = String(existingTask.projectId || embeddedProjectId || '');
+  const nextProjectId = String(patch.projectId !== undefined ? patch.projectId : previousProjectId);
+  if (nextProjectId && !(Array.isArray(db.projects) ? db.projects : []).some((project: any) => String(project?.id || '') === nextProjectId)) {
+    res.status(404).json({ success: false, error: 'Project not found.' });
+    return;
+  }
+  const nextTask = {
+    ...existingTask,
+    ...patch,
+    projectId: nextProjectId,
+    projectName: String(patch.projectName || existingTask.projectName || (Array.isArray(db.projects) ? db.projects : []).find((project: any) => String(project?.id || '') === nextProjectId)?.name || ''),
+    updatedAt: new Date().toISOString(),
+  };
+  if (globalIndex >= 0) db.tasks[globalIndex] = nextTask;
+  else db.tasks.unshift(nextTask);
+  upsertJsonProjectTask(db, { ...nextTask, assignedTo: String(nextTask.assignedTo || nextTask.assignee || '') }, previousProjectId);
+  saveDatabase(db);
   recordAuditLog({ action: 'TASK_UPDATED', actor: req.user!.username, actorRole: req.user!.role, ip: req.ip, userAgent: req.headers['user-agent'] as string, details: `Updated task ${id}.`, severity: 'info' });
-  res.json({ success: true, task: db.tasks[idx] });
+  res.json({ success: true, task: nextTask });
 });
 
 apiRouter.delete('/projects/tasks/:id', requireAuth, requirePermission('canManageKanbanTasks'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -5729,9 +5910,19 @@ apiRouter.delete('/projects/tasks/:id', requireAuth, requirePermission('canManag
     }
     res.json({ success: true, message: 'Task deleted.' }); return;
   }
-  const db = getDatabase(); const exists = (db.tasks || []).some(t => t.id === id);
-  if (!exists) { res.status(404).json({ success: false, error: 'Task not found.' }); return; }
-  db.tasks = (db.tasks || []).filter(t => t.id !== id); saveDatabase(db);
+  const db = getDatabase();
+  const existsGlobally = (Array.isArray(db.tasks) ? db.tasks : []).some((task: any) => String(task?.id || '') === id);
+  const existsInProject = (Array.isArray(db.projects) ? db.projects : []).some((project: any) =>
+    (Array.isArray(project?.tasks) ? project.tasks : []).some((task: any) => String(task?.id || '') === id)
+  );
+  if (!existsGlobally && !existsInProject) { res.status(404).json({ success: false, error: 'Task not found.' }); return; }
+  if ((Array.isArray(db.timeLogs) ? db.timeLogs : []).some((log: any) => String(log?.taskId || '') === id)) {
+    res.status(409).json({ success: false, error: 'Task has time logs and cannot be deleted.' });
+    return;
+  }
+  db.tasks = (Array.isArray(db.tasks) ? db.tasks : []).filter((task: any) => String(task?.id || '') !== id);
+  removeJsonProjectTask(db, id);
+  saveDatabase(db);
   recordAuditLog({ action: 'TASK_DELETED', actor: req.user!.username, actorRole: req.user!.role, ip: req.ip, userAgent: req.headers['user-agent'] as string, details: `Deleted task ${id}.`, severity: 'warning' });
   res.json({ success: true, message: 'Task deleted.' });
 });

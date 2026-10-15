@@ -32,6 +32,8 @@ type TaskStatus = 'todo' | 'in_progress' | 'review' | 'done';
 type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
 type TaskSortKey = 'title' | 'projectName' | 'assignee' | 'priority' | 'status' | 'dueDate' | 'createdAt';
 
+type TaskProject = { id: string; name: string; clientName: string };
+
 type TaskRecord = {
   id: string;
   title: string;
@@ -202,6 +204,7 @@ export const TasksWorkspace: React.FC = () => {
   const canManageTasks = hasAdminPermission('canManageKanbanTasks');
 
   const [records, setRecords] = useState<TaskRecord[]>([]);
+  const [projects, setProjects] = useState<TaskProject[]>([]);
   const [assignees, setAssignees] = useState<Array<{ id: string; name: string; username: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState<string | null>(null);
@@ -218,7 +221,11 @@ export const TasksWorkspace: React.FC = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedTask, setSelectedTask] = useState<TaskRecord | null>(null);
   const [editingTask, setEditingTask] = useState<TaskRecord | null>(null);
+  const [deleteTaskTarget, setDeleteTaskTarget] = useState<TaskRecord | null>(null);
+  const [deleteTaskError, setDeleteTaskError] = useState<string | null>(null);
+  const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
+  const [updatingSubtaskId, setUpdatingSubtaskId] = useState<string | null>(null);
   const [draggingBoardTaskId, setDraggingBoardTaskId] = useState<string | null>(null);
   const [dragOverBoardStatus, setDragOverBoardStatus] = useState<TaskStatus | null>(null);
   const [bulkUpdating, setBulkUpdating] = useState(false);
@@ -256,10 +263,22 @@ export const TasksWorkspace: React.FC = () => {
     const loadTasks = async () => {
       setLoading(true);
       try {
-        const [projectRes, assigneeRes] = await Promise.all([
+        const [projectRes, taskRes, assigneeRes] = await Promise.all([
           api.projects.getAll(),
+          api.tasks.getAll(),
           api.auth.getTaskAssignees(),
         ]);
+        if (!mounted) return;
+
+        const normalizedProjects: TaskProject[] = projectRes.success && Array.isArray(projectRes.data?.projects)
+          ? projectRes.data.projects.map((project: any) => ({
+              id: String(project?.id || ''),
+              name: String(project?.name || project?.title || 'Untitled project'),
+              clientName: String(project?.clientCompany || project?.clientName || ''),
+            })).filter((project: TaskProject) => project.id)
+          : [];
+        setProjects(normalizedProjects);
+        const projectById = new Map(normalizedProjects.map((project) => [project.id, project]));
 
         const assigneeMap = new Map<string, { id: string; name: string; username: string }>();
         if (assigneeRes.success && Array.isArray(assigneeRes.data?.assignees)) {
@@ -267,76 +286,75 @@ export const TasksWorkspace: React.FC = () => {
             id: String(item?.id || ''),
             name: String(item?.name || item?.username || ''),
             username: String(item?.username || ''),
-          }));
-          normalizedAssignees.forEach(item => {
+          })).filter((item: { id: string; name: string; username: string }) => item.id);
+          normalizedAssignees.forEach((item: { id: string; name: string; username: string }) => {
             assigneeMap.set(item.id, item);
-            assigneeMap.set(item.username, item);
-            assigneeMap.set(item.name, item);
+            if (item.username) assigneeMap.set(item.username, item);
+            if (item.name) assigneeMap.set(item.name, item);
           });
-          if (mounted) setAssignees(normalizedAssignees);
+          setAssignees(normalizedAssignees);
         }
 
-        if (projectRes.success && Array.isArray(projectRes.data?.projects)) {
-          const normalized: TaskRecord[] = [];
-          projectRes.data.projects.forEach((project: any) => {
-            const projectId = String(project?.id || '');
-            const projectName = String(project?.name || project?.title || 'Untitled project');
-            const clientName = String(project?.clientCompany || project?.clientName || '');
-            const tasks = Array.isArray(project?.tasks) ? project.tasks : [];
+        if (taskRes.success && Array.isArray(taskRes.data?.tasks)) {
+          const normalized: TaskRecord[] = taskRes.data.tasks.map((task: any): TaskRecord => {
+            const id = String(task?.id || '');
+            const projectId = String(task?.projectId || task?.project_id || '');
+            const project = projectById.get(projectId);
+            const projectName = String(task?.projectName || task?.project_name || project?.name || 'Unassigned project');
+            const clientName = String(task?.clientName || task?.clientCompany || project?.clientName || '');
+            const assignedTo = String(task?.assigneeUserId || task?.assignee || task?.assignedTo || '');
+            const resolved = assigneeMap.get(assignedTo);
+            const title = String(task?.title || 'Untitled task');
+            return {
+              id,
+              title,
+              description: String(task?.description || ''),
+              projectId,
+              projectName,
+              projectSlug: slugify(projectName),
+              clientName,
+              assigneeId: resolved?.id || assignedTo,
+              assignee: resolved?.name || String(task?.assignee || task?.assignedTo || assignedTo || 'Unassigned'),
+              priority: ['low', 'medium', 'high', 'urgent'].includes(String(task?.priority)) ? task.priority : 'medium',
+              status: ['todo', 'in_progress', 'review', 'done'].includes(String(task?.status)) ? task.status : 'todo',
+              dueDate: String(task?.dueDate || task?.due_date || ''),
+              tags: Array.isArray(task?.tags) ? task.tags.map(String) : [],
+              blocked: isTaskBlocked(task),
+              slug: String(task?.slug || 'task-' + slugify(title) + '-' + slugify(id)),
+              createdAt: String(task?.createdAt || task?.created_at || ''),
+              updatedAt: String(task?.updatedAt || task?.updated_at || ''),
+              subtasks: Array.isArray(task?.subtasks)
+                ? task.subtasks.map((item: any, index: number) => ({
+                    id: String(item?.id || id + '-subtask-' + index),
+                    title: String(item?.title || ''),
+                    completed: Boolean(item?.completed),
+                  })).filter((item: { title: string }) => item.title)
+                : [],
+            };
+          }).filter((task: TaskRecord) => task.id);
 
-            tasks.forEach((task: any) => {
-              const id = String(task?.id || '');
-              const assignedTo = String(task?.assignedTo ?? task?.assignee ?? '');
-              const resolved = assigneeMap.get(assignedTo);
-              const title = String(task?.title || 'Untitled task');
-              normalized.push({
-                id,
-                title,
-                description: String(task?.description || ''),
-                projectId,
-                projectName,
-                projectSlug: slugify(projectName),
-                clientName,
-                assigneeId: resolved?.id || assignedTo,
-                assignee: resolved?.name || assignedTo || 'Unassigned',
-                priority: ['low', 'medium', 'high', 'urgent'].includes(String(task?.priority)) ? task.priority : 'medium',
-                status: ['todo', 'in_progress', 'review', 'done'].includes(String(task?.status)) ? task.status : 'todo',
-                dueDate: String(task?.dueDate || ''),
-                tags: Array.isArray(task?.tags) ? task.tags.map(String) : [],
-                blocked: isTaskBlocked(task),
-                slug: 'task-' + slugify(title) + '-' + slugify(id),
-                createdAt: String(task?.createdAt || ''),
-                subtasks: Array.isArray(task?.subtasks)
-                  ? task.subtasks.map((item: any, index: number) => ({
-                      id: String(item?.id || id + '-subtask-' + index),
-                      title: String(item?.title || ''),
-                      completed: Boolean(item?.completed),
-                    })).filter((item: { title: string }) => item.title)
-                  : [],
-              });
-            });
-          });
-
-          if (mounted) {
-            setRecords(normalized.length ? normalized : (isSlugFixtureMode() ? fallbackTasks : []));
-            setNotice(normalized.length
-              ? null
-              : isSlugFixtureMode()
-                ? 'No server tasks were returned. Frontend preview tasks are active for the workspace.'
-                : null);
-          }
-        } else if (mounted) {
+          setRecords(normalized.length ? normalized : (isSlugFixtureMode() ? fallbackTasks : []));
+          setNotice(normalized.length
+            ? null
+            : isSlugFixtureMode()
+              ? 'No server tasks were returned. Frontend preview tasks are active for the workspace.'
+              : null);
+        } else {
           setRecords(isSlugFixtureMode() ? fallbackTasks : []);
           setNotice(isSlugFixtureMode()
             ? 'Task service is unavailable. Frontend preview tasks are active for the workspace.'
-            : 'Task service is unavailable. Live task data could not be loaded.');
+            : taskRes.error || 'Task service is unavailable. Live task data could not be loaded.');
         }
-      } catch {
+
+        if (!projectRes.success && !isSlugFixtureMode()) {
+          setNotice(current => [current, projectRes.error || 'Project directory could not be loaded.'].filter(Boolean).join(' '));
+        }
+      } catch (error) {
         if (mounted) {
           setRecords(isSlugFixtureMode() ? fallbackTasks : []);
           setNotice(isSlugFixtureMode()
             ? 'Task service is unavailable. Frontend preview tasks are active for the workspace.'
-            : 'Task service is unavailable. Live task data could not be loaded.');
+            : error instanceof Error ? error.message : 'Task service is unavailable. Live task data could not be loaded.');
         }
       } finally {
         if (mounted) setLoading(false);
@@ -347,13 +365,18 @@ export const TasksWorkspace: React.FC = () => {
     return () => { mounted = false; };
   }, []);
 
-  const projectOptions = useMemo(
-    () => Array.from(new Map<string, string>(records.map(task => [task.projectId, task.projectName])).entries()).sort((a, b) => a[1].localeCompare(b[1])),
-    [records]
-  );
+  const projectOptions = useMemo(() => {
+    const options = new Map<string, string>(projects.map((project) => [project.id, project.name]));
+    if (isSlugFixtureMode() && options.size === 0) {
+      fallbackTasks.forEach((task) => {
+        if (task.projectId) options.set(task.projectId, task.projectName);
+      });
+    }
+    return Array.from(options.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+  }, [projects]);
 
   const updateTaskStatus = async (task: TaskRecord, nextStatus: TaskStatus) => {
-    if (!canManageTasks || task.status === nextStatus || updatingTaskId !== null || bulkUpdating) return;
+    if (!canManageTasks || task.status === nextStatus || updatingTaskId !== null || updatingSubtaskId !== null || bulkUpdating) return;
     const previousTask = records.find(item => item.id === task.id) || task;
     setUpdatingTaskId(task.id);
     setRecords(current => current.map(item => item.id === task.id ? {
@@ -426,7 +449,7 @@ export const TasksWorkspace: React.FC = () => {
       projectId: project[0],
       projectName: project[1],
       projectSlug: slugify(project[1]),
-      clientName: '',
+      clientName: projects.find(item => item.id === project[0])?.clientName || '',
       assigneeId: taskForm.assignee,
       assignee: assignees.find(item => item.id === taskForm.assignee)?.name || taskForm.assignee || 'Unassigned',
       priority: taskForm.priority,
@@ -612,7 +635,7 @@ export const TasksWorkspace: React.FC = () => {
   };
 
   const bulkUpdateStatus = async (nextStatus: TaskStatus) => {
-    if (!canManageTasks || !selectedIds.length || bulkUpdating || updatingTaskId !== null) return;
+    if (!canManageTasks || !selectedIds.length || bulkUpdating || updatingTaskId !== null || updatingSubtaskId !== null) return;
     setBulkUpdating(true);
     const selectedTasks = records.filter(task => selectedIds.includes(task.id));
     const previousRecords = records;
@@ -761,6 +784,71 @@ export const TasksWorkspace: React.FC = () => {
     } finally {
       setSavingEditTask(false);
       if (saved) setEditingTask(null);
+    }
+  };
+
+  const toggleTaskSubtask = async (task: TaskRecord, subtaskId: string) => {
+    if (!canManageTasks || updatingSubtaskId !== null || updatingTaskId !== null || bulkUpdating) return;
+    const previousTask = records.find((item) => item.id === task.id) || task;
+    const target = previousTask.subtasks.find((item) => item.id === subtaskId);
+    if (!target) return;
+    const mutationKey = task.id + ':' + subtaskId;
+    const nextSubtasks = previousTask.subtasks.map((item) =>
+      item.id === subtaskId ? { ...item, completed: !item.completed } : item
+    );
+    const optimisticTask = { ...previousTask, subtasks: nextSubtasks };
+    setUpdatingSubtaskId(mutationKey);
+    setRecords((current) => current.map((item) => item.id === task.id ? optimisticTask : item));
+    setSelectedTask((current) => current?.id === task.id ? optimisticTask : current);
+
+    const rollback = () => {
+      setRecords((current) => current.map((item) => item.id === previousTask.id ? previousTask : item));
+      setSelectedTask((current) => current?.id === previousTask.id ? previousTask : current);
+    };
+    try {
+      const response = await api.tasks.update(task.id, { subtasks: nextSubtasks, updatedAt: previousTask.updatedAt });
+      if (!response.success) throw new Error(response.error || 'Checklist progress could not be saved.');
+      const savedTask = response.data?.task;
+      const committedTask: TaskRecord = {
+        ...optimisticTask,
+        updatedAt: String(savedTask?.updatedAt || optimisticTask.updatedAt || ''),
+        subtasks: Array.isArray(savedTask?.subtasks)
+          ? savedTask.subtasks.map((item: any, index: number) => ({
+              id: String(item?.id || task.id + '-subtask-' + index),
+              title: String(item?.title || ''),
+              completed: Boolean(item?.completed),
+            })).filter((item: { title: string }) => item.title)
+          : nextSubtasks,
+      };
+      setRecords((current) => current.map((item) => item.id === task.id ? committedTask : item));
+      setSelectedTask((current) => current?.id === task.id ? committedTask : current);
+      setNotice('Checklist progress saved to the server.');
+    } catch (error) {
+      rollback();
+      setNotice(error instanceof Error
+        ? error.message
+        : 'Checklist progress could not be saved. The previous state has been restored.');
+    } finally {
+      setUpdatingSubtaskId(null);
+    }
+  };
+
+  const deleteTask = async () => {
+    if (!canManageTasks || !deleteTaskTarget || deletingTaskId !== null) return;
+    const target = deleteTaskTarget;
+    setDeletingTaskId(target.id);
+    setDeleteTaskError(null);
+    try {
+      const response = await api.tasks.delete(target.id);
+      if (!response.success) throw new Error(response.error || 'Task could not be deleted.');
+      setRecords((current) => current.filter((item) => item.id !== target.id));
+      setSelectedIds((current) => current.filter((id) => id !== target.id));
+      setDeleteTaskTarget(null);
+      setNotice('Task deleted.');
+    } catch (error) {
+      setDeleteTaskError(error instanceof Error ? error.message : 'Task could not be deleted.');
+    } finally {
+      setDeletingTaskId(null);
     }
   };
 
@@ -1293,6 +1381,16 @@ export const TasksWorkspace: React.FC = () => {
                 Edit
               </Button>
             )}
+            {selectedTask && canManageTasks && (
+              <button
+                type="button"
+                onClick={() => { setDeleteTaskError(null); setDeleteTaskTarget(selectedTask); setSelectedTask(null); }}
+                className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-control border border-danger/25 bg-danger/5 px-3 text-xs font-semibold text-danger hover:bg-danger/10"
+                data-ams-slug="task-detail-delete"
+              >
+                Delete task
+              </button>
+            )}
             {selectedTask && canManageTasks && selectedTask.status !== 'done' && (
               <Button type="button" variant="primary" icon={<CheckCircle2 size={14} />} onClick={() => void updateTaskStatus(selectedTask, 'done')} data-ams-slug="task-detail-done">
                 Mark done
@@ -1369,12 +1467,22 @@ export const TasksWorkspace: React.FC = () => {
                 </div>
                 <div className="mt-3 space-y-2">
                   {selectedTask.subtasks.map(item => (
-                    <div key={item.id} data-ams-slug={selectedTask.slug + '-subtask-' + slugify(item.id)} className="flex items-start gap-2 rounded-control border border-line bg-panel px-3 py-2">
-                      <span className={'mt-0.5 h-4 w-4 shrink-0 rounded-full border ' + (item.completed ? 'border-success bg-success/10 text-success' : 'border-line text-muted')}>
-                        {item.completed ? <CheckCircle2 size={12} className="m-[1px]" /> : null}
+                    <button
+                      key={item.id}
+                      type="button"
+                      role="checkbox"
+                      aria-checked={item.completed}
+                      aria-label={(item.completed ? 'Mark incomplete: ' : 'Mark complete: ') + item.title}
+                      disabled={!canManageTasks || updatingSubtaskId !== null || updatingTaskId === selectedTask.id || bulkUpdating}
+                      onClick={() => void toggleTaskSubtask(selectedTask, item.id)}
+                      data-ams-slug={selectedTask.slug + '-subtask-' + slugify(item.id)}
+                      className="flex w-full min-h-9 items-start gap-2 rounded-control border border-line bg-panel px-3 py-2 text-left transition-colors hover:bg-bg disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <span className={'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ' + (item.completed ? 'border-success bg-success/10 text-success' : 'border-line text-muted')}>
+                        {item.completed ? <CheckCircle2 size={12} /> : null}
                       </span>
                       <span className={'text-xs leading-5 ' + (item.completed ? 'text-muted line-through' : 'text-fg')}>{item.title}</span>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -1407,6 +1515,28 @@ export const TasksWorkspace: React.FC = () => {
             )}
           </div>
         )}
+      </Modal>
+
+      <Modal
+        slug="task-delete-confirmation"
+        open={Boolean(deleteTaskTarget)}
+        onClose={() => { if (deletingTaskId === null) { setDeleteTaskTarget(null); setDeleteTaskError(null); } }}
+        size="sm"
+        title="Delete task?"
+        description={deleteTaskTarget ? deleteTaskTarget.title : undefined}
+        footer={(
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="secondary" onClick={() => { setDeleteTaskTarget(null); setDeleteTaskError(null); }} disabled={deletingTaskId !== null}>Cancel</Button>
+            <button type="button" onClick={() => void deleteTask()} disabled={deletingTaskId !== null} className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-control bg-danger px-3 text-xs font-semibold text-white disabled:opacity-50">
+              {deletingTaskId !== null ? 'Deleting…' : 'Delete task'}
+            </button>
+          </div>
+        )}
+      >
+        <div className="space-y-3">
+          <p className="text-xs leading-5 text-muted">This removes the task from the delivery queue. Tasks with recorded time entries cannot be deleted.</p>
+          {deleteTaskError && <div className="rounded-control border border-danger/25 bg-danger/5 px-3 py-2 text-xs text-danger" role="alert">{deleteTaskError}</div>}
+        </div>
       </Modal>
 
       <Drawer slug="task-edit-modal"
