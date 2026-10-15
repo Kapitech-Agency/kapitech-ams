@@ -65,7 +65,7 @@ const STITCH_NAV_ITEMS: AdminNavItem[] = [
   { key: 'tasks', to: '/admin/tasks', label: 'Tasks', icon: ClipboardCheck, accessKey: 'projects', requiredTier: 3, group: 'Delivery' },
   { key: 'team', to: '/admin/team', label: 'Team', icon: UsersRound, accessKey: 'timelogs', requiredTier: 3, group: 'People & Resources' },
   { key: 'time-logs', to: '/admin/time-logs', label: 'Time Tracking', icon: Clock3, accessKey: 'timelogs', requiredTier: 3, group: 'People & Resources' },
-  { key: 'vendors', to: '/admin/vendors', label: 'Vendors & Talent', icon: Building2, accessKey: 'vendors', requiredTier: 3, group: 'People & Resources' },
+  { key: 'vendors', to: '/admin/vendors', label: 'Vendors', icon: Building2, accessKey: 'vendors', requiredTier: 3, group: 'People & Resources' },
   { key: 'finance', to: '/admin/finance', label: 'Finance', icon: Landmark, accessKey: 'invoicing', requiredTier: 2, group: 'Finance' },
   { key: 'cms', to: '/admin/cms/projects', label: 'Website CMS', icon: LayoutGrid, anyAccessKeys: ['cms_projects', 'services', 'testimonials', 'cms_insights'], requiredTier: 3, group: 'Website & Content' },
   { key: 'approvals', to: '/admin/approvals', label: 'Approvals', icon: ShieldCheck, accessKey: 'approvals', requiredTier: 3, group: 'Operations' },
@@ -632,7 +632,7 @@ export const AdminLayout: React.FC = () => {
                   items={[
                     { key: 'all-clients', label: 'Client Directory', to: '/admin/clients/all-clients' },
                     { key: 'retainers', label: 'Retainer Plans', to: '/admin/clients/retainers' },
-                    { key: 'sla-monitoring', label: 'Service Health', to: '/admin/clients/sla-monitoring' }
+                    { key: 'sla-monitoring', label: 'SLA Monitoring', to: '/admin/clients/sla-monitoring' }
                   ]}
                 />
               ) : location.pathname.startsWith('/admin/cms/') ? (
