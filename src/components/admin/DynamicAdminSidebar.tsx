@@ -191,7 +191,7 @@ export const AdminSystemSettingsNavigation: React.FC<AdminSystemSettingsNavigati
     <section
       aria-label="SYSTEM SETTINGS"
       data-ams-feature-slug="ams-system-settings-nav"
-      className="mt-4 space-y-1 border-t border-line pt-4"
+      className="mt-2 space-y-1 pt-1"
     >
       <h2 className="px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.07em] text-muted">
         SYSTEM SETTINGS
