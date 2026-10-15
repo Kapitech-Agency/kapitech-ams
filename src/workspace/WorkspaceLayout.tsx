@@ -84,9 +84,16 @@ export const WorkspaceLayout: React.FC<WorkspaceLayoutProps> = () => {
   const visibleGroups = useMemo(() => getVisibleGroups(role), [role]);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [theme, setTheme] = useState<'light' | 'dark'>(() =>
-    typeof document !== 'undefined' && document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light'
-  );
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    try {
+      const saved = window.localStorage.getItem('kapitech_ams_theme');
+      if (saved === 'light' || saved === 'dark') return saved;
+      if (document.documentElement.dataset.theme === 'dark') return 'dark';
+      return 'dark';
+    } catch {
+      return 'dark';
+    }
+  });
 
   const activeItem = ALL_NAV_ITEMS.find((item) => item.path === location.pathname);
   const pageTitle = activeItem?.label || 'Agency Workspace';
@@ -95,6 +102,7 @@ export const WorkspaceLayout: React.FC<WorkspaceLayoutProps> = () => {
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
+    try { window.localStorage.setItem('kapitech_ams_theme', theme); } catch {}
   }, [theme]);
 
   useEffect(() => {
