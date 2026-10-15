@@ -2434,7 +2434,7 @@ function clientSystemActor(req: AuthenticatedRequest) {
 function resolveJsonClientIdForContract(db: any, contract: any): string | null {
   const explicit = String(contract.clientId || '').trim();
   if (explicit && (db.clients || []).some((client: any) => String(client.id) === explicit)) return explicit;
-  const clientName = String(contract.clientName || '').trim().replace(/\\s+/g, ' ').toLowerCase();
+  const clientName = String(contract.clientName || '').trim().replace(/\s+/g, ' ').toLowerCase();
   if (!clientName) return null;
   const matches = (db.clients || []).filter((client: any) =>
     String(client.company || client.companyName || '').trim().replace(/\\s+/g, ' ').toLowerCase() === clientName
