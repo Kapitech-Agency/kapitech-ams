@@ -78,14 +78,23 @@ test('primary navigation groups supported workspaces and deep-links existing Tea
   const app = await read('src/App.tsx');
 
   for (const group of [
-    "'Overview'",
-    "'Clients & Growth'",
-    "'Project Delivery'",
-    "'Finance & Procurement'",
-    "'Website & Content'"
+    "'Business & Sales Management'",
+    "'Project & Delivery Operations'",
+    "'Finance & Business Control'",
+    "'Internal Management & Governance'"
   ]) {
     assert.ok(layout.includes(group), 'Primary navigation must include the ' + group + ' group.');
   }
+
+  assert.match(layout, /key: 'dashboard',[^\n]*group: 'Business & Sales Management'/);
+  assert.match(layout, /key: 'inbox',[^\n]*group: 'Business & Sales Management'/);
+  assert.match(layout, /key: 'clients',[^\n]*group: 'Business & Sales Management'/);
+  assert.match(layout, /key: 'projects',[^\n]*group: 'Project & Delivery Operations'/);
+  assert.match(layout, /key: 'tasks',[^\n]*group: 'Project & Delivery Operations'/);
+  assert.match(layout, /key: 'finance',[^\n]*group: 'Finance & Business Control'/);
+  assert.match(layout, /key: 'vendors',[^\n]*group: 'Finance & Business Control'/);
+  assert.match(layout, /key: 'documents',[^\n]*group: 'Internal Management & Governance'/);
+  assert.match(layout, /key: 'cms',[^\n]*group: 'Internal Management & Governance'/);
 
   assert.ok(layout.includes("to: '/admin/team?view=team-directory', label: 'Team Directory'"));
   assert.ok(layout.includes("to: '/admin/team?view=time-logs', label: 'Time Logs'"));
