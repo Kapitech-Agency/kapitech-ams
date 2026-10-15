@@ -9,7 +9,7 @@ import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
 import { toSlug } from '../../lib/slug';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 
@@ -220,19 +220,6 @@ export const AdminTimeLogs: React.FC = () => {
       />
 
 
-      <div className="min-[900px]:hidden min-w-0" data-ams-slug="team-mobile-tabs">
-        <AdminSectionTabs
-          ariaLabel="Team sections"
-          activeKey="time-logs"
-          items={[
-            { key: 'team-directory', label: 'Team Directory', to: '/admin/team' },
-            { key: 'vendor-directory', label: 'Vendor Directory', to: '/admin/team?view=vendor-directory' },
-            { key: 'capacity-allocation', label: 'Capacity & Allocation', to: '/admin/team?view=capacity-allocation' },
-            { key: 'skill-matrix', label: 'Skill Matrix', to: '/admin/team?view=skill-matrix' },
-            { key: 'time-logs', label: 'Time Logs', to: '/admin/time-logs' },
-          ]}
-        />
-      </div>
 
 
       <AdminMetricStrip slug="time-tracking-kpis"
