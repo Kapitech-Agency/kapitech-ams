@@ -63,6 +63,9 @@ export const AMS_NAVIGATION_GROUPS: AmsNavigationGroup[] = [
       },
       { key: 'client-directory', label: 'Client Directory', to: '/admin/clients/all-clients', icon: 'clients', allowedRoles: COMMERCIAL_ROLES },
       { key: 'client-onboarding', label: 'Client Onboarding Framework', to: '/admin/clients/all-clients#client-onboarding-readiness', icon: 'onboarding', allowedRoles: COMMERCIAL_ROLES },
+      { key: 'crm-inbox', label: 'CRM Inbox', to: '/admin/inbox', icon: 'activity', allowedRoles: COMMERCIAL_ROLES },
+            { key: 'crm-contracts', label: 'Contracts', to: '/admin/contracts', icon: 'quotes', allowedRoles: COMMERCIAL_ROLES },
+            { key: 'crm-sla', label: 'SLA Monitoring', to: '/admin/clients/sla-monitoring', icon: 'readiness', allowedRoles: COMMERCIAL_ROLES }
     ],
   },
   {
@@ -72,6 +75,11 @@ export const AMS_NAVIGATION_GROUPS: AmsNavigationGroup[] = [
       { key: 'project-hub', label: 'Project Hub', to: '/admin/projects', icon: 'projects', allowedRoles: ALL_ROLES },
       { key: 'tasks-engine', label: 'Task & Deliverables Engine', to: '/admin/tasks', icon: 'tasks', allowedRoles: ['Admin', 'PM'] },
       { key: 'retainer-manager', label: 'Retainer Manager & Hours Pool', to: '/admin/clients/retainers', icon: 'retainer', allowedRoles: ['Admin', 'PM'] },
+      { key: 'project-budget', label: 'Budget & Cost Control', to: '/admin/projects?projects=budget', icon: 'ledger', allowedRoles: ['Admin', 'PM'] },
+            { key: 'project-archive', label: 'Archived Projects', to: '/admin/projects?projects=archived', icon: 'projects', allowedRoles: ['Admin', 'PM'] },
+            { key: 'team-capacity', label: 'Team & Capacity', to: '/admin/team?view=capacity-allocation', icon: 'user', allowedRoles: ['Admin', 'PM'] },
+            { key: 'project-time', label: 'Timesheet Control', to: '/admin/time-logs', icon: 'tasks', allowedRoles: ['Admin', 'PM'] },
+            { key: 'project-documents', label: 'Project Files', to: '/admin/documents', icon: 'registry', allowedRoles: ['Admin'] }
     ],
   },
   {
@@ -82,6 +90,8 @@ export const AMS_NAVIGATION_GROUPS: AmsNavigationGroup[] = [
       { key: 'invoicing-receivables', label: 'Invoicing & Accounts Receivable', to: '/admin/finance?tab=accounts-receivable', icon: 'invoice', allowedRoles: ADMIN_FINANCE },
       { key: 'expense-vendor-ledger', label: 'Expense & Vendor Ledger', to: '/admin/finance?tab=accounts-payable', icon: 'ledger', allowedRoles: ADMIN_FINANCE },
       { key: 'project-profitability', label: 'Real-Time Project Profitability Hub', to: '/admin/finance?tab=project-finance', icon: 'profitability', allowedRoles: ['Admin', 'Finance', 'PM'], accessNote: { PM: 'Aggregated view' } },
+      { key: 'finance-vendors', label: 'Vendor Directory', to: '/admin/vendors', icon: 'registry', allowedRoles: ADMIN_FINANCE },
+            { key: 'finance-approvals', label: 'Finance Approvals', to: '/admin/approvals', icon: 'access', allowedRoles: ADMIN_FINANCE }
     ],
   },
   {
@@ -90,6 +100,9 @@ export const AMS_NAVIGATION_GROUPS: AmsNavigationGroup[] = [
     items: [
       { key: 'insight-editorial', label: 'Insight Editorial Packs', to: '/admin/cms/insights', icon: 'editorial', allowedRoles: ['Admin', 'PM', 'Creative'] },
       { key: 'portfolio-testimonial-registry', label: 'Portfolio & Testimonial Quarantine Registry', to: '/admin/cms/projects', icon: 'registry', allowedRoles: ['Admin', 'PM', 'Creative'] },
+      { key: 'cms-testimonials', label: 'Testimonials', to: '/admin/cms/testimonials', icon: 'user', allowedRoles: ['Admin', 'PM', 'Creative'] },
+            { key: 'cms-services', label: 'Services Catalog', to: '/admin/cms/services', icon: 'registry', allowedRoles: ['Admin'] },
+            { key: 'cms-careers', label: 'Careers CMS', to: '/admin/cms/careers', icon: 'editorial', allowedRoles: ['Admin'] }
     ],
   },
 ];
