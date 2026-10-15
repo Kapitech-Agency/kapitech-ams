@@ -110,7 +110,6 @@ const PRIMARY_NAVIGATION_ITEMS: AmsNavigationItem[] = [
   { key: 'projects', label: 'Projects', to: '/admin/projects', icon: 'projects', allowedRoles: ['Admin', 'Finance', 'PM', 'Creative'] },
   { key: 'finance', label: 'Finance', to: '/admin/finance?tab=executive-summary', icon: 'profitability', allowedRoles: ['Admin', 'Finance', 'PM'] },
   { key: 'cms', label: 'CMS', to: '/admin/cms/insights', icon: 'editorial', allowedRoles: ['Admin', 'PM', 'Creative'] },
-  { key: 'documents', label: 'Documents', to: '/admin/documents', icon: 'registry', allowedRoles: ['Admin'] },
   { key: 'tasks', label: 'Tasks', to: '/admin/tasks?taskscope=my&workspace=project', icon: 'tasks', allowedRoles: ['Freelancer'] },
 ];
 
@@ -322,7 +321,7 @@ export function isNavigationItemActive(
     case 'documents':
       return path === '/admin/documents' || path.startsWith('/admin/documents/');
     case 'settings':
-      return path === '/admin/settings' || path.startsWith('/admin/settings/') || path === '/admin/navigation/release-readiness';
+      return path === '/admin/settings' || path.startsWith('/admin/settings/') || path === '/admin/navigation/release-readiness' || path === '/admin/documents' || path.startsWith('/admin/documents/');
     case 'executive-overview':
       return path === '/admin/dashboard' && params.get('view') !== 'tasks';
     case 'my-hub':
