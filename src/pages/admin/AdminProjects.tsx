@@ -323,6 +323,9 @@ export const AdminProjects: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
   const [projects, setProjects] = useState<ProjectRecord[]>(isSlugFixtureMode() ? demoProjects : []);
+  const [projectExpenses, setProjectExpenses] = useState<any[] | null>(null);
+  const [expenseLoading, setExpenseLoading] = useState(true);
+  const [expenseError, setExpenseError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [serverMode, setServerMode] = useState(false);
   const serverModeRef = React.useRef(false);
@@ -482,6 +485,28 @@ export const AdminProjects: React.FC = () => {
       window.removeEventListener(CURRENCY_EVENT, handleCurrency);
       if (toastTimeoutRef.current !== null) window.clearTimeout(toastTimeoutRef.current);
     };
+  }, []);
+
+  React.useEffect(() => {
+    let mounted = true;
+    api.finance.getExpenses()
+      .then((response) => {
+        if (!mounted) return;
+        if (response.success && Array.isArray(response.data?.expenses)) {
+          setProjectExpenses(response.data.expenses);
+          setExpenseError(null);
+        } else {
+          setProjectExpenses(null);
+          setExpenseError(response.error || 'Finance expense records are unavailable for this role.');
+        }
+      })
+      .catch((requestError) => {
+        if (!mounted) return;
+        setProjectExpenses(null);
+        setExpenseError(requestError instanceof Error ? requestError.message : 'Finance expense records are unavailable.');
+      })
+      .finally(() => { if (mounted) setExpenseLoading(false); });
+    return () => { mounted = false; };
   }, []);
 
   React.useEffect(() => {
@@ -721,18 +746,39 @@ export const AdminProjects: React.FC = () => {
     };
   }, [activeProjects]);
 
+  const recordedExpenseTotals = useMemo(() => {
+    if (projectExpenses === null) return null;
+    const totals = new Map<string, { amount: number; count: number }>();
+    projectExpenses.forEach((expense) => {
+      const projectId = String(expense.projectId || '').trim();
+      const status = String(expense.status || '').toLowerCase();
+      const expenseCurrency = String(expense.currency || 'IDR').toUpperCase();
+      if (!projectId || ['voided', 'cancelled', 'canceled', 'deleted'].includes(status) || expenseCurrency !== currency.toUpperCase()) return;
+      const current = totals.get(projectId) || { amount: 0, count: 0 };
+      current.amount += Math.max(0, toFiniteNumber(expense.amount));
+      current.count += 1;
+      totals.set(projectId, current);
+    });
+    return totals;
+  }, [projectExpenses, currency]);
+
+  const getRecordedExpense = (projectId: string) => {
+    if (recordedExpenseTotals === null) return null;
+    return recordedExpenseTotals.get(projectId)?.amount || 0;
+  };
+
   const budgetRows = useMemo(
-    () =>
-      filteredProjects.map(project => {
-        const burn = Math.round(project.budget * (project.progressPercent / 100));
-        return {
-          project,
-          burn,
-          remaining: Math.max(0, project.budget - burn),
-          variance: project.budget - burn,
-        };
-      }),
-    [filteredProjects]
+    () => filteredProjects.map((project) => {
+      const actual = getRecordedExpense(project.id);
+      return {
+        project,
+        actual,
+        remaining: actual === null ? null : project.budget - actual,
+        variance: actual === null ? null : project.budget - actual,
+        expenseCount: recordedExpenseTotals?.get(project.id)?.count || 0,
+      };
+    }),
+    [filteredProjects, recordedExpenseTotals]
   );
 
   const budgetTablePageCount = Math.max(1, Math.ceil(budgetRows.length / budgetTablePageSize));
@@ -1424,12 +1470,12 @@ export const AdminProjects: React.FC = () => {
       statusLabel(project.status),
       String(project.progressPercent),
       String(project.budget),
-      String(Math.round(project.budget * (project.progressPercent / 100))),
+      getRecordedExpense(project.id) === null ? '' : String(getRecordedExpense(project.id)),
       project.teamLead,
       project.targetEndDate,
     ]);
     const csv = [
-      ['slug', 'project', 'client', 'status', 'progress_percent', 'budget', 'budget_burn', 'owner', 'deadline'],
+      ['slug', 'project', 'client', 'status', 'progress_percent', 'budget', 'recorded_finance_cost', 'owner', 'deadline'],
       ...rows,
     ]
       .map(row => row.map(cell => '"' + String(cell).replace(/"/g, '""') + '"').join(','))
@@ -1808,7 +1854,7 @@ export const AdminProjects: React.FC = () => {
             : view === 'sprint'
               ? 'Move work through execution stages and keep delivery ownership visible.'
               : view === 'budget'
-                ? 'Compare committed project value with progress-based budget burn. Financial actuals can replace the demo burn when the ledger is connected.'
+                ? 'Compare each project budget with recorded Finance expenses linked to that project. Delivery progress is never used as a cost estimate.'
                 : 'Completed projects kept visible for reference, handover history, and future reuse.'
         }
         actions={(
@@ -2129,7 +2175,8 @@ export const AdminProjects: React.FC = () => {
                           ) : (
                             items.map(project => {
                               const taskDone = project.tasks.filter(task => task.status === 'done').length;
-                              const burn = Math.round(project.budget * (project.progressPercent / 100));
+                              const recordedCost = getRecordedExpense(project.id);
+                              const recordedCostCount = recordedExpenseTotals?.get(project.id)?.count || 0;
                               const milestoneDone = project.milestones.filter(milestone => milestone.completed).length;
                               const isDragging = draggingProjectId === project.id;
 
@@ -2237,13 +2284,13 @@ export const AdminProjects: React.FC = () => {
                                   <div className="mt-3 border-t border-line pt-3">
                                     <div className="flex items-end justify-between gap-3">
                                       <div className="min-w-0">
-                                        <div className="text-[10px] font-medium text-muted">Budget burn</div>
+                                        <div className="text-[10px] font-medium text-muted">Recorded cost</div>
                                         <div className="mt-0.5 break-words whitespace-normal text-xs font-medium tabular-nums text-fg">
-                                          {formatAmount(burn, currency)}
+                                          {recordedCost === null ? '—' : formatAmount(recordedCost, currency)}
                                           <span className="text-muted"> / {formatAmount(project.budget, currency)}</span>
                                         </div>
                                         <div className="mt-1 text-[9px] text-muted">
-                                          {project.budget > 0 ? Math.round((burn / project.budget) * 100) : 0}% budget burn
+                                          {recordedCost === null ? 'Finance source unavailable' : recordedCostCount + ' expense records'}
                                         </div>
                                       </div>
                                       {project.teamLead ? (
@@ -2290,7 +2337,7 @@ export const AdminProjects: React.FC = () => {
                       <th>Project</th>
                       <th>Status</th>
                       <th>Progress</th>
-                      <th>Budget burn</th>
+                      <th>Recorded cost</th>
                       <th>Owner</th>
                       <th>Deadline</th>
                       <th>Actions</th>
@@ -2298,7 +2345,7 @@ export const AdminProjects: React.FC = () => {
                   </thead>
                   <tbody>
                     {pagedProjectTableRows.map(project => {
-                      const burn = Math.round(project.budget * (project.progressPercent / 100));
+                      const recordedCost = getRecordedExpense(project.id);
                       return (
                         <tr key={project.id}>
                           <td>
@@ -2314,7 +2361,7 @@ export const AdminProjects: React.FC = () => {
                               <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg"><div className="h-full rounded-full bg-accent" style={{ width: project.progressPercent + '%' }} /></div>
                             </div>
                           </td>
-                          <td className="text-xs tabular-nums font-medium text-fg">{formatAmount(burn, currency)} <span className="text-muted">/ {formatAmount(project.budget, currency)}</span></td>
+                          <td className="text-xs tabular-nums font-medium text-fg">{recordedCost === null ? '—' : formatAmount(recordedCost, currency)} <span className="text-muted">/ {formatAmount(project.budget, currency)}</span></td>
                           <td>
                             {project.teamLead ? (
                               <ProfileIdentity
@@ -2800,8 +2847,8 @@ export const AdminProjects: React.FC = () => {
           <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[
               ['Committed', formatAmount(activeProjects.reduce((sum, project) => sum + project.budget, 0), currency), 'Active portfolio'],
-              ['Burn to date', formatAmount(budgetRows.filter(row => row.project.status !== 'completed').reduce((sum, row) => sum + row.burn, 0), currency), 'Derived from progress'],
-              ['Remaining', formatAmount(budgetRows.filter(row => row.project.status !== 'completed').reduce((sum, row) => sum + row.remaining, 0), currency), 'Unburned commitment'],
+              ['Recorded cost', budgetRows.some(row => row.actual === null) ? '—' : formatAmount(budgetRows.filter(row => row.project.status !== 'completed').reduce((sum, row) => sum + (row.actual || 0), 0), currency), expenseLoading ? 'Loading Finance records' : projectExpenses === null ? (expenseError || 'Finance source unavailable') : 'Linked project expenses'],
+              ['Remaining', budgetRows.some(row => row.remaining === null) ? '—' : formatAmount(budgetRows.filter(row => row.project.status !== 'completed').reduce((sum, row) => sum + (row.remaining || 0), 0), currency), 'Budget less recorded cost'],
               ['At risk', String(budgetRows.filter(row => row.project.health !== 'Good').length), 'Projects to review'],
             ].map(([label, value, context]) => (
               <article key={label} className="rounded-card border border-line bg-panel p-4">
@@ -2812,7 +2859,7 @@ export const AdminProjects: React.FC = () => {
             ))}
           </section>
 
-          <AdminPanel title="Budget vs actual" description="Progress-based actuals keep this view useful before financial ledger integration.">
+          <AdminPanel title="Budget vs actual" description="Actuals use Finance expense entries linked by project ID. Delivery progress is not used as a cost estimate.">
             <div className="overflow-x-auto custom-scrollbar">
               <table className="ams-data-table min-w-[900px] text-left">
                 <thead>
@@ -2820,9 +2867,9 @@ export const AdminProjects: React.FC = () => {
                 </thead>
                 <tbody>
                   {pagedBudgetRows.map(row => {
-                    const burnPercent = row.project.budget > 0
-                      ? Math.min(100, Math.round((row.burn / row.project.budget) * 100))
-                      : 0;
+                    const burnPercent = row.project.budget > 0 && row.actual !== null
+                      ? Math.round((row.actual / row.project.budget) * 100)
+                      : null;
                     return (
                       <tr key={row.project.id}>
                         <td>
@@ -2837,8 +2884,8 @@ export const AdminProjects: React.FC = () => {
                           </span>
                         </td>
                         <td className="text-xs tabular-nums font-medium text-fg">{formatAmount(row.project.budget, currency)}</td>
-                        <td className="text-xs tabular-nums text-fg">{formatAmount(row.burn, currency)}</td>
-                        <td className="text-xs tabular-nums text-fg">{formatAmount(row.remaining, currency)}</td>
+                        <td className="text-xs tabular-nums text-fg">{row.actual === null ? '—' : formatAmount(row.actual, currency)}{row.actual !== null && <span className="ml-1 text-[10px] text-muted">{row.expenseCount} records</span>}</td>
+                        <td className={'text-xs tabular-nums ' + (row.remaining !== null && row.remaining < 0 ? 'font-semibold text-danger' : 'text-fg')}>{row.remaining === null ? '—' : formatAmount(row.remaining, currency)}</td>
                         <td>
                           <div className="min-w-[145px]">
                             <div className="flex items-center justify-between text-[10px] text-muted">
@@ -2853,19 +2900,19 @@ export const AdminProjects: React.FC = () => {
                         <td>
                           <div className="min-w-[145px]">
                             <div className="flex items-center justify-between text-[10px] text-muted">
-                              <span>Burn</span>
-                              <span className="tabular-nums text-fg">{burnPercent}%</span>
+                              <span>Cost / budget</span>
+                              <span className="tabular-nums text-fg">{burnPercent === null ? '—' : burnPercent + '%'}</span>
                             </div>
                             <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg">
                               <div
-                                className={'h-full rounded-full ' + (burnPercent > row.project.progressPercent + 15 ? 'bg-danger' : burnPercent > row.project.progressPercent + 5 ? 'bg-warning' : 'bg-success')}
-                                style={{ width: burnPercent + '%' }}
+                                className={'h-full rounded-full ' + (burnPercent !== null && burnPercent > 100 ? 'bg-danger' : burnPercent !== null && burnPercent > 85 ? 'bg-warning' : 'bg-success')}
+                                style={{ width: Math.min(100, Math.max(0, burnPercent || 0)) + '%' }}
                               />
                             </div>
                           </div>
                         </td>
-                        <td className={'text-xs tabular-nums font-semibold ' + (row.variance < 0 ? 'text-danger' : 'text-success')}>
-                          {formatAmount(row.variance, currency)}
+                        <td className={'text-xs tabular-nums font-semibold ' + (row.variance !== null && row.variance < 0 ? 'text-danger' : row.variance === null ? 'text-muted' : 'text-success')}>
+                          {row.variance === null ? '—' : formatAmount(row.variance, currency)}
                         </td>
                       </tr>
                     );

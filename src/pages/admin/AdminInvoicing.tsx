@@ -38,7 +38,7 @@ import { Modal } from '../../components/ui/Modal';
 import { InvoiceStatusDropdown } from '../../components/ui/InvoiceStatusDropdown';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { api } from '../../lib/apiClient';
-import { AdminMetricCard, AdminTablePagination, AdminStatusBadge } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricCard, AdminTablePagination, AdminStatusBadge, AdminModuleHeader } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { isSlugFixtureMode } from '../../lib/runtimeMode';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
@@ -706,7 +706,7 @@ const FinanceCashFlowChart: React.FC<{
 };
 const FinanceMetricCard: React.FC<React.ComponentProps<typeof AdminMetricCard>> = AdminMetricCard;
 
-type EmbeddedFinanceView = 'invoices' | 'receivables' | 'income-expenses' | 'vendor-payments';
+type EmbeddedFinanceView = 'invoices' | 'receivables' | 'income-expenses' | 'vendor-payments' | 'quotations';
 type AdminInvoicingProps = {
   /** Reuse the existing transactional invoice/expense flows from a Finance worksheet. */
   embeddedView: EmbeddedFinanceView;
@@ -716,8 +716,11 @@ type AdminInvoicingProps = {
 export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, embeddedIncomeExpenseMode }) => {
   const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const { language } = useLanguage();
-  const canViewFinancials = hasAdminPermission('canViewFinancials');
+  const isProposalWorkspace = embeddedView === 'quotations';
   const canManageInvoices = hasAdminPermission('canManageInvoices');
+  const canManageProposals = hasAdminPermission('canManageCrm') || canManageInvoices;
+  const canApproveProposals = hasAdminPermission('canApproveBudgets');
+  const canViewFinancials = hasAdminPermission('canViewFinancials') || (isProposalWorkspace && canManageProposals);
   const canCreateInvoice = canManageInvoices;
   const canDeleteInvoice = canManageInvoices;
 
@@ -1043,12 +1046,12 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   };
 
   useEffect(() => {
-    if (!canViewFinancials) {
+    if (isProposalWorkspace || !canViewFinancials) {
       setLoading(false);
       return;
     }
     void loadData();
-  }, [canViewFinancials, currency]);
+  }, [canViewFinancials, currency, isProposalWorkspace]);
 
   useEffect(() => {
     void loadQuotations();
@@ -2568,7 +2571,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 
   const saveQuotation = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!canManageInvoices || quotationSaving) return;
+    if (!canManageProposals || quotationSaving) return;
 
     const validQuotationItems = quotationItems
       .map((item) => ({ ...item, description: item.description.trim(), quantity: Number(item.quantity) || 0, unitPrice: Number(item.unitPrice) || 0, amount: (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0) }))
@@ -2665,7 +2668,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   };
 
   const updateQuotationStatus = async (quotation: FinanceQuotation, status: FinanceQuotationStatus) => {
-    if (!canManageInvoices || quotation.status === status) return;
+    if (!canManageProposals || quotation.status === status) return;
 
     if (usingDemoQuotations) {
       const updatedQuotation = { ...quotation, status };
@@ -2688,7 +2691,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   };
 
   const deleteQuotation = async (quotation: FinanceQuotation) => {
-    if (!canManageInvoices) return;
+    if (!canManageProposals) return;
 
     if (usingDemoQuotations) {
       setQuotations((current) => current.filter((item) => item.id !== quotation.id));
@@ -2882,6 +2885,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 
   return (
     <div className="min-w-0 space-y-5">
+      {isProposalWorkspace && <AdminModuleHeader className="mb-0" title="Proposals" description="Manage commercial quotations, review stages, validity, and the handoff to invoicing." />}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="inline-flex min-h-9 items-center rounded-control border border-line bg-panel p-1" aria-label="Finance currency">
           {(['IDR', 'USD'] as CurrencyCode[]).map((item) => (
@@ -2934,7 +2938,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
           <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">
             {filteredQuotations.length} visible
           </span>
-          {canManageInvoices && (
+          {canManageProposals && (
             <button type="button" onClick={openCreateQuotation} className={primaryClass}>
               <Plus size={14}/>New quotation
             </button>
@@ -3004,9 +3008,9 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
         <button type="button" onClick={()=>setQuotationActionMenu((current)=>current===quotation.id?null:quotation.id)} className="inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-bg hover:text-fg" aria-label={"Quotation actions for " + quotation.quotationNumber} aria-expanded={quotationActionMenu===quotation.id} title="Quotation actions"><MoreHorizontal size={14}/></button>
         {quotationActionMenu===quotation.id&&<div className="absolute right-0 top-[calc(100%+6px)] z-40 w-48 rounded-card border border-line bg-panel p-1.5" role="menu">
           <button type="button" role="menuitem" onClick={()=>{setQuotationDetail(quotation);setQuotationActionMenu(null);}} className="flex w-full items-center gap-2 rounded-control px-3 py-2.5 text-left text-xs text-muted hover:bg-bg hover:text-fg"><Eye size={14}/>View quotation</button>
-          {canManageInvoices&&<button type="button" role="menuitem" onClick={()=>{openEditQuotation(quotation);setQuotationActionMenu(null);}} className="flex w-full items-center gap-2 rounded-control px-3 py-2.5 text-left text-xs text-muted hover:bg-bg hover:text-fg"><Edit3 size={14}/>Edit quotation</button>}
+          {canManageProposals&&<button type="button" role="menuitem" onClick={()=>{openEditQuotation(quotation);setQuotationActionMenu(null);}} className="flex w-full items-center gap-2 rounded-control px-3 py-2.5 text-left text-xs text-muted hover:bg-bg hover:text-fg"><Edit3 size={14}/>Edit quotation</button>}
           {canConvert&&<button type="button" role="menuitem" onClick={()=>{void convertQuotationToInvoice(quotation);setQuotationActionMenu(null);}} className="flex w-full items-center gap-2 rounded-control px-3 py-2.5 text-left text-xs text-muted hover:bg-bg hover:text-fg"><Receipt size={14}/>Convert to invoice</button>}
-          {canManageInvoices&&<button type="button" role="menuitem" onClick={()=>{void deleteQuotation(quotation);setQuotationActionMenu(null);}} className="flex w-full items-center gap-2 rounded-control px-3 py-2.5 text-left text-xs text-danger hover:bg-danger/10"><Trash2 size={14}/>Delete quotation</button>}
+          {canManageProposals&&<button type="button" role="menuitem" onClick={()=>{void deleteQuotation(quotation);setQuotationActionMenu(null);}} className="flex w-full items-center gap-2 rounded-control px-3 py-2.5 text-left text-xs text-danger hover:bg-danger/10"><Trash2 size={14}/>Delete quotation</button>}
         </div>}
       </div>
     </td>
@@ -3878,11 +3882,11 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
           quotationDetail ? (
             <div className="flex w-full flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <button type="button" onClick={() => openEditQuotation(quotationDetail)} className={actionClass}><Edit3 size={14} />Edit</button>
+                {canManageProposals && <button type="button" onClick={() => openEditQuotation(quotationDetail)} className={actionClass}><Edit3 size={14} />Edit</button>}
                 <button type="button" onClick={() => exportQuotationsCsv()} className={actionClass}><Download size={14} />Export list</button>
               </div>
               <div className="flex items-center gap-2">
-                <button type="button" onClick={() => void convertQuotationToInvoice(quotationDetail)} disabled={Boolean(quotationDetail.invoiceId) || quotationDetail.status !== 'approved'} className={primaryClass}>
+                <button type="button" onClick={() => void convertQuotationToInvoice(quotationDetail)} disabled={!canManageInvoices || Boolean(quotationDetail.invoiceId) || quotationDetail.status !== 'approved'} className={primaryClass}>
                   <Receipt size={14} />
                   {quotationDetail.invoiceId ? 'Invoice linked' : 'Convert to invoice'}
                 </button>
@@ -3932,7 +3936,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
                   ['approved', 'Approve'],
                   ['sent', 'Mark sent']
                 ] as Array<[FinanceQuotationStatus, string]>).map(([status, label]) => (
-                  <button key={status} type="button" onClick={() => void updateQuotationStatus(quotationDetail, status)} className={actionClass + ' w-full'} disabled={!canManageInvoices}>
+                  <button key={status} type="button" onClick={() => void updateQuotationStatus(quotationDetail, status)} className={actionClass + ' w-full'} disabled={!canManageProposals || (status === 'approved' && !canApproveProposals)}>
                     {label}
                   </button>
                 ))}

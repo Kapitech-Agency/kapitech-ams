@@ -6,12 +6,15 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-test('Retired module routes redirect and are not imported by the active AMS shell', async () => {
+test('CRM, proposals, and approvals resolve to protected workspaces', async () => {
   const app = await fs.readFile(path.join(root, 'src/App.tsx'), 'utf8');
-  for (const modulePath of ['crm', 'proposals', 'approvals']) {
-    assert.ok(app.includes('<Route path="' + modulePath + '" element={<Navigate to="/admin/dashboard" replace />} />'));
-  }
-  assert.doesNotMatch(app, /pages\/admin\/Admin(Crm|Proposals|Approvals)/);
+  assert.ok(app.includes('<Route path="crm" element={<ModuleRoute moduleKey="crm" moduleLabel="CRM"><AdminClientLeadAccounts /></ModuleRoute>} />'));
+  assert.ok(app.includes('<Route path="proposals" element={<ModuleRoute moduleKey="proposals" moduleLabel="Proposals"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />'));
+  assert.ok(app.includes('<Route path="approvals" element={<ModuleRoute moduleKey="approvals" moduleLabel="Approvals"><AdminApprovals /></ModuleRoute>} />'));
+  assert.ok(app.includes("const AdminApprovals = lazyWithRetry("));
+  assert.ok(!app.includes('<Route path="crm" element={<Navigate to="/admin/dashboard"'));
+  assert.ok(!app.includes('<Route path="proposals" element={<Navigate to="/admin/dashboard"'));
+  assert.ok(!app.includes('<Route path="approvals" element={<Navigate to="/admin/dashboard"'));
 });
 test('PostgreSQL proposal mutations and approval creation retain audit logging', async () => {
   const source = await fs.readFile(path.join(root, 'server/routes.ts'), 'utf8');
@@ -53,7 +56,10 @@ test('Mutation audit logging is consistent across JSON and PostgreSQL route path
 test('Read-only admin states keep mutation UI controls behind the same permissions as the API', async () => {
   const invoicing = await fs.readFile(path.join(root, 'src/pages/admin/AdminInvoicing.tsx'), 'utf8');
   assert.ok(invoicing.includes('const canCreateInvoice = canManageInvoices;'));
-  assert.ok(invoicing.includes('disabled={!canManageInvoices}'));
+  assert.ok(invoicing.includes("const canManageProposals = hasAdminPermission('canManageCrm') || canManageInvoices;"));
+  assert.ok(invoicing.includes('if (!canManageInvoices || savingInvoice) return;'));
+  assert.ok(invoicing.includes('if (!canManageInvoices || quotation.invoiceId || quotation.status !== \'approved\') return;'));
+  assert.ok(invoicing.includes('canConvert = canManageInvoices && quotation.status === "approved" && !quotation.invoiceId'));
   assert.ok(invoicing.includes('const canCreateInvoice = canManageInvoices;'));
   assert.ok(invoicing.includes('canManageInvoices &&'));
   assert.ok(invoicing.includes('disabled={refreshing}'));
@@ -68,8 +74,8 @@ test('Read-only admin states keep mutation UI controls behind the same permissio
   assert.ok(clients.includes('if (!canManageClients) return;'));
 
   const app = await fs.readFile(path.join(root, 'src/App.tsx'), 'utf8');
-  assert.ok(app.includes('<Route path="crm" element={<Navigate to="/admin/dashboard" replace />} />'));
-  assert.doesNotMatch(app, /pages\/admin\/AdminCrm/);
+  assert.ok(app.includes('<Route path="crm" element={<ModuleRoute moduleKey="crm" moduleLabel="CRM"><AdminClientLeadAccounts /></ModuleRoute>} />'));
+  assert.ok(app.includes('<Route path="proposals" element={<ModuleRoute moduleKey="proposals" moduleLabel="Proposals"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />'));
 });
 
 

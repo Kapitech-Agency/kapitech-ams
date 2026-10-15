@@ -34,12 +34,15 @@ test('finance read access and invoice mutation access match server permissions',
   assert.match(routes, /apiRouter\.post\('\/finance\/invoices', requireAuth, requirePermission\('canManageInvoices'\)/);
 });
 
-test('combined Team workspace applies permission guard for selected view', async () => {
+test('Team legacy links redirect to distinct permission-checked workspaces', async () => {
   const app = await read('src/App.tsx');
-  assert.match(app, /const TeamWorkspaceRoute:[\s\S]*?new URLSearchParams\(location\.search\)\.get\('view'\)/);
-  assert.match(app, /view === 'vendor-directory' \|\| view === 'skill-matrix'/);
-  assert.match(app, /const moduleKey = isVendorWorkspace \? 'vendors' : 'timelogs'/);
-  assert.match(app, /<Route path="team" element=\{<TeamWorkspaceRoute \/>\} \/>/);
+  assert.match(app, /const TeamWorkspaceRoute:[\s\S]*?requestedView === 'vendor-directory'/);
+  assert.match(app, /requestedView === 'skill-matrix'/);
+  assert.match(app, /requestedView === 'time-logs'/);
+  assert.ok(app.includes('<Route path="team" element={<TeamWorkspaceRoute />} />'));
+  assert.ok(app.includes('<Route path="time-logs" element={<ModuleRoute moduleKey="timelogs" moduleLabel="Time"><AdminTimeLogs /></ModuleRoute>} />'));
+  assert.ok(app.includes('<Route path="vendors" element={<VendorWorkspaceRoute />} />'));
+  assert.ok(app.includes('<ModuleRoute moduleKey="vendors" moduleLabel="Vendors">'));
 });
 
 test('Projects accepts valid empty server lists and never falls back to demo records in production', async () => {
@@ -73,66 +76,107 @@ test('MFA enrolment route is accessible before module permissions are evaluated'
 });
 
 
-test('primary navigation contains modules only and keeps submenus inside each module', async () => {
+test('AMS sidebar groups real modules and keeps feature views inside their module', async () => {
   const layout = await read('src/pages/admin/AdminLayout.tsx');
   const app = await read('src/App.tsx');
   const teams = await read('src/pages/admin/AdminTeams.tsx');
   const clients = await read('src/pages/admin/AdminClients.tsx');
 
-  assert.doesNotMatch(layout, /Business & Sales Management|Project & Delivery Operations|Finance & Business Control|Internal Management & Governance/);
-  assert.doesNotMatch(layout, /AdminNavGroup|NAV_GROUPS|getGroupItems/);
+  for (const group of ["'Overview'", "'Sales'", "'Delivery'", "'Finance'", "'Content'", "'Operations'"]) {
+    assert.ok(layout.includes(group), 'Expected sidebar group ' + group);
+  }
+  assert.ok(layout.includes("const NAV_GROUPS: AdminNavGroup[] = ['Overview', 'Sales', 'Delivery', 'Finance', 'Content', 'Operations']"));
 
   const menuStart = layout.indexOf('const STITCH_NAV_ITEMS: AdminNavItem[] = [');
   const menuEnd = layout.indexOf('];', menuStart);
   assert.ok(menuStart >= 0 && menuEnd > menuStart);
-  const moduleMenu = layout.slice(menuStart, menuEnd);
-
-  for (const [key, label, route] of [
-    ['dashboard', 'Dashboard', '/admin/dashboard'],
-    ['inbox', 'Inbox', '/admin/inbox'],
-    ['clients', 'Clients', '/admin/clients/all-clients'],
-    ['projects', 'Projects', '/admin/projects'],
-    ['tasks', 'Tasks', '/admin/tasks'],
-    ['team', 'Team', '/admin/team'],
-    ['time-logs', 'Time', '/admin/time-logs'],
-    ['finance', 'Finance', '/admin/finance'],
-    ['vendors', 'Vendors', '/admin/vendors'],
-    ['documents', 'Documents', '/admin/documents'],
-    ['cms', 'Website', '/admin/cms/projects'],
+  const menu = layout.slice(menuStart, menuEnd);
+  for (const [key, label, group] of [
+    ['dashboard', 'Dashboard', 'Overview'],
+    ['inbox', 'Inbox', 'Sales'],
+    ['crm', 'CRM', 'Sales'],
+    ['proposals', 'Proposals', 'Sales'],
+    ['clients', 'Clients', 'Sales'],
+    ['projects', 'Projects', 'Delivery'],
+    ['tasks', 'Tasks', 'Delivery'],
+    ['team', 'Team', 'Delivery'],
+    ['time-logs', 'Time', 'Delivery'],
+    ['finance', 'Finance', 'Finance'],
+    ['vendors', 'Vendors', 'Finance'],
+    ['cms', 'Website', 'Content'],
+    ['documents', 'Documents', 'Operations'],
+    ['approvals', 'Approvals', 'Operations']
   ]) {
-    assert.match(moduleMenu, new RegExp("key: '" + key + "', to: '" + route + "', label: '" + label + "'"));
+    assert.ok(menu.includes("key: '" + key + "'") && menu.includes("label: '" + label + "'") && menu.includes("group: '" + group + "'"), 'Incorrect sidebar module mapping: ' + label);
   }
+  assert.equal(menu.includes("label: 'Team Directory'"), false);
+  assert.equal(menu.includes("label: 'Time Logs'"), false);
+  assert.equal(menu.includes("label: 'Vendor Directory'"), false);
+  assert.equal(menu.includes("label: 'Capacity'"), false);
 
-  assert.doesNotMatch(moduleMenu, /Team Directory|Time Logs|Vendor Directory|Capacity|Skill Matrix|Retainers|SLA Monitoring/);
-  assert.match(layout, /key: 'team', to: '\/admin\/team', label: 'Team'/);
-  assert.match(layout, /key: 'time-logs', to: '\/admin\/time-logs', label: 'Time'/);
-  assert.match(layout, /key: 'vendors', to: '\/admin\/vendors', label: 'Vendors'/);
-
-  assert.match(layout, /ariaLabel="Team sections"[\s\S]{0,500}label: 'Team Directory'[\s\S]{0,300}label: 'Capacity'/);
-  assert.match(layout, /ariaLabel="Vendors sections"[\s\S]{0,500}label: 'Vendor Directory'[\s\S]{0,300}label: 'Skills'/);
-  assert.match(teams, /location\.pathname === '\/admin\/team'[\s\S]{0,450}ariaLabel="Team sections"/);
-  assert.match(teams, /location\.pathname === '\/admin\/vendors'[\s\S]{0,450}ariaLabel="Vendors sections"/);
-  assert.doesNotMatch(teams, /to: '\/admin\/team\?view=(vendor-directory|skill-matrix|time-logs)'/);
+  assert.ok(layout.includes('ariaLabel="Team sections"'));
+  assert.ok(layout.includes("label: 'Team Directory'"));
+  assert.ok(layout.includes("label: 'Capacity'"));
+  assert.ok(layout.includes('ariaLabel="Vendors sections"'));
+  assert.ok(layout.includes("label: 'Vendor Directory'"));
+  assert.ok(layout.includes("label: 'Skills'"));
+  assert.equal(teams.includes("to: '/admin/team?view=vendor-directory'"), false);
+  assert.equal(teams.includes("to: '/admin/team?view=skill-matrix'"), false);
+  assert.equal(teams.includes("to: '/admin/team?view=time-logs'"), false);
 
   assert.ok(app.includes('<Route path="team" element={<TeamWorkspaceRoute />} />'));
-  assert.ok(app.includes('<Route path="time-logs" element={<TeamWorkspaceRoute />} />'));
-  assert.ok(app.includes('<Route path="vendors" element={<TeamWorkspaceRoute />} />'));
-  assert.match(app, /location\.pathname === '\/admin\/team' && requestedView === 'vendor-directory'/);
-  assert.match(app, /location\.pathname === '\/admin\/team' && requestedView === 'time-logs'/);
-  assert.equal(layout.includes("label: 'CRM'"), false);
-  assert.equal(layout.includes("label: 'Proposals'"), false);
-  assert.equal(layout.includes("label: 'Approvals'"), false);
+  assert.ok(app.includes('<Route path="time-logs" element={<ModuleRoute moduleKey="timelogs" moduleLabel="Time"><AdminTimeLogs /></ModuleRoute>} />'));
+  assert.ok(app.includes('<Route path="vendors" element={<VendorWorkspaceRoute />} />'));
+  assert.ok(app.includes('<Route path="crm" element={<ModuleRoute moduleKey="crm" moduleLabel="CRM"><AdminClientLeadAccounts /></ModuleRoute>} />'));
+  assert.ok(app.includes('<Route path="proposals" element={<ModuleRoute moduleKey="proposals" moduleLabel="Proposals"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />'));
+  assert.ok(app.includes('<Route path="approvals" element={<ModuleRoute moduleKey="approvals" moduleLabel="Approvals"><AdminApprovals /></ModuleRoute>} />'));
+  assert.ok(app.includes("requestedView === 'vendor-directory'"));
+  assert.ok(app.includes("requestedView === 'time-logs'"));
+  assert.equal(app.includes('<Route path="crm" element={<Navigate to="/admin/dashboard"'), false);
+  assert.equal(app.includes('<Route path="proposals" element={<Navigate to="/admin/dashboard"'), false);
+  assert.equal(app.includes('<Route path="approvals" element={<Navigate to="/admin/dashboard"'), false);
   assert.equal(clients.includes("to: '/admin/clients/lead-accounts'"), false);
 });
 
-test('Retired CRM routes redirect to supported workspaces', async () => {
+test('Dashboard Performance and Analytics use AMS operational and finance records', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  for (const sourceCall of [
+    'api.projects.getAll()',
+    'api.tasks.getAll()',
+    'api.timeLogs.getAll()',
+    'api.finance.getInvoices()',
+    'api.finance.getExpenses()'
+  ]) assert.ok(dashboard.includes(sourceCall), 'Dashboard source missing: ' + sourceCall);
+
+  assert.ok(dashboard.includes('<PerformanceView snapshot={operationalSnapshot} />'));
+  assert.ok(dashboard.includes('<AnalyticsView snapshot={operationalSnapshot} range={range} />'));
+  assert.ok(dashboard.includes('Preview data only'));
+  assert.ok(dashboard.includes('not a posted profit figure'));
+  assert.doesNotMatch(dashboard, /const deliveryBreakdown = \[/);
+});
+
+test('Project cost actuals come from linked Finance expenses, not delivery progress', async () => {
+  const projects = await read('src/pages/admin/AdminProjects.tsx');
+  assert.ok(projects.includes('api.finance.getExpenses()'));
+  assert.ok(projects.includes("const projectId = String(expense.projectId || '')"));
+  assert.ok(projects.includes('recordedExpenseTotals'));
+  assert.ok(projects.includes('getRecordedExpense(project.id)'));
+  assert.ok(projects.includes('recorded_finance_cost'));
+  assert.ok(projects.includes("expenseError || 'Finance source unavailable'"));
+  assert.doesNotMatch(projects, /project\.budget \* \(project\.progressPercent \/ 100\)/);
+});
+
+test('Approvals use protected API workflows, maker-checker rules, and canonical Drawers', async () => {
+  const approvals = await read('src/pages/admin/AdminApprovals.tsx');
   const app = await read('src/App.tsx');
-  const layout = await read('src/pages/admin/AdminLayout.tsx');
-  assert.ok(app.includes('<Route path="crm" element={<Navigate to="/admin/dashboard" replace />} />'));
-  assert.ok(app.includes('<Route path="proposals" element={<Navigate to="/admin/dashboard" replace />} />'));
-  assert.ok(app.includes('<Route path="approvals" element={<Navigate to="/admin/dashboard" replace />} />'));
-  assert.ok(app.includes('<Route path="clients/lead-accounts" element={<Navigate to="/admin/clients/all-clients" replace />} />'));
-  assert.equal(layout.includes("label: 'CRM'"), false);
+  assert.ok(app.includes('<Route path="approvals" element={<ModuleRoute moduleKey="approvals" moduleLabel="Approvals"><AdminApprovals /></ModuleRoute>} />'));
+  assert.ok(approvals.includes('api.approvals.getAll()'));
+  assert.ok(approvals.includes('api.approvals.create('));
+  assert.ok(approvals.includes('api.approvals.action('));
+  assert.ok(approvals.includes('const canResolve = hasAdminPermission(\'canApproveBudgets\')'));
+  assert.ok(approvals.includes('isOwnRequest'));
+  assert.ok(approvals.includes('<Drawer'));
+  assert.doesNotMatch(approvals, /<Modal\b|<\/Modal>/);
 });
 
 test('Client Retainers are server-persisted and sample agreements are fixture-only', async () => {
@@ -237,7 +281,8 @@ test('team directory assignee lookup allows project managers without task-mutati
   assert.match(handler, /requireAnyPermission\('canManageProjects', 'canManageKanbanTasks'\)/);
   assert.match(handler, /username: user\.username/);
   assert.match(handler, /division: user\.division/);
-  assert.match(app, /const moduleKey = isVendorWorkspace \? 'vendors' : 'timelogs'/);
+  assert.ok(app.includes('<Route path="time-logs" element={<ModuleRoute moduleKey="timelogs" moduleLabel="Time"><AdminTimeLogs /></ModuleRoute>} />'));
+  assert.ok(app.includes('<ModuleRoute moduleKey="vendors" moduleLabel="Vendors">'));
 });
 
 

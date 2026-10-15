@@ -22,7 +22,7 @@ import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
-import { AdminFilterBar, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminModuleHeader, AdminPageShell, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { api } from '../../lib/apiClient';
 import { isSlugFixtureMode } from '../../lib/runtimeMode';
 import { hasAdminPermission } from '../../lib/adminAuth';
@@ -364,18 +364,7 @@ export const AdminClientLeadAccounts: React.FC = () => {
         )}
       />
 
-      <div className="min-[900px]:hidden min-w-0">
-        <AdminSectionTabs
-          ariaLabel="Clients sections"
-          activeKey="lead-accounts"
-          items={[
-            { key: 'all-clients', label: 'All Clients', to: '/admin/clients' },
-            { key: 'retainers', label: 'Retainers', to: '/admin/clients/retainers' },
-            { key: 'sla-monitoring', label: 'SLA Monitoring', to: '/admin/clients/sla-monitoring' },
-            { key: 'lead-accounts', label: 'Lead Accounts', to: '/admin/clients/lead-accounts' },
-          ].filter((item) => item.key !== 'lead-accounts' || hasAdminPermission('canManageCrm'))}
-        />
-      </div>
+
 
       {message && (
         <div className="flex items-center justify-between rounded-card border border-line bg-panel px-3 py-2.5 text-xs text-fg" role="status" aria-live="polite">
