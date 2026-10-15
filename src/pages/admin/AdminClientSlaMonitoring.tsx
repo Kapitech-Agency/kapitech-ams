@@ -163,7 +163,7 @@ export const AdminClientSlaMonitoring: React.FC = () => {
           items={[
             { key: 'all-clients', label: 'All Clients', to: '/admin/clients' },
             { key: 'retainers', label: 'Retainers', to: '/admin/clients/retainers' },
-            { key: 'sla-monitoring', label: 'SLA Monitoring', to: '/admin/clients/sla-monitoring' },
+            { key: 'sla-monitoring', label: 'SLA', to: '/admin/clients/sla-monitoring' },
           ].filter((item) => item.key !== 'lead-accounts' || hasAdminPermission('canManageCrm'))}
         />
       </div>
