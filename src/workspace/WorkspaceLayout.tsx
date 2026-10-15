@@ -5,7 +5,6 @@ import {
   Briefcase,
   Building2,
   BarChart3,
-  ClipboardCheck,
   ChevronDown,
   ChevronRight,
   ClipboardCheck,
