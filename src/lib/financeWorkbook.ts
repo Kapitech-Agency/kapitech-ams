@@ -776,6 +776,58 @@ export function buildFinanceSourceJournalDrafts(
 }
 
 
+export interface ProjectFinanceWorkbookBill {
+  total: unknown;
+  payments?: Array<{ amount: unknown }>;
+}
+
+export interface ProjectFinanceWorkbookSummary {
+  netProjectProfit: number;
+  vendorBillTotal: number;
+  vendorPaid: number;
+  vendorOutstanding: number;
+  check: 'OK' | 'No vendor bills linked' | 'Bills exceed commitment' | 'Payments exceed bill total';
+}
+
+/**
+ * Mirrors the calculation columns in the Kapitech "08 Project Finance" worksheet.
+ * Net project profit is the planned workbook calculation (contract value minus vendor
+ * commitment and other obligations); actual bill payments remain a separate control.
+ */
+export function calculateProjectFinanceWorkbookSummary(input: {
+  contractValue: unknown;
+  vendorCommitment: unknown;
+  otherObligations: unknown;
+  bills: ProjectFinanceWorkbookBill[];
+}): ProjectFinanceWorkbookSummary {
+  const roundCurrency = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+  const nonNegative = (value: unknown) => Math.max(0, roundCurrency(Number(value) || 0));
+  const contractValue = Number(input.contractValue);
+  const vendorCommitment = nonNegative(input.vendorCommitment);
+  const otherObligations = nonNegative(input.otherObligations);
+  const netProjectProfit = roundCurrency((Number.isFinite(contractValue) ? contractValue : 0) - vendorCommitment - otherObligations);
+  const vendorBillTotal = roundCurrency(input.bills.reduce((sum, bill) => sum + nonNegative(bill.total), 0));
+  const vendorPaid = roundCurrency(input.bills.reduce((sum, bill) => sum + (bill.payments || []).reduce((paid, payment) => paid + nonNegative(payment.amount), 0), 0));
+  const vendorOutstanding = roundCurrency(input.bills.reduce((sum, bill) => {
+    const total = nonNegative(bill.total);
+    const paid = roundCurrency((bill.payments || []).reduce((paymentSum, payment) => paymentSum + nonNegative(payment.amount), 0));
+    return sum + Math.max(0, roundCurrency(total - paid));
+  }, 0));
+  const hasOverpayment = input.bills.some((bill) => {
+    const total = nonNegative(bill.total);
+    const paid = roundCurrency((bill.payments || []).reduce((paymentSum, payment) => paymentSum + nonNegative(payment.amount), 0));
+    return paid > total + 0.01;
+  });
+  const check: ProjectFinanceWorkbookSummary['check'] = hasOverpayment
+    ? 'Payments exceed bill total'
+    : vendorBillTotal > vendorCommitment + 0.01
+      ? 'Bills exceed commitment'
+      : vendorCommitment > 0 && vendorBillTotal <= 0.01
+        ? 'No vendor bills linked'
+        : 'OK';
+  return { netProjectProfit, vendorBillTotal, vendorPaid, vendorOutstanding, check };
+}
+
 export interface VendorBillInstallmentSummary {
   number: 1 | 2 | 3;
   percentage: 30 | 20 | 50;
