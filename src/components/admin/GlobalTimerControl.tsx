@@ -22,6 +22,7 @@ interface ActiveTimer {
 }
 
 const STORAGE_KEY = 'kapitech_ams_active_timer_v1';
+const TIMER_SYNC_EVENT = 'kapitech-ams-global-timer-sync';
 
 function readTimer(userId?: string): ActiveTimer | null {
   try {
@@ -70,6 +71,19 @@ export const GlobalTimerControl: React.FC<{ userId?: string }> = ({ userId }) =>
   }, [userId]);
 
   useEffect(() => {
+    const syncTimer = (event: Event) => {
+      const detail = (event as CustomEvent<ActiveTimer | null>).detail;
+      if (!detail || (userId && detail.userId && detail.userId !== userId)) {
+        setActiveTimer(null);
+        return;
+      }
+      setActiveTimer(detail);
+    };
+    window.addEventListener(TIMER_SYNC_EVENT, syncTimer);
+    return () => window.removeEventListener(TIMER_SYNC_EVENT, syncTimer);
+  }, [userId]);
+
+  useEffect(() => {
     const intervalId = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(intervalId);
   }, []);
@@ -111,6 +125,7 @@ export const GlobalTimerControl: React.FC<{ userId?: string }> = ({ userId }) =>
       // Keep the in-memory timer usable if browser storage is unavailable.
     }
     setActiveTimer(timer);
+    window.dispatchEvent(new CustomEvent<ActiveTimer | null>(TIMER_SYNC_EVENT, { detail: timer }));
   };
 
   const startTimer = () => {
