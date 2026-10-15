@@ -19,7 +19,7 @@ import {
   FileText,
   Mail as MailIcon,
   MessageSquare,
-  PhoneCall,
+  Phone,
   Eye,
   Globe,
   Pencil,
@@ -938,7 +938,7 @@ export const AdminClients: React.FC = () => {
                     {clientInteractions.map(interaction => (
                       <article key={interaction.id} data-ams-slug={'client-interaction-' + interaction.id} className="flex gap-3 px-4 py-3">
                         <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted" aria-hidden="true">
-                          {interaction.type === 'meeting' ? <CalendarDays size={14} /> : interaction.type === 'email' ? <MailIcon size={14} /> : interaction.type === 'call' ? <PhoneCall size={14} /> : interaction.type === 'message' ? <MessageSquare size={14} /> : <FileText size={14} />}
+                          {interaction.type === 'meeting' ? <CalendarDays size={14} /> : interaction.type === 'email' ? <MailIcon size={14} /> : interaction.type === 'call' ? <Phone size={14} /> : interaction.type === 'message' ? <MessageSquare size={14} /> : <FileText size={14} />}
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
