@@ -120,6 +120,21 @@ const AdminVendors = lazyWithRetry(
   'admin-vendors'
 );
 
+const AdminClientLeadAccounts = lazyWithRetry(
+  () => import('./pages/admin/AdminClientLeadAccounts').then((m) => ({ default: m.AdminClientLeadAccounts })),
+  'admin-crm'
+);
+
+const AdminInvoicing = lazyWithRetry(
+  () => import('./pages/admin/AdminInvoicing').then((m) => ({ default: m.AdminInvoicing })),
+  'admin-proposals'
+);
+
+const AdminTimeLogs = lazyWithRetry(
+  () => import('./pages/admin/AdminTimeLogs').then((m) => ({ default: m.AdminTimeLogs })),
+  'admin-time-logs'
+);
+
 const AdminClients = lazyWithRetry(
   () => import('./pages/admin/AdminClients').then((m) => ({ default: m.AdminClients })),
   'admin-clients'
@@ -165,6 +180,11 @@ const AdminCmsCareers = lazyWithRetry(
 const AdminSettings = lazyWithRetry(
   () => import('./pages/admin/AdminSettings').then((m) => ({ default: m.AdminSettings })),
   'admin-settings'
+);
+
+const AdminApprovals = lazyWithRetry(
+  () => import('./pages/admin/AdminApprovals').then((m) => ({ default: m.AdminApprovals })),
+  'admin-approvals'
 );
 
 const LoadingScreen = () => (
@@ -285,32 +305,49 @@ const TeamWorkspaceRoute: React.FC = () => {
   const location = useLocation();
   const requestedView = new URLSearchParams(location.search).get('view');
 
-  // Preserve old deep links, but keep each workspace under its own module.
-  if (location.pathname === '/admin/team' && requestedView === 'vendor-directory') {
-    return <Navigate to="/admin/vendors" replace />;
-  }
-  if (location.pathname === '/admin/team' && requestedView === 'skill-matrix') {
-    return <Navigate to="/admin/vendors?view=skill-matrix" replace />;
-  }
-  if (location.pathname === '/admin/team' && requestedView === 'time-logs') {
-    return <Navigate to="/admin/time-logs" replace />;
-  }
-
-  const view = location.pathname === '/admin/vendors'
-    ? requestedView === 'skill-matrix' ? 'skill-matrix' : 'vendor-directory'
-    : location.pathname === '/admin/time-logs'
-      ? 'time-logs'
-      : requestedView || 'team-directory';
-  const isVendorWorkspace = view === 'vendor-directory' || view === 'skill-matrix';
-  const moduleKey = isVendorWorkspace ? 'vendors' : 'timelogs';
-  const moduleLabel = isVendorWorkspace ? 'vendors' : view === 'time-logs' ? 'time logs' : 'team operations';
+  // Retain old URLs while moving each workspace to its own module route.
+  if (location.pathname === '/admin/team' && requestedView === 'vendor-directory') return <Navigate to="/admin/vendors" replace />;
+  if (location.pathname === '/admin/team' && requestedView === 'skill-matrix') return <Navigate to="/admin/vendors?view=skill-matrix" replace />;
+  if (location.pathname === '/admin/team' && requestedView === 'time-logs') return <Navigate to="/admin/time-logs" replace />;
 
   return (
-    <ModuleRoute moduleKey={moduleKey} moduleLabel={moduleLabel}>
+    <ModuleRoute moduleKey="timelogs" moduleLabel="Team">
       <AdminTeams />
     </ModuleRoute>
   );
 };
+
+const VendorWorkspaceRoute: React.FC = () => {
+  const location = useLocation();
+  const showSkillMatrix = new URLSearchParams(location.search).get('view') === 'skill-matrix';
+  return showSkillMatrix ? (
+    <ModuleRoute moduleKey="vendors" moduleLabel="Vendors">
+      <AdminTeams />
+    </ModuleRoute>
+  ) : (
+    <ModuleRoute moduleKey="vendors" moduleLabel="Vendors">
+      <AdminVendors />
+    </ModuleRoute>
+  );
+};
+
+const DashboardWorkspaceRoute: React.FC = () => {
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  if (params.get('view') === 'tasks') {
+    const taskScope = params.get('taskscope');
+    const destination = taskScope && taskScope !== 'all'
+      ? '/admin/tasks?taskscope=' + encodeURIComponent(taskScope)
+      : '/admin/tasks';
+    return <Navigate to={destination} replace />;
+  }
+  return (
+    <ModuleRoute moduleKey="dashboard" moduleLabel="Dashboard">
+      <GlobalExecutiveDashboard />
+    </ModuleRoute>
+  );
+};
+
 
 const App = () => {
   return (
@@ -328,20 +365,20 @@ const App = () => {
 
               <Route path="/admin" element={<ProtectedAdminRoutes />}>
                 <Route index element={<Navigate to="/admin/dashboard" replace />} />
-                <Route path="dashboard" element={<ModuleRoute moduleKey="dashboard" moduleLabel="the dashboard"><GlobalExecutiveDashboard /></ModuleRoute>} />
+                <Route path="dashboard" element={<DashboardWorkspaceRoute />} />
                 <Route path="tasks" element={<ModuleRoute moduleKey="projects" moduleLabel="tasks"><TasksWorkspace /></ModuleRoute>} />
                 <Route path="executive" element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="inbox" element={<ModuleRoute moduleKey="inbox" moduleLabel="the inbox"><AdminInbox /></ModuleRoute>} />
-                <Route path="crm" element={<Navigate to="/admin/dashboard" replace />} />
-                <Route path="proposals" element={<Navigate to="/admin/dashboard" replace />} />
+                <Route path="crm" element={<ModuleRoute moduleKey="crm" moduleLabel="CRM"><AdminClientLeadAccounts /></ModuleRoute>} />
+                <Route path="proposals" element={<ModuleRoute moduleKey="proposals" moduleLabel="Proposals"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />
                 <Route path="finance" element={<ModuleRoute moduleKey="invoicing" moduleLabel="finance"><AdminFinanceWorkspace /></ModuleRoute>} />
                 <Route path="invoicing" element={<Navigate to="/admin/finance?tab=revenue" replace />} />
                 <Route path="projects" element={<ModuleRoute moduleKey="projects" moduleLabel="projects"><AdminProjects /></ModuleRoute>} />
-                <Route path="approvals" element={<Navigate to="/admin/dashboard" replace />} />
+                <Route path="approvals" element={<ModuleRoute moduleKey="approvals" moduleLabel="Approvals"><AdminApprovals /></ModuleRoute>} />
                 <Route path="documents" element={<ModuleRoute moduleKey="documents" moduleLabel="documents"><AdminDocuments /></ModuleRoute>} />
                 <Route path="team" element={<TeamWorkspaceRoute />} />
-                <Route path="time-logs" element={<TeamWorkspaceRoute />} />
-                <Route path="vendors" element={<TeamWorkspaceRoute />} />
+                <Route path="time-logs" element={<ModuleRoute moduleKey="timelogs" moduleLabel="Time"><AdminTimeLogs /></ModuleRoute>} />
+                <Route path="vendors" element={<VendorWorkspaceRoute />} />
                 <Route path="clients" element={<Navigate to="/admin/clients/all-clients" replace />} />
                 <Route path="clients/all-clients" element={<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClients /></ModuleRoute>} />
                 <Route path="clients/retainers" element={<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClientRetainers /></ModuleRoute>} />
