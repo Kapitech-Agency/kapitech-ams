@@ -59,7 +59,7 @@ const GuardedWorkspaceView: React.FC<GuardedWorkspaceViewProps> = ({ routeKey })
     case 'client-directory':
       return <ClientDirectoryView />;
     case 'client-onboarding':
-      return <ClientOnboardingView />;
+      return <ClientOnboardingView role={role} />;
     case 'project-hub':
       return <ProjectHubView role={role} />;
     case 'task-engine':
