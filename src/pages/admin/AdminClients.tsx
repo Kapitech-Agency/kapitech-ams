@@ -80,7 +80,7 @@ type ClientProfileReadinessItem = {
 const getClientProfileReadiness = (client: AgencyClient): ClientProfileReadinessItem[] => [
   { key: 'company', label: 'Company name', complete: Boolean(String(client.company || '').trim()) },
   { key: 'contact', label: 'Primary contact', complete: Boolean(String(client.name || '').trim()) },
-  { key: 'email', label: 'Business email', complete: /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(String(client.email || '').trim()) },
+  { key: 'email', label: 'Business email', complete: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(client.email || '').trim()) },
   { key: 'phone', label: 'Phone / WhatsApp', complete: Boolean(String(client.phone || '').trim()) },
   { key: 'industry', label: 'Industry', complete: Boolean(String(client.industry || '').trim()) },
   { key: 'location', label: 'Business location', complete: Boolean(String(client.location || '').trim()) },
