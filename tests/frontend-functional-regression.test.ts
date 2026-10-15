@@ -138,6 +138,47 @@ test('AMS sidebar groups real modules and keeps feature views inside their modul
   assert.equal(clients.includes("to: '/admin/clients/lead-accounts'"), false);
 });
 
+test('Dashboard Performance and Analytics use AMS operational and finance records', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  for (const sourceCall of [
+    'api.projects.getAll()',
+    'api.tasks.getAll()',
+    'api.timeLogs.getAll()',
+    'api.finance.getInvoices()',
+    'api.finance.getExpenses()'
+  ]) assert.ok(dashboard.includes(sourceCall), 'Dashboard source missing: ' + sourceCall);
+
+  assert.ok(dashboard.includes('<PerformanceView snapshot={operationalSnapshot} />'));
+  assert.ok(dashboard.includes('<AnalyticsView snapshot={operationalSnapshot} range={range} />'));
+  assert.ok(dashboard.includes('Preview data only'));
+  assert.ok(dashboard.includes('not a posted profit figure'));
+  assert.doesNotMatch(dashboard, /const deliveryBreakdown = \[/);
+});
+
+test('Project cost actuals come from linked Finance expenses, not delivery progress', async () => {
+  const projects = await read('src/pages/admin/AdminProjects.tsx');
+  assert.ok(projects.includes('api.finance.getExpenses()'));
+  assert.ok(projects.includes('const projectId = String(expense.projectId ||').valueOf());
+  assert.ok(projects.includes('recordedExpenseTotals'));
+  assert.ok(projects.includes('getRecordedExpense(project.id)'));
+  assert.ok(projects.includes('recorded_finance_cost'));
+  assert.ok(projects.includes("expenseError || 'Finance source unavailable'"));
+  assert.doesNotMatch(projects, /project\.budget \* \(project\.progressPercent \/ 100\)/);
+});
+
+test('Approvals use protected API workflows, maker-checker rules, and canonical Drawers', async () => {
+  const approvals = await read('src/pages/admin/AdminApprovals.tsx');
+  const app = await read('src/App.tsx');
+  assert.ok(app.includes('<Route path="approvals" element={<ModuleRoute moduleKey="approvals" moduleLabel="Approvals"><AdminApprovals /></ModuleRoute>} />'));
+  assert.ok(approvals.includes('api.approvals.getAll()'));
+  assert.ok(approvals.includes('api.approvals.create('));
+  assert.ok(approvals.includes('api.approvals.action('));
+  assert.ok(approvals.includes('const canResolve = hasAdminPermission(\'canApproveBudgets\')'));
+  assert.ok(approvals.includes('isOwnRequest'));
+  assert.ok(approvals.includes('<Drawer'));
+  assert.doesNotMatch(approvals, /<Modal\b|<\/Modal>/);
+});
+
 test('Client Retainers are server-persisted and sample agreements are fixture-only', async () => {
   const model = await read('src/lib/clientStore.ts');
   const page = await read('src/pages/admin/AdminClientRetainers.tsx');
