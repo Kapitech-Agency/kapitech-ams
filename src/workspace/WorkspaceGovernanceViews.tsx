@@ -104,7 +104,7 @@ export const CmsEditorialView: React.FC<{ role: WorkspaceRole | null }> = ({ rol
           ))}
         </div>
       </SectionPanel>
-      <SectionPanel title="Portfolio quarantine gate dashboard" description="Migration 048-style checks: an outcome metric must be defined, supporting evidence linked and client approval recorded before release.">
+      <SectionPanel title="Portfolio quarantine gate dashboard" description="UI-level publication checks around Migration 048’s quarantine principle: unverified seed content stays unpublished. These editorial checks do not replace the migration’s isPublished=false rule.">
         <div className="mb-3 flex flex-wrap gap-2">
           <StatusBadge tone="success"><CheckCircle2 size={11} />Outcome metric defined</StatusBadge>
           <StatusBadge tone="info"><FileText size={11} />Evidence linked</StatusBadge>
