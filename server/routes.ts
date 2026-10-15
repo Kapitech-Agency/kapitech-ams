@@ -2437,7 +2437,7 @@ function resolveJsonClientIdForContract(db: any, contract: any): string | null {
   const clientName = String(contract.clientName || '').trim().replace(/\s+/g, ' ').toLowerCase();
   if (!clientName) return null;
   const matches = (db.clients || []).filter((client: any) =>
-    String(client.company || client.companyName || '').trim().replace(/\\s+/g, ' ').toLowerCase() === clientName
+    String(client.company || client.companyName || '').trim().replace(/\s+/g, ' ').toLowerCase() === clientName
   );
   return matches.length === 1 ? String(matches[0].id) : null;
 }
