@@ -30,7 +30,7 @@ const DEFAULT_PROFILE_NAME = 'Fikri Nurlete';
 const DEFAULT_PROFILE_TITLE = 'Stakeholder account';
 
 export const AdminLayout: React.FC = () => {
-  const { language, t } = useLanguage();
+  const { language } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
   const session = getAdminSession();
