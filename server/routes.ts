@@ -6344,6 +6344,36 @@ function mergeJsonTaskCollection(db: any): any[] {
   );
 }
 
+function canManageTimeLogsAcrossProjects(user: StoredUser): boolean {
+  return isMasterAdministrator(user) || Boolean(user.permissions?.canManageProjects);
+}
+
+function isTimeLogTaskAssignedToUser(task: any, user: StoredUser): boolean {
+  const identities = [user.id, user.username, user.name, user.email]
+    .map((value) => String(value || '').trim().toLowerCase())
+    .filter(Boolean);
+  if (!identities.length) return false;
+  const assignedValues = [
+    task?.assigneeUserId,
+    task?.assignee_user_id,
+    task?.assignedToId,
+    task?.assigneeId,
+    task?.assignedTo,
+    task?.assignee,
+  ];
+  return assignedValues.some((value) => identities.includes(String(value || '').trim().toLowerCase()));
+}
+
+async function listProjectsForTimeLogOptions(): Promise<any[]> {
+  if (getDataSourceMode() === 'postgres') return await postgresProjectRepository.list();
+  const db = getDatabase();
+  const globalTasks = Array.isArray(db.tasks) ? db.tasks : [];
+  return (Array.isArray(db.projects) ? db.projects : []).map((project: any) => ({
+    ...project,
+    tasks: mergeJsonProjectTasks(project, globalTasks),
+  }));
+}
+
 function removeJsonProjectTask(db: any, taskId: string, exceptProjectId = ''): void {
   (Array.isArray(db?.projects) ? db.projects : []).forEach((project: any) => {
     const projectId = String(project?.id || '');
@@ -6529,24 +6559,100 @@ apiRouter.delete('/projects/tasks/:id', requireAuth, requirePermission('canManag
 });
 
 // Time Tracking
+apiRouter.get('/projects/timelog-options', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const canSeeAllProjects = canManageTimeLogsAcrossProjects(req.user!);
+  const projects = await listProjectsForTimeLogOptions();
+  const options = projects.flatMap((project: any) => {
+    const tasks = Array.isArray(project?.tasks) ? project.tasks : [];
+    const visibleTasks = canSeeAllProjects
+      ? tasks
+      : tasks.filter((task: any) => isTimeLogTaskAssignedToUser(task, req.user!));
+    if (!canSeeAllProjects && visibleTasks.length === 0) return [];
+    return [{
+      id: String(project.id || ''),
+      name: String(project.name || project.title || 'Untitled project'),
+      tasks: visibleTasks.map((task: any) => ({
+        id: String(task.id || ''),
+        title: String(task.title || 'Untitled task'),
+      })).filter((task: { id: string; title: string }) => task.id),
+    }];
+  });
+  res.json({ success: true, projects: options });
+});
+
 apiRouter.get('/projects/timelogs', requireAuth, requireAnyPermission('canManageKanbanTasks', 'canManageProjects'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const timeLogs = getDataSourceMode() === 'postgres' ? await postgresTimeLogRepository.list() : getDatabase().timeLogs || [];
   res.json({ success: true, timeLogs });
 });
 
-apiRouter.post('/projects/timelogs', requireAuth, requireAnyPermission('canManageKanbanTasks', 'canManageProjects'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+apiRouter.post('/projects/timelogs', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const logData = req.body || {};
   const durationMinutes = normalizeNumber(logData.durationMinutes ?? 60, 1, 1440, 60);
   const date = String(logData.date || new Date().toISOString().slice(0, 10));
-  if (durationMinutes === null || !isValidDate(date)) { res.status(400).json({ success: false, error: 'Valid duration and date are required for a time entry.' }); return; }
+  if (durationMinutes === null || !isValidDate(date)) {
+    res.status(400).json({ success: false, error: 'Valid duration and date are required for a time entry.' });
+    return;
+  }
+
+  const canLogAnyProject = canManageTimeLogsAcrossProjects(req.user!);
+  let taskId = cleanText(logData.taskId, 120);
+  let projectId = cleanText(logData.projectId, 120);
+  let projectName = cleanText(logData.projectName || 'General', 200);
+
+  if (!canLogAnyProject && !taskId) {
+    res.status(403).json({ success: false, error: 'Select a task assigned to your account before logging work time.' });
+    return;
+  }
+
+  if (taskId) {
+    const task = getDataSourceMode() === 'postgres'
+      ? await postgresTaskRepository.findById(taskId)
+      : mergeJsonTaskCollection(getDatabase()).find((item: any) => String(item?.id || '') === taskId);
+    if (!task) {
+      res.status(404).json({ success: false, error: 'Task not found.' });
+      return;
+    }
+    const taskProjectId = String((task as any).projectId || (task as any).project_id || '');
+    if (!canLogAnyProject && !isTimeLogTaskAssignedToUser(task, req.user!)) {
+      res.status(403).json({ success: false, error: 'You can only log time against tasks assigned to your account.' });
+      return;
+    }
+    if (projectId && taskProjectId && projectId !== taskProjectId) {
+      res.status(400).json({ success: false, error: 'Task does not belong to the selected project.' });
+      return;
+    }
+    if (!projectId) projectId = taskProjectId;
+    if (!projectName || projectName === 'General') {
+      projectName = String((task as any).projectName || 'Project');
+    }
+    if (!String((task as any).projectName || '').trim() && taskProjectId) {
+      const project = getDataSourceMode() === 'postgres'
+        ? await postgresProjectRepository.findById(taskProjectId)
+        : (Array.isArray(getDatabase().projects) ? getDatabase().projects : []).find((item: any) => String(item?.id || '') === taskProjectId);
+      if (project) projectName = String((project as any).name || (project as any).title || projectName);
+    }
+  }
+
+  if (!projectId) {
+    res.status(400).json({ success: false, error: 'A valid project or task is required for a time entry.' });
+    return;
+  }
+
   const newLog = {
     id: `tim_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
-    projectId: cleanText(logData.projectId, 120), projectName: cleanText(logData.projectName || 'General', 200),
-    taskId: cleanText(logData.taskId, 120), taskTitle: cleanText(logData.taskTitle, 240),
-    user: req.user!.name || req.user!.username, userId: req.user!.id, durationMinutes,
-    billable: logData.billable !== undefined ? Boolean(logData.billable) : true, date,
-    notes: cleanText(logData.notes, 2000), createdAt: new Date().toISOString()
+    projectId,
+    projectName,
+    taskId,
+    taskTitle: cleanText(logData.taskTitle, 240),
+    user: req.user!.name || req.user!.username,
+    userId: req.user!.id,
+    durationMinutes,
+    billable: logData.billable !== undefined ? Boolean(logData.billable) : true,
+    date,
+    notes: cleanText(logData.notes, 2000),
+    createdAt: new Date().toISOString()
   };
+
   if (getDataSourceMode() === 'postgres') {
     try {
       const timeLog = await postgresTimeLogRepository.create(newLog, makeAuditEntry(req, 'TIMELOG_CREATED', `Created ${durationMinutes} minute time entry for ${newLog.projectName}.`, 'info'));
