@@ -85,11 +85,6 @@ const AdminLayout = lazyWithRetry(
   'admin-layout'
 );
 
-const AmsRevampPreview = lazyWithRetry(
-  () => import('./components/admin/AmsRevampPreview').then((m) => ({ default: m.AmsRevampPreview })),
-  'ams-ux-ui-preview'
-);
-
 const GlobalExecutiveDashboard = lazyWithRetry(
   () => import('./components/admin/GlobalExecutiveDashboard').then((m) => ({ default: m.GlobalExecutiveDashboard })),
   'dashboard'
@@ -354,6 +349,15 @@ const DashboardWorkspaceRoute: React.FC = () => {
 };
 
 
+const LegacyInvoicingRedirect: React.FC = () => {
+  const location = useLocation();
+  const query = new URLSearchParams(location.search);
+  const destination = query.get('finance') === 'vendor-payments'
+    ? '/admin/finance?tab=accounts-payable'
+    : '/admin/finance?tab=revenue';
+  return <Navigate to={destination} replace />;
+};
+
 const App = () => {
   return (
     <BrowserRouter>
@@ -371,14 +375,13 @@ const App = () => {
               <Route path="/admin" element={<ProtectedAdminRoutes />}>
                 <Route index element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="dashboard" element={<DashboardWorkspaceRoute />} />
-                <Route path="ui-preview" element={<ModuleRoute moduleKey="dashboard" moduleLabel="UX/UI preview"><AmsRevampPreview /></ModuleRoute>} />
                 <Route path="tasks" element={<ModuleRoute moduleKey="projects" moduleLabel="tasks"><TasksWorkspace /></ModuleRoute>} />
                 <Route path="executive" element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="inbox" element={<ModuleRoute moduleKey="inbox" moduleLabel="the inbox"><AdminInbox /></ModuleRoute>} />
                 <Route path="crm" element={<ModuleRoute moduleKey="crm" moduleLabel="CRM"><AdminClientLeadAccounts /></ModuleRoute>} />
                 <Route path="proposals" element={<ModuleRoute moduleKey="proposals" moduleLabel="Proposals"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />
                 <Route path="finance" element={<ModuleRoute moduleKey="invoicing" moduleLabel="finance"><AdminFinanceWorkspace /></ModuleRoute>} />
-                <Route path="invoicing" element={<Navigate to="/admin/finance?tab=revenue" replace />} />
+                <Route path="invoicing" element={<LegacyInvoicingRedirect />} />
                 <Route path="projects" element={<ModuleRoute moduleKey="projects" moduleLabel="projects"><AdminProjects /></ModuleRoute>} />
                 <Route path="approvals" element={<ModuleRoute moduleKey="approvals" moduleLabel="Approvals"><AdminApprovals /></ModuleRoute>} />
                 <Route path="documents" element={<ModuleRoute moduleKey="documents" moduleLabel="documents"><AdminDocuments /></ModuleRoute>} />
@@ -389,7 +392,7 @@ const App = () => {
                 <Route path="clients/all-clients" element={<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClients /></ModuleRoute>} />
                 <Route path="clients/retainers" element={<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClientRetainers /></ModuleRoute>} />
                 <Route path="clients/sla-monitoring" element={<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClientSlaMonitoring /></ModuleRoute>} />
-                <Route path="clients/lead-accounts" element={<Navigate to="/admin/clients/all-clients" replace />} />
+                <Route path="clients/lead-accounts" element={<Navigate to="/admin/crm" replace />} />
                 <Route path="cms" element={<Navigate to="/admin/cms/projects" replace />} />
                 <Route path="cms/projects" element={<ModuleRoute moduleKey="cms_projects" moduleLabel="case studies"><AdminCmsProjects /></ModuleRoute>} />
                 <Route path="cms/services" element={<ModuleRoute moduleKey="services" moduleLabel="the services catalog"><AdminCmsServices /></ModuleRoute>} />
