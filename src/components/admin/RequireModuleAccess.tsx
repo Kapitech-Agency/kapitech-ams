@@ -26,7 +26,7 @@ export const RequireModuleAccess: React.FC<RequireModuleAccessProps> = ({
 }) => {
   const location = useLocation();
   const session = getAdminSession();
-  const role = getAmsRole(session?.user?.role);
+  const role = getAmsRole(session?.user);
   const params = new URLSearchParams(location.search);
 
   // MFA self-enrolment is a self-service exception, not general Settings access.
