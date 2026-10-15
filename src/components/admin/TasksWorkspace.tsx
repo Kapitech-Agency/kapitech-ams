@@ -32,6 +32,8 @@ type TaskStatus = 'todo' | 'in_progress' | 'review' | 'done';
 type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
 type TaskSortKey = 'title' | 'projectName' | 'assignee' | 'priority' | 'status' | 'dueDate' | 'createdAt';
 
+type TaskProject = { id: string; name: string; clientName: string };
+
 type TaskRecord = {
   id: string;
   title: string;
@@ -202,6 +204,7 @@ export const TasksWorkspace: React.FC = () => {
   const canManageTasks = hasAdminPermission('canManageKanbanTasks');
 
   const [records, setRecords] = useState<TaskRecord[]>([]);
+  const [projects, setProjects] = useState<TaskProject[]>([]);
   const [assignees, setAssignees] = useState<Array<{ id: string; name: string; username: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState<string | null>(null);
@@ -256,10 +259,22 @@ export const TasksWorkspace: React.FC = () => {
     const loadTasks = async () => {
       setLoading(true);
       try {
-        const [projectRes, assigneeRes] = await Promise.all([
+        const [projectRes, taskRes, assigneeRes] = await Promise.all([
           api.projects.getAll(),
+          api.tasks.getAll(),
           api.auth.getTaskAssignees(),
         ]);
+        if (!mounted) return;
+
+        const normalizedProjects: TaskProject[] = projectRes.success && Array.isArray(projectRes.data?.projects)
+          ? projectRes.data.projects.map((project: any) => ({
+              id: String(project?.id || ''),
+              name: String(project?.name || project?.title || 'Untitled project'),
+              clientName: String(project?.clientCompany || project?.clientName || ''),
+            })).filter((project: TaskProject) => project.id)
+          : [];
+        setProjects(normalizedProjects);
+        const projectById = new Map(normalizedProjects.map((project) => [project.id, project]));
 
         const assigneeMap = new Map<string, { id: string; name: string; username: string }>();
         if (assigneeRes.success && Array.isArray(assigneeRes.data?.assignees)) {
@@ -267,76 +282,75 @@ export const TasksWorkspace: React.FC = () => {
             id: String(item?.id || ''),
             name: String(item?.name || item?.username || ''),
             username: String(item?.username || ''),
-          }));
-          normalizedAssignees.forEach(item => {
+          })).filter((item: { id: string; name: string; username: string }) => item.id);
+          normalizedAssignees.forEach((item: { id: string; name: string; username: string }) => {
             assigneeMap.set(item.id, item);
-            assigneeMap.set(item.username, item);
-            assigneeMap.set(item.name, item);
+            if (item.username) assigneeMap.set(item.username, item);
+            if (item.name) assigneeMap.set(item.name, item);
           });
-          if (mounted) setAssignees(normalizedAssignees);
+          setAssignees(normalizedAssignees);
         }
 
-        if (projectRes.success && Array.isArray(projectRes.data?.projects)) {
-          const normalized: TaskRecord[] = [];
-          projectRes.data.projects.forEach((project: any) => {
-            const projectId = String(project?.id || '');
-            const projectName = String(project?.name || project?.title || 'Untitled project');
-            const clientName = String(project?.clientCompany || project?.clientName || '');
-            const tasks = Array.isArray(project?.tasks) ? project.tasks : [];
+        if (taskRes.success && Array.isArray(taskRes.data?.tasks)) {
+          const normalized: TaskRecord[] = taskRes.data.tasks.map((task: any): TaskRecord => {
+            const id = String(task?.id || '');
+            const projectId = String(task?.projectId || task?.project_id || '');
+            const project = projectById.get(projectId);
+            const projectName = String(task?.projectName || task?.project_name || project?.name || 'Unassigned project');
+            const clientName = String(task?.clientName || task?.clientCompany || project?.clientName || '');
+            const assignedTo = String(task?.assigneeUserId || task?.assignee || task?.assignedTo || '');
+            const resolved = assigneeMap.get(assignedTo);
+            const title = String(task?.title || 'Untitled task');
+            return {
+              id,
+              title,
+              description: String(task?.description || ''),
+              projectId,
+              projectName,
+              projectSlug: slugify(projectName),
+              clientName,
+              assigneeId: resolved?.id || assignedTo,
+              assignee: resolved?.name || String(task?.assignee || task?.assignedTo || assignedTo || 'Unassigned'),
+              priority: ['low', 'medium', 'high', 'urgent'].includes(String(task?.priority)) ? task.priority : 'medium',
+              status: ['todo', 'in_progress', 'review', 'done'].includes(String(task?.status)) ? task.status : 'todo',
+              dueDate: String(task?.dueDate || task?.due_date || ''),
+              tags: Array.isArray(task?.tags) ? task.tags.map(String) : [],
+              blocked: isTaskBlocked(task),
+              slug: String(task?.slug || 'task-' + slugify(title) + '-' + slugify(id)),
+              createdAt: String(task?.createdAt || task?.created_at || ''),
+              updatedAt: String(task?.updatedAt || task?.updated_at || ''),
+              subtasks: Array.isArray(task?.subtasks)
+                ? task.subtasks.map((item: any, index: number) => ({
+                    id: String(item?.id || id + '-subtask-' + index),
+                    title: String(item?.title || ''),
+                    completed: Boolean(item?.completed),
+                  })).filter((item: { title: string }) => item.title)
+                : [],
+            };
+          }).filter((task: TaskRecord) => task.id);
 
-            tasks.forEach((task: any) => {
-              const id = String(task?.id || '');
-              const assignedTo = String(task?.assignedTo ?? task?.assignee ?? '');
-              const resolved = assigneeMap.get(assignedTo);
-              const title = String(task?.title || 'Untitled task');
-              normalized.push({
-                id,
-                title,
-                description: String(task?.description || ''),
-                projectId,
-                projectName,
-                projectSlug: slugify(projectName),
-                clientName,
-                assigneeId: resolved?.id || assignedTo,
-                assignee: resolved?.name || assignedTo || 'Unassigned',
-                priority: ['low', 'medium', 'high', 'urgent'].includes(String(task?.priority)) ? task.priority : 'medium',
-                status: ['todo', 'in_progress', 'review', 'done'].includes(String(task?.status)) ? task.status : 'todo',
-                dueDate: String(task?.dueDate || ''),
-                tags: Array.isArray(task?.tags) ? task.tags.map(String) : [],
-                blocked: isTaskBlocked(task),
-                slug: 'task-' + slugify(title) + '-' + slugify(id),
-                createdAt: String(task?.createdAt || ''),
-                subtasks: Array.isArray(task?.subtasks)
-                  ? task.subtasks.map((item: any, index: number) => ({
-                      id: String(item?.id || id + '-subtask-' + index),
-                      title: String(item?.title || ''),
-                      completed: Boolean(item?.completed),
-                    })).filter((item: { title: string }) => item.title)
-                  : [],
-              });
-            });
-          });
-
-          if (mounted) {
-            setRecords(normalized.length ? normalized : (isSlugFixtureMode() ? fallbackTasks : []));
-            setNotice(normalized.length
-              ? null
-              : isSlugFixtureMode()
-                ? 'No server tasks were returned. Frontend preview tasks are active for the workspace.'
-                : null);
-          }
-        } else if (mounted) {
+          setRecords(normalized.length ? normalized : (isSlugFixtureMode() ? fallbackTasks : []));
+          setNotice(normalized.length
+            ? null
+            : isSlugFixtureMode()
+              ? 'No server tasks were returned. Frontend preview tasks are active for the workspace.'
+              : null);
+        } else {
           setRecords(isSlugFixtureMode() ? fallbackTasks : []);
           setNotice(isSlugFixtureMode()
             ? 'Task service is unavailable. Frontend preview tasks are active for the workspace.'
-            : 'Task service is unavailable. Live task data could not be loaded.');
+            : taskRes.error || 'Task service is unavailable. Live task data could not be loaded.');
         }
-      } catch {
+
+        if (!projectRes.success && !isSlugFixtureMode()) {
+          setNotice(current => [current, projectRes.error || 'Project directory could not be loaded.'].filter(Boolean).join(' '));
+        }
+      } catch (error) {
         if (mounted) {
           setRecords(isSlugFixtureMode() ? fallbackTasks : []);
           setNotice(isSlugFixtureMode()
             ? 'Task service is unavailable. Frontend preview tasks are active for the workspace.'
-            : 'Task service is unavailable. Live task data could not be loaded.');
+            : error instanceof Error ? error.message : 'Task service is unavailable. Live task data could not be loaded.');
         }
       } finally {
         if (mounted) setLoading(false);
@@ -347,10 +361,15 @@ export const TasksWorkspace: React.FC = () => {
     return () => { mounted = false; };
   }, []);
 
-  const projectOptions = useMemo(
-    () => Array.from(new Map<string, string>(records.map(task => [task.projectId, task.projectName])).entries()).sort((a, b) => a[1].localeCompare(b[1])),
-    [records]
-  );
+  const projectOptions = useMemo(() => {
+    const options = new Map<string, string>(projects.map((project) => [project.id, project.name]));
+    if (isSlugFixtureMode() && options.size === 0) {
+      fallbackTasks.forEach((task) => {
+        if (task.projectId) options.set(task.projectId, task.projectName);
+      });
+    }
+    return Array.from(options.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+  }, [projects]);
 
   const updateTaskStatus = async (task: TaskRecord, nextStatus: TaskStatus) => {
     if (!canManageTasks || task.status === nextStatus || updatingTaskId !== null || bulkUpdating) return;
@@ -426,7 +445,7 @@ export const TasksWorkspace: React.FC = () => {
       projectId: project[0],
       projectName: project[1],
       projectSlug: slugify(project[1]),
-      clientName: '',
+      clientName: projects.find(item => item.id === project[0])?.clientName || '',
       assigneeId: taskForm.assignee,
       assignee: assignees.find(item => item.id === taskForm.assignee)?.name || taskForm.assignee || 'Unassigned',
       priority: taskForm.priority,
