@@ -30,8 +30,8 @@ test('JSON mode keeps legacy project tasks and top-level task records synchroniz
   assert.ok(routes.includes('function mergeJsonTaskCollection(db: any): any[]'));
   assert.ok(routes.includes('tasks: mergeJsonProjectTasks(project, globalTasks)'));
   assert.ok(routes.includes('mergeJsonTaskCollection(getDatabase())'));
-  assert.ok(routes.includes('upsertJsonProjectTask(db, { ...newTask, assignedTo: newTask.assignee }, '')'));
-  assert.ok(routes.includes('upsertJsonProjectTask(db, { ...nextTask, assignedTo: String(nextTask.assignedTo || nextTask.assignee || '') }, previousProjectId)'));
+  assert.ok(routes.includes("upsertJsonProjectTask(db, { ...newTask, assignedTo: newTask.assignee }, '')"));
+  assert.ok(routes.includes("upsertJsonProjectTask(db, { ...nextTask, assignedTo: String(nextTask.assignedTo || nextTask.assignee || '') }, previousProjectId)"));
   assert.ok(routes.includes('db.tasks = db.tasks.filter((task: any) =>'));
   assert.ok(routes.includes('removeJsonProjectTask(db, id)'));
   assert.ok(routes.includes('Task has time logs and cannot be deleted.'));
