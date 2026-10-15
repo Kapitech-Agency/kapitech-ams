@@ -271,6 +271,7 @@ export interface DatabaseSchema {
   crmDeals: any[];
   proposals: any[];
   clients: any[];
+  clientInteractions: any[];
   projects: any[];
   tasks: any[];
   timeLogs: any[];
@@ -457,6 +458,7 @@ function getInitialSeedData(): DatabaseSchema {
       }
     ],
     sessions: [],
+    clientInteractions: [],
     leads: [
       {
         id: 'lead_inb_001',
@@ -1208,6 +1210,7 @@ function getInitialSeedData(): DatabaseSchema {
       'crmDeals',
       'proposals',
       'clients',
+      'clientInteractions',
       'projects',
       'tasks',
       'timeLogs',
