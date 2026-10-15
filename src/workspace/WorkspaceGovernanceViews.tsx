@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Activity, AlertTriangle, Check, CheckCircle2, FileText, LockKeyhole, ShieldCheck, UsersRound } from 'lucide-react';
-import { Modal } from '../components/ui/Modal';
+import { Drawer } from '../components/ui/Drawer';
 import { WorkspaceRole } from './workspaceAccess';
 import {
   ActionButton,
@@ -138,7 +138,7 @@ export const CmsEditorialView: React.FC<{ role: WorkspaceRole | null }> = ({ rol
           <label htmlFor="editorial-summary" className="grid gap-1.5 text-[11px] font-medium text-fg">Editorial summary<textarea id="editorial-summary" value={workingSummary} onChange={(event) => setWorkingSummary(event.target.value)} rows={5} className="min-w-0 resize-y rounded-control border border-line bg-panel p-3 text-[12px] font-normal leading-5 text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" /></label>
           <div className="rounded-control border border-line bg-bg p-3 text-[11px] leading-5 text-muted">Content edits in this preview do not publish or update the public website. Use the existing AMS content API for persistence.</div>
         </form>
-      </Modal>
+      </Drawer>
     </WorkspacePage>
   );
 };
