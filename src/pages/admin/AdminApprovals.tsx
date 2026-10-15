@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { AlertCircle, CheckCircle2, ClipboardCheck, FileText, Plus, RefreshCw, Search, ShieldCheck, X } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import { Drawer } from '../../components/ui/Drawer';
-import { Modal } from '../../components/ui/Modal';
+
 import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { api } from '../../lib/apiClient';
 import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
@@ -370,7 +370,7 @@ export const AdminApprovals: React.FC = () => {
         </form>
       </Drawer>
 
-      <Modal
+      <Drawer
         slug="approval-review-modal"
         open={Boolean(actionTarget)}
         onClose={() => setActionTarget(null)}
@@ -406,7 +406,7 @@ export const AdminApprovals: React.FC = () => {
             )}
           </div>
         )}
-      </Modal>
+      </Drawer>
     </AdminPageShell>
   );
 };
