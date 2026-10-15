@@ -2062,9 +2062,9 @@ export const AdminProjects: React.FC = () => {
           ariaLabel="Projects sections"
           activeKey={view}
           items={[
-            { key: 'all', label: 'All Projects', to: '/admin/projects' },
-            { key: 'sprint', label: 'Sprint & Delivery', to: '/admin/projects?projects=sprint' },
-            { key: 'budget', label: 'Budget vs Actual', to: '/admin/projects?projects=budget' },
+            { key: 'all', label: 'Projects', to: '/admin/projects' },
+            { key: 'sprint', label: 'Delivery', to: '/admin/projects?projects=sprint' },
+            { key: 'budget', label: 'Budget', to: '/admin/projects?projects=budget' },
             { key: 'archived', label: 'Archived', to: '/admin/projects?projects=archived' },
           ]}
         />
