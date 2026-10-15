@@ -11,7 +11,7 @@ import {
   Clock3,
   ShieldCheck,
   Timer,
-  WalletCards,
+  WalletCardsCards,
 } from 'lucide-react';
 import { WorkspaceRole } from './workspaceAccess';
 import {
@@ -49,9 +49,9 @@ export const ExecutiveOverviewView: React.FC = () => (
   >
     <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
       <MetricCard label="Revenue · MTD" value={idrCompact(128400000)} detail="+10.7% vs. prior month" tone="success" icon={<ArrowUpRight size={15} />} />
-      <MetricCard label="Operating expenses" value={idrCompact(79100000)} detail="61.6% of recognized revenue" tone="neutral" icon={<WalletCards size={15} />} />
+      <MetricCard label="Operating expenses" value={idrCompact(79100000)} detail="61.6% of recognized revenue" tone="neutral" icon={<WalletCardsCards size={15} />} />
       <MetricCard label="Net profit · MTD" value={idrCompact(49300000)} detail="38.4% indicative margin" tone="success" icon={<ArrowUpRight size={15} />} />
-      <MetricCard label="Active projects" value="12" detail="3 milestones due this week" tone="info" icon={<CalendarClock size={15} />} />
+      <MetricCard label="Active projects" value="12" detail="3 milestones due this week" tone="info" icon={<CalendarDays size={15} />} />
     </div>
 
     <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.7fr)_minmax(280px,1fr)]">
@@ -190,7 +190,7 @@ const ApprovalCenter: React.FC = () => {
       <div className="grid gap-2">
         {requests.map((item) => (
           <article key={item.id} className="flex min-w-0 flex-col gap-3 rounded-control border border-line p-3 sm:flex-row sm:items-center">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted">{item.kind === 'Expense' ? <Wallet size={16} /> : <Clock3 size={16} />}</div>
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted">{item.kind === 'Expense' ? <WalletCards size={16} /> : <Clock3 size={16} />}</div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2"><p className="text-[12px] font-semibold text-fg">{item.subject}</p><StatusBadge tone={item.status === 'Approved' ? 'success' : item.status === 'Returned' ? 'danger' : 'warning'}>{item.status}</StatusBadge></div>
               <p className="mt-1 text-[11px] text-muted">{item.detail}</p>
