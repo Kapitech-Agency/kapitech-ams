@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   EXCEL_CHART_OF_ACCOUNTS,
   buildFinanceSourceJournalDrafts,
+  calculateProjectFinanceWorkbookSummary,
   isIssuedInvoice
 } from '../src/lib/financeWorkbook.ts';
 
@@ -49,6 +50,62 @@ const baseExpense = (overrides: Record<string, unknown> = {}) => ({
 const balance = (draft: { lines: Array<{ debit: number; credit: number }> }) => ({
   debit: draft.lines.reduce((sum, line) => sum + line.debit, 0),
   credit: draft.lines.reduce((sum, line) => sum + line.credit, 0)
+});
+
+test('Project Finance summary mirrors the Excel planned-profit and vendor-payment columns', () => {
+  const summary = calculateProjectFinanceWorkbookSummary({
+    contractValue: 42_457_500,
+    vendorCommitment: 16_000_000,
+    otherObligations: 10_000_000,
+    bills: [
+      { total: 3_500_000, payments: [{ amount: 1_050_000 }] },
+      { total: 4_000_000, payments: [{ amount: 1_200_000 }] },
+      { total: 3_500_000, payments: [{ amount: 1_050_000 }] },
+      { total: 2_500_000, payments: [{ amount: 750_000 }] },
+      { total: 2_500_000, payments: [{ amount: 750_000 }] }
+    ]
+  });
+
+  assert.equal(summary.netProjectProfit, 16_457_500);
+  assert.equal(summary.vendorBillTotal, 16_000_000);
+  assert.equal(summary.vendorPaid, 4_800_000);
+  assert.equal(summary.vendorOutstanding, 11_200_000);
+  assert.equal(summary.check, 'OK');
+});
+
+test('Project Finance controls flag excess supplier bills and overpayments without changing planned profit', () => {
+  const overCommitment = calculateProjectFinanceWorkbookSummary({
+    contractValue: 1_000,
+    vendorCommitment: 500,
+    otherObligations: 100,
+    bills: [{ total: 550, payments: [{ amount: 100 }] }]
+  });
+  assert.equal(overCommitment.netProjectProfit, 400);
+  assert.equal(overCommitment.vendorOutstanding, 450);
+  assert.equal(overCommitment.check, 'Bills exceed commitment');
+
+  const overpayment = calculateProjectFinanceWorkbookSummary({
+    contractValue: 1_000,
+    vendorCommitment: 500,
+    otherObligations: 100,
+    bills: [{ total: 500, payments: [{ amount: 525 }] }]
+  });
+  assert.equal(overpayment.vendorPaid, 525);
+  assert.equal(overpayment.vendorOutstanding, 0);
+  assert.equal(overpayment.check, 'Payments exceed bill total');
+});
+
+test('Project Finance flags a configured vendor commitment without linked vendor bills', () => {
+  const summary = calculateProjectFinanceWorkbookSummary({
+    contractValue: 42_457_500,
+    vendorCommitment: 16_000_000,
+    otherObligations: 10_000_000,
+    bills: []
+  });
+  assert.equal(summary.netProjectProfit, 16_457_500);
+  assert.equal(summary.vendorPaid, 0);
+  assert.equal(summary.vendorOutstanding, 0);
+  assert.equal(summary.check, 'No vendor bills linked');
 });
 
 test('taxable invoices split net revenue and output tax into a balanced three-line journal', () => {
