@@ -2847,8 +2847,8 @@ export const AdminProjects: React.FC = () => {
           <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[
               ['Committed', formatAmount(activeProjects.reduce((sum, project) => sum + project.budget, 0), currency), 'Active portfolio'],
-              ['Burn to date', formatAmount(budgetRows.filter(row => row.project.status !== 'completed').reduce((sum, row) => sum + row.burn, 0), currency), 'Derived from progress'],
-              ['Remaining', formatAmount(budgetRows.filter(row => row.project.status !== 'completed').reduce((sum, row) => sum + row.remaining, 0), currency), 'Unburned commitment'],
+              ['Recorded cost', budgetRows.some(row => row.actual === null) ? '—' : formatAmount(budgetRows.filter(row => row.project.status !== 'completed').reduce((sum, row) => sum + (row.actual || 0), 0), currency), expenseLoading ? 'Loading Finance records' : projectExpenses === null ? (expenseError || 'Finance source unavailable') : 'Linked project expenses'],
+              ['Remaining', budgetRows.some(row => row.remaining === null) ? '—' : formatAmount(budgetRows.filter(row => row.project.status !== 'completed').reduce((sum, row) => sum + (row.remaining || 0), 0), currency), 'Budget less recorded cost'],
               ['At risk', String(budgetRows.filter(row => row.project.health !== 'Good').length), 'Projects to review'],
             ].map(([label, value, context]) => (
               <article key={label} className="rounded-card border border-line bg-panel p-4">
@@ -2859,7 +2859,7 @@ export const AdminProjects: React.FC = () => {
             ))}
           </section>
 
-          <AdminPanel title="Budget vs actual" description="Progress-based actuals keep this view useful before financial ledger integration.">
+          <AdminPanel title="Budget vs actual" description="Actuals use Finance expense entries linked by project ID. Delivery progress is not used as a cost estimate.">
             <div className="overflow-x-auto custom-scrollbar">
               <table className="ams-data-table min-w-[900px] text-left">
                 <thead>
@@ -2867,9 +2867,9 @@ export const AdminProjects: React.FC = () => {
                 </thead>
                 <tbody>
                   {pagedBudgetRows.map(row => {
-                    const burnPercent = row.project.budget > 0
-                      ? Math.min(100, Math.round((row.burn / row.project.budget) * 100))
-                      : 0;
+                    const burnPercent = row.project.budget > 0 && row.actual !== null
+                      ? Math.round((row.actual / row.project.budget) * 100)
+                      : null;
                     return (
                       <tr key={row.project.id}>
                         <td>
@@ -2884,8 +2884,8 @@ export const AdminProjects: React.FC = () => {
                           </span>
                         </td>
                         <td className="text-xs tabular-nums font-medium text-fg">{formatAmount(row.project.budget, currency)}</td>
-                        <td className="text-xs tabular-nums text-fg">{formatAmount(row.burn, currency)}</td>
-                        <td className="text-xs tabular-nums text-fg">{formatAmount(row.remaining, currency)}</td>
+                        <td className="text-xs tabular-nums text-fg">{row.actual === null ? '—' : formatAmount(row.actual, currency)}{row.actual !== null && <span className="ml-1 text-[10px] text-muted">{row.expenseCount} records</span>}</td>
+                        <td className={'text-xs tabular-nums ' + (row.remaining !== null && row.remaining < 0 ? 'font-semibold text-danger' : 'text-fg')}>{row.remaining === null ? '—' : formatAmount(row.remaining, currency)}</td>
                         <td>
                           <div className="min-w-[145px]">
                             <div className="flex items-center justify-between text-[10px] text-muted">
@@ -2900,19 +2900,19 @@ export const AdminProjects: React.FC = () => {
                         <td>
                           <div className="min-w-[145px]">
                             <div className="flex items-center justify-between text-[10px] text-muted">
-                              <span>Burn</span>
-                              <span className="tabular-nums text-fg">{burnPercent}%</span>
+                              <span>Cost / budget</span>
+                              <span className="tabular-nums text-fg">{burnPercent === null ? '—' : burnPercent + '%'}</span>
                             </div>
                             <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg">
                               <div
-                                className={'h-full rounded-full ' + (burnPercent > row.project.progressPercent + 15 ? 'bg-danger' : burnPercent > row.project.progressPercent + 5 ? 'bg-warning' : 'bg-success')}
-                                style={{ width: burnPercent + '%' }}
+                                className={'h-full rounded-full ' + (burnPercent !== null && burnPercent > 100 ? 'bg-danger' : burnPercent !== null && burnPercent > 85 ? 'bg-warning' : 'bg-success')}
+                                style={{ width: Math.min(100, Math.max(0, burnPercent || 0)) + '%' }}
                               />
                             </div>
                           </div>
                         </td>
-                        <td className={'text-xs tabular-nums font-semibold ' + (row.variance < 0 ? 'text-danger' : 'text-success')}>
-                          {formatAmount(row.variance, currency)}
+                        <td className={'text-xs tabular-nums font-semibold ' + (row.variance !== null && row.variance < 0 ? 'text-danger' : row.variance === null ? 'text-muted' : 'text-success')}>
+                          {row.variance === null ? '—' : formatAmount(row.variance, currency)}
                         </td>
                       </tr>
                     );
