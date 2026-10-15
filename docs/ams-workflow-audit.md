@@ -10,10 +10,12 @@ Kapitech AMS already has substantial application and backend foundations. The pr
 ## Evidence from repository audit
 
 - `server/routes.ts` already exposes protected workflows for public leads and lead management, CRM deals, CRM proposals, internal approvals, projects, tasks, time logs, invoices, expenses, the finance workbook, vendors, documents, CMS content, notifications, search, and the dashboard overview.
-- The current route configuration redirects `/admin/crm`, `/admin/proposals`, and `/admin/approvals` to the Dashboard, even though the repository contains `AdminClientLeadAccounts.tsx`, a full quotation workflow in `AdminInvoicing.tsx`, and an approvals API/client.
-- `AdminTimeLogs.tsx` and `AdminVendors.tsx` exist as purpose-built workspaces, but current route wiring sends Time and Vendors into the combined `AdminTeams.tsx` workspace. Keep shared data and legacy deep links, but expose each module through the appropriate workspace.
-- Dashboard overview already calls `api.dashboard.getOverview()` and receives live metrics/financials/project data, but separate Performance and Analytics views explicitly return an unavailable-data state in production, and overview fallbacks include hard-coded demo metrics. Workload, historical trends, and analytics must be computed from actual source records or explicitly shown as unavailable, never presented as current production facts.
-- Projects already provides project CRUD, Kanban/table views, execution stages, task links, archive, and a Budget vs Actual view. That budget view explicitly describes its actual-cost line as progress-based/proxy until ledger integration; actual costs should instead use finance records linked to the project.
+- **Baseline finding before this change:** `/admin/crm`, `/admin/proposals`, and `/admin/approvals` redirected to Dashboard despite existing `AdminClientLeadAccounts.tsx`, quotation workflow in `AdminInvoicing.tsx`, and approvals APIs. This branch reconnects those destinations to protected workspaces rather than recreating CRM/proposal business logic.
+- **Baseline finding before this change:** `AdminTimeLogs.tsx` and `AdminVendors.tsx` existed but their routes reused `AdminTeams.tsx`. This branch routes Time to `AdminTimeLogs.tsx` and Vendors to `AdminVendors.tsx`, keeps the existing Team workspace, and preserves legacy Team query links with redirects.
+- Dashboard already exposed an overview endpoint, but Performance/Analytics and KPI fallbacks mixed unavailable live data with demo figures. This branch loads project, task, time-log, invoice, and expense records directly for Performance/Analytics and labels explicit fixture previews. Missing production source records are represented as unavailable, not as sample data.
+- Projects already provides project CRUD, Kanban/table views, execution stages, task links, and archive. This branch changes “actual cost” displays and exports to use Finance expenses linked by project ID, rather than multiplying project budget by task progress. If the Finance source cannot be read, the actual/variance stays unavailable.
+- Finance has a 20-worksheet workbook mapping, invoice/payment and expense/vendor flows, project finance, journals, closing, and reports. This branch reuses the existing quotation workflow for the Proposals route; it does not replace the workbook or alter proposal-to-invoice conversion rules.
+- Website CMS already has dedicated CRUD/publish editors for case studies, services, testimonials, Insights, and Careers. The sidebar grants Website visibility to authorized editors of any existing CMS content type. No new media/review module has been invented without an end-to-end workspace.
 - Tasks already provides list/board layouts, views for all/my/due/review/blocked/completed, task CRUD, assignees, status updates, checklists, and project links. Extend only after confirming the current model/API contracts so existing task workflows and permissions remain intact.
 - Finance contains a workbook mapping for 20 worksheets, finance source records, project finance, vendor bills/payments, journal drafts/posting, monthly closing, and accounting reports. It must remain aligned to the Kapitech workbook. Do not replace the existing finance module or calculate accounting figures from unrelated proxies.
 - Website CMS already contains dedicated editors for case studies, services, testimonials, Insights, and Careers, backed by CMS APIs. Audit publish states, field validation, content relations, and public-site parity before adding new CMS menus. Do not expose menu items for capabilities with no functioning workflow.
@@ -34,6 +36,23 @@ The sidebar contains **modules only**, grouped under short labels. No individual
 
 Settings remains in its established utility/footer position unless the app’s existing permissions and layout convention call for a dedicated Administration workspace. Submenus belong within their own module page using the established tab/navigation primitives.
 
+## Implementation status and remaining audit work
+
+### Implemented in this change set (subject to passing final CI)
+- Sidebar groups: Overview, Sales, Delivery, Finance, Content, Operations. Sidebar entries are modules only; existing design tokens and geometry stay unchanged.
+- Reconnected CRM, Proposals, and Approvals routes to existing/added protected workspaces. Approval request/review actions call existing permission-checked APIs, preserve the maker-checker restriction, and use the existing audit-enabled backend.
+- Separated Team, Time, and Vendors navigation; legacy Team deep links redirect to their dedicated module.
+- Dashboard Performance/Analytics use current project/task/time/invoice/expense sources. “Cash collected”, “cash surplus/deficit”, and invoice-expense difference are deliberately distinguished from accounting revenue/net profit.
+- Project budget actuals are derived from linked Finance expense records; delivery progress is not treated as a financial actual.
+- Regression assertions cover module grouping, workspace routes, source-backed Dashboard metrics, project cost calculations, and approval controls.
+
+### Known gaps deliberately not represented as completed
+- The new Approvals module is a generic approval register. It should not be described as a completed client deliverable review or automatic project/invoice state-transition engine: domain-specific transitions still need requirements and integration tests.
+- Full project profitability should reconcile billable revenue, posted expenses/vendor costs, time-based labor cost, and approved allocations. Linked expenses alone are not a complete margin calculation.
+- Dashboard financial chart difference is not a posted profit figure; source-aligned accounting reports in Finance remain authoritative.
+- Remaining CMS audit should test all fields/status transitions and parity with public content feeds, especially media, localization, SEO metadata, and previews. Existing editors already have CRUD/publish workflows, so these are verification items rather than automatic new modules.
+- Task dependency/recurrence features should only be added after required persistence, API authorization, notifications, and regression coverage are confirmed. Existing task views/CRUD should be preserved.
+- CI on the final head and the deployed ams.kapitech.id UI must be verified before declaring production completion.
 ## Module requirements to validate and close
 
 ### Dashboard (priority 1)
