@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowRight, CalendarDays, CheckCircle2, ClipboardList, ExternalLink, FileText, Plus, RefreshCw, Search, ShieldAlert, X } from 'lucide-react';
+import { ArrowRight, CalendarDays, CheckCircle2, ClipboardList, ExternalLink, FileText, Plus, RefreshCw, Search, ShieldAlert, Trash2, X } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import { Drawer } from '../../components/ui/Drawer';
 import { api } from '../../lib/apiClient';
@@ -286,6 +286,26 @@ export const AdminContracts: React.FC = () => {
     }
   };
 
+  const deleteDraft = async (contract: ClientContract) => {
+    if (!canManage || transitioningId || contract.status !== 'draft') return;
+    if (!window.confirm('Delete draft ' + contract.contractNumber + '? This action cannot be undone.')) return;
+    setTransitioningId(contract.id);
+    setError('');
+    try {
+      const response = await api.contracts.delete(contract.id);
+      if (!response.success) {
+        setError(response.error || 'The draft could not be deleted.');
+        return;
+      }
+      setContracts((current) => current.filter((item) => item.id !== contract.id));
+      setNotice('Draft ' + contract.contractNumber + ' deleted.');
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'The draft could not be deleted.');
+    } finally {
+      setTransitioningId('');
+    }
+  };
+
   const primaryNext = (status: ContractStatus): ContractStatus | null => {
     if (status === 'draft') return 'in_review';
     if (status === 'in_review') return 'sent';
@@ -380,6 +400,7 @@ export const AdminContracts: React.FC = () => {
                         <div className="flex flex-wrap items-center justify-end gap-1.5">
                           {['draft', 'in_review'].includes(contract.status) && <Button type="button" variant="secondary" className="h-8 px-2 text-[10px]" onClick={() => openEdit(contract)} disabled={!canManage}>Edit draft</Button>}
                           {next && <Button type="button" variant="primary" className="h-8 px-2 text-[10px]" onClick={() => void transition(contract, next)} disabled={!canManage || Boolean(transitioningId)} loading={transitioningId === contract.id}>{next === 'in_review' ? 'Send to review' : next === 'sent' ? 'Send for signature' : next === 'signed' ? 'Record signature' : next === 'active' ? 'Activate' : 'Complete'} <ArrowRight size={12} /></Button>}
+                          {contract.status === 'draft' && <Button type="button" variant="secondary" className="h-8 px-2 text-[10px]" onClick={() => void deleteDraft(contract)} disabled={!canManage || Boolean(transitioningId)} loading={transitioningId === contract.id}><Trash2 size={12} /> Delete draft</Button>}
                           {contract.status === 'active' && isDatePast(contract.endDate) && <Button type="button" variant="secondary" className="h-8 px-2 text-[10px]" onClick={() => void transition(contract, 'expired')} disabled={!canManage || Boolean(transitioningId)}>Mark expired</Button>}
                           {contract.status === 'active' && <Button type="button" variant="secondary" className="h-8 px-2 text-[10px]" onClick={() => void transition(contract, 'terminated')} disabled={!canManage || Boolean(transitioningId)}>Terminate</Button>}
                         </div>
