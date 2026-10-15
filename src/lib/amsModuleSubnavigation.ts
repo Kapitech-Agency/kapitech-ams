@@ -125,6 +125,15 @@ export function isAmsModuleSubnavigationItemActive(
   if (item.key === 'overview' && path === '/admin/dashboard') {
     return !params.get('view') || params.get('view') === 'overview';
   }
+  if (path === '/admin/finance' && item.key === 'invoicing-revenues') {
+    return !['accounts-payable', 'project-finance'].includes(params.get('tab') || '');
+  }
+  if (path === '/admin/finance' && item.key === 'profitability-expenses') {
+    return ['accounts-payable', 'expenses', 'vendors', 'approvals', 'journal'].includes(params.get('tab') || '');
+  }
+  if (path === '/admin/finance' && item.key === 'project-profitability') {
+    return params.get('tab') === 'project-finance';
+  }
   if (item.key === 'all' && path === '/admin/projects') {
     return !params.get('projects') || params.get('projects') === 'all';
   }
