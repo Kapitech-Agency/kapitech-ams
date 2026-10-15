@@ -10,7 +10,7 @@ const read = (file: string) => fs.readFile(path.join(root, file), 'utf8');
 test('login and session-recovery endpoints bypass the generic authenticated budget', async () => {
   const routes = await read('server/routes.ts');
   const exceptionStart = routes.indexOf('const AUTH_ENDPOINTS_WITH_DEDICATED_LIMIT = new Set([');
-  const exceptionBlock = routes.match(/const AUTH_ENDPOINTS_WITH_DEDICATED_LIMIT = new Set\\(\\[([\\s\\S]*?)\\]\\);/)?.[1] || '';
+  const exceptionBlock = routes.match(/const AUTH_ENDPOINTS_WITH_DEDICATED_LIMIT = new Set\(\[([\s\S]*?)\]\);/)?.[1] || '';
   const genericLimiter = routes.indexOf('return rateLimitAuthenticated(300, 60 * 1000)(req, res, next);');
   const loginRoute = routes.indexOf("apiRouter.post('/auth/login', rateLimitPublic(10, 15 * 60 * 1000)");
   const firebaseRoute = routes.indexOf("apiRouter.post('/auth/firebase-login', rateLimitPublic(10, 15 * 60 * 1000)");
