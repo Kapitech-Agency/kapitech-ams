@@ -114,7 +114,7 @@ export const AdminTopbarTabs: React.FC<AdminSectionTabsProps> = ({
 export type AdminCmsSectionKey = 'projects' | 'services' | 'testimonials' | 'insights' | 'careers';
 
 const CMS_SECTION_ITEMS: AdminSectionTabItem[] = [
-  { key: 'projects', label: 'Projects', to: '/admin/cms/projects', permission: 'cms_projects' },
+  { key: 'projects', label: 'Case Studies', to: '/admin/cms/projects', permission: 'cms_projects' },
   { key: 'services', label: 'Services', to: '/admin/cms/services', permission: 'services' },
   { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials', permission: 'testimonials' },
   { key: 'insights', label: 'Insights', to: '/admin/cms/insights', permission: 'cms_insights' },
