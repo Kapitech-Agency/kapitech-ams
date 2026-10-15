@@ -3056,7 +3056,7 @@ apiRouter.post('/contracts/:id/transition', requireAuth, requireAnyPermission('c
   res.json({ success: true, contract: updated });
 });
 
-apiRouter.delete('/contracts/:id', requireAuth, requireAnyPermission('canManageProjects', 'canManageCrm'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+apiRouter.delete('/contracts/:id', requireAuth, requireAnyPermission('canManageProjects', 'canManageCrm', 'canManageClients'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const id = cleanText(req.params.id, 160);
   const current = await findClientContract(id);
   if (!current) { res.status(404).json({ success: false, error: 'Contract not found.' }); return; }
