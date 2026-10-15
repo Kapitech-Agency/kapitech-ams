@@ -3881,11 +3881,11 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
           quotationDetail ? (
             <div className="flex w-full flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <button type="button" onClick={() => openEditQuotation(quotationDetail)} className={actionClass}><Edit3 size={14} />Edit</button>
+                {canManageProposals && <button type="button" onClick={() => openEditQuotation(quotationDetail)} className={actionClass}><Edit3 size={14} />Edit</button>}
                 <button type="button" onClick={() => exportQuotationsCsv()} className={actionClass}><Download size={14} />Export list</button>
               </div>
               <div className="flex items-center gap-2">
-                <button type="button" onClick={() => void convertQuotationToInvoice(quotationDetail)} disabled={Boolean(quotationDetail.invoiceId) || quotationDetail.status !== 'approved'} className={primaryClass}>
+                <button type="button" onClick={() => void convertQuotationToInvoice(quotationDetail)} disabled={!canManageInvoices || Boolean(quotationDetail.invoiceId) || quotationDetail.status !== 'approved'} className={primaryClass}>
                   <Receipt size={14} />
                   {quotationDetail.invoiceId ? 'Invoice linked' : 'Convert to invoice'}
                 </button>
