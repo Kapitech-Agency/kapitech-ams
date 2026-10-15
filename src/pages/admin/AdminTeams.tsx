@@ -1157,7 +1157,7 @@ export const AdminTeams: React.FC = () => {
     },
     'capacity-allocation': {
       title: 'Capacity & Allocation',
-      description: 'Review historical time entries against a 40-hour weekly baseline, and assign team members to active projects. Forecast hours and leave calendars are not yet tracked.'
+      description: 'Assign team members to projects, plan weekly allocation percentages with dates, and compare saved forecasts with historical time entries. Leave calendars are not connected.'
     },
     'skill-matrix': {
       title: 'Skill Matrix',
@@ -1679,7 +1679,7 @@ export const AdminTeams: React.FC = () => {
           <AdminPanel
             slug="capacity-allocation-table"
             title="Historical capacity & project assignments"
-            description={currentWeekCapacity ? 'Recorded time across ' + weeklyCapacity.map((week) => formatDate(dateKey(week.start))).join(' · ') + '. Assignments are saved on each project; these historical percentages are not forecasts.' : 'Four-week historical time view.'}
+            description={currentWeekCapacity ? 'Historical time entries across ' + weeklyCapacity.map((week) => formatDate(dateKey(week.start))).join(' · ') + '. Actuals are separate from planned allocations below.' : 'Four-week historical time view.'}
             className="overflow-hidden"
             actions={<span className="text-[10px] text-muted">No forecast values are fabricated; cells are based on recorded time.</span>}
           >
