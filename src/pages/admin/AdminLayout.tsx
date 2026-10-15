@@ -560,7 +560,8 @@ export const AdminLayout: React.FC = () => {
                     </section>
                   );
                 })}
-              </nav>
+              </div>
+            </nav>
             <div className="shrink-0 border-t border-line bg-bg px-2.5 pb-[max(10px,env(safe-area-inset-bottom))] pt-2.5">
               <div className="grid grid-cols-2 gap-2">
                 {canOpenMasterSettings && (
