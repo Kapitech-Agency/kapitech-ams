@@ -3075,6 +3075,33 @@ apiRouter.delete('/contracts/:id', requireAuth, requireAnyPermission('canManageP
   res.json({ success: true, message: 'Draft contract removed.' });
 });
 
+function normalizeProjectResourceAllocations(value: unknown): Array<{
+  memberId: string;
+  memberName: string;
+  allocationPercent: number;
+  startDate: string;
+  endDate: string;
+}> | null {
+  if (!Array.isArray(value) || value.length > 500) return null;
+  const normalized: Array<{ memberId: string; memberName: string; allocationPercent: number; startDate: string; endDate: string }> = [];
+  const seen = new Set<string>();
+  for (const raw of value) {
+    const item = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {};
+    const memberId = cleanText(item.memberId, 120);
+    const memberName = cleanText(item.memberName, 160);
+    const startDate = cleanText(item.startDate, 10);
+    const endDate = cleanText(item.endDate, 10);
+    const allocationPercent = normalizeNumber(item.allocationPercent, 1, 100);
+    if (!memberId || !startDate || !endDate || !isValidDate(startDate) || !isValidDate(endDate)
+      || endDate < startDate || allocationPercent === null) return null;
+    const key = memberId.toLowerCase() + '|' + startDate + '|' + endDate;
+    if (seen.has(key)) return null;
+    seen.add(key);
+    normalized.push({ memberId, memberName, allocationPercent, startDate, endDate });
+  }
+  return normalized;
+}
+
 // ----------------------------------------------------
 // 6. PROJECTS MANAGEMENT
 // ----------------------------------------------------
@@ -3187,7 +3214,12 @@ apiRouter.put('/projects/:id', requireAuth, requirePermission('canManageProjects
   if (getDataSourceMode() === 'postgres') {
     const existingProject = await postgresProjectRepository.findById(id);
     if (!existingProject) { res.status(404).json({ success: false, error: 'Project not found.' }); return; }
-    const patch = pickFields(updates, ['title','name','client','clientId','clientName','clientCompany','clientEmail','serviceCategory','status','health','budget','progressPercent','startDate','targetEndDate','teamLead','teamMembers','techStack','repositoryUrl','figmaUrl','liveStagingUrl','notes','tasks','milestones','crmLeadId','updatedAt']);
+    const patch = pickFields(updates, ['title','name','client','clientId','clientName','clientCompany','clientEmail','serviceCategory','status','health','budget','progressPercent','startDate','targetEndDate','teamLead','teamMembers','resourceAllocations','techStack','repositoryUrl','figmaUrl','liveStagingUrl','notes','tasks','milestones','crmLeadId','updatedAt']);
+    if (patch.resourceAllocations !== undefined) {
+      const allocations = normalizeProjectResourceAllocations(patch.resourceAllocations);
+      if (!allocations) { res.status(400).json({ success: false, error: 'Resource plans require a member, valid start/end dates, and allocation from 1% to 100%.' }); return; }
+      patch.resourceAllocations = allocations;
+    }
     if (patch.clientEmail !== undefined) {
       patch.clientEmail = cleanText(patch.clientEmail, 254).toLowerCase();
       if (patch.clientEmail && !isValidEmail(patch.clientEmail)) { res.status(400).json({ success: false, error: 'Invalid project client email address.' }); return; }
@@ -3241,7 +3273,12 @@ apiRouter.put('/projects/:id', requireAuth, requirePermission('canManageProjects
   const db = getDatabase();
   const idx = db.projects.findIndex(p => p.id === id);
   if (idx === -1) { res.status(404).json({ success: false, error: 'Project not found.' }); return; }
-  const patch = pickFields(updates || {}, ['title', 'name', 'client', 'clientId', 'clientName', 'clientCompany', 'clientEmail', 'serviceCategory', 'status', 'health', 'budget', 'progressPercent', 'startDate', 'targetEndDate', 'teamLead', 'teamMembers', 'techStack', 'repositoryUrl', 'figmaUrl', 'liveStagingUrl', 'notes', 'tasks']);
+  const patch = pickFields(updates || {}, ['title', 'name', 'client', 'clientId', 'clientName', 'clientCompany', 'clientEmail', 'serviceCategory', 'status', 'health', 'budget', 'progressPercent', 'startDate', 'targetEndDate', 'teamLead', 'teamMembers', 'resourceAllocations', 'techStack', 'repositoryUrl', 'figmaUrl', 'liveStagingUrl', 'notes', 'tasks']);
+    if (patch.resourceAllocations !== undefined) {
+      const allocations = normalizeProjectResourceAllocations(patch.resourceAllocations);
+      if (!allocations) { res.status(400).json({ success: false, error: 'Resource plans require a member, valid start/end dates, and allocation from 1% to 100%.' }); return; }
+      patch.resourceAllocations = allocations;
+    }
   if (patch.clientId !== undefined && patch.clientId && !(db.clients || []).some((client: any) => String(client.id) === String(patch.clientId))) {
     res.status(404).json({ success: false, error: 'Client not found.' });
     return;
