@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { CalendarClock, Check, ChevronRight, Clock3, FileText, GripVertical, MessageSquare, Plus, UsersRound } from 'lucide-react';
+import { CalendarDays, Check, ChevronRight, Clock3, FileText, GripVertical, MessageSquare, Plus, UsersRound } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Modal } from '../components/ui/Modal';
 import { WorkspaceRole } from './workspaceAccess';
@@ -246,7 +246,7 @@ export const TaskDeliverablesView: React.FC<{ role: WorkspaceRole | null }> = ({
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted"><FileText size={15} /></span>
                   <div className="min-w-0 flex-1"><p className="text-[12px] font-semibold leading-4 text-fg">{task.title}</p><p className="mt-1 truncate text-[10px] text-muted">{task.projectName} · {task.id}</p><div className="mt-2 flex flex-wrap items-center gap-2"><StatusBadge tone={priorityTone(task.priority)}>{task.priority} priority</StatusBadge><StatusBadge tone={task.stage === 'Done' ? 'success' : task.stage.includes('Review') ? 'info' : 'neutral'}>{task.stage}</StatusBadge></div></div>
                 </div>
-                <div className="flex shrink-0 flex-wrap items-center gap-3 text-[10px] text-muted"><span className="inline-flex items-center gap-1"><UsersRound size={12} />{task.assignee}</span><span className="inline-flex items-center gap-1"><CalendarClock size={12} />{dateLabel(task.dueAt)}</span><span className="inline-flex items-center gap-1"><Check size={12} />{checked.length}/{task.subtasks.length}</span><ActionButton compact onClick={() => setSelectedId(task.id)}>Open task detail <ChevronRight size={12} /></ActionButton></div>
+                <div className="flex shrink-0 flex-wrap items-center gap-3 text-[10px] text-muted"><span className="inline-flex items-center gap-1"><UsersRound size={12} />{task.assignee}</span><span className="inline-flex items-center gap-1"><CalendarDays size={12} />{dateLabel(task.dueAt)}</span><span className="inline-flex items-center gap-1"><Check size={12} />{checked.length}/{task.subtasks.length}</span><ActionButton compact onClick={() => setSelectedId(task.id)}>Open task detail <ChevronRight size={12} /></ActionButton></div>
               </article>
             );
           })}
