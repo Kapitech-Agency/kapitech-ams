@@ -393,17 +393,7 @@ export const AdminClientRetainers: React.FC = () => {
         )}
       />
 
-      <div className="min-[900px]:hidden min-w-0">
-        <AdminSectionTabs
-          ariaLabel="Clients sections"
-          activeKey="retainers"
-          items={[
-            { key: 'all-clients', label: 'Clients', to: '/admin/clients' },
-            { key: 'retainers', label: 'Retainers', to: '/admin/clients/retainers' },
-            { key: 'sla-monitoring', label: 'SLA', to: '/admin/clients/sla-monitoring' },
-          ]}
-        />
-      </div>
+      
 
       {message && <div className="flex items-center justify-between rounded-card border border-line bg-panel px-3 py-2.5 text-xs text-fg" role="status" aria-live="polite"><span>{message}</span><button type="button" onClick={() => setMessage(null)} className="inline-flex h-9 w-9 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Dismiss"><X size={14} /></button></div>}
 
