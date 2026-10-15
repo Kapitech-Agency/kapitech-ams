@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, CalendarDays, CheckCircle2, ClipboardList, ExternalLink, FileText, Plus, RefreshCw, Search, ShieldAlert, X } from 'lucide-react';
 import Button from '../../components/ui/Button';
-import { Modal } from '../../components/ui/Modal';
+import { Drawer } from '../../components/ui/Drawer';
 import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
@@ -403,7 +403,7 @@ export const AdminContracts: React.FC = () => {
         <p>Lifecycle status and audit events are stored in AMS. The workflow records review, sending, signature confirmation, activation, and closeout; it does not send emails or apply a legally binding e-signature. Store signed documents in an approved secure location and attach its HTTPS link.</p>
       </section>
 
-      <Modal
+      <Drawer
         slug="client-contract-editor"
         open={modalOpen}
         onClose={() => !saving && setModalOpen(false)}
@@ -432,7 +432,7 @@ export const AdminContracts: React.FC = () => {
           <label className="block space-y-1.5"><span className="text-[11px] text-muted">Payment terms</span><textarea rows={2} className="ams-control w-full" value={form.paymentTerms} onChange={(event) => updateForm('paymentTerms', event.target.value)} maxLength={2000} placeholder="Milestones, due dates, tax, late fees…" /></label>
           <label className="block space-y-1.5"><span className="text-[11px] text-muted">Internal notes</span><textarea rows={2} className="ams-control w-full" value={form.notes} onChange={(event) => updateForm('notes', event.target.value)} maxLength={3000} placeholder="Internal handover or approval context" /></label>
         </form>
-      </Modal>
+      </Drawer>
     </AdminPageShell>
   );
 };
