@@ -15,7 +15,7 @@ import { CommandPalette } from '../../components/admin/CommandPalette';
 import { AdminNotificationCenter } from '../../components/admin/AdminNotificationCenter';
 import { Modal } from '../../components/ui/Modal';
 import { AGENCY_TIER_LABELS, getAgencyTier } from '../../lib/rbacEngine';
-import { AMS_PRIMARY_SETTINGS_ITEM, getAmsRole, getPrimaryNavigationForRole, isNavigationItemActive } from '../../lib/amsNavigationAccess';
+import { AMS_PRIMARY_SETTINGS_ITEM, getAmsRole, getNavigationGroupsForRole, isNavigationItemActive } from '../../lib/amsNavigationAccess';
 import { AmsBrandLogo } from '../../components/admin/AmsBrandLogo';
 import UserProfileSettingsModal from '../../components/admin/UserProfileSettingsModal';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
@@ -157,9 +157,8 @@ export const AdminLayout: React.FC = () => {
     session?.user?.role
   );
   const profileTitle = session?.user?.role || DEFAULT_PROFILE_TITLE;
-  const primaryNavItems = getPrimaryNavigationForRole(amsRole);
   const navItemsForActiveState = [
-    ...primaryNavItems,
+    ...getNavigationGroupsForRole(amsRole).flatMap((group) => group.items),
     ...(amsRole === 'Admin' ? [AMS_PRIMARY_SETTINGS_ITEM] : []),
   ];
   const activeNavItem = navItemsForActiveState.find((item) =>
