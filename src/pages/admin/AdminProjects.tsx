@@ -2066,6 +2066,7 @@ export const AdminProjects: React.FC = () => {
             { key: 'sprint', label: 'Delivery', to: '/admin/projects?projects=sprint' },
             { key: 'budget', label: 'Budget', to: '/admin/projects?projects=budget' },
             { key: 'archived', label: 'Archived', to: '/admin/projects?projects=archived' },
+            { key: 'files', label: 'Files', to: '/admin/documents' },
           ]}
         />
       </div>
