@@ -18,6 +18,7 @@ interface ActiveTimer {
   taskTitle?: string;
   startedAt: number;
   billable: boolean;
+  notes?: string;
 }
 
 const STORAGE_KEY = 'kapitech_ams_active_timer_v1';
@@ -126,6 +127,7 @@ export const GlobalTimerControl: React.FC<{ userId?: string }> = ({ userId }) =>
       taskTitle: taskOptions.find((task) => task.id === taskId)?.title,
       startedAt: Date.now(),
       billable: true,
+      notes: note.trim(),
     });
     setStartDialogOpen(false);
     setTaskId('');
@@ -146,7 +148,7 @@ export const GlobalTimerControl: React.FC<{ userId?: string }> = ({ userId }) =>
         durationMinutes,
         billable: activeTimer.billable,
         date: localDateString(),
-        notes: note.trim() || 'Tracked with global timer.',
+        notes: activeTimer.notes || 'Tracked with global timer.',
       });
       if (response?.success && response.data?.timeLog) {
         persistTimer(null);
