@@ -1947,27 +1947,56 @@ export const AdminTeams: React.FC = () => {
             </div>
             <div className="rounded-control border border-line bg-bg p-4">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-muted">Active project assignments</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-muted">Project assignment & planned allocation</p>
                 <span className="text-[10px] text-muted">{memberProjects(allocationTarget).length} assigned</span>
               </div>
-              <p className="mt-1 text-[10px] leading-4 text-muted">Assignment links are saved to the project record. Planned hours, allocation percentages, and leave calendars are not available yet.</p>
-              <div className="mt-3 space-y-2">
+              <p className="mt-1 text-[10px] leading-4 text-muted">Assign this member to a project, then set the planned weekly allocation and dates. The forecast is based only on the saved plans below; leave calendars are not connected.</p>
+              <div className="mt-3 space-y-3">
                 {projects.filter((project) => project.status !== 'completed').length ? projects.filter((project) => project.status !== 'completed').slice(0, 12).map((project) => {
                   const identifiers = new Set([allocationTarget.id, allocationTarget.name, allocationTarget.username].map((value) => String(value || '').trim().toLowerCase()).filter(Boolean));
                   const memberEntries = Array.isArray(project.teamMembers) ? project.teamMembers.map(String) : [];
                   const isAssigned = memberEntries.some((value) => identifiers.has(value.trim().toLowerCase()));
                   const isLead = identifiers.has(String(project.teamLead || '').trim().toLowerCase());
-                  const end = project.targetEndDate || '';
+                  const plan = (project.resourceAllocations || []).find((item) => item.memberId === allocationTarget.id);
+                  const key = allocationPlanKey(project.id, allocationTarget.id);
+                  const draft = allocationPlanDrafts[key] || {
+                    allocationPercent: plan ? String(plan.allocationPercent) : '',
+                    startDate: plan?.startDate || project.startDate || dateKey(new Date()),
+                    endDate: plan?.endDate || project.targetEndDate || ''
+                  };
+                  const planned = Boolean(plan);
                   return (
-                    <div key={project.id} className="flex flex-col gap-2 rounded-control border border-line bg-panel px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="min-w-0">
-                        <p className="truncate text-xs font-medium text-fg">{project.name}</p>
-                        <p className="mt-1 text-[10px] text-muted">{project.clientName || project.clientCompany || 'Client not linked'} · {project.status || 'Active'} · Due {formatDate(end)}</p>
+                    <div key={project.id} className="rounded-control border border-line bg-panel px-3 py-3">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-medium text-fg">{project.name}</p>
+                          <p className="mt-1 text-[10px] text-muted">{project.clientName || project.clientCompany || 'Client not linked'} · {project.status || 'Active'} · Due {formatDate(project.targetEndDate || '')}</p>
+                          <p className="mt-1 text-[10px] text-muted">{planned ? 'Planned at ' + plan.allocationPercent + '% from ' + formatDate(plan.startDate) + ' to ' + formatDate(plan.endDate) : 'No dated allocation plan saved'}</p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <span className={'rounded-badge border px-2 py-1 text-[10px] font-medium ' + (isLead || isAssigned ? 'border-success/20 bg-success/10 text-success' : 'border-line bg-bg text-muted')}>{isLead ? 'Project lead' : isAssigned ? 'Assigned' : 'Unassigned'}</span>
+                          <Button type="button" variant={isAssigned ? 'secondary' : 'primary'} className="h-8 px-2 text-[10px]" onClick={() => void toggleProjectAssignment(project)} disabled={!canManageProjects || isLead || Boolean(allocationSavingProjectId)} loading={allocationSavingProjectId === project.id}>{isLead ? 'Lead' : isAssigned ? 'Remove' : 'Assign'}</Button>
+                        </div>
                       </div>
-                      <div className="flex shrink-0 items-center gap-2">
-                        <span className={'rounded-badge border px-2 py-1 text-[10px] font-medium ' + (isLead || isAssigned ? 'border-success/20 bg-success/10 text-success' : 'border-line bg-bg text-muted')}>{isLead ? 'Project lead' : isAssigned ? 'Assigned' : 'Unassigned'}</span>
-                        <Button type="button" variant={isAssigned ? 'secondary' : 'primary'} className="h-8 px-2 text-[10px]" onClick={() => void toggleProjectAssignment(project)} disabled={!canManageProjects || isLead || Boolean(allocationSavingProjectId)} loading={allocationSavingProjectId === project.id}>{isLead ? 'Lead' : isAssigned ? 'Remove' : 'Assign'}</Button>
-                      </div>
+                      {(isAssigned || isLead) && (
+                        <div className="mt-3 grid gap-2 sm:grid-cols-4">
+                          <label className="space-y-1">
+                            <span className="text-[10px] text-muted">Planned weekly allocation (%)</span>
+                            <input type="number" min="1" max="100" step="1" value={draft.allocationPercent} onChange={(event) => updateAllocationPlanDraft(key, { allocationPercent: event.target.value })} className="ams-control w-full" placeholder="1–100" aria-label={'Planned allocation percentage for ' + project.name} disabled={!canManageProjects} />
+                          </label>
+                          <label className="space-y-1">
+                            <span className="text-[10px] text-muted">Plan start</span>
+                            <input type="date" value={draft.startDate} onChange={(event) => updateAllocationPlanDraft(key, { startDate: event.target.value })} className="ams-control w-full" aria-label={'Allocation start date for ' + project.name} disabled={!canManageProjects} />
+                          </label>
+                          <label className="space-y-1">
+                            <span className="text-[10px] text-muted">Plan end</span>
+                            <input type="date" value={draft.endDate} min={draft.startDate || undefined} onChange={(event) => updateAllocationPlanDraft(key, { endDate: event.target.value })} className="ams-control w-full" aria-label={'Allocation end date for ' + project.name} disabled={!canManageProjects} />
+                          </label>
+                          <div className="flex items-end">
+                            <Button type="button" variant="secondary" className="h-9 w-full justify-center px-2 text-[10px]" onClick={() => void saveResourcePlan(project)} disabled={!canManageProjects || Boolean(allocationSavingProjectId)} loading={allocationSavingProjectId === project.id}>{planned ? 'Update plan' : 'Save plan'}</Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 }) : <p className="rounded-control border border-dashed border-line px-3 py-6 text-center text-xs text-muted">No active projects are available for assignment.</p>}
