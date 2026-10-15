@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { getPostgresPool, withPostgresTransaction } from './postgres.ts';
 import { postgresAuditLogRepository, type AuditEntry } from './postgres-audit-log-repository.ts';
+import { appendSystemClientInteractionWithinTransaction } from './postgres-client-interaction-repository.ts';
 
 type Row = Record<string, any>;
 const iso = (v: Date | string): string => v instanceof Date ? v.toISOString() : new Date(v).toISOString();
@@ -39,6 +40,88 @@ function toMetadata(deal: any): Record<string, unknown> {
     createdAt, updatedAt, ...metadata
   } = deal;
   return metadata;
+}
+
+type InteractionActor = { userId?: string; name?: string };
+
+const labelCrmStage = (stage: unknown) =>
+  String(stage || 'new').replace(/_/g, ' ').replace(/\\b\\w/g, letter => letter.toUpperCase());
+
+async function appendDealStageTimelineEvent(
+  db: import('pg').PoolClient,
+  deal: any,
+  previousStage: string,
+  nextStage: string,
+  actor?: InteractionActor
+): Promise<void> {
+  if (previousStage === nextStage) return;
+
+  let clientId = String(deal.clientId || '').trim();
+  if (clientId) {
+    const linked = await db.query('SELECT id FROM clients WHERE id=$1 LIMIT 1', [clientId]);
+    if (!linked.rows[0]) clientId = '';
+  }
+
+  if (!clientId) {
+    const email = String(deal.email || '').trim().toLowerCase();
+    const company = String(deal.company || '').trim().toLowerCase();
+    if (!email && !company) return;
+    const matches = await db.query(
+      `SELECT id FROM clients
+       WHERE (NULLIF(BTRIM(email),'') IS NOT NULL AND LOWER(BTRIM(email))=LOWER(BTRIM($1)))
+          OR (NULLIF(BTRIM(company),'') IS NOT NULL AND LOWER(BTRIM(company))=LOWER(BTRIM($2)))
+       ORDER BY created_at ASC LIMIT 2`,
+      [email, company]
+    );
+    if (matches.rows.length !== 1) return;
+    clientId = String(matches.rows[0].id);
+  }
+
+  const occurredAt = String(deal.updatedAt || new Date().toISOString());
+  await appendSystemClientInteractionWithinTransaction(db, {
+    id: 'interaction_' + Date.now() + '_' + crypto.randomBytes(4).toString('hex'),
+    clientId,
+    type: 'note',
+    sourceType: 'system',
+    systemAction: 'crm_deal_stage_changed',
+    sourceReferenceId: 'crm-deal-stage:' + String(deal.id) + ':' + previousStage + ':' + nextStage + ':' + occurredAt,
+    subject: 'CRM stage changed: ' + labelCrmStage(previousStage) + ' → ' + labelCrmStage(nextStage),
+    summary: 'Opportunity "' + String(deal.title || deal.id) + '" moved from ' + labelCrmStage(previousStage) + ' to ' + labelCrmStage(nextStage) + '.',
+    contactName: String(deal.clientName || ''),
+    outcome: '',
+    nextStep: '',
+    occurredAt,
+    createdByUserId: actor?.userId || '',
+    createdByName: actor?.name || 'AMS system',
+    createdAt: occurredAt
+  });
+}
+
+async function appendDealConversionTimelineEvent(
+  db: import('pg').PoolClient,
+  deal: any,
+  clientId: string,
+  projectName: string,
+  actor: { userId: string; username: string },
+  occurredAt: string
+): Promise<void> {
+  await appendSystemClientInteractionWithinTransaction(db, {
+    id: 'interaction_' + Date.now() + '_' + crypto.randomBytes(4).toString('hex'),
+    clientId,
+    type: 'note',
+    sourceType: 'system',
+    systemAction: 'crm_deal_converted',
+    sourceReferenceId: 'crm-deal-converted:' + String(deal.id),
+    subject: 'Deal converted to delivery: ' + String(deal.title || deal.id),
+    summary: 'Won CRM deal "' + String(deal.title || deal.id) + '" was converted into a client delivery workflow.',
+    contactName: String(deal.clientName || ''),
+    outcome: projectName ? 'Project created: ' + projectName : '',
+    nextStep: 'Review the kickoff task and invoice in their existing AMS modules.',
+    occurredAt,
+    createdByUserId: actor.userId,
+    createdByName: actor.username || 'AMS user',
+    createdAt: occurredAt
+  });
 }
 
 export class PostgresCrmDealRepository {
@@ -84,7 +167,7 @@ export class PostgresCrmDealRepository {
     });
   }
 
-  async update(id: string, patch: Record<string, unknown>, audit?: AuditEntry): Promise<any | null> {
+  async update(id: string, patch: Record<string, unknown>, audit?: AuditEntry, actor?: InteractionActor): Promise<any | null> {
     return withPostgresTransaction(async client => {
       const current = await client.query('SELECT * FROM crm_deals WHERE id = $1 FOR UPDATE', [id]);
       if (!current.rows[0]) return null;
@@ -98,8 +181,12 @@ export class PostgresCrmDealRepository {
          Number(next.value || 0), next.stage || 'new', next.priority || 'medium', Number(next.probability || 0),
          next.owner || null, next.expectedCloseDate || null, JSON.stringify(toMetadata(next)), next.updatedAt]
       );
+      const updatedDeal = result.rows[0] ? mapDeal(result.rows[0]) : null;
+      if (updatedDeal && String(existing.stage || 'new') !== String(updatedDeal.stage || 'new')) {
+        await appendDealStageTimelineEvent(client, updatedDeal, String(existing.stage || 'new'), String(updatedDeal.stage || 'new'), actor);
+      }
       if (audit) await postgresAuditLogRepository.appendWithinTransaction(client, audit);
-      return result.rows[0] ? mapDeal(result.rows[0]) : null;
+      return updatedDeal;
     });
   }
 
@@ -191,6 +278,7 @@ export class PostgresCrmDealRepository {
 
         const refreshedProject = (await db.query('SELECT * FROM projects WHERE id=$1', [project.id])).rows[0];
         const refreshedInvoice = (await db.query('SELECT * FROM invoices WHERE id=$1', [invoice.id])).rows[0];
+        await appendDealConversionTimelineEvent(db, deal, clientId, String(refreshedProject.name || ''), actor, new Date().toISOString());
         return {
           client: (await db.query('SELECT * FROM clients WHERE id=$1', [clientId])).rows[0],
           project: refreshedProject,
@@ -330,6 +418,7 @@ export class PostgresCrmDealRepository {
       );
 
       await db.query('UPDATE crm_deals SET client_id=$2,updated_at=$3 WHERE id=$1', [dealId, clientId, now]);
+      await appendDealConversionTimelineEvent(db, deal, String(clientId), projectName, actor, now);
       if (audit) await postgresAuditLogRepository.appendWithinTransaction(db, audit);
 
       return {
