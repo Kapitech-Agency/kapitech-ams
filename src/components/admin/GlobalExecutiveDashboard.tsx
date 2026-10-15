@@ -23,10 +23,6 @@ import { ProfileIdentity } from './ProfileIdentity';
 import { api } from '../../lib/apiClient';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 
-const TasksWorkspace = React.lazy(() =>
-  import('./TasksWorkspace').then((module) => ({ default: module.TasksWorkspace }))
-);
-
 type RangeKey = '30D' | 'Q2' | 'YTD' | '12M';
 type ProjectFilter = 'All' | 'Enterprise' | 'Retainer' | 'Fixed-fee';
 
@@ -105,12 +101,6 @@ const sampleRevenueByRange: Record<RangeKey, Array<{ label: string; primary: num
   ],
 };
 
-const deliveryBreakdown = [
-  { label: 'On schedule', value: 8, tone: 'success' as const },
-  { label: 'At risk', value: 3, tone: 'warning' as const },
-  { label: 'Overdue', value: 1, tone: 'danger' as const },
-];
-
 const toneClasses = {
   success: 'border-success/25 bg-success/10 text-success',
   warning: 'border-warning/25 bg-warning/10 text-warning',
@@ -129,329 +119,268 @@ const formatMoney = (value: number) => new Intl.NumberFormat('en-US', { style: '
 const formatLiveMoney = (value: number, currency: string) => new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'IDR', maximumFractionDigits: 0 }).format(Number.isFinite(value) ? value : 0);
 
 
-const PerformanceView: React.FC = () => {
-  const fixtureMode = isSlugFixtureMode();
-  if (!fixtureMode) {
-    return (
-      <section className="flex min-h-[220px] flex-col items-center justify-center rounded-card border border-line bg-panel px-5 py-10 text-center" role="status">
-        <AlertTriangle size={22} className="text-muted" aria-hidden="true" />
-        <h2 className="mt-3 text-sm font-semibold text-fg">Performance data is unavailable</h2>
-        <p className="mt-1 max-w-md text-xs leading-5 text-muted">Live delivery performance metrics are not connected to this dashboard yet. Sample performance values are only shown in preview mode.</p>
-      </section>
-    );
-  }
+type DashboardOperationalSnapshot = {
+  loading: boolean;
+  projects: any[] | null;
+  tasks: any[] | null;
+  timeLogs: any[] | null;
+  invoices: any[] | null;
+  expenses: any[] | null;
+};
 
-  const completionSeries = [58, 63, 69, 76, 81, 84];
-  const blockedSeries = [12, 11, 9, 7, 5, 4];
-  const cycleTimeSeries = [4.8, 4.6, 4.4, 4.2, 4.0, 3.8];
-  const totalTasks = 84;
-  const completedTasks = 64;
-  const completion = completionSeries[completionSeries.length - 1];
-  const avgCycleTime = cycleTimeSeries[cycleTimeSeries.length - 1].toFixed(1) + ' days';
-  const blockedTasks = blockedSeries[blockedSeries.length - 1];
+const isFinishedWork = (value: unknown) => /^(done|complete|completed|closed|archived)$/i.test(String(value || '').trim());
+
+const dateKey = (value: unknown) => {
+  const text = String(value || '').slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(text) ? text : '';
+};
+
+const localDateKey = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return year + '-' + month + '-' + day;
+};
+
+const buildProjectDeliveryBreakdown = (source: any[]) => {
+  const active = source.filter((project) => !isFinishedWork(project.status) && !isFinishedWork(project.health));
+  const today = localDateKey(new Date());
+  const overdue = active.filter((project) => {
+    const due = dateKey(project.targetEndDate || project.endDate || project.dueDate || project.deadline);
+    return due && due < today;
+  });
+  const overdueIds = new Set(overdue.map((project) => String(project.id || project.slug || project.name)));
+  const atRisk = active.filter((project) => {
+    const key = String(project.id || project.slug || project.name);
+    if (overdueIds.has(key)) return false;
+    const state = String(project.health || project.status || '').toLowerCase();
+    return /risk|delay|blocked|hold|issue/.test(state);
+  });
+  return [
+    { label: 'No risk flag', value: Math.max(0, active.length - overdue.length - atRisk.length), tone: 'success' as const },
+    { label: 'At risk', value: atRisk.length, tone: 'warning' as const },
+    { label: 'Overdue', value: overdue.length, tone: 'danger' as const },
+  ];
+};
+
+const buildFinancialTrend = (range: RangeKey, invoices: any[], expenses: any[]) => {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  const specs: Array<{ label: string; start: string; end: string }> = [];
+  const addMonth = (year: number, month: number) => {
+    const startDate = new Date(year, month, 1);
+    const endDate = new Date(year, month + 1, 1);
+    specs.push({
+      label: startDate.toLocaleDateString('en-US', { month: 'short' }),
+      start: localDateKey(startDate),
+      end: localDateKey(endDate),
+    });
+  };
+  if (range === 'Q2') {
+    const year = currentMonth < 3 ? currentYear - 1 : currentYear;
+    [3, 4, 5].forEach((month) => addMonth(year, month));
+  } else if (range === 'YTD') {
+    for (let month = 0; month <= currentMonth; month++) addMonth(currentYear, month);
+  } else if (range === '12M') {
+    for (let offset = 11; offset >= 0; offset--) {
+      const date = new Date(currentYear, currentMonth - offset, 1);
+      addMonth(date.getFullYear(), date.getMonth());
+    }
+  } else {
+    const firstDate = new Date(now);
+    firstDate.setDate(now.getDate() - 29);
+    const endDate = new Date(now);
+    endDate.setDate(now.getDate() + 1);
+    for (let index = 0; index < 5; index++) {
+      const startDate = new Date(firstDate);
+      startDate.setDate(firstDate.getDate() + index * 7);
+      if (startDate >= endDate) break;
+      const bucketEnd = new Date(startDate);
+      bucketEnd.setDate(startDate.getDate() + 7);
+      const effectiveEnd = bucketEnd < endDate ? bucketEnd : endDate;
+      specs.push({ label: 'W' + (index + 1), start: localDateKey(startDate), end: localDateKey(effectiveEnd) });
+    }
+  }
+  return specs.map((spec) => {
+    const invoiced = invoices.reduce((sum, invoice) => {
+      const status = String(invoice.status || '').toLowerCase();
+      const day = dateKey(invoice.issueDate || invoice.invoiceDate || invoice.createdAt);
+      if (!day || day < spec.start || day >= spec.end || status === 'draft' || status === 'cancelled' || status === 'voided') return sum;
+      return sum + (Number(invoice.total ?? invoice.amount ?? 0) || 0);
+    }, 0);
+    const recordedExpenses = expenses.reduce((sum, expense) => {
+      const day = dateKey(expense.date || expense.expenseDate || expense.createdAt);
+      if (!day || day < spec.start || day >= spec.end) return sum;
+      return sum + (Number(expense.amount || 0) || 0);
+    }, 0);
+    return { label: spec.label, primary: invoiced, secondary: recordedExpenses, tertiary: invoiced - recordedExpenses };
+  });
+};
+
+const DashboardUnavailable: React.FC<{ title: string; description: string }> = ({ title, description }) => (
+  <div className="flex min-h-[180px] flex-col items-center justify-center rounded-card border border-line bg-panel px-5 py-8 text-center" role="status">
+    <AlertTriangle size={20} className="text-muted" aria-hidden="true" />
+    <p className="mt-3 text-xs font-semibold text-fg">{title}</p>
+    <p className="mt-1 max-w-md text-[11px] leading-5 text-muted">{description}</p>
+  </div>
+);
+
+const PerformanceView: React.FC<{ snapshot: DashboardOperationalSnapshot }> = ({ snapshot }) => {
+  const fixtureMode = isSlugFixtureMode();
+  const previewMode = fixtureMode && !snapshot.tasks?.length && !snapshot.projects?.length && !snapshot.timeLogs?.length;
+  const tasks = snapshot.tasks || [];
+  const projectRows = snapshot.projects?.length ? snapshot.projects : previewMode ? sampleProjects : [];
+  const activeProjects = projectRows.filter((project) => !isFinishedWork(project.status) && !isFinishedWork(project.health));
+  const completedTasks = tasks.filter((task) => isFinishedWork(task.status)).length;
+  const blockedTasks = tasks.filter((task) => String(task.status || '').toLowerCase().includes('block')).length;
+  const today = localDateKey(new Date());
+  const overdueTasks = tasks.filter((task) => {
+    const due = dateKey(task.dueDate || task.deadline);
+    return due && due < today && !isFinishedWork(task.status);
+  }).length;
+  const taskCount = snapshot.tasks !== null ? tasks.length : previewMode ? sampleTeam.reduce((sum, member) => sum + member.tasks, 0) : null;
+  const completionValue = snapshot.tasks !== null && tasks.length ? Math.round(completedTasks / tasks.length * 100) + '%' : '—';
+  const blockedValue = snapshot.tasks !== null ? String(blockedTasks) : '—';
+  const overdueValue = snapshot.tasks !== null ? String(overdueTasks) : '—';
+  const activeProjectValue = snapshot.projects !== null ? String(activeProjects.length) : previewMode ? String(sampleProjects.length) : '—';
+
+  const current = new Date();
+  const monday = new Date(current);
+  const day = current.getDay();
+  monday.setDate(current.getDate() + (day === 0 ? -6 : 1 - day));
+  monday.setHours(0, 0, 0, 0);
+  const mondayKey = localDateKey(monday);
+  const memberTime = (snapshot.timeLogs || []).reduce((map: Map<string, number>, log: any) => {
+    const date = dateKey(log.date || log.createdAt);
+    if (!date || date < mondayKey) return map;
+    const identity = String(log.user || log.userName || log.assignee || log.userId || 'Unassigned');
+    map.set(identity, (map.get(identity) || 0) + (Number(log.durationMinutes ?? log.minutes ?? 0) || 0));
+    return map;
+  }, new Map<string, number>());
+  const workload = Array.from(memberTime.entries()).map(([name, minutes]) => ({ name, minutes })).sort((a, b) => b.minutes - a.minutes).slice(0, 8);
+  const deliveryBreakdown = buildProjectDeliveryBreakdown(activeProjects);
+  const needsAttention = activeProjects.filter((project) => {
+    const state = String(project.health || project.status || '').toLowerCase();
+    const due = dateKey(project.targetEndDate || project.endDate || project.dueDate || project.deadline);
+    return /risk|delay|blocked|hold|issue/.test(state) || (due && due < today);
+  }).slice(0, 8);
+
+  if (snapshot.loading) return <DashboardUnavailable title="Loading performance data" description="Project, task, and time records are being loaded from AMS." />;
 
   return (
-    <div className="space-y-5">
-      <AdminMetricStrip
-        className="lg:grid-cols-4"
-        metrics={[
-          { id: 'delivery-score', label: 'Delivery score', value: '92%', change: '+4.8%', changeToneClassName: 'text-success', context: 'vs previous period', sparkline: completionSeries, toneClassName: 'text-success' },
-          { id: 'task-completion', label: 'Task completion', value: completion + '%', context: completedTasks + ' of ' + totalTasks + ' tracked tasks', sparkline: completionSeries, toneClassName: 'text-info' },
-          { id: 'cycle-time', label: 'Avg. cycle time', value: avgCycleTime, change: '-0.6 days', changeToneClassName: 'text-success', context: 'vs previous period', sparkline: cycleTimeSeries, toneClassName: 'text-fg' },
-          { id: 'blocked-work', label: 'Blocked work', value: String(blockedTasks), context: '3 projects affected', sparkline: blockedSeries, toneClassName: 'text-warning' }
-        ]}
-      />
+    <div className="space-y-4">
+      {previewMode && <p className="rounded-control border border-warning/25 bg-warning/5 px-3 py-2 text-[11px] text-warning">Preview data only. Metrics below must not be used as production reporting.</p>}
+      <AdminMetricStrip metrics={[
+        { id: 'performance-projects', label: 'Active projects', value: activeProjectValue, icon: <FolderKanban size={15} />, context: snapshot.projects !== null ? 'Project records' : previewMode ? 'Preview records' : 'Live source unavailable' },
+        { id: 'performance-tasks', label: 'Tasks tracked', value: taskCount === null ? '—' : String(taskCount), icon: <CheckCircle2 size={15} />, context: snapshot.tasks !== null ? 'Task records' : previewMode ? 'Preview summary' : 'Live source unavailable' },
+        { id: 'performance-overdue', label: 'Overdue tasks', value: overdueValue, icon: <CalendarDays size={15} />, toneClassName: 'text-warning', context: snapshot.tasks !== null ? 'Open tasks past due date' : 'Not available' },
+        { id: 'performance-blocked', label: 'Blocked tasks', value: blockedValue, icon: <AlertTriangle size={15} />, toneClassName: 'text-danger', context: snapshot.tasks !== null ? 'Task status' : 'Not available' },
+      ]} />
 
-      <div className="grid gap-4 min-[1100px]:grid-cols-12">
-        <AdminPanel
-          className="min-[1100px]:col-span-8"
-          title="Delivery performance"
-          description="How projects are progressing against planned delivery windows."
-          bodyClassName="p-4 sm:p-5"
-        >
-          <div className="grid gap-3 sm:grid-cols-3">
-            {[
-              { label: 'On schedule', value: 67, tone: 'success' as const },
-              { label: 'At risk', value: 25, tone: 'warning' as const },
-              { label: 'Delayed', value: 8, tone: 'danger' as const },
-            ].map((item) => (
-              <div key={item.label} className="rounded-control border border-line bg-bg p-3">
-                <div className="flex items-center justify-between gap-2 text-xs">
-                  <span className="text-muted">{item.label}</span>
-                  <span className="font-semibold tabular-nums text-fg">{item.value}%</span>
-                </div>
-                <div className="mt-2 h-2 overflow-hidden rounded-full bg-line">
-                  <div
-                    className={item.tone === 'success' ? 'h-full rounded-full bg-success' : item.tone === 'warning' ? 'h-full rounded-full bg-warning' : 'h-full rounded-full bg-danger'}
-                    style={{ width: item.value + '%' }}
-                  />
-                </div>
+      <div className="grid gap-4 min-[1100px]:grid-cols-2">
+        <AdminPanel title="Task completion" description="Completion and status totals derived from the task records." bodyClassName="p-4 sm:p-5">
+          {snapshot.tasks === null ? <DashboardUnavailable title="Task status unavailable" description="The task service did not return data for the current role." /> : tasks.length === 0 ? (
+            <p className="py-8 text-center text-xs text-muted">No task records found for this workspace.</p>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-end justify-between gap-3"><div><p className="text-3xl font-semibold tabular-nums text-fg">{completionValue}</p><p className="mt-1 text-xs text-muted">{completedTasks} of {tasks.length} tasks completed</p></div><AdminStatusBadge tone={completedTasks === tasks.length ? 'success' : 'info'}>{completedTasks === tasks.length ? 'Complete' : 'In progress'}</AdminStatusBadge></div>
+              <div className="flex h-2 overflow-hidden rounded-full bg-line">
+                <div className="h-full bg-success" style={{ width: (completedTasks / tasks.length * 100) + '%' }} />
+                <div className="h-full bg-warning" style={{ width: (blockedTasks / tasks.length * 100) + '%' }} />
               </div>
-            ))}
-          </div>
-          <div className="mt-5 border-t border-line pt-5">
-            <TrendChart
-              data={completionSeries.map((value, index) => ({
-                label: 'W' + (index + 1),
-                primary: value,
-                secondary: [18, 16, 14, 12, 10, 9][index],
-                tertiary: blockedSeries[index],
-              }))}
-              primaryLabel="Completed"
-              secondaryLabel="In progress"
-              tertiaryLabel="Blocked"
-              ariaLabel="Task completion performance over the last six weeks."
-            />
-          </div>
-        </AdminPanel>
-
-        <AdminPanel
-          className="min-[1100px]:col-span-4"
-          title="Capacity pressure"
-          description="Current workload distribution across the team."
-          bodyClassName="p-4 sm:p-5"
-        >
-          <div className="space-y-4">
-            {sampleTeam.map((member) => (
-              <div key={member.name}>
-                <div className="mb-1.5 flex items-center justify-between gap-3">
-                  <span className="truncate text-xs font-medium text-fg">{member.name}</span>
-                  <span className="text-xs font-medium tabular-nums text-fg">{member.workload}%</span>
-                </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-line">
-                  <div className={['h-full rounded-full', progressClasses[member.tone]].join(' ')} style={{ width: member.workload + '%' }} />
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-5 rounded-control border border-warning/20 bg-warning/5 p-3 text-xs">
-            <div className="font-medium text-fg">2 members near maximum load</div>
-            <div className="mt-1 leading-5 text-muted">Rebalance work before adding new high-priority assignments.</div>
-          </div>
-        </AdminPanel>
-      </div>
-
-      <div className="grid gap-4 min-[1100px]:grid-cols-12">
-        <AdminPanel
-          className="min-[1100px]:col-span-7"
-          title="Workstream health"
-          description="Sample operational indicators for the current delivery cycle."
-          bodyClassName="p-4 sm:p-5"
-        >
-          {[
-            ['Creative production', 88, 'Ahead of plan'],
-            ['Development', 71, 'On plan'],
-            ['QA & launch', 79, 'On plan'],
-          ].map(([label, value, state]) => (
-            <div key={String(label)} className="mb-4 last:mb-0">
-              <div className="mb-1.5 flex items-center justify-between gap-3">
-                <span className="text-xs text-fg">{label}</span>
-                <span className="text-[11px] text-muted">{state} · {value}%</span>
-              </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-line">
-                <div className="h-full rounded-full bg-success" style={{ width: String(value) + '%' }} />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Completed</p><p className="mt-1 text-lg font-semibold tabular-nums text-fg">{completedTasks}</p></div>
+                <div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Remaining</p><p className="mt-1 text-lg font-semibold tabular-nums text-fg">{tasks.length - completedTasks}</p></div>
               </div>
             </div>
-          ))}
+          )}
         </AdminPanel>
-
-        <AdminPanel
-          className="min-[1100px]:col-span-5"
-          title="Execution summary"
-          description="Core performance counters from the current sample period."
-          bodyClassName="p-4 sm:p-5"
-        >
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              ['Tasks tracked', String(totalTasks)],
-              ['Completed', String(completedTasks)],
-              ['Overdue', '3'],
-              ['Tasks remaining', String(Math.max(0, totalTasks - completedTasks))],
-            ].map(([label, value]) => (
-              <div key={label} className="rounded-control border border-line bg-bg p-3">
-                <div className="text-lg font-medium tabular-nums text-fg">{value}</div>
-                <div className="mt-1 text-[11px] text-muted">{label}</div>
-              </div>
-            ))}
-          </div>
+        <AdminPanel title="Projects needing attention" description="Projects with an explicit risk flag or a past target date." bodyClassName="p-4 sm:p-5">
+          {snapshot.projects === null && !previewMode ? <DashboardUnavailable title="Project status unavailable" description="Project risk cannot be calculated because live project records were not returned." /> : needsAttention.length === 0 ? (
+            <p className="py-8 text-center text-xs text-muted">No project risk flags or overdue target dates were found.</p>
+          ) : (
+            <div className="space-y-2">
+              {needsAttention.map((project: any) => {
+                const overdue = Boolean(dateKey(project.targetEndDate || project.endDate || project.dueDate || project.deadline) && dateKey(project.targetEndDate || project.endDate || project.dueDate || project.deadline) < today);
+                return <div key={String(project.id || project.slug || project.name)} className="flex items-center justify-between gap-3 rounded-control border border-line bg-bg p-3"><div className="min-w-0"><p className="truncate text-xs font-medium text-fg">{project.name || project.title || 'Untitled project'}</p><p className="mt-1 truncate text-[10px] text-muted">{project.clientName || project.client || 'Client not linked'} · {project.status || project.health || 'Status not set'}</p></div><AdminStatusBadge tone={overdue ? 'danger' : 'warning'}>{overdue ? 'Overdue' : 'At risk'}</AdminStatusBadge></div>;
+              })}
+            </div>
+          )}
         </AdminPanel>
       </div>
+
+      <AdminPanel title="Tracked time this week" description="Hours recorded since Monday. This is logged time, not a forecast of remaining capacity." bodyClassName="p-4 sm:p-5">
+        {snapshot.timeLogs === null ? <DashboardUnavailable title="Time records unavailable" description="The time tracking service did not return records for this role." /> : workload.length === 0 ? (
+          <p className="py-8 text-center text-xs text-muted">No time entries recorded since {mondayKey}.</p>
+        ) : (
+          <div className="space-y-3">
+            {workload.map((member) => <div key={member.name} className="flex items-center justify-between gap-3"><span className="min-w-0 truncate text-xs font-medium text-fg">{member.name}</span><span className="shrink-0 text-xs tabular-nums text-muted">{Math.floor(member.minutes / 60)}h {member.minutes % 60}m</span></div>)}
+          </div>
+        )}
+      </AdminPanel>
+      <div className="flex justify-end"><Link to="/admin/tasks" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-panel-hover">Open Tasks <ArrowUpRight size={13} /></Link></div>
     </div>
   );
 };
 
-const AnalyticsView: React.FC<{ range: RangeKey }> = ({ range }) => {
+const AnalyticsView: React.FC<{ snapshot: DashboardOperationalSnapshot; range: RangeKey }> = ({ snapshot, range }) => {
   const fixtureMode = isSlugFixtureMode();
-  const [analyticsTeamPage, setAnalyticsTeamPage] = useState(1);
-  const [analyticsTeamPageSize, setAnalyticsTeamPageSize] = useState(6);
-  const analyticsTeamPageCount = Math.max(1, Math.ceil(sampleTeam.length / analyticsTeamPageSize));
-  const pagedAnalyticsTeam = sampleTeam.slice(
-    (analyticsTeamPage - 1) * analyticsTeamPageSize,
-    analyticsTeamPage * analyticsTeamPageSize,
-  );
-  useEffect(() => {
-    setAnalyticsTeamPage((current) => Math.min(current, analyticsTeamPageCount));
-  }, [analyticsTeamPageCount]);
+  const previewFinancialData = fixtureMode && !snapshot.invoices?.length && !snapshot.expenses?.length;
+  const currency = 'IDR';
+  const invoiceRows = snapshot.invoices || [];
+  const expenseRows = snapshot.expenses || [];
+  const trend = snapshot.invoices !== null && snapshot.expenses !== null
+    ? buildFinancialTrend(range, invoiceRows.filter((row) => String(row.currency || 'IDR').toUpperCase() === currency), expenseRows.filter((row) => String(row.currency || 'IDR').toUpperCase() === currency))
+    : previewFinancialData ? sampleRevenueByRange[range] : [];
+  const validInvoices = invoiceRows.filter((invoice) => String(invoice.currency || 'IDR').toUpperCase() === currency && !['draft', 'cancelled', 'voided'].includes(String(invoice.status || '').toLowerCase()));
+  const validExpenses = expenseRows.filter((expense) => String(expense.currency || 'IDR').toUpperCase() === currency);
+  const totalInvoiced = validInvoices.reduce((sum, invoice) => sum + (Number(invoice.total ?? invoice.amount ?? 0) || 0), 0);
+  const recordedExpenses = validExpenses.reduce((sum, expense) => sum + (Number(expense.amount || 0) || 0), 0);
+  const receivables = invoiceRows.filter((invoice) => String(invoice.currency || 'IDR').toUpperCase() === currency).reduce((sum, invoice) => {
+    const status = String(invoice.status || '').toLowerCase();
+    if (status === 'paid' || status === 'cancelled' || status === 'voided' || status === 'draft') return sum;
+    const paid = Number(invoice.amountPaid ?? invoice.paidAmount ?? 0) || 0;
+    const balance = Number(invoice.balanceDue ?? Math.max(0, Number(invoice.total || invoice.amount || 0) - paid));
+    return sum + Math.max(0, Number.isFinite(balance) ? balance : 0);
+  }, 0);
+  const activeProjects = snapshot.projects?.filter((project) => !isFinishedWork(project.status) && !isFinishedWork(project.health)).length;
 
-  if (!fixtureMode) {
-    return (
-      <section className="flex min-h-[220px] flex-col items-center justify-center rounded-card border border-line bg-panel px-5 py-10 text-center" role="status">
-        <AlertTriangle size={22} className="text-muted" aria-hidden="true" />
-        <h2 className="mt-3 text-sm font-semibold text-fg">Analytics data is unavailable</h2>
-        <p className="mt-1 max-w-md text-xs leading-5 text-muted">Live financial and team analytics are not connected to this dashboard yet. Sample analytics are only shown in preview mode.</p>
-      </section>
-    );
-  }
-
-  const revenue = [61000, 68500, 74200, 71800, 80200, 84500];
-  const expenses = [42000, 44700, 46300, 49200, 51400, 52200];
-  const revenueTotal = revenue.reduce((sum, value) => sum + value, 0);
-  const expenseTotal = expenses.reduce((sum, value) => sum + value, 0);
+  if (snapshot.loading) return <DashboardUnavailable title="Loading analytics" description="Invoice, expense, and portfolio records are being loaded from AMS." />;
+  const financialDataAvailable = snapshot.invoices !== null && snapshot.expenses !== null;
+  const previewInvoiced = previewFinancialData ? trend.reduce((sum: number, point: any) => sum + Number(point.primary || 0), 0) : null;
+  const previewExpenses = previewFinancialData ? trend.reduce((sum: number, point: any) => sum + Number(point.secondary || 0), 0) : null;
 
   return (
-    <div className="space-y-3">
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          ['Revenue growth', '+12.4%', 'Month over month'],
-          ['Gross margin', '61.9%', 'Sample agency blended margin'],
-          ['Portfolio value', '$149.3k', 'Active project budgets'],
-          ['Invoice aging', '$8.7k', 'Past due balance'],
-        ].map(([label, value, context]) => (
-          <article key={label} className="rounded-card border border-line bg-panel p-4">
-            <div className="text-xs text-muted">{label}</div>
-            <div className="mt-3 text-2xl font-medium tabular-nums text-fg">{value}</div>
-            <div className="mt-1 text-[11px] text-muted">{context}</div>
-          </article>
-        ))}
-      </section>
+    <div className="space-y-4">
+      {previewFinancialData && <p className="rounded-control border border-warning/25 bg-warning/5 px-3 py-2 text-[11px] text-warning">Preview data only. No production financial records were used for these sample trends.</p>}
+      <AdminMetricStrip metrics={[
+        { id: 'analytics-invoiced', label: 'Invoices issued', value: financialDataAvailable ? formatLiveMoney(totalInvoiced, currency) : previewFinancialData ? formatMoney(previewInvoiced || 0) : '—', icon: <FileText size={15} />, context: financialDataAvailable ? 'Issued invoices · IDR' : previewFinancialData ? 'Sample data' : 'Live source unavailable' },
+        { id: 'analytics-expenses', label: 'Recorded expenses', value: financialDataAvailable ? formatLiveMoney(recordedExpenses, currency) : previewFinancialData ? formatMoney(previewExpenses || 0) : '—', icon: <CircleDollarSign size={15} />, context: financialDataAvailable ? 'Expense records · IDR' : previewFinancialData ? 'Sample data' : 'Live source unavailable' },
+        { id: 'analytics-receivables', label: 'Outstanding receivables', value: snapshot.invoices !== null ? formatLiveMoney(receivables, currency) : '—', icon: <ReceiptText size={15} />, context: snapshot.invoices !== null ? 'Open, non-draft invoices · IDR' : 'Live source unavailable' },
+        { id: 'analytics-projects', label: 'Active projects', value: snapshot.projects !== null ? String(activeProjects || 0) : fixtureMode ? String(sampleProjects.length) : '—', icon: <FolderKanban size={15} />, context: snapshot.projects !== null ? 'Current project records' : fixtureMode ? 'Preview records' : 'Live source unavailable' }
+      ]} />
 
-      <div className="grid gap-3 min-[1100px]:grid-cols-12">
-        <AdminPanel className="min-[1100px]:col-span-8" title="Financial analytics" description="Revenue, expense, and net contribution trend based on Stitch sample inputs." bodyClassName="p-4 sm:p-5">
-          <TrendChart
-            data={sampleRevenueByRange[range]}
-            primaryLabel="Revenue"
-            secondaryLabel="Expenses"
-            tertiaryLabel="Net"
-            primaryFormat={formatMoney}
-            ariaLabel="Financial analytics trend."
-          />
-          <div className="mt-4 grid grid-cols-3 gap-2 border-t border-line pt-4">
-            {[
-              ['Revenue', formatMoney(revenueTotal)],
-              ['Expenses', formatMoney(expenseTotal)],
-              ['Net', formatMoney(revenueTotal - expenseTotal)],
-            ].map(([label, value]) => (
-              <div key={label} className="rounded-control bg-bg p-3">
-                <div className="text-[11px] text-muted">{label}</div>
-                <div className="mt-1 text-sm font-medium tabular-nums text-fg">{value}</div>
-              </div>
-            ))}
-          </div>
-        </AdminPanel>
+      <AdminPanel title="Invoice and expense trend" description="Invoice totals are grouped by issue date; expenses are grouped by recorded date. Their difference is not a posted profit figure." bodyClassName="p-4 sm:p-5">
+        {trend.length >= 2 ? (
+          <TrendChart data={trend} primaryLabel="Invoices issued" secondaryLabel="Recorded expenses" tertiaryLabel="Difference" primaryFormat={previewFinancialData ? formatMoney : (value) => formatLiveMoney(value, currency)} ariaLabel="Issued invoices and recorded expenses by period." />
+        ) : (
+          <DashboardUnavailable title="Financial trend unavailable" description="The selected sources did not return a usable period series. Values are not estimated." />
+        )}
+      </AdminPanel>
 
-        <AdminPanel className="min-[1100px]:col-span-4" title="Portfolio mix" description="Sample distribution of active work by commercial model." bodyClassName="p-4 sm:p-5">
-          <DonutChart
-            data={[
-              { label: 'Enterprise', value: 5, tone: 'info' as const },
-              { label: 'Retainer', value: 4, tone: 'success' as const },
-              { label: 'Fixed-fee', value: 3, tone: 'warning' as const },
-            ]}
-            ariaLabel="Portfolio mix by commercial model."
-          />
-          <div className="mt-4 space-y-3 border-t border-line pt-4">
-            {[
-              ['Enterprise', '42%', '5 projects'],
-              ['Retainer', '33%', '4 projects'],
-              ['Fixed-fee', '25%', '3 projects'],
-            ].map(([label, percent, context]) => (
-              <div key={label} className="flex items-center justify-between gap-3 text-xs">
-                <span className="text-fg">{label}</span>
-                <span className="text-muted">{percent} · {context}</span>
-              </div>
-            ))}
-          </div>
-        </AdminPanel>
-      </div>
-
-      <div className="grid gap-3 min-[1100px]:grid-cols-12">
-        <AdminPanel className="min-[1100px]:col-span-7" title="Team workload analytics" description="Task allocation and utilization by team member." bodyClassName="p-0">
-          <div className="overflow-x-auto custom-scrollbar">
-            <table className="w-full min-w-[620px] border-collapse text-left">
-              <thead>
-                <tr>
-                  <th className="px-4 py-3 text-xs font-medium text-muted">Team member</th>
-                  <th className="px-3 py-3 text-xs font-medium text-muted">Tasks</th>
-                  <th className="px-3 py-3 text-xs font-medium text-muted">Utilization</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-muted">State</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pagedAnalyticsTeam.map((member) => (
-                  <tr key={member.name} className="border-t border-line">
-                    <td className="px-4 py-3 text-xs font-medium text-fg">{member.name}</td>
-                    <td className="px-3 py-3 text-xs tabular-nums text-muted">{member.tasks}</td>
-                    <td className="px-3 py-3">
-                      <div className="flex min-w-[150px] items-center gap-2">
-                        <div className="h-1.5 flex-1 overflow-hidden rounded-sm bg-line">
-                          <div className={['h-full rounded-sm', progressClasses[member.tone]].join(' ')} style={{ width: member.workload + '%' }} />
-                        </div>
-                        <span className="w-9 text-right text-[11px] tabular-nums text-muted">{member.workload}%</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-right text-xs text-muted">{member.state}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <AdminTablePagination
-            total={sampleTeam.length}
-            page={analyticsTeamPage}
-            pageSize={analyticsTeamPageSize}
-            onPageChange={setAnalyticsTeamPage}
-            onPageSizeChange={setAnalyticsTeamPageSize}
-            itemLabel="members"
-            slug="dashboard-team-analytics-pagination"
-          />
-        </AdminPanel>
-
-        <AdminPanel className="min-[1100px]:col-span-5" title="Client & project analytics" description="Sample health signals for decision support." bodyClassName="p-4 sm:p-5">
+      <AdminPanel title="Project status" description="Current project status values from the project register." bodyClassName="p-4 sm:p-5">
+        {snapshot.projects === null && !fixtureMode ? <DashboardUnavailable title="Project records unavailable" description="Project status analytics need access to the live project register." /> : (
           <div className="space-y-3">
-            {[
-              ['Atlas Group', '78%', 'Brand system · enterprise', 'success'],
-              ['Meridian Labs', '61%', 'Commerce · fixed-fee', 'warning'],
-              ['Nova Ventures', '72%', 'Growth · retainer', 'success'],
-              ['Orbit Health', '44%', 'Launch · enterprise', 'danger'],
-            ].map(([client, progress, context, tone]) => (
-              <div key={client} className="rounded-control border border-line bg-bg p-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="truncate text-xs font-medium text-fg">{client}</div>
-                    <div className="mt-0.5 truncate text-[10px] text-muted">{context}</div>
-                  </div>
-                  <span className="text-xs font-medium tabular-nums text-fg">{progress}</span>
-                </div>
-                <div className="mt-2 h-1.5 overflow-hidden rounded-sm bg-line">
-                  <div className={['h-full rounded-sm', progressClasses[tone as keyof typeof progressClasses]].join(' ')} style={{ width: progress }} />
-                </div>
-              </div>
-            ))}
+            {(snapshot.projects?.length ? snapshot.projects : fixtureMode ? sampleProjects : []).reduce((groups: Array<{ status: string; count: number }>, project: any) => {
+              const status = String(project.status || project.health || 'Not set');
+              const existing = groups.find((item) => item.status === status);
+              if (existing) existing.count += 1; else groups.push({ status, count: 1 });
+              return groups;
+            }, []).sort((a, b) => b.count - a.count).map((group) => <div key={group.status} className="flex items-center justify-between gap-3 rounded-control border border-line bg-bg px-3 py-2.5"><span className="text-xs text-fg">{group.status}</span><span className="text-xs font-semibold tabular-nums text-fg">{group.count}</span></div>)}
           </div>
-        </AdminPanel>
-      </div>
-
-      <section className="grid gap-3 sm:grid-cols-3">
-        {[
-          { icon: <CircleDollarSign size={15} />, label: 'Highest revenue month', value: 'June · $84.5k' },
-          { icon: <Users size={15} />, label: 'Peak team load', value: 'Raka · 91%' },
-          { icon: <AlertTriangle size={15} />, label: 'Risk concentration', value: '3 projects at risk' },
-        ].map((item) => (
-          <article key={item.label} className="rounded-card border border-line bg-panel p-4">
-            <div className="flex items-center gap-2 text-xs text-muted">{item.icon}{item.label}</div>
-            <div className="mt-2 text-sm font-medium text-fg">{item.value}</div>
-          </article>
-        ))}
-      </section>
+        )}
+      </AdminPanel>
     </div>
   );
 };
