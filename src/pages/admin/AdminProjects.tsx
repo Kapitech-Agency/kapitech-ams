@@ -1470,12 +1470,12 @@ export const AdminProjects: React.FC = () => {
       statusLabel(project.status),
       String(project.progressPercent),
       String(project.budget),
-      String(Math.round(project.budget * (project.progressPercent / 100))),
+      getRecordedExpense(project.id) === null ? '' : String(getRecordedExpense(project.id)),
       project.teamLead,
       project.targetEndDate,
     ]);
     const csv = [
-      ['slug', 'project', 'client', 'status', 'progress_percent', 'budget', 'budget_burn', 'owner', 'deadline'],
+      ['slug', 'project', 'client', 'status', 'progress_percent', 'budget', 'recorded_finance_cost', 'owner', 'deadline'],
       ...rows,
     ]
       .map(row => row.map(cell => '"' + String(cell).replace(/"/g, '""') + '"').join(','))
