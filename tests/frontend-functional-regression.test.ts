@@ -211,13 +211,11 @@ test('Client Retainers are server-persisted and sample agreements are fixture-on
 test('SLA Monitoring never presents mock uptime or incident metrics as production data', async () => {
   const page = await read('src/pages/admin/AdminClientSlaMonitoring.tsx');
 
-  assert.match(page, /const \[records\] = useState<SlaAccount\[]>\(\(\) => fixtureMode \? seed : \[\]\)/);
-  assert.match(page, /Sample values are hidden in production/);
-  assert.match(page, /avgUptime === null \? 'Not available'/);
-  assert.match(page, /avgMttr === null \? 'Not available'/);
-  assert.match(page, /No production snapshot was exported/);
-  assert.match(page, /exportSnapshot\(selectedTelemetry \? \[selectedTelemetry\] : \[\]\)/);
-  assert.match(page, /not a live telemetry feed/);
+  assert.match(page, /Telemetry not configured/);
+  assert.match(page, /No sample accounts or simulated performance values are shown/);
+  assert.match(page, /value: '—'/);
+  assert.doesNotMatch(page, /const seed|const \[records\]|isSlugFixtureMode/);
+  assert.match(page, /Open Contracts &amp; SOW/);
 });
 
 test('unexpected async API failures are forwarded and returned as safe JSON', async () => {
