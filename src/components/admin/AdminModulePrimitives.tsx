@@ -3,7 +3,8 @@ import { Search, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, AlertTria
 import { Link, NavLink } from 'react-router-dom';
 import { CustomSelect } from '../ui/CustomSelect';
 import { cn } from '../../lib/cn';
-import { hasAdminPermission } from '../../lib/adminAuth';
+import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
+import { canAccessAmsRoute, getAmsRole } from '../../lib/amsNavigationAccess';
 
 export { Skeleton } from '../ui/Skeleton';
 
@@ -43,6 +44,19 @@ export interface AdminSectionTabsProps {
   className?: string;
 }
 
+function canRenderNavigationTab(item: AdminSectionTabItem): boolean {
+  const session = getAdminSession();
+  if (!session?.user) return !item.permission || hasAdminPermission(item.permission);
+
+  const target = new URL(item.to, 'https://ams.kapitech.local');
+  const role = getAmsRole(session.user.role);
+  const currentMfaSetup = session.user.mfaEnabled !== true
+    && target.pathname === '/admin/settings'
+    && target.searchParams.get('tab') === 'security';
+
+  return currentMfaSetup || canAccessAmsRoute(role, target.pathname, target.search);
+}
+
 export const AdminSectionTabs: React.FC<AdminSectionTabsProps> = ({
   items,
   activeKey,
@@ -56,7 +70,7 @@ export const AdminSectionTabs: React.FC<AdminSectionTabsProps> = ({
       className
     )}
   >
-    {items.filter((item) => !item.permission || hasAdminPermission(item.permission)).map((item) => {
+    {items.filter(canRenderNavigationTab).map((item) => {
       const active = activeKey === item.key;
       return (
         <NavLink
@@ -88,7 +102,7 @@ export const AdminTopbarTabs: React.FC<AdminSectionTabsProps> = ({
     aria-label={ariaLabel}
     className={cn('inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll', className)}
   >
-    {items.filter((item) => !item.permission || hasAdminPermission(item.permission)).map((item) => {
+    {items.filter(canRenderNavigationTab).map((item) => {
       const active = activeKey === item.key;
       return (
         <Link
