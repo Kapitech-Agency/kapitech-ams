@@ -320,3 +320,20 @@ test('Client onboarding readiness reflects persisted profile fields and opens th
   assert.ok(clients.includes('api.clients.update(clientData.id, clientData)'));
   assert.equal(clients.includes('const [onboardingChecklist'), false, 'Do not imply an unpersisted local checklist is authoritative.');
 });
+
+
+test('Client profile detail loads persisted contracts by client ID or exact company name', () => {
+  const clients = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClients.tsx'), 'utf8');
+
+  assert.ok(clients.includes('api.contracts.getAll()'));
+  assert.ok(clients.includes('const contractClientId = String(contract.clientId || \'\').trim()'));
+  assert.ok(clients.includes('contractClientId === selectedClient.id'));
+  assert.ok(clients.includes('normalizeClientRelationName(contract.clientName) === normalizeClientRelationName(selectedClient.company)'));
+  assert.ok(clients.includes('const canViewClientContracts = canManageClients || hasAdminPermission(\'canManageCrm\') || hasAdminPermission(\'canManageProjects\')'));
+  assert.ok(clients.includes('data-ams-feature-slug="client-contract-history"'));
+  assert.ok(clients.includes('No linked contracts yet'));
+  assert.ok(clients.includes('isSecureContractDocumentUrl(contract.documentUrl)'));
+  assert.ok(clients.includes("return new URL(value).protocol === 'https:'"));
+  assert.ok(clients.includes('to="/admin/contracts"'));
+  assert.ok(clients.includes('Contract register unavailable'));
+});

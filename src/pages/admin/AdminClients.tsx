@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 // Shared module chrome renders the canonical ams-dashboard-header primitive.
 import {
@@ -12,7 +13,10 @@ import {
   ChevronRight,
   CircleAlert,
   CircleDashed,
+  CalendarDays,
   Download,
+  ExternalLink,
+  FileText,
   Eye,
   Globe,
   Pencil,
@@ -42,6 +46,49 @@ type SortKey = 'name' | 'company' | 'industry' | 'status' | 'updatedAt' | 'proje
 type SortDirection = 'asc' | 'desc';
 type SlaFilter = 'all' | 'healthy' | 'near' | 'over' | 'not-configured';
 type StatusScope = 'all' | 'active' | 'lead' | 'at-risk';
+
+type ClientContractSummary = {
+  id: string;
+  contractNumber?: string;
+  title?: string;
+  contractType?: string;
+  status?: string;
+  clientId?: string;
+  clientName?: string;
+  projectName?: string;
+  contractValue?: number;
+  currency?: 'IDR' | 'USD';
+  documentUrl?: string;
+  startDate?: string;
+  endDate?: string;
+  renewalDate?: string;
+  signedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+const normalizeClientRelationName = (value: unknown) =>
+  String(value || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+
+const CONTRACT_STATUS_PRESENTATION: Record<string, { label: string; className: string }> = {
+  draft: { label: 'Draft', className: 'border-line bg-bg text-muted' },
+  in_review: { label: 'In review', className: 'border-warning/25 bg-warning/10 text-warning' },
+  sent: { label: 'Sent for signature', className: 'border-info/25 bg-info/10 text-info' },
+  signed: { label: 'Signed', className: 'border-accent/25 bg-accent/10 text-accent-text' },
+  active: { label: 'Active', className: 'border-success/25 bg-success/10 text-success' },
+  completed: { label: 'Completed', className: 'border-line bg-bg text-muted' },
+  expired: { label: 'Expired', className: 'border-danger/25 bg-danger/10 text-danger' },
+  terminated: { label: 'Terminated', className: 'border-danger/25 bg-danger/10 text-danger' },
+};
+
+const isSecureContractDocumentUrl = (value?: string) => {
+  if (!value) return false;
+  try {
+    return new URL(value).protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
 
 const STATUS_OPTIONS: Array<{ value: AgencyClient['status']; label: string }> = [
   { value: 'lead', label: 'Lead' },
@@ -100,6 +147,7 @@ const formatDate = (value: string, language: string) => {
 export const AdminClients: React.FC = () => {
   const { matchesDate } = useReportingPeriod();
   const canManageClients = hasAdminPermission('canManageClients');
+  const canViewClientContracts = canManageClients || hasAdminPermission('canManageCrm') || hasAdminPermission('canManageProjects');
   const { t, language } = useLanguage();
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
   const [clients, setClients] = useState<AgencyClient[]>([]);
@@ -120,6 +168,9 @@ export const AdminClients: React.FC = () => {
   const [statusTone, setStatusTone] = useState<'success' | 'danger'>('success');
 
   const [selectedClient, setSelectedClient] = useState<AgencyClient | null>(null);
+  const [clientContracts, setClientContracts] = useState<ClientContractSummary[]>([]);
+  const [contractsLoading, setContractsLoading] = useState(false);
+  const [contractsError, setContractsError] = useState<string | null>(null);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<AgencyClient | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AgencyClient | null>(null);
@@ -250,6 +301,44 @@ export const AdminClients: React.FC = () => {
   useEffect(() => {
     setPage(1);
   }, [searchQuery, statusFilter, industryFilter, locationFilter, slaFilter, statusScope, sortKey, sortDirection]);
+  useEffect(() => {
+    if (!selectedClient || !canViewClientContracts) {
+      setClientContracts([]);
+      setContractsError(null);
+      setContractsLoading(false);
+      return;
+    }
+
+    let active = true;
+    setClientContracts([]);
+    setContractsError(null);
+    setContractsLoading(true);
+
+    void api.contracts.getAll().then((response) => {
+      if (!active) return;
+      if (!response.success || !Array.isArray(response.data?.contracts)) {
+        setContractsError(response.error || 'Contract register could not be loaded.');
+        return;
+      }
+
+      const rows = (response.data.contracts as ClientContractSummary[])
+        .filter((contract) => {
+          const contractClientId = String(contract.clientId || '').trim();
+          if (contractClientId) return contractClientId === selectedClient.id;
+          return normalizeClientRelationName(contract.clientName) === normalizeClientRelationName(selectedClient.company);
+        })
+        .sort((a, b) => String(b.updatedAt || b.createdAt || '').localeCompare(String(a.updatedAt || a.createdAt || '')));
+
+      setClientContracts(rows);
+    }).catch((error) => {
+      if (active) setContractsError(error instanceof Error ? error.message : 'Contract register could not be loaded.');
+    }).finally(() => {
+      if (active) setContractsLoading(false);
+    });
+
+    return () => { active = false; };
+  }, [selectedClient?.id, selectedClient?.company, canViewClientContracts]);
+
 
   const pageCount = Math.max(1, Math.ceil(filteredClients.length / pageSize));
   const paginatedClients = useMemo(
@@ -690,6 +779,82 @@ export const AdminClients: React.FC = () => {
                 <p className="mt-3 text-[10px] leading-4 text-muted">
                   This score covers profile completeness only. Contract approval, project kickoff, and billing readiness must be verified in their existing AMS modules.
                 </p>
+              </section>
+            )}
+
+            {canViewClientContracts && (
+              <section
+                aria-label="Client contracts and statements of work"
+                data-ams-feature-slug="client-contract-history"
+                data-ams-slug="client-contract-history"
+                className="overflow-hidden rounded-card border border-line bg-panel"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line px-4 py-3">
+                  <div>
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-fg"><FileText size={15} className="text-muted" aria-hidden="true" /> Contracts &amp; Statements of Work</h3>
+                    <p className="mt-1 text-xs leading-5 text-muted">Saved contracts linked to this client record.</p>
+                  </div>
+                  <Link to="/admin/contracts" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-fg transition-colors hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                    Contract register <ExternalLink size={12} aria-hidden="true" />
+                  </Link>
+                </div>
+
+                {contractsLoading ? (
+                  <div className="space-y-2 p-4" role="status" aria-label="Loading client contracts">
+                    {[1, 2].map((item) => <div key={item} className="h-16 animate-pulse rounded-control border border-line bg-bg" />)}
+                  </div>
+                ) : contractsError ? (
+                  <div className="flex items-start gap-2.5 p-4" role="alert">
+                    <CircleAlert size={15} className="mt-0.5 shrink-0 text-danger" aria-hidden="true" />
+                    <div>
+                      <p className="text-xs font-medium text-fg">Contract register unavailable</p>
+                      <p className="mt-1 text-xs leading-5 text-muted">{contractsError}</p>
+                    </div>
+                  </div>
+                ) : clientContracts.length ? (
+                  <div className="divide-y divide-line">
+                    {clientContracts.map((contract) => {
+                      const state = CONTRACT_STATUS_PRESENTATION[String(contract.status || '').toLowerCase()] || {
+                        label: String(contract.status || 'Unknown').replace(/_/g, ' '),
+                        className: 'border-line bg-bg text-muted',
+                      };
+                      const dateRange = [contract.startDate, contract.endDate].filter(Boolean).join(' – ');
+                      return (
+                        <article key={contract.id} data-ams-slug={'client-contract-' + contract.id} className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-xs font-semibold text-fg">{contract.title || contract.contractNumber || 'Untitled contract'}</span>
+                              <span className={'inline-flex rounded-badge border px-2 py-0.5 text-[10px] font-semibold ' + state.className}>{state.label}</span>
+                            </div>
+                            <p className="mt-1 text-[10px] text-muted">
+                              {contract.contractNumber || contract.id}
+                              {contract.contractType ? ' · ' + String(contract.contractType).replace(/_/g, ' ').toUpperCase() : ''}
+                              {contract.projectName ? ' · ' + contract.projectName : ''}
+                            </p>
+                            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-muted">
+                              {dateRange && <span className="inline-flex items-center gap-1"><CalendarDays size={11} aria-hidden="true" />{dateRange}</span>}
+                              {contract.signedAt && <span>Signed {formatDate(contract.signedAt, language)}</span>}
+                              {Number.isFinite(Number(contract.contractValue)) && <span className="font-medium tabular-nums text-fg">{formatAmount(Number(contract.contractValue) || 0, contract.currency === 'USD' ? 'USD' : 'IDR')}</span>}
+                            </div>
+                          </div>
+                          {isSecureContractDocumentUrl(contract.documentUrl) && (
+                            <a href={contract.documentUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-fg transition-colors hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                              Open document <ExternalLink size={12} aria-hidden="true" />
+                            </a>
+                          )}
+                        </article>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-start gap-2 p-4" data-ams-slug="client-contract-empty">
+                    <p className="text-xs font-medium text-fg">No linked contracts yet</p>
+                    <p className="text-xs leading-5 text-muted">Contracts and statements of work added in the Contract register will appear here when linked by client ID or exact company name.</p>
+                    <Link to="/admin/contracts" className="inline-flex min-h-9 items-center gap-1.5 rounded-control border border-line bg-bg px-3 text-xs font-medium text-fg transition-colors hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                      Open contract register <ExternalLink size={12} aria-hidden="true" />
+                    </Link>
+                  </div>
+                )}
               </section>
             )}
 
