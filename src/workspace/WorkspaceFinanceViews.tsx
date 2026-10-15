@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { AlertTriangle, ArrowDownRight, ArrowUpRight, CalendarClock, FileDown, FileText, Plus, Receipt, Wallet } from 'lucide-react';
+import { AlertTriangle, ArrowUpDown, ArrowUpRight, CalendarDays, Download, FileText, Plus, Receipt, WalletCards } from 'lucide-react';
 import { Modal } from '../components/ui/Modal';
 import { WorkspaceRole } from './workspaceAccess';
 import {
@@ -288,7 +288,7 @@ export const ProjectProfitabilityView: React.FC<{ role: WorkspaceRole | null }> 
       <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="Revenue" value={idrCompact(totalRevenue)} detail="Recognized project revenue" />
         <MetricCard label="Operating cost" value={idrCompact(totalCost)} detail="Staff cost plus vendor expenses" tone="warning" icon={<ArrowUpDown size={14} />} />
-        <MetricCard label="Net profit" value={idrCompact(totalProfit)} detail="Revenue less operating cost" tone={totalProfit >= 0 ? 'success' : 'danger'} icon={totalProfit >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />} />
+        <MetricCard label="Net profit" value={idrCompact(totalProfit)} detail="Revenue less operating cost" tone={totalProfit >= 0 ? 'success' : 'danger'} icon={totalProfit >= 0 ? <ArrowUpRight size={14} /> : <ArrowUpDown size={14} />} />
         <MetricCard label="Burn-rate alerts" value={String(overrunCount)} detail="Projects at or above 80% of delivery budget" tone={overrunCount ? 'warning' : 'success'} icon={<AlertTriangle size={14} />} />
       </div>
       {overrunCount > 0 && <div role="alert" className="flex items-start gap-2.5 rounded-control border border-warning/35 bg-warning/10 p-3"><AlertTriangle size={15} className="mt-0.5 shrink-0 text-warning" /><div><p className="text-[12px] font-semibold text-fg">Cost overrun warning</p><p className="mt-1 text-[11px] leading-5 text-muted">{overrunCount} project(s) have consumed at least 80% of their indicative delivery budget. Review scope, staffing and vendor commitments.</p></div></div>}
