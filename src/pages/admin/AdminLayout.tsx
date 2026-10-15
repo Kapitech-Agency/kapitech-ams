@@ -20,6 +20,17 @@ import {
   Building2,
   FileText,
   ShieldCheck,
+  ChevronDown,
+  ChevronRight,
+  Globe,
+  Image,
+  UserPlus,
+  CalendarDays,
+  ReceiptText,
+  BarChart3,
+  Activity,
+  FolderKanban,
+  Target,
 } from 'lucide-react';
 import { getAdminSession, logoutAdmin } from '../../lib/adminAuth';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -36,7 +47,13 @@ import Button from '../../components/ui/Button';
 import { ReportingPeriodProvider } from '../../lib/ReportingPeriodContext';
 import { AdminReportingPeriodBar } from '../../components/admin/AdminReportingPeriodBar';
 
-type AdminNavGroup = 'Overview' | 'Sales & Clients' | 'Delivery' | 'People & Resources' | 'Finance' | 'Website & Content' | 'Operations';
+type AdminNavGroup = 'Overview' | 'Clients & CRM' | 'Projects & Delivery' | 'Resource Management' | 'Finance & Billing' | 'Assets & Documents' | 'Client Portal' | 'Website & Content' | 'Operations';
+
+interface AdminNavGroupMeta {
+  key: AdminNavGroup;
+  label: string;
+  icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>;
+}
 
 interface NavItem {
   key: string;
@@ -53,24 +70,69 @@ interface NavItem {
 type AdminNavItem = NavItem & { accessKey?: string; anyAccessKeys?: string[] };
 
 // Sidebar items represent modules only. Feature views stay inside each module.
-const NAV_GROUPS: AdminNavGroup[] = ['Overview', 'Sales & Clients', 'Delivery', 'People & Resources', 'Finance', 'Website & Content', 'Operations'];
+const NAV_GROUPS: AdminNavGroupMeta[] = [
+  { key: 'Overview', label: 'Overview', icon: Home },
+  { key: 'Clients & CRM', label: 'Clients & CRM', icon: UsersRound },
+  { key: 'Projects & Delivery', label: 'Projects & Delivery', icon: Briefcase },
+  { key: 'Resource Management', label: 'Resource Management', icon: UsersRound },
+  { key: 'Finance & Billing', label: 'Finance & Billing', icon: Landmark },
+  { key: 'Assets & Documents', label: 'Assets & Documents', icon: Image },
+  { key: 'Client Portal', label: 'Client Portal', icon: Globe },
+  { key: 'Website & Content', label: 'Website & Content', icon: LayoutGrid },
+  { key: 'Operations', label: 'Operations', icon: ShieldCheck },
+];
 
+// Sidebar modules are expandable; each submenu points to an existing workspace or a UI-first
+// workspace with an explicit unconnected state. No submenu fabricates operational records.
 const STITCH_NAV_ITEMS: AdminNavItem[] = [
   { key: 'dashboard', to: '/admin/dashboard', label: 'Dashboard', icon: Home, requiredTier: 2, group: 'Overview' },
-  { key: 'inbox', to: '/admin/inbox', label: 'Inbox', icon: Inbox, accessKey: 'inbox', requiredTier: 2, group: 'Sales & Clients' },
-  { key: 'crm', to: '/admin/crm', label: 'CRM & Pipeline', icon: Briefcase, accessKey: 'crm', requiredTier: 3, group: 'Sales & Clients' },
-  { key: 'proposals', to: '/admin/proposals', label: 'Proposals & Quotes', icon: FileText, accessKey: 'proposals', requiredTier: 3, group: 'Sales & Clients' },
-  { key: 'contracts', to: '/admin/contracts', label: 'Contracts & SOW', icon: FileText, requiredTier: 3, group: 'Sales & Clients' },
-  { key: 'clients', to: '/admin/clients/all-clients', label: 'Clients & Accounts', icon: UsersRound, requiredTier: 3, group: 'Sales & Clients' },
-  { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, requiredTier: 3, group: 'Delivery' },
-  { key: 'tasks', to: '/admin/tasks', label: 'Tasks', icon: ClipboardCheck, accessKey: 'projects', requiredTier: 3, group: 'Delivery' },
-  { key: 'team', to: '/admin/team', label: 'Team', icon: UsersRound, accessKey: 'timelogs', requiredTier: 3, group: 'People & Resources' },
-  { key: 'time-logs', to: '/admin/time-logs', label: 'Time Tracking', icon: Clock3, accessKey: 'timelogs', requiredTier: 3, group: 'People & Resources' },
-  { key: 'vendors', to: '/admin/vendors', label: 'Vendors', icon: Building2, accessKey: 'vendors', requiredTier: 3, group: 'People & Resources' },
-  { key: 'finance', to: '/admin/finance', label: 'Finance', icon: Landmark, accessKey: 'invoicing', requiredTier: 2, group: 'Finance' },
-  { key: 'cms', to: '/admin/cms/projects', label: 'Website CMS', icon: LayoutGrid, anyAccessKeys: ['cms_projects', 'services', 'testimonials', 'cms_insights'], requiredTier: 3, group: 'Website & Content' },
-  { key: 'approvals', to: '/admin/approvals', label: 'Approvals', icon: ShieldCheck, accessKey: 'approvals', requiredTier: 3, group: 'Operations' },
-  { key: 'documents', to: '/admin/documents', label: 'Documents', icon: LockKeyhole, requiredTier: 3, group: 'Operations' },
+  { key: 'performance', to: '/admin/dashboard?view=performance', label: 'Performance & KPIs', icon: Activity, requiredTier: 2, group: 'Overview' },
+  { key: 'analytics', to: '/admin/dashboard?view=analytics', label: 'Reports & Analytics', icon: BarChart3, requiredTier: 2, group: 'Overview' },
+
+  { key: 'inbox', to: '/admin/inbox', label: 'Inbox & Requests', icon: Inbox, accessKey: 'inbox', requiredTier: 2, group: 'Clients & CRM' },
+  { key: 'crm', to: '/admin/crm', label: 'CRM & Pipeline', icon: Briefcase, accessKey: 'crm', requiredTier: 3, group: 'Clients & CRM' },
+  { key: 'clients', to: '/admin/clients/all-clients', label: 'Client Directory', icon: UsersRound, accessKey: 'clients', requiredTier: 3, group: 'Clients & CRM' },
+  { key: 'client-onboarding', to: '/admin/clients/onboarding', label: 'Client Onboarding', icon: UserPlus, accessKey: 'clients', requiredTier: 3, group: 'Clients & CRM' },
+  { key: 'proposals', to: '/admin/proposals', label: 'Quotes & Proposals', icon: FileText, accessKey: 'proposals', requiredTier: 3, group: 'Clients & CRM' },
+  { key: 'contracts', to: '/admin/contracts', label: 'Contracts & SOW', icon: FileText, accessKey: 'clients', requiredTier: 3, group: 'Clients & CRM' },
+  { key: 'retainers', to: '/admin/clients/retainers', label: 'Retainers', icon: Clock3, accessKey: 'clients', requiredTier: 3, group: 'Clients & CRM' },
+  { key: 'sla-monitoring', to: '/admin/clients/sla-monitoring', label: 'SLA Monitoring', icon: Activity, accessKey: 'clients', requiredTier: 3, group: 'Clients & CRM' },
+
+  { key: 'projects', to: '/admin/projects', label: 'Project Portfolio', icon: FolderKanban, accessKey: 'projects', requiredTier: 3, group: 'Projects & Delivery' },
+  { key: 'project-timeline', to: '/admin/projects?layout=gantt', label: 'Timeline & Gantt', icon: CalendarDays, accessKey: 'projects', requiredTier: 3, group: 'Projects & Delivery' },
+  { key: 'tasks', to: '/admin/tasks', label: 'Task Board & Deadlines', icon: ClipboardCheck, accessKey: 'projects', requiredTier: 3, group: 'Projects & Delivery' },
+  { key: 'project-budget', to: '/admin/projects?projects=budget', label: 'Budget vs Actual', icon: BarChart3, accessKey: 'projects', requiredTier: 3, group: 'Projects & Delivery' },
+
+  { key: 'team', to: '/admin/team', label: 'Team Directory', icon: UsersRound, accessKey: 'timelogs', requiredTier: 3, group: 'Resource Management' },
+  { key: 'capacity-allocation', to: '/admin/team?view=capacity-allocation', label: 'Capacity & Allocation', icon: CalendarDays, accessKey: 'timelogs', requiredTier: 3, group: 'Resource Management' },
+  { key: 'time-logs', to: '/admin/time-logs', label: 'Time Tracking', icon: Clock3, accessKey: 'timelogs', requiredTier: 3, group: 'Resource Management' },
+  { key: 'vendors', to: '/admin/vendors', label: 'Vendors & Freelancers', icon: Building2, accessKey: 'vendors', requiredTier: 3, group: 'Resource Management' },
+
+  { key: 'finance-overview', to: '/admin/finance?tab=executive-summary', label: 'Finance Overview', icon: Landmark, accessKey: 'invoicing', requiredTier: 2, group: 'Finance & Billing' },
+  { key: 'finance-revenue', to: '/admin/finance?tab=revenue', label: 'Revenue & Invoicing', icon: ReceiptText, accessKey: 'invoicing', requiredTier: 2, group: 'Finance & Billing' },
+  { key: 'finance-ar', to: '/admin/finance?tab=accounts-receivable', label: 'Accounts Receivable', icon: FileText, accessKey: 'invoicing', requiredTier: 2, group: 'Finance & Billing' },
+  { key: 'finance-ap', to: '/admin/finance?tab=accounts-payable', label: 'Accounts Payable', icon: WalletCards, accessKey: 'invoicing', requiredTier: 2, group: 'Finance & Billing' },
+  { key: 'finance-expenses', to: '/admin/finance?tab=expenses', label: 'Expenses', icon: ReceiptText, accessKey: 'invoicing', requiredTier: 2, group: 'Finance & Billing' },
+  { key: 'finance-project', to: '/admin/finance?tab=project-finance', label: 'Project Profitability', icon: BarChart3, accessKey: 'invoicing', requiredTier: 2, group: 'Finance & Billing' },
+  { key: 'finance-pnl', to: '/admin/finance?tab=monthly-pnl', label: 'P&L & Statements', icon: FileText, accessKey: 'invoicing', requiredTier: 2, group: 'Finance & Billing' },
+  { key: 'media-spend', to: '/admin/media-spend', label: 'Media Spend Control', icon: Target, accessKey: 'clients', requiredTier: 3, group: 'Finance & Billing' },
+
+  { key: 'asset-library', to: '/admin/assets', label: 'Asset Library', icon: Image, accessKey: 'documents', requiredTier: 3, group: 'Assets & Documents' },
+  { key: 'documents', to: '/admin/documents', label: 'Document Vault', icon: LockKeyhole, accessKey: 'documents', requiredTier: 3, group: 'Assets & Documents' },
+
+  { key: 'client-portal', to: '/admin/client-portal', label: 'Portal Workspace', icon: Globe, accessKey: 'clients', requiredTier: 3, group: 'Client Portal' },
+  { key: 'client-portal-access', to: '/admin/client-portal?view=access', label: 'Client Access', icon: UsersRound, accessKey: 'clients', requiredTier: 3, group: 'Client Portal' },
+  { key: 'client-portal-reviews', to: '/admin/client-portal?view=reviews', label: 'Deliverables & Reviews', icon: CheckCircle2, accessKey: 'clients', requiredTier: 3, group: 'Client Portal' },
+  { key: 'client-portal-approvals', to: '/admin/client-portal?view=approvals', label: 'Approvals & Sign-off', icon: ShieldCheck, accessKey: 'clients', requiredTier: 3, group: 'Client Portal' },
+  { key: 'client-portal-invoices', to: '/admin/client-portal?view=invoices', label: 'Client Invoice Access', icon: ReceiptText, accessKey: 'clients', requiredTier: 3, group: 'Client Portal' },
+
+  { key: 'cms-projects', to: '/admin/cms/projects', label: 'Case Studies', icon: FolderKanban, accessKey: 'cms_projects', requiredTier: 3, group: 'Website & Content' },
+  { key: 'cms-services', to: '/admin/cms/services', label: 'Services', icon: LayoutGrid, accessKey: 'services', requiredTier: 3, group: 'Website & Content' },
+  { key: 'cms-testimonials', to: '/admin/cms/testimonials', label: 'Testimonials', icon: CheckCircle2, accessKey: 'testimonials', requiredTier: 3, group: 'Website & Content' },
+  { key: 'cms-insights', to: '/admin/cms/insights', label: 'Insights', icon: FileText, accessKey: 'cms_insights', requiredTier: 3, group: 'Website & Content' },
+  { key: 'cms-careers', to: '/admin/cms/careers', label: 'Careers', icon: UsersRound, accessKey: 'cms_projects', requiredTier: 3, group: 'Website & Content' },
+
+  { key: 'approvals', to: '/admin/approvals', label: 'Approvals & Operations', icon: ShieldCheck, accessKey: 'approvals', requiredTier: 3, group: 'Operations' },
 ];
 
 const DEFAULT_PROFILE_NAME = 'Fikri Nurlete';
@@ -242,8 +304,7 @@ export const AdminLayout: React.FC = () => {
     const [path, queryString] = itemTo.split('?');
     const actual = new URLSearchParams(location.search);
 
-    if (path === '/admin/clients/all-clients' && location.pathname.startsWith('/admin/clients/')) return true;
-    if (['/admin/cms/projects', '/admin/cms/services', '/admin/cms/testimonials', '/admin/cms/insights', '/admin/cms/careers'].includes(path) && location.pathname.startsWith('/admin/cms/')) return true;
+    if (path === '/admin/clients/all-clients' && ['/admin/clients', '/admin/clients/all-clients'].includes(location.pathname)) return true;
     if (path === '/admin/tasks' && location.pathname === '/admin/dashboard' && actual.get('view') === 'tasks') return true;
     if (location.pathname !== path) return false;
 
@@ -252,8 +313,8 @@ export const AdminLayout: React.FC = () => {
       return Array.from(expected.entries()).every(([key, value]) => actual.get(key) === value);
     }
 
-    if (path === '/admin/dashboard') return actual.get('view') !== 'tasks';
-    if (path === '/admin/team') return !['vendor-directory', 'skill-matrix', 'time-logs'].includes(actual.get('view') || '');
+    if (path === '/admin/dashboard') return !actual.has('view') || actual.get('view') === 'overview';
+    if (path === '/admin/team') return !['vendor-directory', 'skill-matrix', 'time-logs', 'capacity-allocation'].includes(actual.get('view') || '');
     if (path === '/admin/settings') return !actual.has('tab') || actual.get('tab') !== 'rbac';
 
     return true;
@@ -262,6 +323,11 @@ export const AdminLayout: React.FC = () => {
   const activeNavItem = filteredNavItems.find((item) => isItemActive(item.to));
   const activeItemLabel = activeNavItem?.label || 'Dashboard';
   const getGroupItems = (group: AdminNavGroup) => filteredNavItems.filter((item) => item.group === group);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ Overview: true });
+  useEffect(() => {
+    const currentGroup = filteredNavItems.find((item) => isItemActive(item.to))?.group;
+    if (currentGroup) setExpandedGroups((current) => current[currentGroup] ? current : { ...current, [currentGroup]: true });
+  }, [location.pathname, location.search, filteredNavItems]);
 
   return (
     <ReportingPeriodProvider>
