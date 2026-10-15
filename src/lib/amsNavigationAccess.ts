@@ -101,6 +101,45 @@ export const AMS_SYSTEM_SETTINGS_ITEMS: AmsNavigationItem[] = [
 ];
 
 /**
+ * Primary module navigation only. Child destinations are presented as module
+ * tabs in the top bar, never as a nested menu in the sidebar.
+ */
+const PRIMARY_NAVIGATION_ITEMS: AmsNavigationItem[] = [
+  { key: 'dashboard', label: 'Dashboard', to: '/admin/dashboard', icon: 'dashboard', allowedRoles: ALL_ROLES },
+  { key: 'crm', label: 'CRM', to: '/admin/crm', icon: 'crm', allowedRoles: COMMERCIAL_ROLES },
+  { key: 'projects', label: 'Projects', to: '/admin/projects', icon: 'projects', allowedRoles: ['Admin', 'Finance', 'PM', 'Creative'] },
+  { key: 'finance', label: 'Finance', to: '/admin/finance?tab=executive-summary', icon: 'profitability', allowedRoles: ['Admin', 'Finance', 'PM'] },
+  { key: 'cms', label: 'CMS', to: '/admin/cms/insights', icon: 'editorial', allowedRoles: ['Admin', 'PM', 'Creative'] },
+  { key: 'documents', label: 'Documents', to: '/admin/documents', icon: 'registry', allowedRoles: ['Admin'] },
+  { key: 'tasks', label: 'Tasks', to: '/admin/tasks?taskscope=my&workspace=project', icon: 'tasks', allowedRoles: ['Freelancer'] },
+];
+
+export const AMS_PRIMARY_SETTINGS_ITEM: AmsNavigationItem = {
+  key: 'settings',
+  label: 'Settings',
+  to: '/admin/settings?tab=overview',
+  icon: 'access',
+  allowedRoles: ['Admin'],
+};
+
+export function getPrimaryNavigationForRole(role: AmsRole): AmsNavigationItem[] {
+  return PRIMARY_NAVIGATION_ITEMS
+    .filter((item) => item.allowedRoles.includes(role))
+    .map((item) => {
+      if (item.key === 'dashboard' && (role === 'Creative' || role === 'Freelancer')) {
+        return { ...item, to: '/admin/tasks?taskscope=my' };
+      }
+      if (item.key === 'projects' && (role === 'Finance' || role === 'Creative')) {
+        return { ...item, to: '/admin/projects?projects=sprint' };
+      }
+      if (item.key === 'finance' && role === 'PM') {
+        return { ...item, to: '/admin/finance?tab=project-finance' };
+      }
+      return item;
+    });
+}
+
+/**
  * Reads the user.role string from the server-refreshed /api/auth/me profile.
  * Unknown legacy values fall back to the least-privileged navigation profile
  * and never inherit Admin privileges.
@@ -262,6 +301,27 @@ export function isNavigationItemActive(
   const params = new URLSearchParams(search);
 
   switch (item.key) {
+    case 'dashboard':
+      return path === '/admin/dashboard'
+        || (path === '/admin/tasks' && params.get('taskscope') === 'my' && params.get('workspace') !== 'project');
+    case 'crm':
+      return ['/admin/crm', '/admin/inbox', '/admin/clients', '/admin/clients/all-clients', '/admin/clients/sla-monitoring', '/admin/contracts'].includes(path);
+    case 'projects':
+      return path === '/admin/projects'
+        || path === '/admin/clients/retainers'
+        || path === '/admin/team'
+        || path === '/admin/time-logs'
+        || (path === '/admin/tasks' && !(params.get('taskscope') === 'my' && params.get('workspace') !== 'project'));
+    case 'tasks':
+      return path === '/admin/tasks' && params.get('workspace') === 'project';
+    case 'finance':
+      return ['/admin/finance', '/admin/proposals', '/admin/invoicing', '/admin/vendors', '/admin/approvals'].includes(path);
+    case 'cms':
+      return path.startsWith('/admin/cms/');
+    case 'documents':
+      return path === '/admin/documents' || path.startsWith('/admin/documents/');
+    case 'settings':
+      return path === '/admin/settings' || path.startsWith('/admin/settings/') || path === '/admin/navigation/release-readiness';
     case 'executive-overview':
       return path === '/admin/dashboard' && params.get('view') !== 'tasks';
     case 'my-hub':
