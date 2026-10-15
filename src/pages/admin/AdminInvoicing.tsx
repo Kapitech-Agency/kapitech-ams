@@ -3935,7 +3935,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
                   ['approved', 'Approve'],
                   ['sent', 'Mark sent']
                 ] as Array<[FinanceQuotationStatus, string]>).map(([status, label]) => (
-                  <button key={status} type="button" onClick={() => void updateQuotationStatus(quotationDetail, status)} className={actionClass + ' w-full'} disabled={!canManageInvoices}>
+                  <button key={status} type="button" onClick={() => void updateQuotationStatus(quotationDetail, status)} className={actionClass + ' w-full'} disabled={!canManageProposals}>
                     {label}
                   </button>
                 ))}
