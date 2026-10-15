@@ -251,6 +251,7 @@ export const ClientOnboardingView: React.FC = () => {
   });
   const [vaultClient, setVaultClient] = useState<OnboardingClient | null>(null);
   const toggleMilestone = (clientId: string, index: number) => {
+    if (readOnly) return;
     setChecklist((current) => {
       const next = (current[clientId] || ONBOARDING_STEPS.map(() => false)).slice();
       next[index] = !next[index];
@@ -259,7 +260,7 @@ export const ClientOnboardingView: React.FC = () => {
   };
 
   return (
-    <WorkspacePage slug="workspace-client-onboarding" title="Client Onboarding Framework" description="Closed-won handoff milestones, client kickoff readiness and the MSA contract archive entry point.">
+    <WorkspacePage slug="workspace-client-onboarding" title="Client Onboarding Framework" description={readOnly ? 'Read-only CRM view of closed-won milestones and contract archive references.' : 'Closed-won handoff milestones, client kickoff readiness and the MSA contract archive entry point.'} actions={readOnly ? <StatusBadge tone="neutral">PM · Read-only</StatusBadge> : undefined}>
       <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3">
         <MetricCard label="Closed-won clients" value={String(WON_CLIENTS.length)} detail="Eligible for onboarding" />
         <MetricCard label="Milestones complete" value={String(Object.values(checklist).flat().filter(Boolean).length)} detail="Checked in this local view" tone="success" />
@@ -280,7 +281,7 @@ export const ClientOnboardingView: React.FC = () => {
                 <div className="mt-4 grid gap-2">
                   {ONBOARDING_STEPS.map((step, index) => (
                     <label key={step} className="flex min-w-0 items-start gap-2.5 rounded-control border border-line px-2.5 py-2">
-                      <input type="checkbox" checked={Boolean(done[index])} onChange={() => toggleMilestone(client.id, index)} className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" />
+                      <input type="checkbox" checked={Boolean(done[index])} disabled={readOnly} onChange={() => toggleMilestone(client.id, index)} className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:cursor-not-allowed disabled:opacity-60" />
                       <span className={'flex-1 text-[11px] leading-4 ' + (done[index] ? 'text-muted line-through' : 'text-fg')}>{step}</span>
                       {done[index] && <Check size={13} className="shrink-0 text-success" aria-hidden="true" />}
                     </label>
