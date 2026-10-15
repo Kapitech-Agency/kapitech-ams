@@ -101,8 +101,8 @@ export const AMS_SYSTEM_SETTINGS_ITEMS: AmsNavigationItem[] = [
 ];
 
 /**
- * Primary module navigation only. Child destinations are presented as module
- * tabs in the top bar, never as a nested menu in the sidebar.
+ * Primary module navigation only. Child destinations are supplied by the
+ * role-aware sidebar submenu configuration, keeping primary modules concise.
  */
 const PRIMARY_NAVIGATION_ITEMS: AmsNavigationItem[] = [
   { key: 'dashboard', label: 'Dashboard', to: '/admin/dashboard', icon: 'dashboard', allowedRoles: ALL_ROLES },
