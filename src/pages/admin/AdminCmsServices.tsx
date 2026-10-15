@@ -36,8 +36,16 @@ import { Skeleton } from '../../components/ui/Skeleton';
 import { AdminCmsSectionTabs, AdminDataTableShell, AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 
-const normalizeCmsService = (service: ServiceItemData | null | undefined): ServiceItemData => {
-  const source = (service || {}) as Partial<ServiceItemData>;
+type CmsServiceRecord = ServiceItemData & {
+  id?: string;
+  isPublished?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+};
+type CmsServiceCapability = ServiceItemData['capabilities'][number];
+
+const normalizeCmsService = (service: CmsServiceRecord | ServiceItemData | null | undefined): CmsServiceRecord => {
+  const source = (service || {}) as Partial<CmsServiceRecord>;
   const title = typeof source.title === 'string' && source.title.trim() ? source.title.trim() : 'Untitled service';
   const slug = typeof source.slug === 'string' && source.slug.trim()
     ? source.slug.trim()
@@ -76,7 +84,7 @@ const normalizeCmsService = (service: ServiceItemData | null | undefined): Servi
 
 export const AdminCmsServices: React.FC = () => {
   const { language } = useLanguage();
-  const [servicesList, setServicesList] = useState<ServiceItemData[]>([]);
+  const [servicesList, setServicesList] = useState<CmsServiceRecord[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState(1);
@@ -109,11 +117,13 @@ export const AdminCmsServices: React.FC = () => {
   }, [language]);
 
   // Modals & Editing State
-  const [editingService, setEditingService] = useState<ServiceItemData | null>(null);
+  const [editingService, setEditingService] = useState<CmsServiceRecord | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [selectedServiceForDetail, setSelectedServiceForDetail] = useState<ServiceItemData | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [selectedServiceForDetail, setSelectedServiceForDetail] = useState<CmsServiceRecord | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<CmsServiceRecord | null>(null);
   const [deletingService, setDeletingService] = useState(false);
+  const [savingService, setSavingService] = useState(false);
+  const [publishingServiceId, setPublishingServiceId] = useState<string | null>(null);
 
   // New Service Form State
   const [newTitle, setNewTitle] = useState('');
@@ -122,8 +132,9 @@ export const AdminCmsServices: React.FC = () => {
   const [newHeadline, setNewHeadline] = useState('');
   const [newSubtitle, setNewSubtitle] = useState('');
   const [newBadge, setNewBadge] = useState('');
+  const [newIsPublished, setNewIsPublished] = useState(false);
   const [newCapability, setNewCapability] = useState('');
-  const [tempCapabilities, setTempCapabilities] = useState<string[]>([]);
+  const [tempCapabilities, setTempCapabilities] = useState<CmsServiceCapability[]>([]);
 
   const categories = ['All', 'Development', 'Design', 'Branding', 'Solutions'];
 
@@ -153,87 +164,182 @@ export const AdminCmsServices: React.FC = () => {
     }
   };
 
+  const openServiceEditor = (service?: CmsServiceRecord) => {
+    setStatusMessage(null);
+    setEditingService(service || null);
+    setNewTitle(service?.title || '');
+    setNewSlug(service?.slug || '');
+    setNewCategory(service?.category || 'Development');
+    setNewHeadline(service?.heroHeadline || '');
+    setNewSubtitle(service?.heroSubtitle || '');
+    setNewBadge(service?.badge || '');
+    setNewIsPublished(service?.isPublished === true);
+    setTempCapabilities(Array.isArray(service?.capabilities) ? service.capabilities.map((item) => ({ ...item })) : []);
+    setNewCapability('');
+    setIsAddModalOpen(true);
+  };
+
+  const resetServiceEditor = () => {
+    setIsAddModalOpen(false);
+    setEditingService(null);
+    setNewTitle('');
+    setNewSlug('');
+    setNewCategory('Development');
+    setNewHeadline('');
+    setNewSubtitle('');
+    setNewBadge('');
+    setNewIsPublished(false);
+    setNewCapability('');
+    setTempCapabilities([]);
+  };
+
   const handleAddTempCapability = () => {
-    if (newCapability.trim()) {
-      setTempCapabilities([...tempCapabilities, newCapability.trim()]);
-      setNewCapability('');
-    }
+    const title = newCapability.trim();
+    if (!title) return;
+    setTempCapabilities((current) => [...current, {
+      title,
+      titleId: title,
+      desc: 'Production-ready delivery adhering to modern web standards and security benchmarks.',
+      descId: 'Eksekusi produksi sesuai standar arsitektur modern dan keamanan data.'
+    }]);
+    setNewCapability('');
   };
 
   const handleRemoveTempCapability = (index: number) => {
-    setTempCapabilities(tempCapabilities.filter((_, i) => i !== index));
+    setTempCapabilities((current) => current.filter((_, i) => i !== index));
   };
 
-  const handleCreateService = async (e: React.FormEvent) => {
+  const handleSaveService = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTitle || !newSlug) return;
+    if (savingService) return;
+    const title = newTitle.trim();
+    const slug = newSlug.toLowerCase().trim().replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    if (!title || !slug) {
+      setStatusMessage(language === 'id' ? 'Judul layanan dan URL slug wajib diisi.' : 'Service title and URL slug are required.');
+      return;
+    }
+    if (editingService && !editingService.id) {
+      setStatusMessage(language === 'id'
+        ? 'Layanan ini belum memiliki ID CMS sehingga tidak dapat diedit dengan aman. Muat ulang data atau hubungi administrator.'
+        : 'This service has no CMS record ID and cannot be safely edited. Reload the records or contact an administrator.');
+      return;
+    }
 
-    const newService: ServiceItemData = {
-      slug: newSlug.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
-      type: 'service',
-      category: newCategory,
-      title: newTitle,
-      navSubtitle: newHeadline,
-      navSubtitleId: newHeadline,
-      heroHeadline: newHeadline,
-      heroHeadlineId: newHeadline,
-      heroSubtitle: newSubtitle,
-      heroSubtitleId: newSubtitle,
-      badge: newBadge,
-      badgeId: newBadge,
-      metrics: [],
-      testimonial: {
-        quote: '', quoteId: '', highlight: '', highlightId: '', author: '', role: '', company: '', avatar: ''
-      },
-      caseStudySlugs: [],
-      problemsSolutions: [],
-      capabilities: tempCapabilities.map(cap => ({
-        title: cap,
-        titleId: cap,
-        desc: 'Production-ready delivery adhering to modern web standards and security benchmarks.',
-        descId: 'Eksekusi produksi sesuai standar arsitektur modern dan keamanan data.'
-      })),
-      processStages: [],
-      businessOutcomes: { heading: '', headingId: '', benefits: [], benefitsId: [] },
-      tools: [],
-      faqs: []
-    };
+    const payload: CmsServiceRecord = editingService
+      ? {
+          ...editingService,
+          slug,
+          title,
+          category: newCategory,
+          heroHeadline: newHeadline,
+          heroSubtitle: newSubtitle,
+          badge: newBadge,
+          capabilities: tempCapabilities.map((item) => ({ ...item })),
+          isPublished: newIsPublished
+        }
+      : {
+          slug,
+          type: 'service',
+          category: newCategory,
+          title,
+          navSubtitle: newHeadline,
+          navSubtitleId: newHeadline,
+          heroHeadline: newHeadline,
+          heroHeadlineId: newHeadline,
+          heroSubtitle: newSubtitle,
+          heroSubtitleId: newSubtitle,
+          badge: newBadge,
+          badgeId: newBadge,
+          metrics: [],
+          testimonial: {
+            quote: '', quoteId: '', highlight: '', highlightId: '', author: '', role: '', company: '', avatar: ''
+          },
+          caseStudySlugs: [],
+          problemsSolutions: [],
+          capabilities: tempCapabilities.map((item) => ({ ...item })),
+          processStages: [],
+          businessOutcomes: { heading: '', headingId: '', benefits: [], benefitsId: [] },
+          tools: [],
+          faqs: [],
+          isPublished: newIsPublished
+        };
 
+    setSavingService(true);
+    setStatusMessage(null);
     try {
-      const res = await api.cms.createService(newService);
-      if (!res.success) {
-        setStatusMessage(res.error || 'Service could not be created.');
+      const response = editingService?.id
+        ? await api.cms.updateService(editingService.id, payload)
+        : await api.cms.createService(payload);
+      if (!response.success) {
+        setStatusMessage(response.error || (language === 'id' ? 'Layanan gagal disimpan.' : 'Service could not be saved.'));
         return;
       }
-      setServicesList((current) => [newService, ...current]);
-      setIsAddModalOpen(false);
-      setNewTitle('');
-      setNewSlug('');
-      setNewHeadline('');
-      setNewSubtitle('');
-      setStatusMessage(language === 'id' ? `Layanan "${newTitle}" berhasil ditambahkan ke CMS!` : `Service "${newTitle}" successfully added to CMS!`);
+      const saved = normalizeCmsService(response.data?.service || payload);
+      setServicesList((current) => {
+        const withoutSaved = current.filter((item) => saved.id ? item.id !== saved.id : item.slug !== saved.slug);
+        return [saved, ...withoutSaved];
+      });
+      setSelectedServiceForDetail((current) => current && (current.id === saved.id || current.slug === saved.slug) ? saved : current);
+      resetServiceEditor();
+      setStatusMessage(newIsPublished
+        ? (language === 'id' ? 'Layanan disimpan dan dipublikasikan.' : 'Service saved and published.')
+        : (language === 'id' ? 'Layanan disimpan sebagai draft.' : 'Service saved as draft.'));
     } catch (error) {
-      setStatusMessage(error instanceof Error ? error.message : 'Service could not be created.');
+      setStatusMessage(error instanceof Error ? error.message : (language === 'id' ? 'Layanan gagal disimpan.' : 'Service could not be saved.'));
+    } finally {
+      setSavingService(false);
     }
-    setTimeout(() => setStatusMessage(null), 4000);
+    window.setTimeout(() => setStatusMessage(null), 3500);
   };
 
-  const handleDeleteService = async (slug: string) => {
-    setDeleteTarget(slug);
+  const handleTogglePublished = async (service: CmsServiceRecord) => {
+    if (!service.id || publishingServiceId) {
+      setStatusMessage(language === 'id' ? 'Layanan belum memiliki ID CMS yang valid.' : 'Service has no valid CMS record ID.');
+      return;
+    }
+    const nextPublished = service.isPublished !== true;
+    setPublishingServiceId(service.id);
+    setStatusMessage(null);
+    try {
+      const response = await api.cms.updateService(service.id, { isPublished: nextPublished });
+      if (!response.success) throw new Error(response.error || 'Publication status could not be updated.');
+      const saved = normalizeCmsService(response.data?.service || { ...service, isPublished: nextPublished });
+      setServicesList((current) => current.map((item) => item.id === service.id ? saved : item));
+      setSelectedServiceForDetail((current) => current?.id === service.id ? saved : current);
+      setStatusMessage(nextPublished
+        ? (language === 'id' ? 'Layanan berhasil dipublikasikan.' : 'Service published successfully.')
+        : (language === 'id' ? 'Layanan disimpan sebagai draft dan disembunyikan dari website.' : 'Service unpublished and hidden from the public website.'));
+    } catch (error) {
+      setStatusMessage(error instanceof Error ? error.message : 'Publication status could not be updated.');
+    } finally {
+      setPublishingServiceId(null);
+      window.setTimeout(() => setStatusMessage(null), 3500);
+    }
+  };
+
+  const handleDeleteService = async (service: CmsServiceRecord) => {
+    if (!service.id) {
+      setStatusMessage(language === 'id'
+        ? 'Layanan ini belum memiliki ID CMS sehingga tidak dapat dihapus dengan aman.'
+        : 'This service has no CMS record ID and cannot be safely deleted.');
+      return;
+    }
+    setDeleteTarget(service);
   };
 
   const confirmDeleteService = async () => {
-    if (!deleteTarget || deletingService) return;
-    const slug = deleteTarget;
+    if (!deleteTarget?.id || deletingService) return;
+    const target = deleteTarget;
     setDeletingService(true);
     try {
-      const res = await api.cms.deleteService(slug);
-      if (!res.success) {
-        setStatusMessage(res.error || 'Service could not be deleted.');
+      const response = await api.cms.deleteService(target.id);
+      if (!response.success) {
+        setStatusMessage(response.error || 'Service could not be deleted.');
         return;
       }
-      setServicesList(current => current.filter(s => s.slug !== slug));
-      setStatusMessage('Service deleted successfully.');
+      setServicesList((current) => current.filter((item) => item.id !== target.id));
+      setSelectedServiceForDetail((current) => current?.id === target.id ? null : current);
+      setStatusMessage(language === 'id' ? 'Layanan berhasil dihapus.' : 'Service deleted successfully.');
     } catch (error) {
       setStatusMessage(error instanceof Error ? error.message : 'Service could not be deleted.');
     } finally {
