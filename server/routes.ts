@@ -58,6 +58,7 @@ import { createClientSlug } from '../src/lib/clientStore.ts';
 import { loadApplicationDatabase } from './application-data-repository.ts';
 import { postgresAuthRepository } from './postgres-repository.ts';
 import { postgresClientRepository } from './postgres-client-repository.ts';
+import { postgresClientInteractionRepository, type ClientInteractionType } from './postgres-client-interaction-repository.ts';
 import { postgresProjectRepository, ProjectConcurrencyError } from './postgres-project-repository.ts';
 import { postgresVendorRepository } from './postgres-vendor-repository.ts';
 import { postgresFinanceWorkbookRepository, FinanceWorkbookConflictError, FinanceWorkbookNotFoundError, FinanceWorkbookPeriodClosedError, FinanceWorkbookValidationError } from './postgres-finance-workbook-repository.ts';
@@ -2574,6 +2575,121 @@ apiRouter.get('/clients', requireAuth, requireAnyPermission('canManageClients', 
   res.json({ success: true, clients });
 });
 
+const CLIENT_INTERACTION_TYPES: readonly ClientInteractionType[] = ['call', 'email', 'meeting', 'message', 'note'];
+
+apiRouter.get('/clients/:id/interactions', requireAuth, requireAnyPermission('canManageClients', 'canManageCrm'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const clientId = cleanText(req.params.id, 120);
+  if (!clientId) {
+    res.status(400).json({ success: false, error: 'Client ID is required.' });
+    return;
+  }
+
+  let exists: boolean;
+  if (getDataSourceMode() === 'postgres') {
+    exists = Boolean(await postgresClientRepository.findById(clientId));
+  } else {
+    exists = (getDatabase().clients || []).some((client: any) => String(client.id) === clientId);
+  }
+  if (!exists) {
+    res.status(404).json({ success: false, error: 'Client not found.' });
+    return;
+  }
+
+  if (getDataSourceMode() === 'postgres') {
+    const interactions = await postgresClientInteractionRepository.listByClientId(clientId);
+    res.json({ success: true, interactions });
+    return;
+  }
+
+  const interactions = (getDatabase().clientInteractions || [])
+    .filter((interaction: any) => String(interaction.clientId) === clientId)
+    .sort((a: any, b: any) => String(b.occurredAt || '').localeCompare(String(a.occurredAt || '')) || String(b.createdAt || '').localeCompare(String(a.createdAt || '')))
+    .slice(0, 200);
+  res.json({ success: true, interactions });
+});
+
+apiRouter.post('/clients/:id/interactions', requireAuth, requireAnyPermission('canManageClients', 'canManageCrm'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const clientId = cleanText(req.params.id, 120);
+  const body = req.body || {};
+  const type = String(body.type || '').trim().toLowerCase() as ClientInteractionType;
+  const subject = cleanText(body.subject, 160);
+  const summary = cleanText(body.summary, 4000);
+  const contactName = cleanText(body.contactName, 160);
+  const outcome = cleanText(body.outcome, 1000);
+  const nextStep = cleanText(body.nextStep, 500);
+
+  if (!clientId) {
+    res.status(400).json({ success: false, error: 'Client ID is required.' });
+    return;
+  }
+  if (!CLIENT_INTERACTION_TYPES.includes(type)) {
+    res.status(400).json({ success: false, error: 'Select a valid interaction type.' });
+    return;
+  }
+  if (!subject || !summary) {
+    res.status(400).json({ success: false, error: 'Interaction subject and summary are required.' });
+    return;
+  }
+
+  const rawOccurredAt = String(body.occurredAt || '');
+  const occurredAtDate = rawOccurredAt ? new Date(rawOccurredAt) : new Date();
+  if (Number.isNaN(occurredAtDate.getTime())) {
+    res.status(400).json({ success: false, error: 'Interaction date and time are invalid.' });
+    return;
+  }
+
+  const now = new Date().toISOString();
+  const interaction = {
+    id: 'interaction_' + Date.now() + '_' + crypto.randomBytes(4).toString('hex'),
+    clientId,
+    type,
+    subject,
+    summary,
+    contactName,
+    outcome,
+    nextStep,
+    occurredAt: occurredAtDate.toISOString(),
+    createdByUserId: String(req.user!.id || ''),
+    createdByName: cleanText(req.user!.name || req.user!.username, 160) || 'AMS user',
+    createdAt: now
+  };
+  const audit = makeAuditEntry(req, 'CLIENT_INTERACTION_CREATED', 'Recorded a ' + type + ' interaction for client ' + clientId + ': ' + subject + '.', 'info');
+
+  if (getDataSourceMode() === 'postgres') {
+    try {
+      const created = await postgresClientInteractionRepository.create(interaction, audit);
+      res.status(201).json({ success: true, interaction: created });
+    } catch (error) {
+      const code = error instanceof Error ? error.message : '';
+      if (code === 'CLIENT_NOT_FOUND') {
+        res.status(404).json({ success: false, error: 'Client not found.' });
+        return;
+      }
+      throw error;
+    }
+    return;
+  }
+
+  const db = getDatabase();
+  if (!(db.clients || []).some((client: any) => String(client.id) === clientId)) {
+    res.status(404).json({ success: false, error: 'Client not found.' });
+    return;
+  }
+  if (!Array.isArray(db.clientInteractions)) db.clientInteractions = [];
+  db.clientInteractions.unshift(interaction);
+  await saveDatabase(db);
+  recordAuditLog({
+    action: audit.action,
+    actor: req.user!.username,
+    actorRole: req.user!.role,
+    ip: req.ip,
+    userAgent: req.headers['user-agent'] as string,
+    details: audit.details,
+    severity: 'info'
+  });
+  res.status(201).json({ success: true, interaction });
+});
+
 apiRouter.post('/clients', requireAuth, requirePermission('canManageClients'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const clientData = req.body || {};
   const db = getDataSourceMode() === 'json' ? getDatabase() : undefined;
@@ -2779,6 +2895,10 @@ apiRouter.delete('/clients/:id', requireAuth, requirePermission('canManageClient
     const db = getDatabase();
     const client = db.clients.find(c => c.id === id);
     if (!client) { res.status(404).json({ success: false, error: 'Client not found.' }); return; }
+    if ((db.clientInteractions || []).some((item: any) => String(item.clientId) === String(id))) {
+      res.status(409).json({ success: false, error: 'Client has interaction history and cannot be deleted.' });
+      return;
+    }
     db.clients = db.clients.filter(c => c.id !== id);
     saveDatabase(db);
     recordAuditLog({
