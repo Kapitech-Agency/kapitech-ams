@@ -18,7 +18,6 @@ import {
   LockKeyhole,
   LayoutGrid,
   Building2,
-  Handshake,
   FileText,
   ShieldCheck,
 } from 'lucide-react';
@@ -59,7 +58,7 @@ const NAV_GROUPS: AdminNavGroup[] = ['Overview', 'Sales', 'Delivery', 'Finance',
 const STITCH_NAV_ITEMS: AdminNavItem[] = [
   { key: 'dashboard', to: '/admin/dashboard', label: 'Dashboard', icon: Home, requiredTier: 2, group: 'Overview' },
   { key: 'inbox', to: '/admin/inbox', label: 'Inbox', icon: Inbox, accessKey: 'inbox', requiredTier: 2, group: 'Sales' },
-  { key: 'crm', to: '/admin/crm', label: 'CRM', icon: Handshake, accessKey: 'crm', requiredTier: 3, group: 'Sales' },
+  { key: 'crm', to: '/admin/crm', label: 'CRM', icon: Briefcase, accessKey: 'crm', requiredTier: 3, group: 'Sales' },
   { key: 'proposals', to: '/admin/proposals', label: 'Proposals', icon: FileText, accessKey: 'proposals', requiredTier: 3, group: 'Sales' },
   { key: 'clients', to: '/admin/clients/all-clients', label: 'Clients', icon: UsersRound, requiredTier: 3, group: 'Sales' },
   { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, requiredTier: 3, group: 'Delivery' },
