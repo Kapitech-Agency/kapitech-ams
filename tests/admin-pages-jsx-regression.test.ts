@@ -383,3 +383,44 @@ test('Client interaction timeline is separate from global security audit records
   assert.ok(routes.includes("const interactions = (getDatabase().clientInteractions || [])"));
   assert.ok(!clients.includes("api.auditLogs.getAll()"));
 });
+
+
+test('Client timeline distinguishes system-generated CRM, contract, and onboarding events from manual notes', () => {
+  const clients = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClients.tsx'), 'utf8');
+  const routes = fs.readFileSync(path.resolve(process.cwd(), 'server/routes.ts'), 'utf8');
+  const dealRepository = fs.readFileSync(path.resolve(process.cwd(), 'server/postgres-crm-deal-repository.ts'), 'utf8');
+  const clientRepository = fs.readFileSync(path.resolve(process.cwd(), 'server/postgres-client-repository.ts'), 'utf8');
+  const contractRepository = fs.readFileSync(path.resolve(process.cwd(), 'server/postgres-contract-repository.ts'), 'utf8');
+  const interactionRepository = fs.readFileSync(path.resolve(process.cwd(), 'server/postgres-client-interaction-repository.ts'), 'utf8');
+  const migration = fs.readFileSync(path.resolve(process.cwd(), 'db/postgres/054_system_client_timeline_events.sql'), 'utf8');
+  const databaseSnapshot = fs.readFileSync(path.resolve(process.cwd(), 'server/postgres-database-repository.ts'), 'utf8');
+
+  assert.ok(clients.includes("interaction.sourceType === 'system' ? 'System activity' : clientInteractionLabel(interaction.type)"));
+  assert.ok(routes.includes("systemAction: 'crm_deal_stage_changed'"));
+  assert.ok(routes.includes("systemAction: 'client_contract_created'"));
+  assert.ok(routes.includes("systemAction: 'client_contract_status_changed'"));
+  assert.ok(routes.includes("systemAction: 'client_status_changed'"));
+  assert.ok(dealRepository.includes("systemAction: 'crm_deal_stage_changed'"));
+  assert.ok(dealRepository.includes("systemAction: 'crm_deal_converted'"));
+  assert.ok(dealRepository.includes("'crm-deal-converted:' + String(deal.id)"));
+  assert.ok(clientRepository.includes("systemAction: 'client_status_changed'"));
+  assert.ok(contractRepository.includes("'client_contract_created'"));
+  assert.ok(contractRepository.includes("'client_contract_status_changed'"));
+  assert.ok(interactionRepository.includes('ON CONFLICT DO NOTHING'));
+  assert.ok(interactionRepository.includes('sourceType: row.source_type === \'system\' ? \'system\' : \'manual\''));
+  assert.ok(migration.includes('ADD COLUMN IF NOT EXISTS source_type TEXT NOT NULL DEFAULT \'manual\''));
+  assert.ok(migration.includes('idx_client_interactions_system_event_once'));
+  assert.ok(migration.includes('WHERE source_type = \'system\''));
+  assert.ok(databaseSnapshot.includes("sourceType:r.source_type==='system'?'system':'manual'"));
+});
+
+test('CRM stage timeline events are only emitted when the stage changes and conversion events are idempotent', () => {
+  const dealRepository = fs.readFileSync(path.resolve(process.cwd(), 'server/postgres-crm-deal-repository.ts'), 'utf8');
+  const routes = fs.readFileSync(path.resolve(process.cwd(), 'server/routes.ts'), 'utf8');
+
+  assert.ok(dealRepository.includes('if (previousStage === nextStage) return;'));
+  assert.ok(dealRepository.includes("if (updatedDeal && String(existing.stage || 'new') !== String(updatedDeal.stage || 'new'))"));
+  assert.ok(dealRepository.includes("'crm-deal-converted:' + String(deal.id)"));
+  assert.ok(routes.includes("if (String(previousDeal.stage || 'new') !== String(updatedDeal.stage || 'new'))"));
+  assert.ok(routes.includes("if (duplicated) return null;"));
+});
