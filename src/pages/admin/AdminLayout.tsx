@@ -50,19 +50,22 @@ interface NavItem {
   requiredTier: AgencyTier;
 }
 
-type AdminNavItem = NavItem & { accessKey?: string; anyAccessKeys?: string[] };
+type AdminNavItem = NavItem & (
+  | { accessKey: string; anyAccessKeys?: never }
+  | { accessKey?: never; anyAccessKeys: string[] }
+);
 
 // Sidebar items represent modules only. Feature views stay inside each module.
 const NAV_GROUPS: AdminNavGroup[] = ['Overview', 'Sales & Clients', 'Delivery', 'People & Resources', 'Finance', 'Website & Content', 'Operations'];
 
 const STITCH_NAV_ITEMS: AdminNavItem[] = [
-  { key: 'dashboard', to: '/admin/dashboard', label: 'Dashboard', icon: Home, requiredTier: 2, group: 'Overview' },
+  { key: 'dashboard', to: '/admin/dashboard', label: 'Dashboard', icon: Home, accessKey: 'dashboard', requiredTier: 2, group: 'Overview' },
   { key: 'inbox', to: '/admin/inbox', label: 'Inbox', icon: Inbox, accessKey: 'inbox', requiredTier: 2, group: 'Sales & Clients' },
   { key: 'crm', to: '/admin/crm', label: 'CRM & Pipeline', icon: Briefcase, accessKey: 'crm', requiredTier: 3, group: 'Sales & Clients' },
   { key: 'proposals', to: '/admin/proposals', label: 'Proposals & Quotes', icon: FileText, accessKey: 'proposals', requiredTier: 3, group: 'Sales & Clients' },
-  { key: 'contracts', to: '/admin/contracts', label: 'Contracts & SOW', icon: FileText, requiredTier: 3, group: 'Sales & Clients' },
-  { key: 'clients', to: '/admin/clients/all-clients', label: 'Clients & Accounts', icon: UsersRound, requiredTier: 3, group: 'Sales & Clients' },
-  { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, requiredTier: 3, group: 'Delivery' },
+  { key: 'contracts', to: '/admin/contracts', label: 'Contracts & SOW', icon: FileText, accessKey: 'clients', requiredTier: 3, group: 'Sales & Clients' },
+  { key: 'clients', to: '/admin/clients/all-clients', label: 'Clients & Accounts', icon: UsersRound, accessKey: 'clients', requiredTier: 3, group: 'Sales & Clients' },
+  { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, accessKey: 'projects', requiredTier: 3, group: 'Delivery' },
   { key: 'tasks', to: '/admin/tasks', label: 'Tasks', icon: ClipboardCheck, accessKey: 'projects', requiredTier: 3, group: 'Delivery' },
   { key: 'team', to: '/admin/team', label: 'Team', icon: UsersRound, accessKey: 'timelogs', requiredTier: 3, group: 'People & Resources' },
   { key: 'time-logs', to: '/admin/time-logs', label: 'Time Tracking', icon: Clock3, accessKey: 'timelogs', requiredTier: 3, group: 'People & Resources' },
@@ -70,7 +73,7 @@ const STITCH_NAV_ITEMS: AdminNavItem[] = [
   { key: 'finance', to: '/admin/finance', label: 'Finance', icon: Landmark, accessKey: 'invoicing', requiredTier: 2, group: 'Finance' },
   { key: 'cms', to: '/admin/cms/projects', label: 'Website CMS', icon: LayoutGrid, anyAccessKeys: ['cms_projects', 'services', 'testimonials', 'cms_insights'], requiredTier: 3, group: 'Website & Content' },
   { key: 'approvals', to: '/admin/approvals', label: 'Approvals', icon: ShieldCheck, accessKey: 'approvals', requiredTier: 3, group: 'Operations' },
-  { key: 'documents', to: '/admin/documents', label: 'Documents', icon: LockKeyhole, requiredTier: 3, group: 'Operations' },
+  { key: 'documents', to: '/admin/documents', label: 'Documents', icon: LockKeyhole, accessKey: 'documents', requiredTier: 3, group: 'Operations' },
 ];
 
 const DEFAULT_PROFILE_NAME = 'Fikri Nurlete';
@@ -214,7 +217,7 @@ export const AdminLayout: React.FC = () => {
   const filteredNavItems = useMemo(() => {
     const seen = new Set<string>();
     const allowed = STITCH_NAV_ITEMS.filter(
-      (item) => hasAgencyTier(item.requiredTier) && (item.anyAccessKeys ? item.anyAccessKeys.some((accessKey) => isAllowed(accessKey)) : isAllowed(item.accessKey || item.key))
+      (item) => hasAgencyTier(item.requiredTier) && (item.accessKey ? isAllowed(item.accessKey) : item.anyAccessKeys.some((accessKey) => isAllowed(accessKey)))
     ).filter((item) => {
       if (seen.has(item.key)) return false;
       seen.add(item.key);
