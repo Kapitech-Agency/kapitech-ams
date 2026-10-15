@@ -77,7 +77,7 @@ export const AdminSectionTabs: React.FC<AdminSectionTabsProps> = ({
           key={item.key}
           to={item.to}
           aria-current={active ? 'page' : undefined}
-          data-ams-slug={item.key}
+          data-ams-slug={item.slug ?? item.key}
           className={cn(
             'inline-flex min-h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
             active
