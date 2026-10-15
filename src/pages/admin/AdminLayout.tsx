@@ -536,7 +536,11 @@ export const AdminLayout: React.FC = () => {
                     { key: 'team', label: 'Team', to: '/admin/team' },
                     { key: 'capacity', label: 'Capacity', to: '/admin/team?view=capacity-allocation' },
                     { key: 'time', label: 'Time', to: '/admin/time-logs' },
-                  ]}
+                  ].filter((item) => {
+                    if (amsRole === 'Freelancer') return item.key === 'tasks';
+                    if (amsRole === 'Finance' || amsRole === 'Creative') return ['sprint', 'tasks'].includes(item.key);
+                    return true;
+                  })}
                 />
               ) : isFinanceModuleRoute ? (
                 <AdminTopbarTabs
@@ -566,7 +570,6 @@ export const AdminLayout: React.FC = () => {
                   ariaLabel="Settings sections"
                   activeKey={
                     location.pathname === '/admin/navigation/release-readiness' ? 'readiness'
-                      : location.pathname === '/admin/documents' ? 'docs'
                       : ['profile', 'rbac', 'security'].includes(routeQuery.get('tab') || '') ? 'access'
                       : ['branding', 'api', 'integrations'].includes(routeQuery.get('tab') || '') ? 'integrations'
                       : routeQuery.get('tab') === 'audit' ? 'audit'
