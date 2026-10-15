@@ -762,8 +762,8 @@ export const AdminLayout: React.FC = () => {
                     { key: 'all', label: 'All Documents', to: '/admin/documents', slug: 'documents-tab-all' },
                     { key: 'sops', label: 'SOPs & Policies', to: '/admin/documents?documents=sops', slug: 'documents-tab-sops' },
                     { key: 'legal', label: 'Legal & Corporate', to: '/admin/documents?documents=legal', slug: 'documents-tab-legal' },
-                    { key: 'finance', label: 'Finance', to: '/admin/documents?documents=finance', slug: 'documents-tab-finance' },
-                    { key: 'infra', label: 'Infrastructure & Access', to: '/admin/documents?documents=infra', slug: 'documents-tab-infra' }
+                    { key: 'finance', label: 'Finance & Tax', to: '/admin/documents?documents=finance', slug: 'documents-tab-finance' },
+                    { key: 'infra', label: 'Infrastructure & Keys', to: '/admin/documents?documents=infra', slug: 'documents-tab-infra' }
                   ]}
                 />
               ) : (
