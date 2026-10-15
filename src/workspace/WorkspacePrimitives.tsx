@@ -159,7 +159,7 @@ export const TextField: React.FC<React.InputHTMLAttributes<HTMLInputElement> & {
 };
 
 export const SelectField: React.FC<React.SelectHTMLAttributes<HTMLSelectElement> & { label: string }> = ({
-  label, id, className = '', children, ...props,
+  label, id, className = '', children, ...props
 }) => {
   const inputId = id || 'workspace-select-' + label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   return (
