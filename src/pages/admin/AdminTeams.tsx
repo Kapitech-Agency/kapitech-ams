@@ -1244,7 +1244,7 @@ export const AdminTeams: React.FC = () => {
             ariaLabel="Team sections"
             activeKey={currentView}
             items={[
-              { key: 'team-directory', label: 'Team Directory', to: '/admin/team' },
+              { key: 'team-directory', label: 'Team', to: '/admin/team' },
               { key: 'capacity-allocation', label: 'Capacity', to: '/admin/team?view=capacity-allocation' },
             ]}
           />
@@ -1257,7 +1257,7 @@ export const AdminTeams: React.FC = () => {
             ariaLabel="Vendors sections"
             activeKey={currentView}
             items={[
-              { key: 'vendor-directory', label: 'Vendor Directory', to: '/admin/vendors' },
+              { key: 'vendor-directory', label: 'Vendors', to: '/admin/vendors' },
               { key: 'skill-matrix', label: 'Skills', to: '/admin/vendors?view=skill-matrix' },
             ]}
           />
