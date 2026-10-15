@@ -2,18 +2,16 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   Activity,
   AlertTriangle,
-  ArrowDownRight,
+  ArrowUpDown,
   ArrowUpRight,
-  CalendarClock,
+  ArrowRight,
+  CalendarDays,
   Check,
   CheckCircle2,
   Clock3,
-  Pause,
-  Play,
   ShieldCheck,
-  Square,
   Timer,
-  Wallet,
+  WalletCards,
 } from 'lucide-react';
 import { WorkspaceRole } from './workspaceAccess';
 import {
@@ -51,7 +49,7 @@ export const ExecutiveOverviewView: React.FC = () => (
   >
     <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
       <MetricCard label="Revenue · MTD" value={idrCompact(128400000)} detail="+10.7% vs. prior month" tone="success" icon={<ArrowUpRight size={15} />} />
-      <MetricCard label="Operating expenses" value={idrCompact(79100000)} detail="61.6% of recognized revenue" tone="neutral" icon={<Wallet size={15} />} />
+      <MetricCard label="Operating expenses" value={idrCompact(79100000)} detail="61.6% of recognized revenue" tone="neutral" icon={<WalletCards size={15} />} />
       <MetricCard label="Net profit · MTD" value={idrCompact(49300000)} detail="38.4% indicative margin" tone="success" icon={<ArrowUpRight size={15} />} />
       <MetricCard label="Active projects" value="12" detail="3 milestones due this week" tone="info" icon={<CalendarClock size={15} />} />
     </div>
@@ -168,9 +166,9 @@ const StopwatchWidget: React.FC = () => {
         <p className="mt-2 text-[10px] text-muted">No time entry is submitted to the server from this preview.</p>
       </div>
       <div className="grid grid-cols-3 gap-2">
-        <ActionButton variant="primary" onClick={start} disabled={running}><Play size={13} />Start</ActionButton>
-        <ActionButton onClick={pause} disabled={!running}><Pause size={13} />Pause</ActionButton>
-        <ActionButton onClick={stop} disabled={!running && !hasStarted && elapsed === 0}><Square size={12} />Stop</ActionButton>
+        <ActionButton variant="primary" onClick={start} disabled={running}><ArrowRight size={13} />Start</ActionButton>
+        <ActionButton onClick={pause} disabled={!running}><Clock3 size={13} />Pause</ActionButton>
+        <ActionButton onClick={stop} disabled={!running && !hasStarted && elapsed === 0}><Check size={12} />Stop</ActionButton>
       </div>
     </section>
   );
@@ -248,7 +246,7 @@ export const PersonalWorkspaceView: React.FC<{ role: WorkspaceRole | null }> = (
                     <StatusBadge tone={PRIORITY_TONE[item.priority]}>{item.priority}</StatusBadge>
                   </div>
                   <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-2">
-                    <span className="inline-flex items-center gap-1.5 text-[10px] text-muted"><CalendarClock size={12} />Due {dateLabel(item.dueAt)}</span>
+                    <span className="inline-flex items-center gap-1.5 text-[10px] text-muted"><CalendarDays size={12} />Due {dateLabel(item.dueAt)}</span>
                     <StatusBadge tone={done ? 'success' : item.state === 'Waiting' ? 'warning' : 'neutral'}>{done ? 'Completed' : item.state}</StatusBadge>
                   </div>
                 </article>
