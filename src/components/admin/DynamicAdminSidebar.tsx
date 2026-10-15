@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import {
   Home,
   Inbox,
@@ -22,7 +22,7 @@ import {
   type AmsRole,
 } from '../../lib/amsNavigationAccess';
 
-type IconComponent = React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>;
+type IconComponent = React.ComponentType<{ size?: number; className?: string; strokeWidth?: number; 'aria-hidden'?: boolean }>;
 
 const NAVIGATION_ICONS: Record<AmsNavigationIcon, IconComponent> = {
   dashboard: Home,
@@ -158,7 +158,7 @@ export const AdminSystemSettingsNavigation: React.FC<AdminSystemSettingsNavigati
     <section
       aria-label="SYSTEM SETTINGS"
       data-ams-feature-slug="ams-system-settings-nav"
-      className="space-y-1 border-t border-line pt-3"
+      className="space-y-1 pt-3"
     >
       <h2 className="px-2 pb-1.5 text-[10px] font-medium tracking-wide text-muted">SYSTEM SETTINGS</h2>
       {AMS_SYSTEM_SETTINGS_ITEMS.map((item) => (
