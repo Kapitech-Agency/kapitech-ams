@@ -2364,6 +2364,73 @@ apiRouter.post('/leads/:id/convert', requireAuth, requirePermission('canManageCr
 // ----------------------------------------------------
 // ----------------------------------------------------
 
+type ClientSystemTimelineEventInput = {
+  clientId: string;
+  systemAction: string;
+  sourceReferenceId: string;
+  subject: string;
+  summary: string;
+  contactName?: string;
+  outcome?: string;
+  nextStep?: string;
+  occurredAt?: string;
+  createdByUserId?: string;
+  createdByName?: string;
+};
+
+function appendJsonClientSystemTimelineEvent(db: any, input: ClientSystemTimelineEventInput): any | null {
+  if (!Array.isArray(db.clientInteractions)) db.clientInteractions = [];
+  const duplicated = db.clientInteractions.some((item: any) =>
+    item.sourceType === 'system'
+    && item.systemAction === input.systemAction
+    && item.sourceReferenceId === input.sourceReferenceId
+  );
+  if (duplicated) return null;
+
+  const occurredAt = input.occurredAt || new Date().toISOString();
+  const event = {
+    id: 'interaction_' + Date.now() + '_' + crypto.randomBytes(4).toString('hex'),
+    clientId: input.clientId,
+    type: 'note',
+    sourceType: 'system',
+    systemAction: input.systemAction,
+    sourceReferenceId: input.sourceReferenceId,
+    subject: cleanText(input.subject, 160),
+    summary: cleanText(input.summary, 4000),
+    contactName: cleanText(input.contactName, 160),
+    outcome: cleanText(input.outcome, 1000),
+    nextStep: cleanText(input.nextStep, 500),
+    occurredAt,
+    createdByUserId: input.createdByUserId || '',
+    createdByName: cleanText(input.createdByName || 'AMS system', 160),
+    createdAt: occurredAt
+  };
+  db.clientInteractions.unshift(event);
+  return event;
+}
+
+function resolveJsonClientIdForDeal(db: any, deal: any): string | null {
+  const explicit = String(deal.clientId || '').trim();
+  if (explicit && (db.clients || []).some((client: any) => String(client.id) === explicit)) return explicit;
+
+  const email = String(deal.email || '').trim().toLowerCase();
+  const company = String(deal.company || '').trim().replace(/\s+/g, ' ').toLowerCase();
+  if (!email && !company) return null;
+  const matches = (db.clients || []).filter((client: any) => {
+    const clientEmail = String(client.email || '').trim().toLowerCase();
+    const clientCompany = String(client.company || client.companyName || '').trim().replace(/\s+/g, ' ').toLowerCase();
+    return (email && clientEmail === email) || (company && clientCompany === company);
+  });
+  return matches.length === 1 ? String(matches[0].id) : null;
+}
+
+function clientSystemActor(req: AuthenticatedRequest) {
+  return {
+    createdByUserId: String(req.user?.id || ''),
+    createdByName: String(req.user?.name || req.user?.username || 'AMS user')
+  };
+}
+
 apiRouter.get('/crm/deals', requireAuth, requirePermission('canManageCrm'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const deals = getDataSourceMode() === 'postgres'
     ? await postgresCrmDealRepository.list()
@@ -2463,7 +2530,7 @@ apiRouter.put('/crm/deals/:id', requireAuth, requirePermission('canManageCrm'), 
   }
 
   if (getDataSourceMode() === 'postgres') {
-    const deal = await postgresCrmDealRepository.update(id, patch, makeAuditEntry(req, 'CRM_DEAL_UPDATED', `Updated CRM deal "${patch.title || id}".`, 'info'));
+    const deal = await postgresCrmDealRepository.update(id, patch, makeAuditEntry(req, 'CRM_DEAL_UPDATED', `Updated CRM deal "${patch.title || id}".`, 'info'), { userId: req.user!.id, name: req.user!.name || req.user!.username });
     if (!deal) {
       res.status(404).json({ success: false, error: 'Deal not found.' });
       return;
@@ -2478,7 +2545,26 @@ apiRouter.put('/crm/deals/:id', requireAuth, requirePermission('canManageCrm'), 
     res.status(404).json({ success: false, error: 'Deal not found.' });
     return;
   }
-  db.crmDeals[idx] = { ...db.crmDeals[idx], ...patch, updatedAt: new Date().toISOString() };
+  const previousDeal = db.crmDeals[idx];
+  db.crmDeals[idx] = { ...previousDeal, ...patch, updatedAt: new Date().toISOString() };
+  const updatedDeal = db.crmDeals[idx];
+  if (String(previousDeal.stage || 'new') !== String(updatedDeal.stage || 'new')) {
+    const clientId = resolveJsonClientIdForDeal(db, updatedDeal);
+    if (clientId) {
+      const fromStage = String(previousDeal.stage || 'new').replace(/_/g, ' ');
+      const toStage = String(updatedDeal.stage || 'new').replace(/_/g, ' ');
+      appendJsonClientSystemTimelineEvent(db, {
+        clientId,
+        systemAction: 'crm_deal_stage_changed',
+        sourceReferenceId: 'crm-deal-stage:' + id + ':' + updatedDeal.updatedAt,
+        subject: 'CRM stage changed: ' + fromStage + ' → ' + toStage,
+        summary: 'Opportunity "' + String(updatedDeal.title || id) + '" moved from ' + fromStage + ' to ' + toStage + '.',
+        contactName: String(updatedDeal.clientName || ''),
+        occurredAt: updatedDeal.updatedAt,
+        ...clientSystemActor(req)
+      });
+    }
+  }
   saveDatabase(db);
   recordAuditLog({
     action: 'CRM_DEAL_UPDATED',
