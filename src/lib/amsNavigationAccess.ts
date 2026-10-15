@@ -117,10 +117,29 @@ export function normalizeAmsRole(roleValue: unknown): AmsRole {
   return 'Freelancer';
 }
 
+/**
+ * Resolve the navigation role from the full authenticated profile when available.
+ *
+ * Master access is based on the same immutable identity fields used by adminAuth,
+ * not on a display name or a self-reported role label. This keeps the UI menu,
+ * top-level route guard, and existing Master Administrator policy in sync.
+ */
 export function getAmsRole(userOrRole: unknown): AmsRole {
   if (userOrRole && typeof userOrRole === 'object') {
-    return normalizeAmsRole((userOrRole as { role?: unknown }).role);
+    const user = userOrRole as {
+      id?: unknown;
+      role?: unknown;
+      stakeholderType?: unknown;
+    };
+
+    if (user.stakeholderType === 'Master' || user.id === 'usr_root_admin') {
+      return 'Admin';
+    }
+
+    return normalizeAmsRole(user.role);
   }
+
+  // Role-only values remain supported for non-identity-aware callers.
   return normalizeAmsRole(userOrRole);
 }
 
