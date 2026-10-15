@@ -404,7 +404,7 @@ export const AdminCmsProjects: React.FC = () => {
       
       <AdminModuleHeader slug="cms-projects-header"
         className="mb-0"
-        title="Projects"
+        title="Case Studies"
         description={language === 'id'
           ? 'Kelola showcase studi kasus dan portofolio agency untuk kapitech.id/work.'
           : 'Manage case studies, portfolio showcases, and technical deliverables at kapitech.id/work.'}
