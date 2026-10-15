@@ -611,6 +611,7 @@ export const api = {
 
   // Time Tracking
   timeLogs: {
+    getOptions: () => apiRequest<{ success: boolean; projects: Array<{ id: string; name: string; tasks: Array<{ id: string; title: string }> }> }>('/api/projects/timelog-options'),
     getAll: () => apiRequest<{ success: boolean; timeLogs: any[] }>('/api/projects/timelogs'),
     create: (log: any) =>
       apiRequest('/api/projects/timelogs', {
