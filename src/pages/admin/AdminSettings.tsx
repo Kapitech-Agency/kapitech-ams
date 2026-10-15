@@ -867,25 +867,7 @@ export const AdminSettings: React.FC = () => {
         ) : undefined}
       />
 
-      <div className="min-[900px]:hidden min-w-0" data-ams-slug="settings-tabs">
-        <AdminSectionTabs
-          ariaLabel="Settings sections"
-          activeKey={activeTab}
-          items={[
-            { key: 'overview', label: 'Backup', to: '/admin/settings?tab=overview' },
-            { key: 'audit', label: 'Audit', to: '/admin/settings?tab=audit' },
-            { key: 'security', label: 'Access', to: '/admin/settings?tab=security' },
-            { key: 'integrations', label: 'Integrations', to: '/admin/settings?tab=integrations' },
-            { key: 'readiness', label: 'Readiness', to: '/admin/navigation/release-readiness' },
-          ].filter((tab) =>
-            (tab.key !== 'overview' || canAccessServer) &&
-            (tab.key !== 'audit' || canViewAuditLogs) &&
-            (tab.key !== 'security' || mfaSetupRequired || canManageAdminAccounts || canAccessServer) &&
-            (tab.key !== 'integrations' || canAccessServer) &&
-            (tab.key !== 'readiness' || canAccessServer)
-          )}
-        />
-      </div>
+      
 
       {overviewLoadError && canAccessServer && activeTab !== 'audit' && (
         <div className="flex flex-col gap-2 rounded-control border border-danger/20 bg-danger/5 px-4 py-3 text-xs text-danger sm:flex-row sm:items-center sm:justify-between" role="alert">
