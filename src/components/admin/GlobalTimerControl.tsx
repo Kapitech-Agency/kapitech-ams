@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Timer, Square } from 'lucide-react';
 import { api } from '../../lib/apiClient';
 import { Modal } from '../ui/Modal';
+import { Drawer } from '../ui/Drawer';
 import Button from '../ui/Button';
 
 interface TimerProject {
@@ -211,7 +212,7 @@ export const GlobalTimerControl: React.FC<{ userId?: string }> = ({ userId }) =>
         )}
       </button>
 
-      <Modal
+      <Drawer
         open={startDialogOpen}
         onClose={() => setStartDialogOpen(false)}
         size="sm"
@@ -262,7 +263,7 @@ export const GlobalTimerControl: React.FC<{ userId?: string }> = ({ userId }) =>
           </label>
           {errorMessage && <p className="text-xs leading-5 text-danger" role="alert">{errorMessage}</p>}
         </div>
-      </Modal>
+      </Drawer>
 
       <Modal
         open={Boolean(errorMessage) && !startDialogOpen}
