@@ -272,6 +272,12 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ hours })
       }),
+    getInteractions: (id: string) => apiRequest<{ success: boolean; interactions: any[] }>(`/api/clients/${encodeURIComponent(id)}/interactions`),
+    createInteraction: (id: string, interaction: Record<string, unknown>) =>
+      apiRequest<{ success: boolean; interaction: any }>(`/api/clients/${encodeURIComponent(id)}/interactions`, {
+        method: 'POST',
+        body: JSON.stringify(interaction)
+      }),
     delete: (id: string) => apiRequest(`/api/clients/${id}`, { method: 'DELETE' })
   },
 

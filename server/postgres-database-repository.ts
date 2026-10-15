@@ -15,11 +15,12 @@ export class PostgresDatabaseRepository {
   readonly auth=new PostgresAuthRepository();
  async loadDatabase():Promise<DatabaseSchema>{
   const p=getPostgresPool();
-  const names=['users','sessions','leads','crm_deals','clients','projects','proposals','proposal_items','tasks','time_logs','invoices','invoice_items','invoice_payments','expenses','approvals','vendors','documents','document_access','notifications','cms_services','cms_projects','cms_testimonials','cms_insight_categories','cms_insight_tags','cms_insight_authors','cms_insights','cms_settings','audit_logs','notification_settings'];
+  const names=['users','sessions','leads','crm_deals','clients','client_interactions','projects','proposals','proposal_items','tasks','time_logs','invoices','invoice_items','invoice_payments','expenses','approvals','vendors','documents','document_access','notifications','cms_services','cms_projects','cms_testimonials','cms_insight_categories','cms_insight_tags','cms_insight_authors','cms_insights','cms_settings','audit_logs','notification_settings'];
   const rs=await Promise.all(names.map(n=>p.query('SELECT * FROM '+n))); const m=new Map(names.map((n,i)=>[n,rs[i].rows as Row[]]));
   const users=(m.get('users')??[]).map(mapUser),sessions=(m.get('sessions')??[]).map(mapSession);
   const leads=(m.get('leads')??[]).map(r=>base(r,{fullName:r.full_name,honeypotTriggered:r.honeypot_triggered,createdAt:iso(r.created_at),updatedAt:iso(r.updated_at)}));
   const clients=(m.get('clients')??[]).map(r=>base(r,{createdAt:iso(r.created_at),updatedAt:iso(r.updated_at)}));
+   const clientInteractions=(m.get('client_interactions')??[]).map(r=>base(r,{clientId:r.client_id,type:r.interaction_type,contactName:r.contact_name??'',outcome:r.outcome??'',nextStep:r.next_step??'',occurredAt:iso(r.occurred_at),createdByUserId:r.created_by_user_id??undefined,createdByName:r.created_by_name,createdAt:iso(r.created_at)}));
   const crmDeals=(m.get('crm_deals')??[]).map(r=>base(r,{clientId:r.client_id??undefined,clientName:r.client_name??undefined,servicePillar:r.service_pillar??undefined,expectedCloseDate:r.expected_close_date?date(r.expected_close_date):undefined,createdAt:iso(r.created_at),updatedAt:iso(r.updated_at)}));
   const projects=(m.get('projects')??[]).map(r=>base(r,{clientId:r.client_id??undefined,startDate:r.start_date?date(r.start_date):undefined,endDate:r.end_date?date(r.end_date):undefined,createdAt:iso(r.created_at),updatedAt:iso(r.updated_at)}));
   const pi=new Map<string,Row[]>();for(const r of m.get('proposal_items')??[]){const a=pi.get(r.proposal_id)??[];a.push(r);pi.set(r.proposal_id,a)}
@@ -44,6 +45,6 @@ export class PostgresDatabaseRepository {
   const sr=m.get('cms_settings')??[],cmsSettings:any=Object.fromEntries(sr.map(r=>[r.key,r.value]));if(sr.length)cmsSettings.updatedAt=iso(sr[0].updated_at);
   const auditLogs=(m.get('audit_logs')??[]).map(r=>base(r,{actorRole:r.actor_role,actorUserId:r.actor_user_id??undefined,userAgent:r.user_agent??'',timestamp:iso(r.timestamp)}));
   const n=m.get('notification_settings')?.[0];const notificationSettings={targetEmail:n?.target_email??'',formspreeEndpoint:n?.formspree_endpoint??'',telegramBotToken:'',telegramChatId:n?.telegram_chat_id??'',isEmailActive:Boolean(n?.is_email_active),isTelegramActive:Boolean(n?.is_telegram_active),updatedAt:n?.updated_at?iso(n.updated_at):''};
-  return{users,sessions,leads,crmDeals,clients,projects,proposals,tasks,timeLogs,invoices,expenses,approvals,vendors,documents,notifications,cmsServices,cmsProjects,cmsTestimonials,cmsInsights,cmsInsightCategories,cmsInsightTags,cmsInsightAuthors,cmsSettings,auditLogs,notificationSettings};
+  return{users,sessions,leads,crmDeals,clients,clientInteractions,projects,proposals,tasks,timeLogs,invoices,expenses,approvals,vendors,documents,notifications,cmsServices,cmsProjects,cmsTestimonials,cmsInsights,cmsInsightCategories,cmsInsightTags,cmsInsightAuthors,cmsSettings,auditLogs,notificationSettings};
  }}
 export const postgresDatabaseRepository=new PostgresDatabaseRepository();

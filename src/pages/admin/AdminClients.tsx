@@ -17,6 +17,9 @@ import {
   Download,
   ExternalLink,
   FileText,
+  Mail as MailIcon,
+  MessageSquare,
+  Phone,
   Eye,
   Globe,
   Pencil,
@@ -46,6 +49,46 @@ type SortKey = 'name' | 'company' | 'industry' | 'status' | 'updatedAt' | 'proje
 type SortDirection = 'asc' | 'desc';
 type SlaFilter = 'all' | 'healthy' | 'near' | 'over' | 'not-configured';
 type StatusScope = 'all' | 'active' | 'lead' | 'at-risk';
+type ClientInteractionType = 'call' | 'email' | 'meeting' | 'message' | 'note';
+
+type ClientInteraction = {
+  id: string;
+  clientId: string;
+  type: ClientInteractionType;
+  subject: string;
+  summary: string;
+  contactName?: string;
+  outcome?: string;
+  nextStep?: string;
+  occurredAt: string;
+  createdByUserId?: string;
+  createdByName?: string;
+  createdAt: string;
+};
+
+const CLIENT_INTERACTION_OPTIONS: Array<{ value: ClientInteractionType; label: string }> = [
+  { value: 'meeting', label: 'Meeting' },
+  { value: 'call', label: 'Phone call' },
+  { value: 'email', label: 'Email' },
+  { value: 'message', label: 'Message' },
+  { value: 'note', label: 'Internal note' },
+];
+
+const clientInteractionLabel = (type: ClientInteractionType) =>
+  CLIENT_INTERACTION_OPTIONS.find((item) => item.value === type)?.label || 'Interaction';
+
+const toLocalDateTimeInput = (date: Date) => {
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 16);
+};
+
+const formatInteractionTimestamp = (value: string, language: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Date not recorded';
+  return new Intl.DateTimeFormat(language === 'id' ? 'id-ID' : 'en-US', {
+    day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+  }).format(date);
+};
 
 type ClientContractSummary = {
   id: string;
@@ -148,6 +191,7 @@ export const AdminClients: React.FC = () => {
   const { matchesDate } = useReportingPeriod();
   const canManageClients = hasAdminPermission('canManageClients');
   const canViewClientContracts = canManageClients || hasAdminPermission('canManageCrm') || hasAdminPermission('canManageProjects');
+  const canManageClientInteractions = canManageClients || hasAdminPermission('canManageCrm');
   const { t, language } = useLanguage();
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
   const [clients, setClients] = useState<AgencyClient[]>([]);
@@ -171,6 +215,23 @@ export const AdminClients: React.FC = () => {
   const [clientContracts, setClientContracts] = useState<ClientContractSummary[]>([]);
   const [contractsLoading, setContractsLoading] = useState(false);
   const [contractsError, setContractsError] = useState<string | null>(null);
+  const [clientInteractions, setClientInteractions] = useState<ClientInteraction[]>([]);
+  const [interactionsLoading, setInteractionsLoading] = useState(false);
+  const [interactionsError, setInteractionsError] = useState<string | null>(null);
+  const [interactionReloadKey, setInteractionReloadKey] = useState(0);
+  const [interactionDrawerOpen, setInteractionDrawerOpen] = useState(false);
+  const [interactionClient, setInteractionClient] = useState<AgencyClient | null>(null);
+  const [interactionSaving, setInteractionSaving] = useState(false);
+  const [interactionFormError, setInteractionFormError] = useState<string | null>(null);
+  const [interactionForm, setInteractionForm] = useState({
+    type: 'meeting' as ClientInteractionType,
+    subject: '',
+    summary: '',
+    contactName: '',
+    outcome: '',
+    nextStep: '',
+    occurredAt: toLocalDateTimeInput(new Date()),
+  });
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<AgencyClient | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AgencyClient | null>(null);
@@ -338,6 +399,34 @@ export const AdminClients: React.FC = () => {
 
     return () => { active = false; };
   }, [selectedClient?.id, selectedClient?.company, canViewClientContracts]);
+  useEffect(() => {
+    if (!selectedClient || !canManageClientInteractions) {
+      setClientInteractions([]);
+      setInteractionsError(null);
+      setInteractionsLoading(false);
+      return;
+    }
+
+    let active = true;
+    setClientInteractions([]);
+    setInteractionsError(null);
+    setInteractionsLoading(true);
+    void api.clients.getInteractions(selectedClient.id).then((response) => {
+      if (!active) return;
+      if (!response.success || !Array.isArray(response.data?.interactions)) {
+        setInteractionsError(response.error || 'Client interaction history could not be loaded.');
+        return;
+      }
+      setClientInteractions(response.data.interactions as ClientInteraction[]);
+    }).catch((error) => {
+      if (active) setInteractionsError(error instanceof Error ? error.message : 'Client interaction history could not be loaded.');
+    }).finally(() => {
+      if (active) setInteractionsLoading(false);
+    });
+
+    return () => { active = false; };
+  }, [selectedClient?.id, canManageClientInteractions, interactionReloadKey]);
+
 
 
   const pageCount = Math.max(1, Math.ceil(filteredClients.length / pageSize));
@@ -575,6 +664,81 @@ export const AdminClients: React.FC = () => {
     showToast(language === 'id' ? 'Direktori berhasil diekspor.' : 'Directory exported.');
   };
 
+  const openInteractionDrawer = () => {
+    if (!selectedClient || !canManageClientInteractions) return;
+    setInteractionClient(selectedClient);
+    setInteractionForm({
+      type: 'meeting',
+      subject: '',
+      summary: '',
+      contactName: selectedClient.name || '',
+      outcome: '',
+      nextStep: '',
+      occurredAt: toLocalDateTimeInput(new Date()),
+    });
+    setInteractionFormError(null);
+    setSelectedClient(null);
+    setInteractionDrawerOpen(true);
+  };
+
+  const closeInteractionDrawer = () => {
+    if (interactionSaving) return;
+    const clientToReopen = interactionClient;
+    setInteractionDrawerOpen(false);
+    setInteractionClient(null);
+    setInteractionFormError(null);
+    if (clientToReopen) setSelectedClient(clientToReopen);
+  };
+
+  const saveClientInteraction = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!interactionClient || !canManageClientInteractions || interactionSaving) return;
+
+    const subject = interactionForm.subject.trim();
+    const summary = interactionForm.summary.trim();
+    if (!subject || !summary) {
+      setInteractionFormError('Subject and summary are required.');
+      return;
+    }
+    const occurredAt = new Date(interactionForm.occurredAt);
+    if (Number.isNaN(occurredAt.getTime())) {
+      setInteractionFormError('Enter a valid date and time for this interaction.');
+      return;
+    }
+
+    setInteractionSaving(true);
+    setInteractionFormError(null);
+    try {
+      const response = await api.clients.createInteraction(interactionClient.id, {
+        type: interactionForm.type,
+        subject,
+        summary,
+        contactName: interactionForm.contactName.trim(),
+        outcome: interactionForm.outcome.trim(),
+        nextStep: interactionForm.nextStep.trim(),
+        occurredAt: occurredAt.toISOString(),
+      });
+      if (!response.success || !response.data?.interaction) {
+        setInteractionFormError(response.error || 'Interaction could not be saved.');
+        return;
+      }
+
+      const created = response.data.interaction as ClientInteraction;
+      const clientToReopen = interactionClient;
+      setClientInteractions(current => [created, ...current.filter(item => item.id !== created.id)]
+        .sort((a, b) => String(b.occurredAt || '').localeCompare(String(a.occurredAt || ''))));
+      setInteractionDrawerOpen(false);
+      setInteractionClient(null);
+      setInteractionFormError(null);
+      setSelectedClient(clientToReopen);
+      showToast('Client interaction saved.');
+    } catch (error) {
+      setInteractionFormError(error instanceof Error ? error.message : 'Interaction could not be saved.');
+    } finally {
+      setInteractionSaving(false);
+    }
+  };
+
   const selectedClientReadiness = selectedClient ? getClientProfileReadiness(selectedClient) : [];
   const selectedClientReadinessCount = selectedClientReadiness.filter((item) => item.complete).length;
   const selectedClientReadinessPercent = selectedClientReadiness.length
@@ -730,7 +894,7 @@ export const AdminClients: React.FC = () => {
         size="lg"
         title={selectedClient?.company || 'Client details'}
         description={selectedClient ? `${selectedClient.name} · ${selectedClient.id} · ${getAgencyClientSlug(selectedClient as AgencyClient & Record<string, unknown>)}` : undefined}
-        footer={<div className="flex justify-end gap-2">{canManageClients && <Button type="button" variant="secondary" onClick={() => { if (!selectedClient) return; const client = selectedClient; setSelectedClient(null); openEdit(client); }}>{selectedClient?.status === 'lead' ? 'Continue onboarding' : 'Edit client'}</Button>}<Button type="button" variant="secondary" onClick={() => setSelectedClient(null)}>Close</Button></div>}
+        footer={<div className="flex flex-wrap justify-end gap-2">{canManageClientInteractions && <Button type="button" variant="secondary" onClick={openInteractionDrawer} icon={<Plus size={13} aria-hidden="true" />}>Log interaction</Button>}{canManageClients && <Button type="button" variant="secondary" onClick={() => { if (!selectedClient) return; const client = selectedClient; setSelectedClient(null); openEdit(client); }}>{selectedClient?.status === 'lead' ? 'Continue onboarding' : 'Edit client'}</Button>}<Button type="button" variant="secondary" onClick={() => setSelectedClient(null)}>Close</Button></div>}
       >
         {selectedClient && (
           <div className="space-y-6">
@@ -743,6 +907,69 @@ export const AdminClients: React.FC = () => {
                 {statusMeta[selectedClient.status].label}
               </span>
             </div>
+
+            {canManageClientInteractions && (
+              <section
+                aria-label="Client relationship timeline"
+                data-ams-feature-slug="client-interaction-timeline"
+                data-ams-slug="client-interaction-timeline"
+                className="overflow-hidden rounded-card border border-line bg-panel"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line px-4 py-3">
+                  <div>
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-fg"><Activity size={15} className="text-muted" aria-hidden="true" /> Relationship timeline</h3>
+                    <p className="mt-1 text-xs leading-5 text-muted">Saved client calls, meetings, emails, messages, and internal notes.</p>
+                  </div>
+                  <Button type="button" variant="secondary" onClick={openInteractionDrawer} icon={<Plus size={13} aria-hidden="true" />}>Log interaction</Button>
+                </div>
+
+                {interactionsLoading ? (
+                  <div className="space-y-2 p-4" role="status" aria-label="Loading client interaction history">
+                    {[1, 2, 3].map(item => <div key={item} className="h-16 animate-pulse rounded-control border border-line bg-bg" />)}
+                  </div>
+                ) : interactionsError ? (
+                  <div className="flex flex-col items-start gap-2 p-4" role="alert">
+                    <p className="text-xs font-medium text-fg">Interaction history unavailable</p>
+                    <p className="text-xs leading-5 text-muted">{interactionsError}</p>
+                    <Button type="button" variant="secondary" onClick={() => setInteractionReloadKey(value => value + 1)}>Retry loading</Button>
+                  </div>
+                ) : clientInteractions.length ? (
+                  <div className="divide-y divide-line">
+                    {clientInteractions.map(interaction => (
+                      <article key={interaction.id} data-ams-slug={'client-interaction-' + interaction.id} className="flex gap-3 px-4 py-3">
+                        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-control border border-line bg-bg text-muted" aria-hidden="true">
+                          {interaction.type === 'meeting' ? <CalendarDays size={14} /> : interaction.type === 'email' ? <MailIcon size={14} /> : interaction.type === 'call' ? <Phone size={14} /> : interaction.type === 'message' ? <MessageSquare size={14} /> : <FileText size={14} />}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <span className="text-xs font-semibold text-fg">{interaction.subject}</span>
+                            <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] font-medium text-muted">{clientInteractionLabel(interaction.type)}</span>
+                          </div>
+                          <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-fg">{interaction.summary}</p>
+                          {(interaction.contactName || interaction.outcome || interaction.nextStep) && (
+                            <dl className="mt-2 grid gap-x-5 gap-y-2 sm:grid-cols-2">
+                              {interaction.contactName && <div><dt className="text-[10px] text-muted">Contact</dt><dd className="mt-0.5 text-xs text-fg">{interaction.contactName}</dd></div>}
+                              {interaction.outcome && <div><dt className="text-[10px] text-muted">Outcome</dt><dd className="mt-0.5 text-xs text-fg">{interaction.outcome}</dd></div>}
+                              {interaction.nextStep && <div className="sm:col-span-2"><dt className="text-[10px] text-muted">Next step</dt><dd className="mt-0.5 text-xs text-fg">{interaction.nextStep}</dd></div>}
+                            </dl>
+                          )}
+                          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted">
+                            <span>{formatInteractionTimestamp(interaction.occurredAt, language)}</span>
+                            <span>Logged by {interaction.createdByName || 'AMS user'}</span>
+                          </div>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-start gap-2 p-4" data-ams-slug="client-interaction-empty">
+                    <p className="text-xs font-medium text-fg">No interactions recorded yet</p>
+                    <p className="text-xs leading-5 text-muted">Record the next client conversation so the team can follow the relationship history and agreed next steps.</p>
+                    <Button type="button" variant="secondary" onClick={openInteractionDrawer} icon={<Plus size={13} aria-hidden="true" />}>Log first interaction</Button>
+                  </div>
+                )}
+              </section>
+            )}
 
             {selectedClient.status === 'lead' && (
               <section
@@ -1023,6 +1250,56 @@ export const AdminClients: React.FC = () => {
           </section>
         </form>
       </Drawer>
+      <Drawer
+        slug="client-interaction-create-drawer"
+        open={interactionDrawerOpen}
+        onClose={closeInteractionDrawer}
+        closeOnEscape={!interactionSaving}
+        size="lg"
+        title="Log client interaction"
+        description={interactionClient ? 'Record a persistent relationship update for ' + interactionClient.company + '.' : 'Record a persistent client relationship update.'}
+        footer={<div className="flex justify-end gap-2"><Button type="button" variant="secondary" disabled={interactionSaving} onClick={closeInteractionDrawer}>Cancel</Button><Button type="submit" form="client-interaction-form" variant="primary" loading={interactionSaving} disabled={interactionSaving} icon={<CheckCircle2 size={14} aria-hidden="true" />}>Save interaction</Button></div>}
+      >
+        <form id="client-interaction-form" onSubmit={saveClientInteraction} className="space-y-5" noValidate>
+          {interactionFormError && <div role="alert" className="rounded-control border border-danger/30 bg-danger/10 p-3 text-xs leading-5 text-danger">{interactionFormError}</div>}
+          {interactionClient && <div className="rounded-control border border-line bg-bg px-3 py-2.5"><p className="text-[10px] uppercase tracking-wide text-muted">Client</p><p className="mt-1 text-xs font-semibold text-fg">{interactionClient.company}</p><p className="mt-0.5 text-[10px] text-muted">{interactionClient.id}</p></div>}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="client-interaction-type" className="mb-1.5 block">Interaction type</label>
+              <CustomSelect value={interactionForm.type} onChange={value => setInteractionForm(current => ({ ...current, type: value as ClientInteractionType }))} options={CLIENT_INTERACTION_OPTIONS} aria-label="Interaction type" className="w-full" triggerClassName="w-full" />
+            </div>
+            <div>
+              <label htmlFor="client-interaction-date" className="mb-1.5 block">Date and time</label>
+              <input id="client-interaction-date" type="datetime-local" required value={interactionForm.occurredAt} disabled={interactionSaving} onChange={event => setInteractionForm(current => ({ ...current, occurredAt: event.target.value }))} className="w-full" />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="client-interaction-subject" className="mb-1.5 block">Subject <span className="text-danger">*</span></label>
+            <input id="client-interaction-subject" type="text" required maxLength={160} value={interactionForm.subject} disabled={interactionSaving} onChange={event => setInteractionForm(current => ({ ...current, subject: event.target.value }))} placeholder="e.g. Website scope alignment" className="w-full" />
+          </div>
+          <div>
+            <label htmlFor="client-interaction-summary" className="mb-1.5 block">Summary <span className="text-danger">*</span></label>
+            <textarea id="client-interaction-summary" rows={4} required maxLength={4000} value={interactionForm.summary} disabled={interactionSaving} onChange={event => setInteractionForm(current => ({ ...current, summary: event.target.value }))} placeholder="Record what was discussed, decisions, concerns, or requests." className="w-full resize-y" />
+            <p className="mt-1 text-[10px] text-muted">{interactionForm.summary.length}/4000 characters</p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="client-interaction-contact" className="mb-1.5 block">Contact person</label>
+              <input id="client-interaction-contact" value={interactionForm.contactName} maxLength={160} disabled={interactionSaving} onChange={event => setInteractionForm(current => ({ ...current, contactName: event.target.value }))} placeholder="Client contact" className="w-full" />
+            </div>
+            <div>
+              <label htmlFor="client-interaction-outcome" className="mb-1.5 block">Outcome</label>
+              <input id="client-interaction-outcome" value={interactionForm.outcome} maxLength={1000} disabled={interactionSaving} onChange={event => setInteractionForm(current => ({ ...current, outcome: event.target.value }))} placeholder="Decision or agreement" className="w-full" />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="client-interaction-next-step" className="mb-1.5 block">Next step</label>
+            <input id="client-interaction-next-step" value={interactionForm.nextStep} maxLength={500} disabled={interactionSaving} onChange={event => setInteractionForm(current => ({ ...current, nextStep: event.target.value }))} placeholder="Action owner or follow-up" className="w-full" />
+          </div>
+          <p className="text-[10px] leading-4 text-muted">Entries are saved to AMS and visible to users with Client or CRM access. Do not include passwords, payment credentials, or other secrets.</p>
+        </form>
+      </Drawer>
+
       <Modal
         open={!!deleteTarget}
         onClose={() => !isDeleting && setDeleteTarget(null)}
