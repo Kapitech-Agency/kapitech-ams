@@ -1851,7 +1851,7 @@ export const AdminTeams: React.FC = () => {
         open={Boolean(allocationTarget)}
         onClose={() => setAllocationTarget(null)}
         title="Allocate Team Member"
-        description={allocationTarget ? 'Current allocation for ' + allocationTarget.name + '. Allocation controls are presented from existing project data.' : undefined}
+        description={allocationTarget ? 'Assign or remove ' + allocationTarget.name + ' from active projects. Time-tracked hours below are historical actuals, not a forecast.' : undefined}
         size="lg"
       >
         {allocationTarget && (
@@ -1870,17 +1870,31 @@ export const AdminTeams: React.FC = () => {
               </div>
             </div>
             <div className="rounded-control border border-line bg-bg p-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-muted">Available active projects</p>
-              <div className="mt-2 space-y-2">
-                {projects.filter((project) => project.status !== 'completed').slice(0, 8).map((project) => (
-                  <div key={project.id} className="flex items-center justify-between gap-3 rounded-control border border-line bg-panel px-3 py-2">
-                    <div className="min-w-0">
-                      <p className="truncate text-xs font-medium text-fg">{project.name}</p>
-                      <p className="mt-1 text-[10px] text-muted">{project.clientName || project.clientCompany || 'Active project'}</p>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-muted">Active project assignments</p>
+                <span className="text-[10px] text-muted">{memberProjects(allocationTarget).length} assigned</span>
+              </div>
+              <p className="mt-1 text-[10px] leading-4 text-muted">Assignment links are saved to the project record. Planned hours, allocation percentages, and leave calendars are not available yet.</p>
+              <div className="mt-3 space-y-2">
+                {projects.filter((project) => project.status !== 'completed').length ? projects.filter((project) => project.status !== 'completed').slice(0, 12).map((project) => {
+                  const identifiers = new Set([allocationTarget.id, allocationTarget.name, allocationTarget.username].map((value) => String(value || '').trim().toLowerCase()).filter(Boolean));
+                  const memberEntries = Array.isArray(project.teamMembers) ? project.teamMembers.map(String) : [];
+                  const isAssigned = memberEntries.some((value) => identifiers.has(value.trim().toLowerCase()));
+                  const isLead = identifiers.has(String(project.teamLead || '').trim().toLowerCase());
+                  const end = project.targetEndDate || '';
+                  return (
+                    <div key={project.id} className="flex flex-col gap-2 rounded-control border border-line bg-panel px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-medium text-fg">{project.name}</p>
+                        <p className="mt-1 text-[10px] text-muted">{project.clientName || project.clientCompany || 'Client not linked'} · {project.status || 'Active'} · Due {formatDate(end)}</p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <span className={'rounded-badge border px-2 py-1 text-[10px] font-medium ' + (isLead || isAssigned ? 'border-success/20 bg-success/10 text-success' : 'border-line bg-bg text-muted')}>{isLead ? 'Project lead' : isAssigned ? 'Assigned' : 'Unassigned'}</span>
+                        <Button type="button" variant={isAssigned ? 'secondary' : 'primary'} className="h-8 px-2 text-[10px]" onClick={() => void toggleProjectAssignment(project)} disabled={!canManageProjects || isLead || Boolean(allocationSavingProjectId)} loading={allocationSavingProjectId === project.id}>{isLead ? 'Lead' : isAssigned ? 'Remove' : 'Assign'}</Button>
+                      </div>
                     </div>
-                    <span className="font-mono text-[9px] text-muted">{project.slug}</span>
-                  </div>
-                ))}
+                  );
+                }) : <p className="rounded-control border border-dashed border-line px-3 py-6 text-center text-xs text-muted">No active projects are available for assignment.</p>}
               </div>
             </div>
             <div className="flex justify-end gap-2 border-t border-line pt-4">
