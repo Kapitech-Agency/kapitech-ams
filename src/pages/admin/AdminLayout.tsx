@@ -1,80 +1,30 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Link, NavLink, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import {
-  Home,
-  Inbox,
-  Briefcase,
-  Landmark,
   Menu,
   X,
   LogOut,
   Sun,
   Moon,
   Search,
-  ClipboardCheck,
-  Clock3,
-  UsersRound,
-  LockKeyhole,
-  LayoutGrid,
-  Building2,
-  FileText,
-  ShieldCheck,
 } from 'lucide-react';
 import { getAdminSession, logoutAdmin } from '../../lib/adminAuth';
 import { useLanguage } from '../../lib/LanguageContext';
 import { CommandPalette } from '../../components/admin/CommandPalette';
 import { AdminNotificationCenter } from '../../components/admin/AdminNotificationCenter';
 import { Modal } from '../../components/ui/Modal';
-import { AGENCY_TIER_LABELS, AgencyTier, getAgencyTier, useRbacRole } from '../../lib/rbacEngine';
+import { AGENCY_TIER_LABELS, getAgencyTier } from '../../lib/rbacEngine';
+import { getAmsRole, getNavigationGroupsForRole, isNavigationItemActive } from '../../lib/amsNavigationAccess';
 import { AmsBrandLogo } from '../../components/admin/AmsBrandLogo';
 import UserProfileSettingsModal from '../../components/admin/UserProfileSettingsModal';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { AdminTopbarTabs } from '../../components/admin/AdminModulePrimitives';
+import { AdminSystemSettingsNavigation, DynamicAdminSidebarNavigation } from '../../components/admin/DynamicAdminSidebar';
 import { FINANCE_WORKBOOK_GROUPS } from '../../lib/financeWorkbook';
 import Button from '../../components/ui/Button';
 import { ReportingPeriodProvider } from '../../lib/ReportingPeriodContext';
 import { AdminReportingPeriodBar } from '../../components/admin/AdminReportingPeriodBar';
-
-type AdminNavGroup = 'Overview' | 'Sales & Clients' | 'Delivery' | 'People & Resources' | 'Finance' | 'Website & Content' | 'Operations';
-
-interface NavItem {
-  key: string;
-  to: string;
-  label: string;
-  icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>;
-  badge?: string | number | null;
-  badgeColor?: string;
-  exact?: boolean;
-  group: AdminNavGroup;
-  requiredTier: AgencyTier;
-}
-
-type AdminNavItem = NavItem & (
-  | { accessKey: string; anyAccessKeys?: never }
-  | { accessKey?: never; anyAccessKeys: string[] }
-);
-
-// Sidebar items represent modules only. Feature views stay inside each module.
-const NAV_GROUPS: AdminNavGroup[] = ['Overview', 'Sales & Clients', 'Delivery', 'People & Resources', 'Finance', 'Website & Content', 'Operations'];
-
-const STITCH_NAV_ITEMS: AdminNavItem[] = [
-  { key: 'dashboard', to: '/admin/dashboard', label: 'Dashboard', icon: Home, accessKey: 'dashboard', requiredTier: 2, group: 'Overview' },
-  { key: 'inbox', to: '/admin/inbox', label: 'Inbox', icon: Inbox, accessKey: 'inbox', requiredTier: 2, group: 'Sales & Clients' },
-  { key: 'crm', to: '/admin/crm', label: 'CRM & Pipeline', icon: Briefcase, accessKey: 'crm', requiredTier: 3, group: 'Sales & Clients' },
-  { key: 'proposals', to: '/admin/proposals', label: 'Proposals & Quotes', icon: FileText, accessKey: 'proposals', requiredTier: 3, group: 'Sales & Clients' },
-  { key: 'contracts', to: '/admin/contracts', label: 'Contracts & SOW', icon: FileText, accessKey: 'clients', requiredTier: 3, group: 'Sales & Clients' },
-  { key: 'clients', to: '/admin/clients/all-clients', label: 'Clients & Accounts', icon: UsersRound, accessKey: 'clients', requiredTier: 3, group: 'Sales & Clients' },
-  { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, accessKey: 'projects', requiredTier: 3, group: 'Delivery' },
-  { key: 'tasks', to: '/admin/tasks', label: 'Tasks', icon: ClipboardCheck, accessKey: 'projects', requiredTier: 3, group: 'Delivery' },
-  { key: 'team', to: '/admin/team', label: 'Team', icon: UsersRound, accessKey: 'timelogs', requiredTier: 3, group: 'People & Resources' },
-  { key: 'time-logs', to: '/admin/time-logs', label: 'Time Tracking', icon: Clock3, accessKey: 'timelogs', requiredTier: 3, group: 'People & Resources' },
-  { key: 'vendors', to: '/admin/vendors', label: 'Vendors', icon: Building2, accessKey: 'vendors', requiredTier: 3, group: 'People & Resources' },
-  { key: 'finance', to: '/admin/finance', label: 'Finance', icon: Landmark, accessKey: 'invoicing', requiredTier: 2, group: 'Finance' },
-  { key: 'cms', to: '/admin/cms/projects', label: 'Website CMS', icon: LayoutGrid, anyAccessKeys: ['cms_projects', 'services', 'testimonials', 'cms_insights'], requiredTier: 3, group: 'Website & Content' },
-  { key: 'approvals', to: '/admin/approvals', label: 'Approvals', icon: ShieldCheck, accessKey: 'approvals', requiredTier: 3, group: 'Operations' },
-  { key: 'documents', to: '/admin/documents', label: 'Documents', icon: LockKeyhole, accessKey: 'documents', requiredTier: 3, group: 'Operations' },
-];
 
 const DEFAULT_PROFILE_NAME = 'Fikri Nurlete';
 const DEFAULT_PROFILE_TITLE = 'Stakeholder account';
@@ -84,12 +34,7 @@ export const AdminLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const session = getAdminSession();
-  const { isAllowed } = useRbacRole(
-    session?.user?.stakeholderType,
-    session?.user?.division,
-    session?.user?.role,
-    session?.user?.permissions
-  );
+  const amsRole = getAmsRole(session?.user?.role);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
@@ -212,59 +157,14 @@ export const AdminLayout: React.FC = () => {
     session?.user?.division,
     session?.user?.role
   );
-  const hasAgencyTier = (requiredTier: AgencyTier) => agencyTier <= requiredTier;
-
-  const filteredNavItems = useMemo(() => {
-    const seen = new Set<string>();
-    const allowed = STITCH_NAV_ITEMS.filter(
-      (item) => hasAgencyTier(item.requiredTier) && (item.accessKey ? isAllowed(item.accessKey) : item.anyAccessKeys.some((accessKey) => isAllowed(accessKey)))
-    ).filter((item) => {
-      if (seen.has(item.key)) return false;
-      seen.add(item.key);
-      return true;
-    });
-
-    return allowed.map((item) => {
-      if (item.key !== 'cms') return item;
-      const firstAllowedSection = [
-        ['cms_projects', '/admin/cms/projects'],
-        ['services', '/admin/cms/services'],
-        ['testimonials', '/admin/cms/testimonials'],
-        ['cms_insights', '/admin/cms/insights'],
-      ] as const;
-      const destination = firstAllowedSection.find(([permission]) => isAllowed(permission))?.[1] || item.to;
-      return { ...item, to: destination };
-    });
-  }, [agencyTier, isAllowed]);
-
-  const canOpenMasterSettings = hasAgencyTier(1) && isAllowed('settings');
   const profileTitle = session?.user?.role || DEFAULT_PROFILE_TITLE;
-
-  // Helper to determine if a navigation item is active, including Stitch dashboard view query tabs.
-  const isItemActive = (itemTo: string) => {
-    const [path, queryString] = itemTo.split('?');
-    const actual = new URLSearchParams(location.search);
-
-    if (path === '/admin/clients/all-clients' && location.pathname.startsWith('/admin/clients/')) return true;
-    if (['/admin/cms/projects', '/admin/cms/services', '/admin/cms/testimonials', '/admin/cms/insights', '/admin/cms/careers'].includes(path) && location.pathname.startsWith('/admin/cms/')) return true;
-    if (path === '/admin/tasks' && location.pathname === '/admin/dashboard' && actual.get('view') === 'tasks') return true;
-    if (location.pathname !== path) return false;
-
-    if (queryString) {
-      const expected = new URLSearchParams(queryString);
-      return Array.from(expected.entries()).every(([key, value]) => actual.get(key) === value);
-    }
-
-    if (path === '/admin/dashboard') return actual.get('view') !== 'tasks';
-    if (path === '/admin/team') return !['vendor-directory', 'skill-matrix', 'time-logs'].includes(actual.get('view') || '');
-    if (path === '/admin/settings') return !actual.has('tab') || actual.get('tab') !== 'rbac';
-
-    return true;
-  };
-
-  const activeNavItem = filteredNavItems.find((item) => isItemActive(item.to));
-  const activeItemLabel = activeNavItem?.label || 'Dashboard';
-  const getGroupItems = (group: AdminNavGroup) => filteredNavItems.filter((item) => item.group === group);
+  const filteredNavItems = getNavigationGroupsForRole(amsRole)
+    .filter((group) => group.key !== 'system-settings')
+    .flatMap((group) => group.items);
+  const activeNavItem = filteredNavItems.find((item) =>
+    isNavigationItemActive(item, location.pathname, location.search, location.hash)
+  );
+  const activeItemLabel = activeNavItem?.label || 'Personal Workspace / My Hub';
 
   return (
     <ReportingPeriodProvider>
@@ -312,59 +212,11 @@ export const AdminLayout: React.FC = () => {
         </div>
 
         <div className="flex-1 min-h-0 overflow-x-hidden overflow-y-auto overscroll-contain px-3.5 py-4 custom-scrollbar">
-          <nav aria-label="Primary navigation" className="space-y-4">
-            {NAV_GROUPS.map((group) => {
-              const items = getGroupItems(group);
-              if (!items.length) return null;
-              return (
-                <section key={group} aria-label={group}>
-                  <div className="px-2 pb-1.5 text-[10px] font-medium tracking-wide text-muted">{group}</div>
-                  <div className="space-y-1">
-                    {items.map((item) => {
-                      const Icon = item.icon;
-                      const active = isItemActive(item.to);
-                      return (
-                        <Link
-                          key={item.key}
-                          to={item.to}
-                          aria-current={active ? "page" : undefined}
-                          className={["group relative flex min-h-10 items-center gap-2.5 rounded-control px-2.5 text-[12px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent", active ? "border border-accent/25 bg-accent/10 text-fg" : "border border-transparent text-muted hover:border-line hover:bg-bg/70 hover:text-fg"].join(" ")}
-                        >
-                          {active && <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-accent" aria-hidden="true" />}
-                          <span className={["flex h-7 w-7 shrink-0 items-center justify-center", active ? "text-fg" : "text-muted group-hover:text-fg"].join(" ")}>
-                            <Icon size={15} strokeWidth={active ? 2.1 : 1.8} />
-                          </span>
-                          <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                          {item.badge !== null && item.badge !== undefined && (
-                            <span className={["shrink-0 rounded-badge border px-1.5 py-0.5 text-[10px] font-semibold", active ? "border-accent/15 bg-bg text-muted" : "border-line bg-bg text-muted"].join(" ")}>
-                              {item.badge}
-                            </span>
-                          )}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </section>
-              );
-            })}
-          </nav>
+          <DynamicAdminSidebarNavigation role={amsRole} pathname={location.pathname} search={location.search} hash={location.hash} />
         </div>
         <div className="shrink-0 border-t border-line bg-panel px-3.5 pb-3.5 pt-3">
-          <div className="grid grid-cols-2 gap-2">
-            {canOpenMasterSettings && (
-            <Link
-              to="/admin/settings"
-              aria-current={location.pathname === '/admin/settings' ? 'page' : undefined}
-              className={[
-                "flex min-h-10 items-center justify-center rounded-control border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
-                location.pathname === '/admin/settings'
-                  ? "border-accent/25 bg-accent/10 text-fg"
-                  : "border-line bg-bg text-muted hover:border-accent/40 hover:bg-panel-hover hover:text-fg"
-              ].join(" ")}
-            >
-              Settings
-            </Link>
-            )}
+          <AdminSystemSettingsNavigation role={amsRole} pathname={location.pathname} search={location.search} hash={location.hash} />
+          <div className="mt-3 grid grid-cols-1 gap-2">
             <button
               type="button"
               onClick={handleLogout}
@@ -540,61 +392,13 @@ export const AdminLayout: React.FC = () => {
               </Button>
             </div>
 
-            <nav aria-label="Primary navigation" className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-4 custom-scrollbar">
-              <div className="space-y-4">
-                {NAV_GROUPS.map((group) => {
-                  const items = getGroupItems(group);
-                  if (!items.length) return null;
-                  return (
-                    <section key={group} aria-label={group}>
-                      <div className="px-2 pb-1.5 text-[10px] font-medium tracking-wide text-muted">{group}</div>
-                      <div className="space-y-1">
-                        {items.map((item) => {
-                          const Icon = item.icon;
-                          const active = isItemActive(item.to);
-                          return (
-                            <Link
-                              key={item.key}
-                              to={item.to}
-                              onClick={() => setMobileMenuOpen(false)}
-                              aria-current={active ? "page" : undefined}
-                              className={["group relative flex min-h-10 items-center gap-2.5 rounded-control px-2.5 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent", active ? "border border-accent/25 bg-accent/10 font-semibold text-fg" : "border border-transparent text-muted hover:border-line hover:bg-bg/70 hover:text-fg"].join(" ")}
-                            >
-                              {active && <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-accent" aria-hidden="true" />}
-                              <span className={["flex h-7 w-7 shrink-0 items-center justify-center", active ? "text-fg" : "text-muted group-hover:text-fg"].join(" ")}>
-                                <Icon size={16} strokeWidth={active ? 2.1 : 1.8} />
-                              </span>
-                              <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                              {item.badge !== null && item.badge !== undefined && (
-                                <span className="shrink-0 rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] font-semibold text-muted">{item.badge}</span>
-                              )}
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    </section>
-                  );
-                })}
-              </div>
-            </nav>
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-4 custom-scrollbar">
+              <DynamicAdminSidebarNavigation role={amsRole} pathname={location.pathname} search={location.search} hash={location.hash} onNavigate={() => setMobileMenuOpen(false)} />
+            </div>
             <div className="shrink-0 border-t border-line bg-bg px-2.5 pb-[max(10px,env(safe-area-inset-bottom))] pt-2.5">
-              <div className="grid grid-cols-2 gap-2">
-                {canOpenMasterSettings && (
-                  <Link
-                    to="/admin/settings"
-                    onClick={() => setMobileMenuOpen(false)}
-                  aria-current={location.pathname === '/admin/settings' ? 'page' : undefined}
-                  className={[
-                    "flex min-h-10 items-center justify-center rounded-control border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
-                    location.pathname === '/admin/settings'
-                      ? "border-accent/25 bg-accent/10 text-fg"
-                      : "border-line bg-panel text-muted hover:border-accent/40 hover:bg-panel-hover hover:text-fg"
-                  ].join(" ")}
-                >
-                  Settings
-                  </Link>
-                )}
-                <button
+              <AdminSystemSettingsNavigation role={amsRole} pathname={location.pathname} search={location.search} hash={location.hash} onNavigate={() => setMobileMenuOpen(false)} />
+              <div className="mt-3 grid grid-cols-1 gap-2">
+                  <button
                   type="button"
                   onClick={() => {
                     setMobileMenuOpen(false);
