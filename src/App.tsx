@@ -4,6 +4,8 @@ import { MotionConfig } from 'motion/react';
 import { LanguageProvider } from './lib/LanguageContext';
 import { RequireAdminAuth } from './components/admin/RequireAdminAuth';
 import { RequireModuleAccess } from './components/admin/RequireModuleAccess';
+import { AmsRoleRouteGuard } from './components/admin/AmsRoleRouteGuard';
+import { AmsNavigationPlaceholder } from './components/admin/AmsNavigationPlaceholder';
 
 type LazyModule = { default: React.ComponentType<any> };
 
@@ -219,7 +221,9 @@ const ScrollToTop = () => {
 
 const ProtectedAdminRoutes = () => (
   <RequireAdminAuth>
-    <AdminLayout />
+    <AmsRoleRouteGuard>
+      <AdminLayout />
+    </AmsRoleRouteGuard>
   </RequireAdminAuth>
 );
 
@@ -375,11 +379,19 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="/login" element={<Navigate to="/admin/login" replace />} />
+              <Route path="/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
+              <Route path="/my-hub" element={<Navigate to="/admin/tasks?taskscope=my" replace />} />
+              <Route path="/tasks" element={<Navigate to="/admin/tasks?taskscope=my" replace />} />
+              <Route path="/crm" element={<Navigate to="/admin/crm" replace />} />
+              <Route path="/projects" element={<Navigate to="/admin/projects" replace />} />
+              <Route path="/finance" element={<Navigate to="/admin/finance" replace />} />
               <Route path="/admin/login" element={<AdminLogin />} />
 
               <Route path="/admin" element={<ProtectedAdminRoutes />}>
                 <Route index element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="dashboard" element={<DashboardWorkspaceRoute />} />
+                <Route path="navigation/live-activity" element={<ModuleRoute moduleKey="dashboard" moduleLabel="Live Activity Stream"><AmsNavigationPlaceholder kind="activity" /></ModuleRoute>} />
+                <Route path="navigation/release-readiness" element={<ModuleRoute moduleKey="settings" moduleLabel="Release Readiness Telemetry Gate"><AmsNavigationPlaceholder kind="readiness" /></ModuleRoute>} />
                 <Route path="tasks" element={<ModuleRoute moduleKey="projects" moduleLabel="tasks"><TasksWorkspace /></ModuleRoute>} />
                 <Route path="executive" element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="inbox" element={<ModuleRoute moduleKey="inbox" moduleLabel="the inbox"><AdminInbox /></ModuleRoute>} />
