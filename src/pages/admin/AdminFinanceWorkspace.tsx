@@ -1668,7 +1668,8 @@ export const AdminFinanceWorkspace: React.FC = () => {
   const sheetItems = activeGroup.items.map((item) => ({
     key: item.key,
     label: item.label,
-    to: '/admin/finance?tab=' + item.key
+    to: '/admin/finance?tab=' + item.key,
+    slug: 'finance-tab-' + item.key
   }));
   const renderLoading = () => (
     <AdminPanel title="Loading finance sources" description="Reading live AMS invoice, expense, project and vendor records.">
