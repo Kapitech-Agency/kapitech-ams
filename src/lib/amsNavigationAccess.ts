@@ -203,11 +203,14 @@ export function getAmsHomePath(role: AmsRole): string {
 export function getNavigationGroupsForRole(role: AmsRole): AmsNavigationGroup[] {
   return AMS_NAVIGATION_GROUPS.map((group) => {
     if (group.key === 'main-dashboard') {
-      return {
-        ...group,
-        label: 'OPERATIONAL OVERVIEW',
-        items: [{ key: 'dashboard-hub', label: 'Dashboard & Hub', to: getAmsHomePath(role), icon: 'dashboard', allowedRoles: ALL_ROLES }],
+      const dashboardItem: AmsNavigationItem = {
+        key: 'dashboard-hub',
+        label: 'Dashboard & Hub',
+        to: getAmsHomePath(role),
+        icon: 'dashboard',
+        allowedRoles: ALL_ROLES,
       };
+      return { ...group, label: 'OPERATIONAL OVERVIEW', items: [dashboardItem] };
     }
     const labelOverrides: Record<string, string> = {
       'client-pipeline': 'CLIENT & PIPELINE',
@@ -345,8 +348,12 @@ export function isNavigationItemActive(
       return path === '/admin/clients/all-clients' && hash !== '#client-onboarding-readiness';
     case 'client-onboarding':
       return path === '/admin/clients/all-clients' && hash === '#client-onboarding-readiness';
-    case 'project-hub':
-      return path === '/admin/projects' || (path === '/admin/tasks' && params.get('workspace') === 'project');
+    case 'project-hub': {
+      if (path === '/admin/tasks') return params.get('workspace') === 'project';
+      if (path !== '/admin/projects') return false;
+      const view = params.get('projects');
+      return !view || view === 'all' || view === 'sprint';
+    }
     case 'tasks-engine':
       return path === '/admin/tasks' && params.get('workspace') !== 'project' && params.get('taskscope') !== 'my';
     case 'retainer-manager':
