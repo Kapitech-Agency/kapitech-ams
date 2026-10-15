@@ -285,3 +285,20 @@ test('Tasks workspace shows an assignee workload and risk overview linked to the
   assert.ok(tasks.includes("value: '__unassigned__'"));
   assert.ok(tasks.includes('They do not represent available hours or individual capacity.'));
 });
+
+
+test('CRM pipeline opportunity edits use the existing persistent API and canonical open stages', () => {
+  const crm = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientLeadAccounts.tsx'), 'utf8');
+
+  assert.ok(crm.includes("const canManageCrm = fixtureMode || hasAdminPermission('canManageCrm')"));
+  assert.ok(crm.includes('api.crm.updateDeal(editingLead.id'));
+  assert.ok(crm.includes("stage: editForm.stage"));
+  assert.ok(crm.includes("value: 'new', label: 'New'"));
+  assert.ok(crm.includes("value: 'contacted', label: 'Contacted'"));
+  assert.ok(crm.includes("value: 'proposal', label: 'Proposal'"));
+  assert.ok(crm.includes("value: 'negotiation', label: 'Negotiation'"));
+  assert.ok(crm.includes('slug="lead-account-edit-drawer"'));
+  assert.ok(crm.includes('loading={savingEditLead}') && crm.includes('disabled={savingEditLead}'));
+  assert.ok(crm.includes('No server record was changed.'));
+  assert.ok(crm.includes("!['won', 'lost', 'closed_won', 'closed_lost'].includes(String(deal.stage || '').toLowerCase())"));
+});

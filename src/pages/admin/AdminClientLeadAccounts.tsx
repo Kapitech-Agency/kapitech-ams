@@ -28,6 +28,7 @@ import { isSlugFixtureMode } from '../../lib/runtimeMode';
 import { hasAdminPermission } from '../../lib/adminAuth';
 
 type Stage = 'discovery' | 'proposal' | 'contract' | 'ready-to-sign';
+type EditableCrmStage = 'new' | 'contacted' | 'proposal' | 'negotiation';
 type SortKey = 'company' | 'annualValue' | 'stage' | 'owner' | 'probability' | 'dueAt';
 
 type Lead = {
@@ -47,6 +48,8 @@ type Lead = {
   nextAction: string;
   dueAt: string;
   urgent?: boolean;
+  apiStage?: EditableCrmStage;
+  notes?: string;
 };
 
 const daysFromNow = (days: number) => new Date(Date.now() + days * 86400000).toISOString();
@@ -65,6 +68,8 @@ const seed: Lead[] = [
   { id: 'LEAD-011', initials: 'OL', company: 'OtoLink Mobility', contact: 'Tania Wibowo', owner: 'Nadia Karim', ownerRole: 'Account Director', ownerInitials: 'NK', brief: 'Connected Fleet Management', location: 'Bandung', monthlyValue: 190000000, annualValue: 2280000000, stage: 'proposal', probability: 62, nextAction: 'Commercial review with CFO', dueAt: daysFromNow(10) },
   { id: 'LEAD-012', initials: 'MS', company: 'Merah Selatan Logistics', contact: 'Reno Saputra', owner: 'Nadia Karim', ownerRole: 'Account Director', ownerInitials: 'NK', brief: 'Warehouse Automation Layer', location: 'Semarang', monthlyValue: 125000000, annualValue: 1500000000, stage: 'proposal', probability: 48, nextAction: 'Solution architecture review', dueAt: daysFromNow(11) }
 ];
+
+const stageFromApi = (value: string): Stage => value === 'proposal' ? 'proposal' : value === 'negotiation' ? 'contract' : 'discovery';
 
 const stageMeta: Record<Stage, { label: string; dot: string }> = {
   discovery: { label: 'Discovery & Audit', dot: 'bg-muted' },
@@ -119,6 +124,7 @@ const SortButton: React.FC<{
 export const AdminClientLeadAccounts: React.FC = () => {
   const navigate = useNavigate();
   const fixtureMode = isSlugFixtureMode();
+  const canManageCrm = fixtureMode || hasAdminPermission('canManageCrm');
   const [records, setRecords] = useState<Lead[]>(() => fixtureMode ? seed : []);
   const [query, setQuery] = useState('');
   const [stage, setStage] = useState<'all' | Stage>('all');
@@ -129,6 +135,10 @@ export const AdminClientLeadAccounts: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [editingLead, setEditingLead] = useState<Lead | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [savingEditLead, setSavingEditLead] = useState(false);
+  const [editForm, setEditForm] = useState({ company: '', contact: '', title: '', value: '0', stage: 'new' as EditableCrmStage, probability: '25', owner: '', expectedCloseDate: '', notes: '' });
   const [isAdding, setIsAdding] = useState(false);
   const [newCompany, setNewCompany] = useState('');
   const [newContact, setNewContact] = useState('');
@@ -158,11 +168,8 @@ export const AdminClientLeadAccounts: React.FC = () => {
           .filter((deal: any) => !['won', 'lost', 'closed_won', 'closed_lost'].includes(String(deal.stage || '').toLowerCase()))
           .map((deal: any): Lead => {
             const stageValue = String(deal.stage || 'new').toLowerCase();
-            const stage: Stage = stageValue === 'proposal'
-              ? 'proposal'
-              : stageValue === 'negotiation'
-                ? 'contract'
-                : 'discovery';
+            const apiStage: EditableCrmStage = (['new', 'contacted', 'proposal', 'negotiation'].includes(stageValue) ? stageValue : 'new') as EditableCrmStage;
+            const stage = stageFromApi(apiStage);
             const ownerName = String(deal.owner || deal.assignedTo || 'Unassigned');
             const ownerInitials = ownerName.split(/\s+/).filter(Boolean).map((part: string) => part[0]).join('').slice(0, 2).toUpperCase() || 'UN';
             const companyName = String(deal.company || deal.clientName || 'Unnamed opportunity');
@@ -180,6 +187,8 @@ export const AdminClientLeadAccounts: React.FC = () => {
               monthlyValue: Number(deal.monthlyValue) || 0,
               annualValue: Number(deal.value ?? deal.dealValue) || 0,
               stage,
+              apiStage,
+              notes: String(deal.notes || ''),
               probability: Math.round(Math.max(0, Math.min(1, probability > 1 ? probability / 100 : probability)) * 100),
               nextAction: String(deal.nextAction || 'Follow up on opportunity'),
               dueAt: String(deal.expectedCloseDate || '')
@@ -309,6 +318,8 @@ export const AdminClientLeadAccounts: React.FC = () => {
           monthlyValue: 0,
           annualValue: Number(deal.value) || 0,
           stage: 'discovery',
+          apiStage: 'new',
+          notes: String(deal.notes || ''),
           probability: 25,
           nextAction: 'Follow up on opportunity',
           dueAt: String(deal.expectedCloseDate || '')
@@ -349,6 +360,122 @@ export const AdminClientLeadAccounts: React.FC = () => {
     setMessage('Lead account added to the pipeline.');
   };
 
+  const openEditLead = (lead: Lead) => {
+    setSelectedLead(null);
+    setEditError(null);
+    setEditForm({
+      company: lead.company,
+      contact: lead.contact,
+      title: lead.brief,
+      value: String(Math.max(0, lead.annualValue || 0)),
+      stage: lead.apiStage || (lead.stage === 'proposal' ? 'proposal' : lead.stage === 'contract' || lead.stage === 'ready-to-sign' ? 'negotiation' : 'new'),
+      probability: String(lead.probability),
+      owner: lead.owner === 'Unassigned' ? '' : lead.owner,
+      expectedCloseDate: String(lead.dueAt || '').slice(0, 10),
+      notes: lead.notes || '',
+    });
+    setEditingLead(lead);
+  };
+
+  const saveEditedLead = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!canManageCrm || !editingLead || savingEditLead) return;
+
+    const company = editForm.company.trim();
+    const contact = editForm.contact.trim();
+    const title = editForm.title.trim();
+    const value = Number(editForm.value);
+    const probability = Number(editForm.probability);
+    const expectedCloseDate = editForm.expectedCloseDate.trim();
+
+    if (!company || !title) {
+      setEditError('Company and opportunity title are required.');
+      return;
+    }
+    if (!Number.isFinite(value) || value < 0 || value > 100_000_000_000) {
+      setEditError('Deal value must be a valid amount between 0 and Rp 100 billion.');
+      return;
+    }
+    if (!Number.isFinite(probability) || probability < 0 || probability > 100) {
+      setEditError('Win probability must be between 0 and 100.');
+      return;
+    }
+    if (expectedCloseDate && !/^\d{4}-\d{2}-\d{2}$/.test(expectedCloseDate)) {
+      setEditError('Expected close date must be a valid date.');
+      return;
+    }
+
+    setSavingEditLead(true);
+    setEditError(null);
+    try {
+      if (fixtureMode) {
+        const ownerName = editForm.owner.trim() || 'Unassigned';
+        const updatedLead: Lead = {
+          ...editingLead,
+          company,
+          contact: contact || company,
+          brief: title,
+          annualValue: value,
+          stage: stageFromApi(editForm.stage),
+          apiStage: editForm.stage,
+          probability: Math.round(probability),
+          owner: ownerName,
+          ownerInitials: ownerName.split(/\s+/).filter(Boolean).map(part => part[0]).join('').slice(0, 2).toUpperCase() || 'UN',
+          dueAt: expectedCloseDate,
+          notes: editForm.notes.trim(),
+        };
+        setRecords(current => current.map(item => item.id === editingLead.id ? updatedLead : item));
+        setEditingLead(null);
+        setMessage('Opportunity updated in preview mode. No server record was changed.');
+        return;
+      }
+
+      const response = await api.crm.updateDeal(editingLead.id, {
+        company,
+        clientName: contact || company,
+        title,
+        value,
+        stage: editForm.stage,
+        probability,
+        owner: editForm.owner.trim(),
+        expectedCloseDate,
+        notes: editForm.notes.trim(),
+      });
+
+      if (!response.success || !response.data?.deal) {
+        setEditError(response.error || 'Opportunity could not be updated.');
+        return;
+      }
+
+      const saved = response.data.deal;
+      const savedStageValue = String(saved.stage || editForm.stage).toLowerCase();
+      const savedStage: EditableCrmStage = (['new', 'contacted', 'proposal', 'negotiation'].includes(savedStageValue) ? savedStageValue : editForm.stage) as EditableCrmStage;
+      const savedOwner = String(saved.owner || saved.assignedTo || editForm.owner.trim() || 'Unassigned');
+      const savedProbability = Number(saved.probability ?? probability);
+      const updatedLead: Lead = {
+        ...editingLead,
+        company: String(saved.company || company),
+        contact: String(saved.clientName || contact || company),
+        brief: String(saved.title || title),
+        annualValue: Number(saved.value ?? value),
+        stage: stageFromApi(savedStage),
+        apiStage: savedStage,
+        notes: String(saved.notes ?? editForm.notes.trim()),
+        probability: Math.round(Math.max(0, Math.min(1, savedProbability > 1 ? savedProbability / 100 : savedProbability)) * 100),
+        owner: savedOwner,
+        ownerInitials: savedOwner.split(/\s+/).filter(Boolean).map(part => part[0]).join('').slice(0, 2).toUpperCase() || 'UN',
+        dueAt: String(saved.expectedCloseDate || expectedCloseDate),
+      };
+      setRecords(current => current.map(item => item.id === updatedLead.id ? updatedLead : item));
+      setEditingLead(null);
+      setMessage('Opportunity updated and saved to CRM.');
+    } catch (error) {
+      setEditError(error instanceof Error ? error.message : 'Opportunity could not be updated.');
+    } finally {
+      setSavingEditLead(false);
+    }
+  };
+
   return (
     <AdminPageShell featureSlug="client-lead-accounts-module" className="ams-clients-module">
       <AdminModuleHeader slug="client-lead-accounts-header"
@@ -359,7 +486,7 @@ export const AdminClientLeadAccounts: React.FC = () => {
         actions={(
           <>
             <Button type="button" variant="secondary" onClick={exportPipeline} icon={<ArrowDown size={14} />}>Export Pipeline</Button>
-            <Button type="button" variant="primary" onClick={() => setIsAdding(true)} icon={<Plus size={14} />}>Add Lead Account</Button>
+            {canManageCrm && <Button type="button" variant="primary" onClick={() => setIsAdding(true)} icon={<Plus size={14} />}>Add Lead Account</Button>}
           </>
         )}
       />
@@ -456,9 +583,75 @@ export const AdminClientLeadAccounts: React.FC = () => {
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><CheckCircle2 size={14} className="text-success" /><span>Ready to sign: <strong className="text-fg">{stageCounts['ready-to-sign']}</strong></span></div>
       </section>
 
-      <Modal slug="lead-account-detail-modal" open={!!selectedLead} onClose={() => setSelectedLead(null)} size="md" title="Lead account" description={selectedLead ? `${selectedLead.company} · ${selectedLead.id}` : undefined} footer={<div className="flex justify-end gap-2"><Button type="button" variant="secondary" onClick={() => setSelectedLead(null)}>Close</Button><Button type="button" variant="primary" onClick={() => { setSelectedLead(null); navigate('/admin/proposals'); }} icon={<FileText size={14} />}>Open Proposals</Button></div>}>
+      <Modal slug="lead-account-detail-modal" open={!!selectedLead} onClose={() => setSelectedLead(null)} size="md" title="Lead account" description={selectedLead ? `${selectedLead.company} · ${selectedLead.id}` : undefined} footer={<div className="flex flex-wrap justify-end gap-2">{canManageCrm && <Button type="button" variant="secondary" onClick={() => selectedLead && openEditLead(selectedLead)}>Edit opportunity</Button>}<Button type="button" variant="secondary" onClick={() => setSelectedLead(null)}>Close</Button><Button type="button" variant="primary" onClick={() => { setSelectedLead(null); navigate('/admin/proposals'); }} icon={<FileText size={14} />}>Open Proposals</Button></div>}>
         {selectedLead && <div className="space-y-4"><div className="flex items-center gap-3 rounded-card border border-line bg-bg p-3"><div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line bg-panel text-xs font-semibold text-fg">{selectedLead.initials}</div><div className="min-w-0"><p className="truncate text-sm font-semibold text-fg">{selectedLead.company}</p><div className="mt-0.5 flex items-center gap-2"><ProfileIdentity profile={{ name: selectedLead.contact, role: undefined, contextLabel: selectedLead.company }} size="sm" showRole={false} /><span className="text-xs text-muted">· {selectedLead.location}</span></div></div></div><div className="grid gap-3 sm:grid-cols-3"><div className="rounded-card border border-line bg-panel p-4"><span className="text-[10px] uppercase tracking-wider text-muted">Deal value</span><div className="mt-1 text-sm font-semibold tabular-nums text-fg">{money(selectedLead.annualValue)}</div></div><div className="rounded-card border border-line bg-panel p-4"><span className="text-[10px] uppercase tracking-wider text-muted">Win probability</span><div className="mt-1 text-sm font-semibold tabular-nums text-fg">{selectedLead.probability}%</div></div><div className="rounded-card border border-line bg-panel p-4"><span className="text-[10px] uppercase tracking-wider text-muted">Stage</span><div className="mt-1 text-sm font-semibold text-fg">{stageMeta[selectedLead.stage].label}</div></div></div><div className="rounded-card border border-line bg-panel p-4"><span className="text-[10px] uppercase tracking-wider text-muted">Next action</span><p className="mt-1 text-sm font-medium text-fg">{selectedLead.nextAction}</p><p className="mt-1 text-xs text-muted">{dueLabel(selectedLead.dueAt, selectedLead.urgent)}</p></div><div className="text-xs text-muted flex items-center gap-2"><span>Owner:</span><ProfileIdentity profile={{ name: selectedLead.owner, role: selectedLead.ownerRole || undefined, contextLabel: 'Lead owner' }} size="sm" showRole={false} /></div></div>}
       </Modal>
+
+      <Drawer
+        slug="lead-account-edit-drawer"
+        open={!!editingLead}
+        onClose={() => { if (!savingEditLead) setEditingLead(null); }}
+        closeOnEscape={!savingEditLead}
+        size="lg"
+        title="Edit opportunity"
+        description={editingLead ? editingLead.company + ' · ' + editingLead.id : undefined}
+        footer={<div className="flex justify-end gap-2"><Button type="button" variant="secondary" disabled={savingEditLead} onClick={() => setEditingLead(null)}>Cancel</Button><Button type="submit" form="lead-account-edit-form" variant="primary" loading={savingEditLead} disabled={savingEditLead} icon={<CheckCircle2 size={14} />}>Save changes</Button></div>}
+      >
+        <form id="lead-account-edit-form" onSubmit={saveEditedLead} className="space-y-4 p-5" noValidate>
+          {editError && <div role="alert" className="rounded-control border border-danger/25 bg-danger/5 px-3 py-2.5 text-xs text-danger">{editError}</div>}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="lead-edit-company" className="mb-1.5 block text-xs font-medium text-fg">Company <span className="text-danger">*</span></label>
+              <input id="lead-edit-company" required value={editForm.company} disabled={savingEditLead} onChange={event => setEditForm(current => ({ ...current, company: event.target.value }))} className="h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg placeholder:text-muted focus:border-accent focus:outline-none" />
+            </div>
+            <div>
+              <label htmlFor="lead-edit-contact" className="mb-1.5 block text-xs font-medium text-fg">Primary contact</label>
+              <input id="lead-edit-contact" value={editForm.contact} disabled={savingEditLead} onChange={event => setEditForm(current => ({ ...current, contact: event.target.value }))} className="h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg placeholder:text-muted focus:border-accent focus:outline-none" />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="lead-edit-title" className="mb-1.5 block text-xs font-medium text-fg">Opportunity title <span className="text-danger">*</span></label>
+            <input id="lead-edit-title" required value={editForm.title} disabled={savingEditLead} onChange={event => setEditForm(current => ({ ...current, title: event.target.value }))} className="h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg placeholder:text-muted focus:border-accent focus:outline-none" />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="lead-edit-value" className="mb-1.5 block text-xs font-medium text-fg">Deal value (IDR)</label>
+              <input id="lead-edit-value" type="number" min="0" max="100000000000" step="1000" value={editForm.value} disabled={savingEditLead} onChange={event => setEditForm(current => ({ ...current, value: event.target.value }))} className="h-9 w-full rounded-control border border-line bg-bg px-3 text-xs tabular-nums text-fg focus:border-accent focus:outline-none" />
+              <p className="mt-1 text-[10px] leading-4 text-muted">Enter the total deal amount, not the monthly retainer value.</p>
+            </div>
+            <div>
+              <label htmlFor="lead-edit-probability" className="mb-1.5 block text-xs font-medium text-fg">Win probability (%)</label>
+              <input id="lead-edit-probability" type="number" min="0" max="100" step="5" value={editForm.probability} disabled={savingEditLead} onChange={event => setEditForm(current => ({ ...current, probability: event.target.value }))} className="h-9 w-full rounded-control border border-line bg-bg px-3 text-xs tabular-nums text-fg focus:border-accent focus:outline-none" />
+            </div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-fg">Pipeline stage</label>
+              <CustomSelect value={editForm.stage} onChange={value => setEditForm(current => ({ ...current, stage: value as EditableCrmStage }))} options={[
+                { value: 'new', label: 'New' },
+                { value: 'contacted', label: 'Contacted' },
+                { value: 'proposal', label: 'Proposal' },
+                { value: 'negotiation', label: 'Negotiation' },
+              ]} triggerClassName="h-9 w-full" />
+              <p className="mt-1 text-[10px] leading-4 text-muted">Uses the existing CRM stage values. Won/lost deal closure is not changed from this open-opportunity editor.</p>
+            </div>
+            <div>
+              <label htmlFor="lead-edit-owner" className="mb-1.5 block text-xs font-medium text-fg">Opportunity owner</label>
+              <input id="lead-edit-owner" value={editForm.owner} disabled={savingEditLead} onChange={event => setEditForm(current => ({ ...current, owner: event.target.value }))} placeholder="Unassigned" className="h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg placeholder:text-muted focus:border-accent focus:outline-none" />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="lead-edit-close-date" className="mb-1.5 block text-xs font-medium text-fg">Expected close date</label>
+            <input id="lead-edit-close-date" type="date" value={editForm.expectedCloseDate} disabled={savingEditLead} onChange={event => setEditForm(current => ({ ...current, expectedCloseDate: event.target.value }))} className="h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg focus:border-accent focus:outline-none" />
+          </div>
+          <div>
+            <label htmlFor="lead-edit-notes" className="mb-1.5 block text-xs font-medium text-fg">Internal notes</label>
+            <textarea id="lead-edit-notes" rows={4} maxLength={3000} value={editForm.notes} disabled={savingEditLead} onChange={event => setEditForm(current => ({ ...current, notes: event.target.value }))} className="w-full resize-y rounded-control border border-line bg-bg px-3 py-2.5 text-xs leading-5 text-fg focus:border-accent focus:outline-none" />
+            <p className="mt-1 text-[10px] text-muted">{editForm.notes.length}/3000 characters</p>
+          </div>
+          {fixtureMode && <p className="rounded-control border border-warning/25 bg-warning/5 px-3 py-2.5 text-xs text-warning">Preview mode: edits stay in the browser and are not saved to the server.</p>}
+        </form>
+      </Drawer>
 
       <Drawer slug="lead-account-create-drawer" open={isAdding} onClose={() => setIsAdding(false)} size="sm" title="Add lead account" description="Start a new opportunity in Discovery & Audit." footer={<div className="flex justify-end gap-2"><Button type="button" variant="secondary" onClick={() => setIsAdding(false)}>Cancel</Button><Button type="button" variant="primary" onClick={addLead} icon={<Plus size={14} />}>Add lead</Button></div>}>
         <div className="space-y-4"><div><label htmlFor="lead-company" className="mb-1.5 block text-xs font-medium text-fg">Company</label><input id="lead-company" value={newCompany} onChange={(event) => setNewCompany(event.target.value)} placeholder="Company name" className="h-9 w-full rounded-control border border-line bg-bg px-3 text-sm text-fg placeholder:text-muted focus:border-accent focus:outline-none" /></div><div><label htmlFor="lead-contact" className="mb-1.5 block text-xs font-medium text-fg">Contact person</label><input id="lead-contact" value={newContact} onChange={(event) => setNewContact(event.target.value)} placeholder="Contact person" className="h-9 w-full rounded-control border border-line bg-bg px-3 text-sm text-fg placeholder:text-muted focus:border-accent focus:outline-none" /></div><div className="rounded-card border border-line bg-bg p-4 text-xs text-muted">New opportunities start in <span className="font-medium text-fg">Discovery &amp; Audit</span> with a 25% initial probability.</div></div>
