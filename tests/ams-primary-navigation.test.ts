@@ -14,7 +14,7 @@ const keys = (role: Parameters<typeof getPrimaryNavigationForRole>[0]) =>
   getPrimaryNavigationForRole(role).map((item) => item.key);
 
 test('primary navigation lists concise modules while submenu destinations are configured separately', () => {
-  assert.deepEqual(labels('Admin'), ['Dashboard', 'CRM', 'Projects', 'Finance', 'CMS']);
+  assert.deepEqual(labels('Admin'), ['Dashboard & Hub', 'CRM', 'Projects', 'Finance', 'CMS']);
   assert.deepEqual(keys('Admin'), ['dashboard', 'crm', 'projects', 'finance', 'cms']);
   assert.equal(AMS_PRIMARY_SETTINGS_ITEM.label, 'Settings');
   assert.equal(AMS_PRIMARY_SETTINGS_ITEM.allowedRoles.includes('Admin'), true);
@@ -22,10 +22,10 @@ test('primary navigation lists concise modules while submenu destinations are co
 });
 
 test('role-aware primary modules keep the navigation concise', () => {
-  assert.deepEqual(labels('Finance'), ['Dashboard', 'CRM', 'Projects', 'Finance']);
+  assert.deepEqual(labels('Finance'), ['Dashboard & Hub', 'CRM', 'Projects', 'Finance']);
   assert.deepEqual(labels('PM'), ['Dashboard', 'CRM', 'Projects', 'Finance', 'CMS']);
-  assert.deepEqual(labels('Creative'), ['Dashboard', 'Projects', 'CMS']);
-  assert.deepEqual(labels('Freelancer'), ['Dashboard', 'Tasks']);
+  assert.deepEqual(labels('Creative'), ['Dashboard & Hub', 'Projects', 'CMS']);
+  assert.deepEqual(labels('Freelancer'), ['Dashboard & Hub', 'Tasks']);
   assert.equal(getPrimaryNavigationForRole('Creative').find((item) => item.key === 'dashboard')?.to, '/admin/tasks?taskscope=my');
   assert.equal(getPrimaryNavigationForRole('Freelancer').find((item) => item.key === 'tasks')?.to, '/admin/tasks?taskscope=my&workspace=project');
 });
