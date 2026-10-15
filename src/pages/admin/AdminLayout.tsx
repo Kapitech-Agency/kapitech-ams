@@ -640,11 +640,11 @@ export const AdminLayout: React.FC = () => {
                   ariaLabel="CMS sections"
                   activeKey={location.pathname.split('/').pop() || 'projects'}
                   items={[
-                    { key: 'projects', label: 'Projects', to: '/admin/cms/projects', slug: 'cms-tab-projects' },
-                    { key: 'services', label: 'Services', to: '/admin/cms/services', slug: 'cms-tab-services' },
-                    { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials', slug: 'cms-tab-testimonials' },
-                    { key: 'insights', label: 'Insights', to: '/admin/cms/insights', slug: 'cms-tab-insights' },
-                    { key: 'careers', label: 'Careers', to: '/admin/cms/careers', slug: 'cms-tab-careers' }
+                    { key: 'projects', label: 'Projects', to: '/admin/cms/projects', slug: 'cms-tab-projects', permission: 'cms_projects' },
+                    { key: 'services', label: 'Services', to: '/admin/cms/services', slug: 'cms-tab-services', permission: 'services' },
+                    { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials', slug: 'cms-tab-testimonials', permission: 'testimonials' },
+                    { key: 'insights', label: 'Insights', to: '/admin/cms/insights', slug: 'cms-tab-insights', permission: 'cms_insights' },
+                    { key: 'careers', label: 'Careers', to: '/admin/cms/careers', slug: 'cms-tab-careers', permission: 'cms_projects' }
                   ]}
                 />
               ) : location.pathname === '/admin/dashboard' && new URLSearchParams(location.search).get('view') !== 'tasks' ? (
