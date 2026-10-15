@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { CalendarDays, Check, ChevronRight, Clock3, FileText, GripVertical, MessageSquare, Plus, UsersRound } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Modal } from '../components/ui/Modal';
+import { Drawer } from '../components/ui/Drawer';
 import { WorkspaceRole } from './workspaceAccess';
 import {
   ActionButton,
@@ -254,7 +254,7 @@ export const TaskDeliverablesView: React.FC<{ role: WorkspaceRole | null }> = ({
         </div>
       </SectionPanel>
 
-      <Modal
+      <Drawer
         open={Boolean(selectedTask)}
         onClose={() => { setSelectedId(null); setNewSubtask(''); setNewComment(''); }}
         title={selectedTask ? selectedTask.title : 'Task detail'}
@@ -296,7 +296,7 @@ export const TaskDeliverablesView: React.FC<{ role: WorkspaceRole | null }> = ({
             </div>
           </div>
         )}
-      </Modal>
+      </Drawer>
     </WorkspacePage>
   );
 };
