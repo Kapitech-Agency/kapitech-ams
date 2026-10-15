@@ -35,11 +35,10 @@ import { ReportingPeriodProvider } from '../../lib/ReportingPeriodContext';
 import { AdminReportingPeriodBar } from '../../components/admin/AdminReportingPeriodBar';
 
 type AdminNavGroup =
-  | 'Overview'
-  | 'Clients & Growth'
-  | 'Project Delivery'
-  | 'Finance & Procurement'
-  | 'Website & Content';
+  | 'Business & Sales Management'
+  | 'Project & Delivery Operations'
+  | 'Finance & Business Control'
+  | 'Internal Management & Governance';
 
 interface NavItem {
   key: string;
@@ -56,28 +55,27 @@ interface NavItem {
 type AdminNavItem = NavItem & { accessKey?: string };
 
 const NAV_GROUPS: AdminNavGroup[] = [
-  'Overview',
-  'Clients & Growth',
-  'Project Delivery',
-  'Finance & Procurement',
-  'Website & Content',
+  'Business & Sales Management',
+  'Project & Delivery Operations',
+  'Finance & Business Control',
+  'Internal Management & Governance',
 ];
 
 // Keep this list limited to supported workspaces. Backend capabilities without
 // a working UI route (for example CRM, proposals, and approvals) stay out of
 // primary navigation until their dedicated workflows are ready.
 const STITCH_NAV_ITEMS: AdminNavItem[] = [
-  { key: 'dashboard', to: '/admin/dashboard', label: 'Dashboard', icon: Home, requiredTier: 2, group: 'Overview' },
-  { key: 'inbox', to: '/admin/inbox', label: 'Inbox', icon: Inbox, accessKey: 'inbox', requiredTier: 2, group: 'Clients & Growth' },
-  { key: 'clients', to: '/admin/clients', label: 'Clients', icon: UsersRound, requiredTier: 3, group: 'Clients & Growth' },
-  { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, requiredTier: 3, group: 'Project Delivery' },
-  { key: 'tasks', to: '/admin/tasks', label: 'Tasks', icon: ClipboardCheck, accessKey: 'projects', requiredTier: 3, group: 'Project Delivery' },
-  { key: 'team', to: '/admin/team?view=team-directory', label: 'Team Directory', icon: UsersRound, accessKey: 'timelogs', requiredTier: 3, group: 'Project Delivery' },
-  { key: 'time-logs', to: '/admin/team?view=time-logs', label: 'Time Logs', icon: Clock3, accessKey: 'timelogs', requiredTier: 3, group: 'Project Delivery' },
-  { key: 'documents', to: '/admin/documents', label: 'Documents', icon: LockKeyhole, requiredTier: 3, group: 'Project Delivery' },
-  { key: 'finance', to: '/admin/finance', label: 'Finance', icon: Landmark, accessKey: 'invoicing', requiredTier: 2, group: 'Finance & Procurement' },
-  { key: 'vendors', to: '/admin/team?view=vendor-directory', label: 'Vendors', icon: Building2, accessKey: 'vendors', requiredTier: 3, group: 'Finance & Procurement' },
-  { key: 'cms', to: '/admin/cms/projects', label: 'Website CMS', icon: LayoutGrid, accessKey: 'cms_projects', requiredTier: 3, group: 'Website & Content' },
+  { key: 'dashboard', to: '/admin/dashboard', label: 'Dashboard', icon: Home, requiredTier: 2, group: 'Business & Sales Management' },
+  { key: 'inbox', to: '/admin/inbox', label: 'Inbox', icon: Inbox, accessKey: 'inbox', requiredTier: 2, group: 'Business & Sales Management' },
+  { key: 'clients', to: '/admin/clients', label: 'Clients', icon: UsersRound, requiredTier: 3, group: 'Business & Sales Management' },
+  { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, requiredTier: 3, group: 'Project & Delivery Operations' },
+  { key: 'tasks', to: '/admin/tasks', label: 'Tasks', icon: ClipboardCheck, accessKey: 'projects', requiredTier: 3, group: 'Project & Delivery Operations' },
+  { key: 'team', to: '/admin/team?view=team-directory', label: 'Team Directory', icon: UsersRound, accessKey: 'timelogs', requiredTier: 3, group: 'Project & Delivery Operations' },
+  { key: 'time-logs', to: '/admin/team?view=time-logs', label: 'Time Logs', icon: Clock3, accessKey: 'timelogs', requiredTier: 3, group: 'Project & Delivery Operations' },
+  { key: 'finance', to: '/admin/finance', label: 'Finance', icon: Landmark, accessKey: 'invoicing', requiredTier: 2, group: 'Finance & Business Control' },
+  { key: 'vendors', to: '/admin/team?view=vendor-directory', label: 'Vendors', icon: Building2, accessKey: 'vendors', requiredTier: 3, group: 'Finance & Business Control' },
+  { key: 'documents', to: '/admin/documents', label: 'Documents', icon: LockKeyhole, requiredTier: 3, group: 'Internal Management & Governance' },
+  { key: 'cms', to: '/admin/cms/projects', label: 'Website CMS', icon: LayoutGrid, accessKey: 'cms_projects', requiredTier: 3, group: 'Internal Management & Governance' },
 ];
 
 const DEFAULT_PROFILE_NAME = 'Fikri Nurlete';
