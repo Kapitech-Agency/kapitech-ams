@@ -324,6 +324,26 @@ test('opening balance sources reject cash accounts in the generic balance sheet 
   assert.ok(plan.skipped.some((item) => item.reason.includes('Use the Cash & Bank opening register')));
 });
 
+test('client payment journal source IDs stay stable when identified payment rows are reordered', () => {
+  const payments = [
+    { id: 'pay_A', amount: 25, date: '2026-10-05', method: 'bank_transfer', reference: 'BANK-001' },
+    { id: 'pay_B', amount: 35, date: '2026-10-06', method: 'credit_card', reference: 'CARD-001' }
+  ];
+  const getSourceIds = (rows: typeof payments) => {
+    const plan = buildFinanceSourceJournalDrafts([baseInvoice({ payments: rows })], [], [], [], [], EXCEL_CHART_OF_ACCOUNTS);
+    return new Map(
+      plan.drafts
+        .filter((item) => item.sourceType === 'invoice-payment')
+        .map((item) => [item.reference, item.sourceId])
+    );
+  };
+
+  assert.deepEqual(
+    [...getSourceIds(payments).entries()].sort(),
+    [...getSourceIds([...payments].reverse()).entries()].sort()
+  );
+});
+
 test('cancelled, voided, and quotation records do not become revenue journals', () => {
   for (const status of ['cancelled', 'voided', 'deleted', 'rejected']) {
     assert.equal(isIssuedInvoice(baseInvoice({ status })), false);
