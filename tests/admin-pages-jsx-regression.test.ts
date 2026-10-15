@@ -246,3 +246,16 @@ test('Shared modal visual contract and busy-state behavior stay consistent', () 
   assert.ok(projects.includes('busy={deletingProjectRecord}') && projects.includes('busy={deletingTaskRecord}'));
   assert.ok(invoicing.includes('busy={confirmingAction}'));
 });
+
+
+test('AMS keeps core workflows in the existing modules instead of a separate Agency Workspace', () => {
+  const app = fs.readFileSync(path.resolve(process.cwd(), 'src/App.tsx'), 'utf8');
+  const layout = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminLayout.tsx'), 'utf8');
+
+  assert.equal(app.includes('<Route path="/workspace/*"'), false);
+  assert.equal(layout.includes("label: 'Agency Workspace'"), false);
+  assert.ok(app.includes('<Route path="dashboard"'));
+  assert.ok(app.includes('<Route path="projects"'));
+  assert.ok(app.includes('<Route path="tasks"'));
+  assert.ok(app.includes('<Route path="crm"'));
+});
