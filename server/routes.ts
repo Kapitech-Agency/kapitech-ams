@@ -497,8 +497,20 @@ installRouterErrorForwarding(apiRouter);
 // Apply auth header checking on all API requests
 apiRouter.use(authenticate);
 apiRouter.use(validateCsrf);
+
+// These endpoints enforce their own stricter rate limits below. Do not let a valid
+// but stale session cookie consume the general authenticated budget before login
+// can reach its dedicated IP-based limiter.
+const AUTH_ENDPOINTS_WITH_DEDICATED_LIMIT = new Set([
+  '/auth/login',
+  '/auth/firebase-login',
+  '/auth/mfa/verify',
+  '/auth/me',
+  '/auth/logout'
+]);
+
 apiRouter.use((req: AuthenticatedRequest, res: Response, next) => {
-  if (!req.user) return next();
+  if (!req.user || AUTH_ENDPOINTS_WITH_DEDICATED_LIMIT.has(req.path)) return next();
   return rateLimitAuthenticated(300, 60 * 1000)(req, res, next);
 });
 
