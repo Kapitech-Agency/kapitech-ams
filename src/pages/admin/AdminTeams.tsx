@@ -80,6 +80,20 @@ type ProjectTaskRecord = {
   dueDate?: string;
 };
 
+type ResourceAllocationPlan = {
+  memberId: string;
+  memberName: string;
+  allocationPercent: number;
+  startDate: string;
+  endDate: string;
+};
+
+type AllocationPlanDraft = {
+  allocationPercent: string;
+  startDate: string;
+  endDate: string;
+};
+
 type ProjectRecord = {
   id: string;
   name: string;
@@ -93,6 +107,7 @@ type ProjectRecord = {
   targetEndDate?: string;
   clientName?: string;
   clientCompany?: string;
+  resourceAllocations?: ResourceAllocationPlan[];
 };
 
 type TimeLog = {
@@ -326,6 +341,7 @@ export const AdminTeams: React.FC = () => {
   const [memberDetail, setMemberDetail] = useState<TeamMember | null>(null);
   const [allocationTarget, setAllocationTarget] = useState<TeamMember | null>(null);
   const [allocationSavingProjectId, setAllocationSavingProjectId] = useState('');
+  const [allocationPlanDrafts, setAllocationPlanDrafts] = useState<Record<string, AllocationPlanDraft>>({});
 
   const [vendorHeaderSearch, setVendorHeaderSearch] = useState('');
   const [vendorHeaderCategory, setVendorHeaderCategory] = useState('all');
@@ -528,11 +544,14 @@ export const AdminTeams: React.FC = () => {
     const nextMembers = alreadyAssigned
       ? currentMembers.filter((value) => !identifiers.has(value.trim().toLowerCase()))
       : [...currentMembers, member.id];
+    const nextPlans = alreadyAssigned
+      ? (project.resourceAllocations || []).filter((plan) => !identifiers.has(String(plan.memberId || '').trim().toLowerCase()))
+      : (project.resourceAllocations || []);
 
     setAllocationSavingProjectId(project.id);
     setNotice(null);
     try {
-      const response = await api.projects.update(project.id, { teamMembers: nextMembers });
+      const response = await api.projects.update(project.id, { teamMembers: nextMembers, resourceAllocations: nextPlans });
       if (!response.success || !response.data?.project) {
         setNotice({ tone: 'danger', message: response.error || 'The project assignment could not be saved.' });
         return;
@@ -554,6 +573,63 @@ export const AdminTeams: React.FC = () => {
       setAllocationSavingProjectId('');
     }
   };
+  const allocationPlanKey = (projectId: string, memberId: string) => projectId + ':' + memberId;
+
+  const updateAllocationPlanDraft = (key: string, patch: Partial<AllocationPlanDraft>) => {
+    setAllocationPlanDrafts((current) => ({
+      ...current,
+      [key]: { ...(current[key] || { allocationPercent: '', startDate: '', endDate: '' }), ...patch }
+    }));
+  };
+
+  const saveResourcePlan = async (project: ProjectRecord) => {
+    const member = allocationTarget;
+    if (!member || !canManageProjects || allocationSavingProjectId) return;
+    const key = allocationPlanKey(project.id, member.id);
+    const existing = (project.resourceAllocations || []).find((plan) => plan.memberId === member.id);
+    const draft = allocationPlanDrafts[key] || {
+      allocationPercent: existing ? String(existing.allocationPercent) : '',
+      startDate: existing?.startDate || project.startDate || dateKey(new Date()),
+      endDate: existing?.endDate || project.targetEndDate || ''
+    };
+    const allocationPercent = Number(draft.allocationPercent);
+    if (!Number.isFinite(allocationPercent) || allocationPercent < 1 || allocationPercent > 100) {
+      setNotice({ tone: 'danger', message: 'Enter a planned allocation between 1% and 100%.' });
+      return;
+    }
+    if (!draft.startDate || !draft.endDate || draft.endDate < draft.startDate) {
+      setNotice({ tone: 'danger', message: 'Choose valid planned start and end dates.' });
+      return;
+    }
+
+    const plan: ResourceAllocationPlan = {
+      memberId: member.id,
+      memberName: member.name,
+      allocationPercent,
+      startDate: draft.startDate,
+      endDate: draft.endDate
+    };
+    const nextPlans = [...(project.resourceAllocations || []).filter((item) => item.memberId !== member.id), plan];
+    setAllocationSavingProjectId(project.id);
+    setNotice(null);
+    try {
+      const response = await api.projects.update(project.id, { resourceAllocations: nextPlans });
+      if (!response.success || !response.data?.project) {
+        setNotice({ tone: 'danger', message: response.error || 'The resource plan could not be saved.' });
+        return;
+      }
+      const updatedProject = response.data.project as ProjectRecord;
+      setProjects((current) => current.map((item) => item.id === project.id
+        ? { ...item, ...updatedProject, slug: item.slug }
+        : item));
+      setNotice({ tone: 'success', message: 'Planned allocation saved for ' + member.name + ' on ' + project.name + '.' });
+    } catch (error) {
+      setNotice({ tone: 'danger', message: error instanceof Error ? error.message : 'The resource plan could not be saved.' });
+    } finally {
+      setAllocationSavingProjectId('');
+    }
+  };
+
   const memberCoreSkills = (member: TeamMember) => {
     const projectSkills = memberProjects(member).flatMap((project) => project.techStack || []);
     return Array.from(new Set([roleFocus(member), ...projectSkills].filter(Boolean))).slice(0, 3);
