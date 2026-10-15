@@ -126,28 +126,37 @@ export const DynamicAdminSidebarNavigation: React.FC<DynamicAdminSidebarNavigati
   return (
     <nav aria-label="Primary navigation" data-ams-feature-slug="role-based-sidebar" className="space-y-2">
       {groups.map((group) => {
-        const expanded = expandedGroup === group.key;
+        const expanded = role === 'Admin' || expandedGroup === group.key;
         const groupHasActiveItem = group.key === activeGroupKey;
 
         return (
           <section key={group.key} aria-label={group.label} data-ams-nav-group={group.key} className="min-w-0">
-            <button
-              type="button"
-              aria-expanded={expanded}
-              aria-controls={`ams-nav-group-${group.key}`}
-              onClick={() => setExpandedGroup((current) => current === group.key ? null : group.key)}
-              className={[
-                'flex min-h-9 w-full items-center gap-2 rounded-control px-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
-                groupHasActiveItem ? 'text-fg' : 'text-muted hover:bg-bg/60 hover:text-fg',
-              ].join(' ')}
-            >
-              <span className="min-w-0 flex-1 truncate text-[10px] font-semibold uppercase tracking-[0.07em]">
+            {role === 'Admin' ? (
+              <h2 className={[
+                'flex min-h-9 items-center px-2 text-[10px] font-semibold uppercase tracking-[0.07em]',
+                groupHasActiveItem ? 'text-fg' : 'text-muted',
+              ].join(' ')}>
                 {group.label}
-              </span>
-              {expanded
-                ? <ChevronDown size={14} className="shrink-0" aria-hidden="true" />
-                : <ChevronRight size={14} className="shrink-0" aria-hidden="true" />}
-            </button>
+              </h2>
+            ) : (
+              <button
+                type="button"
+                aria-expanded={expanded}
+                aria-controls={`ams-nav-group-${group.key}`}
+                onClick={() => setExpandedGroup((current) => current === group.key ? null : group.key)}
+                className={[
+                  'flex min-h-9 w-full items-center gap-2 rounded-control px-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+                  groupHasActiveItem ? 'text-fg' : 'text-muted hover:bg-bg/60 hover:text-fg',
+                ].join(' ')}
+              >
+                <span className="min-w-0 flex-1 truncate text-[10px] font-semibold uppercase tracking-[0.07em]">
+                  {group.label}
+                </span>
+                {expanded
+                  ? <ChevronDown size={14} className="shrink-0" aria-hidden="true" />
+                  : <ChevronRight size={14} className="shrink-0" aria-hidden="true" />}
+              </button>
+            )}
             {expanded && (
               <div id={`ams-nav-group-${group.key}`} className="mt-1 space-y-1 pl-0.5">
                 {group.items.map((item) => (
