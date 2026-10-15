@@ -2057,19 +2057,7 @@ export const AdminProjects: React.FC = () => {
         )}
       />
 
-      <div className="min-[900px]:hidden min-w-0" data-ams-slug="projects-mobile-tabs">
-        <AdminSectionTabs
-          ariaLabel="Projects sections"
-          activeKey={view}
-          items={[
-            { key: 'all', label: 'Projects', to: '/admin/projects' },
-            { key: 'sprint', label: 'Delivery', to: '/admin/projects?projects=sprint' },
-            { key: 'budget', label: 'Budget', to: '/admin/projects?projects=budget' },
-            { key: 'archived', label: 'Archived', to: '/admin/projects?projects=archived' },
-            { key: 'files', label: 'Files', to: '/admin/documents' },
-          ]}
-        />
-      </div>
+      
 
       {toast && (
         <div role="status" className="fixed bottom-4 left-1/2 z-[80] -translate-x-1/2 rounded-control border border-line bg-panel px-4 py-3 text-xs text-fg">
