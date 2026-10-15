@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Activity, AlertTriangle, CheckCircle2, ExternalLink, FileText, Gauge, TimerReset } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import { AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminStatusBadge } from '../../components/admin/AdminModulePrimitives';
@@ -99,9 +100,9 @@ export const AdminClientSlaMonitoring: React.FC = () => {
             <p className="mt-1 max-w-2xl text-xs leading-5 text-muted">Use Contracts & SOW to record the signed agreement and its service scope. Live compliance calculations remain unavailable until monitoring data is integrated.</p>
           </div>
         </div>
-        <a href="/admin/contracts" className="inline-flex min-h-9 shrink-0 items-center justify-center gap-2 rounded-control border border-line bg-bg px-3 text-xs font-medium text-fg transition-colors hover:bg-panel-hover">
+        <Link to="/admin/contracts" className="inline-flex min-h-9 shrink-0 items-center justify-center gap-2 rounded-control border border-line bg-bg px-3 text-xs font-medium text-fg transition-colors hover:bg-panel-hover">
           Open Contracts &amp; SOW <ExternalLink size={13} />
-        </a>
+        </Link>
       </section>
     </AdminPageShell>
   );
