@@ -148,7 +148,8 @@ export class PostgresClientRepository {
           (SELECT COUNT(*)::int FROM projects WHERE client_id=$1) AS projects,
           (SELECT COUNT(*)::int FROM crm_deals WHERE client_id=$1) AS deals,
           (SELECT COUNT(*)::int FROM proposals WHERE client_id=$1) AS proposals,
-          (SELECT COUNT(*)::int FROM invoices WHERE client_id=$1) AS invoices`,
+          (SELECT COUNT(*)::int FROM invoices WHERE client_id=$1) AS invoices,
+          (SELECT COUNT(*)::int FROM client_interactions WHERE client_id=$1) AS interactions`,
         [id]
       );
       if (Object.values(references.rows[0] || {}).some(v=>Number(v)>0)) {
