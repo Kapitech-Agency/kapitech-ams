@@ -80,6 +80,20 @@ type ProjectTaskRecord = {
   dueDate?: string;
 };
 
+type ResourceAllocationPlan = {
+  memberId: string;
+  memberName: string;
+  allocationPercent: number;
+  startDate: string;
+  endDate: string;
+};
+
+type AllocationPlanDraft = {
+  allocationPercent: string;
+  startDate: string;
+  endDate: string;
+};
+
 type ProjectRecord = {
   id: string;
   name: string;
@@ -89,6 +103,11 @@ type ProjectRecord = {
   teamMembers?: string[];
   tasks?: ProjectTaskRecord[];
   techStack?: string[];
+  startDate?: string;
+  targetEndDate?: string;
+  clientName?: string;
+  clientCompany?: string;
+  resourceAllocations?: ResourceAllocationPlan[];
 };
 
 type TimeLog = {
@@ -299,6 +318,7 @@ export const AdminTeams: React.FC = () => {
       : requestedView === 'capacity-allocation' ? 'capacity-allocation' : 'team-directory';
 
   const canManageVendors = hasAdminPermission('canManageVendors');
+  const canManageProjects = hasAdminPermission('canManageProjects');
   const canManageTimeLogs = hasAdminPermission('canManageProjects') || hasAdminPermission('canManageKanbanTasks');
   const canDeleteAllTimeLogs = hasAdminPermission('canManageProjects');
   const canManageAdminAccounts = hasAdminPermission('canManageAdminAccounts');
@@ -320,6 +340,8 @@ export const AdminTeams: React.FC = () => {
   const [teamPageSize, setTeamPageSize] = useState(10);
   const [memberDetail, setMemberDetail] = useState<TeamMember | null>(null);
   const [allocationTarget, setAllocationTarget] = useState<TeamMember | null>(null);
+  const [allocationSavingProjectId, setAllocationSavingProjectId] = useState('');
+  const [allocationPlanDrafts, setAllocationPlanDrafts] = useState<Record<string, AllocationPlanDraft>>({});
 
   const [vendorHeaderSearch, setVendorHeaderSearch] = useState('');
   const [vendorHeaderCategory, setVendorHeaderCategory] = useState('all');
@@ -498,8 +520,8 @@ export const AdminTeams: React.FC = () => {
     const percent = Math.min(160, Math.round((minutes / (40 * 60)) * 100));
     const status = String(member.status || '').toLowerCase();
     if (status.includes('leave')) return { label: 'On Leave', tone: 'warning', percent };
-    if (percent > 0) return { label: 'Allocated', tone: 'success', percent };
-    return { label: 'Available / Bench', tone: 'warning', percent: 0 };
+    if (percent > 0) return { label: 'Time logged', tone: 'success', percent };
+    return { label: 'No time logged', tone: 'warning', percent: 0 };
   };
 
   const memberProjects = (member: TeamMember) => projects.filter((project) => {
@@ -511,6 +533,102 @@ export const AdminTeams: React.FC = () => {
     const targets = [member.id, member.name, member.username, member.role].map((value) => String(value || '').toLowerCase());
     return values.some((value) => targets.some((target) => target && value.includes(target)));
   });
+
+  const toggleProjectAssignment = async (project: ProjectRecord) => {
+    const member = allocationTarget;
+    if (!member || !canManageProjects || allocationSavingProjectId) return;
+
+    const identifiers = new Set([member.id, member.name, member.username].map((value) => String(value || '').trim().toLowerCase()).filter(Boolean));
+    const currentMembers = Array.isArray(project.teamMembers) ? project.teamMembers.map(String) : [];
+    const alreadyAssigned = currentMembers.some((value) => identifiers.has(value.trim().toLowerCase()));
+    const nextMembers = alreadyAssigned
+      ? currentMembers.filter((value) => !identifiers.has(value.trim().toLowerCase()))
+      : [...currentMembers, member.id];
+    const nextPlans = alreadyAssigned
+      ? (project.resourceAllocations || []).filter((plan) => !identifiers.has(String(plan.memberId || '').trim().toLowerCase()))
+      : (project.resourceAllocations || []);
+
+    setAllocationSavingProjectId(project.id);
+    setNotice(null);
+    try {
+      const response = await api.projects.update(project.id, { teamMembers: nextMembers, resourceAllocations: nextPlans });
+      if (!response.success || !response.data?.project) {
+        setNotice({ tone: 'danger', message: response.error || 'The project assignment could not be saved.' });
+        return;
+      }
+
+      const updatedProject = response.data.project as ProjectRecord;
+      setProjects((current) => current.map((item) => item.id === project.id
+        ? { ...item, ...updatedProject, slug: item.slug }
+        : item));
+      setNotice({
+        tone: 'success',
+        message: alreadyAssigned
+          ? member.name + ' was removed from ' + project.name + '.'
+          : member.name + ' was assigned to ' + project.name + '.'
+      });
+    } catch (error) {
+      setNotice({ tone: 'danger', message: error instanceof Error ? error.message : 'The project assignment could not be saved.' });
+    } finally {
+      setAllocationSavingProjectId('');
+    }
+  };
+  const allocationPlanKey = (projectId: string, memberId: string) => projectId + ':' + memberId;
+
+  const updateAllocationPlanDraft = (key: string, patch: Partial<AllocationPlanDraft>) => {
+    setAllocationPlanDrafts((current) => ({
+      ...current,
+      [key]: { ...(current[key] || { allocationPercent: '', startDate: '', endDate: '' }), ...patch }
+    }));
+  };
+
+  const saveResourcePlan = async (project: ProjectRecord) => {
+    const member = allocationTarget;
+    if (!member || !canManageProjects || allocationSavingProjectId) return;
+    const key = allocationPlanKey(project.id, member.id);
+    const existing = (project.resourceAllocations || []).find((plan) => plan.memberId === member.id);
+    const draft = allocationPlanDrafts[key] || {
+      allocationPercent: existing ? String(existing.allocationPercent) : '',
+      startDate: existing?.startDate || project.startDate || dateKey(new Date()),
+      endDate: existing?.endDate || project.targetEndDate || ''
+    };
+    const allocationPercent = Number(draft.allocationPercent);
+    if (!Number.isFinite(allocationPercent) || allocationPercent < 1 || allocationPercent > 100) {
+      setNotice({ tone: 'danger', message: 'Enter a planned allocation between 1% and 100%.' });
+      return;
+    }
+    if (!draft.startDate || !draft.endDate || draft.endDate < draft.startDate) {
+      setNotice({ tone: 'danger', message: 'Choose valid planned start and end dates.' });
+      return;
+    }
+
+    const plan: ResourceAllocationPlan = {
+      memberId: member.id,
+      memberName: member.name,
+      allocationPercent,
+      startDate: draft.startDate,
+      endDate: draft.endDate
+    };
+    const nextPlans = [...(project.resourceAllocations || []).filter((item) => item.memberId !== member.id), plan];
+    setAllocationSavingProjectId(project.id);
+    setNotice(null);
+    try {
+      const response = await api.projects.update(project.id, { resourceAllocations: nextPlans });
+      if (!response.success || !response.data?.project) {
+        setNotice({ tone: 'danger', message: response.error || 'The resource plan could not be saved.' });
+        return;
+      }
+      const updatedProject = response.data.project as ProjectRecord;
+      setProjects((current) => current.map((item) => item.id === project.id
+        ? { ...item, ...updatedProject, slug: item.slug }
+        : item));
+      setNotice({ tone: 'success', message: 'Planned allocation saved for ' + member.name + ' on ' + project.name + '.' });
+    } catch (error) {
+      setNotice({ tone: 'danger', message: error instanceof Error ? error.message : 'The resource plan could not be saved.' });
+    } finally {
+      setAllocationSavingProjectId('');
+    }
+  };
 
   const memberCoreSkills = (member: TeamMember) => {
     const projectSkills = memberProjects(member).flatMap((project) => project.techStack || []);
@@ -530,8 +648,8 @@ export const AdminTeams: React.FC = () => {
       const matchesPod = teamPod === 'all' || projectsForMember.some((project) => project.name === teamPod);
       const matchesStatus =
         teamStatus === 'all' ||
-        (teamStatus === 'allocated' && allocation.label === 'Allocated') ||
-        (teamStatus === 'bench' && allocation.label === 'Available / Bench') ||
+        (teamStatus === 'allocated' && allocation.label === 'Time logged') ||
+        (teamStatus === 'bench' && allocation.label === 'No time logged') ||
         (teamStatus === 'leave' && allocation.label === 'On Leave');
       return matchesHeaderSearch && matchesToolbarSearch && matchesDepartment && matchesPod && matchesStatus;
     });
@@ -746,6 +864,40 @@ export const AdminTeams: React.FC = () => {
       return { member, weeks };
     });
   }, [members, logs, weeklyCapacity, matchesDate]);
+
+  const futureCapacityWeeks = useMemo(() => {
+    const current = startOfWeek(new Date());
+    return Array.from({ length: 4 }, (_, index) => {
+      const start = new Date(current);
+      start.setDate(start.getDate() + (index + 1) * 7);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 7);
+      return { start, end, label: formatDate(dateKey(start)) };
+    });
+  }, []);
+
+  const futureCapacityRows = useMemo(() => members.map((member) => ({
+    member,
+    weeks: futureCapacityWeeks.map((week) => {
+      const weekEnd = new Date(week.end);
+      weekEnd.setDate(weekEnd.getDate() - 1);
+      const firstDay = dateKey(week.start);
+      const lastDay = dateKey(weekEnd);
+      const plans = projects
+        .filter((project) => !['completed', 'on_hold'].includes(String(project.status || '')))
+        .flatMap((project) => (project.resourceAllocations || []).filter((plan) =>
+          String(plan.memberId) === String(member.id)
+          && plan.startDate <= lastDay
+          && plan.endDate >= firstDay
+        ));
+      const allocationPercent = plans.reduce((sum, plan) => sum + Number(plan.allocationPercent || 0), 0);
+      return {
+        allocationPercent,
+        plannedHours: allocationPercent * 0.4,
+        projectCount: plans.length
+      };
+    })
+  })), [members, projects, futureCapacityWeeks]);
 
   const capacityPageCount = Math.max(1, Math.ceil(capacityRows.length / capacityPageSize));
   const pagedCapacityRows = capacityRows.slice((capacityPage - 1) * capacityPageSize, capacityPage * capacityPageSize);
@@ -972,8 +1124,13 @@ export const AdminTeams: React.FC = () => {
       ]);
     } else if (currentView === 'capacity-allocation') {
       downloadCsv('kapitech-capacity-allocation.csv', [
-        ['Slug', 'Member', 'Role', ...weeklyCapacity.map((week) => week.label + ' utilization'), 'Current tracked hours'],
-        ...capacityRows.map((row) => [row.member.slug, row.member.name, row.member.role, ...row.weeks.map((week) => week.utilization + '%'), formatHours(row.weeks[row.weeks.length - 1]?.minutes || 0)])
+        ['Slug', 'Member', 'Role', ...weeklyCapacity.map((week) => week.label + ' tracked utilization'), 'Current tracked hours', ...futureCapacityWeeks.map((week) => week.label + ' planned allocation')],
+        ...capacityRows.map((row) => [
+          row.member.slug, row.member.name, row.member.role,
+          ...row.weeks.map((week) => week.utilization + '%'),
+          formatHours(row.weeks[row.weeks.length - 1]?.minutes || 0),
+          ...(futureCapacityRows.find((item) => item.member.id === row.member.id)?.weeks || []).map((week) => week.projectCount ? week.allocationPercent + '%' : 'No plan')
+        ])
       ]);
     } else if (currentView === 'skill-matrix') {
       downloadCsv('kapitech-skill-matrix.csv', [
@@ -1000,7 +1157,7 @@ export const AdminTeams: React.FC = () => {
     },
     'capacity-allocation': {
       title: 'Capacity & Allocation',
-      description: 'Review actual tracked workload against a 40-hour weekly planning baseline across the latest four weeks.'
+      description: 'Assign team members to projects, plan weekly allocation percentages with dates, and compare saved forecasts with historical time entries. Leave calendars are not connected.'
     },
     'skill-matrix': {
       title: 'Skill Matrix',
@@ -1022,6 +1179,9 @@ export const AdminTeams: React.FC = () => {
         description={pageCopy[currentView].description}
         actions={
           <>
+            {currentView === 'capacity-allocation' && (
+              <Link to="/admin/team" className="inline-flex h-9 items-center justify-center gap-2 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg"><UsersRound size={14} /> Team Directory</Link>
+            )}
             {currentView === 'vendor-directory' && (
               <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
                 <label className="relative w-full sm:w-[190px]">
@@ -1054,6 +1214,7 @@ export const AdminTeams: React.FC = () => {
                   <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
                   <input value={teamHeaderSearch} onChange={(event) => setTeamHeaderSearch(event.target.value)} placeholder="Search team..." aria-label="Search team" className="h-9 w-full rounded-control border border-line bg-bg pl-9 pr-3 text-xs text-fg outline-none placeholder:text-muted focus:border-accent" />
                 </label>
+                <Link to="/admin/team?view=capacity-allocation" className="inline-flex h-9 items-center justify-center gap-2 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg"><CalendarDays size={14} /> Capacity &amp; Allocation</Link>
                 <CustomSelect
                   value={teamDepartment}
                   onChange={setTeamDepartment}
@@ -1133,7 +1294,7 @@ export const AdminTeams: React.FC = () => {
                 slug: 'team-directory-kpi-headcount',
                 label: 'Total headcount',
                 value: teamMetrics.headcount,
-                context: (teamRows.filter((member) => memberAllocation(member).label === 'Allocated').length) + ' Allocated · ' + (teamMetrics.headcount - teamRows.filter((member) => memberAllocation(member).label === 'Allocated').length) + ' Bench',
+                context: (teamRows.filter((member) => memberAllocation(member).label === 'Time logged').length) + ' with tracked time · ' + (teamMetrics.headcount - teamRows.filter((member) => memberAllocation(member).label === 'Time logged').length) + ' without entries',
                 sparkline: [teamMetrics.headcount, members.length, teamRows.length],
                 icon: <UsersRound size={15} />
               },
@@ -1184,8 +1345,8 @@ export const AdminTeams: React.FC = () => {
                   onChange={setTeamStatus}
                   options={[
                     { value: 'all', label: 'Status: All' },
-                    { value: 'allocated', label: 'Allocated' },
-                    { value: 'bench', label: 'Available / Bench' },
+                    { value: 'allocated', label: 'Has time entries' },
+                    { value: 'bench', label: 'No time logged' },
                     { value: 'leave', label: 'On Leave' }
                   ]}
                   triggerClassName="h-9 min-h-9 w-full sm:w-[165px]"
@@ -1297,7 +1458,7 @@ export const AdminTeams: React.FC = () => {
                       <div><p className="text-muted">Active Projects</p><p className="mt-1 font-semibold tabular-nums text-fg">{projectsForMember.length}</p></div>
                     </div>
                     <div className="mt-4 rounded-control border border-line bg-bg p-3">
-                      <div className="flex items-center justify-between gap-2"><span className="text-[10px] text-muted">Allocation Status</span><span className="text-[11px] font-semibold text-fg">{allocation.label} · {allocation.percent}%</span></div>
+                      <div className="flex items-center justify-between gap-2"><span className="text-[10px] text-muted">Time tracking status</span><span className="text-[11px] font-semibold text-fg">{allocation.label} · {allocation.percent}%</span></div>
                       <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel"><div className="h-full rounded-full bg-accent" style={{ width: Math.min(100, allocation.percent) + '%' }} /></div>
                     </div>
                     <div className="mt-4 flex flex-wrap gap-1.5">
@@ -1505,20 +1666,20 @@ export const AdminTeams: React.FC = () => {
           <AdminMetricStrip
             metrics={[
               { id: 'utilization',
-                slug: 'capacity-allocation-kpi-utilization', label: 'Current utilization', value: currentCapacityStats.average.toFixed(1) + '%', context: 'Tracked vs 40h baseline', sparkline: capacityRows.slice(0, 8).map((row) => row.weeks[row.weeks.length - 1]?.utilization || 0), icon: <TrendingUp size={15} /> },
+                slug: 'capacity-allocation-kpi-utilization', label: 'Historical tracked utilization', value: currentCapacityStats.average.toFixed(1) + '%', context: 'Actual time entries vs 40h baseline', sparkline: capacityRows.slice(0, 8).map((row) => row.weeks[row.weeks.length - 1]?.utilization || 0), icon: <TrendingUp size={15} /> },
               { id: 'risk',
-                slug: 'capacity-allocation-kpi-risk', label: 'High workload risk', value: currentCapacityStats.highRisk, context: '>90% tracked load', sparkline: capacityRows.map((row) => row.weeks[row.weeks.length - 1]?.utilization || 0), icon: <AlertCircle size={15} className="text-danger" />, toneClassName: 'text-danger' },
+                slug: 'capacity-allocation-kpi-risk', label: 'High tracked hours', value: currentCapacityStats.highRisk, context: '>90% of weekly baseline recorded', sparkline: capacityRows.map((row) => row.weeks[row.weeks.length - 1]?.utilization || 0), icon: <AlertCircle size={15} className="text-danger" />, toneClassName: 'text-danger' },
               { id: 'allocated',
                 slug: 'capacity-allocation-kpi-tracked', label: 'Tracked this week', value: formatHours(currentCapacityStats.totalMinutes), context: currentCapacityStats.active + ' active contributors', sparkline: weeklyCapacity.map((week) => logs.filter((log) => { const date = new Date(log.date + 'T00:00:00'); return date >= week.start && date < week.end; }).reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0)), icon: <Timer size={15} /> },
               { id: 'baseline',
-                slug: 'capacity-allocation-kpi-baseline', label: 'Planning baseline', value: '40h', context: 'Per active member / week', sparkline: [40, 40, 40, 40], icon: <CalendarDays size={15} /> }
+                slug: 'capacity-allocation-kpi-baseline', label: 'Reference baseline', value: '40h', context: 'Comparison only, not planned capacity', sparkline: [40, 40, 40, 40], icon: <CalendarDays size={15} /> }
             ]}
           />
 
           <AdminPanel
             slug="capacity-allocation-table"
-            title="Capacity & allocation"
-            description={currentWeekCapacity ? 'Actual tracked allocation across ' + weeklyCapacity.map((week) => formatDate(dateKey(week.start))).join(' · ') : 'Four-week tracked capacity view.'}
+            title="Historical capacity & project assignments"
+            description={currentWeekCapacity ? 'Historical time entries across ' + weeklyCapacity.map((week) => formatDate(dateKey(week.start))).join(' · ') + '. Actuals are separate from planned allocations below.' : 'Four-week historical time view.'}
             className="overflow-hidden"
             actions={<span className="text-[10px] text-muted">No forecast values are fabricated; cells are based on recorded time.</span>}
           >
@@ -1554,6 +1715,37 @@ export const AdminTeams: React.FC = () => {
               </table>
             </div>
             <AdminTablePagination total={capacityRows.length} page={capacityPage} pageSize={capacityPageSize} onPageChange={setCapacityPage} onPageSizeChange={setCapacityPageSize} itemLabel="members" slug="capacity-allocation-pagination" />
+          </AdminPanel>
+
+          <AdminPanel slug="future-resource-allocation-plan" title="Upcoming resource allocation" description="Upcoming four weeks calculated from saved project-member plans. The 40-hour baseline is used to convert planned percentages into hours." className="overflow-hidden" actions={<span className="text-[10px] text-muted">No plan means unplanned, not automatically available.</span>}>
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="ams-teams-table min-w-[1080px] table-fixed">
+                <thead><tr>
+                  <th className="w-[24%]">Resource & role</th>
+                  {futureCapacityWeeks.map((week) => <th key={week.label} className="w-[19%] text-center">{week.label}</th>)}
+                </tr></thead>
+                <tbody>
+                  {futureCapacityRows.map((row) => (
+                    <tr key={row.member.id}>
+                      <td><p className="font-medium text-fg">{row.member.name}</p><p className="mt-1 text-[10px] text-muted">{row.member.role} · {row.member.division}</p></td>
+                      {row.weeks.map((week, index) => (
+                        <td key={index} className="text-center">
+                          <div className={'rounded-control border px-3 py-2 ' + (week.allocationPercent > 100 ? 'border-danger/30 bg-danger/5' : 'border-line bg-bg')}>
+                            <div className="flex items-center justify-between gap-2 text-xs">
+                              <span className={'font-semibold tabular-nums ' + (week.allocationPercent > 100 ? 'text-danger' : 'text-fg')}>{week.projectCount ? week.allocationPercent + '%' : '—'}</span>
+                              <span className="text-[10px] tabular-nums text-muted">{week.projectCount ? week.plannedHours.toFixed(1) + 'h' : 'No plan'}</span>
+                            </div>
+                            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel"><div className={'h-full rounded-full ' + (week.allocationPercent > 100 ? 'bg-danger' : 'bg-series-4')} style={{ width: Math.min(100, week.allocationPercent) + '%' }} /></div>
+                            <p className="mt-1 text-left text-[9px] text-muted">{week.projectCount ? week.projectCount + ' planned project(s)' : 'Not scheduled'}</p>
+                          </div>
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {!futureCapacityRows.some((row) => row.weeks.some((week) => week.projectCount > 0)) && <div className="border-t border-line px-4 py-4 text-xs leading-5 text-muted">No dated resource plans saved for the next four weeks. Open Team Directory, choose Allocate, assign the member to a project, then enter the planned percentage and date range.</div>}
           </AdminPanel>
         </div>
       ) : currentView === 'skill-matrix' ? (
@@ -1801,11 +1993,11 @@ export const AdminTeams: React.FC = () => {
         )}
       </Modal>
 
-      <Modal
+      <Drawer
         open={Boolean(allocationTarget)}
         onClose={() => setAllocationTarget(null)}
         title="Allocate Team Member"
-        description={allocationTarget ? 'Current allocation for ' + allocationTarget.name + '. Allocation controls are presented from existing project data.' : undefined}
+        description={allocationTarget ? 'Assign or remove ' + allocationTarget.name + ' from active projects. Time-tracked hours below are historical actuals, not a forecast.' : undefined}
         size="lg"
       >
         {allocationTarget && (
@@ -1819,22 +2011,65 @@ export const AdminTeams: React.FC = () => {
                 <span className="font-mono text-[9px] text-muted">{allocationTarget.slug}</span>
               </div>
               <div className="mt-3">
-                <p className="text-[10px] text-muted">Current workload</p>
+                <p className="text-[10px] text-muted">Time tracked this week · 40h reference</p>
                 <p className="mt-1 text-lg font-semibold tabular-nums text-fg">{memberAllocation(allocationTarget).percent}%</p>
               </div>
             </div>
             <div className="rounded-control border border-line bg-bg p-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-muted">Available active projects</p>
-              <div className="mt-2 space-y-2">
-                {projects.filter((project) => project.status !== 'completed').slice(0, 8).map((project) => (
-                  <div key={project.id} className="flex items-center justify-between gap-3 rounded-control border border-line bg-panel px-3 py-2">
-                    <div className="min-w-0">
-                      <p className="truncate text-xs font-medium text-fg">{project.name}</p>
-                      <p className="mt-1 text-[10px] text-muted">{project.clientName || project.clientCompany || 'Active project'}</p>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-muted">Project assignment & planned allocation</p>
+                <span className="text-[10px] text-muted">{memberProjects(allocationTarget).length} assigned</span>
+              </div>
+              <p className="mt-1 text-[10px] leading-4 text-muted">Assign this member to a project, then set the planned weekly allocation and dates. The forecast is based only on the saved plans below; leave calendars are not connected.</p>
+              <div className="mt-3 space-y-3">
+                {projects.filter((project) => project.status !== 'completed').length ? projects.filter((project) => project.status !== 'completed').slice(0, 12).map((project) => {
+                  const identifiers = new Set([allocationTarget.id, allocationTarget.name, allocationTarget.username].map((value) => String(value || '').trim().toLowerCase()).filter(Boolean));
+                  const memberEntries = Array.isArray(project.teamMembers) ? project.teamMembers.map(String) : [];
+                  const isAssigned = memberEntries.some((value) => identifiers.has(value.trim().toLowerCase()));
+                  const isLead = identifiers.has(String(project.teamLead || '').trim().toLowerCase());
+                  const plan = (project.resourceAllocations || []).find((item) => item.memberId === allocationTarget.id);
+                  const key = allocationPlanKey(project.id, allocationTarget.id);
+                  const draft = allocationPlanDrafts[key] || {
+                    allocationPercent: plan ? String(plan.allocationPercent) : '',
+                    startDate: plan?.startDate || project.startDate || dateKey(new Date()),
+                    endDate: plan?.endDate || project.targetEndDate || ''
+                  };
+                  const planned = Boolean(plan);
+                  return (
+                    <div key={project.id} className="rounded-control border border-line bg-panel px-3 py-3">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-medium text-fg">{project.name}</p>
+                          <p className="mt-1 text-[10px] text-muted">{project.clientName || project.clientCompany || 'Client not linked'} · {project.status || 'Active'} · Due {formatDate(project.targetEndDate || '')}</p>
+                          <p className="mt-1 text-[10px] text-muted">{planned ? 'Planned at ' + plan.allocationPercent + '% from ' + formatDate(plan.startDate) + ' to ' + formatDate(plan.endDate) : 'No dated allocation plan saved'}</p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <span className={'rounded-badge border px-2 py-1 text-[10px] font-medium ' + (isLead || isAssigned ? 'border-success/20 bg-success/10 text-success' : 'border-line bg-bg text-muted')}>{isLead ? 'Project lead' : isAssigned ? 'Assigned' : 'Unassigned'}</span>
+                          <Button type="button" variant={isAssigned ? 'secondary' : 'primary'} className="h-8 px-2 text-[10px]" onClick={() => void toggleProjectAssignment(project)} disabled={!canManageProjects || isLead || Boolean(allocationSavingProjectId)} loading={allocationSavingProjectId === project.id}>{isLead ? 'Lead' : isAssigned ? 'Remove' : 'Assign'}</Button>
+                        </div>
+                      </div>
+                      {(isAssigned || isLead) && (
+                        <div className="mt-3 grid gap-2 sm:grid-cols-4">
+                          <label className="space-y-1">
+                            <span className="text-[10px] text-muted">Planned weekly allocation (%)</span>
+                            <input type="number" min="1" max="100" step="1" value={draft.allocationPercent} onChange={(event) => updateAllocationPlanDraft(key, { allocationPercent: event.target.value })} className="ams-control w-full" placeholder="1–100" aria-label={'Planned allocation percentage for ' + project.name} disabled={!canManageProjects} />
+                          </label>
+                          <label className="space-y-1">
+                            <span className="text-[10px] text-muted">Plan start</span>
+                            <input type="date" value={draft.startDate} onChange={(event) => updateAllocationPlanDraft(key, { startDate: event.target.value })} className="ams-control w-full" aria-label={'Allocation start date for ' + project.name} disabled={!canManageProjects} />
+                          </label>
+                          <label className="space-y-1">
+                            <span className="text-[10px] text-muted">Plan end</span>
+                            <input type="date" value={draft.endDate} min={draft.startDate || undefined} onChange={(event) => updateAllocationPlanDraft(key, { endDate: event.target.value })} className="ams-control w-full" aria-label={'Allocation end date for ' + project.name} disabled={!canManageProjects} />
+                          </label>
+                          <div className="flex items-end">
+                            <Button type="button" variant="secondary" className="h-9 w-full justify-center px-2 text-[10px]" onClick={() => void saveResourcePlan(project)} disabled={!canManageProjects || Boolean(allocationSavingProjectId)} loading={allocationSavingProjectId === project.id}>{planned ? 'Update plan' : 'Save plan'}</Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <span className="font-mono text-[9px] text-muted">{project.slug}</span>
-                  </div>
-                ))}
+                  );
+                }) : <p className="rounded-control border border-dashed border-line px-3 py-6 text-center text-xs text-muted">No active projects are available for assignment.</p>}
               </div>
             </div>
             <div className="flex justify-end gap-2 border-t border-line pt-4">
@@ -1843,7 +2078,7 @@ export const AdminTeams: React.FC = () => {
             </div>
           </div>
         )}
-      </Modal>
+      </Drawer>
 
       <Drawer
         open={vendorFormOpen}

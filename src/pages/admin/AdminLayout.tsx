@@ -60,6 +60,7 @@ const STITCH_NAV_ITEMS: AdminNavItem[] = [
   { key: 'inbox', to: '/admin/inbox', label: 'Inbox', icon: Inbox, accessKey: 'inbox', requiredTier: 2, group: 'Sales & Clients' },
   { key: 'crm', to: '/admin/crm', label: 'CRM & Pipeline', icon: Briefcase, accessKey: 'crm', requiredTier: 3, group: 'Sales & Clients' },
   { key: 'proposals', to: '/admin/proposals', label: 'Proposals & Quotes', icon: FileText, accessKey: 'proposals', requiredTier: 3, group: 'Sales & Clients' },
+  { key: 'contracts', to: '/admin/contracts', label: 'Contracts & SOW', icon: FileText, requiredTier: 3, group: 'Sales & Clients' },
   { key: 'clients', to: '/admin/clients/all-clients', label: 'Clients & Accounts', icon: UsersRound, requiredTier: 3, group: 'Sales & Clients' },
   { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, requiredTier: 3, group: 'Delivery' },
   { key: 'tasks', to: '/admin/tasks', label: 'Tasks', icon: ClipboardCheck, accessKey: 'projects', requiredTier: 3, group: 'Delivery' },
