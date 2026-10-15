@@ -2906,7 +2906,12 @@ apiRouter.put('/clients/:id', requireAuth, requirePermission('canManageClients')
     if (patch.retainerTier !== undefined && !['tier-1','tier-2','tier-3'].includes(String(patch.retainerTier))) { res.status(400).json({ success: false, error: 'Invalid retainer tier.' }); return; }
     if (patch.retainerCycle !== undefined && !['monthly','quarterly','annual'].includes(String(patch.retainerCycle))) { res.status(400).json({ success: false, error: 'Invalid retainer cycle.' }); return; }
     if (patch.retainerRenewal !== undefined && !isValidDate(patch.retainerRenewal)) { res.status(400).json({ success: false, error: 'Invalid retainer renewal date.' }); return; }
-    const updated = await postgresClientRepository.update(id, patch as any, makeAuditEntry(req, 'CLIENT_UPDATED', `Updated client ${id}.`, 'info'));
+    const updated = await postgresClientRepository.update(
+      id,
+      patch as any,
+      makeAuditEntry(req, 'CLIENT_UPDATED', `Updated client ${id}.`, 'info'),
+      { userId: req.user!.id, name: req.user!.name || req.user!.username }
+    );
     if (!updated) { res.status(404).json({ success: false, error: 'Client not found.' }); return; }
         res.json({ success: true, client: updated });
     return;
@@ -2951,10 +2956,27 @@ apiRouter.put('/clients/:id', requireAuth, requirePermission('canManageClients')
   if (patch.retainerTier !== undefined && !['tier-1','tier-2','tier-3'].includes(String(patch.retainerTier))) { res.status(400).json({ success: false, error: 'Invalid retainer tier.' }); return; }
   if (patch.retainerCycle !== undefined && !['monthly','quarterly','annual'].includes(String(patch.retainerCycle))) { res.status(400).json({ success: false, error: 'Invalid retainer cycle.' }); return; }
   if (patch.retainerRenewal !== undefined && !isValidDate(patch.retainerRenewal)) { res.status(400).json({ success: false, error: 'Invalid retainer renewal date.' }); return; }
+  const previousClient = db!.clients[idx];
   const updatedAt = new Date().toISOString();
-  const updatedClient = { ...db!.clients[idx], ...patch, updatedAt };
+  const updatedClient = { ...previousClient, ...patch, updatedAt };
   if (!updatedClient) { res.status(404).json({ success: false, error: 'Client not found.' }); return; }
   db!.clients[idx] = updatedClient;
+  const previousStatus = String(previousClient.status || 'lead') === 'prospect' ? 'lead' : String(previousClient.status || 'lead') === 'on_hold' ? 'inactive' : String(previousClient.status || 'lead');
+  const nextStatus = String(updatedClient.status || 'lead') === 'prospect' ? 'lead' : String(updatedClient.status || 'lead') === 'on_hold' ? 'inactive' : String(updatedClient.status || 'lead');
+  if (previousStatus !== nextStatus) {
+    const onboardingCompleted = previousStatus === 'lead' && nextStatus === 'active';
+    appendJsonClientSystemTimelineEvent(db!, {
+      clientId: id,
+      systemAction: 'client_status_changed',
+      sourceReferenceId: 'client-status:' + id + ':' + updatedAt,
+      subject: onboardingCompleted ? 'Client onboarding moved to Active' : 'Client status changed to ' + nextStatus.replace(/_/g, ' '),
+      summary: 'Client status changed from ' + previousStatus.replace(/_/g, ' ') + ' to ' + nextStatus.replace(/_/g, ' ') + '.',
+      contactName: String(updatedClient.name || updatedClient.company || ''),
+      outcome: onboardingCompleted ? 'Client moved from onboarding to active account status.' : '',
+      occurredAt: updatedAt,
+      ...clientSystemActor(req)
+    });
+  }
   saveDatabase(db!);
   recordAuditLog({
     action: 'CLIENT_UPDATED',
