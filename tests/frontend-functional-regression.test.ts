@@ -120,7 +120,8 @@ test('AMS navigation uses flat role-based groups and keeps module actions within
   assert.ok(app.includes('path="navigation/live-activity"'));
   assert.ok(app.includes('path="navigation/release-readiness"'));
 
-  assert.ok(layout.includes('data-ams-slug="active-module-title"'));
+  assert.equal(layout.includes('data-ams-slug="active-module-title"'), false, 'Global topbar contains no module navigation.');
+  assert.ok(layout.includes('ariaLabel="Workspace navigation"'));
   assert.ok(layout.includes('Search Everything'));
   assert.ok(layout.includes('GlobalTimerControl'));
   assert.ok(layout.includes('AdminNotificationCenter'));
