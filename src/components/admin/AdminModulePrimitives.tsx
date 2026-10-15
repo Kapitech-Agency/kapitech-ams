@@ -46,7 +46,7 @@ export interface AdminSectionTabsProps {
 
 function canRenderNavigationTab(item: AdminSectionTabItem): boolean {
   const session = getAdminSession();
-  if (!session?.user) return !item.permission || hasAdminPermission(item.permission);
+  if (!session?.user) return !item.permission || hasAdminPermission(item.permission as Parameters<typeof hasAdminPermission>[0]);
 
   const target = new URL(item.to, 'https://ams.kapitech.local');
   const role = getAmsRole(session.user.role);
