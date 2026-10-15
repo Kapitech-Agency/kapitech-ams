@@ -512,7 +512,7 @@ test('Contracts & SOW has a persisted lifecycle workflow and clear commercial na
   const api = await read('src/lib/apiClient.ts');
   const routes = await read('server/routes.ts');
   const repository = await read('server/postgres-contract-repository.ts');
-  const migration = await read('db/postgres/047_client_contracts_and_sow.sql');
+  const migration = await read('db/postgres/055_client_contracts_and_sow.sql');
 
   assert.ok(layout.includes("key: 'contracts'") && layout.includes("label: 'Contracts & SOW'"));
   assert.ok(app.includes("path=\"contracts\"") && app.includes('<AdminContracts />'));
