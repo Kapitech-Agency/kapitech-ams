@@ -89,6 +89,10 @@ type ProjectRecord = {
   teamMembers?: string[];
   tasks?: ProjectTaskRecord[];
   techStack?: string[];
+  startDate?: string;
+  targetEndDate?: string;
+  clientName?: string;
+  clientCompany?: string;
 };
 
 type TimeLog = {
@@ -299,6 +303,7 @@ export const AdminTeams: React.FC = () => {
       : requestedView === 'capacity-allocation' ? 'capacity-allocation' : 'team-directory';
 
   const canManageVendors = hasAdminPermission('canManageVendors');
+  const canManageProjects = hasAdminPermission('canManageProjects');
   const canManageTimeLogs = hasAdminPermission('canManageProjects') || hasAdminPermission('canManageKanbanTasks');
   const canDeleteAllTimeLogs = hasAdminPermission('canManageProjects');
   const canManageAdminAccounts = hasAdminPermission('canManageAdminAccounts');
@@ -320,6 +325,7 @@ export const AdminTeams: React.FC = () => {
   const [teamPageSize, setTeamPageSize] = useState(10);
   const [memberDetail, setMemberDetail] = useState<TeamMember | null>(null);
   const [allocationTarget, setAllocationTarget] = useState<TeamMember | null>(null);
+  const [allocationSavingProjectId, setAllocationSavingProjectId] = useState('');
 
   const [vendorHeaderSearch, setVendorHeaderSearch] = useState('');
   const [vendorHeaderCategory, setVendorHeaderCategory] = useState('all');
@@ -498,8 +504,8 @@ export const AdminTeams: React.FC = () => {
     const percent = Math.min(160, Math.round((minutes / (40 * 60)) * 100));
     const status = String(member.status || '').toLowerCase();
     if (status.includes('leave')) return { label: 'On Leave', tone: 'warning', percent };
-    if (percent > 0) return { label: 'Allocated', tone: 'success', percent };
-    return { label: 'Available / Bench', tone: 'warning', percent: 0 };
+    if (percent > 0) return { label: 'Time logged', tone: 'success', percent };
+    return { label: 'No time logged', tone: 'warning', percent: 0 };
   };
 
   const memberProjects = (member: TeamMember) => projects.filter((project) => {
@@ -530,8 +536,8 @@ export const AdminTeams: React.FC = () => {
       const matchesPod = teamPod === 'all' || projectsForMember.some((project) => project.name === teamPod);
       const matchesStatus =
         teamStatus === 'all' ||
-        (teamStatus === 'allocated' && allocation.label === 'Allocated') ||
-        (teamStatus === 'bench' && allocation.label === 'Available / Bench') ||
+        (teamStatus === 'allocated' && allocation.label === 'Time logged') ||
+        (teamStatus === 'bench' && allocation.label === 'No time logged') ||
         (teamStatus === 'leave' && allocation.label === 'On Leave');
       return matchesHeaderSearch && matchesToolbarSearch && matchesDepartment && matchesPod && matchesStatus;
     });
@@ -1000,7 +1006,7 @@ export const AdminTeams: React.FC = () => {
     },
     'capacity-allocation': {
       title: 'Capacity & Allocation',
-      description: 'Review actual tracked workload against a 40-hour weekly planning baseline across the latest four weeks.'
+      description: 'Review historical time entries against a 40-hour weekly baseline, and assign team members to active projects. Forecast hours and leave calendars are not yet tracked.'
     },
     'skill-matrix': {
       title: 'Skill Matrix',
@@ -1133,7 +1139,7 @@ export const AdminTeams: React.FC = () => {
                 slug: 'team-directory-kpi-headcount',
                 label: 'Total headcount',
                 value: teamMetrics.headcount,
-                context: (teamRows.filter((member) => memberAllocation(member).label === 'Allocated').length) + ' Allocated · ' + (teamMetrics.headcount - teamRows.filter((member) => memberAllocation(member).label === 'Allocated').length) + ' Bench',
+                context: (teamRows.filter((member) => memberAllocation(member).label === 'Time logged').length) + ' with tracked time · ' + (teamMetrics.headcount - teamRows.filter((member) => memberAllocation(member).label === 'Time logged').length) + ' without entries',
                 sparkline: [teamMetrics.headcount, members.length, teamRows.length],
                 icon: <UsersRound size={15} />
               },
@@ -1184,8 +1190,8 @@ export const AdminTeams: React.FC = () => {
                   onChange={setTeamStatus}
                   options={[
                     { value: 'all', label: 'Status: All' },
-                    { value: 'allocated', label: 'Allocated' },
-                    { value: 'bench', label: 'Available / Bench' },
+                    { value: 'allocated', label: 'Has time entries' },
+                    { value: 'bench', label: 'No time logged' },
                     { value: 'leave', label: 'On Leave' }
                   ]}
                   triggerClassName="h-9 min-h-9 w-full sm:w-[165px]"
@@ -1297,7 +1303,7 @@ export const AdminTeams: React.FC = () => {
                       <div><p className="text-muted">Active Projects</p><p className="mt-1 font-semibold tabular-nums text-fg">{projectsForMember.length}</p></div>
                     </div>
                     <div className="mt-4 rounded-control border border-line bg-bg p-3">
-                      <div className="flex items-center justify-between gap-2"><span className="text-[10px] text-muted">Allocation Status</span><span className="text-[11px] font-semibold text-fg">{allocation.label} · {allocation.percent}%</span></div>
+                      <div className="flex items-center justify-between gap-2"><span className="text-[10px] text-muted">Time tracking status</span><span className="text-[11px] font-semibold text-fg">{allocation.label} · {allocation.percent}%</span></div>
                       <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel"><div className="h-full rounded-full bg-accent" style={{ width: Math.min(100, allocation.percent) + '%' }} /></div>
                     </div>
                     <div className="mt-4 flex flex-wrap gap-1.5">
@@ -1505,20 +1511,20 @@ export const AdminTeams: React.FC = () => {
           <AdminMetricStrip
             metrics={[
               { id: 'utilization',
-                slug: 'capacity-allocation-kpi-utilization', label: 'Current utilization', value: currentCapacityStats.average.toFixed(1) + '%', context: 'Tracked vs 40h baseline', sparkline: capacityRows.slice(0, 8).map((row) => row.weeks[row.weeks.length - 1]?.utilization || 0), icon: <TrendingUp size={15} /> },
+                slug: 'capacity-allocation-kpi-utilization', label: 'Historical tracked utilization', value: currentCapacityStats.average.toFixed(1) + '%', context: 'Actual time entries vs 40h baseline', sparkline: capacityRows.slice(0, 8).map((row) => row.weeks[row.weeks.length - 1]?.utilization || 0), icon: <TrendingUp size={15} /> },
               { id: 'risk',
-                slug: 'capacity-allocation-kpi-risk', label: 'High workload risk', value: currentCapacityStats.highRisk, context: '>90% tracked load', sparkline: capacityRows.map((row) => row.weeks[row.weeks.length - 1]?.utilization || 0), icon: <AlertCircle size={15} className="text-danger" />, toneClassName: 'text-danger' },
+                slug: 'capacity-allocation-kpi-risk', label: 'High tracked hours', value: currentCapacityStats.highRisk, context: '>90% of weekly baseline recorded', sparkline: capacityRows.map((row) => row.weeks[row.weeks.length - 1]?.utilization || 0), icon: <AlertCircle size={15} className="text-danger" />, toneClassName: 'text-danger' },
               { id: 'allocated',
                 slug: 'capacity-allocation-kpi-tracked', label: 'Tracked this week', value: formatHours(currentCapacityStats.totalMinutes), context: currentCapacityStats.active + ' active contributors', sparkline: weeklyCapacity.map((week) => logs.filter((log) => { const date = new Date(log.date + 'T00:00:00'); return date >= week.start && date < week.end; }).reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0)), icon: <Timer size={15} /> },
               { id: 'baseline',
-                slug: 'capacity-allocation-kpi-baseline', label: 'Planning baseline', value: '40h', context: 'Per active member / week', sparkline: [40, 40, 40, 40], icon: <CalendarDays size={15} /> }
+                slug: 'capacity-allocation-kpi-baseline', label: 'Reference baseline', value: '40h', context: 'Comparison only, not planned capacity', sparkline: [40, 40, 40, 40], icon: <CalendarDays size={15} /> }
             ]}
           />
 
           <AdminPanel
             slug="capacity-allocation-table"
-            title="Capacity & allocation"
-            description={currentWeekCapacity ? 'Actual tracked allocation across ' + weeklyCapacity.map((week) => formatDate(dateKey(week.start))).join(' · ') : 'Four-week tracked capacity view.'}
+            title="Historical capacity & project assignments"
+            description={currentWeekCapacity ? 'Recorded time across ' + weeklyCapacity.map((week) => formatDate(dateKey(week.start))).join(' · ') + '. Assignments are saved on each project; these historical percentages are not forecasts.' : 'Four-week historical time view.'}
             className="overflow-hidden"
             actions={<span className="text-[10px] text-muted">No forecast values are fabricated; cells are based on recorded time.</span>}
           >
@@ -1819,7 +1825,7 @@ export const AdminTeams: React.FC = () => {
                 <span className="font-mono text-[9px] text-muted">{allocationTarget.slug}</span>
               </div>
               <div className="mt-3">
-                <p className="text-[10px] text-muted">Current workload</p>
+                <p className="text-[10px] text-muted">Time tracked this week · 40h reference</p>
                 <p className="mt-1 text-lg font-semibold tabular-nums text-fg">{memberAllocation(allocationTarget).percent}%</p>
               </div>
             </div>
