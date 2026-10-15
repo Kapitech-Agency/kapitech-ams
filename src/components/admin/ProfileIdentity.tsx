@@ -7,6 +7,7 @@ import {
   Copy,
   ExternalLink,
   Mail,
+  LogOut,
   Phone,
   UserRound,
 } from 'lucide-react';
@@ -39,6 +40,7 @@ interface ProfileIdentityProps {
   className?: string;
   showRole?: boolean;
   onEdit?: () => void;
+  onLogout?: () => void;
   directOpen?: boolean;
   slug?: string;
 }
@@ -97,6 +99,7 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
   className,
   showRole = true,
   onEdit,
+  onLogout,
   directOpen = false,
   slug = 'profile',
 }) => {
@@ -314,6 +317,20 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
                 }}
               >
                 Edit profile
+              </Button>
+            )}
+            {onLogout && (
+              <Button
+                type="button"
+                variant="destructive"
+                slug={slug + '-public-logout'}
+                icon={<LogOut size={14} />}
+                onClick={() => {
+                  closeAll();
+                  onLogout();
+                }}
+              >
+                Sign out
               </Button>
             )}
           </>
