@@ -271,3 +271,17 @@ test('Project management provides an in-place Gantt timeline using existing proj
   assert.ok(projects.includes('projects={filteredProjects}'));
   assert.ok(projects.includes('onOpenProject={openProjectDetail}'));
 });
+
+
+test('Tasks workspace shows an assignee workload and risk overview linked to the existing task queue', () => {
+  const tasks = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/TasksWorkspace.tsx'), 'utf8');
+
+  assert.ok(tasks.includes('data-ams-feature-slug="tasks-workload-distribution"'));
+  assert.ok(tasks.includes('const workloadByAssignee = useMemo<WorkloadItem[]>'));
+  assert.ok(tasks.includes('bucket.overdue += 1'));
+  assert.ok(tasks.includes('bucket.blocked += 1'));
+  assert.ok(tasks.includes('setAssigneeFilter(owner.filterValue)'));
+  assert.ok(tasks.includes("nextParams.delete('taskscope')"));
+  assert.ok(tasks.includes("value: '__unassigned__'"));
+  assert.ok(tasks.includes('They do not represent available hours or individual capacity.'));
+});

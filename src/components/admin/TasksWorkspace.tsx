@@ -198,7 +198,7 @@ const scopeLabels: Record<string, string> = {
 
 export const TasksWorkspace: React.FC = () => {
   const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const taskScope = scopeLabels[searchParams.get('taskscope') || 'all'] ? (searchParams.get('taskscope') || 'all') : 'all';
   const currentUser = getAdminSession()?.user;
   const canManageTasks = hasAdminPermission('canManageKanbanTasks');
@@ -566,7 +566,10 @@ export const TasksWorkspace: React.FC = () => {
         (projectFilter === 'all' || task.projectId === projectFilter) &&
         (priorityFilter === 'all' || task.priority === priorityFilter) &&
         (statusFilter === 'all' || task.status === statusFilter) &&
-        (assigneeFilter === 'all' || task.assigneeId === assigneeFilter || task.assignee === assigneeFilter);
+        (assigneeFilter === 'all' ||
+          (assigneeFilter === '__unassigned__'
+            ? (!task.assigneeId.trim() || task.assignee.trim().toLowerCase() === 'unassigned')
+            : task.assigneeId === assigneeFilter || task.assignee === assigneeFilter));
     });
 
     return filtered.sort((a, b) => {
@@ -603,6 +606,69 @@ export const TasksWorkspace: React.FC = () => {
     blocked: scopedRecords.filter(task => task.blocked).length,
     highPriority: scopedRecords.filter(task => ['high', 'urgent'].includes(task.priority)).length,
   }), [scopedRecords]);
+
+  type WorkloadItem = {
+    key: string;
+    filterValue: string;
+    name: string;
+    open: number;
+    highPriority: number;
+    overdue: number;
+    blocked: number;
+  };
+
+  const workloadByAssignee = useMemo<WorkloadItem[]>(() => {
+    const buckets = new Map<string, WorkloadItem>();
+    records.forEach(task => {
+      if (!matchesDate(task.dueDate || task.createdAt) || task.status === 'done') return;
+
+      const isUnassigned = !task.assigneeId.trim() || task.assignee.trim().toLowerCase() === 'unassigned';
+      const filterValue = isUnassigned ? '__unassigned__' : task.assigneeId || task.assignee;
+      const key = isUnassigned ? '__unassigned__' : filterValue.trim().toLowerCase();
+      let bucket = buckets.get(key);
+      if (!bucket) {
+        bucket = {
+          key,
+          filterValue,
+          name: isUnassigned ? 'Unassigned' : task.assignee || 'Assigned user',
+          open: 0,
+          highPriority: 0,
+          overdue: 0,
+          blocked: 0,
+        };
+        buckets.set(key, bucket);
+      }
+
+      bucket.open += 1;
+      if (task.priority === 'high' || task.priority === 'urgent') bucket.highPriority += 1;
+      if (taskDueState(task) === 'overdue') bucket.overdue += 1;
+      if (task.blocked) bucket.blocked += 1;
+    });
+
+    return Array.from(buckets.values())
+      .sort((a, b) => b.overdue - a.overdue || b.blocked - a.blocked || b.open - a.open || a.name.localeCompare(b.name))
+      .slice(0, 6);
+  }, [records, matchesDate]);
+
+  const workloadMaxOpen = Math.max(1, ...workloadByAssignee.map(item => item.open));
+
+  const selectWorkloadOwner = (owner: WorkloadItem) => {
+    setQuery('');
+    setProjectFilter('all');
+    setPriorityFilter('all');
+    setStatusFilter('all');
+    setAssigneeFilter(owner.filterValue);
+    setSortKey('priority');
+    setSortDirection('desc');
+    setSelectedIds([]);
+    setPage(1);
+
+    if (searchParams.has('taskscope')) {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete('taskscope');
+      setSearchParams(nextParams);
+    }
+  };
 
   const clearFilters = () => {
     setQuery('');
@@ -1005,6 +1071,55 @@ export const TasksWorkspace: React.FC = () => {
         />
       </div>
 
+      {!loading && workloadByAssignee.length > 0 && (
+        <AdminPanel
+          title="Team workload"
+          description="Open task volume and delivery risk by assignee for the selected reporting period."
+          slug="tasks-team-workload"
+          bodyClassName="p-3 sm:p-4"
+          actions={<span className="text-[10px] text-muted">Task count, not logged hours</span>}
+        >
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3" data-ams-feature-slug="tasks-workload-distribution">
+            {workloadByAssignee.map(owner => (
+              <button
+                key={owner.key}
+                type="button"
+                onClick={() => selectWorkloadOwner(owner)}
+                aria-label={'View all open tasks for ' + owner.name}
+                data-ams-slug={'tasks-workload-owner-' + slugify(owner.key)}
+                className="group min-w-0 rounded-control border border-line bg-bg p-3 text-left transition-colors hover:border-accent/35 hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="truncate text-xs font-semibold text-fg">{owner.name}</div>
+                    <div className="mt-1 text-[10px] text-muted">{owner.open} open {owner.open === 1 ? 'task' : 'tasks'}</div>
+                  </div>
+                  <span className="shrink-0 rounded-badge border border-line bg-panel px-2 py-1 text-[10px] font-semibold tabular-nums text-fg">
+                    {owner.open}
+                  </span>
+                </div>
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-line" aria-hidden="true">
+                  <div className="h-full rounded-full bg-accent transition-[width] duration-200" style={{ width: Math.max(5, owner.open / workloadMaxOpen * 100) + '%' }} />
+                </div>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {owner.highPriority > 0 && <span className="rounded-badge border border-warning/25 bg-warning/10 px-1.5 py-1 text-[9px] font-medium text-warning">{owner.highPriority} high/urgent</span>}
+                  {owner.overdue > 0 && <span className="rounded-badge border border-danger/25 bg-danger/10 px-1.5 py-1 text-[9px] font-medium text-danger">{owner.overdue} overdue</span>}
+                  {owner.blocked > 0 && <span className="rounded-badge border border-danger/25 bg-danger/10 px-1.5 py-1 text-[9px] font-medium text-danger">{owner.blocked} blocked</span>}
+                  {owner.highPriority === 0 && owner.overdue === 0 && owner.blocked === 0 && <span className="text-[10px] text-muted">No priority or blocker signals</span>}
+                </div>
+                <div className="mt-3 flex items-center justify-between border-t border-line pt-2 text-[10px] text-muted">
+                  <span>Open owner queue</span>
+                  <ArrowUpRight size={12} className="transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                </div>
+              </button>
+            ))}
+          </div>
+          <p className="mt-3 text-[10px] leading-4 text-muted">
+            Bars compare open task counts across assignees in this view. They do not represent available hours or individual capacity.
+          </p>
+        </AdminPanel>
+      )}
+
       <AdminPanel
         title={scopeLabel}
         description="Operational task queue linked to project delivery and team assignment."
@@ -1035,7 +1150,7 @@ export const TasksWorkspace: React.FC = () => {
                 <CustomSelect value={statusFilter} onChange={setStatusFilter} options={[{ value: 'all', label: 'All statuses' }, ...Object.entries(taskStatusLabel).map(([value, label]) => ({ value, label }))]} triggerClassName="h-9 min-h-9 w-full sm:w-[145px]" />
               </span>
               <span data-ams-slug="tasks-filter-assignee">
-                <CustomSelect value={assigneeFilter} onChange={setAssigneeFilter} options={[{ value: 'all', label: 'All assignees' }, ...assignees.map(item => ({ value: item.id, label: item.name }))]} triggerClassName="h-9 min-h-9 w-full sm:w-[155px]" />
+                <CustomSelect value={assigneeFilter} onChange={setAssigneeFilter} options={[{ value: 'all', label: 'All assignees' }, { value: '__unassigned__', label: 'Unassigned' }, ...assignees.map(item => ({ value: item.id, label: item.name }))]} triggerClassName="h-9 min-h-9 w-full sm:w-[155px]" />
               </span>
               <button
                 type="button"
