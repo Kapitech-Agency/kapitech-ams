@@ -135,6 +135,11 @@ const AdminTimeLogs = lazyWithRetry(
   'admin-time-logs'
 );
 
+const AdminContracts = lazyWithRetry(
+  () => import('./pages/admin/AdminContracts').then((m) => ({ default: m.AdminContracts })),
+  'admin-contracts'
+);
+
 const AdminClients = lazyWithRetry(
   () => import('./pages/admin/AdminClients').then((m) => ({ default: m.AdminClients })),
   'admin-clients'
@@ -380,6 +385,7 @@ const App = () => {
                 <Route path="inbox" element={<ModuleRoute moduleKey="inbox" moduleLabel="the inbox"><AdminInbox /></ModuleRoute>} />
                 <Route path="crm" element={<ModuleRoute moduleKey="crm" moduleLabel="CRM"><AdminClientLeadAccounts /></ModuleRoute>} />
                 <Route path="proposals" element={<ModuleRoute moduleKey="proposals" moduleLabel="Proposals"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />
+                <Route path="contracts" element={<ModuleRoute moduleKey="clients" moduleLabel="contracts"><AdminContracts /></ModuleRoute>} />
                 <Route path="finance" element={<ModuleRoute moduleKey="invoicing" moduleLabel="finance"><AdminFinanceWorkspace /></ModuleRoute>} />
                 <Route path="invoicing" element={<LegacyInvoicingRedirect />} />
                 <Route path="projects" element={<ModuleRoute moduleKey="projects" moduleLabel="projects"><AdminProjects /></ModuleRoute>} />
