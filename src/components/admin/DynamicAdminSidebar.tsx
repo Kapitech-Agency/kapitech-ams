@@ -117,7 +117,7 @@ export const DynamicAdminSidebarNavigation: React.FC<DynamicAdminSidebarNavigati
   const activeGroupKey = groups.find((group) =>
     group.items.some((item) => isNavigationItemActive(item, pathname, search, hash))
   )?.key;
-  const [expandedGroup, setExpandedGroup] = useState(activeGroupKey ?? 'main-dashboard');
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(activeGroupKey ?? 'main-dashboard');
 
   useEffect(() => {
     if (activeGroupKey) setExpandedGroup(activeGroupKey);
