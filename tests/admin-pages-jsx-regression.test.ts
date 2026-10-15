@@ -424,3 +424,26 @@ test('CRM stage timeline events are only emitted when the stage changes and conv
   assert.ok(routes.includes("if (String(previousDeal.stage || 'new') !== String(updatedDeal.stage || 'new'))"));
   assert.ok(routes.includes("if (duplicated) return null;"));
 });
+
+
+test('Sidebar visibility keys align with registered route access and preserve the navigation hierarchy', () => {
+  const layout = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminLayout.tsx'), 'utf8');
+  const routes = fs.readFileSync(path.resolve(process.cwd(), 'src/App.tsx'), 'utf8');
+  const primitives = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/AdminModulePrimitives.tsx'), 'utf8');
+
+  assert.ok(layout.includes("type AdminNavItem = NavItem & (\n  | { accessKey: string; anyAccessKeys?: never }\n  | { accessKey?: never; anyAccessKeys: string[] }\n);"));
+  assert.ok(layout.includes("key: 'contracts', to: '/admin/contracts', label: 'Contracts & SOW', icon: FileText, accessKey: 'clients'"));
+  assert.ok(routes.includes('<Route path="contracts" element={<ModuleRoute moduleKey="clients" moduleLabel="contracts"><AdminContracts /></ModuleRoute>} />'));
+  assert.equal(layout.includes('isAllowed(item.accessKey || item.key)'), false, 'Navigation items must not silently infer permissions from their display keys.');
+
+  const expectedGroups = ["'Overview'", "'Sales & Clients'", "'Delivery'", "'People & Resources'", "'Finance'", "'Website & Content'", "'Operations'"];
+  const groupsStart = layout.indexOf('const NAV_GROUPS');
+  const groupsEnd = layout.indexOf('const STITCH_NAV_ITEMS', groupsStart);
+  const groupsSource = layout.slice(groupsStart, groupsEnd);
+  assert.ok(groupsStart >= 0 && groupsEnd > groupsStart);
+  assert.deepEqual([...groupsSource.matchAll(/'[^']+'/g)].map(match => match[0]), expectedGroups);
+
+  assert.ok(primitives.includes('export const AdminCmsSectionTabs'));
+  assert.ok(primitives.includes('min-[900px]:hidden'));
+  assert.ok(layout.includes('const getGroupItems = (group: AdminNavGroup) => filteredNavItems.filter((item) => item.group === group);'));
+});
