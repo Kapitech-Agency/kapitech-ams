@@ -104,7 +104,7 @@ export const QuotationBuilderView: React.FC = () => {
               <tfoot><tr><td colSpan={3} className="px-3 py-3 text-right text-[11px] font-semibold text-muted">Proposal total</td><td className="px-3 py-3 text-right text-[13px] font-semibold tabular-nums text-fg">{idr(total)}</td></tr></tfoot>
             </table>
           </TableScroller>
-          <div className="mt-4 flex flex-wrap justify-end gap-2"><ActionButton onClick={createVersion}><Plus size={13} />Create version record</ActionButton><ActionButton variant="primary" onClick={exportPdf}><FileDown size={13} />Print / Save PDF</ActionButton></div>
+          <div className="mt-4 flex flex-wrap justify-end gap-2"><ActionButton onClick={createVersion}><Plus size={13} />Create version record</ActionButton><ActionButton variant="primary" onClick={exportPdf}><Download size={13} />Print / Save PDF</ActionButton></div>
         </SectionPanel>
         <SectionPanel title="Version control PDF export archive" description="Historical version records; print export is generated in the browser.">
           <div className="grid gap-3">
@@ -162,7 +162,7 @@ export const InvoiceLedgerView: React.FC = () => {
   };
 
   return (
-    <WorkspacePage slug="workspace-invoice-ledger" title="Invoicing & Accounts Receivable" description="Milestone-triggered billing schedules, outstanding receivables and invoice aging escalation." actions={<ActionButton variant="primary" onClick={() => { setSelectedId(invoices.find((invoice) => invoice.status === 'Outstanding')?.id || ''); setScheduleOpen(true); }}><CalendarClock size={13} />Schedule billing</ActionButton>}>
+    <WorkspacePage slug="workspace-invoice-ledger" title="Invoicing & Accounts Receivable" description="Milestone-triggered billing schedules, outstanding receivables and invoice aging escalation." actions={<ActionButton variant="primary" onClick={() => { setSelectedId(invoices.find((invoice) => invoice.status === 'Outstanding')?.id || ''); setScheduleOpen(true); }}><CalendarDays size={13} />Schedule billing</ActionButton>}>
       <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3">
         {agingBuckets.map((bucket) => <MetricCard key={bucket.label} label={'Aging · ' + bucket.label} value={idrCompact(bucket.items.reduce((sum, item) => sum + item.amount, 0))} detail={bucket.items.length + ' outstanding invoice' + (bucket.items.length === 1 ? '' : 's')} tone={bucket.tone} icon={<AlertTriangle size={14} />} />)}
       </div>
@@ -287,7 +287,7 @@ export const ProjectProfitabilityView: React.FC<{ role: WorkspaceRole | null }> 
     <WorkspacePage slug="workspace-project-profitability" title="Real-Time Project Profitability Hub" description={aggregateMode ? 'Aggregated operating sums for project managers. Individual cost-rate fields are not rendered in this view.' : 'Project contribution using revenue less staff hours at cost rate and vendor expenses.'} actions={<StatusBadge tone={aggregateMode ? 'info' : 'success'}>{aggregateMode ? 'PM · Aggregated view' : 'Financial detail'}</StatusBadge>}>
       <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="Revenue" value={idrCompact(totalRevenue)} detail="Recognized project revenue" />
-        <MetricCard label="Operating cost" value={idrCompact(totalCost)} detail="Staff cost plus vendor expenses" tone="warning" icon={<ArrowDownRight size={14} />} />
+        <MetricCard label="Operating cost" value={idrCompact(totalCost)} detail="Staff cost plus vendor expenses" tone="warning" icon={<ArrowUpDown size={14} />} />
         <MetricCard label="Net profit" value={idrCompact(totalProfit)} detail="Revenue less operating cost" tone={totalProfit >= 0 ? 'success' : 'danger'} icon={totalProfit >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />} />
         <MetricCard label="Burn-rate alerts" value={String(overrunCount)} detail="Projects at or above 80% of delivery budget" tone={overrunCount ? 'warning' : 'success'} icon={<AlertTriangle size={14} />} />
       </div>
