@@ -21,7 +21,8 @@ test('Checklist completion and task deletion are persisted and permission-gated'
   assert.ok(workspace.includes('api.tasks.update(task.id, { subtasks: nextSubtasks, updatedAt: previousTask.updatedAt })'));
   assert.ok(workspace.includes('if (!canManageTasks || updatingSubtaskId !== null || updatingTaskId !== null || bulkUpdating) return;'));
   assert.ok(workspace.includes('api.tasks.delete(target.id)'));
-  assert.ok(workspace.includes('Task has time logs and cannot be deleted.'));
+  const routes = read('server/routes.ts');
+  assert.ok(routes.includes('Task has time logs and cannot be deleted.'));
 });
 
 test('JSON mode keeps legacy project tasks and top-level task records synchronized', () => {
