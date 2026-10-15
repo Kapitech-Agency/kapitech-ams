@@ -197,7 +197,7 @@ export const AdminContracts: React.FC = () => {
     setModalOpen(true);
   };
 
-  const updateForm = <K extends keyof ContractForm>(key: K, value: ContractForm[K]) => {
+  const updateForm = <K extends keyof ContractForm,>(key: K, value: ContractForm[K]) => {
     setForm((current) => ({ ...current, [key]: value }));
   };
 
