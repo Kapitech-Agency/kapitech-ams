@@ -34,7 +34,7 @@ export const AdminLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const session = getAdminSession();
-  const amsRole = getAmsRole(session?.user?.role);
+  const amsRole = getAmsRole(session?.user);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
