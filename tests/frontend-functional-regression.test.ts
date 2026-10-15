@@ -73,6 +73,31 @@ test('MFA enrolment route is accessible before module permissions are evaluated'
 });
 
 
+test('primary navigation groups supported workspaces and deep-links existing Team views', async () => {
+  const layout = await read('src/pages/admin/AdminLayout.tsx');
+  const app = await read('src/App.tsx');
+
+  for (const group of [
+    "'Overview'",
+    "'Clients & Growth'",
+    "'Project Delivery'",
+    "'Finance & Procurement'",
+    "'Website & Content'"
+  ]) {
+    assert.ok(layout.includes(group), 'Primary navigation must include the ' + group + ' group.');
+  }
+
+  assert.ok(layout.includes("to: '/admin/team?view=team-directory', label: 'Team Directory'"));
+  assert.ok(layout.includes("to: '/admin/team?view=time-logs', label: 'Time Logs'"));
+  assert.ok(layout.includes("to: '/admin/team?view=vendor-directory', label: 'Vendors'"));
+  assert.ok(layout.includes("value === 'team-directory'"), 'Team Directory must remain the default active view when no query is present.');
+  assert.ok(app.includes('<Route path="team" element={<TeamWorkspaceRoute />} />'));
+  assert.ok(app.includes("view === 'vendor-directory' || view === 'skill-matrix'"));
+  assert.equal(layout.includes("label: 'CRM'"), false, 'Unavailable CRM UI must not be exposed as an active menu item.');
+  assert.equal(layout.includes("label: 'Proposals'"), false, 'Unavailable proposals UI must not be exposed as an active menu item.');
+  assert.equal(layout.includes("label: 'Approvals'"), false, 'Unavailable approvals UI must not be exposed as an active menu item.');
+});
+
 test('Retired CRM routes redirect to supported workspaces', async () => {
   const app = await read('src/App.tsx');
   const layout = await read('src/pages/admin/AdminLayout.tsx');
