@@ -56,6 +56,7 @@ type AdminNavItem = NavItem & { accessKey?: string; anyAccessKeys?: string[] };
 const NAV_GROUPS: AdminNavGroup[] = ['Overview', 'Sales & Clients', 'Delivery', 'People & Resources', 'Finance', 'Website & Content', 'Operations'];
 
 const STITCH_NAV_ITEMS: AdminNavItem[] = [
+  { key: 'workspace', to: '/workspace', label: 'Agency Workspace', icon: LayoutGrid, requiredTier: 4, group: 'Overview' },
   { key: 'dashboard', to: '/admin/dashboard', label: 'Dashboard', icon: Home, requiredTier: 2, group: 'Overview' },
   { key: 'inbox', to: '/admin/inbox', label: 'Inbox', icon: Inbox, accessKey: 'inbox', requiredTier: 2, group: 'Sales & Clients' },
   { key: 'crm', to: '/admin/crm', label: 'CRM & Pipeline', icon: Briefcase, accessKey: 'crm', requiredTier: 3, group: 'Sales & Clients' },
@@ -214,7 +215,7 @@ export const AdminLayout: React.FC = () => {
   const filteredNavItems = useMemo(() => {
     const seen = new Set<string>();
     const allowed = STITCH_NAV_ITEMS.filter(
-      (item) => hasAgencyTier(item.requiredTier) && (item.anyAccessKeys ? item.anyAccessKeys.some((accessKey) => isAllowed(accessKey)) : isAllowed(item.accessKey || item.key))
+      (item) => hasAgencyTier(item.requiredTier) && (item.key === 'workspace' || (item.anyAccessKeys ? item.anyAccessKeys.some((accessKey) => isAllowed(accessKey)) : isAllowed(item.accessKey || item.key)))
     ).filter((item) => {
       if (seen.has(item.key)) return false;
       seen.add(item.key);
@@ -242,6 +243,7 @@ export const AdminLayout: React.FC = () => {
     const [path, queryString] = itemTo.split('?');
     const actual = new URLSearchParams(location.search);
 
+    if (path === '/workspace' && location.pathname.startsWith('/workspace')) return true;
     if (path === '/admin/clients/all-clients' && location.pathname.startsWith('/admin/clients/')) return true;
     if (['/admin/cms/projects', '/admin/cms/services', '/admin/cms/testimonials', '/admin/cms/insights', '/admin/cms/careers'].includes(path) && location.pathname.startsWith('/admin/cms/')) return true;
     if (path === '/admin/tasks' && location.pathname === '/admin/dashboard' && actual.get('view') === 'tasks') return true;
