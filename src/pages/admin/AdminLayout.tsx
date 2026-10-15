@@ -587,7 +587,7 @@ export const AdminLayout: React.FC = () => {
                   items={[
                     { key: 'all-clients', label: 'All Clients', to: '/admin/clients/all-clients' },
                     { key: 'retainers', label: 'Retainers', to: '/admin/clients/retainers' },
-                    { key: 'sla-monitoring', label: 'SLA Monitoring', to: '/admin/clients/sla-monitoring' }
+                    { key: 'sla-monitoring', label: 'SLA', to: '/admin/clients/sla-monitoring' }
                   ]}
                 />
               ) : location.pathname.startsWith('/admin/cms/') ? (
@@ -618,8 +618,8 @@ export const AdminLayout: React.FC = () => {
                   activeKey={new URLSearchParams(location.search).get('projects') || 'all'}
                   items={[
                     { key: 'all', label: 'All Projects', to: '/admin/projects' },
-                    { key: 'sprint', label: 'Sprint & Delivery', to: '/admin/projects?projects=sprint' },
-                    { key: 'budget', label: 'Budget vs Actual', to: '/admin/projects?projects=budget' },
+                    { key: 'sprint', label: 'Delivery', to: '/admin/projects?projects=sprint' },
+                    { key: 'budget', label: 'Budget', to: '/admin/projects?projects=budget' },
                     { key: 'archived', label: 'Archived', to: '/admin/projects?projects=archived' }
                   ]}
                 />
@@ -630,8 +630,8 @@ export const AdminLayout: React.FC = () => {
                   items={[
                     { key: 'all', label: 'All Tasks', to: '/admin/dashboard?view=tasks', slug: 'task-tab-all' },
                     { key: 'my', label: 'My Tasks', to: '/admin/dashboard?view=tasks&taskscope=my', slug: 'task-tab-my' },
-                    { key: 'due', label: 'Due & Overdue', to: '/admin/dashboard?view=tasks&taskscope=due', slug: 'task-tab-due' },
-                    { key: 'review', label: 'Review Queue', to: '/admin/dashboard?view=tasks&taskscope=review', slug: 'task-tab-review' },
+                    { key: 'due', label: 'Due', to: '/admin/dashboard?view=tasks&taskscope=due', slug: 'task-tab-due' },
+                    { key: 'review', label: 'Review', to: '/admin/dashboard?view=tasks&taskscope=review', slug: 'task-tab-review' },
                     { key: 'blocked', label: 'Blocked', to: '/admin/dashboard?view=tasks&taskscope=blocked', slug: 'task-tab-blocked' },
                     { key: 'completed', label: 'Completed', to: '/admin/dashboard?view=tasks&taskscope=completed', slug: 'task-tab-completed' }
                   ]}
@@ -643,8 +643,8 @@ export const AdminLayout: React.FC = () => {
                   items={[
                     { key: 'all', label: 'All Tasks', to: '/admin/tasks', slug: 'task-tab-all' },
                     { key: 'my', label: 'My Tasks', to: '/admin/tasks?taskscope=my', slug: 'task-tab-my' },
-                    { key: 'due', label: 'Due & Overdue', to: '/admin/tasks?taskscope=due', slug: 'task-tab-due' },
-                    { key: 'review', label: 'Review Queue', to: '/admin/tasks?taskscope=review', slug: 'task-tab-review' },
+                    { key: 'due', label: 'Due', to: '/admin/tasks?taskscope=due', slug: 'task-tab-due' },
+                    { key: 'review', label: 'Review', to: '/admin/tasks?taskscope=review', slug: 'task-tab-review' },
                     { key: 'blocked', label: 'Blocked', to: '/admin/tasks?taskscope=blocked', slug: 'task-tab-blocked' },
                     { key: 'completed', label: 'Completed', to: '/admin/tasks?taskscope=completed', slug: 'task-tab-completed' }
                   ]}
@@ -655,8 +655,8 @@ export const AdminLayout: React.FC = () => {
                   activeKey={new URLSearchParams(location.search).get('view') || 'overview'}
                   items={[
                     { key: 'overview', label: 'Overview', to: '/admin/inbox?view=overview', slug: 'inbox-tab-overview' },
-                    { key: 'client', label: 'Client Inbox', to: '/admin/inbox?view=client', slug: 'inbox-tab-client' },
-                    { key: 'jobs', label: 'Job Applications', to: '/admin/inbox?view=jobs', slug: 'inbox-tab-jobs' },
+                    { key: 'client', label: 'Clients', to: '/admin/inbox?view=client', slug: 'inbox-tab-client' },
+                    { key: 'jobs', label: 'Jobs', to: '/admin/inbox?view=jobs', slug: 'inbox-tab-jobs' },
                     { key: 'starred', label: 'Starred', to: '/admin/inbox?view=starred', slug: 'inbox-tab-starred' }
                   ]}
                 />
@@ -703,9 +703,9 @@ export const AdminLayout: React.FC = () => {
                     return activeTab;
                   })()}
                   items={[
-                    { key: 'overview', label: 'Overview & Backups', to: '/admin/settings?tab=overview' },
+                    { key: 'overview', label: 'Overview', to: '/admin/settings?tab=overview' },
                     { key: 'audit', label: 'Audit Logs', to: '/admin/settings?tab=audit' },
-                    { key: 'security', label: 'Security & MFA', to: '/admin/settings?tab=security' },
+                    { key: 'security', label: 'Security', to: '/admin/settings?tab=security' },
                     { key: 'integrations', label: 'Integrations', to: '/admin/settings?tab=integrations' }
                   ]}
                 />
@@ -714,11 +714,11 @@ export const AdminLayout: React.FC = () => {
                   ariaLabel="Documents sections"
                   activeKey={new URLSearchParams(location.search).get('documents') || 'all'}
                   items={[
-                    { key: 'all', label: 'All Internal Documents', to: '/admin/documents', slug: 'documents-tab-all' },
-                    { key: 'sops', label: 'SOPs & Policies', to: '/admin/documents?documents=sops', slug: 'documents-tab-sops' },
-                    { key: 'legal', label: 'Legal & Corporate', to: '/admin/documents?documents=legal', slug: 'documents-tab-legal' },
-                    { key: 'finance', label: 'Finance & Tax', to: '/admin/documents?documents=finance', slug: 'documents-tab-finance' },
-                    { key: 'infra', label: 'Infrastructure & Keys', to: '/admin/documents?documents=infra', slug: 'documents-tab-infra' }
+                    { key: 'all', label: 'All Documents', to: '/admin/documents', slug: 'documents-tab-all' },
+                    { key: 'sops', label: 'Policies', to: '/admin/documents?documents=sops', slug: 'documents-tab-sops' },
+                    { key: 'legal', label: 'Legal', to: '/admin/documents?documents=legal', slug: 'documents-tab-legal' },
+                    { key: 'finance', label: 'Finance', to: '/admin/documents?documents=finance', slug: 'documents-tab-finance' },
+                    { key: 'infra', label: 'Access', to: '/admin/documents?documents=infra', slug: 'documents-tab-infra' }
                   ]}
                 />
               ) : (
