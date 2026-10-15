@@ -84,6 +84,7 @@ test('AMS navigation uses six role-based groups and shared responsive sidebars',
   const sidebar = await read('src/components/admin/DynamicAdminSidebar.tsx');
   const teams = await read('src/pages/admin/AdminTeams.tsx');
   const vendors = await read('src/pages/admin/AdminVendors.tsx');
+  const clients = await read('src/pages/admin/AdminClients.tsx');
 
   for (const group of [
     "'MAIN DASHBOARD'",
