@@ -86,7 +86,7 @@ export const CmsEditorialView: React.FC<{ role: WorkspaceRole | null }> = ({ rol
   return (
     <WorkspacePage slug="workspace-cms-editorial" title="Insight Editorial Packs & Portfolio Quarantine" description={isEditor ? 'Editor view for article drafts, publishing schedule and visible quarantine validation status.' : 'Editorial calendar and release gates for validating outcome metrics before publication approval.'} actions={<StatusBadge tone={isEditor ? 'info' : 'neutral'}>{isEditor ? 'Creative · Editor view' : 'Editorial governance'}</StatusBadge>}>
       <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-3">
-        <MetricCard label="Editorial items" value={String(editorial.length)} detail="Insight and portfolio records" icon={<Newspaper size={15} />} />
+        <MetricCard label="Editorial items" value={String(editorial.length)} detail="Insight and portfolio records" icon={<FileText size={15} />} />
         <MetricCard label="Awaiting review" value={String(editorial.filter((item) => item.status === 'In review').length)} detail="Requires internal review" tone="warning" />
         <MetricCard label="Quarantine gates blocked" value={String(quarantinedCount)} detail="Missing required outcome evidence" tone={quarantinedCount ? 'danger' : 'success'} icon={<ShieldCheck size={15} />} />
       </div>
@@ -182,7 +182,7 @@ export const SystemSettingsView: React.FC = () => {
         <MetricCard label="Active user accounts" value={String(activeUsers)} detail="Preview user directory" icon={<UsersRound size={15} />} />
         <MetricCard label="MFA coverage" value={mfaCoverage + '%'} detail="Based on preview account states" tone={mfaCoverage >= 95 ? 'success' : 'warning'} />
         <MetricCard label="Backup retention" value={retentionDays + ' days'} detail="Allowed range: 3–30 days" tone="info" />
-        <MetricCard label="Production readiness" value="true" detail="Preview variable · not live telemetry" tone="success" icon={<Workflow size={15} />} />
+        <MetricCard label="Production readiness" value="true" detail="Preview variable · not live telemetry" tone="success" icon={<Activity size={15} />} />
       </div>
       {notice && <div role="status" className="rounded-control border border-line bg-panel px-3 py-2.5 text-[11px] leading-5 text-muted">{notice}</div>}
       <div className="flex min-w-0 flex-wrap items-center gap-1 overflow-x-auto rounded-control border border-line bg-panel p-1" role="tablist" aria-label="System settings sections">
