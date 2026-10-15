@@ -17,7 +17,7 @@ import {
   UsersRound,
   LockKeyhole,
   LayoutGrid,
-  Truck,
+  Building2,
 } from 'lucide-react';
 import { getAdminSession, logoutAdmin } from '../../lib/adminAuth';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -76,7 +76,7 @@ const STITCH_NAV_ITEMS: AdminNavItem[] = [
   { key: 'time-logs', to: '/admin/team?view=time-logs', label: 'Time Logs', icon: Clock3, accessKey: 'timelogs', requiredTier: 3, group: 'Project Delivery' },
   { key: 'documents', to: '/admin/documents', label: 'Documents', icon: LockKeyhole, requiredTier: 3, group: 'Project Delivery' },
   { key: 'finance', to: '/admin/finance', label: 'Finance', icon: Landmark, accessKey: 'invoicing', requiredTier: 2, group: 'Finance & Procurement' },
-  { key: 'vendors', to: '/admin/team?view=vendor-directory', label: 'Vendors', icon: Truck, accessKey: 'vendors', requiredTier: 3, group: 'Finance & Procurement' },
+  { key: 'vendors', to: '/admin/team?view=vendor-directory', label: 'Vendors', icon: Building2, accessKey: 'vendors', requiredTier: 3, group: 'Finance & Procurement' },
   { key: 'cms', to: '/admin/cms/projects', label: 'Website CMS', icon: LayoutGrid, accessKey: 'cms_projects', requiredTier: 3, group: 'Website & Content' },
 ];
 
