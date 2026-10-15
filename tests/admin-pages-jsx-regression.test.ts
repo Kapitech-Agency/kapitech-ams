@@ -426,24 +426,42 @@ test('CRM stage timeline events are only emitted when the stage changes and conv
 });
 
 
-test('Sidebar visibility keys align with registered route access and preserve the navigation hierarchy', () => {
+test('Sidebar visibility follows the canonical role route policy and hierarchy', () => {
   const layout = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminLayout.tsx'), 'utf8');
   const routes = fs.readFileSync(path.resolve(process.cwd(), 'src/App.tsx'), 'utf8');
+  const navigation = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/amsNavigationAccess.ts'), 'utf8');
+  const sidebar = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/DynamicAdminSidebar.tsx'), 'utf8');
   const primitives = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/AdminModulePrimitives.tsx'), 'utf8');
 
-  assert.ok(layout.includes("type AdminNavItem = NavItem & (\n  | { accessKey: string; anyAccessKeys?: never }\n  | { accessKey?: never; anyAccessKeys: string[] }\n);"));
-  assert.ok(layout.includes("key: 'contracts', to: '/admin/contracts', label: 'Contracts & SOW', icon: FileText, accessKey: 'clients'"));
+  assert.ok(navigation.includes("key: 'main-dashboard'"));
+  assert.ok(navigation.includes("key: 'client-pipeline'"));
+  assert.ok(navigation.includes("key: 'projects-workspace'"));
+  assert.ok(navigation.includes("key: 'finance-ledger'"));
+  assert.ok(navigation.includes("key: 'cms-content'"));
+  assert.ok(navigation.includes("key: 'system-settings'"));
+  assert.ok(navigation.includes("path === '/admin/contracts'"));
   assert.ok(routes.includes('<Route path="contracts" element={<ModuleRoute moduleKey="clients" moduleLabel="contracts"><AdminContracts /></ModuleRoute>} />'));
-  assert.equal(layout.includes('isAllowed(item.accessKey || item.key)'), false, 'Navigation items must not silently infer permissions from their display keys.');
 
-  const expectedGroups = ["'Overview'", "'Sales & Clients'", "'Delivery'", "'People & Resources'", "'Finance'", "'Website & Content'", "'Operations'"];
-  const groupsStart = layout.indexOf('const NAV_GROUPS');
-  const groupsEnd = layout.indexOf('const STITCH_NAV_ITEMS', groupsStart);
-  const groupsSource = layout.slice(groupsStart, groupsEnd);
-  assert.ok(groupsStart >= 0 && groupsEnd > groupsStart);
-  assert.deepEqual([...groupsSource.matchAll(/'[^']+'/g)].map(match => match[0]), expectedGroups);
+  assert.ok(layout.includes('<DynamicAdminSidebarNavigation role={amsRole}'));
+  assert.equal((layout.match(/<DynamicAdminSidebarNavigation\b/g) || []).length, 2, 'Desktop and mobile use the same navigation list.');
+  assert.equal((layout.match(/<AdminSystemSettingsNavigation\b/g) || []).length, 2, 'Desktop and mobile keep the separated system block in the footer.');
+  assert.ok(sidebar.includes("if (role !== 'Admin') return null;"));
+  assert.ok(sidebar.includes('getNavigationGroupsForRole(role)'));
+  assert.ok(primitives.includes('items.filter(canRenderNavigationTab).map((item) => {'));
+  assert.ok(navigation.includes('export function canAccessAmsRoute'));
+  assert.ok(navigation.includes('export function isNavigationItemActive'));
 
-  assert.ok(primitives.includes('export const AdminCmsSectionTabs'));
-  assert.ok(primitives.includes('min-[900px]:hidden'));
-  assert.ok(layout.includes('const getGroupItems = (group: AdminNavGroup) => filteredNavItems.filter((item) => item.group === group);'));
+  const expectedItems = [
+    "label: 'Executive Agency Overview'",
+    "label: 'Personal Workspace / My Hub'",
+    "label: 'Sales & Deal Pipeline'",
+    "label: 'Client Onboarding Framework'",
+    "label: 'Task & Deliverables Engine'",
+    "label: 'Retainer Manager & Hours Pool'",
+    "label: 'Quotations & Proposals Builder'",
+    "label: 'Expense & Vendor Ledger'",
+    "label: 'Insight Editorial Packs'",
+    "label: 'Portfolio & Testimonial Quarantine Registry'",
+  ];
+  for (const label of expectedItems) assert.ok(navigation.includes(label), 'Missing navigation item ' + label);
 });

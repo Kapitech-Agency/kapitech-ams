@@ -76,45 +76,43 @@ test('MFA enrolment route is accessible before module permissions are evaluated'
 });
 
 
-test('AMS sidebar groups real modules and keeps feature views inside their module', async () => {
+test('AMS navigation uses six role-based groups and shared responsive sidebars', async () => {
   const layout = await read('src/pages/admin/AdminLayout.tsx');
   const app = await read('src/App.tsx');
   const primitives = await read('src/components/admin/AdminModulePrimitives.tsx');
+  const navigation = await read('src/lib/amsNavigationAccess.ts');
+  const sidebar = await read('src/components/admin/DynamicAdminSidebar.tsx');
   const teams = await read('src/pages/admin/AdminTeams.tsx');
   const vendors = await read('src/pages/admin/AdminVendors.tsx');
   const clients = await read('src/pages/admin/AdminClients.tsx');
 
-  for (const group of ["'Overview'", "'Sales & Clients'", "'Delivery'", "'People & Resources'", "'Finance'", "'Website & Content'", "'Operations'"]) {
-    assert.ok(layout.includes(group), 'Expected sidebar group ' + group);
-  }
-  assert.ok(layout.includes("const NAV_GROUPS: AdminNavGroup[] = ['Overview', 'Sales & Clients', 'Delivery', 'People & Resources', 'Finance', 'Website & Content', 'Operations']"));
-
-  const menuStart = layout.indexOf('const STITCH_NAV_ITEMS: AdminNavItem[] = [');
-  const menuEnd = layout.indexOf('];', menuStart);
-  assert.ok(menuStart >= 0 && menuEnd > menuStart);
-  const menu = layout.slice(menuStart, menuEnd);
-  for (const [key, label, group] of [
-    ['dashboard', 'Dashboard', 'Overview'],
-    ['inbox', 'Inbox', 'Sales & Clients'],
-    ['crm', 'CRM & Pipeline', 'Sales & Clients'],
-    ['proposals', 'Proposals & Quotes', 'Sales & Clients'],
-    ['clients', 'Clients & Accounts', 'Sales & Clients'],
-    ['projects', 'Projects', 'Delivery'],
-    ['tasks', 'Tasks', 'Delivery'],
-    ['team', 'Team', 'People & Resources'],
-    ['time-logs', 'Time Tracking', 'People & Resources'],
-    ['finance', 'Finance', 'Finance'],
-    ['vendors', 'Vendors', 'People & Resources'],
-    ['cms', 'Website CMS', 'Website & Content'],
-    ['documents', 'Documents', 'Operations'],
-    ['approvals', 'Approvals', 'Operations']
+  for (const group of [
+    "'MAIN DASHBOARD'",
+    "'CLIENT & PIPELINE (CRM)'",
+    "'PROJECTS & WORKSPACE'",
+    "'FINANCE & LEDGER CONTROL'",
+    "'CMS & CONTENT MANAGEMENT'",
+    "'SYSTEM SETTINGS'",
   ]) {
-    assert.ok(menu.includes("key: '" + key + "'") && menu.includes("label: '" + label + "'") && menu.includes("group: '" + group + "'"), 'Incorrect sidebar module mapping: ' + label);
+    assert.ok(navigation.includes(group), 'Expected role-based sidebar group ' + group);
   }
-  assert.equal(menu.includes("label: 'Team Directory'"), false);
-  assert.equal(menu.includes("label: 'Time Logs'"), false);
-  assert.equal(menu.includes("label: 'Vendor Directory'"), false);
-  assert.equal(menu.includes("label: 'Capacity'"), false);
+  assert.ok(navigation.includes("if (role === 'Admin')"));
+  assert.ok(navigation.includes("allowedRoles: ['Admin']"));
+  assert.ok(navigation.includes("label: 'Personal Workspace / My Hub'"));
+  assert.ok(navigation.includes("label: 'Retainer Manager & Hours Pool'"));
+  assert.ok(navigation.includes("label: 'Real-Time Project Profitability Hub'"));
+  assert.ok(navigation.includes("return 'Freelancer';"), 'Unknown legacy role must fail closed rather than grant Admin access.');
+
+  assert.equal((layout.match(/<DynamicAdminSidebarNavigation\b/g) || []).length, 2, 'Desktop and mobile use the same sidebar navigation component.');
+  assert.equal((layout.match(/<AdminSystemSettingsNavigation\b/g) || []).length, 2, 'Pinned System Settings region is shared and hidden by its Admin-only component policy.');
+  assert.ok(sidebar.includes("if (role !== 'Admin') return null;"));
+  assert.ok(sidebar.includes('data-ams-feature-slug="role-based-sidebar"'));
+  assert.ok(sidebar.includes("aria-current={active ? 'page' : undefined}"));
+  assert.ok(primitives.includes('items.filter(canRenderNavigationTab).map((item) => {'));
+  assert.ok(navigation.includes('export function canAccessAmsRoute'));
+  assert.ok(app.includes('<AmsRoleRouteGuard>'));
+  assert.ok(app.includes('path="navigation/live-activity"'));
+  assert.ok(app.includes('path="navigation/release-readiness"'));
 
   assert.ok(layout.includes('ariaLabel="Team sections"'));
   assert.ok(layout.includes("label: 'Team Directory'"));
@@ -123,16 +121,6 @@ test('AMS sidebar groups real modules and keeps feature views inside their modul
   assert.ok(layout.includes("label: 'Vendor Directory'"));
   assert.ok(layout.includes("label: 'Skills'"));
   assert.ok(vendors.includes('data-ams-slug="vendors-mobile-tabs"'));
-  assert.ok(vendors.includes("label: 'Vendor Directory'"));
-  assert.ok(vendors.includes("label: 'Skills'"));
-  assert.ok(primitives.includes("items.filter((item) => !item.permission || hasAdminPermission(item.permission)).map((item) => {"));
-  assert.ok(primitives.includes("permission: 'services'"));
-  assert.ok(primitives.includes("permission: 'cms_insights'"));
-  assert.ok(primitives.includes("{ key: 'projects', label: 'Case Studies', to: '/admin/cms/projects', permission: 'cms_projects' }"));
-  assert.ok(layout.includes("slug: 'cms-tab-services', permission: 'services'"));
-  assert.ok(layout.includes("slug: 'cms-tab-insights', permission: 'cms_insights'"));
-  assert.ok(layout.includes("firstAllowedSection.find(([permission]) => isAllowed(permission))"));
-  assert.ok(layout.includes("return { ...item, to: destination };"));
   assert.equal(teams.includes("to: '/admin/team?view=vendor-directory'"), false);
   assert.equal(teams.includes("to: '/admin/team?view=skill-matrix'"), false);
   assert.equal(teams.includes("to: '/admin/team?view=time-logs'"), false);
@@ -505,8 +493,8 @@ test('Careers tabs, filters, and modal fields use consistent AMS interactions', 
 });
 
 
-test('Contracts & SOW has a persisted lifecycle workflow and clear commercial navigation', async () => {
-  const layout = await read('src/pages/admin/AdminLayout.tsx');
+test('Contracts & SOW keeps its persisted lifecycle route under the role navigation policy', async () => {
+  const navigation = await read('src/lib/amsNavigationAccess.ts');
   const app = await read('src/App.tsx');
   const page = await read('src/pages/admin/AdminContracts.tsx');
   const api = await read('src/lib/apiClient.ts');
@@ -514,8 +502,8 @@ test('Contracts & SOW has a persisted lifecycle workflow and clear commercial na
   const repository = await read('server/postgres-contract-repository.ts');
   const migration = await read('db/postgres/055_client_contracts_and_sow.sql');
 
-  assert.ok(layout.includes("key: 'contracts'") && layout.includes("label: 'Contracts & SOW'"));
-  assert.ok(app.includes("path=\"contracts\"") && app.includes('<AdminContracts />'));
+  assert.ok(navigation.includes("path === '/admin/contracts'"), 'Contract access must be enforced by the role-aware route policy.');
+  assert.ok(app.includes('path="contracts"') && app.includes('<AdminContracts />'));
   assert.ok(api.includes("'/api/contracts'") && api.includes('/transition'));
   assert.ok(routes.includes("apiRouter.post('/contracts/:id/transition'"));
   assert.ok(routes.includes('CLIENT_CONTRACT_TRANSITIONS'));

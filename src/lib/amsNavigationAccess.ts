@@ -1,0 +1,285 @@
+export type AmsRole = 'Admin' | 'Finance' | 'PM' | 'Creative' | 'Freelancer';
+
+export type AmsNavigationIcon =
+  | 'dashboard'
+  | 'user'
+  | 'activity'
+  | 'crm'
+  | 'clients'
+  | 'onboarding'
+  | 'projects'
+  | 'tasks'
+  | 'retainer'
+  | 'quotes'
+  | 'invoice'
+  | 'ledger'
+  | 'profitability'
+  | 'editorial'
+  | 'registry'
+  | 'access'
+  | 'backup'
+  | 'readiness';
+
+export interface AmsNavigationItem {
+  key: string;
+  label: string;
+  to: string;
+  icon: AmsNavigationIcon;
+  allowedRoles: AmsRole[];
+  accessNote?: Partial<Record<AmsRole, string>>;
+}
+
+export interface AmsNavigationGroup {
+  key: string;
+  label: string;
+  items: AmsNavigationItem[];
+}
+
+const ALL_ROLES: AmsRole[] = ['Admin', 'Finance', 'PM', 'Creative', 'Freelancer'];
+const COMMERCIAL_ROLES: AmsRole[] = ['Admin', 'Finance', 'PM'];
+const ADMIN_FINANCE: AmsRole[] = ['Admin', 'Finance'];
+
+export const AMS_NAVIGATION_GROUPS: AmsNavigationGroup[] = [
+  {
+    key: 'main-dashboard',
+    label: 'MAIN DASHBOARD',
+    items: [
+      { key: 'executive-overview', label: 'Executive Agency Overview', to: '/admin/dashboard', icon: 'dashboard', allowedRoles: COMMERCIAL_ROLES },
+      { key: 'my-hub', label: 'Personal Workspace / My Hub', to: '/admin/tasks?taskscope=my', icon: 'user', allowedRoles: ALL_ROLES },
+      { key: 'live-activity', label: 'Live Activity Stream', to: '/admin/navigation/live-activity', icon: 'activity', allowedRoles: ALL_ROLES },
+    ],
+  },
+  {
+    key: 'client-pipeline',
+    label: 'CLIENT & PIPELINE (CRM)',
+    items: [
+      {
+        key: 'sales-pipeline',
+        label: 'Sales & Deal Pipeline',
+        to: '/admin/crm',
+        icon: 'crm',
+        allowedRoles: COMMERCIAL_ROLES,
+        accessNote: { PM: 'Read only' },
+      },
+      { key: 'client-directory', label: 'Client Directory', to: '/admin/clients/all-clients', icon: 'clients', allowedRoles: COMMERCIAL_ROLES },
+      { key: 'client-onboarding', label: 'Client Onboarding Framework', to: '/admin/clients/all-clients#client-onboarding-readiness', icon: 'onboarding', allowedRoles: COMMERCIAL_ROLES },
+    ],
+  },
+  {
+    key: 'projects-workspace',
+    label: 'PROJECTS & WORKSPACE',
+    items: [
+      { key: 'project-hub', label: 'Project Hub', to: '/admin/projects', icon: 'projects', allowedRoles: ALL_ROLES },
+      { key: 'tasks-engine', label: 'Task & Deliverables Engine', to: '/admin/tasks', icon: 'tasks', allowedRoles: ['Admin', 'PM'] },
+      { key: 'retainer-manager', label: 'Retainer Manager & Hours Pool', to: '/admin/clients/retainers', icon: 'retainer', allowedRoles: ['Admin', 'PM'] },
+    ],
+  },
+  {
+    key: 'finance-ledger',
+    label: 'FINANCE & LEDGER CONTROL',
+    items: [
+      { key: 'quotations', label: 'Quotations & Proposals Builder', to: '/admin/proposals', icon: 'quotes', allowedRoles: ADMIN_FINANCE },
+      { key: 'invoicing-receivables', label: 'Invoicing & Accounts Receivable', to: '/admin/finance?tab=accounts-receivable', icon: 'invoice', allowedRoles: ADMIN_FINANCE },
+      { key: 'expense-vendor-ledger', label: 'Expense & Vendor Ledger', to: '/admin/finance?tab=accounts-payable', icon: 'ledger', allowedRoles: ADMIN_FINANCE },
+      { key: 'project-profitability', label: 'Real-Time Project Profitability Hub', to: '/admin/finance?tab=project-finance', icon: 'profitability', allowedRoles: ['Admin', 'Finance', 'PM'], accessNote: { PM: 'Aggregated view' } },
+    ],
+  },
+  {
+    key: 'cms-content',
+    label: 'CMS & CONTENT MANAGEMENT',
+    items: [
+      { key: 'insight-editorial', label: 'Insight Editorial Packs', to: '/admin/cms/insights', icon: 'editorial', allowedRoles: ['Admin', 'PM', 'Creative'] },
+      { key: 'portfolio-testimonial-registry', label: 'Portfolio & Testimonial Quarantine Registry', to: '/admin/cms/projects', icon: 'registry', allowedRoles: ['Admin', 'PM', 'Creative'] },
+    ],
+  },
+];
+
+export const AMS_SYSTEM_SETTINGS_ITEMS: AmsNavigationItem[] = [
+  { key: 'user-access', label: 'User Access & Confidential Cost Rates', to: '/admin/settings?tab=security', icon: 'access', allowedRoles: ['Admin'] },
+  { key: 'data-persistence-backup', label: 'Data Persistence & Backup Portal', to: '/admin/settings?tab=overview', icon: 'backup', allowedRoles: ['Admin'] },
+  { key: 'release-readiness', label: 'Release Readiness Telemetry Gate', to: '/admin/navigation/release-readiness', icon: 'readiness', allowedRoles: ['Admin'] },
+];
+
+/**
+ * Reads the user.role string from the server-refreshed /api/auth/me profile.
+ * Unknown legacy values fall back to the least-privileged navigation profile
+ * and never inherit Admin privileges.
+ */
+export function normalizeAmsRole(roleValue: unknown): AmsRole {
+  const role = String(roleValue ?? '').trim().toLowerCase();
+
+  if (role === 'admin') return 'Admin';
+  if (role === 'finance' || role === 'financial officer') return 'Finance';
+  if (role === 'pm' || role === 'project manager' || role === 'tier 2: project manager (pm)') return 'PM';
+  if (role === 'creative' || role === 'internal staff') return 'Creative';
+  if (role === 'freelancer' || role === 'contract freelancer') return 'Freelancer';
+
+  return 'Freelancer';
+}
+
+export function getAmsRole(userOrRole: unknown): AmsRole {
+  if (userOrRole && typeof userOrRole === 'object') {
+    return normalizeAmsRole((userOrRole as { role?: unknown }).role);
+  }
+  return normalizeAmsRole(userOrRole);
+}
+
+export function getAmsHomePath(role: AmsRole): string {
+  return role === 'Admin' || role === 'Finance' || role === 'PM'
+    ? '/admin/dashboard'
+    : '/admin/tasks?taskscope=my';
+}
+
+export function getNavigationGroupsForRole(role: AmsRole): AmsNavigationGroup[] {
+  const groups = AMS_NAVIGATION_GROUPS
+    .map((group) => ({
+      ...group,
+      items: group.items
+        .filter((item) => item.allowedRoles.includes(role))
+        .map((item) => {
+          if (item.key === 'project-hub' && role === 'Freelancer') {
+            return { ...item, to: '/admin/tasks?taskscope=my&workspace=project' };
+          }
+          if (item.key === 'project-hub' && (role === 'Creative' || role === 'Finance')) {
+            return { ...item, to: '/admin/projects?projects=sprint' };
+          }
+          return item;
+        }),
+    }))
+    .filter((group) => group.items.length > 0);
+
+  if (role === 'Admin') {
+    groups.push({
+      key: 'system-settings',
+      label: 'SYSTEM SETTINGS',
+      items: AMS_SYSTEM_SETTINGS_ITEMS.filter((item) => item.allowedRoles.includes(role)),
+    });
+  }
+
+  return groups;
+}
+
+const pathOnly = (pathname: string) => pathname.replace(/\/+$/, '') || '/';
+
+export function canAccessAmsRoute(role: AmsRole, pathname: string, search = ''): boolean {
+  const path = pathOnly(pathname);
+  const params = new URLSearchParams(search);
+
+  if (!path.startsWith('/admin')) return false;
+  if (role === 'Admin') return true;
+
+  if (path === '/admin/navigation/live-activity') return true;
+  if (path === '/admin/navigation/release-readiness') return false;
+
+  if (path === '/admin/dashboard') {
+    if (!['Finance', 'PM'].includes(role)) return false;
+    const view = params.get('view');
+    return !view || view === 'overview';
+  }
+
+  if (path === '/admin/tasks') {
+    const scope = params.get('taskscope') || 'all';
+    if (role === 'PM') return scope !== 'my' || params.get('workspace') !== 'project';
+    if (scope !== 'my') return false;
+    return role !== 'Freelancer' || !params.get('workspace') || params.get('workspace') === 'project';
+  }
+
+  if (path === '/admin/projects') {
+    if (role === 'PM') return true;
+    if (role === 'Creative' || role === 'Finance') return params.get('projects') === 'sprint';
+    return false;
+  }
+
+  if (path === '/admin/crm' || path === '/admin/inbox') return ['Finance', 'PM'].includes(role);
+
+  if (path === '/admin/clients' || path === '/admin/clients/all-clients' || path === '/admin/clients/sla-monitoring') {
+    return ['Finance', 'PM'].includes(role);
+  }
+  if (path === '/admin/clients/retainers') return role === 'PM';
+  if (path === '/admin/contracts') return ['Finance', 'PM'].includes(role);
+
+  if (path === '/admin/proposals') return role === 'Finance';
+
+  if (path === '/admin/finance') {
+    if (role === 'Finance') return true;
+    if (role === 'PM') return params.get('tab') === 'project-finance';
+    return false;
+  }
+
+  if (path === '/admin/vendors') return role === 'Finance';
+  if (path === '/admin/approvals') return role === 'Finance';
+
+  if (path.startsWith('/admin/cms/')) {
+    if (role === 'PM' || role === 'Creative') {
+      return ['/admin/cms/insights', '/admin/cms/projects', '/admin/cms/testimonials'].includes(path);
+    }
+    return false;
+  }
+
+  if (path === '/admin/settings' || path.startsWith('/admin/settings/')) return false;
+  if (path === '/admin/documents' || path.startsWith('/admin/documents/')) return false;
+  if (path === '/admin/team' || path === '/admin/time-logs') return role === 'PM';
+  if (path === '/admin' || path === '/admin/executive') return false;
+
+  return false;
+}
+
+export function getDeniedRouteRedirect(role: AmsRole, pathname: string, search = ''): string {
+  const path = pathOnly(pathname);
+  const params = new URLSearchParams(search);
+
+  if (role === 'PM' && path === '/admin/finance') return '/admin/finance?tab=project-finance';
+  if (path === '/admin/tasks' && role !== 'Admin' && role !== 'PM') return '/admin/tasks?taskscope=my';
+  return getAmsHomePath(role);
+}
+
+export function isNavigationItemActive(
+  item: Pick<AmsNavigationItem, 'key' | 'to'>,
+  pathname: string,
+  search = '',
+  hash = ''
+): boolean {
+  const path = pathOnly(pathname);
+  const params = new URLSearchParams(search);
+
+  switch (item.key) {
+    case 'executive-overview':
+      return path === '/admin/dashboard' && params.get('view') !== 'tasks';
+    case 'my-hub':
+      return path === '/admin/tasks' && params.get('taskscope') === 'my' && params.get('workspace') !== 'project';
+    case 'live-activity':
+      return path === '/admin/navigation/live-activity';
+    case 'sales-pipeline':
+      return path === '/admin/crm';
+    case 'client-directory':
+      return path === '/admin/clients/all-clients' && hash !== '#client-onboarding-readiness';
+    case 'client-onboarding':
+      return path === '/admin/clients/all-clients' && hash === '#client-onboarding-readiness';
+    case 'project-hub':
+      return path === '/admin/projects' || (path === '/admin/tasks' && params.get('workspace') === 'project');
+    case 'tasks-engine':
+      return path === '/admin/tasks' && params.get('workspace') !== 'project' && params.get('taskscope') !== 'my';
+    case 'retainer-manager':
+      return path === '/admin/clients/retainers';
+    case 'quotations':
+      return path === '/admin/proposals';
+    case 'invoicing-receivables':
+      return path === '/admin/finance' && params.get('tab') === 'accounts-receivable';
+    case 'expense-vendor-ledger':
+      return path === '/admin/finance' && params.get('tab') === 'accounts-payable';
+    case 'project-profitability':
+      return path === '/admin/finance' && params.get('tab') === 'project-finance';
+    case 'insight-editorial':
+      return path === '/admin/cms/insights';
+    case 'portfolio-testimonial-registry':
+      return path === '/admin/cms/projects' || path === '/admin/cms/testimonials';
+    case 'user-access':
+      return path === '/admin/settings' && ['security', 'rbac'].includes(params.get('tab') || '');
+    case 'data-persistence-backup':
+      return path === '/admin/settings' && (!params.get('tab') || params.get('tab') === 'overview');
+    case 'release-readiness':
+      return path === '/admin/navigation/release-readiness';
+    default:
+      return pathOnly(item.to.split('?')[0]) === path;
+  }
+}
