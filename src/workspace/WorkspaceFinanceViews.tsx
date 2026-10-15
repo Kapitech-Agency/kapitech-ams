@@ -184,7 +184,7 @@ export const InvoiceLedgerView: React.FC = () => {
           </table>
         </TableScroller>
       </SectionPanel>
-      <Modal open={scheduleOpen} onClose={() => setScheduleOpen(false)} title="Schedule billing milestone" description="Attach a billing date to the selected invoice milestone." size="md" footer={<><ActionButton onClick={() => setScheduleOpen(false)}>Cancel</ActionButton><ActionButton variant="primary" onClick={() => { const form = document.getElementById('billing-schedule-form') as HTMLFormElement | null; form?.requestSubmit(); }}>Save schedule</ActionButton></>}>
+      <Drawer open={scheduleOpen} onClose={() => setScheduleOpen(false)} title="Schedule billing milestone" description="Attach a billing date to the selected invoice milestone." size="md" footer={<><ActionButton onClick={() => setScheduleOpen(false)}>Cancel</ActionButton><ActionButton variant="primary" onClick={() => { const form = document.getElementById('billing-schedule-form') as HTMLFormElement | null; form?.requestSubmit(); }}>Save schedule</ActionButton></>}>
         <form id="billing-schedule-form" onSubmit={scheduleBilling} className="grid gap-4">
           <SelectField label="Invoice / milestone" value={selectedId} onChange={(event) => setSelectedId(event.target.value)} required>
             {invoices.filter((invoice) => invoice.status !== 'Paid').map((invoice) => <option key={invoice.id} value={invoice.id}>{invoice.id} · {invoice.client}</option>)}
