@@ -1660,16 +1660,24 @@ export const AdminFinanceWorkspace: React.FC = () => {
     projects: 'project-finance',
     accounting: 'journal'
   };
+  const groupTabSlugs: Record<string, string> = {
+    overview: 'finance-tab-overview-control',
+    transactions: 'finance-tab-transactions-cash',
+    receivables: 'finance-tab-receivables-payables',
+    projects: 'finance-tab-project-finance',
+    accounting: 'finance-tab-accounting-reports'
+  };
   const groupItems = FINANCE_WORKBOOK_GROUPS.map((group) => ({
     key: group.key,
     label: group.label,
-    to: '/admin/finance?tab=' + (groupEntryTabs[group.key] || group.items[0].key)
+    to: '/admin/finance?tab=' + (groupEntryTabs[group.key] || group.items[0].key),
+    slug: groupTabSlugs[group.key] || 'finance-area-' + group.key
   }));
   const sheetItems = activeGroup.items.map((item) => ({
     key: item.key,
     label: item.label,
     to: '/admin/finance?tab=' + item.key,
-    slug: 'finance-tab-' + item.key
+    slug: 'finance-sheet-' + item.key
   }));
   const renderLoading = () => (
     <AdminPanel title="Loading finance sources" description="Reading live AMS invoice, expense, project and vendor records.">
@@ -3109,29 +3117,18 @@ export const AdminFinanceWorkspace: React.FC = () => {
         actions={<Button variant="secondary" type="button" onClick={() => void loadData(true)} loading={refreshing}>Refresh data</Button>}
         className="mb-0"
       />
+      <AdminSectionTabs
+        ariaLabel="Finance areas"
+        activeKey={activeGroup.key}
+        items={groupItems}
+        className="w-full"
+      />
       <div
         className={SEARCHABLE_FINANCE_TABS.has(activeTab.key) && activeGroup.items.length <= 4
           ? 'grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-center'
           : 'min-w-0 space-y-3'}
         data-ams-slug="finance-workspace-navigation"
       >
-        <div className="min-[900px]:hidden grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-3" data-ams-slug="finance-area-mobile-selector">
-          <span className="text-[11px] font-medium text-muted">Finance area</span>
-          <CustomSelect
-            options={groupItems.map((item) => ({ value: item.key, label: item.label }))}
-            value={activeGroup.key}
-            onChange={(key) => {
-              const destination = groupItems.find((item) => item.key === key);
-              if (destination) navigate(destination.to);
-            }}
-            placeholder="Select finance area"
-            className="w-full min-w-0"
-            triggerClassName="w-full"
-            size="xs"
-            slug="finance-area-select"
-            aria-label="Finance area"
-          />
-        </div>
         <AdminSectionTabs ariaLabel="Finance worksheets" activeKey={activeTab.key} items={sheetItems} className="w-full" />
         {SEARCHABLE_FINANCE_TABS.has(activeTab.key) && (
           <div className="flex min-w-0 justify-start sm:justify-end" data-ams-slug="finance-worksheet-search">
