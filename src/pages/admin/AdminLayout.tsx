@@ -18,6 +18,9 @@ import {
   LockKeyhole,
   LayoutGrid,
   Building2,
+  Handshake,
+  FileText,
+  ShieldCheck,
 } from 'lucide-react';
 import { getAdminSession, logoutAdmin } from '../../lib/adminAuth';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -34,6 +37,8 @@ import Button from '../../components/ui/Button';
 import { ReportingPeriodProvider } from '../../lib/ReportingPeriodContext';
 import { AdminReportingPeriodBar } from '../../components/admin/AdminReportingPeriodBar';
 
+type AdminNavGroup = 'Overview' | 'Sales' | 'Delivery' | 'Finance' | 'Content' | 'Operations';
+
 interface NavItem {
   key: string;
   to: string;
@@ -42,24 +47,30 @@ interface NavItem {
   badge?: string | number | null;
   badgeColor?: string;
   exact?: boolean;
+  group: AdminNavGroup;
   requiredTier: AgencyTier;
 }
 
 type AdminNavItem = NavItem & { accessKey?: string };
 
-// Sidebar contains modules only. Feature-level views stay inside each module.
+// Sidebar items represent modules only. Feature views stay inside each module.
+const NAV_GROUPS: AdminNavGroup[] = ['Overview', 'Sales', 'Delivery', 'Finance', 'Content', 'Operations'];
+
 const STITCH_NAV_ITEMS: AdminNavItem[] = [
-  { key: 'dashboard', to: '/admin/dashboard', label: 'Dashboard', icon: Home, requiredTier: 2 },
-  { key: 'inbox', to: '/admin/inbox', label: 'Inbox', icon: Inbox, accessKey: 'inbox', requiredTier: 2 },
-  { key: 'clients', to: '/admin/clients/all-clients', label: 'Clients', icon: UsersRound, requiredTier: 3 },
-  { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, requiredTier: 3 },
-  { key: 'tasks', to: '/admin/tasks', label: 'Tasks', icon: ClipboardCheck, accessKey: 'projects', requiredTier: 3 },
-  { key: 'team', to: '/admin/team', label: 'Team', icon: UsersRound, accessKey: 'timelogs', requiredTier: 3 },
-  { key: 'time-logs', to: '/admin/time-logs', label: 'Time', icon: Clock3, accessKey: 'timelogs', requiredTier: 3 },
-  { key: 'finance', to: '/admin/finance', label: 'Finance', icon: Landmark, accessKey: 'invoicing', requiredTier: 2 },
-  { key: 'vendors', to: '/admin/vendors', label: 'Vendors', icon: Building2, accessKey: 'vendors', requiredTier: 3 },
-  { key: 'documents', to: '/admin/documents', label: 'Documents', icon: LockKeyhole, requiredTier: 3 },
-  { key: 'cms', to: '/admin/cms/projects', label: 'Website', icon: LayoutGrid, accessKey: 'cms_projects', requiredTier: 3 },
+  { key: 'dashboard', to: '/admin/dashboard', label: 'Dashboard', icon: Home, requiredTier: 2, group: 'Overview' },
+  { key: 'inbox', to: '/admin/inbox', label: 'Inbox', icon: Inbox, accessKey: 'inbox', requiredTier: 2, group: 'Sales' },
+  { key: 'crm', to: '/admin/crm', label: 'CRM', icon: Handshake, accessKey: 'crm', requiredTier: 3, group: 'Sales' },
+  { key: 'proposals', to: '/admin/proposals', label: 'Proposals', icon: FileText, accessKey: 'proposals', requiredTier: 3, group: 'Sales' },
+  { key: 'clients', to: '/admin/clients/all-clients', label: 'Clients', icon: UsersRound, requiredTier: 3, group: 'Sales' },
+  { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, requiredTier: 3, group: 'Delivery' },
+  { key: 'tasks', to: '/admin/tasks', label: 'Tasks', icon: ClipboardCheck, accessKey: 'projects', requiredTier: 3, group: 'Delivery' },
+  { key: 'team', to: '/admin/team', label: 'Team', icon: UsersRound, accessKey: 'timelogs', requiredTier: 3, group: 'Delivery' },
+  { key: 'time-logs', to: '/admin/time-logs', label: 'Time', icon: Clock3, accessKey: 'timelogs', requiredTier: 3, group: 'Delivery' },
+  { key: 'finance', to: '/admin/finance', label: 'Finance', icon: Landmark, accessKey: 'invoicing', requiredTier: 2, group: 'Finance' },
+  { key: 'vendors', to: '/admin/vendors', label: 'Vendors', icon: Building2, accessKey: 'vendors', requiredTier: 3, group: 'Finance' },
+  { key: 'cms', to: '/admin/cms/projects', label: 'Website', icon: LayoutGrid, accessKey: 'cms_projects', requiredTier: 3, group: 'Content' },
+  { key: 'documents', to: '/admin/documents', label: 'Documents', icon: LockKeyhole, requiredTier: 3, group: 'Operations' },
+  { key: 'approvals', to: '/admin/approvals', label: 'Approvals', icon: ShieldCheck, accessKey: 'approvals', requiredTier: 3, group: 'Operations' },
 ];
 
 const DEFAULT_PROFILE_NAME = 'Fikri Nurlete';
@@ -238,6 +249,7 @@ export const AdminLayout: React.FC = () => {
 
   const activeNavItem = filteredNavItems.find((item) => isItemActive(item.to));
   const activeItemLabel = activeNavItem?.label || 'Dashboard';
+  const getGroupItems = (group: AdminNavGroup) => filteredNavItems.filter((item) => item.group === group);
 
   return (
     <ReportingPeriodProvider>
@@ -285,28 +297,39 @@ export const AdminLayout: React.FC = () => {
         </div>
 
         <div className="flex-1 min-h-0 overflow-x-hidden overflow-y-auto overscroll-contain px-3.5 py-4 custom-scrollbar">
-          <nav aria-label="Primary navigation" className="space-y-1">
-            {filteredNavItems.map((item) => {
-              const Icon = item.icon;
-              const active = isItemActive(item.to);
+          <nav aria-label="Primary navigation" className="space-y-4">
+            {NAV_GROUPS.map((group) => {
+              const items = getGroupItems(group);
+              if (!items.length) return null;
               return (
-                <Link
-                  key={item.key}
-                  to={item.to}
-                  aria-current={active ? "page" : undefined}
-                  className={["group relative flex min-h-10 items-center gap-2.5 rounded-control px-2.5 text-[12px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent", active ? "border border-accent/25 bg-accent/10 text-fg" : "border border-transparent text-muted hover:border-line hover:bg-bg/70 hover:text-fg"].join(" ")}
-                >
-                  {active && <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-accent" aria-hidden="true" />}
-                  <span className={["flex h-7 w-7 shrink-0 items-center justify-center", active ? "text-fg" : "text-muted group-hover:text-fg"].join(" ")}>
-                    <Icon size={15} strokeWidth={active ? 2.1 : 1.8} />
-                  </span>
-                  <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                  {item.badge !== null && item.badge !== undefined && (
-                    <span className={["shrink-0 rounded-badge border px-1.5 py-0.5 text-[10px] font-semibold", active ? "border-accent/15 bg-bg text-muted" : "border-line bg-bg text-muted"].join(" ")}>
-                      {item.badge}
-                    </span>
-                  )}
-                </Link>
+                <section key={group} aria-label={group}>
+                  <div className="px-2 pb-1.5 text-[10px] font-medium tracking-wide text-muted">{group}</div>
+                  <div className="space-y-1">
+                    {items.map((item) => {
+                      const Icon = item.icon;
+                      const active = isItemActive(item.to);
+                      return (
+                        <Link
+                          key={item.key}
+                          to={item.to}
+                          aria-current={active ? "page" : undefined}
+                          className={["group relative flex min-h-10 items-center gap-2.5 rounded-control px-2.5 text-[12px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent", active ? "border border-accent/25 bg-accent/10 text-fg" : "border border-transparent text-muted hover:border-line hover:bg-bg/70 hover:text-fg"].join(" ")}
+                        >
+                          {active && <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-accent" aria-hidden="true" />}
+                          <span className={["flex h-7 w-7 shrink-0 items-center justify-center", active ? "text-fg" : "text-muted group-hover:text-fg"].join(" ")}>
+                            <Icon size={15} strokeWidth={active ? 2.1 : 1.8} />
+                          </span>
+                          <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                          {item.badge !== null && item.badge !== undefined && (
+                            <span className={["shrink-0 rounded-badge border px-1.5 py-0.5 text-[10px] font-semibold", active ? "border-accent/15 bg-bg text-muted" : "border-line bg-bg text-muted"].join(" ")}>
+                              {item.badge}
+                            </span>
+                          )}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </section>
               );
             })}
           </nav>
@@ -503,31 +526,41 @@ export const AdminLayout: React.FC = () => {
             </div>
 
             <nav aria-label="Primary navigation" className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-4 custom-scrollbar">
-              <div className="space-y-1">
-                {filteredNavItems.map((item) => {
-                  const Icon = item.icon;
-                  const active = isItemActive(item.to);
+              <div className="space-y-4">
+                {NAV_GROUPS.map((group) => {
+                  const items = getGroupItems(group);
+                  if (!items.length) return null;
                   return (
-                    <Link
-                      key={item.key}
-                      to={item.to}
-                      onClick={() => setMobileMenuOpen(false)}
-                      aria-current={active ? "page" : undefined}
-                      className={["group relative flex min-h-10 items-center gap-2.5 rounded-control px-2.5 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent", active ? "border border-accent/25 bg-accent/10 font-semibold text-fg" : "border border-transparent text-muted hover:border-line hover:bg-bg/70 hover:text-fg"].join(" ")}
-                    >
-                      {active && <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-accent" aria-hidden="true" />}
-                      <span className={["flex h-7 w-7 shrink-0 items-center justify-center", active ? "text-fg" : "text-muted group-hover:text-fg"].join(" ")}>
-                        <Icon size={16} strokeWidth={active ? 2.1 : 1.8} />
-                      </span>
-                      <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                      {item.badge !== null && item.badge !== undefined && (
-                        <span className="shrink-0 rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] font-semibold text-muted">{item.badge}</span>
-                      )}
-                    </Link>
+                    <section key={group} aria-label={group}>
+                      <div className="px-2 pb-1.5 text-[10px] font-medium tracking-wide text-muted">{group}</div>
+                      <div className="space-y-1">
+                        {items.map((item) => {
+                          const Icon = item.icon;
+                          const active = isItemActive(item.to);
+                          return (
+                            <Link
+                              key={item.key}
+                              to={item.to}
+                              onClick={() => setMobileMenuOpen(false)}
+                              aria-current={active ? "page" : undefined}
+                              className={["group relative flex min-h-10 items-center gap-2.5 rounded-control px-2.5 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent", active ? "border border-accent/25 bg-accent/10 font-semibold text-fg" : "border border-transparent text-muted hover:border-line hover:bg-bg/70 hover:text-fg"].join(" ")}
+                            >
+                              {active && <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-accent" aria-hidden="true" />}
+                              <span className={["flex h-7 w-7 shrink-0 items-center justify-center", active ? "text-fg" : "text-muted group-hover:text-fg"].join(" ")}>
+                                <Icon size={16} strokeWidth={active ? 2.1 : 1.8} />
+                              </span>
+                              <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                              {item.badge !== null && item.badge !== undefined && (
+                                <span className="shrink-0 rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] font-semibold text-muted">{item.badge}</span>
+                              )}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </section>
                   );
                 })}
-              </div>
-            </nav>
+              </nav>
             <div className="shrink-0 border-t border-line bg-bg px-2.5 pb-[max(10px,env(safe-area-inset-bottom))] pt-2.5">
               <div className="grid grid-cols-2 gap-2">
                 {canOpenMasterSettings && (
