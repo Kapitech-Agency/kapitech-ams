@@ -877,14 +877,12 @@ export const AdminSettings: React.FC = () => {
             { key: 'security', label: 'Access', to: '/admin/settings?tab=security' },
             { key: 'integrations', label: 'Integrations', to: '/admin/settings?tab=integrations' },
             { key: 'readiness', label: 'Readiness', to: '/admin/navigation/release-readiness' },
-            { key: 'docs', label: 'Documents', to: '/admin/documents' },
           ].filter((tab) =>
             (tab.key !== 'overview' || canAccessServer) &&
             (tab.key !== 'audit' || canViewAuditLogs) &&
             (tab.key !== 'security' || mfaSetupRequired || canManageAdminAccounts || canAccessServer) &&
             (tab.key !== 'integrations' || canAccessServer) &&
-            (tab.key !== 'readiness' || canAccessServer) &&
-            (tab.key !== 'docs' || canAccessServer)
+            (tab.key !== 'readiness' || canAccessServer)
           )}
         />
       </div>
