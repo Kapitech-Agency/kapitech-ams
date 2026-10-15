@@ -204,14 +204,15 @@ test('Finance worksheets embed the existing transactional workflows instead of r
   const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
   const vendors = await read('src/pages/admin/AdminVendors.tsx');
 
-  assert.match(invoicing, /type EmbeddedFinanceView = 'invoices' \| 'receivables' \| 'income-expenses' \| 'vendor-payments'/);
+  assert.match(invoicing, /type EmbeddedFinanceView = 'invoices' \| 'receivables' \| 'income-expenses' \| 'vendor-payments' \| 'quotations'/);
   assert.match(invoicing, /embeddedReceivablesOnly \|\| hasOpenReceivable/);
   assert.match(invoicing, /!embeddedReceivablesOnly && canCreateInvoice && <button[\s\S]*?onClick=\{openCreateInvoice\}/);
   assert.match(invoicing, /openPayment\(invoice\)/);
   assert.match(invoicing, /embeddedIncomeExpenseMode \|\| 'income'/);
   assert.match(invoicing, /Expense ledger/);
   assert.match(vendors, /export const AdminVendors: React\.FC<\{ embedded\?: boolean; searchTerm\?: string \}>/);
-  assert.match(vendors, /!embedded && <div className="min-\[900px\]:hidden min-w-0" data-ams-slug="team-mobile-tabs">/);
+  assert.match(vendors, /!embedded && <AdminModuleHeader/);
+  assert.doesNotMatch(vendors, /data-ams-slug="team-mobile-tabs"/);
   assert.match(workspace, /accountsByCode\.values\(\)/);
   assert.match(workspace, /This account code already exists/);
 });
@@ -223,7 +224,8 @@ test('Finance workbook replaces legacy finance navigation and keeps all operatio
   const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
 
   assert.ok(app.includes('<Route path="invoicing" element={<Navigate to="/admin/finance?tab=revenue" replace />} />'));
-  assert.doesNotMatch(app, /const AdminInvoicing = lazyWithRetry/);
+  assert.match(app, /const AdminInvoicing = lazyWithRetry/);
+  assert.ok(app.includes('<Route path="proposals" element={<ModuleRoute moduleKey="proposals" moduleLabel="Proposals"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />'));
   assert.doesNotMatch(layout, /location\.pathname === '\/admin\/invoicing'/);
   assert.doesNotMatch(layout, /Finance sections|finance=tax-retainers|finance=vendor-payments|finance=financial-reports/);
 
