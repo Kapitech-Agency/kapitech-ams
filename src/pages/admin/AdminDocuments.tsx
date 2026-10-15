@@ -70,7 +70,7 @@ type TabKey = 'all' | 'sops' | 'legal' | 'finance' | 'infra';
 type CategoryKey = 'all' | 'sop' | 'legal' | 'finance' | 'hr' | 'security';
 
 const DOCUMENT_TABS: Array<{ key: TabKey; label: string }> = [
-  { key: 'all', label: 'All Internal Documents' },
+  { key: 'all', label: 'All Documents' },
   { key: 'sops', label: 'SOPs & Policies' },
   { key: 'legal', label: 'Legal & Corporate' },
   { key: 'finance', label: 'Finance & Tax' },

@@ -398,10 +398,10 @@ export const AdminClientRetainers: React.FC = () => {
           ariaLabel="Clients sections"
           activeKey="retainers"
           items={[
-            { key: 'all-clients', label: 'All Clients', to: '/admin/clients' },
-            { key: 'retainers', label: 'Retainers', to: '/admin/clients/retainers' },
-            { key: 'sla-monitoring', label: 'SLA', to: '/admin/clients/sla-monitoring' },
-          ].filter((item) => item.key !== 'lead-accounts' || hasAdminPermission('canManageCrm'))}
+            { key: 'all-clients', label: 'Client Directory', to: '/admin/clients' },
+            { key: 'retainers', label: 'Retainer Plans', to: '/admin/clients/retainers' },
+            { key: 'sla-monitoring', label: 'SLA Monitoring', to: '/admin/clients/sla-monitoring' },
+          ]}
         />
       </div>
 

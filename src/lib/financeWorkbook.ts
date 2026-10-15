@@ -39,7 +39,7 @@ export const FINANCE_WORKBOOK_GROUPS: FinanceWorkbookGroup[] = [
     items: [
       { key: 'accounts-receivable', sheet: '06', label: 'Accounts Receivable', description: 'Invoice balances, due dates and payment status.' },
       { key: 'accounts-payable', sheet: '07', label: 'Accounts Payable', description: 'Vendor obligations and the bill records still required.' },
-      { key: 'vendors', sheet: '11', label: 'Vendor & Freelancer', description: 'Vendor directory, contracts, rates and payment references.' },
+      { key: 'vendors', sheet: '11', label: 'Vendors & Freelancers', description: 'Vendor directory, contracts, rates and payment references.' },
     ]
   },
   {

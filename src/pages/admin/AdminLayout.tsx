@@ -36,7 +36,7 @@ import Button from '../../components/ui/Button';
 import { ReportingPeriodProvider } from '../../lib/ReportingPeriodContext';
 import { AdminReportingPeriodBar } from '../../components/admin/AdminReportingPeriodBar';
 
-type AdminNavGroup = 'Overview' | 'Sales' | 'Delivery' | 'Finance' | 'Content' | 'Operations';
+type AdminNavGroup = 'Overview' | 'Sales & Clients' | 'Delivery' | 'People & Resources' | 'Finance' | 'Website & Content' | 'Operations';
 
 interface NavItem {
   key: string;
@@ -53,24 +53,23 @@ interface NavItem {
 type AdminNavItem = NavItem & { accessKey?: string; anyAccessKeys?: string[] };
 
 // Sidebar items represent modules only. Feature views stay inside each module.
-const NAV_GROUPS: AdminNavGroup[] = ['Overview', 'Sales', 'Delivery', 'Finance', 'Content', 'Operations'];
+const NAV_GROUPS: AdminNavGroup[] = ['Overview', 'Sales & Clients', 'Delivery', 'People & Resources', 'Finance', 'Website & Content', 'Operations'];
 
 const STITCH_NAV_ITEMS: AdminNavItem[] = [
   { key: 'dashboard', to: '/admin/dashboard', label: 'Dashboard', icon: Home, requiredTier: 2, group: 'Overview' },
-  { key: 'ui-preview', to: '/admin/ui-preview', label: 'UX/UI Preview', icon: LayoutGrid, accessKey: 'dashboard', requiredTier: 2, group: 'Overview' },
-  { key: 'inbox', to: '/admin/inbox', label: 'Inbox', icon: Inbox, accessKey: 'inbox', requiredTier: 2, group: 'Sales' },
-  { key: 'crm', to: '/admin/crm', label: 'CRM', icon: Briefcase, accessKey: 'crm', requiredTier: 3, group: 'Sales' },
-  { key: 'proposals', to: '/admin/proposals', label: 'Proposals', icon: FileText, accessKey: 'proposals', requiredTier: 3, group: 'Sales' },
-  { key: 'clients', to: '/admin/clients/all-clients', label: 'Clients', icon: UsersRound, requiredTier: 3, group: 'Sales' },
+  { key: 'inbox', to: '/admin/inbox', label: 'Inbox', icon: Inbox, accessKey: 'inbox', requiredTier: 2, group: 'Sales & Clients' },
+  { key: 'crm', to: '/admin/crm', label: 'CRM & Pipeline', icon: Briefcase, accessKey: 'crm', requiredTier: 3, group: 'Sales & Clients' },
+  { key: 'proposals', to: '/admin/proposals', label: 'Proposals & Quotes', icon: FileText, accessKey: 'proposals', requiredTier: 3, group: 'Sales & Clients' },
+  { key: 'clients', to: '/admin/clients/all-clients', label: 'Clients & Accounts', icon: UsersRound, requiredTier: 3, group: 'Sales & Clients' },
   { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, requiredTier: 3, group: 'Delivery' },
   { key: 'tasks', to: '/admin/tasks', label: 'Tasks', icon: ClipboardCheck, accessKey: 'projects', requiredTier: 3, group: 'Delivery' },
-  { key: 'team', to: '/admin/team', label: 'Team', icon: UsersRound, accessKey: 'timelogs', requiredTier: 3, group: 'Delivery' },
-  { key: 'time-logs', to: '/admin/time-logs', label: 'Time', icon: Clock3, accessKey: 'timelogs', requiredTier: 3, group: 'Delivery' },
+  { key: 'team', to: '/admin/team', label: 'Team', icon: UsersRound, accessKey: 'timelogs', requiredTier: 3, group: 'People & Resources' },
+  { key: 'time-logs', to: '/admin/time-logs', label: 'Time Tracking', icon: Clock3, accessKey: 'timelogs', requiredTier: 3, group: 'People & Resources' },
+  { key: 'vendors', to: '/admin/vendors', label: 'Vendors', icon: Building2, accessKey: 'vendors', requiredTier: 3, group: 'People & Resources' },
   { key: 'finance', to: '/admin/finance', label: 'Finance', icon: Landmark, accessKey: 'invoicing', requiredTier: 2, group: 'Finance' },
-  { key: 'vendors', to: '/admin/vendors', label: 'Vendors', icon: Building2, accessKey: 'vendors', requiredTier: 3, group: 'Finance' },
-  { key: 'cms', to: '/admin/cms/projects', label: 'Website', icon: LayoutGrid, anyAccessKeys: ['cms_projects', 'services', 'testimonials', 'cms_insights'], requiredTier: 3, group: 'Content' },
-  { key: 'documents', to: '/admin/documents', label: 'Documents', icon: LockKeyhole, requiredTier: 3, group: 'Operations' },
+  { key: 'cms', to: '/admin/cms/projects', label: 'Website CMS', icon: LayoutGrid, anyAccessKeys: ['cms_projects', 'services', 'testimonials', 'cms_insights'], requiredTier: 3, group: 'Website & Content' },
   { key: 'approvals', to: '/admin/approvals', label: 'Approvals', icon: ShieldCheck, accessKey: 'approvals', requiredTier: 3, group: 'Operations' },
+  { key: 'documents', to: '/admin/documents', label: 'Documents', icon: LockKeyhole, requiredTier: 3, group: 'Operations' },
 ];
 
 const DEFAULT_PROFILE_NAME = 'Fikri Nurlete';
@@ -631,9 +630,9 @@ export const AdminLayout: React.FC = () => {
                   ariaLabel="Clients sections"
                   activeKey={location.pathname === '/admin/clients/retainers' ? 'retainers' : location.pathname === '/admin/clients/sla-monitoring' ? 'sla-monitoring' : location.pathname === '/admin/clients' || location.pathname === '/admin/clients/all-clients' ? 'all-clients' : ''}
                   items={[
-                    { key: 'all-clients', label: 'All Clients', to: '/admin/clients/all-clients' },
-                    { key: 'retainers', label: 'Retainers', to: '/admin/clients/retainers' },
-                    { key: 'sla-monitoring', label: 'SLA', to: '/admin/clients/sla-monitoring' }
+                    { key: 'all-clients', label: 'Client Directory', to: '/admin/clients/all-clients' },
+                    { key: 'retainers', label: 'Retainer Plans', to: '/admin/clients/retainers' },
+                    { key: 'sla-monitoring', label: 'SLA Monitoring', to: '/admin/clients/sla-monitoring' }
                   ]}
                 />
               ) : location.pathname.startsWith('/admin/cms/') ? (
@@ -641,7 +640,7 @@ export const AdminLayout: React.FC = () => {
                   ariaLabel="CMS sections"
                   activeKey={location.pathname.split('/').pop() || 'projects'}
                   items={[
-                    { key: 'projects', label: 'Projects', to: '/admin/cms/projects', slug: 'cms-tab-projects', permission: 'cms_projects' },
+                    { key: 'projects', label: 'Case Studies', to: '/admin/cms/projects', slug: 'cms-tab-projects', permission: 'cms_projects' },
                     { key: 'services', label: 'Services', to: '/admin/cms/services', slug: 'cms-tab-services', permission: 'services' },
                     { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials', slug: 'cms-tab-testimonials', permission: 'testimonials' },
                     { key: 'insights', label: 'Insights', to: '/admin/cms/insights', slug: 'cms-tab-insights', permission: 'cms_insights' },
@@ -665,7 +664,7 @@ export const AdminLayout: React.FC = () => {
                   items={[
                     { key: 'all', label: 'All Projects', to: '/admin/projects' },
                     { key: 'sprint', label: 'Delivery', to: '/admin/projects?projects=sprint' },
-                    { key: 'budget', label: 'Budget', to: '/admin/projects?projects=budget' },
+                    { key: 'budget', label: 'Budget vs Actual', to: '/admin/projects?projects=budget' },
                     { key: 'archived', label: 'Archived', to: '/admin/projects?projects=archived' }
                   ]}
                 />
@@ -676,8 +675,8 @@ export const AdminLayout: React.FC = () => {
                   items={[
                     { key: 'all', label: 'All Tasks', to: '/admin/dashboard?view=tasks', slug: 'task-tab-all' },
                     { key: 'my', label: 'My Tasks', to: '/admin/dashboard?view=tasks&taskscope=my', slug: 'task-tab-my' },
-                    { key: 'due', label: 'Due', to: '/admin/dashboard?view=tasks&taskscope=due', slug: 'task-tab-due' },
-                    { key: 'review', label: 'Review', to: '/admin/dashboard?view=tasks&taskscope=review', slug: 'task-tab-review' },
+                    { key: 'due', label: 'Due & Overdue', to: '/admin/dashboard?view=tasks&taskscope=due', slug: 'task-tab-due' },
+                    { key: 'review', label: 'Review Queue', to: '/admin/dashboard?view=tasks&taskscope=review', slug: 'task-tab-review' },
                     { key: 'blocked', label: 'Blocked', to: '/admin/dashboard?view=tasks&taskscope=blocked', slug: 'task-tab-blocked' },
                     { key: 'completed', label: 'Completed', to: '/admin/dashboard?view=tasks&taskscope=completed', slug: 'task-tab-completed' }
                   ]}
@@ -689,8 +688,8 @@ export const AdminLayout: React.FC = () => {
                   items={[
                     { key: 'all', label: 'All Tasks', to: '/admin/tasks', slug: 'task-tab-all' },
                     { key: 'my', label: 'My Tasks', to: '/admin/tasks?taskscope=my', slug: 'task-tab-my' },
-                    { key: 'due', label: 'Due', to: '/admin/tasks?taskscope=due', slug: 'task-tab-due' },
-                    { key: 'review', label: 'Review', to: '/admin/tasks?taskscope=review', slug: 'task-tab-review' },
+                    { key: 'due', label: 'Due & Overdue', to: '/admin/tasks?taskscope=due', slug: 'task-tab-due' },
+                    { key: 'review', label: 'Review Queue', to: '/admin/tasks?taskscope=review', slug: 'task-tab-review' },
                     { key: 'blocked', label: 'Blocked', to: '/admin/tasks?taskscope=blocked', slug: 'task-tab-blocked' },
                     { key: 'completed', label: 'Completed', to: '/admin/tasks?taskscope=completed', slug: 'task-tab-completed' }
                   ]}
@@ -701,8 +700,8 @@ export const AdminLayout: React.FC = () => {
                   activeKey={new URLSearchParams(location.search).get('view') || 'overview'}
                   items={[
                     { key: 'overview', label: 'Overview', to: '/admin/inbox?view=overview', slug: 'inbox-tab-overview' },
-                    { key: 'client', label: 'Clients', to: '/admin/inbox?view=client', slug: 'inbox-tab-client' },
-                    { key: 'jobs', label: 'Jobs', to: '/admin/inbox?view=jobs', slug: 'inbox-tab-jobs' },
+                    { key: 'client', label: 'Client Requests', to: '/admin/inbox?view=client', slug: 'inbox-tab-client' },
+                    { key: 'jobs', label: 'Job Applications', to: '/admin/inbox?view=jobs', slug: 'inbox-tab-jobs' },
                     { key: 'starred', label: 'Starred', to: '/admin/inbox?view=starred', slug: 'inbox-tab-starred' }
                   ]}
                 />
@@ -761,10 +760,10 @@ export const AdminLayout: React.FC = () => {
                   activeKey={new URLSearchParams(location.search).get('documents') || 'all'}
                   items={[
                     { key: 'all', label: 'All Documents', to: '/admin/documents', slug: 'documents-tab-all' },
-                    { key: 'sops', label: 'Policies', to: '/admin/documents?documents=sops', slug: 'documents-tab-sops' },
-                    { key: 'legal', label: 'Legal', to: '/admin/documents?documents=legal', slug: 'documents-tab-legal' },
-                    { key: 'finance', label: 'Finance', to: '/admin/documents?documents=finance', slug: 'documents-tab-finance' },
-                    { key: 'infra', label: 'Access', to: '/admin/documents?documents=infra', slug: 'documents-tab-infra' }
+                    { key: 'sops', label: 'SOPs & Policies', to: '/admin/documents?documents=sops', slug: 'documents-tab-sops' },
+                    { key: 'legal', label: 'Legal & Corporate', to: '/admin/documents?documents=legal', slug: 'documents-tab-legal' },
+                    { key: 'finance', label: 'Finance & Tax', to: '/admin/documents?documents=finance', slug: 'documents-tab-finance' },
+                    { key: 'infra', label: 'Infrastructure & Keys', to: '/admin/documents?documents=infra', slug: 'documents-tab-infra' }
                   ]}
                 />
               ) : (
