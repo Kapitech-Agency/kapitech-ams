@@ -178,7 +178,7 @@ export const AdminInbox: React.FC = () => {
 
   const inboxTabs: Array<{ key: InboxTab; label: string; count: number }> = [
     { key: 'overview', label: 'Overview', count: submissions.length },
-    { key: 'client', label: 'Client Inbox', count: submissions.filter((item) => item.type !== 'career').length },
+    { key: 'client', label: 'Client Requests', count: submissions.filter((item) => item.type !== 'career').length },
     { key: 'jobs', label: 'Job Applications', count: submissions.filter((item) => item.type === 'career').length },
     { key: 'starred', label: 'Starred', count: submissions.filter((item) => !!item.starred).length }
   ];
