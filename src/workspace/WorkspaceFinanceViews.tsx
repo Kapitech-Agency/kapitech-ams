@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { AlertTriangle, ArrowUpDown, ArrowUpRight, CalendarDays, Download, FileText, Plus, Receipt, WalletCards } from 'lucide-react';
-import { Modal } from '../components/ui/Modal';
+import { Drawer } from '../components/ui/Drawer';
 import { WorkspaceRole } from './workspaceAccess';
 import {
   ActionButton,
@@ -192,7 +192,7 @@ export const InvoiceLedgerView: React.FC = () => {
           <TextField label="Scheduled billing date" type="date" value={scheduledDate} onChange={(event) => setScheduledDate(event.target.value)} required />
           {selectedInvoice && <div className="rounded-control border border-line bg-bg p-3"><p className="text-[11px] font-semibold text-fg">{selectedInvoice.milestone}</p><p className="mt-1 text-[12px] tabular-nums text-muted">{idr(selectedInvoice.amount)}</p></div>}
         </form>
-      </Modal>
+      </Drawer>
     </WorkspacePage>
   );
 };
