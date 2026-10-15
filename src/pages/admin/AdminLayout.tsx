@@ -15,7 +15,7 @@ import { CommandPalette } from '../../components/admin/CommandPalette';
 import { AdminNotificationCenter } from '../../components/admin/AdminNotificationCenter';
 import { Modal } from '../../components/ui/Modal';
 import { AGENCY_TIER_LABELS, getAgencyTier } from '../../lib/rbacEngine';
-import { getAmsRole, getNavigationGroupsForRole, isNavigationItemActive } from '../../lib/amsNavigationAccess';
+import { AMS_PRIMARY_SETTINGS_ITEM, getAmsRole, getPrimaryNavigationForRole, isNavigationItemActive } from '../../lib/amsNavigationAccess';
 import { AmsBrandLogo } from '../../components/admin/AmsBrandLogo';
 import UserProfileSettingsModal from '../../components/admin/UserProfileSettingsModal';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
@@ -158,12 +158,46 @@ export const AdminLayout: React.FC = () => {
     session?.user?.role
   );
   const profileTitle = session?.user?.role || DEFAULT_PROFILE_TITLE;
-  const filteredNavItems = getNavigationGroupsForRole(amsRole)
-    .flatMap((group) => group.items);
-  const activeNavItem = filteredNavItems.find((item) =>
+  const primaryNavItems = getPrimaryNavigationForRole(amsRole);
+  const navItemsForActiveState = [
+    ...primaryNavItems,
+    ...(amsRole === 'Admin' ? [AMS_PRIMARY_SETTINGS_ITEM] : []),
+  ];
+  const activeNavItem = navItemsForActiveState.find((item) =>
     isNavigationItemActive(item, location.pathname, location.search, location.hash)
   );
-  const activeItemLabel = activeNavItem?.label || 'Personal Workspace / My Hub';
+  const activeItemLabel = activeNavItem?.label || 'Dashboard';
+
+  const routeQuery = new URLSearchParams(location.search);
+  const isMyHubRoute = location.pathname === '/admin/tasks'
+    && routeQuery.get('taskscope') === 'my'
+    && routeQuery.get('workspace') !== 'project';
+  const isActivityRoute = location.pathname === '/admin/navigation/live-activity';
+  const isDashboardModuleRoute = (
+    location.pathname === '/admin/dashboard' && routeQuery.get('view') !== 'tasks'
+  ) || isMyHubRoute || isActivityRoute;
+  const isCrmModuleRoute = [
+    '/admin/crm',
+    '/admin/inbox',
+    '/admin/clients',
+    '/admin/clients/all-clients',
+    '/admin/clients/sla-monitoring',
+    '/admin/contracts',
+  ].includes(location.pathname);
+  const isProjectsModuleRoute = location.pathname === '/admin/projects'
+    || (location.pathname === '/admin/tasks' && !isMyHubRoute)
+    || location.pathname === '/admin/clients/retainers'
+    || location.pathname === '/admin/team'
+    || location.pathname === '/admin/time-logs';
+  const isFinanceModuleRoute = [
+    '/admin/finance',
+    '/admin/proposals',
+    '/admin/invoicing',
+    '/admin/vendors',
+    '/admin/approvals',
+  ].includes(location.pathname);
+  const isSettingsModuleRoute = location.pathname === '/admin/settings'
+    || location.pathname === '/admin/navigation/release-readiness';
 
   return (
     <ReportingPeriodProvider>
@@ -432,145 +466,124 @@ export const AdminLayout: React.FC = () => {
         <header className="hidden min-[900px]:flex h-[52px] min-h-[52px] border-b border-line bg-panel sticky top-0 z-30 items-center shrink-0" aria-label="AMS top bar">
           <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-5 lg:px-6 flex min-w-0 items-center justify-between gap-3">
             <div className="min-w-0 flex-1 overflow-hidden">
-              {location.pathname.startsWith('/admin/clients') ? (
+              {isDashboardModuleRoute ? (
                 <AdminTopbarTabs
-                  ariaLabel="Clients sections"
-                  activeKey={location.pathname === '/admin/clients/retainers' ? 'retainers' : location.pathname === '/admin/clients/sla-monitoring' ? 'sla-monitoring' : location.pathname === '/admin/clients' || location.pathname === '/admin/clients/all-clients' ? 'all-clients' : ''}
+                  ariaLabel="Dashboard sections"
+                  activeKey={isActivityRoute ? 'activity' : isMyHubRoute ? 'my-hub' : routeQuery.get('view') || 'overview'}
                   items={[
-                    { key: 'all-clients', label: 'Client Directory', to: '/admin/clients/all-clients' },
-                    { key: 'retainers', label: 'Retainer Plans', to: '/admin/clients/retainers' },
-                    { key: 'sla-monitoring', label: 'SLA Monitoring', to: '/admin/clients/sla-monitoring' }
+                    { key: 'overview', label: 'Overview', to: '/admin/dashboard' },
+                    { key: 'performance', label: 'Performance', to: '/admin/dashboard?view=performance' },
+                    { key: 'analytics', label: 'Analytics', to: '/admin/dashboard?view=analytics' },
+                    { key: 'my-hub', label: 'My Hub', to: '/admin/tasks?taskscope=my' },
+                    { key: 'activity', label: 'Activity', to: '/admin/navigation/live-activity' },
+                  ]}
+                />
+              ) : isCrmModuleRoute ? (
+                <AdminTopbarTabs
+                  ariaLabel="CRM sections"
+                  activeKey={
+                    location.pathname === '/admin/crm' ? 'pipeline'
+                      : location.pathname === '/admin/inbox' ? 'inbox'
+                      : location.pathname === '/admin/contracts' ? 'contracts'
+                      : location.pathname === '/admin/clients/sla-monitoring' ? 'sla'
+                      : location.hash === '#client-onboarding-readiness' ? 'onboarding'
+                      : 'clients'
+                  }
+                  items={[
+                    { key: 'pipeline', label: 'Pipeline', to: '/admin/crm' },
+                    { key: 'clients', label: 'Clients', to: '/admin/clients/all-clients' },
+                    { key: 'onboarding', label: 'Onboarding', to: '/admin/clients/all-clients#client-onboarding-readiness' },
+                    { key: 'inbox', label: 'Inbox', to: '/admin/inbox' },
+                    { key: 'contracts', label: 'Contracts', to: '/admin/contracts' },
+                    { key: 'sla', label: 'SLA', to: '/admin/clients/sla-monitoring' },
                   ]}
                 />
               ) : location.pathname.startsWith('/admin/cms/') ? (
                 <AdminTopbarTabs
                   ariaLabel="CMS sections"
-                  activeKey={location.pathname.split('/').pop() || 'projects'}
+                  activeKey={location.pathname.split('/').pop() || 'insights'}
                   items={[
-                    { key: 'projects', label: 'Case Studies', to: '/admin/cms/projects', slug: 'cms-tab-projects', permission: 'cms_projects' },
-                    { key: 'services', label: 'Services', to: '/admin/cms/services', slug: 'cms-tab-services', permission: 'services' },
-                    { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials', slug: 'cms-tab-testimonials', permission: 'testimonials' },
                     { key: 'insights', label: 'Insights', to: '/admin/cms/insights', slug: 'cms-tab-insights', permission: 'cms_insights' },
-                    { key: 'careers', label: 'Careers', to: '/admin/cms/careers', slug: 'cms-tab-careers', permission: 'cms_projects' }
+                    { key: 'projects', label: 'Portfolio', to: '/admin/cms/projects', slug: 'cms-tab-projects', permission: 'cms_projects' },
+                    { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials', slug: 'cms-tab-testimonials', permission: 'testimonials' },
+                    { key: 'services', label: 'Services', to: '/admin/cms/services', slug: 'cms-tab-services', permission: 'services' },
+                    { key: 'careers', label: 'Careers', to: '/admin/cms/careers', slug: 'cms-tab-careers', permission: 'cms_projects' },
                   ]}
                 />
-              ) : location.pathname === '/admin/dashboard' && new URLSearchParams(location.search).get('view') !== 'tasks' ? (
-                <AdminTopbarTabs
-                  ariaLabel="Dashboard view"
-                  activeKey={new URLSearchParams(location.search).get('view') || 'overview'}
-                  items={[
-                    { key: 'overview', label: 'Overview', to: '/admin/dashboard' },
-                    { key: 'performance', label: 'Performance', to: '/admin/dashboard?view=performance' },
-                    { key: 'analytics', label: 'Analytics', to: '/admin/dashboard?view=analytics' }
-                  ]}
-                />
-              ) : location.pathname === '/admin/projects' ? (
+              ) : isProjectsModuleRoute ? (
                 <AdminTopbarTabs
                   ariaLabel="Projects sections"
-                  activeKey={new URLSearchParams(location.search).get('projects') || 'all'}
+                  activeKey={
+                    location.pathname === '/admin/tasks' ? 'tasks'
+                      : location.pathname === '/admin/clients/retainers' ? 'retainers'
+                      : location.pathname === '/admin/team' && routeQuery.get('view') === 'capacity-allocation' ? 'capacity'
+                      : location.pathname === '/admin/team' ? 'team'
+                      : location.pathname === '/admin/time-logs' ? 'time'
+                      : routeQuery.get('projects') || 'all'
+                  }
                   items={[
-                    { key: 'all', label: 'All Projects', to: '/admin/projects' },
+                    { key: 'all', label: 'Projects', to: (amsRole === 'Finance' || amsRole === 'Creative') ? '/admin/projects?projects=sprint' : '/admin/projects' },
                     { key: 'sprint', label: 'Delivery', to: '/admin/projects?projects=sprint' },
-                    { key: 'budget', label: 'Budget vs Actual', to: '/admin/projects?projects=budget' },
-                    { key: 'archived', label: 'Archived', to: '/admin/projects?projects=archived' }
+                    { key: 'budget', label: 'Budget', to: '/admin/projects?projects=budget' },
+                    { key: 'archived', label: 'Archived', to: '/admin/projects?projects=archived' },
+                    { key: 'tasks', label: amsRole === 'Freelancer' ? 'My Task' : 'Tasks', to: (['Finance', 'Creative', 'Freelancer'].includes(amsRole)) ? '/admin/tasks?taskscope=my&workspace=project' : '/admin/tasks' },
+                    { key: 'retainers', label: 'Retainers', to: '/admin/clients/retainers' },
+                    { key: 'team', label: 'Team', to: '/admin/team' },
+                    { key: 'capacity', label: 'Capacity', to: '/admin/team?view=capacity-allocation' },
+                    { key: 'time', label: 'Time', to: '/admin/time-logs' },
                   ]}
                 />
-              ) : location.pathname === '/admin/dashboard' && new URLSearchParams(location.search).get('view') === 'tasks' ? (
+              ) : isFinanceModuleRoute ? (
                 <AdminTopbarTabs
-                  ariaLabel="Tasks sections"
-                  activeKey={new URLSearchParams(location.search).get('taskscope') || 'all'}
+                  ariaLabel="Finance sections"
+                  activeKey={
+                    location.pathname === '/admin/proposals' ? 'quotes'
+                      : location.pathname === '/admin/vendors' ? 'vendors'
+                      : location.pathname === '/admin/approvals' ? 'approvals'
+                      : routeQuery.get('tab') === 'accounts-payable' ? 'expenses'
+                      : routeQuery.get('tab') === 'project-finance' ? 'projects'
+                      : FINANCE_WORKBOOK_GROUPS.find((group) => group.items.some((item) => item.key === (routeQuery.get('tab') || 'executive-summary')))?.key || 'overview'
+                  }
                   items={[
-                    { key: 'all', label: 'All Tasks', to: '/admin/dashboard?view=tasks', slug: 'task-tab-all' },
-                    { key: 'my', label: 'My Tasks', to: '/admin/dashboard?view=tasks&taskscope=my', slug: 'task-tab-my' },
-                    { key: 'due', label: 'Due & Overdue', to: '/admin/dashboard?view=tasks&taskscope=due', slug: 'task-tab-due' },
-                    { key: 'review', label: 'Review Queue', to: '/admin/dashboard?view=tasks&taskscope=review', slug: 'task-tab-review' },
-                    { key: 'blocked', label: 'Blocked', to: '/admin/dashboard?view=tasks&taskscope=blocked', slug: 'task-tab-blocked' },
-                    { key: 'completed', label: 'Completed', to: '/admin/dashboard?view=tasks&taskscope=completed', slug: 'task-tab-completed' }
-                  ]}
-                />
-              ) : location.pathname === '/admin/tasks' ? (
-                <AdminTopbarTabs
-                  ariaLabel="Tasks sections"
-                  activeKey={new URLSearchParams(location.search).get('taskscope') || 'all'}
-                  items={[
-                    { key: 'all', label: 'All Tasks', to: '/admin/tasks', slug: 'task-tab-all' },
-                    { key: 'my', label: 'My Tasks', to: '/admin/tasks?taskscope=my', slug: 'task-tab-my' },
-                    { key: 'due', label: 'Due & Overdue', to: '/admin/tasks?taskscope=due', slug: 'task-tab-due' },
-                    { key: 'review', label: 'Review Queue', to: '/admin/tasks?taskscope=review', slug: 'task-tab-review' },
-                    { key: 'blocked', label: 'Blocked', to: '/admin/tasks?taskscope=blocked', slug: 'task-tab-blocked' },
-                    { key: 'completed', label: 'Completed', to: '/admin/tasks?taskscope=completed', slug: 'task-tab-completed' }
-                  ]}
-                />
-              ) : location.pathname === '/admin/inbox' ? (
-                <AdminTopbarTabs
-                  ariaLabel="Inbox sections"
-                  activeKey={new URLSearchParams(location.search).get('view') || 'overview'}
-                  items={[
-                    { key: 'overview', label: 'Overview', to: '/admin/inbox?view=overview', slug: 'inbox-tab-overview' },
-                    { key: 'client', label: 'Client Requests', to: '/admin/inbox?view=client', slug: 'inbox-tab-client' },
-                    { key: 'jobs', label: 'Job Applications', to: '/admin/inbox?view=jobs', slug: 'inbox-tab-jobs' },
-                    { key: 'starred', label: 'Starred', to: '/admin/inbox?view=starred', slug: 'inbox-tab-starred' }
-                  ]}
-                />
-              ) : location.pathname === '/admin/finance' ? (
-                <AdminTopbarTabs
-                  ariaLabel={t('admin.finance.sections')}
-                  activeKey={(() => {
-                    const requestedTab = new URLSearchParams(location.search).get('tab') || 'executive-summary';
-                    return FINANCE_WORKBOOK_GROUPS.find((group) => group.items.some((item) => item.key === requestedTab))?.key || 'overview';
-                  })()}
-                  items={[
-                    { key: 'overview', label: t('admin.finance.tab.overviewControl'), to: '/admin/finance?tab=executive-summary', slug: 'finance-tab-overview-control' },
-                    { key: 'transactions', label: t('admin.finance.tab.transactionsCash'), to: '/admin/finance?tab=cash-bank', slug: 'finance-tab-transactions-cash' },
-                    { key: 'receivables', label: t('admin.finance.tab.receivablesPayables'), to: '/admin/finance?tab=accounts-receivable', slug: 'finance-tab-receivables-payables' },
-                    { key: 'projects', label: t('admin.finance.tab.projectFinance'), to: '/admin/finance?tab=project-finance', slug: 'finance-tab-project-finance' },
-                    { key: 'accounting', label: t('admin.finance.tab.accountingReports'), to: '/admin/finance?tab=journal', slug: 'finance-tab-accounting-reports' }
-                  ]}
-                />
-              ) : location.pathname === '/admin/team' ? (
-                <AdminTopbarTabs
-                  ariaLabel="Team sections"
-                  activeKey={new URLSearchParams(location.search).get('view') || 'team-directory'}
-                  items={[
-                    { key: 'team-directory', label: 'Team Directory', to: '/admin/team' },
-                    { key: 'capacity-allocation', label: 'Capacity', to: '/admin/team?view=capacity-allocation' }
-                  ]}
-                />
-              ) : location.pathname === '/admin/vendors' ? (
-                <AdminTopbarTabs
-                  ariaLabel="Vendors sections"
-                  activeKey={new URLSearchParams(location.search).get('view') || 'vendor-directory'}
-                  items={[
-                    { key: 'vendor-directory', label: 'Vendor Directory', to: '/admin/vendors' },
-                    { key: 'skill-matrix', label: 'Skills', to: '/admin/vendors?view=skill-matrix' }
-                  ]}
-                />
-              ) : location.pathname === '/admin/settings' ? (
-                <AdminTopbarTabs
-                  ariaLabel="Settings sections"
-                  activeKey={(() => {
-                    const activeTab = new URLSearchParams(location.search).get('tab') || 'overview';
-                    if (['profile', 'rbac'].includes(activeTab)) return 'security';
-                    if (['branding', 'api'].includes(activeTab)) return 'integrations';
-                    return activeTab;
-                  })()}
-                  items={[
-                    { key: 'overview', label: 'Overview', to: '/admin/settings?tab=overview' },
-                    { key: 'audit', label: 'Audit Logs', to: '/admin/settings?tab=audit' },
-                    { key: 'security', label: 'Security', to: '/admin/settings?tab=security' },
-                    { key: 'integrations', label: 'Integrations', to: '/admin/settings?tab=integrations' }
+                    { key: 'overview', label: 'Overview', to: '/admin/finance?tab=executive-summary' },
+                    { key: 'transactions', label: 'Transactions', to: '/admin/finance?tab=cash-bank' },
+                    { key: 'receivables', label: 'Invoices', to: '/admin/finance?tab=accounts-receivable' },
+                    { key: 'expenses', label: 'Expenses', to: '/admin/finance?tab=accounts-payable' },
+                    { key: 'projects', label: 'Profit', to: '/admin/finance?tab=project-finance' },
+                    { key: 'accounting', label: 'Accounting', to: '/admin/finance?tab=journal' },
+                    { key: 'quotes', label: 'Quotes', to: '/admin/proposals' },
+                    { key: 'vendors', label: 'Vendors', to: '/admin/vendors' },
+                    { key: 'approvals', label: 'Approvals', to: '/admin/approvals' },
                   ]}
                 />
               ) : location.pathname === '/admin/documents' ? (
                 <AdminTopbarTabs
                   ariaLabel="Documents sections"
-                  activeKey={new URLSearchParams(location.search).get('documents') || 'all'}
+                  activeKey={routeQuery.get('documents') || 'all'}
                   items={[
-                    { key: 'all', label: 'All Documents', to: '/admin/documents', slug: 'documents-tab-all' },
-                    { key: 'sops', label: 'SOPs & Policies', to: '/admin/documents?documents=sops', slug: 'documents-tab-sops' },
-                    { key: 'legal', label: 'Legal & Corporate', to: '/admin/documents?documents=legal', slug: 'documents-tab-legal' },
+                    { key: 'all', label: 'All', to: '/admin/documents', slug: 'documents-tab-all' },
+                    { key: 'sops', label: 'Policies', to: '/admin/documents?documents=sops', slug: 'documents-tab-sops' },
+                    { key: 'legal', label: 'Legal', to: '/admin/documents?documents=legal', slug: 'documents-tab-legal' },
                     { key: 'finance', label: 'Finance & Tax', to: '/admin/documents?documents=finance', slug: 'documents-tab-finance' },
-                    { key: 'infra', label: 'Infrastructure & Keys', to: '/admin/documents?documents=infra', slug: 'documents-tab-infra' }
+                    { key: 'infra', label: 'Infrastructure', to: '/admin/documents?documents=infra', slug: 'documents-tab-infra' },
+                  ]}
+                />
+              ) : isSettingsModuleRoute ? (
+                <AdminTopbarTabs
+                  ariaLabel="Settings sections"
+                  activeKey={
+                    location.pathname === '/admin/navigation/release-readiness' ? 'readiness'
+                      : ['profile', 'rbac', 'security'].includes(routeQuery.get('tab') || '') ? 'access'
+                      : ['branding', 'api', 'integrations'].includes(routeQuery.get('tab') || '') ? 'integrations'
+                      : routeQuery.get('tab') === 'audit' ? 'audit'
+                      : 'backup'
+                  }
+                  items={[
+                    { key: 'backup', label: 'Backup', to: '/admin/settings?tab=overview' },
+                    { key: 'access', label: 'Access', to: '/admin/settings?tab=security' },
+                    { key: 'audit', label: 'Audit', to: '/admin/settings?tab=audit' },
+                    { key: 'integrations', label: 'Integrations', to: '/admin/settings?tab=integrations' },
+                    { key: 'readiness', label: 'Readiness', to: '/admin/navigation/release-readiness' },
                   ]}
                 />
               ) : (
