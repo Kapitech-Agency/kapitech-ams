@@ -3,6 +3,7 @@ import { Search, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, AlertTria
 import { Link, NavLink } from 'react-router-dom';
 import { CustomSelect } from '../ui/CustomSelect';
 import { cn } from '../../lib/cn';
+import { hasAdminPermission } from '../../lib/adminAuth';
 
 export { Skeleton } from '../ui/Skeleton';
 
@@ -32,6 +33,7 @@ export interface AdminSectionTabItem {
   label: string;
   to: string;
   slug?: string;
+  permission?: string;
 }
 
 export interface AdminSectionTabsProps {
@@ -54,7 +56,7 @@ export const AdminSectionTabs: React.FC<AdminSectionTabsProps> = ({
       className
     )}
   >
-    {items.map((item) => {
+    {items.filter((item) => !item.permission || hasAdminPermission(item.permission)).map((item) => {
       const active = activeKey === item.key;
       return (
         <NavLink
@@ -86,7 +88,7 @@ export const AdminTopbarTabs: React.FC<AdminSectionTabsProps> = ({
     aria-label={ariaLabel}
     className={cn('inline-flex min-w-0 max-w-full items-center gap-0.5 overflow-x-auto ams-topnav-scroll', className)}
   >
-    {items.map((item) => {
+    {items.filter((item) => !item.permission || hasAdminPermission(item.permission)).map((item) => {
       const active = activeKey === item.key;
       return (
         <Link
@@ -112,11 +114,11 @@ export const AdminTopbarTabs: React.FC<AdminSectionTabsProps> = ({
 export type AdminCmsSectionKey = 'projects' | 'services' | 'testimonials' | 'insights' | 'careers';
 
 const CMS_SECTION_ITEMS: AdminSectionTabItem[] = [
-  { key: 'projects', label: 'Projects', to: '/admin/cms/projects' },
-  { key: 'services', label: 'Services', to: '/admin/cms/services' },
-  { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials' },
-  { key: 'insights', label: 'Insights', to: '/admin/cms/insights' },
-  { key: 'careers', label: 'Careers', to: '/admin/cms/careers' },
+  { key: 'projects', label: 'Projects', to: '/admin/cms/projects', permission: 'cms_projects' },
+  { key: 'services', label: 'Services', to: '/admin/cms/services', permission: 'services' },
+  { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials', permission: 'testimonials' },
+  { key: 'insights', label: 'Insights', to: '/admin/cms/insights', permission: 'cms_insights' },
+  { key: 'careers', label: 'Careers', to: '/admin/cms/careers', permission: 'cms_projects' },
 ];
 
 export const AdminCmsSectionTabs: React.FC<{ activeKey: AdminCmsSectionKey }> = ({ activeKey }) => (

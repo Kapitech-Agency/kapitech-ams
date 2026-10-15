@@ -212,12 +212,24 @@ export const AdminLayout: React.FC = () => {
 
   const filteredNavItems = useMemo(() => {
     const seen = new Set<string>();
-    return STITCH_NAV_ITEMS.filter(
+    const allowed = STITCH_NAV_ITEMS.filter(
       (item) => hasAgencyTier(item.requiredTier) && (item.anyAccessKeys ? item.anyAccessKeys.some((accessKey) => isAllowed(accessKey)) : isAllowed(item.accessKey || item.key))
     ).filter((item) => {
       if (seen.has(item.key)) return false;
       seen.add(item.key);
       return true;
+    });
+
+    return allowed.map((item) => {
+      if (item.key !== 'cms') return item;
+      const firstAllowedSection = [
+        ['cms_projects', '/admin/cms/projects'],
+        ['services', '/admin/cms/services'],
+        ['testimonials', '/admin/cms/testimonials'],
+        ['cms_insights', '/admin/cms/insights'],
+      ] as const;
+      const destination = firstAllowedSection.find(([permission]) => isAllowed(permission))?.[1] || item.to;
+      return { ...item, to: destination };
     });
   }, [agencyTier, isAllowed]);
 
@@ -230,7 +242,7 @@ export const AdminLayout: React.FC = () => {
     const actual = new URLSearchParams(location.search);
 
     if (path === '/admin/clients/all-clients' && location.pathname.startsWith('/admin/clients/')) return true;
-    if (path === '/admin/cms/projects' && location.pathname.startsWith('/admin/cms/')) return true;
+    if (['/admin/cms/projects', '/admin/cms/services', '/admin/cms/testimonials', '/admin/cms/insights', '/admin/cms/careers'].includes(path) && location.pathname.startsWith('/admin/cms/')) return true;
     if (path === '/admin/tasks' && location.pathname === '/admin/dashboard' && actual.get('view') === 'tasks') return true;
     if (location.pathname !== path) return false;
 
@@ -628,11 +640,11 @@ export const AdminLayout: React.FC = () => {
                   ariaLabel="CMS sections"
                   activeKey={location.pathname.split('/').pop() || 'projects'}
                   items={[
-                    { key: 'projects', label: 'Projects', to: '/admin/cms/projects', slug: 'cms-tab-projects' },
-                    { key: 'services', label: 'Services', to: '/admin/cms/services', slug: 'cms-tab-services' },
-                    { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials', slug: 'cms-tab-testimonials' },
-                    { key: 'insights', label: 'Insights', to: '/admin/cms/insights', slug: 'cms-tab-insights' },
-                    { key: 'careers', label: 'Careers', to: '/admin/cms/careers', slug: 'cms-tab-careers' }
+                    { key: 'projects', label: 'Projects', to: '/admin/cms/projects', slug: 'cms-tab-projects', permission: 'cms_projects' },
+                    { key: 'services', label: 'Services', to: '/admin/cms/services', slug: 'cms-tab-services', permission: 'services' },
+                    { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials', slug: 'cms-tab-testimonials', permission: 'testimonials' },
+                    { key: 'insights', label: 'Insights', to: '/admin/cms/insights', slug: 'cms-tab-insights', permission: 'cms_insights' },
+                    { key: 'careers', label: 'Careers', to: '/admin/cms/careers', slug: 'cms-tab-careers', permission: 'cms_projects' }
                   ]}
                 />
               ) : location.pathname === '/admin/dashboard' && new URLSearchParams(location.search).get('view') !== 'tasks' ? (
