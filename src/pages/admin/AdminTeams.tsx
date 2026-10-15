@@ -1993,7 +1993,7 @@ export const AdminTeams: React.FC = () => {
         )}
       </Modal>
 
-      <Modal
+      <Drawer
         open={Boolean(allocationTarget)}
         onClose={() => setAllocationTarget(null)}
         title="Allocate Team Member"
@@ -2078,7 +2078,7 @@ export const AdminTeams: React.FC = () => {
             </div>
           </div>
         )}
-      </Modal>
+      </Drawer>
 
       <Drawer
         open={vendorFormOpen}
