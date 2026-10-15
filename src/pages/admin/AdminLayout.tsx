@@ -314,6 +314,7 @@ export const AdminLayout: React.FC = () => {
             compact
             size="sm"
             directOpen
+            actionMenu
             onEdit={() => setProfileView('edit')}
             onLogout={handleLogout}
             slug="topbar-profile-mobile"
@@ -452,6 +453,7 @@ export const AdminLayout: React.FC = () => {
                 }}
                 size="sm"
                 directOpen
+                actionMenu
                 onEdit={() => setProfileView('edit')}
                 onLogout={handleLogout}
                 slug="topbar-profile-mobile"
