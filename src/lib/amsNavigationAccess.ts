@@ -301,13 +301,15 @@ export function isNavigationItemActive(
 
   switch (item.key) {
     case 'dashboard':
-      return path === '/admin/dashboard'
+      return (path === '/admin/dashboard' && params.get('view') !== 'tasks')
         || path === '/admin/navigation/live-activity'
         || (path === '/admin/tasks' && params.get('taskscope') === 'my' && params.get('workspace') !== 'project');
     case 'crm':
       return ['/admin/crm', '/admin/inbox', '/admin/clients', '/admin/clients/all-clients', '/admin/clients/sla-monitoring', '/admin/contracts'].includes(path);
     case 'projects':
       return path === '/admin/projects'
+        || (path === '/admin/dashboard' && params.get('view') === 'tasks')
+        || path === '/admin/documents'
         || path === '/admin/clients/retainers'
         || path === '/admin/team'
         || path === '/admin/time-logs'
@@ -321,7 +323,7 @@ export function isNavigationItemActive(
     case 'documents':
       return path === '/admin/documents' || path.startsWith('/admin/documents/');
     case 'settings':
-      return path === '/admin/settings' || path.startsWith('/admin/settings/') || path === '/admin/navigation/release-readiness' || path === '/admin/documents' || path.startsWith('/admin/documents/');
+      return path === '/admin/settings' || path.startsWith('/admin/settings/') || path === '/admin/navigation/release-readiness';
     case 'executive-overview':
       return path === '/admin/dashboard' && params.get('view') !== 'tasks';
     case 'my-hub':
