@@ -291,7 +291,11 @@ const emptyVendorForm = {
 export const AdminTeams: React.FC = () => {
   const { matchesDate } = useReportingPeriod();
   const location = useLocation();
-  const activeView = (new URLSearchParams(location.search).get('view') || 'team-directory') as TeamView;
+  const activeView = (
+    new URLSearchParams(location.search).get('view') ||
+    (location.pathname === '/admin/vendors' ? 'vendor-directory' :
+      location.pathname === '/admin/time-logs' ? 'time-logs' : 'team-directory')
+  ) as TeamView;
   const validTeamViews: TeamView[] = ['team-directory', 'vendor-directory', 'capacity-allocation', 'skill-matrix', 'time-logs'];
   const currentView = validTeamViews.includes(activeView) ? activeView : 'team-directory';
 
@@ -1074,19 +1078,32 @@ export const AdminTeams: React.FC = () => {
         }
       />
 
-      <div className="min-[900px]:hidden min-w-0" data-ams-slug="team-mobile-tabs">
-        <AdminSectionTabs
-          ariaLabel="Team sections"
-          activeKey={currentView}
-          items={[
-            { key: 'team-directory', label: 'Team Directory', to: '/admin/team' },
-            { key: 'vendor-directory', label: 'Vendor Directory', to: '/admin/team?view=vendor-directory' },
-            { key: 'capacity-allocation', label: 'Capacity & Allocation', to: '/admin/team?view=capacity-allocation' },
-            { key: 'skill-matrix', label: 'Skill Matrix', to: '/admin/team?view=skill-matrix' },
-            { key: 'time-logs', label: 'Time Logs', to: '/admin/team?view=time-logs' },
-          ]}
-        />
-      </div>
+      {location.pathname === '/admin/team' && (
+        <div className="min-[900px]:hidden min-w-0" data-ams-slug="team-mobile-tabs">
+          <AdminSectionTabs
+            ariaLabel="Team sections"
+            activeKey={currentView}
+            items={[
+              { key: 'team-directory', label: 'Team Directory', to: '/admin/team' },
+              { key: 'capacity-allocation', label: 'Capacity', to: '/admin/team?view=capacity-allocation' },
+            ]}
+          />
+        </div>
+      )}
+
+      {location.pathname === '/admin/vendors' && (
+        <div className="min-[900px]:hidden min-w-0" data-ams-slug="vendors-mobile-tabs">
+          <AdminSectionTabs
+            ariaLabel="Vendors sections"
+            activeKey={currentView}
+            items={[
+              { key: 'vendor-directory', label: 'Vendor Directory', to: '/admin/vendors' },
+              { key: 'skill-matrix', label: 'Skills', to: '/admin/vendors?view=skill-matrix' },
+            ]}
+          />
+        </div>
+      )}
+
 
       {notice && (
         <div className="mb-5 flex items-start gap-3 rounded-card border border-line bg-panel px-4 py-3 text-xs" role="status">
