@@ -719,7 +719,8 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   const isProposalWorkspace = embeddedView === 'quotations';
   const canManageInvoices = hasAdminPermission('canManageInvoices');
   const canManageProposals = hasAdminPermission('canManageCrm') || canManageInvoices;
-  const canViewFinancials = hasAdminPermission('canViewFinancials') || (isProposalWorkspace && hasAdminPermission('canManageCrm'));
+  const canApproveProposals = hasAdminPermission('canApproveBudgets');
+  const canViewFinancials = hasAdminPermission('canViewFinancials') || (isProposalWorkspace && canManageProposals);
   const canCreateInvoice = canManageInvoices;
   const canDeleteInvoice = canManageInvoices;
 
@@ -3935,7 +3936,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
                   ['approved', 'Approve'],
                   ['sent', 'Mark sent']
                 ] as Array<[FinanceQuotationStatus, string]>).map(([status, label]) => (
-                  <button key={status} type="button" onClick={() => void updateQuotationStatus(quotationDetail, status)} className={actionClass + ' w-full'} disabled={!canManageProposals}>
+                  <button key={status} type="button" onClick={() => void updateQuotationStatus(quotationDetail, status)} className={actionClass + ' w-full'} disabled={!canManageProposals || (status === 'approved' && !canApproveProposals)}>
                     {label}
                   </button>
                 ))}
