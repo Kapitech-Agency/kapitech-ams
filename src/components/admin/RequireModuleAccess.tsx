@@ -30,14 +30,15 @@ export const RequireModuleAccess: React.FC<RequireModuleAccessProps> = ({
   const params = new URLSearchParams(location.search);
 
   // MFA self-enrolment is a self-service exception, not general Settings access.
-  const isRequiredMfaEnrollmentRoute = Boolean(session?.user)
-    && session?.user?.mfaEnabled !== true
-    && location.pathname === '/admin/settings'
-    && params.get('tab') === 'security';
+  const isRequiredMfaEnrollmentRoute =
+    moduleKey === 'settings' &&
+    Boolean(session?.user) &&
+    session?.user?.mfaEnabled !== true &&
+    location.pathname === '/admin/settings' &&
+    params.get('tab') === 'security';
 
-  if (isRequiredMfaEnrollmentRoute || canAccessAmsRoute(role, location.pathname, location.search)) {
-    return <>{children}</>;
-  }
+  if (isRequiredMfaEnrollmentRoute) return <>{children}</>;
+  if (canAccessAmsRoute(role, location.pathname, location.search)) return <>{children}</>;
 
   const destination = getDeniedRouteRedirect(role, location.pathname, location.search) || getAmsHomePath(role);
   return (
