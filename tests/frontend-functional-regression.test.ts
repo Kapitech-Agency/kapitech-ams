@@ -114,7 +114,7 @@ test('AMS navigation uses concise primary modules with role-aware sidebar dropdo
   assert.ok(subnavigation.includes("label: 'Transactions'"));
   assert.ok(subnavigation.includes("label: 'Contracts'"));
   assert.ok(subnavigation.includes("label: 'Capacity'"));
-  assert.equal((layout.match(/<AdminTopbarTabs\\b/g) || []).length, 0);
+  assert.equal((layout.match(/<AdminTopbarTabs\b/g) || []).length, 0);
   assert.ok(primitives.includes('items.filter(canRenderNavigationTab).map((item) => {'));
   assert.ok(navigation.includes('export function canAccessAmsRoute'));
   assert.ok(app.includes('<AmsRoleRouteGuard>'));
