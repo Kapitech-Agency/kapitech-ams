@@ -64,6 +64,9 @@ type ClientInteraction = {
   createdByUserId?: string;
   createdByName?: string;
   createdAt: string;
+  sourceType?: 'manual' | 'system';
+  systemAction?: string;
+  sourceReferenceId?: string;
 };
 
 const CLIENT_INTERACTION_OPTIONS: Array<{ value: ClientInteractionType; label: string }> = [
@@ -943,7 +946,7 @@ export const AdminClients: React.FC = () => {
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                             <span className="text-xs font-semibold text-fg">{interaction.subject}</span>
-                            <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] font-medium text-muted">{clientInteractionLabel(interaction.type)}</span>
+                            <span className={'rounded-badge border px-2 py-0.5 text-[10px] font-medium ' + (interaction.sourceType === 'system' ? 'border-accent/25 bg-accent/10 text-accent-text' : 'border-line bg-bg text-muted')}>{interaction.sourceType === 'system' ? 'System activity' : clientInteractionLabel(interaction.type)}</span>
                           </div>
                           <p className="mt-1 whitespace-pre-wrap text-xs leading-5 text-fg">{interaction.summary}</p>
                           {(interaction.contactName || interaction.outcome || interaction.nextStep) && (
