@@ -45,7 +45,7 @@ function toMetadata(deal: any): Record<string, unknown> {
 type InteractionActor = { userId?: string; name?: string };
 
 const labelCrmStage = (stage: unknown) =>
-  String(stage || 'new').replace(/_/g, ' ').replace(/\\b\\w/g, letter => letter.toUpperCase());
+  String(stage || 'new').replace(/_/g, ' ').replace(/\b\w/g, letter => letter.toUpperCase());
 
 async function appendDealStageTimelineEvent(
   db: import('pg').PoolClient,
