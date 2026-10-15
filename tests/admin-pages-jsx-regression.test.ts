@@ -3,10 +3,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 
-test('Retired CRM route redirects without loading a legacy page', () => {
+test('CRM, proposals, approvals, and Time routes use their functional workspaces', () => {
   const source = fs.readFileSync(path.resolve(process.cwd(), 'src/App.tsx'), 'utf8');
-  assert.ok(source.includes('<Route path="crm" element={<Navigate to="/admin/dashboard" replace />} />'));
-  assert.doesNotMatch(source, /pages\/admin\/AdminCrm/);
+  assert.ok(source.includes('<Route path="crm" element={<ModuleRoute moduleKey="crm" moduleLabel="CRM"><AdminClientLeadAccounts /></ModuleRoute>} />'));
+  assert.ok(source.includes('<Route path="proposals" element={<ModuleRoute moduleKey="proposals" moduleLabel="Proposals"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />'));
+  assert.ok(source.includes('<Route path="approvals" element={<ModuleRoute moduleKey="approvals" moduleLabel="Approvals"><AdminApprovals /></ModuleRoute>} />'));
+  assert.ok(source.includes('<Route path="time-logs" element={<ModuleRoute moduleKey="timelogs" moduleLabel="Time"><AdminTimeLogs /></ModuleRoute>} />'));
+  assert.ok(source.includes("default: m.AdminApprovals"));
 });
 test('Finance transaction worksheets keep mutations permission-gated and use embedded workbook workflows', () => {
   const source = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInvoicing.tsx'), 'utf8');
@@ -132,7 +135,9 @@ test('AMS module tabs share canonical desktop and mobile navigation primitives',
   assert.ok(primitives.includes("'inline-flex h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent'"));
   assert.ok(!/className="inline-flex h-9 shrink-0 items-center rounded-chip/.test(layout));
   assert.ok(!/<nav aria-label="(?:Clients|CMS|Dashboard|Projects|Tasks|Inbox|Finance|Team|Settings|Documents) sections"/.test(layout));
-  assert.ok(dashboard.includes('<AdminSectionTabs') && dashboard.includes("{ key: 'tasks', label: 'Tasks', to: '/admin/dashboard?view=tasks' }"));
+  assert.ok(dashboard.includes('<AdminSectionTabs') && !dashboard.includes("{ key: 'tasks', label: 'Tasks', to: '/admin/dashboard?view=tasks' }"));
+  assert.ok(dashboard.includes('api.finance.getExpenses()') && dashboard.includes('api.tasks.getAll()'));
+  assert.ok(dashboard.includes('<PerformanceView snapshot={operationalSnapshot} />') && dashboard.includes('<AnalyticsView snapshot={operationalSnapshot} range={range} />'));
   assert.ok(dashboard.includes('className="mb-0"') && dashboard.includes('ariaLabel="Dashboard view"'));
   assert.ok(!dashboard.includes('-mt-2'));
   assert.ok(inbox.includes('<AdminSectionTabs') && inbox.includes('inboxTabs.map((tab)'));
