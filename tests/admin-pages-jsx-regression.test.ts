@@ -52,18 +52,22 @@ test('Admin projects mutation actions stay behind their permissions', () => {
   assert.ok(!source.includes('Legacy regression guard:'));
 });
 
-test('Finance subtabs live in the Finance sidebar dropdown and retired routes stay hidden', () => {
+test('Finance worksheets stay inside the Finance workspace and retired routes stay hidden', () => {
   const layout = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminLayout.tsx'), 'utf8');
   const sidebar = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/DynamicAdminSidebar.tsx'), 'utf8');
-  const navigation = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/amsModuleSubnavigation.ts'), 'utf8');
+  const navigation = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/amsNavigationAccess.ts'), 'utf8');
+  const workspace = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminFinanceWorkspace.tsx'), 'utf8');
   assert.equal(layout.includes("location.pathname === '/admin/invoicing'"), false);
   assert.equal(layout.includes('<AdminTopbarTabs'), false);
-  assert.ok(sidebar.includes('getAmsModuleSubnavigation(item.key as AmsSidebarModuleKey, role)'));
-  assert.ok(sidebar.includes('aria-expanded={expanded}'));
-  assert.ok(navigation.includes("label: 'Transactions', to: '/admin/finance?tab=cash-bank'"));
-  assert.ok(navigation.includes("label: 'Invoices', to: '/admin/finance?tab=accounts-receivable'"));
-  assert.ok(navigation.includes("label: 'Accounting', to: '/admin/finance?tab=journal'"));
-  assert.ok(navigation.includes("label: 'Profit', to: '/admin/finance?tab=project-finance'"));
+  assert.ok(sidebar.includes('data-ams-navigation-layout="flat"'));
+  assert.ok(sidebar.includes('getNavigationGroupsForRole(role)'));
+  assert.equal(sidebar.includes('aria-expanded='), false);
+  assert.equal(sidebar.includes('ChevronDown'), false);
+  assert.ok(navigation.includes("to: '/admin/finance?tab=accounts-receivable'"));
+  assert.ok(navigation.includes("to: '/admin/finance?tab=accounts-payable'"));
+  assert.ok(navigation.includes("to: '/admin/finance?tab=project-finance'"));
+  assert.ok(workspace.includes('FINANCE_WORKBOOK_GROUPS'));
+  assert.ok(workspace.includes('AdminSectionTabs ariaLabel="Finance worksheets"'));
   assert.equal(navigation.includes("to: '/admin/invoicing?finance="), false);
 });
 test('Authenticated AMS pages use one canonical responsive page frame', () => {
@@ -127,10 +131,10 @@ test('All AMS record-entry forms use Drawer instead of Modal', () => {
   assert.ok(modal.includes('data-ams-modal-root="true"') && modal.includes('z-[80]'));
   assert.ok(drawer.includes("document.querySelector('[data-ams-modal-root=\"true\"]')"), 'A modal above a drawer must own focus and keyboard handling.');
 });
-test('AMS module dropdowns live in the sidebar while page-level tabs retain canonical mobile primitives', () => {
+test('Flat sidebar keeps direct links while existing tabs stay in their page workspaces', () => {
   const layout = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminLayout.tsx'), 'utf8');
   const sidebar = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/DynamicAdminSidebar.tsx'), 'utf8');
-  const navigation = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/amsModuleSubnavigation.ts'), 'utf8');
+  const navigation = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/amsNavigationAccess.ts'), 'utf8');
   const primitives = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/AdminModulePrimitives.tsx'), 'utf8');
   const dashboard = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/GlobalExecutiveDashboard.tsx'), 'utf8');
   const inbox = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInbox.tsx'), 'utf8');
@@ -140,11 +144,13 @@ test('AMS module dropdowns live in the sidebar while page-level tabs retain cano
   const sla = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientSlaMonitoring.tsx'), 'utf8');
 
   assert.equal((layout.match(/<AdminTopbarTabs\b/g) || []).length, 0);
-  assert.ok(!layout.includes('ariaLabel="Finance sections"'));
-  assert.ok(sidebar.includes('data-ams-nav-submenu="true"'));
-  assert.ok(sidebar.includes('aria-expanded={expanded}'));
-  assert.ok(navigation.includes("label: 'Delivery', to: '/admin/projects?projects=sprint'"));
-  assert.ok(navigation.includes("label: 'Readiness', to: '/admin/navigation/release-readiness'"));
+  assert.ok(sidebar.includes('data-ams-navigation-layout="flat"'));
+  assert.ok(sidebar.includes('getNavigationGroupsForRole(role)'));
+  assert.equal(sidebar.includes('data-ams-nav-submenu='), false);
+  assert.equal(sidebar.includes('aria-expanded='), false);
+  assert.equal(sidebar.includes('ChevronDown'), false);
+  assert.ok(navigation.includes("label: 'DELIVERY & OPERATIONS'"));
+  assert.ok(navigation.includes("label: 'Retainer Hours Pool'"));
   assert.ok(primitives.includes("'inline-flex h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent'"));
   assert.ok(!/className="inline-flex h-9 shrink-0 items-center rounded-chip/.test(layout));
   assert.ok(!/<nav aria-label="(?:Clients|CMS|Dashboard|Projects|Tasks|Inbox|Finance|Team|Settings|Documents) sections"/.test(layout));
@@ -158,7 +164,6 @@ test('AMS module dropdowns live in the sidebar while page-level tabs retain cano
   assert.ok(finance.indexOf('<AdminModuleHeader') < finance.indexOf('<AdminSectionTabs'));
   assert.ok(clients.includes('<AdminSectionTabs') && retainers.includes('<AdminSectionTabs') && sla.includes('<AdminSectionTabs'));
 });
-
 test('Lazy module navigation keeps the AMS shell mounted and recovers locally on module failure', () => {
   const source = fs.readFileSync(path.resolve(process.cwd(), 'src/App.tsx'), 'utf8');
   const routeStart = source.indexOf('const ModuleRoute: React.FC<');
@@ -438,39 +443,44 @@ test('CRM stage timeline events are only emitted when the stage changes and conv
 });
 
 
-test('Sidebar visibility follows the canonical role route policy and hierarchy', () => {
+test('Flat sidebar visibility follows the canonical role route policy and keeps System Center separate', () => {
   const layout = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminLayout.tsx'), 'utf8');
   const routes = fs.readFileSync(path.resolve(process.cwd(), 'src/App.tsx'), 'utf8');
   const navigation = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/amsNavigationAccess.ts'), 'utf8');
   const sidebar = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/DynamicAdminSidebar.tsx'), 'utf8');
   const primitives = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/AdminModulePrimitives.tsx'), 'utf8');
 
-  assert.ok(navigation.includes("key: 'main-dashboard'"));
-  assert.ok(navigation.includes("key: 'client-pipeline'"));
-  assert.ok(navigation.includes("key: 'projects-workspace'"));
-  assert.ok(navigation.includes("key: 'finance-ledger'"));
-  assert.ok(navigation.includes("key: 'cms-content'"));
-  assert.ok(navigation.includes("key: 'system-settings'"));
+  for (const key of ["key: 'main-dashboard'", "key: 'client-pipeline'", "key: 'projects-workspace'", "key: 'finance-ledger'", "key: 'cms-content'"]) {
+    assert.ok(navigation.includes(key), 'Missing functional navigation group ' + key);
+  }
+  assert.ok(navigation.includes("key: 'user-access'"));
+  assert.ok(navigation.includes("key: 'data-persistence-backup'"));
+  assert.ok(navigation.includes("key: 'release-readiness'"));
   assert.ok(navigation.includes("path === '/admin/contracts'"));
   assert.ok(routes.includes('<Route path="contracts" element={<ModuleRoute moduleKey="clients" moduleLabel="contracts"><AdminContracts /></ModuleRoute>} />'));
 
   assert.ok(layout.includes('<DynamicAdminSidebarNavigation role={amsRole}'));
   assert.equal((layout.match(/<DynamicAdminSidebarNavigation\b/g) || []).length, 2, 'Desktop and mobile use the same navigation list.');
-  assert.equal((layout.match(/<AdminSystemSettingsNavigation\b/g) || []).length, 2, 'Desktop and mobile keep the separated system block in the footer.');
+  assert.equal((layout.match(/<AdminSystemSettingsNavigation\b/g) || []).length, 2, 'Desktop and mobile pin the single Admin-only Settings link.');
   assert.ok(sidebar.includes("if (role !== 'Admin') return null;"));
-  assert.ok(sidebar.includes('getPrimaryNavigationForRole(role)'));
+  assert.ok(sidebar.includes('getNavigationGroupsForRole(role)'));
+  assert.ok(sidebar.includes('data-ams-navigation-layout="flat"'));
+  assert.equal(sidebar.includes('data-ams-nav-expand='), false);
   assert.ok(primitives.includes('items.filter(canRenderNavigationTab).map((item) => {'));
   assert.ok(navigation.includes('export function canAccessAmsRoute'));
   assert.ok(navigation.includes('export function isNavigationItemActive'));
 
-  const expectedSidebarModules = [
-    "label: 'Dashboard'",
-    "label: 'CRM'",
-    "label: 'Projects'",
-    "label: 'Finance'",
-    "label: 'CMS'",
+  const expectedEntries = [
+    "label: 'Dashboard & Hub'",
+    "label: 'Sales & Deal Pipeline'",
+    "label: 'Client Directory'",
+    "label: 'Project Hub'",
+    "label: 'Invoicing & Receivables'",
+    "label: 'Insight Editorial Packs'",
   ];
-  for (const label of expectedSidebarModules) assert.ok(navigation.includes(label), 'Missing primary module ' + label);
+  for (const label of expectedEntries) assert.ok(navigation.includes(label), 'Missing direct destination ' + label);
   assert.ok(sidebar.includes('AMS_PRIMARY_SETTINGS_ITEM'));
-  assert.ok(sidebar.includes('getPrimaryNavigationForRole(role)'));
+  assert.ok(layout.includes('GlobalTimerControl'));
+  assert.ok(layout.includes('Search Everything'));
+  assert.ok(layout.includes('onLogout={handleLogout}'));
 });
