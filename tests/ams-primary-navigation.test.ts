@@ -13,7 +13,7 @@ const labels = (role: Parameters<typeof getPrimaryNavigationForRole>[0]) =>
 const keys = (role: Parameters<typeof getPrimaryNavigationForRole>[0]) =>
   getPrimaryNavigationForRole(role).map((item) => item.key);
 
-test('sidebar lists primary modules only; child pages are not sidebar entries', () => {
+test('primary navigation lists concise modules while submenu destinations are configured separately', () => {
   assert.deepEqual(labels('Admin'), ['Dashboard', 'CRM', 'Projects', 'Finance', 'CMS']);
   assert.deepEqual(keys('Admin'), ['dashboard', 'crm', 'projects', 'finance', 'cms']);
   assert.equal(AMS_PRIMARY_SETTINGS_ITEM.label, 'Settings');

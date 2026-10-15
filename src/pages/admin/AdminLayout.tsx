@@ -19,9 +19,7 @@ import { AMS_PRIMARY_SETTINGS_ITEM, getAmsRole, getPrimaryNavigationForRole, isN
 import { AmsBrandLogo } from '../../components/admin/AmsBrandLogo';
 import UserProfileSettingsModal from '../../components/admin/UserProfileSettingsModal';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
-import { AdminTopbarTabs } from '../../components/admin/AdminModulePrimitives';
 import { AdminSystemSettingsNavigation, DynamicAdminSidebarNavigation } from '../../components/admin/DynamicAdminSidebar';
-import { FINANCE_WORKBOOK_GROUPS } from '../../lib/financeWorkbook';
 import Button from '../../components/ui/Button';
 import { ReportingPeriodProvider } from '../../lib/ReportingPeriodContext';
 import { AdminReportingPeriodBar } from '../../components/admin/AdminReportingPeriodBar';
@@ -168,38 +166,7 @@ export const AdminLayout: React.FC = () => {
   );
   const activeItemLabel = activeNavItem?.label || 'Dashboard';
 
-  const routeQuery = new URLSearchParams(location.search);
-  const isMyHubRoute = location.pathname === '/admin/tasks'
-    && routeQuery.get('taskscope') === 'my'
-    && routeQuery.get('workspace') !== 'project';
-  const isActivityRoute = location.pathname === '/admin/navigation/live-activity';
-  const isDashboardModuleRoute = (
-    location.pathname === '/admin/dashboard' && routeQuery.get('view') !== 'tasks'
-  ) || isMyHubRoute || isActivityRoute;
-  const isCrmModuleRoute = [
-    '/admin/crm',
-    '/admin/inbox',
-    '/admin/clients',
-    '/admin/clients/all-clients',
-    '/admin/clients/sla-monitoring',
-    '/admin/contracts',
-  ].includes(location.pathname);
-  const isProjectsModuleRoute = location.pathname === '/admin/projects'
-    || location.pathname === '/admin/documents'
-    || (location.pathname === '/admin/dashboard' && routeQuery.get('view') === 'tasks')
-    || (location.pathname === '/admin/tasks' && !isMyHubRoute)
-    || location.pathname === '/admin/clients/retainers'
-    || location.pathname === '/admin/team'
-    || location.pathname === '/admin/time-logs';
-  const isFinanceModuleRoute = [
-    '/admin/finance',
-    '/admin/proposals',
-    '/admin/invoicing',
-    '/admin/vendors',
-    '/admin/approvals',
-  ].includes(location.pathname);
-  const isSettingsModuleRoute = location.pathname === '/admin/settings'
-    || location.pathname === '/admin/navigation/release-readiness';
+
 
   return (
     <ReportingPeriodProvider>
@@ -468,126 +435,9 @@ export const AdminLayout: React.FC = () => {
         <header className="hidden min-[900px]:flex h-[52px] min-h-[52px] border-b border-line bg-panel sticky top-0 z-30 items-center shrink-0" aria-label="AMS top bar">
           <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-5 lg:px-6 flex min-w-0 items-center justify-between gap-3">
             <div className="min-w-0 flex-1 overflow-hidden">
-              {isDashboardModuleRoute ? (
-                <AdminTopbarTabs
-                  ariaLabel="Dashboard sections"
-                  activeKey={isActivityRoute ? 'activity' : isMyHubRoute ? 'my-hub' : routeQuery.get('view') || 'overview'}
-                  items={[
-                    { key: 'overview', label: 'Overview', to: '/admin/dashboard' },
-                    { key: 'performance', label: 'Performance', to: '/admin/dashboard?view=performance' },
-                    { key: 'analytics', label: 'Analytics', to: '/admin/dashboard?view=analytics' },
-                    { key: 'my-hub', label: 'My Hub', to: '/admin/tasks?taskscope=my' },
-                    { key: 'activity', label: 'Activity', to: '/admin/navigation/live-activity' },
-                  ]}
-                />
-              ) : isCrmModuleRoute ? (
-                <AdminTopbarTabs
-                  ariaLabel="CRM sections"
-                  activeKey={
-                    location.pathname === '/admin/crm' ? 'pipeline'
-                      : location.pathname === '/admin/inbox' ? 'inbox'
-                      : location.pathname === '/admin/contracts' ? 'contracts'
-                      : location.pathname === '/admin/clients/sla-monitoring' ? 'sla'
-                      : location.hash === '#client-onboarding-readiness' ? 'onboarding'
-                      : 'clients'
-                  }
-                  items={[
-                    { key: 'pipeline', label: 'Pipeline', to: '/admin/crm' },
-                    { key: 'clients', label: 'Clients', to: '/admin/clients/all-clients' },
-                    { key: 'onboarding', label: 'Onboarding', to: '/admin/clients/all-clients#client-onboarding-readiness' },
-                    { key: 'inbox', label: 'Inbox', to: '/admin/inbox' },
-                    { key: 'contracts', label: 'Contracts', to: '/admin/contracts' },
-                    { key: 'sla', label: 'SLA', to: '/admin/clients/sla-monitoring' },
-                  ]}
-                />
-              ) : location.pathname.startsWith('/admin/cms/') ? (
-                <AdminTopbarTabs
-                  ariaLabel="CMS sections"
-                  activeKey={location.pathname.split('/').pop() || 'insights'}
-                  items={[
-                    { key: 'insights', label: 'Insights', to: '/admin/cms/insights', slug: 'cms-tab-insights', permission: 'cms_insights' },
-                    { key: 'projects', label: 'Portfolio', to: '/admin/cms/projects', slug: 'cms-tab-projects', permission: 'cms_projects' },
-                    { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials', slug: 'cms-tab-testimonials', permission: 'testimonials' },
-                    { key: 'services', label: 'Services', to: '/admin/cms/services', slug: 'cms-tab-services', permission: 'services' },
-                    { key: 'careers', label: 'Careers', to: '/admin/cms/careers', slug: 'cms-tab-careers', permission: 'cms_projects' },
-                  ]}
-                />
-              ) : isProjectsModuleRoute ? (
-                <AdminTopbarTabs
-                  ariaLabel="Projects sections"
-                  activeKey={
-                    location.pathname === '/admin/documents' ? 'docs'
-                      : location.pathname === '/admin/dashboard' && routeQuery.get('view') === 'tasks' ? 'tasks'
-                      : location.pathname === '/admin/tasks' ? 'tasks'
-                      : location.pathname === '/admin/clients/retainers' ? 'retainers'
-                      : location.pathname === '/admin/team' && routeQuery.get('view') === 'capacity-allocation' ? 'capacity'
-                      : location.pathname === '/admin/team' ? 'team'
-                      : location.pathname === '/admin/time-logs' ? 'time'
-                      : routeQuery.get('projects') || 'all'
-                  }
-                  items={[
-                    { key: 'all', label: 'Projects', to: '/admin/projects' },
-                    { key: 'sprint', label: 'Delivery', to: '/admin/projects?projects=sprint' },
-                    { key: 'budget', label: 'Budget', to: '/admin/projects?projects=budget' },
-                    { key: 'archived', label: 'Archived', to: '/admin/projects?projects=archived' },
-                    { key: 'tasks', label: amsRole === 'Freelancer' ? 'My Task' : 'Tasks', to: (['Finance', 'Creative', 'Freelancer'].includes(amsRole)) ? '/admin/tasks?taskscope=my&workspace=project' : '/admin/tasks' },
-                    { key: 'docs', label: 'Files', to: '/admin/documents' },
-                    { key: 'retainers', label: 'Retainers', to: '/admin/clients/retainers' },
-                    { key: 'team', label: 'Team', to: '/admin/team' },
-                    { key: 'capacity', label: 'Capacity', to: '/admin/team?view=capacity-allocation' },
-                    { key: 'time', label: 'Time', to: '/admin/time-logs' },
-                  ].filter((item) => {
-                    if (amsRole === 'Freelancer') return item.key === 'tasks';
-                    if (amsRole === 'Finance' || amsRole === 'Creative') return ['sprint', 'tasks'].includes(item.key);
-                    return true;
-                  })}
-                />
-              ) : isFinanceModuleRoute ? (
-                <AdminTopbarTabs
-                  ariaLabel="Finance sections"
-                  activeKey={
-                    location.pathname === '/admin/proposals' ? 'quotes'
-                      : location.pathname === '/admin/vendors' ? 'vendors'
-                      : location.pathname === '/admin/approvals' ? 'approvals'
-                      : routeQuery.get('tab') === 'accounts-payable' ? 'expenses'
-                      : routeQuery.get('tab') === 'project-finance' ? 'projects'
-                      : FINANCE_WORKBOOK_GROUPS.find((group) => group.items.some((item) => item.key === (routeQuery.get('tab') || 'executive-summary')))?.key || 'overview'
-                  }
-                  items={[
-                    { key: 'overview', label: 'Overview', to: '/admin/finance?tab=executive-summary', slug: 'finance-tab-overview-control' },
-                    { key: 'transactions', label: 'Transactions', to: '/admin/finance?tab=cash-bank', slug: 'finance-tab-transactions-cash' },
-                    { key: 'receivables', label: 'Invoices', to: '/admin/finance?tab=accounts-receivable', slug: 'finance-tab-receivables-payables' },
-                    { key: 'expenses', label: 'Expenses', to: '/admin/finance?tab=accounts-payable' },
-                    { key: 'projects', label: 'Profit', to: '/admin/finance?tab=project-finance', slug: 'finance-tab-project-finance' },
-                    { key: 'accounting', label: 'Accounting', to: '/admin/finance?tab=journal', slug: 'finance-tab-accounting-reports' },
-                    { key: 'quotes', label: 'Quotes', to: '/admin/proposals' },
-                    { key: 'vendors', label: 'Vendors', to: '/admin/vendors' },
-                    { key: 'approvals', label: 'Approvals', to: '/admin/approvals' },
-                  ]}
-                />
-              ) : isSettingsModuleRoute ? (
-                <AdminTopbarTabs
-                  ariaLabel="Settings sections"
-                  activeKey={
-                    location.pathname === '/admin/navigation/release-readiness' ? 'readiness'
-                      : ['profile', 'rbac', 'security'].includes(routeQuery.get('tab') || '') ? 'access'
-                      : ['branding', 'api', 'integrations'].includes(routeQuery.get('tab') || '') ? 'integrations'
-                      : routeQuery.get('tab') === 'audit' ? 'audit'
-                      : 'backup'
-                  }
-                  items={[
-                    { key: 'backup', label: 'Backup', to: '/admin/settings?tab=overview' },
-                    { key: 'access', label: 'Access', to: '/admin/settings?tab=security' },
-                    { key: 'audit', label: 'Audit', to: '/admin/settings?tab=audit' },
-                    { key: 'integrations', label: 'Integrations', to: '/admin/settings?tab=integrations' },
-                    { key: 'readiness', label: 'Readiness', to: '/admin/navigation/release-readiness' },
-                  ]}
-                />
-              ) : (
-                <nav aria-label="Current module">
-                  <span aria-current="page" className="min-w-0 truncate text-[11px] font-semibold text-fg">{activeItemLabel}</span>
-                </nav>
-              )}
+              <nav aria-label="Current module" data-ams-slug="active-module-title">
+                <span aria-current="page" className="min-w-0 truncate text-[11px] font-semibold text-fg">{activeItemLabel}</span>
+              </nav>
             </div>
             <div className="flex shrink-0 items-center gap-1">
               <AdminReportingPeriodBar />

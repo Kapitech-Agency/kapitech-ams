@@ -76,12 +76,13 @@ test('MFA enrolment route is accessible before module permissions are evaluated'
 });
 
 
-test('AMS navigation uses concise primary modules and role-aware module tabs', async () => {
+test('AMS navigation uses concise primary modules with role-aware sidebar dropdowns', async () => {
   const layout = await read('src/pages/admin/AdminLayout.tsx');
   const app = await read('src/App.tsx');
   const primitives = await read('src/components/admin/AdminModulePrimitives.tsx');
   const navigation = await read('src/lib/amsNavigationAccess.ts');
   const sidebar = await read('src/components/admin/DynamicAdminSidebar.tsx');
+  const subnavigation = await read('src/lib/amsModuleSubnavigation.ts');
   const teams = await read('src/pages/admin/AdminTeams.tsx');
   const vendors = await read('src/pages/admin/AdminVendors.tsx');
   const clients = await read('src/pages/admin/AdminClients.tsx');
@@ -108,17 +109,22 @@ test('AMS navigation uses concise primary modules and role-aware module tabs', a
   assert.ok(sidebar.includes("if (role !== 'Admin') return null;"));
   assert.ok(sidebar.includes('data-ams-feature-slug="role-based-sidebar"'));
   assert.ok(sidebar.includes("aria-current={active ? 'page' : undefined}"));
+  assert.ok(sidebar.includes('data-ams-nav-submenu="true"'));
+  assert.ok(sidebar.includes('aria-expanded={expanded}'));
+  assert.ok(subnavigation.includes("label: 'Transactions'"));
+  assert.ok(subnavigation.includes("label: 'Contracts'"));
+  assert.ok(subnavigation.includes("label: 'Capacity'"));
+  assert.equal((layout.match(/<AdminTopbarTabs\b/g) || []).length, 0);
   assert.ok(primitives.includes('items.filter(canRenderNavigationTab).map((item) => {'));
   assert.ok(navigation.includes('export function canAccessAmsRoute'));
   assert.ok(app.includes('<AmsRoleRouteGuard>'));
   assert.ok(app.includes('path="navigation/live-activity"'));
   assert.ok(app.includes('path="navigation/release-readiness"'));
 
-  assert.ok(layout.includes('ariaLabel="Projects sections"'));
-  assert.ok(layout.includes("label: 'Team'"));
-  assert.ok(layout.includes("label: 'Capacity'"));
-  assert.ok(layout.includes('ariaLabel="Finance sections"'));
-  assert.ok(layout.includes("label: 'Vendors'"));
+  assert.ok(subnavigation.includes("label: 'Team'"));
+  assert.ok(subnavigation.includes("label: 'Capacity'"));
+  assert.ok(subnavigation.includes("label: 'Vendors'"));
+  assert.ok(layout.includes('data-ams-slug="active-module-title"'));
   assert.ok(vendors.includes("label: 'Vendors'"));
   assert.ok(vendors.includes("label: 'Skills'"));
   assert.ok(vendors.includes('data-ams-slug="vendors-mobile-tabs"'));

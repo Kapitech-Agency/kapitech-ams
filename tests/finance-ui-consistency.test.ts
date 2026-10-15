@@ -4,21 +4,24 @@ import test from 'node:test';
 
 const read = (path: string) => readFile(new URL('../' + path, import.meta.url), 'utf8');
 
-test('Finance top-level tabs and clean sub-tabs preserve direct transaction entry', async () => {
+test('Finance sidebar dropdown and clean worksheet sub-tabs preserve direct transaction entry', async () => {
   const layout = await read('src/pages/admin/AdminLayout.tsx');
+  const sidebar = await read('src/components/admin/DynamicAdminSidebar.tsx');
+  const navigation = await read('src/lib/amsModuleSubnavigation.ts');
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
-  assert.match(layout, /isFinanceModuleRoute \? \([\s\S]*?<AdminTopbarTabs/);
-  assert.match(layout, /ariaLabel="Finance sections"/);
-  assert.match(layout, /label: 'Overview', to: '\/admin\/finance\?tab=executive-summary'/);
-  assert.match(layout, /label: 'Transactions'[\s\S]*?to: '\/admin\/finance\?tab=cash-bank'/);
-  assert.match(layout, /label: 'Invoices'[\s\S]*?to: '\/admin\/finance\?tab=accounts-receivable'/);
-  assert.match(layout, /label: 'Profit'[\s\S]*?to: '\/admin\/finance\?tab=project-finance'/);
-  assert.match(layout, /label: 'Accounting'[\s\S]*?to: '\/admin\/finance\?tab=journal'/);
-  assert.match(layout, /slug: 'finance-tab-overview-control'/);
-  assert.match(layout, /slug: 'finance-tab-transactions-cash'/);
-  assert.match(layout, /slug: 'finance-tab-receivables-payables'/);
-  assert.match(layout, /slug: 'finance-tab-project-finance'/);
-  assert.match(layout, /slug: 'finance-tab-accounting-reports'/);
+  assert.doesNotMatch(layout, /<AdminTopbarTabs/);
+  assert.match(layout, /data-ams-slug="active-module-title"/);
+  assert.match(sidebar, /data-ams-nav-submenu="true"/);
+  assert.match(navigation, /label: 'Overview', to: '\/admin\/finance\?tab=executive-summary'/);
+  assert.match(navigation, /label: 'Transactions'[\s\S]*?to: '\/admin\/finance\?tab=cash-bank'/);
+  assert.match(navigation, /label: 'Invoices'[\s\S]*?to: '\/admin\/finance\?tab=accounts-receivable'/);
+  assert.match(navigation, /label: 'Profit'[\s\S]*?to: '\/admin\/finance\?tab=project-finance'/);
+  assert.match(navigation, /label: 'Accounting'[\s\S]*?to: '\/admin\/finance\?tab=journal'/);
+  assert.match(navigation, /slug: 'finance-tab-overview-control'/);
+  assert.match(navigation, /slug: 'finance-tab-transactions-cash'/);
+  assert.match(navigation, /slug: 'finance-tab-receivables-payables'/);
+  assert.match(navigation, /slug: 'finance-tab-project-finance'/);
+  assert.match(navigation, /slug: 'finance-tab-accounting-reports'/);
   assert.match(workspace, /data-ams-slug="finance-area-mobile-selector"/);
   assert.match(workspace, /<CustomSelect[\s\S]*?value=\{activeGroup\.key\}[\s\S]*?navigate\(destination\.to\)/);
   assert.match(workspace, /AdminSectionTabs ariaLabel="Finance worksheets" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="w-full"/);
@@ -232,8 +235,10 @@ test('Finance workbook replaces legacy finance navigation and keeps all operatio
   assert.match(app, /const AdminInvoicing = lazyWithRetry/);
   assert.ok(app.includes('<Route path="proposals" element={<ModuleRoute moduleKey="proposals" moduleLabel="Proposals"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />'));
   assert.doesNotMatch(layout, /location\.pathname === '\/admin\/invoicing'/);
-  assert.match(layout, /isFinanceModuleRoute/);
-  assert.match(layout, /ariaLabel="Finance sections"/);
+  assert.doesNotMatch(layout, /isFinanceModuleRoute|ariaLabel="Finance sections"/);
+  assert.ok(layout.includes('data-ams-slug="active-module-title"'));
+  const navigation = await read('src/lib/amsModuleSubnavigation.ts');
+  assert.match(navigation, /label: 'Accounting', to: '\/admin\/finance\?tab=journal'/);
   assert.doesNotMatch(layout, /finance=tax-retainers|finance=vendor-payments|finance=financial-reports/);
 
   const summaryStart = workspace.indexOf('const renderSummary =');
