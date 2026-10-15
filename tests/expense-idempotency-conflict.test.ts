@@ -14,7 +14,8 @@ test('expense idempotency reuse conflicts are returned as HTTP 409', () => {
   const source = fs.readFileSync('server/routes.ts', 'utf8');
   const start = source.indexOf("apiRouter.post('/finance/expenses'");
   assert.ok(start >= 0);
-  const route = source.slice(start, start + 5000);
+  const paymentRouteStart = source.indexOf("apiRouter.post('/finance/expenses/:id/payments'", start);
+  const route = source.slice(start, paymentRouteStart > start ? paymentRouteStart : undefined);
 
   assert.match(route, /EXPENSE_IDEMPOTENCY_KEY_REUSE_CONFLICT/);
   assert.match(route, /res\.status\(409\)/);

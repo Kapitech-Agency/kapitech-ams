@@ -15,6 +15,50 @@ test('Excel-aligned supplementary Finance registers use a persisted PostgreSQL s
   assert.equal((sql.match(/\('coa-\d{4}', 'chart-of-accounts'/g) || []).length, 17);
 });
 
+test('Finance settlement and tax accounts are added by a forward-only migration', async () => {
+  const sql = await read('db/postgres/053_finance_settlement_tax_accounts.sql');
+  assert.match(sql, /'coa-1010', 'chart-of-accounts', '1010'/);
+  assert.match(sql, /'coa-2100', 'chart-of-accounts', '2100'/);
+  assert.match(sql, /'coa-2200', 'chart-of-accounts', '2200'/);
+  assert.match(sql, /Card Settlement Clearing/);
+  assert.match(sql, /Tax Payable/);
+  assert.match(sql, /Credit Card Payable/);
+  assert.match(sql, /ON CONFLICT \(record_type, record_key\) DO NOTHING/);
+  assert.ok(!sql.includes('DROP TABLE'));
+  assert.ok(!sql.includes('DELETE FROM finance_workbook_records'));
+});
+
+test('Posted source journals lock accounting fields on their source records', async () => {
+  const repository = await read('server/postgres-finance-workbook-repository.ts');
+  const invoices = await read('server/postgres-invoice-repository.ts');
+  const routes = await read('server/routes.ts');
+
+  assert.match(repository, /ensurePostedSourceImmutable/);
+  assert.match(repository, /'cash-bank-opening':\{sourceType:'cash-bank-opening',fields:\['accountCode','openingDate','openingBalance'\]\}/);
+  assert.match(repository, /'balance-sheet-opening':\{sourceType:'balance-sheet-opening',fields:\['accountCode','asOfDate','openingAmount','side'\]\}/);
+  assert.match(repository, /'vendor-bill':\{sourceType:'vendor-bill-issued'/);
+  assert.match(repository, /'vendor-bill-payment':\{sourceType:'vendor-bill-payment'/);
+  assert.match(repository, /await this\.ensurePostedSourceImmutable\(client,type,id,current\.payload,n\.payload\)/);
+  assert.match(invoices, /INVOICE_POSTED_LEDGER_REVERSAL_REQUIRED/);
+  assert.match(routes, /Accounting fields are locked; create and approve a reversal or adjustment journal first/);
+});
+
+test('Month-end close requires period-scoped statement evidence reconciled to posted GL', async () => {
+  const repository = await read('server/postgres-finance-workbook-repository.ts');
+  const routes = await read('server/routes.ts');
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+
+  assert.match(repository, /'cash-reconciliation'/);
+  assert.match(repository, /statementDate!==monthEnd/);
+  assert.match(repository, /statementReference/);
+  assert.match(routes, /has no month-end statement\/count reconciliation/);
+  assert.match(routes, /differs from the posted GL/);
+  assert.match(routes, /Cash & Bank opening balance \(account 1000\) is missing/);
+  assert.match(workspace, /Statement reconciliation · '\+reconciliationMonth/);
+  assert.match(workspace, /Reconciliation exceptions/);
+  assert.match(workspace, /Record reconciliation/);
+});
+
 test('All supplementary Finance register routes have explicit auth and permissions', async () => {
   const routes = await read('server/routes.ts');
   const fragments = [
@@ -35,6 +79,8 @@ test('Finance supplementary repository preserves period locks, maker approval ac
   assert.match(repository, /Only pending petty cash vouchers can be approved/);
   assert.match(repository, /Cannot close /);
   assert.match(repository, /Only an approved petty cash voucher can be posted/);
+  assert.match(repository, /Maker-checker control cannot verify who created this record/);
+  assert.match(repository, /the record creator cannot approve or post their own Finance record/);
   assert.match(repository, /vendor-bill-payment/);
   assert.match(repository, /postPettyCashVoucher/);
   assert.match(repository, /A vendor bill with recorded payments cannot be archived/);
@@ -64,11 +110,11 @@ test('Journal source sync is permission-gated, draft-only and duplicate-safe', a
   assert.match(repository, /key = sourceType && sourceId \? 'source:' \+ sourceType \+ ':' \+ sourceId : reference/);
   assert.match(mapping, /buildFinanceSourceJournalDrafts/);
   assert.match(mapping, /No draft returned by this function is approved or posted/);
-  assert.match(mapping, /provisional workbook default/);
-  assert.match(mapping, /debitCode: '1000', creditCode: '1300'/);
+  assert.match(mapping, /Settlement method\/account is incomplete or unsupported/);
+  assert.match(mapping, /debitCode, creditCode: '1300'/);
   assert.match(mapping, /sourceType: 'invoice-issued'/);
   assert.match(mapping, /sourceType: 'vendor-bill-payment'/);
-  assert.match(repository, /invoice-issued.*invoice-payment.*expense.*cash-bank-transfer.*vendor-bill-payment/);
+  assert.match(repository, /invoice-issued.*invoice-payment.*expense.*expense-payment.*cash-bank-transfer.*vendor-bill-payment/);
   assert.match(routes, /postgresFinanceWorkbookRepository\.list\('vendor-bill-payment'\)/);
   const client = await read('src/lib/apiClient.ts');
   assert.match(client, /workbookSyncJournalDrafts:/);
@@ -119,7 +165,8 @@ test('Client receipts and vendor payments require their recognized source journa
   assert.match(repository, /relatedSourceId/);
   assert.match(repository, /Cannot post this client receipt until the linked invoice-issued journal is posted/);
   assert.match(repository, /Cannot post this vendor payment until the linked vendor-bill-issued journal is posted/);
-  assert.match(repository, /invoice-issued.*invoice-payment.*expense.*cash-bank-transfer.*vendor-bill-issued.*vendor-bill-payment/);
+  assert.match(repository, /Cannot post this expense payment until the linked expense accrual is posted/);
+  assert.match(repository, /invoice-issued.*invoice-payment.*expense.*expense-payment.*cash-bank-transfer.*vendor-bill-issued.*vendor-bill-payment/);
   assert.match(mapping, /Posting is blocked until the linked invoice-issued journal is posted/);
   assert.match(mapping, /Posting is blocked until the linked vendor-bill-issued journal is posted/);
   assert.match(ui, /relatedSourceId: editor\.record\.payload\.relatedSourceId/);

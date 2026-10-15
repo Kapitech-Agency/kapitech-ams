@@ -1,5 +1,6 @@
 import { getPostgresPool, withPostgresTransaction } from './postgres.ts';
 import { postgresAuditLogRepository, type AuditEntry } from './postgres-audit-log-repository.ts';
+import { EXCEL_CHART_OF_ACCOUNTS } from '../src/lib/financeWorkbook.ts';
 
 type Row = Record<string, any>;
 const obj=(v:unknown):Record<string,unknown>=>v&&typeof v==='object'?v as Record<string,unknown>:{};
@@ -11,7 +12,7 @@ function mapInvoice(row:Row, items:Row[], payments:Row[]):any {
   const slug=String(metadata.slug || String(row.invoice_number || row.id).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''));
   const mappedPayments=payments.map(p=>({
     id:p.id, amount:Number(p.amount), date:date(p.paid_at), method:p.method,
-    reference:p.reference||'', recordedBy:obj(metadata.paymentUsers)[p.id] || obj(p.metadata).recordedBy || '',
+    reference:p.reference||'', settlementAccountCode:obj(p.metadata).settlementAccountCode || undefined, recordedBy:obj(metadata.paymentUsers)[p.id] || obj(p.metadata).recordedBy || '',
     notes:obj(p.metadata).notes || ''
   }));
   const amountPaid=Number(row.amount_paid||mappedPayments.reduce((s,p)=>s+p.amount,0));
@@ -30,6 +31,13 @@ function metadata(i:any){const {id,invoiceNumber,proposalId,clientId,projectId,t
 
 export class PostgresInvoiceRepository {
   private readonly writableStatuses = new Set(['draft','sent','overdue']);
+  private async ensureFinancePeriodOpen(db:any,value:unknown):Promise<void>{
+    const period=String(value||'').slice(0,7);
+    if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(period)) return;
+    await db.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))",['kapitech:finance-period:'+period]);
+    const lock=await db.query("SELECT id FROM finance_workbook_records WHERE record_type='monthly-closing-lock' AND period_key=$1 AND archived_at IS NULL LIMIT 1",[period]);
+    if(lock.rows[0]) throw new Error('FINANCE_PERIOD_CLOSED:'+period);
+  }
   private async items(db:any,id:string){const r=await db.query('SELECT * FROM invoice_items WHERE invoice_id=$1 ORDER BY id ASC',[id]);return r.rows as Row[];}
   private async payments(db:any,id:string){const r=await db.query('SELECT * FROM invoice_payments WHERE invoice_id=$1 ORDER BY paid_at DESC, id DESC',[id]);return r.rows as Row[];}
   private validateFinancials(invoice:any):void {
@@ -55,6 +63,7 @@ export class PostgresInvoiceRepository {
   async create(i:any,audit?:AuditEntry):Promise<any>{return withPostgresTransaction(async db=>{
       const requestedStatus = String(i.status || 'draft');
       if (!this.writableStatuses.has(requestedStatus)) throw new Error('INVALID_INVOICE_STATUS');
+      if(requestedStatus!=='draft') await this.ensureFinancePeriodOpen(db,i.issueDate);
       let resolvedClientId = i.clientId ? String(i.clientId) : null;
       const projectId = i.projectId ? String(i.projectId) : null;
       const invoiceItems = Array.isArray(i.items) ? i.items : [];
@@ -113,8 +122,19 @@ export class PostgresInvoiceRepository {
       }
       await db.query('INSERT INTO invoices (id,proposal_id,invoice_number,client_id,project_id,type,subtotal,discount_percent,discount_amount,tax_percent,tax_amount,total,amount_paid,balance_due,currency,status,issue_date,due_date,notes,payment_terms,metadata,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23)',[i.id,i.proposalId||null,i.invoiceNumber,resolvedClientId,projectId,i.type||'invoice',i.subtotal,i.discountPercent||0,i.discountAmount||0,i.taxPercent||0,i.taxAmount||0,i.total,0,i.total,i.currency||'IDR',i.status||'draft',i.issueDate||null,i.dueDate||null,i.notes||null,i.paymentTerms||null,JSON.stringify(metadata(i)),i.createdAt,i.updatedAt]);for(const x of invoiceItems)await db.query('INSERT INTO invoice_items (id,invoice_id,description,quantity,unit_price,amount) VALUES ($1,$2,$3,$4,$5,$6)',[x.id,i.id,x.description,x.quantity,x.unitPrice,x.amount??Number(x.quantity)*Number(x.unitPrice)]);if(audit)await postgresAuditLogRepository.appendWithinTransaction(db,audit);return this.findByIdTx(db,i.id);});}
   private async findByIdTx(db:any,id:string){const r=await db.query('SELECT * FROM invoices WHERE id=$1',[id]);if(!r.rows[0])return null;return mapInvoice(r.rows[0],await this.items(db,id),await this.payments(db,id));}
-  async update(id:string,patch:any,audit?:AuditEntry):Promise<any|null>{return withPostgresTransaction(async db=>{const r=await db.query('SELECT * FROM invoices WHERE id=$1 FOR UPDATE',[id]);if(!r.rows[0])return null;const current=mapInvoice(r.rows[0],await this.items(db,id),await this.payments(db,id));const allowedStatuses=new Set(['draft','sent','overdue','partially_paid','paid','cancelled']);if(patch.status!==undefined&&!allowedStatuses.has(String(patch.status)))throw new Error('INVALID_INVOICE_STATUS');if(current.status==='cancelled'&&patch.status&&patch.status!=='cancelled')throw new Error('Cancelled invoices cannot be reopened.');
+  async update(id:string,patch:any,audit?:AuditEntry):Promise<any|null>{return withPostgresTransaction(async db=>{const r=await db.query('SELECT * FROM invoices WHERE id=$1 FOR UPDATE',[id]);if(!r.rows[0])return null;const current=mapInvoice(r.rows[0],await this.items(db,id),await this.payments(db,id));
+      if(current.status!=='draft') await this.ensureFinancePeriodOpen(db,current.issueDate);
+      const allowedStatuses=new Set(['draft','sent','overdue','partially_paid','paid','cancelled']);if(patch.status!==undefined&&!allowedStatuses.has(String(patch.status)))throw new Error('INVALID_INVOICE_STATUS');if(current.status==='cancelled'&&patch.status&&patch.status!=='cancelled')throw new Error('Cancelled invoices cannot be reopened.');
       if (patch.status === 'cancelled') throw new Error('INVOICE_CANCELLATION_REQUIRES_CANCEL_ENDPOINT');if(patch.updatedAt&&current.updatedAt!==patch.updatedAt)throw new Error('Invoice has been modified since it was loaded. Refresh and retry.');const next={...current,...patch,id,updatedAt:new Date().toISOString(),payments:current.payments};
+      const postedLedger=await db.query("SELECT id FROM finance_workbook_records WHERE record_type='journal-entry' AND status='posted' AND archived_at IS NULL AND payload->>'sourceType'='invoice-issued' AND payload->>'sourceId'=$1 LIMIT 1 FOR SHARE",[String(id)+':issued']);
+      if(postedLedger.rows[0]){
+        const protectedFields=['invoiceNumber','type','clientId','projectId','subtotal','discountPercent','discountAmount','taxPercent','taxAmount','total','currency','issueDate'];
+        const changed=protectedFields.some((key)=>JSON.stringify((next as any)[key]??null)!==JSON.stringify((current as any)[key]??null));
+        const itemFingerprint=(items:any[])=>JSON.stringify((items||[]).map((item:any)=>({description:String(item.description||''),quantity:Number(item.quantity),unitPrice:Number(item.unitPrice),amount:Number(item.amount ?? (Number(item.quantity)*Number(item.unitPrice)))})));
+        const itemsChanged=patch.items!==undefined&&itemFingerprint(next.items)!==itemFingerprint(current.items);
+        if(changed||itemsChanged) throw new Error('INVOICE_POSTED_LEDGER_REVERSAL_REQUIRED');
+      }
+      if(String(next.status||'')!=='draft') await this.ensureFinancePeriodOpen(db,next.issueDate);
       let nextClientId = next.clientId ? String(next.clientId) : null;
       const nextProjectId = next.projectId ? String(next.projectId) : null;
       if (nextClientId) {
@@ -169,20 +189,33 @@ export class PostgresInvoiceRepository {
           method: String(payment.method||''),
           date: String(payment.date||''),
           reference: String(payment.reference||''),
-          notes: String(payment.notes||'')
+          notes: String(payment.notes||''),
+          ...(String(payment.settlementAccountCode||'') ? { settlementAccountCode: String(payment.settlementAccountCode) } : {})
         });
         const storedFingerprint=String(duplicateMetadata.requestFingerprint||JSON.stringify({
           amount: Math.round(Number(duplicate.rows[0].amount)*100)/100,
           method: String(duplicate.rows[0].method||''),
           date: date(duplicate.rows[0].paid_at),
           reference: String(duplicate.rows[0].reference||''),
-          notes: String(duplicateMetadata.notes||'')
+          notes: String(duplicateMetadata.notes||''),
+          ...(String(duplicateMetadata.settlementAccountCode||'') ? { settlementAccountCode: String(duplicateMetadata.settlementAccountCode) } : {})
         }));
         if (storedFingerprint!==requestedFingerprint) throw new Error('IDEMPOTENCY_KEY_REUSE_CONFLICT');
         const replayed = await this.findByIdTx(db,id); return replayed ? { ...replayed, __idempotentReplay: true } : replayed;
       }
     }
+    await this.ensureFinancePeriodOpen(db,payment.date);
     if(current.status==='cancelled')throw new Error('Cancelled invoices cannot receive payments.');
+    if(String(payment.method||'')==='other'){
+      const settlementCode=String(payment.settlementAccountCode||'').trim();
+      const defaultAccount=EXCEL_CHART_OF_ACCOUNTS.find((account)=>account.code===settlementCode&&account.active);
+      const savedAccount=await db.query("SELECT payload FROM finance_workbook_records WHERE record_type='chart-of-accounts' AND record_key=$1 AND archived_at IS NULL LIMIT 1",[settlementCode]);
+      const saved=savedAccount.rows[0]?obj(savedAccount.rows[0].payload):{};
+      if(!['1000','1010','1100','1200'].includes(settlementCode)||
+        (savedAccount.rows[0] ? saved.active===false || String(saved.accountType||'')!=='Asset' : !defaultAccount || defaultAccount.type!=='Asset')) {
+        throw new Error('An Other invoice receipt needs an active cash, bank, or clearing asset account.');
+      }
+    }
     const paymentAmount=Number(payment.amount);
     if(!Number.isFinite(paymentAmount)||paymentAmount<=0||paymentAmount>authoritativeBalance)throw new Error('Payment exceeds the current invoice balance.');
     const paymentMetadata={recordedBy:payment.recordedBy||payment.userId||'system',notes:payment.notes||'',idempotencyKey:payment.idempotencyKey||undefined,requestFingerprint:JSON.stringify({
@@ -190,11 +223,12 @@ export class PostgresInvoiceRepository {
       method: String(payment.method||''),
       date: String(payment.date||''),
       reference: String(payment.reference||''),
-      notes: String(payment.notes||'')
-    })};
+      notes: String(payment.notes||''),
+      ...(String(payment.settlementAccountCode||'') ? { settlementAccountCode: String(payment.settlementAccountCode) } : {})
+    }), ...(String(payment.settlementAccountCode||'') ? { settlementAccountCode: String(payment.settlementAccountCode) } : {})};
     await db.query(
       'INSERT INTO invoice_payments (id,invoice_id,amount,paid_at,method,reference,metadata) VALUES ($1,$2,$3,$4,$5,$6,$7)',
-      [payment.id,id,paymentAmount,payment.date,payment.method,payment.reference||null,JSON.stringify(paymentMetadata)]
+      [payment.id,id,paymentAmount,payment.date,payment.method,payment.reference||null,JSON.stringify({ ...paymentMetadata, ...(String(payment.settlementAccountCode||'') ? { settlementAccountCode: String(payment.settlementAccountCode) } : {}) })]
     );
     const totalPaid=authoritativePaid+paymentAmount;
     const balance=Math.max(0,current.total-totalPaid);
@@ -218,7 +252,11 @@ export class PostgresInvoiceRepository {
       );
     }
     if(audit)await postgresAuditLogRepository.appendWithinTransaction(db,audit);return this.findByIdTx(db,id);});}
-  async cancel(id:string,user:string,audit?:AuditEntry):Promise<any|null>{return withPostgresTransaction(async db=>{const r=await db.query('SELECT * FROM invoices WHERE id=$1 FOR UPDATE',[id]);if(!r.rows[0])return null;const current=mapInvoice(r.rows[0],await this.items(db,id),await this.payments(db,id));if(current.status==='cancelled')return current;if(current.payments.length>0)throw new Error('INVOICE_WITH_PAYMENTS_CANNOT_BE_CANCELLED');const auditTrail=[...current.auditTrail,{action:'cancelled',timestamp:new Date().toISOString(),user}];await db.query('UPDATE invoices SET status=$2,metadata=$3,updated_at=$4 WHERE id=$1',[id,'cancelled',JSON.stringify({...metadata(current),auditTrail:auditTrail}),new Date().toISOString()]);if(audit)await postgresAuditLogRepository.appendWithinTransaction(db,audit);return this.findByIdTx(db,id);});}
+  async cancel(id:string,user:string,audit?:AuditEntry):Promise<any|null>{return withPostgresTransaction(async db=>{const r=await db.query('SELECT * FROM invoices WHERE id=$1 FOR UPDATE',[id]);if(!r.rows[0])return null;const current=mapInvoice(r.rows[0],await this.items(db,id),await this.payments(db,id));if(current.status==='cancelled')return current;
+    if(current.status!=='draft') await this.ensureFinancePeriodOpen(db,current.issueDate);
+    if(current.payments.length>0)throw new Error('INVOICE_WITH_PAYMENTS_CANNOT_BE_CANCELLED');
+    const postedJournal=await db.query<Row>("SELECT id FROM finance_workbook_records WHERE record_type='journal-entry' AND status='posted' AND archived_at IS NULL AND payload->>'sourceType'='invoice-issued' AND payload->>'sourceId'=$1 LIMIT 1 FOR SHARE",[String(current.id)+':issued']);
+    if(postedJournal.rows[0]) throw new Error('INVOICE_POSTED_LEDGER_REVERSAL_REQUIRED');const auditTrail=[...current.auditTrail,{action:'cancelled',timestamp:new Date().toISOString(),user}];await db.query('UPDATE invoices SET status=$2,metadata=$3,updated_at=$4 WHERE id=$1',[id,'cancelled',JSON.stringify({...metadata(current),auditTrail:auditTrail}),new Date().toISOString()]);if(audit)await postgresAuditLogRepository.appendWithinTransaction(db,audit);return this.findByIdTx(db,id);});}
   async delete(id:string,audit?:AuditEntry){return this.cancel(id,'system',audit);}
 }
 export const postgresInvoiceRepository=new PostgresInvoiceRepository();

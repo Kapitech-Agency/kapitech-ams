@@ -360,11 +360,11 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
   if (isLoading && vendors.length === 0) {
     return (
       <VendorWorkspaceContainer embedded={embedded}>
-        <AdminModuleHeader slug="vendors-header"
+        {!embedded && <AdminModuleHeader slug="vendors-header"
           className="mb-0"
           title={t('admin.nav.vendors')}
           description={language === 'id' ? 'Kelola direktori vendor, keahlian, rate, kontrak, dan status verifikasi.' : 'Manage vendor profiles, skills, rates, contracts, and verification status.'}
-        />
+        />}
         <div className="space-y-3" role="status" aria-label="Loading vendors">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {Array.from({ length: 3 }).map((_, index) => (
@@ -379,22 +379,21 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
 
   return (
     <VendorWorkspaceContainer embedded={embedded}>
-      {/* Top Header */}
-      <AdminModuleHeader
-        className="mb-0"
-        title={(
-          <span className="flex items-center gap-2.5"><Users className="shrink-0 text-accent-text" size={22} />{embedded ? (language === 'id' ? 'Direktori Vendor & Freelancer' : 'Vendor & Freelancer Directory') : (language === 'id' ? 'Personel Vendor' : 'Vendor Personnel')}</span>
-        )}
-        description={embedded
-          ? (language === 'id' ? 'Kelola profil vendor, freelancer, rate, kontrak, dan verifikasi tanpa meninggalkan tab Finance.' : 'Manage vendor profiles, rates, contracts, and verification without leaving the Finance tab.')
-          : (language === 'id' ? 'Direktori personel vendor, freelance, kontraktor, dan partner operasional yang digunakan lintas project.' : 'Directory of vendor personnel, freelancers, contractors, and operational partners used across projects.')}
-        actions={(
-          <button type="button" onClick={handleOpenAdd} disabled={!canManageVendors} className="h-9 min-h-9 px-3.5 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-semibold flex items-center gap-2 transition-all disabled:cursor-not-allowed disabled:opacity-50">
-            <Plus size={15} />
-            <span>{language === 'id' ? 'Tambah Vendor' : 'Add Vendor'}</span>
-          </button>
-        )}
-      />
+      {!embedded && (
+        <AdminModuleHeader
+          className="mb-0"
+          title={(
+            <span className="flex items-center gap-2.5"><Users className="shrink-0 text-accent-text" size={22} />{language === 'id' ? 'Personel Vendor' : 'Vendor Personnel'}</span>
+          )}
+          description={language === 'id' ? 'Direktori personel vendor, freelance, kontraktor, dan partner operasional yang digunakan lintas project.' : 'Directory of vendor personnel, freelancers, contractors, and operational partners used across projects.'}
+          actions={(
+            <button type="button" onClick={handleOpenAdd} disabled={!canManageVendors} className="h-9 min-h-9 px-3.5 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-semibold flex items-center gap-2 transition-all disabled:cursor-not-allowed disabled:opacity-50">
+              <Plus size={15} />
+              <span>{language === 'id' ? 'Tambah Vendor' : 'Add Vendor'}</span>
+            </button>
+          )}
+        />
+      )}
 
 
       {!embedded && <div className="min-[900px]:hidden min-w-0" data-ams-slug="team-mobile-tabs">
@@ -427,7 +426,7 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
 
       {/* Top Summary Metrics */}
       <section data-ams-feature-slug="vendor-snapshot" data-ams-slug="vendor-snapshot" aria-label="Vendor snapshot" className="rounded-card border border-line bg-panel p-4">
-        <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3"><div><h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan vendor' : 'Vendor snapshot'}</h2><p className="mt-1 text-xs text-muted">{language === 'id' ? 'Komposisi talent, partner, dan kualitas operasional.' : 'Talent mix, agency partners, and operational quality signals.'}</p></div><span className="text-[11px] font-medium tabular-nums text-muted">{vendors.length} total</span></div>
+        <div className="mb-3 flex flex-col gap-3 border-b border-line pb-3 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan vendor' : 'Vendor snapshot'}</h2><p className="mt-1 text-xs text-muted">{language === 'id' ? 'Komposisi talent, partner, dan kualitas operasional.' : 'Talent mix, agency partners, and operational quality signals.'}</p></div><div className="flex min-w-0 flex-wrap items-center justify-between gap-2 sm:shrink-0 sm:justify-end">{embedded && <button type="button" onClick={handleOpenAdd} disabled={!canManageVendors} className="inline-flex h-8 min-h-8 items-center gap-2 whitespace-nowrap rounded-control bg-accent px-3 text-[11px] font-semibold text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"><Plus size={13}/><span>{language === 'id' ? 'Tambah Vendor' : 'Add Vendor'}</span></button>}<span className="text-[11px] font-medium tabular-nums text-muted">{vendors.length} total</span></div></div>
         <AdminMetricStrip slug="vendor-kpis"
           className="lg:grid-cols-4"
           metrics={[

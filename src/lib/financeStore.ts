@@ -25,6 +25,7 @@ export interface InvoicePaymentRecord {
   amount: number;
   date: string;
   method: 'bank_transfer' | 'credit_card' | 'cash' | 'other';
+  settlementAccountCode?: '1000' | '1010' | '1100' | '1200';
   reference?: string;
   recordedBy?: string;
   notes?: string;
@@ -81,6 +82,17 @@ export type ExpenseCategory =
   | 'Legal & Admin'
   | 'CapEx Equipment';
 
+export interface ExpensePaymentRecord {
+  id: string;
+  amount: number;
+  date: string;
+  method: InvoicePaymentRecord['method'];
+  paymentAccountCode?: '1000' | '1100' | '1200';
+  reference?: string;
+  notes?: string;
+  recordedBy?: string;
+}
+
 export interface AgencyExpense {
   id: string;
   slug?: string;
@@ -94,6 +106,11 @@ export interface AgencyExpense {
   vendorId?: string;
   vendorContractId?: string;
   vendorPayment?: { vendorId: string; contractId: string; contractTitle?: string; reference?: string; notes?: string; legacyFormat?: boolean };
+  paymentStatus?: 'unpaid' | 'partially_paid' | 'paid';
+  payments?: ExpensePaymentRecord[];
+  paidDate?: string;
+  paymentMethod?: InvoicePaymentRecord['method'];
+  paymentAccountCode?: '1000' | '1100' | '1200';
   metadata?: Record<string, unknown>;
   recordedBy: string;
   createdAt?: string;

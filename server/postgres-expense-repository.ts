@@ -21,6 +21,13 @@ export class ExpenseImmutableError extends Error{readonly code='EXPENSE_IMMUTABL
 export class ExpenseVersionConflictError extends Error{readonly code='EXPENSE_VERSION_CONFLICT';}
 export class ExpenseProjectNotFoundError extends Error{readonly code='EXPENSE_PROJECT_NOT_FOUND';}
 export class PostgresExpenseRepository{
+  private async ensureFinancePeriodOpen(client:any,value:unknown):Promise<void>{
+    const period=String(value||'').slice(0,7);
+    if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(period)) return;
+    await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))",['kapitech:finance-period:'+period]);
+    const lock=await client.query("SELECT id FROM finance_workbook_records WHERE record_type='monthly-closing-lock' AND period_key=$1 AND archived_at IS NULL LIMIT 1",[period]);
+    if(lock.rows[0]) throw new Error('FINANCE_PERIOD_CLOSED:'+period);
+  }
   async list(){const r=await getPostgresPool().query<Row>('SELECT * FROM expenses WHERE archived_at IS NULL AND status <> $1 ORDER BY expense_date DESC, created_at DESC',['voided']);return r.rows.map(mapExpense);}
   async findById(id:string){const r=await getPostgresPool().query<Row>('SELECT * FROM expenses WHERE id=$1 LIMIT 1',[id]);return r.rows[0]?mapExpense(r.rows[0]):null;}
   async create(input:Record<string,any>, audit?: AuditEntry){
@@ -39,7 +46,11 @@ export class PostgresExpenseRepository{
         currency,
         date:expenseDate,
         projectId:projectId||'',
-        recurringInterval:String(input.recurringInterval||'none')
+        recurringInterval:String(input.recurringInterval||'none'),
+        paymentStatus:String(input.metadata?.paymentStatus||'unpaid'),
+        paidDate:String(input.metadata?.paidDate||''),
+        paymentMethod:String(input.metadata?.paymentMethod||'bank_transfer'),
+        paymentAccountCode:String(input.metadata?.paymentAccountCode||'')
       };
       if (vendorId || vendorContractId) {
         fingerprintData.vendorId = vendorId || '';
@@ -66,10 +77,29 @@ export class PostgresExpenseRepository{
             projectId:existing.rows[0].project_id?String(existing.rows[0].project_id):'',
             recurringInterval:String(existing.rows[0].recurring_interval||'none')
           }));
-          if(storedFingerprint!==requestFingerprint) throw new Error('EXPENSE_IDEMPOTENCY_KEY_REUSE_CONFLICT');
+          if(storedFingerprint!==requestFingerprint){
+            const legacyFingerprint=JSON.stringify({
+              type:String(existing.rows[0].type||'OpEx'),
+              category:String(existing.rows[0].category||'General'),
+              description:String(existing.rows[0].description||''),
+              amount:Math.round(Number(existing.rows[0].amount||0)*100)/100,
+              currency:String(existing.rows[0].currency||'IDR'),
+              date:dateValue(existing.rows[0].expense_date),
+              projectId:existing.rows[0].project_id?String(existing.rows[0].project_id):'',
+              recurringInterval:String(existing.rows[0].recurring_interval||'none')
+            });
+            const settlementHasBeenRecorded=['paymentStatus','paidDate','paymentMethod','paymentAccountCode'].some((key)=>existingMetadata[key]!==undefined);
+            const legacyDefaultReplay=!settlementHasBeenRecorded
+              && String(input.metadata?.paymentStatus||'unpaid')==='unpaid'
+              && !String(input.metadata?.paidDate||'')
+              && String(input.metadata?.paymentMethod||'bank_transfer')==='bank_transfer'
+              && !String(input.metadata?.paymentAccountCode||'');
+            if(!(legacyDefaultReplay&&storedFingerprint===legacyFingerprint)) throw new Error('EXPENSE_IDEMPOTENCY_KEY_REUSE_CONFLICT');
+          }
           return { ...mapExpense(existing.rows[0]), __idempotentReplay: true };
         }
       }
+      await this.ensureFinancePeriodOpen(client,expenseDate);
       if(projectId){const project=await client.query<Row>('SELECT id FROM projects WHERE id=$1 FOR SHARE',[projectId]);if(!project.rows[0])throw new ExpenseProjectNotFoundError('Project not found.');}
       if (vendorId) {
         const vendor = await client.query<Row>('SELECT id FROM vendors WHERE id = $1 FOR SHARE', [vendorId]);
@@ -82,10 +112,51 @@ export class PostgresExpenseRepository{
       return mapExpense(result.rows[0]);
     });
   }
+  async recordPayment(id:string,input:Record<string,any>,audit?:AuditEntry){
+    return withPostgresTransaction(async client=>{
+      const found=await client.query<Row>('SELECT * FROM expenses WHERE id=$1 FOR UPDATE',[id]);
+      if(!found.rows[0]) throw new ExpenseNotFoundError('Expense not found.');
+      const row=found.rows[0];
+      if(row.status==='voided'||row.archived_at) throw new ExpenseImmutableError('A voided expense cannot receive payments.');
+      if(input.expectedVersion!=null&&Number(row.version)!==Number(input.expectedVersion)) throw new ExpenseVersionConflictError('Expense was modified by another user. Refresh and retry.');
+      const amount=Number(input.amount), paymentDate=dateValue(input.date), method=String(input.method||'').toLowerCase();
+      if(!Number.isFinite(amount)||amount<=0||!paymentDate||!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(paymentDate)||Number.isNaN(new Date(paymentDate+'T00:00:00Z').getTime())||new Date(paymentDate+'T00:00:00Z').toISOString().slice(0,10)!==paymentDate) throw new Error('Valid positive payment amount and actual payment date are required.');
+      if(!['bank_transfer','credit_card','cash','other'].includes(method)) throw new Error('Payment method is not supported.');
+      const metadata=row.metadata&&typeof row.metadata==='object'&&!Array.isArray(row.metadata)?row.metadata:{};
+      const payments=Array.isArray(metadata.payments)?metadata.payments as Array<Record<string,any>>:[];
+      const paymentId=String(input.id||'').trim();
+      if(!paymentId) throw new Error('A unique expense payment ID is required.');
+      const fingerprint=JSON.stringify({amount:Math.round(amount*100)/100,date:paymentDate,method,paymentAccountCode:String(input.paymentAccountCode||''),reference:String(input.reference||''),notes:String(input.notes||'')});
+      const duplicate=payments.find(payment=>String(payment.id||'')===paymentId);
+      if(duplicate){
+        const existingFingerprint=JSON.stringify({amount:Math.round(Number(duplicate.amount||0)*100)/100,date:dateValue(duplicate.date),method:String(duplicate.method||''),paymentAccountCode:String(duplicate.paymentAccountCode||''),reference:String(duplicate.reference||''),notes:String(duplicate.notes||'')});
+        if(existingFingerprint!==fingerprint) throw new ExpenseVersionConflictError('Payment ID has already been used with different payment details.');
+        return {...mapExpense(row),__idempotentReplay:true};
+      }
+      const settledSoFar=payments.reduce((sum:number,payment)=>sum+Math.max(0,Number(payment.amount)||0),0);
+      if(settledSoFar+amount>Number(row.amount||0)+0.01) throw new ExpenseVersionConflictError('Total expense payments cannot exceed the recorded expense amount.');
+      const paymentAccountCode=String(input.paymentAccountCode||'');
+      if(['bank_transfer','cash'].includes(method)&&!['1000','1100','1200'].includes(paymentAccountCode)) throw new Error('Select the actual cash, bank or emergency-fund account used for this payment.');
+      if(method==='credit_card'&&paymentAccountCode) throw new Error('Credit-card settlement uses Credit Card Payable and does not accept a cash-account code.');
+      await this.ensureFinancePeriodOpen(client,paymentDate);
+      const payment={id:paymentId,amount:Math.round(amount*100)/100,date:paymentDate,method,paymentAccountCode:paymentAccountCode||undefined,reference:String(input.reference||'').slice(0,160),notes:String(input.notes||'').slice(0,500),recordedBy:String(input.recordedBy||'')};
+      const nextPayments=[...payments,payment];
+      const totalPaid=Math.round(nextPayments.reduce((sum:number,p)=>sum+Math.max(0,Number(p.amount)||0),0)*100)/100;
+      const nextStatus=totalPaid>=Number(row.amount||0)-0.01?'paid':'partially_paid';
+      const nextMetadata={...metadata,payments:nextPayments,paymentStatus:nextStatus,paidDate:paymentDate,paymentMethod:method,paymentAccountCode:payment.paymentAccountCode,paymentReference:payment.reference};
+      const updated=await client.query<Row>('UPDATE expenses SET metadata=$2,version=version+1 WHERE id=$1 AND version=$3 RETURNING *',[id,JSON.stringify(nextMetadata),Number(row.version||1)]);
+      if(!updated.rows[0]) throw new ExpenseVersionConflictError('Expense changed while recording payment. Refresh and retry.');
+      if(audit) await postgresAuditLogRepository.appendWithinTransaction(client,audit);
+      return mapExpense(updated.rows[0]);
+    });
+  }
   async void(id:string,expectedVersion?:number,audit?: AuditEntry){
     return withPostgresTransaction(async client=>{
       const current=await client.query<Row>('SELECT * FROM expenses WHERE id=$1 FOR UPDATE',[id]);if(!current.rows[0])throw new ExpenseNotFoundError('Expense not found.');
       const row=current.rows[0];if(row.status==='voided'||row.archived_at)throw new ExpenseImmutableError('Expense is already voided.');
+      await this.ensureFinancePeriodOpen(client,row.expense_date);
+      const postedJournal=await client.query<Row>("SELECT id FROM finance_workbook_records WHERE record_type='journal-entry' AND status='posted' AND archived_at IS NULL AND payload->>'sourceType'='expense' AND payload->>'sourceId'=$1 LIMIT 1 FOR SHARE",[String(row.id)]);
+      if(postedJournal.rows[0]) throw new ExpenseImmutableError('EXPENSE_POSTED_LEDGER_REVERSAL_REQUIRED: create an approved reversal journal before voiding this expense.');
       if(expectedVersion!=null&&Number(row.version)!==Number(expectedVersion))throw new ExpenseVersionConflictError('Expense was modified by another user.');
       const result=await client.query<Row>('UPDATE expenses SET status=$2,archived_at=NOW(),version=version+1 WHERE id=$1 RETURNING *',[id,'voided']);
       if (audit) await postgresAuditLogRepository.appendWithinTransaction(client, audit);

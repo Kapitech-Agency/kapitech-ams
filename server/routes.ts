@@ -3251,7 +3251,7 @@ apiRouter.put('/finance/invoices/:id', requireAuth, requirePermission('canManage
       res.json({ success: true, invoice: saved }); return;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Invoice could not be updated.';
-      res.status(message.includes('modified') || message.includes('Cancelled') || message.includes('PAID_INVOICE_LINKAGE_IMMUTABLE') || message.includes('PAID_INVOICE_TOTAL_IMMUTABLE') || message.includes('PAID_INVOICE_ITEMS_IMMUTABLE') || message.includes('PAID_INVOICE_FINANCIAL_FIELDS_IMMUTABLE') ? 409 : 400).json({ success: false, error: message }); return;
+      res.status(message.includes('modified') || message.includes('Cancelled') || message.includes('PAID_INVOICE_LINKAGE_IMMUTABLE') || message.includes('PAID_INVOICE_TOTAL_IMMUTABLE') || message.includes('PAID_INVOICE_ITEMS_IMMUTABLE') || message.includes('PAID_INVOICE_FINANCIAL_FIELDS_IMMUTABLE') || message==='INVOICE_POSTED_LEDGER_REVERSAL_REQUIRED' ? 409 : 400).json({ success: false, error: message==='INVOICE_POSTED_LEDGER_REVERSAL_REQUIRED' ? 'This invoice has a posted General Journal entry. Accounting fields are locked; create and approve a reversal or adjustment journal first.' : message }); return;
     }
   }
 
@@ -3371,15 +3371,21 @@ apiRouter.post('/finance/invoices/:id/pay', requireAuth, requirePermission('canM
     res.status(400).json({ success: false, error: 'Valid payment amount is required.' });
     return;
   }
+  const requestedMethod = PAYMENT_METHODS.has(String(input.method)) ? String(input.method) : 'bank_transfer';
+  const settlementAccountCode = String(input.settlementAccountCode || '').trim();
+  if (requestedMethod === 'other' && !['1000','1010','1100','1200'].includes(settlementAccountCode)) {
+    res.status(400).json({ success: false, error: 'An Other invoice receipt must specify the actual active cash, bank or clearing account.' });
+    return;
+  }
 
   if (getDataSourceMode() === 'postgres') {
     const invoice = await postgresInvoiceRepository.findById(req.params.id);
     if (!invoice) { res.status(404).json({ success: false, error: 'Invoice not found.' }); return; }
     const payAmount = Number(input.amount);
     if (!Number.isFinite(payAmount) || payAmount <= 0) { res.status(400).json({ success: false, error: 'Valid payment amount is required.' }); return; }
-    const method = PAYMENT_METHODS.has(String(input.method)) ? String(input.method) : 'bank_transfer';
+    const method = requestedMethod;
     const date = normalizeDate(input.date, new Date().toISOString().slice(0,10));
-    const payment = { id: `pay_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`, amount: Math.round(payAmount*100)/100, date, method, reference: String(input.reference||'').trim().slice(0,160), notes: String(input.notes||'').trim().slice(0,1000), idempotencyKey: String(input.idempotencyKey || req.get('Idempotency-Key') || '').trim().slice(0,100), recordedBy: req.user!.name || req.user!.username, userId: req.user!.id };
+    const payment = { id: `pay_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`, amount: Math.round(payAmount*100)/100, date, method, ...(method === 'other' ? { settlementAccountCode } : {}), reference: String(input.reference||'').trim().slice(0,160), notes: String(input.notes||'').trim().slice(0,1000), idempotencyKey: String(input.idempotencyKey || req.get('Idempotency-Key') || '').trim().slice(0,100), recordedBy: req.user!.name || req.user!.username, userId: req.user!.id };
     try {
       const saved = await postgresInvoiceRepository.recordPayment(req.params.id, payment, makeAuditEntry(req, 'PAYMENT_RECORDED', `Recorded payment of ${payment.amount} for invoice ${req.params.id}.`));
       if (!saved) { res.status(404).json({ success:false,error:'Invoice not found.' }); return; }
@@ -3417,7 +3423,7 @@ apiRouter.post('/finance/invoices/:id/pay', requireAuth, requirePermission('canM
     return;
   }
 
-  const method = PAYMENT_METHODS.has(String(input.method)) ? String(input.method) : 'bank_transfer';
+  const method = requestedMethod;
   const date = normalizeDate(input.date, new Date().toISOString().slice(0, 10));
   const reference = String(input.reference || '').trim().slice(0, 160);
   const notes = String(input.notes || '').trim().slice(0, 1000);
@@ -3428,6 +3434,7 @@ apiRouter.post('/finance/invoices/:id/pay', requireAuth, requirePermission('canM
     amount: Math.round(payAmount * 100) / 100,
     date,
     method,
+    ...(method === 'other' ? { settlementAccountCode } : {}),
     reference,
     recordedBy: req.user!.name || req.user!.username,
     notes,
@@ -3471,7 +3478,7 @@ apiRouter.delete('/finance/invoices/:id', requireAuth, requirePermission('canMan
       res.json({success:true,message:'Invoice cancelled.',invoice}); return;
     } catch(error) {
       const message=error instanceof Error?error.message:'Invoice could not be cancelled.';
-      res.status(message==='INVOICE_WITH_PAYMENTS_CANNOT_BE_CANCELLED'?409:400).json({success:false,error:message}); return;
+      res.status(['INVOICE_WITH_PAYMENTS_CANNOT_BE_CANCELLED','INVOICE_POSTED_LEDGER_REVERSAL_REQUIRED'].includes(message)?409:400).json({success:false,error:message==='INVOICE_POSTED_LEDGER_REVERSAL_REQUIRED'?'This invoice has a posted General Journal entry. Do not cancel it directly; create and approve a reversal or adjustment journal first.':message}); return;
     }
   }
 
@@ -3572,8 +3579,36 @@ apiRouter.post('/finance/expenses', requireAuth, requirePermission('canManageInv
     };
   }
 
+  const paymentStatus = cleanText(exp.paymentStatus || 'unpaid', 20).toLowerCase();
+  const paidDate = cleanText(exp.paidDate, 10);
+  const paymentMethod = cleanText(exp.paymentMethod || 'bank_transfer', 30).toLowerCase();
+  const paymentAccountCode = cleanText(exp.paymentAccountCode, 4);
+  if (!['unpaid', 'paid'].includes(paymentStatus)) {
+    res.status(400).json({ success: false, error: 'Expense payment status must be unpaid or paid.' });
+    return;
+  }
+  if (!['bank_transfer', 'credit_card', 'cash', 'other'].includes(paymentMethod)) {
+    res.status(400).json({ success: false, error: 'Expense payment method is not supported.' });
+    return;
+  }
+  if (paymentStatus === 'paid') {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(paidDate) || Number.isNaN(new Date(paidDate + 'T00:00:00Z').getTime()) || new Date(paidDate + 'T00:00:00Z').toISOString().slice(0, 10) !== paidDate) {
+      res.status(400).json({ success: false, error: 'A valid actual payment date is required for a paid expense.' });
+      return;
+    }
+    if (paidDate > new Date().toISOString().slice(0, 10)) {
+      res.status(400).json({ success: false, error: 'Actual expense payment date cannot be in the future.' });
+      return;
+    }
+    if (paymentMethod !== 'credit_card' && !['1000', '1100', '1200'].includes(paymentAccountCode)) {
+      res.status(400).json({ success: false, error: 'Select the actual bank, petty-cash, or emergency-fund account for this payment.' });
+      return;
+    }
+  }
+  const newExpenseId = `exp_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
+  const initialPaymentId = newExpenseId + '-payment';
   const newExpense = {
-    id: `exp_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
+    id: newExpenseId,
     slug: slugifyFinanceRecord(exp.slug || ((exp.description || exp.category || 'expense') + '-' + (exp.date || ''))),
     type: ['OpEx', 'CapEx', 'Rentals'].includes(String(exp.type)) ? String(exp.type) : 'OpEx',
     category: cleanText(exp.category || 'General', 120),
@@ -3584,7 +3619,19 @@ apiRouter.post('/finance/expenses', requireAuth, requirePermission('canManageInv
     projectId: cleanText(exp.projectId, 100) || undefined,
     vendorId: vendorPaymentMetadata?.vendorId,
     vendorContractId: vendorPaymentMetadata?.contractId,
-    metadata: vendorPaymentMetadata ? { vendorPayment: vendorPaymentMetadata } : undefined,
+    paymentStatus,
+    paidDate: paymentStatus === 'paid' ? paidDate : undefined,
+    paymentMethod,
+    paymentAccountCode: paymentStatus === 'paid' && paymentMethod !== 'credit_card' ? paymentAccountCode : undefined,
+    payments: paymentStatus === 'paid' ? [{ id: initialPaymentId, amount: Math.round(amount * 100) / 100, date: paidDate, method: paymentMethod, paymentAccountCode: paymentMethod !== 'credit_card' ? paymentAccountCode : undefined, reference: cleanText(exp.paymentReference || exp.reference || '', 160), notes: cleanText(exp.paymentNotes || '', 500), recordedBy: req.user!.name || req.user!.username }] : [],
+    metadata: {
+      ...(vendorPaymentMetadata ? { vendorPayment: vendorPaymentMetadata } : {}),
+      paymentStatus,
+      paidDate: paymentStatus === 'paid' ? paidDate : undefined,
+      paymentMethod,
+      paymentAccountCode: paymentStatus === 'paid' && paymentMethod !== 'credit_card' ? paymentAccountCode : undefined,
+      payments: paymentStatus === 'paid' ? [{ id: initialPaymentId, amount: Math.round(amount * 100) / 100, date: paidDate, method: paymentMethod, paymentAccountCode: paymentMethod !== 'credit_card' ? paymentAccountCode : undefined, reference: cleanText(exp.paymentReference || exp.reference || '', 160), notes: cleanText(exp.paymentNotes || '', 500), recordedBy: req.user!.name || req.user!.username }] : []
+    },
     recurringInterval: cleanText(exp.recurringInterval || 'none', 40),
     recordedBy: req.user!.name || req.user!.username,
     recordedByUserId: req.user!.id,
@@ -3599,7 +3646,8 @@ apiRouter.post('/finance/expenses', requireAuth, requirePermission('canManageInv
       res.json({ success:true, expense, replayed });
     } catch (error) {
       if (error instanceof ExpenseProjectNotFoundError || (error instanceof Error && ['EXPENSE_IDEMPOTENCY_KEY_REUSE_CONFLICT', 'VENDOR_NOT_FOUND'].includes(error.message))) { res.status(409).json({ success:false,error:error.message }); return; }
-      res.status(400).json({ success:false,error:error instanceof Error?error.message:'Expense could not be created.' });
+      const message = error instanceof Error ? error.message : 'Expense could not be created.';
+      res.status(message.startsWith('FINANCE_PERIOD_CLOSED:') ? 409 : 400).json({ success:false,error:message });
     }
     return;
   }
@@ -3609,6 +3657,95 @@ apiRouter.post('/finance/expenses', requireAuth, requirePermission('canManageInv
   db.expenses.unshift(newExpense); saveDatabase(db);
   recordAuditLog({ action:'EXPENSE_CREATED', actor:req.user!.username, actorRole:req.user!.role, ip:req.ip, userAgent:req.headers['user-agent'] as string, details:`Created expense "${newExpense.description || newExpense.id}" (${newExpense.currency} ${newExpense.amount}).`, severity:'info' });
   res.json({success:true,expense:newExpense});
+});
+
+apiRouter.post('/finance/expenses/:id/payments', requireAuth, requirePermission('canManageInvoices'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const body = req.body || {};
+  const amount = Number(body.amount);
+  const date = cleanText(body.date, 10);
+  const method = cleanText(body.method, 30).toLowerCase();
+  const paymentAccountCode = cleanText(body.paymentAccountCode, 4);
+  const paymentId = cleanText(body.id, 160) || crypto.randomUUID();
+  if (!Number.isFinite(amount) || amount <= 0 || amount > 100_000_000_000) {
+    res.status(400).json({ success: false, error: 'Payment amount must be a valid positive amount.' });
+    return;
+  }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(new Date(date + 'T00:00:00Z').getTime()) || new Date(date + 'T00:00:00Z').toISOString().slice(0, 10) !== date) {
+    res.status(400).json({ success: false, error: 'A valid actual payment date is required.' });
+    return;
+  }
+  if (date > new Date().toISOString().slice(0, 10)) {
+    res.status(400).json({ success: false, error: 'Actual payment date cannot be in the future.' });
+    return;
+  }
+  if (!['bank_transfer', 'credit_card', 'cash', 'other'].includes(method)) {
+    res.status(400).json({ success: false, error: 'Payment method is not supported.' });
+    return;
+  }
+  if (['bank_transfer', 'cash'].includes(method) && !['1000', '1100', '1200'].includes(paymentAccountCode)) {
+    res.status(400).json({ success: false, error: 'Select the actual cash, bank, or emergency-fund account used for payment.' });
+    return;
+  }
+  if (method === 'credit_card' && paymentAccountCode) {
+    res.status(400).json({ success: false, error: 'Credit-card payments use Credit Card Payable, not a cash-account code.' });
+    return;
+  }
+  const payment = {
+    id: paymentId, amount: Math.round(amount * 100) / 100, date, method,
+    paymentAccountCode: paymentAccountCode || undefined,
+    reference: cleanText(body.reference, 160),
+    notes: cleanText(body.notes, 500),
+    recordedBy: req.user!.name || req.user!.username,
+    expectedVersion: Number.isFinite(Number(body.version)) ? Number(body.version) : undefined
+  };
+  if (getDataSourceMode() === 'postgres') {
+    try {
+      const expense = await postgresExpenseRepository.recordPayment(req.params.id, payment, makeAuditEntry(req, 'EXPENSE_PAYMENT_RECORDED', 'Recorded expense settlement ' + payment.reference + ' for ' + req.params.id + '.', 'warning'));
+      const replayed = expense.__idempotentReplay === true;
+      if (replayed) delete expense.__idempotentReplay;
+      res.json({ success: true, expense, replayed });
+    } catch (error) {
+      if (error instanceof ExpenseNotFoundError) { res.status(404).json({ success: false, error: error.message }); return; }
+      if (error instanceof ExpenseVersionConflictError || error instanceof ExpenseImmutableError) { res.status(409).json({ success: false, error: error.message, code: error.code }); return; }
+      const message = error instanceof Error ? error.message : 'Expense payment could not be recorded.';
+      res.status(message.startsWith('FINANCE_PERIOD_CLOSED:') ? 409 : 400).json({ success: false, error: message });
+    }
+    return;
+  }
+  const db = getDatabase();
+  const expense = (db.expenses || []).find((item: any) => String(item.id) === String(req.params.id));
+  if (!expense || expense.status === 'voided') { res.status(404).json({ success: false, error: 'Active expense not found.' }); return; }
+  const metadata = expense.metadata && typeof expense.metadata === 'object' ? expense.metadata : {};
+  const payments = Array.isArray(metadata.payments) ? metadata.payments : [];
+  const oldPayment = payments.find((item: any) => String(item.id) === paymentId);
+  if (oldPayment) {
+    const samePayment = Number(oldPayment.amount) === payment.amount
+      && String(oldPayment.date || '') === date
+      && String(oldPayment.method || '') === method
+      && String(oldPayment.paymentAccountCode || '') === String(payment.paymentAccountCode || '')
+      && String(oldPayment.reference || '') === payment.reference
+      && String(oldPayment.notes || '') === payment.notes;
+    if (!samePayment) {
+      res.status(409).json({ success: false, error: 'Payment ID has already been used with different payment details.' });
+      return;
+    }
+    res.json({ success: true, expense, replayed: true }); return;
+  }
+  const paidBefore = payments.reduce((sum: number, item: any) => sum + Math.max(0, Number(item.amount) || 0), 0);
+  if (paidBefore + payment.amount > Number(expense.amount || 0) + 0.01) { res.status(409).json({ success: false, error: 'Total expense payments cannot exceed the recorded expense amount.' }); return; }
+  const nextPayments = [...payments, payment];
+  const paidTotal = Math.round(nextPayments.reduce((sum: number, item: any) => sum + Math.max(0, Number(item.amount) || 0), 0) * 100) / 100;
+  const nextStatus = paidTotal >= Number(expense.amount || 0) - 0.01 ? 'paid' : 'partially_paid';
+  expense.metadata = { ...metadata, payments: nextPayments, paymentStatus: nextStatus, paidDate: date, paymentMethod: method, paymentAccountCode: payment.paymentAccountCode };
+  expense.payments = nextPayments;
+  expense.paymentStatus = nextStatus;
+  expense.paidDate = date;
+  expense.paymentMethod = method;
+  expense.paymentAccountCode = payment.paymentAccountCode;
+  expense.version = Number(expense.version || 1) + 1;
+  saveDatabase(db);
+  recordAuditLog({ action: 'EXPENSE_PAYMENT_RECORDED', actor: req.user!.username, actorRole: req.user!.role, ip: req.ip, userAgent: req.headers['user-agent'] as string, details: 'Recorded expense settlement for "' + expense.description + '".', severity: 'warning' });
+  res.json({ success: true, expense });
 });
 
 apiRouter.delete('/finance/expenses/:id', requireAuth, requirePermission('canManageInvoices'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -3839,10 +3976,135 @@ apiRouter.get('/finance/workbook/:type', requireAuth, requirePermission('canView
 apiRouter.post('/finance/workbook/periods/:period/close', requireAuth, requirePermission('canApproveBudgets'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   if (!ensureFinanceWorkbookPostgres(res)) return;
   try {
+    const period = String(req.params.period || '').slice(0, 7);
+    const sourcePreflight = async (): Promise<string[]> => {
+      const [invoices, expenses, transfers, vendorBills, vendorBillPayments, existingJournals, chartAccounts, cashBankOpenings, balanceSheetOpenings, cashReconciliations] = await Promise.all([
+        postgresInvoiceRepository.list(),
+        postgresExpenseRepository.list(),
+        postgresFinanceWorkbookRepository.list('cash-bank-transaction'),
+        postgresFinanceWorkbookRepository.list('vendor-bill'),
+        postgresFinanceWorkbookRepository.list('vendor-bill-payment'),
+        postgresFinanceWorkbookRepository.list('journal-entry'),
+        postgresFinanceWorkbookRepository.list('chart-of-accounts'),
+        postgresFinanceWorkbookRepository.list('cash-bank-opening'),
+        postgresFinanceWorkbookRepository.list('balance-sheet-opening'),
+        postgresFinanceWorkbookRepository.list('cash-reconciliation')
+      ]);
+      const plan = buildFinanceSourceJournalDrafts(
+        invoices as any[],
+        expenses as any[],
+        transfers.map((item) => ({ id: item.id, status: item.status, payload: item.payload })),
+        vendorBills.map((item) => ({ id: item.id, recordKey: item.recordKey, projectId: item.projectId, payload: item.payload })),
+        vendorBillPayments.map((item) => ({ id: item.id, status: item.status, payload: item.payload })),
+        chartAccounts.map((item) => ({ code: String(item.payload.code || item.recordKey), name: String(item.payload.name || ''), accountType: String(item.payload.accountType || ''), active: item.payload.active !== false })),
+        [
+          ...cashBankOpenings.map((item) => ({ id: item.id, recordType: 'cash-bank-opening' as const, recordKey: item.recordKey, status: item.status, payload: item.payload })),
+          ...balanceSheetOpenings.map((item) => ({ id: item.id, recordType: 'balance-sheet-opening' as const, recordKey: item.recordKey, status: item.status, payload: item.payload }))
+        ]
+      );
+      const postedSources = new Map<string, (typeof existingJournals)[number]>();
+      for (const item of existingJournals) {
+        const sourceType = String(item.payload.sourceType || '');
+        const sourceId = String(item.payload.sourceId || '');
+        if (sourceType && sourceId) postedSources.set(sourceType + '|' + sourceId, item);
+      }
+      const sourceSnapshot = (value: Record<string, any>): string => JSON.stringify({
+        date: String(value.date || ''),
+        reference: String(value.reference || ''),
+        description: String(value.description || ''),
+        projectId: String(value.projectId || ''),
+        relatedSourceId: String(value.relatedSourceId || ''),
+        notes: String(value.notes || ''),
+        lines: (Array.isArray(value.lines) ? value.lines : []).map((line: Record<string, any>) => ({
+          accountCode: String(line.accountCode || ''),
+          accountName: String(line.accountName || ''),
+          debit: Number(line.debit) || 0,
+          credit: Number(line.credit) || 0,
+          notes: String(line.notes || '')
+        }))
+      });
+      const issues: string[] = [];
+      for (const draft of plan.drafts) {
+        if (String(draft.date || '').slice(0, 7) !== period) continue;
+        const key = String(draft.sourceType || '') + '|' + String(draft.sourceId || '');
+        const existing = postedSources.get(key);
+        const context = (draft.reference || draft.description || draft.sourceId) + ' (' + draft.sourceType + ')';
+        if (!existing || existing.status !== 'posted') {
+          issues.push(context + ' is not posted to the General Journal');
+        } else if (sourceSnapshot(existing.payload) !== sourceSnapshot(draft)) {
+          issues.push(context + ' differs from its posted journal. Resolve with an approved reversal or adjustment before closing.');
+        }
+      }
+      for (const skipped of plan.skipped) {
+        const sourcePeriod = String(skipped.date || '').slice(0, 7);
+        if (sourcePeriod && sourcePeriod !== period) continue;
+        issues.push((skipped.reference || skipped.description || skipped.sourceId) + ': ' + skipped.reason);
+      }
+      const monthEnd = new Date(Date.UTC(Number(period.slice(0,4)),Number(period.slice(5,7)),0)).toISOString().slice(0,10);
+      const reconciliationByAccount = new Map<string,(typeof cashReconciliations)[number]>();
+      for (const record of cashReconciliations) {
+        if (String(record.payload.reconciliationMonth || record.periodKey || '') !== period) continue;
+        reconciliationByAccount.set(String(record.payload.accountCode || ''),record);
+      }
+      const reconcilable = new Set(['1000','1010','1100','1200']);
+      const requiredAccounts = new Set<string>(['1000']);
+      const posted = existingJournals.filter((record) => record.status === 'posted');
+      for (const journal of posted) {
+        const date = String(journal.payload.date || '').slice(0,10);
+        if (date.slice(0,7) !== period) continue;
+        const journalLines = Array.isArray(journal.payload.lines) ? journal.payload.lines as Array<Record<string,any>> : [];
+        for (const line of journalLines) {
+          const code = String(line.accountCode || '');
+          if (reconcilable.has(code)) requiredAccounts.add(code);
+        }
+      }
+      const postedBalanceAsOf = (accountCode: string, asOfDate: string) => {
+        let balance = 0;
+        for (const journal of posted) {
+          const date = String(journal.payload.date || '').slice(0,10);
+          if (!date || date > asOfDate) continue;
+          const journalLines = Array.isArray(journal.payload.lines) ? journal.payload.lines as Array<Record<string,any>> : [];
+          for (const line of journalLines) if (String(line.accountCode || '') === accountCode) {
+            balance += (Number(line.debit) || 0) - (Number(line.credit) || 0);
+          }
+        }
+        return Math.round(balance*100)/100;
+      };
+      for (const code of reconcilable) if (Math.abs(postedBalanceAsOf(code,monthEnd)) > 0.01) requiredAccounts.add(code);
+      const bankOpening = cashBankOpenings.find((record) => String(record.payload.accountCode || '') === '1000');
+      if (!bankOpening) {
+        issues.push('Cash & Bank opening balance (account 1000) is missing; record an opening balance before month-end reconciliation.');
+      } else if (String(bankOpening.payload.openingDate || '') > monthEnd) {
+        issues.push('Cash & Bank opening balance date is after the month being closed; a valid opening balance must exist on or before '+monthEnd+'.');
+      }
+      for (const code of requiredAccounts) {
+        const record = reconciliationByAccount.get(code);
+        const accountName = code === '1000' ? 'Cash & Bank' : code === '1010' ? 'Card Settlement Clearing' : code === '1100' ? 'Petty Cash Reserve' : code === '1200' ? 'Emergency Fund' : code;
+        if (!record) {
+          issues.push(accountName+' ('+code+') has no month-end statement/count reconciliation for '+period+'.');
+          continue;
+        }
+        const statementDate = String(record.payload.statementDate || '');
+        if (statementDate !== monthEnd) {
+          issues.push(accountName+' ('+code+') reconciliation must be dated '+monthEnd+'.');
+          continue;
+        }
+        const statementReference = String(record.payload.statementReference || '').trim();
+        if (!statementReference) issues.push(accountName+' ('+code+') reconciliation is missing its statement/count reference.');
+        const statementBalance = Number(record.payload.statementBalance);
+        const ledgerBalance = postedBalanceAsOf(code,statementDate);
+        const difference = Math.round((ledgerBalance-statementBalance)*100)/100;
+        if (Math.abs(difference) > 0.01) {
+          issues.push(accountName+' ('+code+') differs from the posted GL by '+difference.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})+' IDR. Resolve outstanding transactions or correct the reconciliation.');
+        }
+      }
+      return [...new Set(issues)];
+    };
     const record = await postgresFinanceWorkbookRepository.closePeriod(
-      req.params.period,
+      period,
       financeWorkbookActor(req),
-      financeWorkbookAudit(req, 'FINANCE_PERIOD_CLOSED', 'Closed Excel-aligned Finance period ' + req.params.period + '.', 'warning')
+      financeWorkbookAudit(req, 'FINANCE_PERIOD_CLOSED', 'Closed Excel-aligned Finance period ' + period + '.', 'warning'),
+      sourcePreflight
     );
     res.json({ success: true, record });
   } catch (error) {
@@ -3853,20 +4115,28 @@ apiRouter.post('/finance/workbook/periods/:period/close', requireAuth, requirePe
 apiRouter.post('/finance/workbook/journal-drafts/sync', requireAuth, requirePermission('canManageInvoices'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   if (!ensureFinanceWorkbookPostgres(res)) return;
   try {
-    const [invoices, expenses, transfers, vendorBills, vendorBillPayments, existingJournals] = await Promise.all([
+    const [invoices, expenses, transfers, vendorBills, vendorBillPayments, existingJournals, chartAccounts, cashBankOpenings, balanceSheetOpenings] = await Promise.all([
       postgresInvoiceRepository.list(),
       postgresExpenseRepository.list(),
       postgresFinanceWorkbookRepository.list('cash-bank-transaction'),
       postgresFinanceWorkbookRepository.list('vendor-bill'),
       postgresFinanceWorkbookRepository.list('vendor-bill-payment'),
-      postgresFinanceWorkbookRepository.list('journal-entry')
+      postgresFinanceWorkbookRepository.list('journal-entry'),
+      postgresFinanceWorkbookRepository.list('chart-of-accounts'),
+      postgresFinanceWorkbookRepository.list('cash-bank-opening'),
+      postgresFinanceWorkbookRepository.list('balance-sheet-opening'),
     ]);
     const plan = buildFinanceSourceJournalDrafts(
       invoices as any[],
       expenses as any[],
       transfers.map((record) => ({ id: record.id, status: record.status, payload: record.payload })),
       vendorBills.map((record) => ({ id: record.id, recordKey: record.recordKey, projectId: record.projectId, payload: record.payload })),
-      vendorBillPayments.map((record) => ({ id: record.id, status: record.status, payload: record.payload }))
+      vendorBillPayments.map((record) => ({ id: record.id, status: record.status, payload: record.payload })),
+      chartAccounts.map((record) => ({ code: String(record.payload.code || record.recordKey), name: String(record.payload.name || ''), accountType: String(record.payload.accountType || ''), active: record.payload.active !== false })),
+      [
+        ...cashBankOpenings.map((record) => ({ id: record.id, recordType: 'cash-bank-opening' as const, recordKey: record.recordKey, status: record.status, payload: record.payload })),
+        ...balanceSheetOpenings.map((record) => ({ id: record.id, recordType: 'balance-sheet-opening' as const, recordKey: record.recordKey, status: record.status, payload: record.payload }))
+      ]
     );
     const existingSourceRecords = new Map<string, (typeof existingJournals)[number]>();
     for (const record of existingJournals) {
@@ -3879,6 +4149,7 @@ apiRouter.post('/finance/workbook/journal-drafts/sync', requireAuth, requirePerm
       reference: String(value.reference || ''),
       description: String(value.description || ''),
       projectId: String(value.projectId || ''),
+      relatedSourceId: String(value.relatedSourceId || ''),
       notes: String(value.notes || ''),
       lines: (Array.isArray(value.lines) ? value.lines : []).map((line: Record<string, any>) => ({
         accountCode: String(line.accountCode || ''),

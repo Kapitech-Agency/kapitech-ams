@@ -1,4 +1,4 @@
-import { getVendorBillInstallmentSchedule } from '../src/lib/financeWorkbook.ts';
+import { EXCEL_CHART_OF_ACCOUNTS, getVendorBillInstallmentSchedule } from '../src/lib/financeWorkbook.ts';
 import crypto from 'node:crypto';
 import { getPostgresPool, withPostgresTransaction } from './postgres.ts';
 import { postgresAuditLogRepository, type AuditEntry } from './postgres-audit-log-repository.ts';
@@ -6,7 +6,7 @@ import { postgresAuditLogRepository, type AuditEntry } from './postgres-audit-lo
 export const FINANCE_WORKBOOK_RECORD_TYPES = [
   'chart-of-accounts', 'cash-bank-opening', 'cash-bank-transaction', 'petty-cash-voucher',
   'vendor-bill', 'vendor-bill-payment', 'operational-budget', 'project-finance', 'team-fee',
-  'project-allocation', 'journal-entry', 'monthly-closing', 'balance-sheet-opening', 'monthly-closing-lock'
+  'project-allocation', 'journal-entry', 'monthly-closing', 'cash-reconciliation', 'balance-sheet-opening', 'monthly-closing-lock'
 ] as const;
 export type FinanceWorkbookRecordType = typeof FINANCE_WORKBOOK_RECORD_TYPES[number];
 export type FinanceWorkbookRecord = {
@@ -31,7 +31,7 @@ const money = (v: unknown, label: string, allowZero = true): number => {
 const date = (v: unknown, label: string, optional = false): string => {
   const s = txt(v, 10);
   if (optional && !s) return '';
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(s) || Number.isNaN(new Date(s + 'T00:00:00Z').getTime())) throw new FinanceWorkbookValidationError(label + ' must use YYYY-MM-DD.');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s) || Number.isNaN(new Date(s + 'T00:00:00Z').getTime()) || new Date(s + 'T00:00:00Z').toISOString().slice(0,10) !== s) throw new FinanceWorkbookValidationError(label + ' must use a real calendar date in YYYY-MM-DD format.');
   return s;
 };
 const month = (v: unknown): string => {
@@ -85,15 +85,22 @@ function normalise(type: FinanceWorkbookRecordType, raw: unknown, approval = fal
     }
     case 'cash-bank-transaction': {
       const d = date(v.date,'Transaction date');
-      const kind = choice(v.transactionKind,['manual','bank-to-petty-cash','petty-cash-to-bank','bank-to-emergency-fund','emergency-fund-to-bank'],'Transaction kind','manual');
-      const accountCode = choice(v.accountCode,['1000','1100','1200'],'Account code','1000');
-      const counterpart = kind === 'manual' ? '' : choice(v.counterpartAccountCode,['1000','1100','1200'],'Counterpart account');
-      if (counterpart && counterpart === accountCode) throw new FinanceWorkbookValidationError('Transfers must use two different accounts.');
+      const kind = choice(v.transactionKind,['manual','bank-to-petty-cash','petty-cash-to-bank','bank-to-emergency-fund','emergency-fund-to-bank','card-clearing-to-bank','bank-to-credit-card-payable'],'Transaction kind','manual');
+      const accountCode = kind === 'card-clearing-to-bank'
+        ? choice(v.accountCode,['1010'],'Card Settlement Clearing account')
+        : choice(v.accountCode,['1000','1100','1200'],'Account code','1000');
+      const counterpart = kind === 'manual' ? txt(v.counterpartAccountCode,4)
+        : kind === 'card-clearing-to-bank' ? choice(v.counterpartAccountCode,['1000'],'Cash & Bank counterpart')
+          : kind === 'bank-to-credit-card-payable' ? choice(v.counterpartAccountCode,['2200'],'Credit Card Payable counterpart')
+            : choice(v.counterpartAccountCode,['1000','1100','1200'],'Counterpart account');
+      if (kind === 'manual' && !/^\d{4}$/.test(counterpart)) throw new FinanceWorkbookValidationError('Manual cash adjustments require a four-digit counterpart account.');
+      if (counterpart && counterpart === accountCode) throw new FinanceWorkbookValidationError('Cash movements must use two different accounts.');
       const direction = choice(v.direction,['in','out'],'Direction');
       if (kind !== 'manual') {
         const expected: Record<string,string[]> = {
           'bank-to-petty-cash':['1000','1100','out'], 'petty-cash-to-bank':['1100','1000','out'],
-          'bank-to-emergency-fund':['1000','1200','out'], 'emergency-fund-to-bank':['1200','1000','out']
+          'bank-to-emergency-fund':['1000','1200','out'], 'emergency-fund-to-bank':['1200','1000','out'],
+          'card-clearing-to-bank':['1010','1000','out'], 'bank-to-credit-card-payable':['1000','2200','out']
         };
         const rule = expected[kind];
         if (accountCode !== rule[0] || counterpart !== rule[1] || direction !== rule[2]) throw new FinanceWorkbookValidationError('Account and direction do not match the transfer type.');
@@ -124,7 +131,12 @@ function normalise(type: FinanceWorkbookRecordType, raw: unknown, approval = fal
       if (dueDate < billDate) throw new FinanceWorkbookValidationError('Due date cannot precede bill date.');
       const currency = (txt(v.currency,3)||'IDR').toUpperCase();
       if (!/^[A-Z]{3}$/.test(currency)) throw new FinanceWorkbookValidationError('Currency must be a three-letter ISO currency code.');
-      p = { billNo, vendorId:txt(v.vendorId,160), vendorName, projectId:project, projectName:txt(v.projectName,200), billDate, dueDate, currency, total:money(v.total,'Bill amount',false), paymentSchedule:[30,20,50], notes:txt(v.notes,600) };
+      const expenseAccountCode = txt(v.expenseAccountCode,4) || (project ? '5100' : '');
+      if (expenseAccountCode && !/^\d{4}$/.test(expenseAccountCode)) throw new FinanceWorkbookValidationError('Vendor bill expense account must be a four-digit account code.');
+      if (!project && !expenseAccountCode) throw new FinanceWorkbookValidationError('An expense account is required for vendor bills that are not linked to an AMS project.');
+      const installmentDueDates = [date(v.installment1DueDate,'Payment 1 due date',true),date(v.installment2DueDate,'Payment 2 due date',true),date(v.installment3DueDate,'Payment 3 due date',true)];
+      if (installmentDueDates.some((due) => due && due < billDate)) throw new FinanceWorkbookValidationError('Installment due dates cannot precede the vendor bill date.');
+      p = { billNo, vendorId:txt(v.vendorId,160), vendorName, projectId:project, projectName:txt(v.projectName,200), expenseAccountCode, billDate, dueDate, installmentDueDates, currency, total:money(v.total,'Bill amount',false), paymentSchedule:[30,20,50], notes:txt(v.notes,600) };
       key = billNo; period = periodOf(billDate); status = 'open'; break;
     }
     case 'vendor-bill-payment': {
@@ -137,14 +149,18 @@ function normalise(type: FinanceWorkbookRecordType, raw: unknown, approval = fal
       }
       const installmentNumber = installmentMatch ? Number(installmentMatch[1]) : undefined;
       const reference = txt(v.reference,160) || uid('VP');
-      p = { billId, ...(installmentNumber ? { installmentNumber } : {}), paidDate, amount:money(v.amount,'Payment amount',false), method:choice(v.method,['bank_transfer','credit_card','cash','other'],'Payment method','bank_transfer'), reference, notes:txt(v.notes,500), projectId:project };
+      const method = choice(v.method,['bank_transfer','credit_card','cash','other'],'Payment method','bank_transfer');
+      const settlementAccountCode = txt(v.settlementAccountCode,4);
+      if (settlementAccountCode && !['1000','1100','1200','2200'].includes(settlementAccountCode)) throw new FinanceWorkbookValidationError('Settlement account must be Cash & Bank, Petty Cash Reserve, Emergency Fund, or Credit Card Payable.');
+      if (method === 'other' && !settlementAccountCode) throw new FinanceWorkbookValidationError('Select the actual settlement account when the payment method is Other.');
+      p = { billId, ...(installmentNumber ? { installmentNumber } : {}), paidDate, amount:money(v.amount,'Payment amount',false), method, ...(settlementAccountCode ? { settlementAccountCode } : {}), reference, notes:txt(v.notes,500), projectId:project };
       key = reference; period = periodOf(paidDate); status = 'posted'; break;
     }
     case 'operational-budget': {
       const m = month(v.month), category = txt(v.category,160);
       if (!category) throw new FinanceWorkbookValidationError('Budget category is required.');
       p = { month:m, category, budgetAmount:money(v.budgetAmount,'Budget amount'), pic:txt(v.pic,160), notes:txt(v.notes,500), projectId:project };
-      key = m + '|' + keyText(category); period = m; break;
+      key = m + '|' + keyText(category) + '|' + (project || 'company'); period = m; break;
     }
     case 'project-finance': {
       const projectName = txt(v.projectName,200);
@@ -158,20 +174,30 @@ function normalise(type: FinanceWorkbookRecordType, raw: unknown, approval = fal
       const projectName = txt(v.projectName,200), memberName = txt(v.memberName,160);
       if ((!project && !projectName) || !memberName) throw new FinanceWorkbookValidationError('Project and team member are required.');
       const dueDate = date(v.dueDate,'Due date',true);
+      const paymentReference = txt(v.paymentReference,120);
+      if (!paymentReference) throw new FinanceWorkbookValidationError('Team Fee needs a milestone/reference so separate installments cannot overwrite one another.');
       status = choice(v.paymentStatus,['planned','pending','paid'],'Payment status','planned');
-      p = { projectId:project, projectName, memberName, role:txt(v.role,120), feeAmount:money(v.feeAmount,'Team fee',false), dueDate, paymentStatus:status, notes:txt(v.notes,500) };
-      key = (project || keyText(projectName)) + '|' + keyText(memberName); period = dueDate ? periodOf(dueDate) : ''; break;
+      const paidDate = date(v.paidDate,'Actual payment date',true);
+      if (status === 'paid' && !paidDate) throw new FinanceWorkbookValidationError('An actual payment date is required for a paid Team Fee installment.');
+      p = { projectId:project, projectName, memberName, role:txt(v.role,120), feeAmount:money(v.feeAmount,'Team fee',false), dueDate, paymentReference, paymentStatus:status, paidDate, notes:txt(v.notes,500) };
+      key = (project || keyText(projectName)) + '|' + keyText(memberName) + (paymentReference ? '|' + keyText(paymentReference) : ''); period = dueDate ? periodOf(dueDate) : ''; break;
     }
     case 'project-allocation': {
       const projectName = txt(v.projectName,200);
       if (!project && !projectName) throw new FinanceWorkbookValidationError('Project is required.');
-      const contractValue = money(v.contractValue,'Contract value'), vendorCost = money(v.vendorCost,'Vendor commitment'), otherObligations = money(v.otherObligations,'Other obligations');
+      const contractValue = money(v.contractValue,'Contract value'), vendorCost = money(v.vendorCost,'Vendor commitment'), otherObligations = money(v.otherObligations,'Other obligations'), teamFeeAmount = money(v.teamFeeAmount,'Team fee total');
       const pettyPct = Number(v.pettyCashPercent ?? 10), emergencyPct = Number(v.emergencyPercent ?? 10), rewardPct = Number(v.teamRewardPercent ?? 10);
       if (![pettyPct,emergencyPct,rewardPct].every(n=>Number.isFinite(n)&&n>=0&&n<=100) || pettyPct+emergencyPct+rewardPct>100) throw new FinanceWorkbookValidationError('Allocation percentages must be between 0 and 100 and cannot total more than 100%.');
-      const net = Math.round((contractValue-vendorCost-otherObligations)*100)/100;
-      const petty = Math.round(net*pettyPct)/100, emergency = Math.round(net*emergencyPct)/100, reward = Math.round(net*rewardPct)/100;
+      const net = Math.round((contractValue-vendorCost-otherObligations-teamFeeAmount)*100)/100;
+      const distributableProfit = Math.max(0,net);
+      const petty = Math.round(distributableProfit*pettyPct)/100;
+      const emergency = Math.round(distributableProfit*emergencyPct)/100;
+      const reward = Math.round(distributableProfit*rewardPct)/100;
       const emergencyStatus = choice(v.emergencyStatus,['Reserved','Used','Released','Not allocated'],'Emergency fund status','Reserved');
-      p = { projectId:project, projectName, contractValue, vendorCost, otherObligations, netProjectProfit:net, pettyCashPercent:pettyPct, emergencyPercent:emergencyPct, teamRewardPercent:rewardPct, pettyCashReserve:petty, emergencyFund:emergency, teamReward:reward, salesReward:Math.round(net*Math.min(5,rewardPct/2))/100, vendorPicReward:Math.round(net*Math.min(2.5,rewardPct/4))/100, managementReward:Math.round(net*Math.min(2.5,rewardPct/4))/100, teamFeeAmount:money(v.teamFeeAmount,'Team fee total'), companyOperationalFund:Math.round((net-petty-emergency-reward)*100)/100, emergencyStatus, notes:txt(v.notes,600) };
+      const salesReward = Math.round(reward*0.5*100)/100;
+      const vendorPicReward = Math.round(reward*0.25*100)/100;
+      const managementReward = Math.round((reward-salesReward-vendorPicReward)*100)/100;
+      p = { projectId:project, projectName, contractValue, vendorCost, otherObligations, netProjectProfit:net, pettyCashPercent:pettyPct, emergencyPercent:emergencyPct, teamRewardPercent:rewardPct, pettyCashReserve:petty, emergencyFund:emergency, teamReward:reward, salesReward, vendorPicReward, managementReward, teamFeeAmount, companyOperationalFund:Math.round((net-petty-emergency-reward)*100)/100, emergencyStatus, notes:txt(v.notes,600) };
       key = project || keyText(projectName); status = emergencyStatus; break;
     }
     case 'journal-entry': {
@@ -194,7 +220,7 @@ function normalise(type: FinanceWorkbookRecordType, raw: unknown, approval = fal
       if (status === 'posted' && !approval) throw new FinanceWorkbookValidationError('A journal must be approved before posting.');
       const sourceType = txt(v.sourceType, 40);
       const sourceId = txt(v.sourceId, 160);
-      const allowedSourceTypes = ['invoice-issued', 'invoice-payment', 'expense', 'cash-bank-transfer', 'vendor-bill-issued', 'vendor-bill-payment'];
+      const allowedSourceTypes = ['invoice-issued', 'invoice-payment', 'expense', 'expense-payment', 'cash-bank-transfer', 'vendor-bill-issued', 'vendor-bill-payment', 'cash-bank-opening', 'balance-sheet-opening'];
       if ((sourceType && !sourceId) || (!sourceType && sourceId)) {
         throw new FinanceWorkbookValidationError('Journal source type and source ID must be supplied together.');
       }
@@ -202,12 +228,12 @@ function normalise(type: FinanceWorkbookRecordType, raw: unknown, approval = fal
         throw new FinanceWorkbookValidationError('Journal source type is not supported.');
       }
       const relatedSourceId = txt(v.relatedSourceId, 160);
-      const requiresRelatedJournal = sourceType === 'invoice-payment' || sourceType === 'vendor-bill-payment';
+      const requiresRelatedJournal = sourceType === 'invoice-payment' || sourceType === 'vendor-bill-payment' || sourceType === 'expense-payment';
       if (requiresRelatedJournal && !relatedSourceId) {
         throw new FinanceWorkbookValidationError('A source-linked receipt/payment journal must include its prerequisite journal source ID.');
       }
       if (relatedSourceId && !requiresRelatedJournal) {
-        throw new FinanceWorkbookValidationError('Only client receipt and vendor payment journals may reference a prerequisite journal.');
+        throw new FinanceWorkbookValidationError('Only client receipt, expense payment and vendor payment journals may reference a prerequisite journal.');
       }
       p = {
         date:d, reference, description, projectId:project, lines, debitTotal:debits, creditTotal:credits,
@@ -226,11 +252,23 @@ function normalise(type: FinanceWorkbookRecordType, raw: unknown, approval = fal
       p = { period:m, checklistItem, status, pic:txt(v.pic,160), date:date(v.date,'Checklist date',true), notes:txt(v.notes,500) };
       key = m + '|' + keyText(checklistItem); period = m; break;
     }
+    case 'cash-reconciliation': {
+      const reconciliationMonth = month(v.reconciliationMonth);
+      const accountCode = choice(v.accountCode,['1000','1010','1100','1200'],'Cash/bank account');
+      const statementDate = date(v.statementDate,'Statement or count date');
+      const monthEnd = new Date(Date.UTC(Number(reconciliationMonth.slice(0,4)),Number(reconciliationMonth.slice(5,7)),0)).toISOString().slice(0,10);
+      if(statementDate!==monthEnd) throw new FinanceWorkbookValidationError('Cash reconciliation must use the final calendar day of its reporting month ('+monthEnd+').');
+      if(statementDate>new Date().toISOString().slice(0,10)) throw new FinanceWorkbookValidationError('Cash reconciliation cannot be completed before the statement or count date has occurred.');
+      const statementReference = txt(v.statementReference,160);
+      if(!statementReference) throw new FinanceWorkbookValidationError('Bank, processor or cash-count reference is required for reconciliation evidence.');
+      p = { reconciliationMonth, accountCode, statementDate, statementBalance:money(v.statementBalance,'Statement/count balance'), statementReference, notes:txt(v.notes,500) };
+      key = reconciliationMonth+'|'+accountCode; period = reconciliationMonth; status = 'recorded'; break;
+    }
     case 'balance-sheet-opening': {
       const code = txt(v.accountCode,4);
-      if (!/^\d{4}$/.test(code)) throw new FinanceWorkbookValidationError('Opening balance must use a four-digit account code.');
+      if (!/^\d{4}$/.test(code) || ['1000','1100','1200','3200'].includes(code)) throw new FinanceWorkbookValidationError('Opening balance must use an eligible non-cash Asset, Liability or Equity account. Use Cash & Bank Opening for 1000, 1100 or 1200.');
       const asOfDate = date(v.asOfDate,'Opening balance date');
-      p = { accountCode:code, asOfDate, openingAmount:money(v.openingAmount,'Opening amount'), side:choice(v.side,['Debit','Credit'],'Balance side'), notes:txt(v.notes,500) };
+      p = { accountCode:code, counterpartAccountCode:'3200', asOfDate, openingAmount:money(v.openingAmount,'Opening amount'), side:choice(v.side,['Debit','Credit'],'Balance side'), notes:txt(v.notes,500) };
       key = asOfDate + '|' + code; period = periodOf(asOfDate); break;
     }
     case 'monthly-closing-lock': {
@@ -248,6 +286,7 @@ export class PostgresFinanceWorkbookRepository {
   isRecordType(v: unknown): v is FinanceWorkbookRecordType { return FINANCE_WORKBOOK_RECORD_TYPES.includes(String(v) as FinanceWorkbookRecordType); }
   private async ensurePeriodOpen(client: { query: (sql:string, values?:unknown[])=>Promise<any> }, period?: string): Promise<void> {
     if (!period) return;
+    await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))",['kapitech:finance-period:'+period]);
     const r = await client.query("SELECT id FROM finance_workbook_records WHERE record_type='monthly-closing-lock' AND period_key=$1 AND archived_at IS NULL LIMIT 1",[period]);
     if (r.rows[0]) throw new FinanceWorkbookPeriodClosedError('Finance period ' + period + ' is closed.');
   }
@@ -309,6 +348,55 @@ export class PostgresFinanceWorkbookRepository {
     }
     return rows;
   }
+  private async ensureJournalAccountsActive(client:any,payload:Record<string,any>):Promise<void>{
+    const lines=Array.isArray(payload.lines)?payload.lines as Array<Record<string,unknown>>:[];
+    const codes=[...new Set(lines.map((line)=>String(line.accountCode||'').trim()).filter(Boolean))];
+    const accounts=new Map<string,{active:boolean}>(EXCEL_CHART_OF_ACCOUNTS.map((account)=>[account.code,{active:account.active}] as const));
+    const result=await client.query("SELECT record_key,payload FROM finance_workbook_records WHERE record_type='chart-of-accounts' AND archived_at IS NULL");
+    for(const row of result.rows){
+      const account=obj(row.payload);
+      const code=String(account.code||row.record_key||'').trim();
+      if(!code) continue;
+      accounts.set(code,{active:account.active!==false});
+    }
+    const invalid=codes.filter((code)=>!accounts.has(code)||accounts.get(code)?.active!==true);
+    if(invalid.length) throw new FinanceWorkbookValidationError('Journal account code(s) are missing or inactive in Chart of Accounts: '+invalid.join(', ')+'. Add/activate the account before saving the journal.');
+  }
+  private async ensureVendorBillExpenseAccountActive(client:any,payload:Record<string,any>):Promise<void>{
+    const code=String(payload.expenseAccountCode|| (payload.projectId?'5100':'')).trim();
+    if(!/^\d{4}$/.test(code)) throw new FinanceWorkbookValidationError('Vendor bills require an active Expense account classification.');
+    const standard=EXCEL_CHART_OF_ACCOUNTS.find((account)=>account.code===code&&account.active);
+    const result=await client.query("SELECT payload FROM finance_workbook_records WHERE record_type='chart-of-accounts' AND record_key=$1 AND archived_at IS NULL LIMIT 1",[code]);
+    const persisted=result.rows[0]?obj(result.rows[0].payload):{};
+    if(result.rows[0]&&persisted.active===false) throw new FinanceWorkbookValidationError('Vendor bill Expense account '+code+' is inactive.');
+    const accountType=result.rows[0]?String(persisted.accountType||''):String(standard?.type||'');
+    if(accountType!=='Expense') throw new FinanceWorkbookValidationError('Vendor bill account '+code+' must be an active Expense account.');
+  }
+  private async ensureOpeningBalanceAccountActive(client:any,payload:Record<string,any>):Promise<void>{
+    const code=String(payload.accountCode||'').trim();
+    if(!/^\d{4}$/.test(code)||['1000','1100','1200','3200'].includes(code)) throw new FinanceWorkbookValidationError('Opening balance must use an eligible non-cash Asset, Liability or Equity account.');
+    const standard=EXCEL_CHART_OF_ACCOUNTS.find((account)=>account.code===code&&account.active);
+    const result=await client.query("SELECT payload FROM finance_workbook_records WHERE record_type='chart-of-accounts' AND record_key=$1 AND archived_at IS NULL LIMIT 1",[code]);
+    const persisted=result.rows[0]?obj(result.rows[0].payload):{};
+    if(result.rows[0]&&persisted.active===false) throw new FinanceWorkbookValidationError('Opening balance account '+code+' is inactive.');
+    const accountType=result.rows[0]?String(persisted.accountType||''):String(standard?.type||'');
+    if(!['Asset','Liability','Equity'].includes(accountType)) throw new FinanceWorkbookValidationError('Opening balance account '+code+' must be an active Asset, Liability or Equity account.');
+  }
+  private async ensurePostedSourceImmutable(client:any,type:FinanceWorkbookRecordType,id:string,current:Record<string,any>,next:Record<string,any>):Promise<void>{
+    const sourceMap:Partial<Record<FinanceWorkbookRecordType,{sourceType:string;fields:string[]}>>={
+      'cash-bank-opening':{sourceType:'cash-bank-opening',fields:['accountCode','openingDate','openingBalance']},
+      'balance-sheet-opening':{sourceType:'balance-sheet-opening',fields:['accountCode','asOfDate','openingAmount','side']},
+      'cash-bank-transaction':{sourceType:'cash-bank-transfer',fields:['transactionKind','accountCode','counterpartAccountCode','direction','date','amount','reference','description','projectId']},
+      'vendor-bill':{sourceType:'vendor-bill-issued',fields:['billNo','vendorId','vendorName','projectId','billDate','total','currency','expenseAccountCode']},
+      'vendor-bill-payment':{sourceType:'vendor-bill-payment',fields:['billId','paidDate','amount','method','reference','installmentNumber']}
+    };
+    const rule=sourceMap[type];
+    if(!rule) return;
+    const posted=await client.query("SELECT id FROM finance_workbook_records WHERE record_type='journal-entry' AND status='posted' AND archived_at IS NULL AND payload->>'sourceType'=$1 AND payload->>'sourceId'=$2 LIMIT 1 FOR SHARE",[rule.sourceType,id]);
+    if(!posted.rows[0]) return;
+    const changed=rule.fields.filter((key)=>JSON.stringify(current[key]??null)!==JSON.stringify(next[key]??null));
+    if(changed.length) throw new FinanceWorkbookConflictError('This Finance source is linked to a posted General Journal entry. Accounting fields cannot be changed ('+changed.join(', ')+'); create and approve a reversal or adjustment journal instead.');
+  }
   async get(type: FinanceWorkbookRecordType,id:string):Promise<FinanceWorkbookRecord|null> {
     const result=await getPostgresPool().query<Row>('SELECT * FROM finance_workbook_records WHERE record_type=$1 AND id=$2 AND archived_at IS NULL LIMIT 1',[type,id]);
     return result.rows[0]?mapRow(result.rows[0]):null;
@@ -319,6 +407,9 @@ export class PostgresFinanceWorkbookRepository {
     const id=type==='chart-of-accounts'?'coa-'+n.key:uid(type.replace(/-/g,''));
     return withPostgresTransaction(async client=>{
       await this.ensurePeriodOpen(client,n.period);
+      if(type==='journal-entry') await this.ensureJournalAccountsActive(client,n.payload);
+      if(type==='vendor-bill') await this.ensureVendorBillExpenseAccountActive(client,n.payload);
+      if(type==='balance-sheet-opening') await this.ensureOpeningBalanceAccountActive(client,n.payload);
       if(type==='vendor-bill-payment'){
         const bill=await client.query<Row>("SELECT * FROM finance_workbook_records WHERE record_type='vendor-bill' AND id=$1 AND archived_at IS NULL FOR UPDATE",[String(n.payload.billId)]);
         if(!bill.rows[0]) throw new FinanceWorkbookNotFoundError('Vendor bill was not found.');
@@ -379,6 +470,22 @@ export class PostgresFinanceWorkbookRepository {
     return withPostgresTransaction(async client=>{
       await this.ensurePeriodOpen(client,current.periodKey);
       await this.ensurePeriodOpen(client,n.period);
+      await this.ensurePostedSourceImmutable(client,type,id,current.payload,n.payload);
+      if(type==='journal-entry') await this.ensureJournalAccountsActive(client,n.payload);
+      if(type==='vendor-bill') await this.ensureVendorBillExpenseAccountActive(client,n.payload);
+      if(type==='balance-sheet-opening') await this.ensureOpeningBalanceAccountActive(client,n.payload);
+      if(type==='chart-of-accounts' && (n.payload.active===false || String(n.payload.accountType||'')!==String(current.payload.accountType||''))) {
+        const code=String(n.payload.code||current.recordKey||'');
+        const referenced=await client.query("SELECT id FROM finance_workbook_records WHERE record_type='journal-entry' AND status='posted' AND archived_at IS NULL AND EXISTS (SELECT 1 FROM jsonb_array_elements(payload->'lines') AS line WHERE line->>'accountCode'=$1) LIMIT 1 FOR SHARE",[code]);
+        if(referenced.rows[0]) throw new FinanceWorkbookConflictError('This account is referenced by posted journals. Its type cannot change and it cannot be deactivated; use an approved reclassification journal and a new account instead.');
+      }
+      if(type==='vendor-bill'){
+        const lockedBill=await client.query<Row>("SELECT id FROM finance_workbook_records WHERE record_type='vendor-bill' AND id=$1 AND archived_at IS NULL FOR UPDATE",[id]);
+        if(!lockedBill.rows[0]) throw new FinanceWorkbookNotFoundError('Vendor bill was not found.');
+        const linkedPayments=await client.query<Row>("SELECT payload FROM finance_workbook_records WHERE record_type='vendor-bill-payment' AND archived_at IS NULL AND payload->>'billId'=$1 FOR UPDATE",[id]);
+        const paidTotal=linkedPayments.rows.reduce((sum:number,row:Row)=>sum+Number(obj(row.payload).amount||0),0);
+        if(paidTotal>Number(n.payload.total||0)+0.01) throw new FinanceWorkbookConflictError('Bill total cannot be reduced below its linked payments. Record an approved adjustment or correct the payments first.');
+      }
       if(type==='vendor-bill-payment'){
         const bill=await client.query<Row>("SELECT * FROM finance_workbook_records WHERE record_type='vendor-bill' AND id=$1 AND archived_at IS NULL FOR UPDATE",[String(n.payload.billId)]);
         if(!bill.rows[0]) throw new FinanceWorkbookNotFoundError('Vendor bill was not found.');
@@ -422,18 +529,29 @@ export class PostgresFinanceWorkbookRepository {
       const found=await client.query<Row>('SELECT * FROM finance_workbook_records WHERE record_type=$1 AND id=$2 AND archived_at IS NULL FOR UPDATE',[type,id]);
       if(!found.rows[0]) throw new FinanceWorkbookNotFoundError('Finance workbook record was not found.');
       const current=mapRow(found.rows[0]); await this.ensurePeriodOpen(client,current.periodKey);
+       if (['journal-entry','petty-cash-voucher','monthly-closing'].includes(type)) {
+         if (!current.createdByUserId) {
+           throw new FinanceWorkbookConflictError('Maker-checker control cannot verify who created this record. Do not approve it until its creator metadata is restored or an auditable replacement record has been created.');
+         }
+         if (current.createdByUserId === actor.id) {
+           throw new FinanceWorkbookConflictError('Maker-checker control: the record creator cannot approve or post their own Finance record. Ask another authorized Finance user.');
+         }
+       }
       let payload:Record<string,unknown>; let status:string;
       if(type==='petty-cash-voucher'){
         if(current.payload.status!=='pending') throw new FinanceWorkbookConflictError('Only pending petty cash vouchers can be approved.');
         payload={...current.payload,status:'approved',approvedBy:actor.name||actor.username,approvedAt:timeNow(),approvalNotes:txt(notes,500)}; status='approved';
       } else if(type==='journal-entry'){
         if(current.status==='posted') throw new FinanceWorkbookConflictError('Journal is already posted.');
+        await this.ensureJournalAccountsActive(client,current.payload);
         const sourceType = String(current.payload.sourceType || '');
         const dependencyType = sourceType === 'invoice-payment'
           ? 'invoice-issued'
           : sourceType === 'vendor-bill-payment'
             ? 'vendor-bill-issued'
-            : '';
+            : sourceType === 'expense-payment'
+              ? 'expense'
+              : '';
         if (dependencyType) {
           const relatedSourceId = String(current.payload.relatedSourceId || '');
           if (!relatedSourceId) {
@@ -447,7 +565,9 @@ export class PostgresFinanceWorkbookRepository {
             throw new FinanceWorkbookConflictError(
               dependencyType === 'invoice-issued'
                 ? 'Cannot post this client receipt until the linked invoice-issued journal is posted.'
-                : 'Cannot post this vendor payment until the linked vendor-bill-issued journal is posted.'
+                : dependencyType === 'expense'
+                  ? 'Cannot post this expense payment until the linked expense accrual is posted.'
+                  : 'Cannot post this vendor payment until the linked vendor-bill-issued journal is posted.'
             );
           }
         }
@@ -476,9 +596,11 @@ export class PostgresFinanceWorkbookRepository {
       return mapRow(updated.rows[0]);
     });
   }
-  async closePeriod(periodValue:string,actor:Actor,audit?:AuditEntry):Promise<FinanceWorkbookRecord>{
+  async closePeriod(periodValue:string,actor:Actor,audit?:AuditEntry,sourcePreflight?:()=>Promise<string[]>):Promise<FinanceWorkbookRecord>{
     const period=month(periodValue);
     return withPostgresTransaction(async client=>{
+      await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))",['kapitech:finance-period:'+period]);
+      if(sourcePreflight){const sourceIssues=await sourcePreflight();if(sourceIssues.length)throw new FinanceWorkbookConflictError('Cannot close '+period+' until source journals are resolved: '+sourceIssues.slice(0,6).join(' · ')+(sourceIssues.length>6?' · and '+(sourceIssues.length-6)+' more.':'.'));}
       const prior=await client.query<Row>("SELECT id FROM finance_workbook_records WHERE record_type='monthly-closing-lock' AND period_key=$1 AND archived_at IS NULL FOR UPDATE",[period]);
       if(prior.rows[0]) throw new FinanceWorkbookConflictError('Finance period is already closed.');
       const rows=await client.query<Row>("SELECT payload FROM finance_workbook_records WHERE record_type='monthly-closing' AND period_key=$1 AND archived_at IS NULL",[period]);
@@ -486,6 +608,8 @@ export class PostgresFinanceWorkbookRepository {
       const required=['all revenue recorded','all expenses recorded','cash & bank reconciled','receivables reviewed','payables reviewed','project margins reviewed','journal balanced','p&l reviewed','cash flow reviewed','balance sheet reviewed','management approval'];
       const open=required.filter(label=>String(byName.get(label)?.status||'')!=='Done');
       if(open.length) throw new FinanceWorkbookConflictError('Cannot close '+period+'. Complete: '+open.join(', ')+'.');
+      const draftJournals=await client.query<Row>("SELECT id,record_key,payload FROM finance_workbook_records WHERE record_type='journal-entry' AND period_key=$1 AND status='draft' AND archived_at IS NULL",[period]);
+      if(draftJournals.rows.length) throw new FinanceWorkbookConflictError('Cannot close '+period+' while '+draftJournals.rows.length+' journal draft(s) remain. Post valid entries or archive rejected drafts after review.');
       const journals=await client.query<Row>("SELECT payload FROM finance_workbook_records WHERE record_type='journal-entry' AND period_key=$1 AND status='posted' AND archived_at IS NULL",[period]);
       for(const row of journals.rows){const p=obj(row.payload);if(Math.abs(Number(p.debitTotal||0)-Number(p.creditTotal||0))>0.01)throw new FinanceWorkbookConflictError('Cannot close the period because a posted journal is unbalanced.');}
       const payload={period,closedBy:actor.name||actor.username,closedAt:timeNow(),notes:''};
@@ -500,7 +624,7 @@ export class PostgresFinanceWorkbookRepository {
       if(!found.rows[0]) throw new FinanceWorkbookNotFoundError('Finance workbook record was not found.');
       const current=mapRow(found.rows[0]);
       if(current.version!==version) throw new FinanceWorkbookConflictError('Record changed. Refresh and retry.');
-      if(['chart-of-accounts','journal-entry','monthly-closing-lock'].includes(type)) throw new FinanceWorkbookConflictError('This record type cannot be deleted; deactivate or use an approved accounting adjustment.');
+      if(['chart-of-accounts','monthly-closing-lock'].includes(type) || (type==='journal-entry' && current.status==='posted')) throw new FinanceWorkbookConflictError('Posted journals and protected master/control records cannot be deleted; use an approved accounting adjustment.');
       if(type==='vendor-bill'){
         const linked=await client.query<Row>("SELECT id FROM finance_workbook_records WHERE record_type='vendor-bill-payment' AND archived_at IS NULL AND payload->>'billId'=$1 LIMIT 1",[id]);
         if(linked.rows[0]) throw new FinanceWorkbookConflictError('A vendor bill with recorded payments cannot be archived. Record an approved adjustment instead.');

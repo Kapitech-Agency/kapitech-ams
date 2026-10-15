@@ -75,14 +75,16 @@ test('The Finance worksheet search controls the embedded vendor directory withou
   assert.match(vendors, /className=\{searchTerm !== undefined \? 'hidden' : 'relative w-full lg:w-96'\}/);
 });
 
-test('Cash Flow and Annual Summary disclose transfer and petty-cash source boundaries', async () => {
+test('Cash Flow and Annual Summary separate actual cash accounts and exclude internal transfers', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
 
-  assert.match(workspace, /Inflows include dated invoice payments and saved Cash & Bank entries touching account 1000/);
-  assert.match(workspace, /Petty-cash vouchers remain in their separate ledger and are not included in this monthly view/);
-  assert.match(workspace, /metric: 'Recorded cash outflow \(proxy\)'[\s\S]*?AMS expense dates and saved Cash & Bank movements; excludes petty-cash vouchers/);
+  assert.match(workspace, /Posted General Ledger view below is calculated from posted journal lines/);
+  assert.match(workspace, /opening balance entries are not treated as cash flows/);
+  assert.match(workspace, /const getPostedLedgerCashFlow =/);
+  assert.match(workspace, /const postedCurrentFlow = selectedRange \? getPostedLedgerCashFlow/);
+  assert.match(workspace, /metric: 'Recorded cash outflow \(proxy\)'[\s\S]*?excludes petty-cash vouchers/);
   assert.match(workspace, /Collections minus recorded bank outflow proxy; excludes petty-cash voucher spending/);
-  assert.match(workspace, /metric: 'Annual recorded cash in'[\s\S]*?Invoice payments and saved Cash & Bank inflows; excludes petty-cash voucher receipts/);
+  assert.match(workspace, /metric: 'Annual recorded cash in'[\s\S]*?excludes petty-cash voucher receipts/);
   assert.doesNotMatch(workspace, /metric: 'Annual Collections'[\s\S]*?basis: 'Payment date'/);
   assert.match(workspace, /Recorded cash in minus outflow proxy; cash transfers and petty-cash voucher activity are not a complete consolidated view/);
   assert.match(workspace, /FINANCE_UI_COPY: Record<string, string> = \{[\s\S]*?Perlakukan hasilnya sebagai pergerakan bersih/);
@@ -123,7 +125,9 @@ test('Finance worksheet search, date display, and register permissions are wired
   const allocationStart = workspace.indexOf("case 'project-allocation':", closingStart);
   assert.ok(closingStart >= 0 && allocationStart > closingStart);
   const closingView = workspace.slice(closingStart, allocationStart);
-  assert.match(closingView, /<CustomDatePicker type="month" value=\{selectedMonth\} onChange=\{setSelectedMonth\}/);
+  assert.match(closingView, /<CustomDatePicker type="month" value=\{selectedClosingMonth\} onChange=\{setSelectedClosingMonth\}/);
+  assert.match(closingView, /aria-label="Closing month"/);
+  assert.match(closingView, /Closing month: \{selectedClosingMonth\}/);
   assert.match(closingView, /slug="finance-closing-month-picker"/);
   assert.doesNotMatch(closingView, /slug="finance-closing-month-picker"[^>]*disabled=\{locked\}/, 'Users must be able to navigate away from a locked month.');
   assert.match(workspace, /You do not have permission to approve Finance records/);
@@ -245,12 +249,14 @@ test('Finance Executive Summary and Dashboard have distinct scopes and period-aw
   const summary = workspace.slice(start, end);
 
   assert.match(summary, /const dashboardMetrics = \[/);
-  assert.match(summary, /label: 'Invoice value issued'[\s\S]*?billedInMonth/);
-  assert.match(summary, /label: 'Recorded cash in'[\s\S]*?cashInThisMonth/);
-  assert.match(summary, /label: 'Recorded cash out'[\s\S]*?cashOutThisMonth/);
-  assert.match(summary, /label: 'Net cash movement \(proxy\)'[\s\S]*?cashInThisMonth - cashOutThisMonth/);
+  assert.match(summary, /const dashboardRange = getReportingPeriodRange\(reportPeriodValue, reportPeriodMode, locale\)/);
+  assert.match(summary, /label: 'Invoice value issued'[\s\S]*?billedInPeriod/);
+  assert.match(summary, /label: 'Recorded cash in'[\s\S]*?cashInThisPeriod/);
+  assert.match(summary, /label: 'Recorded cash out'[\s\S]*?cashOutThisPeriod/);
+  assert.match(summary, /label: 'Net cash movement \(proxy\)'[\s\S]*?cashInThisPeriod - cashOutThisPeriod/);
   assert.match(summary, /data-ams-slug="finance-dashboard-period"/);
-  assert.match(summary, /renderRecentActivity\(currentMonth\)/);
+  assert.match(summary, /renderRecentActivity\(dashboardRange \?/);
+  assert.doesNotMatch(summary, /finance-dashboard-month-picker|setSelectedMonth/);
   assert.match(summary, /title="Recent invoice register"/);
   assert.match(summary, /\{dashboard \? \([\s\S]*?AdminMetricStrip metrics=\{dashboardMetrics\}[\s\S]*?\) : \(/);
   assert.match(summary, /AdminMetricStrip metrics=\{metrics\}/);
@@ -275,7 +281,7 @@ test('Annual Summary includes years represented only by Cash & Bank records', as
   const end = workspace.indexOf('\n      default:', start);
   assert.ok(start >= 0 && end > start);
   const annual = workspace.slice(start, end);
-  assert.match(annual, /cashMovements\.map\(\(movement\) => getYearKey\(movement\.date\)\)/);
+  assert.match(annual, /const yearCollections = cashMovements\.filter\(\(movement\) => movement\.currency === 'IDR'[\s\S]*?movement\.source !== 'Internal transfer'[\s\S]*?getYearKey\(movement\.date\) === selectedYear\)/);
 });
 
 test('Project Allocation explains defaults and displays the saved percentage per record', async () => {
@@ -294,10 +300,23 @@ test('Project Allocation explains defaults and displays the saved percentage per
 
 test('Embedded invoice, expense, and receivable workflows do not leak UI state across worksheets', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const vendors = await read('src/pages/admin/AdminVendors.tsx');
 
   assert.match(workspace, /case 'revenue':[\s\S]{0,100}key=\{tab\.key\} embeddedView="invoices"/);
   assert.match(workspace, /case 'expenses':[\s\S]{0,150}key=\{tab\.key\} embeddedView="income-expenses"/);
   assert.match(workspace, /case 'accounts-receivable':[\s\S]{0,120}key=\{tab\.key\} embeddedView="receivables"/);
+  assert.match(vendors, /\{!embedded && \([\s\S]{0,180}<AdminModuleHeader/);
+  assert.match(vendors, /\{embedded && <button type="button" onClick=\{handleOpenAdd\}/);
+  assert.match(vendors, /data-ams-slug="vendor-snapshot"/);
+  assert.match(vendors, /flex flex-col gap-3 border-b border-line pb-3 sm:flex-row sm:items-center sm:justify-between/);
+});
+
+test('Vendor contract editor protects unsaved changes on close and cancel', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  assert.match(workspace, /vendorContractDirty/);
+  assert.match(workspace, /kind: 'discard-vendor-contract'/);
+  assert.match(workspace, /Vendor contract changes have not been saved/);
+  assert.match(workspace, /if \(vendorContractDirty\) setPendingConfirmation\(\{ kind: 'discard-vendor-contract' \}\)/);
 });
 
 test('Finance drawer uses the shared drawer header once and keeps source errors actionable', async () => {
@@ -329,14 +348,17 @@ test('Finance date and month inputs use the shared custom calendar control', asy
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
   const picker = await read('src/components/ui/CustomDatePicker.tsx');
+  const reportBar = await read('src/components/admin/AdminReportingPeriodBar.tsx');
 
   assert.match(workspace, /import \{ CustomDatePicker \} from '\.\.\/\.\.\/components\/ui\/CustomDatePicker'/);
+  assert.match(reportBar, /slug="global-reporting-period-picker"/);
   assert.match(workspace, /field\.type === 'date' \|\| field\.type === 'month'[\s\S]*?<CustomDatePicker/);
-  assert.match(workspace, /slug="finance-dashboard-month-picker"/);
-  assert.match(workspace, /import \{ CustomReportPeriodPicker \} from '\.\.\/\.\.\/components\/ui\/CustomReportPeriodPicker'/);
-  assert.match(workspace, /slug="finance-pnl-report-period-picker"/);
-  assert.match(workspace, /slug="finance-cash-flow-report-period-picker"/);
+  assert.doesNotMatch(workspace, /slug="finance-dashboard-month-picker"/);
+  assert.doesNotMatch(workspace, /CustomReportPeriodPicker|finance-pnl-report-period-picker|finance-cash-flow-report-period-picker/);
+  assert.doesNotMatch(workspace, /<AdminPanel title="Reporting period"/);
   assert.match(workspace, /slug="finance-closing-month-picker"/);
+  assert.match(workspace, /const selectedYear = String\(Number\(reportPeriodValue\.slice\(0, 4\)\) \|\| new Date\(\)\.getFullYear\(\)\)/);
+  assert.match(workspace, /data-ams-slug="finance-annual-summary-period"/);
   assert.match(workspace, /slug="finance-vendor-contract-start"/);
   assert.match(workspace, /slug="finance-vendor-contract-end"/);
   assert.doesNotMatch(workspace, /<input type="(?:date|month)"/);
@@ -382,4 +404,46 @@ test('Finance registers provide sortable headers, usable pagination, and CSV exp
   assert.match(workspace, /const exportableRows = sortedRows\.map/);
   assert.match(workspace, /exportable = true/);
   assert.match(workspace, /exportable=\{false\} actions=\{<Button variant="secondary" type="button" icon=\{<Download size=\{14\}/);
+});
+
+test('Journal mapping matches the implemented accrual accounting workflow', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const start = workspace.indexOf("case 'journal': {");
+  const end = workspace.indexOf("case 'annual-summary': {", start);
+  assert.ok(start >= 0 && end > start);
+  const journal = workspace.slice(start, end);
+
+  assert.match(journal, /id:'invoice-issued',cells:\['Invoice issued','1300 · Accounts Receivable','4000 · Project Revenue; 2100 · Tax Payable when taxable'/);
+  assert.match(journal, /id:'receipt',cells:\['Client receipt','1000 · Cash & Bank \/ 1010 · Card Clearing \/ 1100 · Petty Cash','1300 · Accounts Receivable'/);
+  assert.match(journal, /id:'expense-accrual',cells:\['Expense recognition'[\s\S]*?'2000 · Accounts Payable'/);
+  assert.match(journal, /id:'expense-payment',cells:\['Expense settlement','2000 · Accounts Payable'[\s\S]*?2200 · Verified settlement account/);
+  assert.match(journal, /id:'vendor-bill',cells:\['Vendor bill issued'[\s\S]*?'2000 · Accounts Payable'/);
+  assert.match(journal, /id:'vendor-payment',cells:\['Vendor bill payment','2000 · Accounts Payable'/);
+  assert.doesNotMatch(journal, /Client receipt','1000 · Cash & Bank','4000 · Project Revenue/);
+  assert.doesNotMatch(journal, /Not generated by this sync; use linked bill\/payment evidence/);
+});
+
+test('Vendor payment drawer requires a settlement account only for Other payment method', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  assert.match(
+    workspace,
+    /\{key:'settlementAccountCode',label:'Settlement account',type:'select',required:true,optionSource:'accounts',visibleWhen:\{key:'method',values:\['other'\]\}/
+  );
+  assert.match(
+    workspace,
+    /field\.required[\s\S]*?field\.visibleWhen\.values\.includes\(String\(editor\.payload\[field\.visibleWhen\.key\] \|\| ''\)\)/
+  );
+});
+
+test('New vendor payments only offer bills with balances and preserve the selected bill while editing', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const start = workspace.indexOf("if (field.optionSource === 'vendorBills')");
+  const end = workspace.indexOf('const changeRegisterField =', start);
+  assert.ok(start >= 0 && end > start);
+  const options = workspace.slice(start, end);
+  assert.match(options, /const currentBillId = editor\?\.type === 'vendor-bill-payment' \? String\(editor\.record\?\.payload\.billId \|\| ''\) : ''/);
+  assert.match(options, /const payableBills = bills\.filter\(/);
+  assert.match(options, /Number\(bill\.payload\.outstanding \?\? bill\.payload\.total\) \|\| 0\) > 0\.01/);
+  assert.match(options, /\|\| bill\.id === currentBillId/);
+  assert.match(options, /No outstanding vendor bills/);
 });
