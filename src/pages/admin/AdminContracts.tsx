@@ -408,7 +408,7 @@ export const AdminContracts: React.FC = () => {
                     </tr>
                   );
                 }) : <tr><td colSpan={6} className="px-4 py-16 text-center">
-                  <ClipboardList size={20} className="mx-auto text-muted" />
+                  <ClipboardCheck size={20} className="mx-auto text-muted" />
                   <p className="mt-3 text-sm font-medium text-fg">{contracts.length ? 'No contracts match these filters.' : 'No contracts or SOWs recorded yet.'}</p>
                   <p className="mt-1 text-xs text-muted">{contracts.length ? 'Clear the search or choose another status.' : 'Create a draft to start the review and signature workflow. This register does not create an e-signature on your behalf.'}</p>
                   {!contracts.length && canManage && <Button type="button" variant="secondary" className="mt-4" onClick={openCreate} icon={<Plus size={13} />}>Create first contract</Button>}
