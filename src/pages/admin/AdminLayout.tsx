@@ -284,17 +284,17 @@ export const AdminLayout: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
-          <AdminReportingPeriodBar />
-          <AdminNotificationCenter />
           <Button
             type="button"
             variant="secondary"
-            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-            title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            icon={theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+            aria-label="Search everything in AMS"
+            aria-keyshortcuts="Control+K Meta+K"
+            onClick={() => setCommandPaletteOpen(true)}
+            icon={<Search size={15} />}
             className="ams-topbar-icon h-8 w-8 p-0"
           />
+          <GlobalTimerControl userId={session?.user?.id} />
+          <AdminNotificationCenter />
           <ProfileIdentity
             profile={{
               id: session?.user?.id,
