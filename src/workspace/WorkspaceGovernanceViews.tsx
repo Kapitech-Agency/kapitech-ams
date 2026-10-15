@@ -165,8 +165,10 @@ export const SystemSettingsView: React.FC = () => {
   const [retentionDays, setRetentionDays] = useState(14);
   const [ratesVisible, setRatesVisible] = useState(false);
   const [notice, setNotice] = useState('');
-  const mfaCoverage = Math.round(users.filter((user) => user.mfa && user.status === 'Active').length / users.filter((user) => user.status === 'Active').length * 100);
   const activeUsers = users.filter((user) => user.status === 'Active').length;
+  const mfaCoverage = activeUsers
+    ? Math.round(users.filter((user) => user.mfa && user.status === 'Active').length / activeUsers * 100)
+    : 0;
 
   const updateUser = (id: string, update: Partial<WorkspaceUser>) => setUsers((items) => items.map((user) => user.id === id ? { ...user, ...update } : user));
   const tabs: Array<{ key: SettingsTab; label: string }> = [
