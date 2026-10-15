@@ -42,6 +42,8 @@ test('top-level active state remains on the owning module while navigating its t
   assert.equal(isNavigationItemActive(findItem('projects'), '/admin/tasks', '?taskscope=due', ''), true);
   assert.equal(isNavigationItemActive(findItem('finance'), '/admin/proposals', '', ''), true);
   assert.equal(isNavigationItemActive(findItem('cms'), '/admin/cms/testimonials', '', ''), true);
+  assert.equal(isNavigationItemActive(findItem('projects'), '/admin/documents', '', ''), true);
+  assert.equal(isNavigationItemActive(findItem('projects'), '/admin/dashboard', '?view=tasks', ''), true);
+  assert.equal(isNavigationItemActive(findItem('dashboard'), '/admin/dashboard', '?view=tasks', ''), false);
   assert.equal(isNavigationItemActive(AMS_PRIMARY_SETTINGS_ITEM, '/admin/navigation/release-readiness', '', ''), true);
-  assert.equal(isNavigationItemActive(AMS_PRIMARY_SETTINGS_ITEM, '/admin/documents', '', ''), true);
 });
