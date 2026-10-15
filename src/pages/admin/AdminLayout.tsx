@@ -522,7 +522,7 @@ export const AdminLayout: React.FC = () => {
                       : routeQuery.get('projects') || 'all'
                   }
                   items={[
-                    { key: 'all', label: 'Projects', to: (amsRole === 'Finance' || amsRole === 'Creative') ? '/admin/projects?projects=sprint' : '/admin/projects' },
+                    { key: 'all', label: 'Projects', to: '/admin/projects' },
                     { key: 'sprint', label: 'Delivery', to: '/admin/projects?projects=sprint' },
                     { key: 'budget', label: 'Budget', to: '/admin/projects?projects=budget' },
                     { key: 'archived', label: 'Archived', to: '/admin/projects?projects=archived' },
