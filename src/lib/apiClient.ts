@@ -275,6 +275,28 @@ export const api = {
     delete: (id: string) => apiRequest(`/api/clients/${id}`, { method: 'DELETE' })
   },
 
+  // Client contracts & statements of work
+  contracts: {
+    getAll: () => apiRequest<{ success: boolean; contracts: any[] }>('/api/contracts'),
+    create: (contract: Record<string, unknown>) =>
+      apiRequest<{ success: boolean; contract: any }>('/api/contracts', {
+        method: 'POST',
+        body: JSON.stringify(contract)
+      }),
+    update: (id: string, updates: Record<string, unknown>) =>
+      apiRequest<{ success: boolean; contract: any }>(`/api/contracts/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        body: JSON.stringify(updates)
+      }),
+    transition: (id: string, status: string, notes = '') =>
+      apiRequest<{ success: boolean; contract: any }>(`/api/contracts/${encodeURIComponent(id)}/transition`, {
+        method: 'POST',
+        body: JSON.stringify({ status, notes })
+      }),
+    delete: (id: string) =>
+      apiRequest<{ success: boolean; message?: string }>(`/api/contracts/${encodeURIComponent(id)}`, { method: 'DELETE' })
+  },
+
   // Projects
   projects: {
     getAll: () => apiRequest<{ success: boolean; projects: any[] }>('/api/projects'),
