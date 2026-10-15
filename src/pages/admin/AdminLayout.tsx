@@ -16,6 +16,8 @@ import { AdminNotificationCenter } from '../../components/admin/AdminNotificatio
 import { Modal } from '../../components/ui/Modal';
 import { AGENCY_TIER_LABELS, getAgencyTier } from '../../lib/rbacEngine';
 import { AMS_PRIMARY_SETTINGS_ITEM, getAmsRole, getNavigationGroupsForRole, isNavigationItemActive } from '../../lib/amsNavigationAccess';
+import { getAmsModuleSubnavigation, isAmsModuleSubnavigationItemActive, type AmsSidebarModuleKey } from '../../lib/amsModuleSubnavigation';
+import { AdminSectionTabs } from '../../components/admin/AdminModulePrimitives';
 import { AmsBrandLogo } from '../../components/admin/AmsBrandLogo';
 import UserProfileSettingsModal from '../../components/admin/UserProfileSettingsModal';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
@@ -164,7 +166,30 @@ export const AdminLayout: React.FC = () => {
   const activeNavItem = navItemsForActiveState.find((item) =>
     isNavigationItemActive(item, location.pathname, location.search, location.hash)
   );
-  const activeItemLabel = activeNavItem?.label || 'Dashboard';
+
+  const workspaceNavigationModule: AmsSidebarModuleKey | null = (() => {
+    const path = location.pathname;
+    const params = new URLSearchParams(location.search);
+    const personalHub = path === '/admin/tasks'
+      && params.get('taskscope') === 'my'
+      && params.get('workspace') !== 'project';
+
+    if (path === '/admin/dashboard' || path === '/admin/navigation/live-activity' || personalHub) return 'dashboard';
+    if (['/admin/crm', '/admin/clients/all-clients', '/admin/clients/sla-monitoring', '/admin/inbox', '/admin/contracts'].includes(path)) return 'crm';
+    if (['/admin/projects', '/admin/documents', '/admin/team', '/admin/time-logs', '/admin/clients/retainers'].includes(path)) return 'projects';
+    if (path === '/admin/tasks') return 'projects';
+    if (['/admin/finance', '/admin/proposals', '/admin/vendors', '/admin/approvals', '/admin/invoicing'].includes(path)) return 'finance';
+    if (path === '/admin/settings' || path === '/admin/navigation/release-readiness') return 'settings';
+    return null;
+  })();
+
+  const workspaceTabItems = workspaceNavigationModule
+    ? getAmsModuleSubnavigation(workspaceNavigationModule, amsRole)
+    : [];
+  const activeWorkspaceTab = workspaceTabItems.find((item) =>
+    isAmsModuleSubnavigationItemActive(item, location.pathname, location.search, location.hash)
+  );
+  const activeItemLabel = activeWorkspaceTab?.label || activeNavItem?.label || 'Dashboard';
 
 
 
@@ -196,21 +221,6 @@ export const AdminLayout: React.FC = () => {
               </div>
             </div>
           </Link>
-        </div>
-
-        <div className="px-3.5 pt-3.5">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => setCommandPaletteOpen(true)}
-            aria-label="Search AMS"
-            aria-keyshortcuts="Control+K Meta+K"
-            icon={<Search size={15} />}
-            className="flex h-10 w-full justify-start border-line bg-bg px-3"
-          >
-            <span className="min-w-0 flex-1 truncate text-left text-xs text-muted">Search</span>
-            <kbd className="ml-auto rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] text-muted">⌘K</kbd>
-          </Button>
         </div>
 
         <div className="flex-1 min-h-0 overflow-x-hidden overflow-y-auto overscroll-contain px-3.5 py-4 custom-scrollbar">
@@ -373,24 +383,6 @@ export const AdminLayout: React.FC = () => {
               </button>
             </div>
 
-            <div className="px-3 pt-3">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  setCommandPaletteOpen(true);
-                }}
-                aria-label="Search AMS"
-                aria-keyshortcuts="Control+K Meta+K"
-                icon={<Search size={15} />}
-                className="flex h-9 w-full justify-start border-line bg-bg px-3"
-              >
-                <span className="min-w-0 flex-1 truncate text-left text-xs text-muted">Search</span>
-                <kbd className="ml-auto rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] text-muted">⌘K</kbd>
-              </Button>
-            </div>
-
             <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-4 custom-scrollbar">
               <DynamicAdminSidebarNavigation role={amsRole} pathname={location.pathname} search={location.search} hash={location.hash} onNavigate={() => setMobileMenuOpen(false)} />
             </div>
@@ -470,8 +462,18 @@ export const AdminLayout: React.FC = () => {
             </div>
           </div>
         </header>
-        {/* View Outlet */}
+        {/* Workspace navigation lives in the content area, not the global topbar. */}
         <div className="ams-content flex-1 min-h-0 w-full max-w-[1560px] mx-auto">
+          {workspaceTabItems.length > 0 && (
+            <div className="px-4 pt-3 sm:px-5 lg:px-6" data-ams-slug="workspace-navigation">
+              <AdminSectionTabs
+                ariaLabel="Workspace navigation"
+                activeKey={activeWorkspaceTab?.key || ''}
+                items={workspaceTabItems}
+                className="w-full"
+              />
+            </div>
+          )}
           <Outlet />
         </div>
 
