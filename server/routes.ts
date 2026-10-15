@@ -5639,8 +5639,101 @@ apiRouter.delete('/crm/proposals/:id', requireAuth, requirePermission('canManage
 // 14. PROJECT TASKS & TIME TRACKING (PARTS 16, 17, 18)
 // ----------------------------------------------------
 
+// JSON data mode historically stored some tasks inside projects and others in the
+// top-level task register. Keep both old and new records readable while new writes
+// synchronize both representations. PostgreSQL already uses the tasks table as the
+// canonical source and joins it into projects through the repositories.
+function mergeJsonProjectTasks(project: any, globalTasks: any[]): any[] {
+  const projectId = String(project?.id || '');
+  const projectName = String(project?.name || project?.title || 'Untitled project');
+  const clientName = String(project?.clientCompany || project?.clientName || '');
+  const byId = new Map<string, any>();
+  const nested = Array.isArray(project?.tasks) ? project.tasks : [];
+  nested.forEach((task: any) => {
+    const id = String(task?.id || '');
+    if (!id) return;
+    byId.set(id, {
+      ...task,
+      projectId: projectId,
+      projectName: String(task?.projectName || projectName),
+      clientName: String(task?.clientName || clientName),
+      assignee: String(task?.assignee || task?.assignedTo || ''),
+      assignedTo: String(task?.assignedTo || task?.assignee || ''),
+    });
+  });
+  globalTasks.filter((task: any) => String(task?.projectId || '') === projectId).forEach((task: any) => {
+    const id = String(task?.id || '');
+    if (!id) return;
+    byId.set(id, {
+      ...(byId.get(id) || {}),
+      ...task,
+      projectId,
+      projectName: String(task?.projectName || projectName),
+      clientName: String(task?.clientName || clientName),
+      assignee: String(task?.assignee || task?.assignedTo || byId.get(id)?.assignee || ''),
+      assignedTo: String(task?.assignedTo || task?.assignee || byId.get(id)?.assignedTo || ''),
+    });
+  });
+  return Array.from(byId.values());
+}
+
+function mergeJsonTaskCollection(db: any): any[] {
+  const projects = Array.isArray(db?.projects) ? db.projects : [];
+  const globalTasks = Array.isArray(db?.tasks) ? db.tasks : [];
+  const byId = new Map<string, any>();
+  projects.forEach((project: any) => {
+    mergeJsonProjectTasks(project, globalTasks).forEach((task: any) => {
+      const id = String(task?.id || '');
+      if (id) byId.set(id, task);
+    });
+  });
+  globalTasks.filter((task: any) => !String(task?.projectId || '')).forEach((task: any) => {
+    const id = String(task?.id || '');
+    if (id) byId.set(id, { ...(byId.get(id) || {}), ...task });
+  });
+  return Array.from(byId.values()).sort((a: any, b: any) =>
+    String(b?.createdAt || '').localeCompare(String(a?.createdAt || ''))
+  );
+}
+
+function removeJsonProjectTask(db: any, taskId: string, exceptProjectId = ''): void {
+  (Array.isArray(db?.projects) ? db.projects : []).forEach((project: any) => {
+    const projectId = String(project?.id || '');
+    if (projectId === exceptProjectId || !Array.isArray(project?.tasks)) return;
+    const next = project.tasks.filter((task: any) => String(task?.id || '') !== taskId);
+    if (next.length !== project.tasks.length) {
+      project.tasks = next;
+      project.updatedAt = new Date().toISOString();
+    }
+  });
+}
+
+function upsertJsonProjectTask(db: any, input: any, previousProjectId = ''): void {
+  const taskId = String(input?.id || '');
+  const projectId = String(input?.projectId || '');
+  if (!taskId) return;
+  if (previousProjectId && previousProjectId !== projectId) removeJsonProjectTask(db, taskId, projectId);
+  const project = (Array.isArray(db?.projects) ? db.projects : []).find((item: any) => String(item?.id || '') === projectId);
+  if (!project) return;
+  if (!Array.isArray(project.tasks)) project.tasks = [];
+  const index = project.tasks.findIndex((task: any) => String(task?.id || '') === taskId);
+  const linked = {
+    ...(index >= 0 ? project.tasks[index] : {}),
+    ...input,
+    projectId,
+    projectName: String(input?.projectName || project.name || project.title || ''),
+    clientName: String(input?.clientName || project.clientCompany || project.clientName || ''),
+    assignedTo: String(input?.assignedTo || input?.assignee || ''),
+  };
+  if (index >= 0) project.tasks[index] = linked;
+  else project.tasks.push(linked);
+  project.updatedAt = String(input?.updatedAt || new Date().toISOString());
+}
+
 apiRouter.get('/projects/tasks', requireAuth, requireAnyPermission('canManageKanbanTasks', 'canManageProjects'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  const tasks = getDataSourceMode() === 'postgres' ? await postgresTaskRepository.list() : getDatabase().tasks || [];
+  const tasks = getDataSourceMode() === 'postgres'
+    ? await postgresTaskRepository.list()
+    : mergeJsonTaskCollection(getDatabase());
   res.json({ success: true, tasks });
 });
 
