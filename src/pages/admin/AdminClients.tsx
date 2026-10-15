@@ -68,7 +68,7 @@ type ClientContractSummary = {
 };
 
 const normalizeClientRelationName = (value: unknown) =>
-  String(value || '').trim().replace(/\\s+/g, ' ').toLocaleLowerCase();
+  String(value || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase();
 
 const CONTRACT_STATUS_PRESENTATION: Record<string, { label: string; className: string }> = {
   draft: { label: 'Draft', className: 'border-line bg-bg text-muted' },
