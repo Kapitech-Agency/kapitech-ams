@@ -388,7 +388,7 @@ const AnalyticsView: React.FC<{ snapshot: DashboardOperationalSnapshot; range: R
 export const GlobalExecutiveDashboard: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const view = (searchParams.get('view') || 'overview') as 'overview' | 'performance' | 'analytics' | 'tasks';
+  const view = (searchParams.get('view') || 'overview') as 'overview' | 'performance' | 'analytics';
   const fixtureMode = isSlugFixtureMode();
   const { matchesInterval, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const [range, setRange] = useState<RangeKey>('Q2');
@@ -399,6 +399,9 @@ export const GlobalExecutiveDashboard: React.FC = () => {
   const [dashboardProjectPage, setDashboardProjectPage] = useState(1);
   const [dashboardProjectPageSize, setDashboardProjectPageSize] = useState(6);
   const [dashboardOverview, setDashboardOverview] = useState<{ metrics?: any; financials?: any; projects?: any[]; source: 'server' | 'ab'; loading: boolean }>({ source: 'ab', loading: true });
+  const [operationalSnapshot, setOperationalSnapshot] = useState<DashboardOperationalSnapshot>({
+    loading: true, projects: null, tasks: null, timeLogs: null, invoices: null, expenses: null
+  });
 
   useEffect(() => {
     let active = true;
@@ -421,6 +424,33 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       .catch(() => {
         if (active) setDashboardOverview({ source: 'ab', loading: false });
       });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    const readRows = (result: PromiseSettledResult<any>, field: string): any[] | null => {
+      if (result.status !== 'fulfilled' || !result.value?.success || !Array.isArray(result.value.data?.[field])) return null;
+      return result.value.data[field];
+    };
+    const requests: Array<Promise<any>> = [
+      api.projects.getAll(),
+      api.tasks.getAll(),
+      api.timeLogs.getAll(),
+      api.finance.getInvoices(),
+      api.finance.getExpenses()
+    ];
+    Promise.allSettled(requests).then((results) => {
+      if (!active) return;
+      setOperationalSnapshot({
+        loading: false,
+        projects: readRows(results[0], 'projects'),
+        tasks: readRows(results[1], 'tasks'),
+        timeLogs: readRows(results[2], 'timeLogs'),
+        invoices: readRows(results[3], 'invoices'),
+        expenses: readRows(results[4], 'expenses')
+      });
+    });
     return () => { active = false; };
   }, []);
 
@@ -458,8 +488,9 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
 
   const dashboardProjects = useMemo<DashboardProject[]>(() => {
-    const serverProjects = Array.isArray(dashboardOverview.projects)
-      ? dashboardOverview.projects.map((project: any, index: number) => {
+    const projectSource = operationalSnapshot.projects ?? dashboardOverview.projects;
+    const serverProjects = Array.isArray(projectSource)
+      ? projectSource.map((project: any, index: number) => {
           const rawType = String(project.type || project.projectType || project.billingType || 'Fixed-fee').toLowerCase();
           const type: Exclude<ProjectFilter, 'All'> = rawType.includes('retainer')
             ? 'Retainer'
@@ -492,7 +523,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         })
       : [];
     return serverProjects.length ? serverProjects : (fixtureMode ? sampleProjects : []);
-  }, [dashboardOverview.projects, fixtureMode]);
+  }, [dashboardOverview.projects, operationalSnapshot.projects, fixtureMode]);
 
   const filteredProjects = useMemo(
     () => dashboardProjects.filter((project) =>
@@ -515,14 +546,24 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     setDashboardProjectPage((current) => Math.min(current, dashboardProjectPageCount));
   }, [dashboardProjectPageCount]);
 
+  const deliveryProjects = operationalSnapshot.projects?.length ? operationalSnapshot.projects : fixtureMode ? sampleProjects : operationalSnapshot.projects;
+  const deliveryBreakdown = useMemo(
+    () => deliveryProjects === null ? [] : buildProjectDeliveryBreakdown(deliveryProjects),
+    [deliveryProjects]
+  );
   const totalDelivery = deliveryBreakdown.reduce((total, item) => total + Math.max(0, item.value), 0);
-  const onScheduleValue = deliveryBreakdown.find((item) => item.label === 'On schedule')?.value ?? 0;
+  const onScheduleValue = deliveryBreakdown.find((item) => item.label === 'No risk flag')?.value ?? 0;
   const onSchedulePercent = totalDelivery > 0 ? Math.round((Math.max(0, onScheduleValue) / totalDelivery) * 100) : 0;
-  const revenueData = fixtureMode ? sampleRevenueByRange[range] : [];
-
-  if (view === 'tasks') {
-    return <TasksWorkspace />;
-  }
+  const financeCurrency = String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase();
+  const previewFinancialTrend = fixtureMode && !operationalSnapshot.invoices?.length && !operationalSnapshot.expenses?.length;
+  const financeSourcesAvailable = operationalSnapshot.invoices !== null && operationalSnapshot.expenses !== null;
+  const revenueData = useMemo(() => {
+    if (previewFinancialTrend) return sampleRevenueByRange[range];
+    if (!financeSourcesAvailable) return [];
+    const invoices = (operationalSnapshot.invoices || []).filter((invoice: any) => String(invoice.currency || 'IDR').toUpperCase() === financeCurrency);
+    const expenses = (operationalSnapshot.expenses || []).filter((expense: any) => String(expense.currency || 'IDR').toUpperCase() === financeCurrency);
+    return buildFinancialTrend(range, invoices, expenses);
+  }, [previewFinancialTrend, financeSourcesAvailable, operationalSnapshot.invoices, operationalSnapshot.expenses, financeCurrency, range]);
 
   return (
     <AdminPageShell featureSlug="dashboard-module" className="ams-dashboard">
@@ -569,7 +610,6 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             { key: 'overview', label: 'Overview', to: '/admin/dashboard' },
             { key: 'performance', label: 'Performance', to: '/admin/dashboard?view=performance' },
             { key: 'analytics', label: 'Analytics', to: '/admin/dashboard?view=analytics' },
-            { key: 'tasks', label: 'Tasks', to: '/admin/dashboard?view=tasks' }
           ]}
         />
       </div>
@@ -657,7 +697,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           <div className="grid grid-cols-2 gap-2">
             {[
               { label: 'New project', icon: <Plus size={14} />, href: '/admin/projects' },
-              { label: 'Review tasks', icon: <CheckCircle2 size={14} />, href: '/admin/dashboard?view=tasks' },
+              { label: 'Review tasks', icon: <CheckCircle2 size={14} />, href: '/admin/tasks' },
               { label: 'Log time', icon: <Clock3 size={14} />, href: '/admin/time-logs' },
               { label: 'View invoices', icon: <ReceiptText size={14} />, href: '/admin/invoicing' },
               { label: 'View clients', icon: <Users size={14} />, href: '/admin/clients' },
@@ -674,15 +714,15 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       </section>
 
       <div className="grid gap-3 min-[1100px]:grid-cols-12">
-        <AdminPanel className="min-[1100px]:col-span-8" bodyClassName="p-4 sm:p-5" title="Revenue vs expenses" description="Monthly cash flow performance for the selected period." actions={(
+        <AdminPanel className="min-[1100px]:col-span-8" bodyClassName="p-4 sm:p-5" title="Invoices vs expenses" description="Issued invoice value and recorded expenses by record date. The difference is not a posted profit figure." actions={(
           <div className="hidden items-center gap-3 text-[11px] text-muted sm:flex">
-            <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-accent" /> Revenue</span>
-            <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-info" /> Expenses</span>
-            <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-success" /> Net</span>
+            <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-accent" /> Invoices issued</span>
+            <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-info" /> Expenses recorded</span>
+            <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-success" /> Difference</span>
           </div>
         )}>
           {revenueData.length >= 2 ? (
-            <TrendChart data={revenueData} primaryLabel="Revenue" secondaryLabel="Expenses" tertiaryLabel="Net" primaryFormat={formatMoney} ariaLabel={'Revenue, expenses, and net trend for ' + range + '.'} />
+            <TrendChart data={revenueData} primaryLabel="Invoices issued" secondaryLabel="Expenses recorded" tertiaryLabel="Difference" primaryFormat={previewFinancialTrend ? formatMoney : (value) => formatLiveMoney(value, financeCurrency)} ariaLabel={'Issued invoices, recorded expenses, and difference for ' + range + '.'} />
           ) : (
             <div className="flex min-h-[220px] flex-col items-center justify-center rounded-control border border-line bg-bg px-5 py-8 text-center" role="status">
               <CircleDollarSign size={20} className="text-muted" aria-hidden="true" />
@@ -693,18 +733,19 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         </AdminPanel>
 
         <AdminPanel className="min-[1100px]:col-span-4" bodyClassName="p-4 sm:p-5" title="Delivery & pacing" description="Project delivery distribution across the current portfolio.">
-          {fixtureMode ? (
+          {deliveryProjects !== null ? (
           <div className="space-y-4">
+            {fixtureMode && !operationalSnapshot.projects?.length && <p className="text-[10px] text-warning">Preview data only. Live project records were not returned.</p>}
             <div className="rounded-control border border-line bg-bg/45 p-4">
               <div className="flex items-end justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted">On schedule</div>
+                  <div className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted">No risk flag</div>
                   <div className="mt-1 flex items-baseline gap-2">
                     <span className="text-3xl font-semibold tracking-[-0.03em] tabular-nums text-fg">{onSchedulePercent}%</span>
                     <span className="text-[11px] text-muted">{onScheduleValue} of {totalDelivery} projects</span>
                   </div>
                 </div>
-                <span className="shrink-0 rounded-badge border border-success/20 bg-success/10 px-2 py-1 text-[10px] font-medium text-success">On track</span>
+                <span className="shrink-0 rounded-badge border border-success/20 bg-success/10 px-2 py-1 text-[10px] font-medium text-success">Unflagged</span>
               </div>
               <div className="mt-3 flex h-2 overflow-hidden rounded-full bg-line" aria-label="Delivery pacing breakdown">
                 {deliveryBreakdown.map((item) => {
@@ -985,9 +1026,9 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
         </>
       ) : view === 'performance' ? (
-        <PerformanceView />
+        <PerformanceView snapshot={operationalSnapshot} />
       ) : (
-        <AnalyticsView range={range} />
+        <AnalyticsView snapshot={operationalSnapshot} range={range} />
       )}
       <Modal
         open={Boolean(projectDetails)}
