@@ -81,6 +81,7 @@ test('AMS navigation uses flat role-based groups and keeps module actions within
   const app = await read('src/App.tsx');
   const primitives = await read('src/components/admin/AdminModulePrimitives.tsx');
   const navigation = await read('src/lib/amsNavigationAccess.ts');
+  const subnavigation = await read('src/lib/amsModuleSubnavigation.ts');
   const sidebar = await read('src/components/admin/DynamicAdminSidebar.tsx');
   const teams = await read('src/pages/admin/AdminTeams.tsx');
   const vendors = await read('src/pages/admin/AdminVendors.tsx');
@@ -99,7 +100,7 @@ test('AMS navigation uses flat role-based groups and keeps module actions within
   assert.ok(navigation.includes("key: 'data-persistence-backup'"));
   assert.ok(navigation.includes("key: 'release-readiness'"));
   assert.ok(navigation.includes("label: 'Dashboard & Hub'"));
-  assert.ok(navigation.includes("label: 'Retainer Hours Pool'"));
+  assert.ok(subnavigation.includes("label: 'Retainer Hours Pool'"));
   assert.ok(navigation.includes("label: 'Project Profitability'"));
   assert.ok(navigation.includes("return 'Freelancer';"), 'Unknown legacy role must fail closed rather than grant Admin access.');
 
