@@ -14,8 +14,8 @@ test('Flat finance navigation keeps the complete worksheet workbook inside the F
   assert.match(layout, /data-ams-slug="active-module-title"/);
   assert.match(sidebar, /data-ams-navigation-layout="flat"/);
   assert.doesNotMatch(sidebar, /data-ams-nav-submenu|aria-expanded=|ChevronDown/);
-  assert.match(navigation, /label: 'Invoicing & Receivables'/);
-  assert.match(navigation, /label: 'Expenses & Payables'/);
+  assert.match(navigation, /label: 'Invoicing & Revenues'/);
+  assert.match(navigation, /label: 'Profitability & Expenses'/);
   assert.match(navigation, /label: 'Project Profitability'/);
   assert.match(workspace, /FINANCE_WORKBOOK_GROUPS/);
   assert.match(workspace, /AdminSectionTabs ariaLabel="Finance worksheets" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="w-full"/);
