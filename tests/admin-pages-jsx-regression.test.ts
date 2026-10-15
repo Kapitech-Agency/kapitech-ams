@@ -135,6 +135,7 @@ test('Flat sidebar keeps direct links while existing tabs stay in their page wor
   const layout = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminLayout.tsx'), 'utf8');
   const sidebar = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/DynamicAdminSidebar.tsx'), 'utf8');
   const navigation = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/amsNavigationAccess.ts'), 'utf8');
+  const subnavigation = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/amsModuleSubnavigation.ts'), 'utf8');
   const primitives = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/AdminModulePrimitives.tsx'), 'utf8');
   const dashboard = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/GlobalExecutiveDashboard.tsx'), 'utf8');
   const inbox = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInbox.tsx'), 'utf8');
@@ -150,14 +151,17 @@ test('Flat sidebar keeps direct links while existing tabs stay in their page wor
   assert.equal(sidebar.includes('aria-expanded='), false);
   assert.equal(sidebar.includes('ChevronDown'), false);
   assert.ok(navigation.includes("label: 'DELIVERY & OPERATIONS'"));
-  assert.ok(navigation.includes("label: 'Retainer Hours Pool'"));
+  assert.ok(subnavigation.includes("label: 'Retainer Hours Pool'"));
   assert.ok(primitives.includes("'inline-flex h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent'"));
   assert.ok(!/className="inline-flex h-9 shrink-0 items-center rounded-chip/.test(layout));
   assert.ok(!/<nav aria-label="(?:Clients|CMS|Dashboard|Projects|Tasks|Inbox|Finance|Team|Settings|Documents) sections"/.test(layout));
-  assert.ok(dashboard.includes('<AdminSectionTabs') && !dashboard.includes("{ key: 'tasks', label: 'Tasks', to: '/admin/dashboard?view=tasks' }"));
+  assert.equal(dashboard.includes('<AdminSectionTabs'), false, 'Dashboard workspace tabs come from the shared layout.');
+  assert.ok(layout.includes('data-ams-slug="workspace-navigation"'));
+  assert.ok(layout.includes('ariaLabel="Workspace navigation"'));
   assert.ok(dashboard.includes('api.finance.getExpenses()') && dashboard.includes('api.tasks.getAll()'));
   assert.ok(dashboard.includes('<PerformanceView snapshot={operationalSnapshot} />') && dashboard.includes('<AnalyticsView snapshot={operationalSnapshot} range={range} />'));
-  assert.ok(dashboard.includes('className="mb-0"') && dashboard.includes('ariaLabel="Dashboard view"'));
+  assert.ok(dashboard.includes('className="mb-0"'));
+  assert.equal(dashboard.includes('ariaLabel="Dashboard view"'), false);
   assert.ok(!dashboard.includes('-mt-2'));
   assert.ok(inbox.includes('<AdminSectionTabs') && inbox.includes('inboxTabs.map((tab)'));
   assert.ok(finance.includes('<AdminModuleHeader') && finance.includes('<AdminSectionTabs'));
@@ -447,6 +451,7 @@ test('Flat sidebar visibility follows the canonical role route policy and keeps 
   const layout = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminLayout.tsx'), 'utf8');
   const routes = fs.readFileSync(path.resolve(process.cwd(), 'src/App.tsx'), 'utf8');
   const navigation = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/amsNavigationAccess.ts'), 'utf8');
+  const subnavigation = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/amsModuleSubnavigation.ts'), 'utf8');
   const sidebar = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/DynamicAdminSidebar.tsx'), 'utf8');
   const primitives = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/AdminModulePrimitives.tsx'), 'utf8');
 
@@ -470,15 +475,18 @@ test('Flat sidebar visibility follows the canonical role route policy and keeps 
   assert.ok(navigation.includes('export function canAccessAmsRoute'));
   assert.ok(navigation.includes('export function isNavigationItemActive'));
 
-  const expectedEntries = [
+  const expectedSidebarEntries = [
     "label: 'Dashboard & Hub'",
-    "label: 'Sales & Deal Pipeline'",
     "label: 'Client Directory'",
     "label: 'Project Hub'",
-    "label: 'Invoicing & Receivables'",
-    "label: 'Insight Editorial Packs'",
+    "label: 'Invoicing & Revenues'",
+    "label: 'Profitability & Expenses'",
+    "label: 'Content Workspace'",
   ];
-  for (const label of expectedEntries) assert.ok(navigation.includes(label), 'Missing direct destination ' + label);
+  for (const label of expectedSidebarEntries) assert.ok(navigation.includes(label), 'Missing direct workspace ' + label);
+  for (const label of ["label: 'Sales & Pipeline'", "label: 'Retainer Hours Pool'", "label: 'Team & Capacity'", "label: 'Timesheet Control'", "label: 'Vendor Ledger'"]) {
+    assert.ok(subnavigation.includes(label), 'Missing in-workspace destination ' + label);
+  }
   assert.ok(sidebar.includes('AMS_PRIMARY_SETTINGS_ITEM'));
   assert.ok(layout.includes('GlobalTimerControl'));
   assert.ok(layout.includes('Search Everything'));
