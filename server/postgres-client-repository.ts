@@ -121,7 +121,7 @@ export class PostgresClientRepository {
           subject: onboardingCompleted ? 'Client onboarding moved to Active' : 'Client status changed to ' + normalizedNextStatus.replace(/_/g, ' '),
           summary: 'Client status changed from ' + normalizedPreviousStatus.replace(/_/g, ' ') + ' to ' + normalizedNextStatus.replace(/_/g, ' ') + '.',
           contactName: String(next.name || next.company || ''),
-          outcome: onboardingCompleted ? 'Client moved from onboarding to active account status.' : '',
+          outcome: onboardingCompleted ? 'Onboarding is complete; account status is Active.' : '',
           nextStep: '',
           occurredAt,
           createdByUserId: actor?.userId || audit?.actorUserId || '',
