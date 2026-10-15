@@ -221,7 +221,11 @@ export const TasksWorkspace: React.FC = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [selectedTask, setSelectedTask] = useState<TaskRecord | null>(null);
   const [editingTask, setEditingTask] = useState<TaskRecord | null>(null);
+  const [deleteTaskTarget, setDeleteTaskTarget] = useState<TaskRecord | null>(null);
+  const [deleteTaskError, setDeleteTaskError] = useState<string | null>(null);
+  const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
+  const [updatingSubtaskId, setUpdatingSubtaskId] = useState<string | null>(null);
   const [draggingBoardTaskId, setDraggingBoardTaskId] = useState<string | null>(null);
   const [dragOverBoardStatus, setDragOverBoardStatus] = useState<TaskStatus | null>(null);
   const [bulkUpdating, setBulkUpdating] = useState(false);
@@ -372,7 +376,7 @@ export const TasksWorkspace: React.FC = () => {
   }, [projects]);
 
   const updateTaskStatus = async (task: TaskRecord, nextStatus: TaskStatus) => {
-    if (!canManageTasks || task.status === nextStatus || updatingTaskId !== null || bulkUpdating) return;
+    if (!canManageTasks || task.status === nextStatus || updatingTaskId !== null || updatingSubtaskId !== null || bulkUpdating) return;
     const previousTask = records.find(item => item.id === task.id) || task;
     setUpdatingTaskId(task.id);
     setRecords(current => current.map(item => item.id === task.id ? {
@@ -631,7 +635,7 @@ export const TasksWorkspace: React.FC = () => {
   };
 
   const bulkUpdateStatus = async (nextStatus: TaskStatus) => {
-    if (!canManageTasks || !selectedIds.length || bulkUpdating || updatingTaskId !== null) return;
+    if (!canManageTasks || !selectedIds.length || bulkUpdating || updatingTaskId !== null || updatingSubtaskId !== null) return;
     setBulkUpdating(true);
     const selectedTasks = records.filter(task => selectedIds.includes(task.id));
     const previousRecords = records;
@@ -780,6 +784,71 @@ export const TasksWorkspace: React.FC = () => {
     } finally {
       setSavingEditTask(false);
       if (saved) setEditingTask(null);
+    }
+  };
+
+  const toggleTaskSubtask = async (task: TaskRecord, subtaskId: string) => {
+    if (!canManageTasks || updatingSubtaskId !== null || updatingTaskId !== null || bulkUpdating) return;
+    const previousTask = records.find((item) => item.id === task.id) || task;
+    const target = previousTask.subtasks.find((item) => item.id === subtaskId);
+    if (!target) return;
+    const mutationKey = task.id + ':' + subtaskId;
+    const nextSubtasks = previousTask.subtasks.map((item) =>
+      item.id === subtaskId ? { ...item, completed: !item.completed } : item
+    );
+    const optimisticTask = { ...previousTask, subtasks: nextSubtasks };
+    setUpdatingSubtaskId(mutationKey);
+    setRecords((current) => current.map((item) => item.id === task.id ? optimisticTask : item));
+    setSelectedTask((current) => current?.id === task.id ? optimisticTask : current);
+
+    const rollback = () => {
+      setRecords((current) => current.map((item) => item.id === previousTask.id ? previousTask : item));
+      setSelectedTask((current) => current?.id === previousTask.id ? previousTask : current);
+    };
+    try {
+      const response = await api.tasks.update(task.id, { subtasks: nextSubtasks, updatedAt: previousTask.updatedAt });
+      if (!response.success) throw new Error(response.error || 'Checklist progress could not be saved.');
+      const savedTask = response.data?.task;
+      const committedTask: TaskRecord = {
+        ...optimisticTask,
+        updatedAt: String(savedTask?.updatedAt || optimisticTask.updatedAt || ''),
+        subtasks: Array.isArray(savedTask?.subtasks)
+          ? savedTask.subtasks.map((item: any, index: number) => ({
+              id: String(item?.id || task.id + '-subtask-' + index),
+              title: String(item?.title || ''),
+              completed: Boolean(item?.completed),
+            })).filter((item: { title: string }) => item.title)
+          : nextSubtasks,
+      };
+      setRecords((current) => current.map((item) => item.id === task.id ? committedTask : item));
+      setSelectedTask((current) => current?.id === task.id ? committedTask : current);
+      setNotice('Checklist progress saved to the server.');
+    } catch (error) {
+      rollback();
+      setNotice(error instanceof Error
+        ? error.message
+        : 'Checklist progress could not be saved. The previous state has been restored.');
+    } finally {
+      setUpdatingSubtaskId(null);
+    }
+  };
+
+  const deleteTask = async () => {
+    if (!canManageTasks || !deleteTaskTarget || deletingTaskId !== null) return;
+    const target = deleteTaskTarget;
+    setDeletingTaskId(target.id);
+    setDeleteTaskError(null);
+    try {
+      const response = await api.tasks.delete(target.id);
+      if (!response.success) throw new Error(response.error || 'Task could not be deleted.');
+      setRecords((current) => current.filter((item) => item.id !== target.id));
+      setSelectedIds((current) => current.filter((id) => id !== target.id));
+      setDeleteTaskTarget(null);
+      setNotice('Task deleted.');
+    } catch (error) {
+      setDeleteTaskError(error instanceof Error ? error.message : 'Task could not be deleted.');
+    } finally {
+      setDeletingTaskId(null);
     }
   };
 
@@ -1312,6 +1381,16 @@ export const TasksWorkspace: React.FC = () => {
                 Edit
               </Button>
             )}
+            {selectedTask && canManageTasks && (
+              <button
+                type="button"
+                onClick={() => { setDeleteTaskError(null); setDeleteTaskTarget(selectedTask); setSelectedTask(null); }}
+                className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-control border border-danger/25 bg-danger/5 px-3 text-xs font-semibold text-danger hover:bg-danger/10"
+                data-ams-slug="task-detail-delete"
+              >
+                Delete task
+              </button>
+            )}
             {selectedTask && canManageTasks && selectedTask.status !== 'done' && (
               <Button type="button" variant="primary" icon={<CheckCircle2 size={14} />} onClick={() => void updateTaskStatus(selectedTask, 'done')} data-ams-slug="task-detail-done">
                 Mark done
@@ -1388,12 +1467,22 @@ export const TasksWorkspace: React.FC = () => {
                 </div>
                 <div className="mt-3 space-y-2">
                   {selectedTask.subtasks.map(item => (
-                    <div key={item.id} data-ams-slug={selectedTask.slug + '-subtask-' + slugify(item.id)} className="flex items-start gap-2 rounded-control border border-line bg-panel px-3 py-2">
-                      <span className={'mt-0.5 h-4 w-4 shrink-0 rounded-full border ' + (item.completed ? 'border-success bg-success/10 text-success' : 'border-line text-muted')}>
-                        {item.completed ? <CheckCircle2 size={12} className="m-[1px]" /> : null}
+                    <button
+                      key={item.id}
+                      type="button"
+                      role="checkbox"
+                      aria-checked={item.completed}
+                      aria-label={(item.completed ? 'Mark incomplete: ' : 'Mark complete: ') + item.title}
+                      disabled={!canManageTasks || updatingSubtaskId !== null || updatingTaskId === selectedTask.id || bulkUpdating}
+                      onClick={() => void toggleTaskSubtask(selectedTask, item.id)}
+                      data-ams-slug={selectedTask.slug + '-subtask-' + slugify(item.id)}
+                      className="flex w-full min-h-9 items-start gap-2 rounded-control border border-line bg-panel px-3 py-2 text-left transition-colors hover:bg-bg disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <span className={'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ' + (item.completed ? 'border-success bg-success/10 text-success' : 'border-line text-muted')}>
+                        {item.completed ? <CheckCircle2 size={12} /> : null}
                       </span>
                       <span className={'text-xs leading-5 ' + (item.completed ? 'text-muted line-through' : 'text-fg')}>{item.title}</span>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -1426,6 +1515,28 @@ export const TasksWorkspace: React.FC = () => {
             )}
           </div>
         )}
+      </Modal>
+
+      <Modal
+        slug="task-delete-confirmation"
+        open={Boolean(deleteTaskTarget)}
+        onClose={() => { if (deletingTaskId === null) { setDeleteTaskTarget(null); setDeleteTaskError(null); } }}
+        size="sm"
+        title="Delete task?"
+        description={deleteTaskTarget ? deleteTaskTarget.title : undefined}
+        footer={(
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="secondary" onClick={() => { setDeleteTaskTarget(null); setDeleteTaskError(null); }} disabled={deletingTaskId !== null}>Cancel</Button>
+            <button type="button" onClick={() => void deleteTask()} disabled={deletingTaskId !== null} className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-control bg-danger px-3 text-xs font-semibold text-white disabled:opacity-50">
+              {deletingTaskId !== null ? 'Deleting…' : 'Delete task'}
+            </button>
+          </div>
+        )}
+      >
+        <div className="space-y-3">
+          <p className="text-xs leading-5 text-muted">This removes the task from the delivery queue. Tasks with recorded time entries cannot be deleted.</p>
+          {deleteTaskError && <div className="rounded-control border border-danger/25 bg-danger/5 px-3 py-2 text-xs text-danger" role="alert">{deleteTaskError}</div>}
+        </div>
       </Modal>
 
       <Drawer slug="task-edit-modal"
