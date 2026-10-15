@@ -554,12 +554,12 @@ export const AdminLayout: React.FC = () => {
                       : FINANCE_WORKBOOK_GROUPS.find((group) => group.items.some((item) => item.key === (routeQuery.get('tab') || 'executive-summary')))?.key || 'overview'
                   }
                   items={[
-                    { key: 'overview', label: 'Overview', to: '/admin/finance?tab=executive-summary' },
-                    { key: 'transactions', label: 'Transactions', to: '/admin/finance?tab=cash-bank' },
-                    { key: 'receivables', label: 'Invoices', to: '/admin/finance?tab=accounts-receivable' },
+                    { key: 'overview', label: 'Overview', to: '/admin/finance?tab=executive-summary', slug: 'finance-tab-overview-control' },
+                    { key: 'transactions', label: 'Transactions', to: '/admin/finance?tab=cash-bank', slug: 'finance-tab-transactions-cash' },
+                    { key: 'receivables', label: 'Invoices', to: '/admin/finance?tab=accounts-receivable', slug: 'finance-tab-receivables-payables' },
                     { key: 'expenses', label: 'Expenses', to: '/admin/finance?tab=accounts-payable' },
-                    { key: 'projects', label: 'Profit', to: '/admin/finance?tab=project-finance' },
-                    { key: 'accounting', label: 'Accounting', to: '/admin/finance?tab=journal' },
+                    { key: 'projects', label: 'Profit', to: '/admin/finance?tab=project-finance', slug: 'finance-tab-project-finance' },
+                    { key: 'accounting', label: 'Accounting', to: '/admin/finance?tab=journal', slug: 'finance-tab-accounting-reports' },
                     { key: 'quotes', label: 'Quotes', to: '/admin/proposals' },
                     { key: 'vendors', label: 'Vendors', to: '/admin/vendors' },
                     { key: 'approvals', label: 'Approvals', to: '/admin/approvals' },
