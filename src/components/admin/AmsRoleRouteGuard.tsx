@@ -19,9 +19,15 @@ interface AmsRoleRouteGuardProps {
  */
 export const AmsRoleRouteGuard: React.FC<AmsRoleRouteGuardProps> = ({ children }) => {
   const location = useLocation();
-  const role = getAmsRole(getAdminSession()?.user?.role);
+  const session = getAdminSession();
+  const role = getAmsRole(session?.user?.role);
+  const params = new URLSearchParams(location.search);
+  const isRequiredMfaEnrollmentRoute = Boolean(session?.user)
+    && session?.user?.mfaEnabled !== true
+    && location.pathname === '/admin/settings'
+    && params.get('tab') === 'security';
 
-  if (canAccessAmsRoute(role, location.pathname, location.search)) {
+  if (isRequiredMfaEnrollmentRoute || canAccessAmsRoute(role, location.pathname, location.search)) {
     return <>{children}</>;
   }
 
