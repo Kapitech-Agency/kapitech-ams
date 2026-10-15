@@ -38,6 +38,14 @@ export interface ProjectMilestone {
   paymentTrigger?: number; // amount in IDR
 }
 
+export interface ProjectResourceAllocation {
+  memberId: string;
+  memberName: string;
+  allocationPercent: number;
+  startDate: string;
+  endDate: string;
+}
+
 export interface AgencyProject {
   id: string;
   slug?: string;
@@ -55,6 +63,7 @@ export interface AgencyProject {
   targetEndDate: string;
   teamLead: string;
   teamMembers: string[];
+  resourceAllocations?: ProjectResourceAllocation[];
   techStack: string[];
   milestones: ProjectMilestone[];
   tasks: ProjectTask[];
