@@ -504,7 +504,9 @@ apiRouter.use(validateCsrf);
 const AUTH_ENDPOINTS_WITH_DEDICATED_LIMIT = new Set([
   '/auth/login',
   '/auth/firebase-login',
-  '/auth/mfa/verify'
+  '/auth/mfa/verify',
+  '/auth/me',
+  '/auth/logout'
 ]);
 
 apiRouter.use((req: AuthenticatedRequest, res: Response, next) => {
