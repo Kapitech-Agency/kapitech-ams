@@ -20,7 +20,7 @@ Verified from `README.md` and `package.json`:
 | Frontend | React 19, Vite 6, TypeScript, `react-router-dom` v7 | Function components, typed props, `NavLink` for nav active state |
 | Styling | **Tailwind CSS v4** via `@tailwindcss/vite` | Define tokens in CSS with `@theme`. There is **no** `tailwind.config.js`. |
 | Helpers | `clsx`, `tailwind-merge` | Use a `cn()` helper (`twMerge(clsx(...))`). Reuse it if it already exists in `src/lib`. |
-| Icons | `lucide-react` | The only icon set |
+| Icons | `@untitledui/icons` via `src/lib/untitled-ui-icon-bridge.tsx` | The only icon set. Existing `lucide-react` imports are routed through the Vite alias to this official Untitled UI bridge; keep using the bridge and add missing mappings there. |
 | Motion | `motion` (`import { motion } from "motion/react"`) | Not `framer-motion` |
 | Search | `fuse.js` | Client-side fuzzy search, e.g. the ⌘K palette |
 | Charts | **No chart library installed** | Build small SVG chart components, or propose a dependency and justify it before adding |
@@ -214,7 +214,7 @@ For every component define default, hover, focus-visible, active, and disabled s
 
 ### Sidebar
 - Background `--panel`, right border `--line`. Logo, then search field (opens the ⌘K palette), then nav.
-- Nav item: 8px 10px padding, radius 8, `--muted` text, `lucide-react` icon at 16px. Hover → `--text`.
+- Nav item: 8px 10px padding, radius 8, `--muted` text, Untitled UI icon at 16px through the shared icon bridge. Hover → `--text`.
 - **Active item** (use `NavLink`): 14% accent tint background, `--text` color, 2px inset accent bar on the left.
 - Sub-items indent 16px, size 12.
 - **Settings button** pinned to the bottom: ghost style, gear icon + "Settings" label, same size and states as a nav item. When collapsed it shows the icon only, with a tooltip.
@@ -387,7 +387,7 @@ Sidebar order proposal: Dashboard, Clients, Projects, Tasks, Team, Finance, Docu
 
 ## 10. Implementation rules
 
-- **Stack:** React 19 + TypeScript, Tailwind v4 (tokens via `@theme`), `lucide-react`, `motion`, `react-router-dom`, `fuse.js`, `clsx` + `tailwind-merge`. Do not add shadcn/ui, Radix, a chart library, or `framer-motion` without stating why.
+- **Stack:** React 19 + TypeScript, Tailwind v4 (tokens via `@theme`), `@untitledui/icons` (shared bridge + Vite alias for legacy imports), `motion`, `react-router-dom`, `fuse.js`, `clsx` + `tailwind-merge`. Do not add shadcn/ui, Radix, a chart library, or `framer-motion` without stating why.
 - **Structure (adapt to what exists):** `src/components/ui`, `src/components/layout`, `src/components/charts`, `src/pages`, `src/lib` (`cn`, formatters), `src/hooks`. Small, reusable, typed components.
 - **Theming:** `data-theme` on `<html>`; every component works in both themes.
 - **Data:** use the real API where it exists; otherwise keep mock data in one place with realistic, consistent numbers across KPIs, charts, and tables.
@@ -436,7 +436,7 @@ Sidebar order proposal: Dashboard, Clients, Projects, Tasks, Team, Finance, Docu
 You are working in the Kapitech Agency Management System repo (React 19, Vite, TypeScript, Tailwind v4, motion, Express API).
 First inspect src/index.css, src/components and src/lib, then follow AMS-DESIGN-SYSTEM.md strictly. Map existing tokens/components to it; do not duplicate.
 Dark-first UI with crimson (#DC143C) as the single accent; use the danger token (not crimson) for errors.
-Use Tailwind v4 @theme tokens, lucide-react icons, the motion package, and hand-built accessible components (no shadcn/Radix, no new chart library without justification).
+Use Tailwind v4 @theme tokens, official Untitled UI icons through `src/lib/untitled-ui-icon-bridge.tsx`, the motion package, and hand-built accessible components (no shadcn/Radix, no new chart library without justification). Existing `lucide-react` import paths are compatibility aliases only; do not introduce a second icon set.
 Respect roles, MFA and document-vault patterns; never expose secrets or storage URLs.
 Build responsive (1440 / 1024 / 768 / 390), support both themes, and finish by running the Definition of Done checklist (npm run lint and npm run build must pass). List assumptions at the end.
 ```
