@@ -565,6 +565,42 @@ export const GlobalExecutiveDashboard: React.FC = () => {
     return buildFinancialTrend(range, invoices, expenses);
   }, [previewFinancialTrend, financeSourcesAvailable, operationalSnapshot.invoices, operationalSnapshot.expenses, financeCurrency, range]);
 
+  const currentMonthKey = localDateKey(new Date()).slice(0, 7);
+  const liveProjectRows = operationalSnapshot.projects || [];
+  const activeProjectRows = liveProjectRows.filter((project: any) => !isFinishedWork(project.status) && !isFinishedWork(project.health));
+  const activeProjectBudgets = activeProjectRows.map((project: any) => Number(project.budget ?? project.totalBudget ?? 0)).filter((value: number) => Number.isFinite(value) && value > 0);
+  const averageActiveBudget = activeProjectBudgets.length
+    ? activeProjectBudgets.reduce((sum: number, value: number) => sum + value, 0) / activeProjectBudgets.length
+    : null;
+  const liveOverdueTaskCount = operationalSnapshot.tasks === null ? null : operationalSnapshot.tasks.filter((task: any) => {
+    const due = dateKey(task.dueDate || task.deadline);
+    return due && due < localDateKey(new Date()) && !isFinishedWork(task.status);
+  }).length;
+  const liveRiskProjectCount = operationalSnapshot.projects === null ? null : buildProjectDeliveryBreakdown(operationalSnapshot.projects).filter((item) => item.label !== 'No risk flag').reduce((sum, item) => sum + item.value, 0);
+  const liveCashCollected = operationalSnapshot.invoices === null ? null : operationalSnapshot.invoices.reduce((sum: number, invoice: any) => {
+    if (String(invoice.currency || 'IDR').toUpperCase() !== financeCurrency) return sum;
+    const payments = Array.isArray(invoice.payments) ? invoice.payments : [];
+    return sum + payments.filter((payment: any) => String(payment.date || '').slice(0, 7) === currentMonthKey).reduce((paymentSum: number, payment: any) => paymentSum + Math.max(0, Number(payment.amount) || 0), 0);
+  }, 0);
+  const liveOutstanding = operationalSnapshot.invoices === null ? null : operationalSnapshot.invoices.reduce((sum: number, invoice: any) => {
+    if (String(invoice.currency || 'IDR').toUpperCase() !== financeCurrency || ['draft', 'cancelled', 'canceled', 'voided', 'deleted', 'paid'].includes(String(invoice.status || '').toLowerCase())) return sum;
+    const balance = invoice.balanceDue != null
+      ? Math.max(0, Number(invoice.balanceDue) || 0)
+      : Math.max(0, (Number(invoice.total ?? invoice.amount ?? 0) || 0) - (Number(invoice.amountPaid ?? invoice.paidAmount ?? 0) || 0));
+    return sum + balance;
+  }, 0);
+  const liveMonthlyExpenses = operationalSnapshot.expenses === null ? null : operationalSnapshot.expenses.reduce((sum: number, expense: any) => {
+    if (String(expense.currency || 'IDR').toUpperCase() !== financeCurrency || String(expense.date || '').slice(0, 7) !== currentMonthKey || ['voided', 'cancelled', 'canceled', 'deleted'].includes(String(expense.status || '').toLowerCase())) return sum;
+    return sum + Math.max(0, Number(expense.amount) || 0);
+  }, 0);
+  const liveCashDifference = liveCashCollected !== null && liveMonthlyExpenses !== null ? liveCashCollected - liveMonthlyExpenses : null;
+  const activeProjectsMetric = dashboardOverview.metrics?.activeProjects ?? (operationalSnapshot.projects !== null ? activeProjectRows.length : fixtureMode ? 12 : null);
+  const overdueTasksMetric = dashboardOverview.metrics?.overdueTasks ?? liveOverdueTaskCount ?? (fixtureMode ? 3 : null);
+  const projectsAtRiskMetric = dashboardOverview.metrics?.projectsAtRisk ?? liveRiskProjectCount ?? (fixtureMode ? 3 : null);
+  const cashCollectedMetric = dashboardOverview.financials?.cashCollected ?? dashboardOverview.financials?.revenueThisMonth ?? liveCashCollected;
+  const outstandingMetric = dashboardOverview.financials?.outstandingReceivables ?? liveOutstanding;
+  const cashDifferenceMetric = dashboardOverview.financials?.netOperatingProfit ?? liveCashDifference;
+
   return (
     <AdminPageShell featureSlug="dashboard-module" className="ams-dashboard">
       <AdminModuleHeader slug="dashboard-header"
@@ -623,42 +659,38 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             metrics={[
               {
                 id: 'active-projects', label: 'Active projects',
-                value: dashboardOverview.metrics?.activeProjects != null ? String(dashboardOverview.metrics.activeProjects) : fixtureMode ? '12' : '—',
-                context: dashboardOverview.metrics?.activeProjects != null ? 'Live data' : fixtureMode ? 'Preview data' : dashboardOverview.loading ? 'Loading live data' : 'Live data unavailable',
-                sparkline: fixtureMode ? [8, 9, 10, Number(dashboardOverview.metrics?.activeProjects ?? 12)] : undefined,
+                value: activeProjectsMetric != null ? String(activeProjectsMetric) : '—',
+                context: dashboardOverview.metrics?.activeProjects != null || operationalSnapshot.projects !== null ? 'Live project records' : fixtureMode ? 'Preview data' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
+                sparkline: fixtureMode && operationalSnapshot.projects === null ? [8, 9, 10, Number(activeProjectsMetric ?? 12)] : undefined,
                 icon: <FolderKanban size={15} />, toneClassName: 'text-success', slug: 'dashboard-active-projects'
               },
               {
                 id: 'tasks-due', label: 'Overdue tasks',
-                value: dashboardOverview.metrics?.overdueTasks != null ? String(dashboardOverview.metrics.overdueTasks) : fixtureMode ? '3' : '—',
-                context: dashboardOverview.metrics?.overdueTasks != null ? 'Live data' : fixtureMode ? 'Preview data' : dashboardOverview.loading ? 'Loading live data' : 'Live data unavailable',
-                sparkline: fixtureMode ? [6, 5, 4, Number(dashboardOverview.metrics?.overdueTasks ?? 3)] : undefined,
+                value: overdueTasksMetric != null ? String(overdueTasksMetric) : '—',
+                context: dashboardOverview.metrics?.overdueTasks != null || operationalSnapshot.tasks !== null ? 'Open tasks past due date' : fixtureMode ? 'Preview data' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
+                sparkline: fixtureMode && operationalSnapshot.tasks === null ? [6, 5, 4, Number(overdueTasksMetric ?? 3)] : undefined,
                 icon: <CalendarDays size={15} />, toneClassName: 'text-info', slug: 'dashboard-tasks-overdue'
               },
               {
                 id: 'overdue', label: 'Projects at risk',
-                value: dashboardOverview.metrics?.projectsAtRisk != null ? String(dashboardOverview.metrics.projectsAtRisk) : fixtureMode ? '3' : '—',
-                change: dashboardOverview.metrics?.projectsAtRisk != null || fixtureMode ? 'Requires attention' : undefined,
+                value: projectsAtRiskMetric != null ? String(projectsAtRiskMetric) : '—',
+                change: projectsAtRiskMetric != null || fixtureMode ? 'Requires attention' : undefined,
                 changeToneClassName: 'text-danger',
-                sparkline: fixtureMode ? [6, 5, 4, Number(dashboardOverview.metrics?.projectsAtRisk ?? 3)] : undefined,
+                sparkline: fixtureMode && operationalSnapshot.projects === null ? [6, 5, 4, Number(projectsAtRiskMetric ?? 3)] : undefined,
                 icon: <AlertTriangle size={15} />, toneClassName: 'text-danger', slug: 'dashboard-projects-risk'
               },
               {
-                id: 'revenue', label: 'Monthly revenue',
-                value: dashboardOverview.financials?.revenueThisMonth != null
-                  ? formatLiveMoney(Number(dashboardOverview.financials.revenueThisMonth), String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase())
-                  : fixtureMode ? formatLiveMoney(84500, String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase()) : '—',
-                context: dashboardOverview.financials?.revenueThisMonth != null ? 'Current month · live data' : fixtureMode ? 'Preview data' : dashboardOverview.loading ? 'Loading live data' : 'Live data unavailable',
-                sparkline: fixtureMode ? sampleRevenueByRange[range].map((point) => point.primary) : undefined,
+                id: 'revenue', label: 'Cash collected this month',
+                value: cashCollectedMetric != null ? formatLiveMoney(Number(cashCollectedMetric), financeCurrency) : fixtureMode ? formatLiveMoney(84500, financeCurrency) : '—',
+                context: dashboardOverview.financials?.cashCollected != null || dashboardOverview.financials?.revenueThisMonth != null || liveCashCollected !== null ? 'Recorded invoice payments' : fixtureMode ? 'Preview data' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
+                sparkline: fixtureMode && liveCashCollected === null ? sampleRevenueByRange[range].map((point) => point.primary) : undefined,
                 icon: <CircleDollarSign size={15} />, toneClassName: 'text-success', slug: 'dashboard-revenue'
               },
               {
                 id: 'outstanding', label: 'Outstanding invoices',
-                value: dashboardOverview.financials?.outstandingReceivables != null
-                  ? formatLiveMoney(Number(dashboardOverview.financials.outstandingReceivables), String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase())
-                  : fixtureMode ? formatLiveMoney(32400, String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase()) : '—',
-                context: dashboardOverview.financials?.outstandingReceivables != null ? 'Live receivables' : fixtureMode ? 'Preview data' : dashboardOverview.loading ? 'Loading live data' : 'Live data unavailable',
-                sparkline: fixtureMode ? [22, 25, 28, 32.4] : undefined,
+                value: outstandingMetric != null ? formatLiveMoney(Number(outstandingMetric), financeCurrency) : fixtureMode ? formatLiveMoney(32400, financeCurrency) : '—',
+                context: dashboardOverview.financials?.outstandingReceivables != null || liveOutstanding !== null ? 'Open invoice balances' : fixtureMode ? 'Preview data' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
+                sparkline: fixtureMode && liveOutstanding === null ? [22, 25, 28, 32.4] : undefined,
                 icon: <ReceiptText size={15} />, toneClassName: 'text-warning', slug: 'dashboard-outstanding'
               },
               {
@@ -669,21 +701,17 @@ export const GlobalExecutiveDashboard: React.FC = () => {
                 icon: <Users size={15} />, toneClassName: 'text-warning', slug: 'dashboard-utilization'
               },
               {
-                id: 'avg-project-value', label: 'Avg. project value',
-                value: dashboardOverview.metrics?.totalBilled != null && dashboardOverview.metrics?.activeProjects != null
-                  ? formatLiveMoney(Number(dashboardOverview.metrics.totalBilled) / Math.max(1, Number(dashboardOverview.metrics.activeProjects)), String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase())
-                  : fixtureMode ? '$29.8k' : '—',
-                context: dashboardOverview.metrics?.totalBilled != null && dashboardOverview.metrics?.activeProjects != null ? 'Live project base' : fixtureMode ? 'Preview data' : dashboardOverview.loading ? 'Loading live data' : 'Live data unavailable',
-                sparkline: fixtureMode ? [24, 25.5, 28, 29.8] : undefined,
+                id: 'avg-project-value', label: 'Avg. active project budget',
+                value: averageActiveBudget != null ? formatLiveMoney(averageActiveBudget, financeCurrency) : fixtureMode ? '$29.8k' : '—',
+                context: averageActiveBudget != null ? 'Average of active project budgets' : fixtureMode ? 'Preview data' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live project budgets unavailable',
+                sparkline: fixtureMode && averageActiveBudget === null ? [24, 25.5, 28, 29.8] : undefined,
                 icon: <FolderKanban size={15} />, toneClassName: 'text-fg', slug: 'dashboard-avg-project-value'
               },
               {
-                id: 'net-operating-profit', label: 'Net operating profit',
-                value: dashboardOverview.financials?.netOperatingProfit != null
-                  ? formatLiveMoney(Number(dashboardOverview.financials.netOperatingProfit), String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase())
-                  : fixtureMode ? formatLiveMoney(32300, String(dashboardOverview.financials?.currency || dashboardOverview.metrics?.currency || 'IDR').toUpperCase()) : '—',
-                context: dashboardOverview.financials?.netOperatingProfit != null ? 'Current month · live data' : fixtureMode ? 'Preview data' : dashboardOverview.loading ? 'Loading live data' : 'Live data unavailable',
-                sparkline: fixtureMode ? [19600, 22600, 28800, 32300] : undefined,
+                id: 'net-operating-profit', label: 'Cash surplus / deficit',
+                value: cashDifferenceMetric != null ? formatLiveMoney(Number(cashDifferenceMetric), financeCurrency) : fixtureMode ? formatLiveMoney(32300, financeCurrency) : '—',
+                context: dashboardOverview.financials?.netOperatingProfit != null || liveCashDifference !== null ? 'Cash collected less recorded expenses; not posted profit' : fixtureMode ? 'Preview data' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live financial data unavailable',
+                sparkline: fixtureMode && liveCashDifference === null ? [19600, 22600, 28800, 32300] : undefined,
                 icon: <CircleDollarSign size={15} />,
                 toneClassName: dashboardOverview.financials?.netOperatingProfit != null
                   ? Number(dashboardOverview.financials.netOperatingProfit) >= 0 ? 'text-success' : 'text-danger'
