@@ -7,16 +7,20 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (file: string) => fs.readFile(path.join(root, file), 'utf8');
 
-test('Settings subtabs use short labels on mobile while desktop tabs live in the topbar', async () => {
+test('Settings subsections are in the pinned sidebar dropdown and page controls remain responsive', async () => {
   const source = await read('src/pages/admin/AdminSettings.tsx');
   const layout = await read('src/pages/admin/AdminLayout.tsx');
+  const sidebar = await read('src/components/admin/DynamicAdminSidebar.tsx');
+  const navigation = await read('src/lib/amsModuleSubnavigation.ts');
 
   assert.ok(source.includes('data-ams-slug="settings-tabs"'));
   assert.ok(source.includes('className="min-[900px]:hidden min-w-0" data-ams-slug="settings-tabs"'));
   for (const label of ['Backup', 'Audit', 'Access', 'Integrations', 'Readiness']) {
-    assert.ok(source.includes("label: '" + label + "'"), 'Missing Settings tab: ' + label);
+    assert.ok(navigation.includes("label: '" + label + "'"), 'Missing Settings submenu: ' + label);
   }
-  assert.ok(layout.includes('ariaLabel="Settings sections"'));
+  assert.equal(layout.includes('ariaLabel="Settings sections"'), false);
+  assert.ok(sidebar.includes('data-ams-nav-expand="settings"'));
+  assert.ok(sidebar.includes('aria-controls="ams-sidebar-submenu-settings"'));
 });
 
 test('MFA setup stays reachable without admin rights while routine security access remains permission-gated', async () => {
