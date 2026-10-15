@@ -303,6 +303,7 @@ export function isNavigationItemActive(
   switch (item.key) {
     case 'dashboard':
       return path === '/admin/dashboard'
+        || path === '/admin/navigation/live-activity'
         || (path === '/admin/tasks' && params.get('taskscope') === 'my' && params.get('workspace') !== 'project');
     case 'crm':
       return ['/admin/crm', '/admin/inbox', '/admin/clients', '/admin/clients/all-clients', '/admin/clients/sla-monitoring', '/admin/contracts'].includes(path);
