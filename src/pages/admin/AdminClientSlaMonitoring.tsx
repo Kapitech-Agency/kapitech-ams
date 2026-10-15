@@ -161,9 +161,9 @@ export const AdminClientSlaMonitoring: React.FC = () => {
           ariaLabel="Clients sections"
           activeKey="sla-monitoring"
           items={[
-            { key: 'all-clients', label: 'All Clients', to: '/admin/clients' },
-            { key: 'retainers', label: 'Retainers', to: '/admin/clients/retainers' },
-            { key: 'sla-monitoring', label: 'SLA', to: '/admin/clients/sla-monitoring' },
+            { key: 'all-clients', label: 'Client Directory', to: '/admin/clients' },
+            { key: 'retainers', label: 'Retainer Plans', to: '/admin/clients/retainers' },
+            { key: 'sla-monitoring', label: 'Service Health', to: '/admin/clients/sla-monitoring' },
           ].filter((item) => item.key !== 'lead-accounts' || hasAdminPermission('canManageCrm'))}
         />
       </div>
