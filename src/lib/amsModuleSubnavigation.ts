@@ -119,6 +119,10 @@ export function isAmsModuleSubnavigationItemActive(
   const params = new URLSearchParams(search);
   const target = new URL(item.to, 'https://ams.kapitech.local');
   const targetPath = target.pathname.replace(/\\/+$/, '') || '/';
+
+  if (item.key === 'tasks' && path === '/admin/dashboard') {
+    return params.get('view') === 'tasks';
+  }
   if (path !== targetPath) return false;
 
   if (item.key === 'overview' && path === '/admin/dashboard') {
