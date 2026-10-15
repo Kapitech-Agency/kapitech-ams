@@ -93,7 +93,7 @@ export const GlobalTimerControl: React.FC<{ userId?: string }> = ({ userId }) =>
     if (!startDialogOpen) return;
     let cancelled = false;
     setProjectsLoading(true);
-    void api.projects.getAll()
+    void api.timeLogs.getOptions()
       .then((response: any) => {
         if (cancelled) return;
         const rows = Array.isArray(response?.data?.projects) ? response.data.projects : [];
