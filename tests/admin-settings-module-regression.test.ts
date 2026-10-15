@@ -7,14 +7,16 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (file: string) => fs.readFile(path.join(root, file), 'utf8');
 
-test('Settings section navigation remains visible on desktop and mobile', async () => {
+test('Settings subtabs use short labels on mobile while desktop tabs live in the topbar', async () => {
   const source = await read('src/pages/admin/AdminSettings.tsx');
+  const layout = await read('src/pages/admin/AdminLayout.tsx');
 
   assert.ok(source.includes('data-ams-slug="settings-tabs"'));
-  assert.ok(!source.includes('min-[900px]:hidden'));
-  for (const label of ['Overview & Backups', 'Audit Logs', 'Security & MFA', 'Integrations']) {
+  assert.ok(source.includes('className="min-[900px]:hidden min-w-0" data-ams-slug="settings-tabs"'));
+  for (const label of ['Backup', 'Audit', 'Access', 'Integrations', 'Readiness']) {
     assert.ok(source.includes("label: '" + label + "'"), 'Missing Settings tab: ' + label);
   }
+  assert.ok(layout.includes('ariaLabel="Settings sections"'));
 });
 
 test('MFA setup stays reachable without admin rights while routine security access remains permission-gated', async () => {
