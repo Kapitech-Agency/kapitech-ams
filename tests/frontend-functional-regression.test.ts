@@ -34,12 +34,15 @@ test('finance read access and invoice mutation access match server permissions',
   assert.match(routes, /apiRouter\.post\('\/finance\/invoices', requireAuth, requirePermission\('canManageInvoices'\)/);
 });
 
-test('combined Team workspace applies permission guard for selected view', async () => {
+test('Team legacy links redirect to distinct permission-checked workspaces', async () => {
   const app = await read('src/App.tsx');
-  assert.match(app, /const TeamWorkspaceRoute:[\s\S]*?new URLSearchParams\(location\.search\)\.get\('view'\)/);
-  assert.match(app, /view === 'vendor-directory' \|\| view === 'skill-matrix'/);
-  assert.match(app, /const moduleKey = isVendorWorkspace \? 'vendors' : 'timelogs'/);
-  assert.match(app, /<Route path="team" element=\{<TeamWorkspaceRoute \/>\} \/>/);
+  assert.match(app, /const TeamWorkspaceRoute:[\s\S]*?requestedView === 'vendor-directory'/);
+  assert.match(app, /requestedView === 'skill-matrix'/);
+  assert.match(app, /requestedView === 'time-logs'/);
+  assert.ok(app.includes('<Route path="team" element={<TeamWorkspaceRoute />} />'));
+  assert.ok(app.includes('<Route path="time-logs" element={<ModuleRoute moduleKey="timelogs" moduleLabel="Time"><AdminTimeLogs /></ModuleRoute>} />'));
+  assert.ok(app.includes('<Route path="vendors" element={<VendorWorkspaceRoute />} />'));
+  assert.ok(app.includes('<ModuleRoute moduleKey="vendors" moduleLabel="Vendors">'));
 });
 
 test('Projects accepts valid empty server lists and never falls back to demo records in production', async () => {
@@ -237,7 +240,8 @@ test('team directory assignee lookup allows project managers without task-mutati
   assert.match(handler, /requireAnyPermission\('canManageProjects', 'canManageKanbanTasks'\)/);
   assert.match(handler, /username: user\.username/);
   assert.match(handler, /division: user\.division/);
-  assert.match(app, /const moduleKey = isVendorWorkspace \? 'vendors' : 'timelogs'/);
+  assert.ok(app.includes('<Route path="time-logs" element={<ModuleRoute moduleKey="timelogs" moduleLabel="Time"><AdminTimeLogs /></ModuleRoute>} />'));
+  assert.ok(app.includes('<ModuleRoute moduleKey="vendors" moduleLabel="Vendors">'));
 });
 
 
