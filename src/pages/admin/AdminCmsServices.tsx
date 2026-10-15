@@ -374,7 +374,7 @@ export const AdminCmsServices: React.FC = () => {
               type="button"
               variant="primary"
               icon={<Plus size={14} />}
-              onClick={() => setIsAddModalOpen(true)}
+              onClick={() => openServiceEditor()}
             >
               Add service
             </Button>
@@ -517,7 +517,7 @@ export const AdminCmsServices: React.FC = () => {
           <p className="text-sm font-semibold text-fg">{servicesList.length === 0 ? 'No services yet' : 'No matching services'}</p>
           <p className="mt-1 text-xs leading-5 text-muted">{servicesList.length === 0 ? 'Add a service before publishing it to the public site.' : 'Adjust the search or category filter.'}</p>
           {servicesList.length === 0 && (
-            <button type="button" onClick={() => setIsAddModalOpen(true)} className="mt-4 min-h-10 rounded-control bg-accent px-3 text-xs font-medium text-white hover:bg-accent-hover">Add service</button>
+            <button type="button" onClick={() => openServiceEditor()} className="mt-4 min-h-10 rounded-control bg-accent px-3 text-xs font-medium text-white hover:bg-accent-hover">Add service</button>
           )}
         </div>
       ) : (
@@ -528,7 +528,7 @@ export const AdminCmsServices: React.FC = () => {
               <tr className="border-b border-line bg-bg text-[10px] font-medium text-muted">
                 <th className="px-4 py-3">Service</th>
                 <th className="px-4 py-3">Category</th>
-                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Publication</th>
                 <th className="px-4 py-3">Capabilities</th>
                 <th className="px-4 py-3">Slug</th>
                 <th className="px-4 py-3 text-right">Actions</th>
@@ -547,7 +547,19 @@ export const AdminCmsServices: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-4 py-2.5"><span className="inline-flex rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{item.category}</span></td>
-                  <td className="px-4 py-2.5"><span className="inline-flex rounded-badge border border-success/20 bg-success/10 px-2 py-1 text-[10px] font-semibold text-success">{item.badgeId || item.badge || 'Active'}</span></td>
+                  <td className="px-4 py-2.5">
+                    <button
+                      type="button"
+                      disabled={!item.id || publishingServiceId === item.id}
+                      onClick={() => void handleTogglePublished(item)}
+                      aria-pressed={item.isPublished === true}
+                      className={'inline-flex min-h-7 items-center gap-1.5 rounded-badge border px-2 py-1 text-[10px] font-semibold disabled:cursor-not-allowed disabled:opacity-50 ' + (item.isPublished === true ? 'border-success/20 bg-success/10 text-success' : 'border-line bg-bg text-muted')}
+                      title={item.isPublished === true ? 'Unpublish from website' : 'Publish to website'}
+                    >
+                      {publishingServiceId === item.id ? 'Saving…' : item.isPublished === true ? 'Published' : 'Draft'}
+                    </button>
+                    <p className="mt-1 text-[9px] text-muted">Badge: {item.badgeId || item.badge || '—'}</p>
+                  </td>
                   <td className="max-w-[250px] px-4 py-2.5">
                     <div className="flex flex-wrap gap-1">
                       {item.capabilities.slice(0, 2).map((cap, index) => <span key={index} className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] text-muted">{cap.title || cap.titleId}</span>)}
@@ -558,6 +570,7 @@ export const AdminCmsServices: React.FC = () => {
                   <td className="px-4 py-2.5">
                     <div className="flex items-center justify-end gap-1.5">
                       <button type="button" onClick={() => setSelectedServiceForDetail(item)} className="inline-flex h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-fg hover:bg-panel focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"><Eye size={12} />Inspect</button>
+                      <button type="button" disabled={!item.id} onClick={() => openServiceEditor(item)} className="inline-flex h-8 items-center gap-1.5 rounded-control border border-line bg-bg px-2.5 text-[10px] font-medium text-fg hover:bg-panel disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"><Edit3 size={12} />Edit</button>
                       <a href={`https://kapitech.id/services/${item.slug}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center gap-1.5 rounded-control border border-accent/25 bg-accent/10 px-2.5 text-[10px] font-medium text-accent-text hover:bg-accent/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"><ExternalLink size={11} />Live</a>
                     </div>
                   </td>
@@ -647,13 +660,15 @@ export const AdminCmsServices: React.FC = () => {
               <Button
                 type="button"
                 variant="destructive"
-                onClick={() => handleDeleteService(selectedServiceForDetail.slug)}
+                onClick={() => handleDeleteService(selectedServiceForDetail)}
                 icon={<Trash2 size={13} />}
               >
                 Delete Offering
               </Button>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <Button type="button" variant="secondary" onClick={() => { const service = selectedServiceForDetail; setSelectedServiceForDetail(null); openServiceEditor(service); }}><Edit3 size={13} /> Edit service</Button>
+                <Button type="button" variant="secondary" loading={publishingServiceId === selectedServiceForDetail.id} disabled={!selectedServiceForDetail.id || publishingServiceId !== null} onClick={() => void handleTogglePublished(selectedServiceForDetail)}>{selectedServiceForDetail.isPublished === true ? 'Unpublish' : 'Publish'}</Button>
                 <Button type="button" variant="secondary" onClick={() => setSelectedServiceForDetail(null)}>Close</Button>
                 <a
                   href={`https://kapitech.id/services/${selectedServiceForDetail.slug}`}
@@ -673,18 +688,18 @@ export const AdminCmsServices: React.FC = () => {
       {/* Add New Service Modal */}
       <Drawer slug="cms-service-editor-drawer"
         open={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+        onClose={resetServiceEditor}
         size="lg"
-        title="Add agency service"
-        description="Create a service entry for the public agency catalog."
+        title={editingService ? 'Edit agency service' : 'Add agency service'}
+        description={editingService ? 'Update the service while preserving rich content fields not shown in this editor.' : 'Create a service entry for the public agency catalog.'}
         footer={(
           <>
-            <Button type="button" variant="secondary" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
-            <Button type="submit" form="service-form">Publish Service</Button>
+            <Button type="button" variant="secondary" onClick={resetServiceEditor} disabled={savingService}>Cancel</Button>
+            <Button type="submit" form="service-form" loading={savingService} disabled={savingService}>{newIsPublished ? 'Save & publish' : 'Save draft'}</Button>
           </>
         )}
       >
-            <form id="service-form" data-ams-feature-slug="cms-service-form" data-ams-slug="cms-service-form" onSubmit={handleCreateService} className="space-y-4 text-xs font-sans">
+            <form id="service-form" data-ams-feature-slug="cms-service-form" data-ams-slug="cms-service-form" onSubmit={handleSaveService} className="space-y-4 text-xs font-sans">
               <div>
                 <label className="block text-muted mb-1 font-medium">Service Title *</label>
                 <input
@@ -693,7 +708,7 @@ export const AdminCmsServices: React.FC = () => {
                   value={newTitle}
                   onChange={(e) => {
                     setNewTitle(e.target.value);
-                    setNewSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '-'));
+                    if (!editingService || !newSlug) setNewSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''));
                   }}
                   placeholder="e.g. Enterprise SEO & Core Web Vitals"
                   className="ams-control w-full text-xs"
@@ -762,7 +777,7 @@ export const AdminCmsServices: React.FC = () => {
                 <div className="space-y-1.5 max-h-32 overflow-y-auto custom-scrollbar">
                   {tempCapabilities.map((cap, idx) => (
                     <div key={idx} className="flex items-center justify-between p-2 rounded-control bg-panel border border-line text-[11px]">
-                      <span className="text-fg truncate">{cap}</span>
+                      <span className="text-fg truncate">{cap.title || cap.titleId}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveTempCapability(idx)}
@@ -775,6 +790,13 @@ export const AdminCmsServices: React.FC = () => {
                 </div>
               </div>
 
+              <label className="flex items-start gap-2 rounded-control border border-line bg-panel p-3">
+                <input type="checkbox" checked={newIsPublished} onChange={(event) => setNewIsPublished(event.target.checked)} className="mt-0.5 h-4 w-4 accent-accent" />
+                <span>
+                  <span className="block text-xs font-medium text-fg">Publish on public website</span>
+                  <span className="mt-0.5 block text-[10px] leading-4 text-muted">{newIsPublished ? 'This service will be visible in the public service catalog after saving.' : 'Save as draft. The service remains in AMS and is hidden from public service responses.'}</span>
+                </span>
+              </label>
             </form>
       </Drawer>
 
