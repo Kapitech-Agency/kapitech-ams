@@ -52,14 +52,15 @@ test('Admin projects mutation actions stay behind their permissions', () => {
   assert.ok(!source.includes('Legacy regression guard:'));
 });
 
-test('Admin topbar no longer exposes the retired standalone Finance tabs', () => {
+test('Finance subtabs live in the Finance module topbar and retired routes stay hidden', () => {
   const source = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminLayout.tsx'), 'utf8');
   assert.equal(source.includes("location.pathname === '/admin/invoicing'"), false);
-  assert.equal(source.includes('Finance sections'), false);
+  assert.ok(source.includes('ariaLabel="Finance sections"'));
+  assert.ok(source.includes('const isFinanceModuleRoute = ['));
+  assert.ok(source.includes("label: 'Transactions', to: '/admin/finance?tab=cash-bank'"));
+  assert.ok(source.includes("label: 'Invoices', to: '/admin/finance?tab=accounts-receivable'"));
+  assert.ok(source.includes("label: 'Accounting', to: '/admin/finance?tab=journal'"));
   assert.equal(source.includes("to: '/admin/invoicing?finance="), false);
-  assert.ok(source.includes("location.pathname === '/admin/finance'"));
-  assert.ok(source.includes("label: t('admin.finance.tab.transactionsCash')"));
-  assert.ok(source.includes("label: t('admin.finance.tab.receivablesPayables')"));
 });
 test('Authenticated AMS pages use one canonical responsive page frame', () => {
   const primitives = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/AdminModulePrimitives.tsx'), 'utf8');
@@ -446,22 +447,19 @@ test('Sidebar visibility follows the canonical role route policy and hierarchy',
   assert.equal((layout.match(/<DynamicAdminSidebarNavigation\b/g) || []).length, 2, 'Desktop and mobile use the same navigation list.');
   assert.equal((layout.match(/<AdminSystemSettingsNavigation\b/g) || []).length, 2, 'Desktop and mobile keep the separated system block in the footer.');
   assert.ok(sidebar.includes("if (role !== 'Admin') return null;"));
-  assert.ok(sidebar.includes('getNavigationGroupsForRole(role)'));
+  assert.ok(sidebar.includes('getPrimaryNavigationForRole(role)'));
   assert.ok(primitives.includes('items.filter(canRenderNavigationTab).map((item) => {'));
   assert.ok(navigation.includes('export function canAccessAmsRoute'));
   assert.ok(navigation.includes('export function isNavigationItemActive'));
 
-  const expectedItems = [
-    "label: 'Executive Agency Overview'",
-    "label: 'Personal Workspace / My Hub'",
-    "label: 'Sales & Deal Pipeline'",
-    "label: 'Client Onboarding Framework'",
-    "label: 'Task & Deliverables Engine'",
-    "label: 'Retainer Manager & Hours Pool'",
-    "label: 'Quotations & Proposals Builder'",
-    "label: 'Expense & Vendor Ledger'",
-    "label: 'Insight Editorial Packs'",
-    "label: 'Portfolio & Testimonial Quarantine Registry'",
+  const expectedSidebarModules = [
+    "label: 'Dashboard'",
+    "label: 'CRM'",
+    "label: 'Projects'",
+    "label: 'Finance'",
+    "label: 'CMS'",
   ];
-  for (const label of expectedItems) assert.ok(navigation.includes(label), 'Missing navigation item ' + label);
+  for (const label of expectedSidebarModules) assert.ok(navigation.includes(label), 'Missing primary module ' + label);
+  assert.ok(sidebar.includes('AMS_PRIMARY_SETTINGS_ITEM'));
+  assert.ok(sidebar.includes('getPrimaryNavigationForRole(role)'));
 });
