@@ -542,3 +542,20 @@ test('Resource Planning assignments persist on project records and distinguish t
   assert.match(teams, /Capacity &amp; Allocation/);
   assert.match(routes, /pickFields\(updates, \['title','name','client','clientId','clientName','clientCompany','clientEmail','serviceCategory','status','health','budget','progressPercent','startDate','targetEndDate','teamLead','teamMembers'/);
 });
+
+
+test('Global timer uses scoped project options and enforces assigned-task ownership on the server', async () => {
+  const routes = await read('server/routes.ts');
+  const apiClient = await read('src/lib/apiClient.ts');
+  const timer = await read('src/components/admin/GlobalTimerControl.tsx');
+
+  assert.ok(routes.includes("apiRouter.get('/projects/timelog-options', requireAuth"));
+  assert.ok(routes.includes('canManageTimeLogsAcrossProjects(req.user!)'));
+  assert.ok(routes.includes('isTimeLogTaskAssignedToUser(task, req.user!)'));
+  assert.ok(routes.includes('You can only log time against tasks assigned to your account.'));
+  assert.ok(routes.includes("apiRouter.post('/projects/timelogs', requireAuth, async"));
+  assert.ok(apiClient.includes("'/api/projects/timelog-options'"));
+  assert.ok(timer.includes('api.timeLogs.getOptions()'));
+  assert.ok(timer.includes('api.timeLogs.create({'));
+  assert.ok(timer.includes('The timer remains active; retry Stop to try again.'));
+});
