@@ -20,7 +20,7 @@ interface AmsRoleRouteGuardProps {
 export const AmsRoleRouteGuard: React.FC<AmsRoleRouteGuardProps> = ({ children }) => {
   const location = useLocation();
   const session = getAdminSession();
-  const role = getAmsRole(session?.user?.role);
+  const role = getAmsRole(session?.user);
   const params = new URLSearchParams(location.search);
   const isRequiredMfaEnrollmentRoute = Boolean(session?.user)
     && session?.user?.mfaEnabled !== true
