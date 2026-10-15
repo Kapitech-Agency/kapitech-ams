@@ -7,7 +7,7 @@ import {
   getNavigationGroupsForRole,
 } from '../src/lib/amsNavigationAccess';
 
-test('immutable Master identity receives the full Admin navigation profile', () => {
+test('immutable Master identity receives every flat functional group and a separate Admin System Center link', () => {
   const master = {
     id: 'usr_root_admin',
     role: 'Tier 1: Top Management / Sponsor',
@@ -15,12 +15,20 @@ test('immutable Master identity receives the full Admin navigation profile', () 
   };
 
   assert.equal(getAmsRole(master), 'Admin');
-  assert.equal(getNavigationGroupsForRole(getAmsRole(master)).length, 6);
-  assert.equal(getNavigationGroupsForRole(getAmsRole(master)).at(-1)?.key, 'system-settings');
+  const groups = getNavigationGroupsForRole(getAmsRole(master));
+  assert.equal(groups.length, 5);
+  assert.deepEqual(groups.map((group) => group.label), [
+    'OPERATIONAL OVERVIEW',
+    'CLIENT & PIPELINE',
+    'DELIVERY & OPERATIONS',
+    'FINANCE & LEDGER',
+    'MARKETING CMS',
+  ]);
   assert.equal(AMS_SYSTEM_SETTINGS_ITEMS.length, 3);
+  assert.ok(AMS_SYSTEM_SETTINGS_ITEMS.every((item) => item.allowedRoles.length === 1 && item.allowedRoles[0] === 'Admin'));
 });
 
-test('Master Admin route guard allows direct access to all AMS workspaces and System Settings', () => {
+test('Master Admin route guard allows direct access to all AMS workspaces and System Center', () => {
   const role = getAmsRole({
     id: 'usr_root_admin',
     role: 'Tier 1: Top Management / Sponsor',
