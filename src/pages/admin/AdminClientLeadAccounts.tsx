@@ -26,7 +26,6 @@ import { AdminFilterBar, AdminModuleHeader, AdminPageShell, AdminStatusBadge, Ad
 import { api } from '../../lib/apiClient';
 import { isSlugFixtureMode } from '../../lib/runtimeMode';
 import { hasAdminPermission } from '../../lib/adminAuth';
-import { hasAdminPermission } from '../../lib/adminAuth';
 
 type Stage = 'discovery' | 'proposal' | 'contract' | 'ready-to-sign';
 type EditableCrmStage = 'new' | 'contacted' | 'proposal' | 'negotiation';
