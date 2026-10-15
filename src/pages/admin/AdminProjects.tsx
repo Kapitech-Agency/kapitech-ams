@@ -323,6 +323,9 @@ export const AdminProjects: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
   const [projects, setProjects] = useState<ProjectRecord[]>(isSlugFixtureMode() ? demoProjects : []);
+  const [projectExpenses, setProjectExpenses] = useState<any[] | null>(null);
+  const [expenseLoading, setExpenseLoading] = useState(true);
+  const [expenseError, setExpenseError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [serverMode, setServerMode] = useState(false);
   const serverModeRef = React.useRef(false);
@@ -482,6 +485,28 @@ export const AdminProjects: React.FC = () => {
       window.removeEventListener(CURRENCY_EVENT, handleCurrency);
       if (toastTimeoutRef.current !== null) window.clearTimeout(toastTimeoutRef.current);
     };
+  }, []);
+
+  React.useEffect(() => {
+    let mounted = true;
+    api.finance.getExpenses()
+      .then((response) => {
+        if (!mounted) return;
+        if (response.success && Array.isArray(response.data?.expenses)) {
+          setProjectExpenses(response.data.expenses);
+          setExpenseError(null);
+        } else {
+          setProjectExpenses(null);
+          setExpenseError(response.error || 'Finance expense records are unavailable for this role.');
+        }
+      })
+      .catch((requestError) => {
+        if (!mounted) return;
+        setProjectExpenses(null);
+        setExpenseError(requestError instanceof Error ? requestError.message : 'Finance expense records are unavailable.');
+      })
+      .finally(() => { if (mounted) setExpenseLoading(false); });
+    return () => { mounted = false; };
   }, []);
 
   React.useEffect(() => {
@@ -721,18 +746,39 @@ export const AdminProjects: React.FC = () => {
     };
   }, [activeProjects]);
 
+  const recordedExpenseTotals = useMemo(() => {
+    if (projectExpenses === null) return null;
+    const totals = new Map<string, { amount: number; count: number }>();
+    projectExpenses.forEach((expense) => {
+      const projectId = String(expense.projectId || '').trim();
+      const status = String(expense.status || '').toLowerCase();
+      const expenseCurrency = String(expense.currency || 'IDR').toUpperCase();
+      if (!projectId || ['voided', 'cancelled', 'canceled', 'deleted'].includes(status) || expenseCurrency !== currency.toUpperCase()) return;
+      const current = totals.get(projectId) || { amount: 0, count: 0 };
+      current.amount += Math.max(0, toFiniteNumber(expense.amount));
+      current.count += 1;
+      totals.set(projectId, current);
+    });
+    return totals;
+  }, [projectExpenses, currency]);
+
+  const getRecordedExpense = (projectId: string) => {
+    if (recordedExpenseTotals === null) return null;
+    return recordedExpenseTotals.get(projectId)?.amount || 0;
+  };
+
   const budgetRows = useMemo(
-    () =>
-      filteredProjects.map(project => {
-        const burn = Math.round(project.budget * (project.progressPercent / 100));
-        return {
-          project,
-          burn,
-          remaining: Math.max(0, project.budget - burn),
-          variance: project.budget - burn,
-        };
-      }),
-    [filteredProjects]
+    () => filteredProjects.map((project) => {
+      const actual = getRecordedExpense(project.id);
+      return {
+        project,
+        actual,
+        remaining: actual === null ? null : project.budget - actual,
+        variance: actual === null ? null : project.budget - actual,
+        expenseCount: recordedExpenseTotals?.get(project.id)?.count || 0,
+      };
+    }),
+    [filteredProjects, recordedExpenseTotals]
   );
 
   const budgetTablePageCount = Math.max(1, Math.ceil(budgetRows.length / budgetTablePageSize));
