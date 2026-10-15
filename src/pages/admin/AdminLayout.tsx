@@ -57,6 +57,7 @@ const NAV_GROUPS: AdminNavGroup[] = ['Overview', 'Sales', 'Delivery', 'Finance',
 
 const STITCH_NAV_ITEMS: AdminNavItem[] = [
   { key: 'dashboard', to: '/admin/dashboard', label: 'Dashboard', icon: Home, requiredTier: 2, group: 'Overview' },
+  { key: 'ui-preview', to: '/admin/ui-preview', label: 'UX/UI Preview', icon: LayoutGrid, accessKey: 'dashboard', requiredTier: 2, group: 'Overview' },
   { key: 'inbox', to: '/admin/inbox', label: 'Inbox', icon: Inbox, accessKey: 'inbox', requiredTier: 2, group: 'Sales' },
   { key: 'crm', to: '/admin/crm', label: 'CRM', icon: Briefcase, accessKey: 'crm', requiredTier: 3, group: 'Sales' },
   { key: 'proposals', to: '/admin/proposals', label: 'Proposals', icon: FileText, accessKey: 'proposals', requiredTier: 3, group: 'Sales' },

@@ -85,6 +85,11 @@ const AdminLayout = lazyWithRetry(
   'admin-layout'
 );
 
+const AmsRevampPreview = lazyWithRetry(
+  () => import('./components/admin/AmsRevampPreview').then((m) => ({ default: m.AmsRevampPreview })),
+  'ams-ux-ui-preview'
+);
+
 const GlobalExecutiveDashboard = lazyWithRetry(
   () => import('./components/admin/GlobalExecutiveDashboard').then((m) => ({ default: m.GlobalExecutiveDashboard })),
   'dashboard'
@@ -366,6 +371,7 @@ const App = () => {
               <Route path="/admin" element={<ProtectedAdminRoutes />}>
                 <Route index element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="dashboard" element={<DashboardWorkspaceRoute />} />
+                <Route path="ui-preview" element={<ModuleRoute moduleKey="dashboard" moduleLabel="UX/UI preview"><AmsRevampPreview /></ModuleRoute>} />
                 <Route path="tasks" element={<ModuleRoute moduleKey="projects" moduleLabel="tasks"><TasksWorkspace /></ModuleRoute>} />
                 <Route path="executive" element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="inbox" element={<ModuleRoute moduleKey="inbox" moduleLabel="the inbox"><AdminInbox /></ModuleRoute>} />
