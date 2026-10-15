@@ -2431,6 +2431,17 @@ function clientSystemActor(req: AuthenticatedRequest) {
   };
 }
 
+function resolveJsonClientIdForContract(db: any, contract: any): string | null {
+  const explicit = String(contract.clientId || '').trim();
+  if (explicit && (db.clients || []).some((client: any) => String(client.id) === explicit)) return explicit;
+  const clientName = String(contract.clientName || '').trim().replace(/\\s+/g, ' ').toLowerCase();
+  if (!clientName) return null;
+  const matches = (db.clients || []).filter((client: any) =>
+    String(client.company || client.companyName || '').trim().replace(/\\s+/g, ' ').toLowerCase() === clientName
+  );
+  return matches.length === 1 ? String(matches[0].id) : null;
+}
+
 apiRouter.get('/crm/deals', requireAuth, requirePermission('canManageCrm'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const deals = getDataSourceMode() === 'postgres'
     ? await postgresCrmDealRepository.list()
@@ -3167,6 +3178,19 @@ apiRouter.post('/contracts', requireAuth, requireAnyPermission('canManageProject
     const db: any = getDatabase();
     if (!Array.isArray(db.contracts)) db.contracts = [];
     db.contracts.unshift(contract);
+    const linkedClientId = resolveJsonClientIdForContract(db, contract);
+    if (linkedClientId) {
+      appendJsonClientSystemTimelineEvent(db, {
+        clientId: linkedClientId,
+        systemAction: 'client_contract_created',
+        sourceReferenceId: 'contract-created:' + contract.id,
+        subject: 'Contract created: ' + contract.contractNumber,
+        summary: 'Contract ' + contract.contractNumber + ' (' + contract.title + ') was created with initial status Draft.',
+        contactName: contract.clientName,
+        occurredAt: now,
+        ...clientSystemActor(req)
+      });
+    }
     saveDatabase(db);
     await writeAuditLog({ action: 'CLIENT_CONTRACT_CREATED', actor: req.user!.username, actorRole: req.user!.role, ip: req.ip, userAgent: req.headers['user-agent'] as string, details: 'Created contract ' + contract.contractNumber + '.', severity: 'info' });
     created = contract;
@@ -3276,10 +3300,28 @@ apiRouter.post('/contracts/:id/transition', requireAuth, requireAnyPermission('c
     const db: any = getDatabase();
     const index = (db.contracts || []).findIndex((item: any) => String(item.id) === id);
     if (index < 0) { res.status(404).json({ success: false, error: 'Contract not found.' }); return; }
-    db.contracts[index] = { ...db.contracts[index], ...patch };
+    const previousContract = db.contracts[index];
+    db.contracts[index] = { ...previousContract, ...patch };
+    const updatedContract = db.contracts[index];
+    if (String(previousContract.status) !== String(updatedContract.status)) {
+      const linkedClientId = resolveJsonClientIdForContract(db, updatedContract);
+      if (linkedClientId) {
+        const statusNote = String(updatedContract.statusNote || '').trim();
+        appendJsonClientSystemTimelineEvent(db, {
+          clientId: linkedClientId,
+          systemAction: 'client_contract_status_changed',
+          sourceReferenceId: 'contract-status:' + id + ':' + now,
+          subject: 'Contract status changed: ' + String(updatedContract.contractNumber || id),
+          summary: 'Contract ' + String(updatedContract.contractNumber || id) + ' moved from ' + String(previousContract.status).replace(/_/g, ' ') + ' to ' + String(updatedContract.status).replace(/_/g, ' ') + '.' + (statusNote ? ' Note: ' + statusNote : ''),
+          contactName: String(updatedContract.clientName || ''),
+          occurredAt: now,
+          ...clientSystemActor(req)
+        });
+      }
+    }
     saveDatabase(db);
     await writeAuditLog({ action: 'CLIENT_CONTRACT_STATUS_CHANGED', actor: req.user!.username, actorRole: req.user!.role, ip: req.ip, userAgent: req.headers['user-agent'] as string, details, severity: 'info' });
-    updated = db.contracts[index];
+    updated = updatedContract;
   }
   res.json({ success: true, contract: updated });
 });
