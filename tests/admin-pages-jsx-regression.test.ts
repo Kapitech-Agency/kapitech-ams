@@ -346,7 +346,11 @@ test('Client interaction timeline reads and writes persistent relationship histo
   const migration = fs.readFileSync(path.resolve(process.cwd(), 'db/postgres/053_client_interactions.sql'), 'utf8');
   const repository = fs.readFileSync(path.resolve(process.cwd(), 'server/postgres-client-interaction-repository.ts'), 'utf8');
   const database = fs.readFileSync(path.resolve(process.cwd(), 'server/db.ts'), 'utf8');
+  const postgresDatabase = fs.readFileSync(path.resolve(process.cwd(), 'server/postgres-database-repository.ts'), 'utf8');
 
+  assert.ok(postgresDatabase.includes("'client_interactions'"));
+  assert.ok(postgresDatabase.includes('const clientInteractions=(m.get(\'client_interactions\')??[])'));
+  assert.ok(postgresDatabase.includes('clients,clientInteractions,projects'));
   assert.ok(clients.includes('data-ams-feature-slug="client-interaction-timeline"'));
   assert.ok(clients.includes('slug="client-interaction-create-drawer"'));
   assert.ok(clients.includes('api.clients.getInteractions(selectedClient.id)'));
