@@ -33,7 +33,8 @@ test('Finance transaction worksheets keep mutations permission-gated and use emb
   assert.ok(source.includes('onClick={exportInvoicesCsv}'));
   assert.ok(source.includes('onClick={exportExpensesCsv}'));
   assert.ok(source.includes('onClick={exportVendorPaymentsCsv}'));
-  assert.ok(!source.includes('<AdminModuleHeader'));
+  assert.ok(source.includes("isProposalWorkspace && <AdminModuleHeader className=\"mb-0\" title=\"Proposals\""));
+  assert.ok(source.includes("const canManageProposals = hasAdminPermission('canManageCrm') || canManageInvoices;"));
   assert.ok(!source.includes('<AdminSectionTabs'));
   assert.ok(!source.includes('Finance sections'));
   assert.ok(!source.includes('finance=tax-retainers'));
