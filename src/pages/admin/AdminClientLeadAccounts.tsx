@@ -369,7 +369,7 @@ export const AdminClientLeadAccounts: React.FC = () => {
       contact: lead.contact,
       title: lead.brief,
       value: String(Math.max(0, lead.annualValue || 0)),
-      stage: lead.apiStage || (lead.stage === 'proposal' ? 'proposal' : lead.stage === 'contract' ? 'negotiation' : 'new'),
+      stage: lead.apiStage || (lead.stage === 'proposal' ? 'proposal' : lead.stage === 'contract' || lead.stage === 'ready-to-sign' ? 'negotiation' : 'new'),
       probability: String(lead.probability),
       owner: lead.owner === 'Unassigned' ? '' : lead.owner,
       expectedCloseDate: String(lead.dueAt || '').slice(0, 10),
