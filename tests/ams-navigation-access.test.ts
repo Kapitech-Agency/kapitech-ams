@@ -26,31 +26,37 @@ test('role normalization reads the explicit role string and defaults unknown val
   assert.equal(normalizeAmsRole(''), 'Freelancer');
 });
 
-test('navigation declares the six required functional groups in a stable order', () => {
+test('flat navigation declares the five role-aware functional groups in a stable order', () => {
   assert.deepEqual(AMS_NAVIGATION_GROUPS.map((group) => group.label), [
-    'MAIN DASHBOARD',
-    'CLIENT & PIPELINE (CRM)',
-    'PROJECTS & WORKSPACE',
-    'FINANCE & LEDGER CONTROL',
-    'CMS & CONTENT MANAGEMENT',
+    'OPERATIONAL OVERVIEW',
+    'CLIENT & PIPELINE',
+    'DELIVERY & OPERATIONS',
+    'FINANCE & LEDGER',
+    'MARKETING CMS',
   ]);
   assert.equal(AMS_SYSTEM_SETTINGS_ITEMS.length, 3);
   assert.ok(AMS_SYSTEM_SETTINGS_ITEMS.every((item) => item.allowedRoles.length === 1 && item.allowedRoles[0] === 'Admin'));
+  assert.ok(AMS_SYSTEM_SETTINGS_ITEMS.some((item) => item.key === 'release-readiness'));
 });
 
-test('Admin receives every menu group, including the visually separate System Settings group', () => {
+test('Admin receives every functional group while System Center remains a separate direct entry', () => {
   const groups = getNavigationGroupsForRole('Admin');
-  assert.equal(groups.length, 6);
-  assert.equal(groups.at(-1)?.key, 'system-settings');
-  assert.ok(keys('Admin').has('release-readiness'));
+  assert.equal(groups.length, 5);
+  assert.equal(groups.at(-1)?.key, 'cms-content');
+  assert.equal(keys('Admin').has('release-readiness'), false);
+  assert.equal(AMS_SYSTEM_SETTINGS_ITEMS.some((item) => item.key === 'release-readiness'), true);
   assert.equal(canAccessAmsRoute('Admin', '/admin/settings', '?tab=security'), true);
   assert.equal(canAccessAmsRoute('Admin', '/admin/navigation/release-readiness'), true);
+  assert.equal(flatten('Admin').find((item) => item.key === 'dashboard-hub')?.to, '/admin/dashboard');
 });
 
-test('Finance sees CRM and Finance Hub but never retainer setup or System Settings', () => {
+test('Finance sees permitted CRM and Finance destinations but never retainer setup or System Center', () => {
   const menu = keys('Finance');
   assert.ok(menu.has('sales-pipeline'));
   assert.ok(menu.has('client-directory'));
+  assert.ok(menu.has('crm-inbox'));
+  assert.ok(menu.has('crm-contracts'));
+  assert.ok(menu.has('crm-sla'));
   assert.ok(menu.has('quotations'));
   assert.ok(menu.has('invoicing-receivables'));
   assert.ok(menu.has('expense-vendor-ledger'));
@@ -62,9 +68,10 @@ test('Finance sees CRM and Finance Hub but never retainer setup or System Settin
   assert.equal(canAccessAmsRoute('Finance', '/admin/finance', '?tab=accounts-receivable'), true);
   assert.equal(canAccessAmsRoute('Finance', '/admin/settings', '?tab=overview'), false);
   assert.equal(canAccessAmsRoute('Finance', '/admin/tasks', '?taskscope=all'), false);
+  assert.equal(flatten('Finance').find((item) => item.key === 'project-hub')?.to, '/admin/projects?projects=sprint');
 });
 
-test('PM sees the delivery workspace, read-only CRM indicator, and project profitability only', () => {
+test('PM sees delivery operations, CRM, and aggregate project profitability only', () => {
   const pipeline = flatten('PM').find((item) => item.key === 'sales-pipeline');
   assert.equal(pipeline?.accessNote?.PM, 'Read only');
   assert.equal(canAccessAmsRoute('PM', '/admin/crm'), true);
@@ -73,16 +80,18 @@ test('PM sees the delivery workspace, read-only CRM indicator, and project profi
   assert.equal(canAccessAmsRoute('PM', '/admin/finance', '?tab=accounts-receivable'), false);
   assert.equal(canAccessAmsRoute('PM', '/admin/settings', '?tab=security'), false);
   assert.ok(keys('PM').has('retainer-manager'));
+  assert.ok(keys('PM').has('project-time'));
   assert.equal(keys('PM').has('quotations'), false);
 });
 
-test('Creative sees personal work, assigned project delivery, and editorial registry only', () => {
+test('Creative sees personal task hub, filtered project delivery, and editorial registry without CRM or Finance', () => {
   const menu = keys('Creative');
-  assert.ok(menu.has('my-hub'));
+  assert.ok(menu.has('dashboard-hub'));
   assert.ok(menu.has('project-hub'));
   assert.ok(menu.has('live-activity'));
   assert.ok(menu.has('insight-editorial'));
   assert.ok(menu.has('portfolio-testimonial-registry'));
+  assert.ok(menu.has('cms-testimonials'));
   assert.equal(menu.has('sales-pipeline'), false);
   assert.equal(menu.has('client-directory'), false);
   assert.equal(menu.has('project-profitability'), false);
@@ -93,11 +102,13 @@ test('Creative sees personal work, assigned project delivery, and editorial regi
   assert.equal(canAccessAmsRoute('Creative', '/admin/cms/insights'), true);
   assert.equal(canAccessAmsRoute('Creative', '/admin/finance', '?tab=project-finance'), false);
   assert.equal(getAmsHomePath('Creative'), '/admin/tasks?taskscope=my');
+  assert.equal(flatten('Creative').find((item) => item.key === 'dashboard-hub')?.to, '/admin/tasks?taskscope=my');
 });
 
-test('Freelancer is constrained to My Hub, live activity, and a task-scoped Project Hub', () => {
+test('Freelancer sees the role-routed task hub and task-scoped delivery only', () => {
   const menu = flatten('Freelancer');
   const projectHub = menu.find((item) => item.key === 'project-hub');
+  assert.equal(projectHub?.label, 'Assigned Tasks');
   assert.equal(projectHub?.to, '/admin/tasks?taskscope=my&workspace=project');
   assert.equal(canAccessAmsRoute('Freelancer', '/admin/tasks', '?taskscope=my'), true);
   assert.equal(canAccessAmsRoute('Freelancer', '/admin/tasks', '?taskscope=my&workspace=project'), true);
@@ -107,24 +118,25 @@ test('Freelancer is constrained to My Hub, live activity, and a task-scoped Proj
   assert.equal(canAccessAmsRoute('Freelancer', '/admin/finance', '?tab=project-finance'), false);
   assert.equal(canAccessAmsRoute('Freelancer', '/admin/navigation/live-activity'), true);
   assert.equal(getAmsHomePath('Freelancer'), '/admin/tasks?taskscope=my');
+  assert.equal(menu.some((item) => item.key.startsWith('cms-')), false);
 });
 
-test('direct URL navigation is blocked by route policy and returns users to their permitted workspace', () => {
+test('direct URL navigation remains blocked by the canonical role route policy', () => {
   assert.equal(canAccessAmsRoute('Creative', '/admin/finance', '?tab=accounts-receivable'), false);
   assert.equal(canAccessAmsRoute('Creative', '/admin/crm'), false);
   assert.equal(canAccessAmsRoute('Freelancer', '/admin/settings', '?tab=overview'), false);
   assert.equal(canAccessAmsRoute('PM', '/admin/finance', '?tab=journal'), false);
 });
 
-test('navigation active states distinguish the two client-directory entry points and Project Hub task scope', () => {
-  const menuCreative = flatten('Creative');
-  const directory = menuCreative.find((item) => item.key === 'client-directory') ?? {
-    key: 'client-directory', to: '/admin/clients/all-clients',
-  };
+test('flat navigation active states distinguish onboarding, project query tabs, and a role-routed personal hub', () => {
+  const directory = AMS_NAVIGATION_GROUPS.flatMap((group) => group.items).find((item) => item.key === 'client-directory')!;
   const onboarding = AMS_NAVIGATION_GROUPS.flatMap((group) => group.items).find((item) => item.key === 'client-onboarding')!;
-  const freelancerProject = flatten('Freelancer').find((item) => item.key === 'project-hub')!;
+  const projectHub = flatten('Admin').find((item) => item.key === 'project-hub')!;
+  const creativeHub = flatten('Creative').find((item) => item.key === 'dashboard-hub')!;
 
   assert.equal(isNavigationItemActive(directory, '/admin/clients/all-clients', '', ''), true);
   assert.equal(isNavigationItemActive(onboarding, '/admin/clients/all-clients', '', '#client-onboarding-readiness'), true);
-  assert.equal(isNavigationItemActive(freelancerProject, '/admin/tasks', '?taskscope=my&workspace=project', ''), true);
+  assert.equal(isNavigationItemActive(projectHub, '/admin/projects', '?projects=budget', ''), false);
+  assert.equal(isNavigationItemActive(projectHub, '/admin/projects', '?projects=sprint', ''), true);
+  assert.equal(isNavigationItemActive(creativeHub, '/admin/tasks', '?taskscope=my', ''), true);
 });
