@@ -349,6 +349,14 @@ export function buildFinanceSourceJournalDrafts(
     }
 
     const payments = getPaymentRows(invoice);
+    const getPaymentSourceId = (paymentIndex: number) => {
+      const payment = payments[paymentIndex];
+      const rawPayment = Array.isArray(invoice.payments) ? invoice.payments[paymentIndex] : undefined;
+      const explicitPaymentId = String(rawPayment?.id || '').trim();
+      return explicitPaymentId
+        ? sourceIdentifier(invoice.id, 'payment', explicitPaymentId)
+        : sourceIdentifier(invoice.id, 'payment', payment.id, String(paymentIndex));
+    };
     if (payments.length === 0 && getInvoiceCollected(invoice) > 0) {
       skip({
         sourceType: 'invoice-payment',
@@ -365,7 +373,7 @@ export function buildFinanceSourceJournalDrafts(
     if (!invoiceRecognitionReady) {
       for (let paymentIndex = 0; paymentIndex < payments.length; paymentIndex++) {
         const payment = payments[paymentIndex];
-        skip({ sourceType: 'invoice-payment', sourceId: sourceIdentifier(invoice.id, 'payment', payment.id, String(paymentIndex)), date: payment.date, reference: String(payment.reference || invoice.invoiceNumber || invoice.id || ''), description: 'Client receipt · ' + String(invoice.clientCompany || invoice.clientName || 'Client not set'), amount: Number(payment.amount) || 0, reason: 'Receipt journal is held because the linked invoice recognition entry is not eligible. Correct the invoice tax and account mapping first.' });
+        skip({ sourceType: 'invoice-payment', sourceId: getPaymentSourceId(paymentIndex), date: payment.date, reference: String(payment.reference || invoice.invoiceNumber || invoice.id || ''), description: 'Client receipt · ' + String(invoice.clientCompany || invoice.clientName || 'Client not set'), amount: Number(payment.amount) || 0, reason: 'Receipt journal is held because the linked invoice recognition entry is not eligible. Correct the invoice tax and account mapping first.' });
       }
       continue;
     }
@@ -373,7 +381,7 @@ export function buildFinanceSourceJournalDrafts(
     for (let paymentIndex = 0; paymentIndex < payments.length; paymentIndex++) {
       const payment = payments[paymentIndex];
       const amount = safeFinanceMoney(payment.amount);
-      const sourceId = sourceIdentifier(invoice.id, 'payment', payment.id, String(paymentIndex));
+      const sourceId = getPaymentSourceId(paymentIndex);
       const reference = String(payment.reference || invoice.invoiceNumber || invoice.id || '').slice(0, 160);
       const description = 'Client receipt · ' + String(invoice.clientCompany || invoice.clientName || 'Client not set');
       if (!amount) {
