@@ -52,15 +52,19 @@ test('Admin projects mutation actions stay behind their permissions', () => {
   assert.ok(!source.includes('Legacy regression guard:'));
 });
 
-test('Finance subtabs live in the Finance module topbar and retired routes stay hidden', () => {
-  const source = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminLayout.tsx'), 'utf8');
-  assert.equal(source.includes("location.pathname === '/admin/invoicing'"), false);
-  assert.ok(source.includes('ariaLabel="Finance sections"'));
-  assert.ok(source.includes('const isFinanceModuleRoute = ['));
-  assert.ok(source.includes("label: 'Transactions', to: '/admin/finance?tab=cash-bank'"));
-  assert.ok(source.includes("label: 'Invoices', to: '/admin/finance?tab=accounts-receivable'"));
-  assert.ok(source.includes("label: 'Accounting', to: '/admin/finance?tab=journal'"));
-  assert.equal(source.includes("to: '/admin/invoicing?finance="), false);
+test('Finance subtabs live in the Finance sidebar dropdown and retired routes stay hidden', () => {
+  const layout = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminLayout.tsx'), 'utf8');
+  const sidebar = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/DynamicAdminSidebar.tsx'), 'utf8');
+  const navigation = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/amsModuleSubnavigation.ts'), 'utf8');
+  assert.equal(layout.includes("location.pathname === '/admin/invoicing'"), false);
+  assert.equal(layout.includes('<AdminTopbarTabs'), false);
+  assert.ok(sidebar.includes('getAmsModuleSubnavigation(item.key as AmsSidebarModuleKey, role)'));
+  assert.ok(sidebar.includes('aria-expanded={expanded}'));
+  assert.ok(navigation.includes("label: 'Transactions', to: '/admin/finance?tab=cash-bank'"));
+  assert.ok(navigation.includes("label: 'Invoices', to: '/admin/finance?tab=accounts-receivable'"));
+  assert.ok(navigation.includes("label: 'Accounting', to: '/admin/finance?tab=journal'"));
+  assert.ok(navigation.includes("label: 'Profit', to: '/admin/finance?tab=project-finance'"));
+  assert.equal(navigation.includes("to: '/admin/invoicing?finance="), false);
 });
 test('Authenticated AMS pages use one canonical responsive page frame', () => {
   const primitives = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/AdminModulePrimitives.tsx'), 'utf8');
@@ -123,8 +127,10 @@ test('All AMS record-entry forms use Drawer instead of Modal', () => {
   assert.ok(modal.includes('data-ams-modal-root="true"') && modal.includes('z-[80]'));
   assert.ok(drawer.includes("document.querySelector('[data-ams-modal-root=\"true\"]')"), 'A modal above a drawer must own focus and keyboard handling.');
 });
-test('AMS module tabs share canonical desktop and mobile navigation primitives', () => {
+test('AMS module dropdowns live in the sidebar while page-level tabs retain canonical mobile primitives', () => {
   const layout = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminLayout.tsx'), 'utf8');
+  const sidebar = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/DynamicAdminSidebar.tsx'), 'utf8');
+  const navigation = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/amsModuleSubnavigation.ts'), 'utf8');
   const primitives = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/AdminModulePrimitives.tsx'), 'utf8');
   const dashboard = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/GlobalExecutiveDashboard.tsx'), 'utf8');
   const inbox = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInbox.tsx'), 'utf8');
@@ -133,7 +139,12 @@ test('AMS module tabs share canonical desktop and mobile navigation primitives',
   const retainers = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientRetainers.tsx'), 'utf8');
   const sla = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientSlaMonitoring.tsx'), 'utf8');
 
-  assert.equal((layout.match(/<AdminTopbarTabs\b/g) || []).length, 6);
+  assert.equal((layout.match(/<AdminTopbarTabs\b/g) || []).length, 0);
+  assert.ok(!layout.includes('ariaLabel="Finance sections"'));
+  assert.ok(sidebar.includes('data-ams-nav-submenu="true"'));
+  assert.ok(sidebar.includes('aria-expanded={expanded}'));
+  assert.ok(navigation.includes("label: 'Delivery', to: '/admin/projects?projects=sprint'"));
+  assert.ok(navigation.includes("label: 'Readiness', to: '/admin/navigation/release-readiness'"));
   assert.ok(primitives.includes("'inline-flex h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent'"));
   assert.ok(!/className="inline-flex h-9 shrink-0 items-center rounded-chip/.test(layout));
   assert.ok(!/<nav aria-label="(?:Clients|CMS|Dashboard|Projects|Tasks|Inbox|Finance|Team|Settings|Documents) sections"/.test(layout));
