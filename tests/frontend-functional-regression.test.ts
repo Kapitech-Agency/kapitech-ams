@@ -84,10 +84,10 @@ test('AMS sidebar groups real modules and keeps feature views inside their modul
   const vendors = await read('src/pages/admin/AdminVendors.tsx');
   const clients = await read('src/pages/admin/AdminClients.tsx');
 
-  for (const group of ["'Overview'", "'Sales'", "'Delivery'", "'Finance'", "'Content'", "'Operations'"]) {
+  for (const group of ["'Overview'", "'Sales & Clients'", "'Delivery'", "'People & Resources'", "'Finance'", "'Website & Content'", "'Operations'"]) {
     assert.ok(layout.includes(group), 'Expected sidebar group ' + group);
   }
-  assert.ok(layout.includes("const NAV_GROUPS: AdminNavGroup[] = ['Overview', 'Sales', 'Delivery', 'Finance', 'Content', 'Operations']"));
+  assert.ok(layout.includes("const NAV_GROUPS: AdminNavGroup[] = ['Overview', 'Sales & Clients', 'Delivery', 'People & Resources', 'Finance', 'Website & Content', 'Operations']"));
 
   const menuStart = layout.indexOf('const STITCH_NAV_ITEMS: AdminNavItem[] = [');
   const menuEnd = layout.indexOf('];', menuStart);
@@ -95,17 +95,17 @@ test('AMS sidebar groups real modules and keeps feature views inside their modul
   const menu = layout.slice(menuStart, menuEnd);
   for (const [key, label, group] of [
     ['dashboard', 'Dashboard', 'Overview'],
-    ['inbox', 'Inbox', 'Sales'],
-    ['crm', 'CRM', 'Sales'],
-    ['proposals', 'Proposals', 'Sales'],
-    ['clients', 'Clients', 'Sales'],
+    ['inbox', 'Inbox', 'Sales & Clients'],
+    ['crm', 'CRM & Pipeline', 'Sales & Clients'],
+    ['proposals', 'Proposals & Quotes', 'Sales & Clients'],
+    ['clients', 'Clients & Accounts', 'Sales & Clients'],
     ['projects', 'Projects', 'Delivery'],
     ['tasks', 'Tasks', 'Delivery'],
-    ['team', 'Team', 'Delivery'],
-    ['time-logs', 'Time', 'Delivery'],
+    ['team', 'Team', 'People & Resources'],
+    ['time-logs', 'Time Tracking', 'People & Resources'],
     ['finance', 'Finance', 'Finance'],
-    ['vendors', 'Vendors', 'Finance'],
-    ['cms', 'Website', 'Content'],
+    ['vendors', 'Vendors', 'People & Resources'],
+    ['cms', 'Website CMS', 'Website & Content'],
     ['documents', 'Documents', 'Operations'],
     ['approvals', 'Approvals', 'Operations']
   ]) {
@@ -128,6 +128,7 @@ test('AMS sidebar groups real modules and keeps feature views inside their modul
   assert.ok(primitives.includes("items.filter((item) => !item.permission || hasAdminPermission(item.permission)).map((item) => {"));
   assert.ok(primitives.includes("permission: 'services'"));
   assert.ok(primitives.includes("permission: 'cms_insights'"));
+  assert.ok(primitives.includes("{ key: 'projects', label: 'Case Studies', to: '/admin/cms/projects', permission: 'cms_projects' }"));
   assert.ok(layout.includes("slug: 'cms-tab-services', permission: 'services'"));
   assert.ok(layout.includes("slug: 'cms-tab-insights', permission: 'cms_insights'"));
   assert.ok(layout.includes("firstAllowedSection.find(([permission]) => isAllowed(permission))"));
