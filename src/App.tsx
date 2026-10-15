@@ -296,13 +296,11 @@ const TeamWorkspaceRoute: React.FC = () => {
     return <Navigate to="/admin/time-logs" replace />;
   }
 
-  const view = requestedView || (
-    location.pathname === '/admin/vendors'
-      ? 'vendor-directory'
-      : location.pathname === '/admin/time-logs'
-        ? 'time-logs'
-        : 'team-directory'
-  );
+  const view = location.pathname === '/admin/vendors'
+    ? requestedView === 'skill-matrix' ? 'skill-matrix' : 'vendor-directory'
+    : location.pathname === '/admin/time-logs'
+      ? 'time-logs'
+      : requestedView || 'team-directory';
   const isVendorWorkspace = view === 'vendor-directory' || view === 'skill-matrix';
   const moduleKey = isVendorWorkspace ? 'vendors' : 'timelogs';
   const moduleLabel = isVendorWorkspace ? 'vendors' : view === 'time-logs' ? 'time logs' : 'team operations';
