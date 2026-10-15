@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   Home,
@@ -12,6 +12,8 @@ import {
   LayoutGrid,
   FileText,
   ShieldCheck,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 import {
   AMS_SYSTEM_SETTINGS_ITEMS,
@@ -73,16 +75,16 @@ const NavigationLink: React.FC<NavigationLinkProps> = ({
       to={item.to}
       end
       onClick={onNavigate}
+      title={item.label}
       aria-current={active ? 'page' : undefined}
       data-ams-nav-item={item.key}
       className={() => [
-        'group relative flex min-h-10 min-w-0 items-center gap-2.5 rounded-control border px-2.5 text-xs font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+        'group flex min-h-10 min-w-0 items-center gap-2.5 rounded-control border border-transparent px-2.5 text-xs font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
         active
-          ? 'border-accent/25 bg-accent/10 text-fg'
-          : 'border-transparent text-muted hover:border-line hover:bg-bg/70 hover:text-fg',
+          ? 'bg-accent/10 text-fg'
+          : 'text-muted hover:bg-bg/70 hover:text-fg',
       ].join(' ')}
     >
-      {active && <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-accent" aria-hidden="true" />}
       <span className={['flex h-7 w-7 shrink-0 items-center justify-center', active ? 'text-fg' : 'text-muted group-hover:text-fg'].join(' ')}>
         <Icon size={16} strokeWidth={active ? 2.1 : 1.8} aria-hidden="true" />
       </span>
@@ -112,27 +114,67 @@ export const DynamicAdminSidebarNavigation: React.FC<DynamicAdminSidebarNavigati
   onNavigate,
 }) => {
   const groups = getNavigationGroupsForRole(role).filter((group) => group.key !== 'system-settings');
+  const activeGroupKey = groups.find((group) =>
+    group.items.some((item) => isNavigationItemActive(item, pathname, search, hash))
+  )?.key;
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(activeGroupKey ?? 'main-dashboard');
+
+  useEffect(() => {
+    if (activeGroupKey) setExpandedGroup(activeGroupKey);
+  }, [activeGroupKey, pathname, search, hash, role]);
 
   return (
-    <nav aria-label="Primary navigation" data-ams-feature-slug="role-based-sidebar" className="space-y-4">
-      {groups.map((group) => (
-        <section key={group.key} aria-label={group.label} data-ams-nav-group={group.key}>
-          <h2 className="px-2 pb-1.5 text-[10px] font-medium tracking-wide text-muted">{group.label}</h2>
-          <div className="space-y-1">
-            {group.items.map((item) => (
-              <NavigationLink
-                key={item.key}
-                item={item}
-                role={role}
-                pathname={pathname}
-                search={search}
-                hash={hash}
-                onNavigate={onNavigate}
-              />
-            ))}
-          </div>
-        </section>
-      ))}
+    <nav aria-label="Primary navigation" data-ams-feature-slug="role-based-sidebar" className="space-y-2">
+      {groups.map((group) => {
+        const expanded = role === 'Admin' || expandedGroup === group.key;
+        const groupHasActiveItem = group.key === activeGroupKey;
+
+        return (
+          <section key={group.key} aria-label={group.label} data-ams-nav-group={group.key} className="min-w-0">
+            {role === 'Admin' ? (
+              <h2 className={[
+                'flex min-h-9 items-center px-2 text-[10px] font-semibold uppercase tracking-[0.07em]',
+                groupHasActiveItem ? 'text-fg' : 'text-muted',
+              ].join(' ')}>
+                {group.label}
+              </h2>
+            ) : (
+              <button
+                type="button"
+                aria-expanded={expanded}
+                aria-controls={`ams-nav-group-${group.key}`}
+                onClick={() => setExpandedGroup((current) => current === group.key ? null : group.key)}
+                className={[
+                  'flex min-h-9 w-full items-center gap-2 rounded-control px-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+                  groupHasActiveItem ? 'text-fg' : 'text-muted hover:bg-bg/60 hover:text-fg',
+                ].join(' ')}
+              >
+                <span className="min-w-0 flex-1 truncate text-[10px] font-semibold uppercase tracking-[0.07em]">
+                  {group.label}
+                </span>
+                {expanded
+                  ? <ChevronDown size={14} className="shrink-0" aria-hidden="true" />
+                  : <ChevronRight size={14} className="shrink-0" aria-hidden="true" />}
+              </button>
+            )}
+            {expanded && (
+              <div id={`ams-nav-group-${group.key}`} className="mt-1 space-y-1 pl-0.5">
+                {group.items.map((item) => (
+                  <NavigationLink
+                    key={item.key}
+                    item={item}
+                    role={role}
+                    pathname={pathname}
+                    search={search}
+                    hash={hash}
+                    onNavigate={onNavigate}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+        );
+      })}
     </nav>
   );
 };
@@ -158,9 +200,11 @@ export const AdminSystemSettingsNavigation: React.FC<AdminSystemSettingsNavigati
     <section
       aria-label="SYSTEM SETTINGS"
       data-ams-feature-slug="ams-system-settings-nav"
-      className="space-y-1 pt-3"
+      className="mt-2 space-y-1 pt-1"
     >
-      <h2 className="px-2 pb-1.5 text-[10px] font-medium tracking-wide text-muted">SYSTEM SETTINGS</h2>
+      <h2 className="px-2 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.07em] text-muted">
+        SYSTEM SETTINGS
+      </h2>
       {AMS_SYSTEM_SETTINGS_ITEMS.map((item) => (
         <NavigationLink
           key={item.key}
