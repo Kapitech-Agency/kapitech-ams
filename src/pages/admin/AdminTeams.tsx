@@ -291,13 +291,12 @@ const emptyVendorForm = {
 export const AdminTeams: React.FC = () => {
   const { matchesDate } = useReportingPeriod();
   const location = useLocation();
-  const activeView = (
-    new URLSearchParams(location.search).get('view') ||
-    (location.pathname === '/admin/vendors' ? 'vendor-directory' :
-      location.pathname === '/admin/time-logs' ? 'time-logs' : 'team-directory')
-  ) as TeamView;
-  const validTeamViews: TeamView[] = ['team-directory', 'vendor-directory', 'capacity-allocation', 'skill-matrix', 'time-logs'];
-  const currentView = validTeamViews.includes(activeView) ? activeView : 'team-directory';
+  const requestedView = new URLSearchParams(location.search).get('view');
+  const currentView: TeamView = location.pathname === '/admin/vendors'
+    ? requestedView === 'skill-matrix' ? 'skill-matrix' : 'vendor-directory'
+    : location.pathname === '/admin/time-logs'
+      ? 'time-logs'
+      : requestedView === 'capacity-allocation' ? 'capacity-allocation' : 'team-directory';
 
   const canManageVendors = hasAdminPermission('canManageVendors');
   const canManageTimeLogs = hasAdminPermission('canManageProjects') || hasAdminPermission('canManageKanbanTasks');
