@@ -7,18 +7,21 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (file: string) => fs.readFile(path.join(root, file), 'utf8');
 
-test('Settings tabs stay inside the page while the sidebar keeps one Admin-only System Center link', async () => {
-  const source = await read('src/pages/admin/AdminSettings.tsx');
+test('System Center is a single Admin-only direct link and Settings workspace tabs render in the content area', async () => {
   const layout = await read('src/pages/admin/AdminLayout.tsx');
   const sidebar = await read('src/components/admin/DynamicAdminSidebar.tsx');
   const navigation = await read('src/lib/amsNavigationAccess.ts');
+  const workspace = await read('src/lib/amsModuleSubnavigation.ts');
 
-  assert.ok(source.includes('data-ams-slug="settings-tabs"'));
-  assert.ok(source.includes('className="min-[900px]:hidden min-w-0" data-ams-slug="settings-tabs"'));
-  for (const label of ['Backup', 'Audit', 'Access', 'Integrations', 'Readiness']) {
-    assert.ok(source.includes("label: '" + label + "'"), 'Missing Settings page tab: ' + label);
-  }
-  assert.equal(layout.includes('ariaLabel="Settings sections"'), false);
+  assert.ok(layout.includes('data-ams-slug="workspace-navigation"'));
+  assert.ok(layout.includes('ariaLabel="Workspace navigation"'));
+  assert.ok(layout.includes("if (path === '/admin/settings' || path === '/admin/navigation/release-readiness') return 'settings';"));
+  assert.ok(layout.includes('getAmsModuleSubnavigation(workspaceNavigationModule, amsRole)'));
+  assert.ok(workspace.includes("{ key: 'backup', label: 'Backup', to: '/admin/settings?tab=overview' }"));
+  assert.ok(workspace.includes("{ key: 'access', label: 'Access', to: '/admin/settings?tab=security' }"));
+  assert.ok(workspace.includes("{ key: 'audit', label: 'Audit', to: '/admin/settings?tab=audit' }"));
+  assert.ok(workspace.includes("{ key: 'integrations', label: 'Integrations', to: '/admin/settings?tab=integrations' }"));
+  assert.ok(workspace.includes("{ key: 'readiness', label: 'Readiness', to: '/admin/navigation/release-readiness' }"));
   assert.ok(sidebar.includes('data-ams-navigation-layout="flat"'));
   assert.equal(sidebar.includes('aria-expanded='), false);
   assert.equal(sidebar.includes('ChevronDown'), false);
