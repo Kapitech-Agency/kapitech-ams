@@ -434,3 +434,16 @@ test('Vendor payment drawer requires a settlement account only for Other payment
     /field\.required[\s\S]*?field\.visibleWhen\.values\.includes\(String\(editor\.payload\[field\.visibleWhen\.key\] \|\| ''\)\)/
   );
 });
+
+test('New vendor payments only offer bills with balances and preserve the selected bill while editing', async () => {
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const start = workspace.indexOf("if (field.optionSource === 'vendorBills')");
+  const end = workspace.indexOf("if (field.optionSource === 'projects')", start);
+  assert.ok(start >= 0 && end > start);
+  const options = workspace.slice(start, end);
+  assert.match(options, /const currentBillId = editor\?\.type === 'vendor-bill-payment' \? String\(editor\.record\?\.payload\.billId \|\| ''\) : ''/);
+  assert.match(options, /const payableBills = bills\.filter\(/);
+  assert.match(options, /Number\(bill\.payload\.outstanding \?\? bill\.payload\.total\) \|\| 0\) > 0\.01/);
+  assert.match(options, /\|\| bill\.id === currentBillId/);
+  assert.match(options, /No outstanding vendor bills/);
+});
