@@ -11,7 +11,7 @@ import {
   Clock3,
   ShieldCheck,
   Timer,
-  WalletCardsCards,
+  WalletCards,
 } from 'lucide-react';
 import { WorkspaceRole } from './workspaceAccess';
 import {
@@ -49,7 +49,7 @@ export const ExecutiveOverviewView: React.FC = () => (
   >
     <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
       <MetricCard label="Revenue · MTD" value={idrCompact(128400000)} detail="+10.7% vs. prior month" tone="success" icon={<ArrowUpRight size={15} />} />
-      <MetricCard label="Operating expenses" value={idrCompact(79100000)} detail="61.6% of recognized revenue" tone="neutral" icon={<WalletCardsCards size={15} />} />
+      <MetricCard label="Operating expenses" value={idrCompact(79100000)} detail="61.6% of recognized revenue" tone="neutral" icon={<WalletCards size={15} />} />
       <MetricCard label="Net profit · MTD" value={idrCompact(49300000)} detail="38.4% indicative margin" tone="success" icon={<ArrowUpRight size={15} />} />
       <MetricCard label="Active projects" value="12" detail="3 milestones due this week" tone="info" icon={<CalendarDays size={15} />} />
     </div>
