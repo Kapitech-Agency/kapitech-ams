@@ -542,9 +542,11 @@ test('Resource Planning assignments persist on project records and distinguish t
   const routes = await read('server/routes.ts');
 
   assert.match(teams, /const toggleProjectAssignment = async/);
-  assert.match(teams, /api\.projects\.update\(project\.id, \{ teamMembers: nextMembers \}\)/);
+  assert.match(teams, /api\.projects\.update\(project\.id, \{ teamMembers: nextMembers, resourceAllocations: nextPlans \}\)/);
   assert.match(teams, /label: 'Historical tracked utilization'/);
-  assert.match(teams, /Planned hours, allocation percentages, and leave calendars are not available yet/);
+  assert.match(teams, /planned weekly allocation and dates/);
+  assert.match(teams, /Upcoming resource allocation/);
+  assert.match(teams, /No plan means unplanned, not automatically available/);
   assert.match(teams, /Capacity &amp; Allocation/);
   assert.match(routes, /pickFields\(updates, \['title','name','client','clientId','clientName','clientCompany','clientEmail','serviceCategory','status','health','budget','progressPercent','startDate','targetEndDate','teamLead','teamMembers'/);
 });
