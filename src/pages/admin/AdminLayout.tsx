@@ -51,7 +51,7 @@ interface NavItem {
   requiredTier: AgencyTier;
 }
 
-type AdminNavItem = NavItem & { accessKey?: string };
+type AdminNavItem = NavItem & { accessKey?: string; anyAccessKeys?: string[] };
 
 // Sidebar items represent modules only. Feature views stay inside each module.
 const NAV_GROUPS: AdminNavGroup[] = ['Overview', 'Sales', 'Delivery', 'Finance', 'Content', 'Operations'];
@@ -68,7 +68,7 @@ const STITCH_NAV_ITEMS: AdminNavItem[] = [
   { key: 'time-logs', to: '/admin/time-logs', label: 'Time', icon: Clock3, accessKey: 'timelogs', requiredTier: 3, group: 'Delivery' },
   { key: 'finance', to: '/admin/finance', label: 'Finance', icon: Landmark, accessKey: 'invoicing', requiredTier: 2, group: 'Finance' },
   { key: 'vendors', to: '/admin/vendors', label: 'Vendors', icon: Building2, accessKey: 'vendors', requiredTier: 3, group: 'Finance' },
-  { key: 'cms', to: '/admin/cms/projects', label: 'Website', icon: LayoutGrid, accessKey: 'cms_projects', requiredTier: 3, group: 'Content' },
+  { key: 'cms', to: '/admin/cms/projects', label: 'Website', icon: LayoutGrid, anyAccessKeys: ['cms_projects', 'services', 'testimonials', 'cms_insights'], requiredTier: 3, group: 'Content' },
   { key: 'documents', to: '/admin/documents', label: 'Documents', icon: LockKeyhole, requiredTier: 3, group: 'Operations' },
   { key: 'approvals', to: '/admin/approvals', label: 'Approvals', icon: ShieldCheck, accessKey: 'approvals', requiredTier: 3, group: 'Operations' },
 ];
@@ -214,7 +214,7 @@ export const AdminLayout: React.FC = () => {
   const filteredNavItems = useMemo(() => {
     const seen = new Set<string>();
     return STITCH_NAV_ITEMS.filter(
-      (item) => hasAgencyTier(item.requiredTier) && isAllowed(item.accessKey || item.key)
+      (item) => hasAgencyTier(item.requiredTier) && (item.anyAccessKeys ? item.anyAccessKeys.some((accessKey) => isAllowed(accessKey)) : isAllowed(item.accessKey || item.key))
     ).filter((item) => {
       if (seen.has(item.key)) return false;
       seen.add(item.key);
