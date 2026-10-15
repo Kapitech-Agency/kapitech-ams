@@ -113,7 +113,7 @@ async function appendDealConversionTimelineEvent(
     systemAction: 'crm_deal_converted',
     sourceReferenceId: 'crm-deal-converted:' + String(deal.id),
     subject: 'Deal converted to delivery: ' + String(deal.title || deal.id),
-    summary: 'Won CRM deal "' + String(deal.title || deal.id) + '" was converted into a client delivery workflow.',
+    summary: 'Won CRM deal "' + String(deal.title || deal.id) + '" completed won-deal conversion; delivery workflow is ready.',
     contactName: String(deal.clientName || ''),
     outcome: projectName ? 'Project created: ' + projectName : '',
     nextStep: 'Review the kickoff task and invoice in their existing AMS modules.',
