@@ -34,12 +34,6 @@ import Button from '../../components/ui/Button';
 import { ReportingPeriodProvider } from '../../lib/ReportingPeriodContext';
 import { AdminReportingPeriodBar } from '../../components/admin/AdminReportingPeriodBar';
 
-type AdminNavGroup =
-  | 'Business & Sales Management'
-  | 'Project & Delivery Operations'
-  | 'Finance & Business Control'
-  | 'Internal Management & Governance';
-
 interface NavItem {
   key: string;
   to: string;
@@ -48,34 +42,24 @@ interface NavItem {
   badge?: string | number | null;
   badgeColor?: string;
   exact?: boolean;
-  group?: AdminNavGroup;
   requiredTier: AgencyTier;
 }
 
 type AdminNavItem = NavItem & { accessKey?: string };
 
-const NAV_GROUPS: AdminNavGroup[] = [
-  'Business & Sales Management',
-  'Project & Delivery Operations',
-  'Finance & Business Control',
-  'Internal Management & Governance',
-];
-
-// Keep this list limited to supported workspaces. Backend capabilities without
-// a working UI route (for example CRM, proposals, and approvals) stay out of
-// primary navigation until their dedicated workflows are ready.
+// Sidebar contains modules only. Feature-level views stay inside each module.
 const STITCH_NAV_ITEMS: AdminNavItem[] = [
-  { key: 'dashboard', to: '/admin/dashboard', label: 'Dashboard', icon: Home, requiredTier: 2, group: 'Business & Sales Management' },
-  { key: 'inbox', to: '/admin/inbox', label: 'Inbox', icon: Inbox, accessKey: 'inbox', requiredTier: 2, group: 'Business & Sales Management' },
-  { key: 'clients', to: '/admin/clients', label: 'Clients', icon: UsersRound, requiredTier: 3, group: 'Business & Sales Management' },
-  { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, requiredTier: 3, group: 'Project & Delivery Operations' },
-  { key: 'tasks', to: '/admin/tasks', label: 'Tasks', icon: ClipboardCheck, accessKey: 'projects', requiredTier: 3, group: 'Project & Delivery Operations' },
-  { key: 'team', to: '/admin/team?view=team-directory', label: 'Team Directory', icon: UsersRound, accessKey: 'timelogs', requiredTier: 3, group: 'Project & Delivery Operations' },
-  { key: 'time-logs', to: '/admin/team?view=time-logs', label: 'Time Logs', icon: Clock3, accessKey: 'timelogs', requiredTier: 3, group: 'Project & Delivery Operations' },
-  { key: 'finance', to: '/admin/finance', label: 'Finance', icon: Landmark, accessKey: 'invoicing', requiredTier: 2, group: 'Finance & Business Control' },
-  { key: 'vendors', to: '/admin/team?view=vendor-directory', label: 'Vendors', icon: Building2, accessKey: 'vendors', requiredTier: 3, group: 'Finance & Business Control' },
-  { key: 'documents', to: '/admin/documents', label: 'Documents', icon: LockKeyhole, requiredTier: 3, group: 'Internal Management & Governance' },
-  { key: 'cms', to: '/admin/cms/projects', label: 'Website CMS', icon: LayoutGrid, accessKey: 'cms_projects', requiredTier: 3, group: 'Internal Management & Governance' },
+  { key: 'dashboard', to: '/admin/dashboard', label: 'Dashboard', icon: Home, requiredTier: 2 },
+  { key: 'inbox', to: '/admin/inbox', label: 'Inbox', icon: Inbox, accessKey: 'inbox', requiredTier: 2 },
+  { key: 'clients', to: '/admin/clients/all-clients', label: 'Clients', icon: UsersRound, requiredTier: 3 },
+  { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, requiredTier: 3 },
+  { key: 'tasks', to: '/admin/tasks', label: 'Tasks', icon: ClipboardCheck, accessKey: 'projects', requiredTier: 3 },
+  { key: 'team', to: '/admin/team', label: 'Team', icon: UsersRound, accessKey: 'timelogs', requiredTier: 3 },
+  { key: 'time-logs', to: '/admin/time-logs', label: 'Time', icon: Clock3, accessKey: 'timelogs', requiredTier: 3 },
+  { key: 'finance', to: '/admin/finance', label: 'Finance', icon: Landmark, accessKey: 'invoicing', requiredTier: 2 },
+  { key: 'vendors', to: '/admin/vendors', label: 'Vendors', icon: Building2, accessKey: 'vendors', requiredTier: 3 },
+  { key: 'documents', to: '/admin/documents', label: 'Documents', icon: LockKeyhole, requiredTier: 3 },
+  { key: 'cms', to: '/admin/cms/projects', label: 'Website', icon: LayoutGrid, accessKey: 'cms_projects', requiredTier: 3 },
 ];
 
 const DEFAULT_PROFILE_NAME = 'Fikri Nurlete';
@@ -233,51 +217,27 @@ export const AdminLayout: React.FC = () => {
   // Helper to determine if a navigation item is active, including Stitch dashboard view query tabs.
   const isItemActive = (itemTo: string) => {
     const [path, queryString] = itemTo.split('?');
-    const isClientsSection = path === '/admin/clients' && location.pathname.startsWith('/admin/clients/');
-    const isCmsSection = path === '/admin/cms/projects' && location.pathname.startsWith('/admin/cms/');
-    const isTeamSection = path === '/admin/team' && (location.pathname === '/admin/team' || location.pathname === '/admin/time-logs' || location.pathname === '/admin/vendors');
-    if (location.pathname !== path && !isClientsSection && !isCmsSection && !isTeamSection) return false;
+    const actual = new URLSearchParams(location.search);
+
+    if (path === '/admin/clients/all-clients' && location.pathname.startsWith('/admin/clients/')) return true;
+    if (path === '/admin/cms/projects' && location.pathname.startsWith('/admin/cms/')) return true;
+    if (path === '/admin/tasks' && location.pathname === '/admin/dashboard' && actual.get('view') === 'tasks') return true;
+    if (location.pathname !== path) return false;
 
     if (queryString) {
       const expected = new URLSearchParams(queryString);
-      const actual = new URLSearchParams(location.search);
-      return Array.from(expected.entries()).every(([key, value]) => {
-        // The Team Directory is the default view when /admin/team has no query.
-        if (path === '/admin/team' && key === 'view' && value === 'team-directory') {
-          return !actual.has('view') || actual.get(key) === value;
-        }
-        return actual.get(key) === value;
-      });
+      return Array.from(expected.entries()).every(([key, value]) => actual.get(key) === value);
     }
 
-    if (path === '/admin/dashboard') {
-      return new URLSearchParams(location.search).get('view') !== 'tasks';
-    }
-
-    if (path === '/admin/tasks') {
-      return location.pathname === '/admin/tasks' || (location.pathname === '/admin/dashboard' && new URLSearchParams(location.search).get('view') === 'tasks');
-    }
-
-    if (path === '/admin/team') {
-      return location.pathname === '/admin/team' || location.pathname === '/admin/time-logs' || location.pathname === '/admin/vendors';
-    }
-
-    if (path === '/admin/cms/projects') {
-      return location.pathname.startsWith('/admin/cms/');
-    }
-
-    if (path === '/admin/settings') {
-      return !location.search.includes('tab=rbac');
-    }
+    if (path === '/admin/dashboard') return actual.get('view') !== 'tasks';
+    if (path === '/admin/team') return !['vendor-directory', 'skill-matrix', 'time-logs'].includes(actual.get('view') || '');
+    if (path === '/admin/settings') return !actual.has('tab') || actual.get('tab') !== 'rbac';
 
     return true;
   };
 
   const activeNavItem = filteredNavItems.find((item) => isItemActive(item.to));
   const activeItemLabel = activeNavItem?.label || 'Dashboard';
-  const activeSectionLabel = activeNavItem?.group || AGENCY_TIER_LABELS[agencyTier];
-  const navGroups = NAV_GROUPS;
-  const getGroupItems = (group: AdminNavGroup) => filteredNavItems.filter(item => item.group === group);
 
   return (
     <ReportingPeriodProvider>
@@ -325,39 +285,28 @@ export const AdminLayout: React.FC = () => {
         </div>
 
         <div className="flex-1 min-h-0 overflow-x-hidden overflow-y-auto overscroll-contain px-3.5 py-4 custom-scrollbar">
-          <nav aria-label="Primary navigation" className="space-y-5">
-            {navGroups.map((group) => {
-              const items = getGroupItems(group);
-              if (!items.length) return null;
+          <nav aria-label="Primary navigation" className="space-y-1">
+            {filteredNavItems.map((item) => {
+              const Icon = item.icon;
+              const active = isItemActive(item.to);
               return (
-                <section key={group} aria-label={group}>
-                  <div className="px-2 pb-1.5 text-[11px] font-medium tracking-normal text-muted">{group}</div>
-                  <div className="space-y-1">
-                    {items.map((item) => {
-                      const Icon = item.icon;
-                      const active = isItemActive(item.to);
-                      return (
-                        <Link
-                          key={item.key}
-                          to={item.to}
-                          aria-current={active ? "page" : undefined}
-                          className={["group relative flex min-h-10 items-center gap-2.5 rounded-control px-2.5 text-[12px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent", active ? "border border-accent/25 bg-accent/10 text-fg" : "border border-transparent text-muted hover:border-line hover:bg-bg/70 hover:text-fg"].join(" ")}
-                        >
-                          {active && <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-accent" aria-hidden="true" />}
-                          <span className={["flex h-7 w-7 shrink-0 items-center justify-center", active ? "text-fg" : "text-muted group-hover:text-fg"].join(" ")}>
-                            <Icon size={15} strokeWidth={active ? 2.1 : 1.8} />
-                          </span>
-                          <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                          {item.badge !== null && item.badge !== undefined && (
-                            <span className={["shrink-0 rounded-badge border px-1.5 py-0.5 text-[10px] font-semibold", active ? "border-accent/15 bg-bg text-muted" : "border-line bg-bg text-muted"].join(" ")}>
-                              {item.badge}
-                            </span>
-                          )}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </section>
+                <Link
+                  key={item.key}
+                  to={item.to}
+                  aria-current={active ? "page" : undefined}
+                  className={["group relative flex min-h-10 items-center gap-2.5 rounded-control px-2.5 text-[12px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent", active ? "border border-accent/25 bg-accent/10 text-fg" : "border border-transparent text-muted hover:border-line hover:bg-bg/70 hover:text-fg"].join(" ")}
+                >
+                  {active && <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-accent" aria-hidden="true" />}
+                  <span className={["flex h-7 w-7 shrink-0 items-center justify-center", active ? "text-fg" : "text-muted group-hover:text-fg"].join(" ")}>
+                    <Icon size={15} strokeWidth={active ? 2.1 : 1.8} />
+                  </span>
+                  <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                  {item.badge !== null && item.badge !== undefined && (
+                    <span className={["shrink-0 rounded-badge border px-1.5 py-0.5 text-[10px] font-semibold", active ? "border-accent/15 bg-bg text-muted" : "border-line bg-bg text-muted"].join(" ")}>
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
               );
             })}
           </nav>
@@ -554,38 +503,27 @@ export const AdminLayout: React.FC = () => {
             </div>
 
             <nav aria-label="Primary navigation" className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-4 custom-scrollbar">
-              <div className="space-y-5">
-                {navGroups.map((group) => {
-                  const items = getGroupItems(group);
-                  if (!items.length) return null;
+              <div className="space-y-1">
+                {filteredNavItems.map((item) => {
+                  const Icon = item.icon;
+                  const active = isItemActive(item.to);
                   return (
-                    <section key={group} aria-label={group}>
-                      <div className="px-2 pb-1.5 text-[11px] font-medium tracking-normal text-muted">{group}</div>
-                      <div className="space-y-1">
-                        {items.map((item) => {
-                          const Icon = item.icon;
-                          const active = isItemActive(item.to);
-                          return (
-                            <Link
-                              key={item.key}
-                              to={item.to}
-                              onClick={() => setMobileMenuOpen(false)}
-                              aria-current={active ? "page" : undefined}
-                              className={["relative flex min-h-10 items-center gap-2.5 rounded-control px-2.5 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent", active ? "border border-accent/25 bg-accent/10 font-semibold text-fg" : "border border-transparent text-muted hover:border-line hover:bg-bg/70 hover:text-fg"].join(" ")}
-                            >
-                              {active && <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-accent" aria-hidden="true" />}
-                              <span className={["flex h-7 w-7 shrink-0 items-center justify-center", active ? "text-fg" : "text-muted group-hover:text-fg"].join(" ")}>
-                                <Icon size={16} strokeWidth={active ? 2.1 : 1.8} />
-                              </span>
-                              <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                              {item.badge !== null && item.badge !== undefined && (
-                                <span className="shrink-0 rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] font-semibold text-muted">{item.badge}</span>
-                              )}
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    </section>
+                    <Link
+                      key={item.key}
+                      to={item.to}
+                      onClick={() => setMobileMenuOpen(false)}
+                      aria-current={active ? "page" : undefined}
+                      className={["group relative flex min-h-10 items-center gap-2.5 rounded-control px-2.5 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent", active ? "border border-accent/25 bg-accent/10 font-semibold text-fg" : "border border-transparent text-muted hover:border-line hover:bg-bg/70 hover:text-fg"].join(" ")}
+                    >
+                      {active && <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-accent" aria-hidden="true" />}
+                      <span className={["flex h-7 w-7 shrink-0 items-center justify-center", active ? "text-fg" : "text-muted group-hover:text-fg"].join(" ")}>
+                        <Icon size={16} strokeWidth={active ? 2.1 : 1.8} />
+                      </span>
+                      <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                      {item.badge !== null && item.badge !== undefined && (
+                        <span className="shrink-0 rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] font-semibold text-muted">{item.badge}</span>
+                      )}
+                    </Link>
                   );
                 })}
               </div>
@@ -649,7 +587,7 @@ export const AdminLayout: React.FC = () => {
                   items={[
                     { key: 'all-clients', label: 'All Clients', to: '/admin/clients/all-clients' },
                     { key: 'retainers', label: 'Retainers', to: '/admin/clients/retainers' },
-                    { key: 'sla-monitoring', label: 'SLA Monitoring', to: '/admin/clients/sla-monitoring' }
+                    { key: 'sla-monitoring', label: 'SLA', to: '/admin/clients/sla-monitoring' }
                   ]}
                 />
               ) : location.pathname.startsWith('/admin/cms/') ? (
@@ -680,8 +618,8 @@ export const AdminLayout: React.FC = () => {
                   activeKey={new URLSearchParams(location.search).get('projects') || 'all'}
                   items={[
                     { key: 'all', label: 'All Projects', to: '/admin/projects' },
-                    { key: 'sprint', label: 'Sprint & Delivery', to: '/admin/projects?projects=sprint' },
-                    { key: 'budget', label: 'Budget vs Actual', to: '/admin/projects?projects=budget' },
+                    { key: 'sprint', label: 'Delivery', to: '/admin/projects?projects=sprint' },
+                    { key: 'budget', label: 'Budget', to: '/admin/projects?projects=budget' },
                     { key: 'archived', label: 'Archived', to: '/admin/projects?projects=archived' }
                   ]}
                 />
@@ -692,8 +630,8 @@ export const AdminLayout: React.FC = () => {
                   items={[
                     { key: 'all', label: 'All Tasks', to: '/admin/dashboard?view=tasks', slug: 'task-tab-all' },
                     { key: 'my', label: 'My Tasks', to: '/admin/dashboard?view=tasks&taskscope=my', slug: 'task-tab-my' },
-                    { key: 'due', label: 'Due & Overdue', to: '/admin/dashboard?view=tasks&taskscope=due', slug: 'task-tab-due' },
-                    { key: 'review', label: 'Review Queue', to: '/admin/dashboard?view=tasks&taskscope=review', slug: 'task-tab-review' },
+                    { key: 'due', label: 'Due', to: '/admin/dashboard?view=tasks&taskscope=due', slug: 'task-tab-due' },
+                    { key: 'review', label: 'Review', to: '/admin/dashboard?view=tasks&taskscope=review', slug: 'task-tab-review' },
                     { key: 'blocked', label: 'Blocked', to: '/admin/dashboard?view=tasks&taskscope=blocked', slug: 'task-tab-blocked' },
                     { key: 'completed', label: 'Completed', to: '/admin/dashboard?view=tasks&taskscope=completed', slug: 'task-tab-completed' }
                   ]}
@@ -705,8 +643,8 @@ export const AdminLayout: React.FC = () => {
                   items={[
                     { key: 'all', label: 'All Tasks', to: '/admin/tasks', slug: 'task-tab-all' },
                     { key: 'my', label: 'My Tasks', to: '/admin/tasks?taskscope=my', slug: 'task-tab-my' },
-                    { key: 'due', label: 'Due & Overdue', to: '/admin/tasks?taskscope=due', slug: 'task-tab-due' },
-                    { key: 'review', label: 'Review Queue', to: '/admin/tasks?taskscope=review', slug: 'task-tab-review' },
+                    { key: 'due', label: 'Due', to: '/admin/tasks?taskscope=due', slug: 'task-tab-due' },
+                    { key: 'review', label: 'Review', to: '/admin/tasks?taskscope=review', slug: 'task-tab-review' },
                     { key: 'blocked', label: 'Blocked', to: '/admin/tasks?taskscope=blocked', slug: 'task-tab-blocked' },
                     { key: 'completed', label: 'Completed', to: '/admin/tasks?taskscope=completed', slug: 'task-tab-completed' }
                   ]}
@@ -717,8 +655,8 @@ export const AdminLayout: React.FC = () => {
                   activeKey={new URLSearchParams(location.search).get('view') || 'overview'}
                   items={[
                     { key: 'overview', label: 'Overview', to: '/admin/inbox?view=overview', slug: 'inbox-tab-overview' },
-                    { key: 'client', label: 'Client Inbox', to: '/admin/inbox?view=client', slug: 'inbox-tab-client' },
-                    { key: 'jobs', label: 'Job Applications', to: '/admin/inbox?view=jobs', slug: 'inbox-tab-jobs' },
+                    { key: 'client', label: 'Clients', to: '/admin/inbox?view=client', slug: 'inbox-tab-client' },
+                    { key: 'jobs', label: 'Jobs', to: '/admin/inbox?view=jobs', slug: 'inbox-tab-jobs' },
                     { key: 'starred', label: 'Starred', to: '/admin/inbox?view=starred', slug: 'inbox-tab-starred' }
                   ]}
                 />
@@ -737,18 +675,22 @@ export const AdminLayout: React.FC = () => {
                     { key: 'accounting', label: t('admin.finance.tab.accountingReports'), to: '/admin/finance?tab=journal', slug: 'finance-tab-accounting-reports' }
                   ]}
                 />
-              ) : location.pathname === '/admin/team' || location.pathname === '/admin/time-logs' || location.pathname === '/admin/vendors' ? (
+              ) : location.pathname === '/admin/team' ? (
                 <AdminTopbarTabs
                   ariaLabel="Team sections"
-                  activeKey={location.pathname === '/admin/team'
-                    ? (new URLSearchParams(location.search).get('view') || 'team-directory')
-                    : location.pathname === '/admin/vendors' ? 'vendor-directory' : 'time-logs'}
+                  activeKey={new URLSearchParams(location.search).get('view') || 'team-directory'}
                   items={[
                     { key: 'team-directory', label: 'Team Directory', to: '/admin/team' },
-                    { key: 'vendor-directory', label: 'Vendor Directory', to: '/admin/team?view=vendor-directory' },
-                    { key: 'capacity-allocation', label: 'Capacity & Allocation', to: '/admin/team?view=capacity-allocation' },
-                    { key: 'skill-matrix', label: 'Skill Matrix', to: '/admin/team?view=skill-matrix' },
-                    { key: 'time-logs', label: 'Time Logs', to: '/admin/team?view=time-logs' }
+                    { key: 'capacity-allocation', label: 'Capacity', to: '/admin/team?view=capacity-allocation' }
+                  ]}
+                />
+              ) : location.pathname === '/admin/vendors' ? (
+                <AdminTopbarTabs
+                  ariaLabel="Vendors sections"
+                  activeKey={new URLSearchParams(location.search).get('view') || 'vendor-directory'}
+                  items={[
+                    { key: 'vendor-directory', label: 'Vendor Directory', to: '/admin/vendors' },
+                    { key: 'skill-matrix', label: 'Skills', to: '/admin/vendors?view=skill-matrix' }
                   ]}
                 />
               ) : location.pathname === '/admin/settings' ? (
@@ -761,9 +703,9 @@ export const AdminLayout: React.FC = () => {
                     return activeTab;
                   })()}
                   items={[
-                    { key: 'overview', label: 'Overview & Backups', to: '/admin/settings?tab=overview' },
+                    { key: 'overview', label: 'Overview', to: '/admin/settings?tab=overview' },
                     { key: 'audit', label: 'Audit Logs', to: '/admin/settings?tab=audit' },
-                    { key: 'security', label: 'Security & MFA', to: '/admin/settings?tab=security' },
+                    { key: 'security', label: 'Security', to: '/admin/settings?tab=security' },
                     { key: 'integrations', label: 'Integrations', to: '/admin/settings?tab=integrations' }
                   ]}
                 />
@@ -772,20 +714,16 @@ export const AdminLayout: React.FC = () => {
                   ariaLabel="Documents sections"
                   activeKey={new URLSearchParams(location.search).get('documents') || 'all'}
                   items={[
-                    { key: 'all', label: 'All Internal Documents', to: '/admin/documents', slug: 'documents-tab-all' },
-                    { key: 'sops', label: 'SOPs & Policies', to: '/admin/documents?documents=sops', slug: 'documents-tab-sops' },
-                    { key: 'legal', label: 'Legal & Corporate', to: '/admin/documents?documents=legal', slug: 'documents-tab-legal' },
-                    { key: 'finance', label: 'Finance & Tax', to: '/admin/documents?documents=finance', slug: 'documents-tab-finance' },
-                    { key: 'infra', label: 'Infrastructure & Keys', to: '/admin/documents?documents=infra', slug: 'documents-tab-infra' }
+                    { key: 'all', label: 'All Documents', to: '/admin/documents', slug: 'documents-tab-all' },
+                    { key: 'sops', label: 'Policies', to: '/admin/documents?documents=sops', slug: 'documents-tab-sops' },
+                    { key: 'legal', label: 'Legal', to: '/admin/documents?documents=legal', slug: 'documents-tab-legal' },
+                    { key: 'finance', label: 'Finance', to: '/admin/documents?documents=finance', slug: 'documents-tab-finance' },
+                    { key: 'infra', label: 'Access', to: '/admin/documents?documents=infra', slug: 'documents-tab-infra' }
                   ]}
                 />
               ) : (
-                <nav aria-label="Breadcrumb">
-                  <ol className="flex min-w-0 items-center gap-2 text-[11px]">
-                    <li className="shrink-0 font-medium text-muted">{activeSectionLabel}</li>
-                    <li aria-hidden="true" className="shrink-0 text-muted/60">/</li>
-                    <li aria-current="page" className="min-w-0 truncate font-semibold text-fg">{activeItemLabel}</li>
-                  </ol>
+                <nav aria-label="Current module">
+                  <span aria-current="page" className="min-w-0 truncate text-[11px] font-semibold text-fg">{activeItemLabel}</span>
                 </nav>
               )}
             </div>

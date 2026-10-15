@@ -283,7 +283,24 @@ const ModuleRoute: React.FC<{
 
 const TeamWorkspaceRoute: React.FC = () => {
   const location = useLocation();
-  const view = new URLSearchParams(location.search).get('view') || 'team-directory';
+  const requestedView = new URLSearchParams(location.search).get('view');
+
+  // Preserve old deep links, but keep each workspace under its own module.
+  if (location.pathname === '/admin/team' && requestedView === 'vendor-directory') {
+    return <Navigate to="/admin/vendors" replace />;
+  }
+  if (location.pathname === '/admin/team' && requestedView === 'skill-matrix') {
+    return <Navigate to="/admin/vendors?view=skill-matrix" replace />;
+  }
+  if (location.pathname === '/admin/team' && requestedView === 'time-logs') {
+    return <Navigate to="/admin/time-logs" replace />;
+  }
+
+  const view = location.pathname === '/admin/vendors'
+    ? requestedView === 'skill-matrix' ? 'skill-matrix' : 'vendor-directory'
+    : location.pathname === '/admin/time-logs'
+      ? 'time-logs'
+      : requestedView || 'team-directory';
   const isVendorWorkspace = view === 'vendor-directory' || view === 'skill-matrix';
   const moduleKey = isVendorWorkspace ? 'vendors' : 'timelogs';
   const moduleLabel = isVendorWorkspace ? 'vendors' : view === 'time-logs' ? 'time logs' : 'team operations';
@@ -323,8 +340,8 @@ const App = () => {
                 <Route path="approvals" element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="documents" element={<ModuleRoute moduleKey="documents" moduleLabel="documents"><AdminDocuments /></ModuleRoute>} />
                 <Route path="team" element={<TeamWorkspaceRoute />} />
-                <Route path="time-logs" element={<Navigate to="/admin/team?view=time-logs" replace />} />
-                <Route path="vendors" element={<Navigate to="/admin/team?view=vendor-directory" replace />} />
+                <Route path="time-logs" element={<TeamWorkspaceRoute />} />
+                <Route path="vendors" element={<TeamWorkspaceRoute />} />
                 <Route path="clients" element={<Navigate to="/admin/clients/all-clients" replace />} />
                 <Route path="clients/all-clients" element={<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClients /></ModuleRoute>} />
                 <Route path="clients/retainers" element={<ModuleRoute moduleKey="clients" moduleLabel="clients"><AdminClientRetainers /></ModuleRoute>} />
