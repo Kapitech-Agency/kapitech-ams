@@ -73,6 +73,7 @@ import { postgresApprovalRepository } from './postgres-approval-repository.ts';
 import { postgresNotificationRepository } from './postgres-notification-repository.ts';
 import { canViewNotification, getHiddenNotificationTypes } from './notification-access.ts';
 import { postgresDocumentRepository } from './postgres-document-repository.ts';
+import { postgresContractRepository } from './postgres-contract-repository.ts';
 import { postgresAuditLogRepository } from './postgres-audit-log-repository.ts';
 import { postgresCmsRepository } from './postgres-cms-repository.ts';
 import { postgresNotificationSettingsRepository } from './postgres-notification-settings-repository.ts';
@@ -2794,7 +2795,288 @@ apiRouter.delete('/clients/:id', requireAuth, requirePermission('canManageClient
 });
 
 // ----------------------------------------------------
-// 5. PROJECTS MANAGEMENT
+// 5. CLIENT CONTRACTS & STATEMENTS OF WORK
+// ----------------------------------------------------
+
+const CLIENT_CONTRACT_TYPES = ['msa', 'sow', 'service_agreement', 'nda', 'change_order'] as const;
+const CLIENT_CONTRACT_STATUSES = ['draft', 'in_review', 'sent', 'signed', 'active', 'completed', 'expired', 'terminated'] as const;
+const CLIENT_CONTRACT_TRANSITIONS: Record<string, string[]> = {
+  draft: ['in_review'],
+  in_review: ['draft', 'sent'],
+  sent: ['signed'],
+  signed: ['active'],
+  active: ['completed', 'expired', 'terminated'],
+  completed: [],
+  expired: [],
+  terminated: []
+};
+
+async function listClientContracts(): Promise<any[]> {
+  if (getDataSourceMode() === 'postgres') return postgresContractRepository.list();
+  const db: any = getDatabase();
+  return (Array.isArray(db.contracts) ? db.contracts : [])
+    .slice()
+    .sort((a: any, b: any) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')));
+}
+
+async function findClientContract(id: string): Promise<any | null> {
+  if (getDataSourceMode() === 'postgres') return postgresContractRepository.findById(id);
+  const db: any = getDatabase();
+  return (Array.isArray(db.contracts) ? db.contracts : []).find((contract: any) => String(contract.id) === id) || null;
+}
+
+function contractAudit(req: AuthenticatedRequest, action: string, details: string, severity: 'info' | 'warning' = 'info') {
+  return makeAuditEntry(req, action, details, severity);
+}
+
+apiRouter.get('/contracts', requireAuth, requireAnyPermission('canManageProjects', 'canManageCrm', 'canManageClients'), async (_req: AuthenticatedRequest, res: Response): Promise<void> => {
+  res.json({ success: true, contracts: await listClientContracts() });
+});
+
+apiRouter.post('/contracts', requireAuth, requireAnyPermission('canManageProjects', 'canManageCrm', 'canManageClients'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const data = req.body || {};
+  const title = cleanText(data.title, 200);
+  const clientName = cleanText(data.clientName, 200);
+  const clientId = cleanText(data.clientId, 120);
+  const projectId = cleanText(data.projectId, 120);
+  const contractType = String(data.contractType || 'sow');
+  const currency = String(data.currency || 'IDR');
+  const contractValue = normalizeNumber(data.contractValue ?? 0, 0, MAX_MONEY);
+
+  if (!title || !clientName) {
+    res.status(400).json({ success: false, error: 'Contract title and client are required.' });
+    return;
+  }
+  if (!(CLIENT_CONTRACT_TYPES as readonly string[]).includes(contractType)) {
+    res.status(400).json({ success: false, error: 'Select a valid contract type.' });
+    return;
+  }
+  if (!['IDR', 'USD'].includes(currency) || contractValue === null) {
+    res.status(400).json({ success: false, error: 'Contract value or currency is invalid.' });
+    return;
+  }
+
+  const startDate = cleanText(data.startDate, 10);
+  const endDate = cleanText(data.endDate, 10);
+  const renewalDate = cleanText(data.renewalDate, 10);
+  for (const [field, value] of [['startDate', startDate], ['endDate', endDate], ['renewalDate', renewalDate]] as const) {
+    if (value && !isValidDate(value)) {
+      res.status(400).json({ success: false, error: 'Invalid date for ' + field + '.' });
+      return;
+    }
+  }
+  if (startDate && endDate && endDate < startDate) {
+    res.status(400).json({ success: false, error: 'Contract end date must be on or after its start date.' });
+    return;
+  }
+
+  if (clientId || projectId) {
+    if (getDataSourceMode() === 'postgres') {
+      const pool = getPostgresPool();
+      if (clientId) {
+        const linked = await pool.query('SELECT id FROM clients WHERE id = $1 LIMIT 1', [clientId]);
+        if (!linked.rows[0]) { res.status(400).json({ success: false, error: 'The selected client no longer exists.' }); return; }
+      }
+      if (projectId) {
+        const linked = await pool.query('SELECT id FROM projects WHERE id = $1 LIMIT 1', [projectId]);
+        if (!linked.rows[0]) { res.status(400).json({ success: false, error: 'The selected project no longer exists.' }); return; }
+      }
+    } else {
+      const db: any = getDatabase();
+      if (clientId && !(db.clients || []).some((item: any) => String(item.id) === clientId)) {
+        res.status(400).json({ success: false, error: 'The selected client no longer exists.' });
+        return;
+      }
+      if (projectId && !(db.projects || []).some((item: any) => String(item.id) === projectId)) {
+        res.status(400).json({ success: false, error: 'The selected project no longer exists.' });
+        return;
+      }
+    }
+  }
+
+  const rawUrl = cleanText(data.documentUrl, 2048);
+  const documentUrl = rawUrl ? cleanOptionalUrl(rawUrl) : '';
+  if (rawUrl && (!documentUrl || (() => { try { return new URL(documentUrl).protocol !== 'https:'; } catch { return true; } })())) {
+    res.status(400).json({ success: false, error: 'Contract document links must use HTTPS.' });
+    return;
+  }
+
+  const now = new Date().toISOString();
+  const contractNumber = 'KAPI-CTR-' + new Date().getFullYear() + '-' + crypto.randomBytes(3).toString('hex').toUpperCase();
+  const deliverables = Array.isArray(data.deliverables)
+    ? data.deliverables.slice(0, 100).map((item: unknown) => cleanText(item, 300)).filter(Boolean)
+    : String(data.deliverables || '').split(/\r?\n/).map((item: string) => cleanText(item, 300)).filter(Boolean).slice(0, 100);
+  const contract: any = {
+    id: 'ctr_' + Date.now() + '_' + crypto.randomBytes(6).toString('hex'),
+    contractNumber,
+    title,
+    contractType,
+    status: 'draft',
+    clientId,
+    clientName,
+    projectId,
+    projectName: cleanText(data.projectName, 200),
+    contractValue,
+    currency,
+    startDate,
+    endDate,
+    renewalDate,
+    documentUrl: documentUrl || '',
+    scope: cleanText(data.scope, 5000),
+    deliverables,
+    paymentTerms: cleanText(data.paymentTerms, 2000),
+    notes: cleanText(data.notes, 3000),
+    createdBy: req.user!.name || req.user!.username,
+    createdByUserId: req.user!.id,
+    createdAt: now,
+    updatedAt: now
+  };
+
+  let created: any;
+  if (getDataSourceMode() === 'postgres') {
+    created = await postgresContractRepository.create(contract, contractAudit(req, 'CLIENT_CONTRACT_CREATED', 'Created contract ' + contract.contractNumber + '.', 'info'));
+  } else {
+    const db: any = getDatabase();
+    if (!Array.isArray(db.contracts)) db.contracts = [];
+    db.contracts.unshift(contract);
+    saveDatabase(db);
+    await writeAuditLog({ action: 'CLIENT_CONTRACT_CREATED', actor: req.user!.username, actorRole: req.user!.role, ip: req.ip, userAgent: req.headers['user-agent'] as string, details: 'Created contract ' + contract.contractNumber + '.', severity: 'info' });
+    created = contract;
+  }
+  res.status(201).json({ success: true, contract: created });
+});
+
+apiRouter.put('/contracts/:id', requireAuth, requireAnyPermission('canManageProjects', 'canManageCrm', 'canManageClients'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const id = cleanText(req.params.id, 160);
+  const current = await findClientContract(id);
+  if (!current) { res.status(404).json({ success: false, error: 'Contract not found.' }); return; }
+  if (!['draft', 'in_review'].includes(String(current.status))) {
+    res.status(409).json({ success: false, error: 'Commercial terms are locked after a contract is sent. Create an amendment or change order instead.' });
+    return;
+  }
+
+  const updates = pickFields(req.body || {}, ['title','clientId','clientName','projectId','projectName','contractType','contractValue','currency','startDate','endDate','renewalDate','documentUrl','scope','deliverables','paymentTerms','notes']);
+  if (updates.title !== undefined) updates.title = cleanText(updates.title, 200);
+  if (updates.clientName !== undefined) updates.clientName = cleanText(updates.clientName, 200);
+  if (!String(updates.title ?? current.title ?? '').trim() || !String(updates.clientName ?? current.clientName ?? '').trim()) {
+    res.status(400).json({ success: false, error: 'Contract title and client are required.' });
+    return;
+  }
+  if (updates.contractType !== undefined && !(CLIENT_CONTRACT_TYPES as readonly string[]).includes(String(updates.contractType))) {
+    res.status(400).json({ success: false, error: 'Select a valid contract type.' });
+    return;
+  }
+  if (updates.currency !== undefined && !['IDR', 'USD'].includes(String(updates.currency))) {
+    res.status(400).json({ success: false, error: 'Select a valid currency.' });
+    return;
+  }
+  if (updates.contractValue !== undefined) {
+    const value = normalizeNumber(updates.contractValue, 0, MAX_MONEY);
+    if (value === null) { res.status(400).json({ success: false, error: 'Contract value must be a valid non-negative amount.' }); return; }
+    updates.contractValue = value;
+  }
+  for (const field of ['startDate', 'endDate', 'renewalDate'] as const) {
+    if (updates[field] !== undefined) {
+      const value = cleanText(updates[field], 10);
+      if (value && !isValidDate(value)) { res.status(400).json({ success: false, error: 'Invalid date for ' + field + '.' }); return; }
+      updates[field] = value;
+    }
+  }
+  const nextStart = String(updates.startDate ?? current.startDate ?? '');
+  const nextEnd = String(updates.endDate ?? current.endDate ?? '');
+  if (nextStart && nextEnd && nextEnd < nextStart) {
+    res.status(400).json({ success: false, error: 'Contract end date must be on or after its start date.' });
+    return;
+  }
+  if (updates.documentUrl !== undefined) {
+    const rawUrl = cleanText(updates.documentUrl, 2048);
+    const sanitized = rawUrl ? cleanOptionalUrl(rawUrl) : '';
+    if (rawUrl && (!sanitized || (() => { try { return new URL(sanitized).protocol !== 'https:'; } catch { return true; } })())) {
+      res.status(400).json({ success: false, error: 'Contract document links must use HTTPS.' });
+      return;
+    }
+    updates.documentUrl = sanitized || '';
+  }
+  if (updates.deliverables !== undefined) {
+    updates.deliverables = (Array.isArray(updates.deliverables) ? updates.deliverables : String(updates.deliverables || '').split(/\r?\n/))
+      .slice(0, 100).map((item: unknown) => cleanText(item, 300)).filter(Boolean);
+  }
+  for (const field of ['projectName','scope','paymentTerms','notes'] as const) {
+    if (updates[field] !== undefined) updates[field] = cleanText(updates[field], field === 'scope' ? 5000 : field === 'notes' ? 3000 : 2000);
+  }
+
+  const next = { ...current, ...updates, updatedAt: new Date().toISOString() };
+  let updated: any;
+  if (getDataSourceMode() === 'postgres') {
+    updated = await postgresContractRepository.update(id, next, contractAudit(req, 'CLIENT_CONTRACT_UPDATED', 'Updated draft contract ' + current.contractNumber + '.', 'info'));
+  } else {
+    const db: any = getDatabase();
+    const index = (db.contracts || []).findIndex((item: any) => String(item.id) === id);
+    if (index < 0) { res.status(404).json({ success: false, error: 'Contract not found.' }); return; }
+    db.contracts[index] = next;
+    saveDatabase(db);
+    await writeAuditLog({ action: 'CLIENT_CONTRACT_UPDATED', actor: req.user!.username, actorRole: req.user!.role, ip: req.ip, userAgent: req.headers['user-agent'] as string, details: 'Updated draft contract ' + current.contractNumber + '.', severity: 'info' });
+    updated = next;
+  }
+  res.json({ success: true, contract: updated });
+});
+
+apiRouter.post('/contracts/:id/transition', requireAuth, requireAnyPermission('canManageProjects', 'canManageCrm', 'canManageClients'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const id = cleanText(req.params.id, 160);
+  const current = await findClientContract(id);
+  if (!current) { res.status(404).json({ success: false, error: 'Contract not found.' }); return; }
+  const targetStatus = String(req.body?.status || '');
+  const allowed = CLIENT_CONTRACT_TRANSITIONS[String(current.status)] || [];
+  if (!(CLIENT_CONTRACT_STATUSES as readonly string[]).includes(targetStatus) || !allowed.includes(targetStatus)) {
+    res.status(409).json({ success: false, error: 'This contract cannot move from ' + String(current.status).replace(/_/g, ' ') + ' to ' + targetStatus.replace(/_/g, ' ') + '.' });
+    return;
+  }
+
+  const now = new Date().toISOString();
+  const patch: Record<string, unknown> = { status: targetStatus, updatedAt: now };
+  if (targetStatus === 'signed') patch.signedAt = now;
+  if (targetStatus === 'active') patch.activatedAt = now;
+  if (['completed', 'expired', 'terminated'].includes(targetStatus)) patch.closedAt = now;
+  const note = cleanText(req.body?.notes, 1000);
+  if (note) patch.statusNote = note;
+
+  let updated: any;
+  const details = 'Moved contract ' + current.contractNumber + ' from ' + current.status + ' to ' + targetStatus + '.';
+  if (getDataSourceMode() === 'postgres') {
+    updated = await postgresContractRepository.update(id, patch, contractAudit(req, 'CLIENT_CONTRACT_STATUS_CHANGED', details, 'info'));
+  } else {
+    const db: any = getDatabase();
+    const index = (db.contracts || []).findIndex((item: any) => String(item.id) === id);
+    if (index < 0) { res.status(404).json({ success: false, error: 'Contract not found.' }); return; }
+    db.contracts[index] = { ...db.contracts[index], ...patch };
+    saveDatabase(db);
+    await writeAuditLog({ action: 'CLIENT_CONTRACT_STATUS_CHANGED', actor: req.user!.username, actorRole: req.user!.role, ip: req.ip, userAgent: req.headers['user-agent'] as string, details, severity: 'info' });
+    updated = db.contracts[index];
+  }
+  res.json({ success: true, contract: updated });
+});
+
+apiRouter.delete('/contracts/:id', requireAuth, requireAnyPermission('canManageProjects', 'canManageCrm'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const id = cleanText(req.params.id, 160);
+  const current = await findClientContract(id);
+  if (!current) { res.status(404).json({ success: false, error: 'Contract not found.' }); return; }
+  if (current.status !== 'draft') {
+    res.status(409).json({ success: false, error: 'Only draft contracts can be deleted. Keep a record of contracts that entered review or signature.' });
+    return;
+  }
+  if (getDataSourceMode() === 'postgres') {
+    await postgresContractRepository.delete(id, contractAudit(req, 'CLIENT_CONTRACT_DELETED', 'Deleted draft contract ' + current.contractNumber + '.', 'warning'));
+  } else {
+    const db: any = getDatabase();
+    db.contracts = (db.contracts || []).filter((item: any) => String(item.id) !== id);
+    saveDatabase(db);
+    await writeAuditLog({ action: 'CLIENT_CONTRACT_DELETED', actor: req.user!.username, actorRole: req.user!.role, ip: req.ip, userAgent: req.headers['user-agent'] as string, details: 'Deleted draft contract ' + current.contractNumber + '.', severity: 'warning' });
+  }
+  res.json({ success: true, message: 'Draft contract removed.' });
+});
+
+// ----------------------------------------------------
+// 6. PROJECTS MANAGEMENT
 // ----------------------------------------------------
 
 apiRouter.get('/projects', requireAuth, requireAnyPermission('canManageProjects', 'canManageKanbanTasks'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
