@@ -19,6 +19,7 @@ import { AMS_PRIMARY_SETTINGS_ITEM, getAmsRole, getPrimaryNavigationForRole, isN
 import { AmsBrandLogo } from '../../components/admin/AmsBrandLogo';
 import UserProfileSettingsModal from '../../components/admin/UserProfileSettingsModal';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
+import { GlobalTimerControl } from '../../components/admin/GlobalTimerControl';
 import { AdminSystemSettingsNavigation, DynamicAdminSidebarNavigation } from '../../components/admin/DynamicAdminSidebar';
 import Button from '../../components/ui/Button';
 import { ReportingPeriodProvider } from '../../lib/ReportingPeriodContext';
@@ -218,21 +219,6 @@ export const AdminLayout: React.FC = () => {
         </div>
         <div className="shrink-0 border-t border-line bg-panel px-3.5 pb-3.5 pt-3">
           <AdminSystemSettingsNavigation role={amsRole} pathname={location.pathname} search={location.search} hash={location.hash} />
-          <div className="mt-3 grid grid-cols-1 gap-2">
-            <button
-              type="button"
-              onClick={handleLogout}
-              aria-pressed={logoutConfirmOpen}
-              className={[
-                "flex min-h-10 items-center justify-center rounded-control border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
-                logoutConfirmOpen
-                  ? "border-danger/30 bg-danger/10 text-danger"
-                  : "border-line bg-bg text-muted hover:border-danger/40 hover:bg-danger/10 hover:text-danger active:bg-danger/10 active:text-danger"
-              ].join(" ")}
-            >
-              Sign out
-            </button>
-          </div>
           <div className="mt-2 flex items-center justify-between gap-2 px-2.5 pb-1 text-[10px] text-muted">
             <span className="truncate">{AGENCY_TIER_LABELS[agencyTier]}</span>
             <span className="shrink-0">Tier {agencyTier}</span>
@@ -329,6 +315,7 @@ export const AdminLayout: React.FC = () => {
             size="sm"
             directOpen
             onEdit={() => setProfileView('edit')}
+            onLogout={handleLogout}
             slug="topbar-profile-mobile"
               />
         </div>
@@ -399,24 +386,6 @@ export const AdminLayout: React.FC = () => {
             </div>
             <div className="shrink-0 border-t border-line bg-bg px-2.5 pb-[max(10px,env(safe-area-inset-bottom))] pt-2.5">
               <AdminSystemSettingsNavigation role={amsRole} pathname={location.pathname} search={location.search} hash={location.hash} onNavigate={() => setMobileMenuOpen(false)} />
-              <div className="mt-3 grid grid-cols-1 gap-2">
-                  <button
-                  type="button"
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    handleLogout();
-                  }}
-                  aria-pressed={logoutConfirmOpen}
-                  className={[
-                    "flex min-h-10 items-center justify-center rounded-control border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
-                    logoutConfirmOpen
-                      ? "border-danger/30 bg-danger/10 text-danger"
-                      : "border-line bg-panel text-muted hover:border-danger/40 hover:bg-danger/10 hover:text-danger active:bg-danger/10 active:text-danger"
-                  ].join(" ")}
-                >
-                  Sign out
-                </button>
-              </div>
               <div className="mt-2 flex items-center justify-between gap-2 px-2.5 pb-1 text-[10px] text-muted">
                 <span className="truncate">{AGENCY_TIER_LABELS[agencyTier]}</span>
                 <span className="shrink-0">Tier {agencyTier}</span>
@@ -434,13 +403,26 @@ export const AdminLayout: React.FC = () => {
         {/* Sticky desktop top bar */}
         <header className="hidden min-[900px]:flex h-[52px] min-h-[52px] border-b border-line bg-panel sticky top-0 z-30 items-center shrink-0" aria-label="AMS top bar">
           <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-5 lg:px-6 flex min-w-0 items-center justify-between gap-3">
-            <div className="min-w-0 flex-1 overflow-hidden">
-              <nav aria-label="Current module" data-ams-slug="active-module-title">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setCommandPaletteOpen(true)}
+                aria-label="Search everything in AMS"
+                aria-keyshortcuts="Control+K Meta+K"
+                icon={<Search size={14} />}
+                className="h-8 shrink-0 justify-start gap-2 border-line bg-bg px-2.5"
+              >
+                <span className="hidden text-[11px] font-medium sm:inline">Search Everything</span>
+                <kbd className="hidden rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] text-muted md:inline">⌘K</kbd>
+              </Button>
+              <nav aria-label="Current module" data-ams-slug="active-module-title" className="min-w-0 truncate">
                 <span aria-current="page" className="min-w-0 truncate text-[11px] font-semibold text-fg">{activeItemLabel}</span>
               </nav>
             </div>
             <div className="flex shrink-0 items-center gap-1">
               <AdminReportingPeriodBar />
+              <GlobalTimerControl userId={session?.user?.id} />
               <AdminNotificationCenter />
               <Button
                 type="button"
@@ -471,6 +453,7 @@ export const AdminLayout: React.FC = () => {
                 size="sm"
                 directOpen
                 onEdit={() => setProfileView('edit')}
+                onLogout={handleLogout}
                 slug="topbar-profile-mobile"
               />
             </div>
