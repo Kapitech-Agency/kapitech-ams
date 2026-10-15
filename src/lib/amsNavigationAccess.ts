@@ -231,7 +231,7 @@ export function canAccessAmsRoute(role: AmsRole, pathname: string, search = ''):
   if (path === '/admin/dashboard') {
     if (!['Finance', 'PM'].includes(role)) return false;
     const view = params.get('view');
-    return !view || view === 'overview';
+    return !view || ['overview', 'performance', 'analytics'].includes(view);
   }
 
   if (path === '/admin/tasks') {
