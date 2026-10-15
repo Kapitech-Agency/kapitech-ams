@@ -197,7 +197,8 @@ export const AdminLayout: React.FC = () => {
     '/admin/approvals',
   ].includes(location.pathname);
   const isSettingsModuleRoute = location.pathname === '/admin/settings'
-    || location.pathname === '/admin/navigation/release-readiness';
+    || location.pathname === '/admin/navigation/release-readiness'
+    || location.pathname === '/admin/documents';
 
   return (
     <ReportingPeriodProvider>
@@ -556,23 +557,12 @@ export const AdminLayout: React.FC = () => {
                     { key: 'approvals', label: 'Approvals', to: '/admin/approvals' },
                   ]}
                 />
-              ) : location.pathname === '/admin/documents' ? (
-                <AdminTopbarTabs
-                  ariaLabel="Documents sections"
-                  activeKey={routeQuery.get('documents') || 'all'}
-                  items={[
-                    { key: 'all', label: 'All', to: '/admin/documents', slug: 'documents-tab-all' },
-                    { key: 'sops', label: 'Policies', to: '/admin/documents?documents=sops', slug: 'documents-tab-sops' },
-                    { key: 'legal', label: 'Legal', to: '/admin/documents?documents=legal', slug: 'documents-tab-legal' },
-                    { key: 'finance', label: 'Finance & Tax', to: '/admin/documents?documents=finance', slug: 'documents-tab-finance' },
-                    { key: 'infra', label: 'Infrastructure', to: '/admin/documents?documents=infra', slug: 'documents-tab-infra' },
-                  ]}
-                />
               ) : isSettingsModuleRoute ? (
                 <AdminTopbarTabs
                   ariaLabel="Settings sections"
                   activeKey={
                     location.pathname === '/admin/navigation/release-readiness' ? 'readiness'
+                      : location.pathname === '/admin/documents' ? 'docs'
                       : ['profile', 'rbac', 'security'].includes(routeQuery.get('tab') || '') ? 'access'
                       : ['branding', 'api', 'integrations'].includes(routeQuery.get('tab') || '') ? 'integrations'
                       : routeQuery.get('tab') === 'audit' ? 'audit'
@@ -584,6 +574,7 @@ export const AdminLayout: React.FC = () => {
                     { key: 'audit', label: 'Audit', to: '/admin/settings?tab=audit' },
                     { key: 'integrations', label: 'Integrations', to: '/admin/settings?tab=integrations' },
                     { key: 'readiness', label: 'Readiness', to: '/admin/navigation/release-readiness' },
+                    { key: 'docs', label: 'Documents', to: '/admin/documents' },
                   ]}
                 />
               ) : (
