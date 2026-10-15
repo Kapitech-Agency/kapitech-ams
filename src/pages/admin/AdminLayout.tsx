@@ -630,9 +630,9 @@ export const AdminLayout: React.FC = () => {
                   ariaLabel="Clients sections"
                   activeKey={location.pathname === '/admin/clients/retainers' ? 'retainers' : location.pathname === '/admin/clients/sla-monitoring' ? 'sla-monitoring' : location.pathname === '/admin/clients' || location.pathname === '/admin/clients/all-clients' ? 'all-clients' : ''}
                   items={[
-                    { key: 'all-clients', label: 'All Clients', to: '/admin/clients/all-clients' },
-                    { key: 'retainers', label: 'Retainers', to: '/admin/clients/retainers' },
-                    { key: 'sla-monitoring', label: 'SLA', to: '/admin/clients/sla-monitoring' }
+                    { key: 'all-clients', label: 'Client Directory', to: '/admin/clients/all-clients' },
+                    { key: 'retainers', label: 'Retainer Plans', to: '/admin/clients/retainers' },
+                    { key: 'sla-monitoring', label: 'Service Health', to: '/admin/clients/sla-monitoring' }
                   ]}
                 />
               ) : location.pathname.startsWith('/admin/cms/') ? (
@@ -664,7 +664,7 @@ export const AdminLayout: React.FC = () => {
                   items={[
                     { key: 'all', label: 'All Projects', to: '/admin/projects' },
                     { key: 'sprint', label: 'Delivery', to: '/admin/projects?projects=sprint' },
-                    { key: 'budget', label: 'Budget', to: '/admin/projects?projects=budget' },
+                    { key: 'budget', label: 'Budget vs Actual', to: '/admin/projects?projects=budget' },
                     { key: 'archived', label: 'Archived', to: '/admin/projects?projects=archived' }
                   ]}
                 />
@@ -675,8 +675,8 @@ export const AdminLayout: React.FC = () => {
                   items={[
                     { key: 'all', label: 'All Tasks', to: '/admin/dashboard?view=tasks', slug: 'task-tab-all' },
                     { key: 'my', label: 'My Tasks', to: '/admin/dashboard?view=tasks&taskscope=my', slug: 'task-tab-my' },
-                    { key: 'due', label: 'Due', to: '/admin/dashboard?view=tasks&taskscope=due', slug: 'task-tab-due' },
-                    { key: 'review', label: 'Review', to: '/admin/dashboard?view=tasks&taskscope=review', slug: 'task-tab-review' },
+                    { key: 'due', label: 'Due & Overdue', to: '/admin/dashboard?view=tasks&taskscope=due', slug: 'task-tab-due' },
+                    { key: 'review', label: 'Review Queue', to: '/admin/dashboard?view=tasks&taskscope=review', slug: 'task-tab-review' },
                     { key: 'blocked', label: 'Blocked', to: '/admin/dashboard?view=tasks&taskscope=blocked', slug: 'task-tab-blocked' },
                     { key: 'completed', label: 'Completed', to: '/admin/dashboard?view=tasks&taskscope=completed', slug: 'task-tab-completed' }
                   ]}
@@ -760,10 +760,10 @@ export const AdminLayout: React.FC = () => {
                   activeKey={new URLSearchParams(location.search).get('documents') || 'all'}
                   items={[
                     { key: 'all', label: 'All Documents', to: '/admin/documents', slug: 'documents-tab-all' },
-                    { key: 'sops', label: 'Policies', to: '/admin/documents?documents=sops', slug: 'documents-tab-sops' },
-                    { key: 'legal', label: 'Legal', to: '/admin/documents?documents=legal', slug: 'documents-tab-legal' },
+                    { key: 'sops', label: 'SOPs & Policies', to: '/admin/documents?documents=sops', slug: 'documents-tab-sops' },
+                    { key: 'legal', label: 'Legal & Corporate', to: '/admin/documents?documents=legal', slug: 'documents-tab-legal' },
                     { key: 'finance', label: 'Finance', to: '/admin/documents?documents=finance', slug: 'documents-tab-finance' },
-                    { key: 'infra', label: 'Access', to: '/admin/documents?documents=infra', slug: 'documents-tab-infra' }
+                    { key: 'infra', label: 'Infrastructure & Access', to: '/admin/documents?documents=infra', slug: 'documents-tab-infra' }
                   ]}
                 />
               ) : (
