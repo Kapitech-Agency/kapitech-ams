@@ -73,6 +73,46 @@ test('MFA enrolment route is accessible before module permissions are evaluated'
 });
 
 
+test('primary navigation groups supported workspaces and deep-links existing Team views', async () => {
+  const layout = await read('src/pages/admin/AdminLayout.tsx');
+  const app = await read('src/App.tsx');
+  const clients = await read('src/pages/admin/AdminClients.tsx');
+  const retainers = await read('src/pages/admin/AdminClientRetainers.tsx');
+  const sla = await read('src/pages/admin/AdminClientSlaMonitoring.tsx');
+
+  for (const group of [
+    "'Business & Sales Management'",
+    "'Project & Delivery Operations'",
+    "'Finance & Business Control'",
+    "'Internal Management & Governance'"
+  ]) {
+    assert.ok(layout.includes(group), 'Primary navigation must include the ' + group + ' group.');
+  }
+
+  assert.match(layout, /key: 'dashboard',[^\n]*group: 'Business & Sales Management'/);
+  assert.match(layout, /key: 'inbox',[^\n]*group: 'Business & Sales Management'/);
+  assert.match(layout, /key: 'clients',[^\n]*group: 'Business & Sales Management'/);
+  assert.match(layout, /key: 'projects',[^\n]*group: 'Project & Delivery Operations'/);
+  assert.match(layout, /key: 'tasks',[^\n]*group: 'Project & Delivery Operations'/);
+  assert.match(layout, /key: 'finance',[^\n]*group: 'Finance & Business Control'/);
+  assert.match(layout, /key: 'vendors',[^\n]*group: 'Finance & Business Control'/);
+  assert.match(layout, /key: 'documents',[^\n]*group: 'Internal Management & Governance'/);
+  assert.match(layout, /key: 'cms',[^\n]*group: 'Internal Management & Governance'/);
+
+  assert.ok(layout.includes("to: '/admin/team?view=team-directory', label: 'Team Directory'"));
+  assert.ok(layout.includes("to: '/admin/team?view=time-logs', label: 'Time Logs'"));
+  assert.ok(layout.includes("to: '/admin/team?view=vendor-directory', label: 'Vendors'"));
+  assert.ok(layout.includes("value === 'team-directory'"), 'Team Directory must remain the default active view when no query is present.');
+  assert.ok(app.includes('<Route path="team" element={<TeamWorkspaceRoute />} />'));
+  assert.ok(app.includes("view === 'vendor-directory' || view === 'skill-matrix'"));
+  assert.equal(layout.includes("label: 'CRM'"), false, 'Unavailable CRM UI must not be exposed as an active menu item.');
+  assert.equal(layout.includes("label: 'Proposals'"), false, 'Unavailable proposals UI must not be exposed as an active menu item.');
+  assert.equal(layout.includes("label: 'Approvals'"), false, 'Unavailable approvals UI must not be exposed as an active menu item.');
+  for (const [name, source] of [['Clients', clients], ['Retainers', retainers], ['SLA Monitoring', sla]] as const) {
+    assert.equal(source.includes("to: '/admin/clients/lead-accounts'"), false, name + ' navigation must not expose the retired Lead Accounts route.');
+  }
+});
+
 test('Retired CRM routes redirect to supported workspaces', async () => {
   const app = await read('src/App.tsx');
   const layout = await read('src/pages/admin/AdminLayout.tsx');
