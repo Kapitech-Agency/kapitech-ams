@@ -1854,7 +1854,7 @@ export const AdminProjects: React.FC = () => {
             : view === 'sprint'
               ? 'Move work through execution stages and keep delivery ownership visible.'
               : view === 'budget'
-                ? 'Compare committed project value with progress-based budget burn. Financial actuals can replace the demo burn when the ledger is connected.'
+                ? 'Compare each project budget with recorded Finance expenses linked to that project. Delivery progress is never used as a cost estimate.'
                 : 'Completed projects kept visible for reference, handover history, and future reuse.'
         }
         actions={(
@@ -2175,7 +2175,8 @@ export const AdminProjects: React.FC = () => {
                           ) : (
                             items.map(project => {
                               const taskDone = project.tasks.filter(task => task.status === 'done').length;
-                              const burn = Math.round(project.budget * (project.progressPercent / 100));
+                              const recordedCost = getRecordedExpense(project.id);
+                              const recordedCostCount = recordedExpenseTotals?.get(project.id)?.count || 0;
                               const milestoneDone = project.milestones.filter(milestone => milestone.completed).length;
                               const isDragging = draggingProjectId === project.id;
 
@@ -2283,13 +2284,13 @@ export const AdminProjects: React.FC = () => {
                                   <div className="mt-3 border-t border-line pt-3">
                                     <div className="flex items-end justify-between gap-3">
                                       <div className="min-w-0">
-                                        <div className="text-[10px] font-medium text-muted">Budget burn</div>
+                                        <div className="text-[10px] font-medium text-muted">Recorded cost</div>
                                         <div className="mt-0.5 break-words whitespace-normal text-xs font-medium tabular-nums text-fg">
-                                          {formatAmount(burn, currency)}
+                                          {recordedCost === null ? '—' : formatAmount(recordedCost, currency)}
                                           <span className="text-muted"> / {formatAmount(project.budget, currency)}</span>
                                         </div>
                                         <div className="mt-1 text-[9px] text-muted">
-                                          {project.budget > 0 ? Math.round((burn / project.budget) * 100) : 0}% budget burn
+                                          {recordedCost === null ? 'Finance source unavailable' : recordedCostCount + ' expense records'}
                                         </div>
                                       </div>
                                       {project.teamLead ? (
@@ -2336,7 +2337,7 @@ export const AdminProjects: React.FC = () => {
                       <th>Project</th>
                       <th>Status</th>
                       <th>Progress</th>
-                      <th>Budget burn</th>
+                      <th>Recorded cost</th>
                       <th>Owner</th>
                       <th>Deadline</th>
                       <th>Actions</th>
@@ -2344,7 +2345,7 @@ export const AdminProjects: React.FC = () => {
                   </thead>
                   <tbody>
                     {pagedProjectTableRows.map(project => {
-                      const burn = Math.round(project.budget * (project.progressPercent / 100));
+                      const recordedCost = getRecordedExpense(project.id);
                       return (
                         <tr key={project.id}>
                           <td>
@@ -2360,7 +2361,7 @@ export const AdminProjects: React.FC = () => {
                               <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-bg"><div className="h-full rounded-full bg-accent" style={{ width: project.progressPercent + '%' }} /></div>
                             </div>
                           </td>
-                          <td className="text-xs tabular-nums font-medium text-fg">{formatAmount(burn, currency)} <span className="text-muted">/ {formatAmount(project.budget, currency)}</span></td>
+                          <td className="text-xs tabular-nums font-medium text-fg">{recordedCost === null ? '—' : formatAmount(recordedCost, currency)} <span className="text-muted">/ {formatAmount(project.budget, currency)}</span></td>
                           <td>
                             {project.teamLead ? (
                               <ProfileIdentity
