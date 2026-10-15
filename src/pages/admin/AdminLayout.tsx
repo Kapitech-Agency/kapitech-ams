@@ -189,7 +189,6 @@ export const AdminLayout: React.FC = () => {
   const activeWorkspaceTab = workspaceTabItems.find((item) =>
     isAmsModuleSubnavigationItemActive(item, location.pathname, location.search, location.hash)
   );
-  const activeItemLabel = activeWorkspaceTab?.label || activeNavItem?.label || 'Dashboard';
 
 
 
@@ -283,13 +282,10 @@ export const AdminLayout: React.FC = () => {
             <Menu size={20} />
           </button>
 
-          <Link to="/admin/dashboard" className="flex items-center gap-2">
+          <div className="flex items-center gap-2" aria-label="Kapitech AMS">
             <AmsBrandLogo compact className="h-6 w-6 shrink-0" />
-            <div className="min-w-0">
-              <span className="font-sans font-semibold text-fg text-xs block truncate">KAPITECH AMS</span>
-              <span className="text-[11px] font-sans text-muted block truncate -mt-0.5">{activeItemLabel}</span>
-            </div>
-          </Link>
+            <span className="font-sans font-semibold text-fg text-xs block truncate">KAPITECH AMS</span>
+          </div>
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
@@ -418,9 +414,6 @@ export const AdminLayout: React.FC = () => {
                 <span className="hidden text-[11px] font-medium sm:inline">Search Everything</span>
                 <kbd className="hidden rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] text-muted md:inline">⌘K</kbd>
               </Button>
-              <nav aria-label="Current module" data-ams-slug="active-module-title" className="min-w-0 truncate">
-                <span aria-current="page" className="min-w-0 truncate text-[11px] font-semibold text-fg">{activeItemLabel}</span>
-              </nav>
             </div>
             <div className="flex shrink-0 items-center gap-1">
               <AdminReportingPeriodBar />
