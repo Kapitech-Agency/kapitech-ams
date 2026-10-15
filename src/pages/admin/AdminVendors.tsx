@@ -43,7 +43,7 @@ import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { toSlug } from '../../lib/slug';
 
-import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 const VendorWorkspaceContainer: React.FC<{ embedded?: boolean; children: React.ReactNode }> = ({ embedded = false, children }) => (
@@ -395,9 +395,18 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
         />
       )}
 
-
-
-
+      {!embedded && (
+        <div className="min-[900px]:hidden min-w-0" data-ams-slug="vendors-mobile-tabs">
+          <AdminSectionTabs
+            ariaLabel="Vendors sections"
+            activeKey="vendor-directory"
+            items={[
+              { key: 'vendor-directory', label: 'Vendor Directory', to: '/admin/vendors' },
+              { key: 'skill-matrix', label: 'Skills', to: '/admin/vendors?view=skill-matrix' },
+            ]}
+          />
+        </div>
+      )}
 
       {/* Operation feedback */}
       {statusMessage && (
