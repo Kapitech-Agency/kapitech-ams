@@ -244,7 +244,7 @@ const ONBOARDING_STEPS = [
   'Approve first milestone plan',
 ];
 
-export const ClientOnboardingView: React.FC = () => {
+export const ClientOnboardingView: React.FC<{ role: WorkspaceRole | null }> = ({ role }) => {\n  const readOnly = role === 'PM';
   const [checklist, setChecklist] = useState<Record<string, boolean[]>>({
     'CLI-0021': [true, true, true, false, false, false],
     'CLI-0026': [true, true, false, false, false, false],
