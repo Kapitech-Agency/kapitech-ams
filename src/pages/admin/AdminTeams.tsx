@@ -865,6 +865,40 @@ export const AdminTeams: React.FC = () => {
     });
   }, [members, logs, weeklyCapacity, matchesDate]);
 
+  const futureCapacityWeeks = useMemo(() => {
+    const current = startOfWeek(new Date());
+    return Array.from({ length: 4 }, (_, index) => {
+      const start = new Date(current);
+      start.setDate(start.getDate() + (index + 1) * 7);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 7);
+      return { start, end, label: formatDate(dateKey(start)) };
+    });
+  }, []);
+
+  const futureCapacityRows = useMemo(() => members.map((member) => ({
+    member,
+    weeks: futureCapacityWeeks.map((week) => {
+      const weekEnd = new Date(week.end);
+      weekEnd.setDate(weekEnd.getDate() - 1);
+      const firstDay = dateKey(week.start);
+      const lastDay = dateKey(weekEnd);
+      const plans = projects
+        .filter((project) => !['completed', 'on_hold'].includes(String(project.status || '')))
+        .flatMap((project) => (project.resourceAllocations || []).filter((plan) =>
+          String(plan.memberId) === String(member.id)
+          && plan.startDate <= lastDay
+          && plan.endDate >= firstDay
+        ));
+      const allocationPercent = plans.reduce((sum, plan) => sum + Number(plan.allocationPercent || 0), 0);
+      return {
+        allocationPercent,
+        plannedHours: allocationPercent * 0.4,
+        projectCount: plans.length
+      };
+    })
+  })), [members, projects, futureCapacityWeeks]);
+
   const capacityPageCount = Math.max(1, Math.ceil(capacityRows.length / capacityPageSize));
   const pagedCapacityRows = capacityRows.slice((capacityPage - 1) * capacityPageSize, capacityPage * capacityPageSize);
 
@@ -1090,8 +1124,13 @@ export const AdminTeams: React.FC = () => {
       ]);
     } else if (currentView === 'capacity-allocation') {
       downloadCsv('kapitech-capacity-allocation.csv', [
-        ['Slug', 'Member', 'Role', ...weeklyCapacity.map((week) => week.label + ' utilization'), 'Current tracked hours'],
-        ...capacityRows.map((row) => [row.member.slug, row.member.name, row.member.role, ...row.weeks.map((week) => week.utilization + '%'), formatHours(row.weeks[row.weeks.length - 1]?.minutes || 0)])
+        ['Slug', 'Member', 'Role', ...weeklyCapacity.map((week) => week.label + ' tracked utilization'), 'Current tracked hours', ...futureCapacityWeeks.map((week) => week.label + ' planned allocation')],
+        ...capacityRows.map((row) => [
+          row.member.slug, row.member.name, row.member.role,
+          ...row.weeks.map((week) => week.utilization + '%'),
+          formatHours(row.weeks[row.weeks.length - 1]?.minutes || 0),
+          ...(futureCapacityRows.find((item) => item.member.id === row.member.id)?.weeks || []).map((week) => week.projectCount ? week.allocationPercent + '%' : 'No plan')
+        ])
       ]);
     } else if (currentView === 'skill-matrix') {
       downloadCsv('kapitech-skill-matrix.csv', [
