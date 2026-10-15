@@ -7,12 +7,10 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronRight,
-  Clock3,
   CircleDollarSign,
   FileText,
   Filter,
   FolderKanban,
-  LayoutGrid,
   ListTodo,
   MessageSquare,
   MoreHorizontal,
@@ -22,7 +20,6 @@ import {
   SlidersHorizontal,
   Target,
   UsersRound,
-  X,
 } from '../../lib/untitled-ui-icon-bridge';
 import { AdminPageShell } from './AdminModulePrimitives';
 import { Drawer } from '../ui/Drawer';
@@ -117,8 +114,9 @@ export const AmsRevampPreview: React.FC = () => {
   const [projects, setProjects] = useState<PreviewProject[]>(initialProjects);
   const [searchQuery, setSearchQuery] = useState('');
   const [taskFilter, setTaskFilter] = useState<'All tasks' | 'Due soon' | 'High priority'>('All tasks');
-  const [drawerMode, setDrawerMode] = useState<'task' | 'project' | 'details' | null>(null);
+  const [drawerMode, setDrawerMode] = useState<'task' | 'project' | 'details' | 'project-details' | null>(null);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [taskTitle, setTaskTitle] = useState('');
   const [taskProject, setTaskProject] = useState(initialProjects[0].name);
   const [taskOwner, setTaskOwner] = useState('Fikri');
@@ -131,6 +129,7 @@ export const AmsRevampPreview: React.FC = () => {
   const [notice, setNotice] = useState('');
 
   const selectedTask = tasks.find((task) => task.id === selectedTaskId) || null;
+  const selectedProject = projects.find((project) => project.id === selectedProjectId) || null;
 
   const filteredTasks = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -254,7 +253,7 @@ export const AmsRevampPreview: React.FC = () => {
             <p className="mt-1 truncate text-[11px] text-muted">{project.client} · {project.id}</p>
           </div>
         </div>
-        <button type="button" onClick={() => notify('Project actions are part of the next prototype iteration.')} aria-label={'More actions for ' + project.name} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control text-muted transition-colors hover:bg-bg hover:text-fg"><MoreHorizontal size={16} /></button>
+        <button type="button" onClick={() => { setSelectedProjectId(project.id); setDrawerMode('project-details'); }} aria-label={'View details for ' + project.name} title="View project details" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"><MoreHorizontal size={16} /></button>
       </div>
       <div className="mt-4 flex items-center justify-between gap-3">
         <span className={'rounded-badge border px-2 py-1 text-[10px] font-medium ' + healthClass[project.health]}>{project.health}</span>
@@ -523,6 +522,24 @@ export const AmsRevampPreview: React.FC = () => {
           <div><h3 className="text-xs font-semibold text-fg">Next step</h3><p className="mt-1 text-xs leading-5 text-muted">Confirm the expected output, keep one accountable owner, and move the task to the next review stage when ready.</p></div>
           <div className="rounded-control border border-line bg-bg p-3"><div className="flex items-center justify-between"><span className="text-xs font-semibold text-fg">Discussion</span><span className="inline-flex items-center gap-1 text-[10px] text-muted"><MessageSquare size={12}/>{selectedTask.comments} comments</span></div><p className="mt-2 text-[11px] leading-4 text-muted">{selectedTask.comments ? 'Comment history will appear here when connected to the task record.' : 'No comments yet. Keep discussion attached to the work item.'}</p></div>
           <p className="text-[10px] leading-4 text-muted">Demo-only task detail. No activity or comments are saved to the live system.</p>
+        </div>}
+      </Drawer>
+
+      <Drawer
+        open={drawerMode === 'project-details' && Boolean(selectedProject)}
+        onClose={() => setDrawerMode(null)}
+        title={selectedProject?.name || 'Project details'}
+        description={selectedProject ? selectedProject.id + ' · ' + selectedProject.client : undefined}
+        size="lg"
+        slug="ams-preview-project-details"
+        footer={<><Button type="button" variant="secondary" onClick={() => setDrawerMode(null)}>Close</Button><Button type="button" variant="primary" onClick={() => { if (selectedProject) { setActiveTab('Projects'); setSearchQuery(selectedProject.name); } setDrawerMode(null); }}>View in portfolio</Button></>}
+      >
+        {selectedProject && <div className="space-y-5 p-5">
+          <div className="flex flex-wrap items-center gap-2"><span className={'rounded-badge border px-2 py-1 text-[10px] font-medium ' + healthClass[selectedProject.health]}>{selectedProject.health}</span><span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">{selectedProject.stage}</span><span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] font-medium text-muted">{selectedProject.type}</span></div>
+          <div className="grid gap-3 sm:grid-cols-2"><div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Client</p><p className="mt-1 text-xs font-semibold text-fg">{selectedProject.client}</p></div><div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Project lead</p><p className="mt-1 text-xs font-semibold text-fg">{selectedProject.owner}</p></div><div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Target date</p><p className="mt-1 text-xs font-semibold text-fg">{selectedProject.due}</p></div><div className="rounded-control border border-line bg-bg p-3"><p className="text-[10px] text-muted">Delivery progress</p><p className="mt-1 text-xs font-semibold tabular-nums text-fg">{selectedProject.progress}%</p></div></div>
+          <div><div className="flex items-center justify-between text-xs"><h3 className="font-semibold text-fg">Delivery progress</h3><span className="tabular-nums text-muted">{selectedProject.progress}%</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-line"><div className="h-full rounded-full bg-accent" style={{width:selectedProject.progress+'%'}}/></div></div>
+          <div className="rounded-control border border-warning/25 bg-warning/5 p-3"><p className="text-xs font-semibold text-fg">Decision needed</p><p className="mt-1 text-[11px] leading-5 text-muted">{selectedProject.health === 'On track' ? 'No project risk is flagged in this sample record. Review owner updates and upcoming milestones during your weekly check-in.' : 'Review the next milestone, confirm the responsible owner, and record the reason for this status before the next client update.'}</p></div>
+          <p className="text-[10px] leading-4 text-muted">Sample project details for UX review only. Real project records and activity history will be connected after the UI direction is approved.</p>
         </div>}
       </Drawer>
     </AdminPageShell>
