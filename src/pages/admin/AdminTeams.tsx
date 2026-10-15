@@ -1239,16 +1239,7 @@ export const AdminTeams: React.FC = () => {
       />
 
       {location.pathname === '/admin/team' && (
-        <div className="min-[900px]:hidden min-w-0" data-ams-slug="team-mobile-tabs">
-          <AdminSectionTabs
-            ariaLabel="Team sections"
-            activeKey={currentView}
-            items={[
-              { key: 'team-directory', label: 'Team', to: '/admin/team' },
-              { key: 'capacity-allocation', label: 'Capacity', to: '/admin/team?view=capacity-allocation' },
-            ]}
-          />
-        </div>
+        
       )}
 
       {location.pathname === '/admin/vendors' && (
