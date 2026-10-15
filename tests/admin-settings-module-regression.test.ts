@@ -7,22 +7,26 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (file: string) => fs.readFile(path.join(root, file), 'utf8');
 
-test('Settings subsections are in the pinned sidebar dropdown and page controls remain responsive', async () => {
+test('Settings tabs stay inside the page while the sidebar keeps one Admin-only System Center link', async () => {
   const source = await read('src/pages/admin/AdminSettings.tsx');
   const layout = await read('src/pages/admin/AdminLayout.tsx');
   const sidebar = await read('src/components/admin/DynamicAdminSidebar.tsx');
-  const navigation = await read('src/lib/amsModuleSubnavigation.ts');
+  const navigation = await read('src/lib/amsNavigationAccess.ts');
 
   assert.ok(source.includes('data-ams-slug="settings-tabs"'));
   assert.ok(source.includes('className="min-[900px]:hidden min-w-0" data-ams-slug="settings-tabs"'));
   for (const label of ['Backup', 'Audit', 'Access', 'Integrations', 'Readiness']) {
-    assert.ok(navigation.includes("label: '" + label + "'"), 'Missing Settings submenu: ' + label);
+    assert.ok(source.includes("label: '" + label + "'"), 'Missing Settings page tab: ' + label);
   }
   assert.equal(layout.includes('ariaLabel="Settings sections"'), false);
-  assert.ok(sidebar.includes('data-ams-nav-expand="settings"'));
-  assert.ok(sidebar.includes('aria-controls="ams-sidebar-submenu-settings"'));
+  assert.ok(sidebar.includes('data-ams-navigation-layout="flat"'));
+  assert.equal(sidebar.includes('aria-expanded='), false);
+  assert.equal(sidebar.includes('ChevronDown'), false);
+  assert.ok(sidebar.includes('AMS_PRIMARY_SETTINGS_ITEM'));
+  assert.ok(navigation.includes("label: 'Settings'"));
+  assert.ok(navigation.includes("allowedRoles: ['Admin']"));
+  assert.ok(navigation.includes("key: 'release-readiness'"));
 });
-
 test('MFA setup stays reachable without admin rights while routine security access remains permission-gated', async () => {
   const source = await read('src/pages/admin/AdminSettings.tsx');
 
