@@ -185,6 +185,8 @@ export const AdminLayout: React.FC = () => {
     '/admin/contracts',
   ].includes(location.pathname);
   const isProjectsModuleRoute = location.pathname === '/admin/projects'
+    || location.pathname === '/admin/documents'
+    || (location.pathname === '/admin/dashboard' && routeQuery.get('view') === 'tasks')
     || (location.pathname === '/admin/tasks' && !isMyHubRoute)
     || location.pathname === '/admin/clients/retainers'
     || location.pathname === '/admin/team'
@@ -197,8 +199,7 @@ export const AdminLayout: React.FC = () => {
     '/admin/approvals',
   ].includes(location.pathname);
   const isSettingsModuleRoute = location.pathname === '/admin/settings'
-    || location.pathname === '/admin/navigation/release-readiness'
-    || location.pathname === '/admin/documents';
+    || location.pathname === '/admin/navigation/release-readiness';
 
   return (
     <ReportingPeriodProvider>
@@ -515,7 +516,9 @@ export const AdminLayout: React.FC = () => {
                 <AdminTopbarTabs
                   ariaLabel="Projects sections"
                   activeKey={
-                    location.pathname === '/admin/tasks' ? 'tasks'
+                    location.pathname === '/admin/documents' ? 'docs'
+                      : location.pathname === '/admin/dashboard' && routeQuery.get('view') === 'tasks' ? 'tasks'
+                      : location.pathname === '/admin/tasks' ? 'tasks'
                       : location.pathname === '/admin/clients/retainers' ? 'retainers'
                       : location.pathname === '/admin/team' && routeQuery.get('view') === 'capacity-allocation' ? 'capacity'
                       : location.pathname === '/admin/team' ? 'team'
@@ -528,6 +531,7 @@ export const AdminLayout: React.FC = () => {
                     { key: 'budget', label: 'Budget', to: '/admin/projects?projects=budget' },
                     { key: 'archived', label: 'Archived', to: '/admin/projects?projects=archived' },
                     { key: 'tasks', label: amsRole === 'Freelancer' ? 'My Task' : 'Tasks', to: (['Finance', 'Creative', 'Freelancer'].includes(amsRole)) ? '/admin/tasks?taskscope=my&workspace=project' : '/admin/tasks' },
+                    { key: 'docs', label: 'Files', to: '/admin/documents' },
                     { key: 'retainers', label: 'Retainers', to: '/admin/clients/retainers' },
                     { key: 'team', label: 'Team', to: '/admin/team' },
                     { key: 'capacity', label: 'Capacity', to: '/admin/team?view=capacity-allocation' },
@@ -574,7 +578,6 @@ export const AdminLayout: React.FC = () => {
                     { key: 'audit', label: 'Audit', to: '/admin/settings?tab=audit' },
                     { key: 'integrations', label: 'Integrations', to: '/admin/settings?tab=integrations' },
                     { key: 'readiness', label: 'Readiness', to: '/admin/navigation/release-readiness' },
-                    { key: 'docs', label: 'Documents', to: '/admin/documents' },
                   ]}
                 />
               ) : (
