@@ -1485,7 +1485,7 @@ export const AdminTeams: React.FC = () => {
                               ) : (
                                 <Button type="button" variant="secondary" className="h-8 w-8 px-0" icon={<Edit3 size={14} />} title="Manage contract" aria-label={'Manage contract for ' + (vendor.companyName || vendor.name)} onClick={() => setVendorDetail(vendor)} />
                               )}
-                              <Link to="/admin/invoicing?finance=vendor-payments" className="ams-table-action inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-bg hover:text-fg" title="View Invoices" aria-label={'View invoices for ' + (vendor.companyName || vendor.name)}>
+                              <Link to="/admin/finance?tab=accounts-payable" className="ams-table-action inline-flex h-8 w-8 items-center justify-center rounded-control border border-line bg-panel text-muted hover:bg-bg hover:text-fg" title="View payables" aria-label={'View payables for ' + (vendor.companyName || vendor.name)}>
                                 <ReceiptText size={14} />
                               </Link>
                             </div>
