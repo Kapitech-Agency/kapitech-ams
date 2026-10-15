@@ -93,7 +93,7 @@ export interface ActionButtonProps extends React.ButtonHTMLAttributes<HTMLButton
 }
 
 export const ActionButton: React.FC<ActionButtonProps> = ({
-  variant = 'secondary', compact = false, className = '', type = 'button', children, ...props,
+  variant = 'secondary', compact = false, className = '', type = 'button', children, ...props
 }) => {
   const variants = {
     primary: 'border border-accent bg-accent text-white hover:bg-accent-hover',
@@ -142,7 +142,7 @@ export const tableHeadClassName = 'bg-bg text-[10px] font-semibold uppercase tra
 export const tableCellClassName = 'border-b border-line px-3 py-3 align-middle last:border-b-0';
 
 export const TextField: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label: string; hint?: string }> = ({
-  label, hint, id, className = '', ...props,
+  label, hint, id, className = '', ...props
 }) => {
   const inputId = id || 'workspace-input-' + label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   return (
