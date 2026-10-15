@@ -13,9 +13,11 @@ import {
   Moon,
   Search,
   ClipboardCheck,
+  Clock3,
   UsersRound,
   LockKeyhole,
   LayoutGrid,
+  Truck,
 } from 'lucide-react';
 import { getAdminSession, logoutAdmin } from '../../lib/adminAuth';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -32,6 +34,13 @@ import Button from '../../components/ui/Button';
 import { ReportingPeriodProvider } from '../../lib/ReportingPeriodContext';
 import { AdminReportingPeriodBar } from '../../components/admin/AdminReportingPeriodBar';
 
+type AdminNavGroup =
+  | 'Overview'
+  | 'Clients & Growth'
+  | 'Project Delivery'
+  | 'Finance & Procurement'
+  | 'Website & Content';
+
 interface NavItem {
   key: string;
   to: string;
@@ -40,22 +49,35 @@ interface NavItem {
   badge?: string | number | null;
   badgeColor?: string;
   exact?: boolean;
-  group?: 'Agency Core' | 'Agency Management' | 'Project Operations';
+  group?: AdminNavGroup;
   requiredTier: AgencyTier;
 }
 
 type AdminNavItem = NavItem & { accessKey?: string };
 
+const NAV_GROUPS: AdminNavGroup[] = [
+  'Overview',
+  'Clients & Growth',
+  'Project Delivery',
+  'Finance & Procurement',
+  'Website & Content',
+];
+
+// Keep this list limited to supported workspaces. Backend capabilities without
+// a working UI route (for example CRM, proposals, and approvals) stay out of
+// primary navigation until their dedicated workflows are ready.
 const STITCH_NAV_ITEMS: AdminNavItem[] = [
-  { key: 'dashboard', to: '/admin/dashboard', label: 'Dashboard', icon: Home, requiredTier: 2, group: 'Agency Core' },
-  { key: 'inbox', to: '/admin/inbox', label: 'Inbox', icon: Inbox, accessKey: 'inbox', requiredTier: 2, group: 'Agency Core' },
-  { key: 'finance', to: '/admin/finance', label: 'Finance', icon: Landmark, accessKey: 'invoicing', requiredTier: 2, group: 'Agency Core' },
-  { key: 'clients', to: '/admin/clients', label: 'Clients', icon: UsersRound, requiredTier: 3, group: 'Agency Management' },
-  { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, requiredTier: 3, group: 'Agency Management' },
-  { key: 'team', to: '/admin/team', label: 'Team', icon: UsersRound, accessKey: 'timelogs', requiredTier: 3, group: 'Project Operations' },
-  { key: 'tasks', to: '/admin/tasks', label: 'Tasks', icon: ClipboardCheck, accessKey: 'projects', requiredTier: 3, group: 'Project Operations' },
-  { key: 'documents', to: '/admin/documents', label: 'Documents', icon: LockKeyhole, requiredTier: 3, group: 'Project Operations' },
-  { key: 'cms', to: '/admin/cms/projects', label: 'CMS', icon: LayoutGrid, accessKey: 'cms_projects', requiredTier: 3, group: 'Project Operations' },
+  { key: 'dashboard', to: '/admin/dashboard', label: 'Dashboard', icon: Home, requiredTier: 2, group: 'Overview' },
+  { key: 'inbox', to: '/admin/inbox', label: 'Inbox', icon: Inbox, accessKey: 'inbox', requiredTier: 2, group: 'Clients & Growth' },
+  { key: 'clients', to: '/admin/clients', label: 'Clients', icon: UsersRound, requiredTier: 3, group: 'Clients & Growth' },
+  { key: 'projects', to: '/admin/projects', label: 'Projects', icon: Briefcase, requiredTier: 3, group: 'Project Delivery' },
+  { key: 'tasks', to: '/admin/tasks', label: 'Tasks', icon: ClipboardCheck, accessKey: 'projects', requiredTier: 3, group: 'Project Delivery' },
+  { key: 'team', to: '/admin/team?view=team-directory', label: 'Team Directory', icon: UsersRound, accessKey: 'timelogs', requiredTier: 3, group: 'Project Delivery' },
+  { key: 'time-logs', to: '/admin/team?view=time-logs', label: 'Time Logs', icon: Clock3, accessKey: 'timelogs', requiredTier: 3, group: 'Project Delivery' },
+  { key: 'documents', to: '/admin/documents', label: 'Documents', icon: LockKeyhole, requiredTier: 3, group: 'Project Delivery' },
+  { key: 'finance', to: '/admin/finance', label: 'Finance', icon: Landmark, accessKey: 'invoicing', requiredTier: 2, group: 'Finance & Procurement' },
+  { key: 'vendors', to: '/admin/team?view=vendor-directory', label: 'Vendors', icon: Truck, accessKey: 'vendors', requiredTier: 3, group: 'Finance & Procurement' },
+  { key: 'cms', to: '/admin/cms/projects', label: 'Website CMS', icon: LayoutGrid, accessKey: 'cms_projects', requiredTier: 3, group: 'Website & Content' },
 ];
 
 const DEFAULT_PROFILE_NAME = 'Fikri Nurlete';
@@ -221,7 +243,13 @@ export const AdminLayout: React.FC = () => {
     if (queryString) {
       const expected = new URLSearchParams(queryString);
       const actual = new URLSearchParams(location.search);
-      return Array.from(expected.entries()).every(([key, value]) => actual.get(key) === value);
+      return Array.from(expected.entries()).every(([key, value]) => {
+        // The Team Directory is the default view when /admin/team has no query.
+        if (path === '/admin/team' && key === 'view' && value === 'team-directory') {
+          return !actual.has('view') || actual.get(key) === value;
+        }
+        return actual.get(key) === value;
+      });
     }
 
     if (path === '/admin/dashboard') {
@@ -250,8 +278,8 @@ export const AdminLayout: React.FC = () => {
   const activeNavItem = filteredNavItems.find((item) => isItemActive(item.to));
   const activeItemLabel = activeNavItem?.label || 'Dashboard';
   const activeSectionLabel = activeNavItem?.group || AGENCY_TIER_LABELS[agencyTier];
-  const navGroups: Array<NavItem['group']> = ['Agency Core', 'Agency Management', 'Project Operations'];
-  const getGroupItems = (group: NavItem['group']) => filteredNavItems.filter(item => item.group === group);
+  const navGroups = NAV_GROUPS;
+  const getGroupItems = (group: AdminNavGroup) => filteredNavItems.filter(item => item.group === group);
 
   return (
     <ReportingPeriodProvider>
