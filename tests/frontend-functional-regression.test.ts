@@ -79,6 +79,7 @@ test('MFA enrolment route is accessible before module permissions are evaluated'
 test('AMS sidebar groups real modules and keeps feature views inside their module', async () => {
   const layout = await read('src/pages/admin/AdminLayout.tsx');
   const app = await read('src/App.tsx');
+  const primitives = await read('src/components/admin/AdminModulePrimitives.tsx');
   const teams = await read('src/pages/admin/AdminTeams.tsx');
   const vendors = await read('src/pages/admin/AdminVendors.tsx');
   const clients = await read('src/pages/admin/AdminClients.tsx');
@@ -124,6 +125,11 @@ test('AMS sidebar groups real modules and keeps feature views inside their modul
   assert.ok(vendors.includes('data-ams-slug="vendors-mobile-tabs"'));
   assert.ok(vendors.includes("label: 'Vendor Directory'"));
   assert.ok(vendors.includes("label: 'Skills'"));
+  assert.ok(primitives.includes("items.filter((item) => !item.permission || hasAdminPermission(item.permission)).map((item) => {"));
+  assert.ok(primitives.includes("permission: 'services'"));
+  assert.ok(primitives.includes("permission: 'cms_insights'"));
+  assert.ok(layout.includes("slug: 'cms-tab-services', permission: 'services'"));
+  assert.ok(layout.includes("slug: 'cms-tab-insights', permission: 'cms_insights'"));
   assert.ok(layout.includes("firstAllowedSection.find(([permission]) => isAllowed(permission))"));
   assert.ok(layout.includes("return { ...item, to: destination };"));
   assert.equal(teams.includes("to: '/admin/team?view=vendor-directory'"), false);
