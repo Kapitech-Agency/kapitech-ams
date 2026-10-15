@@ -1088,9 +1088,14 @@ export const AdminFinanceWorkspace: React.FC = () => {
     ];
     if (field.optionSource === 'vendorBills') {
       const bills = getRegisterRecords('vendor-bill');
+      const currentBillId = editor?.type === 'vendor-bill-payment' ? String(editor.record?.payload.billId || '') : '';
+      const payableBills = bills.filter((bill) =>
+        Math.max(0, Number(bill.payload.outstanding ?? bill.payload.total) || 0) > 0.01
+        || bill.id === currentBillId
+      );
       return [
-        { value: '', label: bills.length ? 'Select a vendor bill' : 'No vendor bills available' },
-        ...bills.map((bill) => ({
+        { value: '', label: payableBills.length ? 'Select a vendor bill with an outstanding balance' : 'No outstanding vendor bills' },
+        ...payableBills.map((bill) => ({
           value: bill.id,
           label: String(bill.payload.billNo || bill.recordKey) + ' · ' + String(bill.payload.vendorName || 'Vendor') + ' · ' + formatMoney(Number(bill.payload.outstanding ?? bill.payload.total) || 0, String(bill.payload.currency || 'IDR'))
         }))
