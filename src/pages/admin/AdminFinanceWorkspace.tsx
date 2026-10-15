@@ -17,6 +17,7 @@ import { VENDOR_EVENT_NAME } from '../../lib/vendorStore';
 import type { AgencyVendor, VendorContract } from '../../lib/vendorStore';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import {
+  calculateProjectFinanceWorkbookSummary,
   classifyWorkbookExpense,
   EXCEL_CHART_OF_ACCOUNTS,
   FINANCE_WORKBOOK_GROUPS,
@@ -2288,20 +2289,39 @@ export const AdminFinanceWorkspace: React.FC = () => {
           const costsIDR=sumAmounts<AgencyExpense>(projectExpenses.filter((expense)=>String((expense as any).currency||'IDR')==='IDR'),(expense)=>Number(expense.amount)||0);
           const vendorCommitment=record?Number(payload.vendorCommitment)||0:null;
           const otherObligations=record?Number(payload.otherObligations)||0:null;
-          const apOutstandingIDR=sumAmounts(projectBills.filter((bill)=>String(bill.payload.currency||'IDR')==='IDR'),(bill)=>{
-            const linkedPayments=vendorBillPayments.filter((payment)=>String(payment.payload.billId||'')===bill.id);
-            const paid=sumAmounts(linkedPayments,(payment)=>Number(payment.payload.amount)||0);
-            return Math.max(0,(Number(bill.payload.total)||0)-paid);
+          const projectBillsIDR=projectBills.filter((bill)=>String(bill.payload.currency||'IDR').toUpperCase()==='IDR');
+          const workbookSummary=calculateProjectFinanceWorkbookSummary({
+            contractValue: payload.contractValue,
+            vendorCommitment: payload.vendorCommitment,
+            otherObligations: payload.otherObligations,
+            bills: projectBillsIDR.map((bill)=>({
+              total: bill.payload.total,
+              payments: vendorBillPayments
+                .filter((payment)=>String(payment.payload.billId||'')===bill.id)
+                .map((payment)=>({amount:payment.payload.amount}))
+            }))
           });
           const contractValue=record?Number(payload.contractValue)||0:null;
+          const pic=String(payload.pic||project.teamLead||'').trim();
+          const startDate=String(payload.startDate||project.startDate||'').slice(0,10);
+          const endDate=String(payload.endDate||project.targetEndDate||'').slice(0,10);
+          const projectNotes=String(payload.notes||'').trim();
+          const checkLabel=!record?'Setup required':workbookSummary.check;
+          const checkTone: 'success'|'warning'|'danger'=!record||workbookSummary.check==='No vendor bills linked'||workbookSummary.check==='Bills exceed commitment'?'warning':workbookSummary.check==='Payments exceed bill total'?'danger':'success';
           return {id:project.id,cells:[
-            projectLabel(project),project.clientCompany||project.clientName||'—',
+            projectLabel(project),project.clientCompany||project.clientName||'—',pic||'—',
             contractValue===null?<AdminStatusBadge tone="warning">Setup required</AdminStatusBadge>:formatMoney(contractValue),
             vendorCommitment===null?'—':formatMoney(vendorCommitment),
             otherObligations===null?'—':formatMoney(otherObligations),
-            formatMoney(billedIDR),formatMoney(collectedIDR),formatMoney(costsIDR),formatMoney(apOutstandingIDR),
+            contractValue===null?'—':formatMoney(workbookSummary.netProjectProfit),
+            formatMoney(billedIDR),formatMoney(collectedIDR),formatMoney(costsIDR),
+            formatMoney(workbookSummary.vendorPaid),formatMoney(workbookSummary.vendorOutstanding),
+            formatMoney(sumAmounts(projectBillsIDR,(bill)=>Number(bill.payload.total)||0)),
             <StatusBadge value={project.status}/>,
-            record?registerRecordActions('project-finance',record):canManageFinanceRecords?<Button variant="primary" type="button" icon={<Plus size={14} />} onClick={()=>openRegisterForm('project-finance',undefined,{projectId:project.id,projectName:project.name,clientName:project.clientCompany||project.clientName,startDate:project.startDate,endDate:project.targetEndDate,projectStatus:project.status})}>Configure</Button>:<span className="text-muted">View only</span>
+            [startDate?formatDate(startDate):'—',endDate?formatDate(endDate):'—'].join(' → '),
+            projectNotes||'—',
+            <AdminStatusBadge tone={checkTone}>{checkLabel}</AdminStatusBadge>,
+            record?registerRecordActions('project-finance',record):canManageFinanceRecords?<Button variant="primary" type="button" icon={<Plus size={14} />} onClick={()=>openRegisterForm('project-finance',undefined,{projectId:project.id,projectName:project.name,clientName:project.clientCompany||project.clientName,pic:project.teamLead,startDate:project.startDate,endDate:project.targetEndDate,projectStatus:project.status})}>Configure</Button>:<span className="text-muted">View only</span>
           ]};
         });
         const orphanRecords=financeRecords.filter((record)=>!projects.some((project)=>(record.projectId&&record.projectId===project.id)||String(record.payload.projectName||'').toLowerCase()===String(project.name||'').toLowerCase())&&matching([record.payload.projectName,record.recordKey,record.projectId,record.payload.clientName,record.status]));
@@ -2310,7 +2330,7 @@ export const AdminFinanceWorkspace: React.FC = () => {
             <WorkbookNote title="Project finance and source coverage">
               Contract value, vendor commitment and other obligations are planning inputs stored once in Project Finance. Billed revenue, dated collections and recorded expenses follow the selected reporting period ({periodLabel}) and use linked AMS source records. Current AP outstanding is shown separately from vendor commitment to avoid treating the same supplier obligation as both a commitment and a paid cost. Collections without dated payment records are not assigned to a reporting month.
             </WorkbookNote>
-            <FinanceDataTable title="Project Finance" description="Period performance and current supplier exposure by AMS project. Contract and commitment fields remain the saved planning values; period activity comes from linked records." columns={[{label:'Project'},{label:'Client'},{label:'Contract value',align:'right'},{label:'Vendor commitment',align:'right'},{label:'Other obligations',align:'right'},{label:'Billed ex. tax · period',align:'right'},{label:'Collected · period',align:'right'},{label:'Recorded expenses · period',align:'right'},{label:'AP outstanding · current',align:'right'},{label:'Project status'},{label:'Setup / actions'}]} rows={rows} emptyMessage="No AMS projects were returned. Finance records can be saved and linked when a project is available." actions={registerAddButton('project-finance','Add project finance record')}/>
+            <FinanceDataTable title="Project Finance" description="Excel-aligned planned profit is Contract Value less Vendor Commitment and Other Obligations. Vendor Paid and Vendor Outstanding are calculated from linked IDR vendor bills and their recorded payments; period invoice and expense figures remain live source activity." columns={[{label:'Project'},{label:'Client'},{label:'PIC'},{label:'Contract value',align:'right'},{label:'Vendor commitment',align:'right'},{label:'Other obligations',align:'right'},{label:'Net project profit · plan',align:'right'},{label:'Billed ex. tax · period',align:'right'},{label:'Collected · period',align:'right'},{label:'Recorded expenses · period',align:'right'},{label:'Vendor paid · current',align:'right'},{label:'Vendor outstanding · current',align:'right'},{label:'Vendor bills · current',align:'right'},{label:'Project status'},{label:'Project dates'},{label:'Notes'},{label:'Check'},{label:'Setup / actions'}]} rows={rows} emptyMessage="No AMS projects were returned. Finance records can be saved and linked when a project is available." actions={registerAddButton('project-finance','Add project finance record')}/>
             {orphanRecords.length>0&&<FinanceDataTable title="Unlinked project finance records" description="These records remain visible until they can be linked to the correct AMS project." columns={[{label:'Project key'},{label:'Contract value',align:'right'},{label:'Vendor commitment',align:'right'},{label:'Other obligations',align:'right'},{label:'Status'},{label:'Actions'}]} rows={orphanRecords.map((record)=>({id:record.id,cells:[String(record.payload.projectName||record.recordKey),formatMoney(Number(record.payload.contractValue)||0),formatMoney(Number(record.payload.vendorCommitment)||0),formatMoney(Number(record.payload.otherObligations)||0),<StatusBadge value={record.status}/>,registerRecordActions('project-finance',record)]}))}/>}
           </div>
         );
