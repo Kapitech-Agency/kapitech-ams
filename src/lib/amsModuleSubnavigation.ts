@@ -18,8 +18,8 @@ const MODULE_SUBNAVIGATION: Record<AmsSidebarModuleKey, AmsSidebarSubnavigationI
     { key: 'activity', label: 'Activity', to: '/admin/navigation/live-activity' },
   ],
   crm: [
-    { key: 'pipeline', label: 'Pipeline', to: '/admin/crm' },
-    { key: 'clients', label: 'Clients', to: '/admin/clients/all-clients' },
+    { key: 'pipeline', label: 'Sales & Pipeline', to: '/admin/crm' },
+    { key: 'clients', label: 'Client Directory', to: '/admin/clients/all-clients' },
     { key: 'onboarding', label: 'Onboarding', to: '/admin/clients/all-clients#client-onboarding-readiness' },
     { key: 'inbox', label: 'Inbox', to: '/admin/inbox' },
     { key: 'contracts', label: 'Contracts', to: '/admin/contracts' },
@@ -32,20 +32,17 @@ const MODULE_SUBNAVIGATION: Record<AmsSidebarModuleKey, AmsSidebarSubnavigationI
     { key: 'archived', label: 'Archived', to: '/admin/projects?projects=archived' },
     { key: 'tasks', label: 'Tasks', to: '/admin/tasks' },
     { key: 'docs', label: 'Files', to: '/admin/documents' },
-    { key: 'retainers', label: 'Retainers', to: '/admin/clients/retainers' },
+    { key: 'retainers', label: 'Retainer Hours Pool', to: '/admin/clients/retainers' },
     { key: 'team', label: 'Team', to: '/admin/team' },
-    { key: 'capacity', label: 'Capacity', to: '/admin/team?view=capacity-allocation' },
-    { key: 'time', label: 'Time', to: '/admin/time-logs' },
+    { key: 'capacity', label: 'Team & Capacity', to: '/admin/team?view=capacity-allocation' },
+    { key: 'time', label: 'Timesheet Control', to: '/admin/time-logs' },
   ],
   finance: [
-    { key: 'overview', label: 'Overview', to: '/admin/finance?tab=executive-summary', slug: 'finance-tab-overview-control' },
-    { key: 'transactions', label: 'Transactions', to: '/admin/finance?tab=cash-bank', slug: 'finance-tab-transactions-cash' },
-    { key: 'receivables', label: 'Invoices', to: '/admin/finance?tab=accounts-receivable', slug: 'finance-tab-receivables-payables' },
-    { key: 'expenses', label: 'Expenses', to: '/admin/finance?tab=accounts-payable' },
-    { key: 'projects', label: 'Profit', to: '/admin/finance?tab=project-finance', slug: 'finance-tab-project-finance' },
-    { key: 'accounting', label: 'Accounting', to: '/admin/finance?tab=journal', slug: 'finance-tab-accounting-reports' },
-    { key: 'quotes', label: 'Quotes', to: '/admin/proposals' },
-    { key: 'vendors', label: 'Vendors', to: '/admin/vendors' },
+    { key: 'invoicing-revenues', label: 'Invoicing & Revenues', to: '/admin/finance?tab=accounts-receivable' },
+    { key: 'profitability-expenses', label: 'Profitability & Expenses', to: '/admin/finance?tab=accounts-payable' },
+    { key: 'project-profitability', label: 'Project Profitability', to: '/admin/finance?tab=project-finance' },
+    { key: 'quotes', label: 'Quotations', to: '/admin/proposals' },
+    { key: 'vendors', label: 'Vendor Ledger', to: '/admin/vendors' },
     { key: 'approvals', label: 'Approvals', to: '/admin/approvals' },
   ],
   cms: [
@@ -77,7 +74,7 @@ export function getAmsModuleSubnavigation(
   let items = MODULE_SUBNAVIGATION[moduleKey];
 
   if (moduleKey === 'projects') {
-    if (role === 'Freelancer') return [];
+    if (role === 'Freelancer') return [{ key: 'tasks', label: 'Assigned Tasks', to: '/admin/tasks?taskscope=my&workspace=project' }];
     if (role === 'Finance' || role === 'Creative') {
       items = items.filter((item) => ['sprint', 'tasks'].includes(item.key));
     }
