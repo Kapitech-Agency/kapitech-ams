@@ -508,7 +508,7 @@ export const AdminClients: React.FC = () => {
             { key: 'all-clients', label: 'Client Directory', to: '/admin/clients/all-clients' },
             { key: 'retainers', label: 'Retainer Plans', to: '/admin/clients/retainers' },
             { key: 'sla-monitoring', label: 'SLA Monitoring', to: '/admin/clients/sla-monitoring' },
-          ].filter((item) => item.key !== 'lead-accounts' || hasAdminPermission('canManageCrm'))}
+          ]}
         />
       </div>
 
