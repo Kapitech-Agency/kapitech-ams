@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { AlertTriangle, Check, CheckCircle2, FileText, LockKeyhole, Newspaper, ShieldCheck, SlidersHorizontal, UsersRound, Workflow } from 'lucide-react';
+import { Activity, AlertTriangle, Check, CheckCircle2, FileText, LockKeyhole, ShieldCheck, UsersRound } from 'lucide-react';
 import { Modal } from '../components/ui/Modal';
 import { WorkspaceRole } from './workspaceAccess';
 import {
