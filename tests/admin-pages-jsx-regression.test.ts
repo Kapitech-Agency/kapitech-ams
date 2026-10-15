@@ -302,3 +302,21 @@ test('CRM pipeline opportunity edits use the existing persistent API and canonic
   assert.ok(crm.includes('No server record was changed.'));
   assert.ok(crm.includes("!['won', 'lost', 'closed_won', 'closed_lost'].includes(String(deal.stage || '').toLowerCase())"));
 });
+
+
+test('Client onboarding readiness reflects persisted profile fields and opens the existing editor', () => {
+  const clients = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClients.tsx'), 'utf8');
+
+  assert.ok(clients.includes('const getClientProfileReadiness = (client: AgencyClient)'));
+  assert.ok(clients.includes('label: \'Company name\''));
+  assert.ok(clients.includes('label: \'Primary contact\''));
+  assert.ok(clients.includes('label: \'Business email\''));
+  assert.ok(clients.includes('label: \'Phone / WhatsApp\''));
+  assert.ok(clients.includes('data-ams-feature-slug="client-onboarding-readiness"'));
+  assert.ok(clients.includes("selectedClient.status === 'lead'"));
+  assert.ok(clients.includes('selectedClientReadinessCount / selectedClientReadiness.length'));
+  assert.ok(clients.includes('openEdit(client)'));
+  assert.ok(clients.includes('Contract approval, project kickoff, and billing readiness must be verified in their existing AMS modules.'));
+  assert.ok(clients.includes('api.clients.update(clientData.id, clientData)'));
+  assert.equal(clients.includes('const [onboardingChecklist'), false, 'Do not imply an unpersisted local checklist is authoritative.');
+});
