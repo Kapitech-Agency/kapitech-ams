@@ -207,7 +207,7 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
           role="menu"
           aria-label="Profile actions"
           data-ams-feature-slug={slug + '-action-menu'}
-          className="absolute right-0 top-full z-[70] mt-2 w-52 overflow-hidden rounded-card border border-line bg-panel shadow-lg"
+          className="absolute right-0 top-full z-[70] mt-2 w-52 overflow-hidden rounded-card border border-line bg-panel"
         >
           <div className="border-b border-line px-3.5 py-3">
             <p className="truncate text-xs font-semibold text-fg">{profile.name}</p>
