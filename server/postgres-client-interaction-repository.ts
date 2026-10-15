@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import type { PoolClient } from 'pg';
 import { getPostgresPool, withPostgresTransaction } from './postgres.ts';
 import { postgresAuditLogRepository, type AuditEntry } from './postgres-audit-log-repository.ts';
 
@@ -17,6 +18,9 @@ export type ClientInteractionInput = {
   createdByUserId: string;
   createdByName: string;
   createdAt: string;
+  sourceType?: 'manual' | 'system';
+  systemAction?: string;
+  sourceReferenceId?: string;
 };
 
 type ClientInteractionRow = {
@@ -32,6 +36,9 @@ type ClientInteractionRow = {
   created_by_user_id: string | null;
   created_by_name: string;
   created_at: Date | string;
+  source_type?: 'manual' | 'system';
+  system_action?: string | null;
+  source_reference_id?: string | null;
 };
 
 const iso = (value: Date | string): string =>
@@ -50,8 +57,48 @@ function mapInteraction(row: ClientInteractionRow) {
     occurredAt: iso(row.occurred_at),
     createdByUserId: row.created_by_user_id || '',
     createdByName: row.created_by_name,
-    createdAt: iso(row.created_at)
+    createdAt: iso(row.created_at),
+    sourceType: row.source_type === 'system' ? 'system' : 'manual',
+    systemAction: row.system_action || undefined,
+    sourceReferenceId: row.source_reference_id || undefined
   };
+}
+
+export type SystemClientInteractionInput = Omit<ClientInteractionInput, 'type' | 'sourceType'> & {
+  type: 'note';
+  sourceType: 'system';
+  systemAction: string;
+  sourceReferenceId: string;
+};
+
+export async function appendSystemClientInteractionWithinTransaction(
+  client: PoolClient,
+  input: SystemClientInteractionInput
+): Promise<ReturnType<typeof mapInteraction> | null> {
+  const result = await client.query<ClientInteractionRow>(
+    `INSERT INTO client_interactions
+      (id, client_id, interaction_type, subject, summary, contact_name, outcome, next_step,
+       occurred_at, created_by_user_id, created_by_name, created_at, source_type, system_action, source_reference_id)
+     VALUES ($1,$2,'note',$3,$4,$5,$6,$7,$8,$9,$10,$11,'system',$12,$13)
+     ON CONFLICT DO NOTHING
+     RETURNING *`,
+    [
+      input.id,
+      input.clientId,
+      input.subject,
+      input.summary,
+      input.contactName || '',
+      input.outcome || '',
+      input.nextStep || '',
+      input.occurredAt,
+      input.createdByUserId || null,
+      input.createdByName,
+      input.createdAt,
+      input.systemAction,
+      input.sourceReferenceId
+    ]
+  );
+  return result.rows[0] ? mapInteraction(result.rows[0]) : null;
 }
 
 export class PostgresClientInteractionRepository {
@@ -75,8 +122,8 @@ export class PostgresClientInteractionRepository {
       const result = await client.query<ClientInteractionRow>(
         `INSERT INTO client_interactions
           (id, client_id, interaction_type, subject, summary, contact_name, outcome, next_step,
-           occurred_at, created_by_user_id, created_by_name, created_at)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+           occurred_at, created_by_user_id, created_by_name, created_at, source_type, system_action, source_reference_id)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'manual',NULL,NULL)
          RETURNING *`,
         [
           input.id,

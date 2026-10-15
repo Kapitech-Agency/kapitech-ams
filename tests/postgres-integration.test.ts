@@ -698,6 +698,13 @@ test('PostgreSQL won-deal conversion atomically creates linked client, project, 
     assert.equal(String(replay.client.id), clientId);
     assert.equal(String(replay.project.id), projectId);
     assert.equal(String(replay.invoice.id), invoiceId);
+
+    const conversionTimeline = await getPostgresPool().query(
+      "SELECT id, source_type, system_action, source_reference_id FROM client_interactions WHERE client_id=$1 AND system_action='crm_deal_converted' AND source_reference_id=$2",
+      [clientId, 'crm-deal-converted:' + dealId]
+    );
+    assert.equal(conversionTimeline.rows.length, 1, 'Repeated won-deal conversion must not duplicate its client timeline event.');
+    assert.equal(conversionTimeline.rows[0].source_type, 'system');
   } finally {
     const db = getPostgresPool();
     if (invoiceId) {
@@ -707,7 +714,10 @@ test('PostgreSQL won-deal conversion atomically creates linked client, project, 
     if (taskId) await db.query('DELETE FROM tasks WHERE id=$1', [taskId]);
     if (projectId) await db.query('DELETE FROM projects WHERE id=$1', [projectId]);
     await db.query('DELETE FROM crm_deals WHERE id=$1', [dealId]);
-    if (clientId) await db.query('DELETE FROM clients WHERE id=$1', [clientId]);
+    if (clientId) {
+      await db.query('DELETE FROM client_interactions WHERE client_id=$1', [clientId]);
+      await db.query('DELETE FROM clients WHERE id=$1', [clientId]);
+    }
     await db.query('DELETE FROM users WHERE id=$1', [actorId]);
     await closePostgresPool();
   }

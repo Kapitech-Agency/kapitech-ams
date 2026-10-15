@@ -2364,6 +2364,84 @@ apiRouter.post('/leads/:id/convert', requireAuth, requirePermission('canManageCr
 // ----------------------------------------------------
 // ----------------------------------------------------
 
+type ClientSystemTimelineEventInput = {
+  clientId: string;
+  systemAction: string;
+  sourceReferenceId: string;
+  subject: string;
+  summary: string;
+  contactName?: string;
+  outcome?: string;
+  nextStep?: string;
+  occurredAt?: string;
+  createdByUserId?: string;
+  createdByName?: string;
+};
+
+function appendJsonClientSystemTimelineEvent(db: any, input: ClientSystemTimelineEventInput): any | null {
+  if (!Array.isArray(db.clientInteractions)) db.clientInteractions = [];
+  const duplicated = db.clientInteractions.some((item: any) =>
+    item.sourceType === 'system'
+    && item.systemAction === input.systemAction
+    && item.sourceReferenceId === input.sourceReferenceId
+  );
+  if (duplicated) return null;
+
+  const occurredAt = input.occurredAt || new Date().toISOString();
+  const event = {
+    id: 'interaction_' + Date.now() + '_' + crypto.randomBytes(4).toString('hex'),
+    clientId: input.clientId,
+    type: 'note',
+    sourceType: 'system',
+    systemAction: input.systemAction,
+    sourceReferenceId: input.sourceReferenceId,
+    subject: cleanText(input.subject, 160),
+    summary: cleanText(input.summary, 4000),
+    contactName: cleanText(input.contactName, 160),
+    outcome: cleanText(input.outcome, 1000),
+    nextStep: cleanText(input.nextStep, 500),
+    occurredAt,
+    createdByUserId: input.createdByUserId || '',
+    createdByName: cleanText(input.createdByName || 'AMS system', 160),
+    createdAt: occurredAt
+  };
+  db.clientInteractions.unshift(event);
+  return event;
+}
+
+function resolveJsonClientIdForDeal(db: any, deal: any): string | null {
+  const explicit = String(deal.clientId || '').trim();
+  if (explicit && (db.clients || []).some((client: any) => String(client.id) === explicit)) return explicit;
+
+  const email = String(deal.email || '').trim().toLowerCase();
+  const company = String(deal.company || '').trim().replace(/\s+/g, ' ').toLowerCase();
+  if (!email && !company) return null;
+  const matches = (db.clients || []).filter((client: any) => {
+    const clientEmail = String(client.email || '').trim().toLowerCase();
+    const clientCompany = String(client.company || client.companyName || '').trim().replace(/\s+/g, ' ').toLowerCase();
+    return (email && clientEmail === email) || (company && clientCompany === company);
+  });
+  return matches.length === 1 ? String(matches[0].id) : null;
+}
+
+function clientSystemActor(req: AuthenticatedRequest) {
+  return {
+    createdByUserId: String(req.user?.id || ''),
+    createdByName: String(req.user?.name || req.user?.username || 'AMS user')
+  };
+}
+
+function resolveJsonClientIdForContract(db: any, contract: any): string | null {
+  const explicit = String(contract.clientId || '').trim();
+  if (explicit && (db.clients || []).some((client: any) => String(client.id) === explicit)) return explicit;
+  const clientName = String(contract.clientName || '').trim().replace(/\s+/g, ' ').toLowerCase();
+  if (!clientName) return null;
+  const matches = (db.clients || []).filter((client: any) =>
+    String(client.company || client.companyName || '').trim().replace(/\s+/g, ' ').toLowerCase() === clientName
+  );
+  return matches.length === 1 ? String(matches[0].id) : null;
+}
+
 apiRouter.get('/crm/deals', requireAuth, requirePermission('canManageCrm'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const deals = getDataSourceMode() === 'postgres'
     ? await postgresCrmDealRepository.list()
@@ -2463,7 +2541,7 @@ apiRouter.put('/crm/deals/:id', requireAuth, requirePermission('canManageCrm'), 
   }
 
   if (getDataSourceMode() === 'postgres') {
-    const deal = await postgresCrmDealRepository.update(id, patch, makeAuditEntry(req, 'CRM_DEAL_UPDATED', `Updated CRM deal "${patch.title || id}".`, 'info'));
+    const deal = await postgresCrmDealRepository.update(id, patch, makeAuditEntry(req, 'CRM_DEAL_UPDATED', `Updated CRM deal "${patch.title || id}".`, 'info'), { userId: req.user!.id, name: req.user!.name || req.user!.username });
     if (!deal) {
       res.status(404).json({ success: false, error: 'Deal not found.' });
       return;
@@ -2478,7 +2556,26 @@ apiRouter.put('/crm/deals/:id', requireAuth, requirePermission('canManageCrm'), 
     res.status(404).json({ success: false, error: 'Deal not found.' });
     return;
   }
-  db.crmDeals[idx] = { ...db.crmDeals[idx], ...patch, updatedAt: new Date().toISOString() };
+  const previousDeal = db.crmDeals[idx];
+  db.crmDeals[idx] = { ...previousDeal, ...patch, updatedAt: new Date().toISOString() };
+  const updatedDeal = db.crmDeals[idx];
+  if (String(previousDeal.stage || 'new') !== String(updatedDeal.stage || 'new')) {
+    const clientId = resolveJsonClientIdForDeal(db, updatedDeal);
+    if (clientId) {
+      const fromStage = String(previousDeal.stage || 'new').replace(/_/g, ' ');
+      const toStage = String(updatedDeal.stage || 'new').replace(/_/g, ' ');
+      appendJsonClientSystemTimelineEvent(db, {
+        clientId,
+        systemAction: 'crm_deal_stage_changed',
+        sourceReferenceId: 'crm-deal-stage:' + id + ':' + updatedDeal.updatedAt,
+        subject: 'CRM stage changed: ' + fromStage + ' → ' + toStage,
+        summary: 'Opportunity "' + String(updatedDeal.title || id) + '" moved from ' + fromStage + ' to ' + toStage + '.',
+        contactName: String(updatedDeal.clientName || ''),
+        occurredAt: updatedDeal.updatedAt,
+        ...clientSystemActor(req)
+      });
+    }
+  }
   saveDatabase(db);
   recordAuditLog({
     action: 'CRM_DEAL_UPDATED',
@@ -2820,7 +2917,12 @@ apiRouter.put('/clients/:id', requireAuth, requirePermission('canManageClients')
     if (patch.retainerTier !== undefined && !['tier-1','tier-2','tier-3'].includes(String(patch.retainerTier))) { res.status(400).json({ success: false, error: 'Invalid retainer tier.' }); return; }
     if (patch.retainerCycle !== undefined && !['monthly','quarterly','annual'].includes(String(patch.retainerCycle))) { res.status(400).json({ success: false, error: 'Invalid retainer cycle.' }); return; }
     if (patch.retainerRenewal !== undefined && !isValidDate(patch.retainerRenewal)) { res.status(400).json({ success: false, error: 'Invalid retainer renewal date.' }); return; }
-    const updated = await postgresClientRepository.update(id, patch as any, makeAuditEntry(req, 'CLIENT_UPDATED', `Updated client ${id}.`, 'info'));
+    const updated = await postgresClientRepository.update(
+      id,
+      patch as any,
+      makeAuditEntry(req, 'CLIENT_UPDATED', `Updated client ${id}.`, 'info'),
+      { userId: req.user!.id, name: req.user!.name || req.user!.username }
+    );
     if (!updated) { res.status(404).json({ success: false, error: 'Client not found.' }); return; }
         res.json({ success: true, client: updated });
     return;
@@ -2865,10 +2967,27 @@ apiRouter.put('/clients/:id', requireAuth, requirePermission('canManageClients')
   if (patch.retainerTier !== undefined && !['tier-1','tier-2','tier-3'].includes(String(patch.retainerTier))) { res.status(400).json({ success: false, error: 'Invalid retainer tier.' }); return; }
   if (patch.retainerCycle !== undefined && !['monthly','quarterly','annual'].includes(String(patch.retainerCycle))) { res.status(400).json({ success: false, error: 'Invalid retainer cycle.' }); return; }
   if (patch.retainerRenewal !== undefined && !isValidDate(patch.retainerRenewal)) { res.status(400).json({ success: false, error: 'Invalid retainer renewal date.' }); return; }
+  const previousClient = db!.clients[idx];
   const updatedAt = new Date().toISOString();
-  const updatedClient = { ...db!.clients[idx], ...patch, updatedAt };
+  const updatedClient = { ...previousClient, ...patch, updatedAt };
   if (!updatedClient) { res.status(404).json({ success: false, error: 'Client not found.' }); return; }
   db!.clients[idx] = updatedClient;
+  const previousStatus = String(previousClient.status || 'lead') === 'prospect' ? 'lead' : String(previousClient.status || 'lead') === 'on_hold' ? 'inactive' : String(previousClient.status || 'lead');
+  const nextStatus = String(updatedClient.status || 'lead') === 'prospect' ? 'lead' : String(updatedClient.status || 'lead') === 'on_hold' ? 'inactive' : String(updatedClient.status || 'lead');
+  if (previousStatus !== nextStatus) {
+    const onboardingCompleted = previousStatus === 'lead' && nextStatus === 'active';
+    appendJsonClientSystemTimelineEvent(db!, {
+      clientId: id,
+      systemAction: 'client_status_changed',
+      sourceReferenceId: 'client-status:' + id + ':' + updatedAt,
+      subject: onboardingCompleted ? 'Client onboarding moved to Active' : 'Client status changed to ' + nextStatus.replace(/_/g, ' '),
+      summary: 'Client status changed from ' + previousStatus.replace(/_/g, ' ') + ' to ' + nextStatus.replace(/_/g, ' ') + '.',
+      contactName: String(updatedClient.name || updatedClient.company || ''),
+      outcome: onboardingCompleted ? 'Client moved from onboarding to active account status.' : '',
+      occurredAt: updatedAt,
+      ...clientSystemActor(req)
+    });
+  }
   saveDatabase(db!);
   recordAuditLog({
     action: 'CLIENT_UPDATED',
@@ -3059,6 +3178,19 @@ apiRouter.post('/contracts', requireAuth, requireAnyPermission('canManageProject
     const db: any = getDatabase();
     if (!Array.isArray(db.contracts)) db.contracts = [];
     db.contracts.unshift(contract);
+    const linkedClientId = resolveJsonClientIdForContract(db, contract);
+    if (linkedClientId) {
+      appendJsonClientSystemTimelineEvent(db, {
+        clientId: linkedClientId,
+        systemAction: 'client_contract_created',
+        sourceReferenceId: 'contract-created:' + contract.id,
+        subject: 'Contract created: ' + contract.contractNumber,
+        summary: 'Contract ' + contract.contractNumber + ' (' + contract.title + ') was created with initial status Draft.',
+        contactName: contract.clientName,
+        occurredAt: now,
+        ...clientSystemActor(req)
+      });
+    }
     saveDatabase(db);
     await writeAuditLog({ action: 'CLIENT_CONTRACT_CREATED', actor: req.user!.username, actorRole: req.user!.role, ip: req.ip, userAgent: req.headers['user-agent'] as string, details: 'Created contract ' + contract.contractNumber + '.', severity: 'info' });
     created = contract;
@@ -3168,10 +3300,28 @@ apiRouter.post('/contracts/:id/transition', requireAuth, requireAnyPermission('c
     const db: any = getDatabase();
     const index = (db.contracts || []).findIndex((item: any) => String(item.id) === id);
     if (index < 0) { res.status(404).json({ success: false, error: 'Contract not found.' }); return; }
-    db.contracts[index] = { ...db.contracts[index], ...patch };
+    const previousContract = db.contracts[index];
+    db.contracts[index] = { ...previousContract, ...patch };
+    const updatedContract = db.contracts[index];
+    if (String(previousContract.status) !== String(updatedContract.status)) {
+      const linkedClientId = resolveJsonClientIdForContract(db, updatedContract);
+      if (linkedClientId) {
+        const statusNote = String(updatedContract.statusNote || '').trim();
+        appendJsonClientSystemTimelineEvent(db, {
+          clientId: linkedClientId,
+          systemAction: 'client_contract_status_changed',
+          sourceReferenceId: 'contract-status:' + id + ':' + now,
+          subject: 'Contract status changed: ' + String(updatedContract.contractNumber || id),
+          summary: 'Contract ' + String(updatedContract.contractNumber || id) + ' moved from ' + String(previousContract.status).replace(/_/g, ' ') + ' to ' + String(updatedContract.status).replace(/_/g, ' ') + '.' + (statusNote ? ' Note: ' + statusNote : ''),
+          contactName: String(updatedContract.clientName || ''),
+          occurredAt: now,
+          ...clientSystemActor(req)
+        });
+      }
+    }
     saveDatabase(db);
     await writeAuditLog({ action: 'CLIENT_CONTRACT_STATUS_CHANGED', actor: req.user!.username, actorRole: req.user!.role, ip: req.ip, userAgent: req.headers['user-agent'] as string, details, severity: 'info' });
-    updated = db.contracts[index];
+    updated = updatedContract;
   }
   res.json({ success: true, contract: updated });
 });

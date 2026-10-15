@@ -1,6 +1,8 @@
+import crypto from 'node:crypto';
 import { createClientSlug, type AgencyClient } from '../src/lib/clientStore.ts';
 import { getPostgresPool, withPostgresTransaction } from './postgres.ts';
 import { postgresAuditLogRepository, type AuditEntry } from './postgres-audit-log-repository.ts';
+import { appendSystemClientInteractionWithinTransaction } from './postgres-client-interaction-repository.ts';
 
 type ClientRow = {
   id: string;
@@ -82,7 +84,7 @@ export class PostgresClientRepository {
     });
   }
 
-  async update(id: string, patch: Partial<AgencyClient>, audit?: AuditEntry): Promise<AgencyClient | null> {
+  async update(id: string, patch: Partial<AgencyClient>, audit?: AuditEntry, actor?: { userId?: string; name?: string }): Promise<AgencyClient | null> {
     const client = await getPostgresPool().connect();
     try {
       await client.query('BEGIN');
@@ -104,6 +106,29 @@ export class PostgresClientRepository {
         [id, next.name, next.company || null, next.email || null, next.phone || null, next.industry || null,
          normalizeStatus(String(next.status)), next.notes || null, JSON.stringify(toMetadata(next)), next.updatedAt]
       );
+      const normalizedPreviousStatus = normalizeStatus(String(currentClient.status));
+      const normalizedNextStatus = normalizeStatus(String(next.status));
+      if (normalizedPreviousStatus !== normalizedNextStatus) {
+        const occurredAt = String(next.updatedAt || new Date().toISOString());
+        const onboardingCompleted = normalizedPreviousStatus === 'lead' && normalizedNextStatus === 'active';
+        await appendSystemClientInteractionWithinTransaction(client, {
+          id: 'interaction_' + Date.now() + '_' + crypto.randomBytes(4).toString('hex'),
+          clientId: id,
+          type: 'note',
+          sourceType: 'system',
+          systemAction: 'client_status_changed',
+          sourceReferenceId: 'client-status:' + id + ':' + occurredAt,
+          subject: onboardingCompleted ? 'Client onboarding moved to Active' : 'Client status changed to ' + normalizedNextStatus.replace(/_/g, ' '),
+          summary: 'Client status changed from ' + normalizedPreviousStatus.replace(/_/g, ' ') + ' to ' + normalizedNextStatus.replace(/_/g, ' ') + '.',
+          contactName: String(next.name || next.company || ''),
+          outcome: onboardingCompleted ? 'Onboarding is complete; account status is Active.' : '',
+          nextStep: '',
+          occurredAt,
+          createdByUserId: actor?.userId || audit?.actorUserId || '',
+          createdByName: actor?.name || audit?.actor || 'AMS system',
+          createdAt: occurredAt
+        });
+      }
       if (audit) await postgresAuditLogRepository.appendWithinTransaction(client, audit);
       await client.query('COMMIT');
       return result.rows[0] ? mapClient(result.rows[0]) : null;
