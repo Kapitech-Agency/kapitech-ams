@@ -337,3 +337,45 @@ test('Client profile detail loads persisted contracts by client ID or exact comp
   assert.ok(clients.includes('to="/admin/contracts"'));
   assert.ok(clients.includes('Contract register unavailable'));
 });
+
+
+test('Client interaction timeline reads and writes persistent relationship history through the existing AMS API', () => {
+  const clients = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClients.tsx'), 'utf8');
+  const api = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/apiClient.ts'), 'utf8');
+  const routes = fs.readFileSync(path.resolve(process.cwd(), 'server/routes.ts'), 'utf8');
+  const migration = fs.readFileSync(path.resolve(process.cwd(), 'db/postgres/053_client_interactions.sql'), 'utf8');
+  const repository = fs.readFileSync(path.resolve(process.cwd(), 'server/postgres-client-interaction-repository.ts'), 'utf8');
+  const database = fs.readFileSync(path.resolve(process.cwd(), 'server/db.ts'), 'utf8');
+
+  assert.ok(clients.includes('data-ams-feature-slug="client-interaction-timeline"'));
+  assert.ok(clients.includes('slug="client-interaction-create-drawer"'));
+  assert.ok(clients.includes('api.clients.getInteractions(selectedClient.id)'));
+  assert.ok(clients.includes('api.clients.createInteraction(interactionClient.id'));
+  assert.ok(clients.includes('setInteractionSaving(true)'));
+  assert.ok(clients.includes('response.data?.interaction'));
+  assert.ok(api.includes('getInteractions: (id: string)'));
+  assert.ok(api.includes('createInteraction: (id: string'));
+  assert.ok(routes.includes("apiRouter.get('/clients/:id/interactions', requireAuth, requireAnyPermission('canManageClients', 'canManageCrm'"));
+  assert.ok(routes.includes("apiRouter.post('/clients/:id/interactions', requireAuth, requireAnyPermission('canManageClients', 'canManageCrm'"));
+  assert.ok(routes.includes("const CLIENT_INTERACTION_TYPES: readonly ClientInteractionType[] = ['call', 'email', 'meeting', 'message', 'note']"));
+  assert.ok(routes.includes("makeAuditEntry(req, 'CLIENT_INTERACTION_CREATED'"));
+  assert.ok(repository.includes('postgresAuditLogRepository.appendWithinTransaction(client, audit)'));
+  assert.ok(repository.includes('async listByClientId(clientId: string'));
+  assert.ok(repository.includes('async create(input: ClientInteractionInput'));
+  assert.ok(migration.includes('CREATE TABLE IF NOT EXISTS client_interactions'));
+  assert.ok(migration.includes('REFERENCES clients(id) ON DELETE RESTRICT'));
+  assert.ok(migration.includes('ON client_interactions (client_id, occurred_at DESC, created_at DESC)'));
+  assert.ok(database.includes('clientInteractions: any[]'));
+  assert.ok(database.includes('clientInteractions: []'));
+  assert.ok(routes.includes('Client has interaction history and cannot be deleted.'));
+});
+
+test('Client interaction timeline is separate from global security audit records', () => {
+  const clients = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClients.tsx'), 'utf8');
+  const routes = fs.readFileSync(path.resolve(process.cwd(), 'server/routes.ts'), 'utf8');
+
+  assert.ok(clients.includes('Saved client calls, meetings, emails, messages, and internal notes.'));
+  assert.ok(clients.includes('api.clients.getInteractions(selectedClient.id)'));
+  assert.ok(routes.includes("const interactions = (getDatabase().clientInteractions || [])"));
+  assert.ok(!clients.includes("api.auditLogs.getAll()"));
+});
