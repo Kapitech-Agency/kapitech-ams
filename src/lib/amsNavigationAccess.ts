@@ -42,7 +42,7 @@ const ADMIN_FINANCE: AmsRole[] = ['Admin', 'Finance'];
 export const AMS_NAVIGATION_GROUPS: AmsNavigationGroup[] = [
   {
     key: 'main-dashboard',
-    label: 'MAIN DASHBOARD',
+    label: 'OPERATIONAL OVERVIEW',
     items: [
       { key: 'executive-overview', label: 'Executive Agency Overview', to: '/admin/dashboard', icon: 'dashboard', allowedRoles: COMMERCIAL_ROLES },
       { key: 'my-hub', label: 'Personal Workspace / My Hub', to: '/admin/tasks?taskscope=my', icon: 'user', allowedRoles: ALL_ROLES },
@@ -51,7 +51,7 @@ export const AMS_NAVIGATION_GROUPS: AmsNavigationGroup[] = [
   },
   {
     key: 'client-pipeline',
-    label: 'CLIENT & PIPELINE (CRM)',
+    label: 'CLIENT & PIPELINE',
     items: [
       {
         key: 'sales-pipeline',
@@ -67,7 +67,7 @@ export const AMS_NAVIGATION_GROUPS: AmsNavigationGroup[] = [
   },
   {
     key: 'projects-workspace',
-    label: 'PROJECTS & WORKSPACE',
+    label: 'DELIVERY & OPERATIONS',
     items: [
       { key: 'project-hub', label: 'Project Hub', to: '/admin/projects', icon: 'projects', allowedRoles: ALL_ROLES },
       { key: 'tasks-engine', label: 'Task & Deliverables Engine', to: '/admin/tasks', icon: 'tasks', allowedRoles: ['Admin', 'PM'] },
@@ -76,7 +76,7 @@ export const AMS_NAVIGATION_GROUPS: AmsNavigationGroup[] = [
   },
   {
     key: 'finance-ledger',
-    label: 'FINANCE & LEDGER CONTROL',
+    label: 'FINANCE & LEDGER',
     items: [
       { key: 'quotations', label: 'Quotations & Proposals Builder', to: '/admin/proposals', icon: 'quotes', allowedRoles: ADMIN_FINANCE },
       { key: 'invoicing-receivables', label: 'Invoicing & Accounts Receivable', to: '/admin/finance?tab=accounts-receivable', icon: 'invoice', allowedRoles: ADMIN_FINANCE },
@@ -86,7 +86,7 @@ export const AMS_NAVIGATION_GROUPS: AmsNavigationGroup[] = [
   },
   {
     key: 'cms-content',
-    label: 'CMS & CONTENT MANAGEMENT',
+    label: 'MARKETING CMS',
     items: [
       { key: 'insight-editorial', label: 'Insight Editorial Packs', to: '/admin/cms/insights', icon: 'editorial', allowedRoles: ['Admin', 'PM', 'Creative'] },
       { key: 'portfolio-testimonial-registry', label: 'Portfolio & Testimonial Quarantine Registry', to: '/admin/cms/projects', icon: 'registry', allowedRoles: ['Admin', 'PM', 'Creative'] },
@@ -105,7 +105,7 @@ export const AMS_SYSTEM_SETTINGS_ITEMS: AmsNavigationItem[] = [
  * role-aware sidebar submenu configuration, keeping primary modules concise.
  */
 const PRIMARY_NAVIGATION_ITEMS: AmsNavigationItem[] = [
-  { key: 'dashboard', label: 'Dashboard', to: '/admin/dashboard', icon: 'dashboard', allowedRoles: ALL_ROLES },
+  { key: 'dashboard', label: 'Dashboard & Hub', to: '/admin/dashboard', icon: 'dashboard', allowedRoles: ALL_ROLES },
   { key: 'crm', label: 'CRM', to: '/admin/crm', icon: 'crm', allowedRoles: COMMERCIAL_ROLES },
   { key: 'projects', label: 'Projects', to: '/admin/projects', icon: 'projects', allowedRoles: ['Admin', 'Finance', 'PM', 'Creative'] },
   { key: 'finance', label: 'Finance', to: '/admin/finance?tab=executive-summary', icon: 'profitability', allowedRoles: ['Admin', 'Finance', 'PM'] },
@@ -188,34 +188,28 @@ export function getAmsHomePath(role: AmsRole): string {
 }
 
 export function getNavigationGroupsForRole(role: AmsRole): AmsNavigationGroup[] {
-  const groups = AMS_NAVIGATION_GROUPS
-    .map((group) => ({
-      ...group,
-      items: group.items
-        .filter((item) => item.allowedRoles.includes(role))
-        .map((item) => {
-          if (item.key === 'project-hub' && role === 'Freelancer') {
-            return { ...item, to: '/admin/tasks?taskscope=my&workspace=project' };
-          }
-          if (item.key === 'project-hub' && (role === 'Creative' || role === 'Finance')) {
-            return { ...item, to: '/admin/projects?projects=sprint' };
-          }
-          return item;
-        }),
-    }))
-    .filter((group) => group.items.length > 0);
-
-  if (role === 'Admin') {
-    groups.push({
-      key: 'system-settings',
-      label: 'SYSTEM SETTINGS',
-      items: AMS_SYSTEM_SETTINGS_ITEMS.filter((item) => item.allowedRoles.includes(role)),
+  return AMS_NAVIGATION_GROUPS.map((group) => {
+    if (group.key === 'main-dashboard') {
+      return {
+        ...group,
+        label: 'OPERATIONAL OVERVIEW',
+        items: [{ key: 'dashboard-hub', label: 'Dashboard & Hub', to: getAmsHomePath(role), icon: 'dashboard', allowedRoles: ALL_ROLES }],
+      };
+    }
+    const labelOverrides: Record<string, string> = {
+      'client-pipeline': 'CLIENT & PIPELINE',
+      'projects-workspace': 'DELIVERY & OPERATIONS',
+      'finance-ledger': 'FINANCE & LEDGER',
+      'cms-content': 'MARKETING CMS',
+    };
+    const items = group.items.filter((item) => item.allowedRoles.includes(role)).map((item) => {
+      if (item.key === 'project-hub' && role === 'Freelancer') return { ...item, to: '/admin/tasks?taskscope=my&workspace=project' };
+      if (item.key === 'project-hub' && (role === 'Creative' || role === 'Finance')) return { ...item, to: '/admin/projects?projects=sprint' };
+      return item;
     });
-  }
-
-  return groups;
+    return { ...group, label: labelOverrides[group.key] || group.label, items };
+  }).filter((group) => group.items.length > 0);
 }
-
 const pathOnly = (pathname: string) => pathname.replace(/\/+$/, '') || '/';
 
 export function canAccessAmsRoute(role: AmsRole, pathname: string, search = ''): boolean {
@@ -324,8 +318,10 @@ export function isNavigationItemActive(
       return path === '/admin/documents' || path.startsWith('/admin/documents/');
     case 'settings':
       return path === '/admin/settings' || path.startsWith('/admin/settings/') || path === '/admin/navigation/release-readiness';
+    case 'dashboard-hub':
     case 'executive-overview':
-      return path === '/admin/dashboard' && params.get('view') !== 'tasks';
+      return (path === '/admin/dashboard' && params.get('view') !== 'tasks')
+        || (path === '/admin/tasks' && params.get('taskscope') === 'my' && params.get('workspace') !== 'project');
     case 'my-hub':
       return path === '/admin/tasks' && params.get('taskscope') === 'my' && params.get('workspace') !== 'project';
     case 'live-activity':
@@ -360,7 +356,15 @@ export function isNavigationItemActive(
       return path === '/admin/settings' && (!params.get('tab') || params.get('tab') === 'overview');
     case 'release-readiness':
       return path === '/admin/navigation/release-readiness';
-    default:
-      return pathOnly(item.to.split('?')[0]) === path;
+    default: {
+      const target = new URL(item.to, 'https://ams.kapitech.local');
+      if (pathOnly(target.pathname) !== path) return false;
+      const targetParams = target.searchParams;
+      for (const key of new Set([...targetParams.keys(), ...params.keys()])) {
+        if (targetParams.get(key) !== params.get(key)) return false;
+      }
+      if (target.hash && target.hash !== hash) return false;
+      return true;
+    }
   }
 }
