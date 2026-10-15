@@ -505,3 +505,46 @@ test('Careers tabs, filters, and modal fields use consistent AMS interactions', 
   const styles = await read('src/index.css');
   assert.match(styles, /\.ams-shell \.cms-career-editor-group \+ \.cms-career-editor-group/);
 });
+
+
+test('Contracts & SOW has a persisted lifecycle workflow and clear commercial navigation', async () => {
+  const layout = await read('src/pages/admin/AdminLayout.tsx');
+  const app = await read('src/App.tsx');
+  const page = await read('src/pages/admin/AdminContracts.tsx');
+  const api = await read('src/lib/apiClient.ts');
+  const routes = await read('server/routes.ts');
+  const repository = await read('server/postgres-contract-repository.ts');
+  const migration = await read('db/postgres/047_client_contracts_and_sow.sql');
+
+  assert.ok(layout.includes("key: 'contracts'") && layout.includes("label: 'Contracts & SOW'"));
+  assert.ok(app.includes("path=\"contracts\"") && app.includes('<AdminContracts />'));
+  assert.ok(api.includes("'/api/contracts'") && api.includes('/transition'));
+  assert.ok(routes.includes("apiRouter.post('/contracts/:id/transition'"));
+  assert.ok(routes.includes('CLIENT_CONTRACT_TRANSITIONS'));
+  assert.ok(routes.includes('Only draft contracts can be deleted.'));
+  assert.ok(repository.includes('class PostgresContractRepository'));
+  assert.ok(migration.includes('CREATE TABLE IF NOT EXISTS client_contracts'));
+  assert.ok(page.includes('New contract or SOW'));
+});
+
+test('SLA Monitoring never presents fixture telemetry as real client performance', async () => {
+  const sla = await read('src/pages/admin/AdminClientSlaMonitoring.tsx');
+
+  assert.match(sla, /Telemetry not configured/);
+  assert.match(sla, /No sample accounts or simulated performance values are shown/);
+  assert.match(sla, /value: '—'/);
+  assert.doesNotMatch(sla, /SLA-001|PT Astra Digital Ventura|ShopeePay International|const seed/);
+  assert.doesNotMatch(sla, /isSlugFixtureMode/);
+});
+
+test('Resource Planning assignments persist on project records and distinguish tracked hours from forecasts', async () => {
+  const teams = await read('src/pages/admin/AdminTeams.tsx');
+  const routes = await read('server/routes.ts');
+
+  assert.match(teams, /const toggleProjectAssignment = async/);
+  assert.match(teams, /api\.projects\.update\(project\.id, \{ teamMembers: nextMembers \}\)/);
+  assert.match(teams, /label: 'Historical tracked utilization'/);
+  assert.match(teams, /Planned hours, allocation percentages, and leave calendars are not available yet/);
+  assert.match(teams, /Capacity &amp; Allocation/);
+  assert.match(routes, /pickFields\(updates, \['title','name','client','clientId','clientName','clientCompany','clientEmail','serviceCategory','status','health','budget','progressPercent','startDate','targetEndDate','teamLead','teamMembers'/);
+});
