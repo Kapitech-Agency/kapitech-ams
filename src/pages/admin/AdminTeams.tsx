@@ -1716,6 +1716,37 @@ export const AdminTeams: React.FC = () => {
             </div>
             <AdminTablePagination total={capacityRows.length} page={capacityPage} pageSize={capacityPageSize} onPageChange={setCapacityPage} onPageSizeChange={setCapacityPageSize} itemLabel="members" slug="capacity-allocation-pagination" />
           </AdminPanel>
+
+          <AdminPanel slug="future-resource-allocation-plan" title="Upcoming resource allocation" description="Upcoming four weeks calculated from saved project-member plans. The 40-hour baseline is used to convert planned percentages into hours." className="overflow-hidden" actions={<span className="text-[10px] text-muted">No plan means unplanned, not automatically available.</span>}>
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="ams-teams-table min-w-[1080px] table-fixed">
+                <thead><tr>
+                  <th className="w-[24%]">Resource & role</th>
+                  {futureCapacityWeeks.map((week) => <th key={week.label} className="w-[19%] text-center">{week.label}</th>)}
+                </tr></thead>
+                <tbody>
+                  {futureCapacityRows.map((row) => (
+                    <tr key={row.member.id}>
+                      <td><p className="font-medium text-fg">{row.member.name}</p><p className="mt-1 text-[10px] text-muted">{row.member.role} · {row.member.division}</p></td>
+                      {row.weeks.map((week, index) => (
+                        <td key={index} className="text-center">
+                          <div className={'rounded-control border px-3 py-2 ' + (week.allocationPercent > 100 ? 'border-danger/30 bg-danger/5' : 'border-line bg-bg')}>
+                            <div className="flex items-center justify-between gap-2 text-xs">
+                              <span className={'font-semibold tabular-nums ' + (week.allocationPercent > 100 ? 'text-danger' : 'text-fg')}>{week.projectCount ? week.allocationPercent + '%' : '—'}</span>
+                              <span className="text-[10px] tabular-nums text-muted">{week.projectCount ? week.plannedHours.toFixed(1) + 'h' : 'No plan'}</span>
+                            </div>
+                            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel"><div className={'h-full rounded-full ' + (week.allocationPercent > 100 ? 'bg-danger' : 'bg-series-4')} style={{ width: Math.min(100, week.allocationPercent) + '%' }} /></div>
+                            <p className="mt-1 text-left text-[9px] text-muted">{week.projectCount ? week.projectCount + ' planned project(s)' : 'Not scheduled'}</p>
+                          </div>
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {!futureCapacityRows.some((row) => row.weeks.some((week) => week.projectCount > 0)) && <div className="border-t border-line px-4 py-4 text-xs leading-5 text-muted">No dated resource plans saved for the next four weeks. Open Team Directory, choose Allocate, assign the member to a project, then enter the planned percentage and date range.</div>}
+          </AdminPanel>
         </div>
       ) : currentView === 'skill-matrix' ? (
         <div className="space-y-4" data-ams-feature-slug="skill-matrix" data-ams-slug="skill-matrix">
