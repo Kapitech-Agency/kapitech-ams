@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (file: string) => fs.readFile(path.join(root, file), 'utf8');
 
-test('login endpoints bypass the generic authenticated rate limit and retain dedicated limits', async () => {
+test('login and session-recovery endpoints bypass the generic authenticated budget', async () => {
   const routes = await read('server/routes.ts');
   const exceptionStart = routes.indexOf('const AUTH_ENDPOINTS_WITH_DEDICATED_LIMIT = new Set([');
   const genericLimiter = routes.indexOf('return rateLimitAuthenticated(300, 60 * 1000)(req, res, next);');
@@ -22,7 +22,7 @@ test('login endpoints bypass the generic authenticated rate limit and retain ded
   assert.ok(firebaseRoute > genericLimiter, 'Firebase login must keep its dedicated IP-based limiter');
   assert.ok(mfaRoute > genericLimiter, 'MFA verification must keep its dedicated IP-based limiter');
 
-  for (const endpoint of ['/auth/login', '/auth/firebase-login', '/auth/mfa/verify']) {
+  for (const endpoint of ['/auth/login', '/auth/firebase-login', '/auth/mfa/verify', '/auth/me', '/auth/logout']) {
     assert.ok(routes.includes(`'${endpoint}'`), `${endpoint} must be exempted from the generic limiter`);
   }
 });
