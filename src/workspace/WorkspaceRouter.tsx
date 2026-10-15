@@ -86,11 +86,10 @@ const GuardedWorkspaceView: React.FC<GuardedWorkspaceViewProps> = ({ routeKey })
 const WorkspaceRouteSwitch: React.FC = () => {
   const session = getAdminSession();
   const role = normalizeWorkspaceRole(typeof session?.user?.role === 'string' ? session.user.role : null);
-  const landing = workspaceLandingPath(role).replace('/workspace/', '');
   return (
     <Routes>
       <Route element={<WorkspaceLayout />}>
-        <Route index element={<Navigate to={landing} replace />} />
+        <Route index element={<Navigate to={workspaceLandingPath(role)} replace />} />
         <Route path="dashboard/overview" element={<GuardedWorkspaceView routeKey="executive-overview" />} />
         <Route path="dashboard/my-hub" element={<GuardedWorkspaceView routeKey="personal-workspace" />} />
         <Route path="dashboard/activity" element={<GuardedWorkspaceView routeKey="activity-stream" />} />
