@@ -126,13 +126,13 @@ export function isAmsModuleSubnavigationItemActive(
     return !params.get('view') || params.get('view') === 'overview';
   }
   if (path === '/admin/finance' && item.key === 'invoicing-revenues') {
-    return !['accounts-payable', 'project-finance'].includes(params.get('tab') || '');
+    return ['executive-summary', 'dashboard', 'cash-bank', 'revenue', 'petty-cash', 'accounts-receivable'].includes(params.get('tab') || 'executive-summary');
   }
   if (path === '/admin/finance' && item.key === 'profitability-expenses') {
-    return ['accounts-payable', 'expenses', 'vendors', 'approvals', 'journal'].includes(params.get('tab') || '');
+    return ['accounts-payable', 'expenses', 'vendors', 'journal', 'chart-of-accounts', 'monthly-pnl', 'cash-flow', 'balance-sheet', 'monthly-closing', 'annual-summary'].includes(params.get('tab') || '');
   }
   if (path === '/admin/finance' && item.key === 'project-profitability') {
-    return params.get('tab') === 'project-finance';
+    return ['project-finance', 'operational-budget', 'project-allocation', 'team-fee'].includes(params.get('tab') || '');
   }
   if (item.key === 'all' && path === '/admin/projects') {
     return !params.get('projects') || params.get('projects') === 'all';
