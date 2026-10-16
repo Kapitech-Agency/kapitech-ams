@@ -8,6 +8,19 @@ import { isMasterAdministrator } from '../src/lib/adminAuth.ts';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (file: string) => fs.readFile(path.join(root, file), 'utf8');
 
+test('Finance hydration replaces caches only for valid server collection envelopes', async () => {
+  const store = await read('src/lib/financeStore.ts');
+
+  assert.match(store, /invoiceRes\.success && invoiceRes\.data\?\.success !== false && Array\.isArray\(invoiceRes\.data\?\.invoices\)/);
+  assert.match(store, /expenseRes\.success && expenseRes\.data\?\.success !== false && Array\.isArray\(expenseRes\.data\?\.expenses\)/);
+  assert.ok(store.includes('if (invoices !== null) invoiceCache = invoices;'));
+  assert.ok(store.includes('if (expenses !== null) expenseCache = expenses;'));
+  assert.ok(store.includes('if (invoices !== null && expenses !== null) {'));
+  assert.ok(store.includes('financeServerHydrationStarted = false;\n    scheduleFinanceHydrationRetry();'));
+  assert.ok(!store.includes('if (invoiceRes.success) invoiceCache = invoices;'));
+  assert.ok(!store.includes('if (expenseRes.success) expenseCache = expenses;'));
+});
+
 test('Document upload reports failed compensation instead of silently hiding an orphan record', async () => {
   const documents = await read('src/pages/admin/AdminDocuments.tsx');
 
