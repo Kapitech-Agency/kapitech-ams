@@ -72,3 +72,16 @@ Restore utility:
 PostgreSQL is the authoritative data source in production. Encrypted JSON persistence remains available for controlled development/test or an explicitly approved rollback only. Never switch production back to JSON without an approved rollback plan, a verified backup, and reconciliation evidence.
 
 Release readiness: an authorized security/IT operator must verify `GET /api/system/production-readiness` returns HTTP 200 with `productionReady=true`. The gate checks all migrations and checksums shipped with the release, MFA coverage, reconciliation evidence, backup/restore status, durable document storage, and enabled notification channels. See `docs/production-readiness-gate.md` and `docs/production-cutover-checklist.md`.
+
+## AI agent and architecture documentation
+
+Before any AI-assisted code change, read [AGENTS.md](AGENTS.md). GitHub Copilot also receives repository-specific rules in [.github/copilot-instructions.md](.github/copilot-instructions.md).
+
+Core references:
+- [AMS Design System](AMS-DESIGN-SYSTEM.md): visual tokens, layout, shared components and interaction rules.
+- [AMS Master Structure & AI Implementation Guide](docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md): target navigation, modules, workflows, shared data, Finance, Kopra H2H preparation, implementation phases and acceptance criteria.
+- [Finance Excel Alignment](docs/FINANCE-EXCEL-ALIGNMENT.md): existing Finance process and accounting controls.
+- [AMS Workflow Audit](docs/ams-workflow-audit.md): dated audit evidence; its historical route taxonomy/status must not be mistaken for the current target state.
+- [Drawer Guidelines](docs/AMS-DRAWER-GUIDELINES.md), [Modal Guidelines](docs/AMS-MODAL-GUIDELINES.md), and [Kanban Guidelines](docs/AMS-KANBAN-GUIDELINES.md): required shared interactions.
+
+Important: the master structure document describes the **target state**, not a claim that every listed feature has shipped. Verify actual code, APIs, schema, permissions, tests, and production readiness before changing or reporting implementation status.
