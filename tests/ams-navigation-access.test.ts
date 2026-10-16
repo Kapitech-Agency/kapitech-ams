@@ -17,8 +17,11 @@ import { getAmsModuleSubnavigation, isAmsModuleSubnavigationItemActive } from '.
 const flatten = (role: Parameters<typeof getNavigationGroupsForRole>[0]) =>
   getNavigationGroupsForRole(role).flatMap((group) => group.items);
 const keys = (role: Parameters<typeof getNavigationGroupsForRole>[0]) => new Set(flatten(role).map((item) => item.key));
-const subnav = (moduleKey: Parameters<typeof getAmsModuleSubnavigation>[0], role: Parameters<typeof getAmsModuleSubnavigation>[1]) =>
-  getAmsModuleSubnavigation(moduleKey, role);
+const subnav = (
+  moduleKey: Parameters<typeof getAmsModuleSubnavigation>[0],
+  role: Parameters<typeof getAmsModuleSubnavigation>[1],
+  allowMfaSetup = false,
+) => getAmsModuleSubnavigation(moduleKey, role, allowMfaSetup);
 
 test('unknown role values fall back to the least-privileged navigation profile', () => {
   assert.equal(normalizeAmsRole('Admin'), 'Admin');
