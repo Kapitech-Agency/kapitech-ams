@@ -492,7 +492,9 @@ test('Careers tabs, filters, and modal fields use consistent AMS interactions', 
   assert.match(careers, /role="tablist"/);
   assert.match(careers, /role="tab"/);
   assert.match(careers, /aria-selected=\{activeTab === tab\.key\}/);
-  assert.match(careers, /ArrowLeft[\s\S]{0,600}setActiveTab\(nextKey\)/);
+  assert.match(careers, /ArrowLeft[\s\S]{0,700}handleWorkspaceTabChange\(nextKey\)/);
+  assert.match(careers, /setSearchParams\(\(current\) =>/);
+  assert.match(careers, /canManageJobs && requestedTab !== 'applicants' \? 'jobs' : 'applicants'/);
   assert.match(careers, /id="careers-jobs-panel"[\s\S]{0,180}aria-labelledby="careers-jobs-tab"/);
   assert.match(careers, /id="careers-applicants-panel"[\s\S]{0,180}aria-labelledby="careers-applicants-tab"/);
   assert.equal((careers.match(/<CustomSelect\b/g) || []).length, 3);
