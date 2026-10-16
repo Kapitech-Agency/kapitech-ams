@@ -561,3 +561,37 @@ test('Global timer uses scoped project options and enforces assigned-task owners
   assert.ok(timer.includes('api.timeLogs.create({'));
   assert.ok(timer.includes('The timer remains active; retry Stop to try again.'));
 });
+
+
+test('PM project profitability is aggregate-only and confidential vendor rates are redacted server-side', async () => {
+  const routes = await read('server/routes.ts');
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const aggregatePage = await read('src/pages/admin/AdminProjectProfitability.tsx');
+  const apiClient = await read('src/lib/apiClient.ts');
+
+  const start = routes.indexOf("apiRouter.get('/finance/project-profitability'");
+  const end = routes.indexOf("apiRouter.get('/finance/metrics'", start);
+  assert.ok(start >= 0 && end > start, 'Aggregate profitability API route must remain registered before general finance metrics.');
+  const endpoint = routes.slice(start, end);
+  assert.ok(endpoint.includes("isProjectManagerRole(user)"));
+  assert.ok(endpoint.includes("user.permissions?.canManageProjects"));
+  assert.ok(endpoint.includes('postgresInvoiceRepository.list()'));
+  assert.ok(endpoint.includes('postgresExpenseRepository.list()'));
+  assert.ok(endpoint.includes('recordedCosts'));
+  assert.ok(endpoint.includes('res.json({ success: true, projects: result })'));
+  assert.ok(endpoint.includes('Only project/currency-level aggregates are returned'));
+  assert.ok(workspace.includes("if (role === 'PM' && requestedTab === 'project-finance')"));
+  assert.ok(workspace.includes('return <AdminProjectProfitability />;'));
+  assert.ok(apiClient.includes("'/api/finance/project-profitability'"));
+  assert.ok(aggregatePage.includes('Aggregate formula: collected revenue minus recorded expenses.'));
+  assert.ok(aggregatePage.includes('Individual vendor and employee rates are not shown'));
+
+  const vendorStart = routes.indexOf("apiRouter.get('/vendors'");
+  const vendorEnd = routes.indexOf("apiRouter.post('/vendors'", vendorStart);
+  assert.ok(vendorStart >= 0 && vendorEnd > vendorStart);
+  const vendorGet = routes.slice(vendorStart, vendorEnd);
+  assert.ok(vendorGet.includes('canViewConfidentialVendorRates(req.user!)'));
+  assert.ok(vendorGet.includes('redactConfidentialVendorRateFields(vendor)'));
+  assert.ok(vendorGet.includes('rateMasked: true'));
+  assert.ok(routes.includes('Project managers cannot modify confidential vendor rates or contracts.'));
+});
