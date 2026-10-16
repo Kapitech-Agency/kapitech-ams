@@ -1,15 +1,19 @@
 # AMS Relational Database Migration Plan
 
-## Current state
+> **Runtime-status clarification:** This document contains foundation/migration guidance and may include statements from an earlier rollout stage. server/data-source.ts supports json/postgres and defaults to json if KAPITECH_DATA_SOURCE is unset; README specifies postgres as the required production configuration. This document alone does not prove the deployed data source. Before migration, rollback or production claims, verify authorized runtime configuration and GET /api/system/production-readiness. Do not switch sources or migrate production data based on this document alone.
 
-The AMS still uses an encrypted JSON persistence layer. The current implementation has:
+## Historical persistence foundation and verification requirement
+
+The following notes describe the encrypted JSON persistence implementation and its guarantees at the time this plan was authored. Do not use them alone to claim the current production mode; inspect server/data-source.ts, README, authorized runtime configuration and readiness evidence.
+
+The JSON persistence implementation has included:
 
 - AES-256-GCM encryption at rest.
 - Atomic file replacement.
 - A persistent-file fingerprint guard that rejects stale writes from another application process.
 - Rolling encrypted backups and schema-level backup integrity checks.
 
-The fingerprint guard is a safety net, not a replacement for database transactions. The target architecture is PostgreSQL.
+The fingerprint guard is a safety net, not a replacement for database transactions. The configured target and active production source must be verified for the current release before executing any migration.
 
 ## Migration principles
 
