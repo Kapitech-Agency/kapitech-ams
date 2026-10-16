@@ -17,11 +17,11 @@ test('System Center is a single Admin-only direct link and Settings workspace ta
   assert.ok(layout.includes('ariaLabel="Workspace navigation"'));
   assert.ok(layout.includes("if (path === '/admin/settings' || path === '/admin/navigation/release-readiness') return 'settings';"));
   assert.ok(layout.includes('getAmsModuleSubnavigation(workspaceNavigationModule, amsRole)'));
-  assert.ok(workspace.includes("{ key: 'backup', label: 'Backup', to: '/admin/settings?tab=overview' }"));
-  assert.ok(workspace.includes("{ key: 'access', label: 'Access', to: '/admin/settings?tab=security' }"));
+  assert.ok(workspace.includes("{ key: 'backup', label: 'DB Migrations & Backups', to: '/admin/settings?tab=overview' }"));
+  assert.ok(workspace.includes("{ key: 'access', label: 'Access & Confidential Cost Rates', to: '/admin/settings?tab=security' }"));
   assert.ok(workspace.includes("{ key: 'audit', label: 'Audit', to: '/admin/settings?tab=audit' }"));
   assert.ok(workspace.includes("{ key: 'integrations', label: 'Integrations', to: '/admin/settings?tab=integrations' }"));
-  assert.ok(workspace.includes("{ key: 'readiness', label: 'Readiness', to: '/admin/navigation/release-readiness' }"));
+  assert.ok(workspace.includes("{ key: 'readiness', label: 'Telemetry Gate', to: '/admin/navigation/release-readiness' }"));
   assert.ok(sidebar.includes('data-ams-navigation-layout="flat"'));
   assert.equal(sidebar.includes('aria-expanded='), false);
   assert.equal(sidebar.includes('ChevronDown'), false);
