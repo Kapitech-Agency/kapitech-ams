@@ -109,8 +109,8 @@ test('AMS navigation follows the nine-module structure and keeps actions in thei
   }
   assert.ok(navigation.includes("return 'Freelancer';"), 'Unknown legacy role must fail closed.');
 
-  assert.equal((layout.match(/<DynamicAdminSidebarNavigation\\b/g) || []).length, 2, 'Desktop and mobile use the same sidebar.');
-  assert.equal((layout.match(/<AdminSystemSettingsNavigation\\b/g) || []).length, 2, 'Desktop and mobile share the pinned Settings entry.');
+  assert.equal(layout.split('<DynamicAdminSidebarNavigation').length - 1, 2, 'Desktop and mobile use the same sidebar.');
+  assert.equal(layout.split('<AdminSystemSettingsNavigation').length - 1, 2, 'Desktop and mobile pin the single Settings entry.');
   assert.ok(sidebar.includes("if (role !== 'Admin') return null;"));
   assert.ok(sidebar.includes('data-ams-feature-slug="role-based-sidebar"'));
   assert.ok(sidebar.includes('data-ams-navigation-layout="flat"'));

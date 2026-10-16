@@ -221,7 +221,8 @@ test('Finance workbook replaces legacy finance navigation and keeps all operatio
   assert.ok(layout.includes('ariaLabel="Workspace navigation"'));
   assert.ok(workspace.includes('ariaLabel="Finance areas"'));
   const navigation = await read('src/lib/amsModuleSubnavigation.ts');
-  assert.match(navigation, /label: 'Profitability & Expenses', to: '\/admin\/finance\?tab=accounts-payable'/);
+  assert.equal(navigation.includes("label: 'Profitability & Expenses'"), false);
+  assert.ok(workspace.includes('finance-tab-receivables-payables'));
   assert.match(workspace, /finance-tab-accounting-reports/);
   assert.doesNotMatch(layout, /finance=tax-retainers|finance=vendor-payments|finance=financial-reports/);
 
