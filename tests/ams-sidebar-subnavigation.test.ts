@@ -16,7 +16,7 @@ const modules = ['dashboard', 'crm', 'projects', 'finance', 'cms', 'settings', '
 
 function destinationSignature(to: string): string {
   const target = new URL(to, 'https://ams.kapitech.local');
-  const pathname = target.pathname.replace(/\\/+$/, '') || '/';
+  const pathname = target.pathname.replace(/\/+$/, '') || '/';
   const query = [...target.searchParams.entries()]
     .sort(([leftKey, leftValue], [rightKey, rightValue]) =>
       leftKey.localeCompare(rightKey) || leftValue.localeCompare(rightValue)

@@ -74,7 +74,7 @@ const MODULE_SUBNAVIGATION: Record<AmsSidebarModuleKey, AmsSidebarSubnavigationI
  */
 function getDestinationSignature(to: string): string {
   const target = new URL(to, 'https://ams.kapitech.local');
-  const pathname = target.pathname.replace(/\\/+$/, '') || '/';
+  const pathname = target.pathname.replace(/\/+$/, '') || '/';
   const query = [...target.searchParams.entries()]
     .sort(([leftKey, leftValue], [rightKey, rightValue]) =>
       leftKey.localeCompare(rightKey) || leftValue.localeCompare(rightValue)
@@ -169,10 +169,10 @@ export function isAmsModuleSubnavigationItemActive(
   search = '',
   hash = ''
 ): boolean {
-  const path = pathname.replace(/\\/+$/, '') || '/';
+  const path = pathname.replace(/\/+$/, '') || '/';
   const params = new URLSearchParams(search);
   const target = new URL(item.to, 'https://ams.kapitech.local');
-  const targetPath = target.pathname.replace(/\\/+$/, '') || '/';
+  const targetPath = target.pathname.replace(/\/+$/, '') || '/';
 
   if (item.key === 'tasks' && path === '/admin/dashboard') {
     return params.get('view') === 'tasks';
