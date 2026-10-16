@@ -53,7 +53,7 @@ export const AMS_NAVIGATION_GROUPS: AmsNavigationGroup[] = [
     items: [
       { key: 'crm', label: 'Sales & Pipeline', to: '/admin/crm', icon: 'crm', allowedRoles: COMMERCIAL_ROLES },
       { key: 'client-directory', label: 'Client Directory', to: '/admin/clients/all-clients', icon: 'clients', allowedRoles: COMMERCIAL_ROLES },
-      { key: 'client-onboarding', label: 'Client Onboarding', to: '/admin/clients/all-clients#client-onboarding-readiness', icon: 'onboarding', allowedRoles: COMMERCIAL_ROLES },
+      { key: 'client-onboarding', label: 'Client Onboarding', to: '/admin/clients/all-clients?scope=onboarding', icon: 'onboarding', allowedRoles: COMMERCIAL_ROLES },
       { key: 'inbox', label: 'Inbox', to: '/admin/inbox', icon: 'activity', allowedRoles: COMMERCIAL_ROLES },
       { key: 'contracts', label: 'Contracts', to: '/admin/contracts', icon: 'quotes', allowedRoles: COMMERCIAL_ROLES },
       { key: 'sla-monitoring', label: 'SLA Monitoring', to: '/admin/clients/sla-monitoring', icon: 'clients', allowedRoles: COMMERCIAL_ROLES },
@@ -189,6 +189,36 @@ export function getNavigationGroupsForRole(role: AmsRole): AmsNavigationGroup[] 
   }).filter((group) => group.items.length > 0);
 }
 
+
+/**
+ * Canonical identity for a navigable destination. Query parameter order and
+ * trailing slashes do not create a second owner for the same navigation item.
+ */
+export function getAmsNavigationDestinationSignature(to: string): string {
+  const target = new URL(to, 'https://ams.kapitech.local');
+  const pathname = target.pathname.replace(/\/+$/, '') || '/';
+  const query = [...target.searchParams.entries()]
+    .sort(([leftKey, leftValue], [rightKey, rightValue]) =>
+      leftKey.localeCompare(rightKey) || leftValue.localeCompare(rightValue)
+    )
+    .map(([key, value]) => encodeURIComponent(key) + '=' + encodeURIComponent(value))
+    .join('&');
+
+  return pathname + (query ? '?' + query : '') + target.hash;
+}
+
+/** Return destinations owned by the role-visible flat sidebar, including its pinned Settings entry. */
+export function getAmsSidebarDestinationSignatures(role: AmsRole): Set<string> {
+  const items = getNavigationGroupsForRole(role).flatMap((group) => group.items);
+
+  if (AMS_PRIMARY_SETTINGS_ITEM.allowedRoles.includes(role)) {
+    const target = new URL(AMS_PRIMARY_SETTINGS_ITEM.to, 'https://ams.kapitech.local');
+    if (canAccessAmsRoute(role, target.pathname, target.search)) items.push(AMS_PRIMARY_SETTINGS_ITEM);
+  }
+
+  return new Set(items.map((item) => getAmsNavigationDestinationSignature(item.to)));
+}
+
 /**
  * Compatibility helper for existing callers. It returns all direct sidebar
  * destinations visible to the role, including priority feature shortcuts.
@@ -299,9 +329,9 @@ export function isNavigationItemActive(
     case 'crm':
       return path === '/admin/crm';
     case 'client-directory':
-      return path === '/admin/clients/all-clients' && hash !== '#client-onboarding-readiness';
+      return path === '/admin/clients/all-clients' && params.get('scope') !== 'onboarding' && hash !== '#client-onboarding-readiness';
     case 'client-onboarding':
-      return path === '/admin/clients/all-clients' && hash === '#client-onboarding-readiness';
+      return path === '/admin/clients/all-clients' && (params.get('scope') === 'onboarding' || hash === '#client-onboarding-readiness');
     case 'inbox':
       return path === '/admin/inbox';
     case 'contracts':

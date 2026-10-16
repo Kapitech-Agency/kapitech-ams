@@ -161,16 +161,9 @@ export const AdminLayout: React.FC = () => {
   const profileTitle = session?.user?.role || DEFAULT_PROFILE_TITLE;
   const workspaceNavigationModule: AmsSidebarModuleKey | null = (() => {
     const path = location.pathname;
-    const params = new URLSearchParams(location.search);
-    const personalHub = path === '/admin/tasks'
-      && params.get('taskscope') === 'my'
-      && params.get('workspace') !== 'project';
 
-    if (path === '/admin/dashboard' || path === '/admin/navigation/live-activity' || personalHub) return 'dashboard';
-    if (['/admin/crm', '/admin/clients/all-clients', '/admin/clients/sla-monitoring', '/admin/inbox', '/admin/contracts'].includes(path)) return 'crm';
-    if (['/admin/projects', '/admin/documents', '/admin/team', '/admin/time-logs', '/admin/clients/retainers'].includes(path)) return 'projects';
-    if (path === '/admin/tasks') return 'projects';
-    if (['/admin/finance', '/admin/proposals', '/admin/vendors', '/admin/approvals', '/admin/invoicing'].includes(path)) return 'finance';
+    if (path === '/admin/dashboard' || path === '/admin/navigation/live-activity') return 'dashboard';
+    if (path === '/admin/projects') return 'projects';
     if (path === '/admin/settings' || path === '/admin/navigation/release-readiness') return 'settings';
     return null;
   })();

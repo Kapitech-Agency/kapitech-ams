@@ -25,7 +25,7 @@ const MODULE_SUBNAVIGATION: Record<AmsSidebarModuleKey, AmsSidebarSubnavigationI
   crm: [
     { key: 'pipeline', label: 'Sales & Pipeline', to: '/admin/crm' },
     { key: 'clients', label: 'Client Directory', to: '/admin/clients/all-clients' },
-    { key: 'onboarding', label: 'Onboarding', to: '/admin/clients/all-clients#client-onboarding-readiness' },
+    { key: 'onboarding', label: 'Onboarding', to: '/admin/clients/all-clients?scope=onboarding' },
     { key: 'inbox', label: 'Inbox', to: '/admin/inbox' },
     { key: 'contracts', label: 'Contracts', to: '/admin/contracts' },
     { key: 'sla', label: 'SLA', to: '/admin/clients/sla-monitoring' },
@@ -38,7 +38,6 @@ const MODULE_SUBNAVIGATION: Record<AmsSidebarModuleKey, AmsSidebarSubnavigationI
     { key: 'tasks', label: 'Tasks', to: '/admin/tasks' },
     { key: 'docs', label: 'Files', to: '/admin/documents' },
     { key: 'retainers', label: 'Retainer Hours Pool', to: '/admin/clients/retainers' },
-    { key: 'team', label: 'Team', to: '/admin/team' },
     { key: 'capacity', label: 'Team & Capacity', to: '/admin/team?view=capacity-allocation' },
     { key: 'time', label: 'Timesheet Control', to: '/admin/time-logs' },
   ],
@@ -66,40 +65,6 @@ const MODULE_SUBNAVIGATION: Record<AmsSidebarModuleKey, AmsSidebarSubnavigationI
   ],
   tasks: [],
 };
-
-/**
- * A global sidebar destination has one owner: the sidebar.
- * Canonicalize the full destination (path, query and hash) so query order or
- * trailing slashes cannot reintroduce the same link in the workspace tab bar.
- */
-function getDestinationSignature(to: string): string {
-  const target = new URL(to, 'https://ams.kapitech.local');
-  const pathname = target.pathname.replace(/\/+$/, '') || '/';
-  const query = [...target.searchParams.entries()]
-    .sort(([leftKey, leftValue], [rightKey, rightValue]) =>
-      leftKey.localeCompare(rightKey) || leftValue.localeCompare(rightValue)
-    )
-    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
-    .join('&');
-
-  return `${pathname}${query ? `?${query}` : ''}${target.hash}`;
-}
-
-function getGlobalSidebarDestinations(role: AmsRole): Set<string> {
-  const items = getNavigationGroupsForRole(role).flatMap((group) => group.items);
-  if (
-    AMS_PRIMARY_SETTINGS_ITEM.allowedRoles.includes(role)
-    && canAccessAmsRoute(
-      role,
-      new URL(AMS_PRIMARY_SETTINGS_ITEM.to, 'https://ams.kapitech.local').pathname,
-      new URL(AMS_PRIMARY_SETTINGS_ITEM.to, 'https://ams.kapitech.local').search
-    )
-  ) {
-    items.push(AMS_PRIMARY_SETTINGS_ITEM);
-  }
-
-  return new Set(items.map((item) => getDestinationSignature(item.to)));
-}
 
 /**
  * Workspace navigation is contextual, not a second copy of global navigation.
@@ -147,7 +112,7 @@ export function getAmsModuleSubnavigation(
     }
   }
 
-  const globalDestinations = getGlobalSidebarDestinations(role);
+  const globalDestinations = getAmsSidebarDestinationSignatures(role);
 
   return items.filter((item) => {
     if (!mfaAccessOnly) {
@@ -155,7 +120,7 @@ export function getAmsModuleSubnavigation(
       if (!canAccessAmsRoute(role, target.pathname, target.search)) return false;
     }
 
-    return !globalDestinations.has(getDestinationSignature(item.to));
+    return !globalDestinations.has(getAmsNavigationDestinationSignature(item.to));
   });
 }
 
