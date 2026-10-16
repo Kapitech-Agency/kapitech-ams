@@ -217,7 +217,7 @@ The standalone Proposal menu is retired. The existing quotation UI/API remains u
 
 The generic Approval item is absent from primary/contextual navigation. Keep existing workflow-specific maker-checker, posting, period-close, request history, API and audit behavior. The current `/admin/approvals` route remains protected but unlinked as `DEPRECATED_PENDING`, because its consumers and safe owning workflows have not yet been proven complete. Do not claim full retirement until that dependency review is complete.
 
-## 6. Module 03 — Projects
+## 7. Module 03 — Projects
 
 Projects is the primary source for delivery management. CRM starts the deal and transfers commercial context; Finance is the authoritative source for financial values. Projects must not create journals or reconstruct Finance values independently.
 
@@ -335,7 +335,7 @@ If automated publishing is not integrated, AMS may still manage the calendar and
 
 ---
 
-## 7. Module 04 — Clients
+## 8. Module 04 — Clients
 
 Clients manages active accounts and the client relationship lifecycle after a lead becomes an account. Company/contact identity is shared with CRM. Do not create duplicate companies, contacts, contracts, or projects during conversion.
 
@@ -410,7 +410,7 @@ Onboarding criteria must be configurable for the service type. Do not mark a pro
 
 ---
 
-## 8. Module 05 — Finance
+## 9. Module 05 — Finance
 
 Finance has established worksheets, reports, and transactions. Navigation may be reorganized, but accounting and calculation rules must not change as a side effect of changing labels.
 
@@ -619,7 +619,7 @@ Required features:
 
 ---
 
-## 9. Bank Mandiri Kopra H2H — prepared integration scope
+## 10. Bank Mandiri Kopra H2H — prepared integration scope
 
 ### 10.1 Navigation
 
@@ -799,7 +799,7 @@ Sandbox testing is not proof of production access. A mock provider used in tests
 
 ---
 
-## 10. Module 06 — Team & Resources
+## 11. Module 06 — Team & Resources
 
 ### 11.1 Structure
 
@@ -902,7 +902,7 @@ Approved leave → availability calendar → workload/capacity computation → p
 
 ---
 
-## 11. Module 07 — Documents
+## 12. Module 07 — Documents
 
 ### 12.1 Structure
 
@@ -932,7 +932,7 @@ Quotation/invoice PDFs are generated artifacts linked to the canonical document 
 
 ---
 
-## 12. Module 08 — Website CMS
+## 13. Module 08 — Website CMS
 
 ### 13.1 Structure
 
@@ -979,7 +979,7 @@ Draft → review/preview → publish → verified sync/status → update or unpu
 
 ---
 
-## 13. Module 09 — Settings
+## 14. Module 09 — Settings
 
 ### 14.1 Structure
 
