@@ -287,6 +287,11 @@ test('Embedded Finance preserves last successful source records and distinguishe
   assert.match(invoicing, /invoiceSourceUnavailable \\? 'Invoice data unavailable' : embeddedReceivablesOnly/);
   assert.match(invoicing, /!invoiceSourceUnavailable && canManageInvoices && !embeddedReceivablesOnly/);
   assert.match(invoicing, /expenseSourceUnavailable \\? 'Expense data unavailable' : 'No expenses found'/);
+  assert.match(invoicing, /if \\(invoiceSourceUnavailable\\) \\{\\s*showNotice\\('danger', sourceUnavailableMessage\\('invoice'\\)\\);\\s*return;/);
+  assert.match(invoicing, /if \\(expenseSourceUnavailable\\) \\{\\s*showNotice\\('danger', sourceUnavailableMessage\\('expense'\\)\\);\\s*return;/);
+  assert.match(invoicing, /disabled=\\{invoiceSourceUnavailable \\|\\| !filteredInvoices.length\\}/);
+  assert.match(invoicing, /disabled=\\{expenseSourceUnavailable \\|\\| !filteredExpenses.length\\}/);
+  assert.match(invoicing, /disabled=\\{expenseSourceUnavailable \\|\\| vendorSourceUnavailable \\|\\| !filteredVendorPayments.length\\}/);
 });
 
 test('Annual Summary includes years represented only by Cash & Bank records', async () => {
