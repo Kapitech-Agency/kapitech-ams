@@ -17,18 +17,18 @@ test('System Center is a single Admin-only direct link and Settings workspace ta
   assert.ok(layout.includes('ariaLabel="Workspace navigation"'));
   assert.ok(layout.includes("if (path === '/admin/settings' || path === '/admin/navigation/release-readiness') return 'settings';"));
   assert.ok(layout.includes('getAmsModuleSubnavigation(workspaceNavigationModule, amsRole, mfaSetupRequired)'));
-  assert.ok(workspace.includes("{ key: 'backup', label: 'DB Migrations & Backups', to: '/admin/settings?tab=overview' }"));
-  assert.ok(workspace.includes("{ key: 'access', label: 'Access & Confidential Cost Rates', to: '/admin/settings?tab=security' }"));
+  assert.ok(workspace.includes("{ key: 'backup', label: 'DB migrations & backups', to: '/admin/settings?tab=overview' }"));
+  assert.ok(workspace.includes("{ key: 'access', label: 'Access & confidential cost rates', to: '/admin/settings?tab=security' }"));
   assert.ok(workspace.includes("{ key: 'audit', label: 'Audit', to: '/admin/settings?tab=audit' }"));
   assert.ok(workspace.includes("{ key: 'integrations', label: 'Integrations', to: '/admin/settings?tab=integrations' }"));
-  assert.ok(workspace.includes("{ key: 'readiness', label: 'Telemetry Gate', to: '/admin/navigation/release-readiness' }"));
+  assert.equal(workspace.includes("key: 'readiness'"), false);
   assert.ok(sidebar.includes('data-ams-navigation-layout="flat"'));
   assert.equal(sidebar.includes('aria-expanded='), false);
   assert.equal(sidebar.includes('ChevronDown'), false);
   assert.ok(sidebar.includes('AMS_PRIMARY_SETTINGS_ITEM'));
   assert.ok(navigation.includes("label: 'Settings'"));
   assert.ok(navigation.includes("allowedRoles: ['Admin']"));
-  assert.ok(navigation.includes("key: 'release-readiness'"));
+  assert.equal(navigation.includes("key: 'release-readiness'"), false);
 });
 test('MFA setup stays reachable without admin rights while routine security access remains permission-gated', async () => {
   const source = await read('src/pages/admin/AdminSettings.tsx');
@@ -42,7 +42,7 @@ test('MFA setup stays reachable without admin rights while routine security acce
   assert.ok(layout.includes('getAmsModuleSubnavigation(workspaceNavigationModule, amsRole, mfaSetupRequired)'));
   assert.ok(navigation.includes('const mfaAccessOnly = moduleKey === \'settings\' && allowMfaSetup && role !== \'Admin\';'));
   assert.ok(navigation.includes("key: 'access',"));
-  assert.ok(navigation.includes("to: '/admin/settings?tab=security',"));
+  assert.ok(navigation.includes("to: '/admin/settings?tab=security'"));
   assert.ok(source.includes("const fallbackTab: SettingsTab = canAccessServer ? 'overview' : canViewAuditLogs ? 'audit' : (mfaSetupRequired || canManageAdminAccounts) ? 'security' : 'overview';"));
 });
 test('System integrity and snapshot controls are hidden without server permissions', async () => {
@@ -168,7 +168,10 @@ test('Audit CSV uses real row separators and neutralizes spreadsheet formulas', 
 test('workspace context navigation is scoped to its owning pages and cannot follow users across unrelated modules', async () => {
   const layout = await read('src/pages/admin/AdminLayout.tsx');
 
-  assert.ok(layout.includes("if (path === '/admin/dashboard' || path === '/admin/navigation/live-activity') return 'dashboard';"));
+  assert.ok(layout.includes("if (path === '/admin/dashboard') return 'dashboard';"));
+  assert.ok(layout.includes("if (path === '/admin/projects' || path === '/admin/tasks') return 'projects';"));
+  assert.ok(layout.includes("if (path === '/admin/clients' || path.startsWith('/admin/clients/') || path === '/admin/contracts') return 'clients';"));
+  assert.ok(layout.includes("if (path.startsWith('/admin/cms/')) return 'cms';"));
   assert.ok(layout.includes("if (path === '/admin/projects') return 'projects';"));
   assert.ok(layout.includes("if (path === '/admin/settings' || path === '/admin/navigation/release-readiness') return 'settings';"));
   assert.equal(layout.includes("'/admin/documents', '/admin/team', '/admin/time-logs'"), false);
@@ -191,10 +194,10 @@ test('CMS pages do not duplicate their direct sidebar destinations as shared sec
 });
 
 test('Client Onboarding deep-links to a URL-controlled lead scope, not a hidden client-profile section', async () => {
-  const navigation = await read('src/lib/amsNavigationAccess.ts');
+  const subnavigation = await read('src/lib/amsModuleSubnavigation.ts');
   const clients = await read('src/pages/admin/AdminClients.tsx');
 
-  assert.ok(navigation.includes("to: '/admin/clients/all-clients?scope=onboarding'"));
+  assert.ok(subnavigation.includes("to: '/admin/clients/all-clients?scope=onboarding'"));
   assert.ok(clients.includes('useSearchParams'));
   assert.ok(clients.includes("if (scope === 'onboarding') return 'lead';"));
   assert.ok(clients.includes("nextParams.set('scope', queryValue)"));
