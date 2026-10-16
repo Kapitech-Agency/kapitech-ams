@@ -5,6 +5,7 @@
 - **Branch produksi:** main
 - **Deployment target:** Hostinger, mengikuti pipeline repository yang berlaku
 - **Status dokumen:** Baseline rancangan dan instruksi untuk pekerjaan implementasi berikutnya
+- **Penting:** Dokumen ini mendefinisikan target-state. Semua implementer wajib mengikuti root AGENTS.md untuk prioritas sumber, batas tugas, verifikasi kondisi aktual, dan protokol perubahan.
 - **Cakupan saat dokumen dibuat:** Spesifikasi struktur. Dokumen ini sendiri tidak mengubah kode aplikasi, database, konfigurasi produksi, atau integrasi bank.
 - **Bahasa kerja dokumen:** Bahasa Indonesia; label navigasi UI menggunakan istilah Inggris yang konsisten dengan AMS.
 
@@ -1544,3 +1545,202 @@ AMS is considered structurally complete only when its ten modules form one coher
 - Dashboard exposes useful, accurate, permission-aware views of all those sources.
 
 The defining test is not whether every menu exists. It is whether the business processes move between the modules with correct source records, explicit status transitions, secure permissions, visible exceptions, traceable decisions, consistent accounting, no duplicate transactions, and no manual re-entry of the same data.
+
+
+---
+
+## 25. AI implementation anti-mistake contract (mandatory)
+
+This section is intentionally explicit because this repository contains production business rules, security controls, dated audit documents and a desired future navigation that is broader than the currently verified implementation.
+
+### 25.1 Never confuse target navigation with shipped functionality
+
+The navigation in this guide is the **desired target state**. It does not mean that every page, endpoint, database table, API contract, report, integration or permission already exists.
+
+Before implementing a target item, trace and classify:
+1. Sidebar item and route.
+2. Page/view and its data source.
+3. API client methods used by the view.
+4. Server route, service/repository and validation.
+5. Database schema/migration and uniqueness/relationship constraints.
+6. Role/permission checks on both server and UI.
+7. Existing test coverage and real production usage, where verifiable.
+
+Record gaps instead of faking completion. A control is not end-to-end merely because it can be clicked or changes local React state.
+
+### 25.2 Documentation hierarchy and conflict policy
+
+Use this exact scope separation:
+
+| Concern | Primary authority | Conflict handling |
+|---|---|---|
+| Current user task and scope boundary | Latest explicit user instruction | Do not expand scope without authorization |
+| Current implementation and runtime behavior | Repository code, tests, schema/migrations, verified provider contracts | Inspect before altering; preserve working behavior |
+| Visual language and interaction | AMS-DESIGN-SYSTEM.md and the relevant shared-component guide | Do not invent a parallel system |
+| Target module/navigation/workflow | This master guide | Target must be mapped to actual code before implementation |
+| Finance process and accounting controls | docs/FINANCE-EXCEL-ALIGNMENT.md plus actual Finance logic/tests | Preserve calculations, journal controls and reconciliation unless a specific business-rule change is approved |
+| Older findings and historical state | docs/ams-workflow-audit.md and commit history | Treat dated statuses and route taxonomies as snapshots, not live truth |
+| Deployment/runtime readiness | README.md, release/runbook documents and verified CI/production readiness result | Do not claim production readiness from source inspection alone |
+| Bank H2H behavior | Current Bank Mandiri contract, technical spec and test certification | Never infer API schemas from marketing descriptions |
+
+If a conflict affects financial outcomes, access control, existing data, public publishing, a bank transaction, or production operation, stop the conflicting mutation and report the specific conflict before proceeding. For lower-risk choices, select the most consistent existing repository pattern and document the assumption.
+
+### 25.3 Requirements traceability
+
+For a large change, maintain an implementation checklist mapping:
+- Requirement ID / target submenu.
+- Current status: verified, incomplete, UI-only, backend-only, demo-only, schema-required, externally blocked or target-only.
+- Existing source file/API/schema.
+- Intended change.
+- Dependencies and source-of-truth record.
+- Role/permission boundary.
+- Failure/retry behavior.
+- Test required and actual result.
+- Any unresolved assumption.
+
+Do not mark a requirement done until the UI, persisted data, API validation, permission enforcement, related cross-module behavior, and relevant tests prove it. If a test is impossible due to missing bank access or credentials, label the capability externally blocked and state which evidence is missing.
+
+### 25.4 Scope safety: what menu consolidation means
+
+The target has exactly ten top-level navigation modules: Dashboard, Inbox, CRM & Sales, Projects, Clients, Finance, Team & Resources, Documents, Website CMS, Settings.
+
+This taxonomy is not permission to delete underlying capabilities:
+- Removing a standalone Proposals menu must preserve quotation records, sent/accepted/rejected/expired states, quote versions, and quote-to-invoice conversion. Make quotation reachable through CRM & Sales and Finance.
+- Removing the general Approval menu must preserve workflow-specific maker-checker permissions, finance posting controls, period closing controls, request history, audit trail, and any valid API consumers. Map each approval process to the owning business workflow.
+- Removing a legacy CRM menu must not remove CRM & Sales.
+- Vendors and Time Tracking become subareas, but preserve their canonical records, routes/API contracts that are still consumed, record links and relevant redirects.
+- The target does not introduce separate stores for invoice, quotation, vendor, project finance, time entries or bank transactions.
+- A legacy route may be redirected or removed from navigation only after route consumers, deep links, tests, external clients and access rules are assessed.
+
+### 25.5 Explicit frontend and backend boundary
+
+The user's task scope controls whether a change is UI-only, full-stack, documentation-only, or audit-only. Do not infer authorization to change a different layer.
+
+For frontend/UI-only work:
+- Do not change server routes/services, database schema/migrations, Finance calculations, authentication/session/CSRF/MFA, RBAC policy, endpoint contracts, or seeded/production data.
+- Use current APIs and report the backend dependency if a requested UI behavior cannot be implemented safely with existing contracts.
+- Never fabricate persistence through local state/localStorage just to make a button appear to work.
+
+For full-stack workflow work:
+- Preserve backward compatibility where used, validate authorization server-side, design migration and recovery, add tests, and trace the record end-to-end.
+- Do not shift sensitive authorization or business calculations to frontend code.
+- API contracts, request types, response types, validation, logs, event handling and UI states must agree.
+
+For documentation-only work:
+- Change documentation only.
+- Do not treat a documentation commit as application implementation, successful production verification, a live API connection, or a completed migration.
+
+### 25.6 Shared data contract: one business event, one canonical record
+
+Before adding a model, search for an existing entity/API/store and verify whether the request is an alternate view or state transition of an existing record.
+
+- A company/contact must remain a shared identity between CRM and Clients.
+- CRM and Finance quotation builders must reference the same quote and version history.
+- Invoice payments, bank transactions and journal entries must be linked by canonical references and must not be separate ledgers for the same event.
+- Vendor profiles live in Team & Resources; finance vendor bills/ledger/payment views reference that master.
+- Project Finance displays Finance-authoritative actuals and may not invent accounting totals from project completion percent.
+- Time-based retainer consumption must use valid, eligible time logs and must prevent duplicate counting.
+- Inbox content and CMS recruitment applications are different domains; do not convert applicants into sales leads.
+- Documents are canonical files/versions with links from business contexts, not repeated attachments copied into separate stores.
+- Every integration/import/callback/conversion must define stable identity, duplicate detection, conflict resolution and safe retry.
+
+### 25.7 Mutation discipline and transaction safety
+
+Before a mutating action, determine:
+- Is this a draft, an issued business document, a posted accounting entry, a request, or a confirmed external transaction?
+- What role can create, update, issue, submit, authorize, reverse or close it?
+- What is the legal status transition?
+- What happens if the browser retries, the server times out, the response is lost, or the external provider partially succeeds?
+- Can the action be safely repeated? If not, what idempotency/lookup guard exists?
+- What audit entry, version, source reference, journal, notification or linked workflow is required?
+
+Never:
+- Silently overwrite a sent quotation or issued invoice version.
+- Mark an invoice paid merely because a payment request was sent.
+- mark a bank transfer failed or resend it solely because a network call timed out.
+- Treat reconciliation matching as a new payment/receipt event.
+- Rewrite posted journals or closed periods without the existing correction/reversal/reopen controls.
+- Auto-close an exception without evidence.
+
+### 25.8 UI acceptance is interaction-level, not screenshot-level
+
+For each changed UI, verify:
+- The intended action is visible and makes sense in context.
+- All controls work and are disabled while conflicting saves are pending.
+- Validation and server errors remain visible and actionable.
+- Save success reflects confirmed API persistence.
+- Cancel/close behavior protects in-progress edits and does not dismiss a mutation silently.
+- Search/filter/sort/pagination/grouping use the correct data and compose predictably.
+- Empty state differs from loading, error, unavailable and no-permission states.
+- Drawers, modals, dropdowns, focus trap, keyboard use and scroll ownership follow shared guidelines.
+- Query-string tabs/deep links preserve correct active state and browser back/forward behavior where applicable.
+- Narrow viewport and keyboard use remain usable.
+- Optimistic state is reverted when a server mutation fails.
+
+Do not use screenshot similarity as the sole definition of completion.
+
+### 25.9 Data migration rules
+
+For every schema/data migration:
+1. Inspect the current schema and shipped migration chain.
+2. Do not edit checksums/contents of a migration already shipped.
+3. Add a new, ordered migration with deterministic behavior and appropriate transaction/locking strategy.
+4. Backfill only from validated source-of-truth records; produce duplicate/conflict reports for ambiguous rows.
+5. Add indexes/constraints only after understanding existing duplicates and rollout ordering.
+6. Maintain compatibility with application versions during deploy/rollback where applicable.
+7. Run migration tests against a representative copy or controlled environment, not the live production DB casually.
+8. Record expected row counts, invariants and reconciliation queries.
+9. Verify backup and recovery plan before destructive or difficult-to-reverse changes.
+10. Test that rerun/restart does not double-apply business effects.
+
+Never migrate live JSON/production data or change the production datasource by undocumented script.
+
+### 25.10 Tests that should accompany a workflow change
+
+Select tests according to impact; do not rely on build alone.
+
+- Unit/domain logic tests for transitions, calculations and validation.
+- API tests for accepted/rejected input and authorization boundaries.
+- Persistence tests for relationships, unique constraints, migration and audit history.
+- Integration tests between source and destination modules.
+- E2E test for the user journey from entry point to final persisted outcome.
+- Failure-path tests for timeout, duplicate/retry, partial save, permission denial and stale/conflicting record.
+- Finance regression comparing representative values and report outputs with the baseline.
+- Bank integration tests using a provider sandbox or contract fixtures; never real transfer calls in general CI.
+- UI checks for error/empty/loading state, navigation geometry and existing shared interactions.
+
+Test fixtures must be clearly test-only and never leak into production source records or live dashboard metrics.
+
+### 25.11 Required reporting at end of any implementation task
+
+The task report must state:
+1. Scope requested and scope actually performed.
+2. Files changed and why.
+3. Existing behavior intentionally preserved.
+4. User-visible behavior and workflow affected.
+5. API/schema/migration/permission implications.
+6. Tests/commands actually run and pass/fail result.
+7. Known gaps, external dependencies and assumptions.
+8. Whether commit/push/deployment occurred; include commit SHA and target branch when applicable.
+9. What remains unverified.
+
+Do not say “fully complete,” “production-ready,” “E2E passed,” or “bank integration works” unless the relevant evidence exists. Report partial completion honestly.
+
+### 25.12 Documentation maintenance rule
+
+When implementation changes the route taxonomy, workflow, data ownership, security boundary, or user-visible behavior, update the relevant docs in the same task if requested/in scope. Update evidence and date labels rather than allowing historical snapshots to appear current. The master guide describes target architecture; it should be revised when an approved target decision changes. It must not be updated to declare a target feature implemented before the implementation and tests prove it.
+
+### 25.13 AI preflight checklist (complete before editing)
+
+- [ ] I identified the user's exact scope boundary.
+- [ ] I checked current branch/HEAD and existing changes.
+- [ ] I read root AGENTS.md and the task-specific authoritative docs.
+- [ ] I inspected current source/API/schema and tests rather than relying on descriptions alone.
+- [ ] I separated target-only requirements from verified existing features.
+- [ ] I mapped the source-of-truth record and downstream effects.
+- [ ] I identified permission/security/data-integrity risks.
+- [ ] I know the relevant negative/failure and regression tests.
+- [ ] I will reuse current design-system components and architecture.
+- [ ] I have not assumed a bank API capability or fabricated an external response.
+
+If any item is false, investigate it or explicitly report the blocker before making a risky change.
