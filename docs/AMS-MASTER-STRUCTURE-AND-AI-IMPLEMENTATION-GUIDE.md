@@ -84,7 +84,7 @@ Use the existing AMS design system; do not create a second design system.
 
 ---
 
-## 3. Navigasi utama target
+## 3. Target Primary Navigation
 
 The sidebar must display only the following ten primary modules. Worksheets and internal features must not appear as top-level sidebar modules.
 
@@ -107,13 +107,13 @@ Visible navigation items must be accessible to the appropriate roles and lead to
 
 ## 4. Modul 01 — Dashboard
 
-### 4.1 Struktur
+### 4.1 Structure
 
 - Overview
 - Performance
 - Analytics
 
-### 4.2 Tujuan
+### 4.2 Purpose
 
 Dashboard is a business and operations summary, not an independent source of records. Its values must come from source modules and use consistent metric definitions.
 
@@ -159,7 +159,7 @@ Do not combine revenue, issued invoices, cash received, profit, and account bala
 
 ## 5. Modul 02 — Inbox
 
-### 5.1 Struktur
+### 5.1 Structure
 
 - Inbox Overview
 - All Messages
@@ -212,7 +212,7 @@ Each message/thread should have the following fields as appropriate to its sourc
 
 CRM & Sales manages the commercial process before and during closing. Clients manages active client relationships. Company/contact identity must be shared so lead conversion does not create duplicate company/contact records.
 
-### 6.1 Struktur navigasi
+### 6.1 Navigation Structure
 
 **A. Sales Overview**
 
@@ -344,7 +344,7 @@ A project must be created or activated only once from a qualifying handover. Ret
 
 Projects is the primary source for delivery management. CRM starts the deal and transfers commercial context; Finance is the authoritative source for financial values. Projects must not create journals or reconstruct Finance values independently.
 
-### 7.1 Struktur navigasi
+### 7.1 Navigation Structure
 
 **A. Projects Overview**
 
@@ -586,7 +586,7 @@ Finance has established worksheets, reports, and transactions. Navigation may be
 
 Worksheet definitions in source code have included the following 20 existing worksheet views. Verify the current live/source inventory at implementation time and preserve all data and underlying business logic.
 
-| Worksheet existing | Target grouping | Tanggung jawab |
+| Existing worksheet | Target group | Responsibility |
 |---|---|---|
 | Executive Summary | Overview & Control | Ringkasan keuangan periode terpilih |
 | Dashboard | Overview & Control | Validated financial charts/KPIs |
