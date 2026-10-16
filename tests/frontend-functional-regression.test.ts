@@ -78,7 +78,7 @@ test('Project editor can link an existing canonical client without guessing by d
   assert.ok(projects.includes('clientId: projectForm.clientId || undefined'));
   assert.ok(projects.includes('slug="projects-client-link"'));
   assert.ok(projects.includes("No linked client / enter manually"));
-  assert.ok(projects.includes('...clientOptions.map((client) => ({')));
+  assert.ok(projects.includes('...clientOptions.map((client) => ({'));
   assert.ok(projects.includes('clientId: projectForm.clientId && event.target.value !=='));
 });
 
