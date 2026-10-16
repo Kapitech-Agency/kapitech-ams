@@ -34,6 +34,7 @@ import {
   TaskStatus,
 } from '../../lib/projectStore';
 import { useLanguage } from '../../lib/LanguageContext';
+import { AgencyClient } from '../../lib/clientStore';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
@@ -496,6 +497,7 @@ export const AdminProjects: React.FC = () => {
   const { matchesDate, matchesInterval, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const { language } = useLanguage();
   const canManageProjects = hasAdminPermission('canManageProjects');
+  const canReadClients = hasAdminPermission('canManageClients') || hasAdminPermission('canManageCrm');
   const canManageKanbanTasks = hasAdminPermission('canManageKanbanTasks');
   const canManageTasks = canManageKanbanTasks;
   const [searchParams, setSearchParams] = useSearchParams();
@@ -512,6 +514,9 @@ export const AdminProjects: React.FC = () => {
     setServerMode(connected);
   };
   const [saving, setSaving] = useState(false);
+  const [clientOptions, setClientOptions] = useState<AgencyClient[]>([]);
+  const [clientOptionsLoading, setClientOptionsLoading] = useState(false);
+  const [clientOptionsError, setClientOptionsError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimeoutRef = React.useRef<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -580,6 +585,7 @@ export const AdminProjects: React.FC = () => {
 
   const [projectForm, setProjectForm] = useState({
     name: '',
+    clientId: '',
     clientName: '',
     clientCompany: '',
     clientEmail: '',
@@ -612,6 +618,24 @@ export const AdminProjects: React.FC = () => {
     tags: '',
     subtasks: '',
   });
+
+  const loadProjectClients = async () => {
+    if (!canReadClients) return;
+    setClientOptionsLoading(true);
+    setClientOptionsError(null);
+    try {
+      const response = await api.clients.getAll();
+      if (!response.success || !Array.isArray(response.data?.clients)) {
+        setClientOptionsError(response.error || 'Client records could not be loaded.');
+        return;
+      }
+      setClientOptions(response.data.clients as AgencyClient[]);
+    } catch (error) {
+      setClientOptionsError(error instanceof Error ? error.message : 'Client records could not be loaded.');
+    } finally {
+      setClientOptionsLoading(false);
+    }
+  };
 
   const showToast = (message: string) => {
     if (toastTimeoutRef.current !== null) window.clearTimeout(toastTimeoutRef.current);
@@ -988,6 +1012,7 @@ export const AdminProjects: React.FC = () => {
     setEditingProject(null);
     setProjectForm({
       name: '',
+      clientId: '',
       clientName: '',
       clientCompany: '',
       clientEmail: '',
@@ -1007,6 +1032,7 @@ export const AdminProjects: React.FC = () => {
       health: 'Good',
     });
     setProjectDrawerOpen(true);
+    void loadProjectClients();
   };
 
   const openEditProject = (project: ProjectRecord) => {
@@ -1014,6 +1040,7 @@ export const AdminProjects: React.FC = () => {
     setEditingProject(project);
     setProjectForm({
       name: project.name,
+      clientId: project.clientId || '',
       clientName: project.clientName,
       clientCompany: project.clientCompany,
       clientEmail: project.clientEmail,
@@ -1033,6 +1060,7 @@ export const AdminProjects: React.FC = () => {
       health: project.health || 'Good',
     });
     setProjectDrawerOpen(true);
+    void loadProjectClients();
   };
 
   const saveProject = async (event: React.FormEvent) => {
@@ -1060,6 +1088,7 @@ export const AdminProjects: React.FC = () => {
       ...(editingProject || {}),
       id: editingProject?.id || 'demo_' + slug + '_' + Date.now(),
       name: projectForm.name.trim(),
+      clientId: projectForm.clientId || undefined,
       clientName: projectForm.clientName.trim(),
       clientCompany: projectForm.clientCompany.trim(),
       clientEmail: projectForm.clientEmail.trim(),
@@ -3271,9 +3300,37 @@ export const AdminProjects: React.FC = () => {
         <form id="projects-form" data-ams-feature-slug="projects-editor-form" data-ams-slug="projects-editor-form" onSubmit={saveProject} className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="text-xs text-muted">Project name<input required value={projectForm.name} onChange={event => setProjectForm({ ...projectForm, name: event.target.value })} className={fieldClass} /></label>
-            <label className="text-xs text-muted">Client company<input required value={projectForm.clientCompany} onChange={event => setProjectForm({ ...projectForm, clientCompany: event.target.value })} className={fieldClass} /></label>
-            <label className="text-xs text-muted">Client contact<input value={projectForm.clientName} onChange={event => setProjectForm({ ...projectForm, clientName: event.target.value })} className={fieldClass} /></label>
-            <label className="text-xs text-muted">Client email<input type="email" value={projectForm.clientEmail} onChange={event => setProjectForm({ ...projectForm, clientEmail: event.target.value })} className={fieldClass} /></label>
+            {canReadClients && (
+              <div className="min-w-0">
+                <label className="text-xs text-muted">{language === 'id' ? 'Klien terdaftar' : 'Link existing client'}</label>
+                <CustomSelect
+                  value={projectForm.clientId}
+                  onChange={(clientId) => {
+                    const client = clientOptions.find((item) => item.id === clientId);
+                    setProjectForm((current) => client
+                      ? { ...current, clientId: client.id, clientName: client.name, clientCompany: client.company, clientEmail: client.email }
+                      : { ...current, clientId: '', clientName: current.clientId ? '' : current.clientName, clientCompany: current.clientId ? '' : current.clientCompany, clientEmail: current.clientId ? '' : current.clientEmail });
+                  }}
+                  options={[
+                    { value: '', label: language === 'id' ? 'Tidak ditautkan / isi manual' : 'No linked client / enter manually' },
+                    ...clientOptions.map((client) => ({
+                      value: client.id,
+                      label: client.company ? client.company + ' · ' + client.name : client.name
+                    }))
+                  ]}
+                  placeholder={clientOptionsLoading ? (language === 'id' ? 'Memuat klien...' : 'Loading clients...') : (language === 'id' ? 'Pilih klien' : 'Select a client')}
+                  disabled={clientOptionsLoading || Boolean(clientOptionsError)}
+                  className="mt-1 w-full"
+                  triggerClassName="w-full"
+                  slug="projects-client-link"
+                  aria-label={language === 'id' ? 'Tautkan klien ke proyek' : 'Link client to project'}
+                />
+                {clientOptionsError && <p className="mt-1 text-[11px] text-danger" role="status">{clientOptionsError} {language === 'id' ? 'Data kontak tetap bisa diisi manual; tautan klien tidak diubah.' : 'Contact details can still be entered manually; the client link is not changed.'}</p>}
+              </div>
+            )}
+            <label className="text-xs text-muted">Client company<input required value={projectForm.clientCompany} onChange={event => setProjectForm({ ...projectForm, clientId: projectForm.clientId && event.target.value !== (clientOptions.find((client) => client.id === projectForm.clientId)?.company || '') ? '' : projectForm.clientId, clientCompany: event.target.value })} className={fieldClass} /></label>
+            <label className="text-xs text-muted">Client contact<input value={projectForm.clientName} onChange={event => setProjectForm({ ...projectForm, clientId: projectForm.clientId && event.target.value !== (clientOptions.find((client) => client.id === projectForm.clientId)?.name || '') ? '' : projectForm.clientId, clientName: event.target.value })} className={fieldClass} /></label>
+            <label className="text-xs text-muted">Client email<input type="email" value={projectForm.clientEmail} onChange={event => setProjectForm({ ...projectForm, clientId: projectForm.clientId && event.target.value !== (clientOptions.find((client) => client.id === projectForm.clientId)?.email || '') ? '' : projectForm.clientId, clientEmail: event.target.value })} className={fieldClass} /></label>
             <label className="text-xs text-muted">Service category<input value={projectForm.serviceCategory} onChange={event => setProjectForm({ ...projectForm, serviceCategory: event.target.value })} className={fieldClass} /></label>
             <label className="text-xs text-muted">Owner<input value={projectForm.teamLead} onChange={event => setProjectForm({ ...projectForm, teamLead: event.target.value })} className={fieldClass} /></label>
             <div><label className="text-xs text-muted">Status</label><CustomSelect value={projectForm.status} onChange={value => setProjectForm({ ...projectForm, status: value as ProjectStatus })} options={PROJECT_STATUSES} className="mt-1 w-full" /></div>
