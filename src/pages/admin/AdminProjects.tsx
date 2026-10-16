@@ -1093,15 +1093,18 @@ export const AdminProjects: React.FC = () => {
         : await api.projects.create(payload);
 
       if (response.success) {
-        setServerConnected(true);
         const persistedProject = response.data?.project ? normalizeProject(response.data.project) : null;
-        if (persistedProject) {
-          setProjects(current => editingProject
-            ? current.map(item => item.id === editingProject.id ? persistedProject : item)
-            : [persistedProject, ...current.filter(item => item.id !== persistedProject.id)]);
-        } else if (editingProject) {
-          setProjects(current => current.map(item => item.id === editingProject.id ? localProject : item));
+        if (!persistedProject) {
+          await syncProjects(false);
+          showToast(language === 'id'
+            ? 'Server tidak mengembalikan data proyek yang tersimpan. Periksa daftar proyek sebelum mencoba lagi.'
+            : 'The server did not return the saved project record. Review the refreshed project list before retrying.');
+          return;
         }
+        setServerConnected(true);
+        setProjects(current => editingProject
+          ? current.map(item => item.id === editingProject.id ? persistedProject : item)
+          : [persistedProject, ...current.filter(item => item.id !== persistedProject.id)]);
         await syncProjects(false);
         showToast(language === 'id' ? 'Proyek berhasil disimpan.' : 'Project saved.');
         savedToData = true;
