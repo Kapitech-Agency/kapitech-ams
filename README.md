@@ -85,3 +85,34 @@ Core references:
 - [Drawer Guidelines](docs/AMS-DRAWER-GUIDELINES.md), [Modal Guidelines](docs/AMS-MODAL-GUIDELINES.md), and [Kanban Guidelines](docs/AMS-KANBAN-GUIDELINES.md): required shared interactions.
 
 Important: the master structure document describes the **target state**, not a claim that every listed feature has shipped. Verify actual code, APIs, schema, permissions, tests, and production readiness before changing or reporting implementation status.
+
+
+## AMS Engineering Standards
+
+Read AGENTS.md before AI-assisted changes. GitHub Copilot's repository-specific rules are in .github/copilot-instructions.md.
+
+### Product and navigation
+- docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md — target modules/workflows.
+- docs/architecture/ams-navigation-information-architecture.md — route and navigation ownership.
+- docs/AMS-IMPLEMENTATION-TRACEABILITY.md — requirements, evidence and implementation status.
+
+### UX and frontend
+- AMS-DESIGN-SYSTEM.md — exact tokens, layout and shared components.
+- docs/AMS-UX-INTERACTION-STANDARDS.md — hierarchy, spacing ownership, interaction and visual consistency.
+- docs/AMS-FRONTEND-ENGINEERING-STANDARDS.md — routes, state, API use, forms and mutations.
+- docs/AMS-DRAWER-GUIDELINES.md, docs/AMS-MODAL-GUIDELINES.md, docs/AMS-KANBAN-GUIDELINES.md — shared interaction contracts.
+
+### Domain, backend and verification
+- docs/AMS-BUSINESS-WORKFLOW-STATE-MACHINES.md — valid state transitions and side effects.
+- docs/AMS-DATA-MODEL-AND-DATA-DICTIONARY.md — canonical entities and logical relationships.
+- docs/AMS-BACKEND-API-AND-DATA-INTEGRITY.md — server/API/security/transaction rules.
+- docs/FINANCE-EXCEL-ALIGNMENT.md — established Finance workflow and controls.
+- docs/AMS-E2E-AND-REGRESSION-TEST-MATRIX.md — cross-module regression and E2E evidence.
+- docs/integrations/BANK-MANDIRI-KOPRA-H2H-INTEGRATION.md — planned, provider-dependent Kopra integration requirements.
+- docs/ams-workflow-audit.md — dated findings, not the latest target taxonomy.
+
+### Runtime source-of-truth warning
+
+server/data-source.ts selects json or postgres through KAPITECH_DATA_SOURCE and defaults to json if the variable is unset. Production configuration specified in this README requires KAPITECH_DATA_SOURCE=postgres. Never infer the deployed source from the code default or an old runbook. Verify authorized runtime configuration and GET /api/system/production-readiness before a production-source claim, cutover, migration or rollback.
+
+The master guide defines the target architecture, not proof that every feature has shipped. Verify code, APIs, schema, permissions, tests and provider evidence before reporting implementation status.
