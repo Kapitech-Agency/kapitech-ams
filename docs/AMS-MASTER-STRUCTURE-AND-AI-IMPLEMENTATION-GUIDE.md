@@ -1744,3 +1744,32 @@ When implementation changes the route taxonomy, workflow, data ownership, securi
 - [ ] I have not assumed a bank API capability or fabricated an external response.
 
 If any item is false, investigate it or explicitly report the blocker before making a risky change.
+
+
+---
+
+## 26. Companion Engineering Specifications and Document Authority
+
+This guide defines the product target and module requirements. Use specialist documents below for implementation mechanics and verification.
+
+| Question | Companion document |
+|---|---|
+| Which requirements exist and which are verified? | docs/AMS-IMPLEMENTATION-TRACEABILITY.md |
+| Which transitions and side effects are valid? | docs/AMS-BUSINESS-WORKFLOW-STATE-MACHINES.md |
+| Which entity owns a field/relationship? | docs/AMS-DATA-MODEL-AND-DATA-DICTIONARY.md |
+| How are UX, spacing, margins/padding and interaction applied? | docs/AMS-UX-INTERACTION-STANDARDS.md and AMS-DESIGN-SYSTEM.md |
+| Which frontend route/state/API patterns apply? | docs/AMS-FRONTEND-ENGINEERING-STANDARDS.md |
+| Which backend/API/transaction controls apply? | docs/AMS-BACKEND-API-AND-DATA-INTEGRITY.md |
+| How are E2E/regression results proven? | docs/AMS-E2E-AND-REGRESSION-TEST-MATRIX.md |
+| How is route/navigation ownership defined? | docs/architecture/ams-navigation-information-architecture.md |
+| What is known/unknown about Kopra? | docs/integrations/BANK-MANDIRI-KOPRA-H2H-INTEGRATION.md |
+
+Read root AGENTS.md first. GitHub Copilot's entry point is .github/copilot-instructions.md.
+
+### 26.1 Runtime data-source verification
+
+server/data-source.ts supports json and postgres and defaults to json if KAPITECH_DATA_SOURCE is unset. The production configuration in README requires postgres. Verify authorized runtime configuration and GET /api/system/production-readiness before data-source claims, migration, cutover or rollback. Older PostgreSQL notes may describe earlier rollout phases; do not rely on them without reconciliation against current code/configuration.
+
+### 26.2 Change-control rule
+
+For each implementation, update the traceability register, map the requirement to current source/API/schema/permissions, validate state transitions and failure paths, run relevant tests and report evidence. Target-only or externally blocked requirements remain labelled as such.
