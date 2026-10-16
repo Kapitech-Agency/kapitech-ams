@@ -27,7 +27,7 @@ async function withTimedOutRequest<T>(run: () => Promise<T>): Promise<T> {
   } finally {
     globalThis.fetch = originalFetch;
     if (originalWindow) Object.defineProperty(globalThis, 'window', originalWindow);
-    else delete (globalThis as typeof globalThis & { window?: Window }).window;
+    else Reflect.deleteProperty(globalThis, 'window');
   }
 }
 
