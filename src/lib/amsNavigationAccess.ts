@@ -311,6 +311,7 @@ export function isNavigationItemActive(
     case 'dashboard-hub':
     case 'executive-overview':
       return (path === '/admin/dashboard' && params.get('view') !== 'tasks')
+        || path === '/admin/navigation/live-activity'
         || (path === '/admin/tasks' && params.get('taskscope') === 'my' && params.get('workspace') !== 'project');
     case 'my-hub':
       return path === '/admin/tasks' && params.get('taskscope') === 'my' && params.get('workspace') !== 'project';
@@ -319,14 +320,14 @@ export function isNavigationItemActive(
     case 'sales-pipeline':
       return path === '/admin/crm';
     case 'client-directory':
-      return path === '/admin/clients/all-clients' && hash !== '#client-onboarding-readiness';
+      return path === '/admin/clients/all-clients';
     case 'client-onboarding':
       return path === '/admin/clients/all-clients' && hash === '#client-onboarding-readiness';
     case 'project-hub': {
-      if (path === '/admin/tasks') return params.get('workspace') === 'project';
-      if (path !== '/admin/projects') return false;
-      const view = params.get('projects');
-      return !view || view === 'all' || view === 'sprint';
+      if (path === '/admin/tasks') {
+        return !(params.get('taskscope') === 'my' && params.get('workspace') !== 'project');
+      }
+      return ['/admin/projects', '/admin/documents', '/admin/clients/retainers', '/admin/team'].includes(path);
     }
     case 'tasks-engine':
       return path === '/admin/tasks' && params.get('workspace') !== 'project' && params.get('taskscope') !== 'my';
@@ -334,14 +335,18 @@ export function isNavigationItemActive(
       return path === '/admin/clients/retainers';
     case 'quotations':
       return path === '/admin/proposals';
-    case 'invoicing-receivables':
-      return path === '/admin/finance' && params.get('tab') === 'accounts-receivable';
-    case 'expense-vendor-ledger':
-      return path === '/admin/finance' && params.get('tab') === 'accounts-payable';
+    case 'finance-revenue':
+      return path === '/admin/finance'
+        && ['executive-summary', 'dashboard', 'cash-bank', 'revenue', 'petty-cash', 'accounts-receivable'].includes(params.get('tab') || 'executive-summary');
+    case 'finance-expenses':
+      return path === '/admin/finance'
+        && ['accounts-payable', 'expenses', 'vendors', 'journal', 'chart-of-accounts', 'monthly-pnl', 'cash-flow', 'balance-sheet', 'monthly-closing', 'annual-summary'].includes(params.get('tab') || '');
     case 'project-profitability':
-      return path === '/admin/finance' && params.get('tab') === 'project-finance';
+      return path === '/admin/finance'
+        && ['project-finance', 'operational-budget', 'project-allocation', 'team-fee'].includes(params.get('tab') || '');
+    case 'content-workspace':
     case 'insight-editorial':
-      return path === '/admin/cms/insights';
+      return path.startsWith('/admin/cms/');
     case 'portfolio-testimonial-registry':
       return path === '/admin/cms/projects' || path === '/admin/cms/testimonials';
     case 'user-access':
