@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   Home,
   Inbox,
@@ -73,9 +73,8 @@ const NavigationLink: React.FC<NavigationLinkProps> = ({
   const note = item.accessNote?.[role];
 
   return (
-    <NavLink
+    <Link
       to={item.to}
-      end
       onClick={onNavigate}
       title={item.label}
       aria-current={active ? 'page' : undefined}
@@ -95,7 +94,7 @@ const NavigationLink: React.FC<NavigationLinkProps> = ({
           {note}
         </span>
       )}
-    </NavLink>
+    </Link>
   );
 };
 

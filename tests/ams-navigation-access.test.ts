@@ -40,27 +40,23 @@ test('flat sidebar has five ordered groups and System Center is separate and Adm
   assert.deepEqual(AMS_SYSTEM_SETTINGS_ITEMS.map((item) => item.key), ['user-access', 'data-persistence-backup', 'release-readiness']);
 });
 
-test('Admin receives all five functional groups and one direct Settings link outside them', () => {
+test('Admin receives one direct link per workspace group; Settings remains separate', () => {
   assert.equal(getNavigationGroupsForRole('Admin').length, 5);
-  assert.deepEqual([...keys('Admin')], [
-    'dashboard-hub', 'client-directory', 'project-hub', 'project-time',
-    'finance-revenue', 'finance-expenses', 'project-profitability', 'content-workspace',
-  ]);
+  assert.deepEqual([...keys('Admin')], ['dashboard-hub', 'crm', 'project-hub', 'finance', 'cms']);
   assert.equal(getAmsHomePath('Admin'), '/admin/dashboard');
   assert.equal(canAccessAmsRoute('Admin', '/admin/settings', '?tab=security'), true);
   assert.equal(canAccessAmsRoute('Admin', '/admin/navigation/release-readiness'), true);
 });
 
-test('Finance sees only commercial/direct workspaces in the sidebar; CRM and Finance tabs retain existing workflows', () => {
+test('Finance sees only permitted workspaces while CRM and Finance child tabs stay contextual', () => {
   const menu = keys('Finance');
   assert.ok(menu.has('dashboard-hub'));
-  assert.ok(menu.has('client-directory'));
+  assert.ok(menu.has('crm'));
   assert.ok(menu.has('project-hub'));
-  assert.ok(menu.has('finance-revenue'));
-  assert.ok(menu.has('finance-expenses'));
-  assert.equal(menu.has('project-profitability'), true);
+  assert.ok(menu.has('finance'));
+  assert.equal(menu.has('cms'), false);
   assert.equal(menu.has('project-time'), false);
-  assert.equal(menu.has('content-workspace'), false);
+  assert.equal(menu.has('project-profitability'), false);
   assert.deepEqual([...tabKeys('crm', 'Finance')], ['pipeline', 'clients', 'onboarding', 'inbox', 'contracts', 'sla']);
   assert.deepEqual([...tabKeys('finance', 'Finance')], ['invoicing-revenues', 'profitability-expenses', 'project-profitability', 'quotes', 'vendors', 'approvals']);
   assert.equal(canAccessAmsRoute('Finance', '/admin/crm'), true);
@@ -70,11 +66,8 @@ test('Finance sees only commercial/direct workspaces in the sidebar; CRM and Fin
   assert.equal(flatten('Finance').find((item) => item.key === 'project-hub')?.to, '/admin/projects?projects=sprint');
 });
 
-test('PM sees delivery tools and aggregate profitability only; Finance tabs are role-filtered', () => {
-  assert.deepEqual([...keys('PM')], [
-    'dashboard-hub', 'client-directory', 'project-hub', 'project-time',
-    'project-profitability', 'content-workspace',
-  ]);
+test('PM sees delivery tools, editorial CMS, and an aggregated Project Profitability destination', () => {
+  assert.deepEqual([...keys('PM')], ['dashboard-hub', 'crm', 'project-hub', 'finance', 'cms']);
   assert.deepEqual([...tabKeys('finance', 'PM')], ['project-profitability']);
   assert.ok(tabKeys('projects', 'PM').has('retainers'));
   assert.ok(tabKeys('projects', 'PM').has('capacity'));
@@ -83,12 +76,15 @@ test('PM sees delivery tools and aggregate profitability only; Finance tabs are 
   assert.equal(canAccessAmsRoute('PM', '/admin/finance', '?tab=project-finance'), true);
   assert.equal(canAccessAmsRoute('PM', '/admin/finance', '?tab=accounts-receivable'), false);
   assert.equal(canAccessAmsRoute('PM', '/admin/settings', '?tab=security'), false);
+  assert.equal(flatten('PM').find((item) => item.key === 'finance')?.to, '/admin/finance?tab=project-finance');
 });
 
-test('Creative has only personal workspace, filtered delivery, and editorial CMS access', () => {
-  assert.deepEqual([...keys('Creative')], ['dashboard-hub', 'project-hub', 'content-workspace']);
+test('Creative has a personal hub, filtered delivery workspace, and editorial CMS access', () => {
+  assert.deepEqual([...keys('Creative')], ['dashboard-hub', 'project-hub', 'cms']);
   assert.equal(getAmsHomePath('Creative'), '/admin/tasks?taskscope=my');
+  assert.equal(flatten('Creative').find((item) => item.key === 'dashboard-hub')?.label, 'My Hub');
   assert.equal(flatten('Creative').find((item) => item.key === 'dashboard-hub')?.to, '/admin/tasks?taskscope=my');
+  assert.equal(flatten('Creative').find((item) => item.key === 'project-hub')?.to, '/admin/projects?projects=sprint');
   assert.deepEqual([...tabKeys('projects', 'Creative')], ['sprint', 'tasks']);
   assert.deepEqual([...tabKeys('cms', 'Creative')], ['insights', 'projects', 'testimonials']);
   assert.equal(canAccessAmsRoute('Creative', '/admin/dashboard'), false);
@@ -99,12 +95,14 @@ test('Creative has only personal workspace, filtered delivery, and editorial CMS
   assert.equal(canAccessAmsRoute('Creative', '/admin/crm'), false);
 });
 
-test('Freelancer is routed directly to assigned tasks and cannot access CRM, Finance, CMS, or macros', () => {
+test('Freelancer navigation separates My Hub from directly assigned work', () => {
   const menu = flatten('Freelancer');
+  assert.deepEqual([...keys('Freelancer')], ['dashboard-hub', 'tasks']);
   assert.equal(getAmsHomePath('Freelancer'), '/admin/tasks?taskscope=my');
+  assert.equal(menu.find((item) => item.key === 'dashboard-hub')?.label, 'My Hub');
   assert.equal(menu.find((item) => item.key === 'dashboard-hub')?.to, '/admin/tasks?taskscope=my');
-  assert.equal(menu.find((item) => item.key === 'project-hub')?.label, 'Assigned Tasks');
-  assert.equal(menu.find((item) => item.key === 'project-hub')?.to, '/admin/tasks?taskscope=my&workspace=project');
+  assert.equal(menu.find((item) => item.key === 'tasks')?.label, 'Assigned Tasks');
+  assert.equal(menu.find((item) => item.key === 'tasks')?.to, '/admin/tasks?taskscope=my&workspace=project');
   assert.deepEqual([...tabKeys('projects', 'Freelancer')], ['tasks']);
   assert.equal(canAccessAmsRoute('Freelancer', '/admin/tasks', '?taskscope=my&workspace=project'), true);
   assert.equal(canAccessAmsRoute('Freelancer', '/admin/tasks', '?taskscope=all'), false);
@@ -112,7 +110,19 @@ test('Freelancer is routed directly to assigned tasks and cannot access CRM, Fin
   assert.equal(canAccessAmsRoute('Freelancer', '/admin/crm'), false);
   assert.equal(canAccessAmsRoute('Freelancer', '/admin/finance', '?tab=project-finance'), false);
   assert.equal(canAccessAmsRoute('Freelancer', '/admin/navigation/live-activity'), true);
-  assert.equal(keys('Freelancer').has('content-workspace'), false);
+  assert.equal(keys('Freelancer').has('cms'), false);
+});
+
+test('sidebar links keep workspace active state across contextual tabs', () => {
+  const admin = flatten('Admin');
+  const find = (key: string) => admin.find((item) => item.key === key)!;
+
+  assert.equal(isNavigationItemActive(find('crm'), '/admin/clients/all-clients', '', ''), true);
+  assert.equal(isNavigationItemActive(find('project-hub'), '/admin/time-logs', '', ''), true);
+  assert.equal(isNavigationItemActive(find('project-hub'), '/admin/documents', '', ''), true);
+  assert.equal(isNavigationItemActive(find('finance'), '/admin/finance', '?tab=accounts-payable', ''), true);
+  assert.equal(isNavigationItemActive(find('finance'), '/admin/proposals', '', ''), true);
+  assert.equal(isNavigationItemActive(find('cms'), '/admin/cms/testimonials', '', ''), true);
 });
 
 test('direct URL navigation remains subject to the canonical route policy', () => {

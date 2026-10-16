@@ -44,16 +44,14 @@ export const AMS_NAVIGATION_GROUPS: AmsNavigationGroup[] = [
     key: 'main-dashboard',
     label: 'OPERATIONAL OVERVIEW',
     items: [
-      { key: 'executive-overview', label: 'Executive Agency Overview', to: '/admin/dashboard', icon: 'dashboard', allowedRoles: COMMERCIAL_ROLES },
-      { key: 'my-hub', label: 'Personal Workspace / My Hub', to: '/admin/tasks?taskscope=my', icon: 'user', allowedRoles: ALL_ROLES },
-      { key: 'live-activity', label: 'Live Activity Stream', to: '/admin/navigation/live-activity', icon: 'activity', allowedRoles: ALL_ROLES },
+      { key: 'dashboard-hub', label: 'Dashboard & Hub', to: '/admin/dashboard', icon: 'dashboard', allowedRoles: ALL_ROLES },
     ],
   },
   {
     key: 'client-pipeline',
     label: 'CLIENT & PIPELINE',
     items: [
-      { key: 'client-directory', label: 'Client Directory', to: '/admin/clients/all-clients', icon: 'clients', allowedRoles: COMMERCIAL_ROLES },
+      { key: 'crm', label: 'CRM', to: '/admin/crm', icon: 'crm', allowedRoles: COMMERCIAL_ROLES },
     ],
   },
   {
@@ -61,23 +59,20 @@ export const AMS_NAVIGATION_GROUPS: AmsNavigationGroup[] = [
     label: 'DELIVERY & OPERATIONS',
     items: [
       { key: 'project-hub', label: 'Project Hub', to: '/admin/projects', icon: 'projects', allowedRoles: ALL_ROLES },
-      { key: 'project-time', label: 'Timesheet Control', to: '/admin/time-logs', icon: 'tasks', allowedRoles: ['Admin', 'PM'] },
     ],
   },
   {
     key: 'finance-ledger',
     label: 'FINANCE & LEDGER',
     items: [
-      { key: 'finance-revenue', label: 'Invoicing & Revenues', to: '/admin/finance?tab=accounts-receivable', icon: 'invoice', allowedRoles: ADMIN_FINANCE },
-      { key: 'finance-expenses', label: 'Profitability & Expenses', to: '/admin/finance?tab=accounts-payable', icon: 'ledger', allowedRoles: ADMIN_FINANCE },
-      { key: 'project-profitability', label: 'Project Profitability', to: '/admin/finance?tab=project-finance', icon: 'profitability', allowedRoles: ['Admin', 'Finance', 'PM'], accessNote: { PM: 'Aggregated view' } },
+      { key: 'finance', label: 'Finance', to: '/admin/finance?tab=executive-summary', icon: 'profitability', allowedRoles: COMMERCIAL_ROLES },
     ],
   },
   {
     key: 'cms-content',
     label: 'MARKETING CMS',
     items: [
-      { key: 'content-workspace', label: 'Content Workspace', to: '/admin/cms/insights', icon: 'editorial', allowedRoles: ['Admin', 'PM', 'Creative'] },
+      { key: 'cms', label: 'CMS', to: '/admin/cms/insights', icon: 'editorial', allowedRoles: ['Admin', 'PM', 'Creative'] },
     ],
   },
 ];
@@ -87,19 +82,6 @@ export const AMS_SYSTEM_SETTINGS_ITEMS: AmsNavigationItem[] = [
   { key: 'release-readiness', label: 'Release Readiness Telemetry Gate', to: '/admin/navigation/release-readiness', icon: 'readiness', allowedRoles: ['Admin'] },
 ];
 
-/**
- * Primary module navigation only. Child destinations are supplied by the
- * role-aware sidebar submenu configuration, keeping primary modules concise.
- */
-const PRIMARY_NAVIGATION_ITEMS: AmsNavigationItem[] = [
-  { key: 'dashboard', label: 'Dashboard & Hub', to: '/admin/dashboard', icon: 'dashboard', allowedRoles: ALL_ROLES },
-  { key: 'crm', label: 'CRM', to: '/admin/crm', icon: 'crm', allowedRoles: COMMERCIAL_ROLES },
-  { key: 'projects', label: 'Projects', to: '/admin/projects', icon: 'projects', allowedRoles: ['Admin', 'Finance', 'PM', 'Creative'] },
-  { key: 'finance', label: 'Finance', to: '/admin/finance?tab=executive-summary', icon: 'profitability', allowedRoles: ['Admin', 'Finance', 'PM'] },
-  { key: 'cms', label: 'CMS', to: '/admin/cms/insights', icon: 'editorial', allowedRoles: ['Admin', 'PM', 'Creative'] },
-  { key: 'tasks', label: 'Tasks', to: '/admin/tasks?taskscope=my&workspace=project', icon: 'tasks', allowedRoles: ['Freelancer'] },
-];
-
 export const AMS_PRIMARY_SETTINGS_ITEM: AmsNavigationItem = {
   key: 'settings',
   label: 'Settings',
@@ -107,23 +89,6 @@ export const AMS_PRIMARY_SETTINGS_ITEM: AmsNavigationItem = {
   icon: 'access',
   allowedRoles: ['Admin'],
 };
-
-export function getPrimaryNavigationForRole(role: AmsRole): AmsNavigationItem[] {
-  return PRIMARY_NAVIGATION_ITEMS
-    .filter((item) => item.allowedRoles.includes(role))
-    .map((item) => {
-      if (item.key === 'dashboard' && (role === 'Creative' || role === 'Freelancer')) {
-        return { ...item, to: '/admin/tasks?taskscope=my' };
-      }
-      if (item.key === 'projects' && (role === 'Finance' || role === 'Creative')) {
-        return { ...item, to: '/admin/projects?projects=sprint' };
-      }
-      if (item.key === 'finance' && role === 'PM') {
-        return { ...item, to: '/admin/finance?tab=project-finance' };
-      }
-      return item;
-    });
-}
 
 /**
  * Reads the user.role string from the server-refreshed /api/auth/me profile.
@@ -176,29 +141,51 @@ export function getAmsHomePath(role: AmsRole): string {
 
 export function getNavigationGroupsForRole(role: AmsRole): AmsNavigationGroup[] {
   return AMS_NAVIGATION_GROUPS.map((group) => {
-    if (group.key === 'main-dashboard') {
-      const dashboardItem: AmsNavigationItem = {
-        key: 'dashboard-hub',
-        label: 'Dashboard & Hub',
-        to: getAmsHomePath(role),
-        icon: 'dashboard',
-        allowedRoles: ALL_ROLES,
-      };
-      return { ...group, label: 'OPERATIONAL OVERVIEW', items: [dashboardItem] };
-    }
-    const labelOverrides: Record<string, string> = {
-      'client-pipeline': 'CLIENT & PIPELINE',
-      'projects-workspace': 'DELIVERY & OPERATIONS',
-      'finance-ledger': 'FINANCE & LEDGER',
-      'cms-content': 'MARKETING CMS',
-    };
-    const items = group.items.filter((item) => item.allowedRoles.includes(role)).map((item) => {
-      if (item.key === 'project-hub' && role === 'Freelancer') return { ...item, label: 'Assigned Tasks', to: '/admin/tasks?taskscope=my&workspace=project' };
-      if (item.key === 'project-hub' && (role === 'Creative' || role === 'Finance')) return { ...item, to: '/admin/projects?projects=sprint' };
-      return item;
-    });
-    return { ...group, label: labelOverrides[group.key] || group.label, items };
+    const items = group.items
+      .filter((item) => item.allowedRoles.includes(role))
+      .map((item) => {
+        if (item.key === 'dashboard-hub' && (role === 'Creative' || role === 'Freelancer')) {
+          return { ...item, label: 'My Hub', to: getAmsHomePath(role) };
+        }
+        if (item.key === 'project-hub' && role === 'Freelancer') {
+          return {
+            ...item,
+            key: 'tasks',
+            label: 'Assigned Tasks',
+            to: '/admin/tasks?taskscope=my&workspace=project',
+          };
+        }
+        if (item.key === 'project-hub' && (role === 'Finance' || role === 'Creative')) {
+          return { ...item, to: '/admin/projects?projects=sprint' };
+        }
+        if (item.key === 'finance' && role === 'PM') {
+          return {
+            ...item,
+            label: 'Project Profitability',
+            to: '/admin/finance?tab=project-finance',
+          };
+        }
+        return item;
+      });
+
+    return { ...group, items };
   }).filter((group) => group.items.length > 0);
+}
+
+/**
+ * Backwards-compatible flat module list for callers that still use the former
+ * helper. The grouped sidebar above is the single source of truth for labels,
+ * destinations, and role filtering.
+ */
+export function getPrimaryNavigationForRole(role: AmsRole): AmsNavigationItem[] {
+  const keyAliases: Record<string, string> = {
+    'dashboard-hub': 'dashboard',
+    'project-hub': 'projects',
+  };
+
+  return getNavigationGroupsForRole(role)
+    .flatMap((group) => group.items)
+    .map((item) => ({ ...item, key: keyAliases[item.key] || item.key }));
 }
 const pathOnly = (pathname: string) => pathname.replace(/\/+$/, '') || '/';
 
@@ -291,6 +278,7 @@ export function isNavigationItemActive(
     case 'crm':
       return ['/admin/crm', '/admin/inbox', '/admin/clients', '/admin/clients/all-clients', '/admin/clients/sla-monitoring', '/admin/contracts'].includes(path);
     case 'projects':
+    case 'project-hub':
       return path === '/admin/projects'
         || (path === '/admin/dashboard' && params.get('view') === 'tasks')
         || path === '/admin/documents'
@@ -323,12 +311,6 @@ export function isNavigationItemActive(
       return path === '/admin/clients/all-clients';
     case 'client-onboarding':
       return path === '/admin/clients/all-clients' && hash === '#client-onboarding-readiness';
-    case 'project-hub': {
-      if (path === '/admin/tasks') {
-        return !(params.get('taskscope') === 'my' && params.get('workspace') !== 'project');
-      }
-      return ['/admin/projects', '/admin/documents', '/admin/clients/retainers', '/admin/team'].includes(path);
-    }
     case 'tasks-engine':
       return path === '/admin/tasks' && params.get('workspace') !== 'project' && params.get('taskscope') !== 'my';
     case 'retainer-manager':
