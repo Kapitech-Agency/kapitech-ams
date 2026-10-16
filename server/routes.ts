@@ -5284,6 +5284,10 @@ apiRouter.put('/vendors/:id', requireAuth, requirePermission('canManageVendors')
 
 apiRouter.delete('/vendors/:id', requireAuth, requirePermission('canManageVendors'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const { id } = req.params;
+  if (isProjectManagerRole(req.user!)) {
+    res.status(403).json({ success: false, error: 'Project managers cannot delete confidential vendor rate or contract records.' });
+    return;
+  }
   if (getDataSourceMode() === 'postgres') {
     const vendor = await postgresVendorRepository.findById(id);
     if (!vendor) { res.status(404).json({ success: false, error: 'Vendor not found.' }); return; }
