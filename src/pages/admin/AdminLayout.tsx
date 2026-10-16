@@ -175,8 +175,12 @@ export const AdminLayout: React.FC = () => {
     return null;
   })();
 
+  const mfaSetupRequired = Boolean(
+    session?.user
+    && (new URLSearchParams(location.search).get('mfaRequired') === '1' || session.user.mfaEnabled !== true)
+  );
   const workspaceTabItems = workspaceNavigationModule
-    ? getAmsModuleSubnavigation(workspaceNavigationModule, amsRole)
+    ? getAmsModuleSubnavigation(workspaceNavigationModule, amsRole, mfaSetupRequired)
     : [];
   const activeWorkspaceTab = workspaceTabItems.find((item) =>
     isAmsModuleSubnavigationItemActive(item, location.pathname, location.search, location.hash)
