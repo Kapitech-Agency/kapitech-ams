@@ -69,9 +69,18 @@ const MODULE_SUBNAVIGATION: Record<AmsSidebarModuleKey, AmsSidebarSubnavigationI
  */
 export function getAmsModuleSubnavigation(
   moduleKey: AmsSidebarModuleKey,
-  role: AmsRole
+  role: AmsRole,
+  allowMfaSetup = false
 ): AmsSidebarSubnavigationItem[] {
   let items = MODULE_SUBNAVIGATION[moduleKey];
+
+  if (moduleKey === 'settings' && allowMfaSetup && role !== 'Admin') {
+    return [{
+      key: 'access',
+      label: 'Access',
+      to: '/admin/settings?tab=security',
+    }];
+  }
 
   if (moduleKey === 'projects') {
     if (role === 'Freelancer') return [{ key: 'tasks', label: 'Assigned Tasks', to: '/admin/tasks?taskscope=my&workspace=project' }];
