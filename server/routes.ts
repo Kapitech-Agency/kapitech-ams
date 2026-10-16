@@ -69,7 +69,7 @@ import { postgresTaskRepository } from './postgres-task-repository.ts';
 import { postgresTimeLogRepository } from './postgres-time-log-repository.ts';
 import { postgresInvoiceRepository } from './postgres-invoice-repository.ts';
 import { postgresExpenseRepository, ExpenseImmutableError, ExpenseNotFoundError, ExpenseVersionConflictError, ExpenseProjectNotFoundError } from './postgres-expense-repository.ts';
-import { buildFinanceSourceJournalDrafts } from '../src/lib/financeWorkbook.ts';
+import { buildFinanceSourceJournalDrafts, getInvoiceCollected, getInvoiceOutstanding, isIssuedInvoice } from '../src/lib/financeWorkbook.ts';
 import { postgresApprovalRepository } from './postgres-approval-repository.ts';
 import { postgresNotificationRepository } from './postgres-notification-repository.ts';
 import { canViewNotification, getHiddenNotificationTypes } from './notification-access.ts';
@@ -4421,6 +4421,109 @@ apiRouter.delete('/finance/expenses/:id', requireAuth, requirePermission('canMan
 });
 
 // Financial Metrics (Authoritative server-calculated metrics)
+apiRouter.get('/finance/project-profitability', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const user = req.user!;
+  const isProjectManager = isProjectManagerRole(user);
+  if (!isProjectManager && !canViewConfidentialVendorRates(user)) {
+    res.status(403).json({ success: false, error: 'You do not have permission to view project profitability.' });
+    return;
+  }
+  if (isProjectManager && !user.permissions?.canManageProjects) {
+    res.status(403).json({ success: false, error: 'Project-management permission is required for aggregate project profitability.' });
+    return;
+  }
+
+  try {
+    const projects = getDataSourceMode() === 'postgres'
+      ? await postgresProjectRepository.list()
+      : (Array.isArray(getDatabase().projects) ? getDatabase().projects : []);
+    const invoices = getDataSourceMode() === 'postgres'
+      ? await postgresInvoiceRepository.list()
+      : (Array.isArray(getDatabase().invoices) ? getDatabase().invoices : []);
+    const expenses = getDataSourceMode() === 'postgres'
+      ? await postgresExpenseRepository.list()
+      : (Array.isArray(getDatabase().expenses) ? getDatabase().expenses : []);
+    type Aggregate = {
+      projectId: string;
+      projectName: string;
+      clientName: string;
+      projectStatus: string;
+      currency: string;
+      budget: number | null;
+      invoiced: number;
+      collected: number;
+      outstanding: number;
+      recordedCosts: number;
+    };
+    const aggregates = new Map<string, Aggregate>();
+    const getAggregate = (projectId: string, currencyValue: unknown): Aggregate | null => {
+      if (!projectId) return null;
+      const currencyCandidate = String(currencyValue || 'IDR').trim().toUpperCase();
+      const currency = /^[A-Z]{3}$/.test(currencyCandidate) ? currencyCandidate : 'IDR';
+      const project = projects.find((item: any) => String(item?.id || '') === projectId);
+      if (!project) return null;
+      const key = projectId + '::' + currency;
+      let aggregate = aggregates.get(key);
+      if (!aggregate) {
+        aggregate = {
+          projectId,
+          projectName: String(project.name || project.title || 'Untitled project'),
+          clientName: String(project.clientCompany || project.clientName || ''),
+          projectStatus: String(project.status || 'planning'),
+          currency,
+          budget: currency === 'IDR' ? Math.max(0, Number(project.budget) || 0) : null,
+          invoiced: 0,
+          collected: 0,
+          outstanding: 0,
+          recordedCosts: 0
+        };
+        aggregates.set(key, aggregate);
+      }
+      return aggregate;
+    };
+
+    for (const invoice of invoices as any[]) {
+      if (!isIssuedInvoice(invoice)) continue;
+      const aggregate = getAggregate(String(invoice.projectId || invoice.project_id || ''), invoice.currency);
+      if (!aggregate) continue;
+      aggregate.invoiced += Math.max(0, Number(invoice.total) || 0);
+      aggregate.collected += getInvoiceCollected(invoice);
+      aggregate.outstanding += getInvoiceOutstanding(invoice);
+    }
+
+    for (const expense of expenses as any[]) {
+      if (String(expense.status || '').toLowerCase() === 'voided') continue;
+      const aggregate = getAggregate(String(expense.projectId || expense.project_id || ''), expense.currency);
+      if (!aggregate) continue;
+      aggregate.recordedCosts += Math.max(0, Number(expense.amount) || 0);
+    }
+
+    for (const project of projects as any[]) {
+      const projectId = String(project?.id || '');
+      const hasRows = [...aggregates.values()].some((item) => item.projectId === projectId);
+      if (!hasRows) getAggregate(projectId, 'IDR');
+    }
+
+    const result = Array.from(aggregates.values())
+      .map((aggregate) => {
+        const contribution = aggregate.collected - aggregate.recordedCosts;
+        return {
+          ...aggregate,
+          contribution,
+          marginPercent: aggregate.collected > 0 ? Math.round((contribution / aggregate.collected) * 10000) / 100 : null
+        };
+      })
+      .sort((a, b) => a.projectName.localeCompare(b.projectName) || a.currency.localeCompare(b.currency));
+
+    // Only project/currency-level aggregates are returned; invoice, expense,
+    // vendor and employee-level rows/rates are never serialized to this view.
+    res.json({ success: true, projects: result });
+  } catch (error) {
+    console.error('[Project Profitability] Aggregate report failed:', error);
+    res.status(503).json({ success: false, error: 'Project profitability is temporarily unavailable.' });
+  }
+});
+
 apiRouter.get('/finance/metrics', requireAuth, requirePermission('canViewFinancials'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const usePostgres = getDataSourceMode() === 'postgres';
