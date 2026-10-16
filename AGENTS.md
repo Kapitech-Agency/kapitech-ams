@@ -15,7 +15,7 @@ Before implementation, read:
    - Drawer forms: **docs/AMS-DRAWER-GUIDELINES.md**
    - Modal/confirmation: **docs/AMS-MODAL-GUIDELINES.md**
    - Kanban/task boards: **docs/AMS-KANBAN-GUIDELINES.md**
-   - PostgreSQL/schema/cutover/recovery: the relevant **docs/AMS-POSTGRES-\*.md**, **docs/AMS-RELATIONAL-MIGRATION.md**, and recovery runbooks
+   - PostgreSQL/schema/cutover/recovery: the relevant **docs/AMS-POSTGRES-*.md**, **docs/AMS-RELATIONAL-MIGRATION.md**, and recovery runbooks
    - Private documents: **docs/private-document-vault.md**
 
 Do not read one file, infer the rest, and begin a broad rewrite. Inspect the actual files and connected flows relevant to the task.
