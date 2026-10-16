@@ -44,13 +44,19 @@ export const AMS_NAVIGATION_GROUPS: AmsNavigationGroup[] = [
     label: 'OPERATIONAL OVERVIEW',
     items: [
       { key: 'dashboard-hub', label: 'Dashboard & Hub', to: '/admin/dashboard', icon: 'dashboard', allowedRoles: ALL_ROLES },
+      { key: 'my-hub', label: 'My Hub', to: '/admin/tasks?taskscope=my', icon: 'user', allowedRoles: COMMERCIAL_ROLES },
     ],
   },
   {
     key: 'client-pipeline',
     label: 'CLIENT & PIPELINE',
     items: [
-      { key: 'crm', label: 'CRM', to: '/admin/crm', icon: 'crm', allowedRoles: COMMERCIAL_ROLES },
+      { key: 'crm', label: 'Sales & Pipeline', to: '/admin/crm', icon: 'crm', allowedRoles: COMMERCIAL_ROLES },
+      { key: 'client-directory', label: 'Client Directory', to: '/admin/clients/all-clients', icon: 'clients', allowedRoles: COMMERCIAL_ROLES },
+      { key: 'client-onboarding', label: 'Client Onboarding', to: '/admin/clients/all-clients#client-onboarding-readiness', icon: 'onboarding', allowedRoles: COMMERCIAL_ROLES },
+      { key: 'inbox', label: 'Inbox', to: '/admin/inbox', icon: 'activity', allowedRoles: COMMERCIAL_ROLES },
+      { key: 'contracts', label: 'Contracts', to: '/admin/contracts', icon: 'quotes', allowedRoles: COMMERCIAL_ROLES },
+      { key: 'sla-monitoring', label: 'SLA Monitoring', to: '/admin/clients/sla-monitoring', icon: 'clients', allowedRoles: COMMERCIAL_ROLES },
     ],
   },
   {
@@ -58,20 +64,36 @@ export const AMS_NAVIGATION_GROUPS: AmsNavigationGroup[] = [
     label: 'DELIVERY & OPERATIONS',
     items: [
       { key: 'project-hub', label: 'Project Hub', to: '/admin/projects', icon: 'projects', allowedRoles: ALL_ROLES },
+      { key: 'tasks-engine', label: 'Tasks', to: '/admin/tasks', icon: 'tasks', allowedRoles: ['Admin', 'PM'] },
+      { key: 'assigned-tasks', label: 'Assigned Tasks', to: '/admin/tasks?taskscope=my&workspace=project', icon: 'tasks', allowedRoles: ['Finance', 'Creative'] },
+      { key: 'project-files', label: 'Project Files', to: '/admin/documents', icon: 'registry', allowedRoles: ['Admin'] },
+      { key: 'team-capacity', label: 'Team & Capacity', to: '/admin/team?view=capacity-allocation', icon: 'user', allowedRoles: ['Admin', 'PM'] },
+      { key: 'timesheet-control', label: 'Timesheet Control', to: '/admin/time-logs', icon: 'retainer', allowedRoles: ['Admin', 'PM'] },
+      { key: 'retainer-manager', label: 'Retainer Hours Pool', to: '/admin/clients/retainers', icon: 'retainer', allowedRoles: ['Admin', 'PM'] },
     ],
   },
   {
     key: 'finance-ledger',
     label: 'FINANCE & LEDGER',
     items: [
-      { key: 'finance', label: 'Finance', to: '/admin/finance?tab=executive-summary', icon: 'profitability', allowedRoles: COMMERCIAL_ROLES },
+      { key: 'finance', label: 'Finance Overview', to: '/admin/finance?tab=executive-summary', icon: 'profitability', allowedRoles: ['Admin', 'Finance'] },
+      { key: 'finance-revenue', label: 'Invoicing & Revenues', to: '/admin/finance?tab=accounts-receivable', icon: 'invoice', allowedRoles: ['Admin', 'Finance'] },
+      { key: 'finance-expenses', label: 'Profitability & Expenses', to: '/admin/finance?tab=accounts-payable', icon: 'ledger', allowedRoles: ['Admin', 'Finance'] },
+      { key: 'project-profitability', label: 'Project Profitability', to: '/admin/finance?tab=project-finance', icon: 'profitability', allowedRoles: ['Admin', 'Finance', 'PM'], accessNote: { PM: 'Aggregated view' } },
+      { key: 'quotations', label: 'Quotations', to: '/admin/proposals', icon: 'quotes', allowedRoles: ['Admin', 'Finance'] },
+      { key: 'vendor-ledger', label: 'Vendor Ledger', to: '/admin/vendors', icon: 'ledger', allowedRoles: ['Admin', 'Finance'] },
+      { key: 'approvals', label: 'Approvals', to: '/admin/approvals', icon: 'invoice', allowedRoles: ['Admin', 'Finance'] },
     ],
   },
   {
     key: 'cms-content',
     label: 'MARKETING CMS',
     items: [
-      { key: 'cms', label: 'CMS', to: '/admin/cms/insights', icon: 'editorial', allowedRoles: ['Admin', 'PM', 'Creative'] },
+      { key: 'cms', label: 'Insights', to: '/admin/cms/insights', icon: 'editorial', allowedRoles: ['Admin', 'PM', 'Creative'] },
+      { key: 'portfolio', label: 'Portfolio', to: '/admin/cms/projects', icon: 'projects', allowedRoles: ['Admin', 'PM', 'Creative'] },
+      { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials', icon: 'registry', allowedRoles: ['Admin', 'PM', 'Creative'] },
+      { key: 'services', label: 'Services', to: '/admin/cms/services', icon: 'editorial', allowedRoles: ['Admin'] },
+      { key: 'careers', label: 'Careers', to: '/admin/cms/careers', icon: 'user', allowedRoles: ['Admin'] },
     ],
   },
 ];
@@ -149,7 +171,7 @@ export function getNavigationGroupsForRole(role: AmsRole): AmsNavigationGroup[] 
         if (item.key === 'project-hub' && role === 'Freelancer') {
           return {
             ...item,
-            key: 'tasks',
+            key: 'assigned-tasks',
             label: 'Assigned Tasks',
             to: '/admin/tasks?taskscope=my&workspace=project',
           };
@@ -157,31 +179,27 @@ export function getNavigationGroupsForRole(role: AmsRole): AmsNavigationGroup[] 
         if (item.key === 'project-hub' && (role === 'Finance' || role === 'Creative')) {
           return { ...item, to: '/admin/projects?projects=sprint' };
         }
-        if (item.key === 'finance' && role === 'PM') {
-          return {
-            ...item,
-            label: 'Project Profitability',
-            to: '/admin/finance?tab=project-finance',
-          };
-        }
         return item;
+      })
+      .filter((item) => {
+        const target = new URL(item.to, 'https://ams.kapitech.local');
+        return canAccessAmsRoute(role, target.pathname, target.search);
       });
-
     return { ...group, items };
   }).filter((group) => group.items.length > 0);
 }
 
 /**
- * Backwards-compatible flat module list for callers that still use the former
- * helper. The grouped sidebar above is the single source of truth for labels,
- * destinations, and role filtering.
+ * Compatibility helper for existing callers. It returns all direct sidebar
+ * destinations visible to the role, including priority feature shortcuts.
  */
 export function getPrimaryNavigationForRole(role: AmsRole): AmsNavigationItem[] {
   const keyAliases: Record<string, string> = {
     'dashboard-hub': 'dashboard',
     'project-hub': 'projects',
+    'tasks-engine': 'tasks',
+    'assigned-tasks': 'tasks',
   };
-
   return getNavigationGroupsForRole(role)
     .flatMap((group) => group.items)
     .map((item) => ({ ...item, key: keyAliases[item.key] || item.key }));
@@ -271,69 +289,82 @@ export function isNavigationItemActive(
 
   switch (item.key) {
     case 'dashboard':
-      return (path === '/admin/dashboard' && params.get('view') !== 'tasks')
-        || path === '/admin/navigation/live-activity'
-        || (path === '/admin/tasks' && params.get('taskscope') === 'my' && params.get('workspace') !== 'project');
-    case 'crm':
-      return ['/admin/crm', '/admin/inbox', '/admin/clients', '/admin/clients/all-clients', '/admin/clients/sla-monitoring', '/admin/contracts'].includes(path);
-    case 'projects':
-    case 'project-hub':
-      return path === '/admin/projects'
-        || (path === '/admin/dashboard' && params.get('view') === 'tasks')
-        || path === '/admin/documents'
-        || path === '/admin/clients/retainers'
-        || path === '/admin/team'
-        || path === '/admin/time-logs'
-        || (path === '/admin/tasks' && !(params.get('taskscope') === 'my' && params.get('workspace') !== 'project'));
-    case 'tasks':
-      return path === '/admin/tasks' && params.get('workspace') === 'project';
-    case 'finance':
-      return ['/admin/finance', '/admin/proposals', '/admin/invoicing', '/admin/vendors', '/admin/approvals'].includes(path);
-    case 'cms':
-      return path.startsWith('/admin/cms/');
-    case 'documents':
-      return path === '/admin/documents' || path.startsWith('/admin/documents/');
-    case 'settings':
-      return path === '/admin/settings' || path.startsWith('/admin/settings/') || path === '/admin/navigation/release-readiness';
     case 'dashboard-hub':
-    case 'executive-overview':
-      return (path === '/admin/dashboard' && params.get('view') !== 'tasks')
-        || path === '/admin/navigation/live-activity'
-        || (path === '/admin/tasks' && params.get('taskscope') === 'my' && params.get('workspace') !== 'project');
+      if (item.to.startsWith('/admin/tasks?taskscope=my')) {
+        return path === '/admin/tasks' && params.get('taskscope') === 'my' && params.get('workspace') !== 'project';
+      }
+      return path === '/admin/dashboard' && params.get('view') !== 'tasks';
     case 'my-hub':
       return path === '/admin/tasks' && params.get('taskscope') === 'my' && params.get('workspace') !== 'project';
-    case 'live-activity':
-      return path === '/admin/navigation/live-activity';
-    case 'sales-pipeline':
+    case 'crm':
       return path === '/admin/crm';
     case 'client-directory':
-      return path === '/admin/clients/all-clients';
+      return path === '/admin/clients/all-clients' && hash !== '#client-onboarding-readiness';
     case 'client-onboarding':
       return path === '/admin/clients/all-clients' && hash === '#client-onboarding-readiness';
+    case 'inbox':
+      return path === '/admin/inbox';
+    case 'contracts':
+      return path === '/admin/contracts';
+    case 'sla-monitoring':
+      return path === '/admin/clients/sla-monitoring';
+    case 'projects':
+    case 'project-hub':
+      return path === '/admin/projects';
+    case 'tasks':
     case 'tasks-engine':
-      return path === '/admin/tasks' && params.get('workspace') !== 'project' && params.get('taskscope') !== 'my';
+      return path === '/admin/tasks'
+        && !(params.get('taskscope') === 'my' && params.get('workspace') !== 'project')
+        && params.get('workspace') !== 'project';
+    case 'assigned-tasks':
+      return path === '/admin/tasks' && params.get('taskscope') === 'my' && params.get('workspace') === 'project';
+    case 'project-files':
+      return path === '/admin/documents' || path.startsWith('/admin/documents/');
+    case 'team-capacity':
+      return path === '/admin/team' && params.get('view') === 'capacity-allocation';
+    case 'timesheet-control':
+      return path === '/admin/time-logs';
     case 'retainer-manager':
       return path === '/admin/clients/retainers';
-    case 'quotations':
-      return path === '/admin/proposals';
+    case 'finance':
+      return path === '/admin/finance'
+        && ['executive-summary', 'dashboard'].includes(params.get('tab') || 'executive-summary');
     case 'finance-revenue':
       return path === '/admin/finance'
-        && ['executive-summary', 'dashboard', 'cash-bank', 'revenue', 'petty-cash', 'accounts-receivable'].includes(params.get('tab') || 'executive-summary');
+        && ['cash-bank', 'revenue', 'petty-cash', 'accounts-receivable'].includes(params.get('tab') || '');
     case 'finance-expenses':
       return path === '/admin/finance'
         && ['accounts-payable', 'expenses', 'vendors', 'journal', 'chart-of-accounts', 'monthly-pnl', 'cash-flow', 'balance-sheet', 'monthly-closing', 'annual-summary'].includes(params.get('tab') || '');
     case 'project-profitability':
       return path === '/admin/finance'
         && ['project-finance', 'operational-budget', 'project-allocation', 'team-fee'].includes(params.get('tab') || '');
+    case 'quotations':
+      return path === '/admin/proposals';
+    case 'vendor-ledger':
+      return path === '/admin/vendors';
+    case 'approvals':
+      return path === '/admin/approvals';
+    case 'cms':
+      return path === '/admin/cms/insights';
+    case 'portfolio':
+      return path === '/admin/cms/projects';
+    case 'testimonials':
+      return path === '/admin/cms/testimonials';
+    case 'services':
+      return path === '/admin/cms/services';
+    case 'careers':
+      return path === '/admin/cms/careers';
     case 'content-workspace':
     case 'insight-editorial':
-      return path.startsWith('/admin/cms/');
+      return path === '/admin/cms/insights';
     case 'portfolio-testimonial-registry':
       return path === '/admin/cms/projects' || path === '/admin/cms/testimonials';
     case 'user-access':
       return path === '/admin/settings' && ['security', 'rbac'].includes(params.get('tab') || '');
     case 'data-persistence-backup':
       return path === '/admin/settings' && (!params.get('tab') || params.get('tab') === 'overview');
+    case 'settings':
+      return path === '/admin/settings' || path.startsWith('/admin/settings/') || path === '/admin/navigation/release-readiness';
     case 'release-readiness':
       return path === '/admin/navigation/release-readiness';
     default: {
