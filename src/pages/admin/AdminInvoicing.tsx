@@ -744,6 +744,10 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   const [sourceErrors, setSourceErrors] = useState<string[]>([]);
   const invoiceSourceUnavailable = sourceErrors.some((message) => message.startsWith('Invoices:'));
   const expenseSourceUnavailable = sourceErrors.some((message) => message.startsWith('Expenses:'));
+  const vendorSourceUnavailable = sourceErrors.some((message) => message.startsWith('Vendors:'));
+  const sourceUnavailableMessage = (label: string) => language === 'id'
+    ? `Sumber data ${label} belum berhasil dimuat. Muat ulang sebelum melanjutkan.`
+    : `${label} data could not be loaded. Refresh before continuing.`;
   const [notice, setNotice] = useState<{ tone: 'success' | 'danger'; message: string } | null>(null);
   const noticeTimerRef = React.useRef<number | null>(null);
 
@@ -1000,7 +1004,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
           overdueCount: derived.overdueCount,
           draftCount: nextInvoices.filter((invoice) => invoice.status === 'draft').length
         });
-      } else {
+      } else if (metricsSourceAvailable) {
         setServerMetrics(metricsRes.data.metrics as ServerMetrics);
       }
 
@@ -1556,6 +1560,10 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   };
 
   const openCreateInvoice = () => {
+    if (invoiceSourceUnavailable) {
+      showNotice('danger', sourceUnavailableMessage('invoice'));
+      return;
+    }
     resetInvoiceForm();
     setInvoiceModalOpen(true);
   };
@@ -1621,6 +1629,10 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   };
 
   const openExpenseModal = () => {
+    if (expenseSourceUnavailable) {
+      showNotice('danger', sourceUnavailableMessage('expense'));
+      return;
+    }
     setExpenseDirty(false);
     setExpenseType('OpEx');
     setExpenseCategory('Software & Cloud');
@@ -1643,6 +1655,10 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   };
 
   const openEditInvoice = (invoice: AgencyInvoice) => {
+    if (invoiceSourceUnavailable) {
+      showNotice('danger', sourceUnavailableMessage('invoice'));
+      return;
+    }
     setInvoiceDirty(false);
     setEditingInvoice(invoice);
     setInvoiceNumber(invoice.invoiceNumber);
@@ -1710,6 +1726,10 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 
   const handleSaveInvoice = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (invoiceSourceUnavailable) {
+      showNotice('danger', sourceUnavailableMessage('invoice'));
+      return;
+    }
     if (!canManageInvoices || savingInvoice) return;
 
     const invalidLineItem = invoiceItems.some((item) => (
@@ -1854,6 +1874,10 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   };
 
   const updateInvoiceStatus = async (invoice: AgencyInvoice, nextStatus: InvoiceStatus) => {
+    if (invoiceSourceUnavailable) {
+      showNotice('danger', sourceUnavailableMessage('invoice'));
+      return;
+    }
     if (!canManageInvoices || updatingInvoiceId || invoice.status === nextStatus || nextStatus === 'cancelled') return;
     setUpdatingInvoiceId(invoice.id);
     try {
@@ -1888,6 +1912,10 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   };
 
   const openPayment = (invoice: AgencyInvoice) => {
+    if (invoiceSourceUnavailable) {
+      showNotice('danger', sourceUnavailableMessage('invoice'));
+      return;
+    }
     setPaymentDirty(false);
     const balance = Number(invoice.balanceDue ?? (invoice.total - (invoice.amountPaid || 0)));
     setPaymentInvoice(invoice);
@@ -1906,6 +1934,10 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 
   const handlePayment = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (invoiceSourceUnavailable) {
+      showNotice('danger', sourceUnavailableMessage('invoice'));
+      return;
+    }
     if (!paymentInvoice || !canManageInvoices || savingPayment) return;
     const balance = Number(paymentInvoice.balanceDue ?? (paymentInvoice.total - (paymentInvoice.amountPaid || 0)));
     const amount = Number(paymentAmount);
@@ -2019,6 +2051,10 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   const getExpensePaidAmount = (expense: FinanceExpense) =>
     Math.min(Number(expense.amount) || 0, getExpensePayments(expense).reduce((sum, payment) => sum + Math.max(0, Number(payment.amount) || 0), 0));
   const openExpensePayment = (expense: FinanceExpense) => {
+    if (expenseSourceUnavailable) {
+      showNotice('danger', sourceUnavailableMessage('expense'));
+      return;
+    }
     const remaining = Math.max(0, Number(expense.amount || 0) - getExpensePaidAmount(expense));
     if (remaining <= 0.01 || !canManageInvoices) return;
     setExpensePaymentDrawer(expense);
@@ -2035,6 +2071,10 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 
   const handleExpensePayment = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (expenseSourceUnavailable) {
+      showNotice('danger', sourceUnavailableMessage('expense'));
+      return;
+    }
     const expense = expensePaymentDrawer;
     if (!expense || !canManageInvoices || savingExpensePayment) return;
     const amount = Number(expenseSettlementAmount);
@@ -2096,6 +2136,10 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 
   const handleSaveExpense = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (expenseSourceUnavailable) {
+      showNotice('danger', sourceUnavailableMessage('expense'));
+      return;
+    }
     if (!canManageInvoices || savingExpense) return;
     const amount = Number(expenseAmount);
     const normalizedExpenseDate = new Date(`${expenseDate}T00:00:00`);
@@ -2189,6 +2233,12 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 
   const confirmDelete = async () => {
     if (!confirmAction || confirmingAction) return;
+    const sourceUnavailable = confirmAction.type === 'invoice' ? invoiceSourceUnavailable : expenseSourceUnavailable;
+    if (sourceUnavailable) {
+      showNotice('danger', sourceUnavailableMessage(confirmAction.type === 'invoice' ? 'invoice' : 'expense'));
+      setConfirmAction(null);
+      return;
+    }
     setConfirmingAction(true);
     try {
       if ((confirmAction.type === 'invoice' && usingDemoInvoices) || (confirmAction.type === 'expense' && usingDemoExpenses)) {
@@ -2389,6 +2439,10 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 
   const handleSaveVendorPayment = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (expenseSourceUnavailable || vendorSourceUnavailable) {
+      showNotice('danger', sourceUnavailableMessage(expenseSourceUnavailable ? 'expense' : 'vendor'));
+      return;
+    }
     if (!canManageInvoices || savingVendorPayment) return;
     const vendor = vendors.find((item) => item.id === vendorPaymentVendorId);
     const contract = vendor?.contracts.find((item) => item.id === vendorPaymentContractId);
@@ -3088,7 +3142,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
             <CustomSelect value={expensePeriodFilter} onChange={(value) => setExpensePeriodFilter(value as typeof expensePeriodFilter)} options={expensePeriodOptions} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Expense period filter"/>
             <CustomSelect value={expenseSort} onChange={(value) => setExpenseSort(value as typeof expenseSort)} options={[{value:'date_desc',label:'Newest'},{value:'date_asc',label:'Oldest'},{value:'amount_high',label:'Highest amount'},{value:'amount_low',label:'Lowest amount'}]} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Expense sort"/>
             <button type="button" onClick={() => void loadData(true)} disabled={refreshing} className={actionClass + ' h-10 min-h-10'}><RefreshCw size={14} className={refreshing ? 'animate-spin' : ''}/>{refreshing ? 'Refreshing' : 'Refresh'}</button>
-            <button type="button" onClick={exportExpensesCsv} disabled={!filteredExpenses.length} className={actionClass + ' h-10 min-h-10'}><Download size={14}/>Export CSV</button>
+            <button type="button" onClick={exportExpensesCsv} disabled={expenseSourceUnavailable || !filteredExpenses.length} className={actionClass + ' h-10 min-h-10'}><Download size={14}/>Export CSV</button>
             {canManageInvoices && <button type="button" onClick={openExpenseModal} className={primaryClass + ' h-10 min-h-10 shrink-0'}><Plus size={14}/>Add expense</button>}
           </div>
         </div>
@@ -3180,7 +3234,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{currency}</span>
                     <button type="button" onClick={() => void loadData(true)} disabled={refreshing} className={actionClass}><RefreshCw size={14} className={refreshing ? 'animate-spin' : ''}/>{refreshing ? 'Refreshing' : 'Refresh'}</button>
-                    <button type="button" onClick={exportVendorPaymentsCsv} disabled={!filteredVendorPayments.length} className={actionClass}><Download size={14}/>Export CSV</button>
+                    <button type="button" onClick={exportVendorPaymentsCsv} disabled={expenseSourceUnavailable || vendorSourceUnavailable || !filteredVendorPayments.length} className={actionClass}><Download size={14}/>Export CSV</button>
                     {canManageInvoices && <button type="button" onClick={() => openVendorPaymentModal()} className={primaryClass}><Plus size={14}/>Record payment</button>}
                   </div>
                 </div>
@@ -3317,8 +3371,8 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           <button type="button" onClick={() => void loadData(true)} disabled={refreshing} className={actionClass + ' h-9 min-h-9'}><RefreshCw size={14} className={refreshing ? 'animate-spin' : ''}/>{refreshing ? 'Refreshing' : 'Refresh'}</button>
-          <button type="button" onClick={exportInvoicesCsv} disabled={!filteredInvoices.length} className={actionClass + ' h-9 min-h-9'}><Download size={14}/>Export CSV</button>
-          {!embeddedReceivablesOnly && canCreateInvoice && <button type="button" onClick={openCreateInvoice} className={primaryClass + ' h-9 min-h-9'}><Plus size={14}/>New invoice</button>}
+          <button type="button" onClick={exportInvoicesCsv} disabled={invoiceSourceUnavailable || !filteredInvoices.length} className={actionClass + ' h-9 min-h-9'}><Download size={14}/>Export CSV</button>
+          {!embeddedReceivablesOnly && canCreateInvoice && !invoiceSourceUnavailable && <button type="button" onClick={openCreateInvoice} className={primaryClass + ' h-9 min-h-9'}><Plus size={14}/>New invoice</button>}
           <div className="inline-flex items-center rounded-control border border-line bg-bg p-0.5">
             <button
               type="button"
