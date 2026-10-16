@@ -15,7 +15,9 @@ import type { AgencyExpense, AgencyInvoice } from '../../lib/financeStore';
 import type { AgencyProject } from '../../lib/projectStore';
 import { VENDOR_EVENT_NAME } from '../../lib/vendorStore';
 import type { AgencyVendor, VendorContract } from '../../lib/vendorStore';
-import { hasAdminPermission } from '../../lib/adminAuth';
+import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
+import { getAmsRole } from '../../lib/amsNavigationAccess';
+import { AdminProjectProfitability } from './AdminProjectProfitability';
 import {
   calculateProjectFinanceWorkbookSummary,
   classifyWorkbookExpense,
@@ -614,7 +616,7 @@ const CASH_ACCOUNT_OPTIONS = [
   {value:'1200',label:'1200 · Emergency Fund'}
 ];
 
-export const AdminFinanceWorkspace: React.FC = () => {
+const FinanceWorkbookWorkspace: React.FC = () => {
   const { mode: reportPeriodMode, value: reportPeriodValue, enabled: reportPeriodEnabled, matchesDate, matchesInterval } = useReportingPeriod();
   const { language } = useLanguage();
   const locale = language === 'id' ? 'id-ID' : 'en-US';
@@ -3240,4 +3242,20 @@ export const AdminFinanceWorkspace: React.FC = () => {
     </AdminPageShell>
   );
   return localizeFinanceValue(financePage, language) as React.ReactElement;
+};
+
+/**
+ * PMs must never mount the general Finance workbook, because its sources include
+ * invoice, expense and vendor records. They get a separate aggregate-only view.
+ */
+export const AdminFinanceWorkspace: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const role = getAmsRole(getAdminSession()?.user);
+  const requestedTab = searchParams.get('tab') || 'executive-summary';
+
+  if (role === 'PM' && requestedTab === 'project-finance') {
+    return <AdminProjectProfitability />;
+  }
+
+  return <FinanceWorkbookWorkspace />;
 };
