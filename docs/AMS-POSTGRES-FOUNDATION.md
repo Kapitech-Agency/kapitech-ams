@@ -1,6 +1,8 @@
 # AMS PostgreSQL Foundation
 
-The PostgreSQL path is now implemented as a parallel, opt-in foundation. The existing encrypted JSON persistence remains the active production store.
+> **Runtime-status clarification:** This document contains foundation/migration guidance and may include statements from an earlier rollout stage. server/data-source.ts supports json/postgres and defaults to json if KAPITECH_DATA_SOURCE is unset; README specifies postgres as the required production configuration. This document alone does not prove the deployed data source. Before migration, rollback or production claims, verify authorized runtime configuration and GET /api/system/production-readiness. Do not switch sources or migrate production data based on this document alone.
+
+This document describes the PostgreSQL foundation and its original staged rollout. Verify current code and production configuration before treating this as a statement about the active data store.
 
 ## Components
 
