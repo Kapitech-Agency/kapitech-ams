@@ -24,22 +24,29 @@ export const FINANCE_WORKBOOK_GROUPS: FinanceWorkbookGroup[] = [
     ]
   },
   {
-    key: 'transactions',
-    label: 'Transactions & Cash',
+    key: 'receivables',
+    label: 'Revenue & Receivables',
     items: [
-      { key: 'cash-bank', sheet: '05', label: 'Cash & Bank', description: 'Cash movement view built from recorded receipts and expenses.' },
-      { key: 'revenue', sheet: '03', label: 'Revenue', description: 'Revenue register sourced from issued client invoices.' },
-      { key: 'expenses', sheet: '04', label: 'Expenses', description: 'Expense register sourced from finance expenses in AMS.' },
-      { key: 'petty-cash', sheet: '10', label: 'Petty Cash', description: 'Petty-cash register and controls required by the workbook.' }
+      { key: 'quotations', sheet: '03A', label: 'Quotations', description: 'Reusable commercial document templates, quotation creation, validity tracking, and conversion to invoice.' },
+      { key: 'revenue', sheet: '03', label: 'Revenue & Invoices', description: 'Invoice creation, issued revenue records, and revenue register.' },
+      { key: 'accounts-receivable', sheet: '06', label: 'Accounts Receivable', description: 'Invoice balances, due dates, collections, and outstanding payment status.' }
     ]
   },
   {
-    key: 'receivables',
-    label: 'Receivables & Payables',
+    key: 'payables',
+    label: 'Expenses & Payables',
     items: [
-      { key: 'accounts-receivable', sheet: '06', label: 'Accounts Receivable', description: 'Invoice balances, due dates and payment status.' },
-      { key: 'accounts-payable', sheet: '07', label: 'Accounts Payable', description: 'Vendor obligations and the bill records still required.' },
-      { key: 'vendors', sheet: '11', label: 'Vendors & Freelancers', description: 'Vendor directory, contracts, rates and payment references.' },
+      { key: 'expenses', sheet: '04', label: 'Expenses', description: 'Expense register sourced from finance expenses in AMS.' },
+      { key: 'accounts-payable', sheet: '07', label: 'Accounts Payable', description: 'Vendor obligations, bills, settlements, and installment schedules.' },
+      { key: 'vendors', sheet: '11', label: 'Vendor Ledger', description: 'Vendor contract references and payment context for finance workflows.' }
+    ]
+  },
+  {
+    key: 'cash',
+    label: 'Cash Management',
+    items: [
+      { key: 'cash-bank', sheet: '05', label: 'Cash & Bank', description: 'Cash movement view built from recorded receipts and expenses.' },
+      { key: 'petty-cash', sheet: '10', label: 'Petty Cash', description: 'Petty-cash register and controls required by the workbook.' }
     ]
   },
   {
