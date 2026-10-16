@@ -166,7 +166,13 @@ test('Flat sidebar keeps direct links while existing tabs stay in their page wor
   assert.ok(inbox.includes('<AdminSectionTabs') && inbox.includes('inboxTabs.map((tab)'));
   assert.ok(finance.includes('<AdminModuleHeader') && finance.includes('<AdminSectionTabs'));
   assert.ok(finance.indexOf('<AdminModuleHeader') < finance.indexOf('<AdminSectionTabs'));
-  assert.ok(clients.includes('<AdminSectionTabs') && retainers.includes('<AdminSectionTabs') && sla.includes('<AdminSectionTabs'));
+  assert.ok(layout.includes('ariaLabel="Workspace navigation"'), 'CRM and retainer route navigation comes from the shared content-area workspace tabs.');
+  assert.ok(subnavigation.includes("label: 'Client Directory'"));
+  assert.ok(subnavigation.includes("label: 'Onboarding'"));
+  assert.ok(subnavigation.includes("label: 'Retainer Hours Pool'"));
+  assert.equal(clients.includes('clients-mobile-tabs'), false);
+  assert.equal(retainers.includes('Clients sections'), false);
+  assert.equal(sla.includes('Clients sections'), false);
 });
 test('Lazy module navigation keeps the AMS shell mounted and recovers locally on module failure', () => {
   const source = fs.readFileSync(path.resolve(process.cwd(), 'src/App.tsx'), 'utf8');
