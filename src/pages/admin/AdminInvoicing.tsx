@@ -745,9 +745,14 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   const invoiceSourceUnavailable = sourceErrors.some((message) => message.startsWith('Invoices:'));
   const expenseSourceUnavailable = sourceErrors.some((message) => message.startsWith('Expenses:'));
   const vendorSourceUnavailable = sourceErrors.some((message) => message.startsWith('Vendors:'));
-  const sourceUnavailableMessage = (label: string) => language === 'id'
-    ? `Sumber data ${label} belum berhasil dimuat. Muat ulang sebelum melanjutkan.`
-    : `${label} data could not be loaded. Refresh before continuing.`;
+  const invoiceSourceBlocked = loading || refreshing || invoiceSourceUnavailable;
+  const expenseSourceBlocked = loading || refreshing || expenseSourceUnavailable;
+  const vendorSourceBlocked = loading || refreshing || vendorSourceUnavailable;
+  const sourceUnavailableMessage = (label: string) => loading || refreshing
+    ? (language === 'id' ? 'Data Finance sedang dimuat ulang. Tunggu hingga selesai sebelum melanjutkan.' : 'Finance data is refreshing. Wait until it finishes before continuing.')
+    : language === 'id'
+      ? `Sumber data ${label} belum berhasil dimuat. Muat ulang sebelum melanjutkan.`
+      : `${label} data could not be loaded. Refresh before continuing.`;
   const [notice, setNotice] = useState<{ tone: 'success' | 'danger'; message: string } | null>(null);
   const noticeTimerRef = React.useRef<number | null>(null);
 
@@ -928,7 +933,6 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
     if (silent) setRefreshing(true);
     else setLoading(true);
     setError(null);
-    setSourceErrors([]);
     try {
       const [invoiceRes, expenseRes, metricsRes, clientRes, projectRes, vendorRes] = await Promise.all([
         api.finance.getInvoices(),
@@ -1021,7 +1025,16 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
       }
     } catch (err) {
       if (requestId === loadRequestId.current) {
-        setError(err instanceof Error ? err.message : 'Financial data is temporarily unavailable.');
+        const message = err instanceof Error ? err.message : 'Financial data is temporarily unavailable.';
+        setSourceErrors([
+          `Invoices: ${message}`,
+          `Expenses: ${message}`,
+          `Financial metrics: ${message}`,
+          `Clients: ${message}`,
+          `Projects: ${message}`,
+          `Vendors: ${message}`
+        ]);
+        setError(message);
       }
     } finally {
       if (requestId === loadRequestId.current) {
@@ -1560,7 +1573,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   };
 
   const openCreateInvoice = () => {
-    if (invoiceSourceUnavailable) {
+    if (invoiceSourceBlocked) {
       showNotice('danger', sourceUnavailableMessage('invoice'));
       return;
     }
@@ -1629,7 +1642,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   };
 
   const openExpenseModal = () => {
-    if (expenseSourceUnavailable) {
+    if (expenseSourceBlocked) {
       showNotice('danger', sourceUnavailableMessage('expense'));
       return;
     }
@@ -1655,7 +1668,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   };
 
   const openEditInvoice = (invoice: AgencyInvoice) => {
-    if (invoiceSourceUnavailable) {
+    if (invoiceSourceBlocked) {
       showNotice('danger', sourceUnavailableMessage('invoice'));
       return;
     }
@@ -1726,7 +1739,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 
   const handleSaveInvoice = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (invoiceSourceUnavailable) {
+    if (invoiceSourceBlocked) {
       showNotice('danger', sourceUnavailableMessage('invoice'));
       return;
     }
@@ -1874,7 +1887,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   };
 
   const updateInvoiceStatus = async (invoice: AgencyInvoice, nextStatus: InvoiceStatus) => {
-    if (invoiceSourceUnavailable) {
+    if (invoiceSourceBlocked) {
       showNotice('danger', sourceUnavailableMessage('invoice'));
       return;
     }
@@ -1912,7 +1925,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   };
 
   const openPayment = (invoice: AgencyInvoice) => {
-    if (invoiceSourceUnavailable) {
+    if (invoiceSourceBlocked) {
       showNotice('danger', sourceUnavailableMessage('invoice'));
       return;
     }
@@ -1934,7 +1947,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 
   const handlePayment = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (invoiceSourceUnavailable) {
+    if (invoiceSourceBlocked) {
       showNotice('danger', sourceUnavailableMessage('invoice'));
       return;
     }
@@ -2051,7 +2064,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   const getExpensePaidAmount = (expense: FinanceExpense) =>
     Math.min(Number(expense.amount) || 0, getExpensePayments(expense).reduce((sum, payment) => sum + Math.max(0, Number(payment.amount) || 0), 0));
   const openExpensePayment = (expense: FinanceExpense) => {
-    if (expenseSourceUnavailable) {
+    if (expenseSourceBlocked) {
       showNotice('danger', sourceUnavailableMessage('expense'));
       return;
     }
@@ -2071,7 +2084,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 
   const handleExpensePayment = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (expenseSourceUnavailable) {
+    if (expenseSourceBlocked) {
       showNotice('danger', sourceUnavailableMessage('expense'));
       return;
     }
@@ -2136,7 +2149,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 
   const handleSaveExpense = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (expenseSourceUnavailable) {
+    if (expenseSourceBlocked) {
       showNotice('danger', sourceUnavailableMessage('expense'));
       return;
     }
@@ -2233,7 +2246,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 
   const confirmDelete = async () => {
     if (!confirmAction || confirmingAction) return;
-    const sourceUnavailable = confirmAction.type === 'invoice' ? invoiceSourceUnavailable : expenseSourceUnavailable;
+    const sourceUnavailable = confirmAction.type === 'invoice' ? invoiceSourceBlocked : expenseSourceBlocked;
     if (sourceUnavailable) {
       showNotice('danger', sourceUnavailableMessage(confirmAction.type === 'invoice' ? 'invoice' : 'expense'));
       setConfirmAction(null);
@@ -2439,7 +2452,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 
   const handleSaveVendorPayment = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (expenseSourceUnavailable || vendorSourceUnavailable) {
+    if (expenseSourceBlocked || vendorSourceBlocked) {
       showNotice('danger', sourceUnavailableMessage(expenseSourceUnavailable ? 'expense' : 'vendor'));
       return;
     }
@@ -3142,7 +3155,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
             <CustomSelect value={expensePeriodFilter} onChange={(value) => setExpensePeriodFilter(value as typeof expensePeriodFilter)} options={expensePeriodOptions} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Expense period filter"/>
             <CustomSelect value={expenseSort} onChange={(value) => setExpenseSort(value as typeof expenseSort)} options={[{value:'date_desc',label:'Newest'},{value:'date_asc',label:'Oldest'},{value:'amount_high',label:'Highest amount'},{value:'amount_low',label:'Lowest amount'}]} triggerClassName="h-10 min-h-10 w-full whitespace-nowrap" aria-label="Expense sort"/>
             <button type="button" onClick={() => void loadData(true)} disabled={refreshing} className={actionClass + ' h-10 min-h-10'}><RefreshCw size={14} className={refreshing ? 'animate-spin' : ''}/>{refreshing ? 'Refreshing' : 'Refresh'}</button>
-            <button type="button" onClick={exportExpensesCsv} disabled={expenseSourceUnavailable || !filteredExpenses.length} className={actionClass + ' h-10 min-h-10'}><Download size={14}/>Export CSV</button>
+            <button type="button" onClick={exportExpensesCsv} disabled={expenseSourceBlocked || !filteredExpenses.length} className={actionClass + ' h-10 min-h-10'}><Download size={14}/>Export CSV</button>
             {canManageInvoices && <button type="button" onClick={openExpenseModal} className={primaryClass + ' h-10 min-h-10 shrink-0'}><Plus size={14}/>Add expense</button>}
           </div>
         </div>
@@ -3181,7 +3194,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
     <div className="space-y-0">
       <div className="overflow-x-auto custom-scrollbar">
         {filteredExpenses.length === 0 ? (
-          <div className="p-5"><EmptyState title={expenseSourceUnavailable ? 'Expense data unavailable' : 'No expenses found'} description={expenseSourceUnavailable ? 'The expense source could not be loaded. Retry before relying on this list.' : 'Adjust the search or filters.'}/></div>
+          <div className="p-5"><EmptyState title={loading || refreshing ? 'Loading expenses…' : expenseSourceUnavailable ? 'Expense data unavailable' : 'No expenses found'} description={loading || refreshing ? 'Loading the latest expense records.' : expenseSourceUnavailable ? 'The expense source could not be loaded. Retry before relying on this list.' : 'Adjust the search or filters.'}/></div>
         ) : (
           <table className="ams-finance-table min-w-[980px] border-separate border-spacing-0 text-xs">
             <thead><tr><th className="w-[27%]">Expense</th><th className="w-[19%]">Category</th><th className="w-[18%]">Project</th><th className="w-[12%]">Date</th><th className="w-[13%] text-right">Amount</th><th className="w-[11%]">Schedule</th><th className="w-[48px] text-right">Action</th></tr></thead>
@@ -3234,7 +3247,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-badge border border-line bg-bg px-2 py-1 text-[10px] text-muted">{currency}</span>
                     <button type="button" onClick={() => void loadData(true)} disabled={refreshing} className={actionClass}><RefreshCw size={14} className={refreshing ? 'animate-spin' : ''}/>{refreshing ? 'Refreshing' : 'Refresh'}</button>
-                    <button type="button" onClick={exportVendorPaymentsCsv} disabled={expenseSourceUnavailable || vendorSourceUnavailable || !filteredVendorPayments.length} className={actionClass}><Download size={14}/>Export CSV</button>
+                    <button type="button" onClick={exportVendorPaymentsCsv} disabled={expenseSourceBlocked || vendorSourceBlocked || !filteredVendorPayments.length} className={actionClass}><Download size={14}/>Export CSV</button>
                     {canManageInvoices && <button type="button" onClick={() => openVendorPaymentModal()} className={primaryClass}><Plus size={14}/>Record payment</button>}
                   </div>
                 </div>
@@ -3371,8 +3384,8 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           <button type="button" onClick={() => void loadData(true)} disabled={refreshing} className={actionClass + ' h-9 min-h-9'}><RefreshCw size={14} className={refreshing ? 'animate-spin' : ''}/>{refreshing ? 'Refreshing' : 'Refresh'}</button>
-          <button type="button" onClick={exportInvoicesCsv} disabled={invoiceSourceUnavailable || !filteredInvoices.length} className={actionClass + ' h-9 min-h-9'}><Download size={14}/>Export CSV</button>
-          {!embeddedReceivablesOnly && canCreateInvoice && !invoiceSourceUnavailable && <button type="button" onClick={openCreateInvoice} className={primaryClass + ' h-9 min-h-9'}><Plus size={14}/>New invoice</button>}
+          <button type="button" onClick={exportInvoicesCsv} disabled={invoiceSourceBlocked || !filteredInvoices.length} className={actionClass + ' h-9 min-h-9'}><Download size={14}/>Export CSV</button>
+          {!embeddedReceivablesOnly && canCreateInvoice && !invoiceSourceBlocked && <button type="button" onClick={openCreateInvoice} className={primaryClass + ' h-9 min-h-9'}><Plus size={14}/>New invoice</button>}
           <div className="inline-flex items-center rounded-control border border-line bg-bg p-0.5">
             <button
               type="button"
@@ -3503,7 +3516,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
         </div>
       )}
     </div>
-  </div><div className="overflow-hidden">{filteredInvoices.length===0?<div className="p-5"><EmptyState title={invoiceSourceUnavailable ? 'Invoice data unavailable' : embeddedReceivablesOnly ? 'No outstanding receivables' : 'No invoices found'} description={invoiceSourceUnavailable ? 'The invoice source could not be loaded. Retry before relying on this list or creating a new invoice.' : embeddedReceivablesOnly ? 'No open invoice balances match the current filters.' : 'No invoices match the current filters.'} action={!invoiceSourceUnavailable && canManageInvoices && !embeddedReceivablesOnly ? <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>Create invoice</button> : undefined}/></div>:<table className="ams-finance-table table-fixed border-separate border-spacing-0 text-xs">
+  </div><div className="overflow-hidden">{filteredInvoices.length===0?<div className="p-5"><EmptyState title={loading || refreshing ? 'Loading invoices…' : invoiceSourceUnavailable ? 'Invoice data unavailable' : embeddedReceivablesOnly ? 'No outstanding receivables' : 'No invoices found'} description={loading || refreshing ? 'Loading the latest invoice records.' : invoiceSourceUnavailable ? 'The invoice source could not be loaded. Retry before relying on this list or creating a new invoice.' : embeddedReceivablesOnly ? 'No open invoice balances match the current filters.' : 'No invoices match the current filters.'} action={!invoiceSourceBlocked && canManageInvoices && !embeddedReceivablesOnly ? <button type="button" onClick={openCreateInvoice} className={primaryClass}><Plus size={14}/>Create invoice</button> : undefined}/></div>:<table className="ams-finance-table table-fixed border-separate border-spacing-0 text-xs">
 <thead><tr>
   <th className="w-[20%]">Invoice</th>
   {columnVisibility.client&&<th className="w-[19%]">Client & project</th>}
