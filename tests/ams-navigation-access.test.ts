@@ -4,6 +4,8 @@ import {
   AMS_NAVIGATION_GROUPS,
   AMS_SYSTEM_SETTINGS_ITEMS,
   canAccessAmsRoute,
+  getAmsNavigationDestinationSignature,
+  getAmsSidebarDestinationSignatures,
   getAmsHomePath,
   getNavigationGroupsForRole,
   isNavigationItemActive,
@@ -78,7 +80,7 @@ test('PM sidebar exposes operations and aggregate project profitability without 
     'project-profitability', 'cms', 'portfolio', 'testimonials',
   ]);
   assert.deepEqual([...tabKeys('finance', 'PM')], []);
-  assert.deepEqual([...tabKeys('projects', 'PM')], ['sprint', 'budget', 'archived', 'team']);
+  assert.deepEqual([...tabKeys('projects', 'PM')], ['sprint', 'budget', 'archived']);
   assert.equal(canAccessAmsRoute('PM', '/admin/projects', '?projects=budget'), true);
   assert.equal(canAccessAmsRoute('PM', '/admin/finance', '?tab=project-finance'), true);
   assert.equal(canAccessAmsRoute('PM', '/admin/finance', '?tab=accounts-receivable'), false);
@@ -130,7 +132,7 @@ test('feature shortcuts have distinct active states and hash-aware client onboar
 
   assert.equal(isNavigationItemActive(find('crm'), '/admin/crm', '', ''), true);
   assert.equal(isNavigationItemActive(find('client-directory'), '/admin/clients/all-clients', '', ''), true);
-  assert.equal(isNavigationItemActive(find('client-onboarding'), '/admin/clients/all-clients', '', '#client-onboarding-readiness'), true);
+  assert.equal(isNavigationItemActive(find('client-onboarding'), '/admin/clients/all-clients', '?scope=onboarding', ''), true);
   assert.equal(isNavigationItemActive(find('tasks-engine'), '/admin/tasks', '?taskscope=due', ''), true);
   assert.equal(isNavigationItemActive(find('project-files'), '/admin/documents', '', ''), true);
   assert.equal(isNavigationItemActive(find('team-capacity'), '/admin/team', '?view=capacity-allocation', ''), true);
@@ -140,6 +142,8 @@ test('feature shortcuts have distinct active states and hash-aware client onboar
   assert.equal(isNavigationItemActive(find('quotations'), '/admin/proposals', '', ''), true);
   assert.equal(isNavigationItemActive(find('vendor-ledger'), '/admin/vendors', '', ''), true);
   assert.equal(isNavigationItemActive(find('testimonials'), '/admin/cms/testimonials', '', ''), true);
+  assert.deepEqual(activeKeys('/admin/clients/all-clients'), ['client-directory']);
+  assert.deepEqual(activeKeys('/admin/clients/all-clients', '?scope=onboarding'), ['client-onboarding']);
   assert.deepEqual(activeKeys('/admin/clients/all-clients'), ['client-directory']);
   assert.deepEqual(activeKeys('/admin/clients/all-clients', '', '#client-onboarding-readiness'), ['client-onboarding']);
   assert.deepEqual(activeKeys('/admin/finance', '?tab=accounts-receivable'), ['finance-revenue']);
@@ -161,9 +165,25 @@ test('contextual workspace tabs continue to honour query and hash state', () => 
   const budget = getAmsModuleSubnavigation('projects', 'Admin').find((item) => item.key === 'budget')!;
   const dashboard = flatten('Creative').find((item) => item.key === 'dashboard-hub')!;
   assert.equal(isNavigationItemActive(directory, '/admin/clients/all-clients', '', ''), true);
-  assert.equal(isNavigationItemActive(onboarding, '/admin/clients/all-clients', '', '#client-onboarding-readiness'), true);
+  assert.equal(isNavigationItemActive(onboarding, '/admin/clients/all-clients', '?scope=onboarding', ''), true);
   assert.deepEqual([...tabKeys('crm', 'Admin')], []);
   assert.equal(isAmsModuleSubnavigationItemActive(delivery, '/admin/projects', '?projects=sprint', ''), true);
   assert.equal(isAmsModuleSubnavigationItemActive(budget, '/admin/projects', '?projects=budget', ''), true);
   assert.equal(isNavigationItemActive(dashboard, '/admin/tasks', '?taskscope=my', ''), true);
+});
+
+
+test('sidebar destination signatures are canonical and role-aware for Finance shortcuts', () => {
+  const financeDestinations = getAmsSidebarDestinationSignatures('Finance');
+  const pmDestinations = getAmsSidebarDestinationSignatures('PM');
+
+  assert.ok(financeDestinations.has(getAmsNavigationDestinationSignature('/admin/finance?tab=accounts-receivable')));
+  assert.ok(financeDestinations.has(getAmsNavigationDestinationSignature('/admin/finance?tab=accounts-payable')));
+  assert.ok(financeDestinations.has(getAmsNavigationDestinationSignature('/admin/finance?tab=project-finance')));
+  assert.equal(
+    getAmsNavigationDestinationSignature('/admin/team?view=capacity-allocation'),
+    getAmsNavigationDestinationSignature('/admin/team/?view=capacity-allocation')
+  );
+  assert.equal(pmDestinations.has(getAmsNavigationDestinationSignature('/admin/finance?tab=accounts-receivable')), false);
+  assert.equal(pmDestinations.has(getAmsNavigationDestinationSignature('/admin/finance?tab=project-finance')), true);
 });

@@ -163,3 +163,39 @@ test('Audit CSV uses real row separators and neutralizes spreadsheet formulas', 
   assert.ok(source.includes(".join('\\r\\n')"));
   assert.ok(source.includes('safeValue.replace('));
 });
+
+
+test('workspace context navigation is scoped to its owning pages and cannot follow users across unrelated modules', async () => {
+  const layout = await read('src/pages/admin/AdminLayout.tsx');
+
+  assert.ok(layout.includes("if (path === '/admin/dashboard' || path === '/admin/navigation/live-activity') return 'dashboard';"));
+  assert.ok(layout.includes("if (path === '/admin/projects') return 'projects';"));
+  assert.ok(layout.includes("if (path === '/admin/settings' || path === '/admin/navigation/release-readiness') return 'settings';"));
+  assert.equal(layout.includes("'/admin/documents', '/admin/team', '/admin/time-logs'"), false);
+  assert.equal(layout.includes("'/admin/crm', '/admin/clients/all-clients'"), false);
+});
+
+test('CMS pages do not duplicate their direct sidebar destinations as shared section tabs', async () => {
+  const cmsPages = [
+    'src/pages/admin/AdminCmsProjects.tsx',
+    'src/pages/admin/AdminCmsServices.tsx',
+    'src/pages/admin/AdminCmsInsights.tsx',
+    'src/pages/admin/AdminCmsTestimonials.tsx',
+    'src/pages/admin/AdminCmsCareers.tsx',
+  ];
+
+  for (const file of cmsPages) {
+    const source = await read(file);
+    assert.equal(source.includes('AdminCmsSectionTabs'), false, file + ' should use the global sidebar for CMS destinations');
+  }
+});
+
+test('Client Onboarding deep-links to a URL-controlled lead scope, not a hidden client-profile section', async () => {
+  const navigation = await read('src/lib/amsNavigationAccess.ts');
+  const clients = await read('src/pages/admin/AdminClients.tsx');
+
+  assert.ok(navigation.includes("to: '/admin/clients/all-clients?scope=onboarding'"));
+  assert.ok(clients.includes('useSearchParams'));
+  assert.ok(clients.includes("if (scope === 'onboarding') return 'lead';"));
+  assert.ok(clients.includes("nextParams.set('scope', queryValue)"));
+});

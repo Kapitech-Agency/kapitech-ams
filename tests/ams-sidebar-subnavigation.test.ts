@@ -63,7 +63,7 @@ test('contextual navigation keeps only role-permitted local views not exposed in
   assert.deepEqual(getAmsModuleSubnavigation('finance', 'PM'), []);
   assert.deepEqual(
     getAmsModuleSubnavigation('projects', 'Admin').map((item) => item.key),
-    ['sprint', 'budget', 'archived', 'team']
+    ['sprint', 'budget', 'archived']
   );
   assert.deepEqual(getAmsModuleSubnavigation('projects', 'Finance'), []);
   assert.deepEqual(getAmsModuleSubnavigation('projects', 'Creative'), []);
@@ -91,8 +91,6 @@ test('contextual active states remain exact for dashboard views, project views, 
   assert.equal(isAmsModuleSubnavigationItemActive(projectItem('sprint'), '/admin/projects', '?projects=budget'), false);
   assert.equal(isAmsModuleSubnavigationItemActive(projectItem('budget'), '/admin/projects', '?projects=budget'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(projectItem('archived'), '/admin/projects', '?projects=archived'), true);
-  assert.equal(isAmsModuleSubnavigationItemActive(projectItem('team'), '/admin/team'), true);
-  assert.equal(isAmsModuleSubnavigationItemActive(projectItem('team'), '/admin/team', '?view=capacity-allocation'), false);
 
   const settings = getAmsModuleSubnavigation('settings', 'Admin');
   const settingsItem = (key: string) => settings.find((item) => item.key === key)!;
