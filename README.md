@@ -69,7 +69,7 @@ Restore utility:
 
 `node scripts/restore-ams-db.mjs /absolute/path/to/backup.bak --force`
 
-PostgreSQL is the authoritative data source in production. Encrypted JSON persistence remains available for controlled development/test or an explicitly approved rollback only. Never switch production back to JSON without an approved rollback plan, a verified backup, and reconciliation evidence.
+PostgreSQL is the authoritative data source in production. Encrypted JSON persistence remains available for controlled development/test. **Current runtime limitation:** `server.ts` blocks the production API when `KAPITECH_DATA_SOURCE` is not `postgres`, so a rollback to JSON is not executable under the current production guard. Do not bypass the guard or switch production to a non-production runtime. Any JSON rollback requires a separately authorized change reconciling the startup guard, rollback procedure, payment idempotency parity, verified backups, and reconciliation evidence.
 
 Release readiness: an authorized security/IT operator must verify `GET /api/system/production-readiness` returns HTTP 200 with `productionReady=true`. The gate checks all migrations and checksums shipped with the release, MFA coverage, reconciliation evidence, backup/restore status, durable document storage, and enabled notification channels. See `docs/production-readiness-gate.md` and `docs/production-cutover-checklist.md`.
 
