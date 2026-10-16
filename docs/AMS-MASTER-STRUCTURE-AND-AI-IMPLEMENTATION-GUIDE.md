@@ -605,7 +605,7 @@ Worksheet definitions in source code have included the following 20 existing wor
 | Chart of Accounts | Accounting & Reports | Account list and mapping |
 | Monthly P&L | Accounting & Reports | Laba rugi periode |
 | Cash Flow | Accounting & Reports | Pergerakan kas |
-| Balance Sheet | Accounting & Reports | Posisi keuangan |
+| Balance Sheet | Accounting & Reports | Statement of financial position |
 | Monthly Closing | Accounting & Reports | Kontrol penutupan periode |
 | Annual Summary | Accounting & Reports | Annual financial summary |
 
