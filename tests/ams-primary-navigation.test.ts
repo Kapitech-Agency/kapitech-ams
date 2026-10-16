@@ -49,7 +49,7 @@ test('query-aware active state selects the specific destination', () => {
   const findItem = (key: string) => adminItems.find((item) => item.key === key)!;
   assert.equal(isNavigationItemActive(findItem('crm'), '/admin/crm', '', ''), true);
   assert.equal(isNavigationItemActive(findItem('client-directory'), '/admin/clients/all-clients', '', ''), true);
-  assert.equal(isNavigationItemActive(findItem('tasks-engine'), '/admin/tasks', '?taskscope=due', ''), true);
+  assert.equal(isNavigationItemActive(findItem('tasks'), '/admin/tasks', '?taskscope=due', ''), true);
   assert.equal(isNavigationItemActive(findItem('quotations'), '/admin/proposals', '', ''), true);
   assert.equal(isNavigationItemActive(findItem('testimonials'), '/admin/cms/testimonials', '', ''), true);
   assert.equal(isNavigationItemActive(AMS_PRIMARY_SETTINGS_ITEM, '/admin/navigation/release-readiness', '', ''), true);
