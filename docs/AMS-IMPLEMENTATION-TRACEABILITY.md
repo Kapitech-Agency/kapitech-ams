@@ -157,6 +157,12 @@ This record tracks the source patch on branch `feat/ams-nine-module-navigation-2
 | UX-001: Shared AMS layout retained | IMPLEMENTED_UNVERIFIED | `src/pages/admin/AdminLayout.tsx`, existing AMS primitives | No design system or dependency replacement; responsive visual review remains pending. |
 | DOC-001: Target documentation aligned | IMPLEMENTED_UNVERIFIED | Master guide, navigation IA, traceability, AGENTS, Copilot, UX and workflow audit | Automated reference sweep and CI status still pending. |
 
-**Test evidence:** No local checkout was available to execute npm/Bun commands in this environment. GitHub Actions results must be reviewed before any requirement is marked `IMPLEMENTED_VERIFIED`.
+**CI evidence, feature SHA `69632d7d792032bc8e6a7d18f4aab6d77be6dc68`:**
+- AMS Quality Gate: **success**. Job `Typecheck, tests, and production build` ran `bun run lint`, `node --import tsx --test tests/**/*.test.ts`, and `bun run build`.
+- Unit/regression suite: **558 tests, 538 passed, 0 failed, 20 skipped**, across 4 suites.
+- Production build: **success**, Vite 6.4.4, 1,690 modules transformed; 55 PostgreSQL migration files packaged into `dist/db/postgres`.
+- AMS CI: **success**. The verify job also ran `bun run db:migrate`, the Node test suite, `tests/postgres-integration.test.ts`, `bun audit --audit-level=high`, the production build, and a production-runtime smoke test against a temporary PostgreSQL service. The smoke checks included health response, unauthenticated route protection, login/session, protected readiness endpoint, and existing CMS API data.
+- The build logs still show pre-existing `import.meta` CommonJS-format warnings in `src/lib/clientStore.ts` and `src/lib/runtimeMode.ts`. Build completed successfully; these were not changed as part of navigation scope.
+- Browser-level manual review of responsive layouts, navigation history/back-forward, and real user-role direct URL entry has not been performed in this environment. Source/unit tests and the CI runtime smoke do not prove every requested browser interaction; retain those items as unverified until exercised in the deployed-like browser environment.
 
 **Known gap:** The existing generic Approvals UI has not been mapped to all current consumers and safe workflow-specific owners. Keep it protected and unlinked; do not delete its API/data or claim complete retirement. No production deployment has been performed.
