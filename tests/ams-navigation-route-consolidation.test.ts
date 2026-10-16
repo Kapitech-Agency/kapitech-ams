@@ -68,7 +68,7 @@ test('consolidated aliases keep their canonical module owner and preserve useful
   assert.match(layout, /if \(path\.startsWith\('\/admin\/cms\/'\)\) return 'cms'/);
 });
 
-test('legacy routes remain protected and role-scoped while removed modules stay out of navigation', () => {
+test('legacy routes remain protected and role-scoped while removed modules stay out of navigation', async () => {
   const labels = getPrimaryNavigationForRole('Admin').map((item) => item.label);
   assert.deepEqual(labels, [
     'Dashboard', 'Inbox', 'Projects', 'Clients', 'Finance', 'Team & Resources', 'Documents', 'Website CMS',
