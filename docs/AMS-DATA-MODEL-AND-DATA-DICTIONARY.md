@@ -6,6 +6,8 @@
 
 ## 1. Runtime/persistence note
 
+Current implementation source selection is defined in server/data-source.ts. The runtime default is not evidence of the deployed production configuration.
+
 server/data-source.ts supports json/postgres and defaults to json when KAPITECH_DATA_SOURCE is unset. README specifies PostgreSQL as the required production configuration. Source code alone cannot prove the deployed mode. Verify authorized runtime configuration and readiness evidence before migration/production claims; never switch sources as part of a model-only task.
 
 ## 2. Data ownership principles
