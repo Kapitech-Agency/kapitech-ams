@@ -1,6 +1,8 @@
 # AMS PostgreSQL Cutover Architecture
 
-PostgreSQL is available as an opt-in relational foundation. The JSON database remains the production source of truth until every cutover gate passes.
+> **Runtime-status clarification:** This document contains foundation/migration guidance and may include statements from an earlier rollout stage. server/data-source.ts supports json/postgres and defaults to json if KAPITECH_DATA_SOURCE is unset; README specifies postgres as the required production configuration. This document alone does not prove the deployed data source. Before migration, rollback or production claims, verify authorized runtime configuration and GET /api/system/production-readiness. Do not switch sources or migrate production data based on this document alone.
+
+This guide describes cutover safety gates and rollback mechanics. It does not prove whether a specific deployed environment has completed cutover; verify actual runtime mode and readiness evidence.
 
 ## Source selection
 
