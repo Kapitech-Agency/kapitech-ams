@@ -42,6 +42,7 @@ import { AdminMetricCard, AdminTablePagination, AdminStatusBadge, AdminModuleHea
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 import { isSlugFixtureMode } from '../../lib/runtimeMode';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
+import { FINANCE_INVOICE_TEMPLATES, FINANCE_QUOTATION_TEMPLATES, printFinanceDocument } from '../../lib/financeDocumentTemplates';
 
 
 type SortKey = 'updated' | 'due' | 'oldest' | 'amount_high' | 'amount_low' | 'invoice';
@@ -712,8 +713,10 @@ type AdminInvoicingProps = {
   embeddedView: EmbeddedFinanceView;
   /** Lock the embedded transaction ledger to one worksheet workflow. */
   embeddedIncomeExpenseMode?: 'income' | 'expenses';
+  /** Hide legacy standalone page chrome when rendered inside the Finance workspace. */
+  showStandaloneHeader?: boolean;
 };
-export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, embeddedIncomeExpenseMode }) => {
+export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, embeddedIncomeExpenseMode, showStandaloneHeader = true }) => {
   const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const { language } = useLanguage();
   const isProposalWorkspace = embeddedView === 'quotations';
@@ -780,6 +783,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   const [expensePageSize, setExpensePageSize] = useState(10);
 
   const [invoiceModalOpen, setInvoiceModalOpen] = useState(false);
+  const [invoiceTemplateKey, setInvoiceTemplateKey] = useState('blank');
   const [editingInvoice, setEditingInvoice] = useState<AgencyInvoice | null>(null);
   const [savingInvoice, setSavingInvoice] = useState(false);
   const [invoiceNumber, setInvoiceNumber] = useState('');
@@ -859,6 +863,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   const [quotationSort, setQuotationSort] = useState<QuotationSort>('newest');
   const [quotationActionMenu, setQuotationActionMenu] = useState<string | null>(null);
   const [quotationModalOpen, setQuotationModalOpen] = useState(false);
+  const [quotationTemplateKey, setQuotationTemplateKey] = useState('blank');
   const [quotationDetail, setQuotationDetail] = useState<FinanceQuotation | null>(null);
   const [editingQuotation, setEditingQuotation] = useState<FinanceQuotation | null>(null);
   const [quotationSaving, setQuotationSaving] = useState(false);
@@ -1500,6 +1505,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 
   const resetInvoiceForm = () => {
     setInvoiceDirty(false);
+    setInvoiceTemplateKey('blank');
     setEditingInvoice(null);
     setInvoiceNumber(createInvoiceNumber());
     setClientId('');
@@ -1544,6 +1550,53 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   const openCreateInvoice = () => {
     resetInvoiceForm();
     setInvoiceModalOpen(true);
+  };
+
+  const applyInvoiceTemplate = () => {
+    const template = FINANCE_INVOICE_TEMPLATES.find((item) => item.key === invoiceTemplateKey);
+    if (!template) return;
+    setInvoiceDirty(true);
+    setInvoiceItems(template.lineItems.length
+      ? template.lineItems.map((line, index) => ({
+          ...emptyLineItem(),
+          id: 'invoice-template-' + template.key + '-' + index + '-' + Date.now(),
+          description: line.description,
+          quantity: line.quantity,
+          unitPrice: 0,
+          amount: 0
+        }))
+      : [emptyLineItem()]);
+    if (template.paymentTerms) setPaymentTerms(template.paymentTerms);
+    if (!editingInvoice && template.title) setInvoiceNotes('');
+    showNotice('success', 'Invoice template applied. Review all prices, tax, dates, and payment terms before issuing.');
+  };
+
+  const printInvoiceDraft = () => {
+    const totals = computeInvoiceTotals(invoiceItems, Number(taxPercent) || 0, Number(discountPercent) || 0);
+    const printed = printFinanceDocument({
+      kind: 'invoice',
+      documentNumber: invoiceNumber || 'DRAFT-' + new Date().getFullYear(),
+      title: invoiceItems.length === 1 ? invoiceItems[0].description : (projects.find((project) => project.id === projectId)?.name || 'Project billing'),
+      clientName,
+      clientCompany,
+      clientEmail,
+      clientPhone,
+      projectName: projects.find((project) => project.id === projectId)?.name,
+      currency: invoiceCurrency,
+      issueDate,
+      dueDate,
+      status: invoiceStatus,
+      items: invoiceItems.map((line) => ({ ...line, amount: Number(line.quantity || 0) * Number(line.unitPrice || 0) })),
+      subtotal: totals.subtotal,
+      discountPercent,
+      discountAmount: totals.discountAmount,
+      taxPercent,
+      taxAmount: totals.taxAmount,
+      total: totals.total,
+      paymentTerms,
+      notes: invoiceNotes
+    });
+    if (!printed) showNotice('danger', 'The print window was blocked. Allow pop-ups for AMS, then try again.');
   };
 
   const requestCloseInvoice = () => {
@@ -1630,6 +1683,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 
   const openEditInvoice = (invoice: AgencyInvoice) => {
     setInvoiceDirty(false);
+    setInvoiceTemplateKey('blank');
     setEditingInvoice(invoice);
     setInvoiceNumber(invoice.invoiceNumber);
     setClientId(String((invoice as AgencyInvoice & { clientId?: string }).clientId || ''));
@@ -2535,6 +2589,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 
   const resetQuotationForm = () => {
     setEditingQuotation(null);
+    setQuotationTemplateKey('blank');
     setQuotationTitle('');
     setQuotationClientName('');
     setQuotationClientCompany('');
@@ -2553,8 +2608,82 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
     setQuotationModalOpen(true);
   };
 
+  const applyQuotationTemplate = () => {
+    const template = FINANCE_QUOTATION_TEMPLATES.find((item) => item.key === quotationTemplateKey);
+    if (!template) return;
+    setQuotationTitle(template.title);
+    setQuotationAmount(0);
+    setQuotationItems(template.lineItems.length
+      ? template.lineItems.map((line, index) => ({
+          ...emptyLineItem(),
+          id: 'quotation-template-' + template.key + '-' + index + '-' + Date.now(),
+          description: line.description,
+          quantity: line.quantity,
+          unitPrice: 0,
+          amount: 0
+        }))
+      : [emptyLineItem()]);
+    setQuotationDiscountPercent(0);
+    if (template.paymentTerms) setQuotationPaymentTerms(template.paymentTerms);
+    if (template.validityDays) setQuotationValidUntil(getDateInputValue(template.validityDays));
+    showNotice('success', 'Quotation template applied. Complete pricing and review scope, tax, validity, and terms before sending.');
+  };
+
+  const printQuotationDraft = () => {
+    const totals = computeInvoiceTotals(quotationItems, Number(quotationTaxPercent) || 0, Number(quotationDiscountPercent) || 0);
+    const draftNumber = editingQuotation?.quotationNumber || ('DRAFT-QTN-' + new Date().toISOString().replace(/[-:TZ.]/g, '').slice(0, 14));
+    const printed = printFinanceDocument({
+      kind: 'quotation',
+      documentNumber: draftNumber,
+      title: quotationTitle,
+      clientName: quotationClientName,
+      clientCompany: quotationClientCompany,
+      currency,
+      issueDate: getDateInputValue(),
+      validUntil: quotationValidUntil,
+      status: quotationStatusLabel(quotationStatus),
+      items: quotationItems.map((line) => ({ ...line, amount: Number(line.quantity || 0) * Number(line.unitPrice || 0) })),
+      subtotal: totals.subtotal,
+      discountPercent: quotationDiscountPercent,
+      discountAmount: totals.discountAmount,
+      taxPercent: quotationTaxPercent,
+      taxAmount: totals.taxAmount,
+      total: totals.total,
+      paymentTerms: quotationPaymentTerms,
+      notes: quotationNotes
+    });
+    if (!printed) showNotice('danger', 'The print window was blocked. Allow pop-ups for AMS, then try again.');
+  };
+
+  const printSavedQuotation = (quotation: FinanceQuotation) => {
+    const items = quotation.items?.length ? quotation.items : [{ ...emptyLineItem(), description: quotation.title, quantity: 1, unitPrice: quotation.total, amount: quotation.total }];
+    const totals = computeInvoiceTotals(items, Number(quotation.taxPercent) || 0, Number(quotation.discountPercent) || 0);
+    const printed = printFinanceDocument({
+      kind: 'quotation',
+      documentNumber: quotation.quotationNumber || quotation.id,
+      title: quotation.title,
+      clientName: quotation.clientName,
+      clientCompany: quotation.clientCompany,
+      currency: quotation.currency,
+      issueDate: quotation.createdAt,
+      validUntil: quotation.validUntil,
+      status: quotationStatusLabel(quotation.status),
+      items,
+      subtotal: totals.subtotal,
+      discountPercent: quotation.discountPercent,
+      discountAmount: totals.discountAmount,
+      taxPercent: quotation.taxPercent,
+      taxAmount: totals.taxAmount,
+      total: quotation.total || totals.total,
+      paymentTerms: quotation.paymentTerms,
+      notes: quotation.notes
+    });
+    if (!printed) showNotice('danger', 'The print window was blocked. Allow pop-ups for AMS, then try again.');
+  };
+
   const openEditQuotation = (quotation: FinanceQuotation) => {
     setEditingQuotation(quotation);
+    setQuotationTemplateKey('blank');
     setQuotationTitle(quotation.title);
     setQuotationClientName(quotation.clientName);
     setQuotationClientCompany(quotation.clientCompany);
@@ -2885,7 +3014,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 
   return (
     <div className="min-w-0 space-y-5">
-      {isProposalWorkspace && <AdminModuleHeader className="mb-0" title="Proposals" description="Manage commercial quotations, review stages, validity, and the handoff to invoicing." />}
+      {isProposalWorkspace && showStandaloneHeader && <AdminModuleHeader className="mb-0" title="Quotations" description="Create commercial quotations, manage validity and status, and convert approved records to invoices." />}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="inline-flex min-h-9 items-center rounded-control border border-line bg-panel p-1" aria-label="Finance currency">
           {(['IDR', 'USD'] as CurrencyCode[]).map((item) => (
@@ -3787,6 +3916,19 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
         }
       >
         <form id="finance-quotation-form" data-ams-feature-slug="finance-quotation-form" data-ams-slug="finance-quotation-form" onSubmit={saveQuotation} className="space-y-5">
+          <section className="rounded-card border border-line bg-bg p-4" data-ams-feature-slug="finance-quotation-template-picker">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div className="min-w-0 flex-1">
+                <label className="mb-1.5 block text-xs font-medium text-muted">Quotation template</label>
+                <CustomSelect aria-label="Quotation template" value={quotationTemplateKey} onChange={setQuotationTemplateKey} options={FINANCE_QUOTATION_TEMPLATES.map((template) => ({ value: template.key, label: template.label }))} className="w-full" triggerClassName="h-10 min-h-10 w-full" />
+                <p className="mt-1.5 text-[10px] leading-4 text-muted">Templates prefill common Creative and IT scope. Enter the agreed prices and confirm the final scope before sending.</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={applyQuotationTemplate} className={actionClass}><FileText size={13}/>Apply template</button>
+                <button type="button" onClick={printQuotationDraft} className={actionClass}><Download size={13}/>Preview / Save PDF</button>
+              </div>
+            </div>
+          </section>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <label htmlFor="finance-quotation-title" className="mb-1.5 block text-xs font-medium text-muted">Quotation title *</label>
@@ -3883,6 +4025,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
             <div className="flex w-full flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 {canManageProposals && <button type="button" onClick={() => openEditQuotation(quotationDetail)} className={actionClass}><Edit3 size={14} />Edit</button>}
+                <button type="button" onClick={() => printSavedQuotation(quotationDetail)} className={actionClass}><Download size={14} />Print / Save PDF</button>
                 <button type="button" onClick={() => exportQuotationsCsv()} className={actionClass}><Download size={14} />Export list</button>
               </div>
               <div className="flex items-center gap-2">
@@ -4151,6 +4294,20 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
               <input id="finance-client-phone" disabled={invoiceBillingLocked} maxLength={40} value={clientPhone} onChange={(event) => setClientPhone(event.target.value)} className={fieldClass} />
             </div>
           </div>
+
+          <section className="rounded-card border border-line bg-bg p-4" data-ams-feature-slug="finance-invoice-template-picker">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div className="min-w-0 flex-1">
+                <label className="mb-1.5 block text-xs font-medium text-muted">Invoice template</label>
+                <CustomSelect aria-label="Invoice template" value={invoiceTemplateKey} onChange={setInvoiceTemplateKey} options={FINANCE_INVOICE_TEMPLATES.map((template) => ({ value: template.key, label: template.label }))} className="w-full" triggerClassName="h-10 min-h-10 w-full" />
+                <p className="mt-1.5 text-[10px] leading-4 text-muted">Templates populate service line items and payment terms. Rates start at zero so you can enter the agreed contract value.</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={applyInvoiceTemplate} disabled={invoiceBillingLocked} className={actionClass}><FileText size={13}/>Apply template</button>
+                <button type="button" onClick={printInvoiceDraft} className={actionClass}><Download size={13}/>Preview / Save PDF</button>
+              </div>
+            </div>
+          </section>
 
           <section className="rounded-card border border-line bg-panel">
             <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
