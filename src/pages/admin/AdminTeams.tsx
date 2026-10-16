@@ -1238,22 +1238,7 @@ export const AdminTeams: React.FC = () => {
         }
       />
 
-      {location.pathname === '/admin/team' && (
-        
-      )}
 
-      {location.pathname === '/admin/vendors' && (
-        <div className="min-[900px]:hidden min-w-0" data-ams-slug="vendors-mobile-tabs">
-          <AdminSectionTabs
-            ariaLabel="Vendors sections"
-            activeKey={currentView}
-            items={[
-              { key: 'vendor-directory', label: 'Vendors', to: '/admin/vendors' },
-              { key: 'skill-matrix', label: 'Skills', to: '/admin/vendors?view=skill-matrix' },
-            ]}
-          />
-        </div>
-      )}
 
 
       {notice && (
