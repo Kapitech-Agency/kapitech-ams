@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 // Shared module chrome renders the canonical ams-dashboard-header primitive.
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { 
   Inbox, 
@@ -56,6 +56,7 @@ import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 export const AdminInbox: React.FC = () => {
   const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const { language } = useLanguage();
+  const navigate = useNavigate();
   const canManageCrm = hasAdminPermission('canManageCrm');
   const canManageClients = hasAdminPermission('canManageClients');
   type InboxTab = 'overview' | 'client' | 'jobs' | 'starred';
@@ -64,6 +65,11 @@ export const AdminInbox: React.FC = () => {
   const activeInboxTab: InboxTab = requestedTab && ['overview', 'client', 'jobs', 'starred'].includes(requestedTab)
     ? requestedTab
     : 'overview';
+
+  // Legacy Careers links now open the canonical applicant workspace in Website CMS.
+  useEffect(() => {
+    if (requestedTab === 'jobs') navigate('/admin/cms/careers?tab=applicants', { replace: true });
+  }, [navigate, requestedTab]);
 
   // Core Data & Currency
   const [submissions, setSubmissions] = useState<ContactSubmission[]>([]);
@@ -109,7 +115,9 @@ export const AdminInbox: React.FC = () => {
         return;
       }
 
-      const items = (res.data.leads as ContactSubmission[]).map(normalizeContactSubmission);
+      const items = (res.data.leads as ContactSubmission[])
+        .map(normalizeContactSubmission)
+        .filter((item) => item.type !== 'career');
       setSubmissions(items);
       setPrevCount(items.length);
     } catch {
@@ -178,8 +186,7 @@ export const AdminInbox: React.FC = () => {
 
   const inboxTabs: Array<{ key: InboxTab; label: string; count: number }> = [
     { key: 'overview', label: 'Overview', count: submissions.length },
-    { key: 'client', label: 'Client Requests', count: submissions.filter((item) => item.type !== 'career').length },
-    { key: 'jobs', label: 'Job Applications', count: submissions.filter((item) => item.type === 'career').length },
+    { key: 'client', label: 'Client Requests', count: submissions.length },
     { key: 'starred', label: 'Starred', count: submissions.filter((item) => !!item.starred).length }
   ];
 

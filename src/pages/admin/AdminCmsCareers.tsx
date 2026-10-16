@@ -1,12 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
-import { useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import {
   ArrowUpRight, Briefcase, CheckCircle2, ExternalLink, FileText,
   Globe, Plus, Search, Send, ShieldAlert, Trash2, Users, X, Pencil,
   RefreshCw, Eye, EyeOff
 } from 'lucide-react';
 import { useLanguage } from '../../lib/LanguageContext';
+import { getAdminSession } from '../../lib/adminAuth';
+import { canAccessAmsRoute, getAmsRole } from '../../lib/amsNavigationAccess';
 import { api } from '../../lib/apiClient';
 import Button from '../../components/ui/Button';
 import { Drawer } from '../../components/ui/Drawer';
@@ -163,10 +165,15 @@ const applicantCoverLetter = (message?: string): string => {
 export const AdminCmsCareers: React.FC = () => {
   const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const { language } = useLanguage();
-  const navigate = useNavigate();
   const isId = language === 'id';
+  const role = getAmsRole(getAdminSession()?.user);
+  const canManageJobs = canAccessAmsRoute(role, '/admin/cms/careers');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get('tab');
 
-  const [activeTab, setActiveTab] = useState<WorkspaceTab>('jobs');
+  const [activeTab, setActiveTab] = useState<WorkspaceTab>(
+    canManageJobs && requestedTab !== 'applicants' ? 'jobs' : 'applicants'
+  );
   const [positions, setPositions] = useState<CareerPosition[]>([]);
   const [jobsLoading, setJobsLoading] = useState(true);
   const [jobsError, setJobsError] = useState<string | null>(null);
@@ -220,7 +227,7 @@ export const AdminCmsCareers: React.FC = () => {
     try {
       const result = await api.leads.getAll();
       if (!result.success || !Array.isArray(result.data?.leads)) {
-        throw new Error(result.error || 'Job applications could not be loaded. Check CRM / Inbox access.');
+        throw new Error(result.error || 'Job applications could not be loaded in the Careers workspace.');
       }
       setApplicants((result.data.leads as Applicant[]).filter(item => (item as any).type === 'career'));
       setApplicantsLoaded(true);
@@ -231,10 +238,30 @@ export const AdminCmsCareers: React.FC = () => {
     }
   };
 
-  useEffect(() => { void loadJobs(); }, []);
+  useEffect(() => {
+    if (canManageJobs) void loadJobs();
+    else setJobsLoading(false);
+  }, [canManageJobs]);
+
+  useEffect(() => {
+    const nextTab: WorkspaceTab = canManageJobs && requestedTab !== 'applicants' ? 'jobs' : 'applicants';
+    setActiveTab((current) => current === nextTab ? current : nextTab);
+  }, [canManageJobs, requestedTab]);
+
   useEffect(() => {
     if (activeTab === 'applicants') void loadApplicants();
   }, [activeTab]);
+
+  const handleWorkspaceTabChange = (tab: WorkspaceTab) => {
+    if (tab === 'jobs' && !canManageJobs) return;
+    setActiveTab(tab);
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      if (tab === 'applicants') next.set('tab', 'applicants');
+      else next.delete('tab');
+      return next;
+    });
+  };
 
   const filteredPositions = useMemo(() => {
     const q = jobSearch.trim().toLowerCase();
@@ -436,8 +463,8 @@ export const AdminCmsCareers: React.FC = () => {
         loading={deletingApplicant}
         title={isId ? 'Hapus data pelamar?' : 'Delete applicant record?'}
         description={isId
-          ? 'Data pelamar akan dihapus dari Inbox. Tindakan ini tidak dapat dibatalkan.'
-          : 'This applicant record will be deleted from the Inbox. This action cannot be undone.'}
+          ? 'Data pelamar akan dihapus dari pengelolaan Careers. Tindakan ini tidak dapat dibatalkan.'
+          : 'This applicant record will be deleted from Careers management. This action cannot be undone.'}
         confirmLabel={isId ? 'Hapus pelamar' : 'Delete applicant'}
         onConfirm={() => void confirmDeleteApplicant()}
       />
@@ -446,19 +473,19 @@ export const AdminCmsCareers: React.FC = () => {
         slug="cms-careers-header"
         className="mb-0"
         title={isId ? 'Careers' : 'Careers'}
-        description={isId
-          ? 'Kelola lowongan public site dan tindak lanjuti kandidat dari formulir Career.'
-          : 'Manage public job openings and follow up candidates submitted through the Careers page.'}
+        description={canManageJobs
+          ? (isId
+            ? 'Kelola lowongan public site dan tindak lanjuti kandidat dari formulir Careers.'
+            : 'Manage public job openings and applicants submitted through the Careers page.')
+          : (isId
+            ? 'Tinjau dan kelola pelamar yang masuk melalui halaman Careers.'
+            : 'Review and manage applications submitted through the public Careers page.')}
         actions={
           <>
-            <span className="hidden text-xs tabular-nums text-muted sm:inline">{positions.length} {isId ? 'lowongan' : 'openings'}</span>
-            {activeTab === 'jobs' ? (
+            {canManageJobs && <span className="hidden text-xs tabular-nums text-muted sm:inline">{positions.length} {isId ? 'lowongan' : 'openings'}</span>}
+            {canManageJobs && activeTab === 'jobs' && (
               <Button type="button" variant="primary" icon={<Plus size={14} />} onClick={openCreateEditor}>
                 {isId ? 'Tambah lowongan' : 'Add opening'}
-              </Button>
-            ) : (
-              <Button type="button" variant="secondary" icon={<ArrowUpRight size={14} />} onClick={() => navigate('/admin/inbox?view=jobs')}>
-                {isId ? 'Buka pipeline lengkap' : 'Open full pipeline'}
               </Button>
             )}
           </>
@@ -478,24 +505,26 @@ export const AdminCmsCareers: React.FC = () => {
 
       <AdminMetricStrip
         slug="cms-careers-metrics"
-        className="grid-cols-2 sm:grid-cols-4"
-        metrics={[
+        className={canManageJobs ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-1'}
+        metrics={canManageJobs ? [
           { id: 'total-openings', label: isId ? 'Total lowongan' : 'Total openings', value: positions.length, icon: <Briefcase size={15} />, toneClassName: 'text-accent-text' },
           { id: 'published-openings', label: isId ? 'Dipublikasikan' : 'Published', value: publishedCount, icon: <Globe size={15} />, toneClassName: 'text-success' },
           { id: 'draft-openings', label: 'Draft', value: draftCount, icon: <EyeOff size={15} />, toneClassName: 'text-muted' },
           { id: 'job-applicants', label: isId ? 'Pelamar baru' : 'New applicants', value: applicantsLoaded ? newApplicantsCount : '—', icon: <Users size={15} />, toneClassName: 'text-info' }
+        ] : [
+          { id: 'job-applicants', label: isId ? 'Total pelamar' : 'Applicants', value: applicantsLoaded ? applicants.length : '—', icon: <Users size={15} />, toneClassName: 'text-info' }
         ]}
       />
 
       <div role="tablist" aria-label={isId ? "Workspace Careers" : "Careers workspace"} className="ams-workspace-tabs inline-flex max-w-full flex-wrap items-center gap-1 rounded-control border border-line bg-panel p-1">
         {([
-          { key: 'jobs', label: isId ? 'Lowongan' : 'Job openings', count: positions.length },
-          { key: 'applicants', label: isId ? 'Pelamar' : 'Applicants', count: applicantsLoaded ? applicants.length : null }
+          ...(canManageJobs ? [{ key: 'jobs' as const, label: isId ? 'Lowongan' : 'Job openings', count: positions.length }] : []),
+          { key: 'applicants' as const, label: isId ? 'Pelamar' : 'Applicants', count: applicantsLoaded ? applicants.length : null }
         ] as Array<{ key: WorkspaceTab; label: string; count: number | null }>).map(tab => (
           <button
             key={tab.key}
             type="button"
-            onClick={() => setActiveTab(tab.key)}
+            onClick={() => handleWorkspaceTabChange(tab.key)}
             id={`careers-${tab.key}-tab`}
             role="tab"
             aria-selected={activeTab === tab.key}
@@ -504,7 +533,7 @@ export const AdminCmsCareers: React.FC = () => {
             onKeyDown={(event) => {
               if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
               event.preventDefault();
-              const tabKeys: WorkspaceTab[] = ['jobs', 'applicants'];
+              const tabKeys: WorkspaceTab[] = canManageJobs ? ['jobs', 'applicants'] : ['applicants'];
               const currentIndex = tabKeys.indexOf(tab.key);
               const nextIndex = event.key === 'Home'
                 ? 0
@@ -512,7 +541,7 @@ export const AdminCmsCareers: React.FC = () => {
                   ? tabKeys.length - 1
                   : (currentIndex + (event.key === 'ArrowRight' ? 1 : -1) + tabKeys.length) % tabKeys.length;
               const nextKey = tabKeys[nextIndex];
-              setActiveTab(nextKey);
+              handleWorkspaceTabChange(nextKey);
               document.getElementById(`careers-${nextKey}-tab`)?.focus();
             }}
             className={'inline-flex min-h-8 items-center gap-2 rounded-chip border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (activeTab === tab.key ? 'border-accent/25 bg-accent/10 font-semibold text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg')}
@@ -668,7 +697,7 @@ export const AdminCmsCareers: React.FC = () => {
                   <p className="mt-2 text-xs leading-5 text-muted">{isId ? 'Pengelolaan pelamar memakai permission CRM / Inbox yang sama dengan pipeline saat ini.' : 'Applicant management uses the same CRM / Inbox permission as the existing pipeline.'}</p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Button type="button" variant="secondary" icon={<RefreshCw size={13} />} onClick={() => void loadApplicants(true)}>{isId ? 'Coba lagi' : 'Try again'}</Button>
-                    <Button type="button" variant="primary" icon={<ArrowUpRight size={13} />} onClick={() => navigate('/admin/inbox?view=jobs')}>{isId ? 'Buka Job Applications Inbox' : 'Open Job Applications Inbox'}</Button>
+                    <Button type="button" variant="primary" icon={<ArrowUpRight size={13} />} onClick={() => handleWorkspaceTabChange('applicants')}>{isId ? 'Buka Job Applications Inbox' : 'Open Job Applications Inbox'}</Button>
                   </div>
                 </div>
               </div>
@@ -678,7 +707,7 @@ export const AdminCmsCareers: React.FC = () => {
               <Users size={23} className="mx-auto text-muted" />
               <h3 className="mt-3 text-sm font-semibold text-fg">{applicants.length === 0 ? (isId ? 'Belum ada pelamar' : 'No applicants yet') : (isId ? 'Tidak ada pelamar yang cocok' : 'No matching applicants')}</h3>
               <p className="mt-1 text-xs leading-5 text-muted">{isId ? 'Lamaran dari halaman Career public site akan muncul di sini secara otomatis.' : 'Applications submitted through the public Careers page will appear here automatically.'}</p>
-              <Button type="button" variant="secondary" className="mt-4" icon={<ArrowUpRight size={13} />} onClick={() => navigate('/admin/inbox?view=jobs')}>{isId ? 'Buka pipeline lengkap' : 'Open full applicant pipeline'}</Button>
+              <Button type="button" variant="secondary" className="mt-4" icon={<ArrowUpRight size={13} />} onClick={() => handleWorkspaceTabChange('applicants')}>{isId ? 'Buka pipeline lengkap' : 'Open full applicant pipeline'}</Button>
             </div>
           ) : (
             <AdminDataTableShell slug="cms-careers-applicants-table">
@@ -754,7 +783,6 @@ export const AdminCmsCareers: React.FC = () => {
                 onPageSizeChange={setApplicantsPageSize}
                 itemLabel={isId ? 'pelamar' : 'applicants'}
                 slug="cms-careers-applicants-pagination"
-                secondaryLabel={<button type="button" onClick={() => navigate('/admin/inbox?view=jobs')} className="inline-flex items-center gap-1.5 text-accent-text hover:text-fg">{isId ? 'Lanjutkan di pipeline lengkap' : 'Continue in full applicant pipeline'}<ArrowUpRight size={11} /></button>}
               />
             </AdminDataTableShell>
           )}

@@ -269,6 +269,12 @@ export function canAccessAmsRoute(role: AmsRole, pathname: string, search = ''):
   if (path === '/admin/vendors') return role === 'Finance';
   if (path === '/admin/approvals') return role === 'Finance';
 
+  if (path === '/admin/cms/careers' && params.get('tab') === 'applicants') {
+    // Applicants previously existed in Inbox for Finance and PM. Preserve that same data access
+    // while keeping public job-opening editing restricted to roles already allowed into CMS Careers.
+    return ['Finance', 'PM'].includes(role);
+  }
+
   if (path.startsWith('/admin/cms/')) {
     if (role === 'PM' || role === 'Creative') {
       return ['/admin/cms/insights', '/admin/cms/projects', '/admin/cms/testimonials'].includes(path);
