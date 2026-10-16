@@ -1034,7 +1034,7 @@ Workflow & Automation is a platform capability, not a new sidebar module and not
 | Trigger / source event | Target/action | Guardrail |
 |---|---|---|
 | Website/customer inquiry received | Inbox: create/link thread; CRM: lead candidate if qualified/needed | Stable external ID/duplicate detection |
-| Inbox categorized as sales | CRM lead or opportunity candidate | Keep Inbox thread; link, don't copy conversation into a new unrelated record |
+| Inbox categorized as sales | Existing linked lead/opportunity record only where required by the current intake contract | Keep the Inbox thread, link an existing record where needed, and do not create a parallel CRM UI or duplicate conversation |
 | Opportunity moves to Closed Won | Validate handover; prepare client onboarding and project | Idempotent conversion; required scope/terms |
 | Quotation accepted | Update shared quote state; prepare contract/billing plan | Must not auto-create duplicate quote/invoice or cash event |
 | Contract/milestone billing becomes due | Finance prepares invoice per valid schedule | No premature issue/posting; valid source terms |
@@ -1112,7 +1112,7 @@ This section defines logical ownership. It does not require a full database rewr
 
 ### 17.1 Existing quotation-to-delivery compatibility
 
-Inquiry → Inbox classification/owner → CRM lead → qualification/discovery → scope/estimation → quotation versioning → negotiation → contract/SOW → Closed Won readiness → client onboarding → project handover → project setup → delivery and review → closure → client renewal/expansion.
+Inquiry → Inbox classification/owner → existing lead/opportunity record where required by the current intake contract → existing qualification/scoping workflow → quotation authoring and versioning in Finance → existing negotiation/contract handling → client onboarding → project handover → project setup → delivery and review → closure → client renewal/expansion. Preserve legacy stages and API consumers, but do not present a standalone CRM pipeline as an approved AMS module.
 
 Every arrow represents a real persisted relationship and guard condition. It is not only a redirect between screens.
 
