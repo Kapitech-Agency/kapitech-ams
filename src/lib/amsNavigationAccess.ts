@@ -70,7 +70,7 @@ export const AMS_NAVIGATION_GROUPS: AmsNavigationGroup[] = [
     items: [
       { key: 'finance-revenue', label: 'Invoicing & Revenues', to: '/admin/finance?tab=accounts-receivable', icon: 'invoice', allowedRoles: ADMIN_FINANCE },
       { key: 'finance-expenses', label: 'Profitability & Expenses', to: '/admin/finance?tab=accounts-payable', icon: 'ledger', allowedRoles: ADMIN_FINANCE },
-      { key: 'project-profitability', label: 'Project Profitability', to: '/admin/finance?tab=project-finance', icon: 'profitability', allowedRoles: ['Admin', 'PM'], accessNote: { PM: 'Aggregated view' } },
+      { key: 'project-profitability', label: 'Project Profitability', to: '/admin/finance?tab=project-finance', icon: 'profitability', allowedRoles: ['Admin', 'Finance', 'PM'], accessNote: { PM: 'Aggregated view' } },
     ],
   },
   {
