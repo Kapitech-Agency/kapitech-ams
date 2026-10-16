@@ -1,7 +1,7 @@
 import {
-  AMS_PRIMARY_SETTINGS_ITEM,
   canAccessAmsRoute,
-  getNavigationGroupsForRole,
+  getAmsNavigationDestinationSignature,
+  getAmsSidebarDestinationSignatures,
   type AmsRole,
 } from './amsNavigationAccess';
 
