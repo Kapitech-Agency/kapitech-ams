@@ -1,26 +1,32 @@
 # Kapitech AMS — GitHub Copilot Instructions
 
-Before coding, read root **AGENTS.md**. It is the primary AI agent contract for this repository.
+Read root AGENTS.md before coding. It defines task boundaries, conflict resolution, verification and reporting.
 
-For all UI changes, read **AMS-DESIGN-SYSTEM.md** and the relevant interaction guideline:
-- Drawer: **docs/AMS-DRAWER-GUIDELINES.md**
-- Modal and destructive confirmation: **docs/AMS-MODAL-GUIDELINES.md**
-- Kanban: **docs/AMS-KANBAN-GUIDELINES.md**
+## Required documentation by task
+- Target modules/workflows: docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md and docs/architecture/ams-navigation-information-architecture.md.
+- Requirement status/evidence: docs/AMS-IMPLEMENTATION-TRACEABILITY.md.
+- UI: AMS-DESIGN-SYSTEM.md and docs/AMS-UX-INTERACTION-STANDARDS.md.
+- Shared interactions: docs/AMS-DRAWER-GUIDELINES.md, docs/AMS-MODAL-GUIDELINES.md, docs/AMS-KANBAN-GUIDELINES.md.
+- Frontend: docs/AMS-FRONTEND-ENGINEERING-STANDARDS.md.
+- Business transitions: docs/AMS-BUSINESS-WORKFLOW-STATE-MACHINES.md.
+- Data model: docs/AMS-DATA-MODEL-AND-DATA-DICTIONARY.md.
+- Backend/API/security: docs/AMS-BACKEND-API-AND-DATA-INTEGRITY.md.
+- Finance: docs/FINANCE-EXCEL-ALIGNMENT.md.
+- Verification: docs/AMS-E2E-AND-REGRESSION-TEST-MATRIX.md.
+- Kopra only when in scope: docs/integrations/BANK-MANDIRI-KOPRA-H2H-INTEGRATION.md.
 
-For target navigation, modules, workflows and cross-module data, read **docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md**. It describes the intended target, not proof that every feature already exists.
-
-For Finance changes, read **docs/FINANCE-EXCEL-ALIGNMENT.md** and inspect current Finance source/tests. Preserve accounting formulas, existing worksheet behavior, transaction history, journal controls, approval/maker-checker and period-close guards unless the user explicitly approves a business-rule change.
-
-For current implementation evidence, read **docs/ams-workflow-audit.md**, but treat its implementation status/taxonomy as a dated audit snapshot. The master structure guide supersedes its old sidebar taxonomy; actual source code, tests and production data must be checked before declaring feature status.
-
-Non-negotiable rules:
-- Do only the requested scope. Documentation-only means no application code changes.
-- Do not replace the AMS design with a new design system or introduce a parallel component/API/store.
-- Do not delete backend APIs, schema, data, audit trails or controls merely because a legacy sidebar module is removed.
-- Keep only the ten target top-level modules from the master guide; subareas remain inside the relevant module.
-- Do not use demo/fixture data as production data or hardcode success.
-- Preserve session, CSRF, MFA, server-side authorization, RBAC, encrypted storage and audit requirements.
-- Never commit credentials, keys, private documents, real bank account data, or bank payloads.
-- Kopra H2H is a planned/provider-dependent integration until bank documentation, account access, technical contract and environment are verified. Never invent endpoints or initiate real payments in tests.
-- Run and report real tests, lint, build and relevant E2E checks. Do not claim a check passed if it was not executed.
-- Prefer small, validated, reversible changes and report uncertainties rather than silently guessing.
+## Non-negotiable rules
+- Do only the scope requested. Documentation-only means no application-code changes.
+- Target is ten primary modules: Dashboard, Inbox, CRM & Sales, Projects, Clients, Finance, Team & Resources, Documents, Website CMS, Settings.
+- Target specifications are not proof of implementation. Inspect current code, APIs, schema, permissions and test evidence.
+- Do not delete APIs, data, audit trails, quotation conversion, maker-checker or period-close controls because a legacy sidebar item is removed.
+- Preserve Finance formulas, mappings, transaction meaning, reports, journal controls and closing behavior unless a business-rule change is explicitly approved and reconciled.
+- Reuse current components, tokens, API client, stores and permission patterns; do not build parallel systems for convenience.
+- The frontend is not the source of business logic or permission authority.
+- Never use fixtures as production truth or hardcode success.
+- Preserve session, CSRF, MFA, RBAC, encryption, private document vault and audit controls.
+- Runtime selects json/postgres through KAPITECH_DATA_SOURCE and defaults to json if unset; production configuration requires postgres. Verify authorized runtime/readiness evidence before source claims or migrations.
+- Never commit secrets, private documents, real bank data or sensitive provider payloads.
+- Kopra remains provider-dependent until official contract/access/testing are available. Never invent endpoints/cryptography or call production payments in ordinary tests.
+- Run and report actual tests, lint, build and relevant E2E checks. A build alone is not workflow proof.
+- Prefer small, reversible, evidence-backed changes; report uncertainty rather than guessing.
