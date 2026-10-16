@@ -431,7 +431,7 @@ Projects is the primary source for delivery management. CRM starts the deal and 
 
 ### 7.4 Content & Campaign Operations
 
-Alur konten:
+Content workflow:
 
 Brief → Planning/Calendar → Production → Internal Review → Client Review → Revision (when requested) → Approved for Publishing → Scheduled → Published/Publication Confirmed → Performance Reporting.
 
@@ -592,7 +592,7 @@ Worksheet definitions in source code have included the following 20 existing wor
 | Dashboard | Overview & Control | Validated financial charts/KPIs |
 | Cash & Bank | Cash Management | Recorded bank/cash accounts, balances, and movements |
 | Revenue | Revenue & Receivables | Existing revenue records and invoice workflow |
-| Expenses | Expenses & Payables | Pencatatan biaya existing |
+| Expenses | Expenses & Payables | Existing expense recording workflow |
 | Petty Cash | Cash Management | Petty cash management |
 | Accounts Receivable | Revenue & Receivables | Invoice balances, aging, and receivable payments |
 | Accounts Payable | Expenses & Payables | Liabilities and payment status |
@@ -600,7 +600,7 @@ Worksheet definitions in source code have included the following 20 existing wor
 | Project Finance | Project Finance | Project-linked financial information |
 | Operational Budget | Project Finance | Budget operasional |
 | Project Allocation | Project Finance | Existing financial/resource allocation |
-| Team Fee | Project Finance | Perhitungan team fee existing |
+| Team Fee | Project Finance | Existing team-fee calculation |
 | Journal | Accounting & Reports | Journal and posting controls |
 | Chart of Accounts | Accounting & Reports | Account list and mapping |
 | Monthly P&L | Accounting & Reports | Laba rugi periode |
