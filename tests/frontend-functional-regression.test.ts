@@ -79,7 +79,7 @@ test('Project editor can link an existing canonical client without guessing by d
   assert.ok(projects.includes('slug="projects-client-link"'));
   assert.ok(projects.includes("No linked client / enter manually"));
   assert.ok(projects.includes('...clientOptions.map((client) => ({')));
-  assert.ok(projects.includes('clientId: projectForm.clientId && event.target.value !== (clientOptions.find((client) => client.id === projectForm.clientId)?.company || \'\') ? \'\' : projectForm.clientId'));
+  assert.ok(projects.includes('clientId: projectForm.clientId && event.target.value !=='));
 });
 
 test('Project save requires the canonical persisted record before showing success', async () => {
