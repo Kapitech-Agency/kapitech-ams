@@ -23,7 +23,7 @@ Record commit/branch, exact command/scenario, pass/fail, environment/fixtures, s
 
 | ID | Journey | Success assertions | Failure/retry assertions |
 |---|---|---|---|
-| E2E-001 | Inquiry → Inbox → CRM lead | One thread, linked identity, owner and activity | Duplicate provider event creates no duplicate |
+| E2E-001 | Inquiry → Inbox → linked legacy record when required | One thread, linked identity, owner and activity, without standalone CRM UI dependency | Duplicate provider event creates no duplicate |
 | E2E-002 | Lead → opportunity | Stage guard/history/next action persist | Illegal transition, denial and stale version rejected |
 | E2E-003 | Opportunity → quote | Correct template, version, scope, total and links | Retry safe; sent/accepted version immutable |
 | E2E-004 | Quote/contract → handover | Commercial evidence and readiness validated | Missing evidence blocks; no duplicate project |

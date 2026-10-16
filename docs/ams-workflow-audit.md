@@ -12,42 +12,39 @@ Kapitech AMS already has substantial application and backend foundations. The pr
 ## Evidence from repository audit
 
 - `server/routes.ts` already exposes protected workflows for public leads and lead management, CRM deals, CRM proposals, internal approvals, projects, tasks, time logs, invoices, expenses, the finance workbook, vendors, documents, CMS content, notifications, search, and the dashboard overview.
-- **Baseline finding before this change:** `/admin/crm`, `/admin/proposals`, and `/admin/approvals` redirected to Dashboard despite existing `AdminClientLeadAccounts.tsx`, quotation workflow in `AdminInvoicing.tsx`, and approvals APIs. This branch reconnects those destinations to protected workspaces rather than recreating CRM/proposal business logic.
+- **Historical baseline:** `/admin/crm`, `/admin/proposals`, and `/admin/approvals` previously redirected to Dashboard despite existing CRM/deal records, quotation UI in `AdminInvoicing.tsx`, and approval APIs. Current navigation retires CRM as a standalone UI, redirects Proposal URLs into Finance quotations, and keeps approvals unlinked but protected pending owner/dependency review. APIs and records are not deleted.
 - **Baseline finding before this change:** `AdminTimeLogs.tsx` and `AdminVendors.tsx` existed but their routes reused `AdminTeams.tsx`. This branch routes Time to `AdminTimeLogs.tsx` and Vendors to `AdminVendors.tsx`, keeps the existing Team workspace, and preserves legacy Team query links with redirects.
 - Dashboard already exposed an overview endpoint, but Performance/Analytics and KPI fallbacks mixed unavailable live data with demo figures. This branch loads project, task, time-log, invoice, and expense records directly for Performance/Analytics and labels explicit fixture previews. Missing production source records are represented as unavailable, not as sample data.
 - Projects already provides project CRUD, Kanban/table views, execution stages, task links, and archive. This branch changes “actual cost” displays and exports to use Finance expenses linked by project ID, rather than multiplying project budget by task progress. If the Finance source cannot be read, the actual/variance stays unavailable.
-- Finance has a 20-worksheet workbook mapping, invoice/payment and expense/vendor flows, project finance, journals, closing, and reports. This branch reuses the existing quotation workflow for the Proposals route; it does not replace the workbook or alter proposal-to-invoice conversion rules.
+- Finance has a 20-worksheet mapping, invoice/payment and expense/vendor flows, project finance, journals, closing and reports. Quotations use the existing workflow at `/admin/finance/quotations`; the legacy Proposals URL redirects there. Workbook and quote-to-invoice rules remain unchanged.
 - Website CMS already has dedicated CRUD/publish editors for case studies, services, testimonials, Insights, and Careers. The sidebar grants Website visibility to authorized editors of any existing CMS content type. No new media/review module has been invented without an end-to-end workspace.
 - Tasks already provides list/board layouts, views for all/my/due/review/blocked/completed, task CRUD, assignees, status updates, checklists, and project links. Extend only after confirming the current model/API contracts so existing task workflows and permissions remain intact.
 - Finance contains a workbook mapping for 20 worksheets, finance source records, project finance, vendor bills/payments, journal drafts/posting, monthly closing, and accounting reports. It must remain aligned to the Kapitech workbook. Do not replace the existing finance module or calculate accounting figures from unrelated proxies.
 - Website CMS already contains dedicated editors for case studies, services, testimonials, Insights, and Careers, backed by CMS APIs. Audit publish states, field validation, content relations, and public-site parity before adding new CMS menus. Do not expose menu items for capabilities with no functioning workflow.
 - Backend and tests already cover authorization boundaries, financial conversion integrity, journal controls, transaction integrity, and project/task persistence. All changes must retain the existing regression gates.
 
-## Target sidebar taxonomy — superseded by the master guide
+## Approved sidebar taxonomy
 
-This section records the prior taxonomy for historical context only. **Do not implement it as the present target.** The current target has exactly these ten top-level modules:
+The earlier ten-entry taxonomy is historical and superseded. The current product target has nine primary modules:
 
 1. Dashboard
 2. Inbox
-3. CRM & Sales
-4. Projects
-5. Clients
-6. Finance
-7. Team & Resources
-8. Documents
-9. Website CMS
-10. Settings
+3. Projects
+4. Clients
+5. Finance
+6. Team & Resources
+7. Documents
+8. Website CMS
+9. Settings
 
-Subviews such as Quotations, Time Tracking, Vendors, People Operations, Content & Campaign Operations, and Kopra H2H belong under their owning module as detailed in the master guide. Standalone Proposal and generic Approval sidebar entries are not target top-level modules. That does not authorize removal of the underlying quotation workflow, maker-checker controls, approval request/review logic needed by business workflows, audit trails, APIs or data. Map consumers and preserve those controls.
-
-Settings visibility and layout must follow the existing permission and shell conventions. Submenus belong within their module workspace using established navigation primitives.
+Quotations, Time Tracking, Vendors, People Operations, Content & Campaign Operations and Kopra H2H remain subareas. CRM, Proposal and generic Approval are not primary navigation modules. Removing their menu entries does not delete records, APIs, conversion behavior, audit trails or maker-checker controls.
 
 ## Implementation status and remaining audit work
 
 ### Implemented in this change set (subject to passing final CI)
 - Sidebar groups: Overview, Sales, Delivery, Finance, Content, Operations. Sidebar entries are modules only; existing design tokens and geometry stay unchanged.
-- Reconnected CRM, Proposals, and Approvals routes to existing/added protected workspaces. Approval request/review actions call existing permission-checked APIs, preserve the maker-checker restriction, and use the existing audit-enabled backend.
-- Separated Team, Time, and Vendors navigation; legacy Team deep links redirect to their dedicated module.
+- Consolidated navigation to the nine-module target. CRM URLs redirect to Clients; CRM/deal APIs and records remain intact. The existing quotation screen/API is reached through Finance. The generic approvals route remains protected and unlinked as DEPRECATED_PENDING until its consumers/owners are validated; no new approval engine was added.
+- Consolidated Team, Time and Vendors under Team & Resources contextual routes while preserving current permissions and canonical records.
 - Dashboard Performance/Analytics use current project/task/time/invoice/expense sources. “Cash collected”, “cash surplus/deficit”, and invoice-expense difference are deliberately distinguished from accounting revenue/net profit.
 - Project budget actuals are derived from linked Finance expense records; delivery progress is not treated as a financial actual.
 - Regression assertions cover module grouping, workspace routes, source-backed Dashboard metrics, project cost calculations, and approval controls.
@@ -81,11 +78,11 @@ Keep case studies, services, testimonials, Insights, and Careers. Verify content
 
 ### Other modules
 - **Inbox:** inquiry/client lead intake, job applicants, status/priority/assignment, notes, starred items, safe conversion and response tracking.
-- **CRM:** lead/deal pipeline, value and win probability, owner, next action/date, activity history, and explicit conversion to client/project without duplicate records.
-- **Proposals:** quotation line items/tax/discount, version/status transitions, approval, sent/accepted/rejected state, validity, client linkage, and conversion to invoice.
+- **Legacy CRM data/API:** preserve stable lead/deal records, activity history, IDs and existing API consumers. A standalone sales-pipeline UI is outside the approved navigation scope.
+- **Finance quotations:** verify existing quotation line items, tax/discount, version/status transitions, sent/accepted/rejected state, validity, client linkage and invoice conversion through Finance.
 - **Clients:** account/contact directory, status, related projects/finance, retainer terms/hours, and service/SLA tracking.
 - **Team / Time:** staff directory, capacity/allocation, skills, billable time records tied to project/task, exports, edit/delete permissions, and finance links.
-- **Reviews:** one queue for deliverable/client and internal operational approvals, with requester, reviewer, comments, decisions, timestamps, and audit trail; do not conflate approval states with task completion.
+- **Workflow-specific reviews:** preserve existing state-machine, maker-checker and audit rules. Do not introduce a generic approval engine. The current approvals UI remains a protected, unlinked compatibility route until owners and consumers are verified.
 - **Vendors:** profiles, skills, rates, verification, contracts, commitments, vendor bills, and settlement records.
 - **Documents / Operations:** secure documents, SOPs/policies, role/permission administration, audit logs, backups, security and readiness checks.
 

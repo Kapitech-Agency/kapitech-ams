@@ -16,7 +16,7 @@
 - Removing generic Approval navigation does not remove workflow-specific review or maker-checker controls.
 - Never infer business status from a click, route change, timer, optimistic state or generic HTTP success.
 
-## 2. Lead and opportunity
+## 2. Legacy lead and opportunity record compatibility
 
 Lead conceptual states: New, Unqualified, Qualified, Nurturing, Converted, Disqualified, Archived.
 
@@ -30,7 +30,7 @@ Lead conceptual states: New, Unqualified, Qualified, Nurturing, Converted, Disqu
 | Active → Archived | Permission/policy allow | Remove from active queues, retain history |
 | Archived → Active | Authorized reopen | Reuse same record and retain archive event |
 
-Opportunity target stages: New → Qualification → Discovery → Scoping → Quotation → Negotiation → Contract → Closed Won / Closed Lost.
+Existing opportunity records may contain stages such as New → Qualification → Discovery → Scoping → Quotation → Negotiation → Contract → Closed Won / Closed Lost. Preserve existing state/history contracts for current consumers; this is not a target for standalone CRM pipeline UI.
 
 - New: source/owner established.
 - Qualification: need, service fit, timing and relevant stakeholders reviewed.
@@ -60,7 +60,7 @@ The current repository has proposal APIs, a Finance invoice shape with an option
 | Eligible version → Revision | Change to scope/price/terms requires new version | Sent/accepted version remains immutable |
 | Superseded version → Read-only | New version replaces it | Preserve old file and audit history |
 
-CRM and Finance must share one authoritative quote lifecycle. Do not blindly merge existing proposal/invoice records. Preserve stable IDs and conversion behavior. One quote may produce multiple milestone invoices. Quote acceptance alone creates no cash/journal event.
+The Finance quotation UI and existing quotation API must share one authoritative lifecycle. Do not blindly merge existing proposal/invoice records. Preserve stable IDs, history and conversion behavior. One quote may produce multiple milestone invoices. Quote acceptance alone creates no cash/journal event. No standalone CRM or Proposal module is required.
 
 ## 4. Contract, SOW, and change order
 
@@ -68,7 +68,7 @@ Conceptual contract states: Draft, In Review, Ready for Signature, Active, Expir
 
 - Active/signed versions are not silently overwritten.
 - Change orders link to the parent contract/SOW and identify scope, timeline, price and billing impact.
-- Renewal links to a CRM opportunity without cloning account/contact.
+- Renewal may reference an existing legacy opportunity record where a current consumer uses it, without cloning canonical account/contact. Do not introduce a standalone CRM route to support renewal navigation.
 - Documents remain canonical versions in Documents/private vault.
 - Amendments preserve prior terms and effective dates.
 
@@ -164,7 +164,7 @@ Applicant workflow is separate from CRM. Applicant CV/contact data is restricted
 
 | Event | Expected effect | Must not happen |
 |---|---|---|
-| Inquiry received | Link/create Inbox thread and eligible CRM lead | Duplicate lead on retry |
+| Inquiry received | Link/create Inbox thread and any eligible legacy record required by the existing intake contract | Duplicate linked record on retry |
 | Opportunity Closed Won | Prepare onboarding and project handover | Duplicate project/account/contact |
 | Quote accepted | Update quote and prepare billing plan | Cash/journal creation from acceptance alone |
 | Invoice issued | Update AR under current rules | Mark as paid |

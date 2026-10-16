@@ -25,7 +25,7 @@ server/data-source.ts supports json/postgres and defaults to json when KAPITECH_
 
 Mermaid diagram relationship summary (logical target only):
 - Account has Contacts, Leads, Opportunities, Projects and Retainer Periods.
-- Opportunity owns Quotations; Quotations have Versions and may produce multiple milestone Invoices.
+- Existing legacy opportunity records may reference Quotations; Quotations have Versions and may produce multiple milestone Invoices. Preserve existing relationships without requiring a standalone CRM UI.
 - Contracts own Change Orders and govern Projects.
 - Projects contain Tasks and Deliverables and consume Time Entries.
 - Client Requests relate to Inbox Threads.
@@ -137,7 +137,7 @@ For each new field, record meaning, type/nullability/default, normalization/vali
 ## 7. Prohibited shortcuts
 
 - No competing company/contact masters.
-- No separate quote store for CRM versus Finance.
+- No separate quote store across legacy APIs and Finance; Finance is the quotation UI owner and stable IDs/history must be preserved.
 - No Finance vendor master duplicating Team & Resources.
 - No duplicate cash/AR/AP/journal event for the same financial event.
 - No independent page-local status calculators that contradict domain rules.
