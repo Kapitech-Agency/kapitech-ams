@@ -1,5 +1,7 @@
 # Excel-aligned Finance workflow
 
+> **Documentation priority note (16 October 2026):** This document remains the domain reference for the established workbook-aligned Finance process, worksheet/source mapping, journal controls, and known accounting limitations. Its original five-group navigation map is a historical/baseline mapping; the target Finance navigation grouping is now defined by [AMS Master Structure & AI Implementation Guide](AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md). That navigation regrouping does **not** authorize changes to workbook formulas, account mapping, transaction meaning, posting controls, close guards, or historical results. Inspect current source and tests before assuming any implementation state.
+
 ## Source of truth and UI constraints
 
 The workbook **Kapitech Finance Final Automated.xlsx** is the business-process reference for AMS Finance. The AMS design system and existing UI implementation remain the visual source of truth. The workspace reuses AdminPageShell, AdminModuleHeader, AdminSectionTabs, AdminPanel, AdminMetricStrip, AdminStatusBadge, the shared Button and Drawer, and the existing color tokens. Do not introduce a new palette or redesign existing Finance screens.
