@@ -192,7 +192,7 @@ test('Finance worksheets embed the existing transactional workflows instead of r
 
   assert.match(invoicing, /type EmbeddedFinanceView = 'invoices' \| 'receivables' \| 'income-expenses' \| 'vendor-payments' \| 'quotations'/);
   assert.match(invoicing, /embeddedReceivablesOnly \|\| hasOpenReceivable/);
-  assert.match(invoicing, /!embeddedReceivablesOnly && canCreateInvoice && !invoiceSourceUnavailable && <button[\s\S]*?onClick=\{openCreateInvoice\}/);
+  assert.match(invoicing, /!embeddedReceivablesOnly && canCreateInvoice && !invoiceSourceBlocked && <button[\s\S]*?onClick=\{openCreateInvoice\}/);
   assert.match(invoicing, /openPayment\(invoice\)/);
   assert.match(invoicing, /embeddedIncomeExpenseMode \|\| 'income'/);
   assert.match(invoicing, /Expense ledger/);
@@ -282,6 +282,10 @@ test('Embedded Finance preserves last successful source records and distinguishe
   assert.ok(invoicing.includes('const nextInvoices = shouldUseDemoInvoices ? demoInvoices : invoiceSourceAvailable ? apiInvoices : invoices;'));
   assert.ok(invoicing.includes('const nextExpenses = shouldUseDemoExpenses ? demoExpenses : expenseSourceAvailable ? apiExpenses : expenses;'));
   assert.ok(invoicing.includes('const sourceFailures = ['));
+  assert.ok(invoicing.includes('const invoiceSourceBlocked = loading || refreshing || invoiceSourceUnavailable;'));
+  assert.ok(!invoicing.includes('setError(null);\n    setSourceErrors([]);'));
+  assert.ok(invoicing.includes('`Invoices: ${message}`'));
+  assert.ok(invoicing.includes("loading || refreshing ? 'Loading invoices…' : invoiceSourceUnavailable ? 'Invoice data unavailable'"));
   assert.ok(invoicing.includes('Some Finance data sources could not be loaded. Displayed records and totals may be incomplete.'));
   assert.ok(invoicing.includes('if (shouldUseDemoInvoices || shouldUseDemoExpenses || (!metricsSourceAvailable && invoiceSourceAvailable && expenseSourceAvailable)) {'));
   assert.ok(invoicing.includes('} else if (metricsRes.success && metricsRes.data?.metrics) {'));
@@ -290,9 +294,9 @@ test('Embedded Finance preserves last successful source records and distinguishe
   assert.ok(invoicing.includes("expenseSourceUnavailable ? 'Expense data unavailable' : 'No expenses found'"));
   assert.ok(invoicing.includes("showNotice('danger', sourceUnavailableMessage('invoice'));"));
   assert.ok(invoicing.includes("showNotice('danger', sourceUnavailableMessage('expense'));"));
-  assert.ok(invoicing.includes('disabled={invoiceSourceUnavailable || !filteredInvoices.length}'));
-  assert.ok(invoicing.includes('disabled={expenseSourceUnavailable || !filteredExpenses.length}'));
-  assert.ok(invoicing.includes('disabled={expenseSourceUnavailable || vendorSourceUnavailable || !filteredVendorPayments.length}'));
+  assert.ok(invoicing.includes('disabled={invoiceSourceBlocked || !filteredInvoices.length}'));
+  assert.ok(invoicing.includes('disabled={expenseSourceBlocked || !filteredExpenses.length}'));
+  assert.ok(invoicing.includes('disabled={expenseSourceBlocked || vendorSourceBlocked || !filteredVendorPayments.length}'));
 });
 
 test('Annual Summary includes years represented only by Cash & Bank records', async () => {
