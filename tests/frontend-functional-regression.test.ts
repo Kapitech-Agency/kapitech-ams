@@ -69,6 +69,19 @@ test('Projects accepts valid empty server lists and never falls back to demo rec
   assert.match(projects, /if \(!isSlugFixtureMode\(\)\) \{[\s\S]{0,200}writeStatusOverrides\(PROJECT_STATUS_OVERRIDES_KEY, \{\}\)[\s\S]{0,160}return source/);
 });
 
+test('Project editor can link an existing canonical client without guessing by display name', async () => {
+  const projects = await read('src/pages/admin/AdminProjects.tsx');
+
+  assert.ok(projects.includes("const canReadClients = hasAdminPermission('canManageClients') || hasAdminPermission('canManageCrm');"));
+  assert.ok(projects.includes('const loadProjectClients = async () => {'));
+  assert.ok(projects.includes("clientId: project.clientId || ''"));
+  assert.ok(projects.includes('clientId: projectForm.clientId || undefined'));
+  assert.ok(projects.includes('slug="projects-client-link"'));
+  assert.ok(projects.includes("No linked client / enter manually"));
+  assert.ok(projects.includes('...clientOptions.map((client) => ({')));
+  assert.ok(projects.includes('clientId: projectForm.clientId && event.target.value !== (clientOptions.find((client) => client.id === projectForm.clientId)?.company || \'\') ? \'\' : projectForm.clientId'));
+});
+
 test('Project save requires the canonical persisted record before showing success', async () => {
   const projects = await read('src/pages/admin/AdminProjects.tsx');
 
