@@ -6,15 +6,17 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-test('CRM, proposals, and approvals resolve to protected workspaces', async () => {
+test('CRM and Proposal navigation is retired while protected legacy workflows remain compatible', async () => {
   const app = await fs.readFile(path.join(root, 'src/App.tsx'), 'utf8');
-  assert.ok(app.includes('<Route path="crm" element={<ModuleRoute moduleKey="crm" moduleLabel="CRM"><AdminClientLeadAccounts /></ModuleRoute>} />'));
-  assert.ok(app.includes('<Route path="proposals" element={<ModuleRoute moduleKey="proposals" moduleLabel="Proposals"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />'));
+  assert.ok(app.includes('<Route path="crm" element={<Navigate to="/admin/clients/all-clients" replace />} />'));
+  assert.ok(app.includes('<Route path="clients/lead-accounts" element={<Navigate to="/admin/clients/all-clients" replace />} />'));
+  assert.ok(app.includes('<Route path="proposals" element={<LegacyQuotationRedirect />} />'));
+  assert.ok(app.includes('<Route path="finance/quotations" element={<ModuleRoute moduleKey="invoicing" moduleLabel="quotations"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />'));
+  assert.ok(app.includes("pathname: '/admin/finance/quotations', search: location.search, hash: location.hash"));
   assert.ok(app.includes('<Route path="approvals" element={<ModuleRoute moduleKey="approvals" moduleLabel="Approvals"><AdminApprovals /></ModuleRoute>} />'));
   assert.ok(app.includes("const AdminApprovals = lazyWithRetry("));
-  assert.ok(!app.includes('<Route path="crm" element={<Navigate to="/admin/dashboard"'));
-  assert.ok(!app.includes('<Route path="proposals" element={<Navigate to="/admin/dashboard"'));
-  assert.ok(!app.includes('<Route path="approvals" element={<Navigate to="/admin/dashboard"'));
+  assert.equal(app.includes('<Route path="crm" element={<ModuleRoute moduleKey="crm"'), false);
+  assert.equal(app.includes('<Route path="proposals" element={<ModuleRoute moduleKey="proposals"'), false);
 });
 test('PostgreSQL proposal mutations and approval creation retain audit logging', async () => {
   const source = await fs.readFile(path.join(root, 'server/routes.ts'), 'utf8');
@@ -74,8 +76,9 @@ test('Read-only admin states keep mutation UI controls behind the same permissio
   assert.ok(clients.includes('if (!canManageClients) return;'));
 
   const app = await fs.readFile(path.join(root, 'src/App.tsx'), 'utf8');
-  assert.ok(app.includes('<Route path="crm" element={<ModuleRoute moduleKey="crm" moduleLabel="CRM"><AdminClientLeadAccounts /></ModuleRoute>} />'));
-  assert.ok(app.includes('<Route path="proposals" element={<ModuleRoute moduleKey="proposals" moduleLabel="Proposals"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />'));
+  assert.ok(app.includes('<Route path="crm" element={<Navigate to="/admin/clients/all-clients" replace />} />'));
+  assert.ok(app.includes('<Route path="proposals" element={<LegacyQuotationRedirect />} />'));
+  assert.ok(app.includes('<Route path="finance/quotations" element={<ModuleRoute moduleKey="invoicing" moduleLabel="quotations"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />'));
 });
 
 

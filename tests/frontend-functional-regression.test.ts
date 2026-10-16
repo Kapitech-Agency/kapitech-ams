@@ -76,7 +76,7 @@ test('MFA enrolment route is accessible before module permissions are evaluated'
 });
 
 
-test('AMS navigation uses flat role-based groups and keeps module actions within their workspaces', async () => {
+test('AMS navigation follows the nine-module structure and keeps actions in their owning workspaces', async () => {
   const layout = await read('src/pages/admin/AdminLayout.tsx');
   const app = await read('src/App.tsx');
   const primitives = await read('src/components/admin/AdminModulePrimitives.tsx');
@@ -86,26 +86,31 @@ test('AMS navigation uses flat role-based groups and keeps module actions within
   const teams = await read('src/pages/admin/AdminTeams.tsx');
   const vendors = await read('src/pages/admin/AdminVendors.tsx');
   const clients = await read('src/pages/admin/AdminClients.tsx');
+  const workbook = await read('src/lib/financeWorkbook.ts');
 
-  for (const group of [
-    "'OPERATIONAL OVERVIEW'",
-    "'CLIENT & PIPELINE'",
-    "'DELIVERY & OPERATIONS'",
-    "'FINANCE & LEDGER'",
-    "'MARKETING CMS'",
-  ]) {
-    assert.ok(navigation.includes(group), 'Expected flat sidebar group ' + group);
+  for (const group of ["'WORKSPACE'", "'DELIVERY'", "'OPERATIONS'", "'PUBLISHING'"]) {
+    assert.ok(navigation.includes(group), 'Expected navigation group ' + group);
   }
+  for (const label of ["Dashboard", "Inbox", "Projects", "Clients", "Finance", "Team & Resources", "Documents", "Website CMS"]) {
+    assert.ok(navigation.includes("label: '" + label + "'"), 'Missing primary module ' + label);
+  }
+  assert.ok(navigation.includes("label: 'Settings'"));
   assert.ok(navigation.includes("key: 'user-access'"));
   assert.ok(navigation.includes("key: 'data-persistence-backup'"));
-  assert.ok(navigation.includes("key: 'release-readiness'"));
-  assert.ok(navigation.includes("label: 'Dashboard & Hub'"));
-  assert.ok(subnavigation.includes("label: 'Retainer Hours Pool'"));
-  assert.ok(navigation.includes("label: 'Project Profitability'"));
-  assert.ok(navigation.includes("return 'Freelancer';"), 'Unknown legacy role must fail closed rather than grant Admin access.');
+  assert.equal(navigation.includes("key: 'release-readiness'"), false);
+  for (const label of ["Overview & Control", "Transactions & Cash", "Receivables & Payables", "Project Finance", "Accounting & Reports"]) {
+    assert.ok(workbook.includes("label: '" + label + "'"), 'Missing Finance area ' + label);
+  }
+  for (const label of ["label: 'Retainers'", "label: 'Capacity'", "label: 'Time tracking'", "label: 'Vendors & freelancers'"]) {
+    assert.ok(subnavigation.includes(label), 'Missing contextual subarea ' + label);
+  }
+  for (const removed of ["label: 'Sales & Pipeline'", "label: 'Proposals'", "label: 'Approvals'", "label: 'Vendor Ledger'", "label: 'Timesheet Control'"]) {
+    assert.equal(navigation.includes(removed), false, 'Standalone/legacy navigation remains: ' + removed);
+  }
+  assert.ok(navigation.includes("return 'Freelancer';"), 'Unknown legacy role must fail closed.');
 
-  assert.equal((layout.match(/<DynamicAdminSidebarNavigation\b/g) || []).length, 2, 'Desktop and mobile use the same sidebar component.');
-  assert.equal((layout.match(/<AdminSystemSettingsNavigation\b/g) || []).length, 2, 'Desktop and mobile pin the single Admin-only Settings entry.');
+  assert.equal((layout.match(/<DynamicAdminSidebarNavigation\\b/g) || []).length, 2, 'Desktop and mobile use the same sidebar.');
+  assert.equal((layout.match(/<AdminSystemSettingsNavigation\\b/g) || []).length, 2, 'Desktop and mobile share the pinned Settings entry.');
   assert.ok(sidebar.includes("if (role !== 'Admin') return null;"));
   assert.ok(sidebar.includes('data-ams-feature-slug="role-based-sidebar"'));
   assert.ok(sidebar.includes('data-ams-navigation-layout="flat"'));
@@ -113,14 +118,14 @@ test('AMS navigation uses flat role-based groups and keeps module actions within
   assert.equal(sidebar.includes('data-ams-nav-submenu='), false);
   assert.equal(sidebar.includes('aria-expanded='), false);
   assert.equal(sidebar.includes('ChevronDown'), false);
-  assert.equal((layout.match(/<AdminTopbarTabs\b/g) || []).length, 0);
+  assert.equal((layout.match(/<AdminTopbarTabs\\b/g) || []).length, 0);
   assert.ok(primitives.includes('items.filter(canRenderNavigationTab).map((item) => {'));
   assert.ok(navigation.includes('export function canAccessAmsRoute'));
   assert.ok(app.includes('<AmsRoleRouteGuard>'));
   assert.ok(app.includes('path="navigation/live-activity"'));
   assert.ok(app.includes('path="navigation/release-readiness"'));
 
-  assert.equal(layout.includes('data-ams-slug="active-module-title"'), false, 'Global topbar contains no module navigation.');
+  assert.equal(layout.includes('data-ams-slug="active-module-title"'), false);
   assert.ok(layout.includes('ariaLabel="Workspace navigation"'));
   assert.ok(layout.includes('Search Everything'));
   assert.ok(layout.includes('GlobalTimerControl'));
@@ -137,16 +142,15 @@ test('AMS navigation uses flat role-based groups and keeps module actions within
   assert.ok(app.includes('<Route path="team" element={<TeamWorkspaceRoute />} />'));
   assert.ok(app.includes('<Route path="time-logs" element={<ModuleRoute moduleKey="timelogs" moduleLabel="Time"><AdminTimeLogs /></ModuleRoute>} />'));
   assert.ok(app.includes('<Route path="vendors" element={<VendorWorkspaceRoute />} />'));
-  assert.ok(app.includes('<Route path="crm" element={<ModuleRoute moduleKey="crm" moduleLabel="CRM"><AdminClientLeadAccounts /></ModuleRoute>} />'));
-  assert.ok(app.includes('<Route path="proposals" element={<ModuleRoute moduleKey="proposals" moduleLabel="Proposals"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />'));
+  assert.ok(app.includes('<Route path="crm" element={<Navigate to="/admin/clients/all-clients" replace />} />'));
+  assert.ok(app.includes('<Route path="proposals" element={<LegacyQuotationRedirect />} />'));
+  assert.ok(app.includes('<Route path="finance/quotations" element={<ModuleRoute moduleKey="invoicing" moduleLabel="quotations"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />'));
   assert.ok(app.includes('<Route path="approvals" element={<ModuleRoute moduleKey="approvals" moduleLabel="Approvals"><AdminApprovals /></ModuleRoute>} />'));
   assert.ok(app.includes("requestedView === 'vendor-directory'"));
   assert.ok(app.includes("requestedView === 'time-logs'"));
-  assert.equal(app.includes('<Route path="crm" element={<Navigate to="/admin/dashboard"'), false);
-  assert.equal(app.includes('<Route path="proposals" element={<Navigate to="/admin/dashboard"'), false);
-  assert.equal(app.includes('<Route path="approvals" element={<Navigate to="/admin/dashboard"'), false);
   assert.equal(clients.includes("to: '/admin/clients/lead-accounts'"), false);
 });
+
 test('Dashboard Performance and Analytics use AMS operational and finance records', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   for (const sourceCall of [
