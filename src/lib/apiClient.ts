@@ -355,6 +355,7 @@ export const api = {
         body: version == null ? undefined : JSON.stringify({ version })
       }),
     getMetrics: (currency?: string) => apiRequest<{ success: boolean; metrics: any }>('/api/finance/metrics' + (currency ? `?currency=${encodeURIComponent(currency)}` : '')),
+    getProjectProfitability: () => apiRequest<{ success: boolean; projects: Array<{ projectId: string; projectName: string; clientName: string; projectStatus: string; currency: string; budget: number | null; invoiced: number; collected: number; outstanding: number; recordedCosts: number; contribution: number; marginPercent: number | null }> }>('/api/finance/project-profitability'),
     workbookList: (type: string, filters: { period?: string; projectId?: string; includeArchived?: boolean } = {}) => {
       const params = new URLSearchParams();
       if (filters.period) params.set('period', filters.period);
