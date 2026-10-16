@@ -56,6 +56,7 @@ test('Finance worksheets stay inside the Finance workspace and retired routes st
   const layout = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminLayout.tsx'), 'utf8');
   const sidebar = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/DynamicAdminSidebar.tsx'), 'utf8');
   const navigation = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/amsNavigationAccess.ts'), 'utf8');
+  const subnavigation = fs.readFileSync(path.resolve(process.cwd(), 'src/lib/amsModuleSubnavigation.ts'), 'utf8');
   const workspace = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminFinanceWorkspace.tsx'), 'utf8');
   assert.equal(layout.includes("location.pathname === '/admin/invoicing'"), false);
   assert.equal(layout.includes('<AdminTopbarTabs'), false);
