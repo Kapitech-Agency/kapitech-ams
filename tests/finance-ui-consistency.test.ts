@@ -284,6 +284,7 @@ test('Embedded Finance preserves last successful source records and distinguishe
   assert.ok(invoicing.includes('const sourceFailures = ['));
   assert.ok(invoicing.includes('Some Finance data sources could not be loaded. Displayed records and totals may be incomplete.'));
   assert.ok(invoicing.includes('if (shouldUseDemoInvoices || shouldUseDemoExpenses || (!metricsSourceAvailable && invoiceSourceAvailable && expenseSourceAvailable)) {'));
+  assert.ok(invoicing.includes('} else if (metricsRes.success && metricsRes.data?.metrics) {'));
   assert.ok(invoicing.includes("invoiceSourceUnavailable ? 'Invoice data unavailable' : embeddedReceivablesOnly"));
   assert.ok(invoicing.includes('!invoiceSourceUnavailable && canManageInvoices && !embeddedReceivablesOnly'));
   assert.ok(invoicing.includes("expenseSourceUnavailable ? 'Expense data unavailable' : 'No expenses found'"));
