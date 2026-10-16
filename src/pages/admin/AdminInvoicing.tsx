@@ -1004,7 +1004,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
           overdueCount: derived.overdueCount,
           draftCount: nextInvoices.filter((invoice) => invoice.status === 'draft').length
         });
-      } else if (metricsSourceAvailable) {
+      } else if (metricsRes.success && metricsRes.data?.metrics) {
         setServerMetrics(metricsRes.data.metrics as ServerMetrics);
       }
 
