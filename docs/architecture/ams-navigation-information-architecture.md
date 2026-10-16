@@ -36,7 +36,7 @@ Settings may remain pinned in the existing system area. It remains the ninth pri
 Local views are Overview, Performance and Analytics. Values are summaries of their source modules. Do not imply an unimplemented activity/analytics route is functional.
 
 ### 3.2 Inbox
-Keep current communication, inquiry, follow-up, starred and read/unread experiences. Notification targets route to the owning record/module using existing authorization. Careers applicants are owned by Website CMS, not default sales leads. Inbox is not an approval register.
+Keep current communication, client inquiry, follow-up, starred and read/unread experiences. Notification targets route to the owning record/module using existing authorization. Careers applicants are managed only in Website CMS → Careers. Inbox may provide a contextual shortcut, but it must not expose a competing applicant status, notes or delete workflow. Inbox is not an approval register.
 
 ### 3.3 Projects
 Project views include the existing registry/overview, delivery, budget and archived views. Tasks/Kanban/list are views over the same records. Financial values remain sourced from Finance. Client retainers/SLA belong to Clients, vendor master/time records to Team & Resources, and canonical files to Documents.
@@ -75,6 +75,7 @@ Settings owns authorized access, configuration, audit and integration screens. D
 |---|---|---|
 | `/crm`, `/admin/crm` | Redirect to Clients directory; no standalone CRM UI | Preserve CRM/deal records, IDs, APIs, history and consumers. Do not rebuild a sales pipeline. |
 | `/admin/clients/lead-accounts` | Redirect to Clients directory | Keep route access guarded. |
+| `/admin/inbox?view=jobs` | Redirect to `/admin/cms/careers?tab=applicants` | Preserve old links while keeping one Careers applicant management workspace. Finance/PM access is limited to the applicant tab. |
 | `/admin/proposals` | Redirect to `/admin/finance/quotations`, preserving query/hash | Reuse existing quotation API/component and conversion behavior. |
 | `/admin/approvals` | No primary/local link or command-palette shortcut. Keep protected direct route as `DEPRECATED_PENDING`. | Preserve approval records, API, audit and maker-checker. Full retirement waits for owner/consumer validation. |
 | `/admin/invoicing` | Keep existing Finance compatibility redirect | Preserve current query-based destination mapping. |
