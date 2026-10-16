@@ -70,7 +70,7 @@ Never place secrets, production personal data, bank account numbers or private p
 The items below are audit requirements, not claims of completion.
 
 ### Global architecture
-- NAV-001: Exactly ten primary modules: Dashboard, Inbox, CRM & Sales, Projects, Clients, Finance, Team & Resources, Documents, Website CMS, Settings.
+- NAV-001: Exactly nine primary modules: Dashboard, Inbox, Projects, Clients, Finance, Team & Resources, Documents, Website CMS, Settings.
 - NAV-002: Every submenu has one owner, a real route/view and appropriate permission.
 - NAV-003: Legacy routes are preserved, redirected or retired only after consumer/access/test review.
 - UX-001: Shell, header, tabs, spacing, forms, tables and states follow the AMS design system.
@@ -87,8 +87,8 @@ The items below are audit requirements, not claims of completion.
 
 ### CRM, Clients and Projects
 - FLOW-010: Lead/opportunity stage guards and history are explicit.
-- DATA-010: Company/contact identity is shared between CRM & Sales and Clients.
-- FLOW-011: CRM and Finance quotation workflows share one authoritative lifecycle.
+- DATA-010: Canonical company/contact identity is shared across Clients and current linked-record consumers; no duplicate identity store is introduced.
+- FLOW-011: The existing Finance quotation UI and current quotation API share one lifecycle; no standalone CRM quotation UI is required.
 - FLOW-012: Closed Won handover is validated and cannot create duplicate projects.
 - FLOW-013: Contract/SOW/change-order decisions and versions remain traceable.
 - FLOW-014: Onboarding/Client 360 link to source records.
@@ -97,7 +97,7 @@ The items below are audit requirements, not claims of completion.
 - FLOW-017: SLA metrics exist only when target/calendar/timestamp evidence is sufficient.
 
 ### Finance
-- FIN-001: All twenty current worksheet keys map to six target groups without loss.
+- FIN-001: All twenty current worksheet keys map to five target Finance areas without loss.
 - FIN-002: Quote builder/templates/version/status/print output are verified.
 - FIN-003: Invoice templates, numbering, due dates, partial payments and ageing use canonical Finance records.
 - FIN-004: Existing formulas, account mapping, transactions, journal controls, closing and report definitions are regression-tested.
@@ -140,3 +140,23 @@ Mark IMPLEMENTED_VERIFIED only when scope is explicit, current source/permission
 ## 8. End-of-task report
 
 Report requirement IDs completed and partial, files/source changed, API/schema/permission impact, tests actually run, financial/security/regression consequences, external blockers, branch/commit/deployment status, and requirements excluded by the scope boundary.
+
+
+## 9. Navigation consolidation change record, 16 October 2026
+
+This record tracks the source patch on branch `feat/ams-nine-module-navigation-2026-10-16`. It is not evidence of production deployment.
+
+| Requirement | Status | Source evidence | Validation state / gap |
+|---|---|---|---|
+| NAV-001: Nine-module primary navigation | IMPLEMENTED_UNVERIFIED | `src/lib/amsNavigationAccess.ts`, `src/pages/admin/AdminLayout.tsx` | Navigation config and unit assertions updated. Typecheck, full tests and build still need CI evidence. |
+| NAV-002: Contextual feature ownership | IMPLEMENTED_UNVERIFIED | `src/lib/amsModuleSubnavigation.ts`, `src/pages/admin/AdminLayout.tsx` | Role/active-state test assertions updated; browser/runtime layout remains unverified. |
+| NAV-003: CRM/Proposal compatibility | IMPLEMENTED_UNVERIFIED | `src/App.tsx`, `src/lib/amsNavigationAccess.ts` | CRM aliases redirect to Clients; Proposal aliases redirect to Finance quotations. Verify route and direct-access regression. |
+| NAV-004: Quotations owned by Finance UI | IMPLEMENTED_UNVERIFIED | `src/App.tsx`, `src/pages/admin/AdminFinanceWorkspace.tsx`, `src/pages/admin/AdminInvoicing.tsx` | Existing component/API reused; no database, API or financial calculations changed. Verify quote conversion regressions. |
+| NAV-005: Approval primary entry retired without data deletion | PARTIAL | `src/lib/amsNavigationAccess.ts`, `src/lib/amsModuleSubnavigation.ts`, `src/App.tsx` | No navigation shortcut. `/admin/approvals` remains protected and direct-access compatible as `DEPRECATED_PENDING` until consumers/owning workflow are verified. |
+| SEC-001: Existing permissions retained | IMPLEMENTED_UNVERIFIED | Existing role route guard and server/API permission layers retained | Route policy tests updated; server/API and E2E denial behavior still require actual test execution. |
+| UX-001: Shared AMS layout retained | IMPLEMENTED_UNVERIFIED | `src/pages/admin/AdminLayout.tsx`, existing AMS primitives | No design system or dependency replacement; responsive visual review remains pending. |
+| DOC-001: Target documentation aligned | IMPLEMENTED_UNVERIFIED | Master guide, navigation IA, traceability, AGENTS, Copilot, UX and workflow audit | Automated reference sweep and CI status still pending. |
+
+**Test evidence:** No local checkout was available to execute npm/Bun commands in this environment. GitHub Actions results must be reviewed before any requirement is marked `IMPLEMENTED_VERIFIED`.
+
+**Known gap:** The existing generic Approvals UI has not been mapped to all current consumers and safe workflow-specific owners. Keep it protected and unlinked; do not delete its API/data or claim complete retirement. No production deployment has been performed.

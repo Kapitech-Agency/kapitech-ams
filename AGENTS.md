@@ -57,7 +57,7 @@ Never describe a target submenu as an existing feature merely because it appears
 - Do not rewrite entire modules when an incremental change is sufficient.
 - Do not make a new UI framework, token system, component library, API client, store, master directory, ledger, or permission mechanism when a canonical one already exists.
 - Do not delete a route, endpoint, data model, API, migration, audit record, or workflow merely because its old sidebar entry is being removed. First map consumers and move the user-facing entry to its target workflow.
-- The target removes **standalone Proposal/Approvals/legacy CRM navigation entries**, not the underlying quotation lifecycle, maker-checker controls, audit trail, or valid business API contracts. Quotation must be reachable in CRM & Sales and Finance using the same record.
+- The approved target has nine primary modules: Dashboard, Inbox, Projects, Clients, Finance, Team & Resources, Documents, Website CMS, and Settings. CRM, Proposal/Quotation and Approval are not primary modules. Do not delete their APIs, records, audit history, maker-checker controls or valid contracts. The existing quotation workflow remains reachable through Finance using canonical records; do not create a new pipeline or duplicate quote store.
 - Vendors, Time Tracking, People Operations, Content & Campaign Operations, and Kopra H2H are subareas, not additional top-level sidebar modules.
 - Never add Mobile App as a Kapitech service.
 - Never hardcode success states, KPI values, API responses, accounting totals, bank statuses, or publish status.

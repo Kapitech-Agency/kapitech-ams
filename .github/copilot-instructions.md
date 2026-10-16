@@ -17,9 +17,9 @@ Read root AGENTS.md before coding. It defines task boundaries, conflict resoluti
 
 ## Non-negotiable rules
 - Do only the scope requested. Documentation-only means no application-code changes.
-- Target is ten primary modules: Dashboard, Inbox, CRM & Sales, Projects, Clients, Finance, Team & Resources, Documents, Website CMS, Settings.
+- Target is nine primary modules: Dashboard, Inbox, Projects, Clients, Finance, Team & Resources, Documents, Website CMS, Settings. CRM, Proposal and Approval are not primary modules.
 - Target specifications are not proof of implementation. Inspect current code, APIs, schema, permissions and test evidence.
-- Do not delete APIs, data, audit trails, quotation conversion, maker-checker or period-close controls because a legacy sidebar item is removed.
+- Do not delete APIs, data, audit trails, quotation conversion, maker-checker or period-close controls because a legacy sidebar item is removed. Keep the existing quotation workflow in Finance; do not build a replacement CRM pipeline or generic approval engine.
 - Preserve Finance formulas, mappings, transaction meaning, reports, journal controls and closing behavior unless a business-rule change is explicitly approved and reconciled.
 - Reuse current components, tokens, API client, stores and permission patterns; do not build parallel systems for convenience.
 - The frontend is not the source of business logic or permission authority.
