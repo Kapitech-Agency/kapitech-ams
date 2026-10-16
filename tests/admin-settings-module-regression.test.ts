@@ -40,7 +40,7 @@ test('MFA setup stays reachable without admin rights while routine security acce
   const navigation = await read('src/lib/amsModuleSubnavigation.ts');
   assert.ok(layout.includes('mfaSetupRequired'));
   assert.ok(layout.includes('getAmsModuleSubnavigation(workspaceNavigationModule, amsRole, mfaSetupRequired)'));
-  assert.ok(navigation.includes('if (moduleKey === \'settings\' && allowMfaSetup && role !== \'Admin\')'));
+  assert.ok(navigation.includes('const mfaAccessOnly = moduleKey === \'settings\' && allowMfaSetup && role !== \'Admin\';'));
   assert.ok(navigation.includes("key: 'access',"));
   assert.ok(navigation.includes("to: '/admin/settings?tab=security',"));
   assert.ok(source.includes("const fallbackTab: SettingsTab = canAccessServer ? 'overview' : canViewAuditLogs ? 'audit' : (mfaSetupRequired || canManageAdminAccounts) ? 'security' : 'overview';"));

@@ -60,8 +60,8 @@ test('Finance sidebar exposes commercial and finance workflows but not Admin-onl
   for (const key of ['project-files', 'team-capacity', 'timesheet-control', 'retainer-manager', 'cms', 'services', 'careers']) {
     assert.equal(menu.has(key), false, `Finance should not see ${key}`);
   }
-  assert.deepEqual([...tabKeys('crm', 'Finance')], ['pipeline', 'clients', 'onboarding', 'inbox', 'contracts', 'sla']);
-  assert.deepEqual([...tabKeys('finance', 'Finance')], ['invoicing-revenues', 'profitability-expenses', 'project-profitability', 'quotes', 'vendors', 'approvals']);
+  assert.deepEqual([...tabKeys('crm', 'Finance')], []);
+  assert.deepEqual([...tabKeys('finance', 'Finance')], []);
   assert.equal(canAccessAmsRoute('Finance', '/admin/crm'), true);
   assert.equal(canAccessAmsRoute('Finance', '/admin/finance', '?tab=accounts-receivable'), true);
   assert.equal(canAccessAmsRoute('Finance', '/admin/settings', '?tab=overview'), false);
@@ -77,10 +77,8 @@ test('PM sidebar exposes operations and aggregate project profitability without 
     'project-hub', 'tasks-engine', 'team-capacity', 'timesheet-control', 'retainer-manager',
     'project-profitability', 'cms', 'portfolio', 'testimonials',
   ]);
-  assert.deepEqual([...tabKeys('finance', 'PM')], ['project-profitability']);
-  assert.ok(tabKeys('projects', 'PM').has('retainers'));
-  assert.ok(tabKeys('projects', 'PM').has('capacity'));
-  assert.ok(tabKeys('projects', 'PM').has('time'));
+  assert.deepEqual([...tabKeys('finance', 'PM')], []);
+  assert.deepEqual([...tabKeys('projects', 'PM')], []);
   assert.equal(canAccessAmsRoute('PM', '/admin/projects', '?projects=budget'), true);
   assert.equal(canAccessAmsRoute('PM', '/admin/finance', '?tab=project-finance'), true);
   assert.equal(canAccessAmsRoute('PM', '/admin/finance', '?tab=accounts-receivable'), false);
@@ -95,8 +93,8 @@ test('Creative sees personal work and only the editorial and project shortcuts a
   assert.equal(flatten('Creative').find((item) => item.key === 'dashboard-hub')?.label, 'My Hub');
   assert.equal(flatten('Creative').find((item) => item.key === 'dashboard-hub')?.to, '/admin/tasks?taskscope=my');
   assert.equal(flatten('Creative').find((item) => item.key === 'project-hub')?.to, '/admin/projects?projects=sprint');
-  assert.deepEqual([...tabKeys('projects', 'Creative')], ['sprint', 'tasks']);
-  assert.deepEqual([...tabKeys('cms', 'Creative')], ['insights', 'projects', 'testimonials']);
+  assert.deepEqual([...tabKeys('projects', 'Creative')], []);
+  assert.deepEqual([...tabKeys('cms', 'Creative')], []);
   assert.equal(canAccessAmsRoute('Creative', '/admin/dashboard'), false);
   assert.equal(canAccessAmsRoute('Creative', '/admin/projects', '?projects=sprint'), true);
   assert.equal(canAccessAmsRoute('Creative', '/admin/projects', '?projects=budget'), false);
@@ -114,7 +112,7 @@ test('Freelancer sees a focused My Hub and Assigned Tasks sidebar', () => {
   assert.equal(menu.find((item) => item.key === 'dashboard-hub')?.to, '/admin/tasks?taskscope=my');
   assert.equal(menu.find((item) => item.key === 'assigned-tasks')?.label, 'Assigned Tasks');
   assert.equal(menu.find((item) => item.key === 'assigned-tasks')?.to, '/admin/tasks?taskscope=my&workspace=project');
-  assert.deepEqual([...tabKeys('projects', 'Freelancer')], ['tasks']);
+  assert.deepEqual([...tabKeys('projects', 'Freelancer')], []);
   assert.equal(canAccessAmsRoute('Freelancer', '/admin/tasks', '?taskscope=my&workspace=project'), true);
   assert.equal(canAccessAmsRoute('Freelancer', '/admin/tasks', '?taskscope=all'), false);
   assert.equal(canAccessAmsRoute('Freelancer', '/admin/projects', '?projects=sprint'), false);
@@ -157,13 +155,14 @@ test('direct URL navigation remains subject to the canonical route policy', () =
 });
 
 test('contextual workspace tabs continue to honour query and hash state', () => {
-  const directory = getAmsModuleSubnavigation('crm', 'Admin').find((item) => item.key === 'clients')!;
-  const onboarding = getAmsModuleSubnavigation('crm', 'Admin').find((item) => item.key === 'onboarding')!;
+  const directory = flatten('Admin').find((item) => item.key === 'client-directory')!;
+  const onboarding = flatten('Admin').find((item) => item.key === 'client-onboarding')!;
   const delivery = getAmsModuleSubnavigation('projects', 'Admin').find((item) => item.key === 'sprint')!;
   const budget = getAmsModuleSubnavigation('projects', 'Admin').find((item) => item.key === 'budget')!;
   const dashboard = flatten('Creative').find((item) => item.key === 'dashboard-hub')!;
-  assert.equal(isAmsModuleSubnavigationItemActive(directory, '/admin/clients/all-clients', '', ''), true);
-  assert.equal(isAmsModuleSubnavigationItemActive(onboarding, '/admin/clients/all-clients', '', '#client-onboarding-readiness'), true);
+  assert.equal(isNavigationItemActive(directory, '/admin/clients/all-clients', '', ''), true);
+  assert.equal(isNavigationItemActive(onboarding, '/admin/clients/all-clients', '', '#client-onboarding-readiness'), true);
+  assert.deepEqual([...tabKeys('crm', 'Admin')], []);
   assert.equal(isAmsModuleSubnavigationItemActive(delivery, '/admin/projects', '?projects=sprint', ''), true);
   assert.equal(isAmsModuleSubnavigationItemActive(budget, '/admin/projects', '?projects=budget', ''), true);
   assert.equal(isNavigationItemActive(dashboard, '/admin/tasks', '?taskscope=my', ''), true);
