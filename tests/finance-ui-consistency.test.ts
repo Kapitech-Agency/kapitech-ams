@@ -192,7 +192,7 @@ test('Finance worksheets embed the existing transactional workflows instead of r
 
   assert.match(invoicing, /type EmbeddedFinanceView = 'invoices' \| 'receivables' \| 'income-expenses' \| 'vendor-payments' \| 'quotations'/);
   assert.match(invoicing, /embeddedReceivablesOnly \|\| hasOpenReceivable/);
-  assert.match(invoicing, /!embeddedReceivablesOnly && canCreateInvoice && <button[\s\S]*?onClick=\{openCreateInvoice\}/);
+  assert.match(invoicing, /!embeddedReceivablesOnly && canCreateInvoice && !invoiceSourceUnavailable && <button[\s\S]*?onClick=\{openCreateInvoice\}/);
   assert.match(invoicing, /openPayment\(invoice\)/);
   assert.match(invoicing, /embeddedIncomeExpenseMode \|\| 'income'/);
   assert.match(invoicing, /Expense ledger/);
