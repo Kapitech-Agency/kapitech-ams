@@ -75,7 +75,6 @@ export const AMS_NAVIGATION_GROUPS: AmsNavigationGroup[] = [
 export const AMS_SYSTEM_SETTINGS_ITEMS: AmsNavigationItem[] = [
   { key: 'user-access', label: 'User Access & Confidential Cost Rates', to: '/admin/settings?tab=security', icon: 'access', allowedRoles: ['Admin'] },
   { key: 'data-persistence-backup', label: 'Data Persistence & Backup Portal', to: '/admin/settings?tab=overview', icon: 'backup', allowedRoles: ['Admin'] },
-  { key: 'release-readiness', label: 'Release Readiness Telemetry Gate', to: '/admin/navigation/release-readiness', icon: 'readiness', allowedRoles: ['Admin'] },
 ];
 
 export const AMS_PRIMARY_SETTINGS_ITEM: AmsNavigationItem = {
