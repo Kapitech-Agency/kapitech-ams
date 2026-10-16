@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 import { useSearchParams } from 'react-router-dom';
 import {
-  ArrowUpRight, Briefcase, CheckCircle2, ExternalLink, FileText,
+  Briefcase, CheckCircle2, ExternalLink, FileText,
   Globe, Plus, Search, Send, ShieldAlert, Trash2, Users, X, Pencil,
   RefreshCw, Eye, EyeOff
 } from 'lucide-react';
@@ -697,7 +697,7 @@ export const AdminCmsCareers: React.FC = () => {
                   <p className="mt-2 text-xs leading-5 text-muted">{isId ? 'Pengelolaan pelamar memakai permission CRM / Inbox yang sama dengan pipeline saat ini.' : 'Applicant management uses the same CRM / Inbox permission as the existing pipeline.'}</p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Button type="button" variant="secondary" icon={<RefreshCw size={13} />} onClick={() => void loadApplicants(true)}>{isId ? 'Coba lagi' : 'Try again'}</Button>
-                    <Button type="button" variant="primary" icon={<ArrowUpRight size={13} />} onClick={() => handleWorkspaceTabChange('applicants')}>{isId ? 'Buka Job Applications Inbox' : 'Open Job Applications Inbox'}</Button>
+
                   </div>
                 </div>
               </div>
@@ -707,7 +707,7 @@ export const AdminCmsCareers: React.FC = () => {
               <Users size={23} className="mx-auto text-muted" />
               <h3 className="mt-3 text-sm font-semibold text-fg">{applicants.length === 0 ? (isId ? 'Belum ada pelamar' : 'No applicants yet') : (isId ? 'Tidak ada pelamar yang cocok' : 'No matching applicants')}</h3>
               <p className="mt-1 text-xs leading-5 text-muted">{isId ? 'Lamaran dari halaman Career public site akan muncul di sini secara otomatis.' : 'Applications submitted through the public Careers page will appear here automatically.'}</p>
-              <Button type="button" variant="secondary" className="mt-4" icon={<ArrowUpRight size={13} />} onClick={() => handleWorkspaceTabChange('applicants')}>{isId ? 'Buka pipeline lengkap' : 'Open full applicant pipeline'}</Button>
+
             </div>
           ) : (
             <AdminDataTableShell slug="cms-careers-applicants-table">

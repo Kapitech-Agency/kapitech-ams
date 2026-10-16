@@ -489,12 +489,21 @@ test('AMS UI defaults no longer override component focus, form sizing, or compac
 
 test('Careers tabs, filters, and modal fields use consistent AMS interactions', async () => {
   const careers = await read('src/pages/admin/AdminCmsCareers.tsx');
+  const inbox = await read('src/pages/admin/AdminInbox.tsx');
+  const app = await read('src/App.tsx');
   assert.match(careers, /role="tablist"/);
   assert.match(careers, /role="tab"/);
   assert.match(careers, /aria-selected=\{activeTab === tab\.key\}/);
   assert.match(careers, /ArrowLeft[\s\S]{0,700}handleWorkspaceTabChange\(nextKey\)/);
   assert.match(careers, /setSearchParams\(\(current\) =>/);
   assert.match(careers, /canManageJobs && requestedTab !== 'applicants' \? 'jobs' : 'applicants'/);
+  assert.match(careers, /canAccessAmsRoute\(role, '\/admin\/cms\/careers'\)/);
+  assert.doesNotMatch(careers, /navigate\('\/admin\/inbox\?view=jobs'/);
+  assert.match(inbox, /\.filter\(\(item\) => item\.type !== 'career'\)/);
+  assert.match(inbox, /to="\/admin\/cms\/careers\?tab=applicants"/);
+  assert.match(app, /if \(query\.get\('view'\) === 'jobs'\)/);
+  assert.match(app, /pathname: '\/admin\/cms\/careers', search: '\?tab=applicants'/);
+  assert.match(app, /<InboxWorkspaceRoute \/>/);
   assert.match(careers, /id="careers-jobs-panel"[\s\S]{0,180}aria-labelledby="careers-jobs-tab"/);
   assert.match(careers, /id="careers-applicants-panel"[\s\S]{0,180}aria-labelledby="careers-applicants-tab"/);
   assert.equal((careers.match(/<CustomSelect\b/g) || []).length, 3);

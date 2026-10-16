@@ -81,6 +81,9 @@ test('Finance receives the permitted financial and client workspaces but cannot 
   assert.equal(canAccessAmsRoute('Finance', '/admin/tasks', '?taskscope=all'), false);
   assert.equal(canAccessAmsRoute('Finance', '/admin/documents'), false);
   assert.equal(canAccessAmsRoute('Finance', '/admin/finance/quotations'), true);
+  assert.equal(canAccessAmsRoute('Finance', '/admin/cms/careers', '?tab=applicants'), true);
+  assert.equal(canAccessAmsRoute('Finance', '/admin/cms/careers'), false);
+  assert.equal(canAccessAmsRoute('Finance', '/admin/cms/careers', '?tab=jobs'), false);
 });
 
 test('PM can view assigned client, delivery, team and aggregate project finance destinations only', () => {
@@ -98,6 +101,8 @@ test('PM can view assigned client, delivery, team and aggregate project finance 
   assert.equal(canAccessAmsRoute('PM', '/admin/settings', '?tab=security'), false);
   assert.equal(canAccessAmsRoute('PM', '/admin/documents'), false);
   assert.equal(canAccessAmsRoute('PM', '/admin/cms/insights'), true);
+  assert.equal(canAccessAmsRoute('PM', '/admin/cms/careers', '?tab=applicants'), true);
+  assert.equal(canAccessAmsRoute('PM', '/admin/cms/careers'), false);
   assert.equal(canAccessAmsRoute('PM', '/admin/cms/services'), false);
 });
 
@@ -111,6 +116,7 @@ test('Creative and Freelancer route restrictions remain intact while using the c
   assert.equal(canAccessAmsRoute('Creative', '/admin/projects', '?projects=sprint'), true);
   assert.equal(canAccessAmsRoute('Creative', '/admin/projects', '?projects=budget'), false);
   assert.equal(canAccessAmsRoute('Creative', '/admin/cms/insights'), true);
+  assert.equal(canAccessAmsRoute('Creative', '/admin/cms/careers', '?tab=applicants'), false);
   assert.equal(canAccessAmsRoute('Creative', '/admin/finance', '?tab=project-finance'), false);
   assert.equal(canAccessAmsRoute('Creative', '/admin/crm'), false);
   assert.equal(canAccessAmsRoute('Freelancer', '/admin/tasks', '?taskscope=my&workspace=project'), true);

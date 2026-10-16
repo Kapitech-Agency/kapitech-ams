@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 // Shared module chrome renders the canonical ams-dashboard-header primitive.
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { 
   Inbox, 
@@ -56,7 +56,6 @@ import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 export const AdminInbox: React.FC = () => {
   const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const { language } = useLanguage();
-  const navigate = useNavigate();
   const canManageCrm = hasAdminPermission('canManageCrm');
   const canManageClients = hasAdminPermission('canManageClients');
   type InboxTab = 'overview' | 'client' | 'jobs' | 'starred';
@@ -65,11 +64,6 @@ export const AdminInbox: React.FC = () => {
   const activeInboxTab: InboxTab = requestedTab && ['overview', 'client', 'jobs', 'starred'].includes(requestedTab)
     ? requestedTab
     : 'overview';
-
-  // Legacy Careers links now open the canonical applicant workspace in Website CMS.
-  useEffect(() => {
-    if (requestedTab === 'jobs') navigate('/admin/cms/careers?tab=applicants', { replace: true });
-  }, [navigate, requestedTab]);
 
   // Core Data & Currency
   const [submissions, setSubmissions] = useState<ContactSubmission[]>([]);
@@ -747,6 +741,7 @@ export const AdminInbox: React.FC = () => {
         actions={(
           <>
             <span className="text-[11px] tabular-nums text-muted">{activeTabItems.length} inbound</span>
+            {canManageCrm && <Link to="/admin/cms/careers?tab=applicants" className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent">{language === 'id' ? 'Pelamar Careers' : 'Careers Applicants'}</Link>}
             <button type="button" onClick={() => setIsEmailModalOpen(true)} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent" title={language === 'id' ? 'Buka pengaturan notifikasi email' : 'Open email alert settings'}><Mail size={14} /><span>{language === 'id' ? 'Notifikasi Email' : 'Email Alerts'}</span></button>
             {metrics.newCount > 0 && <button type="button" onClick={handleMarkAllRead} disabled={!canManageCrm} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"><Check size={14} /><span>{activeInboxTab === 'jobs'
     ? (language === 'id' ? 'Mulai Screening' : 'Start Screening')

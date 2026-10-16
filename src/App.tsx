@@ -372,6 +372,18 @@ const LegacyQuotationRedirect: React.FC = () => {
   );
 };
 
+const InboxWorkspaceRoute: React.FC = () => {
+  const location = useLocation();
+  const query = new URLSearchParams(location.search);
+
+  // The old job-applications Inbox view now opens the single owning Careers workspace.
+  if (query.get('view') === 'jobs') {
+    return <Navigate to={{ pathname: '/admin/cms/careers', search: '?tab=applicants' }} replace />;
+  }
+
+  return <AdminInbox />;
+};
+
 const App = () => {
   return (
     <BrowserRouter>
@@ -399,7 +411,7 @@ const App = () => {
                 <Route path="navigation/release-readiness" element={<ModuleRoute moduleKey="settings" moduleLabel="Release Readiness Telemetry Gate"><AmsNavigationPlaceholder kind="readiness" /></ModuleRoute>} />
                 <Route path="tasks" element={<ModuleRoute moduleKey="projects" moduleLabel="tasks"><TasksWorkspace /></ModuleRoute>} />
                 <Route path="executive" element={<Navigate to="/admin/dashboard" replace />} />
-                <Route path="inbox" element={<ModuleRoute moduleKey="inbox" moduleLabel="the inbox"><AdminInbox /></ModuleRoute>} />
+                <Route path="inbox" element={<ModuleRoute moduleKey="inbox" moduleLabel="the inbox"><InboxWorkspaceRoute /></ModuleRoute>} />
                 <Route path="crm" element={<Navigate to="/admin/clients/all-clients" replace />} />
                 <Route path="proposals" element={<LegacyQuotationRedirect />} />
                 <Route path="contracts" element={<ModuleRoute moduleKey="clients" moduleLabel="contracts"><AdminContracts /></ModuleRoute>} />
