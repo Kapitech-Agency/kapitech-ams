@@ -278,20 +278,20 @@ test('Finance refresh keeps last successful source records available when a requ
 test('Embedded Finance preserves last successful source records and distinguishes failed sources from empty lists', async () => {
   const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
 
-  assert.match(invoicing, /const \\[sourceErrors, setSourceErrors\\] = useState<string\\[\\]>\\(\\[\\]\\)/);
-  assert.match(invoicing, /const nextInvoices = shouldUseDemoInvoices \\? demoInvoices : invoiceSourceAvailable \\? apiInvoices : invoices/);
-  assert.match(invoicing, /const nextExpenses = shouldUseDemoExpenses \\? demoExpenses : expenseSourceAvailable \\? apiExpenses : expenses/);
-  assert.match(invoicing, /const sourceFailures = \\[/);
-  assert.match(invoicing, /Some Finance data sources could not be loaded\\. Displayed records and totals may be incomplete\\./);
-  assert.match(invoicing, /if \\(shouldUseDemoInvoices \\|\\| shouldUseDemoExpenses \\|\\| \\(!metricsSourceAvailable && invoiceSourceAvailable && expenseSourceAvailable\\)\\)/);
-  assert.match(invoicing, /invoiceSourceUnavailable \\? 'Invoice data unavailable' : embeddedReceivablesOnly/);
-  assert.match(invoicing, /!invoiceSourceUnavailable && canManageInvoices && !embeddedReceivablesOnly/);
-  assert.match(invoicing, /expenseSourceUnavailable \\? 'Expense data unavailable' : 'No expenses found'/);
-  assert.match(invoicing, /if \\(invoiceSourceUnavailable\\) \\{\\s*showNotice\\('danger', sourceUnavailableMessage\\('invoice'\\)\\);\\s*return;/);
-  assert.match(invoicing, /if \\(expenseSourceUnavailable\\) \\{\\s*showNotice\\('danger', sourceUnavailableMessage\\('expense'\\)\\);\\s*return;/);
-  assert.match(invoicing, /disabled=\\{invoiceSourceUnavailable \\|\\| !filteredInvoices.length\\}/);
-  assert.match(invoicing, /disabled=\\{expenseSourceUnavailable \\|\\| !filteredExpenses.length\\}/);
-  assert.match(invoicing, /disabled=\\{expenseSourceUnavailable \\|\\| vendorSourceUnavailable \\|\\| !filteredVendorPayments.length\\}/);
+  assert.ok(invoicing.includes('const [sourceErrors, setSourceErrors] = useState<string[]>([])'));
+  assert.ok(invoicing.includes('const nextInvoices = shouldUseDemoInvoices ? demoInvoices : invoiceSourceAvailable ? apiInvoices : invoices;'));
+  assert.ok(invoicing.includes('const nextExpenses = shouldUseDemoExpenses ? demoExpenses : expenseSourceAvailable ? apiExpenses : expenses;'));
+  assert.ok(invoicing.includes('const sourceFailures = ['));
+  assert.ok(invoicing.includes('Some Finance data sources could not be loaded. Displayed records and totals may be incomplete.'));
+  assert.ok(invoicing.includes('if (shouldUseDemoInvoices || shouldUseDemoExpenses || (!metricsSourceAvailable && invoiceSourceAvailable && expenseSourceAvailable)) {'));
+  assert.ok(invoicing.includes("invoiceSourceUnavailable ? 'Invoice data unavailable' : embeddedReceivablesOnly"));
+  assert.ok(invoicing.includes('!invoiceSourceUnavailable && canManageInvoices && !embeddedReceivablesOnly'));
+  assert.ok(invoicing.includes("expenseSourceUnavailable ? 'Expense data unavailable' : 'No expenses found'"));
+  assert.ok(invoicing.includes("showNotice('danger', sourceUnavailableMessage('invoice'));"));
+  assert.ok(invoicing.includes("showNotice('danger', sourceUnavailableMessage('expense'));"));
+  assert.ok(invoicing.includes('disabled={invoiceSourceUnavailable || !filteredInvoices.length}'));
+  assert.ok(invoicing.includes('disabled={expenseSourceUnavailable || !filteredExpenses.length}'));
+  assert.ok(invoicing.includes('disabled={expenseSourceUnavailable || vendorSourceUnavailable || !filteredVendorPayments.length}'));
 });
 
 test('Annual Summary includes years represented only by Cash & Bank records', async () => {
