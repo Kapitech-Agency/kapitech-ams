@@ -30,7 +30,7 @@ test('Flat finance navigation keeps the complete worksheet workbook inside the F
   assert.match(workspace, /AdminSectionTabs ariaLabel="Finance worksheets" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="w-full"/);
   assert.match(workspace, /data-ams-slug="finance-workspace-navigation"/);
   assert.match(workspace, /data-ams-slug="finance-active-worksheet"/);
-  assert.match(workspace, /const sheetItems = activeGroup\.items\.map\(\(item\) =>/);
+  assert.match(workspace, /const sheetItems = activeGroup\.items[\s\S]{0,180}canShowFinanceWorksheet\(item\.key\)/);
   assert.match(workspace, /label: item\.label/);
   assert.doesNotMatch(workspace, /label: item\.sheet \+ ' ' \+ item\.label/);
   assert.match(workspace, /\{loading \? renderLoading\(\) : renderView\(activeTab\)\}/);
@@ -160,7 +160,9 @@ test('Finance groups and vendor workflows are separated by user task', async () 
   assert.match(apView, /title="Accounts Payable register"/);
   assert.match(apView, /title="Vendor payment schedule"/);
   assert.match(apView, /bills\.length > 0 &&/);
-  assert.match(workspace, /receivables: 'accounts-receivable'/);
+  assert.match(workspace, /const financeWorksheetDestination = \(key: string\) => '\/admin\/finance\?tab=' \+ key/);
+  assert.match(workspace, /const canShowFinanceWorksheet = \(key: string\) =>/);
+  assert.match(workspace, /!sidebarDestinations\.has\(destination\)/);
   assert.doesNotMatch(apView, /title="Vendor contract references"/);
   assert.match(vendorsView, /<AdminVendors embedded searchTerm=\{searchText\} \/>/);
   assert.match(vendorsView, /Vendor contract register/);
@@ -316,7 +318,7 @@ test('Vendor contract editor protects unsaved changes on close and cancel', asyn
 test('Finance drawer uses the shared drawer header once and keeps source errors actionable', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   const start = workspace.indexOf('const renderRegisterEditor = () =>');
-  const end = workspace.indexOf('const groupEntryTabs:', start);
+  const end = workspace.indexOf('const navigationRole = getAmsRole', start);
   assert.ok(start >= 0 && end > start);
   const drawer = workspace.slice(start, end);
 
