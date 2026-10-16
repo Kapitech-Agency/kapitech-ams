@@ -1665,8 +1665,9 @@ const FinanceWorkbookWorkspace: React.FC = () => {
   };
   const groupTabSlugs: Record<string, string> = {
     overview: 'finance-tab-overview-control',
-    transactions: 'finance-tab-transactions-cash',
-    receivables: 'finance-tab-receivables-payables',
+    receivables: 'finance-tab-revenue-receivables',
+    payables: 'finance-tab-expenses-payables',
+    cash: 'finance-tab-cash-management',
     projects: 'finance-tab-project-finance',
     accounting: 'finance-tab-accounting-reports'
   };
@@ -1995,6 +1996,8 @@ const FinanceWorkbookWorkspace: React.FC = () => {
           </div>
         );
       }
+      case 'quotations':
+        return <AdminInvoicing key={tab.key} embeddedView="quotations" showStandaloneHeader={false} />;
       case 'revenue':
         return <AdminInvoicing key={tab.key} embeddedView="invoices" />;
       case 'expenses':
