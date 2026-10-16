@@ -36,7 +36,13 @@ test('MFA setup stays reachable without admin rights while routine security acce
   assert.ok(source.includes("const mfaSetupRequired = searchParams.get('mfaRequired') === '1' || session?.user?.mfaEnabled !== true;"));
   assert.ok(source.includes("(requestedTab === 'security' && !mfaSetupRequired && !canManageAdminAccounts && !canAccessServer)"));
   assert.ok(source.includes("if (tab === 'security' && !mfaSetupRequired && !canManageAdminAccounts && !canAccessServer) return;"));
-  assert.ok(source.includes("(tab.key !== 'security' || mfaSetupRequired || canManageAdminAccounts || canAccessServer)"));
+  const layout = await read('src/pages/admin/AdminLayout.tsx');
+  const navigation = await read('src/lib/amsModuleSubnavigation.ts');
+  assert.ok(layout.includes('mfaSetupRequired'));
+  assert.ok(layout.includes('getAmsModuleSubnavigation(workspaceNavigationModule, amsRole, mfaSetupRequired)'));
+  assert.ok(navigation.includes('if (moduleKey === \'settings\' && allowMfaSetup && role !== \'Admin\')'));
+  assert.ok(navigation.includes("key: 'access',"));
+  assert.ok(navigation.includes("to: '/admin/settings?tab=security',"));
   assert.ok(source.includes("const fallbackTab: SettingsTab = canAccessServer ? 'overview' : canViewAuditLogs ? 'audit' : (mfaSetupRequired || canManageAdminAccounts) ? 'security' : 'overview';"));
 });
 test('System integrity and snapshot controls are hidden without server permissions', async () => {
