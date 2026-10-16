@@ -274,6 +274,21 @@ test('Finance refresh keeps last successful source records available when a requ
   assert.match(workspace, /setSourceErrors\(baseResults\.filter\(\(result\) => result\.error\)/);
 });
 
+
+test('Embedded Finance preserves last successful source records and distinguishes failed sources from empty lists', async () => {
+  const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
+
+  assert.match(invoicing, /const \\[sourceErrors, setSourceErrors\\] = useState<string\\[\\]>\\(\\[\\]\\)/);
+  assert.match(invoicing, /const nextInvoices = shouldUseDemoInvoices \\? demoInvoices : invoiceSourceAvailable \\? apiInvoices : invoices/);
+  assert.match(invoicing, /const nextExpenses = shouldUseDemoExpenses \\? demoExpenses : expenseSourceAvailable \\? apiExpenses : expenses/);
+  assert.match(invoicing, /const sourceFailures = \\[/);
+  assert.match(invoicing, /Some Finance data sources could not be loaded\\. Displayed records and totals may be incomplete\\./);
+  assert.match(invoicing, /if \\(shouldUseDemoInvoices \\|\\| shouldUseDemoExpenses \\|\\| \\(!metricsSourceAvailable && invoiceSourceAvailable && expenseSourceAvailable\\)\\)/);
+  assert.match(invoicing, /invoiceSourceUnavailable \\? 'Invoice data unavailable' : embeddedReceivablesOnly/);
+  assert.match(invoicing, /!invoiceSourceUnavailable && canManageInvoices && !embeddedReceivablesOnly/);
+  assert.match(invoicing, /expenseSourceUnavailable \\? 'Expense data unavailable' : 'No expenses found'/);
+});
+
 test('Annual Summary includes years represented only by Cash & Bank records', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   const start = workspace.indexOf("case 'annual-summary': {");
