@@ -290,7 +290,7 @@ test('Embedded Finance preserves last successful source records and distinguishe
   assert.ok(invoicing.includes('if (shouldUseDemoInvoices || shouldUseDemoExpenses || (!metricsSourceAvailable && invoiceSourceAvailable && expenseSourceAvailable)) {'));
   assert.ok(invoicing.includes('} else if (metricsRes.success && metricsRes.data?.metrics) {'));
   assert.ok(invoicing.includes("invoiceSourceUnavailable ? 'Invoice data unavailable' : embeddedReceivablesOnly"));
-  assert.ok(invoicing.includes('!invoiceSourceUnavailable && canManageInvoices && !embeddedReceivablesOnly'));
+  assert.ok(invoicing.includes('!invoiceSourceBlocked && canManageInvoices && !embeddedReceivablesOnly'));
   assert.ok(invoicing.includes("expenseSourceUnavailable ? 'Expense data unavailable' : 'No expenses found'"));
   assert.ok(invoicing.includes("showNotice('danger', sourceUnavailableMessage('invoice'));"));
   assert.ok(invoicing.includes("showNotice('danger', sourceUnavailableMessage('expense'));"));
