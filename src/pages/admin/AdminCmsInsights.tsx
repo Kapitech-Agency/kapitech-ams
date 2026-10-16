@@ -16,7 +16,7 @@ import {
 import { api } from '../../lib/apiClient';
 import { useLanguage } from '../../lib/LanguageContext';
 import {
-  AdminCmsSectionTabs, AdminDataTableShell, AdminFilterBar, AdminModuleNotice,
+  AdminDataTableShell, AdminFilterBar, AdminModuleNotice,
   AdminMetricStrip,
   AdminModuleHeader,
   AdminPageShell,
@@ -771,7 +771,7 @@ export const AdminCmsInsights: React.FC = () => {
       />
 
       
-      <AdminCmsSectionTabs activeKey="insights" />
+      
 
       <AdminMetricStrip
         slug="cms-insights-kpis"

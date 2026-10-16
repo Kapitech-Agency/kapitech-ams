@@ -27,7 +27,7 @@ import type { ProjectItem } from '../../data/projectsData';
 import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { AdminCmsSectionTabs, AdminDataTableShell, AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminDataTableShell, AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 
 const slugifyCaseStudy = (value: string): string =>
@@ -422,7 +422,7 @@ export const AdminCmsProjects: React.FC = () => {
 
       
       
-      <AdminCmsSectionTabs activeKey="projects" />
+      
 
       <AdminMetricStrip
         slug="cms-projects-kpis"

@@ -12,7 +12,7 @@ import Button from '../../components/ui/Button';
 import { Drawer } from '../../components/ui/Drawer';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { CustomSelect } from '../../components/ui/CustomSelect';
-import { AdminCmsSectionTabs, AdminDataTableShell, AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination, Skeleton } from '../../components/admin/AdminModulePrimitives';
+import { AdminDataTableShell, AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination, Skeleton } from '../../components/admin/AdminModulePrimitives';
 
 type CareerPosition = {
   id: string;
@@ -465,7 +465,7 @@ export const AdminCmsCareers: React.FC = () => {
         }
       />
 
-      <AdminCmsSectionTabs activeKey="careers" />
+      
 
       {statusMessage && (
         <AdminModuleNotice

@@ -33,7 +33,7 @@ import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { AdminCmsSectionTabs, AdminDataTableShell, AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminDataTableShell, AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 
 const normalizeCmsService = (service: ServiceItemData | null | undefined): ServiceItemData => {
@@ -277,7 +277,7 @@ export const AdminCmsServices: React.FC = () => {
       />
 
 
-      <AdminCmsSectionTabs activeKey="services" />
+      
 
       {statusMessage && (
         <AdminModuleNotice

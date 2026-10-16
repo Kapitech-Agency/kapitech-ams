@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
 // Shared module chrome renders the canonical ams-dashboard-header primitive.
 import {
@@ -49,6 +49,19 @@ type SortKey = 'name' | 'company' | 'industry' | 'status' | 'updatedAt' | 'proje
 type SortDirection = 'asc' | 'desc';
 type SlaFilter = 'all' | 'healthy' | 'near' | 'over' | 'not-configured';
 type StatusScope = 'all' | 'active' | 'lead' | 'at-risk';
+
+const getStatusScopeFromSearchParams = (searchParams: URLSearchParams): StatusScope => {
+  const scope = searchParams.get('scope');
+  if (scope === 'active') return 'active';
+  if (scope === 'onboarding') return 'lead';
+  if (scope === 'at-risk') return 'at-risk';
+  return 'all';
+};
+
+const getStatusScopeQueryValue = (scope: StatusScope): string | null => {
+  if (scope === 'lead') return 'onboarding';
+  return scope === 'all' ? null : scope;
+};
 type ClientInteractionType = 'call' | 'email' | 'meeting' | 'message' | 'note';
 
 type ClientInteraction = {
@@ -196,6 +209,7 @@ export const AdminClients: React.FC = () => {
   const canViewClientContracts = canManageClients || hasAdminPermission('canManageCrm') || hasAdminPermission('canManageProjects');
   const canManageClientInteractions = canManageClients || hasAdminPermission('canManageCrm');
   const { t, language } = useLanguage();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [currency, setCurrency] = useState<CurrencyCode>(getActiveCurrency());
   const [clients, setClients] = useState<AgencyClient[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -203,7 +217,7 @@ export const AdminClients: React.FC = () => {
   const [industryFilter, setIndustryFilter] = useState('all');
   const [locationFilter, setLocationFilter] = useState('all');
   const [slaFilter, setSlaFilter] = useState<SlaFilter>('all');
-  const [statusScope, setStatusScope] = useState<StatusScope>('all');
+  const [statusScope, setStatusScope] = useState<StatusScope>(() => getStatusScopeFromSearchParams(searchParams));
   const [sortKey, setSortKey] = useState<SortKey>('updatedAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [page, setPage] = useState(1);
@@ -262,6 +276,11 @@ export const AdminClients: React.FC = () => {
     setStatusMessage(message);
     window.setTimeout(() => setStatusMessage(null), 3500);
   };
+
+  useEffect(() => {
+    const requestedScope = getStatusScopeFromSearchParams(searchParams);
+    setStatusScope((current) => current === requestedScope ? current : requestedScope);
+  }, [searchParams]);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -489,6 +508,19 @@ export const AdminClients: React.FC = () => {
     setSlaFilter('all');
     setStatusScope('all');
     setPage(1);
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('scope');
+    setSearchParams(nextParams, { replace: true });
+  };
+
+  const changeStatusScope = (scope: StatusScope) => {
+    setStatusScope(scope);
+    setPage(1);
+    const nextParams = new URLSearchParams(searchParams);
+    const queryValue = getStatusScopeQueryValue(scope);
+    if (queryValue) nextParams.set('scope', queryValue);
+    else nextParams.delete('scope');
+    setSearchParams(nextParams);
   };
 
   const openCreate = () => {
@@ -821,7 +853,7 @@ export const AdminClients: React.FC = () => {
             { id: 'lead', label: 'Onboarding' },
             { id: 'at-risk', label: 'At-risk' }
           ].map((item) => (
-            <button key={item.id} type="button" onClick={() => { setStatusScope(item.id as StatusScope); setPage(1); }} className={`inline-flex min-h-9 shrink-0 items-center rounded-control border px-3 text-[11px] font-medium transition-colors ${statusScope === item.id ? 'border-line bg-line text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg'}`}>
+            <button key={item.id} type="button" onClick={() => changeStatusScope(item.id as StatusScope)} className={`inline-flex min-h-9 shrink-0 items-center rounded-control border px-3 text-[11px] font-medium transition-colors ${statusScope === item.id ? 'border-line bg-line text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg'}`}>
               {item.label}
             </button>
           ))}

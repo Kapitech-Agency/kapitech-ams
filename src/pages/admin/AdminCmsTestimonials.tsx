@@ -6,7 +6,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
 import { Button } from '../../components/ui/Button';
-import { AdminCmsSectionTabs, AdminDataTableShell, AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminDataTableShell, AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 const normalizeCmsTestimonial = (item: TestimonialItem): TestimonialItem => ({
@@ -185,7 +185,7 @@ export const AdminCmsTestimonials: React.FC = () => {
 
       
       
-      <AdminCmsSectionTabs activeKey="testimonials" />
+      
 
       <AdminMetricStrip
         slug="cms-testimonials-kpis"
