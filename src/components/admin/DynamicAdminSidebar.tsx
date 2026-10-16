@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import React from 'react';
+import { NavLink } from 'react-router-dom';
 import {
   Home,
   Inbox,
@@ -12,24 +12,23 @@ import {
   LayoutGrid,
   FileText,
   ShieldCheck,
-  ChevronDown,
 } from 'lucide-react';
 import {
   AMS_PRIMARY_SETTINGS_ITEM,
-  getPrimaryNavigationForRole,
+  getNavigationGroupsForRole,
   isNavigationItemActive,
+  type AmsNavigationGroup,
   type AmsNavigationIcon,
   type AmsNavigationItem,
   type AmsRole,
 } from '../../lib/amsNavigationAccess';
-import {
-  getAmsModuleSubnavigation,
-  isAmsModuleSubnavigationItemActive,
-  type AmsSidebarModuleKey,
-  type AmsSidebarSubnavigationItem,
-} from '../../lib/amsModuleSubnavigation';
 
-type IconComponent = React.ComponentType<{ size?: number; className?: string; strokeWidth?: number; 'aria-hidden'?: boolean }>;
+type IconComponent = React.ComponentType<{
+  size?: number;
+  className?: string;
+  strokeWidth?: number;
+  'aria-hidden'?: boolean;
+}>;
 
 const NAVIGATION_ICONS: Record<AmsNavigationIcon, IconComponent> = {
   dashboard: Home,
@@ -59,7 +58,6 @@ interface NavigationLinkProps {
   search: string;
   hash: string;
   onNavigate?: () => void;
-  className?: string;
 }
 
 const NavigationLink: React.FC<NavigationLinkProps> = ({
@@ -69,7 +67,6 @@ const NavigationLink: React.FC<NavigationLinkProps> = ({
   search,
   hash,
   onNavigate,
-  className = '',
 }) => {
   const Icon = NAVIGATION_ICONS[item.icon];
   const active = isNavigationItemActive(item, pathname, search, hash);
@@ -83,13 +80,11 @@ const NavigationLink: React.FC<NavigationLinkProps> = ({
       title={item.label}
       aria-current={active ? 'page' : undefined}
       data-ams-nav-item={item.key}
-      className={() => [
-        'group flex min-h-10 min-w-0 items-center gap-2.5 rounded-control border border-transparent px-2.5 text-xs font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
-        className,
-        active
-          ? 'bg-accent/10 text-fg'
-          : 'text-muted hover:bg-bg/70 hover:text-fg',
-      ].filter(Boolean).join(' ')}
+      data-ams-slug={item.key}
+      className={[
+        'group flex min-h-10 w-full min-w-0 items-center gap-2.5 rounded-control border border-transparent px-2.5 text-xs font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
+        active ? 'bg-accent/10 text-fg' : 'text-muted hover:bg-bg/70 hover:text-fg',
+      ].join(' ')}
     >
       <span className={['flex h-7 w-7 shrink-0 items-center justify-center', active ? 'text-fg' : 'text-muted group-hover:text-fg'].join(' ')}>
         <Icon size={16} strokeWidth={active ? 2.1 : 1.8} aria-hidden="true" />
@@ -104,45 +99,54 @@ const NavigationLink: React.FC<NavigationLinkProps> = ({
   );
 };
 
-interface SubnavigationListProps {
-  items: AmsSidebarSubnavigationItem[];
+interface NavigationGroupProps {
+  group: AmsNavigationGroup;
+  role: AmsRole;
   pathname: string;
   search: string;
   hash: string;
   onNavigate?: () => void;
+  showHeading?: boolean;
 }
 
-const SubnavigationList: React.FC<SubnavigationListProps> = ({
-  items,
+const NavigationGroup: React.FC<NavigationGroupProps> = ({
+  group,
+  role,
   pathname,
   search,
   hash,
   onNavigate,
-}) => (
-  <div className="ml-4 mt-1 space-y-0.5 border-l border-line pl-2.5" data-ams-nav-submenu="true">
-    {items.map((item) => {
-      const active = isAmsModuleSubnavigationItemActive(item, pathname, search, hash);
-      return (
-        <Link
-          key={item.key}
-          to={item.to}
-          onClick={onNavigate}
-          aria-current={active ? 'page' : undefined}
-          data-ams-nav-subitem={item.key}
-          data-ams-slug={item.slug || item.key}
-          className={[
-            'flex min-h-8 min-w-0 items-center rounded-control border border-transparent px-2.5 py-1.5 text-[11px] font-medium leading-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
-            active
-              ? 'bg-accent/10 text-fg'
-              : 'text-muted hover:bg-bg/70 hover:text-fg',
-          ].join(' ')}
-        >
-          <span className="min-w-0 flex-1 truncate">{item.label}</span>
-        </Link>
-      );
-    })}
-  </div>
-);
+  showHeading = true,
+}) => {
+  if (!group.items.length) return null;
+
+  return (
+    <section
+      aria-label={group.label}
+      data-ams-nav-group={group.key}
+      className="space-y-1.5"
+    >
+      {showHeading && (
+        <h2 className="px-2.5 pb-1 pt-3 text-[9px] font-semibold uppercase tracking-[0.12em] text-muted/80">
+          {group.label}
+        </h2>
+      )}
+      <div className="space-y-0.5">
+        {group.items.map((item) => (
+          <NavigationLink
+            key={item.key}
+            item={item}
+            role={role}
+            pathname={pathname}
+            search={search}
+            hash={hash}
+            onNavigate={onNavigate}
+          />
+        ))}
+      </div>
+    </section>
+  );
+};
 
 export interface DynamicAdminSidebarNavigationProps {
   role: AmsRole;
@@ -153,8 +157,8 @@ export interface DynamicAdminSidebarNavigationProps {
 }
 
 /**
- * The sidebar contains primary modules with expandable, role-filtered submenu
- * links. The desktop top bar is reserved for global controls, not module routes.
+ * Flat, role-filtered sidebar navigation. Each destination is a direct link;
+ * in-page sections and tabs remain within their owning module workspace.
  */
 export const DynamicAdminSidebarNavigation: React.FC<DynamicAdminSidebarNavigationProps> = ({
   role,
@@ -163,69 +167,26 @@ export const DynamicAdminSidebarNavigation: React.FC<DynamicAdminSidebarNavigati
   hash,
   onNavigate,
 }) => {
-  const items = getPrimaryNavigationForRole(role);
-  const moduleItems = items.map((item) => ({
-    item,
-    children: getAmsModuleSubnavigation(item.key as AmsSidebarModuleKey, role),
-  }));
-  const activeModuleKey =
-    moduleItems.find(({ item, children }) => children.some((child) =>
-      isAmsModuleSubnavigationItemActive(child, pathname, search, hash)
-    ))?.item.key
-    || moduleItems.find(({ item, children }) => children.length > 0
-      && isNavigationItemActive(item, pathname, search, hash))?.item.key
-    || null;
-
-  const [expandedModuleKey, setExpandedModuleKey] = useState<string | null>(activeModuleKey);
-
-  useEffect(() => {
-    setExpandedModuleKey(activeModuleKey);
-  }, [activeModuleKey]);
+  const groups = getNavigationGroupsForRole(role);
 
   return (
-    <nav aria-label="Primary navigation" data-ams-feature-slug="role-based-sidebar" className="space-y-1">
-      {moduleItems.map(({ item, children }) => {
-        const expanded = expandedModuleKey === item.key;
-        return (
-          <div key={item.key} className="min-w-0">
-            <div className="flex min-w-0 items-center gap-1">
-              <NavigationLink
-                item={item}
-                role={role}
-                pathname={pathname}
-                search={search}
-                hash={hash}
-                onNavigate={onNavigate}
-                className={children.length > 0 ? 'min-w-0 flex-1' : 'w-full'}
-              />
-              {children.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setExpandedModuleKey((current) => current === item.key ? null : item.key)}
-                  aria-label={`${expanded ? 'Collapse' : 'Expand'} ${item.label} submenu`}
-                  aria-expanded={expanded}
-                  aria-controls={`ams-sidebar-submenu-${item.key}`}
-                  data-ams-nav-expand={item.key}
-                  className="flex h-9 w-8 shrink-0 items-center justify-center rounded-control border border-transparent text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                >
-                  <ChevronDown size={14} className={expanded ? 'rotate-180 transition-transform' : 'transition-transform'} aria-hidden="true" />
-                </button>
-              )}
-            </div>
-            {expanded && children.length > 0 && (
-              <div id={`ams-sidebar-submenu-${item.key}`}>
-                <SubnavigationList
-                  items={children}
-                  pathname={pathname}
-                  search={search}
-                  hash={hash}
-                  onNavigate={onNavigate}
-                />
-              </div>
-            )}
-          </div>
-        );
-      })}
+    <nav
+      aria-label="Primary navigation"
+      data-ams-feature-slug="role-based-sidebar"
+      data-ams-navigation-layout="flat"
+      className="space-y-3"
+    >
+      {groups.map((group) => (
+        <NavigationGroup
+          key={group.key}
+          group={group}
+          role={role}
+          pathname={pathname}
+          search={search}
+          hash={hash}
+          onNavigate={onNavigate}
+        />
+      ))}
     </nav>
   );
 };
@@ -238,7 +199,7 @@ export interface AdminSystemSettingsNavigationProps {
   onNavigate?: () => void;
 }
 
-/** System Settings stays pinned to the sidebar bottom and expands to its own sections. */
+/** Settings remains a single Admin-only direct link pinned to the sidebar bottom. */
 export const AdminSystemSettingsNavigation: React.FC<AdminSystemSettingsNavigationProps> = ({
   role,
   pathname,
@@ -246,57 +207,25 @@ export const AdminSystemSettingsNavigation: React.FC<AdminSystemSettingsNavigati
   hash,
   onNavigate,
 }) => {
-  const items = role === 'Admin' ? getAmsModuleSubnavigation('settings', role) : [];
-  const activeSubitem = items.find((item) =>
-    isAmsModuleSubnavigationItemActive(item, pathname, search, hash)
-  )?.key || null;
-  const [expanded, setExpanded] = useState(Boolean(activeSubitem));
-
-  useEffect(() => {
-    setExpanded(Boolean(activeSubitem));
-  }, [activeSubitem]);
-
   if (role !== 'Admin') return null;
 
   return (
     <section
-      aria-label="System settings"
+      aria-label="System center"
       data-ams-feature-slug="ams-system-settings-nav"
       className="mt-3 border-t border-line pt-3"
     >
-      <div className="flex min-w-0 items-center gap-1">
-        <NavigationLink
-          item={AMS_PRIMARY_SETTINGS_ITEM}
-          role={role}
-          pathname={pathname}
-          search={search}
-          hash={hash}
-          onNavigate={onNavigate}
-          className="min-w-0 flex-1"
-        />
-        <button
-          type="button"
-          onClick={() => setExpanded((current) => !current)}
-          aria-label={`${expanded ? 'Collapse' : 'Expand'} Settings submenu`}
-          aria-expanded={expanded}
-          aria-controls="ams-sidebar-submenu-settings"
-          data-ams-nav-expand="settings"
-          className="flex h-9 w-8 shrink-0 items-center justify-center rounded-control border border-transparent text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-        >
-          <ChevronDown size={14} className={expanded ? 'rotate-180 transition-transform' : 'transition-transform'} aria-hidden="true" />
-        </button>
-      </div>
-      {expanded && items.length > 0 && (
-        <div id="ams-sidebar-submenu-settings" className="max-h-48 overflow-y-auto custom-scrollbar">
-          <SubnavigationList
-            items={items}
-            pathname={pathname}
-            search={search}
-            hash={hash}
-            onNavigate={onNavigate}
-          />
-        </div>
-      )}
+      <h2 className="px-2.5 pb-1.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-muted/80">
+        SYSTEM CENTER
+      </h2>
+      <NavigationLink
+        item={AMS_PRIMARY_SETTINGS_ITEM}
+        role={role}
+        pathname={pathname}
+        search={search}
+        hash={hash}
+        onNavigate={onNavigate}
+      />
     </section>
   );
 };

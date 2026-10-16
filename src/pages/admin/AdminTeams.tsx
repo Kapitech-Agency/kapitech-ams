@@ -1238,31 +1238,7 @@ export const AdminTeams: React.FC = () => {
         }
       />
 
-      {location.pathname === '/admin/team' && (
-        <div className="min-[900px]:hidden min-w-0" data-ams-slug="team-mobile-tabs">
-          <AdminSectionTabs
-            ariaLabel="Team sections"
-            activeKey={currentView}
-            items={[
-              { key: 'team-directory', label: 'Team', to: '/admin/team' },
-              { key: 'capacity-allocation', label: 'Capacity', to: '/admin/team?view=capacity-allocation' },
-            ]}
-          />
-        </div>
-      )}
 
-      {location.pathname === '/admin/vendors' && (
-        <div className="min-[900px]:hidden min-w-0" data-ams-slug="vendors-mobile-tabs">
-          <AdminSectionTabs
-            ariaLabel="Vendors sections"
-            activeKey={currentView}
-            items={[
-              { key: 'vendor-directory', label: 'Vendors', to: '/admin/vendors' },
-              { key: 'skill-matrix', label: 'Skills', to: '/admin/vendors?view=skill-matrix' },
-            ]}
-          />
-        </div>
-      )}
 
 
       {notice && (

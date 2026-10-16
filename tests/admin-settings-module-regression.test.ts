@@ -7,29 +7,42 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (file: string) => fs.readFile(path.join(root, file), 'utf8');
 
-test('Settings subsections are in the pinned sidebar dropdown and page controls remain responsive', async () => {
-  const source = await read('src/pages/admin/AdminSettings.tsx');
+test('System Center is a single Admin-only direct link and Settings workspace tabs render in the content area', async () => {
   const layout = await read('src/pages/admin/AdminLayout.tsx');
   const sidebar = await read('src/components/admin/DynamicAdminSidebar.tsx');
-  const navigation = await read('src/lib/amsModuleSubnavigation.ts');
+  const navigation = await read('src/lib/amsNavigationAccess.ts');
+  const workspace = await read('src/lib/amsModuleSubnavigation.ts');
 
-  assert.ok(source.includes('data-ams-slug="settings-tabs"'));
-  assert.ok(source.includes('className="min-[900px]:hidden min-w-0" data-ams-slug="settings-tabs"'));
-  for (const label of ['Backup', 'Audit', 'Access', 'Integrations', 'Readiness']) {
-    assert.ok(navigation.includes("label: '" + label + "'"), 'Missing Settings submenu: ' + label);
-  }
-  assert.equal(layout.includes('ariaLabel="Settings sections"'), false);
-  assert.ok(sidebar.includes('data-ams-nav-expand="settings"'));
-  assert.ok(sidebar.includes('aria-controls="ams-sidebar-submenu-settings"'));
+  assert.ok(layout.includes('data-ams-slug="workspace-navigation"'));
+  assert.ok(layout.includes('ariaLabel="Workspace navigation"'));
+  assert.ok(layout.includes("if (path === '/admin/settings' || path === '/admin/navigation/release-readiness') return 'settings';"));
+  assert.ok(layout.includes('getAmsModuleSubnavigation(workspaceNavigationModule, amsRole, mfaSetupRequired)'));
+  assert.ok(workspace.includes("{ key: 'backup', label: 'DB Migrations & Backups', to: '/admin/settings?tab=overview' }"));
+  assert.ok(workspace.includes("{ key: 'access', label: 'Access & Confidential Cost Rates', to: '/admin/settings?tab=security' }"));
+  assert.ok(workspace.includes("{ key: 'audit', label: 'Audit', to: '/admin/settings?tab=audit' }"));
+  assert.ok(workspace.includes("{ key: 'integrations', label: 'Integrations', to: '/admin/settings?tab=integrations' }"));
+  assert.ok(workspace.includes("{ key: 'readiness', label: 'Telemetry Gate', to: '/admin/navigation/release-readiness' }"));
+  assert.ok(sidebar.includes('data-ams-navigation-layout="flat"'));
+  assert.equal(sidebar.includes('aria-expanded='), false);
+  assert.equal(sidebar.includes('ChevronDown'), false);
+  assert.ok(sidebar.includes('AMS_PRIMARY_SETTINGS_ITEM'));
+  assert.ok(navigation.includes("label: 'Settings'"));
+  assert.ok(navigation.includes("allowedRoles: ['Admin']"));
+  assert.ok(navigation.includes("key: 'release-readiness'"));
 });
-
 test('MFA setup stays reachable without admin rights while routine security access remains permission-gated', async () => {
   const source = await read('src/pages/admin/AdminSettings.tsx');
 
   assert.ok(source.includes("const mfaSetupRequired = searchParams.get('mfaRequired') === '1' || session?.user?.mfaEnabled !== true;"));
   assert.ok(source.includes("(requestedTab === 'security' && !mfaSetupRequired && !canManageAdminAccounts && !canAccessServer)"));
   assert.ok(source.includes("if (tab === 'security' && !mfaSetupRequired && !canManageAdminAccounts && !canAccessServer) return;"));
-  assert.ok(source.includes("(tab.key !== 'security' || mfaSetupRequired || canManageAdminAccounts || canAccessServer)"));
+  const layout = await read('src/pages/admin/AdminLayout.tsx');
+  const navigation = await read('src/lib/amsModuleSubnavigation.ts');
+  assert.ok(layout.includes('mfaSetupRequired'));
+  assert.ok(layout.includes('getAmsModuleSubnavigation(workspaceNavigationModule, amsRole, mfaSetupRequired)'));
+  assert.ok(navigation.includes('if (moduleKey === \'settings\' && allowMfaSetup && role !== \'Admin\')'));
+  assert.ok(navigation.includes("key: 'access',"));
+  assert.ok(navigation.includes("to: '/admin/settings?tab=security',"));
   assert.ok(source.includes("const fallbackTab: SettingsTab = canAccessServer ? 'overview' : canViewAuditLogs ? 'audit' : (mfaSetupRequired || canManageAdminAccounts) ? 'security' : 'overview';"));
 });
 test('System integrity and snapshot controls are hidden without server permissions', async () => {

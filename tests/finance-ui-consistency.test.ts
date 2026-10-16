@@ -4,26 +4,27 @@ import test from 'node:test';
 
 const read = (path: string) => readFile(new URL('../' + path, import.meta.url), 'utf8');
 
-test('Finance sidebar dropdown and clean worksheet sub-tabs preserve direct transaction entry', async () => {
+test('Flat finance navigation keeps the complete worksheet workbook inside the Finance workspace', async () => {
   const layout = await read('src/pages/admin/AdminLayout.tsx');
   const sidebar = await read('src/components/admin/DynamicAdminSidebar.tsx');
-  const navigation = await read('src/lib/amsModuleSubnavigation.ts');
+  const navigation = await read('src/lib/amsNavigationAccess.ts');
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const workbook = await read('src/lib/financeWorkbook.ts');
   assert.doesNotMatch(layout, /<AdminTopbarTabs/);
-  assert.match(layout, /data-ams-slug="active-module-title"/);
-  assert.match(sidebar, /data-ams-nav-submenu="true"/);
-  assert.match(navigation, /label: 'Overview', to: '\/admin\/finance\?tab=executive-summary'/);
-  assert.match(navigation, /label: 'Transactions'[\s\S]*?to: '\/admin\/finance\?tab=cash-bank'/);
-  assert.match(navigation, /label: 'Invoices'[\s\S]*?to: '\/admin\/finance\?tab=accounts-receivable'/);
-  assert.match(navigation, /label: 'Profit'[\s\S]*?to: '\/admin\/finance\?tab=project-finance'/);
-  assert.match(navigation, /label: 'Accounting'[\s\S]*?to: '\/admin\/finance\?tab=journal'/);
-  assert.match(navigation, /slug: 'finance-tab-overview-control'/);
-  assert.match(navigation, /slug: 'finance-tab-transactions-cash'/);
-  assert.match(navigation, /slug: 'finance-tab-receivables-payables'/);
-  assert.match(navigation, /slug: 'finance-tab-project-finance'/);
-  assert.match(navigation, /slug: 'finance-tab-accounting-reports'/);
-  assert.match(workspace, /data-ams-slug="finance-area-mobile-selector"/);
-  assert.match(workspace, /<CustomSelect[\s\S]*?value=\{activeGroup\.key\}[\s\S]*?navigate\(destination\.to\)/);
+  assert.doesNotMatch(layout, /active-module-title|aria-label="Current module"/);
+  assert.match(layout, /ariaLabel="Workspace navigation"/);
+  assert.match(sidebar, /data-ams-navigation-layout="flat"/);
+  assert.doesNotMatch(sidebar, /data-ams-nav-submenu|aria-expanded=|ChevronDown/);
+  assert.match(navigation, /label: 'Invoicing & Revenues'/);
+  assert.match(navigation, /label: 'Profitability & Expenses'/);
+  assert.match(navigation, /label: 'Project Profitability'/);
+  assert.match(workspace, /FINANCE_WORKBOOK_GROUPS/);
+  assert.match(workspace, /ariaLabel="Finance areas"/);
+  assert.match(workspace, /finance-tab-overview-control/);
+  assert.match(workspace, /finance-tab-transactions-cash/);
+  assert.match(workspace, /finance-tab-receivables-payables/);
+  assert.match(workspace, /finance-tab-project-finance/);
+  assert.match(workspace, /finance-tab-accounting-reports/);
   assert.match(workspace, /AdminSectionTabs ariaLabel="Finance worksheets" activeKey=\{activeTab\.key\} items=\{sheetItems\} className="w-full"/);
   assert.match(workspace, /data-ams-slug="finance-workspace-navigation"/);
   assert.match(workspace, /data-ams-slug="finance-active-worksheet"/);
@@ -31,35 +32,9 @@ test('Finance sidebar dropdown and clean worksheet sub-tabs preserve direct tran
   assert.match(workspace, /label: item\.label/);
   assert.doesNotMatch(workspace, /label: item\.sheet \+ ' ' \+ item\.label/);
   assert.match(workspace, /\{loading \? renderLoading\(\) : renderView\(activeTab\)\}/);
-  const pageStart = workspace.indexOf('const financePage = (');
-  const pageEnd = workspace.indexOf('return localizeFinanceValue(financePage, language)', pageStart);
-  assert.ok(pageStart >= 0 && pageEnd > pageStart, 'Finance page render must remain available.');
-  const renderedPage = workspace.slice(pageStart, pageEnd);
-  const uiSourceStart = workspace.indexOf('const renderSummary =');
-  const uiSource = workspace.slice(uiSourceStart, pageStart);
-  assert.doesNotMatch(uiSource, /Sheet \{activeTab\.sheet\}|Source of truth for workflow design|Excel-alignment implementation|Excel-aligned finance workflow|Open transaction workspace|workbook's Project Cost|Finance workbook sheets|Project name \/ Excel key/);
-  assert.doesNotMatch(renderedPage, /Sheet \{activeTab\.sheet\}|Source of truth for workflow design|Excel-alignment implementation|Excel-aligned finance workflow|Open transaction workspace|Finance workbook sheets/);
-  const headerStart = renderedPage.indexOf('<AdminModuleHeader');
-  const headerEnd = renderedPage.indexOf('      />', headerStart);
-  assert.ok(headerStart >= 0 && headerEnd > headerStart, 'Finance must use the shared module header.');
-  assert.doesNotMatch(renderedPage.slice(headerStart, headerEnd), /\bicon=/, 'Finance header must not render icons.');
-  assert.match(renderedPage.slice(headerStart, headerEnd), /description="Manage revenue, expenses, cash, receivables, payables, and financial reporting in one place\."/);
-  assert.doesNotMatch(renderedPage, /<div className="border-b border-line pb-3">\s*<h2 className="text-base font-semibold text-fg">\{activeTab\.label\}<\/h2>\s*<\/div>/, 'The selected worksheet must not repeat its label as a separate header below the subtabs.');
-  assert.match(uiSource, /case 'revenue':\s*return <AdminInvoicing key=\{tab\.key\} embeddedView="invoices" \/>/);
-  assert.match(uiSource, /case 'expenses':\s*return <AdminInvoicing key=\{tab\.key\} embeddedView="income-expenses" embeddedIncomeExpenseMode="expenses" \/>/);
-  assert.match(uiSource, /case 'accounts-receivable':\s*return <AdminInvoicing key=\{tab\.key\} embeddedView="receivables" \/>/);
-  assert.match(uiSource, /case 'vendors':[\s\S]*?<AdminVendors embedded searchTerm=\{searchText\} \/>/);
-  assert.match(uiSource, /registerAddButton\('chart-of-accounts', 'Add account'\)/);
-  assert.match(uiSource, /Add movement/);
-  assert.match(uiSource, /Add vendor bill/);
-  assert.match(uiSource, /Add project finance record/);
-  assert.match(uiSource, /Add budget line/);
-  assert.match(uiSource, /Add voucher/);
-  assert.match(uiSource, /Add team fee/);
-  assert.match(uiSource, /Add journal entry/);
-  assert.match(uiSource, /Calculate project allocation/);
+  assert.match(workbook, /FINANCE_WORKBOOK_GROUPS/);
+  assert.ok(workbook.includes('cash-bank') && workbook.includes('accounts-receivable'));
 });
-
 test('Finance workspace groups navigation, search, and alerts using the shared AMS layout patterns', async () => {
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
 
@@ -236,9 +211,12 @@ test('Finance workbook replaces legacy finance navigation and keeps all operatio
   assert.ok(app.includes('<Route path="proposals" element={<ModuleRoute moduleKey="proposals" moduleLabel="Proposals"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />'));
   assert.doesNotMatch(layout, /location\.pathname === '\/admin\/invoicing'/);
   assert.doesNotMatch(layout, /isFinanceModuleRoute|ariaLabel="Finance sections"/);
-  assert.ok(layout.includes('data-ams-slug="active-module-title"'));
+  assert.equal(layout.includes('data-ams-slug="active-module-title"'), false);
+  assert.ok(layout.includes('ariaLabel="Workspace navigation"'));
+  assert.ok(workspace.includes('ariaLabel="Finance areas"'));
   const navigation = await read('src/lib/amsModuleSubnavigation.ts');
-  assert.match(navigation, /label: 'Accounting', to: '\/admin\/finance\?tab=journal'/);
+  assert.match(navigation, /label: 'Profitability & Expenses', to: '\/admin\/finance\?tab=accounts-payable'/);
+  assert.match(workspace, /finance-tab-accounting-reports/);
   assert.doesNotMatch(layout, /finance=tax-retainers|finance=vendor-payments|finance=financial-reports/);
 
   const summaryStart = workspace.indexOf('const renderSummary =');

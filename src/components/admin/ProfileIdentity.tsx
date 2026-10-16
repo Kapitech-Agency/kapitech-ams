@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Briefcase,
   Building2,
@@ -7,6 +7,7 @@ import {
   Copy,
   ExternalLink,
   Mail,
+  LogOut,
   Phone,
   UserRound,
 } from 'lucide-react';
@@ -39,7 +40,9 @@ interface ProfileIdentityProps {
   className?: string;
   showRole?: boolean;
   onEdit?: () => void;
+  onLogout?: () => void;
   directOpen?: boolean;
+  actionMenu?: boolean;
   slug?: string;
 }
 
@@ -97,10 +100,14 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
   className,
   showRole = true,
   onEdit,
+  onLogout,
   directOpen = false,
+  actionMenu = false,
   slug = 'profile',
 }) => {
   const [quickOpen, setQuickOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
   const [fullOpen, setFullOpen] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
 
@@ -118,11 +125,16 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
   };
 
   const openFullProfile = () => {
+    setMenuOpen(false);
     setQuickOpen(false);
     setFullOpen(true);
   };
 
   const handleProfileClick = () => {
+    if (actionMenu) {
+      setMenuOpen((open) => !open);
+      return;
+    }
     if (directOpen) {
       setFullOpen(true);
       return;
@@ -131,12 +143,29 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
   };
 
   const closeAll = () => {
+    setMenuOpen(false);
     setQuickOpen(false);
     setFullOpen(false);
   };
 
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) setMenuOpen(false);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMenuOpen(false);
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [menuOpen]);
+
   return (
-    <>
+    <div ref={menuRef} className="relative inline-flex">
       <button
         type="button"
         data-ams-feature-slug={slug}
@@ -149,8 +178,10 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
             : 'gap-2 rounded-control px-1.5 py-1 hover:bg-panel-hover',
           className || '',
         ].join(' ')}
-        aria-haspopup="dialog"
-        aria-label={'Open profile for ' + profile.name}
+        aria-haspopup={actionMenu ? 'menu' : 'dialog'}
+        aria-expanded={actionMenu ? menuOpen : undefined}
+        aria-controls={actionMenu ? slug + '-action-menu' : undefined}
+        aria-label={actionMenu ? 'Open profile menu for ' + profile.name : 'Open profile for ' + profile.name}
       >
         <UserAvatar
           name={profile.name}
@@ -169,6 +200,41 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
           </span>
         )}
       </button>
+
+      {actionMenu && menuOpen && (
+        <div
+          id={slug + '-action-menu'}
+          role="menu"
+          aria-label="Profile actions"
+          data-ams-feature-slug={slug + '-action-menu'}
+          className="absolute right-0 top-full z-[70] mt-2 w-52 overflow-hidden rounded-card border border-line bg-panel"
+        >
+          <div className="border-b border-line px-3.5 py-3">
+            <p className="truncate text-xs font-semibold text-fg">{profile.name}</p>
+            <p className="mt-0.5 truncate text-[10px] text-muted">{profile.role || 'AMS user'}</p>
+          </div>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => { setMenuOpen(false); setFullOpen(true); }}
+            className="flex min-h-10 w-full items-center gap-2.5 px-3.5 text-left text-xs text-fg transition-colors hover:bg-bg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
+          >
+            <UserRound size={14} aria-hidden="true" />
+            My Profile
+          </button>
+          {onLogout && (
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => { setMenuOpen(false); onLogout(); }}
+              className="flex min-h-10 w-full items-center gap-2.5 border-t border-line px-3.5 text-left text-xs text-muted transition-colors hover:bg-danger/10 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
+            >
+              <LogOut size={14} aria-hidden="true" />
+              Logout
+            </button>
+          )}
+        </div>
+      )}
 
       <Modal
         open={quickOpen}
@@ -314,6 +380,20 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
                 }}
               >
                 Edit profile
+              </Button>
+            )}
+            {onLogout && (
+              <Button
+                type="button"
+                variant="destructive"
+                slug={slug + '-public-logout'}
+                icon={<LogOut size={14} />}
+                onClick={() => {
+                  closeAll();
+                  onLogout();
+                }}
+              >
+                Sign out
               </Button>
             )}
           </>
@@ -517,7 +597,7 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
             )}
         </div>
       </Drawer>
-    </>
+    </div>
   );
 };
 

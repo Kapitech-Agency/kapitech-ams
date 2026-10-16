@@ -31,17 +31,7 @@ export const AdminClientSlaMonitoring: React.FC = () => {
         actions={<Button type="button" variant="secondary" disabled icon={<Activity size={14} />}>Snapshot unavailable</Button>}
       />
 
-      <div className="min-[900px]:hidden min-w-0">
-        <AdminSectionTabs
-          ariaLabel="Clients sections"
-          activeKey="sla-monitoring"
-          items={[
-            { key: 'all-clients', label: 'Clients', to: '/admin/clients' },
-            { key: 'retainers', label: 'Retainers', to: '/admin/clients/retainers' },
-            { key: 'sla-monitoring', label: 'SLA', to: '/admin/clients/sla-monitoring' },
-          ]}
-        />
-      </div>
+      
 
       <section className="rounded-card border border-warning/25 bg-warning/5 p-4 sm:p-5" role="status" aria-live="polite" data-ams-slug="sla-telemetry-not-configured">
         <div className="flex items-start gap-3">

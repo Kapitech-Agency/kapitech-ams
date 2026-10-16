@@ -777,17 +777,7 @@ export const AdminClients: React.FC = () => {
           )}
         />
       </div>
-      <div className="min-[900px]:hidden min-w-0" data-ams-slug="clients-mobile-tabs">
-        <AdminSectionTabs
-          ariaLabel="Clients sections"
-          activeKey="all-clients"
-          items={[
-            { key: 'all-clients', label: 'Clients', to: '/admin/clients/all-clients' },
-            { key: 'retainers', label: 'Retainers', to: '/admin/clients/retainers' },
-            { key: 'sla-monitoring', label: 'SLA', to: '/admin/clients/sla-monitoring' },
-          ]}
-        />
-      </div>
+      
 
       {errorMessage && (
         <div role="alert" aria-live="assertive" className="flex flex-col gap-3 rounded-card border border-danger/25 bg-danger/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">

@@ -69,7 +69,7 @@ import { postgresTaskRepository } from './postgres-task-repository.ts';
 import { postgresTimeLogRepository } from './postgres-time-log-repository.ts';
 import { postgresInvoiceRepository } from './postgres-invoice-repository.ts';
 import { postgresExpenseRepository, ExpenseImmutableError, ExpenseNotFoundError, ExpenseVersionConflictError, ExpenseProjectNotFoundError } from './postgres-expense-repository.ts';
-import { buildFinanceSourceJournalDrafts } from '../src/lib/financeWorkbook.ts';
+import { buildFinanceSourceJournalDrafts, getInvoiceCollected, getInvoiceOutstanding, isIssuedInvoice } from '../src/lib/financeWorkbook.ts';
 import { postgresApprovalRepository } from './postgres-approval-repository.ts';
 import { postgresNotificationRepository } from './postgres-notification-repository.ts';
 import { canViewNotification, getHiddenNotificationTypes } from './notification-access.ts';
@@ -4421,6 +4421,109 @@ apiRouter.delete('/finance/expenses/:id', requireAuth, requirePermission('canMan
 });
 
 // Financial Metrics (Authoritative server-calculated metrics)
+apiRouter.get('/finance/project-profitability', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const user = req.user!;
+  const isProjectManager = isProjectManagerRole(user);
+  if (!isProjectManager && !canViewConfidentialVendorRates(user)) {
+    res.status(403).json({ success: false, error: 'You do not have permission to view project profitability.' });
+    return;
+  }
+  if (isProjectManager && !user.permissions?.canManageProjects) {
+    res.status(403).json({ success: false, error: 'Project-management permission is required for aggregate project profitability.' });
+    return;
+  }
+
+  try {
+    const projects = getDataSourceMode() === 'postgres'
+      ? await postgresProjectRepository.list()
+      : (Array.isArray(getDatabase().projects) ? getDatabase().projects : []);
+    const invoices = getDataSourceMode() === 'postgres'
+      ? await postgresInvoiceRepository.list()
+      : (Array.isArray(getDatabase().invoices) ? getDatabase().invoices : []);
+    const expenses = getDataSourceMode() === 'postgres'
+      ? await postgresExpenseRepository.list()
+      : (Array.isArray(getDatabase().expenses) ? getDatabase().expenses : []);
+    type Aggregate = {
+      projectId: string;
+      projectName: string;
+      clientName: string;
+      projectStatus: string;
+      currency: string;
+      budget: number | null;
+      invoiced: number;
+      collected: number;
+      outstanding: number;
+      recordedCosts: number;
+    };
+    const aggregates = new Map<string, Aggregate>();
+    const getAggregate = (projectId: string, currencyValue: unknown): Aggregate | null => {
+      if (!projectId) return null;
+      const currencyCandidate = String(currencyValue || 'IDR').trim().toUpperCase();
+      const currency = /^[A-Z]{3}$/.test(currencyCandidate) ? currencyCandidate : 'IDR';
+      const project = projects.find((item: any) => String(item?.id || '') === projectId);
+      if (!project) return null;
+      const key = projectId + '::' + currency;
+      let aggregate = aggregates.get(key);
+      if (!aggregate) {
+        aggregate = {
+          projectId,
+          projectName: String(project.name || project.title || 'Untitled project'),
+          clientName: String(project.clientCompany || project.clientName || ''),
+          projectStatus: String(project.status || 'planning'),
+          currency,
+          budget: currency === 'IDR' ? Math.max(0, Number(project.budget) || 0) : null,
+          invoiced: 0,
+          collected: 0,
+          outstanding: 0,
+          recordedCosts: 0
+        };
+        aggregates.set(key, aggregate);
+      }
+      return aggregate;
+    };
+
+    for (const invoice of invoices as any[]) {
+      if (!isIssuedInvoice(invoice)) continue;
+      const aggregate = getAggregate(String(invoice.projectId || invoice.project_id || ''), invoice.currency);
+      if (!aggregate) continue;
+      aggregate.invoiced += Math.max(0, Number(invoice.total) || 0);
+      aggregate.collected += getInvoiceCollected(invoice);
+      aggregate.outstanding += getInvoiceOutstanding(invoice);
+    }
+
+    for (const expense of expenses as any[]) {
+      if (String(expense.status || '').toLowerCase() === 'voided') continue;
+      const aggregate = getAggregate(String(expense.projectId || expense.project_id || ''), expense.currency);
+      if (!aggregate) continue;
+      aggregate.recordedCosts += Math.max(0, Number(expense.amount) || 0);
+    }
+
+    for (const project of projects as any[]) {
+      const projectId = String(project?.id || '');
+      const hasRows = [...aggregates.values()].some((item) => item.projectId === projectId);
+      if (!hasRows) getAggregate(projectId, 'IDR');
+    }
+
+    const result = Array.from(aggregates.values())
+      .map((aggregate) => {
+        const contribution = aggregate.collected - aggregate.recordedCosts;
+        return {
+          ...aggregate,
+          contribution,
+          marginPercent: aggregate.collected > 0 ? Math.round((contribution / aggregate.collected) * 10000) / 100 : null
+        };
+      })
+      .sort((a, b) => a.projectName.localeCompare(b.projectName) || a.currency.localeCompare(b.currency));
+
+    // Only project/currency-level aggregates are returned; invoice, expense,
+    // vendor and employee-level rows/rates are never serialized to this view.
+    res.json({ success: true, projects: result });
+  } catch (error) {
+    console.error('[Project Profitability] Aggregate report failed:', error);
+    res.status(503).json({ success: false, error: 'Project profitability is temporarily unavailable.' });
+  }
+});
+
 apiRouter.get('/finance/metrics', requireAuth, requirePermission('canViewFinancials'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const usePostgres = getDataSourceMode() === 'postgres';
@@ -5019,12 +5122,55 @@ apiRouter.delete('/finance/workbook/:type/:id', requireAuth, requirePermission('
 
 // ----------------------------------------------------
 // 7. Vendors
+function isProjectManagerRole(user: StoredUser): boolean {
+  const role = String(user.role || '').trim().toLowerCase();
+  return role === 'pm' || role.includes('project manager');
+}
+
+function canViewConfidentialVendorRates(user: StoredUser): boolean {
+  if (isMasterAdministrator(user)) return true;
+  if (isProjectManagerRole(user)) return false;
+  return Boolean(user.permissions?.canViewFinancials);
+}
+
+const CONFIDENTIAL_VENDOR_RATE_FIELDS = new Set([
+  'hourlyrate', 'hourly_rate', 'costrate', 'cost_rate',
+  'employeecostrate', 'employee_cost_rate', 'vendorrate', 'vendor_rate',
+  'contractrate', 'contract_rate', 'rateperhour', 'rate_per_hour',
+  'payrate', 'pay_rate', 'costperhour', 'cost_per_hour', 'rate'
+]);
+
+function redactConfidentialVendorRateFields(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(redactConfidentialVendorRateFields);
+  if (!value || typeof value !== 'object') return value;
+  const sanitized: Record<string, unknown> = {};
+  for (const [key, field] of Object.entries(value as Record<string, unknown>)) {
+    const normalizedKey = key.toLowerCase().replace(/[\\s-]/g, '_');
+    const compactKey = normalizedKey.replace(/_/g, '');
+    if (CONFIDENTIAL_VENDOR_RATE_FIELDS.has(normalizedKey) || CONFIDENTIAL_VENDOR_RATE_FIELDS.has(compactKey)) continue;
+    sanitized[key] = redactConfidentialVendorRateFields(field);
+  }
+  return sanitized;
+}
+
 apiRouter.get('/vendors', requireAuth, requireAnyPermission('canManageVendors', 'canViewFinancials'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const vendors = getDataSourceMode() === 'postgres' ? await postgresVendorRepository.list() : getDatabase().vendors;
-  res.json({ success: true, vendors });
+  if (canViewConfidentialVendorRates(req.user!)) {
+    res.json({ success: true, vendors });
+    return;
+  }
+  const sanitized = (Array.isArray(vendors) ? vendors : []).map((vendor: any) => ({
+    ...redactConfidentialVendorRateFields(vendor) as Record<string, unknown>,
+    rateMasked: true
+  }));
+  res.json({ success: true, vendors: sanitized });
 });
 
 apiRouter.post('/vendors', requireAuth, requirePermission('canManageVendors'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  if (isProjectManagerRole(req.user!)) {
+    res.status(403).json({ success: false, error: 'Project managers cannot create or manage confidential vendor rate records.' });
+    return;
+  }
   const vendorData = req.body || {};
   const hourlyRate = Number(vendorData.hourlyRate);
   if (!Number.isFinite(hourlyRate) || hourlyRate < 0 || hourlyRate > 10_000_000_000) {
@@ -5079,6 +5225,14 @@ apiRouter.post('/vendors', requireAuth, requirePermission('canManageVendors'), a
 apiRouter.put('/vendors/:id', requireAuth, requirePermission('canManageVendors'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const { id } = req.params;
   const updates = req.body || {};
+  if (isProjectManagerRole(req.user!)) {
+    const sensitiveKeys = Object.keys(updates as Record<string, unknown>).map((key) => key.toLowerCase().replace(/[\\s-]/g, '_'));
+    const sensitiveCompactKeys = sensitiveKeys.map((key) => key.replace(/_/g, ''));
+    if (sensitiveKeys.some((key) => CONFIDENTIAL_VENDOR_RATE_FIELDS.has(key)) || sensitiveCompactKeys.some((key) => CONFIDENTIAL_VENDOR_RATE_FIELDS.has(key)) || 'contracts' in (updates as Record<string, unknown>)) {
+      res.status(403).json({ success: false, error: 'Project managers cannot modify confidential vendor rates or contracts.' });
+      return;
+    }
+  }
   if (getDataSourceMode() === 'postgres') {
     const patch = pickFields(updates, ['name','companyName','email','phone','type','primaryCategory','skills','hourlyRate','currency','rating','completedProjectsCount','status','isVetted','location','portfolioUrl','githubUrl','contracts','notes','updatedAt']);
     if (patch.email !== undefined) {
@@ -5130,6 +5284,10 @@ apiRouter.put('/vendors/:id', requireAuth, requirePermission('canManageVendors')
 
 apiRouter.delete('/vendors/:id', requireAuth, requirePermission('canManageVendors'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const { id } = req.params;
+  if (isProjectManagerRole(req.user!)) {
+    res.status(403).json({ success: false, error: 'Project managers cannot delete confidential vendor rate or contract records.' });
+    return;
+  }
   if (getDataSourceMode() === 'postgres') {
     const vendor = await postgresVendorRepository.findById(id);
     if (!vendor) { res.status(404).json({ success: false, error: 'Vendor not found.' }); return; }
@@ -6344,6 +6502,41 @@ function mergeJsonTaskCollection(db: any): any[] {
   );
 }
 
+function canManageTimeLogsAcrossProjects(user: StoredUser): boolean {
+  if (isMasterAdministrator(user)) return true;
+  const role = String(user.role || '').trim().toLowerCase();
+  // Delivery contributors should see/track assigned work even where their
+  // operational role grants task-management permissions for normal workflows.
+  if (/creative|operational staff|freelancer|internal staff/.test(role)) return false;
+  return Boolean(user.permissions?.canManageProjects);
+}
+
+function isTimeLogTaskAssignedToUser(task: any, user: StoredUser): boolean {
+  const identities = [user.id, user.username, user.name, user.email]
+    .map((value) => String(value || '').trim().toLowerCase())
+    .filter(Boolean);
+  if (!identities.length) return false;
+  const assignedValues = [
+    task?.assigneeUserId,
+    task?.assignee_user_id,
+    task?.assignedToId,
+    task?.assigneeId,
+    task?.assignedTo,
+    task?.assignee,
+  ];
+  return assignedValues.some((value) => identities.includes(String(value || '').trim().toLowerCase()));
+}
+
+async function listProjectsForTimeLogOptions(): Promise<any[]> {
+  if (getDataSourceMode() === 'postgres') return await postgresProjectRepository.list();
+  const db = getDatabase();
+  const globalTasks = Array.isArray(db.tasks) ? db.tasks : [];
+  return (Array.isArray(db.projects) ? db.projects : []).map((project: any) => ({
+    ...project,
+    tasks: mergeJsonProjectTasks(project, globalTasks),
+  }));
+}
+
 function removeJsonProjectTask(db: any, taskId: string, exceptProjectId = ''): void {
   (Array.isArray(db?.projects) ? db.projects : []).forEach((project: any) => {
     const projectId = String(project?.id || '');
@@ -6529,24 +6722,108 @@ apiRouter.delete('/projects/tasks/:id', requireAuth, requirePermission('canManag
 });
 
 // Time Tracking
+apiRouter.get('/projects/timelog-options', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const canSeeAllProjects = canManageTimeLogsAcrossProjects(req.user!);
+  const projects = await listProjectsForTimeLogOptions();
+  const options = projects.flatMap((project: any) => {
+    const tasks = Array.isArray(project?.tasks) ? project.tasks : [];
+    const visibleTasks = canSeeAllProjects
+      ? tasks
+      : tasks.filter((task: any) => isTimeLogTaskAssignedToUser(task, req.user!));
+    if (!canSeeAllProjects && visibleTasks.length === 0) return [];
+    return [{
+      id: String(project.id || ''),
+      name: String(project.name || project.title || 'Untitled project'),
+      tasks: visibleTasks.map((task: any) => ({
+        id: String(task.id || ''),
+        title: String(task.title || 'Untitled task'),
+      })).filter((task: { id: string; title: string }) => task.id),
+    }];
+  });
+  res.json({ success: true, projects: options });
+});
+
 apiRouter.get('/projects/timelogs', requireAuth, requireAnyPermission('canManageKanbanTasks', 'canManageProjects'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const timeLogs = getDataSourceMode() === 'postgres' ? await postgresTimeLogRepository.list() : getDatabase().timeLogs || [];
   res.json({ success: true, timeLogs });
 });
 
-apiRouter.post('/projects/timelogs', requireAuth, requireAnyPermission('canManageKanbanTasks', 'canManageProjects'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+apiRouter.post('/projects/timelogs', requireAuth, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const logData = req.body || {};
   const durationMinutes = normalizeNumber(logData.durationMinutes ?? 60, 1, 1440, 60);
   const date = String(logData.date || new Date().toISOString().slice(0, 10));
-  if (durationMinutes === null || !isValidDate(date)) { res.status(400).json({ success: false, error: 'Valid duration and date are required for a time entry.' }); return; }
+  if (durationMinutes === null || !isValidDate(date)) {
+    res.status(400).json({ success: false, error: 'Valid duration and date are required for a time entry.' });
+    return;
+  }
+
+  const canLogAnyProject = canManageTimeLogsAcrossProjects(req.user!);
+  let taskId = cleanText(logData.taskId, 120);
+  let projectId = cleanText(logData.projectId, 120);
+  let projectName = cleanText(logData.projectName || 'General', 200);
+
+  if (!canLogAnyProject && !taskId) {
+    res.status(403).json({ success: false, error: 'Select a task assigned to your account before logging work time.' });
+    return;
+  }
+
+  if (taskId) {
+    const task = getDataSourceMode() === 'postgres'
+      ? await postgresTaskRepository.findById(taskId)
+      : mergeJsonTaskCollection(getDatabase()).find((item: any) => String(item?.id || '') === taskId);
+    if (!task) {
+      res.status(404).json({ success: false, error: 'Task not found.' });
+      return;
+    }
+    const taskProjectId = String((task as any).projectId || (task as any).project_id || '');
+    if (projectId && !taskProjectId) {
+      res.status(400).json({ success: false, error: 'A task without a project cannot be logged against a different project.' });
+      return;
+    }
+    if (projectId && taskProjectId !== projectId) {
+      res.status(400).json({ success: false, error: 'Task does not belong to the selected project.' });
+      return;
+    }
+    if (!canLogAnyProject && !taskProjectId) {
+      res.status(403).json({ success: false, error: 'Only assigned project tasks can be tracked for your account.' });
+      return;
+    }
+    if (!canLogAnyProject && !isTimeLogTaskAssignedToUser(task, req.user!)) {
+      res.status(403).json({ success: false, error: 'You can only log time against tasks assigned to your account.' });
+      return;
+    }
+    if (!projectId) projectId = taskProjectId;
+    if (!projectName || projectName === 'General') {
+      projectName = String((task as any).projectName || 'Project');
+    }
+    if (!String((task as any).projectName || '').trim() && taskProjectId) {
+      const project = getDataSourceMode() === 'postgres'
+        ? await postgresProjectRepository.findById(taskProjectId)
+        : (Array.isArray(getDatabase().projects) ? getDatabase().projects : []).find((item: any) => String(item?.id || '') === taskProjectId);
+      if (project) projectName = String((project as any).name || (project as any).title || projectName);
+    }
+  }
+
+  if (!projectId) {
+    res.status(400).json({ success: false, error: 'A valid project or task is required for a time entry.' });
+    return;
+  }
+
   const newLog = {
     id: `tim_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
-    projectId: cleanText(logData.projectId, 120), projectName: cleanText(logData.projectName || 'General', 200),
-    taskId: cleanText(logData.taskId, 120), taskTitle: cleanText(logData.taskTitle, 240),
-    user: req.user!.name || req.user!.username, userId: req.user!.id, durationMinutes,
-    billable: logData.billable !== undefined ? Boolean(logData.billable) : true, date,
-    notes: cleanText(logData.notes, 2000), createdAt: new Date().toISOString()
+    projectId,
+    projectName,
+    taskId,
+    taskTitle: cleanText(logData.taskTitle, 240),
+    user: req.user!.name || req.user!.username,
+    userId: req.user!.id,
+    durationMinutes,
+    billable: logData.billable !== undefined ? Boolean(logData.billable) : true,
+    date,
+    notes: cleanText(logData.notes, 2000),
+    createdAt: new Date().toISOString()
   };
+
   if (getDataSourceMode() === 'postgres') {
     try {
       const timeLog = await postgresTimeLogRepository.create(newLog, makeAuditEntry(req, 'TIMELOG_CREATED', `Created ${durationMinutes} minute time entry for ${newLog.projectName}.`, 'info'));

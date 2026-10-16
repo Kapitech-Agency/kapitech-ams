@@ -638,17 +638,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
         )}
       />
 
-      <div className="min-[900px]:hidden min-w-0">
-        <AdminSectionTabs
-          ariaLabel="Dashboard view"
-          activeKey={view}
-          items={[
-            { key: 'overview', label: 'Overview', to: '/admin/dashboard' },
-            { key: 'performance', label: 'Performance', to: '/admin/dashboard?view=performance' },
-            { key: 'analytics', label: 'Analytics', to: '/admin/dashboard?view=analytics' },
-          ]}
-        />
-      </div>
+      
 
       {view === 'overview' ? (
         <>

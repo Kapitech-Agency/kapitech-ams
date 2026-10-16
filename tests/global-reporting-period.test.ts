@@ -37,7 +37,6 @@ test('Finance workbook keeps all 20 sheets reachable through the worksheet rende
   const fs = await import('node:fs/promises');
   const workbook = await fs.readFile('src/lib/financeWorkbook.ts', 'utf8');
   const workspace = await fs.readFile('src/pages/admin/AdminFinanceWorkspace.tsx', 'utf8');
-  const navigation = await fs.readFile('src/lib/amsModuleSubnavigation.ts', 'utf8');
   const workbookBlock = workbook.slice(
     workbook.indexOf('export const FINANCE_WORKBOOK_GROUPS'),
     workbook.indexOf('export interface ExcelChartAccount')
@@ -52,10 +51,18 @@ test('Finance workbook keeps all 20 sheets reachable through the worksheet rende
   assert.equal(worksheetKeys.length, 20);
   assert.equal(new Set(worksheetKeys).size, worksheetKeys.length);
   assert.deepEqual([...renderedKeys].sort(), [...worksheetKeys].sort());
-  for (const tab of ['overview-control', 'transactions-cash', 'receivables-payables', 'project-finance', 'accounting-reports']) {
-    assert.ok(navigation.includes('finance-tab-' + tab));
+  for (const slug of [
+    'finance-tab-overview-control',
+    'finance-tab-transactions-cash',
+    'finance-tab-receivables-payables',
+    'finance-tab-project-finance',
+    'finance-tab-accounting-reports',
+  ]) {
+    assert.ok(workspace.includes(slug), 'Missing stable Finance area tab slug ' + slug);
   }
   assert.ok(workspace.includes('const groupEntryTabs: Record<string, string>'));
+  assert.ok(workspace.includes('ariaLabel="Finance areas"'));
+  assert.ok(workspace.includes('ariaLabel="Finance worksheets"'));
   assert.ok(workspace.includes('data-ams-slug="finance-workspace-navigation"'));
 });
 

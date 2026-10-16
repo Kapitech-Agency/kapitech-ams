@@ -5,7 +5,7 @@ import {
   isAmsModuleSubnavigationItemActive,
 } from '../src/lib/amsModuleSubnavigation';
 
-test('module dropdowns retain all destinations permitted for each role', () => {
+test('in-workspace tabs retain every destination permitted by each role', () => {
   assert.deepEqual(
     getAmsModuleSubnavigation('dashboard', 'Admin').map((item) => item.key),
     ['overview', 'performance', 'analytics', 'my-hub', 'activity']
@@ -15,8 +15,12 @@ test('module dropdowns retain all destinations permitted for each role', () => {
     ['pipeline', 'clients', 'onboarding', 'inbox', 'contracts', 'sla']
   );
   assert.deepEqual(
+    getAmsModuleSubnavigation('finance', 'Finance').map((item) => item.key),
+    ['invoicing-revenues', 'profitability-expenses', 'project-profitability', 'quotes', 'vendors', 'approvals']
+  );
+  assert.deepEqual(
     getAmsModuleSubnavigation('finance', 'PM').map((item) => item.key),
-    ['projects']
+    ['project-profitability']
   );
   assert.deepEqual(
     getAmsModuleSubnavigation('projects', 'Finance').map((item) => item.key),
@@ -31,32 +35,40 @@ test('module dropdowns retain all destinations permitted for each role', () => {
     ['backup', 'access', 'audit', 'integrations', 'readiness']
   );
   assert.deepEqual(getAmsModuleSubnavigation('settings', 'PM'), []);
-  assert.deepEqual(getAmsModuleSubnavigation('projects', 'Freelancer'), []);
+  assert.deepEqual(
+    getAmsModuleSubnavigation('projects', 'Freelancer').map((item) => item.key),
+    ['tasks']
+  );
 });
 
-test('query-based submenu active state highlights only the selected destination', () => {
+test('Finance area activation stays coherent across all workbook worksheets', () => {
   const finance = getAmsModuleSubnavigation('finance', 'Finance');
   const isFinanceActive = (key: string, search: string) =>
     isAmsModuleSubnavigationItemActive(finance.find((item) => item.key === key)!, '/admin/finance', search);
 
-  assert.equal(isFinanceActive('overview', ''), true);
-  assert.equal(isFinanceActive('overview', '?tab=executive-summary'), true);
-  assert.equal(isFinanceActive('overview', '?tab=cash-bank'), false);
-  assert.equal(isFinanceActive('transactions', '?tab=cash-bank'), true);
-  assert.equal(isFinanceActive('receivables', '?tab=accounts-receivable'), true);
-  assert.equal(isFinanceActive('projects', '?tab=project-finance'), true);
-  assert.equal(isFinanceActive('accounting', '?tab=journal'), true);
+  assert.equal(isFinanceActive('invoicing-revenues', ''), true);
+  assert.equal(isFinanceActive('invoicing-revenues', '?tab=executive-summary'), true);
+  assert.equal(isFinanceActive('invoicing-revenues', '?tab=cash-bank'), true);
+  assert.equal(isFinanceActive('invoicing-revenues', '?tab=accounts-receivable'), true);
+  assert.equal(isFinanceActive('invoicing-revenues', '?tab=accounts-payable'), false);
+  assert.equal(isFinanceActive('profitability-expenses', '?tab=accounts-payable'), true);
+  assert.equal(isFinanceActive('profitability-expenses', '?tab=journal'), true);
+  assert.equal(isFinanceActive('profitability-expenses', '?tab=monthly-pnl'), true);
+  assert.equal(isFinanceActive('profitability-expenses', '?tab=project-finance'), false);
+  assert.equal(isFinanceActive('project-profitability', '?tab=project-finance'), true);
+  assert.equal(isFinanceActive('project-profitability', '?tab=operational-budget'), true);
+  assert.equal(isFinanceActive('project-profitability', '?tab=accounts-payable'), false);
 });
 
-test('project and settings submenu states account for query parameters and hashes', () => {
+test('project, CRM, and Settings tabs account for query parameters and hashes', () => {
   const projects = getAmsModuleSubnavigation('projects', 'Admin');
   const byProjectKey = (key: string) => projects.find((item) => item.key === key)!;
   assert.equal(isAmsModuleSubnavigationItemActive(byProjectKey('all'), '/admin/projects', ''), true);
   assert.equal(isAmsModuleSubnavigationItemActive(byProjectKey('all'), '/admin/projects', '?projects=sprint'), false);
   assert.equal(isAmsModuleSubnavigationItemActive(byProjectKey('sprint'), '/admin/projects', '?projects=sprint'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(byProjectKey('budget'), '/admin/projects', '?projects=budget'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(byProjectKey('capacity'), '/admin/team', '?view=capacity-allocation'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(byProjectKey('team'), '/admin/team', '?view=capacity-allocation'), false);
-  assert.equal(isAmsModuleSubnavigationItemActive(byProjectKey('tasks'), '/admin/dashboard', '?view=tasks'), true);
 
   const crm = getAmsModuleSubnavigation('crm', 'Admin');
   assert.equal(isAmsModuleSubnavigationItemActive(crm.find((item) => item.key === 'clients')!, '/admin/clients/all-clients', '', ''), true);
@@ -66,4 +78,12 @@ test('project and settings submenu states account for query parameters and hashe
   assert.equal(isAmsModuleSubnavigationItemActive(settings.find((item) => item.key === 'backup')!, '/admin/settings', '?tab=overview'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(settings.find((item) => item.key === 'access')!, '/admin/settings', '?tab=security'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(settings.find((item) => item.key === 'audit')!, '/admin/settings', '?tab=audit'), true);
+});
+
+test('users who have not enrolled in MFA retain an Access destination without gaining Settings permissions', () => {
+  assert.deepEqual(
+    getAmsModuleSubnavigation('settings', 'Freelancer', true).map((item) => item.key),
+    ['access']
+  );
+  assert.deepEqual(getAmsModuleSubnavigation('settings', 'PM'), []);
 });

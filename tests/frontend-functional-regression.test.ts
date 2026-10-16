@@ -76,44 +76,43 @@ test('MFA enrolment route is accessible before module permissions are evaluated'
 });
 
 
-test('AMS navigation uses concise primary modules with role-aware sidebar dropdowns', async () => {
+test('AMS navigation uses flat role-based groups and keeps module actions within their workspaces', async () => {
   const layout = await read('src/pages/admin/AdminLayout.tsx');
   const app = await read('src/App.tsx');
   const primitives = await read('src/components/admin/AdminModulePrimitives.tsx');
   const navigation = await read('src/lib/amsNavigationAccess.ts');
-  const sidebar = await read('src/components/admin/DynamicAdminSidebar.tsx');
   const subnavigation = await read('src/lib/amsModuleSubnavigation.ts');
+  const sidebar = await read('src/components/admin/DynamicAdminSidebar.tsx');
   const teams = await read('src/pages/admin/AdminTeams.tsx');
   const vendors = await read('src/pages/admin/AdminVendors.tsx');
   const clients = await read('src/pages/admin/AdminClients.tsx');
 
   for (const group of [
-    "'MAIN DASHBOARD'",
-    "'CLIENT & PIPELINE (CRM)'",
-    "'PROJECTS & WORKSPACE'",
-    "'FINANCE & LEDGER CONTROL'",
-    "'CMS & CONTENT MANAGEMENT'",
-    "'SYSTEM SETTINGS'",
+    "'OPERATIONAL OVERVIEW'",
+    "'CLIENT & PIPELINE'",
+    "'DELIVERY & OPERATIONS'",
+    "'FINANCE & LEDGER'",
+    "'MARKETING CMS'",
   ]) {
-    assert.ok(navigation.includes(group), 'Expected role-based sidebar group ' + group);
+    assert.ok(navigation.includes(group), 'Expected flat sidebar group ' + group);
   }
-  assert.ok(navigation.includes("if (role === 'Admin')"));
-  assert.ok(navigation.includes("allowedRoles: ['Admin']"));
-  assert.ok(navigation.includes("label: 'Personal Workspace / My Hub'"));
-  assert.ok(navigation.includes("label: 'Retainer Manager & Hours Pool'"));
-  assert.ok(navigation.includes("label: 'Real-Time Project Profitability Hub'"));
+  assert.ok(navigation.includes("key: 'user-access'"));
+  assert.ok(navigation.includes("key: 'data-persistence-backup'"));
+  assert.ok(navigation.includes("key: 'release-readiness'"));
+  assert.ok(navigation.includes("label: 'Dashboard & Hub'"));
+  assert.ok(subnavigation.includes("label: 'Retainer Hours Pool'"));
+  assert.ok(navigation.includes("label: 'Project Profitability'"));
   assert.ok(navigation.includes("return 'Freelancer';"), 'Unknown legacy role must fail closed rather than grant Admin access.');
 
-  assert.equal((layout.match(/<DynamicAdminSidebarNavigation\b/g) || []).length, 2, 'Desktop and mobile use the same sidebar navigation component.');
-  assert.equal((layout.match(/<AdminSystemSettingsNavigation\b/g) || []).length, 2, 'Pinned System Settings region is shared and hidden by its Admin-only component policy.');
+  assert.equal((layout.match(/<DynamicAdminSidebarNavigation\b/g) || []).length, 2, 'Desktop and mobile use the same sidebar component.');
+  assert.equal((layout.match(/<AdminSystemSettingsNavigation\b/g) || []).length, 2, 'Desktop and mobile pin the single Admin-only Settings entry.');
   assert.ok(sidebar.includes("if (role !== 'Admin') return null;"));
   assert.ok(sidebar.includes('data-ams-feature-slug="role-based-sidebar"'));
+  assert.ok(sidebar.includes('data-ams-navigation-layout="flat"'));
   assert.ok(sidebar.includes("aria-current={active ? 'page' : undefined}"));
-  assert.ok(sidebar.includes('data-ams-nav-submenu="true"'));
-  assert.ok(sidebar.includes('aria-expanded={expanded}'));
-  assert.ok(subnavigation.includes("label: 'Transactions'"));
-  assert.ok(subnavigation.includes("label: 'Contracts'"));
-  assert.ok(subnavigation.includes("label: 'Capacity'"));
+  assert.equal(sidebar.includes('data-ams-nav-submenu='), false);
+  assert.equal(sidebar.includes('aria-expanded='), false);
+  assert.equal(sidebar.includes('ChevronDown'), false);
   assert.equal((layout.match(/<AdminTopbarTabs\b/g) || []).length, 0);
   assert.ok(primitives.includes('items.filter(canRenderNavigationTab).map((item) => {'));
   assert.ok(navigation.includes('export function canAccessAmsRoute'));
@@ -121,15 +120,16 @@ test('AMS navigation uses concise primary modules with role-aware sidebar dropdo
   assert.ok(app.includes('path="navigation/live-activity"'));
   assert.ok(app.includes('path="navigation/release-readiness"'));
 
-  assert.ok(subnavigation.includes("label: 'Team'"));
-  assert.ok(subnavigation.includes("label: 'Capacity'"));
-  assert.ok(subnavigation.includes("label: 'Vendors'"));
-  assert.ok(layout.includes('data-ams-slug="active-module-title"'));
+  assert.equal(layout.includes('data-ams-slug="active-module-title"'), false, 'Global topbar contains no module navigation.');
+  assert.ok(layout.includes('ariaLabel="Workspace navigation"'));
+  assert.ok(layout.includes('Search Everything'));
+  assert.ok(layout.includes('GlobalTimerControl'));
+  assert.ok(layout.includes('AdminNotificationCenter'));
+  assert.ok(layout.includes('onLogout={handleLogout}'));
+  assert.ok(layout.includes('actionMenu'));
   assert.ok(vendors.includes("label: 'Vendors'"));
   assert.ok(vendors.includes("label: 'Skills'"));
   assert.ok(vendors.includes('data-ams-slug="vendors-mobile-tabs"'));
-  assert.ok(layout.includes('getPrimaryNavigationForRole(amsRole)'));
-  assert.ok(sidebar.includes('getPrimaryNavigationForRole(role)'));
   assert.equal(teams.includes("to: '/admin/team?view=vendor-directory'"), false);
   assert.equal(teams.includes("to: '/admin/team?view=skill-matrix'"), false);
   assert.equal(teams.includes("to: '/admin/team?view=time-logs'"), false);
@@ -147,7 +147,6 @@ test('AMS navigation uses concise primary modules with role-aware sidebar dropdo
   assert.equal(app.includes('<Route path="approvals" element={<Navigate to="/admin/dashboard"'), false);
   assert.equal(clients.includes("to: '/admin/clients/lead-accounts'"), false);
 });
-
 test('Dashboard Performance and Analytics use AMS operational and finance records', async () => {
   const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
   for (const sourceCall of [
@@ -544,4 +543,55 @@ test('Resource Planning assignments persist on project records and distinguish t
   assert.match(teams, /No plan means unplanned, not automatically available/);
   assert.match(teams, /Capacity &amp; Allocation/);
   assert.match(routes, /pickFields\(updates, \['title','name','client','clientId','clientName','clientCompany','clientEmail','serviceCategory','status','health','budget','progressPercent','startDate','targetEndDate','teamLead','teamMembers'/);
+});
+
+
+test('Global timer uses scoped project options and enforces assigned-task ownership on the server', async () => {
+  const routes = await read('server/routes.ts');
+  const apiClient = await read('src/lib/apiClient.ts');
+  const timer = await read('src/components/admin/GlobalTimerControl.tsx');
+
+  assert.ok(routes.includes("apiRouter.get('/projects/timelog-options', requireAuth"));
+  assert.ok(routes.includes('canManageTimeLogsAcrossProjects(req.user!)'));
+  assert.ok(routes.includes('isTimeLogTaskAssignedToUser(task, req.user!)'));
+  assert.ok(routes.includes('You can only log time against tasks assigned to your account.'));
+  assert.ok(routes.includes("apiRouter.post('/projects/timelogs', requireAuth, async"));
+  assert.ok(apiClient.includes("'/api/projects/timelog-options'"));
+  assert.ok(timer.includes('api.timeLogs.getOptions()'));
+  assert.ok(timer.includes('api.timeLogs.create({'));
+  assert.ok(timer.includes('The timer remains active; retry Stop to try again.'));
+});
+
+
+test('PM project profitability is aggregate-only and confidential vendor rates are redacted server-side', async () => {
+  const routes = await read('server/routes.ts');
+  const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
+  const aggregatePage = await read('src/pages/admin/AdminProjectProfitability.tsx');
+  const apiClient = await read('src/lib/apiClient.ts');
+
+  const start = routes.indexOf("apiRouter.get('/finance/project-profitability'");
+  const end = routes.indexOf("apiRouter.get('/finance/metrics'", start);
+  assert.ok(start >= 0 && end > start, 'Aggregate profitability API route must remain registered before general finance metrics.');
+  const endpoint = routes.slice(start, end);
+  assert.ok(endpoint.includes("isProjectManagerRole(user)"));
+  assert.ok(endpoint.includes("user.permissions?.canManageProjects"));
+  assert.ok(endpoint.includes('postgresInvoiceRepository.list()'));
+  assert.ok(endpoint.includes('postgresExpenseRepository.list()'));
+  assert.ok(endpoint.includes('recordedCosts'));
+  assert.ok(endpoint.includes('res.json({ success: true, projects: result })'));
+  assert.ok(endpoint.includes('Only project/currency-level aggregates are returned'));
+  assert.ok(workspace.includes("if (role === 'PM' && requestedTab === 'project-finance')"));
+  assert.ok(workspace.includes('return <AdminProjectProfitability />;'));
+  assert.ok(apiClient.includes("'/api/finance/project-profitability'"));
+  assert.ok(aggregatePage.includes('Aggregate formula: collected revenue minus recorded expenses.'));
+  assert.ok(aggregatePage.includes('Individual vendor and employee rates are not shown'));
+
+  const vendorStart = routes.indexOf("apiRouter.get('/vendors'");
+  const vendorEnd = routes.indexOf("apiRouter.post('/vendors'", vendorStart);
+  assert.ok(vendorStart >= 0 && vendorEnd > vendorStart);
+  const vendorGet = routes.slice(vendorStart, vendorEnd);
+  assert.ok(vendorGet.includes('canViewConfidentialVendorRates(req.user!)'));
+  assert.ok(vendorGet.includes('redactConfidentialVendorRateFields(vendor)'));
+  assert.ok(vendorGet.includes('rateMasked: true'));
+  assert.ok(routes.includes('Project managers cannot modify confidential vendor rates or contracts.'));
 });

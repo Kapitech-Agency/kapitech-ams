@@ -355,6 +355,7 @@ export const api = {
         body: version == null ? undefined : JSON.stringify({ version })
       }),
     getMetrics: (currency?: string) => apiRequest<{ success: boolean; metrics: any }>('/api/finance/metrics' + (currency ? `?currency=${encodeURIComponent(currency)}` : '')),
+    getProjectProfitability: () => apiRequest<{ success: boolean; projects: Array<{ projectId: string; projectName: string; clientName: string; projectStatus: string; currency: string; budget: number | null; invoiced: number; collected: number; outstanding: number; recordedCosts: number; contribution: number; marginPercent: number | null }> }>('/api/finance/project-profitability'),
     workbookList: (type: string, filters: { period?: string; projectId?: string; includeArchived?: boolean } = {}) => {
       const params = new URLSearchParams();
       if (filters.period) params.set('period', filters.period);
@@ -611,6 +612,7 @@ export const api = {
 
   // Time Tracking
   timeLogs: {
+    getOptions: () => apiRequest<{ success: boolean; projects: Array<{ id: string; name: string; tasks: Array<{ id: string; title: string }> }> }>('/api/projects/timelog-options'),
     getAll: () => apiRequest<{ success: boolean; timeLogs: any[] }>('/api/projects/timelogs'),
     create: (log: any) =>
       apiRequest('/api/projects/timelogs', {

@@ -15,10 +15,13 @@ import { CommandPalette } from '../../components/admin/CommandPalette';
 import { AdminNotificationCenter } from '../../components/admin/AdminNotificationCenter';
 import { Modal } from '../../components/ui/Modal';
 import { AGENCY_TIER_LABELS, getAgencyTier } from '../../lib/rbacEngine';
-import { AMS_PRIMARY_SETTINGS_ITEM, getAmsRole, getPrimaryNavigationForRole, isNavigationItemActive } from '../../lib/amsNavigationAccess';
+import { getAmsRole } from '../../lib/amsNavigationAccess';
+import { getAmsModuleSubnavigation, isAmsModuleSubnavigationItemActive, type AmsSidebarModuleKey } from '../../lib/amsModuleSubnavigation';
+import { AdminSectionTabs } from '../../components/admin/AdminModulePrimitives';
 import { AmsBrandLogo } from '../../components/admin/AmsBrandLogo';
 import UserProfileSettingsModal from '../../components/admin/UserProfileSettingsModal';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
+import { GlobalTimerControl } from '../../components/admin/GlobalTimerControl';
 import { AdminSystemSettingsNavigation, DynamicAdminSidebarNavigation } from '../../components/admin/DynamicAdminSidebar';
 import Button from '../../components/ui/Button';
 import { ReportingPeriodProvider } from '../../lib/ReportingPeriodContext';
@@ -156,15 +159,32 @@ export const AdminLayout: React.FC = () => {
     session?.user?.role
   );
   const profileTitle = session?.user?.role || DEFAULT_PROFILE_TITLE;
-  const primaryNavItems = getPrimaryNavigationForRole(amsRole);
-  const navItemsForActiveState = [
-    ...primaryNavItems,
-    ...(amsRole === 'Admin' ? [AMS_PRIMARY_SETTINGS_ITEM] : []),
-  ];
-  const activeNavItem = navItemsForActiveState.find((item) =>
-    isNavigationItemActive(item, location.pathname, location.search, location.hash)
+  const workspaceNavigationModule: AmsSidebarModuleKey | null = (() => {
+    const path = location.pathname;
+    const params = new URLSearchParams(location.search);
+    const personalHub = path === '/admin/tasks'
+      && params.get('taskscope') === 'my'
+      && params.get('workspace') !== 'project';
+
+    if (path === '/admin/dashboard' || path === '/admin/navigation/live-activity' || personalHub) return 'dashboard';
+    if (['/admin/crm', '/admin/clients/all-clients', '/admin/clients/sla-monitoring', '/admin/inbox', '/admin/contracts'].includes(path)) return 'crm';
+    if (['/admin/projects', '/admin/documents', '/admin/team', '/admin/time-logs', '/admin/clients/retainers'].includes(path)) return 'projects';
+    if (path === '/admin/tasks') return 'projects';
+    if (['/admin/finance', '/admin/proposals', '/admin/vendors', '/admin/approvals', '/admin/invoicing'].includes(path)) return 'finance';
+    if (path === '/admin/settings' || path === '/admin/navigation/release-readiness') return 'settings';
+    return null;
+  })();
+
+  const mfaSetupRequired = Boolean(
+    session?.user
+    && (new URLSearchParams(location.search).get('mfaRequired') === '1' || session.user.mfaEnabled !== true)
   );
-  const activeItemLabel = activeNavItem?.label || 'Dashboard';
+  const workspaceTabItems = workspaceNavigationModule
+    ? getAmsModuleSubnavigation(workspaceNavigationModule, amsRole, mfaSetupRequired)
+    : [];
+  const activeWorkspaceTab = workspaceTabItems.find((item) =>
+    isAmsModuleSubnavigationItemActive(item, location.pathname, location.search, location.hash)
+  );
 
 
 
@@ -198,41 +218,11 @@ export const AdminLayout: React.FC = () => {
           </Link>
         </div>
 
-        <div className="px-3.5 pt-3.5">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => setCommandPaletteOpen(true)}
-            aria-label="Search AMS"
-            aria-keyshortcuts="Control+K Meta+K"
-            icon={<Search size={15} />}
-            className="flex h-10 w-full justify-start border-line bg-bg px-3"
-          >
-            <span className="min-w-0 flex-1 truncate text-left text-xs text-muted">Search</span>
-            <kbd className="ml-auto rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] text-muted">⌘K</kbd>
-          </Button>
-        </div>
-
         <div className="flex-1 min-h-0 overflow-x-hidden overflow-y-auto overscroll-contain px-3.5 py-4 custom-scrollbar">
           <DynamicAdminSidebarNavigation role={amsRole} pathname={location.pathname} search={location.search} hash={location.hash} />
         </div>
         <div className="shrink-0 border-t border-line bg-panel px-3.5 pb-3.5 pt-3">
           <AdminSystemSettingsNavigation role={amsRole} pathname={location.pathname} search={location.search} hash={location.hash} />
-          <div className="mt-3 grid grid-cols-1 gap-2">
-            <button
-              type="button"
-              onClick={handleLogout}
-              aria-pressed={logoutConfirmOpen}
-              className={[
-                "flex min-h-10 items-center justify-center rounded-control border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
-                logoutConfirmOpen
-                  ? "border-danger/30 bg-danger/10 text-danger"
-                  : "border-line bg-bg text-muted hover:border-danger/40 hover:bg-danger/10 hover:text-danger active:bg-danger/10 active:text-danger"
-              ].join(" ")}
-            >
-              Sign out
-            </button>
-          </div>
           <div className="mt-2 flex items-center justify-between gap-2 px-2.5 pb-1 text-[10px] text-muted">
             <span className="truncate">{AGENCY_TIER_LABELS[agencyTier]}</span>
             <span className="shrink-0">Tier {agencyTier}</span>
@@ -288,17 +278,24 @@ export const AdminLayout: React.FC = () => {
             <Menu size={20} />
           </button>
 
-          <Link to="/admin/dashboard" className="flex items-center gap-2">
+          <div className="flex items-center gap-2" aria-label="Kapitech AMS">
             <AmsBrandLogo compact className="h-6 w-6 shrink-0" />
-            <div className="min-w-0">
-              <span className="font-sans font-semibold text-fg text-xs block truncate">KAPITECH AMS</span>
-              <span className="text-[11px] font-sans text-muted block truncate -mt-0.5">{activeItemLabel}</span>
-            </div>
-          </Link>
+            <span className="font-sans font-semibold text-fg text-xs block truncate">KAPITECH AMS</span>
+          </div>
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
           <AdminReportingPeriodBar />
+          <Button
+            type="button"
+            variant="secondary"
+            aria-label="Search everything in AMS"
+            aria-keyshortcuts="Control+K Meta+K"
+            onClick={() => setCommandPaletteOpen(true)}
+            icon={<Search size={15} />}
+            className="ams-topbar-icon h-8 w-8 p-0"
+          />
+          <GlobalTimerControl userId={session?.user?.id} />
           <AdminNotificationCenter />
           <Button
             type="button"
@@ -328,7 +325,9 @@ export const AdminLayout: React.FC = () => {
             compact
             size="sm"
             directOpen
+            actionMenu
             onEdit={() => setProfileView('edit')}
+            onLogout={handleLogout}
             slug="topbar-profile-mobile"
               />
         </div>
@@ -376,47 +375,11 @@ export const AdminLayout: React.FC = () => {
               </button>
             </div>
 
-            <div className="px-3 pt-3">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  setCommandPaletteOpen(true);
-                }}
-                aria-label="Search AMS"
-                aria-keyshortcuts="Control+K Meta+K"
-                icon={<Search size={15} />}
-                className="flex h-9 w-full justify-start border-line bg-bg px-3"
-              >
-                <span className="min-w-0 flex-1 truncate text-left text-xs text-muted">Search</span>
-                <kbd className="ml-auto rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] text-muted">⌘K</kbd>
-              </Button>
-            </div>
-
             <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 py-4 custom-scrollbar">
               <DynamicAdminSidebarNavigation role={amsRole} pathname={location.pathname} search={location.search} hash={location.hash} onNavigate={() => setMobileMenuOpen(false)} />
             </div>
             <div className="shrink-0 border-t border-line bg-bg px-2.5 pb-[max(10px,env(safe-area-inset-bottom))] pt-2.5">
               <AdminSystemSettingsNavigation role={amsRole} pathname={location.pathname} search={location.search} hash={location.hash} onNavigate={() => setMobileMenuOpen(false)} />
-              <div className="mt-3 grid grid-cols-1 gap-2">
-                  <button
-                  type="button"
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    handleLogout();
-                  }}
-                  aria-pressed={logoutConfirmOpen}
-                  className={[
-                    "flex min-h-10 items-center justify-center rounded-control border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
-                    logoutConfirmOpen
-                      ? "border-danger/30 bg-danger/10 text-danger"
-                      : "border-line bg-panel text-muted hover:border-danger/40 hover:bg-danger/10 hover:text-danger active:bg-danger/10 active:text-danger"
-                  ].join(" ")}
-                >
-                  Sign out
-                </button>
-              </div>
               <div className="mt-2 flex items-center justify-between gap-2 px-2.5 pb-1 text-[10px] text-muted">
                 <span className="truncate">{AGENCY_TIER_LABELS[agencyTier]}</span>
                 <span className="shrink-0">Tier {agencyTier}</span>
@@ -434,13 +397,23 @@ export const AdminLayout: React.FC = () => {
         {/* Sticky desktop top bar */}
         <header className="hidden min-[900px]:flex h-[52px] min-h-[52px] border-b border-line bg-panel sticky top-0 z-30 items-center shrink-0" aria-label="AMS top bar">
           <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-5 lg:px-6 flex min-w-0 items-center justify-between gap-3">
-            <div className="min-w-0 flex-1 overflow-hidden">
-              <nav aria-label="Current module" data-ams-slug="active-module-title">
-                <span aria-current="page" className="min-w-0 truncate text-[11px] font-semibold text-fg">{activeItemLabel}</span>
-              </nav>
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setCommandPaletteOpen(true)}
+                aria-label="Search everything in AMS"
+                aria-keyshortcuts="Control+K Meta+K"
+                icon={<Search size={14} />}
+                className="h-8 shrink-0 justify-start gap-2 border-line bg-bg px-2.5"
+              >
+                <span className="hidden text-[11px] font-medium sm:inline">Search Everything</span>
+                <kbd className="hidden rounded-badge border border-line bg-panel px-1.5 py-0.5 text-[10px] text-muted md:inline">⌘K</kbd>
+              </Button>
             </div>
             <div className="flex shrink-0 items-center gap-1">
               <AdminReportingPeriodBar />
+              <GlobalTimerControl userId={session?.user?.id} />
               <AdminNotificationCenter />
               <Button
                 type="button"
@@ -470,14 +443,26 @@ export const AdminLayout: React.FC = () => {
                 }}
                 size="sm"
                 directOpen
+                actionMenu
                 onEdit={() => setProfileView('edit')}
+                onLogout={handleLogout}
                 slug="topbar-profile-mobile"
               />
             </div>
           </div>
         </header>
-        {/* View Outlet */}
+        {/* Workspace navigation lives in the content area, not the global topbar. */}
         <div className="ams-content flex-1 min-h-0 w-full max-w-[1560px] mx-auto">
+          {workspaceTabItems.length > 0 && (
+            <div className="px-4 pt-3 sm:px-5 lg:px-6" data-ams-slug="workspace-navigation">
+              <AdminSectionTabs
+                ariaLabel="Workspace navigation"
+                activeKey={activeWorkspaceTab?.key || ''}
+                items={workspaceTabItems}
+                className="w-full"
+              />
+            </div>
+          )}
           <Outlet />
         </div>
 
