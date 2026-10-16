@@ -58,7 +58,7 @@ test('Finance sees only commercial/direct workspaces in the sidebar; CRM and Fin
   assert.ok(menu.has('project-hub'));
   assert.ok(menu.has('finance-revenue'));
   assert.ok(menu.has('finance-expenses'));
-  assert.equal(menu.has('project-profitability'), false);
+  assert.equal(menu.has('project-profitability'), true);
   assert.equal(menu.has('project-time'), false);
   assert.equal(menu.has('content-workspace'), false);
   assert.deepEqual([...tabKeys('crm', 'Finance')], ['pipeline', 'clients', 'onboarding', 'inbox', 'contracts', 'sla']);
