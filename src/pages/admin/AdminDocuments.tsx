@@ -356,6 +356,20 @@ export const AdminDocuments: React.FC = () => {
     if (error) notify(error);
   };
 
+  const cleanupIncompleteDocument = async (id: string): Promise<{ confirmed: boolean; error?: string }> => {
+    try {
+      const response = await api.documents.delete(id);
+      return response.success
+        ? { confirmed: true }
+        : { confirmed: false, error: response.error || 'The temporary document record could not be removed.' };
+    } catch (error) {
+      return {
+        confirmed: false,
+        error: error instanceof Error ? error.message : 'The temporary document record could not be removed.'
+      };
+    }
+  };
+
   const saveUpload = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!canManageDocuments) return;
@@ -391,8 +405,13 @@ export const AdminDocuments: React.FC = () => {
       createdId = String(created.data.document.id);
       const uploaded = await api.documents.uploadContent(createdId, uploadFile);
       if (!uploaded.success || !uploaded.data?.document) {
-        await api.documents.delete(createdId).catch(() => {});
-        notify(uploaded.error || 'The file could not be stored in the vault.');
+        const cleanup = await cleanupIncompleteDocument(createdId);
+        if (!cleanup.confirmed) {
+          await loadDocuments();
+          notify((uploaded.error || 'The file could not be stored in the vault.') + ' Temporary record cleanup could not be confirmed. The vault was refreshed; inspect the document list before retrying.');
+        } else {
+          notify(uploaded.error || 'The file could not be stored in the vault.');
+        }
         return;
       }
 
@@ -405,8 +424,15 @@ export const AdminDocuments: React.FC = () => {
       setInputKey((current) => current + 1);
       notify('Document stored in the private vault.');
     } catch {
-      if (createdId) await api.documents.delete(createdId).catch(() => {});
-      notify('The document upload failed. Check the file and try again.');
+      const cleanup = createdId
+        ? await cleanupIncompleteDocument(createdId)
+        : { confirmed: true };
+      if (!cleanup.confirmed) {
+        await loadDocuments();
+        notify('The document upload failed, and temporary record cleanup could not be confirmed. The vault was refreshed; inspect the document list before retrying.');
+      } else {
+        notify('The document upload failed. Check the file and try again.');
+      }
     } finally {
       setUploading(false);
     }
