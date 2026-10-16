@@ -136,7 +136,7 @@ const CMS_SECTION_ITEMS: AdminSectionTabItem[] = [
 ];
 
 export const AdminCmsSectionTabs: React.FC<{ activeKey: AdminCmsSectionKey }> = ({ activeKey }) => (
-  <div className="min-[900px]:hidden min-w-0 ams-cms-section-tabs" data-ams-slug="cms-mobile-tabs" data-ams-feature-slug="cms-sections">
+  <div className="min-w-0 ams-cms-section-tabs" data-ams-slug="cms-section-tabs" data-ams-feature-slug="cms-sections">
     <AdminSectionTabs
       ariaLabel="CMS sections"
       activeKey={activeKey}
