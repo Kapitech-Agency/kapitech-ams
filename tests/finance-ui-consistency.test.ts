@@ -211,9 +211,12 @@ test('Finance workbook replaces legacy finance navigation and keeps all operatio
   assert.ok(app.includes('<Route path="proposals" element={<ModuleRoute moduleKey="proposals" moduleLabel="Proposals"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />'));
   assert.doesNotMatch(layout, /location\.pathname === '\/admin\/invoicing'/);
   assert.doesNotMatch(layout, /isFinanceModuleRoute|ariaLabel="Finance sections"/);
-  assert.ok(layout.includes('data-ams-slug="active-module-title"'));
+  assert.equal(layout.includes('data-ams-slug="active-module-title"'), false);
+  assert.ok(layout.includes('ariaLabel="Workspace navigation"'));
+  assert.ok(workspace.includes('ariaLabel="Finance areas"'));
   const navigation = await read('src/lib/amsModuleSubnavigation.ts');
-  assert.match(navigation, /label: 'Accounting', to: '\/admin\/finance\?tab=journal'/);
+  assert.match(navigation, /label: 'Profitability & Expenses', to: '\/admin\/finance\?tab=accounts-payable'/);
+  assert.match(workspace, /finance-tab-accounting-reports/);
   assert.doesNotMatch(layout, /finance=tax-retainers|finance=vendor-payments|finance=financial-reports/);
 
   const summaryStart = workspace.indexOf('const renderSummary =');
