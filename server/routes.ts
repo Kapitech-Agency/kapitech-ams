@@ -5019,12 +5019,55 @@ apiRouter.delete('/finance/workbook/:type/:id', requireAuth, requirePermission('
 
 // ----------------------------------------------------
 // 7. Vendors
+function isProjectManagerRole(user: StoredUser): boolean {
+  const role = String(user.role || '').trim().toLowerCase();
+  return role === 'pm' || role.includes('project manager');
+}
+
+function canViewConfidentialVendorRates(user: StoredUser): boolean {
+  if (isMasterAdministrator(user)) return true;
+  if (isProjectManagerRole(user)) return false;
+  return Boolean(user.permissions?.canViewFinancials);
+}
+
+const CONFIDENTIAL_VENDOR_RATE_FIELDS = new Set([
+  'hourlyrate', 'hourly_rate', 'costrate', 'cost_rate',
+  'employeecostrate', 'employee_cost_rate', 'vendorrate', 'vendor_rate',
+  'contractrate', 'contract_rate', 'rateperhour', 'rate_per_hour',
+  'payrate', 'pay_rate', 'costperhour', 'cost_per_hour', 'rate'
+]);
+
+function redactConfidentialVendorRateFields(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(redactConfidentialVendorRateFields);
+  if (!value || typeof value !== 'object') return value;
+  const sanitized: Record<string, unknown> = {};
+  for (const [key, field] of Object.entries(value as Record<string, unknown>)) {
+    const normalizedKey = key.toLowerCase().replace(/[\\s-]/g, '_');
+    const compactKey = normalizedKey.replace(/_/g, '');
+    if (CONFIDENTIAL_VENDOR_RATE_FIELDS.has(normalizedKey) || CONFIDENTIAL_VENDOR_RATE_FIELDS.has(compactKey)) continue;
+    sanitized[key] = redactConfidentialVendorRateFields(field);
+  }
+  return sanitized;
+}
+
 apiRouter.get('/vendors', requireAuth, requireAnyPermission('canManageVendors', 'canViewFinancials'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const vendors = getDataSourceMode() === 'postgres' ? await postgresVendorRepository.list() : getDatabase().vendors;
-  res.json({ success: true, vendors });
+  if (canViewConfidentialVendorRates(req.user!)) {
+    res.json({ success: true, vendors });
+    return;
+  }
+  const sanitized = (Array.isArray(vendors) ? vendors : []).map((vendor: any) => ({
+    ...redactConfidentialVendorRateFields(vendor) as Record<string, unknown>,
+    rateMasked: true
+  }));
+  res.json({ success: true, vendors: sanitized });
 });
 
 apiRouter.post('/vendors', requireAuth, requirePermission('canManageVendors'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  if (isProjectManagerRole(req.user!)) {
+    res.status(403).json({ success: false, error: 'Project managers cannot create or manage confidential vendor rate records.' });
+    return;
+  }
   const vendorData = req.body || {};
   const hourlyRate = Number(vendorData.hourlyRate);
   if (!Number.isFinite(hourlyRate) || hourlyRate < 0 || hourlyRate > 10_000_000_000) {
@@ -5079,6 +5122,14 @@ apiRouter.post('/vendors', requireAuth, requirePermission('canManageVendors'), a
 apiRouter.put('/vendors/:id', requireAuth, requirePermission('canManageVendors'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const { id } = req.params;
   const updates = req.body || {};
+  if (isProjectManagerRole(req.user!)) {
+    const sensitiveKeys = Object.keys(updates as Record<string, unknown>).map((key) => key.toLowerCase().replace(/[\\s-]/g, '_'));
+    const sensitiveCompactKeys = sensitiveKeys.map((key) => key.replace(/_/g, ''));
+    if (sensitiveKeys.some((key) => CONFIDENTIAL_VENDOR_RATE_FIELDS.has(key)) || sensitiveCompactKeys.some((key) => CONFIDENTIAL_VENDOR_RATE_FIELDS.has(key)) || 'contracts' in (updates as Record<string, unknown>)) {
+      res.status(403).json({ success: false, error: 'Project managers cannot modify confidential vendor rates or contracts.' });
+      return;
+    }
+  }
   if (getDataSourceMode() === 'postgres') {
     const patch = pickFields(updates, ['name','companyName','email','phone','type','primaryCategory','skills','hourlyRate','currency','rating','completedProjectsCount','status','isVetted','location','portfolioUrl','githubUrl','contracts','notes','updatedAt']);
     if (patch.email !== undefined) {
