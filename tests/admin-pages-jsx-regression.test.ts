@@ -63,9 +63,10 @@ test('Finance worksheets stay inside the Finance workspace and retired routes st
   assert.ok(sidebar.includes('getNavigationGroupsForRole(role)'));
   assert.equal(sidebar.includes('aria-expanded='), false);
   assert.equal(sidebar.includes('ChevronDown'), false);
-  assert.ok(navigation.includes("to: '/admin/finance?tab=accounts-receivable'"));
-  assert.ok(navigation.includes("to: '/admin/finance?tab=accounts-payable'"));
-  assert.ok(navigation.includes("to: '/admin/finance?tab=project-finance'"));
+  assert.ok(navigation.includes("key: 'finance', label: 'Finance', to: '/admin/finance?tab=executive-summary'"));
+  assert.ok(subnavigation.includes("to: '/admin/finance?tab=accounts-receivable'"));
+  assert.ok(subnavigation.includes("to: '/admin/finance?tab=accounts-payable'"));
+  assert.ok(subnavigation.includes("to: '/admin/finance?tab=project-finance'"));
   assert.ok(workspace.includes('FINANCE_WORKBOOK_GROUPS'));
   assert.ok(workspace.includes('AdminSectionTabs ariaLabel="Finance worksheets"'));
   assert.equal(navigation.includes("to: '/admin/invoicing?finance="), false);
@@ -483,14 +484,24 @@ test('Flat sidebar visibility follows the canonical role route policy and keeps 
 
   const expectedSidebarEntries = [
     "label: 'Dashboard & Hub'",
-    "label: 'Client Directory'",
+    "label: 'CRM'",
     "label: 'Project Hub'",
-    "label: 'Invoicing & Revenues'",
-    "label: 'Profitability & Expenses'",
-    "label: 'Content Workspace'",
+    "label: 'Finance'",
+    "label: 'CMS'",
   ];
   for (const label of expectedSidebarEntries) assert.ok(navigation.includes(label), 'Missing direct workspace ' + label);
-  for (const label of ["label: 'Sales & Pipeline'", "label: 'Retainer Hours Pool'", "label: 'Team & Capacity'", "label: 'Timesheet Control'", "label: 'Vendor Ledger'"]) {
+  for (const label of [
+    "label: 'Client Directory'",
+    "label: 'Sales & Pipeline'",
+    "label: 'Invoicing & Revenues'",
+    "label: 'Profitability & Expenses'",
+    "label: 'Project Profitability'",
+    "label: 'Retainer Hours Pool'",
+    "label: 'Team & Capacity'",
+    "label: 'Timesheet Control'",
+    "label: 'Vendor Ledger'",
+    "label: 'Insights'",
+  ]) {
     assert.ok(subnavigation.includes(label), 'Missing in-workspace destination ' + label);
   }
   assert.ok(sidebar.includes('AMS_PRIMARY_SETTINGS_ITEM'));

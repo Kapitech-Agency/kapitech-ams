@@ -37,7 +37,6 @@ export interface AmsNavigationGroup {
 
 const ALL_ROLES: AmsRole[] = ['Admin', 'Finance', 'PM', 'Creative', 'Freelancer'];
 const COMMERCIAL_ROLES: AmsRole[] = ['Admin', 'Finance', 'PM'];
-const ADMIN_FINANCE: AmsRole[] = ['Admin', 'Finance'];
 
 export const AMS_NAVIGATION_GROUPS: AmsNavigationGroup[] = [
   {

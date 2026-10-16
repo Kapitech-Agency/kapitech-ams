@@ -15,9 +15,11 @@ test('Flat finance navigation keeps the complete worksheet workbook inside the F
   assert.match(layout, /ariaLabel="Workspace navigation"/);
   assert.match(sidebar, /data-ams-navigation-layout="flat"/);
   assert.doesNotMatch(sidebar, /data-ams-nav-submenu|aria-expanded=|ChevronDown/);
-  assert.match(navigation, /label: 'Invoicing & Revenues'/);
-  assert.match(navigation, /label: 'Profitability & Expenses'/);
-  assert.match(navigation, /label: 'Project Profitability'/);
+  const subnavigation = await read('src/lib/amsModuleSubnavigation.ts');
+  assert.match(navigation, /label: 'Finance', to: '\/admin\/finance\?tab=executive-summary'/);
+  assert.match(subnavigation, /label: 'Invoicing & Revenues'/);
+  assert.match(subnavigation, /label: 'Profitability & Expenses'/);
+  assert.match(subnavigation, /label: 'Project Profitability'/);
   assert.match(workspace, /FINANCE_WORKBOOK_GROUPS/);
   assert.match(workspace, /ariaLabel="Finance areas"/);
   assert.match(workspace, /finance-tab-overview-control/);
