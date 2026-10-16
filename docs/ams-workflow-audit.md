@@ -3,6 +3,8 @@
 **Audit date:** 15 October 2026  
 **Scope:** Existing frontend routes, module workspaces, API contracts, persistence repositories, financial workbook alignment, and operational workflow requirements.
 
+> **Historical snapshot notice:** This audit documents evidence and status as of 15 October 2026. Treat implementation-status statements, route names and the old sidebar taxonomy below as dated findings, not proof of the current HEAD or the target architecture. The current target navigation and intended end-state are defined by [AMS Master Structure & AI Implementation Guide](AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md). The UI source of truth remains [AMS-DESIGN-SYSTEM.md](../AMS-DESIGN-SYSTEM.md). Verify current source, tests, database and production readiness before making status claims.
+
 ## Executive finding
 
 Kapitech AMS already has substantial application and backend foundations. The primary gap is not a lack of every feature from scratch; it is the disconnect between the available back-end workflows and the front-end navigation/routes, plus several operational dashboards that show preview data or do not yet derive their metrics from authoritative records. Preserve working data models, audit trails, approval gates, and conversion paths. Extend existing components and API contracts before proposing new schemas.
@@ -21,20 +23,24 @@ Kapitech AMS already has substantial application and backend foundations. The pr
 - Website CMS already contains dedicated editors for case studies, services, testimonials, Insights, and Careers, backed by CMS APIs. Audit publish states, field validation, content relations, and public-site parity before adding new CMS menus. Do not expose menu items for capabilities with no functioning workflow.
 - Backend and tests already cover authorization boundaries, financial conversion integrity, journal controls, transaction integrity, and project/task persistence. All changes must retain the existing regression gates.
 
-## Target sidebar taxonomy
+## Target sidebar taxonomy — superseded by the master guide
 
-The sidebar contains **modules only**, grouped under short labels. No individual view, list, tab, or CRUD action should become a sidebar module.
+This section records the prior taxonomy for historical context only. **Do not implement it as the present target.** The current target has exactly these ten top-level modules:
 
-| Group | Modules |
-|---|---|
-| Overview | Dashboard |
-| Sales | Inbox, CRM, Proposals, Clients |
-| Delivery | Projects, Tasks, Team, Time, Reviews |
-| Finance | Finance, Vendors |
-| Content | Website |
-| Operations | Documents |
+1. Dashboard
+2. Inbox
+3. CRM & Sales
+4. Projects
+5. Clients
+6. Finance
+7. Team & Resources
+8. Documents
+9. Website CMS
+10. Settings
 
-Settings remains in its established utility/footer position unless the app’s existing permissions and layout convention call for a dedicated Administration workspace. Submenus belong within their own module page using the established tab/navigation primitives.
+Subviews such as Quotations, Time Tracking, Vendors, People Operations, Content & Campaign Operations, and Kopra H2H belong under their owning module as detailed in the master guide. Standalone Proposal and generic Approval sidebar entries are not target top-level modules. That does not authorize removal of the underlying quotation workflow, maker-checker controls, approval request/review logic needed by business workflows, audit trails, APIs or data. Map consumers and preserve those controls.
+
+Settings visibility and layout must follow the existing permission and shell conventions. Submenus belong within their module workspace using established navigation primitives.
 
 ## Implementation status and remaining audit work
 
@@ -54,6 +60,9 @@ Settings remains in its established utility/footer position unless the app’s e
 - Task dependency/recurrence features should only be added after required persistence, API authorization, notifications, and regression coverage are confirmed. Existing task views/CRUD should be preserved.
 - CI on the final head and the deployed ams.kapitech.id UI must be verified before declaring production completion.
 ## Module requirements to validate and close
+
+The module names and list below are requirements captured by the historical audit. For target top-level navigation and current priorities, consult the master guide. Do not interpret this section as authority to recreate separate Tasks, Time, Vendors, Reviews, Proposals, or Approvals sidebar modules when the master taxonomy places their workflows inside an owning module.
+
 
 ### Dashboard (priority 1)
 Executive overview, active project/task status, upcoming and overdue work, risk/blocked work, pipeline and proposal exposure, invoicing/collections, operating expense and net contribution, pending approvals, and capacity. KPI values, charts, and tables must use live API/finance/project/task/time-log records with reporting-period filters. Demo fixtures may appear only in explicit preview mode and must be labeled.
