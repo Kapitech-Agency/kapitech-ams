@@ -2885,7 +2885,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 
   return (
     <div className="min-w-0 space-y-5">
-      {isProposalWorkspace && <AdminModuleHeader className="mb-0" title="Proposals" description="Manage commercial quotations, review stages, validity, and the handoff to invoicing." />}
+      {isProposalWorkspace && <AdminModuleHeader className="mb-0" title="Quotations" description="Manage commercial quotations, review stages, validity, and the handoff to invoicing." />}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="inline-flex min-h-9 items-center rounded-control border border-line bg-panel p-1" aria-label="Finance currency">
           {(['IDR', 'USD'] as CurrencyCode[]).map((item) => (
