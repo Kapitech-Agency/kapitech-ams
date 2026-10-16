@@ -27,15 +27,17 @@ function readCookie(name: string): string {
 }
 
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+const UNKNOWN_MUTATION_OUTCOME_ERROR = 'The server response was not received. The operation may have completed; check its current status before retrying.';
+const UNKNOWN_UPLOAD_OUTCOME_ERROR = 'The upload result could not be confirmed. Check the document list before retrying to avoid duplicate or orphaned files.';
 
 export async function apiRequest<T = any>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<{ success: boolean; data?: T; error?: string; status?: number }> {
   const controller = new AbortController();
+  const method = String(options.method || 'GET').toUpperCase();
   const timeout = window.setTimeout(() => controller.abort(), 15000);
   try {
-    const method = String(options.method || 'GET').toUpperCase();
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...(options.headers as Record<string, string> || {})
@@ -93,10 +95,12 @@ export async function apiRequest<T = any>(
       data: json
     };
   } catch (err: any) {
-    return {
-      success: false,
-      error: err?.name === 'AbortError' ? 'Request timed out. Please try again.' : (err?.message || 'Network request failed')
-    };
+    const error = MUTATING_METHODS.has(method)
+      ? UNKNOWN_MUTATION_OUTCOME_ERROR
+      : err?.name === 'AbortError'
+        ? 'Request timed out. Please try again.'
+        : (err?.message || 'Network request failed');
+    return { success: false, error };
   } finally {
     window.clearTimeout(timeout);
   }
@@ -148,10 +152,10 @@ async function apiBinaryRequest<T = any>(
       return { success: false, error: safeError, status: res.status };
     }
     return { success: true, data: json };
-  } catch (err: any) {
+  } catch {
     return {
       success: false,
-      error: err?.name === 'AbortError' ? 'Upload timed out. Please try again.' : (err?.message || 'Network request failed')
+      error: UNKNOWN_UPLOAD_OUTCOME_ERROR
     };
   } finally {
     window.clearTimeout(timeout);
