@@ -64,7 +64,7 @@ test('Finance worksheets stay inside the Finance workspace and retired routes st
   assert.ok(sidebar.includes('getNavigationGroupsForRole(role)'));
   assert.equal(sidebar.includes('aria-expanded='), false);
   assert.equal(sidebar.includes('ChevronDown'), false);
-  assert.ok(navigation.includes("key: 'finance', label: 'Finance', to: '/admin/finance?tab=executive-summary'"));
+  assert.ok(navigation.includes("key: 'finance', label: 'Finance Overview', to: '/admin/finance?tab=executive-summary'"));
   assert.ok(subnavigation.includes("to: '/admin/finance?tab=accounts-receivable'"));
   assert.ok(subnavigation.includes("to: '/admin/finance?tab=accounts-payable'"));
   assert.ok(subnavigation.includes("to: '/admin/finance?tab=project-finance'"));
@@ -485,23 +485,25 @@ test('Flat sidebar visibility follows the canonical role route policy and keeps 
 
   const expectedSidebarEntries = [
     "label: 'Dashboard & Hub'",
-    "label: 'CRM'",
-    "label: 'Project Hub'",
-    "label: 'Finance'",
-    "label: 'CMS'",
-  ];
-  for (const label of expectedSidebarEntries) assert.ok(navigation.includes(label), 'Missing direct workspace ' + label);
-  for (const label of [
-    "label: 'Client Directory'",
     "label: 'Sales & Pipeline'",
+    "label: 'Client Directory'",
+    "label: 'Client Onboarding'",
+    "label: 'Project Hub'",
+    "label: 'Tasks'",
+    "label: 'Finance Overview'",
     "label: 'Invoicing & Revenues'",
     "label: 'Profitability & Expenses'",
     "label: 'Project Profitability'",
+    "label: 'Insights'",
+    "label: 'Portfolio'",
+    "label: 'Testimonials'",
+  ];
+  for (const label of expectedSidebarEntries) assert.ok(navigation.includes(label), 'Missing direct workspace ' + label);
+  for (const label of [
     "label: 'Retainer Hours Pool'",
     "label: 'Team & Capacity'",
     "label: 'Timesheet Control'",
     "label: 'Vendor Ledger'",
-    "label: 'Insights'",
   ]) {
     assert.ok(subnavigation.includes(label), 'Missing in-workspace destination ' + label);
   }
