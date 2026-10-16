@@ -1,92 +1,92 @@
 # AMS Master Structure & AI Implementation Guide
-## Spesifikasi Induk Navigasi, Modul, Worksheet, Workflow, Data, Integrasi, dan Kriteria Penerimaan Kapitech AMS
+## Master Specification for Kapitech AMS Navigation, Modules, Worksheets, Workflows, Data, Integrations, and Acceptance Criteria
 
 - **Repository:** Kapitech-Agency/kapitech-ams
 - **Branch produksi:** main
-- **Deployment target:** Hostinger, mengikuti pipeline repository yang berlaku
-- **Status dokumen:** Baseline rancangan dan instruksi untuk pekerjaan implementasi berikutnya
-- **Penting:** Dokumen ini mendefinisikan target-state. Semua implementer wajib mengikuti root AGENTS.md untuk prioritas sumber, batas tugas, verifikasi kondisi aktual, dan protokol perubahan.
-- **Cakupan saat dokumen dibuat:** Spesifikasi struktur. Dokumen ini sendiri tidak mengubah kode aplikasi, database, konfigurasi produksi, atau integrasi bank.
-- **Bahasa kerja dokumen:** Bahasa Indonesia; label navigasi UI menggunakan istilah Inggris yang konsisten dengan AMS.
+- **Deployment target:** Hostinger, following the repository's current deployment pipeline
+- **Document status:** Baseline architecture and instructions for future implementation work
+- **Important:** This document defines the target state. All implementers must follow the root AGENTS.md for source precedence, task boundaries, verification of the actual state, and change procedures.
+- **Scope at publication:** Structure specification only. This document does not itself change application code, the database, production configuration, or bank integrations.
+- **Document language:** English; UI navigation labels use the English terminology adopted by AMS.
 
 ---
 
-## 1. Tujuan dan cara menggunakan dokumen ini
+## 1. Purpose and How to Use This Document
 
-Dokumen ini adalah sumber instruksi utama bagi AI developer yang kelak diminta untuk merancang, mengaudit, mengimplementasikan, menguji, dan merilis restrukturisasi besar Kapitech Agency Management System (AMS). Dokumen menjelaskan struktur navigasi target, tanggung jawab setiap modul, submenu dan worksheet, fitur, status, alur bisnis, kepemilikan data, batas antar modul, integrasi, keamanan, tahapan migrasi, dan kriteria penerimaan.
+This document is the primary instruction source for AI developers tasked with designing, auditing, implementing, testing, and releasing the major restructuring of Kapitech Agency Management System (AMS). It defines the target navigation structure, module responsibilities, submenus and worksheets, features, statuses, business workflows, data ownership, module boundaries, integrations, security, migration stages, and acceptance criteria.
 
-Tujuan AMS adalah menyediakan satu sistem operasional terpadu untuk agensi creative dan IT Kapitech. Sistem harus dapat menangani pekerjaan dari inquiry pertama sampai penjualan, perjanjian, onboarding klien, delivery, penagihan, pembayaran, akuntansi, dukungan, renewal, people operations, konten website, dan audit operasional.
+The goal of AMS is to provide one integrated operating system for Kapitech's creative and IT agency. It must support work from the initial inquiry through sales, agreements, client onboarding, delivery, invoicing, payments, accounting, support, renewals, people operations, website content, and operational audit.
 
-### 1.1 Prinsip utama
+### 1.1 Core Principles
 
-1. **Satu sidebar, sepuluh modul utama.** Jangan membuat modul sidebar baru hanya karena sebuah fitur memiliki workflow khusus.
-2. **End-to-end, bukan hanya kumpulan halaman.** Setiap fitur harus mengakomodasi keadaan awal, proses, tindakan pengguna, status, kegagalan, pengecualian, hasil, histori, dan dampak lintas modul.
-3. **Satu sumber data otoritatif.** Data yang digunakan lintas modul harus menunjuk ke record yang sama, bukan disalin menjadi master data independen.
-4. **Pertahankan aturan bisnis yang sudah berjalan.** Terutama Finance: restrukturisasi navigasi tidak membolehkan perubahan diam-diam pada rumus, transaksi historis, mapping akun, perhitungan, posting jurnal, penutupan periode, atau perilaku produksi yang telah ada.
-5. **Jangan mengganti desain AMS dengan desain baru.** Ikuti AMS-DESIGN-SYSTEM.md, Dashboard sebagai referensi struktur halaman, guideline drawer/modal/kanban yang ada, dan pola yang telah terbukti di modul lain.
-6. **Keamanan dan kontrol transaksi melekat pada workflow.** Tidak ada kebutuhan membuat modul Approval generik tersendiri; kontrol maker-checker dan otorisasi tetap berlaku dalam konteks transaksi yang relevan.
-7. **Bedakan rencana dari kemampuan nyata.** Jangan memperlihatkan kontrol yang seolah berfungsi jika backend, API, izin, atau integrasi belum benar-benar mendukungnya. Fitur yang belum aktif harus dinyatakan sebagai belum dikonfigurasi atau tidak tersedia, bukan dibuat seolah sukses.
-8. **Data historis harus dipertahankan.** Perubahan menu tidak boleh menghapus, menggandakan, atau mengubah makna data bisnis yang sudah ada.
-9. **Operasi harus dapat ditelusuri.** Status, perubahan penting, tindakan sensitif, pengecualian, dan integrasi eksternal harus memiliki audit trail yang sesuai.
-10. **Retry aman.** Pengulangan aksi, callback, polling, sinkronisasi, atau penanganan timeout tidak boleh menghasilkan pembayaran, jurnal, invoice, lead, proyek, atau record bisnis ganda.
+1. **One sidebar with ten primary modules.** Do not create a new sidebar module merely because a feature has its own workflow.
+2. **End to end, not just a collection of pages.** Every feature must account for its initial state, process, user actions, statuses, failures, exceptions, outcome, history, and cross-module impact.
+3. **One authoritative data source.** Cross-module references must point to the same record rather than copying data into independent master records.
+4. **Preserve established business rules.** In particular, Finance navigation restructuring must not silently change formulas, historical transactions, account mappings, calculations, journal posting, period closing, or existing production behavior.
+5. **Do not replace the AMS design with a new design.** Follow AMS-DESIGN-SYSTEM.md, use Dashboard as the structural page reference, and follow the existing drawer/modal/Kanban guides and established patterns in other modules.
+6. **Keep security and transaction controls within the workflow.** A standalone generic Approval module is not required; maker-checker and authorization controls must remain in the relevant transaction workflows.
+7. **Distinguish planned capabilities from actual functionality.** Do not present a control as functional unless the backend, API, permissions, and integration genuinely support it. Inactive features must be identified as unconfigured or unavailable, not shown as successful.
+8. **Preserve historical data.** Navigation changes must not delete, duplicate, or change the meaning of existing business data.
+9. **Maintain traceability.** Important statuses, changes, sensitive actions, exceptions, and external integrations must have appropriate audit trails.
+10. **Make retries safe.** Repeated actions, callbacks, polling, synchronization, and timeout handling must not create duplicate payments, journals, invoices, leads, projects, or other business records.
 
-### 1.2 Aturan kerja untuk AI developer
+### 1.2 Working Rules for AI Developers
 
-Sebelum implementasi:
+Before implementation:
 
-- Pelajari repository pada branch main dan semua guideline terkait, minimal AMS-DESIGN-SYSTEM.md, panduan drawer/modal/kanban, definisi navigasi dan akses, struktur Finance, Finance store/API, migrasi database, dan test yang berkaitan.
-- Verifikasi kondisi aktual branch, commit, status working tree, struktur folder, API, model data, permission, migration chain, dan hasil build. Jangan berasumsi dokumentasi ini berarti semua fitur sudah tersedia.
-- Susun peta keterkaitan antara navigasi target dan implementasi aktual. Bedakan existing, partially implemented, missing, simulated/demo-only, dan blocked by external provider.
-- Tulis rencana migrasi kecil yang bisa ditinjau sebelum melakukan perubahan luas. Kerjakan secara bertahap, bukan satu rewrite besar.
-- Pertahankan sumber data dan business rules existing kecuali ada perubahan bisnis yang disetujui secara eksplisit.
-- Tambahkan migrasi database hanya bila dibutuhkan, idempotent, berurutan, aman untuk produksi, dan kompatibel dengan data existing. Jangan mengedit atau menghapus migrasi historis yang sudah berjalan.
-- Jalankan lint, build, pengujian yang relevan, dan smoke test. Catat hasil aktual. Jangan mengklaim tes lolos tanpa menjalankannya.
-- Jangan mengirim kredensial, token, secret, data pribadi sensitif, atau isi file private ke log maupun dokumentasi.
-- Jangan deploy, melakukan perubahan produksi, atau mengubah backend/API/DB/security/auth/RBAC hanya berdasarkan asumsi. Ikuti batas kerja eksplisit dalam tugas implementasi aktual.
-- Saat tugas hanya meminta rancangan, audit, atau dokumen, jangan menerjemahkannya menjadi perubahan kode aplikasi.
+- Read the repository on the main branch and the relevant guidelines, including AMS-DESIGN-SYSTEM.md, the drawer/modal/Kanban guides, navigation and access definitions, Finance structure, Finance store/API, database migrations, and relevant tests.
+- Verify the actual branch, commit, working-tree state, folder structure, APIs, data models, permissions, migration chain, and build results. Do not assume this document means every feature is already available.
+- Map the target navigation to the current implementation. Distinguish existing, partially implemented, missing, simulated/demo-only, and externally blocked capabilities.
+- Prepare a small, reviewable migration plan before broad changes. Work incrementally rather than attempting one large rewrite.
+- Preserve existing data sources and business rules unless a business change has been explicitly approved.
+- Add database migrations only when needed; make them ordered, safe for production, idempotent where appropriate, and compatible with existing data. Do not edit or remove historical migrations that have already shipped.
+- Run lint, build, relevant tests, and smoke tests. Record actual results. Never claim tests passed without running them.
+- Never write credentials, tokens, secrets, sensitive personal data, or private file contents to logs or documentation.
+- Do not deploy, change production, or modify backend/API/database/security/authentication/RBAC based on assumptions. Follow the explicit scope of the active implementation task.
+- When the task asks only for architecture, an audit, or documentation, do not turn it into application-code changes.
 
 ---
 
-## 2. Batas repository dan arsitektur teknis yang harus dihormati
+## 2. Repository and Technical Architecture Boundaries
 
-Repository yang menjadi target adalah Kapitech-Agency/kapitech-ams. Branch produksi adalah main dan deployment produksi ditujukan ke Hostinger.
+The target repository is Kapitech-Agency/kapitech-ams. The production branch is main, and production deployment targets Hostinger.
 
-Runtime dan batas teknis repository harus diverifikasi ulang sebelum setiap pekerjaan besar. Referensi repository yang telah terdokumentasi mencakup Node.js 22, Express API, React/Vite frontend, TypeScript, Tailwind v4, PostgreSQL sebagai production data source, autentikasi session-cookie, proteksi CSRF, MFA TOTP, RBAC, encrypted data, backup, dan private document vault.
+The runtime and technical boundaries must be re-verified before each major task. Documented repository foundations include Node.js 22, Express API, React/Vite frontend, TypeScript, Tailwind v4, PostgreSQL as the production data source, session-cookie authentication, CSRF protection, TOTP MFA, RBAC, encrypted data, backups, and a private document vault.
 
-### 2.1 Batas yang tidak boleh dilanggar tanpa instruksi eksplisit
+### 2.1 Boundaries That Must Not Be Crossed Without Explicit Authorization
 
-- Jangan mengganti, mem-bypass, atau menurunkan keamanan autentikasi, session, CSRF, MFA, recovery code, RBAC, permission enforcement, audit log, enkripsi, backup, atau document vault.
-- Jangan memindahkan business logic sensitif ke frontend.
-- Jangan menjadikan mock/demo/fixture/local preview sebagai sumber data produksi.
-- Jangan menambah dependency atau library UI/diagram/chart hanya untuk mempermudah pekerjaan tanpa alasan teknis yang kuat.
-- Jangan menghapus fitur, route, tabel, record, atau workflow hanya karena tidak sesuai dengan susunan menu baru. Lakukan mapping dan rencana deprecation terlebih dahulu.
-- Jangan membuat fitur Mobile App sebagai layanan Kapitech. Daftar layanan Kapitech tidak mencakup Mobile App.
-- Jangan mengubah domain publik, konfigurasi deployment, database production, kredensial, atau external integration tanpa pekerjaan eksplisit dan pengujian.
-- Jangan menganggap menu tersembunyi sebagai kontrol keamanan. Otorisasi wajib diperiksa server-side.
-- Jangan mengubah laporan Finance dengan rumus baru tanpa rekonsiliasi yang membuktikan bahwa output lama dan output baru konsisten atau perubahan telah disetujui.
+- Do not replace, bypass, or weaken authentication, sessions, CSRF, MFA, recovery codes, RBAC, permission enforcement, audit logs, encryption, backups, or the document vault.
+- Do not move sensitive business logic into the frontend.
+- Do not use mock/demo/fixture/local-preview data as production data.
+- Do not add a dependency or UI/diagram/chart library merely for convenience without a strong technical justification.
+- Do not delete a feature, route, table, record, or workflow just because it does not match the new menu arrangement. Map dependencies and prepare a deprecation plan first.
+- Do not add Mobile App as a Kapitech service. Mobile App is not part of Kapitech's service offering.
+- Do not change the public domain, deployment configuration, production database, credentials, or external integrations without explicit task scope and testing.
+- Do not treat a hidden menu as a security control. Authorization must be enforced server-side.
+- Do not change Finance report formulas without reconciliation evidence proving that old and new outputs are consistent, or explicit approval for the business-rule change.
 
-### 2.2 Aturan gaya UI yang wajib
+### 2.2 Mandatory UI Style Rules
 
-Gunakan sistem desain AMS yang telah ada, bukan membuat design system kedua.
+Use the existing AMS design system; do not create a second design system.
 
 - Dark-first, premium, operasional, kompak tetapi mudah dibaca.
-- Token referensi yang tercatat: background #09090c, panel #0f0f14, line #20202a, text #f3f3f6, muted #8b8b99, crimson #dc143c, success #34d399, warning #f5a524, danger #f97066, info #5b8cff. Verifikasi token source-of-truth sebelum mengubah.
-- Crimson adalah aksen brand; jangan menggunakan warna danger untuk semua tombol atau semua elemen aktif.
-- Gunakan Inter/system, ukuran, skala, gap, padding, control height, table row, sidebar, topbar, breakpoints, dan komponen yang sesuai dengan guideline aktif.
-- Jangan membawa pola UI generik yang tidak sesuai konsep AMS seperti dashboard bento berlebihan, glassmorphism, blur, garis dekoratif, atau animasi tanpa tujuan.
-- Perpindahan tab/subtab tidak boleh menyebabkan page padding, header, tinggi area kerja, atau posisi konten meloncat.
-- Setiap halaman harus memiliki konteks: judul, deskripsi singkat jika pola modul menggunakannya, hierarki konten jelas, empty state yang membantu, loading/error state, dan tindakan utama yang terlihat.
-- Jangan membuat header ganda. Ikuti pola modul saat ini: satu konteks header halaman, lalu navigasi/tab, lalu isi. Jangan menambahkan header baru di bawah subtab.
-- Tombol Add/Create mengikuti treatment utama AMS, dengan aksen merah brand sesuai aturan desain yang aktif.
-- Gunakan drawer/form custom sesuai guideline ketika itu pola yang berlaku; jangan mengembalikan modal atau dropdown legacy hanya karena mudah.
-- Hindari fake data, button inert, dead-end route, tab kosong, KPI yang tidak bersumber, atau label yang tidak menjelaskan arti.
-- Gunakan sentence case, nilai uang dan angka tabular, status konsisten, dan label yang manusiawi.
+- Reference tokens recorded in the design system: background #09090c, panel #0f0f14, line #20202a, text #f3f3f6, muted #8b8b99, crimson #dc143c, success #34d399, warning #f5a524, danger #f97066, info #5b8cff. Verify the source-of-truth tokens before changing anything.
+- Crimson is the brand accent; do not use the danger color for every button or active element.
+- Use Inter/system typography and the sizes, scale, gaps, padding, control heights, table rows, sidebar, topbar, breakpoints, and components defined by the active guidelines.
+- Avoid generic UI patterns that conflict with the AMS concept, such as excessive bento dashboards, glassmorphism, blur, decorative lines, or purposeless animation.
+- Switching tabs/subtabs must not cause page padding, header, workspace height, or content position to jump.
+- Each page needs clear context: title, a short description when the module pattern uses one, clear content hierarchy, helpful empty state, loading/error states, and a visible primary action.
+- Do not create duplicate headers. Follow the current pattern: one page context header, then navigation/tabs, then content. Do not add another header below a subtab.
+- Add/Create buttons must use the primary AMS treatment, with the red brand accent in line with the active design rules.
+- Use the shared drawer/form patterns where required by the guidelines; do not reintroduce legacy modals or dropdowns for convenience.
+- Avoid fake data, inert buttons, dead-end routes, empty tabs, unsupported KPIs, and labels that fail to explain their meaning.
+- Use sentence case, tabular figures for money and numeric values, consistent statuses, and clear human-readable labels.
 
 ---
 
 ## 3. Navigasi utama target
 
-Sidebar harus menampilkan hanya sepuluh modul berikut. Detail worksheet atau fitur internal tidak menjadi item sidebar level pertama.
+The sidebar must display only the following ten primary modules. Worksheets and internal features must not appear as top-level sidebar modules.
 
 1. Dashboard
 2. Inbox
@@ -99,9 +99,9 @@ Sidebar harus menampilkan hanya sepuluh modul berikut. Detail worksheet atau fit
 9. Website CMS
 10. Settings
 
-Proposal, Approval, dan CRM lama sebagai modul terpisah tidak boleh dipertahankan sebagai modul sidebar mandiri. **CRM & Sales tetap harus tersedia** sebagai satu modul lengkap bisnis/sales. Quotation menjadi workflow di CRM & Sales dan Finance dengan satu record quotation bersama. General Approval bukan modul utama; kontrol otorisasi ada di transaksi. Vendors, Time Tracking, People Operations, Content & Campaign Operations, dan Kopra H2H adalah kelompok fitur/submenu, bukan modul sidebar tambahan.
+Standalone Proposal, Approval, and legacy CRM modules must not remain as primary sidebar modules. **CRM & Sales must remain available** as the complete sales/business module. Quotations are workflows in CRM & Sales and Finance backed by one shared quotation record. Generic Approval is not a primary module; transaction-level authorization controls remain in place. Vendors, Time Tracking, People Operations, Content & Campaign Operations, and Kopra H2H are subareas, not additional top-level modules.
 
-Menu yang terlihat harus dapat diakses sesuai role dan memiliki tujuan fungsional. Jangan menampilkan link navigasi yang hanya mengarah ke halaman kosong.
+Visible navigation items must be accessible to the appropriate roles and lead to functional destinations. Do not show links that only open empty pages.
 
 ---
 
@@ -115,45 +115,45 @@ Menu yang terlihat harus dapat diakses sesuai role dan memiliki tujuan fungsiona
 
 ### 4.2 Tujuan
 
-Dashboard merupakan ringkasan bisnis dan operasional, bukan sumber pencatatan independen. Nilai harus berasal dari modul sumber dan menggunakan definisi metrik yang konsisten.
+Dashboard is a business and operations summary, not an independent source of records. Its values must come from source modules and use consistent metric definitions.
 
 ### 4.3 Overview
 
-Tampilkan metrik yang memang tersedia dan relevan dengan role pengguna, misalnya:
+Show metrics that are actually available and relevant to the user's role, such as:
 
 - Active projects, task overdue, milestones at risk.
 - Active clients, client requests awaiting action.
-- Sales pipeline dan forecast dari CRM.
-- Revenue, outstanding receivables, overdue invoices, expenses, cash position, dan profit indicator dari Finance.
-- Team utilization/capacity dari Team & Resources, jika data jam dan kapasitas memadai.
-- Integrasi kritis yang perlu ditindaklanjuti, termasuk status sinkronisasi bank bila diaktifkan.
-- Feed tindakan penting dan exception yang membutuhkan tindakan.
+- Sales pipeline and forecast from CRM.
+- Revenue, outstanding receivables, overdue invoices, expenses, cash position, and profit indicators from Finance.
+- Team utilization/capacity from Team & Resources when sufficient time and capacity data exists.
+- Critical integrations requiring attention, including bank synchronization status when enabled.
+- A feed of important actions and exceptions requiring attention.
 
-Jangan mencampur revenue, invoice issued, cash received, profit, dan saldo rekening menjadi satu metrik. Nilai harus memiliki periode, definisi, sumber, timestamp bila perlu, dan drill-down.
+Do not combine revenue, issued invoices, cash received, profit, and account balances into one metric. Every value must have a period, definition, source, timestamp when relevant, and drill-down.
 
 ### 4.4 Performance
 
-- Perbandingan periode yang jelas.
-- Tren delivery, pipeline, revenue/cash, client health, dan resource load.
-- Filter periode yang konsisten dengan filter laporan Finance bila relevan.
+- Clear period comparisons.
+- Trends for delivery, pipeline, revenue/cash, client health, and resource load.
+- Reporting-period controls consistent with Finance reports where relevant.
 - Drill-down ke modul asal.
-- Perubahan persentase harus aman ketika baseline nol/tidak tersedia.
+- Percentage changes must be handled safely when the baseline is zero or unavailable.
 
 ### 4.5 Analytics
 
-- Analisis lead conversion dan win/loss.
-- Delivery timeliness, task throughput, dan revision/quality trends jika metrik tersedia.
-- Revenue, expense, cash flow, AR aging, dan project profitability sesuai data yang valid.
+- Lead conversion and win/loss analysis.
+- Delivery timeliness, task throughput, and revision/quality trends when metrics are available.
+- Revenue, expenses, cash flow, AR aging, and project profitability based on valid data.
 - Client renewal/retainer indicators.
-- Jangan menambahkan chart hanya untuk dekorasi. Setiap grafik harus menjawab pertanyaan bisnis.
+- Do not add charts for decoration. Every chart must answer a business question.
 
 ### 4.6 Kriteria penerimaan
 
-- Tidak ada angka hardcoded atau berasal dari fixture/demo di produksi.
-- Periode, zona waktu, definisi, currency, dan sumber metrik jelas.
-- Klik KPI membuka konteks transaksi/record sumber yang sesuai izin.
-- Data unavailable ditampilkan sebagai unavailable/stale, bukan zero palsu.
-- Role hanya melihat data yang berhak diakses.
+- No hardcoded or fixture/demo numbers in production.
+- Reporting period, timezone, metric definition, currency, and source must be clear.
+- Selecting a KPI opens the relevant source record or transaction, subject to permissions.
+- Unavailable data must be labelled unavailable/stale, not represented as a false zero.
+- Roles must only see data they are authorized to access.
 
 ---
 
@@ -171,46 +171,46 @@ Jangan mencampur revenue, invoice issued, cash received, profit, dan saldo reken
 - Resolved & Archived
 - Routing & Response Templates
 
-Lamaran kerja tidak dikelola sebagai sales lead di Inbox; lamaran berada di Website CMS → Careers → Applicants. Inquiry website dapat masuk ke Inbox.
+Job applications are not sales leads and must not be managed in Inbox; they belong in Website CMS → Careers → Applicants. Website inquiries may enter Inbox.
 
 ### 5.2 Kapabilitas dasar
 
-Setiap thread/message sebaiknya memiliki, sesuai jenis sumber:
+Each message/thread should have the following fields as appropriate to its source:
 
-- Source/channel dan external reference.
-- Nama/contact data serta hubungan ke account, lead, client, atau project bila sudah dapat dikenali.
+- Source/channel and external reference.
+- Name/contact data and links to an account, lead, client, or project when identifiable.
 - Received time, status, priority, category, assigned owner/PIC, due date/SLA.
-- Conversation history, internal note, attachment reference, dan link ke related record.
+- Conversation history, internal notes, attachment references, and related-record links.
 - Star/favorite, follow-up due date, resolution reason, archive/reopen status.
-- Duplicate detection dan kemampuan merge/link terhadap record existing.
-- Routing berdasarkan kategori, channel, ownership, atau aturan yang disetujui.
-- Response templates yang dapat dipelihara sesuai kebijakan.
+- Duplicate detection and the ability to merge or link existing records.
+- Routing by category, channel, ownership, or approved rules.
+- Maintainable response templates.
 
 ### 5.3 Workflow
 
-1. Pesan/inquiry diterima melalui channel yang sungguh terhubung.
-2. Sistem menyimpan pesan dan external reference secara aman.
-3. Klasifikasi awal dapat dibantu oleh aturan; pengguna tetap dapat memperbaikinya.
-4. Sistem menemukan kemungkinan lead/client/project existing agar duplikasi dicegah.
-5. Pesan ditugaskan kepada PIC dan memiliki prioritas serta due date yang jelas.
-6. PIC merespons, meminta informasi, membuat follow-up, atau menghubungkan/membuat lead atau client request.
-7. Pesan hanya dapat di-resolve jika syarat penyelesaian yang relevan terpenuhi.
-8. Resolved threads dapat dibuka kembali jika ada respons lanjutan.
-9. Archive tidak berarti delete permanen. Retention mengikuti kebijakan data.
+1. A message/inquiry arrives through a genuinely connected channel.
+2. The system securely stores the message and external reference.
+3. Initial classification may be rule-assisted; users can correct it.
+4. The system identifies possible existing lead/client/project records to prevent duplication.
+5. The message is assigned to a PIC/owner with a clear priority and due date.
+6. The owner responds, requests more information, creates a follow-up, or links/creates a lead or client request.
+7. A message can be resolved only when the relevant resolution requirements are met.
+8. Resolved threads can be reopened when a new response arrives.
+9. Archiving does not mean permanent deletion. Retention follows the data policy.
 
 ### 5.4 Kriteria penerimaan
 
-- Lead dibuat satu kali ketika pesan yang sama di-retry.
-- Thread memiliki link langsung ke record terkait.
-- SLA hanya ditampilkan jika aturan, kalender kerja, dan timestamp yang dibutuhkan tersedia.
-- Tidak ada klaim pesan terkirim bila provider tidak mengonfirmasi.
-- Starred, follow-up, archive, resolve, dan routing memiliki efek nyata, bukan dekorasi.
+- A lead is created only once when the same message is retried.
+- Each thread has a direct link to its related record.
+- SLA is displayed only when the required rules, working calendar, and timestamps are available.
+- Do not claim a message was sent unless the provider confirms it.
+- Starred, follow-up, archive, resolve, and routing actions must have real effects, not be decorative.
 
 ---
 
 ## 6. Modul 03 — CRM & Sales
 
-CRM & Sales mengelola proses komersial sebelum dan selama closing. Clients mengelola hubungan klien aktif. Data perusahaan/kontak tetap memakai identitas bersama sehingga konversi lead tidak membuat company/contact duplikat.
+CRM & Sales manages the commercial process before and during closing. Clients manages active client relationships. Company/contact identity must be shared so lead conversion does not create duplicate company/contact records.
 
 ### 6.1 Struktur navigasi
 
@@ -272,77 +272,77 @@ CRM & Sales mengelola proses komersial sebelum dan selama closing. Clients menge
 - Revenue Forecast
 - Salesperson Performance
 
-### 6.2 Lead database dan qualification
+### 6.2 Lead Database and Qualification
 
-Lead memiliki data sumber, contact, kebutuhan, layanan yang diminati, budget indikatif bila diketahui, decision role, expected timing, source, owner, qualification state, activity history, dan related opportunity. Simpan unknown sebagai unknown; jangan mengisi data komersial fiktif.
+A lead contains source data, contact, needs, desired services, indicative budget when known, decision role, expected timing, source, owner, qualification state, activity history, and related opportunity. Keep unknown fields unknown; do not invent commercial data.
 
-Scoring boleh menggunakan aturan yang jelas, dapat ditinjau, dan dijelaskan. Jangan menjadikan skor sebagai satu-satunya penentu penolakan. Duplicate management harus memberi opsi melihat, merge, atau link record dengan mempertahankan history.
+Scoring may use clear, reviewable, explainable rules. A score must not be the sole rejection criterion. Duplicate management must support reviewing, merging, or linking records while preserving history.
 
-### 6.3 Pipeline dan lifecycle opportunity
+### 6.3 Opportunity Pipeline and Lifecycle
 
-Pipeline yang direkomendasikan:
+Recommended pipeline:
 
 New → Qualification → Discovery → Scoping → Quotation → Negotiation → Contract → Closed Won / Closed Lost.
 
-Setiap perpindahan stage memiliki exit criteria, required field, tindakan berikutnya, serta audit history. Stage bukan hanya label visual.
+Every stage transition has exit criteria, required fields, next actions, and audit history. A stage is not merely a visual label.
 
-- **New:** sumber dan owner tercatat.
-- **Qualification:** kebutuhan awal dan fit dinilai.
-- **Discovery:** meeting/brief dan pemangku keputusan dicatat.
-- **Scoping:** deliverables, exclusions, assumptions, dependencies, timeline, dan estimasi disusun.
-- **Quotation:** quotation dibuat dari record bersama melalui template dan siap diperiksa.
-- **Negotiation:** perubahan harga/scope/termin serta komunikasi dicatat sebagai history/version.
-- **Contract:** service agreement/SOW dan closing checklist dilengkapi.
-- **Closed Won:** persyaratan komersial yang dibutuhkan untuk handover tervalidasi.
-- **Closed Lost:** lost reason wajib tersedia, tanpa menghapus activity history.
+- **New:** source and owner are recorded.
+- **Qualification:** initial need and service fit are assessed.
+- **Discovery:** meetings/briefs and decision-makers are recorded.
+- **Scoping:** deliverables, exclusions, assumptions, dependencies, timeline, and estimates are defined.
+- **Quotation:** a quotation is created from the shared record using a template and prepared for review.
+- **Negotiation:** price/scope/terms changes and communications are recorded in history/version records.
+- **Contract:** the service agreement/SOW and closing checklist are completed.
+- **Closed Won:** the commercial requirements for handover are validated.
+- **Closed Lost:** a lost reason is required; activity history is retained.
 
-Pipeline value dan forecast harus membedakan deal amount, probability-weighted forecast, quotation value, contracted value, invoiced revenue, serta cash received.
+Pipeline value and forecast must distinguish deal amount, probability-weighted forecast, quotation value, contracted value, invoiced revenue, and cash received.
 
-### 6.4 Sales Desk dan quotation
+### 6.4 Sales Desk and Quotations
 
-Quotation Builder dari CRM menggunakan authoritative quotation records yang sama dengan Finance. Dilarang membangun penyimpanan quotation ganda.
+The CRM Quotation Builder uses the same authoritative quotation records as Finance. Do not create a duplicate quotation store.
 
-Input yang dibutuhkan mencakup account/contact, opportunity, scope/deliverables, quantity, price, discounts/tax sesuai konfigurasi Finance, assumptions/exclusions, timeline, payment terms, validity, notes, dan version history.
+Required inputs include account/contact, opportunity, scope/deliverables, quantity, price, discounts/tax as configured in Finance, assumptions/exclusions, timeline, payment terms, validity, notes, and version history.
 
-Sales tidak boleh mengubah tax, nomor dokumen, terms, atau harga terotorisasi dengan bypass terhadap kontrol Finance. Perubahan quotation yang sudah dikirim harus menjadi versi/revision baru dengan histori, bukan menimpa history sent version.
+Sales must not bypass Finance controls to change tax, document numbering, terms, or authorized pricing. A sent quotation must be revised as a new version with history rather than silently overwriting the sent version.
 
 ### 6.5 Contracts & Closing
 
-- Contract Register dan Active/Expired/Expiring views.
-- Service agreements dan Statements of Work.
-- Change order/change request yang memiliki dampak scope, timeline, value, billing, dan approval requirement sesuai kebijakan.
+- Contract Register and Active/Expired/Expiring views.
+- Service agreements and Statements of Work.
+- Change orders/change requests with scope, timeline, value, billing, and policy-required approval impacts.
 - Closing checklist.
 - Contract dates, parties, references, status, version, secure document link, renewal terms, and obligations.
-- Dokumen legal disimpan di Documents; CRM menyimpan referensi dan business metadata.
+- Legal documents are stored in Documents; CRM stores references and business metadata.
 
 ### 6.6 Project Handover
 
-Handover harus mencakup:
+The handover must include:
 
-- Accepted quotation/contract/SOW dan versi yang disetujui.
-- Scope dan exclusions.
+- Accepted quotation/contract/SOW and the approved version.
+- Scope and exclusions.
 - Deliverables, milestones, dependencies, target timeline.
-- PIC client, PIC internal, stakeholders, dan communication preference.
-- Budget/contract value dan billing milestones.
+- Client PIC, internal PIC, stakeholders, and communication preferences.
+- Budget/contract value and billing milestones.
 - Risk, assumption, open issues, special commitments.
-- Required files dan meeting/brief summary.
-- Handover readiness checklist, owner, timestamp, dan history.
+- Required files and meeting/brief summary.
+- Handover readiness checklist, owner, timestamp, and history.
 
-Project hanya dibuat atau diaktifkan satu kali dari handover yang memenuhi syarat. Retry tidak boleh membuat proyek kembar.
+A project must be created or activated only once from a qualifying handover. Retries must not create duplicate projects.
 
 ### 6.7 Sales reports
 
-- Lead conversion dengan definisi numerator/denominator konsisten.
-- Pipeline aging dan stuck opportunities.
-- Win/loss by source/service/owner berdasarkan data yang valid.
-- Forecast dengan probabilitas dan tanggal yang relevan.
-- Sales performance mempertimbangkan kualitas dan hasil, bukan hanya nilai nominal.
+- Lead conversion with consistent numerator/denominator definitions.
+- Pipeline aging and stalled opportunities.
+- Win/loss analysis by source/service/owner based on valid data.
+- Forecast with relevant probabilities and dates.
+- Sales performance should account for quality and outcomes, not only nominal value.
 
 ---
 
 ## 7. Modul 04 — Projects
 
-Projects adalah sumber utama pengelolaan delivery. CRM memulai deal dan menyerahkan konteks komersial; Finance adalah sumber angka keuangan resmi. Projects tidak membuat jurnal atau merekonstruksi nilai Finance sendiri.
+Projects is the primary source for delivery management. CRM starts the deal and transfers commercial context; Finance is the authoritative source for financial values. Projects must not create journals or reconstruct Finance values independently.
 
 ### 7.1 Struktur navigasi
 
@@ -409,60 +409,60 @@ Projects adalah sumber utama pengelolaan delivery. CRM memulai deal dan menyerah
 
 ### 7.2 Lifecycle project
 
-1. Ready-for-handover dari CRM.
-2. Pemeriksaan handover dan pembuatan/penyiapan project record.
-3. Project template, brief, scope, deliverables, milestone, timeline, owner, team, dan project folder ditentukan.
-4. Task, dependencies, assignment, estimated effort, due date, dan acceptance criteria dibuat.
-5. Resource availability dicek dengan Team & Resources.
-6. Pekerjaan berjalan melalui board/list dan progress diperbarui dari task yang nyata.
-7. Deliverable menjalani internal QA, client review, feedback, dan revision tracking.
-8. Perubahan scope dicatat melalui change request dan diperiksa dampaknya ke harga, waktu, serta billing.
-9. Penyelesaian diverifikasi, outstanding issue dicatat, file diserahkan, dan closure checklist diselesaikan.
-10. Project diarsipkan sesuai kebijakan, tetapi histori tidak hilang.
+1. CRM marks the project as ready for handover.
+2. Handover requirements are checked and the project record is prepared/created.
+3. The project template, brief, scope, deliverables, milestones, timeline, owner, team, and project folder are set.
+4. Tasks, dependencies, assignments, estimated effort, due dates, and acceptance criteria are created.
+5. Resource availability is checked with Team & Resources.
+6. Work proceeds through board/list views, with progress updated from real task records.
+7. Deliverables go through internal QA, client review, feedback, and revision tracking.
+8. Scope changes are recorded through change requests and assessed for impact on price, time, and billing.
+9. Completion is verified, open issues are recorded, files are handed over, and the closure checklist is completed.
+10. The project is archived according to policy while its history is retained.
 
-### 7.3 Tasks, Kanban, dan dependencies
+### 7.3 Tasks, Kanban, and Dependencies
 
-- Satu task memiliki satu identitas, status, owner, priority, due date, estimate/actual jika fitur time log tersedia, project, task list, dan dependency.
-- Kanban, list, My Tasks, dan task details adalah berbagai views ke dataset yang sama.
-- Drag-and-drop harus benar-benar menyimpan status/order yang relevan dan menghormati transition rules.
-- Dependency yang belum terpenuhi harus diperlihatkan dan diperhitungkan secara tepat.
-- Perubahan board tidak boleh menimbulkan task duplikat atau status yang tidak konsisten di view lain.
-- Filter, search, pagination, grouping, dan empty states konsisten antar view.
+- Each task has one identity, status, owner, priority, due date, estimate/actual values if time logging is available, project, task list, and dependencies.
+- Kanban, list, My Tasks, and task details are different views of the same dataset.
+- Drag-and-drop must persist the relevant status/order and respect transition rules.
+- Unmet dependencies must be visible and correctly accounted for.
+- Board changes must not create duplicate tasks or inconsistent statuses in other views.
+- Filters, search, pagination, grouping, and empty states must behave consistently across views.
 
 ### 7.4 Content & Campaign Operations
 
 Alur konten:
 
-Brief → Planning/Calendar → Production → Internal Review → Client Review → Revision (jika diminta) → Approved for Publishing → Scheduled → Published/Publication Confirmed → Performance Reporting.
+Brief → Planning/Calendar → Production → Internal Review → Client Review → Revision (when requested) → Approved for Publishing → Scheduled → Published/Publication Confirmed → Performance Reporting.
 
-Fitur:
+Features:
 
 - Content calendar per project/client/campaign/channel/date.
-- Content item dengan brief, format, copy/caption, channel, owner, assets, due date, campaign link, dan metadata yang dibutuhkan.
+- Content items with brief, format, copy/caption, channel, owner, assets, due date, campaign link, and required metadata.
 - File/version history.
-- Review checklist dan komentar yang terhubung ke versi.
-- Revisi wajib menyimpan konteks feedback dan siapa yang meminta.
+- Review checklists and comments linked to the relevant version.
+- Revisions must retain feedback context and the identity of the requester.
 - Publishing schedule.
-- Publication status dan live URL/reference bila benar-benar tersedia.
-- Campaign objective, period, channel, planned budget, campaign asset, metric definition, actual result source, dan report.
-- Angka campaign performance harus mencantumkan sumber dan rentang tanggal; jangan mengarang atau menyimpulkan data platform iklan jika koneksi belum ada.
+- Publication status and live URL/reference when genuinely available.
+- Campaign objective, period, channel, planned budget, campaign assets, metric definitions, actual-result source, and report.
+- Campaign performance figures must include their source and date range. Do not invent or infer advertising-platform data when no connection exists.
 
-Jika publikasi otomatis belum diintegrasikan, AMS tetap boleh mengelola kalender dan status manual, tetapi harus menyatakan status secara jujur dan tidak mengklaim terbit otomatis.
+If automated publishing is not integrated, AMS may still manage the calendar and manual status, but it must state the status honestly and must not claim that it published content automatically.
 
-### 7.5 Project budget dan kesehatan
+### 7.5 Project Budget and Health
 
-- Budget summary mengambil angka keuangan dari Finance.
-- Planned vs actual membedakan estimasi, time-log effort, vendor costs, billed amount, dan recorded financial data.
-- Project health mempertimbangkan delivery risks, late tasks/milestones, scope change, resource overload, pending client reviews, dan masalah yang belum terselesaikan.
-- Formula health harus terdokumentasi, konsisten, dan tidak diklaim sebagai financial profitability tanpa data Finance yang tepat.
+- Budget summaries use financial values from Finance.
+- Planned vs. actual views distinguish estimates, time-log effort, vendor costs, billed amounts, and recorded financial data.
+- Project health considers delivery risks, late tasks/milestones, scope changes, resource overload, pending client reviews, and unresolved issues.
+- Health formulas must be documented and consistent; do not claim financial profitability without the correct Finance data.
 
 ---
 
 ## 8. Modul 05 — Clients
 
-Clients fokus pada pengelolaan akun aktif dan lifecycle relasi klien setelah lead menjadi account. Identitas perusahaan/kontak dibagi dengan CRM. Jangan buat company, contact, contract, atau project duplikat saat konversi.
+Clients manages active accounts and the client relationship lifecycle after a lead becomes an account. Company/contact identity is shared with CRM. Do not create duplicate companies, contacts, contracts, or projects during conversion.
 
-### 8.1 Struktur
+### 8.1 Structure
 
 **A. Client Overview**
 
@@ -502,7 +502,7 @@ Clients fokus pada pengelolaan akun aktif dan lifecycle relasi klien setelah lea
 
 ### 8.2 Client 360°
 
-Satu halaman hubungan klien yang merangkum, berdasarkan akses:
+A single client-relationship page summarizing, subject to access permissions:
 
 - Company/contact identity and relationships.
 - CRM opportunities and sales history.
@@ -513,31 +513,31 @@ Satu halaman hubungan klien yang merangkum, berdasarkan akses:
 - Inbox conversation, requests, SLA, support history.
 - Documents and feedback.
 
-Client 360 adalah aggregation/view, bukan tempat membuat ulang source records.
+Client 360 is an aggregation/view, not a place to recreate source records.
 
-### 8.3 Onboarding dan lifecycle
+### 8.3 Onboarding and Lifecycle
 
 Closed Won → client account confirmed → onboarding checklist → documents/contracts verified → kickoff ready → active service → ongoing support → renewal/expansion or offboarding.
 
-Kriteria onboarding harus dapat dikonfigurasi dan disesuaikan dengan tipe service. Project jangan ditandai siap hanya karena checklist kosmetik selesai; checklist harus merujuk pada dokumen/record yang benar.
+Onboarding criteria must be configurable for the service type. Do not mark a project ready merely because a cosmetic checklist is complete; checklist items must reference the correct documents/records.
 
-### 8.4 Retainer dan SLA
+### 8.4 Retainers and SLA
 
 - Retainer register: period, client, included hours/units, service scope, rates/terms, carry-over policy if applicable, renewal date, status.
-- Used/remaining hour dihitung dari time logs yang valid dan terkait service/retainer sesuai aturan yang disepakati.
+- Used/remaining hours are calculated from valid time logs associated with the service/retainer under the agreed rules.
 - Batasi double counting time entry.
-- SLA memerlukan definisi target, working calendar, pause rules, valid event timestamps, priority, owner, and breach rules.
-- Jika event atau integrasi data belum tersedia, label SLA monitoring sebagai manual/limited atau not configured. Jangan memberi SLA score palsu.
-- Renewal/opportunity harus terhubung ke CRM dan tidak menggandakan client identity.
-- Invoice retainer dihasilkan melalui Finance dengan jadwal dan record bersama.
+- SLA monitoring requires a target definition, working calendar, pause rules, valid event timestamps, priority, owner, and breach rules.
+- If required events or data integrations are unavailable, label SLA monitoring as manual/limited or not configured. Do not fabricate SLA scores.
+- Renewals/opportunities must link to CRM and must not duplicate client identity.
+- Retainer invoices are generated through Finance using the shared billing schedule and records.
 
 ---
 
 ## 9. Modul 06 — Finance
 
-Finance memiliki aturan penting karena sudah mempunyai worksheet, laporan dan transaksi existing. Navigasi boleh dirapikan, tetapi aturan perhitungan dan akuntansi tidak boleh berubah karena perpindahan label.
+Finance has established worksheets, reports, and transactions. Navigation may be reorganized, but accounting and calculation rules must not change as a side effect of changing labels.
 
-### 9.1 Struktur navigasi Finance
+### 9.1 Finance Navigation Structure
 
 **A. Overview & Control**
 - Executive Summary
@@ -553,7 +553,7 @@ Finance memiliki aturan penting karena sudah mempunyai worksheet, laporan dan tr
 - Expense Register
 - Purchase & Expense Requests
 - Budget Availability Check
-- Purchase Orders (jika proses memerlukan)
+- Purchase Orders (when the purchasing process requires them)
 - Vendor Bills
 - Accounts Payable
 - Vendor Ledger & Payments
@@ -589,20 +589,20 @@ Worksheet definitions in source code have included the following 20 existing wor
 | Worksheet existing | Target grouping | Tanggung jawab |
 |---|---|---|
 | Executive Summary | Overview & Control | Ringkasan keuangan periode terpilih |
-| Dashboard | Overview & Control | Grafik/KPI keuangan yang tervalidasi |
-| Cash & Bank | Cash Management | Rekening, saldo yang dicatat, transaksi kas/bank |
-| Revenue | Revenue & Receivables | Revenue records dan workflow invoice existing |
+| Dashboard | Overview & Control | Validated financial charts/KPIs |
+| Cash & Bank | Cash Management | Recorded bank/cash accounts, balances, and movements |
+| Revenue | Revenue & Receivables | Existing revenue records and invoice workflow |
 | Expenses | Expenses & Payables | Pencatatan biaya existing |
-| Petty Cash | Cash Management | Pengelolaan kas kecil |
-| Accounts Receivable | Revenue & Receivables | Invoice balance, ageing, dan pembayaran piutang |
-| Accounts Payable | Expenses & Payables | Kewajiban dan status pembayaran |
-| Vendors | Expenses & Payables, reference to master | Referensi vendor/payee dari master Vendor di Team & Resources |
-| Project Finance | Project Finance | Finansial terhubung dengan proyek |
+| Petty Cash | Cash Management | Petty cash management |
+| Accounts Receivable | Revenue & Receivables | Invoice balances, aging, and receivable payments |
+| Accounts Payable | Expenses & Payables | Liabilities and payment status |
+| Vendors | Expenses & Payables, reference to master | References supplier/payee records managed in Team & Resources |
+| Project Finance | Project Finance | Project-linked financial information |
 | Operational Budget | Project Finance | Budget operasional |
-| Project Allocation | Project Finance | Alokasi finansial/resource yang ada |
+| Project Allocation | Project Finance | Existing financial/resource allocation |
 | Team Fee | Project Finance | Perhitungan team fee existing |
-| Journal | Accounting & Reports | Jurnal dan kontrol posting |
-| Chart of Accounts | Accounting & Reports | Daftar akun serta mapping |
+| Journal | Accounting & Reports | Journal and posting controls |
+| Chart of Accounts | Accounting & Reports | Account list and mapping |
 | Monthly P&L | Accounting & Reports | Laba rugi periode |
 | Cash Flow | Accounting & Reports | Pergerakan kas |
 | Balance Sheet | Accounting & Reports | Posisi keuangan |
@@ -933,7 +933,7 @@ Sandbox testing is not proof of production access. A mock provider used in tests
 
 ## 11. Modul 07 — Team & Resources
 
-### 11.1 Struktur
+### 11.1 Structure
 
 **A. Team & Capacity**
 - Team Directory
@@ -1036,7 +1036,7 @@ Approved leave → availability calendar → workload/capacity computation → p
 
 ## 12. Modul 08 — Documents
 
-### 12.1 Struktur
+### 12.1 Structure
 
 - Document Overview
 - All Documents
@@ -1066,7 +1066,7 @@ Quotation/invoice PDFs are generated artifacts linked to the canonical document 
 
 ## 13. Modul 09 — Website CMS
 
-### 13.1 Struktur
+### 13.1 Structure
 
 - CMS Overview
 - Case Studies
@@ -1113,7 +1113,7 @@ Draft → review/preview → publish → verified sync/status → update or unpu
 
 ## 14. Modul 10 — Settings
 
-### 14.1 Struktur
+### 14.1 Structure
 
 **A. System Overview**
 - System Status
@@ -1159,7 +1159,7 @@ Draft → review/preview → publish → verified sync/status → update or unpu
 
 ## 15. Workflow & Automation lintas modul
 
-Workflow & Automation adalah kapabilitas platform, bukan menu sidebar baru dan bukan engine palsu yang hanya menunjukkan rule list.
+Workflow & Automation is a platform capability, not a new sidebar module and not a fake engine that merely displays a list of rules.
 
 ### 15.1 Event/trigger map
 
