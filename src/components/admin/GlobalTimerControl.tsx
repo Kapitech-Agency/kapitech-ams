@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Timer, Square } from 'lucide-react';
+import { Timer, TimerReset } from 'lucide-react';
 import { api } from '../../lib/apiClient';
 import { Modal } from '../ui/Modal';
 import { Drawer } from '../ui/Drawer';
@@ -204,7 +204,7 @@ export const GlobalTimerControl: React.FC<{ userId?: string }> = ({ userId }) =>
         ].join(' ')}
         title={activeTimer ? 'Stop timer and save time entry' : 'Start a tracked work session'}
       >
-        {activeTimer ? <Square size={12} fill="currentColor" aria-hidden="true" /> : <Timer size={14} aria-hidden="true" />}
+        {activeTimer ? <TimerReset size={13} aria-hidden="true" /> : <Timer size={14} aria-hidden="true" />}
         {activeTimer ? (
           <span className="tabular-nums">{saving ? 'Saving…' : formatElapsed(elapsedSeconds)}</span>
         ) : (
