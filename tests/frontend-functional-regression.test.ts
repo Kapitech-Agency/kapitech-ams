@@ -69,6 +69,15 @@ test('Projects accepts valid empty server lists and never falls back to demo rec
   assert.match(projects, /if \(!isSlugFixtureMode\(\)\) \{[\s\S]{0,200}writeStatusOverrides\(PROJECT_STATUS_OVERRIDES_KEY, \{\}\)[\s\S]{0,160}return source/);
 });
 
+test('Project save requires the canonical persisted record before showing success', async () => {
+  const projects = await read('src/pages/admin/AdminProjects.tsx');
+
+  assert.ok(projects.includes('const persistedProject = response.data?.project ? normalizeProject(response.data.project) : null;'));
+  assert.ok(projects.includes('if (!persistedProject) {\n          await syncProjects(false);'));
+  assert.ok(projects.includes('Review the refreshed project list before retrying.'));
+  assert.ok(!projects.includes('else if (editingProject) {\n          setProjects(current => current.map(item => item.id === editingProject.id ? localProject : item));'));
+});
+
 test('Team workspace preview records are only injected in development or explicit fixture mode', async () => {
   const teams = await read('src/pages/admin/AdminTeams.tsx');
   assert.match(teams, /if \(isSlugFixtureMode\(\)\) \{[\s\S]{0,120}if \(nextMembers\.length === 0\)/);
