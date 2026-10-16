@@ -1,4 +1,9 @@
-import { canAccessAmsRoute, type AmsRole } from './amsNavigationAccess';
+import {
+  AMS_PRIMARY_SETTINGS_ITEM,
+  canAccessAmsRoute,
+  getNavigationGroupsForRole,
+  type AmsRole,
+} from './amsNavigationAccess';
 
 export type AmsSidebarModuleKey = 'dashboard' | 'crm' | 'projects' | 'finance' | 'cms' | 'settings' | 'tasks';
 
@@ -63,9 +68,45 @@ const MODULE_SUBNAVIGATION: Record<AmsSidebarModuleKey, AmsSidebarSubnavigationI
 };
 
 /**
- * Returns module-specific navigation links after applying the same route access
- * rules used by the client-side route guard. This keeps menus role-aware instead
- * of merely hiding unauthorized destinations in the page content.
+ * A global sidebar destination has one owner: the sidebar.
+ * Canonicalize the full destination (path, query and hash) so query order or
+ * trailing slashes cannot reintroduce the same link in the workspace tab bar.
+ */
+function getDestinationSignature(to: string): string {
+  const target = new URL(to, 'https://ams.kapitech.local');
+  const pathname = target.pathname.replace(/\\/+$/, '') || '/';
+  const query = [...target.searchParams.entries()]
+    .sort(([leftKey, leftValue], [rightKey, rightValue]) =>
+      leftKey.localeCompare(rightKey) || leftValue.localeCompare(rightValue)
+    )
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+    .join('&');
+
+  return `${pathname}${query ? `?${query}` : ''}${target.hash}`;
+}
+
+function getGlobalSidebarDestinations(role: AmsRole): Set<string> {
+  const items = getNavigationGroupsForRole(role).flatMap((group) => group.items);
+  if (
+    AMS_PRIMARY_SETTINGS_ITEM.allowedRoles.includes(role)
+    && canAccessAmsRoute(
+      role,
+      new URL(AMS_PRIMARY_SETTINGS_ITEM.to, 'https://ams.kapitech.local').pathname,
+      new URL(AMS_PRIMARY_SETTINGS_ITEM.to, 'https://ams.kapitech.local').search
+    )
+  ) {
+    items.push(AMS_PRIMARY_SETTINGS_ITEM);
+  }
+
+  return new Set(items.map((item) => getDestinationSignature(item.to)));
+}
+
+/**
+ * Workspace navigation is contextual, not a second copy of global navigation.
+ * It contains only role-permitted local views that do not already have a
+ * direct destination in the flat sidebar. Exact sidebar destinations are
+ * deliberately suppressed here; this is the single enforcement point used by
+ * every module, including query-based feature shortcuts.
  */
 export function getAmsModuleSubnavigation(
   moduleKey: AmsSidebarModuleKey,
@@ -73,47 +114,54 @@ export function getAmsModuleSubnavigation(
   allowMfaSetup = false
 ): AmsSidebarSubnavigationItem[] {
   let items = MODULE_SUBNAVIGATION[moduleKey];
+  const mfaAccessOnly = moduleKey === 'settings' && allowMfaSetup && role !== 'Admin';
 
-  if (moduleKey === 'settings' && allowMfaSetup && role !== 'Admin') {
-    return [{
+  if (mfaAccessOnly) {
+    items = [{
       key: 'access',
       label: 'Access',
       to: '/admin/settings?tab=security',
     }];
-  }
+  } else if (moduleKey === 'projects') {
+    if (role === 'Freelancer') {
+      items = [{
+        key: 'tasks',
+        label: 'Assigned Tasks',
+        to: '/admin/tasks?taskscope=my&workspace=project',
+      }];
+    } else {
+      if (role === 'Finance' || role === 'Creative') {
+        items = items.filter((item) => ['sprint', 'tasks'].includes(item.key));
+      }
 
-  if (moduleKey === 'projects') {
-    if (role === 'Freelancer') return [{ key: 'tasks', label: 'Assigned Tasks', to: '/admin/tasks?taskscope=my&workspace=project' }];
-    if (role === 'Finance' || role === 'Creative') {
-      items = items.filter((item) => ['sprint', 'tasks'].includes(item.key));
-    }
-  }
-
-  if (moduleKey === 'projects') {
-    items = items.map((item) => {
-      if (item.key === 'tasks') {
+      items = items.map((item) => {
+        if (item.key !== 'tasks') return item;
         return {
           ...item,
-          label: role === 'Freelancer' ? 'My Task' : 'Tasks',
-          to: ['Finance', 'Creative', 'Freelancer'].includes(role)
+          label: 'Tasks',
+          to: ['Finance', 'Creative'].includes(role)
             ? '/admin/tasks?taskscope=my&workspace=project'
             : '/admin/tasks',
         };
-      }
-      return item;
-    });
+      });
+    }
   }
 
+  const globalDestinations = getGlobalSidebarDestinations(role);
+
   return items.filter((item) => {
-    const target = new URL(item.to, 'https://ams.kapitech.local');
-    return canAccessAmsRoute(role, target.pathname, target.search);
+    if (!mfaAccessOnly) {
+      const target = new URL(item.to, 'https://ams.kapitech.local');
+      if (!canAccessAmsRoute(role, target.pathname, target.search)) return false;
+    }
+
+    return !globalDestinations.has(getDestinationSignature(item.to));
   });
 }
 
 /**
- * Query-aware active state for sidebar submenu links. Navigation tabs often
- * share the same pathname, so comparing pathname alone incorrectly highlights
- * several links at once.
+ * Query-aware active state for contextual links. Global feature links are not
+ * rendered here; their active state is resolved by the global sidebar.
  */
 export function isAmsModuleSubnavigationItemActive(
   item: Pick<AmsSidebarSubnavigationItem, 'key' | 'to'>,
@@ -121,10 +169,10 @@ export function isAmsModuleSubnavigationItemActive(
   search = '',
   hash = ''
 ): boolean {
-  const path = pathname.replace(/\/+$/, '') || '/';
+  const path = pathname.replace(/\\/+$/, '') || '/';
   const params = new URLSearchParams(search);
   const target = new URL(item.to, 'https://ams.kapitech.local');
-  const targetPath = target.pathname.replace(/\/+$/, '') || '/';
+  const targetPath = target.pathname.replace(/\\/+$/, '') || '/';
 
   if (item.key === 'tasks' && path === '/admin/dashboard') {
     return params.get('view') === 'tasks';
