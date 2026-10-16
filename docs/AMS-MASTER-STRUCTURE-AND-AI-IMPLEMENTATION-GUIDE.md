@@ -105,7 +105,7 @@ Visible navigation items must be accessible to the appropriate roles and lead to
 
 ---
 
-## 4. Modul 01 — Dashboard
+## 4. Module 01 — Dashboard
 
 ### 4.1 Structure
 
@@ -136,7 +136,7 @@ Do not combine revenue, issued invoices, cash received, profit, and account bala
 - Clear period comparisons.
 - Trends for delivery, pipeline, revenue/cash, client health, and resource load.
 - Reporting-period controls consistent with Finance reports where relevant.
-- Drill-down ke modul asal.
+- Drill down to the source module.
 - Percentage changes must be handled safely when the baseline is zero or unavailable.
 
 ### 4.5 Analytics
@@ -147,7 +147,7 @@ Do not combine revenue, issued invoices, cash received, profit, and account bala
 - Client renewal/retainer indicators.
 - Do not add charts for decoration. Every chart must answer a business question.
 
-### 4.6 Kriteria penerimaan
+### 4.6 Acceptance Criteria
 
 - No hardcoded or fixture/demo numbers in production.
 - Reporting period, timezone, metric definition, currency, and source must be clear.
@@ -157,7 +157,7 @@ Do not combine revenue, issued invoices, cash received, profit, and account bala
 
 ---
 
-## 5. Modul 02 — Inbox
+## 5. Module 02 — Inbox
 
 ### 5.1 Structure
 
@@ -173,7 +173,7 @@ Do not combine revenue, issued invoices, cash received, profit, and account bala
 
 Job applications are not sales leads and must not be managed in Inbox; they belong in Website CMS → Careers → Applicants. Website inquiries may enter Inbox.
 
-### 5.2 Kapabilitas dasar
+### 5.2 Core Capabilities
 
 Each message/thread should have the following fields as appropriate to its source:
 
@@ -198,7 +198,7 @@ Each message/thread should have the following fields as appropriate to its sourc
 8. Resolved threads can be reopened when a new response arrives.
 9. Archiving does not mean permanent deletion. Retention follows the data policy.
 
-### 5.4 Kriteria penerimaan
+### 5.4 Acceptance Criteria
 
 - A lead is created only once when the same message is retried.
 - Each thread has a direct link to its related record.
@@ -208,7 +208,7 @@ Each message/thread should have the following fields as appropriate to its sourc
 
 ---
 
-## 6. Modul 03 — CRM & Sales
+## 6. Module 03 — CRM & Sales
 
 CRM & Sales manages the commercial process before and during closing. Clients manages active client relationships. Company/contact identity must be shared so lead conversion does not create duplicate company/contact records.
 
@@ -340,7 +340,7 @@ A project must be created or activated only once from a qualifying handover. Ret
 
 ---
 
-## 7. Modul 04 — Projects
+## 7. Module 04 — Projects
 
 Projects is the primary source for delivery management. CRM starts the deal and transfers commercial context; Finance is the authoritative source for financial values. Projects must not create journals or reconstruct Finance values independently.
 
@@ -458,7 +458,7 @@ If automated publishing is not integrated, AMS may still manage the calendar and
 
 ---
 
-## 8. Modul 05 — Clients
+## 8. Module 05 — Clients
 
 Clients manages active accounts and the client relationship lifecycle after a lead becomes an account. Company/contact identity is shared with CRM. Do not create duplicate companies, contacts, contracts, or projects during conversion.
 
@@ -533,7 +533,7 @@ Onboarding criteria must be configurable for the service type. Do not mark a pro
 
 ---
 
-## 9. Modul 06 — Finance
+## 9. Module 06 — Finance
 
 Finance has established worksheets, reports, and transactions. Navigation may be reorganized, but accounting and calculation rules must not change as a side effect of changing labels.
 
@@ -588,7 +588,7 @@ Worksheet definitions in source code have included the following 20 existing wor
 
 | Existing worksheet | Target group | Responsibility |
 |---|---|---|
-| Executive Summary | Overview & Control | Ringkasan keuangan periode terpilih |
+| Executive Summary | Overview & Control | Summary of the selected reporting period |
 | Dashboard | Overview & Control | Validated financial charts/KPIs |
 | Cash & Bank | Cash Management | Recorded bank/cash accounts, balances, and movements |
 | Revenue | Revenue & Receivables | Existing revenue records and invoice workflow |
@@ -607,7 +607,7 @@ Worksheet definitions in source code have included the following 20 existing wor
 | Cash Flow | Accounting & Reports | Pergerakan kas |
 | Balance Sheet | Accounting & Reports | Posisi keuangan |
 | Monthly Closing | Accounting & Reports | Kontrol penutupan periode |
-| Annual Summary | Accounting & Reports | Ringkasan tahunan |
+| Annual Summary | Accounting & Reports | Annual financial summary |
 
 **New worksheet views needed:**
 
@@ -931,7 +931,7 @@ Sandbox testing is not proof of production access. A mock provider used in tests
 
 ---
 
-## 11. Modul 07 — Team & Resources
+## 11. Module 07 — Team & Resources
 
 ### 11.1 Structure
 
@@ -1034,7 +1034,7 @@ Approved leave → availability calendar → workload/capacity computation → p
 
 ---
 
-## 12. Modul 08 — Documents
+## 12. Module 08 — Documents
 
 ### 12.1 Structure
 
@@ -1064,7 +1064,7 @@ Quotation/invoice PDFs are generated artifacts linked to the canonical document 
 
 ---
 
-## 13. Modul 09 — Website CMS
+## 13. Module 09 — Website CMS
 
 ### 13.1 Structure
 
@@ -1111,7 +1111,7 @@ Draft → review/preview → publish → verified sync/status → update or unpu
 
 ---
 
-## 14. Modul 10 — Settings
+## 14. Module 10 — Settings
 
 ### 14.1 Structure
 
@@ -1157,7 +1157,7 @@ Draft → review/preview → publish → verified sync/status → update or unpu
 
 ---
 
-## 15. Workflow & Automation lintas modul
+## 15. Cross-Module Workflow & Automation
 
 Workflow & Automation is a platform capability, not a new sidebar module and not a fake engine that merely displays a list of rules.
 
