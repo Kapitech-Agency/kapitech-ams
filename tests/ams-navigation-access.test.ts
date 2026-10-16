@@ -78,7 +78,7 @@ test('PM sidebar exposes operations and aggregate project profitability without 
     'project-profitability', 'cms', 'portfolio', 'testimonials',
   ]);
   assert.deepEqual([...tabKeys('finance', 'PM')], []);
-  assert.deepEqual([...tabKeys('projects', 'PM')], []);
+  assert.deepEqual([...tabKeys('projects', 'PM')], ['sprint', 'budget', 'archived', 'team']);
   assert.equal(canAccessAmsRoute('PM', '/admin/projects', '?projects=budget'), true);
   assert.equal(canAccessAmsRoute('PM', '/admin/finance', '?tab=project-finance'), true);
   assert.equal(canAccessAmsRoute('PM', '/admin/finance', '?tab=accounts-receivable'), false);
