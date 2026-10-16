@@ -115,3 +115,29 @@ Production deployments are sourced from **main** as configured for Kapitech. Com
 ## 9. Final acceptance rule
 
 Do not declare completion because code compiles or a menu renders. Confirm the user's requested behavior, related end-to-end flow, permissions, persistence, failure cases, non-duplication, regression tests, and production implications. If some capability remains target-only or provider-dependent, mark it as such explicitly.
+
+
+## 10. Complete engineering document map
+
+Read domain-specific documents for substantial tasks:
+- Target modules/workflows: docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md.
+- Navigation and URL ownership: docs/architecture/ams-navigation-information-architecture.md.
+- Requirement status/evidence: docs/AMS-IMPLEMENTATION-TRACEABILITY.md.
+- UX and spacing/margin/padding: docs/AMS-UX-INTERACTION-STANDARDS.md and AMS-DESIGN-SYSTEM.md.
+- Frontend routes/state/API/forms: docs/AMS-FRONTEND-ENGINEERING-STANDARDS.md.
+- Business transitions/side effects: docs/AMS-BUSINESS-WORKFLOW-STATE-MACHINES.md.
+- Logical entities/canonical ownership: docs/AMS-DATA-MODEL-AND-DATA-DICTIONARY.md.
+- Backend/API/authorization/transactions/idempotency: docs/AMS-BACKEND-API-AND-DATA-INTEGRITY.md.
+- Finance: docs/FINANCE-EXCEL-ALIGNMENT.md.
+- E2E/regression: docs/AMS-E2E-AND-REGRESSION-TEST-MATRIX.md.
+- Kopra when in scope: docs/integrations/BANK-MANDIRI-KOPRA-H2H-INTEGRATION.md.
+
+### 10.1 Runtime data-source caveat
+
+server/data-source.ts supports json and postgres and defaults to json if KAPITECH_DATA_SOURCE is unset. README specifies postgres as required production configuration. Verify authorized runtime configuration/readiness evidence; do not migrate production data, switch sources, roll back or claim the active store based on an old Markdown statement or the code default.
+
+Older PostgreSQL foundation/cutover files may describe earlier rollout stages. Their unqualified source-of-truth claims are historical until checked against current code, README, deployed configuration and the readiness gate.
+
+### 10.2 Target documents are not implementation evidence
+
+The master architecture, navigation, state machine and data dictionary define intended behavior. They do not prove the feature, relationship, API or permission is implemented. Use traceability to connect every requirement to current source, server validation, schema, access policy and tests. Implement approved targets through scoped changes/migrations rather than assuming they are already live.
