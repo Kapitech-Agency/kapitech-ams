@@ -172,7 +172,6 @@ test('workspace context navigation is scoped to its owning pages and cannot foll
   assert.ok(layout.includes("if (path === '/admin/projects' || path === '/admin/tasks') return 'projects';"));
   assert.ok(layout.includes("if (path === '/admin/clients' || path.startsWith('/admin/clients/') || path === '/admin/contracts') return 'clients';"));
   assert.ok(layout.includes("if (path.startsWith('/admin/cms/')) return 'cms';"));
-  assert.ok(layout.includes("if (path === '/admin/projects') return 'projects';"));
   assert.ok(layout.includes("if (path === '/admin/settings' || path === '/admin/navigation/release-readiness') return 'settings';"));
   assert.equal(layout.includes("'/admin/documents', '/admin/team', '/admin/time-logs'"), false);
   assert.equal(layout.includes("'/admin/crm', '/admin/clients/all-clients'"), false);

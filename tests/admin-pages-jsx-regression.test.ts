@@ -484,8 +484,8 @@ test('Flat sidebar visibility follows the nine-module role policy and keeps Sett
   assert.ok(routes.includes('<Route path="contracts" element={<ModuleRoute moduleKey="clients" moduleLabel="contracts"><AdminContracts /></ModuleRoute>} />'));
 
   assert.ok(layout.includes('<DynamicAdminSidebarNavigation role={amsRole}'));
-  assert.equal((layout.match(/<DynamicAdminSidebarNavigation\\b/g) || []).length, 2);
-  assert.equal((layout.match(/<AdminSystemSettingsNavigation\\b/g) || []).length, 2);
+  assert.equal(layout.split('<DynamicAdminSidebarNavigation').length - 1, 2);
+  assert.equal(layout.split('<AdminSystemSettingsNavigation').length - 1, 2);
   assert.ok(sidebar.includes("if (role !== 'Admin') return null;"));
   assert.ok(sidebar.includes('getNavigationGroupsForRole(role)'));
   assert.ok(sidebar.includes('data-ams-navigation-layout="flat"'));
