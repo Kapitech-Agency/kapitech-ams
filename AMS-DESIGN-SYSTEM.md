@@ -9,6 +9,8 @@
 >
 > **Before writing code, inspect the repo** (`src/index.css` or the current theme file, `src/components`, `src/lib`, existing pages). If tokens or components already exist, **map them to the names in this file and migrate incrementally**. Do not create parallel duplicates. Report any conflicts instead of silently overwriting.
 
+> For consistent page hierarchy, margin/padding ownership, spacing application and interaction-level review, also follow `docs/AMS-UX-INTERACTION-STANDARDS.md`. For the target module taxonomy and workflow ownership, use `docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md`; this design system remains the source of truth for exact visual tokens and component appearance.
+
 > **Architecture documentation boundary:** This file is authoritative for visual tokens, page geometry, shared UI primitives, and interaction rules. It is not the authority for the current module taxonomy or proof that a feature has shipped. Read [AGENTS.md](AGENTS.md) for AI change rules and [the AMS master structure guide](docs/AMS-MASTER-STRUCTURE-AND-AI-IMPLEMENTATION-GUIDE.md) for target navigation/workflows. Check route examples and feature status against the master guide and actual source; never create a parallel design system.
 
 ---
