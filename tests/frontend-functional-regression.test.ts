@@ -8,6 +8,17 @@ import { isMasterAdministrator } from '../src/lib/adminAuth.ts';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (file: string) => fs.readFile(path.join(root, file), 'utf8');
 
+test('Document upload reports failed compensation instead of silently hiding an orphan record', async () => {
+  const documents = await read('src/pages/admin/AdminDocuments.tsx');
+
+  assert.ok(documents.includes('const cleanupIncompleteDocument = async (id: string): Promise<{ confirmed: boolean; error?: string }> => {'));
+  assert.ok(documents.includes('const cleanup = await cleanupIncompleteDocument(createdId);'));
+  assert.ok(documents.includes('if (!cleanup.confirmed) {'));
+  assert.ok(documents.includes('await loadDocuments();'));
+  assert.ok(documents.includes('Temporary record cleanup could not be confirmed. The vault was refreshed; inspect the document list before retrying.'));
+  assert.ok(!documents.includes('await api.documents.delete(createdId).catch(() => {})'));
+});
+
 test('frontend Master bypass uses only server-owned identity attributes', async () => {
   assert.equal(isMasterAdministrator({
     id: 'usr_ops', username: 'admin', role: 'Tier 3: Operational Staff', stakeholderType: 'Operations'
