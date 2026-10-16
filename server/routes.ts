@@ -6345,7 +6345,12 @@ function mergeJsonTaskCollection(db: any): any[] {
 }
 
 function canManageTimeLogsAcrossProjects(user: StoredUser): boolean {
-  return isMasterAdministrator(user) || Boolean(user.permissions?.canManageProjects);
+  if (isMasterAdministrator(user)) return true;
+  const role = String(user.role || '').trim().toLowerCase();
+  // Delivery contributors should see/track assigned work even where their
+  // operational role grants task-management permissions for normal workflows.
+  if (/creative|operational staff|freelancer|internal staff/.test(role)) return false;
+  return Boolean(user.permissions?.canManageProjects);
 }
 
 function isTimeLogTaskAssignedToUser(task: any, user: StoredUser): boolean {
@@ -6613,12 +6618,20 @@ apiRouter.post('/projects/timelogs', requireAuth, async (req: AuthenticatedReque
       return;
     }
     const taskProjectId = String((task as any).projectId || (task as any).project_id || '');
-    if (!canLogAnyProject && !isTimeLogTaskAssignedToUser(task, req.user!)) {
-      res.status(403).json({ success: false, error: 'You can only log time against tasks assigned to your account.' });
+    if (projectId && !taskProjectId) {
+      res.status(400).json({ success: false, error: 'A task without a project cannot be logged against a different project.' });
       return;
     }
-    if (projectId && taskProjectId && projectId !== taskProjectId) {
+    if (projectId && taskProjectId !== projectId) {
       res.status(400).json({ success: false, error: 'Task does not belong to the selected project.' });
+      return;
+    }
+    if (!canLogAnyProject && !taskProjectId) {
+      res.status(403).json({ success: false, error: 'Only assigned project tasks can be tracked for your account.' });
+      return;
+    }
+    if (!canLogAnyProject && !isTimeLogTaskAssignedToUser(task, req.user!)) {
+      res.status(403).json({ success: false, error: 'You can only log time against tasks assigned to your account.' });
       return;
     }
     if (!projectId) projectId = taskProjectId;
