@@ -35,7 +35,6 @@ import { formatAmount, getActiveCurrency, CurrencyCode, CURRENCY_EVENT } from '.
 import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
-import { Modal } from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
@@ -366,12 +365,13 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
           description={language === 'id' ? 'Kelola direktori vendor, keahlian, rate, kontrak, dan status verifikasi.' : 'Manage vendor profiles, skills, rates, contracts, and verification status.'}
         />}
         <div className="space-y-3" role="status" aria-label="Loading vendors">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, index) => (
+          <Skeleton className="h-[72px] rounded-card border border-line bg-panel" />
+          <Skeleton className="h-[420px] rounded-card border border-line bg-panel" />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, index) => (
               <Skeleton key={index} className="h-[116px] rounded-card border border-line bg-panel" />
             ))}
           </div>
-          <Skeleton className="h-[420px] rounded-card border border-line bg-panel" />
         </div>
       </VendorWorkspaceContainer>
     );
@@ -420,20 +420,6 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
           </button>
         </div>
       )}
-
-      {/* Top Summary Metrics */}
-      <section data-ams-feature-slug="vendor-snapshot" data-ams-slug="vendor-snapshot" aria-label="Vendor snapshot" className="rounded-card border border-line bg-panel p-4">
-        <div className="mb-3 flex flex-col gap-3 border-b border-line pb-3 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan vendor' : 'Vendor snapshot'}</h2><p className="mt-1 text-xs text-muted">{language === 'id' ? 'Komposisi talent, partner, dan kualitas operasional.' : 'Talent mix, agency partners, and operational quality signals.'}</p></div><div className="flex min-w-0 flex-wrap items-center justify-between gap-2 sm:shrink-0 sm:justify-end">{embedded && <button type="button" onClick={handleOpenAdd} disabled={!canManageVendors} className="inline-flex h-8 min-h-8 items-center gap-2 whitespace-nowrap rounded-control bg-accent px-3 text-[11px] font-semibold text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"><Plus size={13}/><span>{language === 'id' ? 'Tambah Vendor' : 'Add Vendor'}</span></button>}<span className="text-[11px] font-medium tabular-nums text-muted">{vendors.length} total</span></div></div>
-        <AdminMetricStrip slug="vendor-kpis"
-          className="lg:grid-cols-4"
-          metrics={[
-            { id: 'total', label: language === 'id' ? 'Total Mitra Terdaftar' : 'Total vendors', value: vendors.length, context: vendors.filter(v => v.status === 'active').length + ' Active', sparkline: [vendors.filter(v => v.type === 'freelancer' || v.type === 'contractor').length, vendors.filter(v => v.type === 'agency_partner').length, vendors.length], icon: <Users size={16} strokeWidth={1.8} /> },
-            { id: 'freelance', label: language === 'id' ? 'Spesialis Freelance' : 'Freelance Talent', value: vendors.filter(v => v.type === 'freelancer' || v.type === 'contractor').length, context: 'Design, Dev & 3D', sparkline: [vendors.filter(v => v.type === 'freelancer').length, vendors.filter(v => v.type === 'contractor').length, vendors.filter(v => v.type === 'freelancer' || v.type === 'contractor').length], icon: <Briefcase size={16} strokeWidth={1.8} /> },
-            { id: 'agency', label: language === 'id' ? 'Partner Agensi' : 'Agency Partners', value: vendors.filter(v => v.type === 'agency_partner').length, context: 'DevOps, Cloud & Legal', sparkline: [vendors.filter(v => v.type === 'saas_vendor').length, vendors.filter(v => v.type === 'agency_partner').length, vendors.filter(v => v.type === 'freelancer').length], icon: <Building2 size={16} strokeWidth={1.8} />, toneClassName: 'text-info' },
-            { id: 'rating', label: language === 'id' ? 'Rata-rata rating vendor' : 'Average vendor rating', value: averageVendorRating === null ? '—' : <span className="inline-flex items-center gap-1.5">{averageVendorRating.toFixed(1)} <Star size={16} className="text-warning fill-warning" /></span>, context: ratedVendors.length ? (language === 'id' ? 'Dari ' + ratedVendors.length + ' profil vendor dengan rating' : 'Across ' + ratedVendors.length + ' rated vendor profiles') : (language === 'id' ? 'Belum ada data rating' : 'No rating data yet'), sparkline: ratedVendors.slice(0, 8).map(v => Number(v.rating)), icon: <Star size={16} strokeWidth={1.8} />, toneClassName: 'text-fg' }
-          ]}
-        />
-      </section>
 
       {/* Filter & Search Bar */}
       <section data-ams-feature-slug="vendor-directory-filters" data-ams-slug="vendor-directory-filters" className="w-full rounded-card bg-panel border border-line p-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between" aria-label="Vendor directory controls">
@@ -631,17 +617,7 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
         ))}
       </div></section>
 
-      <AdminTablePagination
-        total={filteredVendors.length}
-        page={vendorPage}
-        pageSize={vendorPageSize}
-        onPageChange={setVendorPage}
-        onPageSizeChange={setVendorPageSize}
-        itemLabel="vendors"
-        slug="vendor-directory-pagination"
-      />
-
-      {filteredVendors.length === 0 && (
+{filteredVendors.length === 0 && (
         <div className="flex w-full flex-col items-center justify-center rounded-card border border-line bg-panel px-5 py-12 text-center">
           {loadError ? <AlertCircle size={28} className="mb-3 text-danger" aria-hidden="true" /> : <Users size={28} className="mb-3 text-muted" aria-hidden="true" />}
           <h3 className="text-sm font-semibold text-fg">
@@ -669,14 +645,54 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
         </div>
       )}
 
+      {filteredVendors.length > 0 && (
+      <AdminTablePagination
+        total={filteredVendors.length}
+        page={vendorPage}
+        pageSize={vendorPageSize}
+        onPageChange={setVendorPage}
+        onPageSizeChange={setVendorPageSize}
+        itemLabel="vendors"
+        slug="vendor-directory-pagination"
+      />
+      )}
+
+      {/* Top Summary Metrics */}
+      <section data-ams-feature-slug="vendor-snapshot" data-ams-slug="vendor-snapshot" aria-label="Vendor snapshot" className="rounded-card border border-line bg-panel p-4">
+        <div className="mb-3 flex flex-col gap-3 border-b border-line pb-3 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><h2 className="text-sm font-semibold text-fg">{language === 'id' ? 'Ringkasan vendor' : 'Vendor snapshot'}</h2><p className="mt-1 text-xs text-muted">{language === 'id' ? 'Komposisi talent, partner, dan kualitas operasional.' : 'Talent mix, agency partners, and operational quality signals.'}</p></div><div className="flex min-w-0 flex-wrap items-center justify-between gap-2 sm:shrink-0 sm:justify-end">{embedded && <button type="button" onClick={handleOpenAdd} disabled={!canManageVendors} className="inline-flex h-8 min-h-8 items-center gap-2 whitespace-nowrap rounded-control bg-accent px-3 text-[11px] font-semibold text-white transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"><Plus size={13}/><span>{language === 'id' ? 'Tambah Vendor' : 'Add Vendor'}</span></button>}<span className="text-[11px] font-medium tabular-nums text-muted">{vendors.length} total</span></div></div>
+        <AdminMetricStrip slug="vendor-kpis"
+          className="lg:grid-cols-4"
+          metrics={[
+            { id: 'total', label: language === 'id' ? 'Total Mitra Terdaftar' : 'Total vendors', value: vendors.length, context: vendors.filter(v => v.status === 'active').length + ' Active', sparkline: [vendors.filter(v => v.type === 'freelancer' || v.type === 'contractor').length, vendors.filter(v => v.type === 'agency_partner').length, vendors.length], icon: <Users size={16} strokeWidth={1.8} /> },
+            { id: 'freelance', label: language === 'id' ? 'Spesialis Freelance' : 'Freelance Talent', value: vendors.filter(v => v.type === 'freelancer' || v.type === 'contractor').length, context: 'Design, Dev & 3D', sparkline: [vendors.filter(v => v.type === 'freelancer').length, vendors.filter(v => v.type === 'contractor').length, vendors.filter(v => v.type === 'freelancer' || v.type === 'contractor').length], icon: <Briefcase size={16} strokeWidth={1.8} /> },
+            { id: 'agency', label: language === 'id' ? 'Partner Agensi' : 'Agency Partners', value: vendors.filter(v => v.type === 'agency_partner').length, context: 'DevOps, Cloud & Legal', sparkline: [vendors.filter(v => v.type === 'saas_vendor').length, vendors.filter(v => v.type === 'agency_partner').length, vendors.filter(v => v.type === 'freelancer').length], icon: <Building2 size={16} strokeWidth={1.8} />, toneClassName: 'text-info' },
+            { id: 'rating', label: language === 'id' ? 'Rata-rata rating vendor' : 'Average vendor rating', value: averageVendorRating === null ? '—' : <span className="inline-flex items-center gap-1.5">{averageVendorRating.toFixed(1)} <Star size={16} className="text-warning fill-warning" /></span>, context: ratedVendors.length ? (language === 'id' ? 'Dari ' + ratedVendors.length + ' profil vendor dengan rating' : 'Across ' + ratedVendors.length + ' rated vendor profiles') : (language === 'id' ? 'Belum ada data rating' : 'No rating data yet'), sparkline: ratedVendors.slice(0, 8).map(v => Number(v.rating)), icon: <Star size={16} strokeWidth={1.8} />, toneClassName: 'text-fg' }
+          ]}
+        />
+      </section>
+
       {/* Detail Slideover Drawer */}
       {isDrawerOpen && selectedVendor && (
-        <Modal slug="vendor-delete-modal"
+        <Drawer
+          slug="vendor-detail-drawer"
           open={isDrawerOpen}
           onClose={() => setIsDrawerOpen(false)}
-          size="xl"
+          size="lg"
           title={selectedVendor.name}
           description={selectedVendor.primaryCategory}
+          footer={(
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                onClick={() => {
+                  setIsDrawerOpen(false);
+                  handleOpenEdit(selectedVendor);
+                }}
+              >
+                {language === 'id' ? 'Edit Profil' : 'Edit Profile'}
+              </Button>
+            </div>
+          )}
         >
           <div className="space-y-4 text-xs font-sans">
             <div>
@@ -734,19 +750,8 @@ export const AdminVendors: React.FC<{ embedded?: boolean; searchTerm?: string }>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-line flex items-center justify-end gap-2">
-              <Button
-                type="button"
-                onClick={() => {
-                  setIsDrawerOpen(false);
-                  handleOpenEdit(selectedVendor);
-                }}
-              >
-                {language === 'id' ? 'Edit Profil' : 'Edit Profile'}
-              </Button>
-            </div>
           </div>
-        </Modal>
+        </Drawer>
       )}
 
       {/* Add / Edit Modal */}

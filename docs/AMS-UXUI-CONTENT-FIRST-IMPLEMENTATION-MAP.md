@@ -142,6 +142,10 @@ The Project Profitability report displayed four aggregate KPI cards before the p
 
 The linked-task field in the Time Tracking entry form used the last native `<select>` in the page. It now uses the shared `CustomSelect` while keeping the same task ID value, task-title labels, handler, “No linked task” option, and disabled condition when no project or eligible tasks are available. This is a presentation/control consistency change only; the time-entry form's persistence, task linkage, validation, and permission logic are unchanged.
 
+## Follow-on Vendor Directory hierarchy and detail surface
+
+The standalone Vendor Directory now leads with directory controls and vendor cards, followed by the empty/unavailable state and pagination; its four source-derived snapshot metrics are below the working register. The loading skeleton mirrors that content-first order and four-metric count. The long-form vendor profile detail now uses the shared `Drawer` with the Edit action in its fixed footer instead of a `Modal` incorrectly named `vendor-delete-modal`. The selected vendor, rate, contact details and notes remain unchanged; the existing edit handler, permissions, mutations and data sources stay intact.
+
 ## Remaining visual verification and limits
 
 Authenticated browser-level UX/visual testing was not performed in this environment. In particular, the 1440px, 1024px, 768px, 390px, and 320px viewport pass, actual keyboard/focus flow, direct-route/browser-history checks, drawer interactions, and permission-specific visual scenarios remain unverified in a live AMS session. CI verifies static/type/regression/security/build gates but does not replace those visual checks.
