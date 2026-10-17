@@ -3,6 +3,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowUpRight,
   Check,
+  ChevronDown,
+  ChevronUp,
   HelpCircle,
   FileText,
   Globe,
@@ -168,12 +170,12 @@ const BlockEditor: React.FC<{
               aria-label={'Block type ' + (index + 1)}
             />
             <div className="flex items-center gap-1">
-              <Button type="button" variant="ghost" className="h-8 w-8 px-0" disabled={index === 0} onClick={() => move(index, -1)} aria-label="Move block up">↑</Button>
-              <Button type="button" variant="ghost" className="h-8 w-8 px-0" disabled={index === blocks.length - 1} onClick={() => move(index, 1)} aria-label="Move block down">↓</Button>
+              <Button type="button" variant="ghost" className="h-9 w-9 px-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" disabled={index === 0} onClick={() => move(index, -1)} aria-label="Move block up"><ChevronUp size={15} aria-hidden="true" /></Button>
+              <Button type="button" variant="ghost" className="h-9 w-9 px-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent" disabled={index === blocks.length - 1} onClick={() => move(index, 1)} aria-label="Move block down"><ChevronDown size={15} aria-hidden="true" /></Button>
               <Button
                 type="button"
                 variant="ghost"
-                className="h-8 w-8 px-0 text-danger"
+                className="h-9 w-9 px-0 text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 onClick={() => onChange(blocks.filter((_, itemIndex) => itemIndex !== index))}
                 aria-label="Remove block"
               >
