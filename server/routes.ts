@@ -3124,6 +3124,10 @@ apiRouter.post('/contracts', requireAuth, requireAnyPermission('canManageProject
     res.status(400).json({ success: false, error: 'Select a valid contract type.' });
     return;
   }
+  if (contractType === 'change_order') {
+    res.status(409).json({ success: false, error: 'Change orders cannot be created until AMS supports a persisted parent-contract relationship. Keep this change under the existing contract process and do not create an unlinked change order.' });
+    return;
+  }
   if (!['IDR', 'USD'].includes(currency) || contractValue === null) {
     res.status(400).json({ success: false, error: 'Contract value or currency is invalid.' });
     return;
@@ -3237,7 +3241,7 @@ apiRouter.put('/contracts/:id', requireAuth, requireAnyPermission('canManageProj
   const current = await findClientContract(id);
   if (!current) { res.status(404).json({ success: false, error: 'Contract not found.' }); return; }
   if (!['draft', 'in_review'].includes(String(current.status))) {
-    res.status(409).json({ success: false, error: 'Commercial terms are locked after a contract is sent. Create an amendment or change order instead.' });
+    res.status(409).json({ success: false, error: 'Commercial terms are locked after a contract is sent. Linked amendments and change orders are not available in AMS yet.' });
     return;
   }
 
@@ -3250,6 +3254,10 @@ apiRouter.put('/contracts/:id', requireAuth, requireAnyPermission('canManageProj
   }
   if (updates.contractType !== undefined && !(CLIENT_CONTRACT_TYPES as readonly string[]).includes(String(updates.contractType))) {
     res.status(400).json({ success: false, error: 'Select a valid contract type.' });
+    return;
+  }
+  if (updates.contractType === 'change_order' && String(current.contractType) !== 'change_order') {
+    res.status(409).json({ success: false, error: 'An unlinked change order cannot be created from this contract. Parent-contract traceability is not available yet.' });
     return;
   }
   if (updates.currency !== undefined && !['IDR', 'USD'].includes(String(updates.currency))) {
