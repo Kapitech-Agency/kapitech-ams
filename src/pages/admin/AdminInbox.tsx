@@ -683,11 +683,7 @@ export const AdminInbox: React.FC = () => {
               ? (language === 'id'
                 ? 'Kelola inquiry klien, prioritas tindak lanjut, dan status respons.'
                 : 'Review client inquiries, prioritize follow-ups, and track response status.')
-              : activeInboxTab === 'jobs'
-                ? (language === 'id'
-                  ? 'Kelola lamaran kerja dari screening sampai keputusan hiring.'
-                  : 'Manage job applications from screening through hiring decisions.')
-                : (language === 'id'
+            : (language === 'id'
                   ? 'Kelola record yang disimpan untuk follow-up prioritas.'
                   : 'Manage records intentionally saved for priority follow-up.')
         }
@@ -696,11 +692,7 @@ export const AdminInbox: React.FC = () => {
             <span className="text-[11px] tabular-nums text-muted">{activeTabItems.length} inbound</span>
             {canManageCrm && <Link to="/admin/cms/careers?tab=applicants" className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent">{language === 'id' ? 'Pelamar Careers' : 'Careers Applicants'}</Link>}
             <button type="button" onClick={() => setIsEmailModalOpen(true)} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent" title={language === 'id' ? 'Buka pengaturan notifikasi email' : 'Open email alert settings'}><Mail size={14} /><span>{language === 'id' ? 'Notifikasi Email' : 'Email Alerts'}</span></button>
-            {metrics.newCount > 0 && <button type="button" onClick={handleMarkAllRead} disabled={!canManageCrm} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"><Check size={14} /><span>{activeInboxTab === 'jobs'
-    ? (language === 'id' ? 'Mulai Screening' : 'Start Screening')
-    : isMixedInboxTab
-      ? (language === 'id' ? 'Proses Baru' : 'Process New')
-      : (language === 'id' ? 'Tandai Dibaca' : 'Mark Read')}</span></button>}
+            {metrics.newCount > 0 && <button type="button" onClick={handleMarkAllRead} disabled={!canManageCrm} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"><Check size={14} /><span>{isMixedInboxTab ? (language === 'id' ? 'Proses Baru' : 'Process New') : (language === 'id' ? 'Tandai Dibaca' : 'Mark Read')}</span></button>}
             {activeTabItems.length > 0 && <button type="button" onClick={handleExportCSV} className="ams-action inline-flex h-9 min-h-9 items-center justify-center gap-1.5 rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-accent"><Download size={14} /><span>Export CSV</span></button>}
           </>
         )}
@@ -1072,10 +1064,10 @@ export const AdminInbox: React.FC = () => {
               <thead>
                 <tr className="bg-panel border-b border-line text-muted">
                   <th className="p-3 w-10 text-center">★</th>
-                  <th className="p-3">{activeInboxTab === 'jobs' ? (language === 'id' ? 'Kandidat & Posisi' : 'Candidate & Role') : activeInboxTab === 'client' ? (language === 'id' ? 'Klien & Perusahaan' : 'Client & Company') : (language === 'id' ? 'Inbound & Konteks' : 'Inbound & Context')}</th>
+                  <th className="p-3">{activeInboxTab === 'client' ? (language === 'id' ? 'Klien & Perusahaan' : 'Client & Company') : (language === 'id' ? 'Inbound & Konteks' : 'Inbound & Context')}</th>
                   <th className="p-3">{language === 'id' ? 'Kanal' : 'Channel'}</th>
-                  <th className="p-3">{activeInboxTab === 'jobs' ? (language === 'id' ? 'Skill / Spesialisasi' : 'Skills / Specialty') : activeInboxTab === 'client' ? (language === 'id' ? 'Layanan Diminta' : 'Requested Services') : (language === 'id' ? 'Layanan / Spesialisasi' : 'Services / Specialty')}</th>
-                  <th className="p-3">{activeInboxTab === 'jobs' ? (language === 'id' ? 'Pengalaman' : 'Experience') : activeInboxTab === 'client' ? (language === 'id' ? 'Anggaran' : 'Budget') : (language === 'id' ? 'Anggaran / Pengalaman' : 'Budget / Experience')}</th>
+                  <th className="p-3">{activeInboxTab === 'client' ? (language === 'id' ? 'Layanan Diminta' : 'Requested Services') : (language === 'id' ? 'Layanan / Spesialisasi' : 'Services / Specialty')}</th>
+                  <th className="p-3">{activeInboxTab === 'client' ? (language === 'id' ? 'Anggaran' : 'Budget') : (language === 'id' ? 'Anggaran / Pengalaman' : 'Budget / Experience')}</th>
                   <th className="p-3">{language === 'id' ? 'Status' : 'Status'}</th>
                   <th className="p-3">{language === 'id' ? 'Waktu' : 'Date'}</th>
                   <th className="p-3 text-right">{language === 'id' ? 'Aksi' : 'Actions'}</th>
@@ -1114,14 +1106,9 @@ export const AdminInbox: React.FC = () => {
                         <td className="p-3">
                           <div className="font-semibold text-fg font-sans text-sm flex items-center gap-1.5">
                             <span>{item.fullName}</span>
-                            {item.type === 'career' && item.status === 'hired' && (
-                              <span className="text-[10px] font-sans px-1.5 py-0.2 rounded-badge bg-success/10 text-success border border-success/30">
-                                Hired ✓
-                              </span>
-                            )}
                           </div>
                           <div className="text-[11px] text-muted truncate max-w-[200px]">
-                            {activeInboxTab === 'jobs' ? (item.positionTitle || item.specialty || item.email) : (item.company || item.email)}
+                            {item.company || item.email}
                           </div>
                         </td>
 
@@ -1133,33 +1120,24 @@ export const AdminInbox: React.FC = () => {
                         {/* Services */}
                         <td className="p-3 max-w-[200px]">
                           <div className="flex flex-wrap gap-1">
-                            {item.type === 'career' ? (
-                              <>
-                                <span className="px-1.5 py-0.5 rounded-badge bg-panel border border-line text-[10px] text-fg">{item.positionTitle || 'Role not specified'}</span>
-                                {item.specialty && <span className="px-1.5 py-0.5 rounded-badge bg-panel border border-line text-[10px] text-muted">{item.specialty}</span>}
-                              </>
-                            ) : (
-                              <>
-                                {item.services && item.services.length > 0 ? (
-                                  item.services.slice(0, 2).map((svc, i) => (
-                                    <span key={i} className="px-1.5 py-0.5 rounded-badge bg-panel border border-line text-[10px] text-fg">{svc}</span>
-                                  ))
-                                ) : (
-                                  <span className="text-muted text-[10px]">{item.specialty || '-'}</span>
-                                )}
-                                {item.services && item.services.length > 2 && (
-                                  <span className="text-[10px] text-muted">+{item.services.length - 2}</span>
-                                )}
-                              </>
-                            )}
+                            <>
+                              {item.services && item.services.length > 0 ? (
+                                item.services.slice(0, 2).map((svc, i) => (
+                                  <span key={i} className="px-1.5 py-0.5 rounded-badge bg-panel border border-line text-[10px] text-fg">{svc}</span>
+                                ))
+                              ) : (
+                                <span className="text-muted text-[10px]">{item.specialty || '-'}</span>
+                              )}
+                              {item.services && item.services.length > 2 && (
+                                <span className="text-[10px] text-muted">+{item.services.length - 2}</span>
+                              )}
+                            </>
                           </div>
                         </td>
 
                         {/* Value / Experience */}
                         <td className="p-3 font-semibold text-fg">
-                          {activeInboxTab === 'jobs'
-                            ? (item.experienceYears ? item.experienceYears + ' yrs' : '-')
-                            : (item.budget || (language === 'id' ? 'Tidak ditentukan' : 'Not provided'))}
+{item.budget || (language === 'id' ? 'Tidak ditentukan' : 'Not provided')}
                         </td>
 
                         {/* Status & Priority */}
@@ -1207,7 +1185,7 @@ export const AdminInbox: React.FC = () => {
               </tbody>
             </table></div>
           </div>
-          <AdminTablePagination total={filteredItems.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel={activeInboxTab === 'jobs' ? 'applications' : 'inbound records'} slug={'inbox-' + activeInboxTab + '-pagination'} />
+          <AdminTablePagination total={filteredItems.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel={language === 'id' ? 'record inbound' : 'inbound records'} slug={'inbox-' + activeInboxTab + '-pagination'} />
         </div>
       ) : loading ? (
         <div className="rounded-card border border-line bg-panel p-4" role="status" aria-label="Loading inbox records">
@@ -1737,22 +1715,16 @@ export const AdminInbox: React.FC = () => {
                 <Inbox size={32} />
               </div>
               <h3 className="text-fg font-medium mb-1 font-sans text-base">
-                {activeInboxTab === 'jobs'
-                  ? (language === 'id' ? 'Pilih Lamaran untuk Meninjau Kandidat' : 'Select an Application to Review')
-                  : activeInboxTab === 'client'
-                    ? (language === 'id' ? 'Pilih Pesan untuk Membaca Brief' : 'Select a Brief to Inspect')
-                    : (language === 'id' ? 'Pilih Record untuk Ditinjau' : 'Select a Record to Review')}
+                {activeInboxTab === 'client'
+                  ? (language === 'id' ? 'Pilih Pesan untuk Membaca Brief' : 'Select a Brief to Inspect')
+                  : (language === 'id' ? 'Pilih Record untuk Ditinjau' : 'Select a Record to Review')}
               </h3>
               <p className="text-xs text-muted max-w-sm font-sans leading-relaxed">
                 {language === 'id'
-                  ? (activeInboxTab === 'jobs'
-                    ? 'Klik salah satu lamaran untuk melihat detail kandidat, tautan resume/portfolio, catatan internal, dan status rekrutmen.'
-                    : activeInboxTab === 'client'
-                      ? 'Klik salah satu inquiry untuk melihat brief, respon cepat, kontak WhatsApp/Email, dan status tindak lanjut.'
-                      : 'Klik salah satu record untuk melihat detail inbound, status, catatan internal, dan tindak lanjut.')
-                  : (activeInboxTab === 'jobs'
-                    ? 'Select an application to review candidate details, resume or portfolio links, internal notes, and hiring stage.'
-                    : 'Select an inquiry to review the brief, quick responses, WhatsApp/Email contact, and follow-up status.')}
+                  ? (activeInboxTab === 'client'
+                    ? 'Klik salah satu inquiry untuk melihat brief, respon cepat, kontak WhatsApp/Email, dan status tindak lanjut.'
+                    : 'Klik salah satu record untuk melihat detail inbound, status, catatan internal, dan tindak lanjut.')
+                  : 'Select an inquiry to review the brief, quick responses, WhatsApp/Email contact, and follow-up status.'}
               </p>
             </div>
           )}
@@ -1771,18 +1743,12 @@ export const AdminInbox: React.FC = () => {
         busy={confirmActionLoading}
         title={confirmAction?.type === 'delete'
           ? (language === 'id' ? 'Hapus pesan?' : 'Delete message?')
-          : activeInboxTab === 'jobs'
-            ? (language === 'id' ? 'Pindahkan lamaran ke Screening?' : 'Move applications to Screening?')
-            : isMixedInboxTab
+          : isMixedInboxTab
               ? (language === 'id' ? 'Proses record baru?' : 'Process new records?')
               : (language === 'id' ? 'Tandai pesan sebagai ditinjau?' : 'Mark messages as reviewed?')}
         description={confirmAction?.type === 'delete'
           ? (language === 'id' ? 'Tindakan ini menghapus data inbox secara permanen dan tidak dapat dibatalkan.' : 'This permanently removes the inbox record and cannot be undone.')
-          : activeInboxTab === 'jobs'
-            ? (language === 'id'
-              ? `Sebanyak ${confirmAction?.count ?? 0} lamaran baru akan dipindahkan ke Screening.`
-              : `${confirmAction?.count ?? 0} new applications will be moved to Screening.`)
-            : isMixedInboxTab
+          : isMixedInboxTab
               ? (language === 'id'
                 ? `Sebanyak ${confirmAction?.count ?? 0} record baru akan diproses sesuai jenis inbound.`
                 : `${confirmAction?.count ?? 0} new records will be moved to their next workflow stage.`)
@@ -1807,9 +1773,7 @@ export const AdminInbox: React.FC = () => {
                 ? (language === 'id' ? 'Memproses...' : 'Processing...')
                 : confirmAction?.type === 'delete'
                   ? (language === 'id' ? 'Hapus Permanen' : 'Delete Permanently')
-                  : activeInboxTab === 'jobs'
-                    ? (language === 'id' ? 'Pindahkan ke Screening' : 'Move to Screening')
-                    : isMixedInboxTab
+                  : isMixedInboxTab
                       ? (language === 'id' ? 'Proses Record' : 'Process Records')
                       : (language === 'id' ? 'Tandai In Review' : 'Mark In Review')}
             </button>
