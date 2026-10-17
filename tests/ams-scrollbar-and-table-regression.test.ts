@@ -77,6 +77,8 @@ test('Inbox leaves Careers applicant review in the canonical CMS workspace', asy
   assert.match(app, /if \(query\.get\('view'\) === 'jobs'\)/);
   assert.match(app, /pathname: '\/admin\/cms\/careers', search: '\?tab=applicants'/);
   assert.match(careers, /pagedApplicants\.map\(applicant/);
+  assert.match(inbox, /className="ams-table-scroll overflow-x-auto custom-scrollbar">\s*<div data-ams-feature-slug="inbox-leads-directory" data-ams-slug="inbox-leads-directory" className="min-w-0"><table/);
+  assert.doesNotMatch(inbox, /data-ams-feature-slug="inbox-leads-directory"[^>]*className="overflow-x-auto"/);
 });
 
 
