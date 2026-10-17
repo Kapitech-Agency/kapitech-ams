@@ -211,6 +211,7 @@ test('Finance workbook replaces legacy finance navigation and keeps all operatio
   const sidebar = await read('src/components/admin/DynamicAdminSidebar.tsx');
   const workspace = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   const invoicing = await read('src/pages/admin/AdminInvoicing.tsx');
+  const navigation = await read('src/lib/amsModuleSubnavigation.ts');
 
   assert.ok(app.includes('<Route path="invoicing" element={<LegacyInvoicingRedirect />} />'));
   assert.match(app, /query.get\('finance'\) === 'vendor-payments'/);
