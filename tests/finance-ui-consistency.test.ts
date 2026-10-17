@@ -358,6 +358,7 @@ test('Embedded invoice, expense, and receivable workflows do not leak UI state a
   assert.match(vendors, /\{!embedded && \([\s\S]{0,180}<AdminModuleHeader/);
   assert.match(vendors, /\{embedded && <button type="button" onClick=\{handleOpenAdd\}/);
   assert.match(vendors, /data-ams-slug="vendor-snapshot"/);
+  assert.ok(vendors.indexOf('data-ams-feature-slug="vendor-directory-list"') < vendors.indexOf('data-ams-feature-slug="vendor-snapshot"'));
   assert.match(vendors, /flex flex-col gap-3 border-b border-line pb-3 sm:flex-row sm:items-center sm:justify-between/);
 });
 

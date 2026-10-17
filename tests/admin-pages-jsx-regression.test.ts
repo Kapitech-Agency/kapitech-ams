@@ -820,3 +820,23 @@ test('Time Tracking uses shared CustomSelect for linked tasks while preserving e
   assert.ok(time.includes('{ value: "", label: "No linked task" }'));
   assert.ok(time.includes('selectedProjectTasks.map(task => ({ value: task.id, label: task.title }))'));
 });
+
+
+test('Vendor directory prioritizes its register, then the snapshot, and uses the shared detail drawer', () => {
+  const vendors = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminVendors.tsx'), 'utf8');
+  const filters = vendors.indexOf('aria-label="Vendor directory controls"');
+  const directory = vendors.indexOf('data-ams-feature-slug="vendor-directory-list"');
+  const emptyState = vendors.indexOf('filteredVendors.length === 0 && (');
+  const pagination = vendors.indexOf('slug="vendor-directory-pagination"');
+  const snapshot = vendors.indexOf('data-ams-feature-slug="vendor-snapshot"');
+  const detailDrawer = vendors.indexOf('slug="vendor-detail-drawer"');
+  assert.ok(filters >= 0 && directory > filters);
+  assert.ok(emptyState > directory && pagination > emptyState);
+  assert.ok(snapshot > pagination);
+  assert.ok(detailDrawer > snapshot);
+  assert.equal(vendors.includes('<Modal'), false);
+  assert.ok(vendors.includes('footer={('));
+  assert.ok(vendors.includes("handleOpenEdit(selectedVendor)"));
+  assert.ok(vendors.includes('{filteredVendors.length > 0 && ('));
+  assert.ok(vendors.includes('Array.from({ length: 4 })'));
+});
