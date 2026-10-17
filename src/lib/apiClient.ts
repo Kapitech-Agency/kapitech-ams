@@ -276,11 +276,6 @@ export const api = {
         method: 'PUT',
         body: JSON.stringify(updates)
       }),
-    addRetainerHours: (id: string, hours: number) =>
-      apiRequest<{ success: boolean; client: any }>(`/api/clients/${id}/retainer-hours`, {
-        method: 'POST',
-        body: JSON.stringify({ hours })
-      }),
     getInteractions: (id: string) => apiRequest<{ success: boolean; interactions: any[] }>(`/api/clients/${encodeURIComponent(id)}/interactions`),
     createInteraction: (id: string, interaction: Record<string, unknown>) =>
       apiRequest<{ success: boolean; interaction: any }>(`/api/clients/${encodeURIComponent(id)}/interactions`, {
