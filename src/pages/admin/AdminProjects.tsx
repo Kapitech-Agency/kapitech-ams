@@ -1182,6 +1182,10 @@ export const AdminProjects: React.FC = () => {
       await syncProjects(false);
       showToast(language === 'id' ? 'Tugas berhasil disimpan.' : 'Task saved.');
       savedToData = true;
+    } catch (error) {
+      showToast(error instanceof Error
+        ? error.message
+        : (language === 'id' ? 'Tugas gagal disimpan. Periksa koneksi lalu coba lagi.' : 'Task could not be saved. Check your connection and try again.'));
     } finally {
       setSaving(false);
       if (savedToData) setTaskDrawerOpen(false);
