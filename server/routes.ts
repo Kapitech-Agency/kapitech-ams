@@ -4332,10 +4332,7 @@ apiRouter.post('/finance/expenses', requireAuth, requirePermission('canManageInv
     return JSON.stringify(fingerprintData);
   };
 
-  newExpense.metadata = {
-    ...(newExpense.metadata || {}),
-    requestFingerprint: buildExpenseIdempotencyFingerprint(newExpense)
-  };
+  newExpense.metadata.requestFingerprint = buildExpenseIdempotencyFingerprint(newExpense);
 
   if (getDataSourceMode() === 'postgres') {
     try {
