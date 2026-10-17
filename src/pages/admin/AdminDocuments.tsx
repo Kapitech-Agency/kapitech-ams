@@ -82,7 +82,7 @@ const CATEGORY_FILTERS: Array<{ key: CategoryKey; label: string }> = [
   { key: 'all', label: 'All Files' },
   { key: 'sop', label: 'SOP & Guides' },
   { key: 'legal', label: 'Legal & Corporate' },
-  { key: 'finance', label: 'Financial Reports' },
+  { key: 'finance', label: 'Finance & Tax' },
   { key: 'hr', label: 'HR & People' },
   { key: 'security', label: 'Security & Keys' },
 ];
