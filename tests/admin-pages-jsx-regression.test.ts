@@ -14,7 +14,7 @@ test('retired CRM, proposals, and Approval routes redirect to active workspaces'
   assert.ok(source.includes('<Route path="approvals" element={<Navigate to="/admin/dashboard" replace />} />'));
   assert.ok(!source.includes("import('./pages/admin/AdminApprovals')"));
   assert.ok(source.includes('<Route path="time-logs" element={<ModuleRoute moduleKey="timelogs" moduleLabel="Time"><AdminTimeLogs /></ModuleRoute>} />'));
-  assert.ok(source.includes("default: m.AdminApprovals"));
+  assert.ok(!source.includes("default: m.AdminApprovals"));
 });
 test('Finance transaction worksheets keep mutations permission-gated and use embedded workbook workflows', () => {
   const source = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInvoicing.tsx'), 'utf8');
