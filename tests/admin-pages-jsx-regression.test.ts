@@ -632,3 +632,17 @@ test('Document vault prioritizes search and the register while preserving the up
   assert.ok(documents.includes('data-ams-slug="documents-upload-browse"'));
   assert.ok(documents.includes('<Drawer') && documents.includes('documents-upload-form'));
 });
+
+
+test('Retainers and SLA monitoring prioritize the actual operational workspace', () => {
+  const retainers = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientRetainers.tsx'), 'utf8');
+  const sla = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientSlaMonitoring.tsx'), 'utf8');
+  assert.ok(retainers.includes('<AdminMetricStrip'));
+  assert.ok(retainers.includes('data-ams-slug="retainer-time-log-reconciliation-state"'));
+  assert.ok(retainers.includes('data-ams-slug="retainers-directory"'));
+  assert.equal(retainers.includes('className="grid grid-cols-1 gap-3 md:grid-cols-3"'), false);
+  assert.ok(sla.indexOf('data-ams-slug="sla-telemetry-not-configured"') < sla.indexOf('data-ams-slug="sla-monitoring-setup"'));
+  assert.ok(sla.indexOf('data-ams-slug="sla-monitoring-setup"') < sla.indexOf('data-ams-slug="sla-monitoring-next-actions"'));
+  assert.equal(sla.includes('aria-label="SLA metrics"'), false);
+  assert.ok(sla.includes('No sample accounts or simulated performance values are shown.'));
+});

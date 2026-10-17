@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Activity, AlertTriangle, CheckCircle2, ExternalLink, FileText, TimerReset } from 'lucide-react';
+import { AlertTriangle, ExternalLink, FileText } from 'lucide-react';
 import { AdminModuleHeader, AdminPageShell, AdminStatusBadge } from '../../components/admin/AdminModulePrimitives';
 
 const slaSetupRequirements = [
@@ -41,24 +41,6 @@ export const AdminClientSlaMonitoring: React.FC = () => {
             </p>
           </div>
         </div>
-      </section>
-
-      <section className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4" aria-label="SLA metrics" data-ams-slug="sla-monitoring-kpis">
-        {[
-          { label: 'Average uptime', value: '—', note: 'Requires verified availability events', icon: <Activity size={17} /> },
-          { label: 'Mean time to recovery', value: '—', note: 'Requires incident and recovery timestamps', icon: <TimerReset size={17} /> },
-          { label: 'Warning accounts', value: '—', note: 'Requires measured values against contract targets', icon: <AlertTriangle size={17} /> },
-          { label: 'Compliant services', value: '—', note: 'Requires an active SLA and validated reporting window', icon: <CheckCircle2 size={17} /> }
-        ].map((metric) => (
-          <div key={metric.label} className="rounded-card border border-line bg-panel p-4">
-            <div className="flex items-center justify-between gap-2 text-muted">
-              <span className="text-[11px] font-medium">{metric.label}</span>
-              {metric.icon}
-            </div>
-            <p className="mt-3 text-2xl font-semibold tabular-nums text-fg">{metric.value}</p>
-            <p className="mt-1 text-[10px] leading-4 text-muted">{metric.note}</p>
-          </div>
-        ))}
       </section>
 
       <section className="overflow-hidden rounded-card border border-line bg-panel" aria-labelledby="sla-setup-title" data-ams-slug="sla-monitoring-setup">

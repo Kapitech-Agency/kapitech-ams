@@ -43,6 +43,12 @@ Confirmed hierarchy before this slice: header and contextual tabs were followed 
 
 Change intent: remove the four-card KPI strip and its display-only summaries, place search/sort and the document register first, then keep the existing upload/dropzone panel below the register. The header upload action, browse control, drag-and-drop behavior, upload drawer, private-vault wording, record states, filters, sorting, permissions and source data remain intact.
 
+## Third implementation slice: Clients and SLA workspaces
+
+The Retainers page had three large hand-built metric cards using a separate visual pattern from the shared AMS metric component. The values themselves remain relevant to this workspace, so they are retained and moved to the shared `AdminMetricStrip` with the same source-derived values and the existing reconciliation notice.
+
+SLA Monitoring had an explicit telemetry-unavailable notice followed by four large em-dash metric tiles that repeated the same missing-source explanation before the setup checklist. The repeated unavailable tiles are removed. The truthful unavailable notice, setup requirements and Contracts & SOW link now form the main sequence; no metrics are replaced by zeros or sample values.
+
 ## Evidence and remaining verification
 
 Source review covered the canonical page shell/navigation primitives and source files for all nine modules, Finance navigation/workbook grouping, page-specific CMS/Inbox working areas, and existing regression tests. The baseline CI passed. The current implementation branch still requires its own CI run, full diff review, responsive/browser inspection, and final source-boundary scan before it can be declared ready.
