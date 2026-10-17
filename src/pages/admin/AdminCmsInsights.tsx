@@ -17,7 +17,6 @@ import { api } from '../../lib/apiClient';
 import { useLanguage } from '../../lib/LanguageContext';
 import {
   AdminDataTableShell, AdminFilterBar, AdminModuleNotice,
-  AdminMetricStrip,
   AdminModuleHeader,
   AdminPageShell,
   AdminStatusBadge,
@@ -660,9 +659,6 @@ export const AdminCmsInsights: React.FC = () => {
     };
   }, [page, pageSize, languageFilter, statusFilter, categoryFilter, authorFilter, featuredFilter, search]);
 
-  const featuredCount = items.filter(item => item.isFeatured).length;
-  const publishedCount = items.filter(item => item.status === 'published').length;
-  const draftCount = items.filter(item => item.status === 'draft').length;
 
   const statusOptions = useMemo(() => [
     { value: '', label: 'All statuses' },
@@ -772,17 +768,6 @@ export const AdminCmsInsights: React.FC = () => {
 
       
       
-
-      <AdminMetricStrip
-        slug="cms-insights-kpis"
-        className="grid-cols-2 sm:grid-cols-4"
-        metrics={[
-          { id: 'insights-total', label: 'Current results', value: total, icon: <FileText size={15} />, toneClassName: 'text-accent-text' },
-          { id: 'insights-published', label: 'Published', value: publishedCount, icon: <Check size={15} />, toneClassName: 'text-success' },
-          { id: 'insights-drafts', label: 'Drafts', value: draftCount, icon: <Pencil size={15} />, toneClassName: 'text-warning' },
-          { id: 'insights-featured', label: 'Featured', value: featuredCount, icon: <Globe size={15} />, toneClassName: 'text-info' }
-        ]}
-      />
 
       {statusMessage && (
         <AdminModuleNotice

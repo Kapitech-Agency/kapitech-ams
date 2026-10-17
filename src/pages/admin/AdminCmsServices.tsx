@@ -32,7 +32,7 @@ import { Drawer } from '../../components/ui/Drawer';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { AdminDataTableShell, AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminDataTableShell, AdminFilterBar, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 
 type CmsServiceRecord = ServiceItemData & {
@@ -392,40 +392,6 @@ export const AdminCmsServices: React.FC = () => {
           {statusMessage}
         </AdminModuleNotice>
       )}
-
-      <AdminMetricStrip slug="cms-services-kpis"
-        className="grid-cols-2 sm:grid-cols-4"
-        metrics={[
-          {
-            id: 'total-services',
-            label: 'Total services',
-            value: servicesList.length,
-            icon: <Layers size={15} />,
-            toneClassName: 'text-accent-text'
-          },
-          {
-            id: 'development-services',
-            label: 'Development',
-            value: servicesList.filter((item) => item.category === 'Development').length,
-            icon: <Code size={15} />,
-            toneClassName: 'text-accent-text'
-          },
-          {
-            id: 'design-services',
-            label: 'Design',
-            value: servicesList.filter((item) => item.category === 'Design').length,
-            icon: <PenTool size={15} />,
-            toneClassName: 'text-info'
-          },
-          {
-            id: 'active-categories',
-            label: 'Categories used',
-            value: new Set(servicesList.map((item) => item.category)).size,
-            icon: <Sliders size={15} />,
-            toneClassName: 'text-success'
-          }
-        ]}
-      />
 
       <AdminFilterBar
         slug="cms-services-filters"
