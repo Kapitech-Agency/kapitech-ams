@@ -573,7 +573,7 @@ export const AdminProjects: React.FC = () => {
         setProjects(serverProjects);
         setServerConnected(true);
         setError(null);
-        return;
+        return true;
       }
 
       setError(response.error || 'Project service is unavailable. Refresh after the connection is restored.');
@@ -581,6 +581,7 @@ export const AdminProjects: React.FC = () => {
         setServerConnected(false);
         setProjects([]);
       }
+      return false;
     } catch (requestError) {
       setError(requestError instanceof Error
         ? requestError.message
@@ -589,6 +590,7 @@ export const AdminProjects: React.FC = () => {
         setServerConnected(false);
         setProjects([]);
       }
+      return false;
     } finally {
       if (showLoading) setLoading(false);
     }
@@ -1247,7 +1249,8 @@ export const AdminProjects: React.FC = () => {
       const response = await api.tasks.update(task.id, { status });
       if (!response.success) {
         if (isUnknownMutationOutcome(response)) {
-          await syncProjects(false);
+          const refreshed = await syncProjects(false);
+          if (!refreshed) rollback();
           showToast(response.error || (language === 'id' ? 'Hasil perubahan status tugas belum dapat dipastikan. Data telah dimuat ulang.' : 'Task status outcome is unknown. Canonical records were refreshed.'));
           return;
         }
@@ -1349,7 +1352,8 @@ export const AdminProjects: React.FC = () => {
       const response = await api.projects.update(project.id, { status });
       if (!response.success) {
         if (isUnknownMutationOutcome(response)) {
-          await syncProjects(false);
+          const refreshed = await syncProjects(false);
+          if (!refreshed) rollback();
           showToast(response.error || (language === 'id' ? 'Hasil perubahan status proyek belum dapat dipastikan. Data telah dimuat ulang.' : 'Project status outcome is unknown. Canonical records were refreshed.'));
           return;
         }
@@ -1397,7 +1401,8 @@ export const AdminProjects: React.FC = () => {
       const response = await api.tasks.update(task.id, { subtasks: nextSubtasks });
       if (!response.success) {
         if (isUnknownMutationOutcome(response)) {
-          await syncProjects(false);
+          const refreshed = await syncProjects(false);
+          if (!refreshed) applySubtasks(previousSubtasks);
           showToast(response.error || (language === 'id' ? 'Hasil pembaruan checklist belum dapat dipastikan. Data telah dimuat ulang.' : 'Checklist update outcome is unknown. Canonical records were refreshed.'));
           return;
         }
