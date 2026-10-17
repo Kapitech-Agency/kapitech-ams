@@ -194,28 +194,31 @@ function hydrateFinanceFromServer(): void {
   financeServerHydrationStarted = true;
 
   Promise.all([api.finance.getInvoices(), api.finance.getExpenses()]).then(([invoiceRes, expenseRes]) => {
-    const invoices = invoiceRes.success && Array.isArray(invoiceRes.data?.invoices)
+    // HTTP success alone is not proof that the response matches the collection contract.
+    // Only a valid envelope may replace a last-known-good cache; malformed/error bodies
+    // are not authoritative empty results.
+    const invoices = invoiceRes.success && invoiceRes.data?.success !== false && Array.isArray(invoiceRes.data?.invoices)
       ? invoiceRes.data.invoices.map((inv: any) => normalizeFinanceInvoice({
           ...inv,
           slug: inv.slug || inv.metadata?.slug,
           currency: inv.currency || 'IDR',
           items: Array.isArray(inv.items) ? inv.items : []
         } as AgencyInvoice))
-      : [];
-    const expenses = expenseRes.success && Array.isArray(expenseRes.data?.expenses)
+      : null;
+    const expenses = expenseRes.success && expenseRes.data?.success !== false && Array.isArray(expenseRes.data?.expenses)
       ? expenseRes.data.expenses.map((expense: any) => normalizeFinanceExpense({
           ...expense,
           slug: expense.slug || expense.metadata?.slug
         } as AgencyExpense))
-      : [];
+      : null;
 
-    if (invoiceRes.success) invoiceCache = invoices;
-    if (expenseRes.success) expenseCache = expenses;
-    if (typeof window !== 'undefined' && (invoiceRes.success || expenseRes.success)) {
+    if (invoices !== null) invoiceCache = invoices;
+    if (expenses !== null) expenseCache = expenses;
+    if (typeof window !== 'undefined' && (invoices !== null || expenses !== null)) {
       window.dispatchEvent(new CustomEvent(FINANCE_EVENT_NAME));
     }
 
-    if (invoiceRes.success && expenseRes.success) {
+    if (invoices !== null && expenses !== null) {
       financeServerHydrationRetryCount = 0;
       return;
     }
