@@ -34,7 +34,7 @@ Optional:
 - PostgreSQL runtime: `KAPITECH_DATA_SOURCE=postgres`, `KAPITECH_POSTGRES_URL` and optional SSL/pool settings.
 - PostgreSQL mode: `KAPITECH_POSTGRES_BACKUP_PROVIDER`, `KAPITECH_POSTGRES_BACKUP_LATEST_AT`, `KAPITECH_POSTGRES_BACKUP_RESTORE_VERIFIED_AT`, `KAPITECH_POSTGRES_BACKUP_RPO_MINUTES`, `KAPITECH_POSTGRES_BACKUP_RTO_MINUTES`, `KAPITECH_POSTGRES_BACKUP_RETENTION_DAYS`
 - PostgreSQL production Document Vault: `KAPITECH_DOCUMENT_STORAGE_PROVIDER`, `KAPITECH_DOCUMENT_STORAGE_BUCKET`, `KAPITECH_DOCUMENT_STORAGE_ENDPOINT`, `KAPITECH_DOCUMENT_STORAGE_REGION`, `KAPITECH_DOCUMENT_STORAGE_ACCESS_KEY_ID`, `KAPITECH_DOCUMENT_STORAGE_SECRET_ACCESS_KEY` (optional `KAPITECH_DOCUMENT_STORAGE_SESSION_TOKEN`)
-- PostgreSQL migration chain currently runs through migration 049. Migration status must still be checked against the live database before declaring a release ready. Telegram bot credentials remain runtime-managed via `KAPITECH_TELEGRAM_BOT_TOKEN` and are not persisted in PostgreSQL.
+- The repository currently packages 55 PostgreSQL migration files, with filename prefixes through `055` (including distinct files sharing the `053` and `054` prefixes). This is a repository inventory, not proof of the live database's applied migration state. Check applied migration/checksum parity and the authenticated production-readiness gate before declaring a release ready. Telegram bot credentials remain runtime-managed via `KAPITECH_TELEGRAM_BOT_TOKEN` and are not persisted in PostgreSQL.
 - S3-compatible provider stores only application-encrypted objects; the AMS never exposes the underlying object URL.
 
 Generate a 32-byte encryption key with:

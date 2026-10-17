@@ -75,9 +75,11 @@ export async function apiRequest<T = any>(
                 ? json.error
                 : "You don't have access to this action.")
             : res.status >= 500
-              ? (typeof json.error === 'string' && json.error.trim()
-                  ? json.error
-                  : `The AMS server returned an error (HTTP ${res.status}). Check service and database health.`)
+              ? MUTATING_METHODS.has(method)
+                ? `${typeof json.error === 'string' && json.error.trim() ? json.error : 'The AMS server returned an error.'} The change may still have completed. Check the record before retrying to avoid creating a duplicate.`
+                : (typeof json.error === 'string' && json.error.trim()
+                    ? json.error
+                    : `The AMS server returned an error (HTTP ${res.status}). Check service and database health.`)
               : json.error || 'The request could not be completed. Check your input and try again.';
 
       return {
@@ -93,10 +95,15 @@ export async function apiRequest<T = any>(
       data: json
     };
   } catch (err: any) {
-    return {
-      success: false,
-      error: err?.name === 'AbortError' ? 'Request timed out. Please try again.' : (err?.message || 'Network request failed')
-    };
+    const mutationOutcomeUnknown = MUTATING_METHODS.has(String(options.method || 'GET').toUpperCase());
+    const error = mutationOutcomeUnknown
+      ? err?.name === 'AbortError'
+        ? 'The request timed out. Its result is unknown. Check the record before retrying to avoid creating a duplicate.'
+        : 'The request result could not be confirmed. Check the record before retrying to avoid creating a duplicate.'
+      : err?.name === 'AbortError'
+        ? 'Request timed out. Please try again.'
+        : (err?.message || 'Network request failed');
+    return { success: false, error };
   } finally {
     window.clearTimeout(timeout);
   }
@@ -151,7 +158,9 @@ async function apiBinaryRequest<T = any>(
   } catch (err: any) {
     return {
       success: false,
-      error: err?.name === 'AbortError' ? 'Upload timed out. Please try again.' : (err?.message || 'Network request failed')
+      error: err?.name === 'AbortError'
+        ? 'Upload timed out. Its result is unknown; inspect the document in the private vault before retrying.'
+        : 'The upload result could not be confirmed. Inspect the document in the private vault before retrying.'
     };
   } finally {
     window.clearTimeout(timeout);
