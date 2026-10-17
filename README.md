@@ -99,6 +99,8 @@ Read AGENTS.md before AI-assisted changes. GitHub Copilot's repository-specific 
 ### UX and frontend
 - AMS-DESIGN-SYSTEM.md — exact tokens, layout and shared components.
 - docs/AMS-UX-INTERACTION-STANDARDS.md — hierarchy, spacing ownership, interaction and visual consistency.
+- docs/AMS-CONTENT-ARCHITECTURE-AND-MODULE-WORKSPACE-GUIDELINES.md — content hierarchy and primary work areas for each module.
+- docs/AMS-FRONTEND-ONLY-UXUI-EXECUTION-PROMPT.md — phased AI execution prompt with strict frontend-only limits.
 - docs/AMS-FRONTEND-ENGINEERING-STANDARDS.md — routes, state, API use, forms and mutations.
 - docs/AMS-DRAWER-GUIDELINES.md, docs/AMS-MODAL-GUIDELINES.md, docs/AMS-KANBAN-GUIDELINES.md — shared interaction contracts.
 
