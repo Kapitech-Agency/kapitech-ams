@@ -582,11 +582,11 @@ This checkpoint continues the existing source-backed nine-module content-first w
 - Client Retainers (5566448291eee09ff3db765f24f19ac69176db71): moved the existing KPI strip after filters and the agreement register. Existing records, warning context, filters, sorting, actions and permission checks remain unchanged.
 - Time Tracking (49fc1a013372869ba4fc0a2f2338942aff6eee33): moved the multi-field time-entry form into the shared Drawer. The ledger remains the primary workspace; save, validation, unknown-outcome recovery, API payload and permissions are unchanged. The existing regression test was updated for the drawer interaction in d60f6708f27a518bfc43aab20ed5565d88d3bb64.
 - Shared contextual tabs (af7868d9ea7c8038cac3d68fc48f4f65684030d5): primary and secondary workspace tabs now share compact 32px geometry and 11px labels. Primary navigation uses a restrained accent-tint selected state; secondary worksheet navigation uses a neutral selected state. Route matching, access filtering, active state and scroll-to-active behavior remain unchanged. The existing tab-style assertion was updated in ef41117ec845dddc9fc5e07e683a69b1fa973995.
+- CMS Careers (f7b30ed829b0d152707acc50c518e7126731b7fe): Jobs/Applicants tabs now use the same compact height and label scale while retaining their role-specific visibility, counts, tab semantics, keyboard navigation, and query behavior.
 
 ### Automated validation evidence
 
-- Quality Gate passed at ef41117ec845dddc9fc5e07e683a69b1fa973995: typecheck, regression tests and production build.
-- AMS CI passed at the same commit: type check, PostgreSQL migrations, security regression tests, PostgreSQL integration tests, dependency audit, production build and HTTP smoke test.
+- Quality Gate and AMS CI passed at f7b30ed829b0d152707acc50c518e7126731b7fe: typecheck, regression tests, production build, PostgreSQL migrations, security regression tests, PostgreSQL integration tests, dependency audit and production HTTP smoke test.
 - A prior failing test run was caused by an assertion that still expected the retired inline time-entry form and underline-style tabs. The implementation was retained; assertions were updated to reflect the intended frontend structure and rerun successfully.
 
 ### Current remaining scope
