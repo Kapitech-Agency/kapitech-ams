@@ -14,7 +14,7 @@ test('CRM, Proposal, and Approval routes are retired while protected APIs remain
   assert.ok(app.includes('<Route path="finance/quotations" element={<ModuleRoute moduleKey="invoicing" moduleLabel="quotations"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />'));
   assert.ok(app.includes("pathname: '/admin/finance/quotations', search: location.search, hash: location.hash"));
   assert.ok(app.includes('<Route path="approvals" element={<Navigate to="/admin/dashboard" replace />} />'));
-  assert.ok(app.includes("const AdminApprovals = lazyWithRetry("));
+  assert.ok(!app.includes("const AdminApprovals = lazyWithRetry("));
   assert.equal(app.includes('<Route path="crm" element={<ModuleRoute moduleKey="crm"'), false);
   assert.equal(app.includes('<Route path="proposals" element={<ModuleRoute moduleKey="proposals"'), false);
 });
