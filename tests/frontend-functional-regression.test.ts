@@ -20,6 +20,18 @@ test('API client does not encourage blind retry when a mutation outcome is unkno
   assert.ok(!client.includes("error: err?.name === 'AbortError' ? 'Upload timed out. Please try again.'"));
 });
 
+test('Document upload does not delete a record when the storage outcome is ambiguous', async () => {
+  const documents = await read('src/pages/admin/AdminDocuments.tsx');
+  const unknownOutcome = documents.indexOf('const uploadOutcomeUnknown = uploaded.status === undefined || uploaded.status >= 500;');
+  const cleanup = documents.indexOf('const cleanup = await cleanupIncompleteDocument(createdId);', unknownOutcome);
+
+  assert.ok(unknownOutcome >= 0);
+  assert.ok(cleanup > unknownOutcome);
+  assert.ok(documents.slice(unknownOutcome, cleanup).includes('if (uploadOutcomeUnknown) {'));
+  assert.ok(documents.slice(unknownOutcome, cleanup).includes('await loadDocuments();'));
+  assert.ok(documents.includes('do not upload it again until its status is clear.'));
+});
+
 test('Document upload reports failed compensation instead of silently hiding an orphan record', async () => {
   const documents = await read('src/pages/admin/AdminDocuments.tsx');
 
