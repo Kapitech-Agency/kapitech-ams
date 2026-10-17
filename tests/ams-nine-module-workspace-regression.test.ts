@@ -16,6 +16,21 @@ test('Dashboard preserves useful finance context and two-column mobile KPI layou
   assert.match(dashboard, /Issued invoice value and recorded expenses/);
 });
 
+test('Dashboard prioritizes operational KPIs before the primary chart and moves supporting metrics below it', async () => {
+  const dashboard = await read('src/components/admin/GlobalExecutiveDashboard.tsx');
+  const overview = dashboard.indexOf('data-ams-feature-slug="dashboard-overview"');
+  const primaryKpis = dashboard.indexOf("id: 'active-projects'", overview);
+  const fourthPrimaryKpi = dashboard.indexOf("id: 'revenue'", primaryKpis);
+  const chart = dashboard.indexOf('title="Invoices vs expenses"', fourthPrimaryKpi);
+  const supportingMetrics = dashboard.indexOf('data-ams-feature-slug="dashboard-supporting-metrics"', chart);
+  const projects = dashboard.indexOf('title="Active projects"', supportingMetrics);
+  assert.ok(overview < primaryKpis && primaryKpis < fourthPrimaryKpi && fourthPrimaryKpi < chart);
+  assert.ok(chart < supportingMetrics && supportingMetrics < projects);
+  for (const id of ["outstanding", "utilization", "avg-project-value", "net-operating-profit"]) {
+    assert.ok(dashboard.indexOf("id: '" + id + "'", supportingMetrics) > supportingMetrics, 'missing supporting KPI ' + id);
+  }
+});
+
 test('Inbox toast feedback follows the stable page header instead of shifting it', async () => {
   const inbox = await read('src/pages/admin/AdminInbox.tsx');
   const header = inbox.indexOf('<AdminModuleHeader slug="inbox-header"');
