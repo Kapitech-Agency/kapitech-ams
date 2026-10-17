@@ -1719,7 +1719,7 @@ export const AdminProjects: React.FC = () => {
     ? null
     : (
       (selectedProject?.id ? projects.find(project => project.id === selectedProject.id) : null) ||
-      (selectedProjectSlug ? projects.find(project => project.slug === selectedProjectSlug) || null : null)
+      (selectedProjectSlug ? projects.find(project => project.id === selectedProjectSlug || project.slug === selectedProjectSlug) || null : null)
     );
 
   return (
