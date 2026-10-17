@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useReportingPeriod } from '../../lib/ReportingPeriodContext';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   Building2,
   CheckCircle2,
@@ -61,6 +61,7 @@ interface DocumentItem {
   uploadedAt?: string;
   updatedAt?: string;
   relatedEntity?: string;
+  relatedId?: string;
   accessLevel?: string;
   tags?: string[];
 }
@@ -71,16 +72,16 @@ type CategoryKey = 'all' | 'sop' | 'legal' | 'finance' | 'hr' | 'security';
 
 const DOCUMENT_TABS: Array<{ key: TabKey; label: string }> = [
   { key: 'all', label: 'All Documents' },
-  { key: 'sops', label: 'SOPs & Policies' },
+  { key: 'sops', label: 'SOP & Guides' },
   { key: 'legal', label: 'Legal & Corporate' },
   { key: 'finance', label: 'Finance & Tax' },
-  { key: 'infra', label: 'Infrastructure & Keys' },
+  { key: 'infra', label: 'Security & Keys' },
 ];
 
 const CATEGORY_FILTERS: Array<{ key: CategoryKey; label: string }> = [
   { key: 'all', label: 'All Files' },
   { key: 'sop', label: 'SOP & Guides' },
-  { key: 'legal', label: 'Legal & Charters' },
+  { key: 'legal', label: 'Legal & Corporate' },
   { key: 'finance', label: 'Financial Reports' },
   { key: 'hr', label: 'HR & People' },
   { key: 'security', label: 'Security & Keys' },
@@ -200,6 +201,13 @@ export const AdminDocuments: React.FC = () => {
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadCategory, setUploadCategory] = useState('Contract');
   const [uploadRelatedType, setUploadRelatedType] = useState('General');
+  const [uploadRelatedId, setUploadRelatedId] = useState('');
+  const [relatedClients, setRelatedClients] = useState<Array<{ id: string; name: string }>>([]);
+  const [relatedProjects, setRelatedProjects] = useState<Array<{ id: string; name: string }>>([]);
+  const [relatedClientsError, setRelatedClientsError] = useState<string | null>(null);
+  const [relatedProjectsError, setRelatedProjectsError] = useState<string | null>(null);
+  const [relatedClientsLoading, setRelatedClientsLoading] = useState(false);
+  const [relatedProjectsLoading, setRelatedProjectsLoading] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
 
   const [uploadDragActive, setUploadDragActive] = useState(false);
@@ -267,6 +275,48 @@ export const AdminDocuments: React.FC = () => {
 
   useEffect(() => {
     void loadDocuments();
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    setRelatedClientsLoading(true);
+    setRelatedProjectsLoading(true);
+    void Promise.all([api.clients.getAll(), api.projects.getAll()]).then(([clientRes, projectRes]) => {
+      if (!mounted) return;
+      if (clientRes.success && Array.isArray(clientRes.data?.clients)) {
+        setRelatedClients((clientRes.data.clients as Array<Record<string, unknown>>).map((client) => ({
+          id: String(client.id || ''),
+          name: String(client.company || client.companyName || client.name || client.clientName || client.id || 'Unnamed client'),
+        })).filter((client) => client.id));
+        setRelatedClientsError(null);
+      } else {
+        setRelatedClients([]);
+        setRelatedClientsError(clientRes.error || 'Client records are unavailable for linking.');
+      }
+      if (projectRes.success && Array.isArray(projectRes.data?.projects)) {
+        setRelatedProjects((projectRes.data.projects as Array<Record<string, unknown>>).map((project) => ({
+          id: String(project.id || ''),
+          name: String(project.name || project.title || project.id || 'Unnamed project'),
+        })).filter((project) => project.id));
+        setRelatedProjectsError(null);
+      } else {
+        setRelatedProjects([]);
+        setRelatedProjectsError(projectRes.error || 'Project records are unavailable for linking.');
+      }
+    }).catch((error) => {
+      if (!mounted) return;
+      const message = error instanceof Error ? error.message : 'Related records could not be loaded.';
+      setRelatedClients([]);
+      setRelatedProjects([]);
+      setRelatedClientsError(message);
+      setRelatedProjectsError(message);
+    }).finally(() => {
+      if (mounted) {
+        setRelatedClientsLoading(false);
+        setRelatedProjectsLoading(false);
+      }
+    });
+    return () => { mounted = false; };
   }, []);
 
   useEffect(() => {
@@ -370,11 +420,25 @@ export const AdminDocuments: React.FC = () => {
     }
   };
 
+  const relatedRecords = uploadRelatedType === 'Client' ? relatedClients : uploadRelatedType === 'Project' ? relatedProjects : [];
+  const relatedRecordLoading = uploadRelatedType === 'Client' ? relatedClientsLoading : uploadRelatedType === 'Project' ? relatedProjectsLoading : false;
+  const relatedRecordError = uploadRelatedType === 'Client' ? relatedClientsError : uploadRelatedType === 'Project' ? relatedProjectsError : null;
+  const relatedLabel = (doc: DocumentItem) => {
+    if (!doc.relatedId || !['Client', 'Project'].includes(String(doc.relatedEntity || ''))) return doc.relatedEntity || doc.department || 'Internal';
+    const records = doc.relatedEntity === 'Client' ? relatedClients : relatedProjects;
+    const linked = records.find((record) => record.id === doc.relatedId);
+    return linked ? linked.name : `${doc.relatedEntity} record · ${doc.relatedId}`;
+  };
+
   const saveUpload = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!canManageDocuments) return;
+    if (!canManageDocuments || uploading) return;
     if (!uploadTitle.trim()) {
       notify('Enter a document title.');
+      return;
+    }
+    if (uploadRelatedType !== 'General' && (!uploadRelatedId || !relatedRecords.some((record) => record.id === uploadRelatedId))) {
+      notify(relatedRecordError || 'Select an existing client or project record before uploading.');
       return;
     }
     const fileError = validateFile(uploadFile);
@@ -395,6 +459,7 @@ export const AdminDocuments: React.FC = () => {
         size: formatBytes(uploadFile.size),
         sizeBytes: uploadFile.size,
         relatedEntity: uploadRelatedType,
+        relatedId: uploadRelatedType === 'General' ? '' : uploadRelatedId,
       });
 
       if (!created.success || !created.data?.document) {
@@ -431,6 +496,7 @@ export const AdminDocuments: React.FC = () => {
       setUploadTitle('');
       setUploadCategory('Contract');
       setUploadRelatedType('General');
+      setUploadRelatedId('');
       setUploadFile(null);
       setInputKey((current) => current + 1);
       notify('Document stored in the private vault.');
@@ -717,7 +783,7 @@ export const AdminDocuments: React.FC = () => {
                       </div>
                       <div className="mt-3 flex min-w-0 items-center gap-2">
                         <ProfileIdentity profile={{ name: ownerOf(doc), contextLabel: 'Document owner' }} size="sm" showRole={false} />
-                        <span className="truncate text-[10px] text-muted">· {doc.relatedEntity || doc.department || 'Internal'}</span>
+                        <span className="truncate text-[10px] text-muted">· {relatedLabel(doc)}</span>
                       </div>
                       <div className="mt-3 flex justify-end gap-1.5">
                         <button type="button" title="Preview" aria-label={'Preview ' + titleOf(doc)} onClick={() => setSelectedDocument(doc)} data-ams-slug={'document-' + doc.id + '-preview'} className="inline-flex h-9 w-9 items-center justify-center rounded-control border border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg"><Eye size={14} /></button>
@@ -760,7 +826,7 @@ export const AdminDocuments: React.FC = () => {
                               <div className={'flex h-8 w-8 shrink-0 items-center justify-center rounded-control border ' + categoryTone(doc)}>{docIcon(doc)}</div>
                               <button type="button" onClick={() => setSelectedDocument(doc)} className="min-w-0 text-left" data-ams-slug={'document-' + doc.id + '-open'}>
                                 <div className="max-w-[400px] truncate text-xs font-medium text-fg">{titleOf(doc)}</div>
-                                <div className="mt-1 flex max-w-[440px] items-center gap-2 truncate text-[10px] text-muted"><span>{typeOf(doc)}</span><span>·</span><span>{doc.relatedEntity || doc.department || 'Internal'}</span></div>
+                                <div className="mt-1 flex max-w-[440px] items-center gap-2 truncate text-[10px] text-muted"><span>{typeOf(doc)}</span><span>·</span><span>{relatedLabel(doc)}</span></div>
                               </button>
                             </div>
                           </td>
@@ -808,8 +874,23 @@ export const AdminDocuments: React.FC = () => {
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div data-ams-slug="documents-upload-category"><label className="text-xs font-medium text-muted">Category</label><CustomSelect aria-label="Category" value={uploadCategory} onChange={setUploadCategory} options={['Contract','Proposal','Invoice','Deliverable','Compliance','SOP & Guides','Legal & Charters','Financial Reports','HR & People','Security & Keys'].map((value) => ({ value, label: value }))} triggerClassName="mt-1 h-9 min-h-9 w-full" /></div>
-            <div data-ams-slug="documents-upload-related"><label className="text-xs font-medium text-muted">Related entity</label><CustomSelect aria-label="Related entity" value={uploadRelatedType} onChange={setUploadRelatedType} options={['General','Client','Deal','Project'].map((value) => ({ value, label: value }))} triggerClassName="mt-1 w-full" /></div>
+            <div data-ams-slug="documents-upload-related"><label className="text-xs font-medium text-muted">Related entity</label><CustomSelect aria-label="Related entity" value={uploadRelatedType} onChange={(value) => { setUploadRelatedType(value); setUploadRelatedId(''); }} options={['General','Client','Project'].map((value) => ({ value, label: value }))} triggerClassName="mt-1 w-full" /></div>
           </div>
+          {uploadRelatedType !== 'General' && (
+            <div data-ams-slug="documents-upload-related-record">
+              <label className="text-xs font-medium text-muted">{uploadRelatedType} record *</label>
+              <CustomSelect
+                aria-label={uploadRelatedType + ' record'}
+                value={uploadRelatedId}
+                onChange={setUploadRelatedId}
+                options={relatedRecords.map((record) => ({ value: record.id, label: record.name }))}
+                placeholder={relatedRecordLoading ? 'Loading records…' : 'Select an existing ' + uploadRelatedType.toLowerCase()}
+                disabled={relatedRecordLoading || Boolean(relatedRecordError) || relatedRecords.length === 0}
+                triggerClassName="mt-1 h-9 min-h-9 w-full"
+              />
+              {relatedRecordLoading ? <p className="mt-1 text-[10px] text-muted">Loading persisted records.</p> : relatedRecordError ? <p className="mt-1 text-[10px] text-danger">{relatedRecordError}</p> : relatedRecords.length === 0 ? <p className="mt-1 text-[10px] text-muted">No accessible records are available to link.</p> : <p className="mt-1 text-[10px] text-muted">The relationship is stored against the selected record ID.</p>}
+            </div>
+          )}
           <div data-ams-slug="documents-upload-file">
             <label className="text-xs font-medium text-muted">Document file</label>
             <input id="documents-file-input" key={inputKey} type="file" accept={ACCEPTED_TYPES} onChange={(event) => pickFile(event.target.files?.[0] || null)} className="mt-1 block h-10 w-full rounded-control border border-line bg-bg px-2 py-2 text-xs text-fg" />
@@ -841,7 +922,7 @@ export const AdminDocuments: React.FC = () => {
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-control border border-line bg-bg p-3"><div className="text-[10px] text-muted">Category</div><div className="mt-1 text-xs font-semibold text-fg">{categoryOf(selectedDocument)}</div></div>
-              <div className="rounded-control border border-line bg-bg p-3"><div className="text-[10px] text-muted">Related entity</div><div className="mt-1 text-xs font-semibold text-fg">{selectedDocument.relatedEntity || selectedDocument.department || 'Internal'}</div></div>
+              <div className="rounded-control border border-line bg-bg p-3"><div className="text-[10px] text-muted">Related entity</div><div className="mt-1 text-xs font-semibold text-fg">{relatedLabel(selectedDocument)}{selectedDocument.relatedId ? <span className="mt-1 block break-all text-[10px] font-normal text-muted">Record ID: {selectedDocument.relatedId}</span> : null}</div></div>
               <div className="rounded-control border border-line bg-bg p-3"><div className="text-[10px] text-muted">Last updated</div><div className="mt-1 text-xs font-semibold tabular-nums text-fg">{dateOf(selectedDocument)}</div></div>
               <div className="rounded-control border border-line bg-bg p-3"><div className="text-[10px] text-muted">Owner</div><div className="mt-1"><ProfileIdentity profile={{ name: ownerOf(selectedDocument), contextLabel: 'Document owner' }} size="sm" showRole={false} /></div></div>
             </div>
