@@ -138,6 +138,8 @@ export function isAmsModuleSubnavigationItemActive(
   const target = new URL(item.to, 'https://ams.kapitech.local');
   const targetPath = target.pathname.replace(/\/+$/, '') || '/';
 
+  if (path === '/admin/finance/quotations') return item.key === 'receivables';
+
   if (path === '/admin/finance') {
     const financeGroups: Record<string, string[]> = {
       overview: ['executive-summary', 'dashboard'],

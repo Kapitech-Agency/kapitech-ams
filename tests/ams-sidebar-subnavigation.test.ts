@@ -70,6 +70,7 @@ test('active state follows route and query for Dashboard, Projects, Clients, Tea
   assert.equal(isAmsModuleSubnavigationItemActive(finance.find((item) => item.key === 'overview')!, '/admin/finance', '?tab=dashboard'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(finance.find((item) => item.key === 'transactions')!, '/admin/finance', '?tab=expenses'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(finance.find((item) => item.key === 'receivables')!, '/admin/finance', '?tab=quotations'), true);
+  assert.equal(isAmsModuleSubnavigationItemActive(finance.find((item) => item.key === 'receivables')!, '/admin/finance/quotations'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(finance.find((item) => item.key === 'projects')!, '/admin/finance', '?tab=project-finance'), true);
   assert.equal(isAmsModuleSubnavigationItemActive(finance.find((item) => item.key === 'accounting')!, '/admin/finance', '?tab=monthly-closing'), true);
 
