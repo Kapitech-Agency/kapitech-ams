@@ -56,7 +56,7 @@ test('Finance visible copy describes user workflows, not spreadsheet implementat
   ]) {
     assert.equal(workspace.includes(implementationPhrase), false, 'Visible Finance copy should not expose implementation wording: ' + implementationPhrase);
   }
-  assert.ok(workspace.includes('Finance worksheets'));
+  assert.ok(workspace.includes('Finance views'));
   assert.ok(workspace.includes('Project name / project reference'));
   assert.doesNotMatch(workbook, /description: '[^']*(?:workbook|Excel)[^']*'/i);
 });
