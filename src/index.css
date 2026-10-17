@@ -163,6 +163,28 @@
 .ams-shell [data-status=success]{color:var(--success)}.ams-shell [data-status=warning]{color:var(--warning)}.ams-shell [data-status=danger]{color:var(--danger)}.ams-shell [data-status=info]{color:var(--info)}
 .ams-shell .overflow-x-auto{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:var(--muted) transparent;-webkit-overflow-scrolling:touch}
 .ams-shell .overflow-x-auto::-webkit-scrollbar{width:6px;height:6px}.ams-shell .overflow-x-auto::-webkit-scrollbar-track{background:transparent}.ams-shell .overflow-x-auto::-webkit-scrollbar-thumb{background:var(--muted);border-radius:999px}.ams-shell .overflow-x-auto::-webkit-scrollbar-thumb:hover{background:var(--text)}
+/* Compact register actions meet AMS desktop/mobile target sizes and keyboard focus standards. */
+.ams-shell :is(.ams-data-table,.ams-client-table,.ams-teams-table,.ams-projects-table,.settings-system-table,.ams-table) td :is(button,a)[class~="h-8"][class~="w-8"]{
+  min-width:36px;
+  min-height:36px;
+}
+.ams-shell [data-ams-feature-slug="tasks-board-view"] button[class~="h-7"][class~="w-7"]{
+  min-width:36px;
+  min-height:36px;
+}
+.ams-shell :is(.ams-data-table,.ams-client-table,.ams-teams-table,.ams-projects-table,.settings-system-table,.ams-table) td :is(button,a)[class~="h-8"][class~="w-8"]:focus-visible,
+.ams-shell [data-ams-feature-slug="tasks-board-view"] button[class~="h-7"][class~="w-7"]:focus-visible{
+  outline:2px solid var(--accent);
+  outline-offset:2px;
+}
+@media (max-width:639px){
+  .ams-shell :is(.ams-data-table,.ams-client-table,.ams-teams-table,.ams-projects-table,.settings-system-table,.ams-table) td :is(button,a)[class~="h-8"][class~="w-8"],
+  .ams-shell [data-ams-feature-slug="tasks-board-view"] button[class~="h-7"][class~="w-7"]{
+    min-width:40px;
+    min-height:40px;
+  }
+}
+
 /* Base control and keyboard defaults belong to Tailwind's base layer.
    Unlayered selectors here used to beat utility classes and component focus rings. */
 @layer base {
