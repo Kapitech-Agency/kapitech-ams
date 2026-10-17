@@ -21,7 +21,6 @@ import {
 import { useLanguage } from '../../lib/LanguageContext';
 import { hasAdminPermission } from '../../lib/adminAuth';
 import { api } from '../../lib/apiClient';
-import { isSlugFixtureMode } from '../../lib/runtimeMode';
 import type { AgencyClient } from '../../lib/clientStore';
 import { Button } from '../../components/ui/Button';
 import { CustomSelect } from '../../components/ui/CustomSelect';
@@ -47,15 +46,6 @@ type Retainer = {
   renewal: string;
   health: Health;
 };
-
-const seed: Retainer[] = [
-  { id: 'RET-2024-01', initials: 'NV', client: 'PT Nusantara Vault Bank', tier: 'tier-1', monthlyValue: 250000000, committedHours: 400, usedHours: 312, overageRate: 850000, cycle: 'monthly', renewal: '2026-11-30', health: 'healthy' },
-  { id: 'RET-2024-04', initials: 'SB', client: 'SatuBio Diagnostics', tier: 'tier-2', monthlyValue: 175000000, committedHours: 280, usedHours: 246, overageRate: 750000, cycle: 'monthly', renewal: '2026-10-15', health: 'near-cap' },
-  { id: 'RET-2023-18', initials: 'KL', client: 'Kinetix Logistics', tier: 'tier-2', monthlyValue: 140000000, committedHours: 220, usedHours: 138, overageRate: 700000, cycle: 'quarterly', renewal: '2026-12-31', health: 'healthy' },
-  { id: 'RET-2024-09', initials: 'PP', client: 'PayPintar Gateways', tier: 'tier-1', monthlyValue: 210000000, committedHours: 350, usedHours: 348, overageRate: 900000, cycle: 'monthly', renewal: '2027-01-15', health: 'overage-risk' },
-  { id: 'RET-2023-31', initials: 'AM', client: 'AeroMedika Telemetry', tier: 'tier-3', monthlyValue: 90000000, committedHours: 150, usedHours: 96, overageRate: 650000, cycle: 'monthly', renewal: '2027-03-31', health: 'healthy' },
-  { id: 'RET-2024-11', initials: 'VC', client: 'Voltran Core Infra', tier: 'tier-2', monthlyValue: 120000000, committedHours: 200, usedHours: 164, overageRate: 750000, cycle: 'annual', renewal: '2027-08-31', health: 'near-cap' }
-];
 
 const tierLabel: Record<Tier, string> = { 'tier-1': 'Tier 1 Strategic', 'tier-2': 'Tier 2 Enterprise', 'tier-3': 'Tier 3 Growth' };
 const cycleLabel: Record<Cycle, string> = { monthly: 'Monthly', quarterly: 'Quarterly', annual: 'Annual' };
@@ -115,10 +105,9 @@ const SortButton: React.FC<{ label: string; sortKey: SortKey; activeKey: SortKey
 export const AdminClientRetainers: React.FC = () => {
   const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
   const { language } = useLanguage();
-  const fixtureMode = isSlugFixtureMode();
-  const canManageRetainers = fixtureMode || hasAdminPermission('canManageClients');
+  const canManageRetainers = hasAdminPermission('canManageClients');
   const [clients, setClients] = useState<AgencyClient[]>([]);
-  const [records, setRecords] = useState<Retainer[]>(() => fixtureMode ? seed : []);
+  const [records, setRecords] = useState<Retainer[]>([]);
   const [query, setQuery] = useState('');
   const [cycle, setCycle] = useState<'all' | Cycle>('all');
   const [tier, setTier] = useState<'all' | Tier>('all');
@@ -144,12 +133,6 @@ export const AdminClientRetainers: React.FC = () => {
   const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
-    if (fixtureMode) {
-      setRecords(seed);
-      setIsLoading(false);
-      return;
-    }
-
     let mounted = true;
     const loadRetainers = async () => {
       setIsLoading(true);
@@ -177,7 +160,7 @@ export const AdminClientRetainers: React.FC = () => {
 
     void loadRetainers();
     return () => { mounted = false; };
-  }, [fixtureMode]);
+  }, []);
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -241,52 +224,24 @@ export const AdminClientRetainers: React.FC = () => {
       return;
     }
 
-    const targetClient = fixtureMode
-      ? undefined
-      : editingRetainer?.clientId
-        ? clients.find((item) => item.id === editingRetainer.clientId)
-        : clients.find((item) => String(item.company || item.name || '').trim().toLowerCase() === clientName.toLowerCase());
+    const targetClient = editingRetainer?.clientId
+      ? clients.find((item) => item.id === editingRetainer.clientId)
+      : clients.find((item) => String(item.company || item.name || '').trim().toLowerCase() === clientName.toLowerCase());
 
-    if (!fixtureMode && !targetClient) {
+    if (!targetClient) {
       setMessage(language === 'id'
         ? 'Klien harus sudah ada di Client Directory. Gunakan nama perusahaan yang sama persis.'
         : 'The client must already exist in Client Directory. Enter the exact company name.');
       return;
     }
-    if (!fixtureMode && !editingRetainer && targetClient?.activeRetainer) {
+    if (!editingRetainer && targetClient.activeRetainer) {
       setMessage(language === 'id' ? 'Klien ini sudah memiliki retainer aktif. Gunakan Edit Terms.' : 'This client already has an active retainer. Use Edit Terms.');
       return;
     }
 
     const suffix = Date.now().toString(36).toUpperCase();
     const retainerId = editingRetainer?.id || ('RET-' + new Date().getFullYear() + '-' + suffix);
-    const usedHours = editingRetainer?.usedHours ?? 0;
-    const burnRatio = usedHours / Math.max(1, committedHours);
-    const newRetainer: Retainer = {
-      id: retainerId,
-      clientId: targetClient?.id || editingRetainer?.clientId,
-      initials: clientName.split(/\s+/).filter(Boolean).map(part => part[0]).join('').slice(0, 2).toUpperCase() || 'CL',
-      client: targetClient ? String(targetClient.company || targetClient.name || clientName) : clientName,
-      tier: retainerTier,
-      monthlyValue,
-      committedHours,
-      usedHours,
-      overageRate,
-      cycle: retainerCycle,
-      renewal: retainerRenewal,
-      health: burnRatio > 1 ? 'overage-risk' : burnRatio >= 0.85 ? 'near-cap' : 'healthy'
-    };
 
-    if (fixtureMode) {
-      setRecords((current) => editingRetainer
-        ? current.map((item) => item.id === editingRetainer.id ? newRetainer : item)
-        : [newRetainer, ...current]);
-      setPage(1);
-      setRetainerFormOpen(false);
-      setEditingRetainer(null);
-      setMessage(language === 'id' ? 'Retainer diperbarui di workspace A/B.' : 'Retainer updated in the A/B workspace.');
-      return;
-    }
 
     if (!targetClient) return;
     setRetainerSaving(true);
@@ -342,18 +297,6 @@ export const AdminClientRetainers: React.FC = () => {
     }
 
     const nextUsedHours = hoursTarget.usedHours + amount;
-    if (fixtureMode) {
-      setRecords((current) => current.map((item) => {
-        if (item.id !== hoursTarget.id) return item;
-        const burnRatio = nextUsedHours / Math.max(1, item.committedHours);
-        const health: Health = burnRatio > 1 ? 'overage-risk' : burnRatio >= 0.85 ? 'near-cap' : 'healthy';
-        return { ...item, usedHours: nextUsedHours, health };
-      }));
-      setMessage(amount + ' hours logged for ' + hoursTarget.client + ' in the A/B workspace.');
-      setHoursTarget(null);
-      return;
-    }
-
     const clientId = hoursTarget.clientId;
     if (!clientId) {
       setMessage('This retainer is missing its client link and cannot be updated.');
@@ -459,7 +402,7 @@ export const AdminClientRetainers: React.FC = () => {
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><CheckCircle2 size={14} className="text-success" /><span>Agency burn: <strong className="text-fg">{burn.toFixed(1)}%</strong></span></div>
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><TriangleAlert size={14} className="text-warning" /><span>Near cap: <strong className="text-fg">{nearCap}</strong></span></div>
         <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><ReceiptText size={14} className="text-info" /><span>Average overage: <strong className="text-fg">{money(avgRate)}/hr</strong></span></div>
-        <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><TimerReset size={14} className="text-accent-text" /><span>Data source: <strong className="text-fg">{fixtureMode ? 'A/B fixtures' : 'Client Directory'}</strong></span></div>
+        <div className="flex items-center gap-2 rounded-card border border-line bg-panel p-4"><TimerReset size={14} className="text-accent-text" /><span>Data source: <strong className="text-fg">Client Directory</strong></span></div>
       </section>
 
       <Drawer slug="retainer-create-drawer"
@@ -467,7 +410,7 @@ export const AdminClientRetainers: React.FC = () => {
         onClose={() => { setRetainerFormOpen(false); setEditingRetainer(null); }}
         size="lg"
         title={editingRetainer ? 'Edit retainer' : 'New retainer'}
-        description={fixtureMode ? 'Manage a retainer record in the A/B workspace.' : 'Save retainer terms against an existing client record.'}
+        description="Save retainer terms against an existing client record."
         footer={(
           <>
             <Button type="button" variant="secondary" onClick={() => { setRetainerFormOpen(false); setEditingRetainer(null); }}>Cancel</Button>
@@ -479,7 +422,7 @@ export const AdminClientRetainers: React.FC = () => {
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="space-y-1.5 sm:col-span-2">
               <span className="text-[11px] font-medium text-muted">Client</span>
-              <input required value={retainerClient} onChange={(event) => setRetainerClient(event.target.value)} disabled={Boolean(editingRetainer && !fixtureMode)} placeholder={fixtureMode ? 'Client company' : 'Existing client company name'} className="h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent disabled:opacity-60" />
+              <input required value={retainerClient} onChange={(event) => setRetainerClient(event.target.value)} disabled={Boolean(editingRetainer)} placeholder="Existing client company name" className="h-9 w-full rounded-control border border-line bg-bg px-3 text-xs text-fg outline-none focus:border-accent disabled:opacity-60" />
             </label>
             <label className="space-y-1.5">
               <span className="text-[11px] font-medium text-muted">Tier</span>
