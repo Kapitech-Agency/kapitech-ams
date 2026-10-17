@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { KeyRound, Mail, Eye, EyeOff, AlertCircle, ArrowRight, ArrowLeft, ShieldCheck, Pause, Play } from 'lucide-react';
+import { KeyRound, Mail, Eye, EyeOff, AlertCircle, ArrowRight, ArrowLeft, ShieldCheck } from 'lucide-react';
 import { api } from '../../lib/apiClient';
 import { authenticateAdmin, cacheAdminSession } from '../../lib/adminAuth';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -663,7 +663,9 @@ export const AdminLogin: React.FC = () => {
                         onClick={() => setIsArtAutoplayPaused((paused) => !paused)}
                         className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-panel/80 text-muted transition-colors duration-200 hover:border-white/25 hover:bg-white/[0.04] hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                       >
-                        {isArtAutoplayPaused ? <Play size={15} /> : <Pause size={15} />}
+                        {isArtAutoplayPaused
+                          ? (language === 'id' ? 'Lanjutkan' : 'Resume')
+                          : (language === 'id' ? 'Jeda' : 'Pause')}
                       </button>
                       <button
                         type="button"
