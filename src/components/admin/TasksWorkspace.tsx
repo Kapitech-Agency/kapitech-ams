@@ -54,6 +54,9 @@ type TaskRecord = {
   subtasks: Array<{ id: string; title: string; completed: boolean }>;
 };
 
+const isUnknownMutationOutcome = (response: { success: boolean; status?: number }) =>
+  !response.success && (response.status === undefined || response.status >= 500);
+
 const TASK_TABS = [
   { key: 'all', label: 'All Tasks', search: '' },
   { key: 'my', label: 'My Tasks', search: '&taskscope=my' },
@@ -336,6 +339,12 @@ export const TasksWorkspace: React.FC = () => {
     try {
       const response = await api.tasks.update(task.id, { status: nextStatus });
       if (!response.success) {
+        if (isUnknownMutationOutcome(response)) {
+          const refreshed = await loadTasks(false);
+          if (!refreshed) rollback();
+          setNotice((response.error || 'Task status could not be confirmed.') + ' The canonical task list was refreshed; inspect the status before retrying.');
+          return;
+        }
         rollback();
         setNotice(response.error || 'Task status could not be saved. The previous server state has been restored.');
         return;
@@ -355,10 +364,9 @@ export const TasksWorkspace: React.FC = () => {
       setSelectedTask(current => current?.id === committedTask.id ? committedTask : current);
       setNotice('Task status saved to the server.');
     } catch (error) {
-      rollback();
-      setNotice(error instanceof Error
-        ? error.message
-        : 'Task status could not be saved. The previous server state has been restored.');
+      const refreshed = await loadTasks(false);
+      if (!refreshed) rollback();
+      setNotice((error instanceof Error ? error.message : 'Task status result could not be confirmed.') + ' The canonical task list was checked before retrying.');
     } finally {
       setUpdatingTaskId(null);
     }
@@ -425,6 +433,15 @@ export const TasksWorkspace: React.FC = () => {
 
       const persistedTask = response.data?.task;
       if (!response.success || !persistedTask || !String(persistedTask.id || '').trim()) {
+        if (!response.success && isUnknownMutationOutcome(response)) {
+          const refreshed = await loadTasks(false);
+          setTaskFormOpen(false);
+          setSelectedIds([]);
+          setNotice((response.error || 'Task creation result could not be confirmed.') + (refreshed
+            ? ' The canonical task list was refreshed. Inspect it before trying again.'
+            : ' The task list could not be confirmed. Do not retry until the server state has been checked.'));
+          return;
+        }
         setNotice(response.error || 'Task could not be saved. No local task was added.');
         return;
       }
@@ -472,7 +489,12 @@ export const TasksWorkspace: React.FC = () => {
       setTaskFormOpen(false);
       setPage(1);
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : 'Task could not be saved. No local task was added.');
+      const refreshed = await loadTasks(false);
+      setTaskFormOpen(false);
+      setSelectedIds([]);
+      setNotice((error instanceof Error ? error.message : 'Task creation result could not be confirmed.') + (refreshed
+        ? ' The canonical task list was refreshed. Inspect it before trying again.'
+        : ' The task list could not be confirmed. Do not retry until the server state has been checked.'));
     } finally {
       setSavingTask(false);
     }
@@ -654,14 +676,29 @@ export const TasksWorkspace: React.FC = () => {
 
     const failedIds: string[] = [];
     let succeeded = 0;
+    let hasUnknownOutcome = false;
     for (const task of selectedTasks) {
       try {
         const response = await api.tasks.update(task.id, { status: nextStatus });
         if (response.success) succeeded += 1;
-        else failedIds.push(task.id);
+        else {
+          failedIds.push(task.id);
+          if (isUnknownMutationOutcome(response)) hasUnknownOutcome = true;
+        }
       } catch {
         failedIds.push(task.id);
+        hasUnknownOutcome = true;
       }
+    }
+
+    if (hasUnknownOutcome) {
+      const refreshed = await loadTasks(false);
+      setSelectedIds([]);
+      setBulkUpdating(false);
+      setNotice(refreshed
+        ? 'Some task update results were unknown. The canonical task list was refreshed; inspect each selected task before retrying.'
+        : 'Some task update results were unknown and the task list could not be refreshed. Do not retry until the server state is checked.');
+      return;
     }
 
     if (failedIds.length) {
@@ -770,6 +807,15 @@ export const TasksWorkspace: React.FC = () => {
         subtasks: nextTask.subtasks,
       });
       if (!response.success) {
+        if (isUnknownMutationOutcome(response)) {
+          const refreshed = await loadTasks(false);
+          setEditingTask(null);
+          if (!refreshed) rollback();
+          setNotice((response.error || 'Task edit result could not be confirmed.') + (refreshed
+            ? ' The canonical task list was refreshed; inspect the task before retrying.'
+            : ' The task list could not be refreshed. Do not retry until the server state is checked.'));
+          return;
+        }
         rollback();
         setNotice(response.error || 'Task could not be saved. The previous server state has been restored.');
         return;
@@ -786,10 +832,12 @@ export const TasksWorkspace: React.FC = () => {
       setNotice('Task updated and saved to the server.');
       saved = true;
     } catch (error) {
-      rollback();
-      setNotice(error instanceof Error
-        ? error.message
-        : 'Task could not be saved. The previous server state has been restored.');
+      const refreshed = await loadTasks(false);
+      setEditingTask(null);
+      if (!refreshed) rollback();
+      setNotice((error instanceof Error ? error.message : 'Task edit result could not be confirmed.') + (refreshed
+        ? ' The canonical task list was refreshed; inspect the task before retrying.'
+        : ' The task list could not be refreshed. Do not retry until the server state is checked.'));
     } finally {
       setSavingEditTask(false);
       if (saved) setEditingTask(null);
@@ -816,7 +864,15 @@ export const TasksWorkspace: React.FC = () => {
     };
     try {
       const response = await api.tasks.update(task.id, { subtasks: nextSubtasks, updatedAt: previousTask.updatedAt });
-      if (!response.success) throw new Error(response.error || 'Checklist progress could not be saved.');
+      if (!response.success) {
+        if (isUnknownMutationOutcome(response)) {
+          const refreshed = await loadTasks(false);
+          if (!refreshed) rollback();
+          setNotice((response.error || 'Checklist result could not be confirmed.') + ' Inspect the canonical task before retrying.');
+          return;
+        }
+        throw new Error(response.error || 'Checklist progress could not be saved.');
+      }
       const savedTask = response.data?.task;
       const committedTask: TaskRecord = {
         ...optimisticTask,
@@ -833,10 +889,9 @@ export const TasksWorkspace: React.FC = () => {
       setSelectedTask((current) => current?.id === task.id ? committedTask : current);
       setNotice('Checklist progress saved to the server.');
     } catch (error) {
-      rollback();
-      setNotice(error instanceof Error
-        ? error.message
-        : 'Checklist progress could not be saved. The previous state has been restored.');
+      const refreshed = await loadTasks(false);
+      if (!refreshed) rollback();
+      setNotice((error instanceof Error ? error.message : 'Checklist result could not be confirmed.') + ' The canonical task list was checked before retrying.');
     } finally {
       setUpdatingSubtaskId(null);
     }
@@ -849,13 +904,31 @@ export const TasksWorkspace: React.FC = () => {
     setDeleteTaskError(null);
     try {
       const response = await api.tasks.delete(target.id);
-      if (!response.success) throw new Error(response.error || 'Task could not be deleted.');
+      if (!response.success) {
+        if (isUnknownMutationOutcome(response)) {
+          const refreshed = await loadTasks(false);
+          setDeleteTaskTarget(null);
+          setSelectedIds(current => current.filter(id => id !== target.id));
+          setDeleteTaskError(null);
+          setNotice((response.error || 'Task deletion result could not be confirmed.') + (refreshed
+            ? ' The canonical task list was refreshed. Inspect it before attempting deletion again.'
+            : ' The task list could not be confirmed. Do not retry until the server state is checked.'));
+          return;
+        }
+        throw new Error(response.error || 'Task could not be deleted.');
+      }
       setRecords((current) => current.filter((item) => item.id !== target.id));
       setSelectedIds((current) => current.filter((id) => id !== target.id));
       setDeleteTaskTarget(null);
       setNotice('Task deleted.');
     } catch (error) {
-      setDeleteTaskError(error instanceof Error ? error.message : 'Task could not be deleted.');
+      const refreshed = await loadTasks(false);
+      setDeleteTaskTarget(null);
+      setSelectedIds(current => current.filter(id => id !== target.id));
+      setDeleteTaskError(null);
+      setNotice((error instanceof Error ? error.message : 'Task deletion result could not be confirmed.') + (refreshed
+        ? ' The canonical task list was refreshed. Inspect it before attempting deletion again.'
+        : ' The task list could not be confirmed. Do not retry until the server state is checked.'));
     } finally {
       setDeletingTaskId(null);
     }
