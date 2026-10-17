@@ -808,3 +808,15 @@ test('Project profitability prioritizes its searchable financial register before
   assert.ok(page.includes('currencyFormatter(\'IDR\', idrContribution)'));
   assert.ok(page.includes('Figures remain separated by currency'));
 });
+
+
+test('Time Tracking uses shared CustomSelect for linked tasks while preserving empty and disabled behavior', () => {
+  const time = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminTimeLogs.tsx'), 'utf8');
+  assert.doesNotMatch(time, /<select\\b/);
+  assert.ok(time.includes('slug="time-entry-task-select"'));
+  assert.ok(time.includes('aria-label="Linked task"'));
+  assert.ok(time.includes('onChange={handleTaskChange}'));
+  assert.ok(time.includes('disabled={!projectId || selectedProjectTasks.length === 0}'));
+  assert.ok(time.includes('{ value: "", label: "No linked task" }'));
+  assert.ok(time.includes('selectedProjectTasks.map(task => ({ value: task.id, label: task.title }))'));
+});

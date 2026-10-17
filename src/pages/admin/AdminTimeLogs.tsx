@@ -284,10 +284,16 @@ export const AdminTimeLogs: React.FC = () => {
               </label>
               <label className="space-y-1.5">
                 <span className="text-[11px] text-muted">Linked task</span>
-                <select value={taskId} onChange={e => handleTaskChange(e.target.value)} disabled={!projectId || selectedProjectTasks.length === 0} className="ams-control w-full disabled:cursor-not-allowed disabled:opacity-50">
-                  <option value="">No linked task</option>
-                  {selectedProjectTasks.map(task => <option key={task.id} value={task.id}>{task.title}</option>)}
-                </select>
+                <CustomSelect
+                  value={taskId}
+                  onChange={handleTaskChange}
+                  options={[{ value: "", label: "No linked task" }, ...selectedProjectTasks.map(task => ({ value: task.id, label: task.title }))]}
+                  disabled={!projectId || selectedProjectTasks.length === 0}
+                  aria-label="Linked task"
+                  className="w-full"
+                  triggerClassName="w-full"
+                  slug="time-entry-task-select"
+                />
               </label>
               <label className="space-y-1.5">
                 <span className="text-[11px] text-muted">Task / activity</span>
