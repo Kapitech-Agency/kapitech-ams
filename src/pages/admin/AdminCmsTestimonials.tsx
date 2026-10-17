@@ -4,7 +4,7 @@ import type { TestimonialItem } from '../../lib/cmsStore';
 import { api } from '../../lib/apiClient';
 import { useLanguage } from '../../lib/LanguageContext';
 import { Drawer } from '../../components/ui/Drawer';
-import { Modal } from '../../components/ui/Modal';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { Button } from '../../components/ui/Button';
 import { AdminDataTableShell, AdminFilterBar, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
@@ -303,28 +303,20 @@ export const AdminCmsTestimonials: React.FC = () => {
         </AdminDataTableShell>
       )}
 
-      {deleteTarget && (
-        <Modal slug="cms-testimonial-delete-modal"
-          open={!!deleteTarget}
-          onClose={() => !isDeleting && setDeleteTarget(null)}
-          size="sm"
-          title="Delete testimonial"
-          description={`This will permanently remove the testimonial from the CMS. Review the author before confirming.`}
-          footer={(
-            <>
-              <Button type="button" variant="secondary" onClick={() => setDeleteTarget(null)} disabled={isDeleting}>Cancel</Button>
-              <Button type="button" variant="destructive" onClick={() => void handleDelete()} loading={isDeleting}>Delete</Button>
-            </>
-          )}
-        >
-          <div className="space-y-4">
-            <div className="rounded-control border border-danger/30 bg-danger/5 p-3">
-              <p className="text-sm font-semibold text-fg">{deleteTarget.author}</p>
-              <p className="mt-1 text-xs text-muted">The testimonial will no longer appear on the public site.</p>
-            </div>
-          </div>
-        </Modal>
-      )}
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title={language === 'id' ? 'Hapus testimoni?' : 'Delete testimonial?'}
+        description={deleteTarget
+          ? language === 'id'
+            ? `Testimoni dari ${deleteTarget.author} akan dihapus dari CMS dan tidak lagi tampil di situs publik.`
+            : `The testimonial from ${deleteTarget.author} will be permanently removed from the CMS and will no longer appear on the public site.`
+          : ''}
+        confirmLabel={language === 'id' ? 'Hapus testimoni' : 'Delete testimonial'}
+        cancelLabel={language === 'id' ? 'Batal' : 'Cancel'}
+        onConfirm={() => void handleDelete()}
+        onClose={() => !isDeleting && setDeleteTarget(null)}
+        loading={isDeleting}
+      />
 
       {/* Modal: Add / Edit Testimonial */}
       {isModalOpen && editingItem && (
