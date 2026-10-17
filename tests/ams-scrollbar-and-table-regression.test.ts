@@ -140,7 +140,7 @@ test('Documents distinguishes an unavailable vault from a genuinely empty vault 
 
   assert.match(loader, /let hadAccessFailure = firstError\?\.status === 401 \|\| firstError\?\.status === 403/);
   assert.match(loader, /hadAccessFailure = hadAccessFailure \|\| retryError\?\.status === 401 \|\| retryError\?\.status === 403/);
-  assert.match(loader, /if \(hadAccessFailure\) setDocuments\(\[\]\);/);
+  assert.match(loader, /if \(hadAccessFailure\) \{[\s\S]{0,160}setDocuments\(\[\]\);[\s\S]{0,160}setSelectedDocument\(null\);[\s\S]{0,120}setDeleteTarget\(null\);/);
   assert.match(loader, /Retain last-known-good rows for transient service failures/);
   assert.match(documents, /isLoading && documents\.length === 0/);
   assert.match(documents, /isLoading && documents\.length > 0/);
