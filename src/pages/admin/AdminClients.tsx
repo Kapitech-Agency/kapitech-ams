@@ -309,6 +309,17 @@ export const AdminClients: React.FC = () => {
     return () => window.removeEventListener(CURRENCY_EVENT, handleCurrencyChange);
   }, [language]);
 
+  useEffect(() => {
+    const requestedClientId = searchParams.get('client');
+    if (!requestedClientId || isLoading) return;
+    const linkedClient = clients.find((client) => String(client.id) === requestedClientId);
+    if (!linkedClient) return;
+    setSelectedClient(linkedClient);
+    const next = new URLSearchParams(searchParams);
+    next.delete('client');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, isLoading, clients, setSearchParams]);
+
   const filteredClients = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
