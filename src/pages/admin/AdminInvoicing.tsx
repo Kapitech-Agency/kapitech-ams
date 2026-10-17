@@ -1690,7 +1690,16 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
         ? await api.finance.updateInvoice(editingInvoice.id, payload)
         : await api.finance.createInvoice(payload);
 
-      if (!result.success) {
+      if (!result.success || !result.data?.invoice) {
+        if (isUnknownFinanceMutationOutcome(result) || (result.success && !result.data?.invoice)) {
+          await loadData(true);
+          setInvoiceModalOpen(false);
+          setInvoiceDirty(false);
+          showNotice('danger', (result.error || (language === 'id' ? 'Hasil penyimpanan invoice belum dapat dipastikan.' : 'The invoice save result could not be confirmed.')) + (language === 'id'
+            ? ' Daftar invoice sudah dimuat ulang. Periksa apakah invoice tersimpan sebelum mencoba lagi.'
+            : ' The invoice list was refreshed. Check whether the invoice exists before trying again.'));
+          return;
+        }
         if (result.status === 409) {
           await loadData(true);
           throw new Error(language === 'id'
@@ -1720,6 +1729,13 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
     try {
       const result = await api.finance.updateInvoice(invoice.id, { status: nextStatus, updatedAt: invoice.updatedAt });
       if (!result.success) {
+        if (isUnknownFinanceMutationOutcome(result)) {
+          await loadData(true);
+          showNotice('danger', (result.error || (language === 'id' ? 'Hasil perubahan status invoice belum dapat dipastikan.' : 'Invoice status outcome could not be confirmed.')) + (language === 'id'
+            ? ' Data keuangan sudah dimuat ulang. Periksa status invoice sebelum mengulangi tindakan.'
+            : ' Finance data was refreshed. Inspect the invoice status before repeating the action.'));
+          return;
+        }
         showNotice(
           'danger',
           result.status === 409
@@ -1798,6 +1814,13 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
         idempotencyKey: paymentIdempotencyKey
       });
       if (!result.success) {
+        if (isUnknownFinanceMutationOutcome(result)) {
+          await loadData(true);
+          showNotice('danger', (result.error || (language === 'id' ? 'Hasil pembayaran belum dapat dipastikan.' : 'The payment result could not be confirmed.')) + (language === 'id'
+            ? ' Form dan kunci idempotensi dipertahankan. Jangan ubah detail pembayaran sebelum memeriksa saldo invoice terbaru.'
+            : ' The payment form and idempotency key are preserved. Do not change the payment details before checking the latest invoice balance.'));
+          return;
+        }
         if (result.status === 409) {
           await loadData(true);
           throw new Error(language === 'id'
@@ -1900,6 +1923,13 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
       };
       const result = await api.finance.recordExpensePayment(expense.id, payment);
       if (!result.success) {
+        if (isUnknownFinanceMutationOutcome(result)) {
+          await loadData(true);
+          showNotice('danger', (result.error || (language === 'id' ? 'Hasil pelunasan pengeluaran belum dapat dipastikan.' : 'Expense payment outcome could not be confirmed.')) + (language === 'id'
+            ? ' Form dan ID pelunasan dipertahankan. Periksa saldo pengeluaran sebelum mengubah atau mengirim ulang pembayaran.'
+            : ' The payment form and idempotency ID are preserved. Check the expense balance before changing or resubmitting this payment.'));
+          return;
+        }
         if (result.status === 409) await loadData(true);
         throw new Error(result.error || 'Expense payment could not be recorded.');
       }
@@ -1969,7 +1999,16 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
         receiptUrl: expenseReceiptUrl.trim(),
         idempotencyKey: expenseIdempotencyKey
       });
-      if (!result.success) throw new Error(result.error || 'Expense could not be saved.');
+      if (!result.success) {
+        if (isUnknownFinanceMutationOutcome(result)) {
+          await loadData(true);
+          showNotice('danger', (result.error || (language === 'id' ? 'Hasil penyimpanan pengeluaran belum dapat dipastikan.' : 'Expense save result could not be confirmed.')) + (language === 'id'
+            ? ' Form dan kunci idempotensi dipertahankan. Periksa daftar pengeluaran sebelum mengubah atau mengirim ulang catatan ini.'
+            : ' The form and idempotency key are preserved. Check the expense list before changing or resubmitting this record.'));
+          return;
+        }
+        throw new Error(result.error || 'Expense could not be saved.');
+      }
       setExpenseModalOpen(false);
       setExpenseIdempotencyKey('');
       setExpenseDirty(false);
@@ -2002,6 +2041,14 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
           );
 
       if (!result.success) {
+        if (isUnknownFinanceMutationOutcome(result)) {
+          await loadData(true);
+          setConfirmAction(null);
+          showNotice('danger', (result.error || (language === 'id' ? 'Hasil penghapusan belum dapat dipastikan.' : 'The delete result could not be confirmed.')) + (language === 'id'
+            ? ' Data terbaru sudah dimuat. Periksa record sebelum mencoba menghapus lagi.'
+            : ' The latest data was refreshed. Inspect the record before attempting deletion again.'));
+          return;
+        }
         if (result.status === 409) {
           await loadData(true);
         }
@@ -2220,7 +2267,14 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
           }
         }
       });
-      if (!result.success) throw new Error(result.error || 'Vendor payment could not be recorded.');
+      if (!result.success) {
+        if (isUnknownFinanceMutationOutcome(result)) {
+          await loadData(true);
+          showNotice('danger', (result.error || 'Vendor payment result could not be confirmed.') + ' The idempotency key is preserved. Inspect the vendor payment list before changing or resubmitting this payment.');
+          return;
+        }
+        throw new Error(result.error || 'Vendor payment could not be recorded.');
+      }
       setVendorPaymentModalOpen(false);
       setVendorPaymentIdempotencyKey('');
       showNotice('success', language === 'id' ? 'Vendor payment berhasil dicatat.' : 'Vendor payment recorded successfully.');
@@ -2498,6 +2552,13 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
         : await api.proposals.create(payload);
 
       if (!response.success || !response.data?.proposal) {
+        if (isUnknownFinanceMutationOutcome(response) || (response.success && !response.data?.proposal)) {
+          await loadQuotations();
+          setQuotationModalOpen(false);
+          resetQuotationForm();
+          showNotice('danger', (response.error || 'Quotation save result could not be confirmed.') + ' The quotation list was refreshed. Inspect it before creating or saving this quotation again.');
+          return;
+        }
         throw new Error(response.error || 'Quotation could not be saved.');
       }
 
@@ -2520,7 +2581,14 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 
     try {
       const response = await api.proposals.update(quotation.id, { status: quotationStatusLabel(status) });
-      if (!response.success || !response.data?.proposal) throw new Error(response.error || 'Quotation status could not be updated.');
+      if (!response.success || !response.data?.proposal) {
+        if (isUnknownFinanceMutationOutcome(response) || (response.success && !response.data?.proposal)) {
+          await loadQuotations();
+          showNotice('danger', (response.error || 'Quotation status result could not be confirmed.') + ' The canonical quotation list was refreshed; inspect the current status before retrying.');
+          return;
+        }
+        throw new Error(response.error || 'Quotation status could not be updated.');
+      }
       const normalized = normalizeFinanceQuotation(response.data.proposal);
       setQuotations((current) => current.map((item) => item.id === normalized.id ? normalized : item));
       setQuotationDetail((current) => current?.id === normalized.id ? normalized : current);
@@ -2535,7 +2603,14 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
 
     try {
       const response = await api.proposals.delete(quotation.id);
-      if (!response.success) throw new Error(response.error || 'Quotation could not be deleted.');
+      if (!response.success) {
+        if (isUnknownFinanceMutationOutcome(response)) {
+          await loadQuotations();
+          showNotice('danger', (response.error || 'Quotation deletion result could not be confirmed.') + ' The canonical quotation list was refreshed; inspect it before retrying deletion.');
+          return;
+        }
+        throw new Error(response.error || 'Quotation could not be deleted.');
+      }
       setQuotations((current) => current.filter((item) => item.id !== quotation.id));
       if (quotationDetail?.id === quotation.id) setQuotationDetail(null);
       showNotice('success', 'Quotation deleted.');
@@ -2550,6 +2625,11 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
     try {
       const response = await api.proposals.convertToInvoice(quotation.id);
       if (!response.success || !response.data?.invoice) {
+        if (isUnknownFinanceMutationOutcome(response) || (response.success && !response.data?.invoice)) {
+          await Promise.all([loadData(true), loadQuotations()]);
+          showNotice('danger', (response.error || 'Quotation conversion result could not be confirmed.') + ' Invoice and quotation sources were refreshed. Inspect both records before retrying the conversion.');
+          return;
+        }
         throw new Error(response.error || 'Quotation could not be converted to an invoice.');
       }
       const updatedQuotation = { ...quotation, status: 'accepted' as FinanceQuotationStatus, invoiceId: response.data?.invoice?.id || quotation.invoiceId };
