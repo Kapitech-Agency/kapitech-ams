@@ -704,7 +704,7 @@ export const AdminInbox: React.FC = () => {
                 : (language === 'id' ? 'Jumlah dan status antrean belum bisa diverifikasi.' : 'Queue totals and empty states cannot be verified yet.')}
             </p>
           </div>
-          <Button type="button" variant="secondary" onClick={() => void refreshInbox()} disabled={loading} loading={loading}>{language === 'id' ? 'Coba lagi' : 'Retry'}</Button>
+          <button type="button" onClick={() => void refreshInbox()} disabled={loading} aria-busy={loading || undefined} className="inline-flex min-h-9 items-center justify-center rounded-control border border-line bg-panel px-3 text-xs font-medium text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-wait disabled:opacity-60">{loading ? (language === 'id' ? 'Memuat…' : 'Retrying…') : (language === 'id' ? 'Coba lagi' : 'Retry')}</button>
         </div>
       )}
 
