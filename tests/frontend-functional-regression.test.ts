@@ -8,6 +8,18 @@ import { isMasterAdministrator } from '../src/lib/adminAuth.ts';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (file: string) => fs.readFile(path.join(root, file), 'utf8');
 
+test('API client does not encourage blind retry when a mutation outcome is unknown', async () => {
+  const client = await read('src/lib/apiClient.ts');
+
+  assert.ok(client.includes('const mutationOutcomeUnknown = MUTATING_METHODS.has(String(options.method || \'GET\').toUpperCase());'));
+  assert.ok(client.includes('The request timed out. Its result is unknown. Check the record before retrying to avoid creating a duplicate.'));
+  assert.ok(client.includes('The request result could not be confirmed. Check the record before retrying to avoid creating a duplicate.'));
+  assert.ok(client.includes('Upload timed out. Its result is unknown; inspect the document in the private vault before retrying.'));
+  assert.ok(client.includes('The upload result could not be confirmed. Inspect the document in the private vault before retrying.'));
+  assert.ok(!client.includes("error: err?.name === 'AbortError' ? 'Request timed out. Please try again.'"));
+  assert.ok(!client.includes("error: err?.name === 'AbortError' ? 'Upload timed out. Please try again.'"));
+});
+
 test('Document upload reports failed compensation instead of silently hiding an orphan record', async () => {
   const documents = await read('src/pages/admin/AdminDocuments.tsx');
 
