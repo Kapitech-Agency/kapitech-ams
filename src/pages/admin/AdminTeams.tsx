@@ -1426,16 +1426,6 @@ export const AdminTeams: React.FC = () => {
                 icon: <TrendingUp size={15} />
               },
               {
-                id: 'sla',
-                slug: 'vendor-directory-kpi-sla',
-                label: 'Average SLA Compliance',
-                value: '—',
-                context: 'SLA data is not tracked in the current vendor model',
-                
-                icon: <ShieldCheck size={15} />,
-                toneClassName: 'text-muted'
-              },
-              {
                 id: 'renewals',
                 slug: 'vendor-directory-kpi-renewals',
                 label: 'Contract Renewals Due',

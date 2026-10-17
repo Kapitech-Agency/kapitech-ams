@@ -49,6 +49,10 @@ The Retainers page had three large hand-built metric cards using a separate visu
 
 SLA Monitoring had an explicit telemetry-unavailable notice followed by four large em-dash metric tiles that repeated the same missing-source explanation before the setup checklist. The repeated unavailable tiles are removed. The truthful unavailable notice, setup requirements and Contracts & SOW link now form the main sequence; no metrics are replaced by zeros or sample values.
 
+## Fourth implementation slice: Team & Resources
+
+The vendor-directory view included an “Average SLA Compliance” KPI with a permanently hardcoded em dash and a caption saying that SLA data is not tracked in the current vendor model. That did not expose a real decision metric and visually competed with source-backed vendor count, monthly external burn, and renewal information. The unsupported tile is removed. Active contractor, burn and renewal metrics plus their existing unavailable-data states remain unchanged; no model or permission behavior was changed.
+
 ## Evidence and remaining verification
 
 Source review covered the canonical page shell/navigation primitives and source files for all nine modules, Finance navigation/workbook grouping, page-specific CMS/Inbox working areas, and existing regression tests. The baseline CI passed. The current implementation branch still requires its own CI run, full diff review, responsive/browser inspection, and final source-boundary scan before it can be declared ready.

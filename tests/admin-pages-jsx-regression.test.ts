@@ -646,3 +646,13 @@ test('Retainers and SLA monitoring prioritize the actual operational workspace',
   assert.equal(sla.includes('aria-label="SLA metrics"'), false);
   assert.ok(sla.includes('No sample accounts or simulated performance values are shown.'));
 });
+
+
+test('Vendor directory omits SLA compliance metrics until the source model supports them', () => {
+  const team = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminTeams.tsx'), 'utf8');
+  assert.ok(team.includes("slug: 'vendor-directory-kpi-active-contractors'"));
+  assert.ok(team.includes("slug: 'vendor-directory-kpi-external-burn'"));
+  assert.ok(team.includes("slug: 'vendor-directory-kpi-renewals'"));
+  assert.equal(team.includes("slug: 'vendor-directory-kpi-sla'"), false);
+  assert.equal(team.includes("label: 'Average SLA Compliance'"), false);
+});
