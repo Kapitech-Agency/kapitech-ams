@@ -669,5 +669,5 @@ test('Project portfolio and archive registers lead their supporting KPI summarie
   assert.ok(archiveTitle >= 0 && archiveKpis > archiveTitle);
   assert.ok(projects.indexOf('</AdminPanel>', archiveTitle) < archiveKpis);
   assert.ok(projects.includes('aria-label="Project status quick filters"'));
-  assert.ok(projects.includes('data-ams-slug="projects-directory-filters"'));
+  assert.ok(projects.includes('slug="projects-directory-filters"'));
 });
