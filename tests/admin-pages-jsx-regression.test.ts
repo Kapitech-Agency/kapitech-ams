@@ -748,3 +748,21 @@ test('Contracts and SOW leads with its searchable register before the shared sum
   assert.ok(contracts.includes("value: loading ? '—' : expiringSoon"));
   assert.ok(contracts.includes('data-ams-slug={\'contract-\' + contract.id}'));
 });
+
+
+test('Contracts uses shared busy-state confirmations for lifecycle changes and draft deletion', () => {
+  const contracts = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminContracts.tsx'), 'utf8');
+  assert.ok(contracts.includes("import { ConfirmDialog } from '../../components/ui/ConfirmDialog';"));
+  assert.equal(contracts.includes('window.confirm'), false);
+  assert.ok(contracts.includes('open={Boolean(pendingStatusChange)}'));
+  assert.ok(contracts.includes('loading={Boolean(pendingStatusChange && transitioningId === pendingStatusChange.contract.id)}'));
+  assert.ok(contracts.includes('open={Boolean(deleteDraftTarget)}'));
+  assert.ok(contracts.includes('loading={Boolean(deleteDraftTarget && transitioningId === deleteDraftTarget.id)}'));
+  assert.ok(contracts.includes("setPendingStatusChange({ contract, status: 'expired' })"));
+  assert.ok(contracts.includes("setPendingStatusChange({ contract, status: 'terminated' })"));
+  assert.ok(contracts.includes('setDeleteDraftTarget(contract)'));
+  assert.ok(contracts.includes('const confirmPendingStatusChange = async () => {'));
+  assert.ok(contracts.includes('const confirmDeleteDraft = async () => {'));
+  assert.ok(contracts.includes('setContracts((current) => current.map((item) => item.id === contract.id'));
+  assert.ok(contracts.includes('setContracts((current) => current.filter((item) => item.id !== contract.id))'));
+});
