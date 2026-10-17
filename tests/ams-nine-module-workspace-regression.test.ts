@@ -70,6 +70,14 @@ test('Clients surface the directory before supporting metrics and keeps data gap
   assert.match(clients, /Cumulative billed value/);
 });
 
+test('Client Retainers places the searchable agreement register before supporting KPIs', async () => {
+  const retainers = await read('src/pages/admin/AdminClientRetainers.tsx');
+  const filters = retainers.indexOf('slug="client-retainers-filters"');
+  const directory = retainers.indexOf('data-ams-feature-slug="retainers-directory"');
+  const metrics = retainers.indexOf('data-ams-feature-slug="retainers-kpis"');
+  assert.ok(filters >= 0 && directory > filters && metrics > directory);
+});
+
 test('Finance exposes one current worksheet and explicit unavailable source context', async () => {
   const finance = await read('src/pages/admin/AdminFinanceWorkspace.tsx');
   assert.match(finance, /data-ams-slug="finance-workspace-navigation"/);

@@ -308,17 +308,7 @@ export const AdminClientRetainers: React.FC = () => {
 
       {message && <div className="flex items-center justify-between rounded-card border border-line bg-panel px-3 py-2.5 text-xs text-fg" role="status" aria-live="polite"><span>{message}</span><button type="button" onClick={() => setMessage(null)} className="inline-flex h-9 w-9 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Dismiss"><X size={14} /></button></div>}
 
-      <section data-ams-feature-slug="retainers-kpis" data-ams-slug="retainers-kpis" aria-label="Retainer metrics">
-        <AdminMetricStrip
-          slug="retainers-kpis"
-          className="md:grid-cols-3 lg:grid-cols-3"
-          metrics={[
-            { id: 'monthly-value', label: 'Monthly retainer value', value: money(mrr), context: 'Current committed recurring value', icon: <ArrowUp size={15} />, toneClassName: 'text-success' },
-            { id: 'committed-hours', label: 'Committed retainer hours', value: allocated.toLocaleString() + ' hrs/mo', context: 'Burned ' + used.toLocaleString() + ' hrs · ' + burn.toFixed(1) + '%', icon: <Clock3 size={15} />, toneClassName: 'text-info' },
-            { id: 'renewals-due', label: 'Renewals due in 30 days', value: renewals.length, context: money(renewalsValue) + ' monthly value', icon: <CalendarDays size={15} />, toneClassName: 'text-warning' }
-          ]}
-        />
-      </section>
+
 
       <AdminFilterBar slug="client-retainers-filters"
         searchValue={query}
@@ -369,6 +359,18 @@ export const AdminClientRetainers: React.FC = () => {
           </table>
         </div>
         {!isLoading && <AdminTablePagination total={filtered.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="retainers" slug="retainers-pagination" />}
+      </section>
+
+      <section data-ams-feature-slug="retainers-kpis" data-ams-slug="retainers-kpis" aria-label="Retainer metrics">
+        <AdminMetricStrip
+          slug="retainers-kpis"
+          className="md:grid-cols-3 lg:grid-cols-3"
+          metrics={[
+            { id: 'monthly-value', label: 'Monthly retainer value', value: money(mrr), context: 'Current committed recurring value', icon: <ArrowUp size={15} />, toneClassName: 'text-success' },
+            { id: 'committed-hours', label: 'Committed retainer hours', value: allocated.toLocaleString() + ' hrs/mo', context: 'Burned ' + used.toLocaleString() + ' hrs · ' + burn.toFixed(1) + '%', icon: <Clock3 size={15} />, toneClassName: 'text-info' },
+            { id: 'renewals-due', label: 'Renewals due in 30 days', value: renewals.length, context: money(renewalsValue) + ' monthly value', icon: <CalendarDays size={15} />, toneClassName: 'text-warning' }
+          ]}
+        />
       </section>
 
       <section data-ams-feature-slug="retainers-summary" data-ams-slug="retainers-summary" className="grid grid-cols-1 gap-3 text-[11px] text-muted md:grid-cols-4" aria-label="Retainer summary">
