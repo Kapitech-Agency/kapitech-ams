@@ -7277,6 +7277,38 @@ apiRouter.post('/documents', requireAuth, documentMutationMiddleware, async (req
     return;
   }
 
+  const relatedEntity = cleanText(data.relatedEntity || 'General', 200);
+  const relatedId = cleanText(data.relatedId || '', 120);
+  if (relatedEntity === 'Client' || relatedEntity === 'Project') {
+    if (!relatedId) {
+      res.status(400).json({ success: false, error: 'Select an existing client or project record for this document.' });
+      return;
+    }
+
+    let relatedRecordExists = false;
+    if (getDataSourceMode() === 'postgres') {
+      if (relatedEntity === 'Client') {
+        relatedRecordExists = Boolean(await postgresClientRepository.findById(relatedId));
+      } else {
+        const linkedProjects = await postgresProjectRepository.list();
+        relatedRecordExists = linkedProjects.some((project: any) => String(project.id) === relatedId);
+      }
+    } else {
+      const db: any = getDatabase();
+      const relatedRecords = relatedEntity === 'Client' ? db.clients : db.projects;
+      relatedRecordExists = Array.isArray(relatedRecords)
+        && relatedRecords.some((record: any) => String(record.id) === relatedId);
+    }
+
+    if (!relatedRecordExists) {
+      res.status(404).json({ success: false, error: 'The selected related record was not found or is no longer available.' });
+      return;
+    }
+  } else if (relatedId) {
+    res.status(400).json({ success: false, error: 'A related record ID requires a Client or Project relationship type.' });
+    return;
+  }
+
   const now = new Date().toISOString();
   const newDoc: any = {
     id: `doc_${Date.now()}_${crypto.randomBytes(8).toString('hex')}`,
@@ -7287,8 +7319,8 @@ apiRouter.post('/documents', requireAuth, documentMutationMiddleware, async (req
     size: cleanText(data.size || '0 B', 40),
     sizeBytes: Math.max(0, Math.floor(Number(data.sizeBytes) || 0)),
     category: cleanText(data.category || 'General', 100),
-    relatedEntity: cleanText(data.relatedEntity || 'General', 200),
-    relatedId: cleanText(data.relatedId || '', 120),
+    relatedEntity,
+    relatedId,
     owner: req.user!.name || req.user!.username,
     ownerUserId: req.user!.id,
     accessUserIds: [req.user!.id],
