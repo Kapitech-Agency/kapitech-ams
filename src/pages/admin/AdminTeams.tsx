@@ -1079,9 +1079,9 @@ export const AdminTeams: React.FC = () => {
         ['Slug', 'Member', 'Role', ...weeklyCapacity.map((week) => week.label + ' tracked utilization'), 'Current tracked hours', ...futureCapacityWeeks.map((week) => week.label + ' planned allocation')],
         ...capacityRows.map((row) => [
           row.member.slug, row.member.name, row.member.role,
-          ...row.weeks.map((week) => week.utilization + '%'),
-          formatHours(row.weeks[row.weeks.length - 1]?.minutes || 0),
-          ...(futureCapacityRows.find((item) => item.member.id === row.member.id)?.weeks || []).map((week) => week.projectCount ? week.allocationPercent + '%' : 'No plan')
+          ...row.weeks.map((week) => sourceAvailability.timeLogs === true ? week.utilization + '%' : 'Unavailable'),
+          sourceAvailability.timeLogs === true ? formatHours(row.weeks[row.weeks.length - 1]?.minutes ?? 0) : 'Unavailable',
+          ...(futureCapacityRows.find((item) => item.member.id === row.member.id)?.weeks || []).map((week) => sourceAvailability.projects === true ? (week.projectCount ? week.allocationPercent + '%' : 'No plan') : 'Unavailable')
         ])
       ]);
     } else if (currentView === 'skill-matrix') {
@@ -1273,12 +1273,12 @@ export const AdminTeams: React.FC = () => {
                               </button>
                             </td>
                             <td>
-                              <p className="font-medium text-fg">{projectsForMember[0]?.name || member.division || 'Unassigned'}</p>
-                              <p className="mt-1 text-[10px] text-muted">{roleFocus(member)}</p>
+                              <p className="font-medium text-fg">{sourceAvailability.projects === true ? (projectsForMember[0]?.name || member.division || 'Unassigned') : (member.division || '—')}</p>
+                              <p className="mt-1 text-[10px] text-muted">{sourceAvailability.projects === true ? roleFocus(member) : sourceAvailability.projects === false ? 'Project data unavailable' : 'Loading project data'}</p>
                             </td>
                             <td>
-                              <p className="font-semibold tabular-nums text-fg">{projectsForMember.length}</p>
-                              <p className="mt-1 text-[10px] text-muted">{projectsForMember.length === 1 ? 'Pod assigned' : 'Pods assigned'}</p>
+                              <p className="font-semibold tabular-nums text-fg">{sourceAvailability.projects === true ? projectsForMember.length : '—'}</p>
+                              <p className="mt-1 text-[10px] text-muted">{sourceAvailability.projects === true ? (projectsForMember.length === 1 ? 'Pod assigned' : 'Pods assigned') : sourceAvailability.projects === false ? 'Project data unavailable' : 'Loading project data'}</p>
                             </td>
                             <td>
                               <div className="w-36 space-y-1.5">
@@ -1324,8 +1324,8 @@ export const AdminTeams: React.FC = () => {
                       <ProfileIdentity profile={{ id: member.id, name: member.name, username: member.username }} showRole={true} />
                     </div>
                     <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
-                      <div><p className="text-muted">Pod / Focus</p><p className="mt-1 font-medium text-fg">{projectsForMember[0]?.name || member.division || 'Unassigned'}</p></div>
-                      <div><p className="text-muted">Active projects</p><p className="mt-1 font-semibold tabular-nums text-fg">{projectsForMember.length}</p></div>
+                      <div><p className="text-muted">Pod / Focus</p><p className="mt-1 font-medium text-fg">{sourceAvailability.projects === true ? (projectsForMember[0]?.name || member.division || 'Unassigned') : (member.division || '—')}</p>{sourceAvailability.projects !== true && <p className="mt-1 text-[10px] text-muted">{sourceAvailability.projects === false ? 'Project data unavailable' : 'Loading project data'}</p>}</div>
+                      <div><p className="text-muted">Active projects</p><p className="mt-1 font-semibold tabular-nums text-fg">{sourceAvailability.projects === true ? projectsForMember.length : '—'}</p>{sourceAvailability.projects !== true && <p className="mt-1 text-[10px] text-muted">{sourceAvailability.projects === false ? 'Project data unavailable' : 'Loading project data'}</p>}</div>
                     </div>
                     <div className="mt-4 rounded-control border border-line bg-bg p-3">
                       <div className="flex items-center justify-between gap-2"><span className="text-[10px] text-muted">Time tracking status</span><span className="text-[11px] font-semibold text-fg">{allocation.label} · {allocation.percent === null ? '—' : allocation.percent + '%'}</span></div>
@@ -1602,13 +1602,13 @@ export const AdminTeams: React.FC = () => {
                       </td>
                       {row.weeks.map((week, index) => (
                         <td key={index} className="text-center">
-                          <div className={'rounded-control border px-3 py-2 ' + (week.utilization > 90 ? 'border-danger/30 bg-danger/5' : week.utilization >= 70 ? 'border-line bg-bg' : 'border-line bg-bg')}>
+                          <div className={'rounded-control border px-3 py-2 ' + (sourceAvailability.timeLogs !== true ? 'border-line bg-bg' : week.utilization > 90 ? 'border-danger/30 bg-danger/5' : 'border-line bg-bg')}>
                             <div className="flex items-center justify-between gap-3 text-xs">
-                              <span className={'font-semibold tabular-nums ' + (week.utilization > 90 ? 'text-danger' : week.utilization >= 70 ? 'text-fg' : 'text-muted')}>{week.utilization}%</span>
-                              <span className="text-[10px] tabular-nums text-muted">{formatHours(week.minutes)}</span>
+                              <span className={'font-semibold tabular-nums ' + (sourceAvailability.timeLogs !== true ? 'text-muted' : week.utilization > 90 ? 'text-danger' : week.utilization >= 70 ? 'text-fg' : 'text-muted')}>{sourceAvailability.timeLogs === true ? week.utilization + '%' : sourceAvailability.timeLogs === false ? '—' : 'Loading'}</span>
+                              <span className="text-[10px] tabular-nums text-muted">{sourceAvailability.timeLogs === true ? formatHours(week.minutes) : sourceAvailability.timeLogs === false ? 'Unavailable' : 'Loading'}</span>
                             </div>
                             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel">
-                              <div className={'h-full rounded-full ' + (week.utilization > 90 ? 'bg-danger' : week.utilization >= 70 ? 'bg-series-3' : 'bg-series-4')} style={{ width: Math.min(100, week.utilization) + '%' }} />
+                              <div className={'h-full rounded-full ' + (sourceAvailability.timeLogs !== true ? 'bg-muted' : week.utilization > 90 ? 'bg-danger' : week.utilization >= 70 ? 'bg-series-3' : 'bg-series-4')} style={{ width: sourceAvailability.timeLogs === true ? Math.min(100, week.utilization) + '%' : '0%' }} />
                             </div>
                           </div>
                         </td>
@@ -1634,10 +1634,10 @@ export const AdminTeams: React.FC = () => {
                       <td><p className="font-medium text-fg">{row.member.name}</p><p className="mt-1 text-[10px] text-muted">{row.member.role} · {row.member.division}</p></td>
                       {row.weeks.map((week, index) => (
                         <td key={index} className="text-center">
-                          <div className={'rounded-control border px-3 py-2 ' + (week.allocationPercent > 100 ? 'border-danger/30 bg-danger/5' : 'border-line bg-bg')}>
+                          <div className={'rounded-control border px-3 py-2 ' + (sourceAvailability.projects !== true ? 'border-line bg-bg' : week.allocationPercent > 100 ? 'border-danger/30 bg-danger/5' : 'border-line bg-bg')}>
                             <div className="flex items-center justify-between gap-2 text-xs">
-                              <span className={'font-semibold tabular-nums ' + (week.allocationPercent > 100 ? 'text-danger' : 'text-fg')}>{week.projectCount ? week.allocationPercent + '%' : '—'}</span>
-                              <span className="text-[10px] tabular-nums text-muted">{week.projectCount ? week.plannedHours.toFixed(1) + 'h' : 'No plan'}</span>
+                              <span className={'font-semibold tabular-nums ' + (sourceAvailability.projects !== true ? 'text-muted' : week.allocationPercent > 100 ? 'text-danger' : 'text-fg')}>{sourceAvailability.projects === true ? (week.projectCount ? week.allocationPercent + '%' : '—') : sourceAvailability.projects === false ? 'Unavailable' : 'Loading'}</span>
+                              <span className="text-[10px] tabular-nums text-muted">{sourceAvailability.projects === true ? (week.projectCount ? week.plannedHours.toFixed(1) + 'h' : 'No plan') : sourceAvailability.projects === false ? 'Unavailable' : 'Loading'}</span>
                             </div>
                             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel"><div className={'h-full rounded-full ' + (week.allocationPercent > 100 ? 'bg-danger' : 'bg-series-4')} style={{ width: Math.min(100, week.allocationPercent) + '%' }} /></div>
                             <p className="mt-1 text-left text-[10px] text-muted">{week.projectCount ? week.projectCount + ' planned project(s)' : 'Not scheduled'}</p>
@@ -1889,7 +1889,9 @@ export const AdminTeams: React.FC = () => {
             <div className="rounded-control border border-line bg-bg p-4">
               <p className="text-xs font-medium text-muted">Active Projects</p>
               <div className="mt-2 space-y-2">
-                {memberProjects(memberDetail).length ? memberProjects(memberDetail).map((project) => (
+                {sourceAvailability.projects !== true ? (
+                  <p className="text-xs text-muted">{sourceAvailability.projects === false ? 'Project assignment data unavailable. Refresh to retry.' : 'Loading project assignments.'}</p>
+                ) : memberProjects(memberDetail).length ? memberProjects(memberDetail).map((project) => (
                   <div key={project.id} className="flex items-center justify-between gap-3 rounded-control border border-line bg-panel px-3 py-2">
                     <div className="min-w-0">
                       <p className="truncate text-xs font-medium text-fg">{project.name}</p>
@@ -1935,11 +1937,13 @@ export const AdminTeams: React.FC = () => {
             <div className="rounded-control border border-line bg-bg p-4">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-xs font-medium text-muted">Project assignment & planned allocation</p>
-                <span className="text-[10px] text-muted">{memberProjects(allocationTarget).length} assigned</span>
+                <span className="text-[10px] text-muted">{sourceAvailability.projects === true ? memberProjects(allocationTarget).length + ' assigned' : sourceAvailability.projects === false ? 'Assignments unavailable' : 'Loading assignments'}</span>
               </div>
               <p className="mt-1 text-[10px] leading-4 text-muted">Assign this member to a project, then set the planned weekly allocation and dates. The forecast is based only on the saved plans below; leave calendars are not connected.</p>
               <div className="mt-3 space-y-3">
-                {projects.filter((project) => project.status !== 'completed').length ? projects.filter((project) => project.status !== 'completed').slice(0, 12).map((project) => {
+                {sourceAvailability.projects !== true ? (
+                  <p className="rounded-control border border-dashed border-line px-3 py-6 text-center text-xs text-muted">{sourceAvailability.projects === false ? 'Project data unavailable. Refresh to retry.' : 'Loading project data.'}</p>
+                ) : projects.filter((project) => project.status !== 'completed').length ? projects.filter((project) => project.status !== 'completed').slice(0, 12).map((project) => {
                   const identifiers = new Set([allocationTarget.id, allocationTarget.name, allocationTarget.username].map((value) => String(value || '').trim().toLowerCase()).filter(Boolean));
                   const memberEntries = Array.isArray(project.teamMembers) ? project.teamMembers.map(String) : [];
                   const isAssigned = memberEntries.some((value) => identifiers.has(value.trim().toLowerCase()));
