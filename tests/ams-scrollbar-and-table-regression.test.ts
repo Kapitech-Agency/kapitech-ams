@@ -85,8 +85,8 @@ test('login carousel respects reduced-motion by default and has a pause/resume c
   assert.match(login, /isArtAutoplayPaused/);
   assert.match(login, /Pause automatic image rotation/);
   assert.match(login, /Resume automatic image rotation/);
-  assert.match(login, /<Pause size=\{15\}/);
-  assert.match(login, /<Play size=\{15\}/);
+  assert.match(login, /language === 'id' \? 'Lanjutkan' : 'Resume'/);
+  assert.match(login, /language === 'id' \? 'Jeda' : 'Pause'/);
   assert.match(login, /motionPreference\.removeEventListener\('change', handleMotionPreferenceChange\)/);
 });
 
