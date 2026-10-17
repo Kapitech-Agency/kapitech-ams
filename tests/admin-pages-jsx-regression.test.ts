@@ -30,7 +30,9 @@ test('Finance transaction worksheets keep mutations permission-gated and use emb
   assert.ok(source.includes('dueFilter'));
   assert.ok(source.includes('table-fixed'));
   assert.ok(source.includes('retainerLedgerInvoices'));
-  assert.ok(source.includes('usingDemoRetainerLedger'));
+  assert.ok(source.includes("return retainerInvoices.filter((invoice) => matchesDate(invoice.issueDate || invoice.createdAt))"));
+  assert.ok(!source.includes('usingDemoRetainerLedger'));
+  assert.ok(!source.includes('STITCH_FINANCE_RETAINER_INVOICES'));
   assert.ok(source.includes('openPayment(invoice)'));
   assert.ok(source.includes('finance-revenue-tax-retainer'));
   assert.ok(source.includes('Contract-linked vendor payments'));
