@@ -388,3 +388,30 @@ No server, API, database, migration, auth/session implementation, CSRF/MFA/RBAC 
 - No authenticated browser or branch preview was available. No viewport screenshots, computed-style checks, live wheel/touch tests or login/logout transitions were performed.
 - Remaining source-only Career type guards in the Inbox reader were left in place as defensive rendering paths. The reachable Inbox navigation/type/state and directory list no longer advertise or expose a recruitment pipeline. Revisit the defensive detail guards only if a full source consumer audit demonstrates a safe, nonbehavioral cleanup.
 - Main remains the previously confirmed baseline unless refreshed branch metadata reports otherwise. The audit branch is not merged or deployed.
+
+
+
+## Follow-up checkpoint · Client financial metadata and SLA state · 17 October 2026
+
+### Slice 7 · Preserve the distinction between recorded zero and missing data
+
+- Files changed: src/pages/admin/AdminClients.tsx and tests/ams-client-detail-data-state-regression.test.ts.
+- Added one presentation-level SLA state classifier shared by client filtering, directory row status, SLA counts, and compliance calculations. States now distinguish not configured, spend not recorded, healthy, near cap, and over cap.
+- Exposed the existing SLA filter in the client directory filter toolbar, including a separate "Spend not recorded" state. Existing search, status scope, query state, API and record model remain unchanged.
+- Directory rows and client detail drawer now show localized "Not recorded" / "Belum dicatat" when usage data is absent. A recorded numeric zero is still rendered as a valid zero. An absent cap is labelled "Not configured" / "Belum ditetapkan" rather than being formatted as zero.
+- SLA compliance only compares configured caps where spend data is actually recorded. The KPI context identifies how many configured spend caps have actual recorded data. When some configured records lack spend data, the compliance KPI is not given the positive/success tone even when the observed subset exceeds the threshold.
+- Cumulative billed value and its directory KPI now preserve incomplete-data status. The whole-client total is unavailable if one or more client values are missing or invalid, and missing billed values sort after valid amounts. A genuine zero remains numeric zero.
+- Client CSV export leaves an absent cap/spend value blank instead of exporting a false zero. It still exports numeric zero as 0.
+- The regression test covers missing versus zero in the drawer, SLA classification/filter/compliance, complete billed totals, missing values in sort order, and CSV semantics.
+- No Finance calculation, persisted client fields, API payload, database, backend, authentication, permissions, workflow or route was changed.
+
+### Validation evidence
+
+- At commit af9b14e612e5d63f3c941ef162131d94a790cec3, AMS Quality Gate passed: https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39051949535.
+- At the same SHA, AMS CI passed: https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39051949466. The workflow covered typecheck, regression tests, production build, security tests, PostgreSQL integration tests, dependency audit, packaged migrations and production HTTP smoke test.
+- Source checks also confirmed: unrecorded spend has a distinct classifier and filter, only recorded spend enters the SLA-compliance denominator, incomplete billed totals return unavailable, missing billed values sort after valid values, and the CSV does not serialize absent SLA fields as zero.
+- These results are from GitHub Actions. Local npm scripts and authenticated browser/visual checks were unavailable in this execution environment. No responsive screenshots or computed-style results are claimed.
+
+### Resume point
+
+Refresh the current branch HEAD and Actions after this documentation update. Then continue with route-specific source/browser QA only where an authenticated preview can demonstrate the problem. Highest outstanding validation remains browser-based verification of scroll ownership, responsive layout, table last-column reachability, active-tab reveal, client drawer scroll/focus restoration, and login/logout scroll-lock restoration. The /admin/approvals source/documentation discrepancy remains deliberately untouched. Do not merge or deploy this review branch without a separate instruction.
