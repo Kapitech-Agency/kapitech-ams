@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   canAccessAmsRoute,
-  getNavigationGroupsForRole,
   type AmsRole,
 } from '../src/lib/amsNavigationAccess';
 import { getAmsModuleSubnavigation, isAmsModuleSubnavigationItemActive } from '../src/lib/amsModuleSubnavigation';
