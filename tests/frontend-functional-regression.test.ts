@@ -272,7 +272,7 @@ test('Legacy Approval implementation remains permission-gated while route is ret
   assert.doesNotMatch(approvals, /<Modal\b|<\/Modal>/);
 });
 
-test('Client Retainers are server-persisted and sample agreements are fixture-only', async () => {
+test('Client Retainers use persisted records and disclose missing time-log reconciliation', async () => {
   const model = await read('src/lib/clientStore.ts');
   const page = await read('src/pages/admin/AdminClientRetainers.tsx');
   const routes = await read('server/routes.ts');
@@ -285,6 +285,8 @@ test('Client Retainers are server-persisted and sample agreements are fixture-on
   assert.match(page, /api\.clients\.update\(targetClient\.id/);
   assert.doesNotMatch(page, /api\.clients\.addRetainerHours\(/);
   assert.doesNotMatch(page, /retainer-hours-drawer|setHoursTarget/);
+  assert.ok(page.includes('data-ams-slug="retainer-time-log-reconciliation-state"'));
+  assert.ok(page.includes('does not yet reconcile Time Logs with retainer billing cycles and eligible-entry rules'));
   assert.match(routes, /retainerMonthlyValue/);
   assert.match(routes, /Invalid retainer cycle/);
   assert.match(routes, /key === 'retainerCommittedHours' && numeric < 1/);
