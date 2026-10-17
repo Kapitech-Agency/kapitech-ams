@@ -454,7 +454,17 @@ export const AdminTeams: React.FC = () => {
     [projects]
   );
 
-  const memberAllocation = (member: TeamMember) => {
+  const memberAllocation = (member: TeamMember): { label: string; tone: 'success' | 'warning' | 'neutral'; percent: number | null } => {
+    const status = String(member.status || '').toLowerCase();
+    const timeLogsAvailable = sourceAvailability.timeLogs === true;
+    if (!timeLogsAvailable) {
+      return {
+        label: status.includes('leave') ? 'On Leave' : sourceAvailability.timeLogs === false ? 'Time data unavailable' : 'Loading time data',
+        tone: status.includes('leave') ? 'warning' : 'neutral',
+        percent: null
+      };
+    }
+
     const start = startOfWeek(new Date());
     const end = new Date(start);
     end.setDate(end.getDate() + 7);
@@ -466,7 +476,6 @@ export const AdminTeams: React.FC = () => {
       })
       .reduce((sum, log) => sum + Number(log.durationMinutes || 0), 0);
     const percent = Math.min(160, Math.round((minutes / (40 * 60)) * 100));
-    const status = String(member.status || '').toLowerCase();
     if (status.includes('leave')) return { label: 'On Leave', tone: 'warning', percent };
     if (percent > 0) return { label: 'Time logged', tone: 'success', percent };
     return { label: 'No time logged', tone: 'warning', percent: 0 };
@@ -596,10 +605,11 @@ export const AdminTeams: React.FC = () => {
         teamStatus === 'all' ||
         (teamStatus === 'allocated' && allocation.label === 'Time logged') ||
         (teamStatus === 'bench' && allocation.label === 'No time logged') ||
-        (teamStatus === 'leave' && allocation.label === 'On Leave');
+        (teamStatus === 'leave' && allocation.label === 'On Leave') ||
+        (teamStatus === 'unavailable' && ['Time data unavailable', 'Loading time data'].includes(allocation.label));
       return matchesToolbarSearch && matchesDepartment && matchesPod && matchesStatus;
     });
-  }, [members, projects, logs, teamSearch, teamDepartment, teamPod, teamStatus]);
+  }, [members, projects, logs, sourceAvailability.timeLogs, teamSearch, teamDepartment, teamPod, teamStatus]);
 
   const teamPageCount = Math.max(1, Math.ceil(teamRows.length / teamPageSize));
   const pagedTeamRows = teamRows.slice((teamPage - 1) * teamPageSize, teamPage * teamPageSize);
@@ -1057,7 +1067,7 @@ export const AdminTeams: React.FC = () => {
     if (currentView === 'team-directory') {
       downloadCsv('kapitech-team-directory.csv', [
         ['Slug', 'Member', 'Username', 'Role', 'Division', 'Status', 'Tracked'],
-        ...teamRows.map((member) => [member.slug, member.name, member.username, member.role, member.division, member.status || 'active', formatHours(teamTrackedMinutes.get(member.id) || 0)])
+        ...teamRows.map((member) => [member.slug, member.name, member.username, member.role, member.division, member.status || 'active', sourceAvailability.timeLogs === true ? formatHours(teamTrackedMinutes.get(member.id) ?? 0) : 'Unavailable'])
       ]);
     } else if (currentView === 'vendor-directory') {
       downloadCsv('kapitech-vendor-directory.csv', [
@@ -1206,7 +1216,8 @@ export const AdminTeams: React.FC = () => {
                     { value: 'all', label: 'Status: All' },
                     { value: 'allocated', label: 'Has time entries' },
                     { value: 'bench', label: 'No time logged' },
-                    { value: 'leave', label: 'On Leave' }
+                    { value: 'leave', label: 'On Leave' },
+                    { value: 'unavailable', label: 'Time data unavailable' }
                   ]}
                   triggerClassName="h-9 min-h-9 w-full sm:w-[165px]"
                 />
@@ -1272,14 +1283,14 @@ export const AdminTeams: React.FC = () => {
                             <td>
                               <div className="w-36 space-y-1.5">
                                 <div className="flex items-center justify-between gap-2">
-                                  <span className={'inline-flex items-center gap-1.5 rounded-badge border px-2 py-0.5 text-[10px] font-medium ' + (allocation.tone === 'success' ? 'border-success/20 bg-success/10 text-success' : 'border-warning/20 bg-warning/10 text-warning')}>
-                                    <span className={'h-1.5 w-1.5 rounded-full ' + (allocation.tone === 'success' ? 'bg-success' : 'bg-warning')} />
+                                  <span className={'inline-flex items-center gap-1.5 rounded-badge border px-2 py-0.5 text-[10px] font-medium ' + (allocation.tone === 'success' ? 'border-success/20 bg-success/10 text-success' : allocation.tone === 'warning' ? 'border-warning/20 bg-warning/10 text-warning' : 'border-line bg-bg text-muted')}>
+                                    <span className={'h-1.5 w-1.5 rounded-full ' + (allocation.tone === 'success' ? 'bg-success' : allocation.tone === 'warning' ? 'bg-warning' : 'bg-muted')} />
                                     {allocation.label}
                                   </span>
-                                  <span className={'text-[10px] font-semibold tabular-nums ' + (allocation.tone === 'success' ? 'text-success' : 'text-warning')}>{allocation.percent}%</span>
+                                  <span className={'text-[10px] font-semibold tabular-nums ' + (allocation.tone === 'success' ? 'text-success' : allocation.tone === 'warning' ? 'text-warning' : 'text-muted')}>{allocation.percent === null ? '—' : allocation.percent + '%'}</span>
                                 </div>
                                 <div className="h-1.5 overflow-hidden rounded-full bg-bg">
-                                  <div className={'h-full rounded-full ' + (allocation.tone === 'success' ? 'bg-success' : 'bg-warning')} style={{ width: Math.min(100, allocation.percent) + '%' }} />
+                                  <div className={'h-full rounded-full ' + (allocation.tone === 'success' ? 'bg-success' : allocation.tone === 'warning' ? 'bg-warning' : 'bg-muted')} style={{ width: allocation.percent === null ? '0%' : Math.min(100, allocation.percent) + '%' }} />
                                 </div>
                               </div>
                             </td>
@@ -1317,8 +1328,8 @@ export const AdminTeams: React.FC = () => {
                       <div><p className="text-muted">Active projects</p><p className="mt-1 font-semibold tabular-nums text-fg">{projectsForMember.length}</p></div>
                     </div>
                     <div className="mt-4 rounded-control border border-line bg-bg p-3">
-                      <div className="flex items-center justify-between gap-2"><span className="text-[10px] text-muted">Time tracking status</span><span className="text-[11px] font-semibold text-fg">{allocation.label} · {allocation.percent}%</span></div>
-                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel"><div className="h-full rounded-full bg-accent" style={{ width: Math.min(100, allocation.percent) + '%' }} /></div>
+                      <div className="flex items-center justify-between gap-2"><span className="text-[10px] text-muted">Time tracking status</span><span className="text-[11px] font-semibold text-fg">{allocation.label} · {allocation.percent === null ? '—' : allocation.percent + '%'}</span></div>
+                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel"><div className={'h-full rounded-full ' + (allocation.percent === null ? 'bg-muted' : 'bg-accent')} style={{ width: allocation.percent === null ? '0%' : Math.min(100, allocation.percent) + '%' }} /></div>
                     </div>
                     <div className="mt-4 flex flex-wrap gap-1.5">
                       {skills.map((skill) => <span key={skill} className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] text-fg">{skill}</span>)}
@@ -1868,7 +1879,7 @@ export const AdminTeams: React.FC = () => {
               </div>
               <div className="rounded-control border border-line bg-bg p-3">
                 <p className="text-[10px] text-muted">Allocation</p>
-                <p className="mt-1 text-sm font-semibold text-fg">{memberAllocation(memberDetail).label} · {memberAllocation(memberDetail).percent}%</p>
+                <p className="mt-1 text-sm font-semibold text-fg">{memberAllocation(memberDetail).label} · {memberAllocation(memberDetail).percent === null ? '—' : memberAllocation(memberDetail).percent + '%'}</p>
               </div>
               <div className="rounded-control border border-line bg-bg p-3">
                 <p className="text-[10px] text-muted">Slug</p>
@@ -1918,7 +1929,7 @@ export const AdminTeams: React.FC = () => {
               </div>
               <div className="mt-3">
                 <p className="text-[10px] text-muted">Time tracked this week · 40h reference</p>
-                <p className="mt-1 text-lg font-semibold tabular-nums text-fg">{memberAllocation(allocationTarget).percent}%</p>
+                <p className="mt-1 text-lg font-semibold tabular-nums text-fg">{memberAllocation(allocationTarget).percent === null ? '—' : memberAllocation(allocationTarget).percent + '%'}</p>
               </div>
             </div>
             <div className="rounded-control border border-line bg-bg p-4">
