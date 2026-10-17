@@ -864,7 +864,7 @@ test('Team and vendor directory filters have one search/category control in thei
   const teams = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminTeams.tsx'), 'utf8');
   assert.doesNotMatch(teams, /teamHeaderSearch|vendorHeaderSearch|vendorHeaderCategory/);
   assert.ok(teams.includes('aria-label="Search by name, role, email"'));
-  assert.ok(teams.includes('aria-label="Search vendor directory"'));
+  assert.ok(teams.includes('aria-label="Search by company or freelancer name"'));
   assert.equal((teams.match(/aria-label="Search team"/g) || []).length, 0);
   assert.equal((teams.match(/aria-label="Filter vendors"/g) || []).length, 0);
   const teamFilterStart = teams.indexOf('data-ams-feature-slug="team-directory-filters"');
