@@ -1093,13 +1093,23 @@ export const AdminInbox: React.FC = () => {
                         className="hover:bg-panel-hover cursor-pointer transition-colors group"
                       >
                         {/* Star */}
-                        <td className="p-3 text-center" onClick={(e) => handleToggleStar(e, item.id, item.starred)}>
-                          <Star 
-                            size={14} 
-                            className={`mx-auto transition-colors ${
-                              item.starred ? 'fill-warning text-warning' : 'text-muted hover:text-warning'
-                            }`} 
-                          />
+                        <td className="p-3 text-center">
+                          <button
+                            type="button"
+                            onClick={(event) => void handleToggleStar(event, item.id, item.starred)}
+                            aria-label={item.starred
+                              ? (language === 'id' ? 'Hapus bintang dari ' : 'Remove star from ') + (item.fullName || item.email)
+                              : (language === 'id' ? 'Beri bintang pada ' : 'Star ') + (item.fullName || item.email)}
+                            aria-pressed={Boolean(item.starred)}
+                            disabled={!canManageCrm}
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-control text-muted transition-colors hover:bg-bg hover:text-warning focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            <Star
+                              size={14}
+                              aria-hidden="true"
+                              className={item.starred ? 'fill-warning text-warning' : 'text-muted'}
+                            />
+                          </button>
                         </td>
 
                         {/* Name & Company */}
