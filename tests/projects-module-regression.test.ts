@@ -42,7 +42,11 @@ test('Successful project and task writes update local state before non-blocking 
   const source = await read('src/pages/admin/AdminProjects.tsx');
 
   assert.ok(source.includes('const persistedProject = response.data?.project ? normalizeProject(response.data.project) : null'));
-  assert.ok(source.includes('const persistedTask = response.data?.task ? normalizeTask(response.data.task) : localTask'));
+  assert.ok(source.includes('const persistedTask = response.data?.task ? normalizeTask(response.data.task) : null'));
+  assert.ok(source.includes('if (!persistedTask)'));
+  assert.ok(source.includes('The server did not return the saved task record.'));
+  assert.ok(!source.includes('const localTask: ProjectTask'));
+  assert.ok(!source.includes("'demo_task_' + Date.now()"));
   assert.ok(source.includes('const syncProjects = async (showLoading = true) =>'));
   assert.ok(source.includes('await syncProjects(false)'));
 });
