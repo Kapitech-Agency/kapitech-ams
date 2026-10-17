@@ -1069,102 +1069,6 @@ export const TasksWorkspace: React.FC = () => {
         />
       </div>
 
-      <div data-ams-feature-slug="tasks-kpis">
-        <AdminMetricStrip slug="tasks-kpis"
-          className="sm:grid-cols-2 lg:grid-cols-4"
-          metrics={[
-            {
-              id: 'tasks-scope',
-              slug: 'tasks-kpi-scope',
-              label: scopeLabel,
-              value: metrics.total,
-              context: taskScope === 'all' ? 'Across project delivery work' : 'Tasks currently in this queue',
-              sparkline: [records.length, scopedRecords.length, metrics.total],
-              icon: <FolderKanban size={15} />,
-            },
-            {
-              id: 'tasks-open',
-              slug: 'tasks-kpi-open',
-              label: 'Open Work',
-              value: metrics.open,
-              context: metrics.highPriority + ' high / urgent',
-              sparkline: [metrics.open, metrics.dueSoon, metrics.blocked],
-              toneClassName: 'text-info',
-              icon: <Clock3 size={15} />,
-            },
-            {
-              id: 'tasks-review',
-              slug: 'tasks-kpi-review',
-              label: 'Review Queue',
-              value: metrics.review,
-              context: 'Awaiting review or QA',
-              sparkline: [metrics.review, metrics.blocked, metrics.open],
-              toneClassName: 'text-warning',
-              icon: <AlertTriangle size={15} />,
-            },
-            {
-              id: 'tasks-risk',
-              slug: 'tasks-kpi-risk',
-              label: taskScope === 'completed' ? 'Completed' : 'Risk Signals',
-              value: taskScope === 'completed' ? metrics.total : metrics.blocked + metrics.dueSoon,
-              context: taskScope === 'completed' ? 'Completed tasks in scope' : 'Blocked + due soon / overdue',
-              sparkline: [metrics.blocked, metrics.dueSoon, metrics.total],
-              toneClassName: taskScope === 'completed' ? 'text-success' : 'text-danger',
-              icon: taskScope === 'completed' ? <CheckCircle2 size={15} /> : <AlertTriangle size={15} />,
-            },
-          ]}
-        />
-      </div>
-
-      {!loading && workloadByAssignee.length > 0 && (
-        <AdminPanel
-          title="Team workload"
-          description="Open task volume and delivery risk by assignee for the selected reporting period."
-          slug="tasks-team-workload"
-          bodyClassName="p-3 sm:p-4"
-          actions={<span className="text-[10px] text-muted">Task count, not logged hours</span>}
-        >
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3" data-ams-feature-slug="tasks-workload-distribution">
-            {workloadByAssignee.map(owner => (
-              <button
-                key={owner.key}
-                type="button"
-                onClick={() => selectWorkloadOwner(owner)}
-                aria-label={'View all open tasks for ' + owner.name}
-                data-ams-slug={'tasks-workload-owner-' + slugify(owner.key)}
-                className="group min-w-0 rounded-control border border-line bg-bg p-3 text-left transition-colors hover:border-accent/35 hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="truncate text-xs font-semibold text-fg">{owner.name}</div>
-                    <div className="mt-1 text-[10px] text-muted">{owner.open} open {owner.open === 1 ? 'task' : 'tasks'}</div>
-                  </div>
-                  <span className="shrink-0 rounded-badge border border-line bg-panel px-2 py-1 text-[10px] font-semibold tabular-nums text-fg">
-                    {owner.open}
-                  </span>
-                </div>
-                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-line" aria-hidden="true">
-                  <div className="h-full rounded-full bg-accent transition-[width] duration-200" style={{ width: Math.max(5, owner.open / workloadMaxOpen * 100) + '%' }} />
-                </div>
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {owner.highPriority > 0 && <span className="rounded-badge border border-warning/25 bg-warning/10 px-1.5 py-1 text-[9px] font-medium text-warning">{owner.highPriority} high/urgent</span>}
-                  {owner.overdue > 0 && <span className="rounded-badge border border-danger/25 bg-danger/10 px-1.5 py-1 text-[9px] font-medium text-danger">{owner.overdue} overdue</span>}
-                  {owner.blocked > 0 && <span className="rounded-badge border border-danger/25 bg-danger/10 px-1.5 py-1 text-[9px] font-medium text-danger">{owner.blocked} blocked</span>}
-                  {owner.highPriority === 0 && owner.overdue === 0 && owner.blocked === 0 && <span className="text-[10px] text-muted">No priority or blocker signals</span>}
-                </div>
-                <div className="mt-3 flex items-center justify-between border-t border-line pt-2 text-[10px] text-muted">
-                  <span>Open owner queue</span>
-                  <ArrowUpRight size={12} className="transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
-                </div>
-              </button>
-            ))}
-          </div>
-          <p className="mt-3 text-[10px] leading-4 text-muted">
-            Bars compare open task counts across assignees in this view. They do not represent available hours or individual capacity.
-          </p>
-        </AdminPanel>
-      )}
-
       <AdminPanel
         title={scopeLabel}
         description="Operational task queue linked to project delivery and team assignment."
@@ -1481,6 +1385,102 @@ export const TasksWorkspace: React.FC = () => {
 
         <AdminTablePagination total={filteredRecords.length} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} itemLabel="tasks" slug="tasks-pagination" />
       </AdminPanel>
+
+      <div data-ams-feature-slug="tasks-kpis">
+        <AdminMetricStrip slug="tasks-kpis"
+          className="sm:grid-cols-2 lg:grid-cols-4"
+          metrics={[
+            {
+              id: 'tasks-scope',
+              slug: 'tasks-kpi-scope',
+              label: scopeLabel,
+              value: metrics.total,
+              context: taskScope === 'all' ? 'Across project delivery work' : 'Tasks currently in this queue',
+              sparkline: [records.length, scopedRecords.length, metrics.total],
+              icon: <FolderKanban size={15} />,
+            },
+            {
+              id: 'tasks-open',
+              slug: 'tasks-kpi-open',
+              label: 'Open Work',
+              value: metrics.open,
+              context: metrics.highPriority + ' high / urgent',
+              sparkline: [metrics.open, metrics.dueSoon, metrics.blocked],
+              toneClassName: 'text-info',
+              icon: <Clock3 size={15} />,
+            },
+            {
+              id: 'tasks-review',
+              slug: 'tasks-kpi-review',
+              label: 'Review Queue',
+              value: metrics.review,
+              context: 'Awaiting review or QA',
+              sparkline: [metrics.review, metrics.blocked, metrics.open],
+              toneClassName: 'text-warning',
+              icon: <AlertTriangle size={15} />,
+            },
+            {
+              id: 'tasks-risk',
+              slug: 'tasks-kpi-risk',
+              label: taskScope === 'completed' ? 'Completed' : 'Risk Signals',
+              value: taskScope === 'completed' ? metrics.total : metrics.blocked + metrics.dueSoon,
+              context: taskScope === 'completed' ? 'Completed tasks in scope' : 'Blocked + due soon / overdue',
+              sparkline: [metrics.blocked, metrics.dueSoon, metrics.total],
+              toneClassName: taskScope === 'completed' ? 'text-success' : 'text-danger',
+              icon: taskScope === 'completed' ? <CheckCircle2 size={15} /> : <AlertTriangle size={15} />,
+            },
+          ]}
+        />
+      </div>
+
+      {!loading && workloadByAssignee.length > 0 && (
+        <AdminPanel
+          title="Team workload"
+          description="Open task volume and delivery risk by assignee for the selected reporting period."
+          slug="tasks-team-workload"
+          bodyClassName="p-3 sm:p-4"
+          actions={<span className="text-[10px] text-muted">Task count, not logged hours</span>}
+        >
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3" data-ams-feature-slug="tasks-workload-distribution">
+            {workloadByAssignee.map(owner => (
+              <button
+                key={owner.key}
+                type="button"
+                onClick={() => selectWorkloadOwner(owner)}
+                aria-label={'View all open tasks for ' + owner.name}
+                data-ams-slug={'tasks-workload-owner-' + slugify(owner.key)}
+                className="group min-w-0 rounded-control border border-line bg-bg p-3 text-left transition-colors hover:border-accent/35 hover:bg-panel-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="truncate text-xs font-semibold text-fg">{owner.name}</div>
+                    <div className="mt-1 text-[10px] text-muted">{owner.open} open {owner.open === 1 ? 'task' : 'tasks'}</div>
+                  </div>
+                  <span className="shrink-0 rounded-badge border border-line bg-panel px-2 py-1 text-[10px] font-semibold tabular-nums text-fg">
+                    {owner.open}
+                  </span>
+                </div>
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-line" aria-hidden="true">
+                  <div className="h-full rounded-full bg-accent transition-[width] duration-200" style={{ width: Math.max(5, owner.open / workloadMaxOpen * 100) + '%' }} />
+                </div>
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {owner.highPriority > 0 && <span className="rounded-badge border border-warning/25 bg-warning/10 px-1.5 py-1 text-[9px] font-medium text-warning">{owner.highPriority} high/urgent</span>}
+                  {owner.overdue > 0 && <span className="rounded-badge border border-danger/25 bg-danger/10 px-1.5 py-1 text-[9px] font-medium text-danger">{owner.overdue} overdue</span>}
+                  {owner.blocked > 0 && <span className="rounded-badge border border-danger/25 bg-danger/10 px-1.5 py-1 text-[9px] font-medium text-danger">{owner.blocked} blocked</span>}
+                  {owner.highPriority === 0 && owner.overdue === 0 && owner.blocked === 0 && <span className="text-[10px] text-muted">No priority or blocker signals</span>}
+                </div>
+                <div className="mt-3 flex items-center justify-between border-t border-line pt-2 text-[10px] text-muted">
+                  <span>Open owner queue</span>
+                  <ArrowUpRight size={12} className="transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                </div>
+              </button>
+            ))}
+          </div>
+          <p className="mt-3 text-[10px] leading-4 text-muted">
+            Bars compare open task counts across assignees in this view. They do not represent available hours or individual capacity.
+          </p>
+        </AdminPanel>
+      )}
 
       <Drawer slug="task-create-modal"
         open={taskFormOpen}
