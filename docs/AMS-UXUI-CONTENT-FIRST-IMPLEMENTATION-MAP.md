@@ -295,3 +295,69 @@ Phase F (regression and delivery): run npm run lint, npm run build, npm run test
 - Risks that require browser reproduction before deciding a fix: body overflow-x hidden masking child overflow; scrollbar-gutter stable interacting with main-only scroll ownership; login scroll-style restoration across successful/failed auth navigation; mobile drawer and nested detail scroll.
 - Protected behavior remains unchanged: no server/API/DB/auth/session/CSRF/MFA/RBAC policy/Finance formula/posting/payment/data-source/workflow/permission/dependency changes.
 - GitHub branch created for isolated work: audit/ams-structural-uxui-2026-10-17, based on the refreshed main SHA 35bc936ef96972a233196d3f3c92b2e5bb24d2d7. This audit-document update is the gate before application-source edits.
+
+
+## Implementation progress report · 17 October 2026
+
+### Slice 1 · Shared scrollbar and table styles
+
+- Files changed: src/index.css and tests/ams-scrollbar-and-table-regression.test.ts.
+- Normalized global, .overflow-x-auto, and .custom-scrollbar thumb contrast and sizing around the muted/text tokens, with a visible hover state.
+- Replaced explicit hidden-scrollbar rules for .ams-topnav-scroll, .ams-kanban-scroll, .ams-project-kanban-board, and .ams-project-kanban-task-board with thin visible scrollbars and consistent thumb styles.
+- Added a reduced-motion media rule that disables root smooth scrolling.
+- Removed screen-layout !important overrides from shared table actions and the Projects, Team, and Settings table variants. Their intended row/header geometry remains explicit. Print-only !important directives are retained.
+- Deliberately kept body horizontal clipping, stable scrollbar gutter, shell clipping, and existing main/sidebar/drawer scroll ownership. Their effects require live computed-style and viewport evidence before changing.
+- Added source regression checks for hidden scrollbar policies, reduced motion, and scoped table variants.
+
+### Slice 2 · Inbox ownership
+
+- Files changed: src/pages/admin/AdminInbox.tsx and tests/ams-scrollbar-and-table-regression.test.ts.
+- Removed the unreachable Inbox job controls and duplicate Candidate pipeline board, along with the empty Starred candidate work panel.
+- The Starred queue now uses a single-column register rather than reserving half of the layout for an empty candidate panel. Search copy refers to contact records instead of candidate reviews.
+- Kept the existing career-record exclusion in Inbox, the legacy view=jobs redirect to /admin/cms/careers?tab=applicants, and the canonical CMS applicant list/detail workflow. No API, route, data, status transition, or permission code was changed.
+- Added a regression assertion guarding the sole Careers applicant workspace and the compatibility redirect.
+
+### Slice 3 · Context tab discoverability
+
+- Files changed: src/components/admin/AdminModulePrimitives.tsx and tests/ams-scrollbar-and-table-regression.test.ts.
+- AdminSectionTabs now checks the active link's bounding rectangle when activeKey changes and adjusts only that tab strip's scrollLeft when the selected item falls outside the visible area. It does not call scrollIntoView, so this logic does not deliberately scroll the page vertically.
+- Added regression assertions for the active-link reference and horizontal reveal logic.
+- Browser confirmation of tab behavior after deep-link loads, resize, focus traversal, and keyboard navigation is outstanding.
+
+### Slice 4 · Login carousel motion control
+
+- Files changed: src/pages/admin/AdminLogin.tsx and tests/ams-scrollbar-and-table-regression.test.ts.
+- Added a localized, keyboard-focusable Pause/Resume control with a proper text label. Existing previous/next controls remain circular and unchanged in geometry.
+- Automatic rotation starts paused when prefers-reduced-motion: reduce is active. A preference change to reduced motion pauses an active rotation. The interval and media-query listener are cleaned up with the effect.
+- Kept login/authentication, session state, redirect handling, MFA, CSRF, and remember-device behavior unchanged. The carousel retains manual previous/next controls.
+- The first attempt used Play/Pause icons, but the app's lucide-react import bridge does not export those names. CI exposed the issue, and the icons were replaced with localized text controls. The final source no longer imports unsupported icons.
+
+### Validation state at the implementation checkpoint
+
+At commit 881dd732baae439a561cc623cad7f3daf0a2e900:
+- AMS Quality Gate: passed, run https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39050728048.
+- AMS CI: running the production HTTP smoke test when last checked, run https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39050728056. Final validation for the updated audit-map commit must be checked separately.
+- Additional direct source assertions passed for: no hidden-scrollbar rules left in src/index.css, no screen-table !important in the named variants, tab reveal references, login pause-control state/labels, preserved arrow-button geometry, and removal of the duplicate Inbox candidate board/group.
+- The repository could not be cloned in this local execution environment, so local npm run lint, npm run build, or npm run test were not run. Do not present GitHub workflow results as locally executed commands.
+- No authenticated browser, branch preview, computed-style inspection, viewport screenshots, or keyboard/touch session could be run here. No after-screenshot exists for the branch changes. Do not claim visual completion or WCAG conformance based on source checks.
+
+### Changed-file inventory and protected-boundary review
+
+Only these files were changed on this audit branch:
+1. docs/AMS-UXUI-CONTENT-FIRST-IMPLEMENTATION-MAP.md
+2. src/index.css
+3. src/pages/admin/AdminInbox.tsx
+4. src/pages/admin/AdminLogin.tsx
+5. src/components/admin/AdminModulePrimitives.tsx
+6. tests/ams-scrollbar-and-table-regression.test.ts
+
+No server, API, database, migration, auth/session implementation, CSRF/MFA/RBAC policy, Finance calculation/accounting workflow, dependency, route definition, or production data-source file was changed. Existing URLs, permissions, and workflow behavior are preserved by code inspection and focused regression tests, subject to final CI and runtime confirmation.
+
+### Remaining work and exact resume point
+
+- Refresh Actions and verify that the final branch HEAD's AMS Quality Gate and AMS CI both finish successfully after this report is committed.
+- When a legitimate authenticated browser session and branch preview are available, run the required viewport matrix: 1440, 1280, 1024, 900, 768, 390, and 320px. Check 200% zoom, reduced motion, keyboard, touch/trackpad/wheel, overflowing tables and Kanban, active query tabs, drawers/modals, login success/failure/logout, and scroll-lock cleanup. Capture before/after screenshots for every reproduced problem.
+- Continue module-specific adjustments only where source evidence or browser reproduction supports them. Prior content-first slices in main remain the baseline; do not repeat them blindly.
+- Reassess the remaining unreachable candidate-specific branches and status helpers inside AdminInbox.tsx only if compiler/test evidence or a fuller consumer search justifies that cleanup. The visible duplicate board/filter/empty group is removed; record filtering and CMS ownership remain protected.
+- The route/documentation discrepancy for /admin/approvals remains intentionally untouched and needs a separate route-owner decision if behavior is to change.
+- Current main baseline remains 35bc936ef96972a233196d3f3c92b2e5bb24d2d7 at the last refresh. This branch is for review only; no merge or deployment was performed.
