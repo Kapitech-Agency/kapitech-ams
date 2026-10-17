@@ -656,3 +656,18 @@ test('Vendor directory omits SLA compliance metrics until the source model suppo
   assert.equal(team.includes("slug: 'vendor-directory-kpi-sla'"), false);
   assert.equal(team.includes("label: 'Average SLA Compliance'"), false);
 });
+
+
+test('Project portfolio and archive registers lead their supporting KPI summaries', () => {
+  const projects = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminProjects.tsx'), 'utf8');
+  const portfolioTitle = projects.indexOf('title="Project portfolio"');
+  const portfolioKpis = projects.indexOf('data-ams-feature-slug="projects-kpis"');
+  const archiveTitle = projects.indexOf('title="Archived projects"');
+  const archiveKpis = projects.indexOf('data-ams-feature-slug="projects-archived-kpis"');
+  assert.ok(portfolioTitle >= 0 && portfolioKpis > portfolioTitle);
+  assert.ok(projects.indexOf('</AdminPanel>', portfolioTitle) < portfolioKpis);
+  assert.ok(archiveTitle >= 0 && archiveKpis > archiveTitle);
+  assert.ok(projects.indexOf('</AdminPanel>', archiveTitle) < archiveKpis);
+  assert.ok(projects.includes('aria-label="Project status quick filters"'));
+  assert.ok(projects.includes('data-ams-slug="projects-directory-filters"'));
+});
