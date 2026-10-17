@@ -77,4 +77,17 @@ test('Inbox leaves Careers applicant review in the canonical CMS workspace', asy
   assert.match(careers, /pagedApplicants\.map\(applicant/);
 });
 
+
+test('login carousel respects reduced-motion by default and has a pause/resume control', async () => {
+  const login = await read('src/pages/admin/AdminLogin.tsx');
+
+  assert.match(login, /window\.matchMedia\('\(prefers-reduced-motion: reduce\)'\)/);
+  assert.match(login, /isArtAutoplayPaused/);
+  assert.match(login, /Pause automatic image rotation/);
+  assert.match(login, /Resume automatic image rotation/);
+  assert.match(login, /<Pause size=\{15\}/);
+  assert.match(login, /<Play size=\{15\}/);
+  assert.match(login, /motionPreference\.removeEventListener\('change', handleMotionPreferenceChange\)/);
+});
+
 // Print-specific !important rules remain outside these screen-layout variants by design.
