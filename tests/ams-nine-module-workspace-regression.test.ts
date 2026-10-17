@@ -122,6 +122,15 @@ test('Documents puts the private register before upload and has a distinct failu
   assert.match(documents, /No documents match the current filters/);
 });
 
+test('Careers jobs/applicants tabs follow compact AMS geometry and retain tab semantics', async () => {
+  const careers = await read('src/pages/admin/AdminCmsCareers.tsx');
+  assert.match(careers, /ams-workspace-tabs inline-flex max-w-full flex-wrap/);
+  assert.match(careers, /inline-flex min-h-8 items-center gap-2 rounded-chip border px-3 text-\[11px\] font-medium/);
+  assert.match(careers, /role="tablist"/);
+  assert.match(careers, /aria-selected=\{activeTab === tab\.key\}/);
+  assert.match(careers, /aria-controls=/);
+});
+
 test('Website CMS editorial controls use accessible actions and the canonical Careers applicant workspace', async () => {
   const cmsProjects = await read('src/pages/admin/AdminCmsProjects.tsx');
   const insights = await read('src/pages/admin/AdminCmsInsights.tsx');
