@@ -173,7 +173,9 @@ test('Ambiguous project and task mutation responses refresh canonical records in
 
   assert.ok(source.includes('const isUnknownMutationOutcome = (response: { success: boolean; status?: number }) =>'));
   assert.ok(source.includes('!response.success && (response.status === undefined || response.status >= 500)'));
-  assert.ok(source.includes('if (isUnknownMutationOutcome(response)) await syncProjects(false);'));
+  assert.ok(source.includes('if (isUnknownMutationOutcome(response)) {\n          await syncProjects(false);\n          setProjectDrawerOpen(false);'));
+  assert.ok(source.includes('setTaskDrawerOpen(false);'));
+  assert.ok(source.includes('Task status outcome is unknown. Canonical records were refreshed.'));
   assert.ok(source.includes('Task status outcome is unknown. Canonical records were refreshed.'));
   assert.ok(source.includes('Project status outcome is unknown. Canonical records were refreshed.'));
   assert.ok(source.includes('Checklist update outcome is unknown. Canonical records were refreshed.'));
