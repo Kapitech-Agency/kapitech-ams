@@ -1719,6 +1719,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   };
 
   const openEditInvoice = (invoice: AgencyInvoice) => {
+    setInvoiceTemplateKey('blank');
     if (invoiceSourceBlocked) {
       showNotice('danger', sourceUnavailableMessage('invoice'));
       return;
@@ -2760,6 +2761,7 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
   };
 
   const openEditQuotation = (quotation: FinanceQuotation) => {
+    setQuotationTemplateKey('blank');
     setEditingQuotation(quotation);
     setQuotationTitle(quotation.title);
     setQuotationClientName(quotation.clientName);
