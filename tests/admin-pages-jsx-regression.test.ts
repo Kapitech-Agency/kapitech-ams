@@ -790,3 +790,21 @@ test('Contracts form and status filtering use CustomSelect without enabling unli
   assert.ok(contracts.includes('handleClientChange}'));
   assert.ok(contracts.includes('handleProjectChange}'));
 });
+
+
+test('Project profitability prioritizes its searchable financial register before aggregate metrics', () => {
+  const page = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminProjectProfitability.tsx'), 'utf8');
+  const header = page.indexOf('slug="project-profitability-header"');
+  const register = page.indexOf('data-ams-slug="project-profitability-table"');
+  const search = page.indexOf('aria-label="Search project profitability"');
+  const table = page.indexOf('<table', search);
+  const metrics = page.indexOf('aria-label="Aggregate profitability metrics"');
+  assert.ok(header >= 0 && register > header);
+  assert.ok(search > register && table > search);
+  assert.ok(metrics > table);
+  assert.ok(page.includes('collected revenue minus recorded expenses'));
+  assert.ok(page.includes('currencyFormatter(\'IDR\', idrCollected)'));
+  assert.ok(page.includes('currencyFormatter(\'IDR\', idrOutstanding)'));
+  assert.ok(page.includes('currencyFormatter(\'IDR\', idrContribution)'));
+  assert.ok(page.includes('Figures remain separated by currency'));
+});

@@ -100,28 +100,7 @@ export const AdminProjectProfitability: React.FC = () => {
         </AdminModuleNotice>
       )}
 
-      <section aria-label="Aggregate profitability metrics" className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-card border border-line bg-panel p-4" data-ams-slug="profitability-project-count">
-          <p className="text-[11px] font-medium text-muted">Projects in report</p>
-          <p className="mt-2 text-xl font-semibold tabular-nums text-fg">{loading ? '—' : projectCount}</p>
-          <p className="mt-1 text-[10px] text-muted">Distinct projects across currencies</p>
-        </div>
-        <div className="rounded-card border border-line bg-panel p-4" data-ams-slug="profitability-collected-idr">
-          <p className="text-[11px] font-medium text-muted">Collected · IDR only</p>
-          <p className="mt-2 text-xl font-semibold tabular-nums text-fg">{loading ? '—' : currencyFormatter('IDR', idrCollected)}</p>
-          <p className="mt-1 text-[10px] text-muted">Issued invoice payments recorded in AMS</p>
-        </div>
-        <div className="rounded-card border border-line bg-panel p-4" data-ams-slug="profitability-outstanding-idr">
-          <p className="text-[11px] font-medium text-muted">Outstanding · IDR only</p>
-          <p className="mt-2 text-xl font-semibold tabular-nums text-fg">{loading ? '—' : currencyFormatter('IDR', idrOutstanding)}</p>
-          <p className="mt-1 text-[10px] text-muted">Open balances for issued invoices</p>
-        </div>
-        <div className="rounded-card border border-line bg-panel p-4" data-ams-slug="profitability-contribution-idr">
-          <p className="text-[11px] font-medium text-muted">Contribution · IDR only</p>
-          <p className="mt-2 text-xl font-semibold tabular-nums text-fg">{loading ? '—' : currencyFormatter('IDR', idrContribution)}</p>
-          <p className="mt-1 text-[10px] text-muted">Collected revenue less recorded expenses ({currencyFormatter('IDR', idrCosts)} costs)</p>
-        </div>
-      </section>
+
 
       <section className="min-w-0 overflow-hidden rounded-card border border-line bg-panel" data-ams-slug="project-profitability-table">
         <div className="flex flex-col gap-3 border-b border-line p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
@@ -186,6 +165,29 @@ export const AdminProjectProfitability: React.FC = () => {
           <p className="text-[10px] leading-4 text-muted">
             Aggregate formula: collected revenue minus recorded expenses. This is a management contribution indicator, not a fully allocated accounting profit unless all project costs have been recorded and classified.
           </p>
+        </div>
+      </section>
+
+      <section aria-label="Aggregate profitability metrics" className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-card border border-line bg-panel p-4" data-ams-slug="profitability-project-count">
+          <p className="text-[11px] font-medium text-muted">Projects in report</p>
+          <p className="mt-2 text-xl font-semibold tabular-nums text-fg">{loading ? '—' : projectCount}</p>
+          <p className="mt-1 text-[10px] text-muted">Distinct projects across currencies</p>
+        </div>
+        <div className="rounded-card border border-line bg-panel p-4" data-ams-slug="profitability-collected-idr">
+          <p className="text-[11px] font-medium text-muted">Collected · IDR only</p>
+          <p className="mt-2 text-xl font-semibold tabular-nums text-fg">{loading ? '—' : currencyFormatter('IDR', idrCollected)}</p>
+          <p className="mt-1 text-[10px] text-muted">Issued invoice payments recorded in AMS</p>
+        </div>
+        <div className="rounded-card border border-line bg-panel p-4" data-ams-slug="profitability-outstanding-idr">
+          <p className="text-[11px] font-medium text-muted">Outstanding · IDR only</p>
+          <p className="mt-2 text-xl font-semibold tabular-nums text-fg">{loading ? '—' : currencyFormatter('IDR', idrOutstanding)}</p>
+          <p className="mt-1 text-[10px] text-muted">Open balances for issued invoices</p>
+        </div>
+        <div className="rounded-card border border-line bg-panel p-4" data-ams-slug="profitability-contribution-idr">
+          <p className="text-[11px] font-medium text-muted">Contribution · IDR only</p>
+          <p className="mt-2 text-xl font-semibold tabular-nums text-fg">{loading ? '—' : currencyFormatter('IDR', idrContribution)}</p>
+          <p className="mt-1 text-[10px] text-muted">Collected revenue less recorded expenses ({currencyFormatter('IDR', idrCosts)} costs)</p>
         </div>
       </section>
     </AdminPageShell>
