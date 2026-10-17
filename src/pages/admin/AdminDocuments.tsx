@@ -405,6 +405,17 @@ export const AdminDocuments: React.FC = () => {
       createdId = String(created.data.document.id);
       const uploaded = await api.documents.uploadContent(createdId, uploadFile);
       if (!uploaded.success || !uploaded.data?.document) {
+        // No HTTP response (timeout/network interruption) or a server error can mean
+        // the storage write completed but its response did not reach this client.
+        // Do not delete a possibly completed document: DELETE also removes its object.
+        const uploadOutcomeUnknown = uploaded.status === undefined || uploaded.status >= 500;
+        if (uploadOutcomeUnknown) {
+          await loadDocuments();
+          notify((uploaded.error || 'The upload result could not be confirmed.')
+            + ' The file may already be stored. Inspect the refreshed vault before retrying; do not upload it again until its status is clear.');
+          return;
+        }
+
         const cleanup = await cleanupIncompleteDocument(createdId);
         if (!cleanup.confirmed) {
           await loadDocuments();
