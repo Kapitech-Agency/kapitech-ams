@@ -139,7 +139,10 @@ test('Team workspace preview records are only injected in development or explici
   assert.match(teams, /api\.projects\.getAll\(\)/);
   assert.match(teams, /api\.timeLogs\.getAll\(\)/);
   assert.match(teams, /let nextMembers: TeamMember\[] = \[\]/);
-  assert.match(teams, /currentViewResults[\s\S]{0,600}filter\(\(item\) => !item\.result\.success\)/);
+  assert.match(teams, /const availableSources: TeamSourceAvailability = \{[\s\S]*members: memberRes\.success && Array\.isArray\(memberRes\.data\?\.assignees\)[\s\S]*timeLogs: timeRes\.success && Array\.isArray\(timeRes\.data\?\.timeLogs\)/);
+  assert.match(teams, /currentViewResults[\s\S]{0,2500}filter\(\(item\) => !item\.available\)/);
+  assert.match(teams, /'skill-matrix': \['members', 'vendors'\]/);
+  assert.match(teams, /currentViewDataUnavailable = TEAM_VIEW_DATA_SOURCES\[currentView\]/);
 });
 
 
