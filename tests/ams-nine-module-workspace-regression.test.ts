@@ -105,6 +105,12 @@ test('Settings keeps backup and audit failure states distinct from empty history
   assert.match(settings, /Retry/);
 });
 
+test('shared module headers wrap actions without forcing a full-width mobile action stack', async () => {
+  const primitives = await read('src/components/admin/AdminModulePrimitives.tsx');
+  assert.match(primitives, /className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto sm:justify-end"/);
+  assert.doesNotMatch(primitives, /className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:justify-end"/);
+});
+
 test('shared compact actions retain adequate touch targets and visible keyboard focus', async () => {
   const css = await read('src/index.css');
   assert.match(css, /\.ams-shell :is\(\.ams-data-table,\.ams-client-table,\.ams-teams-table,\.ams-projects-table,\.settings-system-table,\.ams-table\) td :is\(button,a\)\[class~="h-8"\]\[class~="w-8"\]/);
