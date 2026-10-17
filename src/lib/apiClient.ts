@@ -75,9 +75,11 @@ export async function apiRequest<T = any>(
                 ? json.error
                 : "You don't have access to this action.")
             : res.status >= 500
-              ? (typeof json.error === 'string' && json.error.trim()
-                  ? json.error
-                  : `The AMS server returned an error (HTTP ${res.status}). Check service and database health.`)
+              ? MUTATING_METHODS.has(method)
+                ? `${typeof json.error === 'string' && json.error.trim() ? json.error : 'The AMS server returned an error.'} The change may still have completed. Check the record before retrying to avoid creating a duplicate.`
+                : (typeof json.error === 'string' && json.error.trim()
+                    ? json.error
+                    : `The AMS server returned an error (HTTP ${res.status}). Check service and database health.`)
               : json.error || 'The request could not be completed. Check your input and try again.';
 
       return {
