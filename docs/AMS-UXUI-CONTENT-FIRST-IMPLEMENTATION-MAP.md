@@ -105,8 +105,20 @@ Team Directory, Vendor & Contractor Directory and Time Log Ledger also began wit
 | Settings · Audit log | Audit register/filter/pagination | Audit data and policy untouched. Source errors must not masquerade as empty history. |
 | Settings · Integrations | Integration status/configuration and save feedback | UI displays current source status; no API/provider configuration or credentials changed. |
 
-## Evidence and remaining verification
+## Validation and delivery status
 
-Source review covered the canonical page shell/navigation primitives and source files for all nine modules, Finance navigation/workbook grouping, page-specific CMS/Inbox working areas, and existing regression tests. The baseline CI passed. The current implementation branch still requires its own CI run, full diff review, responsive/browser inspection, and final source-boundary scan before it can be declared ready.
+Source review covered the canonical page shell and contextual navigation primitives, all nine primary modules, the actual Finance worksheet grouping, page-level CMS/Inbox workflows, and targeted frontend regression tests.
 
-Browser verification requires a supported authenticated test environment. If that is unavailable, document it rather than inferring visual correctness from JSX, tests, or build output.
+Implementation branch: `fix/ams-content-first-workspaces-2026-10-17`. It is 12 commits ahead of `main` and 0 commits behind the baseline `356ba6d57b1993dccafcea7e7a6f40a977afda04` at the time of the final diff review.
+
+The source implementation at commit `348f89ac69b976ee4d96341371e116a2145154f2` passed both repository workflows:
+- [AMS Quality Gate: typecheck, regression tests, production build](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39043896120)
+- [AMS CI: verify job](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39043896129)
+
+The compare review contained only these frontend/documentation/test files: this implementation map; `AdminClientRetainers.tsx`, `AdminClientSlaMonitoring.tsx`, `AdminClients.tsx`, `AdminCmsCareers.tsx`, `AdminCmsInsights.tsx`, `AdminCmsProjects.tsx`, `AdminCmsServices.tsx`, `AdminCmsTestimonials.tsx`, `AdminDocuments.tsx`, `AdminInbox.tsx`, `AdminProjects.tsx`, `AdminTeams.tsx`, and the two frontend regression test files. No backend, API, database, auth/session, RBAC, Finance calculation, dependency, or migration files are included in the diff.
+
+## Remaining visual verification and limits
+
+Authenticated browser-level UX/visual testing was not performed in this environment. In particular, the 1440px, 1024px, 768px, 390px, and 320px viewport pass, actual keyboard/focus flow, direct-route/browser-history checks, drawer interactions, and permission-specific visual scenarios remain unverified in a live AMS session. CI verifies static/type/regression/security/build gates but does not replace those visual checks.
+
+No frontend change is currently blocked by a backend requirement. The known visual-verification limitation is documented rather than inferred as a pass. The branch is ready for repository review; production deployment and live Hostinger verification have not been claimed.
