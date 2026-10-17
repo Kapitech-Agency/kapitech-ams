@@ -483,3 +483,28 @@ Refresh the current branch HEAD and Actions after this documentation update. The
 ### Resume point
 
 After this documentation update, fetch the current branch HEAD and check the exact SHA's AMS Quality Gate and AMS CI. The review branch remains separate from main, with no merge or deployment. Next visual verification should focus on the seven required viewport widths, table horizontal reachability, filter behavior during source failure/recovery, and scroll/focus restoration in resource drawers. Do not change the protected data contracts to simplify the unavailable-state presentation.
+
+
+
+## Follow-up checkpoint · Documents vault unavailable and access-denied states · 18 October 2026
+
+### Slice 12 · Separate a genuinely empty vault from a failed document request
+
+- Files changed: src/pages/admin/AdminDocuments.tsx and tests/ams-scrollbar-and-table-regression.test.ts.
+- Initial document load or refresh errors now use a dedicated "Documents unavailable" state when there are no previously loaded records. The UI does not present the vault as empty and does not encourage an upload based on a failed request.
+- For transient service failures after successful data has loaded, Documents retains the last-known-good list and shows an error/retry notice stating that the visible rows are the last successfully loaded data. During refresh, loaded rows stay visible with a refresh status.
+- Access failures are handled differently from transient service failures. When either the initial or retried request reports 401/403, the list is cleared and private detail/delete selections are reset so stale private records do not remain visible after a session or permission failure. The existing retry for transient 401/502/503 responses is preserved.
+- Successful empty responses still use the genuine empty-vault message and may show Upload when the current user's existing permission allows it. Search/filter no-match messaging remains separate from the empty-vault state.
+- Regression tests now cover the empty-vault versus unavailable state, retaining loaded rows on transient failures, clearing rows after access denial, and clearing private detail/delete state on access failure.
+- No API, document payload, storage, permission policy, backend route or server behavior was changed.
+
+### Validation at the Documents follow-up checkpoint
+
+- At commit 84c86652ea13eedf8242c41592d2775f8a054d11, AMS CI passed: https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39053725106.
+- At the same SHA, AMS Quality Gate passed: https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39053724975.
+- Focused source checks confirmed: the unavailable state takes precedence over the empty-vault state; transient failures retain last-known-good rows; access failures clear cached rows and selected detail/delete targets; mobile document actions remain 40×40px with focus styles.
+- These checks were run by repository CI. Authenticated browser-state testing and screenshots were not available, so exact rendered layout, real 401/403 navigation behavior and focus/scroll restoration still require visual/runtime verification.
+
+### Resume point
+
+The exact source HEAD verified here is 84c86652ea13eedf8242c41592d2775f8a054d11. The branch remains 50 commits ahead of main and 0 commits behind the checked main baseline 35bc936ef96972a233196d3f3c92b2e5bb24d2d7. Refresh both branch references before any later delivery decision. Nothing in this checkpoint is merged to main or deployed.
