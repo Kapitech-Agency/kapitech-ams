@@ -49,6 +49,10 @@ test('Task workspace reconciles ambiguous task mutations against canonical serve
   assert.ok(workspace.includes('Task edit result could not be confirmed.'));
   assert.ok(workspace.includes('Checklist result could not be confirmed.'));
   assert.ok(workspace.includes('Task deletion result could not be confirmed.'));
+  const deleteStart = workspace.indexOf('const deleteTask = async');
+  const deleteEnd = workspace.indexOf('const activeFilterCount', deleteStart);
+  const deleteHandler = workspace.slice(deleteStart, deleteEnd);
+  assert.ok(deleteHandler.includes("setDeleteTaskError(response.error || 'Task could not be deleted.');\n        return;"));
   assert.ok(workspace.includes('Some task update results were unknown.'));
   assert.ok(workspace.includes('Task status response did not include the saved record.'));
   assert.ok(workspace.includes('Task update response did not include the saved record.'));
