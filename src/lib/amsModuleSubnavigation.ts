@@ -1,9 +1,4 @@
-import {
-  canAccessAmsRoute,
-  getAmsNavigationDestinationSignature,
-  getAmsSidebarDestinationSignatures,
-  type AmsRole,
-} from './amsNavigationAccess';
+import { canAccessAmsRoute, type AmsRole } from './amsNavigationAccess';
 
 export type AmsSidebarModuleKey = 'dashboard' | 'crm' | 'projects' | 'finance' | 'clients' | 'team' | 'cms' | 'settings' | 'tasks';
 
@@ -63,9 +58,10 @@ const MODULE_SUBNAVIGATION: Record<AmsSidebarModuleKey, AmsSidebarSubnavigationI
 };
 
 /**
- * Contextual navigation contains only role-permitted local views owned by the
- * current module. Exact global destinations are suppressed to prevent duplicate
- * entries. Authorization decisions remain in the existing route policy.
+ * Contextual navigation lists the views owned by the current module.
+ * A module's default view must remain visible here even when its URL matches
+ * the sidebar destination: sidebar navigation and in-module navigation serve
+ * different purposes. Route access is still enforced by the existing policy.
  */
 export function getAmsModuleSubnavigation(
   moduleKey: AmsSidebarModuleKey,
@@ -97,13 +93,10 @@ export function getAmsModuleSubnavigation(
     items = items.filter((item) => item.key !== 'skills');
   }
 
-  const globalDestinations = getAmsSidebarDestinationSignatures(role);
   return items.filter((item) => {
-    if (!mfaAccessOnly) {
-      const target = new URL(item.to, 'https://ams.kapitech.local');
-      if (!canAccessAmsRoute(role, target.pathname, target.search)) return false;
-    }
-    return !globalDestinations.has(getAmsNavigationDestinationSignature(item.to));
+    if (mfaAccessOnly) return true;
+    const target = new URL(item.to, 'https://ams.kapitech.local');
+    return canAccessAmsRoute(role, target.pathname, target.search);
   });
 }
 
