@@ -37,6 +37,7 @@ export const FINANCE_WORKBOOK_GROUPS: FinanceWorkbookGroup[] = [
     key: 'receivables',
     label: 'Receivables & Payables',
     items: [
+      { key: 'quotations', sheet: '03A', label: 'Quotations', description: 'Reusable commercial document templates, quotation creation, validity tracking, and conversion to invoice.' },
       { key: 'accounts-receivable', sheet: '06', label: 'Accounts Receivable', description: 'Invoice balances, due dates and payment status.' },
       { key: 'accounts-payable', sheet: '07', label: 'Accounts Payable', description: 'Vendor obligations and the bill records still required.' },
       { key: 'vendors', sheet: '11', label: 'Vendors & Freelancers', description: 'Vendor directory, contracts, rates and payment references.' },
