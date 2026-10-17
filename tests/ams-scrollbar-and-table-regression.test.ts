@@ -131,4 +131,22 @@ test('Documents mobile row actions use usable touch targets and visible focus', 
   assert.match(mobileList, /canManageDocuments && <button[^>]*aria-label=\{'Delete ' \+ titleOf\(doc\)\}/);
 });
 
+test('Documents distinguishes an unavailable vault from a genuinely empty vault and retains last good rows', async () => {
+  const documents = await read('src/pages/admin/AdminDocuments.tsx');
+  const loadStart = documents.indexOf('const loadDocuments = async () =>');
+  const loadEnd = documents.indexOf('  useEffect(() => {\n    void loadDocuments();', loadStart);
+  assert.ok(loadStart >= 0 && loadEnd > loadStart, 'missing document loader boundary');
+  const loader = documents.slice(loadStart, loadEnd);
+
+  assert.doesNotMatch(loader, /setDocuments\(\[\]\)/);
+  assert.match(documents, /isLoading && documents\.length === 0/);
+  assert.match(documents, /isLoading && documents\.length > 0/);
+  assert.match(documents, /loadError && documents\.length === 0/);
+  assert.match(documents, /data-ams-slug="documents-unavailable"/);
+  assert.match(documents, /Documents unavailable/);
+  assert.match(documents, /loadError && documents\.length > 0/);
+  assert.match(documents, /Showing the last successfully loaded document list\./);
+  assert.match(documents, /documents\.length \? 'No documents match the current filters' : 'No documents in the vault yet'/);
+});
+
 // Print-specific !important rules remain outside these screen-layout variants by design.
