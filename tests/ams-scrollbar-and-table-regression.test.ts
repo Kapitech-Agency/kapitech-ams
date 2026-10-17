@@ -117,4 +117,18 @@ test('contextual navigation reveals a selected tab that is outside the visible s
   assert.match(primitives, /nav\.scrollLeft \+= tabBounds\.right - \(navBounds\.right - inset\)/);
 });
 
+test('Documents mobile row actions use usable touch targets and visible focus', async () => {
+  const documents = await read('src/pages/admin/AdminDocuments.tsx');
+  const start = documents.indexOf('data-ams-feature-slug="documents-mobile-list"');
+  const end = documents.indexOf('data-ams-feature-slug="documents-table"', start);
+  assert.ok(start >= 0 && end > start, 'missing mobile document list or desktop table boundary');
+  const mobileList = documents.slice(start, end);
+
+  assert.equal((mobileList.match(/inline-flex h-10 w-10 items-center justify-center/g) || []).length, 3);
+  assert.equal((mobileList.match(/focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent/g) || []).length, 3);
+  assert.match(mobileList, /aria-label=\{'Preview ' \+ titleOf\(doc\)\}/);
+  assert.match(mobileList, /aria-label=\{'Download ' \+ titleOf\(doc\)\}[^>]*disabled=\{!canDownload\}/);
+  assert.match(mobileList, /canManageDocuments && <button[^>]*aria-label=\{'Delete ' \+ titleOf\(doc\)\}/);
+});
+
 // Print-specific !important rules remain outside these screen-layout variants by design.
