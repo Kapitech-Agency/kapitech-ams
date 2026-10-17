@@ -415,3 +415,44 @@ No server, API, database, migration, auth/session implementation, CSRF/MFA/RBAC 
 ### Resume point
 
 Refresh the current branch HEAD and Actions after this documentation update. Then continue with route-specific source/browser QA only where an authenticated preview can demonstrate the problem. Highest outstanding validation remains browser-based verification of scroll ownership, responsive layout, table last-column reachability, active-tab reveal, client drawer scroll/focus restoration, and login/logout scroll-lock restoration. The /admin/approvals source/documentation discrepancy remains deliberately untouched. Do not merge or deploy this review branch without a separate instruction.
+
+
+
+## Follow-up checkpoint · Settings availability, Inbox accessibility, and mobile Documents actions · 17 October 2026
+
+### Slice 8 · Backup unavailable state is distinct from an empty history
+
+- Files changed: src/pages/admin/AdminSettings.tsx and tests/admin-settings-module-regression.test.ts.
+- Added a frontend-only backup-source error state separate from the general system overview error banner.
+- When backup history is empty because the backup request failed, Settings now says "Backup status unavailable" and offers retry. The "No production backups found" state and Create Snapshot prompt appear only when the source response successfully returned an empty history.
+- When a refresh fails after earlier backup rows loaded successfully, the prior rows remain visible and a warning says the entries are the last successfully loaded data. While refresh is in progress, existing rows remain visible with a refreshing message.
+- Successful backup responses clear the backup-specific error. The server API, permissions, snapshot flow, integrity action and persistence behavior were not changed.
+- Regression checks cover unavailable status, valid empty state, and preservation of previous rows.
+
+### Slice 9 · Inbox starred action has semantic button behavior
+
+- Files changed: src/pages/admin/AdminInbox.tsx and tests/ams-scrollbar-and-table-regression.test.ts.
+- Replaced the star icon's direct click handler on a table cell with a real button. It exposes a localized name based on whether the record is starred, reports state through aria-pressed, and has visible keyboard focus.
+- Existing canManageCrm authorization remains the guard. Unauthorized users receive a disabled control; the existing update handler/API call and row-selection workflow are preserved.
+- Added a regression assertion for button semantics, accessible state, permission gating, focus style and the removal of the non-semantic cell action.
+
+### Slice 10 · Mobile Documents action targets
+
+- Files changed: src/pages/admin/AdminDocuments.tsx and tests/ams-scrollbar-and-table-regression.test.ts.
+- Increased mobile Preview, Download and Delete buttons from 36×36px to 40×40px. All three now expose the design-system focus ring. Download remains disabled when no eligible URL exists, and Delete remains permission-gated.
+- No private-file URL, secure download or deletion workflow was modified.
+- A first regression assertion used a regex that stopped at the JSX arrow in the click handler, causing a test-only failure. The assertion was corrected to allow JSX expression content. The application change itself remained the intended 40×40px targets.
+
+### Validation for combined source changes
+
+- Commit 7f17d3501e3a30c6d4dd6ed0df7abca5eb02daaf passed AMS Quality Gate: https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39052613323.
+- The same commit passed AMS CI: https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39052613329. This includes typecheck, regression tests, production build, security regression tests, PostgreSQL integration tests, dependency audit, packaged migrations and production HTTP smoke test.
+- Those runs cover the combined Client, Settings, Inbox, scrollbar/navigation, login and mobile Documents changes at that source checkpoint. The follow-up audit-map commit still needs its own CI result checked.
+
+### Current scope and remaining verification
+
+- Files changed in the frontend slices remain limited to the AMS audit map, shared navigation primitive, main CSS, Clients, Documents, Inbox, Login, Settings, and their focused frontend regression tests.
+- No backend/server, API contract, database/migration, auth/session, CSRF/MFA/RBAC policy, Finance formula, dependency or production data-source file was changed.
+- The editor for client records still initializes optional SLA fields as zero when opening an edit form and serializes zero on save. This was not changed because it can affect persisted payload semantics and needs a separate approved data-contract/workflow review. The display, filter, compliance and export fixes described in Slice 7 remain frontend presentation fixes.
+- Browser-based verification is outstanding: authenticated module screenshots, scroll ownership and last-column reachability at the required widths, keyboard/touch behavior, drawer/modal focus and scroll restoration, login success/failure/logout style-lock cleanup, and native scrollbar behavior in another browser engine. The source checks and CI do not substitute for these runtime tests.
+- Repository main was last verified at 35bc936ef96972a233196d3f3c92b2e5bb24d2d7. Refresh main and the review branch before any future release decision. This branch remains unmerged and undeployed.
