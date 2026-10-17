@@ -301,7 +301,9 @@ test('SLA Monitoring never presents mock uptime or incident metrics as productio
 
   assert.match(page, /Telemetry not configured/);
   assert.match(page, /No sample accounts or simulated performance values are shown/);
-  assert.match(page, /value: '—'/);
+  assert.match(page, /Uptime, MTTR, compliance, incident history, and snapshots are unavailable/);
+  assert.match(page, /data-ams-slug="sla-monitoring-setup"/);
+  assert.doesNotMatch(page, /SLA-001|PT Astra Digital Ventura|ShopeePay International|value:\s*['"]\d+/);
   assert.doesNotMatch(page, /const seed|const \[records\]|isSlugFixtureMode/);
   assert.match(page, /Open Contracts &amp; SOW/);
 });
@@ -663,7 +665,9 @@ test('SLA Monitoring never presents fixture telemetry as real client performance
 
   assert.match(sla, /Telemetry not configured/);
   assert.match(sla, /No sample accounts or simulated performance values are shown/);
-  assert.match(sla, /value: '—'/);
+  assert.match(sla, /Uptime, MTTR, compliance, incident history, and snapshots are unavailable/);
+  assert.match(sla, /data-ams-slug="sla-monitoring-setup"/);
+  assert.doesNotMatch(sla, /SLA-001|PT Astra Digital Ventura|ShopeePay International|value:\s*['"]\d+/);
   assert.doesNotMatch(sla, /SLA-001|PT Astra Digital Ventura|ShopeePay International|const seed/);
   assert.doesNotMatch(sla, /isSlugFixtureMode/);
 });

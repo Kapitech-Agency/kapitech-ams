@@ -51,7 +51,7 @@ import { useLanguage } from '../../lib/LanguageContext';
 import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
 
-import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminSectionTabs, AdminTablePagination, AdminPageShell } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminModuleHeader, AdminSectionTabs, AdminTablePagination, AdminPageShell } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 export const AdminInbox: React.FC = () => {
   const { matchesDate, value: reportPeriodValue, enabled: reportPeriodEnabled } = useReportingPeriod();
@@ -758,72 +758,6 @@ export const AdminInbox: React.FC = () => {
         />
       </div>
 
-      {/* ------------------------------------------------------------- */}
-      {/* 2. TAB-SPECIFIC KPI WORKSPACE */}
-      {activeInboxTab === 'overview' ? (
-        <section data-ams-feature-slug="inbox-overview-kpis" data-ams-slug="inbox-overview-kpis" aria-label="Inbox overview KPIs" className="rounded-card border border-line bg-panel p-4">
-          <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
-            <div>
-              <h2 className="text-sm font-semibold text-fg">Operational control center</h2>
-              <p className="mt-1 text-xs text-muted">A single view of client demand, hiring intake, and saved follow-up work.</p>
-            </div>
-            <span className="text-[11px] font-medium tabular-nums text-muted">{submissions.length} total inbound</span>
-          </div>
-          <AdminMetricStrip slug="inbox-overview-kpis" className="lg:grid-cols-4" metrics={[
-            { id: 'overview-total', label: 'Total inbound', value: submissions.length, context: 'All website submissions',  icon: <Inbox size={16} strokeWidth={1.8} /> },
-            { id: 'overview-client-new', label: 'New client leads', value: submissions.filter((item) => item.type !== 'career' && item.status === 'new').length, context: 'Awaiting client triage',  icon: <MessageSquare size={16} strokeWidth={1.8} />, toneClassName: 'text-danger' },
-            { id: 'overview-starred', label: 'Starred queue', value: submissions.filter((item) => !!item.starred).length, context: 'Saved for follow-up',  icon: <Star size={16} strokeWidth={1.8} />, toneClassName: 'text-warning' }
-          ]} />
-        </section>
-      ) : activeInboxTab === 'client' ? (
-        <section data-ams-feature-slug="inbox-client-kpis" data-ams-slug="inbox-client-kpis" aria-label="Client inbox KPIs" className="rounded-card border border-line bg-panel p-4">
-          <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
-            <div>
-              <h2 className="text-sm font-semibold text-fg">Client sales intake</h2>
-              <p className="mt-1 text-xs text-muted">Review website inquiries, track response status, and keep follow-ups visible.</p>
-            </div>
-            <span className="text-[11px] font-medium tabular-nums text-muted">{activeTabItems.length} client inquiries</span>
-          </div>
-          <AdminMetricStrip slug="inbox-client-kpis" className="lg:grid-cols-4" metrics={[
-            { id: 'client-total', label: 'Total inquiries', value: activeTabItems.length, context: 'Inbound client requests', },
-            { id: 'client-new', label: 'New', value: activeTabItems.filter((item) => item.status === 'new').length, context: 'Needs first review',  toneClassName: 'text-danger' },
-            { id: 'client-review', label: 'In review', value: activeTabItems.filter((item) => item.status === 'in-review').length, context: 'Being qualified',  toneClassName: 'text-warning' },
-            { id: 'client-contact-details', label: 'Contact details', value: activeTabItems.filter((item) => Boolean(item.email || item.phone)).length, context: 'Email or phone provided',  icon: <Users size={16} strokeWidth={1.8} />, toneClassName: 'text-info' }
-          ]} />
-        </section>
-      ) : activeInboxTab === 'jobs' ? (
-        <section data-ams-feature-slug="inbox-jobs-kpis" data-ams-slug="inbox-jobs-kpis" aria-label="Job application KPIs" className="rounded-card border border-line bg-panel p-4">
-          <div className="mb-3 flex items-start justify-between gap-3 border-b border-line pb-3">
-            <div className="min-w-0">
-              <h2 className="text-sm font-semibold text-fg">Recruitment pipeline</h2>
-              <p className="mt-1 max-w-2xl text-xs leading-5 text-muted">Screen candidates by stage, keep ownership visible, and move each application to its next decision.</p>
-            </div>
-            <span className="shrink-0 text-[11px] font-medium tabular-nums text-muted">{activeTabItems.length} applications</span>
-          </div>
-          <AdminMetricStrip slug="inbox-jobs-kpis" className="lg:grid-cols-4" metrics={[
-            { id: 'jobs-total', label: 'Applications', value: activeTabItems.length, context: 'All candidate intake',  icon: <Briefcase size={16} strokeWidth={1.8} /> },
-            { id: 'jobs-new', label: 'Needs screening', value: activeTabItems.filter((item) => item.status === 'new').length, context: 'New applications',  toneClassName: 'text-danger' },
-            { id: 'jobs-active', label: 'In process', value: activeTabItems.filter((item) => ['screening', 'shortlisted', 'interview'].includes(item.status)).length, context: 'Screening to interview',  toneClassName: 'text-info' },
-            { id: 'jobs-hired', label: 'Hired', value: metrics.hiredCount, context: metrics.hiringRate + '% of applications',  toneClassName: 'text-success' }
-          ]} />
-        </section>
-      ) : (
-        <section data-ams-feature-slug="inbox-starred-kpis" data-ams-slug="inbox-starred-kpis" aria-label="Starred queue KPIs" className="rounded-card border border-line bg-panel p-4">
-          <div className="mb-3 flex items-end justify-between gap-3 border-b border-line pb-3">
-            <div>
-              <h2 className="text-sm font-semibold text-fg">Priority queue</h2>
-              <p className="mt-1 text-xs text-muted">A focused workspace for records the team intentionally saved for follow-up.</p>
-            </div>
-            <span className="text-[11px] font-medium tabular-nums text-muted">{activeTabItems.length} starred</span>
-          </div>
-          <AdminMetricStrip slug="inbox-starred-kpis" className="lg:grid-cols-4" metrics={[
-            { id: 'starred-total', label: 'Starred', value: activeTabItems.length, context: 'Saved records',  icon: <Star size={16} strokeWidth={1.8} /> },
-            { id: 'starred-critical', label: 'Urgent / high', value: activeTabItems.filter((item) => item.priority === 'urgent' || item.priority === 'high').length, context: 'Priority follow-up',  toneClassName: 'text-danger' },
-            { id: 'starred-clients', label: 'Client inquiries', value: activeTabItems.filter((item) => item.type !== 'career').length, context: 'Client follow-up', },
-          ]} />
-        </section>
-      )}
-      
       {/* 3. TAB-SPECIFIC CONTROLS */}
       {activeInboxTab === 'overview' ? (
         <AdminFilterBar

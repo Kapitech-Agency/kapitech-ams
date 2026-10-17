@@ -583,3 +583,121 @@ test('Flat sidebar visibility follows the nine-module role policy and keeps Sett
   assert.ok(layout.includes('Search Everything'));
   assert.ok(layout.includes('onLogout={handleLogout}'));
 });
+
+
+test('Content-first CMS registers use their working area instead of repeated KPI strips', () => {
+  const pages = [
+    'src/pages/admin/AdminCmsProjects.tsx',
+    'src/pages/admin/AdminCmsServices.tsx',
+    'src/pages/admin/AdminCmsInsights.tsx',
+    'src/pages/admin/AdminCmsTestimonials.tsx',
+    'src/pages/admin/AdminCmsCareers.tsx',
+  ];
+
+  for (const file of pages) {
+    const source = fs.readFileSync(path.resolve(process.cwd(), file), 'utf8');
+    assert.match(source, /<AdminModuleHeader\b/, file + ' keeps its single module header');
+    assert.doesNotMatch(source, /<AdminMetricStrip\b/, file + ' should not put a repeated KPI strip before its register/editor');
+  }
+
+  const caseStudies = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsProjects.tsx'), 'utf8');
+  const services = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsServices.tsx'), 'utf8');
+  const insights = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsInsights.tsx'), 'utf8');
+  const testimonials = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsTestimonials.tsx'), 'utf8');
+  const careers = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminCmsCareers.tsx'), 'utf8');
+  assert.match(caseStudies, /<AdminFilterBar\b/);
+  assert.match(services, /<AdminFilterBar\b/);
+  assert.match(insights, /<AdminFilterBar\b/);
+  assert.match(testimonials, /<AdminFilterBar\b/);
+  assert.ok(careers.indexOf('role="tablist"') < careers.indexOf('data-ams-feature-slug="cms-careers-list"'));
+});
+
+test('Inbox opens with contextual controls and its triage workspace, without a redundant KPI dashboard', () => {
+  const inbox = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminInbox.tsx'), 'utf8');
+  assert.match(inbox, /<AdminModuleHeader\b/);
+  assert.match(inbox, /<AdminSectionTabs\b/);
+  assert.match(inbox, /<AdminFilterBar\b/);
+  assert.match(inbox, /data-ams-slug="inbox-overview-workspace"/);
+  assert.doesNotMatch(inbox, /<AdminMetricStrip\b/);
+  assert.ok(inbox.includes('to="/admin/cms/careers?tab=applicants"'));
+});
+
+
+test('Document vault prioritizes search and the register while preserving the upload dropzone', () => {
+  const documents = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminDocuments.tsx'), 'utf8');
+  assert.doesNotMatch(documents, /<AdminMetricStrip\\b/);
+  assert.ok(documents.indexOf('<AdminFilterBar') < documents.indexOf('data-ams-slug="documents-directory"'));
+  assert.ok(documents.indexOf('data-ams-slug="documents-directory"') < documents.indexOf('<AdminPanel slug="documents-upload-dropzone"'));
+  assert.ok(documents.includes('onDrop={(event) => {'));
+  assert.ok(documents.includes('data-ams-slug="documents-upload-browse"'));
+  assert.ok(documents.includes('<Drawer') && documents.includes('documents-upload-form'));
+});
+
+
+test('Retainers and SLA monitoring prioritize the actual operational workspace', () => {
+  const retainers = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientRetainers.tsx'), 'utf8');
+  const sla = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClientSlaMonitoring.tsx'), 'utf8');
+  assert.ok(retainers.includes('<AdminMetricStrip'));
+  assert.ok(retainers.includes('data-ams-slug="retainer-time-log-reconciliation-state"'));
+  assert.ok(retainers.includes('data-ams-slug="retainers-directory"'));
+  assert.equal(retainers.includes('className="grid grid-cols-1 gap-3 md:grid-cols-3"'), false);
+  assert.ok(sla.indexOf('data-ams-slug="sla-telemetry-not-configured"') < sla.indexOf('data-ams-slug="sla-monitoring-setup"'));
+  assert.ok(sla.indexOf('data-ams-slug="sla-monitoring-setup"') < sla.indexOf('data-ams-slug="sla-monitoring-next-actions"'));
+  assert.equal(sla.includes('aria-label="SLA metrics"'), false);
+  assert.ok(sla.includes('No sample accounts or simulated performance values are shown.'));
+});
+
+
+test('Vendor directory omits SLA compliance metrics until the source model supports them', () => {
+  const team = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminTeams.tsx'), 'utf8');
+  assert.ok(team.includes("slug: 'vendor-directory-kpi-active-contractors'"));
+  assert.ok(team.includes("slug: 'vendor-directory-kpi-external-burn'"));
+  assert.ok(team.includes("slug: 'vendor-directory-kpi-renewals'"));
+  assert.equal(team.includes("slug: 'vendor-directory-kpi-sla'"), false);
+  assert.equal(team.includes("label: 'Average SLA Compliance'"), false);
+});
+
+
+test('Project portfolio and archive registers lead their supporting KPI summaries', () => {
+  const projects = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminProjects.tsx'), 'utf8');
+  const portfolioTitle = projects.indexOf('title="Project portfolio"');
+  const portfolioKpis = projects.indexOf('data-ams-feature-slug="projects-kpis"');
+  const archiveTitle = projects.indexOf('title="Archived projects"');
+  const archiveKpis = projects.indexOf('data-ams-feature-slug="projects-archived-kpis"');
+  assert.ok(portfolioTitle >= 0 && portfolioKpis > portfolioTitle);
+  assert.ok(projects.indexOf('</AdminPanel>', portfolioTitle) < portfolioKpis);
+  assert.ok(archiveTitle >= 0 && archiveKpis > archiveTitle);
+  assert.ok(projects.indexOf('</AdminPanel>', archiveTitle) < archiveKpis);
+  assert.ok(projects.includes('aria-label="Project status quick filters"'));
+  assert.ok(projects.includes('slug="projects-directory-filters"'));
+});
+
+
+test('Client, team, vendor and time-log registers lead their supporting summaries', () => {
+  const clients = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClients.tsx'), 'utf8');
+  const teams = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminTeams.tsx'), 'utf8');
+
+  const clientDirectory = clients.indexOf('data-ams-feature-slug="clients-directory-table"');
+  const clientDirectoryEnd = clients.indexOf('</section>', clientDirectory);
+  const clientMetrics = clients.indexOf('data-ams-feature-slug="clients-metrics"');
+  assert.ok(clientDirectory >= 0 && clientDirectoryEnd > clientDirectory && clientMetrics > clientDirectoryEnd);
+  assert.ok(clients.indexOf('slug="client-directory-filters"') < clientDirectory);
+
+  const teamPagination = teams.indexOf('slug="team-directory-pagination"');
+  const teamPanelEnd = teams.indexOf('</AdminPanel>', teamPagination);
+  const teamMetrics = teams.indexOf("slug: 'team-directory-kpi-headcount'");
+  assert.ok(teamPagination >= 0 && teamPanelEnd > teamPagination && teamMetrics > teamPanelEnd);
+
+  const vendorPagination = teams.indexOf('slug="vendor-directory-pagination"');
+  const vendorPanelEnd = teams.indexOf('</AdminPanel>', vendorPagination);
+  const vendorMetrics = teams.indexOf("slug: 'vendor-directory-kpi-active-contractors'");
+  assert.ok(vendorPagination >= 0 && vendorPanelEnd > vendorPagination && vendorMetrics > vendorPanelEnd);
+  assert.equal(teams.includes('SLA is not tracked by the current vendor data model'), false);
+  assert.equal(teams.includes('className="w-[8%] text-center">SLA</th>'), false);
+
+  const timePagination = teams.indexOf('slug="time-logs-pagination"');
+  const timePanelEnd = teams.indexOf('</AdminPanel>', timePagination);
+  const timeMetrics = teams.indexOf("slug: 'time-logs-kpi-tracked'");
+  assert.ok(timePagination >= 0 && timePanelEnd > timePagination && timeMetrics > timePanelEnd);
+  assert.ok(teams.indexOf('slug="time-logs-filters"') < teams.indexOf('slug="time-logs-ledger"'));
+});

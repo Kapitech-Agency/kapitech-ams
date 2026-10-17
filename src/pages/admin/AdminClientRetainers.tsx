@@ -25,7 +25,7 @@ import type { AgencyClient } from '../../lib/clientStore';
 import { Button } from '../../components/ui/Button';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
-import { AdminFilterBar, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 type Health = 'healthy' | 'near-cap' | 'overage-risk';
 type Cycle = 'monthly' | 'quarterly' | 'annual';
@@ -308,10 +308,16 @@ export const AdminClientRetainers: React.FC = () => {
 
       {message && <div className="flex items-center justify-between rounded-card border border-line bg-panel px-3 py-2.5 text-xs text-fg" role="status" aria-live="polite"><span>{message}</span><button type="button" onClick={() => setMessage(null)} className="inline-flex h-9 w-9 items-center justify-center rounded-control text-muted hover:bg-bg hover:text-fg" aria-label="Dismiss"><X size={14} /></button></div>}
 
-      <section data-ams-feature-slug="retainers-kpis" data-ams-slug="retainers-kpis" className="grid grid-cols-1 gap-3 md:grid-cols-3" aria-label="Retainer metrics">
-        <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-xs font-medium">Monthly retainer value</span><ArrowUp size={18} className="text-success" /></div><div className="mt-3 text-2xl font-medium leading-8 tabular-nums text-fg">{money(mrr)}</div><p className="mt-1 text-[11px] text-muted">Current committed recurring value</p></div>
-        <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-xs font-medium">Committed retainer hours</span><Clock3 size={18} className="text-info" /></div><div className="mt-3 text-2xl font-medium leading-8 tabular-nums text-fg">{allocated.toLocaleString()} hrs/mo</div><p className="mt-1 text-[11px] tabular-nums text-muted">Burned {used.toLocaleString()} hrs · {burn.toFixed(1)}%</p></div>
-        <div className="rounded-card border border-line bg-panel p-4"><div className="flex items-center justify-between text-muted"><span className="text-xs font-medium">Renewals due in 30 days</span><CalendarDays size={18} className="text-warning" /></div><div className="mt-3 text-2xl font-medium leading-8 tabular-nums text-fg">{renewals.length}</div><p className="mt-1 text-[11px] text-muted">{money(renewalsValue)} monthly value</p></div>
+      <section data-ams-feature-slug="retainers-kpis" data-ams-slug="retainers-kpis" aria-label="Retainer metrics">
+        <AdminMetricStrip
+          slug="retainers-kpis"
+          className="md:grid-cols-3 lg:grid-cols-3"
+          metrics={[
+            { id: 'monthly-value', label: 'Monthly retainer value', value: money(mrr), context: 'Current committed recurring value', icon: <ArrowUp size={15} />, toneClassName: 'text-success' },
+            { id: 'committed-hours', label: 'Committed retainer hours', value: allocated.toLocaleString() + ' hrs/mo', context: 'Burned ' + used.toLocaleString() + ' hrs · ' + burn.toFixed(1) + '%', icon: <Clock3 size={15} />, toneClassName: 'text-info' },
+            { id: 'renewals-due', label: 'Renewals due in 30 days', value: renewals.length, context: money(renewalsValue) + ' monthly value', icon: <CalendarDays size={15} />, toneClassName: 'text-warning' }
+          ]}
+        />
       </section>
 
       <AdminFilterBar slug="client-retainers-filters"

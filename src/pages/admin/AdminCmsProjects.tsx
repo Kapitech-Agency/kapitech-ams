@@ -27,7 +27,7 @@ import type { ProjectItem } from '../../data/projectsData';
 import { useLanguage } from '../../lib/LanguageContext';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Skeleton } from '../../components/ui/Skeleton';
-import { AdminDataTableShell, AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminDataTableShell, AdminFilterBar, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 
 
 const slugifyCaseStudy = (value: string): string =>
@@ -424,17 +424,6 @@ export const AdminCmsProjects: React.FC = () => {
       
       
 
-      <AdminMetricStrip
-        slug="cms-projects-kpis"
-        className="grid-cols-2 sm:grid-cols-4"
-        metrics={[
-          { id: 'projects-total', label: 'Case studies', value: projects.length, icon: <Layers size={15} />, toneClassName: 'text-accent-text' },
-          { id: 'projects-featured', label: 'Featured', value: projects.filter((project) => project.featured).length, icon: <Star size={15} />, toneClassName: 'text-warning' },
-          { id: 'projects-visual', label: 'Visual experience', value: projects.filter((project) => project.pillar === 'Visual Experience').length, icon: <Eye size={15} />, toneClassName: 'text-info' },
-          { id: 'projects-development', label: 'Innovation development', value: projects.filter((project) => project.pillar === 'Innovation Development').length, icon: <TrendingUp size={15} />, toneClassName: 'text-success' }
-        ]}
-      />
-
             {statusMessage && (
         <AdminModuleNotice
           tone={/failed|could not|unable|error|gagal|wajib|required/i.test(statusMessage) ? 'danger' : 'success'}
@@ -450,7 +439,6 @@ export const AdminCmsProjects: React.FC = () => {
         onSearchChange={setSearchQuery}
         searchPlaceholder="Search project, client, industry, or service..."
         searchLabel="Search case studies"
-        className="mt-4"
         actions={(
           <button
             type="button"

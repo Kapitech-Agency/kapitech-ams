@@ -14,7 +14,7 @@ import Button from '../../components/ui/Button';
 import { Drawer } from '../../components/ui/Drawer';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { CustomSelect } from '../../components/ui/CustomSelect';
-import { AdminDataTableShell, AdminMetricStrip, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination, Skeleton } from '../../components/admin/AdminModulePrimitives';
+import { AdminDataTableShell, AdminModuleHeader, AdminModuleNotice, AdminPageShell, AdminTablePagination, Skeleton } from '../../components/admin/AdminModulePrimitives';
 
 type CareerPosition = {
   id: string;
@@ -294,9 +294,6 @@ export const AdminCmsCareers: React.FC = () => {
   useEffect(() => { setApplicantsPage(1); }, [applicantSearch, applicantStatusFilter, applicantsPageSize, reportPeriodValue, reportPeriodEnabled]);
   useEffect(() => { setApplicantsPage(current => Math.min(current, totalApplicantPages)); }, [totalApplicantPages]);
 
-  const publishedCount = positions.filter(position => position.isPublished).length;
-  const draftCount = positions.length - publishedCount;
-  const newApplicantsCount = applicants.filter(applicant => applicant.status === 'new').length;
   const statusOptions = [
     { value: 'new', label: isId ? 'Baru' : 'New' },
     { value: 'in-review', label: isId ? 'Dalam review' : 'In Review' },
@@ -537,19 +534,6 @@ export const AdminCmsCareers: React.FC = () => {
           </button>
         ))}
       </div>
-
-      <AdminMetricStrip
-        slug="cms-careers-metrics"
-        className={canManageJobs ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-1'}
-        metrics={canManageJobs ? [
-          { id: 'total-openings', label: isId ? 'Total lowongan' : 'Total openings', value: positions.length, icon: <Briefcase size={15} />, toneClassName: 'text-accent-text' },
-          { id: 'published-openings', label: isId ? 'Dipublikasikan' : 'Published', value: publishedCount, icon: <Globe size={15} />, toneClassName: 'text-success' },
-          { id: 'draft-openings', label: 'Draft', value: draftCount, icon: <EyeOff size={15} />, toneClassName: 'text-muted' },
-          { id: 'job-applicants', label: isId ? 'Pelamar baru' : 'New applicants', value: applicantsLoaded ? newApplicantsCount : '—', icon: <Users size={15} />, toneClassName: 'text-info' }
-        ] : [
-          { id: 'job-applicants', label: isId ? 'Total pelamar' : 'Applicants', value: applicantsLoaded ? applicants.length : '—', icon: <Users size={15} />, toneClassName: 'text-info' }
-        ]}
-      />
 
       {activeTab === 'jobs' ? (
         <section className="space-y-3" data-ams-feature-slug="cms-careers-list" role="tabpanel" id="careers-jobs-panel" aria-labelledby="careers-jobs-tab" tabIndex={0}>
