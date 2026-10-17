@@ -238,7 +238,6 @@ export const AdminDocuments: React.FC = () => {
         }
       }
 
-      setDocuments([]);
       if (firstError?.status === 401) {
         setLoadError('Your AMS session has expired. Please sign in again and retry.');
       } else if (firstError?.status === 403) {
@@ -618,9 +617,16 @@ export const AdminDocuments: React.FC = () => {
           </div>
         </AdminFilterBar>
 
-        {loadError && (
+        {isLoading && documents.length > 0 && (
+          <div className="flex items-center gap-2 rounded-control border border-line bg-bg px-3 py-2 text-xs text-muted" role="status" data-ams-slug="documents-refreshing">
+            <RefreshCw size={13} className="animate-spin" />
+            <span>Refreshing document list. Previously loaded records remain visible.</span>
+          </div>
+        )}
+
+        {loadError && documents.length > 0 && (
           <div className="flex flex-col gap-2 rounded-control border border-danger/20 bg-danger/5 px-3 py-3 text-xs text-danger sm:flex-row sm:items-center sm:justify-between" role="alert" data-ams-slug="documents-error">
-            <span>{loadError}</span>
+            <span>{loadError} Showing the last successfully loaded document list.</span>
             <Button type="button" variant="secondary" onClick={() => void loadDocuments()} data-ams-slug="documents-error-retry">Retry</Button>
           </div>
         )}
@@ -641,7 +647,7 @@ export const AdminDocuments: React.FC = () => {
             </div>
           </div>
 
-          {isLoading ? (
+          {isLoading && documents.length === 0 ? (
             <div className="space-y-2 p-4 sm:p-5" role="status" aria-label="Loading documents" data-ams-slug="documents-loading">
               {[1, 2, 3, 4, 5].map((item) => (
                 <div key={item} className="grid grid-cols-[minmax(220px,1fr)_130px_90px_140px_120px] gap-3 border-b border-line px-2 py-3 last:border-b-0">
@@ -649,6 +655,13 @@ export const AdminDocuments: React.FC = () => {
                   <Skeleton className="h-3 w-20" /><Skeleton className="h-3 w-14" /><Skeleton className="h-3 w-24" /><Skeleton className="h-8 w-20" />
                 </div>
               ))}
+            </div>
+          ) : loadError && documents.length === 0 ? (
+            <div className="flex min-h-[260px] flex-col items-center justify-center px-5 py-12 text-center" role="alert" data-ams-slug="documents-unavailable">
+              <div className="flex h-10 w-10 items-center justify-center rounded-control border border-danger/20 bg-danger/5 text-danger"><FileText size={17} /></div>
+              <h3 className="mt-3 text-sm font-semibold text-fg">Documents unavailable</h3>
+              <p className="mt-1 max-w-md text-xs leading-5 text-muted">{loadError}</p>
+              <Button type="button" variant="secondary" onClick={() => void loadDocuments()} className="mt-4" data-ams-slug="documents-unavailable-retry">Retry</Button>
             </div>
           ) : filteredDocuments.length === 0 ? (
             <div className="flex min-h-[260px] flex-col items-center justify-center px-5 py-12 text-center" data-ams-slug="documents-empty">
