@@ -110,7 +110,7 @@ test('date-aware Finance worksheets use the shared reporting period without chan
   assert.ok(workspace.includes('Number(record.payload.outstanding ?? ((Number(record.payload.total) || 0) - (Number(record.payload.paidAmount) || 0)))'));
   assert.ok(invoicing.includes('return matchesDate(row.dueDate)'));
   assert.ok(invoicing.includes('vendorPaymentSort, matchesDate]'));
-  assert.ok(invoicing.includes('return source.filter((invoice) => matchesDate(invoice.issueDate || invoice.createdAt))'));
+  assert.ok(invoicing.includes('return retainerInvoices.filter((invoice) => matchesDate(invoice.issueDate || invoice.createdAt))'));
   assert.ok(invoicing.includes('setRetainerPage(1); }, [currency, reportPeriodValue, reportPeriodEnabled, matchesDate]'));
 });
 
