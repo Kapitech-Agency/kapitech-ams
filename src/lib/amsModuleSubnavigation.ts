@@ -42,8 +42,8 @@ const MODULE_SUBNAVIGATION: Record<AmsSidebarModuleKey, AmsSidebarSubnavigationI
     { key: 'time', label: 'Time tracking', to: '/admin/time-logs' },
   ],
   cms: [
+    { key: 'projects', label: 'Case studies', to: '/admin/cms/projects', slug: 'cms-tab-projects' },
     { key: 'insights', label: 'Insights', to: '/admin/cms/insights', slug: 'cms-tab-insights' },
-    { key: 'projects', label: 'Portfolio', to: '/admin/cms/projects', slug: 'cms-tab-projects' },
     { key: 'testimonials', label: 'Testimonials', to: '/admin/cms/testimonials', slug: 'cms-tab-testimonials' },
     { key: 'services', label: 'Services', to: '/admin/cms/services', slug: 'cms-tab-services' },
     { key: 'careers', label: 'Careers', to: '/admin/cms/careers', slug: 'cms-tab-careers' },
@@ -91,6 +91,27 @@ export function getAmsModuleSubnavigation(
   } else if (moduleKey === 'team' && role === 'Finance') {
     // Skill coverage is an operational capability view, not part of Finance's vendor workspace.
     items = items.filter((item) => item.key !== 'skills');
+  } else if (moduleKey === 'cms') {
+    // CMS entry points are role-specific: Admin opens Case Studies, while PM
+    // and Creative enter through Insights. Keep the default destination first.
+    if (role !== 'Admin') {
+      items = [
+        ...items.filter((item) => item.key === 'insights'),
+        ...items.filter((item) => item.key !== 'insights'),
+      ];
+    }
+
+    // Finance and PM can review applicants but cannot manage job openings.
+    // Give them a destination that matches their permitted Careers workspace.
+    if (
+      role !== 'Admin'
+      && canAccessAmsRoute(role, '/admin/cms/careers', '?tab=applicants')
+      && !canAccessAmsRoute(role, '/admin/cms/careers')
+    ) {
+      items = items.map((item) => item.key === 'careers'
+        ? { ...item, label: 'Applicants', to: '/admin/cms/careers?tab=applicants' }
+        : item);
+    }
   }
 
   return items.filter((item) => {
