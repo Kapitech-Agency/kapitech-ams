@@ -242,7 +242,11 @@ export const AdminDocuments: React.FC = () => {
 
       // Retain last-known-good rows for transient service failures, but never keep displaying
       // private records after the session or authorization check has failed.
-      if (hadAccessFailure) setDocuments([]);
+      if (hadAccessFailure) {
+        setDocuments([]);
+        setSelectedDocument(null);
+        setDeleteTarget(null);
+      }
 
       if (firstError?.status === 401) {
         setLoadError('Your AMS session has expired. Please sign in again and retry.');
