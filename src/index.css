@@ -599,7 +599,7 @@
 .ams-shell table thead th.text-right,.ams-shell table tbody td.text-right{text-align:right}
 .ams-shell table thead th.text-center,.ams-shell table tbody td.text-center{text-align:center}
 .ams-shell table .ams-table-actions{display:flex;flex-wrap:nowrap;align-items:center;justify-content:flex-end;gap:6px}
-.ams-shell table .ams-table-actions>button,.ams-shell table .ams-table-actions>a{min-height:32px!important;min-width:32px!important;height:32px!important;width:32px!important;padding:0;display:inline-flex;align-items:center;justify-content:center}
+.ams-shell table .ams-table-actions>button,.ams-shell table .ams-table-actions>a{min-height:32px;min-width:32px;height:32px;width:32px;padding:0;display:inline-flex;align-items:center;justify-content:center}
 .ams-shell .ams-table-action{min-height:34px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--muted);font-size:11px;font-weight:500;white-space:nowrap;transition:background-color .15s ease,border-color .15s ease,color .15s ease}
 .ams-shell .ams-table-action:hover{background:var(--panel);color:var(--text)}
 .ams-shell .ams-table-action[data-primary=true]{border-color:color-mix(in srgb,var(--accent) 35%,var(--line));background:color-mix(in srgb,var(--accent) 10%,var(--bg));color:var(--accent-text)}
@@ -699,19 +699,19 @@
   line-height:16px;
   font-weight:500;
   height:44px;
-  padding:0 12px!important;
-  color:var(--muted)!important;
+  padding:0 12px;
+  color:var(--muted);
 }
 .ams-shell .settings-system-table tbody td{
-  min-height:48px!important;
-  height:48px!important;
-  padding:10px 12px!important;
-  font-size:12px!important;
-  line-height:18px!important;
-  color:var(--text)!important;
+  min-height:48px;
+  height:48px;
+  padding:10px 12px;
+  font-size:12px;
+  line-height:18px;
+  color:var(--text);
 }
 .ams-shell .settings-system-table tbody tr:hover td{
-  background:color-mix(in srgb,var(--text) 4%,transparent)!important;
+  background:color-mix(in srgb,var(--text) 4%,transparent);
 }
 
 /* AMS DRAWER SYSTEM: canonical geometry, field type scale, and form rhythm. */
