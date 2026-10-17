@@ -184,11 +184,6 @@ const AdminSettings = lazyWithRetry(
   'admin-settings'
 );
 
-const AdminApprovals = lazyWithRetry(
-  () => import('./pages/admin/AdminApprovals').then((m) => ({ default: m.AdminApprovals })),
-  'admin-approvals'
-);
-
 const LoadingScreen = () => (
   <div className="min-h-screen bg-bg text-fg flex items-center justify-center p-6 font-sans">
     <div className="w-full max-w-[720px] space-y-3" role="status" aria-label="Loading AMS">
@@ -419,7 +414,7 @@ const App = () => {
                 <Route path="finance/quotations" element={<ModuleRoute moduleKey="invoicing" moduleLabel="quotations"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />
                 <Route path="invoicing" element={<LegacyInvoicingRedirect />} />
                 <Route path="projects" element={<ModuleRoute moduleKey="projects" moduleLabel="projects"><AdminProjects /></ModuleRoute>} />
-                <Route path="approvals" element={<ModuleRoute moduleKey="approvals" moduleLabel="Approvals"><AdminApprovals /></ModuleRoute>} />
+                <Route path="approvals" element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="documents" element={<ModuleRoute moduleKey="documents" moduleLabel="documents"><AdminDocuments /></ModuleRoute>} />
                 <Route path="team" element={<TeamWorkspaceRoute />} />
                 <Route path="time-logs" element={<ModuleRoute moduleKey="timelogs" moduleLabel="Time"><AdminTimeLogs /></ModuleRoute>} />
