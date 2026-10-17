@@ -90,4 +90,16 @@ test('login carousel respects reduced-motion by default and has a pause/resume c
   assert.match(login, /motionPreference\.removeEventListener\('change', handleMotionPreferenceChange\)/);
 });
 
+
+test('contextual navigation reveals a selected tab that is outside the visible strip', async () => {
+  const primitives = await read('src/components/admin/AdminModulePrimitives.tsx');
+
+  assert.match(primitives, /const navRef = React\.useRef/);
+  assert.match(primitives, /const activeTabRef = React\.useRef/);
+  assert.match(primitives, /ref=\{active \? activeTabRef : null\}/);
+  assert.match(primitives, /tabBounds\.left < navBounds\.left \+ inset/);
+  assert.match(primitives, /tabBounds\.right > navBounds\.right - inset/);
+  assert.match(primitives, /nav\.scrollLeft \+= tabBounds\.right - \(navBounds\.right - inset\)/);
+});
+
 // Print-specific !important rules remain outside these screen-layout variants by design.
