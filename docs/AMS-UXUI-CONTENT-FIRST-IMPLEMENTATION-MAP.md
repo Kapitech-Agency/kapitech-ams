@@ -154,6 +154,10 @@ The shared Team workspace loading state now mirrors the selected view's actual c
 
 The Team Directory and Vendor & Contractor Directory previously exposed the same search dimension in both the module header and the primary directory toolbar, using separate state variables that were both applied to the same results. Vendor category was similarly selectable twice. The redundant header search/category controls are removed; Team Department, Team Pod, status, team search, vendor search/category/tier/agreement filters remain available in their owning directory workspaces. Header actions retain Invite Member, Add Vendor / Contractor, Export and Refresh. Result filtering and permissions continue to use the existing source records and predicates, without changing business data or API behavior.
 
+## Follow-on Team & Resources detail surfaces
+
+The member profile and vendor profile detail views now use the shared `Drawer` instead of `Modal`, matching their multi-section content and making secondary actions available in a fixed footer. The member drawer retains role, department, allocation, active-project and skill information; Open Projects and Allocate remain available. The vendor drawer retains contact/commercial/location/status/skills/contract information plus Portfolio, GitHub and Edit vendor actions. This changes only the presentation surface and action placement; selection state, permissions, project allocation, vendor editing, data sources and mutations are unchanged.
+
 ## Remaining visual verification and limits
 
 Authenticated browser-level UX/visual testing was not performed in this environment. In particular, the 1440px, 1024px, 768px, 390px, and 320px viewport pass, actual keyboard/focus flow, direct-route/browser-history checks, drawer interactions, and permission-specific visual scenarios remain unverified in a live AMS session. CI verifies static/type/regression/security/build gates but does not replace those visual checks.
