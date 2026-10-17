@@ -1,6 +1,6 @@
 import React, { useId } from 'react';
 import { Search, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, AlertTriangle, HelpCircle, X } from 'lucide-react';
-import { Link, NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { CustomSelect } from '../ui/CustomSelect';
 import { cn } from '../../lib/cn';
 import { getAdminSession, hasAdminPermission } from '../../lib/adminAuth';
