@@ -150,6 +150,10 @@ The standalone Vendor Directory now leads with directory controls and vendor car
 
 The shared Team workspace loading state now mirrors the selected view's actual content order. Team Directory, Vendor & Contractor Directory, and Time Logs show a filter/surface placeholder, then the main register placeholder, then supporting metric placeholders. Capacity & Allocation and Skill Matrix keep metric-first loading placeholders because their aggregate values frame the analytical view. This changes loading presentation only; source requests, data availability flags, metrics, filters, records, permissions, and actions are unchanged.
 
+## Follow-on Team & Resources filter consolidation slice
+
+The Team Directory and Vendor & Contractor Directory previously exposed the same search dimension in both the module header and the primary directory toolbar, using separate state variables that were both applied to the same results. Vendor category was similarly selectable twice. The redundant header search/category controls are removed; Team Department, Team Pod, status, team search, vendor search/category/tier/agreement filters remain available in their owning directory workspaces. Header actions retain Invite Member, Add Vendor / Contractor, Export and Refresh. Result filtering and permissions continue to use the existing source records and predicates, without changing business data or API behavior.
+
 ## Remaining visual verification and limits
 
 Authenticated browser-level UX/visual testing was not performed in this environment. In particular, the 1440px, 1024px, 768px, 390px, and 320px viewport pass, actual keyboard/focus flow, direct-route/browser-history checks, drawer interactions, and permission-specific visual scenarios remain unverified in a live AMS session. CI verifies static/type/regression/security/build gates but does not replace those visual checks.

@@ -282,7 +282,6 @@ export const AdminTeams: React.FC = () => {
   const currentViewDataUnavailable = TEAM_VIEW_DATA_SOURCES[currentView]
     .some((source) => sourceAvailability[source] !== true);
 
-  const [teamHeaderSearch, setTeamHeaderSearch] = useState('');
   const [teamSearch, setTeamSearch] = useState('');
   const [teamDepartment, setTeamDepartment] = useState('all');
   const [teamPod, setTeamPod] = useState('all');
@@ -295,8 +294,6 @@ export const AdminTeams: React.FC = () => {
   const [allocationSavingProjectId, setAllocationSavingProjectId] = useState('');
   const [allocationPlanDrafts, setAllocationPlanDrafts] = useState<Record<string, AllocationPlanDraft>>({});
 
-  const [vendorHeaderSearch, setVendorHeaderSearch] = useState('');
-  const [vendorHeaderCategory, setVendorHeaderCategory] = useState('all');
   const [vendorSearch, setVendorSearch] = useState('');
   const [vendorCategory, setVendorCategory] = useState('all');
   const [vendorTier, setVendorTier] = useState('all');
@@ -445,8 +442,8 @@ export const AdminTeams: React.FC = () => {
     void loadData();
   }, []);
 
-  useEffect(() => { setTeamPage(1); }, [teamHeaderSearch, teamSearch, teamDepartment, teamPod, teamStatus, teamDisplay]);
-  useEffect(() => { setVendorPage(1); }, [vendorHeaderSearch, vendorHeaderCategory, vendorSearch, vendorCategory, vendorTier, vendorAgreementStatus]);
+  useEffect(() => { setTeamPage(1); }, [teamSearch, teamDepartment, teamPod, teamStatus, teamDisplay]);
+  useEffect(() => { setVendorPage(1); }, [vendorSearch, vendorCategory, vendorTier, vendorAgreementStatus]);
 
   const teamDivisions = useMemo(
     () => ['all', ...Array.from(new Set(members.map((member) => member.division).filter(Boolean))).sort()],
@@ -588,11 +585,9 @@ export const AdminTeams: React.FC = () => {
   };
 
   const teamRows = useMemo(() => {
-    const headerQuery = teamHeaderSearch.trim().toLowerCase();
     const toolbarQuery = teamSearch.trim().toLowerCase();
     return members.filter((member) => {
       const searchable = [member.name, member.username, member.role, member.division, member.id].join(' ').toLowerCase();
-      const matchesHeaderSearch = !headerQuery || searchable.includes(headerQuery);
       const matchesToolbarSearch = !toolbarQuery || searchable.includes(toolbarQuery);
       const projectsForMember = memberProjects(member);
       const allocation = memberAllocation(member);
@@ -603,9 +598,9 @@ export const AdminTeams: React.FC = () => {
         (teamStatus === 'allocated' && allocation.label === 'Time logged') ||
         (teamStatus === 'bench' && allocation.label === 'No time logged') ||
         (teamStatus === 'leave' && allocation.label === 'On Leave');
-      return matchesHeaderSearch && matchesToolbarSearch && matchesDepartment && matchesPod && matchesStatus;
+      return matchesToolbarSearch && matchesDepartment && matchesPod && matchesStatus;
     });
-  }, [members, projects, logs, teamHeaderSearch, teamSearch, teamDepartment, teamPod, teamStatus]);
+  }, [members, projects, logs, teamSearch, teamDepartment, teamPod, teamStatus]);
 
   const teamPageCount = Math.max(1, Math.ceil(teamRows.length / teamPageSize));
   const pagedTeamRows = teamRows.slice((teamPage - 1) * teamPageSize, teamPage * teamPageSize);
@@ -744,20 +739,16 @@ export const AdminTeams: React.FC = () => {
   }), [vendors]);
 
   const vendorRows = useMemo(() => {
-    const headerQuery = vendorHeaderSearch.trim().toLowerCase();
     const toolbarQuery = vendorSearch.trim().toLowerCase();
     return vendors.filter((vendor) => {
       const searchable = [vendor.name, vendor.companyName || '', vendor.email, vendor.primaryCategory, ...vendor.skills, vendor.id].join(' ').toLowerCase();
-      const matchesHeaderSearch = !headerQuery || searchable.includes(headerQuery);
       const matchesToolbarSearch = !toolbarQuery || searchable.includes(toolbarQuery);
-      return matchesHeaderSearch &&
-        matchesToolbarSearch &&
-        (vendorHeaderCategory === 'all' || vendor.primaryCategory === vendorHeaderCategory) &&
+      return matchesToolbarSearch &&
         (vendorCategory === 'all' || vendor.primaryCategory === vendorCategory) &&
         (vendorTier === 'all' || vendorTierOf(vendor) === vendorTier) &&
         (vendorAgreementStatus === 'all' || vendorAgreementState(vendor) === vendorAgreementStatus);
     }).sort((a, b) => Number(b.hourlyRate || 0) - Number(a.hourlyRate || 0));
-  }, [vendors, vendorHeaderSearch, vendorSearch, vendorHeaderCategory, vendorCategory, vendorTier, vendorAgreementStatus]);
+  }, [vendors, vendorSearch, vendorCategory, vendorTier, vendorAgreementStatus]);
 
   const vendorPageCount = Math.max(1, Math.ceil(vendorRows.length / vendorPageSize));
   const pagedVendorRows = vendorRows.slice((vendorPage - 1) * vendorPageSize, vendorPage * vendorPageSize);
@@ -1131,50 +1122,20 @@ export const AdminTeams: React.FC = () => {
         description={pageCopy[currentView].description}
         actions={
           <>
-            {currentView === 'vendor-directory' && (
-              <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-                <label className="relative w-full sm:w-[190px]">
-                  <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-                  <input value={vendorHeaderSearch} onChange={(event) => setVendorHeaderSearch(event.target.value)} placeholder="Filter vendors..." aria-label="Filter vendors" className="h-9 w-full rounded-control border border-line bg-bg pl-9 pr-3 text-xs text-fg outline-none placeholder:text-muted focus:border-accent" />
-                </label>
-                <CustomSelect
-                  value={vendorHeaderCategory}
-                  onChange={setVendorHeaderCategory}
-                  options={[{ value: 'all', label: 'All Categories' }, ...Array.from(new Set(vendors.map((vendor) => vendor.primaryCategory))).sort().map((value) => ({ value, label: value }))]}
-                  triggerClassName="h-9 min-h-9 w-full sm:w-[165px]"
-                />
-
-
-                {canManageVendors && (
-                  <Button type="button" variant="primary" icon={<Plus size={14} />} onClick={() => openVendorForm()}>
-                    + Add Vendor / Contractor
-                  </Button>
-                )}
-              </div>
+            {currentView === 'vendor-directory' && canManageVendors && (
+              <Button type="button" variant="primary" icon={<Plus size={14} />} onClick={() => openVendorForm()}>
+                + Add Vendor / Contractor
+              </Button>
             )}
             {currentView === 'time-logs' && canManageTimeLogs && (
               <Button type="button" variant="primary" icon={<Plus size={15} />} onClick={() => setTimeFormOpen(true)}>
                 Add Time Entry
               </Button>
             )}
-            {currentView === 'team-directory' && (
-              <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-                <label className="relative w-full sm:w-[190px]">
-                  <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-                  <input value={teamHeaderSearch} onChange={(event) => setTeamHeaderSearch(event.target.value)} placeholder="Search team..." aria-label="Search team" className="h-9 w-full rounded-control border border-line bg-bg pl-9 pr-3 text-xs text-fg outline-none placeholder:text-muted focus:border-accent" />
-                </label>
-                <CustomSelect
-                  value={teamDepartment}
-                  onChange={setTeamDepartment}
-                  options={teamDivisions.map((value) => ({ value, label: value === 'all' ? 'All Departments' : value }))}
-                  triggerClassName="h-9 min-h-9 w-full sm:w-[165px]"
-                />
-                {canManageAdminAccounts && (
-                  <Link to="/admin/settings?tab=rbac" className="inline-flex h-9 items-center justify-center gap-2 rounded-control bg-accent px-3 text-xs font-semibold text-white hover:bg-accent/90">
-                    <UserPlus size={14} /> Invite Member
-                  </Link>
-                )}
-              </div>
+            {currentView === 'team-directory' && canManageAdminAccounts && (
+              <Link to="/admin/settings?tab=rbac" className="inline-flex h-9 items-center justify-center gap-2 rounded-control bg-accent px-3 text-xs font-semibold text-white hover:bg-accent/90">
+                <UserPlus size={14} /> Invite Member
+              </Link>
             )}
             <Button type="button" variant="secondary" icon={<Download size={14} />} onClick={exportCurrentView}>
               Export
@@ -1232,6 +1193,12 @@ export const AdminTeams: React.FC = () => {
                   <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
                   <input value={teamSearch} onChange={(event) => setTeamSearch(event.target.value)} placeholder="Search by name, role, email..." aria-label="Search by name, role, email" className="h-9 w-full rounded-control border border-line bg-bg pl-9 pr-3 text-xs text-fg outline-none placeholder:text-muted focus:border-accent" />
                 </label>
+                <CustomSelect
+                  value={teamDepartment}
+                  onChange={setTeamDepartment}
+                  options={teamDivisions.map((value) => ({ value, label: value === 'all' ? 'Department: All' : value }))}
+                  triggerClassName="h-9 min-h-9 w-full sm:w-[165px]"
+                />
                 <CustomSelect value={teamPod} onChange={setTeamPod} options={[{ value: 'all', label: 'All Pods' }, ...teamPods.slice(1).map((value) => ({ value, label: 'Pod: ' + value }))]} triggerClassName="h-9 min-h-9 w-full sm:w-[205px]" />
                 <CustomSelect
                   value={teamStatus}
@@ -1244,7 +1211,7 @@ export const AdminTeams: React.FC = () => {
                   ]}
                   triggerClassName="h-9 min-h-9 w-full sm:w-[165px]"
                 />
-                <Button type="button" variant="ghost" icon={<RotateCcw size={14} />} onClick={() => { setTeamHeaderSearch(''); setTeamSearch(''); setTeamDepartment('all'); setTeamPod('all'); setTeamStatus('all'); }}>
+                <Button type="button" variant="ghost" icon={<RotateCcw size={14} />} onClick={() => { setTeamSearch(''); setTeamDepartment('all'); setTeamPod('all'); setTeamStatus('all'); }}>
                   Clear
                 </Button>
               </div>

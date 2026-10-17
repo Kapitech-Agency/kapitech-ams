@@ -858,3 +858,23 @@ test('Team loading skeleton follows the selected directory/report hierarchy', ()
   const metricFirst = loading.slice(metricFirstStart);
   assert.ok(metricFirst.indexOf('grid grid-cols-2 gap-3 xl:grid-cols-4') < metricFirst.indexOf('h-80'));
 });
+
+
+test('Team and vendor directory filters have one search/category control in their owning workspace', () => {
+  const teams = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminTeams.tsx'), 'utf8');
+  assert.doesNotMatch(teams, /teamHeaderSearch|vendorHeaderSearch|vendorHeaderCategory/);
+  assert.ok(teams.includes('aria-label="Search by name, role, email"'));
+  assert.ok(teams.includes('aria-label="Search by company or freelancer name"'));
+  assert.equal((teams.match(/aria-label="Search team"/g) || []).length, 0);
+  assert.equal((teams.match(/aria-label="Filter vendors"/g) || []).length, 0);
+  const teamFilterStart = teams.indexOf('data-ams-feature-slug="team-directory-filters"');
+  const departmentFilter = teams.indexOf('value={teamDepartment}', teamFilterStart);
+  const teamSearch = teams.indexOf('value={teamSearch}', teamFilterStart);
+  assert.ok(teamFilterStart >= 0 && departmentFilter > teamFilterStart && teamSearch > teamFilterStart);
+  const vendorFilterStart = teams.indexOf('data-ams-feature-slug="vendor-directory-filters"');
+  const vendorSearch = teams.indexOf('value={vendorSearch}', vendorFilterStart);
+  const vendorCategory = teams.indexOf('value={vendorCategory}', vendorFilterStart);
+  assert.ok(vendorFilterStart >= 0 && vendorSearch > vendorFilterStart && vendorCategory > vendorSearch);
+  assert.ok(teams.includes("const matchesDepartment = teamDepartment === 'all' || member.division === teamDepartment;"));
+  assert.ok(teams.includes("(vendorCategory === 'all' || vendor.primaryCategory === vendorCategory)"));
+});
