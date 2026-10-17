@@ -487,7 +487,7 @@ export const AdminCmsServices: React.FC = () => {
         </div>
       ) : (
         <AdminDataTableShell slug="cms-services-directory">
-          <div data-ams-feature-slug="cms-services-table-scroll" data-ams-slug="cms-services-table-scroll" className="overflow-x-auto custom-scrollbar">
+          <div data-ams-feature-slug="cms-services-table-scroll" data-ams-slug="cms-services-table-scroll" className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable service register">
           <table className="ams-data-table w-full min-w-[980px] text-left">
             <thead>
               <tr className="border-b border-line bg-bg text-[10px] font-medium text-muted">

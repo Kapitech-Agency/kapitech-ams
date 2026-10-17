@@ -153,3 +153,29 @@ test('Documents distinguishes an unavailable vault from a genuinely empty vault 
 });
 
 // Print-specific !important rules remain outside these screen-layout variants by design.
+
+
+test('main viewport scrollbar is stable and horizontal scroll regions show a visible focus ring', async () => {
+  const css = await read('src/index.css');
+  assert.match(css, /\.ams-shell>main\{[^}]*scrollbar-gutter:stable[^}]*scrollbar-width:auto/s);
+  assert.match(css, /\.ams-shell \.overflow-x-auto:focus-visible\{outline:2px solid var\(--accent\);outline-offset:-2px\}/);
+  assert.match(css, /\*::-webkit-scrollbar\s*\{\s*width:\s*8px;\s*height:\s*8px;/);
+});
+
+test('primary data scroll regions are named and keyboard-accessible across all nine AMS modules', async () => {
+  const checks: Array<[string, RegExp, string]> = [
+    ['src/components/admin/GlobalExecutiveDashboard.tsx', /aria-label="Scrollable active project register"[^>]*tabIndex=\{0\}|tabIndex=\{0\}[^>]*aria-label="Scrollable active project register"/, 'Dashboard'],
+    ['src/pages/admin/AdminInbox.tsx', /aria-label="Scrollable inbox inquiry register"/, 'Inbox'],
+    ['src/pages/admin/AdminProjects.tsx', /aria-label="Scrollable project register table"/, 'Projects'],
+    ['src/components/admin/TasksWorkspace.tsx', /aria-label="Scrollable task register"/, 'Tasks'],
+    ['src/pages/admin/AdminClients.tsx', /aria-label="Scrollable client directory"/, 'Clients'],
+    ['src/pages/admin/AdminFinanceWorkspace.tsx', /aria-label=\{'Scrollable ' \+ title \+ ' table'\}/, 'Finance'],
+    ['src/pages/admin/AdminTeams.tsx', /aria-label="Scrollable team directory table"/, 'Team & Resources'],
+    ['src/pages/admin/AdminDocuments.tsx', /aria-label="Scrollable private document register"/, 'Documents'],
+    ['src/pages/admin/AdminCmsProjects.tsx', /aria-label="Scrollable case study register"/, 'Website CMS'],
+    ['src/pages/admin/AdminSettings.tsx', /aria-label="Scrollable system audit log"/, 'Settings']
+  ];
+  for (const [file, pattern, moduleName] of checks) {
+    assert.match(await read(file), pattern, moduleName + ' needs a named keyboard-accessible data scroll region');
+  }
+});

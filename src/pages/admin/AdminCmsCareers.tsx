@@ -580,7 +580,7 @@ export const AdminCmsCareers: React.FC = () => {
             </div>
           ) : (
             <AdminDataTableShell slug="cms-careers-jobs-table">
-              <div className="overflow-x-auto custom-scrollbar">
+              <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable job openings register">
                 <table className="ams-data-table w-full min-w-[900px] text-left">
                   <thead><tr className="border-b border-line bg-bg text-[10px] font-medium text-muted">
                     <th className="px-4 py-3">{isId ? 'Lowongan' : 'Position'}</th>
@@ -694,7 +694,7 @@ export const AdminCmsCareers: React.FC = () => {
             </div>
           ) : (
             <AdminDataTableShell slug="cms-careers-applicants-table">
-              <div className="overflow-x-auto custom-scrollbar">
+              <div className="overflow-x-auto custom-scrollbar" tabIndex={0} role="region" aria-label="Scrollable applicants register">
                 <table className="ams-data-table w-full min-w-[980px] text-left">
                   <thead><tr className="border-b border-line bg-bg text-[10px] font-medium text-muted">
                     <th className="px-4 py-3">{isId ? 'Pelamar' : 'Applicant'}</th>

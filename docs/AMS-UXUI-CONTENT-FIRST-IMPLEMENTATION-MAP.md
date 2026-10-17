@@ -547,3 +547,12 @@ These runs validate source commit `53edaaa063c649a0b1a840aa9ac56dac58848314`, be
 ### Remaining acceptance checks
 
 Automated tests do not establish visual or interaction correctness in an authenticated browser. The remaining acceptance gate is to inspect all nine routes and their contextual tabs at 1440, 1024, 768, 390 and 320px; verify last-column reachability, horizontal scroll discoverability, native scrollbars, keyboard/touch interactions, drawer and dialog focus/scroll restoration, and login/logout scroll-lock cleanup. This runtime verification has not been claimed or substituted by CI. This audit branch remains separate from `main`; no merge or deployment is implied by this checkpoint.
+
+
+## Follow-up checkpoint · Direct-to-main delivery and cross-module scroll access · 18 October 2026
+
+The nine-module source sweep was fast-forwarded directly to `main` at `c9768dfd4eefd81f614162d6812b7538bd047a17`. The implementation has since continued with direct pushes to `main`; earlier checkpoint sentences describing the audit branch as unmerged are historical, not the current delivery state.
+
+This follow-up makes primary horizontally scrollable registers and boards keyboard-focusable and exposes each as a named region across Dashboard, Inbox, Projects, Tasks, Clients, Finance, Team & Resources, Documents, Website CMS and Settings. The main content scrollbar now reserves a stable gutter, increases Chromium/WebKit scrollbar geometry from 6px to 8px, and adds a visible keyboard-focus outline to horizontal scroll regions. These are presentation/accessibility changes only.
+
+Regression assertions now cover the scrollbar geometry, last-row register scroll affordances, and named keyboard-accessible data regions. Authenticated browser/device acceptance checks remain outstanding: verify actual appearance and last-column reachability at 1440, 1024, 768, 390 and 320px, keyboard/touch scrolling, theme behavior, and drawer/dialog focus and scroll restoration. No browser-level pass is claimed by this source checkpoint.

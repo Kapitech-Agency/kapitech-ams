@@ -937,7 +937,7 @@ export const AdminSettings: React.FC = () => {
               </span>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable production backup history">
               {overviewLoading && backups.length === 0 ? (
                 <div className="px-5 py-8">{renderSkeleton()}</div>
               ) : backupLoadError && backups.length === 0 ? (
@@ -1119,7 +1119,7 @@ export const AdminSettings: React.FC = () => {
             </div>
           )}
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable system audit log">
             {auditLoading ? (
               <div className="px-5 py-10">{renderSkeleton()}</div>
             ) : auditError && filteredLogs.length === 0 ? (
@@ -1573,7 +1573,7 @@ export const AdminSettings: React.FC = () => {
                   </div>
                 )}
 
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable administrator accounts table">
                   {accountsLoading ? (
                     <div className="px-5 py-10">{renderSkeleton()}</div>
                   ) : pagedAccounts.length === 0 && accountsError ? (
@@ -1661,7 +1661,7 @@ export const AdminSettings: React.FC = () => {
                     <p className="mt-1 text-[10px] leading-4 text-muted">Reference matrix for financial, CRM, delivery, and system access.</p>
                   </div>
                 </div>
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable stakeholder access matrix">
                   <table className="settings-system-table min-w-[900px]">
                     <thead>
                       <tr>
