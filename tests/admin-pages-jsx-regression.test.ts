@@ -104,6 +104,21 @@ test('Retainer workspace uses neutral counts and sentence-case table hierarchy',
   assert.ok(retainers.includes('inline-flex h-9 w-9 items-center justify-center rounded-control'));
 });
 
+test('Operational UI avoids sub-10px text outside faithful CMS previews', () => {
+  const paths = [
+    'src/pages/admin/AdminProjects.tsx',
+    'src/pages/admin/AdminInbox.tsx',
+    'src/pages/admin/AdminTeams.tsx',
+    'src/pages/admin/AdminCmsServices.tsx',
+    'src/pages/admin/AdminSettings.tsx',
+    'src/components/admin/GlobalExecutiveDashboard.tsx'
+  ];
+  for (const file of paths) {
+    const source = fs.readFileSync(path.resolve(process.cwd(), file), 'utf8');
+    assert.doesNotMatch(source, /text-\[(?:8|9)px\]/, file + ' must keep operational text at 10px or above.');
+  }
+});
+
 test('Operational labels use sentence case and shared AMS text sizing', () => {
   const readPage = (file: string) => fs.readFileSync(path.resolve(process.cwd(), file), 'utf8');
   const projects = readPage('src/pages/admin/AdminProjects.tsx');

@@ -1049,7 +1049,7 @@ export const AdminSettings: React.FC = () => {
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="text-sm font-semibold text-fg">Immutable System Audit Log</h2>
-                  <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[9px] font-mono text-muted">Write-Once Ledger</span>
+                  <span className="rounded-badge border border-line bg-bg px-2 py-0.5 text-[10px] font-mono text-muted">Write-Once Ledger</span>
                 </div>
                 <p className="mt-1 text-[10px] leading-4 text-muted">Authentication, RBAC, and security operations reported by the server.</p>
               </div>
@@ -1133,7 +1133,7 @@ export const AdminSettings: React.FC = () => {
                         <td className="font-mono text-[10px] tabular-nums text-muted">{formatUtc(log.timestamp)}</td>
                         <td>
                           <div className="flex items-center gap-2">
-                            <span className="flex h-6 w-6 items-center justify-center rounded-control border border-line bg-bg text-[9px] font-mono font-semibold text-fg">
+                            <span className="flex h-6 w-6 items-center justify-center rounded-control border border-line bg-bg text-[10px] font-mono font-semibold text-fg">
                               {String(log.actor || 'SYS').slice(0, 2).toUpperCase()}
                             </span>
                             <span className="text-[11px] font-medium text-fg">{log.actor || 'System'}</span>
@@ -1289,7 +1289,7 @@ export const AdminSettings: React.FC = () => {
                         <div className="flex items-center justify-between gap-2">
                           <div>
                             <span className="text-[10px] font-medium text-muted">Scan with your phone</span>
-                            <p className="mt-1 text-[9px] leading-4 text-muted">Open your authenticator app and scan this QR code.</p>
+                            <p className="mt-1 text-[10px] leading-4 text-muted">Open your authenticator app and scan this QR code.</p>
                           </div>
                           <Smartphone size={14} className="text-accent-text" />
                         </div>
@@ -1330,7 +1330,7 @@ export const AdminSettings: React.FC = () => {
                               <Copy size={11} />Copy
                             </button>
                           </div>
-                          <p className="mt-2 max-h-24 overflow-y-auto break-all rounded-control border border-line bg-bg px-3 py-2 font-mono text-[9px] leading-4 text-muted">{mfaSetupData.otpAuthUri}</p>
+                          <p className="mt-2 max-h-24 overflow-y-auto break-all rounded-control border border-line bg-bg px-3 py-2 font-mono text-[10px] leading-4 text-muted">{mfaSetupData.otpAuthUri}</p>
                         </div>
                       </div>
                     </div>
@@ -1587,7 +1587,7 @@ export const AdminSettings: React.FC = () => {
                               <td>
                                 <div className="min-w-0">
                                   <p className="text-[11px] font-medium text-fg">{account.name}</p>
-                                  <p className="mt-1 font-mono text-[9px] text-muted">{account.username} · {account.email}</p>
+                                  <p className="mt-1 font-mono text-[10px] text-muted">{account.username} · {account.email}</p>
                                 </div>
                               </td>
                               <td className="text-[11px] text-fg">{account.role}</td>

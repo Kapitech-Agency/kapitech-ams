@@ -558,12 +558,12 @@ export const AdminCmsServices: React.FC = () => {
                     >
                       {publishingServiceId === item.id ? 'Saving…' : item.isPublished === true ? 'Published' : 'Draft'}
                     </button>
-                    <p className="mt-1 text-[9px] text-muted">Badge: {item.badgeId || item.badge || '—'}</p>
+                    <p className="mt-1 text-[10px] text-muted">Badge: {item.badgeId || item.badge || '—'}</p>
                   </td>
                   <td className="max-w-[250px] px-4 py-2.5">
                     <div className="flex flex-wrap gap-1">
-                      {item.capabilities.slice(0, 2).map((cap, index) => <span key={index} className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] text-muted">{cap.title || cap.titleId}</span>)}
-                      {item.capabilities.length > 2 && <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[9px] text-muted">+{item.capabilities.length - 2}</span>}
+                      {item.capabilities.slice(0, 2).map((cap, index) => <span key={index} className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] text-muted">{cap.title || cap.titleId}</span>)}
+                      {item.capabilities.length > 2 && <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 text-[10px] text-muted">+{item.capabilities.length - 2}</span>}
                     </div>
                   </td>
                   <td className="px-4 py-2.5"><span className="font-mono text-[10px] text-muted">/{item.slug}</span></td>
@@ -645,7 +645,7 @@ export const AdminCmsServices: React.FC = () => {
                       <p className="text-[11px] text-muted mb-2">{stage.stageDesc}</p>
                       <div className="flex flex-wrap gap-1">
                         {stage.deliverables?.map((d, dIdx) => (
-                          <span key={dIdx} className="text-[9px] font-sans bg-panel text-success px-1.5 py-0.5 rounded-badge border border-line">
+                          <span key={dIdx} className="text-[10px] font-sans bg-panel text-success px-1.5 py-0.5 rounded-badge border border-line">
                             ✓ {d}
                           </span>
                         ))}

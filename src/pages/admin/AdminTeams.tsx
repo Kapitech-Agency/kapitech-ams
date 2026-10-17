@@ -1530,7 +1530,7 @@ export const AdminTeams: React.FC = () => {
                               <span className="min-w-0">
                                 <span className="flex flex-wrap items-center gap-1.5">
                                   <span className="font-medium text-fg hover:text-accent-text">{vendor.companyName || vendor.name}</span>
-                                  <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 font-mono text-[8px] font-semibold text-muted">{tier.toUpperCase()}</span>
+                                  <span className="rounded-badge border border-line bg-bg px-1.5 py-0.5 font-mono text-[10px] font-semibold text-muted">{tier.toUpperCase()}</span>
                                 </span>
                                 <span className="mt-1 block text-[10px] text-muted">{vendor.primaryCategory}</span>
                               </span>
@@ -1665,7 +1665,7 @@ export const AdminTeams: React.FC = () => {
                               <span className="text-[10px] tabular-nums text-muted">{week.projectCount ? week.plannedHours.toFixed(1) + 'h' : 'No plan'}</span>
                             </div>
                             <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel"><div className={'h-full rounded-full ' + (week.allocationPercent > 100 ? 'bg-danger' : 'bg-series-4')} style={{ width: Math.min(100, week.allocationPercent) + '%' }} /></div>
-                            <p className="mt-1 text-left text-[9px] text-muted">{week.projectCount ? week.projectCount + ' planned project(s)' : 'Not scheduled'}</p>
+                            <p className="mt-1 text-left text-[10px] text-muted">{week.projectCount ? week.projectCount + ' planned project(s)' : 'Not scheduled'}</p>
                           </div>
                         </td>
                       ))}
@@ -1913,7 +1913,7 @@ export const AdminTeams: React.FC = () => {
                       <p className="truncate text-xs font-medium text-fg">{project.name}</p>
                       <p className="mt-1 text-[10px] text-muted">{project.status || 'Active'}</p>
                     </div>
-                    <span className="font-mono text-[9px] text-muted">{project.slug}</span>
+                    <span className="font-mono text-[10px] text-muted">{project.slug}</span>
                   </div>
                 )) : <p className="text-xs text-muted">No active project assignments found.</p>}
               </div>
@@ -1947,7 +1947,7 @@ export const AdminTeams: React.FC = () => {
                   <p className="text-sm font-semibold text-fg">{allocationTarget.name}</p>
                   <p className="mt-1 text-xs text-muted">{allocationTarget.role} · {allocationTarget.division}</p>
                 </div>
-                <span className="font-mono text-[9px] text-muted">{allocationTarget.slug}</span>
+                <span className="font-mono text-[10px] text-muted">{allocationTarget.slug}</span>
               </div>
               <div className="mt-3">
                 <p className="text-[10px] text-muted">Time tracked this week · 40h reference</p>
