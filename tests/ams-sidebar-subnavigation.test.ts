@@ -48,7 +48,7 @@ test('contextual navigation contains only local views owned by the current modul
   assert.equal(getAmsModuleSubnavigation('team', 'Creative').some((item) => item.key === 'skills'), false);
   assert.equal(getAmsModuleSubnavigation('team', 'Freelancer').some((item) => item.key === 'skills'), false);
   assert.deepEqual(getAmsModuleSubnavigation('cms', 'Admin').map((item) => item.key), ['insights', 'projects', 'testimonials', 'services', 'careers']);
-  assert.deepEqual(getAmsModuleSubnavigation('settings', 'Admin').map((item) => item.key), ['access', 'audit', 'integrations']);
+  assert.deepEqual(getAmsModuleSubnavigation('settings', 'Admin').map((item) => item.key), ['backup', 'access', 'audit', 'integrations']);
   assert.deepEqual(getAmsModuleSubnavigation('settings', 'PM'), []);
 });
 
