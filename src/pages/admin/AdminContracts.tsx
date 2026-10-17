@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, CalendarDays, CheckCircle2, ClipboardCheck, ExternalLink, FileText, Plus, RefreshCw, Search, ShieldAlert, Trash2, X } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import { Drawer } from '../../components/ui/Drawer';
+import { CustomSelect } from '../../components/ui/CustomSelect';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { api } from '../../lib/apiClient';
 import { hasAdminPermission } from '../../lib/adminAuth';
@@ -352,10 +353,18 @@ export const AdminContracts: React.FC = () => {
             <input aria-label="Search contracts" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search contract number, client, project, or title…" className="ams-control w-full pl-9" />
           </label>
           <div className="flex flex-wrap items-center gap-2">
-            <select aria-label="Filter contracts by status" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as 'all' | ContractStatus)} className="ams-control min-w-[160px]">
-              <option value="all">All statuses</option>
-              {(Object.keys(statusLabels) as ContractStatus[]).map((status) => <option key={status} value={status}>{statusLabels[status]}</option>)}
-            </select>
+            <CustomSelect
+              value={statusFilter}
+              onChange={(value) => setStatusFilter(value as 'all' | ContractStatus)}
+              options={[
+                { value: 'all', label: 'All statuses' },
+                ...(Object.keys(statusLabels) as ContractStatus[]).map((status) => ({ value: status, label: statusLabels[status] }))
+              ]}
+              aria-label="Filter contracts by status"
+              className="min-w-[160px]"
+              triggerClassName="w-full min-w-[160px]"
+              slug="contracts-status-filter"
+            />
             <Button type="button" variant="secondary" onClick={() => void load()} disabled={loading} icon={<RefreshCw size={13} />}>Refresh</Button>
           </div>
         </div>
@@ -470,13 +479,13 @@ export const AdminContracts: React.FC = () => {
           {error && <p role="alert" className="rounded-control border border-danger/25 bg-danger/5 px-3 py-2 text-xs text-danger">{error}</p>}
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="space-y-1.5"><span className="text-[11px] text-muted">Contract title *</span><input className="ams-control w-full" value={form.title} onChange={(event) => updateForm('title', event.target.value)} maxLength={200} required placeholder="Website redesign statement of work" /></label>
-            <label className="space-y-1.5"><span className="text-[11px] text-muted">Contract type *</span><select className="ams-control w-full" value={form.contractType} onChange={(event) => updateForm('contractType', event.target.value as ContractType)}>{(Object.keys(typeLabels) as ContractType[]).map((type) => <option key={type} value={type} disabled={type === 'change_order' && form.contractType !== 'change_order'}>{type === 'change_order' ? 'Change order (parent link unavailable)' : typeLabels[type]}</option>)}</select></label>
+            <label className="space-y-1.5"><span className="text-[11px] text-muted">Contract type *</span><CustomSelect value={form.contractType} onChange={(value) => updateForm('contractType', value as ContractType)} options={(Object.keys(typeLabels) as ContractType[]).map((type) => ({ value: type, label: type === 'change_order' ? 'Change order (parent link unavailable)' : typeLabels[type], disabled: type === 'change_order' && form.contractType !== 'change_order' }))} aria-label="Contract type" className="w-full" triggerClassName="w-full" slug="contract-type-select" /></label>
             {form.contractType === 'change_order' && <p className="mt-1 text-[10px] leading-4 text-warning">This is a legacy change-order record without a verified parent-contract link. Creating new unlinked change orders is disabled.</p>}
-            <label className="space-y-1.5"><span className="text-[11px] text-muted">Link existing client</span><select className="ams-control w-full" value={form.clientId} onChange={(event) => handleClientChange(event.target.value)}><option value="">No client record selected</option>{clients.map((client) => <option key={client.id} value={client.id}>{client.company || client.companyName || client.name || client.id}</option>)}</select></label>
+            <label className="space-y-1.5"><span className="text-[11px] text-muted">Link existing client</span><CustomSelect value={form.clientId} onChange={handleClientChange} options={[{ value: '', label: 'No client record selected' }, ...clients.map((client) => ({ value: client.id, label: String(client.company || client.companyName || client.name || client.id) }))]} aria-label="Link existing client" className="w-full" triggerClassName="w-full" slug="contract-client-select" /></label>
             <label className="space-y-1.5"><span className="text-[11px] text-muted">Client / company name *</span><input className="ams-control w-full" value={form.clientName} onChange={(event) => updateForm('clientName', event.target.value)} maxLength={200} required placeholder="Client legal name" /></label>
-            <label className="space-y-1.5 sm:col-span-2"><span className="text-[11px] text-muted">Related project</span><select className="ams-control w-full" value={form.projectId} onChange={(event) => handleProjectChange(event.target.value)}><option value="">Not linked to a project</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.name || project.title || project.id}</option>)}</select></label>
+            <label className="space-y-1.5 sm:col-span-2"><span className="text-[11px] text-muted">Related project</span><CustomSelect value={form.projectId} onChange={handleProjectChange} options={[{ value: '', label: 'Not linked to a project' }, ...projects.map((project) => ({ value: project.id, label: String(project.name || project.title || project.id) }))]} aria-label="Related project" className="w-full" triggerClassName="w-full" slug="contract-project-select" /></label>
             <label className="space-y-1.5"><span className="text-[11px] text-muted">Contract value</span><input type="number" min="0" step="0.01" className="ams-control w-full" value={form.contractValue} onChange={(event) => updateForm('contractValue', event.target.value)} /></label>
-            <label className="space-y-1.5"><span className="text-[11px] text-muted">Currency</span><select className="ams-control w-full" value={form.currency} onChange={(event) => updateForm('currency', event.target.value as Currency)}><option value="IDR">IDR · Indonesian Rupiah</option><option value="USD">USD · US Dollar</option></select></label>
+            <label className="space-y-1.5"><span className="text-[11px] text-muted">Currency</span><CustomSelect value={form.currency} onChange={(value) => updateForm('currency', value as Currency)} options={[{ value: 'IDR', label: 'IDR · Indonesian Rupiah' }, { value: 'USD', label: 'USD · US Dollar' }]} aria-label="Currency" className="w-full" triggerClassName="w-full" slug="contract-currency-select" /></label>
             <label className="space-y-1.5"><span className="text-[11px] text-muted">Start date</span><input type="date" className="ams-control w-full" value={form.startDate} onChange={(event) => updateForm('startDate', event.target.value)} /></label>
             <label className="space-y-1.5"><span className="text-[11px] text-muted">End date</span><input type="date" className="ams-control w-full" value={form.endDate} min={form.startDate || undefined} onChange={(event) => updateForm('endDate', event.target.value)} /></label>
             <label className="space-y-1.5"><span className="text-[11px] text-muted">Renewal / review date</span><input type="date" className="ams-control w-full" value={form.renewalDate} onChange={(event) => updateForm('renewalDate', event.target.value)} /></label>

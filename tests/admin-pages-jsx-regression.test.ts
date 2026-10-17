@@ -766,3 +766,27 @@ test('Contracts uses shared busy-state confirmations for lifecycle changes and d
   assert.ok(contracts.includes('setContracts((current) => current.map((item) => item.id === contract.id'));
   assert.ok(contracts.includes('setContracts((current) => current.filter((item) => item.id !== contract.id))'));
 });
+
+
+test('CustomSelect skips disabled options for pointer and keyboard selection', () => {
+  const select = fs.readFileSync(path.resolve(process.cwd(), 'src/components/ui/CustomSelect.tsx'), 'utf8');
+  assert.ok(select.includes('disabled?: boolean;'));
+  assert.ok(select.includes('disabled={option.disabled}'));
+  assert.ok(select.includes('if (option.disabled) return;'));
+  assert.ok(select.includes('!options[activeIndex].disabled'));
+  assert.ok(select.includes('nextEnabledIndex(activeIndex, delta as 1 | -1)'));
+  assert.ok(select.includes('const firstEnabledIndex = options.findIndex((option) => !option.disabled)'));
+});
+
+test('Contracts form and status filtering use CustomSelect without enabling unlinked change orders', () => {
+  const contracts = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminContracts.tsx'), 'utf8');
+  assert.doesNotMatch(contracts, /<select\\b/);
+  assert.ok(contracts.includes('slug="contracts-status-filter"'));
+  assert.ok(contracts.includes('slug="contract-type-select"'));
+  assert.ok(contracts.includes('slug="contract-client-select"'));
+  assert.ok(contracts.includes('slug="contract-project-select"'));
+  assert.ok(contracts.includes('slug="contract-currency-select"'));
+  assert.ok(contracts.includes("disabled: type === 'change_order' && form.contractType !== 'change_order'"));
+  assert.ok(contracts.includes('handleClientChange}'));
+  assert.ok(contracts.includes('handleProjectChange}'));
+});
