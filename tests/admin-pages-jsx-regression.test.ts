@@ -233,7 +233,8 @@ test('Flat sidebar keeps direct links while existing tabs stay in their page wor
   assert.ok(subnavigation.includes("label: 'Retainers'"));
   assert.equal(primitives.includes('export const AdminTopbarTabs'), false, 'The retired pill-style topbar tabs are removed.');
   assert.equal(primitives.includes('AdminCmsSectionTabs'), false, 'CMS uses the shared contextual navigation rather than a second legacy tab component.');
-  assert.ok(primitives.includes("'inline-flex min-h-9 shrink-0 items-center border-b-2 border-transparent px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent'"));
+  assert.ok(primitives.includes("'inline-flex min-h-8 shrink-0 items-center rounded-chip border px-3 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent'"));
+  assert.ok(primitives.includes("'border-accent/20 bg-accent/10 font-semibold text-fg'"));
   assert.ok(!/className="inline-flex h-9 shrink-0 items-center rounded-chip/.test(layout));
   assert.ok(!/<nav aria-label="(?:Clients|CMS|Dashboard|Projects|Tasks|Inbox|Finance|Team|Settings|Documents) sections"/.test(layout));
   assert.equal(dashboard.includes('<AdminSectionTabs'), false, 'Dashboard workspace tabs come from the shared layout.');
