@@ -223,7 +223,7 @@ test('AMS navigation follows the nine-module structure and keeps actions in thei
   assert.ok(app.includes('<Route path="crm" element={<Navigate to="/admin/clients/all-clients" replace />} />'));
   assert.ok(app.includes('<Route path="proposals" element={<LegacyQuotationRedirect />} />'));
   assert.ok(app.includes('<Route path="finance/quotations" element={<ModuleRoute moduleKey="invoicing" moduleLabel="quotations"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />'));
-  assert.ok(app.includes('<Route path="approvals" element={<ModuleRoute moduleKey="approvals" moduleLabel="Approvals"><AdminApprovals /></ModuleRoute>} />'));
+  assert.ok(app.includes('<Route path="approvals" element={<Navigate to="/admin/dashboard" replace />} />'));
   assert.ok(app.includes("requestedView === 'vendor-directory'"));
   assert.ok(app.includes("requestedView === 'time-logs'"));
   assert.equal(clients.includes("to: '/admin/clients/lead-accounts'"), false);
@@ -259,10 +259,10 @@ test('Project cost actuals come from linked Finance expenses, not delivery progr
   assert.doesNotMatch(projects, /project\.budget \* \(project\.progressPercent \/ 100\)/);
 });
 
-test('Approvals use protected API workflows, maker-checker rules, and canonical Drawers', async () => {
+test('Legacy Approval implementation remains permission-gated while route is retired', async () => {
   const approvals = await read('src/pages/admin/AdminApprovals.tsx');
   const app = await read('src/App.tsx');
-  assert.ok(app.includes('<Route path="approvals" element={<ModuleRoute moduleKey="approvals" moduleLabel="Approvals"><AdminApprovals /></ModuleRoute>} />'));
+  assert.ok(app.includes('<Route path="approvals" element={<Navigate to="/admin/dashboard" replace />} />'));
   assert.ok(approvals.includes('api.approvals.getAll()'));
   assert.ok(approvals.includes('api.approvals.create('));
   assert.ok(approvals.includes('api.approvals.action('));
