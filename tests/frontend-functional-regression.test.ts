@@ -313,24 +313,24 @@ test('unexpected async API failures are forwarded and returned as safe JSON', as
 });
 
 
-test('retainer usage increments atomically and keeps its audit event in the same database transaction', async () => {
+test('manual retainer increments are disabled until canonical time-entry rules exist', async () => {
   const repository = await read('server/postgres-client-repository.ts');
   const routes = await read('server/routes.ts');
   const client = await read('src/lib/apiClient.ts');
   const page = await read('src/pages/admin/AdminClientRetainers.tsx');
 
-  const start = repository.indexOf('async addRetainerHours(');
-  const end = repository.indexOf('async delete(', start);
-  const method = repository.slice(start, end);
+  assert.doesNotMatch(repository, /async addRetainerHours\(/);
+  assert.doesNotMatch(client, /addRetainerHours/);
+  assert.doesNotMatch(page, /api\.clients\.addRetainerHours\(|retainer-hours-drawer|setHoursTarget/);
 
+  const start = routes.indexOf("apiRouter.post('/clients/:id/retainer-hours'");
+  const end = routes.indexOf("apiRouter.put('/clients/:id'", start);
+  const legacyRoute = routes.slice(start, end);
   assert.ok(start >= 0 && end > start);
-  assert.match(method, /SELECT \* FROM clients WHERE id = \$1 FOR UPDATE/);
-  assert.match(method, /const nextHours = currentHours \+ hours/);
-  assert.match(method, /appendWithinTransaction\(client, audit\)/);
-  assert.match(routes, /apiRouter\.post\('\/clients\/:id\/retainer-hours', requireAuth, requirePermission\('canManageClients'\)/);
-  assert.match(client, /addRetainerHours: \(id: string, hours: number\)/);
-  assert.doesNotMatch(page, /api\.clients\.addRetainerHours\(/);
-  assert.doesNotMatch(page, /retainer-hours-drawer|setHoursTarget/);
+  assert.match(legacyRoute, /res\.status\(410\)/);
+  assert.match(legacyRoute, /Manual retainer usage adjustments are disabled/);
+  assert.doesNotMatch(legacyRoute, /retainerUsedHours|postgresClientRepository\.addRetainerHours|db\.clients\[index\]/);
+  assert.ok(routes.includes("apiRouter.post('/projects/timelogs'"));
 });
 
 
@@ -347,21 +347,22 @@ test('retainer mutations are only offered to accounts with client-management per
 });
 
 
-test('retainer usage can only be changed through the atomic hours endpoint', async () => {
+test('retainer usage is not incremented outside a defined canonical time-entry rule', async () => {
   const routes = await read('server/routes.ts');
+  const repository = await read('server/postgres-client-repository.ts');
+  const client = await read('src/lib/apiClient.ts');
   const page = await read('src/pages/admin/AdminClientRetainers.tsx');
   const updateStart = routes.indexOf("apiRouter.put('/clients/:id'");
   const deleteStart = routes.indexOf("apiRouter.delete('/clients/:id'", updateStart);
   const updateRoute = routes.slice(updateStart, deleteStart);
-  const termsStart = page.indexOf('const response = await api.clients.update(targetClient.id');
-  const termsEnd = page.indexOf('});', termsStart);
-  const termsPayload = page.slice(termsStart, termsEnd);
 
   assert.ok(updateStart >= 0 && deleteStart > updateStart);
   assert.doesNotMatch(updateRoute, /retainerUsedHours/);
-  assert.doesNotMatch(termsPayload, /retainerUsedHours/);
-  assert.match(routes, /apiRouter\.post\('\/clients\/:id\/retainer-hours', requireAuth, requirePermission\('canManageClients'\)/);
-  assert.match(routes, /postgresClientRepository\.addRetainerHours\(id, hours,/);
+  assert.doesNotMatch(repository, /addRetainerHours/);
+  assert.doesNotMatch(client, /addRetainerHours/);
+  assert.doesNotMatch(page, /retainerUsedHours\s*:/);
+  assert.match(routes, /apiRouter\.post\('\/clients\/:id\/retainer-hours'[\s\S]{0,300}status\(410\)/);
+  assert.ok(routes.includes("apiRouter.post('/projects/timelogs'"));
 });
 
 
