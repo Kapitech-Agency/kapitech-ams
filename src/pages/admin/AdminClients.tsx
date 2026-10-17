@@ -41,7 +41,7 @@ import { Button } from '../../components/ui/Button';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
-import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminSectionTabs, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 
