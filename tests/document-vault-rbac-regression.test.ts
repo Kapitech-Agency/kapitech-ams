@@ -21,3 +21,18 @@ test('Document Vault mutation UI follows the server document mutation permission
   assert.ok(routes.includes("apiRouter.put('/documents/:id/content', requireAuth, documentMutationMiddleware"));
   assert.ok(routes.includes("apiRouter.delete('/documents/:id', requireAuth, documentMutationMiddleware"));
 });
+
+test('Document upload keeps ambiguous storage writes for reconciliation instead of deleting them', async () => {
+  const ui = await fs.readFile(path.join(root, 'src/pages/admin/AdminDocuments.tsx'), 'utf8');
+  const start = ui.indexOf('const saveUpload = async');
+  const end = ui.indexOf('const confirmDelete', start);
+  assert.ok(start >= 0 && end > start, 'The document upload handler must remain discoverable.');
+  const handler = ui.slice(start, end);
+
+  assert.ok(handler.includes('let uploadAttempted = false;'));
+  assert.ok(handler.indexOf('uploadAttempted = true;') < handler.indexOf('api.documents.uploadContent(createdId, uploadFile)'));
+  assert.ok(handler.includes('if (uploadAttempted && createdId)'));
+  assert.ok(handler.includes('The upload result could not be confirmed.'));
+  assert.ok(handler.includes('const cleanup = createdId'));
+  assert.ok(handler.includes('Never delete a possibly completed upload'));
+});
