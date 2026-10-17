@@ -134,6 +134,10 @@ The Contracts lifecycle workspace now uses the existing shared `ConfirmDialog` f
 
 The Contracts status filter and editor dropdowns for type, client, project, and currency now use the shared `CustomSelect`, aligning keyboard, focus, and visual behavior with AMS. `CustomSelect` now supports disabled individual options and skips them during Arrow/Home/End navigation; pointer and Enter/Space activation are guarded as well. This preserves the existing rule that a new unlinked change-order cannot be selected while keeping a legacy change-order record readable/editable. Data options, values, and update handlers remain the same.
 
+## Follow-on Project Profitability hierarchy slice
+
+The Project Profitability report displayed four aggregate KPI cards before the primary financial register and its project/client search. The table now leads the workspace; the same source-derived project count and IDR-only collection, outstanding, and contribution summaries remain directly below it. Per-currency row values, the contribution formula disclosure, search behavior, loading/error states, refresh action, and aggregate-only privacy boundary remain unchanged. No financial formula, source mapping, API contract, or accounting logic changed.
+
 ## Remaining visual verification and limits
 
 Authenticated browser-level UX/visual testing was not performed in this environment. In particular, the 1440px, 1024px, 768px, 390px, and 320px viewport pass, actual keyboard/focus flow, direct-route/browser-history checks, drawer interactions, and permission-specific visual scenarios remain unverified in a live AMS session. CI verifies static/type/regression/security/build gates but does not replace those visual checks.
