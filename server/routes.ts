@@ -335,6 +335,28 @@ async function resolveCmsProjectSlug(candidateInput: unknown, fallbackTitle: unk
   return slug;
 }
 
+async function resolveCmsServiceSlug(candidateInput: unknown, fallbackTitle: unknown, currentId?: string): Promise<string> {
+  const base = slugifyCmsProject(candidateInput) || slugifyCmsProject(fallbackTitle);
+  if (!base) return '';
+  const services = getDataSourceMode() === 'postgres'
+    ? await postgresCmsRepository.list('service')
+    : getDatabase().cmsServices;
+  const used = new Set(
+    services
+      .filter((item: any) => String(item?.id || '') !== String(currentId || ''))
+      .map((item: any) => slugifyCmsProject(item?.slug))
+      .filter(Boolean)
+  );
+  let slug = base;
+  let suffix = 2;
+  while (used.has(slug)) {
+    const suffixText = '-' + suffix;
+    slug = (base.slice(0, Math.max(1, 120 - suffixText.length)) + suffixText).replace(/-+/g, '-');
+    suffix += 1;
+  }
+  return slug;
+}
+
 function getInvoicePaidAmount(invoice: any): number {
   const payments = Array.isArray(invoice?.payments) ? invoice.payments : [];
   if (payments.length > 0) {
@@ -5338,17 +5360,40 @@ apiRouter.get('/cms/services', rateLimitPublic(), async (req: Request, res: Resp
 
 apiRouter.post('/cms/services', requireAuth, requirePermission('canManageCmsContent'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const item = req.body || {};
+  const title = cleanText(item.title, 200);
+  if (!title) {
+    res.status(400).json({ success: false, error: 'Service title is required.' });
+    return;
+  }
+  const category = cleanText(item.category, 60) || 'Development';
+  if (!['Solutions', 'Branding', 'Design', 'Development'].includes(category)) {
+    res.status(400).json({ success: false, error: 'Invalid service category.' });
+    return;
+  }
+  const serviceType = cleanText(item.type, 30) || 'service';
+  if (!['service', 'solution'].includes(serviceType)) {
+    res.status(400).json({ success: false, error: 'Invalid service type.' });
+    return;
+  }
+  const slug = await resolveCmsServiceSlug(item.slug, title);
+  if (!slug) {
+    res.status(400).json({ success: false, error: 'A valid service slug could not be generated.' });
+    return;
+  }
   const now = new Date().toISOString();
   const newService = {
     id: `srv_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
     ...pickFields(item, [
-      'slug','type','category','title','navSubtitle','navSubtitleId','heroHeadline','heroHeadlineId',
+      'navSubtitle','navSubtitleId','heroHeadline','heroHeadlineId',
       'heroSubtitle','heroSubtitleId','badge','badgeId','metrics','capabilities','technologies',
-      'deliverables','testimonial','featured','isPublished'
+      'deliverables','testimonial','featured'
     ]),
-    slug: cleanText(item.slug, 160).toLowerCase().replace(/[^a-z0-9-]/g, '-'),
-    title: cleanText(item.title, 200),
-    isPublished: item.isPublished !== undefined ? Boolean(item.isPublished) : true,
+    slug,
+    type: serviceType,
+    category,
+    title,
+    // New records remain drafts until an editor explicitly opts in to publication.
+    isPublished: item.isPublished === true,
     createdAt: now,
     updatedAt: now
   };
@@ -5367,7 +5412,45 @@ apiRouter.post('/cms/services', requireAuth, requirePermission('canManageCmsCont
 
 apiRouter.put('/cms/services/:id', requireAuth, requirePermission('canManageCmsContent'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const { id } = req.params;
-  const patch = pickFields(req.body || {}, ['slug','type','category','title','navSubtitle','navSubtitleId','heroHeadline','heroHeadlineId','heroSubtitle','heroSubtitleId','badge','badgeId','metrics','capabilities','technologies','deliverables','testimonial','featured','isPublished']);
+  const item = req.body || {};
+  const patch = pickFields(item, ['slug','type','category','title','navSubtitle','navSubtitleId','heroHeadline','heroHeadlineId','heroSubtitle','heroSubtitleId','badge','badgeId','metrics','capabilities','technologies','deliverables','testimonial','featured','isPublished']);
+  if (patch.title !== undefined) {
+    patch.title = cleanText(patch.title, 200);
+    if (!patch.title) {
+      res.status(400).json({ success: false, error: 'Service title cannot be empty.' });
+      return;
+    }
+  }
+  if (patch.category !== undefined) {
+    patch.category = cleanText(patch.category, 60);
+    if (!['Solutions', 'Branding', 'Design', 'Development'].includes(String(patch.category))) {
+      res.status(400).json({ success: false, error: 'Invalid service category.' });
+      return;
+    }
+  }
+  if (patch.type !== undefined) {
+    patch.type = cleanText(patch.type, 30);
+    if (!['service', 'solution'].includes(String(patch.type))) {
+      res.status(400).json({ success: false, error: 'Invalid service type.' });
+      return;
+    }
+  }
+  if (patch.isPublished !== undefined) patch.isPublished = patch.isPublished === true;
+  if (patch.slug !== undefined || patch.title !== undefined) {
+    const current = getDataSourceMode() === 'postgres'
+      ? await postgresCmsRepository.findById('service', id)
+      : getDatabase().cmsServices.find((service: any) => String(service?.id || '') === id);
+    const slug = await resolveCmsServiceSlug(
+      patch.slug !== undefined ? patch.slug : current?.slug,
+      patch.title !== undefined ? patch.title : current?.title,
+      id
+    );
+    if (!slug) {
+      res.status(400).json({ success: false, error: 'A valid service slug could not be generated.' });
+      return;
+    }
+    patch.slug = slug;
+  }
   if (getDataSourceMode() === 'postgres') {
     const service = await postgresCmsRepository.update('service', id, patch, makeAuditEntry(req, 'CMS_SERVICE_UPDATED', `Updated CMS service "${patch.title || id}".`, 'info'));
     if (!service) { res.status(404).json({ success: false, error: 'Service not found.' }); return; }
