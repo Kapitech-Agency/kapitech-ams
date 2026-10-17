@@ -33,3 +33,25 @@ test('missing source arrays and failed requests show unavailable states instead 
   assert.ok(source.includes('Vendor skill data unavailable'));
   assert.ok(source.includes('Time log data unavailable'));
 });
+
+
+test('team allocation distinguishes unavailable time logs from a recorded zero', () => {
+  assert.match(source, /sourceAvailability\.timeLogs === true/);
+  assert.match(source, /'Time data unavailable'/);
+  assert.match(source, /'Loading time data'/);
+  assert.match(source, /percent: null/);
+  assert.match(source, /teamStatus === 'unavailable'/);
+  assert.match(source, /value: 'unavailable', label: 'Time data unavailable'/);
+  assert.match(source, /allocation\.percent === null \? '—'/);
+  assert.match(source, /sourceAvailability\.timeLogs === true \? formatHours\(teamTrackedMinutes\.get\(member\.id\) \?\? 0\) : 'Unavailable'/);
+});
+
+test('Team project and capacity views do not show zero or no-plan states when sources are unavailable', () => {
+  assert.match(source, /sourceAvailability\.projects === true \? projectsForMember\.length : '—'/);
+  assert.match(source, /'Project data unavailable'/);
+  assert.match(source, /sourceAvailability\.timeLogs === true \? week\.utilization \+ '%' : 'Unavailable'/);
+  assert.match(source, /sourceAvailability\.projects === true \? \(week\.projectCount \? week\.allocationPercent \+ '%' : 'No plan'\) : 'Unavailable'/);
+  assert.match(source, /sourceAvailability\.projects === true && !futureCapacityRows\.some/);
+  assert.match(source, /sourceAvailability\.timeLogs === true \? \(teamRows\.filter/);
+  assert.match(source, /sourceAvailability\.timeLogs === false \? 'Time log data unavailable'/);
+});
