@@ -1565,7 +1565,7 @@ export const AdminProjects: React.FC = () => {
           </>
         )}
       >
-        <div className="text-xs text-muted">This removes the record from the current workspace. Demo mode keeps the change local.</div>
+        <div className="text-xs text-muted">AMS applies project deletion only after the server confirms the operation.</div>
       </Modal>
 
       <Modal
@@ -1582,7 +1582,7 @@ export const AdminProjects: React.FC = () => {
           </>
         )}
       >
-        <div className="text-xs text-muted">This action can be tested with the seeded task data without changing the API contract.</div>
+        <div className="text-xs text-muted">AMS applies task deletion only after the server confirms the operation.</div>
       </Modal>
 
       <Drawer
@@ -1872,8 +1872,10 @@ export const AdminProjects: React.FC = () => {
         title={(
           <span className="flex min-w-0 flex-wrap items-center gap-2.5">
             <span>{view === 'all' ? 'Projects & Delivery Kanban' : view === 'sprint' ? 'Sprint & Delivery' : view === 'budget' ? 'Budget vs Actual' : 'Archived Projects'}</span>
-            <span className="rounded-badge border border-accent/25 bg-accent/10 px-2 py-1 text-[10px] font-semibold text-accent">
-              {view === 'archived' ? archivedProjects.length + ' Completed Projects' : activeProjects.length + ' Active Projects'}
+            <span className={'rounded-badge border px-2 py-1 text-[10px] font-semibold ' + (serverMode ? 'border-accent/25 bg-accent/10 text-accent' : loading ? 'border-info/25 bg-info/10 text-info' : 'border-warning/25 bg-warning/10 text-warning')}>
+              {serverMode
+                ? view === 'archived' ? archivedProjects.length + ' Completed Projects' : activeProjects.length + ' Active Projects'
+                : loading ? 'Loading project records' : 'Project data unavailable'}
             </span>
           </span>
         )}
@@ -1936,10 +1938,10 @@ export const AdminProjects: React.FC = () => {
                 {
                   id: 'active-value',
                   label: 'Total active value',
-                  value: formatAmount(metrics.value, currency),
-                  change: activeProjects.length + ' active',
-                  changeToneClassName: 'text-success',
-                  context: 'Across active contracts',
+                  value: serverMode ? formatAmount(metrics.value, currency) : '—',
+                  change: serverMode ? activeProjects.length + ' active' : loading ? 'Loading records' : 'Unavailable',
+                  changeToneClassName: serverMode ? 'text-success' : 'text-muted',
+                  context: serverMode ? 'Across active contracts' : loading ? 'Loading live project records' : 'Live project data unavailable',
                   
                   icon: <CircleDollarSign size={15} />,
                   toneClassName: 'text-success',
@@ -1947,10 +1949,10 @@ export const AdminProjects: React.FC = () => {
                 {
                   id: 'velocity',
                   label: 'Average project progress',
-                  value: metrics.averageProgress + '%',
-                  change: metrics.openTasks + ' open tasks',
-                  changeToneClassName: 'text-info',
-                  context: 'Based on active project progress',
+                  value: serverMode ? metrics.averageProgress + '%' : '—',
+                  change: serverMode ? metrics.openTasks + ' open tasks' : loading ? 'Loading records' : 'Unavailable',
+                  changeToneClassName: serverMode ? 'text-info' : 'text-muted',
+                  context: serverMode ? 'Based on active project progress' : loading ? 'Loading live project records' : 'Live project data unavailable',
                   
                   icon: <BarChart3 size={15} />,
                   toneClassName: 'text-info',
@@ -1958,21 +1960,20 @@ export const AdminProjects: React.FC = () => {
                 {
                   id: 'risk',
                   label: 'Milestones at risk',
-                  value: String(metrics.milestonesAtRisk || metrics.risks),
-                  change: metrics.risks ? 'Action required' : 'Healthy',
-                  changeToneClassName: metrics.risks ? 'text-danger' : 'text-success',
-                  context: metrics.risks + ' projects need attention',
-                  
+                  value: serverMode ? String(metrics.milestonesAtRisk || metrics.risks) : '—',
+                  change: serverMode ? metrics.risks ? 'Action required' : 'Healthy' : loading ? 'Loading records' : 'Unavailable',
+                  changeToneClassName: serverMode ? metrics.risks ? 'text-danger' : 'text-success' : 'text-muted',
+                  context: serverMode ? metrics.risks + ' projects need attention' : loading ? 'Loading live project records' : 'Live project data unavailable',
                   icon: <ShieldAlert size={15} />,
-                  toneClassName: metrics.risks ? 'text-danger' : 'text-success',
+                  toneClassName: serverMode ? metrics.risks ? 'text-danger' : 'text-success' : 'text-muted',
                 },
                 {
                   id: 'allocation',
                   label: 'Resource allocation',
-                  value: metrics.assignedPeople + ' assigned',
-                  change: activeProjects.length + ' active projects',
+                  value: serverMode ? metrics.assignedPeople + ' assigned' : '—',
+                  change: serverMode ? activeProjects.length + ' active projects' : loading ? 'Loading records' : 'Unavailable',
                   changeToneClassName: 'text-muted',
-                  context: 'Unique owners & contributors',
+                  context: serverMode ? 'Unique owners & contributors' : loading ? 'Loading live project records' : 'Live project data unavailable',
                   
                   icon: <Users size={15} />,
                   toneClassName: 'text-fg',
@@ -1983,7 +1984,11 @@ export const AdminProjects: React.FC = () => {
 
           <AdminPanel
             title="Project portfolio"
-            description={serverMode ? 'Manage the active project portfolio, move delivery stages from Kanban, and keep the table as the structured reporting view.' : 'Seeded project data keeps the portfolio fully testable without a connected project service.'}
+            description={serverMode
+              ? 'Manage the active project portfolio, move delivery stages from Kanban, and keep the table as the structured reporting view.'
+              : loading
+                ? 'Loading the current project portfolio from AMS.'
+                : 'Live project records are unavailable. Refresh after the project service is restored.'}
           >
             <AdminFilterBar
               slug="projects-directory-filters"
@@ -2015,7 +2020,7 @@ export const AdminProjects: React.FC = () => {
                     className={'inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-chip border px-2.5 text-[10px] font-medium transition-colors ' + (!projectStatusFilter ? 'border-accent/25 bg-accent/10 text-fg' : 'border-line bg-bg text-muted hover:bg-panel-hover hover:text-fg')}
                   >
                     All
-                    <span className="tabular-nums">{projects.length}</span>
+                    <span className="tabular-nums">{serverMode ? projects.length : '—'}</span>
                   </button>
                   {PROJECT_KANBAN_COLUMNS.map(column => {
                     const count = projects.filter(project => project.status === column.id).length;
@@ -2029,12 +2034,12 @@ export const AdminProjects: React.FC = () => {
                       >
                         <span className={'h-1.5 w-1.5 shrink-0 rounded-full ' + column.dot} />
                         {column.label}
-                        <span className="tabular-nums">{count}</span>
+                        <span className="tabular-nums">{serverMode ? count : '—'}</span>
                       </button>
                     );
                   })}
                   <span className="ml-auto shrink-0 whitespace-nowrap px-1 text-[10px] text-muted">
-                    {filteredProjects.length} / {projects.length}
+                    {serverMode ? filteredProjects.length + ' / ' + projects.length : loading ? 'Loading records' : '—'}
                   </span>
                 </div>
               )}
@@ -2965,10 +2970,10 @@ export const AdminProjects: React.FC = () => {
                 {
                   id: 'archived-count',
                   label: 'Completed projects',
-                  value: String(archivedProjects.length),
-                  change: 'Historical delivery',
-                  changeToneClassName: 'text-success',
-                  context: 'Closed project records',
+                  value: serverMode ? String(archivedProjects.length) : '—',
+                  change: serverMode ? 'Historical delivery' : loading ? 'Loading records' : 'Unavailable',
+                  changeToneClassName: serverMode ? 'text-success' : 'text-muted',
+                  context: serverMode ? 'Closed project records' : loading ? 'Loading live project records' : 'Live project data unavailable',
                   
                   icon: <CheckCircle2 size={15} />,
                   toneClassName: 'text-success',
@@ -2976,10 +2981,10 @@ export const AdminProjects: React.FC = () => {
                 {
                   id: 'archived-value',
                   label: 'Completed value',
-                  value: formatAmount(archiveStats.totalValue, currency),
-                  change: archiveStats.clients + ' clients',
-                  changeToneClassName: 'text-info',
-                  context: 'Historical portfolio value',
+                  value: serverMode ? formatAmount(archiveStats.totalValue, currency) : '—',
+                  change: serverMode ? archiveStats.clients + ' clients' : loading ? 'Loading records' : 'Unavailable',
+                  changeToneClassName: serverMode ? 'text-info' : 'text-muted',
+                  context: serverMode ? 'Historical portfolio value' : loading ? 'Loading live project records' : 'Live project data unavailable',
                   
                   icon: <CircleDollarSign size={15} />,
                   toneClassName: 'text-info',
@@ -2987,10 +2992,10 @@ export const AdminProjects: React.FC = () => {
                 {
                   id: 'archived-progress',
                   label: 'Average final progress',
-                  value: archiveStats.averageProgress + '%',
-                  change: 'Delivery completion',
-                  changeToneClassName: 'text-success',
-                  context: 'Across archived projects',
+                  value: serverMode ? archiveStats.averageProgress + '%' : '—',
+                  change: serverMode ? 'Delivery completion' : loading ? 'Loading records' : 'Unavailable',
+                  changeToneClassName: serverMode ? 'text-success' : 'text-muted',
+                  context: serverMode ? 'Across archived projects' : loading ? 'Loading live project records' : 'Live project data unavailable',
                   
                   icon: <BarChart3 size={15} />,
                   toneClassName: 'text-fg',
@@ -2998,10 +3003,10 @@ export const AdminProjects: React.FC = () => {
                 {
                   id: 'archived-clients',
                   label: 'Historical clients',
-                  value: String(archiveStats.clients),
-                  change: filteredArchivedProjects.length + ' visible',
+                  value: serverMode ? String(archiveStats.clients) : '—',
+                  change: serverMode ? filteredArchivedProjects.length + ' visible' : loading ? 'Loading records' : 'Unavailable',
                   changeToneClassName: 'text-muted',
-                  context: 'Distinct client companies',
+                  context: serverMode ? 'Distinct client companies' : loading ? 'Loading live project records' : 'Live project data unavailable',
                   
                   icon: <Users size={15} />,
                   toneClassName: 'text-fg',

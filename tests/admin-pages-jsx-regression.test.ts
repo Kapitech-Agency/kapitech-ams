@@ -59,6 +59,15 @@ test('Admin projects mutation actions stay behind their permissions', () => {
   assert.ok(!source.includes('Legacy regression guard:'));
 });
 
+test('Projects does not present unavailable project data as seeded/demo records or zero metrics', () => {
+  const source = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminProjects.tsx'), 'utf8');
+  assert.doesNotMatch(source, /Demo mode keeps the change local|seeded task data|Seeded project data/i);
+  assert.ok(source.includes("serverMode ? String(archivedProjects.length) : '—'"));
+  assert.ok(source.includes("{serverMode ? projects.length : '—'}"));
+  assert.ok(source.includes('Live project records are unavailable. Refresh after the project service is restored.'));
+  assert.ok(source.includes('Project data unavailable'));
+});
+
 test('Finance worksheets stay inside the Finance workspace and retired routes stay hidden', () => {
   const layout = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminLayout.tsx'), 'utf8');
   const sidebar = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/DynamicAdminSidebar.tsx'), 'utf8');
