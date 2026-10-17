@@ -205,102 +205,111 @@ export const TasksWorkspace: React.FC = () => {
       .map(value => String(value).trim().toLowerCase())
   ), [currentUser]);
 
+  const loadTasks = async (showLoading = true, isActive: () => boolean = () => true): Promise<boolean> => {
+    if (showLoading) setLoading(true);
+    try {
+      const [projectRes, taskRes, assigneeRes] = await Promise.all([
+        api.projects.getAll(),
+        api.tasks.getAll(),
+        api.auth.getTaskAssignees(),
+      ]);
+      if (!isActive()) return false;
+
+      let normalizedProjects = projects;
+      if (projectRes.success && Array.isArray(projectRes.data?.projects)) {
+        normalizedProjects = projectRes.data.projects.map((project: any) => ({
+          id: String(project?.id || ''),
+          name: String(project?.name || project?.title || 'Untitled project'),
+          clientName: String(project?.clientCompany || project?.clientName || ''),
+        })).filter((project: TaskProject) => project.id);
+        setProjects(normalizedProjects);
+      }
+
+      const projectById = new Map(normalizedProjects.map((project) => [project.id, project]));
+      let assigneeMap = new Map<string, { id: string; name: string; username: string }>();
+      assignees.forEach((item) => {
+        assigneeMap.set(item.id, item);
+        if (item.username) assigneeMap.set(item.username, item);
+        if (item.name) assigneeMap.set(item.name, item);
+      });
+      if (assigneeRes.success && Array.isArray(assigneeRes.data?.assignees)) {
+        const normalizedAssignees = assigneeRes.data.assignees.map((item: any) => ({
+          id: String(item?.id || ''),
+          name: String(item?.name || item?.username || ''),
+          username: String(item?.username || ''),
+        })).filter((item: { id: string; name: string; username: string }) => item.id);
+        assigneeMap = new Map<string, { id: string; name: string; username: string }>();
+        normalizedAssignees.forEach((item: { id: string; name: string; username: string }) => {
+          assigneeMap.set(item.id, item);
+          if (item.username) assigneeMap.set(item.username, item);
+          if (item.name) assigneeMap.set(item.name, item);
+        });
+        setAssignees(normalizedAssignees);
+      }
+
+      if (taskRes.success && Array.isArray(taskRes.data?.tasks)) {
+        const normalized: TaskRecord[] = taskRes.data.tasks.map((task: any): TaskRecord => {
+          const id = String(task?.id || '');
+          const projectId = String(task?.projectId || task?.project_id || '');
+          const project = projectById.get(projectId);
+          const projectName = String(task?.projectName || task?.project_name || project?.name || 'Unassigned project');
+          const clientName = String(task?.clientName || task?.clientCompany || project?.clientName || '');
+          const assignedTo = String(task?.assigneeUserId || task?.assignee || task?.assignedTo || '');
+          const resolved = assigneeMap.get(assignedTo);
+          const title = String(task?.title || 'Untitled task');
+          return {
+            id,
+            title,
+            description: String(task?.description || ''),
+            projectId,
+            projectName,
+            projectSlug: slugify(projectName),
+            clientName,
+            assigneeId: resolved?.id || assignedTo,
+            assignee: resolved?.name || String(task?.assignee || task?.assignedTo || assignedTo || 'Unassigned'),
+            priority: ['low', 'medium', 'high', 'urgent'].includes(String(task?.priority)) ? task.priority : 'medium',
+            status: ['todo', 'in_progress', 'review', 'done'].includes(String(task?.status)) ? task.status : 'todo',
+            dueDate: String(task?.dueDate || task?.due_date || ''),
+            tags: Array.isArray(task?.tags) ? task.tags.map(String) : [],
+            blocked: isTaskBlocked(task),
+            slug: String(task?.slug || 'task-' + slugify(title) + '-' + slugify(id)),
+            createdAt: String(task?.createdAt || task?.created_at || ''),
+            updatedAt: String(task?.updatedAt || task?.updated_at || ''),
+            subtasks: Array.isArray(task?.subtasks)
+              ? task.subtasks.map((item: any, index: number) => ({
+                  id: String(item?.id || id + '-subtask-' + index),
+                  title: String(item?.title || ''),
+                  completed: Boolean(item?.completed),
+                })).filter((item: { title: string }) => item.title)
+              : [],
+          };
+        }).filter((task: TaskRecord) => task.id);
+
+        setRecords(normalized);
+        setNotice(projectRes.success
+          ? null
+          : projectRes.error || 'Project directory could not be refreshed. Task records were refreshed.');
+        return true;
+      }
+
+      setNotice([
+        taskRes.error || 'Task service is unavailable. Live task data could not be loaded.',
+        !projectRes.success ? (projectRes.error || 'Project directory could not be loaded.') : '',
+      ].filter(Boolean).join(' '));
+      return false;
+    } catch (error) {
+      if (isActive()) {
+        setNotice(error instanceof Error ? error.message : 'Task service is unavailable. Live task data could not be loaded.');
+      }
+      return false;
+    } finally {
+      if (isActive() && showLoading) setLoading(false);
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
-    const loadTasks = async () => {
-      setLoading(true);
-      try {
-        const [projectRes, taskRes, assigneeRes] = await Promise.all([
-          api.projects.getAll(),
-          api.tasks.getAll(),
-          api.auth.getTaskAssignees(),
-        ]);
-        if (!mounted) return;
-
-        const normalizedProjects: TaskProject[] = projectRes.success && Array.isArray(projectRes.data?.projects)
-          ? projectRes.data.projects.map((project: any) => ({
-              id: String(project?.id || ''),
-              name: String(project?.name || project?.title || 'Untitled project'),
-              clientName: String(project?.clientCompany || project?.clientName || ''),
-            })).filter((project: TaskProject) => project.id)
-          : [];
-        setProjects(normalizedProjects);
-        const projectById = new Map(normalizedProjects.map((project) => [project.id, project]));
-
-        const assigneeMap = new Map<string, { id: string; name: string; username: string }>();
-        if (assigneeRes.success && Array.isArray(assigneeRes.data?.assignees)) {
-          const normalizedAssignees = assigneeRes.data.assignees.map((item: any) => ({
-            id: String(item?.id || ''),
-            name: String(item?.name || item?.username || ''),
-            username: String(item?.username || ''),
-          })).filter((item: { id: string; name: string; username: string }) => item.id);
-          normalizedAssignees.forEach((item: { id: string; name: string; username: string }) => {
-            assigneeMap.set(item.id, item);
-            if (item.username) assigneeMap.set(item.username, item);
-            if (item.name) assigneeMap.set(item.name, item);
-          });
-          setAssignees(normalizedAssignees);
-        }
-
-        if (taskRes.success && Array.isArray(taskRes.data?.tasks)) {
-          const normalized: TaskRecord[] = taskRes.data.tasks.map((task: any): TaskRecord => {
-            const id = String(task?.id || '');
-            const projectId = String(task?.projectId || task?.project_id || '');
-            const project = projectById.get(projectId);
-            const projectName = String(task?.projectName || task?.project_name || project?.name || 'Unassigned project');
-            const clientName = String(task?.clientName || task?.clientCompany || project?.clientName || '');
-            const assignedTo = String(task?.assigneeUserId || task?.assignee || task?.assignedTo || '');
-            const resolved = assigneeMap.get(assignedTo);
-            const title = String(task?.title || 'Untitled task');
-            return {
-              id,
-              title,
-              description: String(task?.description || ''),
-              projectId,
-              projectName,
-              projectSlug: slugify(projectName),
-              clientName,
-              assigneeId: resolved?.id || assignedTo,
-              assignee: resolved?.name || String(task?.assignee || task?.assignedTo || assignedTo || 'Unassigned'),
-              priority: ['low', 'medium', 'high', 'urgent'].includes(String(task?.priority)) ? task.priority : 'medium',
-              status: ['todo', 'in_progress', 'review', 'done'].includes(String(task?.status)) ? task.status : 'todo',
-              dueDate: String(task?.dueDate || task?.due_date || ''),
-              tags: Array.isArray(task?.tags) ? task.tags.map(String) : [],
-              blocked: isTaskBlocked(task),
-              slug: String(task?.slug || 'task-' + slugify(title) + '-' + slugify(id)),
-              createdAt: String(task?.createdAt || task?.created_at || ''),
-              updatedAt: String(task?.updatedAt || task?.updated_at || ''),
-              subtasks: Array.isArray(task?.subtasks)
-                ? task.subtasks.map((item: any, index: number) => ({
-                    id: String(item?.id || id + '-subtask-' + index),
-                    title: String(item?.title || ''),
-                    completed: Boolean(item?.completed),
-                  })).filter((item: { title: string }) => item.title)
-                : [],
-            };
-          }).filter((task: TaskRecord) => task.id);
-
-          setRecords(normalized);
-          setNotice(null);
-        } else {
-          setRecords([]);
-          setNotice(taskRes.error || 'Task service is unavailable. Live task data could not be loaded.');
-        }
-
-        if (!projectRes.success) {
-          setNotice(current => [current, projectRes.error || 'Project directory could not be loaded.'].filter(Boolean).join(' '));
-        }
-      } catch (error) {
-        if (mounted) {
-          setRecords([]);
-          setNotice(error instanceof Error ? error.message : 'Task service is unavailable. Live task data could not be loaded.');
-        }
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-
-    void loadTasks();
+    void loadTasks(true, () => mounted);
     return () => { mounted = false; };
   }, []);
 
