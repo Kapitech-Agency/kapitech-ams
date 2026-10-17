@@ -181,4 +181,7 @@ test('Ambiguous project and task mutation responses refresh canonical records in
   assert.ok(source.includes('Checklist update outcome is unknown. Canonical records were refreshed.'));
   assert.ok(source.includes('Project deletion outcome is unknown.'));
   assert.ok(source.includes('Task deletion outcome is unknown.'));
+  assert.ok(source.includes('return true;') && source.includes('return false;'));
+  assert.ok(source.includes('if (!refreshed) rollback();'));
+  assert.ok(source.includes('if (!refreshed) applySubtasks(previousSubtasks);'));
 });
