@@ -104,6 +104,23 @@ test('Retainer workspace uses neutral counts and sentence-case table hierarchy',
   assert.ok(retainers.includes('inline-flex h-9 w-9 items-center justify-center rounded-control'));
 });
 
+test('Operational labels use sentence case and shared AMS text sizing', () => {
+  const readPage = (file: string) => fs.readFileSync(path.resolve(process.cwd(), file), 'utf8');
+  const projects = readPage('src/pages/admin/AdminProjects.tsx');
+  const clients = readPage('src/pages/admin/AdminClients.tsx');
+  const teams = readPage('src/pages/admin/AdminTeams.tsx');
+  const sla = readPage('src/pages/admin/AdminClientSlaMonitoring.tsx');
+  const dashboard = readPage('src/components/admin/GlobalExecutiveDashboard.tsx');
+
+  assert.equal(projects.includes('uppercase tracking-[0.06em]'), false);
+  assert.equal(projects.includes('uppercase tracking-[0.08em]'), false);
+  assert.equal(clients.includes('uppercase tracking-wider'), false);
+  assert.equal(clients.includes('uppercase tracking-wide'), false);
+  assert.equal(teams.includes('uppercase tracking-[0.06em]'), false);
+  assert.equal(sla.includes('uppercase tracking-[0.08em]'), false);
+  assert.equal(dashboard.includes('uppercase tracking-[0.08em]'), false);
+});
+
 test('Authenticated AMS pages use one canonical responsive page frame', () => {
   const primitives = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/AdminModulePrimitives.tsx'), 'utf8');
   const stylesheet = fs.readFileSync(path.resolve(process.cwd(), 'src/index.css'), 'utf8');

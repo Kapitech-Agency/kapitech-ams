@@ -1379,7 +1379,7 @@ export const AdminTeams: React.FC = () => {
                     </div>
                     <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
                       <div><p className="text-muted">Pod / Focus</p><p className="mt-1 font-medium text-fg">{projectsForMember[0]?.name || member.division || 'Unassigned'}</p></div>
-                      <div><p className="text-muted">Active Projects</p><p className="mt-1 font-semibold tabular-nums text-fg">{projectsForMember.length}</p></div>
+                      <div><p className="text-muted">Active projects</p><p className="mt-1 font-semibold tabular-nums text-fg">{projectsForMember.length}</p></div>
                     </div>
                     <div className="mt-4 rounded-control border border-line bg-bg p-3">
                       <div className="flex items-center justify-between gap-2"><span className="text-[10px] text-muted">Time tracking status</span><span className="text-[11px] font-semibold text-fg">{allocation.label} · {allocation.percent}%</span></div>
@@ -1905,7 +1905,7 @@ export const AdminTeams: React.FC = () => {
               </div>
             </div>
             <div className="rounded-control border border-line bg-bg p-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-muted">Active Projects</p>
+              <p className="text-xs font-medium text-muted">Active Projects</p>
               <div className="mt-2 space-y-2">
                 {memberProjects(memberDetail).length ? memberProjects(memberDetail).map((project) => (
                   <div key={project.id} className="flex items-center justify-between gap-3 rounded-control border border-line bg-panel px-3 py-2">
@@ -1919,7 +1919,7 @@ export const AdminTeams: React.FC = () => {
               </div>
             </div>
             <div className="rounded-control border border-line bg-bg p-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-muted">Core Skills</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-muted">Core skills</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {memberCoreSkills(memberDetail).map((skill) => <span key={skill} className="rounded-badge border border-line bg-panel px-2.5 py-1 text-[10px] text-fg">{skill}</span>)}
               </div>

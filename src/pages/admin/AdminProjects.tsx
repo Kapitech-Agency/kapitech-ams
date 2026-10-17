@@ -274,7 +274,7 @@ const ProjectTimeline: React.FC<ProjectTimelineProps> = ({
       <div className="overflow-x-auto custom-scrollbar" tabIndex={0} aria-label="Scrollable project schedule">
         <div className="min-w-max">
           <div className="flex border-b border-line bg-panel">
-            <div className="sticky left-0 z-30 flex h-11 w-[260px] shrink-0 items-center border-r border-line bg-panel px-3.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">
+            <div className="sticky left-0 z-30 flex h-11 w-[260px] shrink-0 items-center border-r border-line bg-panel px-3.5 text-[11px] font-medium text-muted">
               Project / owner
             </div>
             <div className="relative h-11 shrink-0" style={{ width: rangeWidth }}>
@@ -1628,7 +1628,7 @@ export const AdminProjects: React.FC = () => {
                 ['Service', selectedProjectDetail.serviceCategory || 'Delivery'],
               ].map(([label, value]) => (
                 <div key={label} className="rounded-control border border-line bg-bg p-3">
-                  <div className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted">{label}</div>
+                  <div className="text-xs font-medium text-muted">{label}</div>
                   <div className="mt-1.5 truncate text-xs font-semibold text-fg">{value}</div>
                 </div>
               ))}
@@ -2526,7 +2526,7 @@ export const AdminProjects: React.FC = () => {
                     ['Overdue', sprintStats.overdue, 'Past due'],
                   ].map(([label, value, context]) => (
                     <div key={String(label)} className="rounded-card border border-line bg-panel p-4">
-                      <div className="text-[10px] font-medium uppercase tracking-[0.08em] text-muted">{label}</div>
+                      <div className="text-xs font-medium text-muted">{label}</div>
                       <div className="mt-2 text-xl font-semibold tabular-nums text-fg">{value}</div>
                       <div className="mt-1 text-[10px] text-muted">{context}</div>
                     </div>

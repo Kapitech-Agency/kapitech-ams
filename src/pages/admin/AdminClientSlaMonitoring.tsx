@@ -63,7 +63,7 @@ export const AdminClientSlaMonitoring: React.FC = () => {
 
       <section className="overflow-hidden rounded-card border border-line bg-panel" aria-labelledby="sla-setup-title" data-ams-slug="sla-monitoring-setup">
         <div className="border-b border-line px-4 py-4 sm:px-5">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted">Setup checklist</p>
+          <p className="text-xs font-medium text-muted">Setup checklist</p>
           <h2 id="sla-setup-title" className="mt-1 text-sm font-semibold text-fg">What must be configured before monitoring can start?</h2>
           <p className="mt-1 text-xs leading-5 text-muted">This checklist identifies the missing inputs. It does not imply that a provider is configured or receiving data.</p>
         </div>

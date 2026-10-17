@@ -876,7 +876,7 @@ export const AdminClients: React.FC = () => {
         <div className="overflow-x-auto custom-scrollbar">
           <table className="ams-client-table w-full min-w-[1240px] border-collapse text-left">
             <thead className="bg-bg">
-              <tr className="border-b border-line text-[10px] uppercase tracking-wider text-muted">
+              <tr className="border-b border-line text-[11px] font-medium text-muted">
                 <th className="px-4 py-2.5"><button type="button" onClick={() => toggleSort('company')} className="inline-flex min-h-9 items-center gap-1.5 font-medium hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">Client account {sortKey === 'company' ? (sortDirection === 'asc' ? <ArrowUp size={13} /> : <ArrowUp size={13} className="rotate-180" />) : <ArrowUpDown size={13} />}</button></th>
                 <th className="px-4 py-2.5">Slug</th>
                 <th className="px-4 py-2.5"><button type="button" onClick={() => toggleSort('industry')} className="inline-flex min-h-9 items-center gap-1.5 font-medium hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">Industry {sortKey === 'industry' ? (sortDirection === 'asc' ? <ArrowUp size={13} /> : <ArrowUp size={13} className="rotate-180" />) : <ArrowUpDown size={13} />}</button></th>
@@ -1298,7 +1298,7 @@ export const AdminClients: React.FC = () => {
       >
         <form id="client-interaction-form" onSubmit={saveClientInteraction} className="space-y-5" noValidate>
           {interactionFormError && <div role="alert" className="rounded-control border border-danger/30 bg-danger/10 p-3 text-xs leading-5 text-danger">{interactionFormError}</div>}
-          {interactionClient && <div className="rounded-control border border-line bg-bg px-3 py-2.5"><p className="text-[10px] uppercase tracking-wide text-muted">Client</p><p className="mt-1 text-xs font-semibold text-fg">{interactionClient.company}</p><p className="mt-0.5 text-[10px] text-muted">{interactionClient.id}</p></div>}
+          {interactionClient && <div className="rounded-control border border-line bg-bg px-3 py-2.5"><p className="text-xs font-medium text-muted">Client</p><p className="mt-1 text-xs font-semibold text-fg">{interactionClient.company}</p><p className="mt-0.5 text-[10px] text-muted">{interactionClient.id}</p></div>}
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="client-interaction-type" className="mb-1.5 block">Interaction type</label>

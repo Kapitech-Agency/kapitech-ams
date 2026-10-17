@@ -673,7 +673,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
             <div className="rounded-control border border-line bg-bg/45 p-4">
               <div className="flex items-end justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted">No risk flag</div>
+                  <div className="text-xs font-medium text-muted">No risk flag</div>
                   <div className="mt-1 flex items-baseline gap-2">
                     <span className="text-3xl font-semibold tracking-[-0.03em] tabular-nums text-fg">{onSchedulePercent}%</span>
                     <span className="text-[11px] text-muted">{onScheduleValue} of {totalDelivery} projects</span>
@@ -962,7 +962,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           <div className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-control border border-line bg-bg p-3">
-                <div className="text-[10px] uppercase tracking-[0.08em] text-muted">Status</div>
+                <div className="text-xs font-medium text-muted">Status</div>
                 <div className="mt-1 text-sm font-semibold text-fg">{projectDetails.status}</div>
               </div>
               <div className="rounded-control border border-line bg-bg p-3">
