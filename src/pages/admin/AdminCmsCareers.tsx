@@ -482,7 +482,6 @@ export const AdminCmsCareers: React.FC = () => {
             : 'Review and manage applications submitted through the public Careers page.')}
         actions={
           <>
-            {canManageJobs && <span className="hidden text-xs tabular-nums text-muted sm:inline">{positions.length} {isId ? 'lowongan' : 'openings'}</span>}
             {canManageJobs && activeTab === 'jobs' && (
               <Button type="button" variant="primary" icon={<Plus size={14} />} onClick={openCreateEditor}>
                 {isId ? 'Tambah lowongan' : 'Add opening'}
@@ -502,19 +501,6 @@ export const AdminCmsCareers: React.FC = () => {
           {statusMessage.text}
         </AdminModuleNotice>
       )}
-
-      <AdminMetricStrip
-        slug="cms-careers-metrics"
-        className={canManageJobs ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-1'}
-        metrics={canManageJobs ? [
-          { id: 'total-openings', label: isId ? 'Total lowongan' : 'Total openings', value: positions.length, icon: <Briefcase size={15} />, toneClassName: 'text-accent-text' },
-          { id: 'published-openings', label: isId ? 'Dipublikasikan' : 'Published', value: publishedCount, icon: <Globe size={15} />, toneClassName: 'text-success' },
-          { id: 'draft-openings', label: 'Draft', value: draftCount, icon: <EyeOff size={15} />, toneClassName: 'text-muted' },
-          { id: 'job-applicants', label: isId ? 'Pelamar baru' : 'New applicants', value: applicantsLoaded ? newApplicantsCount : '—', icon: <Users size={15} />, toneClassName: 'text-info' }
-        ] : [
-          { id: 'job-applicants', label: isId ? 'Total pelamar' : 'Applicants', value: applicantsLoaded ? applicants.length : '—', icon: <Users size={15} />, toneClassName: 'text-info' }
-        ]}
-      />
 
       <div role="tablist" aria-label={isId ? "Workspace Careers" : "Careers workspace"} className="ams-workspace-tabs inline-flex max-w-full flex-wrap items-center gap-1 rounded-control border border-line bg-panel p-1">
         {([
@@ -551,6 +537,19 @@ export const AdminCmsCareers: React.FC = () => {
           </button>
         ))}
       </div>
+
+      <AdminMetricStrip
+        slug="cms-careers-metrics"
+        className={canManageJobs ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-1'}
+        metrics={canManageJobs ? [
+          { id: 'total-openings', label: isId ? 'Total lowongan' : 'Total openings', value: positions.length, icon: <Briefcase size={15} />, toneClassName: 'text-accent-text' },
+          { id: 'published-openings', label: isId ? 'Dipublikasikan' : 'Published', value: publishedCount, icon: <Globe size={15} />, toneClassName: 'text-success' },
+          { id: 'draft-openings', label: 'Draft', value: draftCount, icon: <EyeOff size={15} />, toneClassName: 'text-muted' },
+          { id: 'job-applicants', label: isId ? 'Pelamar baru' : 'New applicants', value: applicantsLoaded ? newApplicantsCount : '—', icon: <Users size={15} />, toneClassName: 'text-info' }
+        ] : [
+          { id: 'job-applicants', label: isId ? 'Total pelamar' : 'Applicants', value: applicantsLoaded ? applicants.length : '—', icon: <Users size={15} />, toneClassName: 'text-info' }
+        ]}
+      />
 
       {activeTab === 'jobs' ? (
         <section className="space-y-3" data-ams-feature-slug="cms-careers-list" role="tabpanel" id="careers-jobs-panel" aria-labelledby="careers-jobs-tab" tabIndex={0}>

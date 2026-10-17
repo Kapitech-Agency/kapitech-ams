@@ -1294,7 +1294,7 @@ export const AdminTeams: React.FC = () => {
             </div>
           </section>
 
-          <AdminPanel title="Team Directory" description={teamRows.length + ' members'} className="overflow-hidden">
+          <AdminPanel className="overflow-hidden">
             {teamDisplay === 'table' ? (
               <div className="overflow-x-auto custom-scrollbar">
                 {pagedTeamRows.length === 0 ? (
