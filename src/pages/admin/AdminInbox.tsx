@@ -61,7 +61,7 @@ export const AdminInbox: React.FC = () => {
   type InboxTab = 'overview' | 'client' | 'jobs' | 'starred';
   const [searchParams] = useSearchParams();
   const requestedTab = searchParams.get('view') as InboxTab | null;
-  const activeInboxTab: InboxTab = requestedTab && ['overview', 'client', 'jobs', 'starred'].includes(requestedTab)
+  const activeInboxTab: InboxTab = requestedTab && ['overview', 'client', 'starred'].includes(requestedTab)
     ? requestedTab
     : 'overview';
 
