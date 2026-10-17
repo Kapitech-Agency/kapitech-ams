@@ -455,6 +455,7 @@ export const AdminDocuments: React.FC = () => {
 
     setUploading(true);
     let createdId = '';
+    let uploadAttempted = false;
     try {
       const created = await api.documents.create({
         name: uploadTitle.trim(),
@@ -474,6 +475,7 @@ export const AdminDocuments: React.FC = () => {
       }
 
       createdId = String(created.data.document.id);
+      uploadAttempted = true;
       const uploaded = await api.documents.uploadContent(createdId, uploadFile);
       if (!uploaded.success || !uploaded.data?.document) {
         // No HTTP response (timeout/network interruption) or a server error can mean
@@ -507,14 +509,21 @@ export const AdminDocuments: React.FC = () => {
       setInputKey((current) => current + 1);
       notify('Document stored in the private vault.');
     } catch {
-      const cleanup = createdId
-        ? await cleanupIncompleteDocument(createdId)
-        : { confirmed: true };
-      if (!cleanup.confirmed) {
+      if (uploadAttempted && createdId) {
+        // The request may have reached storage even when its response was lost.
+        // Never delete a possibly completed upload from an ambiguous transport failure.
         await loadDocuments();
-        notify('The document upload failed, and temporary record cleanup could not be confirmed. The vault was refreshed; inspect the document list before retrying.');
+        notify('The upload result could not be confirmed. The file may already be stored. Inspect the refreshed vault before retrying; do not upload it again until its status is clear.');
       } else {
-        notify('The document upload failed. Check the file and try again.');
+        const cleanup = createdId
+          ? await cleanupIncompleteDocument(createdId)
+          : { confirmed: true };
+        if (!cleanup.confirmed) {
+          await loadDocuments();
+          notify('The document upload failed, and temporary record cleanup could not be confirmed. The vault was refreshed; inspect the document list before retrying.');
+        } else {
+          notify('The document upload failed. Check the file and try again.');
+        }
       }
     } finally {
       setUploading(false);
