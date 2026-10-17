@@ -6,14 +6,14 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-test('CRM and Proposal navigation is retired while protected legacy workflows remain compatible', async () => {
+test('CRM, Proposal, and Approval routes are retired while protected APIs remain compatible', async () => {
   const app = await fs.readFile(path.join(root, 'src/App.tsx'), 'utf8');
   assert.ok(app.includes('<Route path="crm" element={<Navigate to="/admin/clients/all-clients" replace />} />'));
   assert.ok(app.includes('<Route path="clients/lead-accounts" element={<Navigate to="/admin/clients/all-clients" replace />} />'));
   assert.ok(app.includes('<Route path="proposals" element={<LegacyQuotationRedirect />} />'));
   assert.ok(app.includes('<Route path="finance/quotations" element={<ModuleRoute moduleKey="invoicing" moduleLabel="quotations"><AdminInvoicing embeddedView="quotations" /></ModuleRoute>} />'));
   assert.ok(app.includes("pathname: '/admin/finance/quotations', search: location.search, hash: location.hash"));
-  assert.ok(app.includes('<Route path="approvals" element={<ModuleRoute moduleKey="approvals" moduleLabel="Approvals"><AdminApprovals /></ModuleRoute>} />'));
+  assert.ok(app.includes('<Route path="approvals" element={<Navigate to="/admin/dashboard" replace />} />'));
   assert.ok(app.includes("const AdminApprovals = lazyWithRetry("));
   assert.equal(app.includes('<Route path="crm" element={<ModuleRoute moduleKey="crm"'), false);
   assert.equal(app.includes('<Route path="proposals" element={<ModuleRoute moduleKey="proposals"'), false);
@@ -99,7 +99,7 @@ test('Approval is absent from primary navigation while active approval notificat
   const contextualNavigation = await fs.readFile(path.join(root, 'src/lib/amsModuleSubnavigation.ts'), 'utf8');
   const server = await fs.readFile(path.join(root, 'server/routes.ts'), 'utf8');
 
-  assert.ok(app.includes('<Route path="approvals" element={<ModuleRoute moduleKey="approvals" moduleLabel="Approvals"><AdminApprovals /></ModuleRoute>} />'));
+  assert.ok(app.includes('<Route path="approvals" element={<Navigate to="/admin/dashboard" replace />} />'));
   assert.doesNotMatch(navigation, /label:\s*['"]Approvals['"]/);
   assert.doesNotMatch(navigation, /key:\s*['"]approvals['"]/);
   assert.doesNotMatch(contextualNavigation, /label:\s*['"]Approvals['"]/);
