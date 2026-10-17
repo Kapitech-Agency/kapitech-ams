@@ -1021,7 +1021,9 @@ export const AdminProjects: React.FC = () => {
       status: projectForm.status,
       health: projectForm.health,
       createdAt: editingProject?.createdAt || now,
-      updatedAt: now,
+      // Preserve the server timestamp as the optimistic-concurrency token on edits.
+      // The server will issue the new updatedAt value after a successful write.
+      updatedAt: editingProject?.updatedAt || now,
       milestones: editingProject?.milestones || [],
       tasks: editingProject?.tasks || [],
       slug,
