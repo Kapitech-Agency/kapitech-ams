@@ -37,18 +37,14 @@ test('reduced-motion preference disables smooth document scrolling', async () =>
 
 test('table geometry variants use scoped selectors rather than important overrides', async () => {
   const css = await read('src/index.css');
-  const slice = (start: string, end: string) => {
-    const startIndex = css.indexOf(start);
-    const endIndex = css.indexOf(end, startIndex + start.length);
-    assert.ok(startIndex >= 0, 'missing CSS section: ' + start);
-    assert.ok(endIndex > startIndex, 'missing CSS section boundary: ' + end);
-    return css.slice(startIndex, endIndex);
-  };
+  const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)];
+  const collectRules = (selector: string) =>
+    rules.filter((match) => match[1].includes(selector)).map((match) => match[0]).join('\n');
 
-  const sharedActions = slice('.ams-shell table .ams-table-actions>button', '.ams-shell .ams-finance-table{');
-  const projects = slice('.ams-shell .ams-projects-table{', '/* --------------------------------------------------------------------------\n   AMS CANONICAL DATA TABLE');
-  const teams = slice('.ams-shell .ams-teams-table{', '/* Settings / System & Security table treatment */');
-  const settings = slice('/* Settings / System & Security table treatment */', '/* AMS DRAWER SYSTEM: canonical geometry');
+  const sharedActions = collectRules('.ams-table-actions>button') + collectRules('.ams-table-action');
+  const projects = collectRules('.ams-projects-table');
+  const teams = collectRules('.ams-teams-table');
+  const settings = collectRules('.settings-system-table');
 
   for (const [name, source] of [
     ['shared table actions', sharedActions],
@@ -56,6 +52,7 @@ test('table geometry variants use scoped selectors rather than important overrid
     ['Team table variant', teams],
     ['Settings table variant', settings]
   ]) {
+    assert.ok(source.length > 0, 'missing scoped CSS rules for ' + name);
     assert.doesNotMatch(source, /!important/, name + ' must not rely on !important');
   }
 
