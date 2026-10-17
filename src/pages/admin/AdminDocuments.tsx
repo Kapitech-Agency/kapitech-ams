@@ -437,7 +437,8 @@ export const AdminDocuments: React.FC = () => {
 
   const saveUpload = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!canManageDocuments || uploading) return;
+    if (!canManageDocuments) return;
+    if (uploading) return;
     if (!uploadTitle.trim()) {
       notify('Enter a document title.');
       return;
