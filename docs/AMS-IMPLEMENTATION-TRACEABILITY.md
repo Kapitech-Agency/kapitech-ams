@@ -268,7 +268,7 @@ The regression suite iterates through Admin, Finance, PM, Creative, and Freelanc
 - AMS Quality Gate: success; lint/typecheck, 568 tests (548 passed, 0 failed, 20 skipped), production build succeeded.
 - AMS CI: success; migration/package validation, same unit/regression suite, 8 PostgreSQL integration tests passed, `bun audit --audit-level=high`, production build and isolated PostgreSQL HTTP/auth/CMS smoke tests passed.
 - Workflow links: [Quality Gate](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39009690483) · [AMS CI](https://github.com/Kapitech-Agency/kapitech-ams/actions/runs/39009690524).
-- The new timeout/ambiguous-upload source assertions were included in this tested commit. These are repository regression tests, not a browser-based fault-injection test. The README/traceability-only commits need their own CI confirmation before this audit branch checkpoint is treated as the final passing head.
+- The new timeout/ambiguous-upload source assertions were included in the tested code checkpoint. The subsequent README/traceability snapshot at commit `5bad3b7fcec5d4a49f407aa174dd6f4baa531dba` also passed both AMS Quality Gate and AMS CI with the same 568-test result and isolated PostgreSQL validation. For any later amendments, the workflow runs attached to the current PR head remain the authority; these repository assertions are not a browser-based fault-injection test.
 
 ### 11.5 Protected remediation queue
 
