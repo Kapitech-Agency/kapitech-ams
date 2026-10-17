@@ -112,6 +112,14 @@ test('login carousel respects reduced-motion by default and has a pause/resume c
 });
 
 
+test('shared workspace tabs use compact consistent geometry and a visible selected state', async () => {
+  const primitives = await read('src/components/admin/AdminModulePrimitives.tsx');
+  assert.match(primitives, /inline-flex min-h-8 shrink-0 items-center rounded-chip border px-3 text-\[11px\] font-medium/);
+  assert.match(primitives, /border-accent\/20 bg-accent\/10 font-semibold text-fg/);
+  assert.match(primitives, /inline-flex min-h-8 shrink-0 items-center rounded-control border px-3 text-\[11px\] font-medium/);
+  assert.doesNotMatch(primitives, /items-center gap-1 overflow-x-auto border-b border-line ams-topnav-scroll/);
+});
+
 test('contextual navigation reveals a selected tab that is outside the visible strip', async () => {
   const primitives = await read('src/components/admin/AdminModulePrimitives.tsx');
 
