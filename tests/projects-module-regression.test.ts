@@ -158,3 +158,12 @@ test('Project details expose client, schedule, team, technology, and milestone c
   assert.ok(source.includes("milestone.completed ? 'Completed' : overdueMilestone ? 'Overdue' : 'Upcoming'"));
   assert.ok(source.includes("formatAmount(milestone.paymentTrigger, currency)"));
 });
+
+test('Project edits preserve the original server timestamp for optimistic concurrency', async () => {
+  const page = await read('src/pages/admin/AdminProjects.tsx');
+  const repository = await read('server/postgres-project-repository.ts');
+
+  assert.ok(page.includes('updatedAt: editingProject?.updatedAt || now'));
+  assert.ok(page.includes('The server will issue the new updatedAt value after a successful write.'));
+  assert.ok(repository.includes('if (patch.updatedAt && iso(current.updated_at) !== patch.updatedAt) throw new ProjectConcurrencyError();'));
+});
