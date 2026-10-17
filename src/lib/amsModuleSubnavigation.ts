@@ -92,6 +92,9 @@ export function getAmsModuleSubnavigation(
           : '/admin/tasks',
       }));
     }
+  } else if (moduleKey === 'team' && role === 'Finance') {
+    // Skill coverage is an operational capability view, not part of Finance's vendor workspace.
+    items = items.filter((item) => item.key !== 'skills');
   }
 
   const globalDestinations = getAmsSidebarDestinationSignatures(role);
