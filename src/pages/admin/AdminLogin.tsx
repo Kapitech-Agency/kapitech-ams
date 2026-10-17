@@ -648,7 +648,7 @@ export const AdminLogin: React.FC = () => {
                         type="button"
                         aria-label="Previous image"
                         onClick={() => setArtFrame((current) => (current + loginSlides.length - 1) % loginSlides.length)}
-                        className="flex h-10 min-w-20 items-center justify-center rounded-control border border-line bg-panel/80 px-2.5 text-[10px] font-medium text-muted transition-colors duration-200 hover:border-white/25 hover:bg-white/[0.04] hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                        className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-panel/80 text-muted transition-colors duration-200 hover:border-white/25 hover:bg-white/[0.04] hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                       >
                         <ArrowLeft size={15} />
                       </button>
@@ -661,7 +661,7 @@ export const AdminLogin: React.FC = () => {
                           ? (language === 'id' ? 'Putar otomatis' : 'Resume automatic rotation')
                           : (language === 'id' ? 'Jeda otomatis' : 'Pause automatic rotation')}
                         onClick={() => setIsArtAutoplayPaused((paused) => !paused)}
-                        className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-panel/80 text-muted transition-colors duration-200 hover:border-white/25 hover:bg-white/[0.04] hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                        className="flex h-10 min-w-20 items-center justify-center rounded-control border border-line bg-panel/80 px-2.5 text-[10px] font-medium text-muted transition-colors duration-200 hover:border-white/25 hover:bg-white/[0.04] hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                       >
                         {isArtAutoplayPaused
                           ? (language === 'id' ? 'Lanjutkan' : 'Resume')
