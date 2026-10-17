@@ -90,6 +90,7 @@ test('Authenticated AMS pages use one canonical responsive page frame', () => {
   const dashboard = fs.readFileSync(path.resolve(process.cwd(), 'src/components/admin/GlobalExecutiveDashboard.tsx'), 'utf8');
 
   assert.ok(primitives.includes("className={cn('ams-page-shell min-h-full min-w-0', className)}"));
+  assert.ok(primitives.includes('ams-workspace-navigation-group'), 'Page title and contextual tabs share one spacing group.');
   assert.ok(stylesheet.includes('.ams-shell>main>.ams-content{min-width:0;padding:0}'));
   assert.ok(stylesheet.includes('.ams-shell .ams-page-shell{display:flex;flex-direction:column;gap:24px;padding:24px 24px 32px}'));
   assert.ok(stylesheet.includes('.ams-shell .ams-page-shell{padding:24px 20px 32px}'));

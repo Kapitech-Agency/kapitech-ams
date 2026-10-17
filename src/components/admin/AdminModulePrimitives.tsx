@@ -661,7 +661,19 @@ function injectWorkspaceNavigationAfterHeader(children: React.ReactNode, navigat
     }
     if (!React.isValidElement(node)) return { node, inserted: false };
     if (node.type === AdminModuleHeader) {
-      return { node: <React.Fragment key="ams-workspace-navigation-after-header">{node}<WorkspaceNavigationTabs navigation={navigation} /></React.Fragment>, inserted: true };
+      const header = React.cloneElement(
+        node as React.ReactElement<{ className?: string }>,
+        { className: cn((node.props as { className?: string }).className, 'mb-0') }
+      );
+      return {
+        node: (
+          <div key="ams-workspace-navigation-group" className="flex min-w-0 flex-col gap-0">
+            {header}
+            <WorkspaceNavigationTabs navigation={navigation} />
+          </div>
+        ),
+        inserted: true
+      };
     }
     if (node.type === React.Fragment) {
       const result = walk(node.props.children);
