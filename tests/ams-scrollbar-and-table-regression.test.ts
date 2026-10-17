@@ -36,7 +36,7 @@ test('reduced-motion preference disables smooth document scrolling', async () =>
 });
 
 test('table geometry variants use scoped selectors rather than important overrides', async () => {
-  const css = await read('src/index.css');
+  const css = (await read('src/index.css')).replace(/\\/\\*[\\s\\S]*?\\*\\//g, '');
   const slice = (start: string, end: string) => {
     const startIndex = css.indexOf(start);
     const endIndex = css.indexOf(end, startIndex + start.length);
