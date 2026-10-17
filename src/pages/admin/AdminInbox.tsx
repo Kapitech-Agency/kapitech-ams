@@ -1060,7 +1060,7 @@ export const AdminInbox: React.FC = () => {
         /* DENSE SPREADSHEET TABLE VIEW */
         <div className="bg-panel border border-line rounded-card overflow-hidden">
           <div className="ams-table-scroll overflow-x-auto custom-scrollbar">
-            <div data-ams-feature-slug="inbox-leads-directory" data-ams-slug="inbox-leads-directory" className="overflow-x-auto"><table className="ams-table w-full text-left border-collapse text-xs font-sans">
+            <div data-ams-feature-slug="inbox-leads-directory" data-ams-slug="inbox-leads-directory" className="min-w-0"><table className="ams-table w-full text-left border-collapse text-xs font-sans">
               <thead>
                 <tr className="bg-panel border-b border-line text-muted">
                   <th className="p-3 w-10 text-center">★</th>
