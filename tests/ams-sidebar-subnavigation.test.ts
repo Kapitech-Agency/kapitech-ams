@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   canAccessAmsRoute,
+  getNavigationGroupsForRole,
   type AmsRole,
 } from '../src/lib/amsNavigationAccess';
 import { getAmsModuleSubnavigation, isAmsModuleSubnavigationItemActive } from '../src/lib/amsModuleSubnavigation';
@@ -122,6 +123,49 @@ test('role-specific module entry points activate a tab that owns the destination
 
   const creativeProjects = getAmsModuleSubnavigation('projects', 'Creative');
   assert.equal(isAmsModuleSubnavigationItemActive(creativeProjects.find((item) => item.key === 'sprint')!, '/admin/projects', '?projects=sprint'), true);
+});
+
+test('primary module clicks land on exactly one matching contextual tab across permitted roles', () => {
+  const cases: Array<{
+    role: AmsRole;
+    primaryKey: string;
+    module: typeof modules[number];
+    expectedTab: string;
+  }> = [
+    { role: 'Admin', primaryKey: 'dashboard-hub', module: 'dashboard', expectedTab: 'overview' },
+    { role: 'Finance', primaryKey: 'dashboard-hub', module: 'dashboard', expectedTab: 'overview' },
+    { role: 'PM', primaryKey: 'dashboard-hub', module: 'dashboard', expectedTab: 'overview' },
+    { role: 'Admin', primaryKey: 'project-hub', module: 'projects', expectedTab: 'all' },
+    { role: 'Finance', primaryKey: 'project-hub', module: 'projects', expectedTab: 'sprint' },
+    { role: 'Creative', primaryKey: 'project-hub', module: 'projects', expectedTab: 'sprint' },
+    { role: 'Admin', primaryKey: 'clients', module: 'clients', expectedTab: 'directory' },
+    { role: 'Finance', primaryKey: 'clients', module: 'clients', expectedTab: 'directory' },
+    { role: 'PM', primaryKey: 'clients', module: 'clients', expectedTab: 'directory' },
+    { role: 'Admin', primaryKey: 'team-resources', module: 'team', expectedTab: 'team' },
+    { role: 'PM', primaryKey: 'team-resources', module: 'team', expectedTab: 'team' },
+    { role: 'Finance', primaryKey: 'team-resources', module: 'team', expectedTab: 'vendors' },
+    { role: 'Admin', primaryKey: 'website-cms', module: 'cms', expectedTab: 'projects' },
+    { role: 'PM', primaryKey: 'website-cms', module: 'cms', expectedTab: 'insights' },
+    { role: 'Creative', primaryKey: 'website-cms', module: 'cms', expectedTab: 'insights' },
+  ];
+
+  for (const item of cases) {
+    const primary = getNavigationGroupsForRole(item.role)
+      .flatMap((group) => group.items)
+      .find((entry) => entry.key === item.primaryKey);
+    assert.ok(primary, 'Missing permitted primary entry: ' + item.role + '/' + item.primaryKey);
+
+    const destination = new URL(primary.to, 'https://ams.kapitech.local');
+    const tabs = getAmsModuleSubnavigation(item.module, item.role);
+    const active = tabs.filter((tab) =>
+      isAmsModuleSubnavigationItemActive(tab, destination.pathname, destination.search, destination.hash)
+    );
+
+    assert.equal(active.length, 1,
+      item.role + '/' + item.primaryKey + ' should activate exactly one tab at ' + primary.to);
+    assert.equal(active[0].key, item.expectedTab,
+      item.role + '/' + item.primaryKey + ' should activate ' + item.expectedTab + ' at ' + primary.to);
+  }
 });
 
 test('MFA setup preserves exceptional Access without exposing Settings to non-admin navigation', () => {
