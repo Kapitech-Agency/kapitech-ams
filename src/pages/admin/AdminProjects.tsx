@@ -129,6 +129,9 @@ const inferHealth = (project: Partial<AgencyProject>): ProjectHealth => {
   return 'Good';
 };
 
+const isUnknownMutationOutcome = (response: { success: boolean; status?: number }) =>
+  !response.success && (response.status === undefined || response.status >= 500);
+
 const normalizeTask = (task: any): ProjectTask => ({
   id: String(task?.id || ''),
   title: String(task?.title || 'Untitled task'),
@@ -1054,6 +1057,7 @@ export const AdminProjects: React.FC = () => {
         showToast(language === 'id' ? 'Proyek berhasil disimpan.' : 'Project saved.');
         savedToData = true;
       } else {
+        if (isUnknownMutationOutcome(response)) await syncProjects(false);
         showToast(response.error || (language === 'id' ? 'Proyek gagal disimpan.' : 'Project could not be saved.'));
         return;
       }
@@ -1161,6 +1165,7 @@ export const AdminProjects: React.FC = () => {
         : await api.tasks.create(payload);
 
       if (!response.success) {
+        if (isUnknownMutationOutcome(response)) await syncProjects(false);
         showToast(response.error || (language === 'id' ? 'Tugas gagal disimpan.' : 'Task could not be saved.'));
         return;
       }
@@ -1235,6 +1240,11 @@ export const AdminProjects: React.FC = () => {
     try {
       const response = await api.tasks.update(task.id, { status });
       if (!response.success) {
+        if (isUnknownMutationOutcome(response)) {
+          await syncProjects(false);
+          showToast(response.error || (language === 'id' ? 'Hasil perubahan status tugas belum dapat dipastikan. Data telah dimuat ulang.' : 'Task status outcome is unknown. Canonical records were refreshed.'));
+          return;
+        }
         rollback();
         showToast(response.error || (language === 'id' ? 'Status tugas gagal diperbarui. Perubahan dikembalikan.' : 'Task status could not be saved. Changes were reverted.'));
         return;
@@ -1332,6 +1342,11 @@ export const AdminProjects: React.FC = () => {
     try {
       const response = await api.projects.update(project.id, { status });
       if (!response.success) {
+        if (isUnknownMutationOutcome(response)) {
+          await syncProjects(false);
+          showToast(response.error || (language === 'id' ? 'Hasil perubahan status proyek belum dapat dipastikan. Data telah dimuat ulang.' : 'Project status outcome is unknown. Canonical records were refreshed.'));
+          return;
+        }
         rollback();
         showToast(response.error || (language === 'id' ? 'Status proyek gagal diperbarui dan dikembalikan.' : 'Project status could not be saved and was reverted.'));
         return;
@@ -1375,6 +1390,11 @@ export const AdminProjects: React.FC = () => {
     try {
       const response = await api.tasks.update(task.id, { subtasks: nextSubtasks });
       if (!response.success) {
+        if (isUnknownMutationOutcome(response)) {
+          await syncProjects(false);
+          showToast(response.error || (language === 'id' ? 'Hasil pembaruan checklist belum dapat dipastikan. Data telah dimuat ulang.' : 'Checklist update outcome is unknown. Canonical records were refreshed.'));
+          return;
+        }
         applySubtasks(previousSubtasks);
         showToast(response.error || (language === 'id' ? 'Checklist gagal diperbarui. Perubahan dikembalikan.' : 'Checklist could not be updated. Changes were reverted.'));
         return;
@@ -1403,6 +1423,12 @@ export const AdminProjects: React.FC = () => {
     try {
       const response = await api.projects.delete(target.id);
       if (!response.success) {
+        if (isUnknownMutationOutcome(response)) {
+          await syncProjects(false);
+          setDeleteProject(null);
+          showToast(response.error || 'Project deletion outcome is unknown. The project list was refreshed; inspect it before retrying.');
+          return;
+        }
         showToast(response.error || 'Project could not be deleted.');
         return;
       }
@@ -1430,6 +1456,12 @@ export const AdminProjects: React.FC = () => {
     try {
       const response = await api.tasks.delete(target.id);
       if (!response.success) {
+        if (isUnknownMutationOutcome(response)) {
+          await syncProjects(false);
+          setDeleteTask(null);
+          showToast(response.error || 'Task deletion outcome is unknown. The project list was refreshed; inspect it before retrying.');
+          return;
+        }
         showToast(response.error || 'Task could not be deleted.');
         return;
       }
