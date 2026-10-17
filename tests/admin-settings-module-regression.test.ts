@@ -62,6 +62,21 @@ test('Overview loads each server status independently and reports partial failur
   assert.ok(source.includes('onClick={() => void loadOverview()}'));
 });
 
+test('Backup source failures do not masquerade as an empty production backup history', async () => {
+  const source = await read('src/pages/admin/AdminSettings.tsx');
+
+  assert.ok(source.includes('const [backupLoadError, setBackupLoadError] = useState<string | null>(null);'));
+  assert.ok(source.includes('setBackupLoadError(null);'));
+  assert.ok(source.includes("setBackupLoadError(backupError || 'Backup status could not be loaded. Retry to refresh the latest server data.');"));
+  assert.ok(source.includes('overviewLoading && backups.length === 0'));
+  assert.ok(source.includes('backupLoadError && backups.length === 0'));
+  assert.ok(source.includes('Backup status unavailable'));
+  assert.ok(source.includes('No production backups found'));
+  assert.ok(source.includes('overviewLoading && ('));
+  assert.ok(source.includes('Previously loaded entries remain visible.'));
+  assert.ok(source.includes('Showing the last successfully loaded backup entries.'));
+});
+
 test('Audit log load failures do not erase cached entries or masquerade as an empty ledger', async () => {
   const source = await read('src/pages/admin/AdminSettings.tsx');
   const start = source.indexOf('const loadAuditLogs = useCallback');
