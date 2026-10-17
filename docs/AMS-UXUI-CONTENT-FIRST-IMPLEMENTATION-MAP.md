@@ -361,3 +361,30 @@ No server, API, database, migration, auth/session implementation, CSRF/MFA/RBAC 
 - Reassess the remaining unreachable candidate-specific branches and status helpers inside AdminInbox.tsx only if compiler/test evidence or a fuller consumer search justifies that cleanup. The visible duplicate board/filter/empty group is removed; record filtering and CMS ownership remain protected.
 - The route/documentation discrepancy for /admin/approvals remains intentionally untouched and needs a separate route-owner decision if behavior is to change.
 - Current main baseline remains 35bc936ef96972a233196d3f3c92b2e5bb24d2d7 at the last refresh. This branch is for review only; no merge or deployment was performed.
+
+
+
+## Follow-up checkpoint · Inbox route-state and scroll ownership · 17 October 2026
+
+### Slice 5 · Remove unreachable recruitment states from Inbox
+
+- Files changed: src/pages/admin/AdminInbox.tsx and tests/ams-scrollbar-and-table-regression.test.ts.
+- Removed jobs from the InboxTab type and removed job-only branches from the view-state effect, status filter, bulk status transition/copy, CSV naming, header action labels, table headers/cells/pagination label, empty selection state, and confirmation dialog.
+- The filter options now list only the enquiry/inbound states handled by Inbox. Hiring stages remain inside Website CMS → Careers → Applicants.
+- Retained the source filter that excludes type=career records, the visible Careers Applicants link, the legacy /admin/inbox?view=jobs redirect in src/App.tsx, and the CMS Careers applicant list/render path. No route/API/data/status-transition/permission change was made.
+- Added regression assertions that reject an Inbox jobs-tab type or activeInboxTab jobs conditional, verify the career filter and canonical CMS route, and preserve the compatibility redirect.
+- Direct source checks on commit c43a42b0f7b7a34eaa82152bbe9bbcfa1bcb9224 passed. AMS Quality Gate passed at that SHA. AMS CI for that SHA was still running at the last recorded poll; verify the newer final HEAD below before claiming final CI success.
+
+### Slice 6 · Single horizontal scroll owner for the Inbox table
+
+- File changed: src/pages/admin/AdminInbox.tsx and tests/ams-scrollbar-and-table-regression.test.ts.
+- The Inbox directory table had nested horizontal overflow: outer .ams-table-scroll and inner .overflow-x-auto. The inner feature wrapper now uses min-w-0 and the outer .ams-table-scroll is the sole horizontal owner.
+- Added regression assertions for the single-owner structure and rejection of the inner overflow class.
+- This corrects a concrete source-level nested-scroll risk. The actual browser scrollbar count, thumb visibility, horizontal action-column reachability, and touch/keyboard behavior still require runtime verification.
+
+### Current branch QA and remaining work
+
+- Latest branch head after the two follow-up slices and this document entry is to be read from GitHub Actions/branch metadata at the time of review. Check that exact SHA's AMS Quality Gate and AMS CI before further changes.
+- No authenticated browser or branch preview was available. No viewport screenshots, computed-style checks, live wheel/touch tests or login/logout transitions were performed.
+- Remaining source-only Career type guards in the Inbox reader were left in place as defensive rendering paths. The reachable Inbox navigation/type/state and directory list no longer advertise or expose a recruitment pipeline. Revisit the defensive detail guards only if a full source consumer audit demonstrates a safe, nonbehavioral cleanup.
+- Main remains the previously confirmed baseline unless refreshed branch metadata reports otherwise. The audit branch is not merged or deployed.
