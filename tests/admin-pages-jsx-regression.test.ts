@@ -895,3 +895,18 @@ test('Team member and vendor profile details use shared drawers with fixed actio
   assert.ok(teams.includes('Edit vendor</Button>'));
   assert.ok(teams.includes('setVendorDetail(null)'));
 });
+
+
+test('Clients header avoids repeating the Active clients metric before the primary directory', () => {
+  const clients = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/admin/AdminClients.tsx'), 'utf8');
+  const headerStart = clients.indexOf('<AdminModuleHeader slug="clients-header"');
+  const headerEnd = clients.indexOf('{errorMessage && (', headerStart);
+  const directory = clients.indexOf('data-ams-feature-slug="clients-directory-table"');
+  const metrics = clients.indexOf('data-ams-feature-slug="clients-metrics"');
+  assert.ok(headerStart >= 0 && headerEnd > headerStart);
+  const header = clients.slice(headerStart, headerEnd);
+  assert.doesNotMatch(header, /clientMetrics\\.active|active accounts|AdminStatusBadge/);
+  assert.ok(directory > headerEnd);
+  assert.ok(metrics > directory);
+  assert.ok(clients.includes("id: 'active-clients', label: 'Active clients'"));
+});

@@ -158,6 +158,10 @@ The Team Directory and Vendor & Contractor Directory previously exposed the same
 
 The member profile and vendor profile detail views now use the shared `Drawer` instead of `Modal`, matching their multi-section content and making secondary actions available in a fixed footer. The member drawer retains role, department, allocation, active-project and skill information; Open Projects and Allocate remain available. The vendor drawer retains contact/commercial/location/status/skills/contract information plus Portfolio, GitHub and Edit vendor actions. This changes only the presentation surface and action placement; selection state, permissions, project allocation, vendor editing, data sources and mutations are unchanged.
 
+## Follow-on Clients header consistency slice
+
+The Clients & Key Accounts header previously repeated the Active clients KPI value as an `active accounts` badge, while the same source-backed count remained in the summary strip below the register. The header badge is removed; the primary directory remains the dominant work surface and the metric strip still provides Active clients, billed value and spend-cap compliance in its supporting position. Header title, description, export/create actions, query scopes, filters, register, permissions and lifecycle behavior remain unchanged.
+
 ## Remaining visual verification and limits
 
 Authenticated browser-level UX/visual testing was not performed in this environment. In particular, the 1440px, 1024px, 768px, 390px, and 320px viewport pass, actual keyboard/focus flow, direct-route/browser-history checks, drawer interactions, and permission-specific visual scenarios remain unverified in a live AMS session. CI verifies static/type/regression/security/build gates but does not replace those visual checks.

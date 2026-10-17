@@ -41,7 +41,7 @@ import { Button } from '../../components/ui/Button';
 import { CustomSelect } from '../../components/ui/CustomSelect';
 import { Drawer } from '../../components/ui/Drawer';
 import { Modal } from '../../components/ui/Modal';
-import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminStatusBadge, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
+import { AdminFilterBar, AdminMetricStrip, AdminModuleHeader, AdminPageShell, AdminTablePagination } from '../../components/admin/AdminModulePrimitives';
 import { ProfileIdentity } from '../../components/admin/ProfileIdentity';
 
 
@@ -799,7 +799,6 @@ export const AdminClients: React.FC = () => {
           className="mb-0"
           title="Clients & Key Accounts"
         description="Directory of enterprise clients, relationship health, spend-cap status, and account operations."
-        eyebrow={<AdminStatusBadge tone="neutral">{isLoading || errorMessage ? '— active accounts' : clientMetrics.active + ' active accounts'}</AdminStatusBadge>}
         actions={(
           <>
             <Button type="button" variant="secondary" onClick={() => {
