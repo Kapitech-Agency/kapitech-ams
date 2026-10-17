@@ -561,7 +561,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
       <section data-ams-feature-slug="dashboard-overview" data-ams-slug="dashboard-overview" className="mb-5 grid gap-3 min-[1100px]:grid-cols-12" aria-label="Executive overview controls">
         <div className="min-[1100px]:col-span-9">
           <AdminMetricStrip
-            className="grid-cols-1 sm:grid-cols-2 min-[760px]:grid-cols-4"
+            className="grid-cols-1 min-[390px]:grid-cols-2 min-[760px]:grid-cols-4"
             metrics={[
               {
                 id: 'active-projects', label: 'Active projects',
@@ -643,7 +643,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
 
       <div className="grid gap-3 min-[1100px]:grid-cols-12">
         <AdminPanel className="min-[1100px]:col-span-8" bodyClassName="p-4 sm:p-5" title="Invoices vs expenses" description="Issued invoice value and recorded expenses by record date. The difference is not a posted profit figure." actions={(
-          <div className="hidden items-center gap-3 text-[11px] text-muted sm:flex">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] text-muted" data-ams-slug="dashboard-finance-chart-legend">
             <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-accent" /> Invoices issued</span>
             <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-info" /> Expenses recorded</span>
             <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-success" /> Difference</span>
