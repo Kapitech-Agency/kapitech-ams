@@ -24,4 +24,9 @@ test('Client detail distinguishes absent financial values from recorded zero', a
   assert.match(clients, /const recorded = configured\.filter\(\(\{ state \}\) => state !== 'spend-not-recorded'\);/);
   assert.match(clients, /slaCompliance: recorded\.length \? Math\.round\(\(healthy \/ recorded\.length\) \* 1000\) \/ 10 : null/);
   assert.match(clients, /clientMetrics\.recordedSla/);
+  assert.match(clients, /const hasCompleteBilledData = clients\.length > 0 && clients\.every/);
+  assert.match(clients, /totalBilled: hasCompleteBilledData \? clients\.reduce\(\(sum, client\) => sum \+ client\.totalSpend, 0\) : null/);
+  assert.match(clients, /if \(billedA === null && billedB !== null\) return 1;/);
+  assert.match(clients, /if \(billedA !== null && billedB === null\) return -1;/);
+  assert.match(clients, /clientMetrics\.totalBilled === null \? '—'/);
 });
