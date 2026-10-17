@@ -70,6 +70,8 @@ test('Inbox leaves Careers applicant review in the canonical CMS workspace', asy
   const careers = await read('src/pages/admin/AdminCmsCareers.tsx');
 
   assert.doesNotMatch(inbox, /inbox-jobs-board|Candidate pipeline|Starred candidate work/);
+  assert.doesNotMatch(inbox, /type InboxTab =[^;]*\bjobs\b/);
+  assert.doesNotMatch(inbox, /activeInboxTab === 'jobs'|case 'jobs':/);
   assert.match(inbox, /\.filter\(\(item\) => item\.type !== 'career'\)/);
   assert.match(inbox, /to="\/admin\/cms\/careers\?tab=applicants"/);
   assert.match(app, /if \(query\.get\('view'\) === 'jobs'\)/);
