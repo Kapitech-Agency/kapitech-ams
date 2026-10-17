@@ -753,7 +753,7 @@ export const AdminInbox: React.FC = () => {
         )}
       />
 
-      <div className="min-[900px]:hidden min-w-0">
+      <div className="min-w-0">
         <AdminSectionTabs
           ariaLabel="Inbox sections"
           activeKey={activeInboxTab}
@@ -780,7 +780,6 @@ export const AdminInbox: React.FC = () => {
           <AdminMetricStrip slug="inbox-overview-kpis" className="lg:grid-cols-4" metrics={[
             { id: 'overview-total', label: 'Total inbound', value: submissions.length, context: 'All website submissions', sparkline: [Math.max(0, submissions.length - 3), submissions.length], icon: <Inbox size={16} strokeWidth={1.8} /> },
             { id: 'overview-client-new', label: 'New client leads', value: submissions.filter((item) => item.type !== 'career' && item.status === 'new').length, context: 'Awaiting client triage', sparkline: [0, submissions.filter((item) => item.type !== 'career' && item.status === 'new').length], icon: <MessageSquare size={16} strokeWidth={1.8} />, toneClassName: 'text-danger' },
-            { id: 'overview-jobs-new', label: 'New applications', value: submissions.filter((item) => item.type === 'career' && item.status === 'new').length, context: 'Awaiting screening', sparkline: [0, submissions.filter((item) => item.type === 'career' && item.status === 'new').length], icon: <Briefcase size={16} strokeWidth={1.8} />, toneClassName: 'text-warning' },
             { id: 'overview-starred', label: 'Starred queue', value: submissions.filter((item) => !!item.starred).length, context: 'Saved for follow-up', sparkline: [0, submissions.filter((item) => !!item.starred).length], icon: <Star size={16} strokeWidth={1.8} />, toneClassName: 'text-warning' }
           ]} />
         </section>
@@ -829,7 +828,6 @@ export const AdminInbox: React.FC = () => {
             { id: 'starred-total', label: 'Starred', value: activeTabItems.length, context: 'Saved records', sparkline: [Math.max(0, activeTabItems.length - 2), activeTabItems.length], icon: <Star size={16} strokeWidth={1.8} /> },
             { id: 'starred-critical', label: 'Urgent / high', value: activeTabItems.filter((item) => item.priority === 'urgent' || item.priority === 'high').length, context: 'Priority follow-up', sparkline: [0, activeTabItems.filter((item) => item.priority === 'urgent' || item.priority === 'high').length], toneClassName: 'text-danger' },
             { id: 'starred-clients', label: 'Client inquiries', value: activeTabItems.filter((item) => item.type !== 'career').length, context: 'Client follow-up', sparkline: [0, activeTabItems.filter((item) => item.type !== 'career').length] },
-            { id: 'starred-candidates', label: 'Candidates', value: activeTabItems.filter((item) => item.type === 'career').length, context: 'Recruitment follow-up', sparkline: [0, activeTabItems.filter((item) => item.type === 'career').length] }
           ]} />
         </section>
       )}
@@ -840,7 +838,7 @@ export const AdminInbox: React.FC = () => {
           slug="inbox-overview-controls"
           searchValue={searchQuery}
           onSearchChange={setSearchQuery}
-          searchPlaceholder="Search inbound, company, candidate, or slug..."
+          searchPlaceholder="Search inbound, company, or slug..."
           searchLabel="Search inbound"
           actions={(
             <div className="flex min-w-0 items-center gap-2 overflow-x-auto custom-scrollbar">
