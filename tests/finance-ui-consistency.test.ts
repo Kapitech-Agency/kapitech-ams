@@ -523,3 +523,24 @@ test('Finance reconciles uncertain transaction mutations before duplicate-prone 
   assert.ok(invoicing.includes('vendorPaymentIdempotencyKey'));
   assert.ok(invoicing.includes('expenseIdempotencyKey'));
 });
+
+test('JSON fallback enforces the same invoice and expense idempotency keys as PostgreSQL', async () => {
+  const routes = await read('server/routes.ts');
+  const invoicePayStart = routes.indexOf("apiRouter.post('/finance/invoices/:id/pay'");
+  const invoicePayEnd = routes.indexOf("apiRouter.post('/finance/invoices',", invoicePayStart);
+  const invoicePay = routes.slice(invoicePayStart, invoicePayEnd > invoicePayStart ? invoicePayEnd : invoicePayStart + 9000);
+  const expenseStart = routes.indexOf("apiRouter.post('/finance/expenses',");
+  const expenseEnd = routes.indexOf("apiRouter.post('/finance/expenses/:id/payments'", expenseStart);
+  const expenseCreate = routes.slice(expenseStart, expenseEnd);
+
+  assert.ok(invoicePayStart >= 0);
+  assert.ok(invoicePay.includes("String(payment.idempotencyKey || '') === idempotencyKey"));
+  assert.ok(invoicePay.includes("IDEMPOTENCY_KEY_REUSE_CONFLICT"));
+  assert.ok(invoicePay.includes("replayed: true"));
+  assert.ok(invoicePay.indexOf('const existingPayment = payments.find') < invoicePay.indexOf("if (invoice.status === 'cancelled')"));
+  assert.ok(expenseStart >= 0 && expenseEnd > expenseStart);
+  assert.ok(expenseCreate.includes('buildExpenseIdempotencyFingerprint'));
+  assert.ok(expenseCreate.includes('metadata.requestFingerprint'));
+  assert.ok(expenseCreate.includes('EXPENSE_IDEMPOTENCY_KEY_REUSE_CONFLICT'));
+  assert.ok(expenseCreate.includes('replayed:true'));
+});

@@ -4050,6 +4050,31 @@ apiRouter.post('/finance/invoices/:id/pay', requireAuth, requirePermission('canM
     return;
   }
 
+  const method = requestedMethod;
+  const date = normalizeDate(input.date, new Date().toISOString().slice(0, 10));
+  const reference = String(input.reference || '').trim().slice(0, 160);
+  const notes = String(input.notes || '').trim().slice(0, 1000);
+  const idempotencyKey = String(input.idempotencyKey || req.get('Idempotency-Key') || '').trim().slice(0, 100);
+
+  if (idempotencyKey) {
+    const payments = Array.isArray(invoice.payments) ? invoice.payments : [];
+    const existingPayment = payments.find((payment: any) => String(payment.idempotencyKey || '') === idempotencyKey);
+    if (existingPayment) {
+      const samePayment = Math.round(Number(existingPayment.amount || 0) * 100) / 100 === Math.round(payAmount * 100) / 100
+        && String(existingPayment.date || '') === date
+        && String(existingPayment.method || '') === method
+        && String(existingPayment.settlementAccountCode || '') === String(method === 'other' ? settlementAccountCode : '')
+        && String(existingPayment.reference || '') === reference
+        && String(existingPayment.notes || '') === notes;
+      if (!samePayment) {
+        res.status(409).json({ success: false, error: 'IDEMPOTENCY_KEY_REUSE_CONFLICT' });
+        return;
+      }
+      res.json({ success: true, invoice, payment: existingPayment, replayed: true });
+      return;
+    }
+  }
+
   if (invoice.status === 'cancelled') {
     res.status(409).json({ success: false, error: 'Cancelled invoices cannot receive payments.' });
     return;
@@ -4065,12 +4090,6 @@ apiRouter.post('/finance/invoices/:id/pay', requireAuth, requirePermission('canM
     res.status(400).json({ success: false, error: 'Payment exceeds the current invoice balance.' });
     return;
   }
-
-  const method = requestedMethod;
-  const date = normalizeDate(input.date, new Date().toISOString().slice(0, 10));
-  const reference = String(input.reference || '').trim().slice(0, 160);
-  const notes = String(input.notes || '').trim().slice(0, 1000);
-  const idempotencyKey = String(input.idempotencyKey || req.get('Idempotency-Key') || '').trim().slice(0, 100);
 
   const paymentRecord = {
     id: `pay_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`,
@@ -4281,6 +4300,42 @@ apiRouter.post('/finance/expenses', requireAuth, requirePermission('canManageInv
     idempotencyKey: cleanText(exp.idempotencyKey || req.get('Idempotency-Key'), 100) || undefined,
     createdAt: new Date().toISOString()
   };
+
+  const buildExpenseIdempotencyFingerprint = (value: any): string => {
+    const metadata = value?.metadata && typeof value.metadata === 'object' && !Array.isArray(value.metadata)
+      ? value.metadata
+      : {};
+    const fingerprintData: Record<string, unknown> = {
+      type: String(value?.type || 'OpEx'),
+      category: String(value?.category || 'General'),
+      description: String(value?.description || ''),
+      amount: Math.round(Number(value?.amount || 0) * 100) / 100,
+      currency: String(value?.currency || 'IDR'),
+      date: String(value?.date || value?.expenseDate || '').slice(0, 10),
+      projectId: value?.projectId ? String(value.projectId) : '',
+      recurringInterval: String(value?.recurringInterval || 'none'),
+      paymentStatus: String(metadata.paymentStatus || value?.paymentStatus || 'unpaid'),
+      paidDate: String(metadata.paidDate || value?.paidDate || ''),
+      paymentMethod: String(metadata.paymentMethod || value?.paymentMethod || 'bank_transfer'),
+      paymentAccountCode: String(metadata.paymentAccountCode || value?.paymentAccountCode || '')
+    };
+    if (value?.vendorId || value?.vendorContractId) {
+      fingerprintData.vendorId = String(value.vendorId || '');
+      fingerprintData.vendorContractId = String(value.vendorContractId || '');
+      const vendorPayment = metadata.vendorPayment;
+      if (vendorPayment && typeof vendorPayment === 'object') {
+        fingerprintData.vendorPaymentReference = String(vendorPayment.reference || '');
+        fingerprintData.vendorPaymentNotes = String(vendorPayment.notes || '');
+      }
+    }
+    return JSON.stringify(fingerprintData);
+  };
+
+  newExpense.metadata = {
+    ...(newExpense.metadata || {}),
+    requestFingerprint: buildExpenseIdempotencyFingerprint(newExpense)
+  };
+
   if (getDataSourceMode() === 'postgres') {
     try {
       const expense = await postgresExpenseRepository.create(newExpense, makeAuditEntry(req, 'EXPENSE_CREATED', `Created expense "${newExpense.description || newExpense.id}" (${newExpense.currency} ${newExpense.amount}).`));
@@ -4295,8 +4350,22 @@ apiRouter.post('/finance/expenses', requireAuth, requirePermission('canManageInv
     return;
   }
   const db=getDatabase();
-  const existingIdempotent=newExpense.idempotencyKey ? db.expenses.find((expense:any)=>expense.recordedByUserId===newExpense.recordedByUserId&&expense.idempotencyKey===newExpense.idempotencyKey&&expense.status!=='voided') : undefined;
-  if(existingIdempotent){res.json({success:true,expense:existingIdempotent});return;}
+  const existingIdempotent=newExpense.idempotencyKey
+    ? (db.expenses || []).find((expense:any)=>expense.recordedByUserId===newExpense.recordedByUserId&&expense.idempotencyKey===newExpense.idempotencyKey)
+    : undefined;
+  if(existingIdempotent){
+    const existingMetadata = existingIdempotent.metadata && typeof existingIdempotent.metadata === 'object' && !Array.isArray(existingIdempotent.metadata)
+      ? existingIdempotent.metadata
+      : {};
+    const storedFingerprint = String(existingMetadata.requestFingerprint || buildExpenseIdempotencyFingerprint(existingIdempotent));
+    const requestedFingerprint = String(newExpense.metadata.requestFingerprint || buildExpenseIdempotencyFingerprint(newExpense));
+    if(storedFingerprint !== requestedFingerprint){
+      res.status(409).json({success:false,error:'EXPENSE_IDEMPOTENCY_KEY_REUSE_CONFLICT'});
+      return;
+    }
+    res.json({success:true,expense:existingIdempotent,replayed:true});
+    return;
+  }
   db.expenses.unshift(newExpense); saveDatabase(db);
   recordAuditLog({ action:'EXPENSE_CREATED', actor:req.user!.username, actorRole:req.user!.role, ip:req.ip, userAgent:req.headers['user-agent'] as string, details:`Created expense "${newExpense.description || newExpense.id}" (${newExpense.currency} ${newExpense.amount}).`, severity:'info' });
   res.json({success:true,expense:newExpense});
