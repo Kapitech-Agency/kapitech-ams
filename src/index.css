@@ -594,16 +594,16 @@
 .ams-shell .ams-table-action[data-primary=true]:hover{background:var(--accent)!important;color:#fff!important}
 .ams-shell .ams-table-action:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .ams-shell .ams-finance-table{width:100%;border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums}
-.ams-shell .ams-finance-table thead th{height:44px!important;padding:0 16px!important;background:var(--panel)!important;border-bottom:1px solid var(--line)!important;color:var(--muted)!important;font-size:11px!important;line-height:16px!important;font-weight:600!important;letter-spacing:0!important;text-transform:none!important;text-align:left!important;vertical-align:middle!important;white-space:nowrap!important}
-.ams-shell .ams-finance-table tbody td{height:56px!important;min-height:56px;padding:10px 16px!important;background:var(--panel);border-bottom:1px solid var(--line)!important;color:var(--text);font-size:13px!important;line-height:18px!important;vertical-align:middle!important;text-align:left!important}
-.ams-shell .ams-finance-table tbody tr:last-child td{border-bottom:0!important}
+.ams-shell .ams-finance-table thead th{height:40px;padding:0 12px;background:var(--panel);border-bottom:1px solid var(--line);color:var(--muted);font-size:11px;line-height:16px;font-weight:600;letter-spacing:0;text-transform:none;text-align:left;vertical-align:middle;white-space:nowrap}
+.ams-shell .ams-finance-table tbody td{height:48px;min-height:48px;padding:8px 12px;background:var(--panel);border-bottom:1px solid var(--line);color:var(--text);font-size:13px;line-height:18px;vertical-align:middle;text-align:left}
+.ams-shell .ams-finance-table tbody tr:last-child td{border-bottom:0}
 .ams-shell .ams-finance-table tbody tr:hover td{background:color-mix(in srgb,var(--text) 4%,transparent)}
-.ams-shell .ams-finance-table th:first-child,.ams-shell .ams-finance-table td:first-child{padding-left:20px!important}
-.ams-shell .ams-finance-table th:last-child,.ams-shell .ams-finance-table td:last-child{padding-right:20px!important}
-.ams-shell .ams-finance-table thead th.text-right,.ams-shell .ams-finance-table tbody td.text-right{text-align:right!important}
-.ams-shell .ams-finance-table thead th.text-center,.ams-shell .ams-finance-table tbody td.text-center{text-align:center!important}
+.ams-shell .ams-finance-table th:first-child,.ams-shell .ams-finance-table td:first-child{padding-left:16px}
+.ams-shell .ams-finance-table th:last-child,.ams-shell .ams-finance-table td:last-child{padding-right:16px}
+.ams-shell .ams-finance-table thead th.text-right,.ams-shell .ams-finance-table tbody td.text-right{text-align:right}
+.ams-shell .ams-finance-table thead th.text-center,.ams-shell .ams-finance-table tbody td.text-center{text-align:center}
 .ams-shell .ams-finance-table .ams-table-actions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:nowrap;gap:6px}
-.ams-shell .ams-finance-table .ams-table-actions>button,.ams-shell .ams-finance-table .ams-table-actions>a{width:32px!important;height:32px!important;min-width:32px!important;min-height:32px!important;padding:0!important}
+.ams-shell .ams-finance-table .ams-table-actions>button,.ams-shell .ams-finance-table .ams-table-actions>a{width:32px;height:32px;min-width:32px;min-height:32px;padding:0}
 .ams-shell .ams-finance-table .tabular-nums{font-variant-numeric:tabular-nums}
 .ams-shell .ams-data-table-shell,.ams-shell .ams-client-table-shell{min-width:0;overflow:hidden;background:var(--panel);border:1px solid var(--line);border-radius:12px}
 .ams-shell .ams-data-table,.ams-shell .ams-client-table{width:100%;border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums}

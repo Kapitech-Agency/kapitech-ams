@@ -163,6 +163,7 @@ export const AdminLayout: React.FC = () => {
     const path = location.pathname;
 
     if (path === '/admin/dashboard') return 'dashboard';
+    if (path === '/admin/finance' || path.startsWith('/admin/finance/')) return 'finance';
     if (path === '/admin/projects' || path === '/admin/tasks') return 'projects';
     if (path === '/admin/clients' || path.startsWith('/admin/clients/') || path === '/admin/contracts') return 'clients';
     if (path === '/admin/team' || path === '/admin/time-logs' || path === '/admin/vendors') return 'team';
@@ -450,7 +451,11 @@ export const AdminLayout: React.FC = () => {
         {/* Page shells render contextual navigation below the page title and description. */}
         <div className="ams-content flex-1 min-h-0 w-full max-w-[1560px] mx-auto">
           <AdminWorkspaceNavigationContext.Provider
-            value={workspaceTabItems.length > 0 ? { items: workspaceTabItems, activeKey: activeWorkspaceTab?.key || '' } : null}
+            value={workspaceTabItems.length > 0 ? {
+              items: workspaceTabItems,
+              activeKey: activeWorkspaceTab?.key || '',
+              placement: workspaceNavigationModule === 'finance' ? 'before-header' : 'after-header'
+            } : null}
           >
             <Outlet />
           </AdminWorkspaceNavigationContext.Provider>

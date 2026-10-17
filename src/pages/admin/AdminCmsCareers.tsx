@@ -482,7 +482,6 @@ export const AdminCmsCareers: React.FC = () => {
             : 'Review and manage applications submitted through the public Careers page.')}
         actions={
           <>
-            {canManageJobs && <span className="hidden text-xs tabular-nums text-muted sm:inline">{positions.length} {isId ? 'lowongan' : 'openings'}</span>}
             {canManageJobs && activeTab === 'jobs' && (
               <Button type="button" variant="primary" icon={<Plus size={14} />} onClick={openCreateEditor}>
                 {isId ? 'Tambah lowongan' : 'Add opening'}
@@ -502,19 +501,6 @@ export const AdminCmsCareers: React.FC = () => {
           {statusMessage.text}
         </AdminModuleNotice>
       )}
-
-      <AdminMetricStrip
-        slug="cms-careers-metrics"
-        className={canManageJobs ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-1'}
-        metrics={canManageJobs ? [
-          { id: 'total-openings', label: isId ? 'Total lowongan' : 'Total openings', value: positions.length, icon: <Briefcase size={15} />, toneClassName: 'text-accent-text' },
-          { id: 'published-openings', label: isId ? 'Dipublikasikan' : 'Published', value: publishedCount, icon: <Globe size={15} />, toneClassName: 'text-success' },
-          { id: 'draft-openings', label: 'Draft', value: draftCount, icon: <EyeOff size={15} />, toneClassName: 'text-muted' },
-          { id: 'job-applicants', label: isId ? 'Pelamar baru' : 'New applicants', value: applicantsLoaded ? newApplicantsCount : '—', icon: <Users size={15} />, toneClassName: 'text-info' }
-        ] : [
-          { id: 'job-applicants', label: isId ? 'Total pelamar' : 'Applicants', value: applicantsLoaded ? applicants.length : '—', icon: <Users size={15} />, toneClassName: 'text-info' }
-        ]}
-      />
 
       <div role="tablist" aria-label={isId ? "Workspace Careers" : "Careers workspace"} className="ams-workspace-tabs inline-flex max-w-full flex-wrap items-center gap-1 rounded-control border border-line bg-panel p-1">
         {([
@@ -544,13 +530,26 @@ export const AdminCmsCareers: React.FC = () => {
               handleWorkspaceTabChange(nextKey);
               document.getElementById(`careers-${nextKey}-tab`)?.focus();
             }}
-            className={'inline-flex min-h-8 items-center gap-2 rounded-chip border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (activeTab === tab.key ? 'border-accent/25 bg-accent/10 font-semibold text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg')}
+            className={'inline-flex min-h-9 items-center gap-2 rounded-chip border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (activeTab === tab.key ? 'border-accent/25 bg-accent/10 font-semibold text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg')}
           >
             {tab.label}
             {tab.count !== null && <span className={'rounded-badge border px-1.5 py-0.5 text-[10px] tabular-nums ' + (activeTab === tab.key ? 'border-accent/25 bg-accent/10 text-accent-text' : 'border-line bg-bg text-muted')}>{tab.count}</span>}
           </button>
         ))}
       </div>
+
+      <AdminMetricStrip
+        slug="cms-careers-metrics"
+        className={canManageJobs ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-1'}
+        metrics={canManageJobs ? [
+          { id: 'total-openings', label: isId ? 'Total lowongan' : 'Total openings', value: positions.length, icon: <Briefcase size={15} />, toneClassName: 'text-accent-text' },
+          { id: 'published-openings', label: isId ? 'Dipublikasikan' : 'Published', value: publishedCount, icon: <Globe size={15} />, toneClassName: 'text-success' },
+          { id: 'draft-openings', label: 'Draft', value: draftCount, icon: <EyeOff size={15} />, toneClassName: 'text-muted' },
+          { id: 'job-applicants', label: isId ? 'Pelamar baru' : 'New applicants', value: applicantsLoaded ? newApplicantsCount : '—', icon: <Users size={15} />, toneClassName: 'text-info' }
+        ] : [
+          { id: 'job-applicants', label: isId ? 'Total pelamar' : 'Applicants', value: applicantsLoaded ? applicants.length : '—', icon: <Users size={15} />, toneClassName: 'text-info' }
+        ]}
+      />
 
       {activeTab === 'jobs' ? (
         <section className="space-y-3" data-ams-feature-slug="cms-careers-list" role="tabpanel" id="careers-jobs-panel" aria-labelledby="careers-jobs-tab" tabIndex={0}>

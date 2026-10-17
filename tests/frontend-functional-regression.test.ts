@@ -670,6 +670,7 @@ test('SLA Monitoring never presents fixture telemetry as real client performance
 
 test('Resource Planning assignments persist on project records and distinguish tracked hours from forecasts', async () => {
   const teams = await read('src/pages/admin/AdminTeams.tsx');
+  const navigation = await read('src/lib/amsModuleSubnavigation.ts');
   const routes = await read('server/routes.ts');
 
   assert.match(teams, /const toggleProjectAssignment = async/);
@@ -678,7 +679,7 @@ test('Resource Planning assignments persist on project records and distinguish t
   assert.match(teams, /planned weekly allocation and dates/);
   assert.match(teams, /Upcoming resource allocation/);
   assert.match(teams, /No plan means unplanned, not automatically available/);
-  assert.match(teams, /Capacity &amp; Allocation/);
+  assert.match(navigation, /key: 'capacity', label: 'Capacity', to: '\/admin\/team\?view=capacity-allocation'/);
   assert.match(routes, /pickFields\(updates, \['title','name','client','clientId','clientName','clientCompany','clientEmail','serviceCategory','status','health','budget','progressPercent','startDate','targetEndDate','teamLead','teamMembers'/);
 });
 

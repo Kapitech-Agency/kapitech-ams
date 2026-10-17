@@ -1673,23 +1673,6 @@ const FinanceWorkbookWorkspace: React.FC = () => {
     return !sidebarDestinations.has(destination)
       && canAccessAmsRoute(navigationRole, '/admin/finance', '?tab=' + key);
   };
-  const groupTabSlugs: Record<string, string> = {
-    overview: 'finance-tab-overview-control',
-    transactions: 'finance-tab-transactions-cash',
-    receivables: 'finance-tab-receivables-payables',
-    projects: 'finance-tab-project-finance',
-    accounting: 'finance-tab-accounting-reports'
-  };
-  const groupItems = FINANCE_WORKBOOK_GROUPS.flatMap((group) => {
-    const firstNavigableSheet = group.items.find((item) => canShowFinanceWorksheet(item.key));
-    if (!firstNavigableSheet) return [];
-    return [{
-      key: group.key,
-      label: group.label,
-      to: financeWorksheetDestination(firstNavigableSheet.key),
-      slug: groupTabSlugs[group.key] || 'finance-area-' + group.key
-    }];
-  });
   const sheetItems = [
     ...activeGroup.items
       .filter((item) => canShowFinanceWorksheet(item.key))
@@ -2371,7 +2354,7 @@ const FinanceWorkbookWorkspace: React.FC = () => {
             <WorkbookNote title="Project finance and source coverage">
               Contract value, vendor commitment and other obligations are planning inputs stored once in Project Finance. Billed revenue, dated collections and recorded expenses follow the selected reporting period ({periodLabel}) and use linked AMS source records. Current AP outstanding is shown separately from vendor commitment to avoid treating the same supplier obligation as both a commitment and a paid cost. Collections without dated payment records are not assigned to a reporting month.
             </WorkbookNote>
-            <FinanceDataTable title="Project Finance" description="Excel-aligned planned profit is Contract Value less Vendor Commitment and Other Obligations. Vendor Paid and Vendor Outstanding are calculated from linked IDR vendor bills and their recorded payments; period invoice and expense figures remain live source activity." columns={[{label:'Project'},{label:'Client'},{label:'PIC'},{label:'Contract value',align:'right'},{label:'Vendor commitment',align:'right'},{label:'Other obligations',align:'right'},{label:'Net project profit · plan',align:'right'},{label:'Billed ex. tax · period',align:'right'},{label:'Collected · period',align:'right'},{label:'Recorded expenses · period',align:'right'},{label:'Vendor paid · current',align:'right'},{label:'Vendor outstanding · current',align:'right'},{label:'Vendor bills · current',align:'right'},{label:'Project status'},{label:'Project dates'},{label:'Notes'},{label:'Check'},{label:'Setup / actions'}]} rows={rows} emptyMessage="No AMS projects were returned. Finance records can be saved and linked when a project is available." actions={registerAddButton('project-finance','Add project finance record')}/>
+            <FinanceDataTable title="Project Finance" description="Planned profit is Contract Value less Vendor Commitment and Other Obligations. Vendor Paid and Vendor Outstanding are calculated from linked IDR vendor bills and their recorded payments; period invoice and expense figures remain live source activity." columns={[{label:'Project'},{label:'Client'},{label:'PIC'},{label:'Contract value',align:'right'},{label:'Vendor commitment',align:'right'},{label:'Other obligations',align:'right'},{label:'Net project profit · plan',align:'right'},{label:'Billed ex. tax · period',align:'right'},{label:'Collected · period',align:'right'},{label:'Recorded expenses · period',align:'right'},{label:'Vendor paid · current',align:'right'},{label:'Vendor outstanding · current',align:'right'},{label:'Vendor bills · current',align:'right'},{label:'Project status'},{label:'Project dates'},{label:'Notes'},{label:'Check'},{label:'Setup / actions'}]} rows={rows} emptyMessage="No AMS projects were returned. Finance records can be saved and linked when a project is available." actions={registerAddButton('project-finance','Add project finance record')}/>
             {orphanRecords.length>0&&<FinanceDataTable title="Unlinked project finance records" description="These records remain visible until they can be linked to the correct AMS project." columns={[{label:'Project key'},{label:'Contract value',align:'right'},{label:'Vendor commitment',align:'right'},{label:'Other obligations',align:'right'},{label:'Status'},{label:'Actions'}]} rows={orphanRecords.map((record)=>({id:record.id,cells:[String(record.payload.projectName||record.recordKey),formatMoney(Number(record.payload.contractValue)||0),formatMoney(Number(record.payload.vendorCommitment)||0),formatMoney(Number(record.payload.otherObligations)||0),<StatusBadge value={record.status}/>,registerRecordActions('project-finance',record)]}))}/>}
           </div>
         );
@@ -3148,11 +3131,6 @@ const FinanceWorkbookWorkspace: React.FC = () => {
         description="Manage revenue, expenses, cash, receivables, payables, and financial reporting in one place."
         actions={(
           <div className="flex flex-wrap items-center gap-2">
-            {activeGroup.key === 'receivables' && (
-              <Button variant="secondary" type="button" onClick={() => navigate('/admin/finance/quotations')}>
-                Quotations
-              </Button>
-            )}
             <Button variant="secondary" type="button" onClick={() => void loadData(true)} loading={refreshing}>
               Refresh data
             </Button>
@@ -3160,14 +3138,6 @@ const FinanceWorkbookWorkspace: React.FC = () => {
         )}
         className="mb-0"
       />
-      {groupItems.length > 0 && (
-        <AdminSectionTabs
-          ariaLabel="Finance areas"
-          activeKey={activeGroup.key}
-          items={groupItems}
-          className="w-full"
-        />
-      )}
       <div
         className={SEARCHABLE_FINANCE_TABS.has(activeTab.key) && activeGroup.items.length <= 4
           ? 'grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-center'

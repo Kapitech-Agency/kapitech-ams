@@ -24,9 +24,15 @@ const MODULE_SUBNAVIGATION: Record<AmsSidebarModuleKey, AmsSidebarSubnavigationI
     { key: 'archived', label: 'Archived', to: '/admin/projects?projects=archived' },
     { key: 'tasks', label: 'Tasks', to: '/admin/tasks' },
   ],
-  // Finance owns its five workbook areas and the existing quotation workflow.
-  // Quotations are linked from the Receivables & Payables workspace, not a second sidebar item.
-  finance: [],
+  // Finance area navigation sits above the page header. Worksheets remain a secondary row inside Finance.
+  // Quotations stay within Receivables & Payables; they are not a primary navigation module.
+  finance: [
+    { key: 'overview', label: 'Overview & Control', to: '/admin/finance?tab=executive-summary', slug: 'finance-tab-overview-control' },
+    { key: 'transactions', label: 'Transactions & Cash', to: '/admin/finance?tab=cash-bank', slug: 'finance-tab-transactions-cash' },
+    { key: 'receivables', label: 'Receivables & Payables', to: '/admin/finance?tab=accounts-receivable', slug: 'finance-tab-receivables-payables' },
+    { key: 'projects', label: 'Project Finance', to: '/admin/finance?tab=project-finance', slug: 'finance-tab-project-finance' },
+    { key: 'accounting', label: 'Accounting & Reports', to: '/admin/finance?tab=journal', slug: 'finance-tab-accounting-reports' },
+  ],
   clients: [
     { key: 'directory', label: 'Client directory', to: '/admin/clients/all-clients' },
     { key: 'onboarding', label: 'Onboarding', to: '/admin/clients/all-clients?scope=onboarding' },
@@ -49,9 +55,9 @@ const MODULE_SUBNAVIGATION: Record<AmsSidebarModuleKey, AmsSidebarSubnavigationI
     { key: 'careers', label: 'Careers', to: '/admin/cms/careers', slug: 'cms-tab-careers' },
   ],
   settings: [
-    { key: 'backup', label: 'DB migrations & backups', to: '/admin/settings?tab=overview' },
-    { key: 'access', label: 'Access & confidential cost rates', to: '/admin/settings?tab=security' },
-    { key: 'audit', label: 'Audit', to: '/admin/settings?tab=audit' },
+    { key: 'backup', label: 'System overview', to: '/admin/settings?tab=overview' },
+    { key: 'access', label: 'Access & security', to: '/admin/settings?tab=security' },
+    { key: 'audit', label: 'Audit log', to: '/admin/settings?tab=audit' },
     { key: 'integrations', label: 'Integrations', to: '/admin/settings?tab=integrations' },
   ],
   tasks: [],
@@ -131,6 +137,22 @@ export function isAmsModuleSubnavigationItemActive(
   const params = new URLSearchParams(search);
   const target = new URL(item.to, 'https://ams.kapitech.local');
   const targetPath = target.pathname.replace(/\/+$/, '') || '/';
+
+  if (path === '/admin/finance/quotations') return item.key === 'receivables';
+
+  if (path === '/admin/finance') {
+    const financeGroups: Record<string, string[]> = {
+      overview: ['executive-summary', 'dashboard'],
+      transactions: ['cash-bank', 'revenue', 'expenses', 'petty-cash'],
+      receivables: ['accounts-receivable', 'accounts-payable', 'vendors', 'quotations'],
+      projects: ['project-finance', 'operational-budget', 'project-allocation', 'team-fee'],
+      accounting: ['journal', 'chart-of-accounts', 'monthly-pnl', 'cash-flow', 'balance-sheet', 'monthly-closing', 'annual-summary'],
+    };
+    const validTabs = Object.values(financeGroups).flat();
+    const selectedTab = params.get('tab') || 'executive-summary';
+    const normalizedTab = validTabs.includes(selectedTab) ? selectedTab : 'executive-summary';
+    if (item.key in financeGroups) return financeGroups[item.key].includes(normalizedTab);
+  }
 
   if (item.key === 'overview' && path === '/admin/dashboard') {
     return !params.get('view') || params.get('view') === 'overview';

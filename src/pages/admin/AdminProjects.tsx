@@ -1871,7 +1871,7 @@ export const AdminProjects: React.FC = () => {
         eyebrow={view === 'all' ? 'Workspace / Projects' : 'Projects'}
         title={(
           <span className="flex min-w-0 flex-wrap items-center gap-2.5">
-            <span>{view === 'all' ? 'Projects & Delivery Kanban' : view === 'sprint' ? 'Sprint & Delivery' : view === 'budget' ? 'Budget vs Actual' : 'Archived Projects'}</span>
+            <span>{view === 'all' ? 'Projects' : view === 'sprint' ? 'Sprint & Delivery' : view === 'budget' ? 'Budget vs Actual' : 'Archived Projects'}</span>
             <span className={'rounded-badge border px-2 py-1 text-[10px] font-semibold ' + (serverMode ? 'border-accent/25 bg-accent/10 text-accent' : loading ? 'border-info/25 bg-info/10 text-info' : 'border-warning/25 bg-warning/10 text-warning')}>
               {serverMode
                 ? view === 'archived' ? archivedProjects.length + ' Completed Projects' : activeProjects.length + ' Active Projects'
@@ -1891,14 +1891,14 @@ export const AdminProjects: React.FC = () => {
         actions={(
           <>
             {view === 'all' && (
-              <div className="flex h-9 items-center gap-1 rounded-control border border-line bg-panel p-1">
-                <button type="button" onClick={() => openLayout('board')} className={'inline-flex h-7 items-center gap-1.5 rounded-chip px-3 text-xs font-medium transition-colors ' + (projectLayout === 'board' ? 'bg-line text-fg' : 'text-muted hover:bg-bg hover:text-fg')}>
+              <div className="inline-flex min-h-9 items-center gap-1 rounded-control border border-line bg-panel px-0.5">
+                <button type="button" aria-pressed={projectLayout === 'board'} onClick={() => openLayout('board')} className={'inline-flex h-9 min-h-9 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (projectLayout === 'board' ? 'border-line bg-line text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg')}>
                   <LayoutGrid size={13} /> Kanban
                 </button>
-                <button type="button" onClick={() => openLayout('table')} aria-pressed={projectLayout === 'table'} className={'inline-flex h-7 items-center gap-1.5 rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ' + (projectLayout === 'table' ? 'bg-line text-fg' : 'text-muted hover:bg-bg hover:text-fg')}>
+                <button type="button" onClick={() => openLayout('table')} aria-pressed={projectLayout === 'table'} className={'inline-flex h-9 min-h-9 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ' + (projectLayout === 'table' ? 'border-line bg-line text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg')}>
                   <List size={13} /> Table
                 </button>
-                <button type="button" onClick={() => openLayout('timeline')} aria-pressed={projectLayout === 'timeline'} className={'inline-flex h-7 items-center gap-1.5 rounded-chip px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ' + (projectLayout === 'timeline' ? 'bg-line text-fg' : 'text-muted hover:bg-bg hover:text-fg')}>
+                <button type="button" onClick={() => openLayout('timeline')} aria-pressed={projectLayout === 'timeline'} className={'inline-flex h-9 min-h-9 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ' + (projectLayout === 'timeline' ? 'border-line bg-line text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg')}>
                   <CalendarDays size={13} /> Gantt
                 </button>
               </div>

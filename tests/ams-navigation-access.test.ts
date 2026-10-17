@@ -151,7 +151,8 @@ test('contextual navigation preserves the default view of each module', () => {
 test('module subnavigation respects feature ownership and role-specific scope', () => {
   assert.deepEqual(subnav('dashboard', 'Admin').map((item) => item.key), ['overview', 'performance', 'analytics']);
   assert.deepEqual(subnav('crm', 'Admin'), []);
-  assert.deepEqual(subnav('finance', 'Finance'), []);
+  assert.deepEqual(subnav('finance', 'Finance').map((item) => item.key), ['overview', 'transactions', 'receivables', 'projects', 'accounting']);
+  assert.deepEqual(subnav('finance', 'PM').map((item) => item.key), ['projects']);
   assert.deepEqual(subnav('projects', 'Admin').map((item) => item.key), ['all', 'sprint', 'budget', 'archived', 'tasks']);
   assert.deepEqual(subnav('projects', 'Finance').map((item) => item.key), ['sprint', 'tasks']);
   assert.deepEqual(subnav('projects', 'Creative').map((item) => item.key), ['sprint', 'tasks']);

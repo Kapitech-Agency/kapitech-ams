@@ -620,18 +620,38 @@ export const AdminCmsProjects: React.FC = () => {
                 <button
                   type="button"
                   role="tab"
+                  id="case-study-details-tab"
+                  aria-controls="case-study-details-panel"
                   aria-selected={modalTab === 'details'}
+                  tabIndex={modalTab === 'details' ? 0 : -1}
                   onClick={() => setModalTab('details')}
-                  className={`inline-flex h-8 items-center rounded-chip px-3 text-[11px] font-medium transition-colors ${modalTab === 'details' ? 'border border-line bg-panel text-fg' : 'border border-transparent text-muted hover:bg-bg hover:text-fg'}`}
+                  onKeyDown={(event) => {
+                    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+                    event.preventDefault();
+                    const nextTab = event.key === 'Home' ? 'details' : event.key === 'End' ? 'preview' : modalTab === 'details' ? 'preview' : 'details';
+                    setModalTab(nextTab);
+                    document.getElementById('case-study-' + nextTab + '-tab')?.focus();
+                  }}
+                  className={`inline-flex h-9 min-h-9 items-center rounded-chip border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${modalTab === 'details' ? 'border-line bg-panel text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg'}`}
                 >
                   Details
                 </button>
                 <button
                   type="button"
                   role="tab"
+                  id="case-study-preview-tab"
+                  aria-controls="case-study-preview-panel"
                   aria-selected={modalTab === 'preview'}
+                  tabIndex={modalTab === 'preview' ? 0 : -1}
                   onClick={() => setModalTab('preview')}
-                  className={`inline-flex h-8 items-center gap-1.5 rounded-chip px-3 text-[11px] font-medium transition-colors ${modalTab === 'preview' ? 'border border-line bg-panel text-fg' : 'border border-transparent text-muted hover:bg-bg hover:text-fg'}`}
+                  onKeyDown={(event) => {
+                    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+                    event.preventDefault();
+                    const nextTab = event.key === 'Home' ? 'details' : event.key === 'End' ? 'preview' : modalTab === 'details' ? 'preview' : 'details';
+                    setModalTab(nextTab);
+                    document.getElementById('case-study-' + nextTab + '-tab')?.focus();
+                  }}
+                  className={`inline-flex h-9 min-h-9 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${modalTab === 'preview' ? 'border-line bg-panel text-fg' : 'border-transparent text-muted hover:bg-bg hover:text-fg'}`}
                 >
                   <Eye size={12} />
                   <span>Card Preview</span>
@@ -640,7 +660,7 @@ export const AdminCmsProjects: React.FC = () => {
             </div>
 
             {modalTab === 'preview' ? (
-              <div data-ams-drawer-preview className="space-y-5 py-4">
+              <div role="tabpanel" id="case-study-preview-panel" aria-labelledby="case-study-preview-tab" tabIndex={0} data-ams-drawer-preview className="space-y-5 py-4">
                 <div className="rounded-card border border-line bg-bg p-3 text-[11px] text-muted">
                   Live case study preview. This is the content structure that will feed the public <code className="text-fg">/work</code> detail modal.
                 </div>
@@ -656,7 +676,7 @@ export const AdminCmsProjects: React.FC = () => {
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/35 to-transparent" />
                     <div className="absolute inset-x-4 bottom-4">
-                      <div className="mb-2 flex flex-wrap items-center gap-1.5 text-[9px] font-medium uppercase tracking-[0.08em]">
+                      <div className="mb-2 flex flex-wrap items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.08em]">
                         <span className="rounded-badge border border-accent/30 bg-accent/10 px-2 py-1 text-accent-text">{editingProject.pillar}</span>
                         <span className="rounded-badge border border-line bg-bg/80 px-2 py-1 text-muted">{editingProject.service}</span>
                         <span className="rounded-badge border border-line bg-bg/80 px-2 py-1 font-mono tabular-nums text-muted">{editingProject.year}</span>
@@ -668,7 +688,7 @@ export const AdminCmsProjects: React.FC = () => {
 
                   <div className="space-y-5 p-4">
                     <section>
-                      <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-muted">Project Context</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">Project Context</p>
                       <p className="mt-2 text-xs leading-6 text-fg">
                         {editingProject.descId || editingProject.desc || 'No project summary entered.'}
                       </p>
@@ -676,21 +696,21 @@ export const AdminCmsProjects: React.FC = () => {
 
                     <div className="grid gap-3">
                       <section className="rounded-control border border-line bg-panel p-3">
-                        <div className="text-[9px] font-semibold uppercase tracking-[0.12em] text-accent-text">01 · Client Challenge</div>
+                        <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-accent-text">01 · Client Challenge</div>
                         <p className="mt-2 text-xs leading-6 text-muted">{editingProject.challengeId || editingProject.challenge || 'No client challenge entered.'}</p>
                       </section>
                       <section className="rounded-control border border-accent/20 bg-accent/5 p-3">
-                        <div className="text-[9px] font-semibold uppercase tracking-[0.12em] text-accent-text">02 · Kapitech Solution</div>
+                        <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-accent-text">02 · Kapitech Solution</div>
                         <p className="mt-2 text-xs leading-6 text-muted">{editingProject.solutionId || editingProject.solution || 'No Kapitech solution entered.'}</p>
                       </section>
                       <section className="rounded-control border border-line bg-panel p-3">
-                        <div className="text-[9px] font-semibold uppercase tracking-[0.12em] text-muted">03 · Execution Narrative</div>
+                        <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">03 · Execution Narrative</div>
                         <p className="mt-2 text-xs leading-6 text-muted">{editingProject.executionId || editingProject.execution || 'No execution narrative entered.'}</p>
                       </section>
                     </div>
 
                     <section>
-                      <div className="text-[9px] font-semibold uppercase tracking-[0.12em] text-muted">03 · Execution & Delivery</div>
+                      <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">03 · Execution & Delivery</div>
                       <div className="mt-2 space-y-2">
                         {editingProject.deliverables.length > 0 ? editingProject.deliverables.map((item, idx) => (
                           <div key={idx} className="flex items-start gap-2 rounded-control border border-line bg-panel px-3 py-2 text-xs text-fg">
@@ -707,13 +727,13 @@ export const AdminCmsProjects: React.FC = () => {
                     </section>
 
                     <section>
-                      <div className="text-[9px] font-semibold uppercase tracking-[0.12em] text-muted">04 · Outcome & Client Impact</div>
+                      <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">04 · Outcome & Client Impact</div>
                       <p className="mt-2 text-xs leading-6 text-muted">{editingProject.outcomeId || editingProject.outcome || 'No client outcome narrative entered.'}</p>
                       <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
                         {editingProject.impact.length > 0 ? editingProject.impact.map((item, idx) => (
                           <div key={idx} className="rounded-control border border-line bg-panel p-3">
                             <div className="text-lg font-semibold text-fg">{item.value}</div>
-                            <div className="mt-1 text-[9px] uppercase tracking-[0.08em] text-muted">{item.label}</div>
+                            <div className="mt-1 text-[10px] uppercase tracking-[0.08em] text-muted">{item.label}</div>
                           </div>
                         )) : <p className="text-xs text-muted">No impact metrics entered.</p>}
                       </div>
@@ -722,7 +742,7 @@ export const AdminCmsProjects: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <form id="case-study-form" data-ams-feature-slug="cms-project-form" data-ams-slug="cms-project-form" onSubmit={handleSaveModal} className="space-y-5">
+              <form id="case-study-form" role="tabpanel" aria-labelledby="case-study-details-tab" tabIndex={0} data-ams-feature-slug="cms-project-form" data-ams-slug="cms-project-form" onSubmit={handleSaveModal} className="space-y-5">
                 <section className="space-y-3">
                   <div>
                     <h4 className="text-sm font-semibold text-fg">Identity & publishing</h4>

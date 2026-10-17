@@ -58,7 +58,7 @@ export const AdminReportingPeriodBar: React.FC = () => {
         aria-controls="global-reporting-period-popover"
         title={enabled ? label : (isId ? 'Periode terpilih, belum diterapkan' : 'Selected period, not applied')}
         className={[
-          'h-8 min-h-8 gap-1.5 px-2.5 text-[11px]',
+          'h-9 min-h-9 gap-1.5 px-3 text-xs sm:w-[124px] sm:justify-between',
           enabled ? 'border-accent/35 bg-accent/10 text-fg' : ''
         ].join(' ')}
         slug="global-reporting-period-trigger"
@@ -86,7 +86,7 @@ export const AdminReportingPeriodBar: React.FC = () => {
               type="button"
               onClick={() => setOpen(false)}
               aria-label={isId ? 'Tutup periode laporan' : 'Close reporting period'}
-              className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-control text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-control text-muted transition-colors hover:bg-bg hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
               <X size={14} aria-hidden="true" />
             </button>
@@ -115,7 +115,7 @@ export const AdminReportingPeriodBar: React.FC = () => {
               type="button"
               variant="ghost"
               icon={<RotateCcw size={12} aria-hidden="true" />}
-              className="h-8 min-h-8 px-2 text-[11px]"
+              className="h-9 min-h-9 px-3 text-xs"
               disabled={!enabled}
               onClick={() => {
                 clearFilter();
@@ -129,7 +129,7 @@ export const AdminReportingPeriodBar: React.FC = () => {
               type="button"
               variant="secondary"
               onClick={() => setOpen(false)}
-              className="h-8 min-h-8 px-3 text-[11px]"
+              className="h-9 min-h-9 px-3 text-xs"
             >
               {isId ? 'Selesai' : 'Done'}
             </Button>

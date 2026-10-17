@@ -1131,9 +1131,6 @@ export const AdminTeams: React.FC = () => {
         description={pageCopy[currentView].description}
         actions={
           <>
-            {currentView === 'capacity-allocation' && (
-              <Link to="/admin/team" className="inline-flex h-9 items-center justify-center gap-2 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg"><UsersRound size={14} /> Team Directory</Link>
-            )}
             {currentView === 'vendor-directory' && (
               <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
                 <label className="relative w-full sm:w-[190px]">
@@ -1166,7 +1163,6 @@ export const AdminTeams: React.FC = () => {
                   <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
                   <input value={teamHeaderSearch} onChange={(event) => setTeamHeaderSearch(event.target.value)} placeholder="Search team..." aria-label="Search team" className="h-9 w-full rounded-control border border-line bg-bg pl-9 pr-3 text-xs text-fg outline-none placeholder:text-muted focus:border-accent" />
                 </label>
-                <Link to="/admin/team?view=capacity-allocation" className="inline-flex h-9 items-center justify-center gap-2 rounded-control border border-line bg-panel px-3 text-xs font-medium text-fg hover:bg-bg"><CalendarDays size={14} /> Capacity &amp; Allocation</Link>
                 <CustomSelect
                   value={teamDepartment}
                   onChange={setTeamDepartment}
@@ -1286,10 +1282,10 @@ export const AdminTeams: React.FC = () => {
               <div className="flex items-center gap-2">
                 <span className="text-[11px] text-muted">Display:</span>
                 <div className="inline-flex items-center gap-0.5 rounded-control border border-line bg-bg p-0.5">
-                  <button type="button" onClick={() => setTeamDisplay('table')} className={'inline-flex h-8 items-center gap-1.5 rounded-control px-2.5 text-[11px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (teamDisplay === 'table' ? 'bg-panel text-fg' : 'text-muted hover:text-fg')} title="Table View">
+                  <button type="button" aria-pressed={teamDisplay === 'table'} onClick={() => setTeamDisplay('table')} className={'inline-flex h-9 min-h-9 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (teamDisplay === 'table' ? 'border-line bg-panel text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')} title="Table View">
                     <Table size={14} /> Table
                   </button>
-                  <button type="button" onClick={() => setTeamDisplay('grid')} className={'inline-flex h-8 items-center gap-1.5 rounded-control px-2.5 text-[11px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (teamDisplay === 'grid' ? 'bg-panel text-fg' : 'text-muted hover:text-fg')} title="Grid View">
+                  <button type="button" aria-pressed={teamDisplay === 'grid'} onClick={() => setTeamDisplay('grid')} className={'inline-flex h-9 min-h-9 items-center gap-1.5 rounded-chip border px-3 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' + (teamDisplay === 'grid' ? 'border-line bg-panel text-fg' : 'border-transparent text-muted hover:bg-panel hover:text-fg')} title="Grid View">
                     <LayoutGrid size={14} /> Grid
                   </button>
                 </div>
@@ -1298,7 +1294,7 @@ export const AdminTeams: React.FC = () => {
             </div>
           </section>
 
-          <AdminPanel title="Team Directory" description={teamRows.length + ' members'} className="overflow-hidden">
+          <AdminPanel className="overflow-hidden">
             {teamDisplay === 'table' ? (
               <div className="overflow-x-auto custom-scrollbar">
                 {pagedTeamRows.length === 0 ? (
