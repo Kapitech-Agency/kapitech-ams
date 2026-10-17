@@ -900,22 +900,25 @@ export const AdminInvoicing: React.FC<AdminInvoicingProps> = ({ embeddedView, em
     }
   };
 
+  const isUnknownFinanceMutationOutcome = (response: { success: boolean; status?: number }) =>
+    !response.success && (response.status === undefined || response.status >= 500);
+
   const loadQuotations = async () => {
     setQuotationLoading(true);
     setQuotationError(null);
     try {
       const result = await api.proposals.getAll();
       if (!result.success || !Array.isArray(result.data?.proposals)) {
-        setQuotations([]);
-        setQuotationError(result.error || 'Quotation records could not be loaded.');
+        setQuotationError(result.error || 'Quotation records could not be loaded. Previously loaded quotations are kept.');
         return;
       }
-      setQuotations(result.data.proposals
+      const normalizedQuotations = result.data.proposals
         .map(normalizeFinanceQuotation)
-        .filter((quotation) => quotation.currency === currency));
+        .filter((quotation) => quotation.currency === currency);
+      setQuotations(normalizedQuotations);
+      setQuotationDetail(current => current ? normalizedQuotations.find(item => item.id === current.id) || null : null);
     } catch (error) {
-      setQuotations([]);
-      setQuotationError(error instanceof Error ? error.message : 'Quotation records could not be loaded.');
+      setQuotationError((error instanceof Error ? error.message : 'Quotation records could not be loaded.') + ' Previously loaded quotations are kept.');
     } finally {
       setQuotationLoading(false);
     }
