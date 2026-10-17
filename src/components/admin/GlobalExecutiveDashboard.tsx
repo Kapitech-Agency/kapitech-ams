@@ -718,6 +718,7 @@ export const GlobalExecutiveDashboard: React.FC = () => {
           <AdminMetricStrip
             className="grid-cols-1 min-[390px]:grid-cols-2 min-[760px]:grid-cols-4"
             metrics={[
+              {
                 id: 'outstanding', label: 'Outstanding invoices',
                 value: outstandingMetric != null ? formatLiveMoney(Number(outstandingMetric), financeCurrency) : '—',
                 context: dashboardOverview.financials?.outstandingReceivables != null || liveOutstanding !== null ? 'Open invoice balances' : dashboardOverview.loading || operationalSnapshot.loading ? 'Loading live data' : 'Live data unavailable',
