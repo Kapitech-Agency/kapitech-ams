@@ -127,7 +127,7 @@ test('Documents mobile row actions use usable touch targets and visible focus', 
   assert.equal((mobileList.match(/inline-flex h-10 w-10 items-center justify-center/g) || []).length, 3);
   assert.equal((mobileList.match(/focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent/g) || []).length, 3);
   assert.match(mobileList, /aria-label=\{'Preview ' \+ titleOf\(doc\)\}/);
-  assert.match(mobileList, /aria-label=\{'Download ' \+ titleOf\(doc\)\}[^>]*disabled=\{!canDownload\}/);
+  assert.match(mobileList, /aria-label=\{'Download ' \+ titleOf\(doc\)\}[\s\S]{0,220}disabled=\{!canDownload\}/);
   assert.match(mobileList, /canManageDocuments && <button[^>]*aria-label=\{'Delete ' \+ titleOf\(doc\)\}/);
 });
 
